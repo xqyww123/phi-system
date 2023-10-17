@@ -110,6 +110,7 @@ fun apply_processors thy =
         let val next = case toks of tok :: _ =>
                              (case Token.kind_of tok
                                 of Token.Cartouche => "<cartouche>"
+                                 | Token.Nat => "<number>"
                                  | _ => Token.content_of tok)
                           | _ => ""
             val ps = case Symtab.lookup processors next
@@ -196,10 +197,8 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
                                                         {id=expr_id, config=cfg, toks=[]} opr_ctxt
         val opr_ctxt = apsnd (apfst ( Phi_Opr_Stack.Data.put (#1 opr_ctxt)
                                    #> Config.restore Phi_Reasoner.auto_level (fst stat0))) opr_ctxt
-     in if null (#1 (#1 opr_ctxt)) orelse Phi_Opr_Stack.is_interrupted (#1 (#1 opr_ctxt))
-        then ()
-        else error (let open Pretty in string_of (para "The expression does not end.") end) ;
-        snd opr_ctxt
+     in snd opr_ctxt
+     |> apfst (Phi_Opr_Stack.Data.put (#1 opr_ctxt))
     end )
 
 (*

@@ -8,10 +8,10 @@ proc op_routine:
   requires Ty_X: \<open>\<phi>_Have_Types X TY_ARGs\<close>
       and  Ty_Y: \<open>\<phi>_Have_Types Y TY_RETs\<close>
       and  \<open>\<r>Success\<close>
-      and  F: \<open>(\<And>(vs:: 'a::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
+      and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
             return_\<phi>app\<^bold>: TECHNICAL(
-                \<forall>ret :: 'b :: FIX_ARITY_VALs \<phi>arg.
-                  \<p>\<r>\<o>\<c> (op_break TYPE('b) TYPE('b) label_ret ret) \<lbrace> Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret \<longmapsto> 0 \<rbrace>
+                \<forall>ret :: 'rets::FIX_ARITY_VALs \<phi>arg.
+                  \<p>\<r>\<o>\<c> (op_break TYPE('rets) TYPE('rets) label_ret ret) \<lbrace> Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret \<longmapsto> 0 \<rbrace>
                   \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label_ret Y))
             \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs) \<lbrace> X (case_named id vs)\<heavy_comma> TECHNICAL Brk_Frame label_ret
                                                 \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret
@@ -20,61 +20,28 @@ proc op_routine:
   output \<open>Y\<close>
   throws \<open>E\<close>
 \<medium_left_bracket>
-  apply_rule "__routine_basic__"[OF Ty_X Ty_Y \<r>Success_I, where 'names='names]
+  apply_rule "__routine_basic__"[OF Ty_X Ty_Y \<r>Success_I, where 'names='names,
+                                 unfolded named_All, simplified]
   \<medium_left_bracket> for vs 
     op_brk_scope \<medium_left_bracket> for label_ret
-      apply_rule F[of label_ret vs, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
+      apply_rule F[of label_ret \<open>tag vs\<close>, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
       apply_rule op_break
-    \<medium_right_bracket> ;;  
+    \<medium_right_bracket>
   \<medium_right_bracket>
+\<medium_right_bracket> .
 
-      thm op_break_\<phi>app
-
-      ;;      apply_rule F[where vs=\<open>tag vs\<close>, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
-
-  thm "__routine_basic__"[OF Ty_X Ty_Y \<r>Success_I, where 'names='names]
-
-definition op_routine
-        :: \<open>TY list \<Rightarrow> TY list \<Rightarrow>
-            (RES.brk_label \<Rightarrow> ('a::FIX_ARITY_VALs, 'b::FIX_ARITY_VALs) proc') \<Rightarrow>
-            ('a,'b) proc'\<close>
-  where \<open>op_routine argtys rettys F =
-    op_routine_basic argtys rettys (\<lambda>arg. op_brk_scope (\<lambda>brk. F brk arg))\<close>
+thm op_routine_\<phi>app
 
 abbreviation
-  \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>. op_routine argtys rettys (F \<f>))\<close>
-
-lemma "__routine__":
-  \<open> \<phi>_Have_Types X TY_ARGs
-\<Longrightarrow> \<phi>_Have_Types Y TY_RETs
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<And>(vs:: 'a::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
-      return_\<phi>app\<^bold>: TECHNICAL(
-          \<forall>ret :: 'b :: FIX_ARITY_VALs \<phi>arg.
-            \<p>\<r>\<o>\<c> (op_break label_ret ret :: 'b proc) \<lbrace> Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret \<longmapsto> 0 \<rbrace>
-            \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label_ret Y))
-      \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs) \<lbrace> X (case_named id vs)\<heavy_comma> TECHNICAL Brk_Frame label_ret
-                                          \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret
-                                            \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<b>\<r>\<e>\<a>\<k> label_ret \<w>\<i>\<t>\<h> Y \<o>\<r> E e))
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_routine TY_ARGs TY_RETs F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding op_routine_def
-  \<medium_left_bracket> premises [\<phi>reason 5000] and [\<phi>reason 5000] and _ and F
-    apply_rule "__routine_basic__"[where TY_ARGs=TY_ARGs and TY_RETs=TY_RETs and X=X and Y=Y
-                                                         and vs=vs and 'names='names, simplified]
-    \<medium_left_bracket> for vs
-      brk_scope \<medium_left_bracket> for label_ret
-        apply_rule F[where vs=\<open>tag vs\<close>, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
-        apply_rule "_op_break_rule_"
-      \<medium_right_bracket>
-    \<medium_right_bracket>
-  \<medium_right_bracket>.
+  \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
+        op_routine TYPE('ret::FIX_ARITY_VALs) TYPE('arg::FIX_ARITY_VALs) argtys rettys (F \<f>))\<close>
 
 attribute_setup routine =
   \<open>Scan.succeed (Phi_Modifier.wrap_to_attribute
       (PhiSem_Control_Flow.routine_mod
           (fn T => \<^typ>\<open>RES.brk_label\<close> --> T)
           (fn N => fn wrap => fn Tm => Abs("label_ret", \<^typ>\<open>RES.brk_label\<close>, wrap (Tm $ Bound N)))
-          @{thm "__routine__"}))\<close>
+          @{thm "op_routine_\<phi>app"}))\<close>
 
 
 end

@@ -96,14 +96,14 @@ section \<open>Value \& Reasoning over it\<close>
 
 subsection \<open>\<phi>-Type Abstraction\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=true}
         (\<^binding>\<open>Val\<close>, \<^pattern>\<open>Val::VAL \<phi>arg \<Rightarrow> (VAL, ?'a) \<phi> \<Rightarrow> (?'x::one, ?'a) \<phi>\<close>,
          Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Val_def}),
          \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 let_\<phi>type Val
   deriving \<open>Abstract_Domain T P

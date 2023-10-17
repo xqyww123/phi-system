@@ -133,7 +133,7 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_const_areal_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_areal.mk x \<Turnstile> (x \<Ztypecolon> \<real>)\<close>

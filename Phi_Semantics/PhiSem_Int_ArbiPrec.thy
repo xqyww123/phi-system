@@ -232,17 +232,19 @@ subsubsection \<open>Constant Integer\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma op_const_aint_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
+lemma op_const_aint_\<phi>app[\<phi>reason %ToA_mk_literal_cut,
+                         \<phi>reason %ToA_mk_literal for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_::int) \<Ztypecolon> Val (\<phi>literal _) _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x \<Turnstile> (x \<Ztypecolon> \<int>)\<close>
 \<medium_right_bracket> .
 
-lemma op_const_anat_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
+lemma op_const_anat_\<phi>app[\<phi>reason %ToA_mk_literal_cut,
+                         \<phi>reason %ToA_mk_literal for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_::nat) \<Ztypecolon> Val (\<phi>literal _) _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] x' : of_nat x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x' \<Turnstile> (x \<Ztypecolon> \<nat>)\<close>
@@ -441,6 +443,8 @@ lemma op_lt_aint[\<phi>overload <,
   unfolding op_a_lt_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: Premise_def, rule,
       simp add: Premise_def, rule, simp)
+
+declare [[\<phi>display_value_internal_name]]
 
 lemma op_lt_anat[\<phi>overload <,
                  \<phi>synthesis for _ (100)

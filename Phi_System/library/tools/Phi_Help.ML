@@ -290,12 +290,19 @@ fun generic_theory_mapping pos f =
   Context.mapping (Context.theory_map (f Morphism.identity))
                   (Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} f)
 
+fun aconv_bound_diff d (t1 $ u1, t2 $ u2) =
+      aconv_bound_diff d (t1,t2) andalso aconv_bound_diff d (u1,u2)
+  | aconv_bound_diff d (Abs (_, T1, t1), Abs (_, T2, t2)) =
+      aconv_bound_diff d (t1,t2) andalso T1 = T2
+  | aconv_bound_diff d (Bound i, Bound j) = i = j + d
+  | aconv_bound_diff _ (a1,a2) = a1 = a2
+
 (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
-  This version improves it, but it still requires that loose bounds do not occur in `v`*)
+  This version improves it, by supporting loose bound variables occurring in both redex and residue*)
 fun abstract_over (v, body) =
   let
     fun abs lev tm =
-      if v aconv tm then Bound lev
+      if aconv_bound_diff lev (tm, v) then Bound lev
       else
         (case tm of
           Abs (a, T, t) => Abs (a, T, abs (lev + 1) t)
@@ -313,14 +320,7 @@ fun lambda v t = lambda_name ("", v) t;
 
 fun subst_free_with_loose_bounds [] = I
   | subst_free_with_loose_bounds pairs =
-      let fun aconv_bound_diff d (t1 $ u1, t2 $ u2) =
-                aconv_bound_diff d (t1,t2) andalso aconv_bound_diff d (u1,u2)
-            | aconv_bound_diff d (Abs (_, T1, t1), Abs (_, T2, t2)) =
-                aconv_bound_diff d (t1,t2) andalso T1 = T2
-            | aconv_bound_diff d (Bound i, Bound j) = i = j + d
-            | aconv_bound_diff _ (a1,a2) = a1 = a2
-
-          fun substf i u =
+      let fun substf i u =
             case AList.lookup (aconv_bound_diff i) pairs u
               of SOME u' => Term.incr_boundvars i u'
                | NONE => (case u of Abs(a,T,t) => Abs(a, T, substf (i+1) t)

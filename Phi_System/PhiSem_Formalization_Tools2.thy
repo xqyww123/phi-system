@@ -141,18 +141,21 @@ lemma semantic_local_value_\<phi>app:
 
 subsection \<open>Reasoning Configure\<close>
 
-declare [[\<phi>reason_default_pattern \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal ?u] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _\<close> \<Rightarrow>
-                                  \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal ?u] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _\<close>   (100) ]]
+declare [[\<phi>reason_default_pattern \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
+                                  \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>   (100) ]]
 
 \<phi>reasoner_group ToA_mk_literal_cut = (1000, [1000,1030]) in ToA_cut
-  \<open>cutting rule synthesizing literal local values\<close>
+      \<open>cutting rule synthesizing literal local values\<close>
+  and ToA_mk_literal = (100, [100,130]) in ToA
+      \<open>synthesizing literal local values\<close>
 
+(*
 lemma [\<phi>reason %\<phi>synthesis_cut]:
-  \<open> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal u] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal u] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @action synthesis \<close>
-  by (rule Synthesis_Proc_fallback_VS,
-      rule view_shift_by_implication)
-
+  \<open> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal u] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal u) \<lbrace> S1 \<longmapsto> \<lambda>v. y \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @action synthesis \<close>
+  unfolding Action_Tag_def \<phi>Procedure_def det_lift_def Return_def Transformation_def
+  by (clarsimp simp add: INTERP_SPEC; blast)
+*)
 
 subsection \<open>Drop & Duplicate Value\<close>
 

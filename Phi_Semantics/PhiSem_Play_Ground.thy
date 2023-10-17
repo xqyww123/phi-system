@@ -10,14 +10,22 @@ theory PhiSem_Play_Ground
     PhiSem_Mem_Pointer
 begin
 
+(*
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
-  where [\<phi>defs]: \<open>\<phi>Rational x = ((n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0)\<close>
+  where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
+  deriving Basic
+       and \<open>Object_Equiv \<rat> (=)\<close>
 
-lemma [\<phi>reason]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> of_int n / of_int d = x \<and> d \<noteq> 0
-\<Longrightarrow> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<rat>\<close>
-  \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<rat>\<close> \<medium_right_bracket> .
+thm \<phi>Rational.intro_reasoning
+
+lemma [\<phi>reason add]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> snd x \<noteq> 0
+\<Longrightarrow> x \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_int (fst x) / of_int (snd x) \<Ztypecolon> \<rat>\<close>
+  \<medium_left_bracket> 
+    \<open>of_int (fst x) / of_int (snd x) \<Ztypecolon> MAKE \<rat>\<close>
+  \<medium_right_bracket> .
 
 declare One_nat_def [simp del]
 
@@ -25,7 +33,7 @@ proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>
-  var q1 \<leftarrow> $q1 destruct\<phi> _ ; \<comment> \<open>The reasoner will not open an abstraction by default\<close>
+  var q1 \<leftarrow> $q1 destruct\<phi> _ ;; \<comment> \<open>The reasoner will not open an abstraction by default\<close>
   var q2 \<leftarrow> $q2 destruct\<phi> _ ;; 
   val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1] ;
   val denominator \<leftarrow> $q1[1] * $q2[1] ;
@@ -67,6 +75,14 @@ proc
 (*
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
+
+*)
+
+proc
+  input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
+  output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
+  \<medium_left_bracket> if \<open>True\<close>
+    ;; if ( \<open>0 < $x\<close> ) ( $x - 1) ( 0 ) \<medium_right_bracket> .
 
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>

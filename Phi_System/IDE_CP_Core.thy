@@ -926,14 +926,17 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis+10]:
   unfolding Synthesis_by_def Action_Tag_def Simplify_def by fastforce
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis]:
-  \<open> \<r>CALL Synthesis_Parse X' X
+  \<open> \<r>CALL Synthesis_Parse A A'
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action synthesis
 \<Longrightarrow> End_Optimum_Solution
-\<Longrightarrow> Simplify post_synthesis_simp X'' X
-\<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
-\<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. X'' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>
-  unfolding Synthesis_by_def Action_Tag_def Simplify_def by fastforce
+\<Longrightarrow> Simplify post_synthesis_simp A'' (\<lambda>ret. A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R)
+\<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E'
+\<Longrightarrow> (\<And>ret. A'' ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret @action NToA)
+\<Longrightarrow> (\<And>e. E'' e \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E e @action NToA)
+\<Longrightarrow> PROP Synthesis_by A (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ))\<close>
+  unfolding Synthesis_by_def Action_Tag_def Simplify_def
+  by (meson "_\<phi>cast_proc_exception_internal_rule_" "_\<phi>cast_proc_return_internal_rule_" Action_Tag_def Premise_True \<r>Success_I)
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis]:
   \<open> (\<And>x. PROP Synthesis_by X (Trueprop (P x)))
@@ -1323,6 +1326,8 @@ lemma [\<phi>reason %\<phi>app_conv_normalize]:
   unfolding \<phi>App_Conv_def
   by blast
 
+paragraph \<open>Reduction\<close>
+
 lemma [\<phi>reason %\<phi>app_conv]:
   \<open> \<phi>App_Conv X Y
 \<Longrightarrow> \<phi>App_Conv X (Y @action A)\<close>
@@ -1332,6 +1337,16 @@ lemma [\<phi>reason %\<phi>app_conv]:
   \<open> \<phi>App_Conv Y X
 \<Longrightarrow> \<phi>App_Conv (Y @action A) X\<close>
   unfolding Action_Tag_def .
+
+lemma [\<phi>reason %\<phi>app_conv]:
+  \<open> \<phi>App_Conv Y X
+\<Longrightarrow> \<phi>App_Conv (TECHNICAL Y) X \<close>
+  unfolding Technical_def .
+
+lemma [\<phi>reason %\<phi>app_conv]:
+  \<open> \<phi>App_Conv Y X
+\<Longrightarrow> \<phi>App_Conv Y (TECHNICAL X) \<close>
+  unfolding Technical_def .
 
 
 paragraph \<open>Specifically for ToA\<close>
@@ -2328,7 +2343,7 @@ hide_fact \<phi>cast_exception_UI
 
 ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
 
-\<phi>lang_parser synthesis (8800, %\<phi>lang_app) ["<cartouche>"]
+\<phi>lang_parser synthesis (8800, %\<phi>lang_app) ["<cartouche>", "<number>"]
                       ( \<open>CurrentConstruction ?mode ?blk ?H ?S\<close>
                       | \<open>ToA_Construction ?\<CC> ?S'\<close>
                       | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close> )

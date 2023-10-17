@@ -3174,11 +3174,13 @@ lemma [\<phi>reason %identity_element_cut]:
   \<open>Identity_Element\<^sub>I 0 True\<close>
   unfolding Identity_Element\<^sub>I_def by simp
 
-lemma [\<phi>reason %identity_element_cut]:
+lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>E 1\<close>
+                                         \<open>Identity_Element\<^sub>E ?var\<close> ]:
   \<open>Identity_Element\<^sub>E 1\<close>
   unfolding Identity_Element\<^sub>E_def by simp
 
-lemma [\<phi>reason %identity_element_cut]:
+lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>I 1 _\<close>
+                                         \<open>Identity_Element\<^sub>I ?var _\<close> ]:
   \<open>Identity_Element\<^sub>I 1 True\<close>
   unfolding Identity_Element\<^sub>I_def by simp
 
@@ -3190,6 +3192,7 @@ lemma Identity_Element\<^sub>I_empty[\<phi>reason %identity_element_cut]:
   \<open>Identity_Element\<^sub>I (any \<Ztypecolon> \<circle>) True\<close>
   unfolding Identity_Element\<^sub>I_def by simp
 
+(*
 lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
   \<open>Identity_Element\<^sub>I {1} True\<close>
   unfolding Identity_Element\<^sub>I_def one_set_def by simp
@@ -3197,7 +3200,7 @@ lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>I {_
 lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>E {_}\<close>]:
   \<open>Identity_Element\<^sub>E {1}\<close>
   unfolding Identity_Element\<^sub>E_def one_set_def by simp
-
+*)
 
 subsubsection \<open>Special Forms\<close>
 

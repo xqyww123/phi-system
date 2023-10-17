@@ -26,9 +26,10 @@ section \<open>Instructions\<close>
 text \<open>There is no semantic instruction to make a symbol, because they are merely literal string
   known during compilation time.\<close>
 
-lemma "_intro_symbol_\<phi>app":
-  \<open>Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
-  unfolding Transformation_def \<phi>literal_def
+lemma [\<phi>reason %ToA_mk_literal_cut]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+  for X :: assn
+  unfolding Transformation_def \<phi>literal_def Action_Tag_def
   by clarsimp
 
 lemma "_intro_symbol_":
