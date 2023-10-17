@@ -107,9 +107,9 @@ proc Coprime:
 proc binary_search:
   requires F: \<open>\<forall>i v. \<p>\<r>\<o>\<c> F v \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close> \<comment> \<open>v: raw value\<close>
   premises \<open>mono f\<close>
-  input  \<open>lower \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
-  premises \<open>f upper\<close> and \<open>lower < upper\<close>
-  output \<open>(LEAST i. lower \<le> i \<and> i \<le> upper \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  input  \<open>lower' \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> upper' \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  premises \<open>f upper'\<close> and \<open>lower' < upper'\<close>
+  output \<open>(LEAST i. lower' \<le> i \<and> i \<le> upper' \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
   is [routine]
 \<medium_left_bracket>
   pure_fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
