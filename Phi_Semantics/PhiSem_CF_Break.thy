@@ -104,7 +104,7 @@ declare sift_brking_frame'_def[folded sift_brking_frame_def, assertion_simps_sou
 
 declare [[\<phi>hide_techinicals=false]]
 
-proc brk_scope:
+proc op_brk_scope:
   requires BLK: \<open>(\<And>l. \<p>\<r>\<o>\<c> f l \<lbrace> X\<heavy_comma> TECHNICAL Brk_Frame l \<longmapsto> \<lambda>ret. TECHNICAL Brk_Frame l \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y ret \<rbrace>
                       \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>a. sift_brking_frame l Y' (E a)))\<close>
   input  \<open>X\<close>
@@ -170,7 +170,7 @@ proc op_break:
 \<medium_right_bracket> .
 
 lemma op_break_reduce_tail[procedure_simps,simp]:
-  \<open>(op_break TYPE('a) TYPE('b::VALs) L v \<ggreater> f) = op_break TYPE('a) TYPE('b::VALs) L v\<close>
+  \<open>(op_break TYPE('ret) TYPE('val::VALs) L v \<ggreater> f) = op_break TYPE('ret) TYPE('val::VALs) L v\<close>
   unfolding op_break_def by simp
 
 
@@ -185,14 +185,19 @@ declare [[\<phi>reason_default_pattern
   \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l _ _ \<w>\<i>\<t>\<h> _\<close>  (1000)]]
 
 
-lemma [\<phi>reason 1010 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?var_Y' ?var_E'\<close>]:
+lemma [\<phi>reason %ToA_normalizing+10 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?var_Y' ?var_E' \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined] Y' : Y
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined] E' : E
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %ToA_normalizing]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame  l Y E\<close>
+  unfolding sift_brking_frame_def .
+
+(*lemma [\<phi>reason 1000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
 \<Longrightarrow> (\<And>v. Y v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' v @action NToA)
 \<Longrightarrow> E \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' @action NToA
@@ -205,7 +210,7 @@ lemma [\<phi>reason 1000]:
       \<medium_left_bracket> apply_rule E[THEN transformation_right_frame] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
       \<medium_left_bracket> apply_rule Y[THEN transformation_right_frame] \<medium_right_bracket>
   \<medium_right_bracket>.
-
+*)
 
 lemma [\<phi>reason 3000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?Y ?E \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E
@@ -220,7 +225,10 @@ lemma Brking_Frame_plus:
 
 declare [[\<phi>trace_reasoning = 2]]
 
-lemma [\<phi>reason 1200]:
+\<phi>reasoner_group sift_brking_frame = (1720, [1700,1730]) in ToA_assertion_cut
+  \<open>\<close>
+
+lemma [\<phi>reason %sift_brking_frame]:
   \<open> X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y1 E1
 \<Longrightarrow> X2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y2 E2
 \<Longrightarrow> (X1 + X2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
@@ -237,7 +245,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> X1 + X2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E\<close>
   using \<phi>CASE_IMP by fastforce *)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %sift_brking_frame]:
   \<open>Brking_Frame l Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y 0\<close>
   unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>.
 
@@ -259,7 +267,7 @@ lemma Brking_Frame_absorb_ex[assertion_simps]:
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>.
 
-lemma [\<phi>reason 1180]:
+lemma [\<phi>reason %sift_brking_frame-10]:
   \<open> NO_MATCH TYPE('a) TYPE('b)
 \<Longrightarrow> ERROR TEXT(\<open>The exits of scope\<close> l \<open>mismach in return type. One is\<close>
                     TYPE('a) \<open>while another is\<close> TYPE('b))
@@ -268,7 +276,7 @@ lemma [\<phi>reason 1180]:
   unfolding ERROR_def
   by blast
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %sift_brking_frame-20]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brk_Frame l \<r>\<e>\<m>\<a>\<i>\<n>\<s> E \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l 0 E\<close>
   unfolding sift_brking_frame'_def Technical_def
@@ -323,8 +331,8 @@ proc
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   output \<open>y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   \<medium_left_bracket>
-    brk_scope \<medium_left_bracket> for l1
-      brk_scope \<medium_left_bracket> for l2
+    op_brk_scope \<medium_left_bracket> for l1
+      op_brk_scope \<medium_left_bracket> for l2
         apply_rule "op_break"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>] ($y)
       \<medium_right_bracket>
       assert \<open>\<bottom>\<^sub>B\<^sub>I\<close> (*this place is unreachable!*)

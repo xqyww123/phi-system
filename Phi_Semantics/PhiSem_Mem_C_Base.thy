@@ -448,8 +448,9 @@ lemma getter_rule:
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
       \<lambda>ret. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (nosep x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
-  by (rule "_getter_rule_2_"[OF fiction_Map_of_Val_ins_perm_projection,
-                                simplified split_nosep_ExSet inj_image_mem_iff inj_nosep])
+  by (rule "_getter_rule_2_"[OF _ fiction_Map_of_Val_ins_perm_projection,
+                                simplified split_nosep_ExSet inj_image_mem_iff inj_nosep],
+      simp)
 
 context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
 
@@ -488,8 +489,9 @@ lemma setter_rule:
                         and V=\<open>nosep ` {a. index_value idx a = u_idx}\<close>
                         and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)\<close>
                         for idx v u_idx,
-                      OF fiction_Map_of_Val_perm_partial_refinement
+                      OF _ fiction_Map_of_Val_perm_partial_refinement
                          fiction_Map_of_Val_ins_perm_projection],
+      simp,
       assumption,
       assumption,
       assumption,
@@ -513,6 +515,7 @@ proof -
 
   show ?thesis
     by (rule "_setter_rule_2_"[where f=\<open>\<lambda>_. None\<close> and V=\<open>{nosep v}\<close> and F=\<open>\<lambda>_. 1\<close> for v, simplified],
+        simp,
         unfold refinement_source_subjection, rule impI,
         rule sep_refinement_stepwise[
                   OF refinement_frame[OF Map_of_Val_ins.\<F>_functional_refinement[simplified]]

@@ -34,10 +34,10 @@ proc while:
   output \<open>R\<heavy_comma> X x \<s>\<u>\<b>\<j> x. invariant x \<and> termination x\<close>
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> S
-    brk_scope \<medium_left_bracket> for lb
+    op_brk_scope \<medium_left_bracket> for lb
       PhiSem_CF_Basic.while \<open>TECHNICAL Brk_Frame lb\<heavy_comma> R\<heavy_comma> X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x\<close>
       \<medium_left_bracket> C \<medium_right_bracket>
-      \<medium_left_bracket> brk_scope \<medium_left_bracket> for lc    
+      \<medium_left_bracket> op_brk_scope \<medium_left_bracket> for lc    
           apply_rule B[where lb1=lb]
           apply_rule op_break[THEN Technical_I, THEN Labelled_I]
           apply_rule op_break[THEN Technical_I, THEN Labelled_I]
