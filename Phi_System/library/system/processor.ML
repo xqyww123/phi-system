@@ -197,7 +197,10 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
                                                         {id=expr_id, config=cfg, toks=[]} opr_ctxt
         val opr_ctxt = apsnd (apfst ( Phi_Opr_Stack.Data.put (#1 opr_ctxt)
                                    #> Config.restore Phi_Reasoner.auto_level (fst stat0))) opr_ctxt
-     in snd opr_ctxt
+     in if Phi_Opr_Stack.precedence_of (#1 (#1 opr_ctxt)) >= 0
+        then warning "The expression does not end"
+        else ();
+        snd opr_ctxt
      |> apfst (Phi_Opr_Stack.Data.put (#1 opr_ctxt))
     end )
 

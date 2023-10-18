@@ -138,53 +138,6 @@ lemma [\<phi>reason 1020]:
 \<Longrightarrow> chk_semantics_validity [AgIdx_N n]\<close>
   unfolding chk_semantics_validity_def ..
 
-(* paragraph \<open>Unwind aggregate path into logical form easy for reasoning\<close>
-
-definition \<open>parse_element_index_input A B C \<longleftrightarrow> B = C\<close>
-
-declare [[\<phi>reason_default_pattern
-  \<open>parse_element_index_input ?A _ _\<close> => \<open>parse_element_index_input ?A _ _\<close> (100),
-  \<phi>premise_attribute? [unfolded parse_element_index_input_def, useful] for \<open>parse_element_index_input _ _ _\<close>
-]]
-
-lemma [\<phi>reason 1000]:
-  \<open>parse_element_index_input [] [] []\<close>
-  unfolding parse_element_index_input_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> parse_element_index_input A A' A''
-\<Longrightarrow> parse_element_index_input L L' L''
-\<Longrightarrow> parse_element_index_input (A # L) (A' # L') (A'' # L'')\<close>
-  unfolding parse_element_index_input_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> \<phi>arg.dest v \<in> S
-\<Longrightarrow> get_logical_nat_from_semantic_int S n
-\<Longrightarrow> \<r>nat_to_suc_nat n n'
-\<Longrightarrow> parse_element_index_input (AgIdx_VN v) (AgIdx_N n') (AgIdx_N n)\<close>
-  unfolding get_logical_nat_from_semantic_int_def element_index_refinement_def
-            AgIdx_VN_def Ball_def
-  by (cases v; simp; metis option.sel)
-
-lemma [\<phi>reason 1000]:
-  \<open> \<r>nat_to_suc_nat n n'
-\<Longrightarrow> element_index_refinement (AgIdx_N n) (AgIdx_N n') (AgIdx_N n)\<close>
-  unfolding element_index_refinement_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open>element_index_refinement (AgIdx_S s) (AgIdx_S s) (AgIdx_S s)\<close>
-  unfolding element_index_refinement_def by simp
-
-*)
-(*
-lemma [\<phi>reason 1000]:
-  \<open> Is_Literal n
-\<Longrightarrow> element_index_refinement (AgIdx_N n) (AgIdx_N n)\<close>
-  unfolding element_index_refinement_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open> element_index_refinement (AgIdx_S s) (AgIdx_S s)\<close>
-  unfolding element_index_refinement_def .. *)
 
 
 section \<open>Instructions\<close>
@@ -248,9 +201,9 @@ lemma [\<phi>reason %chk_sem_ele_idx]:
   unfolding is_valid_index_of_def is_valid_step_idx_of_def
   by simp
 
-subsection \<open>Parse Element Index Input by Semantic Type\<close>
+subsection \<open>parse_ele_idx\<close> \<comment> \<open>Parse Element Index Input by Semantic Type\<close>
 
-consts parse_element_index_input :: action
+consts parse_eleidx_input :: action
 
 definition \<open>parse_element_index_input_by_semantic_type TY (input::element_index_input) semantic_idx unwinded pretty_idx (reject::element_index_input)
     \<longleftrightarrow> valid_index TY unwinded \<and> semantic_idx = unwinded \<and> pretty_idx = unwinded\<close>
@@ -262,6 +215,9 @@ definition \<open>parse_element_index_input_by_semantic_type_at_least_1 TY input
 declare [[\<phi>reason_default_pattern
       \<open>parse_element_index_input_by_semantic_type ?TY ?input _ _ _ _ \<close> \<Rightarrow>
       \<open>parse_element_index_input_by_semantic_type ?TY ?input _ _ _ _ \<close> (100)]]
+
+\<phi>reasoner_group parse_eleidx_input = (1000, [1000,1000])
+  \<open>Rules giving abstract specifiction of the values of an element index\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> parse_element_index_input_by_semantic_type TY input sidx unwinded pidx reject
@@ -289,7 +245,7 @@ lemma [\<phi>reason 900]:
   by simp
 
 lemma [\<phi>reason 850]:
-  \<open> \<phi>arg.dest v \<Turnstile> S @action parse_element_index_input
+  \<open> \<phi>arg.dest v \<Turnstile> S @action parse_eleidx_input
 \<Longrightarrow> get_logical_nat_from_semantic_int S n'
 \<Longrightarrow> \<r>nat_to_suc_nat n' n
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U
@@ -302,7 +258,7 @@ lemma [\<phi>reason 850]:
   by (cases v; simp; metis option.sel)
 
 lemma [\<phi>reason 880]:
-  \<open> \<phi>arg.dest (\<phi>literal v) \<Turnstile> S @action parse_element_index_input
+  \<open> \<phi>arg.dest (\<phi>literal v) \<Turnstile> S @action parse_eleidx_input
 \<Longrightarrow> get_logical_nat_from_semantic_int {v} n'
 \<Longrightarrow> \<r>nat_to_suc_nat n' n
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U

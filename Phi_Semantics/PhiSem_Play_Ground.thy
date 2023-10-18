@@ -48,7 +48,11 @@ proc test_ptr:
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (2, 0)
-  ;; $1[0][2]
+  ;; $1[0] \<rightarrow> val t
+    note [[\<phi>trace_reasoning = 2]]
+    ;; $t [2]
+     
+    ;;[2]
   ;; $1 \<tribullet> $b \<tribullet> $a
 \<medium_right_bracket> .
 

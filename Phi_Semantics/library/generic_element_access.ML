@@ -65,20 +65,20 @@ fun mk_element_index_input_internal args0 ctxt =
       fun pattern_of (Trueprop $ ((H1 as Const (\<^const_name>\<open>Satisfaction\<close>, _)) $ V $ S))
             = let val i = Int.max (maxidx_of_term H1, maxidx_of_term V) + 1
                in Trueprop $ (\<^const>\<open>Action_Tag\<close> $ (H1 $ V $ Var(("S",i), fastype_of S))
-                                                $ \<^const>\<open>parse_element_index_input\<close>)
+                                                $ \<^const>\<open>parse_eleidx_input\<close>)
               end
         | pattern_of X =
             raise TERM ("bad rule #c419df7c-c917-4605-a129-bb914d5716bf", [X])
       val reasoning_rules = map (fn (pos, rule) =>
-            ([rule RS @{thm Action_Tag_I[where A=\<open>parse_element_index_input\<close>]}], pos,
-             Phi_Reasoner.NORMAL_LOCAL_CUT, (1000, NONE),
+            ([rule RS @{thm Action_Tag_I[where A=\<open>parse_eleidx_input\<close>]}], pos,
+             Phi_Reasoner.NORMAL_LOCAL_CUT, @{reasoner_group %parse_eleidx_input},
              [(pattern_of (Thm.prop_of rule), NONE)], [], NONE)
           ) args
       val thy = Proof_Context.theory_of ctxt
       val pats = map (pattern_of o Thm.prop_of o snd) args
    in ctxt
    |> Context.proof_map (
-        Phi_Reasoner.del_reasoners [\<^pattern_prop>\<open>(_ :: VAL) \<Turnstile> _ @action parse_element_index_input\<close>]
+        Phi_Reasoner.del_reasoners [\<^pattern_prop>\<open>(_ :: VAL) \<Turnstile> _ @action parse_eleidx_input\<close>]
           (fn r => exists (fn pat => Pattern.matches thy (pat, #name r)) pats))
    |> Context.proof_map (
         Phi_Reasoner.add_rules reasoning_rules)
