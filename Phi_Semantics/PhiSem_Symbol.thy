@@ -38,7 +38,7 @@ lemma "_intro_symbol_":
   by clarsimp
 
 
-\<phi>lang_parser literal_symbol (8500, %\<phi>lang_app) [""]
+\<phi>lang_parser literal_symbol (%\<phi>parser_unique, %\<phi>lang_push_val) ["<string>"]
                             (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>) \<open>
 fn (oprs,(ctxt,sequent)) => Parse.string >> (fn s => fn _ =>
   (oprs, (ctxt, #transformation_rule Phi_Working_Mode.programming

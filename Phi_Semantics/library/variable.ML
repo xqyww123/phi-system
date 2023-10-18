@@ -120,7 +120,7 @@ val _ = Theory.setup (
 #> Phi_CP_IDE.add_parser (["var"],
     { name = "declare_variable",
       pos = \<^here>,
-      priorirty = 5010,
+      priorirty = @{priority %\<phi>parser_var_decl+50},
       precedence = 0,
       pattern = [\<^pattern_prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>],
       proc = (fn opr_ctxt as (_,(ctxt,sequent)) =>

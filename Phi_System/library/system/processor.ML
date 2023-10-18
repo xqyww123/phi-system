@@ -111,6 +111,7 @@ fun apply_processors thy =
                              (case Token.kind_of tok
                                 of Token.Cartouche => "<cartouche>"
                                  | Token.Nat => "<number>"
+                                 | Token.String => "<string>"
                                  | _ => Token.content_of tok)
                           | _ => ""
             val ps = case Symtab.lookup processors next
@@ -333,11 +334,12 @@ fun process_all_antecedents lev s =
 
 val read_prop_pattern = Syntax.read_props o Proof_Context.set_mode Proof_Context.mode_pattern
 
-fun setup_cmd ((((((name, pos), (priority, raw_precedence)), keywords), raw_pattern),fixes),proc) thy =
+fun setup_cmd ((((((name, pos), (raw_priority, raw_precedence)), keywords), raw_pattern),fixes),proc) thy =
   let
     val ctxt_parse = Proof_Context.init_global thy
     val (_, ctxt_parse') = Proof_Context.add_fixes_cmd fixes ctxt_parse
     val pattern = read_prop_pattern ctxt_parse' raw_pattern
+    val (priority, _) = Reasoner_Group.check_priority true (Context.Theory thy) raw_priority
     val (precedence, _) = Reasoner_Group.check_priority true (Context.Theory thy) raw_precedence
     open ML_Syntax
   in
@@ -371,7 +373,7 @@ fun parse_auto_level (proc:proc) (oprs, (ctxt,sequent)) =
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>lang_parser\<close> "define \<phi>lang_parser"
       (  Parse.name_position
-      -- (\<^keyword>\<open>(\<close> |-- Parse.nat --| \<^keyword>\<open>,\<close> -- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>)
+      -- (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>,\<close> -- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>)
       -- (\<^keyword>\<open>[\<close> |-- Parse.list Parse.name --| \<^keyword>\<open>]\<close>)
       -- (\<^keyword>\<open>(\<close> |-- Parse.enum1 "|" Parse.term --| \<^keyword>\<open>)\<close> )
       -- Parse.for_fixes -- Parse.ML_source

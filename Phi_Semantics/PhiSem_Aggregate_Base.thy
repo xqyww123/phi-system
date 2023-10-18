@@ -442,7 +442,7 @@ proc op_construct_aggregate:
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
   \<medium_left_bracket>
     semantic_assert \<open>constructor args \<in> Well_Type TY\<close>
-      ;;    semantic_return \<open>constructor args \<Turnstile> (x \<Ztypecolon> T)\<close>
+    semantic_return \<open>constructor args \<Turnstile> (x \<Ztypecolon> T)\<close>
   \<medium_right_bracket> .
 
 
@@ -475,15 +475,18 @@ declare_\<phi>operator infix 40 :=
 declare op_get_aggregate[\<phi>overload "[]", \<phi>overload "\<tribullet>"]
         op_set_aggregate[\<phi>overload "[]:="]
 
+\<phi>reasoner_group \<phi>parser_lbrack = (500, [500,500]) \<open>\<close>
+  and \<phi>parser_rbrack = (500,[500,500]) \<open>\<close>
+
 ML_file \<open>library/generic_element_access.ML\<close>
 
-\<phi>lang_parser aggregate_getter_setter (8800, %\<phi>lang_app) ["["] (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser aggregate_getter_setter (%\<phi>parser_lbrack, %\<phi>lang_app) ["["] (\<open>PROP _\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>[\<close> >> (fn (_, pos) => fn cfg =>
     Generic_Element_Access.gen_access (\<^named_theorems>\<open>[]_\<phi>app\<close>, \<^named_theorems>\<open>[]:=_\<phi>app\<close>)
                                       (("[",pos), (NONE, pos))
                                       cfg s) \<close>
 
-\<phi>lang_parser aggregate_getter_end (8800, %\<phi>lang_top) ["]"] (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser aggregate_getter_end (%\<phi>parser_rbrack, %\<phi>lang_top) ["]"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>]\<close> -- Scan.option (Parse.position \<^keyword>\<open>:=\<close>)
 >> (fn ((_, pos), assign) => fn cfg => (
     if Phi_Opr_Stack.inside_calling_stack "[" (#1 opr_ctxt) then ()
@@ -494,19 +497,19 @@ ML_file \<open>library/generic_element_access.ML\<close>
       opr_ctxt
 )) \<close>
 
-\<phi>lang_parser construct_aggregate (8800, %\<phi>lang_app) ["\<lbrace>"] (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser construct_aggregate (%\<phi>parser_lbrack, %\<phi>lang_app) ["\<lbrace>"] (\<open>PROP _\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>\<lbrace>\<close> -- Scan.option (Parse.short_ident --| \<^keyword>\<open>:\<close>)
 >> (fn ((_, pos), arg_name) => fn cfg =>
     Generic_Element_Access.gen_constructor "" (("\<lbrace>",pos), (arg_name, pos)) cfg s) \<close>
 
-\<phi>lang_parser construct_aggregate_end (8800, %\<phi>lang_top) ["\<rbrace>"] (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser construct_aggregate_end (%\<phi>parser_rbrack, %\<phi>lang_top) ["\<rbrace>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<rbrace>\<close> >> (fn (_, pos) => fn cfg => (
     if Phi_Opr_Stack.inside_calling_stack "\<lbrace>" (#1 opr_ctxt) then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
     Phi_Opr_Stack.close_parenthesis (cfg, NONE, false) opr_ctxt
 )) \<close>
 
-\<phi>lang_parser triangle_operator (8800, %\<phi>lang_top) ["\<tribullet>"] (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser triangle_operator (%\<phi>parser_unique, %\<phi>lang_top) ["\<tribullet>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<tribullet>\<close> >> (fn (_, pos) => fn cfg => (
 let open Phi_Opr_Stack
     fun is_the_first (Meta_Opr (_,_,("\<tribullet>",_),_,_,_) :: _) = false
@@ -526,7 +529,7 @@ let open Phi_Opr_Stack
 end
 )) \<close>
 
-\<phi>lang_parser assignment_opr (8800, %\<phi>lang_top) ["\<leftarrow>"] (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser assignment_opr (%\<phi>parser_left_arrow, %\<phi>lang_top) ["\<leftarrow>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<leftarrow>\<close> >> (fn (_, pos) => fn cfg => (
 let open Phi_Opr_Stack
     fun chk_val (Meta_Opr (_,_,("$",_),_,_,_) :: _) = ()

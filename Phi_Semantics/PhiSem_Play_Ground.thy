@@ -32,7 +32,7 @@ declare One_nat_def [simp del]
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
-\<medium_left_bracket>
+\<medium_left_bracket>  
   val q1 \<leftarrow> $q1 to \<open>OPEN _\<close>
   val q2 \<leftarrow> $q2 to \<open>OPEN _\<close>
   val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1]
@@ -47,21 +47,21 @@ proc test_ptr:
   input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
-  val a, b \<leftarrow> (2, 0) ;;
-  $1[$b] \<tribullet> $a        ;;
-  $1 \<tribullet> $b \<tribullet> $a
+  val a, b \<leftarrow> (0, 0) ;;
+  $1[$b]\<tribullet>$a\<tribullet>0 ;;
+  $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
-
  
 proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
-  var v \<leftarrow> $1 ;;
-  $v \<tribullet> 0 \<tribullet> 1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
-  $v \<tribullet> 0 \<tribullet> 0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
+  var v \<leftarrow> $1 ;
+  $v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
+  $v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
   $v
 \<medium_right_bracket> .
+
 
 thm test_agg2_def
 
@@ -228,5 +228,7 @@ proc YYY2:
 
 thm YYY2_def
 *)
+
+  thm "!_\<phi>app"
 
 end
