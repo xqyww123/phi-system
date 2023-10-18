@@ -65,20 +65,20 @@ fun mk_element_index_input_internal args0 ctxt =
       fun pattern_of (Trueprop $ ((H1 as Const (\<^const_name>\<open>Satisfaction\<close>, _)) $ V $ S))
             = let val i = Int.max (maxidx_of_term H1, maxidx_of_term V) + 1
                in Trueprop $ (\<^const>\<open>Action_Tag\<close> $ (H1 $ V $ Var(("S",i), fastype_of S))
-                                                $ \<^const>\<open>parse_eleidx_input\<close>)
+                                                $ \<^const>\<open>\<A>parse_eleidx\<close>)
               end
         | pattern_of X =
-            raise TERM ("bad rule #c419df7c-c917-4605-a129-bb914d5716bf", [X])
+            raise TERM ("bad rule Y6uYVPRLRYeA3oqKVPXWGQ", [X])
       val reasoning_rules = map (fn (pos, rule) =>
-            ([rule RS @{thm Action_Tag_I[where A=\<open>parse_eleidx_input\<close>]}], pos,
-             Phi_Reasoner.NORMAL_LOCAL_CUT, @{reasoner_group %parse_eleidx_input},
+            ([rule RS @{thm Action_Tag_I[where A=\<open>\<A>parse_eleidx\<close>]}], pos,
+             Phi_Reasoner.NORMAL_LOCAL_CUT, @{reasoner_group %\<A>parse_eleidx},
              [(pattern_of (Thm.prop_of rule), NONE)], [], NONE)
           ) args
       val thy = Proof_Context.theory_of ctxt
       val pats = map (pattern_of o Thm.prop_of o snd) args
    in ctxt
    |> Context.proof_map (
-        Phi_Reasoner.del_reasoners [\<^pattern_prop>\<open>(_ :: VAL) \<Turnstile> _ @action parse_eleidx_input\<close>]
+        Phi_Reasoner.del_reasoners [\<^pattern_prop>\<open>(_ :: VAL) \<Turnstile> _ @action \<A>parse_eleidx\<close>]
           (fn r => exists (fn pat => Pattern.matches thy (pat, #name r)) pats))
    |> Context.proof_map (
         Phi_Reasoner.add_rules reasoning_rules)
@@ -105,7 +105,7 @@ fun gen_access named_thm_of_rules pos_and_first_args cfg stat =
             then error ("Bad Syntax: The operand of aggregate access is absent. " ^
                          Position.here (snd (fst pos_and_first_args)))
             else invoke' (cfg, args, free_arg) (opstack, Generic_Variable_Access.push_values vals_before stat)
-        | invoke'3 _ _ = error "internal bug #a2a96e04-14d6-4b66-9c2e-053e5c2bfcbe"
+        | invoke'3 _ _ = error "BUG qgjNc1ebSHCtqRNU7y9/Cw"
    in Phi_Opr_Stack.meta_apply cfg pos_and_first_args invoke'3 stat
   end
 
@@ -118,7 +118,7 @@ structure Agg_Constructors = Handlers (
 fun gen_constructor kind pos_and_first_args cfg stat =
   let fun invoke (_, (_, vals_before) :: args0, free_arg) (oprs, (ctxt0, sequent0)) =
         let val _ = case free_arg of NONE => ()
-                       | _ => error "Bad free_arg: a32d7843-538e-4ddc-af95-ea71514cc0ad"
+                       | _ => error "Bad free_arg 1ibvpcveSdePAKyDJuJefA"
             val (ctxt,sequent) = Generic_Variable_Access.push_values vals_before (ctxt0,sequent0)
             val kind' = if kind = "" then "structure" else kind
             val (ctxt', ctor, args') = Agg_Constructors.invoke (Context.Proof ctxt)
@@ -127,10 +127,10 @@ fun gen_constructor kind pos_and_first_args cfg stat =
                            | NONE => error ("Don't know how to construct " ^ kind' ^
                                               " using the given arguments."))
             val args = Thm.cterm_of ctxt (HOLogic.mk_list \<^typ>\<open>VAL \<phi>arg\<close> args')
-            val reasoning_rules =
-                  maps (fn ((_, pos), rules) =>
-                    map (fn rule => (rule,pos,Phi_Reasoner.NORMAL_LOCAL_CUT,(1000,NONE))) rules) args0
-            val ctxt'' = Context.proof_map (Phi_Local_Value.add_local_value_specs reasoning_rules) ctxt'
+            val ctxt'' = Context.proof_map (
+                    Generic_Variable_Access.register_value_spec_thms (
+                      map (fn ((_, pos), rules) => (pos, rules)) args0)
+                  ) ctxt'
             val rule' =
                 @{thm' op_construct_aggregate_\<phi>app}
                   |> Thm.transfer' ctxt''
@@ -141,7 +141,7 @@ fun gen_constructor kind pos_and_first_args cfg stat =
                   |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1) ctxt''
          in (oprs, (ctxt'', Phi_Apply.apply [rule'] ctxt'' sequent))
         end
-        | invoke _ _ = error "internal bug #5330d2f8-c5e3-46ae-9b45-5ae9550f037d"
+        | invoke _ _ = error "BUG 2CG4WNzYQqirWulpFUkQQA"
    in Phi_Opr_Stack.meta_apply cfg pos_and_first_args invoke stat
   end
 

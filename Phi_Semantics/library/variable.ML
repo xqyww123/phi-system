@@ -82,7 +82,7 @@ fun variable_assigner' (b,idx) (ctxt,sequent) =
                      else @{thm "__set_new_var_noty_rule__\<phi>app"}
           val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
           val ctxt = ctxt
-                  |> Generic_Variable_Access.bind_local_vals
+                  |> Generic_Variable_Access.bind_generic_vars
                         [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, @{typ varname})),
                                               find_Var' vname))]
                   |> bind_variable (vname, Binding.name_of b)
@@ -99,7 +99,7 @@ fun variable_declarer' TY (b,idx) (ctxt,sequent) =
     val vb = Binding.prefix_name varname_prefix b
     val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = ctxt
-            |> Generic_Variable_Access.bind_local_vals
+            |> Generic_Variable_Access.bind_generic_vars
                         [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, @{typ varname})),
                                               find_Var' vname))]
             |> bind_variable (vname, Binding.name_of b)
@@ -120,7 +120,7 @@ val _ = Theory.setup (
 #> Phi_CP_IDE.add_parser (["var"],
     { name = "declare_variable",
       pos = \<^here>,
-      priorirty = 5000,
+      priorirty = 5010,
       precedence = 0,
       pattern = [\<^pattern_prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>],
       proc = (fn opr_ctxt as (_,(ctxt,sequent)) =>

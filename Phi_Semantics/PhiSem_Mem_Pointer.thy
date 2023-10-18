@@ -542,7 +542,7 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 section \<open>Semantic Operations\<close>
  
 proc op_get_element_pointer[\<phi>overload \<tribullet>]:
-  requires \<open>parse_element_index_input_by_semantic_type TY input_index sidx unwinded pidx reject\<close>
+  requires \<open>parse_eleidx_input TY input_index sidx unwinded pidx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> unwinded \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of unwinded TY TY'\<close>
        and \<open>report_unprocessed_element_index reject\<close>

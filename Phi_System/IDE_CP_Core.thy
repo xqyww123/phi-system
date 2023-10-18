@@ -2108,23 +2108,10 @@ lemma implies_prod_right_1:
 \<phi>reasoner_group local_values = (%cutting, [%cutting, %cutting]) for \<open>_\<close>
   \<open>Facts demonstrating values of local variables\<close>
 
+
 ML_file \<open>library/system/generic_variable_access.ML\<close>
 
-lemma value_extraction_rule_no_remove:
-  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
-  unfolding Transformation_def by (simp add: Val_expn)
-
-lemma value_extraction_rule_remove:
-  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
-  unfolding Transformation_def by (simp add: Val_expn)
-
-setup \<open>Context.theory_map (
-  Generic_Variable_Access.add_extraction_rule
-    (\<^const_name>\<open>Val\<close>, (@{thm value_extraction_rule_remove}, @{thm value_extraction_rule_no_remove}))
-)\<close>
-
-hide_fact value_extraction_rule_no_remove value_extraction_rule_remove
-          implies_prod_right_1
+hide_fact implies_prod_right_1
 
 (*
 lemma [\<phi>reason 1000]:
@@ -2152,11 +2139,11 @@ subsection \<open>Convention of Operator Precedence\<close>
       \<open>precedences of operators in Isar/\<phi> programming interface\<close>
   and \<phi>lang_top = (1000, [1000,1000]) in \<phi>lang_precedence
       \<open>technically used. No operator should be of this precedence.\<close>
-  and \<phi>lang_deref = (930, [930,931]) in \<phi>lang_precedence and < \<phi>lang_top
+  and \<phi>lang_deref = (950, [950,950]) in \<phi>lang_precedence and < \<phi>lang_top
       \<open>dereference operator\<close>
-  and \<phi>lang_push_val = (920, [920,921]) in \<phi>lang_precedence and < \<phi>lang_deref
+  and \<phi>lang_push_val = (930, [930,930]) in \<phi>lang_precedence and < \<phi>lang_deref
       \<open>pushing local value to thestate sequent\<close>
-  and \<phi>lang_dot_opr = (910, [910,911]) in \<phi>lang_precedence and < \<phi>lang_push_val
+  and \<phi>lang_dot_opr = (910, [910,910]) in \<phi>lang_precedence and < \<phi>lang_push_val
       \<open>dot operator \<open>\<tribullet>\<close>\<close>
   and \<phi>lang_app = (900, [900,900]) in \<phi>lang_precedence and < \<phi>lang_dot_opr
       \<open>precedence of lambda application\<close>
@@ -2186,7 +2173,7 @@ ML_file \<open>library/system/modifier.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 
 
-hide_fact "__value_access_0__" "_rule_push_a_value_"
+hide_fact "__value_access_0__"
 
 subsection \<open>Isar Commands \& Attributes\<close>
 
@@ -2287,7 +2274,7 @@ hide_fact \<phi>cast_exception_UI
       else raise Phi_CP_IDE.Bypass
     end)\<close>
 
-\<phi>lang_parser apply_operator (8990, %\<phi>lang_app) [] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<phi>lang_parser apply_operator (8990, %\<phi>lang_top) [] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn (opr_ctxt as (_,(ctxt,_))) =>
   (Phi_App_Rules.symbol_position >> (fn (xname,pos) => fn cfg =>
     case Phi_Opr_Stack.lookup_operator (Proof_Context.theory_of ctxt) xname
@@ -2302,11 +2289,11 @@ hide_fact \<phi>cast_exception_UI
                 end)
   ))\<close>
 
-\<phi>lang_parser open_parenthesis (8800, %\<phi>lang_app) ["("] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<phi>lang_parser open_parenthesis (8800, %\<phi>lang_top) ["("] (\<open>?Bool\<close>)
 \<open> fn s => (Parse.position \<^keyword>\<open>(\<close>) >> (fn (_, pos) => fn _ =>
     Phi_Opr_Stack.open_parenthesis (NONE, pos) s) \<close>
 
-\<phi>lang_parser close_parenthensis (8800, %\<phi>lang_top) [")"] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<phi>lang_parser close_parenthensis (8800, %\<phi>lang_top) [")"] (\<open>?Bool\<close>)
 \<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn cfg => Phi_Opr_Stack.close_parenthesis (cfg, NONE, false) s)\<close>
 
 \<phi>lang_parser comma (8800, %\<phi>lang_top) [","] (\<open>?P\<close>) \<open> fn s => 
@@ -2343,7 +2330,7 @@ hide_fact \<phi>cast_exception_UI
 
 ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
 
-\<phi>lang_parser synthesis (8800, %\<phi>lang_app) ["<cartouche>", "<number>"]
+\<phi>lang_parser synthesis (8800, %\<phi>lang_push_val) ["<cartouche>", "<number>"]
                       ( \<open>CurrentConstruction ?mode ?blk ?H ?S\<close>
                       | \<open>ToA_Construction ?\<CC> ?S'\<close>
                       | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close> )
@@ -2368,7 +2355,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
               (oprs, Phi_Reasoners.wrap'' (Phi_Sys.synthesis term) (ctxt, sequent))
          | _ =>
               Phi_Opr_Stack.push_meta_operator cfg
-                  ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val+1}, SOME 0), ("<synthesis>", pos), NONE,
+                  ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val}, SOME 0), ("<synthesis>", pos), NONE,
                   (K (apsnd (Phi_Reasoners.wrap'' (Phi_Sys.synthesis term))))) (oprs, (ctxt, sequent))
   end)\<close>
 
@@ -2383,7 +2370,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
          of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => (oprs, get (ctxt,sequent))
           | _ =>
               Phi_Opr_Stack.push_meta_operator cfg
-                  ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val+1}, SOME 0),
+                  ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val}, SOME 0),
                       ("$", pos), SOME (Phi_Opr_Stack.String_Param var),
                       (K (fn (oprs, s) => (oprs, get s))))
                   (oprs,(ctxt,sequent))

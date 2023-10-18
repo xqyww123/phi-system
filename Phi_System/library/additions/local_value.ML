@@ -6,18 +6,18 @@
 
 signature PHI_LOCAL_VALUE = sig
 
+(* Tools *)
+
+val valname_prefix : string
+val get_raw_val_in_rule : thm -> term
+
+(* Access of Local Value *)
+
 val has_val : string (*external name*) -> Proof.context -> bool
 val delete_val : string (*external name*) -> Proof.context -> Proof.context
 val update_val : binding -> thm (*rule*) -> Proof.context -> Proof.context
       (*a rule in form \<open>(\<phi>arg.dest (v <val-of> (name::valname)) \<Turnstile> (x \<Ztypecolon> T)\<close>*)
 
-val valname_prefix : string
-
-(*the rules must be in form \<open>\<phi>arg.dest v \<Turnstile> x : T\<close>*)
-val add_local_value_specs : (thm * Position.T * Phi_Reasoner.mode * (priority * Reasoner_Group.name option)) list
-                       -> Context.generic -> Context.generic
-val remove_reasoning_rules: thm list -> Context.generic -> Context.generic
-val get_raw_val_in_rule : thm -> term
 
 end
 
@@ -49,8 +49,8 @@ fun get_raw_val_in_rule rule =
 fun pattern_of' mk_var rule =
   let val i = 1 + Thm.maxidx_of rule
   in case Thm.prop_of rule
-       of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>,
-                                (T1 as Type ("fun", [_, Type ("fun", [T,_])])))
+       of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, (T1 as 
+Type ("fun", [_, Type ("fun", [T,_])])))
               $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
               $ _)
              => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
@@ -94,6 +94,8 @@ fun extract_x_T th =
        in (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
       end
 
+
+
 fun dest_rule rule =
   case Thm.prop_of rule
     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
@@ -119,21 +121,11 @@ fun update_val b rule ctxt =
        #> Phi_Reasoner.add_rule (Binding.pos_of b)
                                 Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %local_value}
                                 ([(pattern, NONE)],[]) NONE [rule])
-     |> Generic_Variable_Access.bind_local_vals
+     |> Generic_Variable_Access.bind_generic_vars
             [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, T)), K V))]
      |> Proof_Context.maybe_bind_term ((Binding.name_of b,0),
                                        Option.map (Thm.term_of o fst) V)
   end
-
-fun add_local_value_specs rules ctxt =
-  Phi_Reasoner.add_rules (map (fn (rule,pos,mode, prio) =>
-    ([rule], pos, mode, prio, [(pattern_of rule, NONE)],[], NONE))
-    rules) ctxt
-
-fun remove_reasoning_rules rules ctxt =
-  fold (fn rule => Phi_Reasoner.del_reasoners [pattern_of rule]
-                      (fn r => #name r aconv Thm.prop_of rule)
-       ) rules ctxt
 
 val value_assigner_id = "val"
 val valname_prefix = "\<v>\<a>\<l>_"
@@ -191,6 +183,7 @@ fun optimized_value_assign bs stat =
      else stat
   end
 
+(*** Setup ***)
 
 val _ = Theory.setup (
    Generic_Variable_Access.register_assigner

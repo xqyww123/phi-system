@@ -554,8 +554,9 @@ fun get_reasoners thy tactics term =
 
 fun del_reasoners patterns filter ctxt =
   Reasoners.map (fn all_reasoners =>
-    let val to_remove = maps (iNet.unify_term all_reasoners) patterns
-                     |> List.filter (fn (_,_,_,r) => filter r)
+    let val to_remove = maps ( iNet.unify_term all_reasoners
+                            #> List.filter (fn (_,_,_,r) => filter r) ) patterns
+                     |> distinct pointer_eq
      in fold (fn (c,p,id,R) => iNet.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
     end) ctxt

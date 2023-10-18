@@ -203,72 +203,89 @@ lemma [\<phi>reason %chk_sem_ele_idx]:
 
 subsection \<open>parse_ele_idx\<close> \<comment> \<open>Parse Element Index Input by Semantic Type\<close>
 
-consts parse_eleidx_input :: action
+consts \<A>parse_eleidx :: action
 
-definition \<open>parse_element_index_input_by_semantic_type TY (input::element_index_input) semantic_idx unwinded pretty_idx (reject::element_index_input)
+definition \<open>parse_eleidx_input TY (input::element_index_input) semantic_idx unwinded pretty_idx (reject::element_index_input)
     \<longleftrightarrow> valid_index TY unwinded \<and> semantic_idx = unwinded \<and> pretty_idx = unwinded\<close>
 
-definition \<open>parse_element_index_input_by_semantic_type_at_least_1 TY input sidx unwinded pidx reject
-    \<longleftrightarrow> parse_element_index_input_by_semantic_type TY input sidx unwinded pidx reject \<and>
+definition \<open>parse_eleidx_input_least1 TY input sidx unwinded pidx reject
+    \<longleftrightarrow> parse_eleidx_input TY input sidx unwinded pidx reject \<and>
         (input \<noteq> [] \<longrightarrow> unwinded \<noteq> [])\<close>
 
-declare [[\<phi>reason_default_pattern
-      \<open>parse_element_index_input_by_semantic_type ?TY ?input _ _ _ _ \<close> \<Rightarrow>
-      \<open>parse_element_index_input_by_semantic_type ?TY ?input _ _ _ _ \<close> (100)]]
+declare [[
+  \<phi>reason_default_pattern
+      \<open>parse_eleidx_input ?TY ?input _ _ _ _ \<close> \<Rightarrow> \<open>parse_eleidx_input ?TY ?input _ _ _ _ \<close> (100)
+  and \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ _ \<close> \<Rightarrow> \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ _ \<close> (100)
+]]
 
-\<phi>reasoner_group parse_eleidx_input = (1000, [1000,1000])
-  \<open>Rules giving abstract specifiction of the values of an element index\<close>
+\<phi>reasoner_group \<A>parse_eleidx = (1000, [1000,1000]) for \<open>\<phi>arg.dest v \<Turnstile> S @action \<A>parse_eleidx\<close>
+      \<open>rules giving abstract specifiction of the values of an element index\<close>
+  and parse_eleidx_input_all = (1000, [1, 2000]) for \<open>parse_eleidx_input TY input semantic_idx unwinded pretty_idx reject\<close>
+      \<open>reasoning parsing source of element index\<close>
+  and parse_eleidx_input_success = (2000, [2000, 2000]) in parse_eleidx_input_all
+      \<open>direct success\<close>
+  and parse_eleidx_literal_symbol = (1700, [1700, 1700]) in parse_eleidx_input_all and < parse_eleidx_input_success
+      \<open>literal index\<close>
+  and parse_eleidx_literal_number = (1600, [1600, 1600]) in parse_eleidx_input_all and < parse_eleidx_literal_symbol
+      \<open>literal number\<close>
+  and parse_eleidx_input = (1000, [1000, 1200]) in parse_eleidx_input_all and < parse_eleidx_literal_number
+      \<open>usual rules\<close>
+  and parse_eleidx_number = (700, [700,899]) in parse_eleidx_input_all and < parse_eleidx_input \<open>\<close>
+  and parse_eleidx_val = (500, [500,699]) in parse_eleidx_input_all and < parse_eleidx_number \<open>\<close>
+  and parse_eleidx_input_fallback = (1, [1,1]) in parse_eleidx_input_all and < parse_eleidx_val
+      \<open>rejecting all input, meaning the parsing fails\<close>
 
-lemma [\<phi>reason 1000]:
-  \<open> parse_element_index_input_by_semantic_type TY input sidx unwinded pidx reject
+lemma [\<phi>reason %parse_eleidx_input]:
+  \<open> parse_eleidx_input TY input sidx unwinded pidx reject
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input = [] \<or> unwinded \<noteq> []
-\<Longrightarrow> parse_element_index_input_by_semantic_type_at_least_1 TY input sidx unwinded pidx reject\<close>
-  unfolding parse_element_index_input_by_semantic_type_at_least_1_def Premise_def by simp blast
+\<Longrightarrow> parse_eleidx_input_least1 TY input sidx unwinded pidx reject\<close>
+  unfolding parse_eleidx_input_least1_def Premise_def by simp blast
 
-lemma [\<phi>reason 1200]:
-  \<open>parse_element_index_input_by_semantic_type TY [] [] [] [] []\<close>
-  unfolding parse_element_index_input_by_semantic_type_def
+lemma [\<phi>reason %parse_eleidx_input_success]:
+  \<open>parse_eleidx_input TY [] [] [] [] []\<close>
+  unfolding parse_eleidx_input_def
   by simp
 
-lemma [\<phi>reason 1]:
-  \<open>parse_element_index_input_by_semantic_type TY input [] [] [] input\<close>
-  unfolding parse_element_index_input_by_semantic_type_def
+lemma [\<phi>reason default %parse_eleidx_input_fallback]:
+  \<open>parse_eleidx_input TY input [] [] [] input\<close>
+  unfolding parse_eleidx_input_def
   by simp
 
-lemma [\<phi>reason 900]:
-  \<open> is_valid_step_idx_of (AgIdx_S s) TY U
-\<Longrightarrow> parse_element_index_input_by_semantic_type U input sidx unwinded pidx reject
-\<Longrightarrow> parse_element_index_input_by_semantic_type TY
+lemma [\<phi>reason %parse_eleidx_literal_symbol]:
+  \<open> \<g>\<u>\<a>\<r>\<d> is_valid_step_idx_of (AgIdx_S s) TY U
+\<Longrightarrow> parse_eleidx_input U input sidx unwinded pidx reject
+\<Longrightarrow> parse_eleidx_input TY
       ((\<phi>arg.dest (\<phi>literal (\<phi>embed_semantic_symbol s)), S) # input)
       (AgIdx_S s # sidx) (AgIdx_S s # unwinded) (AgIdx_S s # pidx) reject \<close>
-  unfolding parse_element_index_input_by_semantic_type_def is_valid_step_idx_of_def
-  by simp
+  unfolding parse_eleidx_input_def is_valid_step_idx_of_def \<r>Guard_def Ant_Seq_def
+  by clarsimp
 
-lemma [\<phi>reason 850]:
-  \<open> \<phi>arg.dest v \<Turnstile> S @action parse_eleidx_input
-\<Longrightarrow> get_logical_nat_from_semantic_int S n'
-\<Longrightarrow> \<r>nat_to_suc_nat n' n
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U
-\<Longrightarrow> parse_element_index_input_by_semantic_type U input sidx unwinded pidx reject
-\<Longrightarrow> parse_element_index_input_by_semantic_type TY
+lemma [\<phi>reason %parse_eleidx_number]:
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest v \<Turnstile> S @action \<A>parse_eleidx) \<and>\<^sub>\<r>
+          get_logical_nat_from_semantic_int S n' \<and>\<^sub>\<r>
+          \<r>nat_to_suc_nat n' n \<and>\<^sub>\<r>
+          is_valid_step_idx_of (AgIdx_N n) TY U
+\<Longrightarrow> parse_eleidx_input U input sidx unwinded pidx reject
+\<Longrightarrow> parse_eleidx_input TY              
       ((\<phi>arg.dest v, S) # input) (AgIdx_VN v # sidx) (AgIdx_N n # unwinded) (AgIdx_N n' # pidx) reject \<close>
-  unfolding parse_element_index_input_by_semantic_type_def Action_Tag_def
+  unfolding parse_eleidx_input_def Action_Tag_def
             get_logical_nat_from_semantic_int_def AgIdx_VN_def is_valid_step_idx_of_def
-            \<r>nat_to_suc_nat_def
-  by (cases v; simp; metis option.sel)
+            \<r>nat_to_suc_nat_def \<r>Guard_def Ant_Seq_def
+  by (cases v; clarsimp; metis option.sel)
 
-lemma [\<phi>reason 880]:
-  \<open> \<phi>arg.dest (\<phi>literal v) \<Turnstile> S @action parse_eleidx_input
-\<Longrightarrow> get_logical_nat_from_semantic_int {v} n'
-\<Longrightarrow> \<r>nat_to_suc_nat n' n
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U
-\<Longrightarrow> parse_element_index_input_by_semantic_type U input sidx unwinded pidx reject
-\<Longrightarrow> parse_element_index_input_by_semantic_type TY
+lemma [\<phi>reason %parse_eleidx_literal_number]:
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest (\<phi>literal v) \<Turnstile> S @action \<A>parse_eleidx) \<and>\<^sub>\<r>
+          get_logical_nat_from_semantic_int (v \<Ztypecolon> Itself) n' \<and>\<^sub>\<r>
+          \<r>nat_to_suc_nat n' n \<and>\<^sub>\<r>
+          is_valid_step_idx_of (AgIdx_N n) TY U
+\<Longrightarrow> parse_eleidx_input U input sidx unwinded pidx reject
+\<Longrightarrow> parse_eleidx_input TY
       ((\<phi>arg.dest (\<phi>literal v), S) # input) (AgIdx_N n' # sidx) (AgIdx_N n # unwinded) (AgIdx_N n' # pidx) reject \<close>
-  unfolding parse_element_index_input_by_semantic_type_def Action_Tag_def
+  unfolding parse_eleidx_input_def Action_Tag_def
             get_logical_nat_from_semantic_int_def AgIdx_VN_def is_valid_step_idx_of_def
-            \<r>nat_to_suc_nat_def
-  by (simp; metis option.sel)
+            \<r>nat_to_suc_nat_def \<r>Guard_def Ant_Seq_def
+  by (clarsimp; metis option.sel)
+
 
 subsection \<open>Evaluate Index\<close>
 
@@ -394,19 +411,19 @@ section \<open>First-level Abstraction of Instructions\<close>
 
 lemma op_get_aggregate:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> parse_element_index_input_by_semantic_type_at_least_1 TY input_index sidx unwinded pidx reject
+\<Longrightarrow> parse_eleidx_input_least1 TY input_index sidx unwinded pidx reject
 \<Longrightarrow> \<phi>Aggregate_Getter unwinded T U f
 \<Longrightarrow> report_unprocessed_element_index reject
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate sidx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
   unfolding op_get_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Getter_def
-            parse_element_index_input_by_semantic_type_def
-            parse_element_index_input_by_semantic_type_at_least_1_def
+            parse_eleidx_input_def
+            parse_eleidx_input_least1_def
   by (cases rv; simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
 
 lemma op_set_aggregate:
   \<open> Is_Aggregate T
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> parse_element_index_input_by_semantic_type_at_least_1 TY input_index sidx idx pidx reject
+\<Longrightarrow> parse_eleidx_input_least1 TY input_index sidx idx pidx reject
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
 \<Longrightarrow> is_valid_index_of idx TY TY2'
 \<Longrightarrow> Premise eval_aggregate_path (TY2' = TY2 \<or> allow_assigning_different_typ TY idx)
@@ -414,8 +431,8 @@ lemma op_set_aggregate:
 \<Longrightarrow> report_unprocessed_element_index reject
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 sidx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
   unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
-            parse_element_index_input_by_semantic_type_def is_valid_index_of_def
-            parse_element_index_input_by_semantic_type_at_least_1_def
+            parse_eleidx_input_def is_valid_index_of_def
+            parse_eleidx_input_least1_def
   by (cases rv; cases ru; simp, rule, rule, simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
 
 proc op_construct_aggregate:

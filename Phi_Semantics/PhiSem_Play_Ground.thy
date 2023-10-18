@@ -47,13 +47,9 @@ proc test_ptr:
   input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
-  val a, b \<leftarrow> (2, 0)
-  ;; $1[0] \<rightarrow> val t
-    note [[\<phi>trace_reasoning = 2]]
-    ;; $t [2]
-     
-    ;;[2]
-  ;; $1 \<tribullet> $b \<tribullet> $a
+  val a, b \<leftarrow> (2, 0) ;;
+  $1[$b] \<tribullet> $a        ;;
+  $1 \<tribullet> $b \<tribullet> $a
 \<medium_right_bracket> .
 
  
