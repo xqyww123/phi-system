@@ -73,9 +73,6 @@ lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
   by (simp add: can_eq_bool eq_bool)
 
 
-abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
-
-
 section \<open>Abstractions of Boolean Arithmetic\<close>
 
 \<phi>overloads "=" and "\<not>" and "\<and>" and "\<or>"
