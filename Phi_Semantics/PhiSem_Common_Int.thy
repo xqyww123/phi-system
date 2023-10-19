@@ -51,7 +51,9 @@ declare [[\<phi>reason_default_pattern
 and \<open>get_logical_int_from_semantic_int ?S _\<close> \<Rightarrow> \<open>get_logical_int_from_semantic_int ?S _\<close> (100)
 ]]
 
-
+\<phi>reasoner_group logical_spec_of_semantics = (1000, [1000,1000])
+                 for (\<open>get_logical_int_from_semantic_int S i\<close>, \<open>get_logical_nat_from_semantic_int S i\<close>)
+  \<open>returning logical images of semantic representations.\<close>
 
 
 
@@ -146,6 +148,10 @@ declare_\<phi>operator
       \<open>literal number\<close>
   and \<phi>synthesis_transformation = (300, [300, 330]) in \<phi>synthesis < \<phi>synthesis_literal
       \<open>transformation between abstractions, no opcode emits\<close>
+  and synthesis_arith = (100, [100,120]) in \<phi>synthesis and < \<phi>synthesis_transformation
+      \<open>arithmetic operations\<close>
+  and synthesis_arith_cut = (1000, [1000,1020]) in \<phi>synthesis_cut
+      \<open>cutting arithmetic operations\<close>
 
 lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>0\<close>]
 lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>1\<close>]

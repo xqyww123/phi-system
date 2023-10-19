@@ -47,13 +47,13 @@ and  zero_aint[simp]: \<open>Zero aint   = Some (V_aint.mk 0)\<close>
 and \<phi>Sem_aint_to_logic_int[simp]: \<open>\<phi>Sem_int_to_logic_int (V_aint.mk i) = Some i\<close>
 and \<phi>Sem_aint_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (V_aint.mk i) = (if 0 \<le> i then Some (nat i) else None)\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> n
 \<Longrightarrow> get_logical_nat_from_semantic_int (V_aint.mk n \<Ztypecolon> Itself) (nat n)\<close>
   unfolding get_logical_nat_from_semantic_int_def Premise_def
   by simp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open> get_logical_int_from_semantic_int (V_aint.mk n \<Ztypecolon> Itself) n\<close>
   unfolding get_logical_int_from_semantic_int_def Premise_def
   by simp
@@ -82,12 +82,12 @@ lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (simp add: eq_nat_nat_iff)
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<int>) n\<close>
   unfolding get_logical_int_from_semantic_int_def Ball_def
   by clarsimp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> n
 \<Longrightarrow> get_logical_nat_from_semantic_int (n \<Ztypecolon> \<int>) (nat n)\<close>
   unfolding get_logical_nat_from_semantic_int_def Ball_def Premise_def
@@ -131,12 +131,12 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
 
 lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>.
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<nat>) (of_nat n)\<close>
   unfolding get_logical_int_from_semantic_int_def Ball_def
   by clarsimp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open>get_logical_nat_from_semantic_int (n \<Ztypecolon> \<nat>) n\<close>
   unfolding get_logical_nat_from_semantic_int_def Ball_def
   by clarsimp
@@ -296,8 +296,8 @@ paragraph \<open>Addition\<close>
 
 lemma op_add_aint_\<phi>app
   [\<phi>overload +,
-   \<phi>synthesis for _ (100)
-              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
+   \<phi>synthesis for _ (%synthesis_arith)
+              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<o>\<c> op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<int> \<rbrace> \<close>
   unfolding op_aadd_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule,
@@ -305,8 +305,8 @@ lemma op_add_aint_\<phi>app
 
 lemma op_add_anat_\<phi>app
   [\<phi>overload +,
-   \<phi>synthesis for _ (100)
-              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
+   \<phi>synthesis for _ (%synthesis_arith)
+              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<o>\<c> op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat> \<rbrace> \<close>
   \<medium_left_bracket> op_add_aint \<medium_right_bracket> .
 
@@ -314,16 +314,16 @@ lemma op_add_anat_\<phi>app
 paragraph \<open>Subtraction\<close>
 
 lemma op_sub_aint_\<phi>app[\<phi>overload -,
-                       \<phi>synthesis for _ (100)
-                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
+                       \<phi>synthesis for _ (%synthesis_arith)
+                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_asub_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def,
       rule, simp add: Premise_def, rule, simp)
 
 lemma op_sub_anat_\<phi>app[\<phi>overload -,
-                       \<phi>synthesis for _ (100)
-                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
+                       \<phi>synthesis for _ (%synthesis_arith)
+                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_sub_aint \<medium_right_bracket> .
@@ -333,8 +333,8 @@ paragraph \<open>Negation\<close>
 
 lemma op_neg_aint_\<phi>app
   [\<phi>overload ~,
-   \<phi>synthesis for _ (100)
-              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (1200)]:
+   \<phi>synthesis for _ (%synthesis_arith)
+              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<o>\<c> op_aneg rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] \<int> \<longmapsto> \<v>\<a>\<l> -x \<Ztypecolon> \<int> \<rbrace> \<close>
   unfolding op_aneg_def Premise_def
   by (cases rv; simp, rule, simp add: Premise_def, rule, simp)
@@ -343,16 +343,16 @@ lemma op_neg_aint_\<phi>app
 paragraph \<open>Times\<close>
 
 lemma op_mul_aint[\<phi>overload *,
-                  \<phi>synthesis for _ (100)
-                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
+                  \<phi>synthesis for _ (%synthesis_arith)
+                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<o>\<c> op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_amul_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def,
       rule, simp add: Premise_def, rule, simp)
 
 lemma op_mul_anat[\<phi>overload *,
-                  \<phi>synthesis for _ (100)
-                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
+                  \<phi>synthesis for _ (%synthesis_arith)
+                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<o>\<c> op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_mul_aint \<medium_right_bracket>
       certified by (simp add: nat_mult_distrib) .
@@ -361,16 +361,16 @@ lemma op_mul_anat[\<phi>overload *,
 paragraph \<open>Division\<close>
 
 lemma op_udiv_aint_\<phi>app[\<phi>overload /,
-                        \<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
+                        \<phi>synthesis for _ (%synthesis_arith)
+                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_adiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_adiv_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
       rule, simp)
 
 lemma op_udiv_anat_\<phi>app[\<phi>overload /,
-                        \<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
+                        \<phi>synthesis for _ (%synthesis_arith)
+                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_adiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_udiv_aint \<medium_right_bracket>
       certified by (simp add: div_int_pos_iff nat_div_distrib) .
@@ -379,16 +379,16 @@ lemma op_udiv_anat_\<phi>app[\<phi>overload /,
 paragraph \<open>Modulo\<close>
 
 lemma op_mod_aint_\<phi>app[\<phi>overload mod,
-                       \<phi>synthesis for _ (100)
-                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (1200)]:
+                       \<phi>synthesis for _ (%synthesis_arith)
+                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_amod (vy \<^bold>, vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_amod_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
       rule, simp)                  
 
 lemma op_mod_anat_\<phi>app[\<phi>overload mod,
-                       \<phi>synthesis for _ (100)
-                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (1200)]:
+                       \<phi>synthesis for _ (%synthesis_arith)
+                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_amod (vy \<^bold>, vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_mod_aint \<medium_right_bracket>
       certified by (metis nat_int of_nat_0_le_iff zmod_int) .
@@ -405,13 +405,13 @@ lemma op_lshr_aint_pre_\<phi>app:
       rule \<phi>M_assert, simp, rule, simp)
   using drop_bit_int_def by presburger
 
-lemma op_lshr_aint_\<phi>app[\<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. drop_bit y x \<Ztypecolon> _\<close> (1200)]:
+lemma op_lshr_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. drop_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
   \<medium_left_bracket> op_lshr_aint_pre \<medium_right_bracket>.
 
-lemma op_lshr_anat_\<phi>app[\<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>ret. drop_bit y x \<Ztypecolon> _\<close> (1200)]:
+lemma op_lshr_anat_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>ret. drop_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_lshr_aint \<medium_right_bracket>
     certified by (simp add: drop_bit_of_nat)  .
@@ -425,13 +425,13 @@ lemma op_lshl_aint_pre_\<phi>app:
   by (cases raw1; cases raw2; simp; rule, rule, simp add: Premise_def, rule, simp add: Premise_def, rule,
       rule \<phi>M_assert, simp, rule, simp add: push_bit_int_def)
 
-lemma op_lshl_aint_\<phi>app[\<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (1200)]:
+lemma op_lshl_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
   \<medium_left_bracket> op_lshl_aint_pre \<medium_right_bracket>.
 
-lemma op_lshl_anat_\<phi>app[\<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (1200)]:
+lemma op_lshl_anat_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_lshl_aint \<medium_right_bracket>
       certified by (simp add: push_bit_of_nat) .
@@ -440,8 +440,8 @@ lemma op_lshl_anat_\<phi>app[\<phi>synthesis for _ (100)
 paragraph \<open>Less Than\<close>
 
 lemma op_lt_aint[\<phi>overload <,
-                 \<phi>synthesis for _ (100)
-                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
+                 \<phi>synthesis for _ (%synthesis_arith)
+                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_a_lt_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: Premise_def, rule,
@@ -450,8 +450,8 @@ lemma op_lt_aint[\<phi>overload <,
 declare [[\<phi>display_value_internal_name]]
 
 lemma op_lt_anat[\<phi>overload <,
-                 \<phi>synthesis for _ (100)
-                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
+                 \<phi>synthesis for _ (%synthesis_arith)
+                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> op_lt_aint \<medium_right_bracket>.
 
@@ -479,16 +479,16 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 paragraph \<open>Less Equal\<close>
 
 lemma op_le_aint_\<phi>app[\<phi>overload \<le>,
-                      \<phi>synthesis for _ (100)
-                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
+                      \<phi>synthesis for _ (%synthesis_arith)
+                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_a_le_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: Premise_def,
       rule, simp add: Premise_def, rule, simp)
 
 lemma op_le_anat_\<phi>app[\<phi>overload \<le>,
-                      \<phi>synthesis for _ (100)
-                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
+                      \<phi>synthesis for _ (%synthesis_arith)
+                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> op_le_aint \<medium_right_bracket>.
 

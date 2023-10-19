@@ -810,7 +810,18 @@ lemma [\<phi>reason 1050]:
 *)
 
 attribute_setup \<phi>synthesis = \<open>
-  let val pattern = Scan.peek (fn ctxt =>
+  let val arrow = (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>)
+      fun named_term2 read =
+            Args.internal_term --| arrow -- Args.internal_term ||
+            Parse.token Parse.embedded --| arrow -- Parse.token Parse.embedded
+              >> (fn (tok1, tok2) =>
+                  let val [term1, term2] = read [Token.inner_syntax_of tok1, Token.inner_syntax_of tok2]
+                   in Token.assign (SOME (Token.Term term1)) tok1 ;
+                      Token.assign (SOME (Token.Term term2)) tok2 ;
+                      (term1, term2)
+                  end)
+
+      val pattern = Scan.peek (fn ctxt =>
         let val ctxt' = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
             fun read_term raw =
               let val raw1 = map (Syntax.parse_term ctxt') raw
@@ -825,18 +836,18 @@ attribute_setup \<phi>synthesis = \<open>
                   val terms' = Variable.export_terms ctxt'' ctxt' terms
                in terms' end
          in (Args.$$$ "_"  >> (K Phi_Synthesis.No_Pattern))
-         || ((Parse.term --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term)
-                >> (fn (a,b) => case read_term [a,b] of [a',b'] =>
-                                        Phi_Synthesis.Arg_and_Ret (a',b')))
-         || (Parse.term >> (singleton read_term #> Phi_Synthesis.Ret_only))
+         || named_term2 read_term >> Phi_Synthesis.Arg_and_Ret
+         || (Args.named_term (singleton read_term) >> Phi_Synthesis.Ret_only)
         end )
-      val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
+      val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>))
       val pat2 = (Scan.optional (Scan.lift \<^keyword>\<open>for\<close> |-- Parse.and_list1' (pattern -- priority)) [] --
                   Scan.optional (Scan.lift \<^keyword>\<open>except\<close> |-- Parse.and_list1' pattern) [] )
    in Phi_Reasoner.attr_syntax' @{reasoner_group %\<phi>synthesis} pat2
-      (fn (pos, mode, group, pats) =>
-        Thm.declaration_attribute (fn rule =>
-            Phi_Synthesis.declare_rule pos (mode, group) pats rule))
+      (fn (pos, mode, group, raw_pats) =>
+        Thm.declaration_attribute (fn rule => fn ctxt =>
+          let val pats = apfst (map (apsnd (Option.map (fst o Reasoner_Group.check_priority true ctxt)))) raw_pats
+           in Phi_Synthesis.declare_rule pos (mode, group) pats rule ctxt
+          end))
   end
 \<close>
 

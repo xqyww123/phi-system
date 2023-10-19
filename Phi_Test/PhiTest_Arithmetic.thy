@@ -5,7 +5,6 @@ theory PhiTest_Arithmetic
     Phi_Semantics.PhiSem_Variable
     Phi_Semantics.PhiSem_Int_ArbiPrec
     "HOL-Computational_Algebra.Primes"
-  keywords "{" "}" :: "quasi_command"
 begin
 
 proc test_prime:
