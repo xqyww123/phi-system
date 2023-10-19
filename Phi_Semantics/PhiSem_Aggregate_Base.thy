@@ -461,8 +461,10 @@ syntax "_\<phi>Tuple" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> (
 translations
   "_\<phi>Tuple (_\<phi>tuple_args y z)" \<rightleftharpoons> "CONST \<phi>Prod (_\<phi>Tuple (_\<phi>tuple_arg y)) (_\<phi>Tuple z)"
 
-subsection \<open>GEP for Variable\<close>
-
+ML \<open>fun strip_phi_tuple_args (Const(\<^syntax_const>\<open>_\<phi>tuple_args\<close>, _) $ x $ L)
+          = x :: strip_phi_tuple_args L
+      | strip_phi_tuple_args (Const(\<^syntax_const>\<open>_\<phi>tuple_arg\<close>, _) $ x) = [x]
+      | strip_phi_tuple_args _ = error "Bad Syntax"\<close>
 
 
 
@@ -548,7 +550,19 @@ let open Phi_Opr_Stack
 end
 )) \<close>
 
-
+\<phi>lang_parser literal_symbol_in_eleidx (%\<phi>parser_app-250, %\<phi>lang_push_val) [""]
+                                      (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>) \<open>
+fn (oprs,(ctxt,sequent)) =>
+  case #1 oprs
+    of Phi_Opr_Stack.Meta_Opr (_,_,("\<tribullet>",_),_,_,_) :: _ => (
+        Parse.name >> (fn s => fn _ =>
+        (oprs, (ctxt, #transformation_rule Phi_Working_Mode.programming
+                  OF [sequent, Thm.instantiate
+                                  (TVars.empty, Vars.make [((("s",0),\<^typ>\<open>symbol\<close>),
+                                                           Thm.cterm_of ctxt (Phi_Tool_Symbol.mk_symbol s))])
+                                  @{thm "_intro_symbol_"}]))))
+     | _ => Scan.fail
+\<close>
 
 setup \<open>fn thy => thy
 |> Phi_Opr_Stack.decl_postfix (@{priority %\<phi>lang_deref}, "!", SOME 0) |> snd

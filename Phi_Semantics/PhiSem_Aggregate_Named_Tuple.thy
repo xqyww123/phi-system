@@ -1,5 +1,6 @@
 theory PhiSem_Aggregate_Named_Tuple
   imports PhiSem_Aggregate_Base
+  abbrevs "<struct>" = "\<s>\<t>\<r>\<u>\<c>\<t>"
 begin
 
 section \<open>Semantics\<close>
@@ -19,6 +20,60 @@ interpretation named_tuple_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(T
 
 (*TODO: intergrate automatic hidding into the automation command*)
 hide_fact named_tuple_ty_ax
+
+definition \<open>semty_ntup \<equiv> named_tup.mk\<close>
+
+paragraph \<open>Syntax\<close>
+
+abbreviation "semty_ntup_empty" ("\<s>\<t>\<r>\<u>\<c>\<t> {}")
+  where \<open>semty_ntup_empty \<equiv> semty_ntup fmempty\<close>
+
+notation semty_ntup_empty ("struct{}")
+     and semty_ntup_empty ("S{}")
+     and semty_ntup_empty ("\<s>\<t>\<r>\<u>\<c>\<t> { }")
+
+nonterminal semty_ntup_args and semty_ntup_arg
+
+syntax "semty_ntup_arg" :: \<open>\<phi>_symbol_ \<Rightarrow> logic \<Rightarrow> semty_ntup_arg\<close> ("_: _")
+       "semty_ntup_arg0" :: \<open>semty_ntup_arg \<Rightarrow> semty_ntup_args\<close> ("_")
+       "semty_ntup_args" :: \<open>semty_ntup_arg \<Rightarrow> semty_ntup_args \<Rightarrow> semty_ntup_args\<close> ("_, _")
+
+       "_semty_ntup" :: \<open>semty_ntup_args \<Rightarrow> logic\<close> ("struct{_}" [50] 999)
+       "_semty_ntup" :: \<open>semty_ntup_args \<Rightarrow> logic\<close> ("S{_}" [50] 999)
+       "_semty_ntup" :: \<open>semty_ntup_args \<Rightarrow> logic\<close> ("\<s>\<t>\<r>\<u>\<c>\<t> {_}" [50] 999)
+
+parse_translation \<open>[
+  (\<^syntax_const>\<open>_semty_ntup\<close>, fn ctxt => fn [args] =>
+    let fun strip_args (Const(\<^syntax_const>\<open>semty_ntup_args\<close>, _) $ x $ L)
+              = x :: strip_args L
+          | strip_args (Const(\<^syntax_const>\<open>semty_ntup_arg0\<close>, _) $ x) = [x]
+          | strip_args _ = error "Bad Syntax"
+     in \<^Const>\<open>semty_ntup\<close> $
+        fold_rev (fn (Const(\<^syntax_const>\<open>semty_ntup_arg\<close>, _) $ s $ T) => (fn X =>
+                        \<^Const>\<open>fmupd \<^Type>\<open>symbol\<close> \<^Type>\<open>TY\<close>\<close> $ s $ T $ X)
+                   | X => error "Bad Syntax")
+                 (strip_args args) \<^Const>\<open>fmempty \<^Type>\<open>symbol\<close> \<^Type>\<open>TY\<close>\<close>
+    end)
+]\<close>
+
+print_translation \<open>[
+  (\<^const_syntax>\<open>semty_ntup\<close>, fn ctxt => fn [args] =>
+  let fun strip_fmupd (Const(\<^const_syntax>\<open>fmupd\<close>, _) $ s $ v $ L)
+            = (s,v) :: strip_fmupd L
+        | strip_fmupd (Const(\<^const_syntax>\<open>fmempty\<close>, _)) = []
+      fun pass_sym (Const(\<^const_syntax>\<open>mk_symbol\<close>, _) $ X) = Phi_Tool_Symbol.print X
+        | pass_sym X = X
+      fun assemble [(s,v)] =
+            Const(\<^syntax_const>\<open>semty_ntup_arg0\<close>, dummyT) $ (Const(\<^syntax_const>\<open>semty_ntup_arg\<close>, dummyT) $ pass_sym s $ v)
+        | assemble ((s,v)::L) =
+            Const(\<^syntax_const>\<open>semty_ntup_args\<close>, dummyT)
+              $ (Const(\<^syntax_const>\<open>semty_ntup_arg\<close>, dummyT) $ pass_sym s $ v)
+              $ (assemble L)
+      fun assemble' [] = Const(\<^const_syntax>\<open>semty_ntup_empty\<close>, dummyT)
+        | assemble' L = Const(\<^syntax_const>\<open>_semty_ntup\<close>, dummyT) $ assemble L
+   in assemble' (strip_fmupd args)
+  end)
+]\<close>
 
 
 subsubsection \<open>Value\<close>
@@ -44,11 +99,11 @@ subsection \<open>Semantics\<close>
 
 debt_axiomatization
         WT_named_tup[simp]:
-            \<open>Well_Type (named_tup.mk Ts)  = { V_named_tup.mk vs |vs. fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs }\<close>
+            \<open>Well_Type (semty_ntup Ts)  = { V_named_tup.mk vs |vs. fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs }\<close>
   and   zero_named_tup[simp]:
-            \<open>Zero (named_tup.mk Ts) = (if fmpred (\<lambda>_ t. Zero t \<noteq> None) Ts
-                                       then Some (V_named_tup.mk (fmmap (the o Zero) Ts))
-                                       else None)\<close>
+            \<open>Zero (semty_ntup Ts) = (if fmpred (\<lambda>_ t. Zero t \<noteq> None) Ts
+                                     then Some (V_named_tup.mk (fmmap (the o Zero) Ts))
+                                     else None)\<close>
   and   V_named_tup_sep_disj_R:
             \<open>V_named_tup.mk f1 ## vf2 \<Longrightarrow> (\<exists>f2. vf2 = V_named_tup.mk f2)\<close>
   and   V_named_tup_sep_disj_L:
@@ -58,9 +113,9 @@ debt_axiomatization
   and   V_named_tup_mult:
             \<open>V_named_tup.mk f1 * V_named_tup.mk f2 = V_named_tup.mk (f1 ++\<^sub>f f2)\<close>
   and   idx_step_type_tup [eval_aggregate_path]:
-            \<open>s |\<in>| fmdom Ts \<Longrightarrow> idx_step_type (AgIdx_S s) (named_tup.mk Ts) = the (fmlookup Ts s)\<close>
+            \<open>s |\<in>| fmdom Ts \<Longrightarrow> idx_step_type (AgIdx_S s) (semty_ntup Ts) = the (fmlookup Ts s)\<close>
   and   valid_idx_step_named_tup[eval_aggregate_path]:
-            \<open>valid_idx_step (named_tup.mk Ts) j \<longleftrightarrow> j \<in> {AgIdx_S s | s. s |\<in>| fmdom Ts }\<close>
+            \<open>valid_idx_step (semty_ntup Ts) j \<longleftrightarrow> j \<in> {AgIdx_S s | s. s |\<in>| fmdom Ts }\<close>
   and   idx_step_value_named_tup[eval_aggregate_path]:
             \<open>idx_step_value (AgIdx_S s) (V_named_tup.mk vs) = the (fmlookup vs s)\<close>
   and   idx_step_mod_value_named_tup:
@@ -102,8 +157,8 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> V_named_tup.mk fmempty \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>\<phi>SemType (x \<Ztypecolon> Empty_Named_Tuple) (named_tup.mk fmempty)\<close>
-       and \<open>Semantic_Zero_Val (named_tup.mk fmempty) Empty_Named_Tuple ()\<close>
+       and \<open>\<phi>SemType (x \<Ztypecolon> Empty_Named_Tuple) (semty_ntup fmempty)\<close>
+       and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Named_Tuple\<close>
 
 \<phi>adhoc_overloading \<phi>_Empty_Tuple_sugar Empty_Named_Tuple
@@ -117,6 +172,8 @@ subsection \<open>Field\<close>
        and Functional_Transformation_Functor
        and Functionality
        and \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
+
+subsubsection \<open>Syntax\<close>
 
 syntax "\<phi>_named_tuple_" :: \<open>\<phi>_symbol_ \<Rightarrow> logic \<Rightarrow> \<phi>_tuple_arg_\<close> ("_: _")
 
@@ -140,11 +197,13 @@ print_translation \<open>[
               $ T)))
 ]\<close>
 
+subsubsection \<open>Properties\<close>
+
 let_\<phi>type Named_Tuple_Field
   deriving \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-         \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) (named_tup.mk (fmupd s TY fmempty))\<close>
+         \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) (semty_ntup (fmupd s TY fmempty))\<close>
        and \<open> Semantic_Zero_Val ty T x
-         \<Longrightarrow> Semantic_Zero_Val (named_tup.mk (fmupd s ty fmempty)) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> x \<close>
+         \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> x \<close>
 
 lemma Empty_Tuple_reduce[simp]:
   \<open>(((),a) \<Ztypecolon> Empty_Named_Tuple \<^emph> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) = (a \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>)\<close>
@@ -160,8 +219,8 @@ lemma Empty_Tuple_reduce[simp]:
 lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   \<open> s |\<notin>| fmdom tys
 \<Longrightarrow> Semantic_Zero_Val ty T x
-\<Longrightarrow> Semantic_Zero_Val (named_tup.mk tys) Ts xs
-\<Longrightarrow> Semantic_Zero_Val (named_tup.mk (fmupd s ty tys)) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
+\<Longrightarrow> Semantic_Zero_Val (semty_ntup tys) Ts xs
+\<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty tys)) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding Semantic_Zero_Val_def
   apply (clarsimp; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>;
      auto simp add: inj_image_mem_iff fmmap_fmupd
@@ -173,8 +232,8 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
 
 lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (named_tup.mk TYs)
-\<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts)) (named_tup.mk (fmupd s TY TYs))\<close>
+\<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (semty_ntup TYs)
+\<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts)) (semty_ntup (fmupd s TY TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
   by (clarsimp; metis V_named_tup_mult fmadd_empty(2) fmadd_fmupd fmrel_upd)
 
@@ -185,20 +244,20 @@ subsection \<open>Semantics Related\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx+20]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s = s'
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (named_tup.mk (fmupd s TY Tys)) TY \<close>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup (fmupd s TY Tys)) TY \<close>
   unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s \<noteq> s'
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (named_tup.mk Tys) RET
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (named_tup.mk (fmupd s TY Tys)) RET \<close>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup Tys) RET
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup (fmupd s TY Tys)) RET \<close>
   unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx+20]:
-  \<open> FAIL TEXT(s \<open>is not a field in the named tuple\<close>)
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s) (named_tup.mk fmempty) RET \<close>
+  \<open> FAIL TEXT(s \<open>is not a field of the named tuple\<close>)
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s) (semty_ntup fmempty) RET \<close>
   unfolding \<r>Guard_def Premise_def FAIL_def
   by blast
 
@@ -278,7 +337,7 @@ lemma [\<phi>reason %aggregate_access+1]:
   by (clarsimp simp add: \<r>Guard_def Premise_def, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (named_tup.mk fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
   by clarsimp
 
@@ -286,17 +345,17 @@ lemma [\<phi>reason %aggregate_access+20]:
   \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
-          (named_tup.mk (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>)\<close>
+          (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (named_tup.mk TyR) (r \<Ztypecolon> R)
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
-          (named_tup.mk (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> R)\<close>
+          (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> R)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
   subgoal for vs

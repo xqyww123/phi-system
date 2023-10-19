@@ -397,7 +397,7 @@ val _ =
              |> rpair (if is_eof_toks toks then [Token.eof] else []))
 
 fun statement_cmd_no_auto toks = (Phi_CP_IDE.eval_line (Symtab.empty, SOME 3, SOME 1) (toks @ [Token.eof]),
-                                  if is_eof_toks (@{print} toks) then [Token.eof] else [])
+                                  if is_eof_toks toks then [Token.eof] else [])
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"

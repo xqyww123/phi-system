@@ -134,7 +134,7 @@ fun value_assigner (b,eleidx) (ctxt,_) =
 let
   val _ = if Generic_Element_Access.is_empty_input (Thm.term_of eleidx)
           then ()
-          else error "Cannot assign partially to an element of a local value"
+          else error "Cannot assign to a member field of a local value"
   val xname = Binding.name_of b
   val (vname, ctxt) =
         case get_internal_val_name xname ctxt
@@ -156,7 +156,7 @@ fun optimized_value_assign bs stat =
         val _ = if forall (fn ((_,eleidx),_) =>
                       Generic_Element_Access.is_empty_input (Thm.term_of eleidx)) bs
                 then ()
-                else error "Cannot assign partially to an element of a local value"
+                else error "Cannot assign to a member field of a local value"
         val (vnames, ctxt) = fold_map (fn ((b,_),_) => fn ctxt =>
               case get_internal_val_name (Binding.name_of b) ctxt
                 of SOME vname => (vname, ctxt)

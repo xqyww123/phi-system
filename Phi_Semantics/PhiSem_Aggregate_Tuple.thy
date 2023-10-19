@@ -1,5 +1,6 @@
 theory PhiSem_Aggregate_Tuple
   imports PhiSem_Aggregate_Base
+  abbrevs "<tup>" = "\<t>\<u>\<p>"
 begin
 
 section \<open>Semantics\<close>
@@ -19,6 +20,57 @@ interpretation tuple_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<cl
 (*TODO: intergrate automatic hidding into the automation command*)
 hide_fact tuple_ty_ax
 
+definition \<open>semty_tup \<equiv> tup.mk\<close>
+
+paragraph \<open>Syntax\<close>
+
+abbreviation semty_tup_empty ("\<t>\<u>\<p> {}")
+  where \<open>semty_tup_empty \<equiv> semty_tup []\<close>
+
+notation semty_tup_empty ("tup{}")
+     and semty_tup_empty ("T{}")
+     and semty_tup_empty ("\<t>\<u>\<p> { }")
+
+syntax "\<phi>_tuple_" :: \<open>logic \<Rightarrow> \<phi>_tuple_arg_\<close> ("_")
+
+       "_semty_tup" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("tup{_}" [50] 999)
+       "_semty_tup" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("T{_}" [50] 999)
+       "_semty_tup" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("\<t>\<u>\<p> {_}" [50] 999)
+
+parse_translation \<open>[
+  (\<^syntax_const>\<open>_semty_tup\<close>, fn ctxt => fn [args] =>
+    \<^Const>\<open>semty_tup\<close> $
+    fold_rev (fn (Const(\<^syntax_const>\<open>\<phi>_tuple_\<close>, _) $ T) => (fn X => \<^Const>\<open>list.Cons \<^Type>\<open>TY\<close>\<close> $ T $ X)
+               | _ => error "Bad Syntax")
+             (strip_phi_tuple_args args) \<^Const>\<open>list.Nil \<^Type>\<open>TY\<close>\<close>)
+]\<close>
+
+print_translation \<open>[
+  (\<^const_syntax>\<open>semty_tup\<close>, fn ctxt => fn [args] =>
+  let fun strip_list (Const(\<^const_syntax>\<open>list.Cons\<close>, _) $ T $ L)
+            = T :: strip_list L
+        | strip_list (Const(\<^const_syntax>\<open>list.Nil\<close>, _)) = []
+      fun assemble [T] =
+            Const(\<^syntax_const>\<open>_\<phi>tuple_arg\<close>, dummyT) $ (Const(\<^syntax_const>\<open>\<phi>_tuple_\<close>, dummyT) $ T)
+        | assemble (T::L) =
+            Const(\<^syntax_const>\<open>_\<phi>tuple_args\<close>, dummyT)
+              $ (Const(\<^syntax_const>\<open>_\<phi>tuple_arg\<close>, dummyT) $ (Const(\<^syntax_const>\<open>\<phi>_tuple_\<close>, dummyT) $ T))
+              $ (assemble L)
+      fun assemble' [] = Const(\<^const_syntax>\<open>semty_tup_empty\<close>, dummyT)
+        | assemble' L = Const(\<^syntax_const>\<open>_semty_tup\<close>, dummyT) $ assemble L
+   in assemble' (strip_list args)
+  end)
+]\<close>
+
+(*
+  "_semty_tup_arg0 (_semty_tup_arg s x)" <= "CONST list.Cons (_MK_SYMBOL_ s) x CONST fmempty"
+  "_semty_tup_arg0 (_semty_tup_arg s x)" == "CONST list.Cons s x CONST fmempty"
+  "_semty_tup_args (_semty_tup_arg s x) r" <= "CONST fmupd (_MK_SYMBOL_ s) x r"
+  "_semty_tup_args (_semty_tup_arg s x) r" == "CONST fmupd s x r"
+*)
+
+
+
 subsubsection \<open>Value\<close>
 
 virtual_datatype tuple_val =
@@ -32,18 +84,16 @@ interpretation tuple_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)
 
 hide_fact tuple_val_ax
 
-abbreviation \<open>tup \<equiv> tup.mk\<close>
-
 subsection \<open>Semantics\<close>
 
 debt_axiomatization
-        WT_tup[simp]: \<open>Well_Type (tup ts)  = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
-  and   zero_tup[simp]: \<open>Zero (tup Ts)     = map_option V_tup.mk (those (map Zero Ts))\<close>
+        WT_tup[simp]: \<open>Well_Type (semty_tup ts)  = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
+  and   zero_tup[simp]: \<open>Zero (semty_tup Ts)     = map_option V_tup.mk (those (map Zero Ts))\<close>
   and   V_tup_sep_disj_R[simp]: \<open>V_tup.mk l1 ## vl2 \<longleftrightarrow> (\<exists>l2. vl2 = V_tup.mk l2)\<close>
   and   V_tup_sep_disj_L[simp]: \<open>vl1 ## V_tup.mk l2 \<longleftrightarrow> (\<exists>l1. vl1 = V_tup.mk l1)\<close>
   and   V_tup_mult    : \<open>V_tup.mk l1 * V_tup.mk l2 = V_tup.mk (l2 @ l1)\<close>
-  and   idx_step_type_tup [eval_aggregate_path] : \<open>i < length tys \<Longrightarrow> idx_step_type (AgIdx_N i) (tup tys) = tys!i \<close>
-  and   valid_idx_step_tup[eval_aggregate_path] : \<open>valid_idx_step (tup tys) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < length tys}\<close>
+  and   idx_step_type_tup [eval_aggregate_path] : \<open>i < length tys \<Longrightarrow> idx_step_type (AgIdx_N i) (semty_tup tys) = tys!i \<close>
+  and   valid_idx_step_tup[eval_aggregate_path] : \<open>valid_idx_step (semty_tup tys) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < length tys}\<close>
   and   idx_step_value_tup[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (V_tup.mk vs) = vs!i\<close>
   and   idx_step_mod_value_tup : \<open>idx_step_mod_value (AgIdx_N i) f (V_tup.mk vs) = V_tup.mk (vs[i := f (vs!i)])\<close>
 
@@ -61,7 +111,7 @@ primrec semantic_tuple_constructor
             V_tup.mk (\<phi>arg.dest v # V_tup.dest (semantic_tuple_constructor R))\<close>
 
 (* lemma Valid_Type_\<tau>Tuple[simp]:
-  \<open>Valid_Type (tup Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
+  \<open>Valid_Type (semty_tup Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
   unfolding Inhabited_def
   by (simp; induct Ts; simp add: list_all2_Cons1) *)
 
@@ -75,8 +125,8 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>x \<Ztypecolon> Empty_Tuple \<equiv> V_tup.mk [] \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>\<phi>SemType (x \<Ztypecolon> Empty_Tuple) (tup [])\<close>
-       and \<open>Semantic_Zero_Val (tup []) Empty_Tuple ()\<close>
+       and \<open>\<phi>SemType (x \<Ztypecolon> Empty_Tuple) (semty_tup [])\<close>
+       and \<open>Semantic_Zero_Val (semty_tup []) Empty_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Tuple\<close>
 
 \<phi>adhoc_overloading \<phi>_Empty_Tuple_sugar Empty_Tuple
@@ -91,12 +141,10 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        and Functionality
        and \<open>\<phi>SemType (x \<Ztypecolon> T) TY
-        \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Tuple_Field T) (tup [TY])\<close>
+        \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Tuple_Field T) (semty_tup [TY])\<close>
        and \<open>Semantic_Zero_Val TY T x
-        \<Longrightarrow> Semantic_Zero_Val (tup [TY]) (Tuple_Field T) x \<close>
+        \<Longrightarrow> Semantic_Zero_Val (semty_tup [TY]) (Tuple_Field T) x \<close>
        and \<open>Is_Aggregate (Tuple_Field T)\<close>
-
-syntax "\<phi>_tuple_" :: \<open>logic \<Rightarrow> \<phi>_tuple_arg_\<close> ("_")
 
 translations
   "_\<phi>Tuple (_\<phi>tuple_arg (\<phi>_tuple_ X))" \<rightleftharpoons> "CONST Tuple_Field X"
@@ -112,8 +160,8 @@ lemma Empty_Tuple_reduce[simp]:
 
 lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   \<open> Semantic_Zero_Val ty T x
-\<Longrightarrow> Semantic_Zero_Val (tup tys) Ts xs
-\<Longrightarrow> Semantic_Zero_Val (tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
+\<Longrightarrow> Semantic_Zero_Val (semty_tup tys) Ts xs
+\<Longrightarrow> Semantic_Zero_Val (semty_tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding Semantic_Zero_Val_def
   by (clarsimp simp add: V_tup_mult_cons image_iff, insert V_tup_sep_disj_L, blast)
 
@@ -121,8 +169,8 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<phi>SemType (fst x_xs \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (snd x_xs \<Ztypecolon> Ts) (tup TYs)
-\<Longrightarrow> \<phi>SemType (x_xs \<Ztypecolon> (\<lbrace> T \<rbrace> \<^emph> Ts)) (tup (TY#TYs))\<close>
+\<Longrightarrow> \<phi>SemType (snd x_xs \<Ztypecolon> Ts) (semty_tup TYs)
+\<Longrightarrow> \<phi>SemType (x_xs \<Ztypecolon> (\<lbrace> T \<rbrace> \<^emph> Ts)) (semty_tup (TY#TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
   by (clarsimp, metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
 
@@ -132,13 +180,13 @@ section \<open>Reasoning\<close>
 subsection \<open>Show validity of an index for a type\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> is_valid_step_idx_of (AgIdx_N 0) (tup (Ty # Tys)) Ty \<close>
+  \<open> is_valid_step_idx_of (AgIdx_N 0) (semty_tup (Ty # Tys)) Ty \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> is_valid_step_idx_of (AgIdx_N i) (tup Tys) RET
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_N (Suc i)) (tup (Ty # Tys)) RET \<close>
+  \<open> is_valid_step_idx_of (AgIdx_N i) (semty_tup Tys) RET
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N (Suc i)) (semty_tup (Ty # Tys)) RET \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
@@ -193,22 +241,22 @@ lemma [\<phi>reason %aggregate_access]:
 
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor [] (tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor [] (semty_tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor [v] (tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
+\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor [v] (semty_tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
   by (cases v; clarsimp; blast)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor vR (tup Tys) (r \<Ztypecolon> Tr)
-\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor (v # vR) (tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
+\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor vR (semty_tup Tys) (r \<Ztypecolon> Tr)
+\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor (v # vR) (semty_tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
   by (cases v; clarsimp; metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 

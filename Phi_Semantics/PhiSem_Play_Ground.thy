@@ -44,14 +44,24 @@ thm rat_add_def
 
 
 proc test_ptr:
-  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (\<t>\<u>\<p> {\<t>\<u>\<p> {aint}, aint, aint}), \<int> \<rbrace>\<close>
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 0) ;;
   $1[$b]\<tribullet>$a\<tribullet>0 ;;
   $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
+
+no_notation Set.member ("(_/ : _)" [51, 51] 50)
  
+proc test_ptr2:
+  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<p>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: aint, x: \<t>\<u>\<p> {aint, \<s>\<t>\<r>\<u>\<c>\<t> {q: aint, w: aint}}, y: aint}, \<int> \<rbrace>\<close>
+  output \<open>ptr \<tribullet>\<^sub>a x \<tribullet>\<^sub>a 1\<^sup>\<t>\<^sup>\<h>  \<tribullet>\<^sub>a w \<Ztypecolon> \<v>\<a>\<l> \<p>\<t>\<r> aint\<close>
+\<medium_left_bracket>
+  val a, b \<leftarrow> (0, 1) ;
+  $1[$a]\<tribullet>x\<tribullet>$b\<tribullet>w
+\<medium_right_bracket> .
+
 proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
@@ -59,6 +69,16 @@ proc test_agg2:
   var v \<leftarrow> $1 ;
   $v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
   $v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
+  $v
+\<medium_right_bracket> .
+
+proc test_agg3:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<int>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<nat>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 ;
+  $v \<tribullet> x \<tribullet> n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
+  $v \<tribullet> x \<tribullet> m \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
   $v
 \<medium_right_bracket> .
 
@@ -229,6 +249,5 @@ proc YYY2:
 thm YYY2_def
 *)
 
-  thm "!_\<phi>app"
 
 end

@@ -526,7 +526,7 @@ lemma RawPointer_eqcmp[\<phi>reason 1200]:
 
 subsubsection \<open>Logical Pointer\<close>
 
-\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>"
+\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<p>\<t>\<r> _" [999] 998)
   where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> logaddr_type x = TY\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>
