@@ -163,16 +163,11 @@ proc FIB2:
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
-thm FIB2_def
-
-declare [[\<phi>trace_reasoning = 2]]
 
 proc YYY:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + of_nat b + c \<Ztypecolon> \<int>\<close>
-  \<medium_left_bracket> \<open>of_nat $b\<close>
-
-    ;; \<open>$a + of_nat $b + $c\<close> \<medium_right_bracket>.
+  \<medium_left_bracket> \<open>$a + of_nat $b + $c\<close> \<medium_right_bracket>.
 
 proc YYY2:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
@@ -213,7 +208,7 @@ proc
   \<medium_right_bracket> (*loop body*)
   $v
 \<medium_right_bracket>.
-  
+
 proc
   input \<open>\<v>\<a>\<l> b \<Ztypecolon> \<bool>\<close>
   output \<open>(if b then 32 else 24) \<Ztypecolon> \<v>\<a>\<l> (if b then \<nat>(32) else \<nat>(16))\<close>

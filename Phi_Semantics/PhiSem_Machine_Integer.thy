@@ -528,7 +528,7 @@ subsubsection \<open>Constant Integer\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma op_const_word_\<phi>app[\<phi>reason %ToA_mk_literal]:
+lemma op_const_word_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n : unat n'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n' \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n))] Word('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
@@ -536,7 +536,7 @@ lemma op_const_word_\<phi>app[\<phi>reason %ToA_mk_literal]:
   semantic_literal \<open>V_int.mk (LENGTH('b),n) \<Turnstile> (n' \<Ztypecolon> Word('b))\<close>
 \<medium_right_bracket> .
 
-lemma op_const_nat_\<phi>app[\<phi>reason %ToA_mk_literal]:
+lemma op_const_nat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n < 2 ^ LENGTH('b)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n' : n
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n'))] \<nat>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
@@ -546,7 +546,7 @@ lemma op_const_nat_\<phi>app[\<phi>reason %ToA_mk_literal]:
   certified by (simp add: \<phi> unat_of_nat_len)
 \<medium_right_bracket> .
 
-lemma op_const_natR_\<phi>app[\<phi>reason %ToA_mk_literal]:
+lemma op_const_natR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n' : n mod 2 ^ LENGTH('b)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n'))] \<nat>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn

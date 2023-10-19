@@ -665,20 +665,41 @@ declare [[\<phi>reason_default_pattern
       \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (100)
   and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
       \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (110)
+  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (100)
+  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (110)
+    \<comment> \<open>In ordinary reasoning of ToA, the target \<phi>-type has to be given while the target object is
+        optional, as it yields a function from the source object to the target. However, in synthesis
+        process, this is reversed where the \<phi>-type can be unknown but the target object, as the target
+        of the synthesis, has to be given. For this reason, we cannot always simply reuse ToA reasoning
+        but may provide (or at least declare, as there is rule generation from ToA rules) specific rules.\<close>
+  and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _  @action synthesis\<close> \<Rightarrow>
+      \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action synthesis\<close>   (100)
+  and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action synthesis\<close> \<Rightarrow>
+      \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action synthesis\<close>   (100)
   and \<open>?X @action synthesis\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Synthesis rule\<close> \<newline> ?X \<newline> \<open>expect: \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?R \<heavy_comma> \<blangle> Target \<brangle> \<rbrace>\<close>\<close>)\<close> (0)
+      \<open>ERROR TEXT(\<open>Malformed Synthesis rule\<close> \<newline> ?X)\<close> (0)
 ]]
 
 \<phi>reasoner_group \<phi>synthesis_all = (100, [1, 3000]) for \<open>_ @action synthesis\<close>
       \<open>Rules implementing Synthesis mechanism of IDE-CP\<close>
   and \<phi>synthesis_red = (2500, [2500, 2799]) in \<phi>synthesis_all
       \<open>Reductions and Evaluations\<close>
-  and \<phi>synthesis = (100, [100, 130]) in \<phi>synthesis_all
+  and \<phi>synthesis = (100, [10, 500]) in \<phi>synthesis_all
       \<open>usual rules\<close>
-  and \<phi>synthesis_cut = (1000, [1000, 2000]) in \<phi>synthesis_all and > \<phi>synthesis and < \<phi>synthesis_red
+  and \<phi>synthesis_literal = (470, [450, 500]) in \<phi>synthesis
+      \<open>literal\<close>
+  and \<phi>synthesis_fallback = (9, [9,9]) in \<phi>synthesis_all and < \<phi>synthesis
+      \<open>fallbacks\<close>
+  and \<phi>synthesis_cut = (1000, [1000, 1500]) in \<phi>synthesis_all and > \<phi>synthesis and < \<phi>synthesis_red
       \<open>cutting rules\<close>
-  and \<phi>synthesis_split = (1230, [1230, 1250]) in \<phi>synthesis_cut
+  and \<phi>synthesis_split = (1530, [1530, 1550]) in \<phi>synthesis_all and > \<phi>synthesis_cut
       \<open>Splitting the targets into each sub-reasoning goal\<close>
+  and \<phi>synthesis_normalize = (2000, [2000,2400]) in \<phi>synthesis_all and > \<phi>synthesis_split
+      \<open>normalization\<close>
+  and \<phi>synthesis_weak_normalize = (800, [800,900]) in \<phi>synthesis_all and < \<phi>synthesis_cut
+      \<open>normalization with backtracking\<close>
 
   and interp_\<phi>synthesis = (%cutting, [%cutting, %cutting+30]) for \<open>PROP DoSynthesis _ _ _\<close>
       \<open>describing how to carry out the synthesis in detail on specific IDE-CP sequent\<close>
@@ -794,19 +815,23 @@ consts post_synthesis_simp :: mode
 
 subsubsection \<open>Synthesis Operations\<close>
 
-paragraph \<open>Fallbacks\<close>
+paragraph \<open>Fallback\<close>
 
 text \<open>On programming mode, the synthesis operation always tries to find a procedure.
   View shifts have to be wrapped in a procedure. The following is an automatic wrapper. \<close>
 
 lemma Synthesis_Proc_fallback_VS
-  [\<phi>reason 10 for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?X' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]:
+  [\<phi>reason default %\<phi>synthesis_fallback for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>v. ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]:
   \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @action synthesis\<close>
   unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def Satisfaction_def
   by simp
 
-text \<open>The fallback from VS to IMP is given by @{thm view_shift_by_implication}\<close>
+lemma [\<phi>reason default %\<phi>synthesis_fallback]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action synthesis
+\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action synthesis \<close>
+  unfolding Action_Tag_def
+  using view_shift_by_implication .
 
 
 paragraph \<open>Construction on Programming\<close>

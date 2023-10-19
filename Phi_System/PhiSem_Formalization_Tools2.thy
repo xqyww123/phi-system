@@ -139,25 +139,19 @@ lemma semantic_local_value_\<phi>app:
   by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
 
 
-subsection \<open>Reasoning Configure\<close>
+subsection \<open>Synthesis of Literal Value\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
-      \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>
-      \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _]  _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (100) ]]
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _]  _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (500) ]]
 
-\<phi>reasoner_group (*ToA_mk_literal_cut = (1000, [1000,1030]) in ToA_cut
-      \<open>cutting rule synthesizing literal local values\<close>
-  and*) ToA_mk_literal = (100, [100,130]) in ToA
-      \<open>synthesizing literal local values\<close>
+lemma "_synthesis_literal_":
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> @action synthesis\<close>
+  unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Transformation_def
+  by (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set INTERP_SPEC, blast)
 
-(*
-lemma [\<phi>reason %\<phi>synthesis_cut]:
-  \<open> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal u] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal u) \<lbrace> S1 \<longmapsto> \<lambda>v. y \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @action synthesis \<close>
-  unfolding Action_Tag_def \<phi>Procedure_def det_lift_def Return_def Transformation_def
-  by (clarsimp simp add: INTERP_SPEC; blast)
-*)
 
 subsection \<open>Drop & Duplicate Value\<close>
 

@@ -59,7 +59,8 @@ fun declare_overloaded_operator signat0 pos (mode, (priority, group)) ctxt0 =
                 Thm.pretty_thm ctxt rule
               ])
 
-      val ret_val_ty = Procedure_Syntax.dest_argT (domain_type (Term.fastype_of ret))
+      val (dom_ty, rng_ty) = Term.dest_funT (Term.fastype_of ret)
+      val ret_val_ty = Procedure_Syntax.dest_argT dom_ty
       val pattern1 = \<^pattern_prop>\<open>PROP Gen_Synthesis_Rule
                         (Trueprop (\<forall>vs::?'a. \<p>\<r>\<o>\<c> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?YY ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E)) ?An ?Re\<close>
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
@@ -68,12 +69,25 @@ fun declare_overloaded_operator signat0 pos (mode, (priority, group)) ctxt0 =
                         (Trueprop (\<forall>vs::?'a. \<p>\<r>\<o>\<c> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E)) ?An ?Re\<close>
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
+
+      val idx = maxidx_of_term ret + 1
+      val no_val_ret =
+            case Seq.chop 2 (Unify.hounifiers (Context.Proof ctxt, Envir.empty idx, [(ret, Abs("",dom_ty, Var(("X",0),rng_ty)))]))
+              of ([(env, _)], _) => SOME (Envir.norm_term env (Var(("X",0),rng_ty)))
+               | _ => NONE
+      val synthesis_mode = Option.map (fn ret' =>
+            Drule.infer_instantiate ctxt [(("A",0),Thm.cterm_of ctxt ret')] @{thm' synthesis_gen_mode_overloaded_I}
+          ) no_val_ret
+
    in ctxt0
    |> Phi_Reasoner.add_rule pos mode (priority, group) ([],[]) NONE [rule]
    |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %\<phi>synthesis_gen_by_overloading}
                    ([(pattern1,NONE)],[]) NONE [@{thm make_overloaded_synthesis_rule}]
    |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %\<phi>synthesis_gen_by_overloading+10}
                    ([(pattern2,NONE)],[]) NONE [@{thm make_overloaded_synthesis_rule'}]
+   |> is_some synthesis_mode ? (fn ctxt =>
+      Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %synthesis_gen_mode_overridded}
+                   ([],[]) NONE [the synthesis_mode] ctxt)
   end
 
 

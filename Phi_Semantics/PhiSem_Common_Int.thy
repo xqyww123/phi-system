@@ -141,67 +141,16 @@ declare_\<phi>operator
   infix  50 >
   infix  50 \<ge>
 
-(*
-definition \<open>MK_CONST x \<equiv> x\<close>
+\<phi>reasoner_group \<phi>synthesis_literal_number = (%\<phi>synthesis_literal, [%\<phi>synthesis_literal, %\<phi>synthesis_literal+10])
+                                             in \<phi>synthesis_literal
+      \<open>literal number\<close>
+  and \<phi>synthesis_transformation = (300, [300, 330]) in \<phi>synthesis < \<phi>synthesis_literal
+      \<open>transformation between abstractions, no opcode emits\<close>
 
-lemma synthesis_const:
-  \<open> \<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
-  unfolding Action_Tag_def MK_CONST_def .
-*)
-
-lemma synthesis_const_by_imp:
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> @action synthesis\<close>
-  unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Transformation_def
-  by (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set INTERP_SPEC, blast)
-
-
-(*lemma make_synthesis_rule_for_const:
-  \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R\<heavy_comma> E e)
-\<Longrightarrow> PROP Gen_Synthesis_Rule
-          (Trueprop (\<forall>vs::unit \<phi>arg. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. const \<Ztypecolon> T ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
-          Ant
-          (X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> Any1
-       \<Longrightarrow> PROP Ant
-       \<Longrightarrow> \<p>\<r>\<o>\<c> F \<phi>V_none \<lbrace> X' \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
-           @action overloaded_synthesis)\<close>
-  unfolding split_paired_All_\<phi>arg_unit
-  using make_overloaded_synthesis_rule[where 'a = \<open>unit \<phi>arg\<close> and X' = \<open>\<lambda>_. X'\<close>,
-      unfolded split_paired_All_\<phi>arg_unit split_paired_all_\<phi>arg_unit] .
-
-lemma make_synthesis_rule'_for_const:
-  \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R'\<heavy_comma> E e)
-\<Longrightarrow> PROP Gen_Synthesis_Rule
-          (Trueprop (\<forall>vs::unit \<phi>arg. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
-          Ant
-          (X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> Any1
-       \<Longrightarrow> PROP Ant
-       \<Longrightarrow> \<p>\<r>\<o>\<c> F \<phi>V_none \<lbrace> X' \<longmapsto> \<lambda>ret. R'\<heavy_comma> R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
-           @action synthesis)\<close>
-  unfolding MK_CONST_def split_paired_All_\<phi>arg_unit
-  using make_synthesis_rule'[where 'a = \<open>unit \<phi>arg\<close>,
-      unfolded split_paired_All_\<phi>arg_unit split_paired_all_\<phi>arg_unit] .
-
-
-lemmas [\<phi>reason 160]
-  = synthesis_const[where const=\<open>0\<close>]
-lemmas [\<phi>reason 160]
-  = synthesis_const[where const=\<open>1\<close>]
-lemmas [\<phi>reason 160]
-  = synthesis_const[where const=\<open>numeral x\<close> for x]
-lemmas [\<phi>reason 160]
-  = synthesis_const[where const=\<open>- numeral x\<close> for x]
-*)
-
-lemmas [\<phi>reason 180]
-  = synthesis_const_by_imp[where const=\<open>0\<close>]
-lemmas [\<phi>reason 180]
-  = synthesis_const_by_imp[where const=\<open>1\<close>]
-lemmas [\<phi>reason 180]
-  = synthesis_const_by_imp[where const=\<open>numeral x\<close> for x]
-lemmas [\<phi>reason 180]
-  = synthesis_const_by_imp[where const=\<open>- numeral x\<close> for x]
+lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>0\<close>]
+lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>1\<close>]
+lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>numeral x\<close> for x]
+lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>- numeral x\<close> for x]
 
 (*
 lemmas [\<phi>reason 2000 for \<open>PROP Gen_Synthesis_Rule (
@@ -212,18 +161,18 @@ lemmas [\<phi>reason 2010 for \<open>PROP Gen_Synthesis_Rule (
   = make_synthesis_rule'_for_const[where const = x for x :: \<open>'a::numeral\<close>]
 *)
 
-lemma [\<phi>reason 200]:
+lemma [\<phi>reason %\<phi>synthesis_normalize]:
   \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. 1 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. Suc 0 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
   unfolding One_nat_def .
 
-lemma [\<phi>reason 200]:
+lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
   \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
   for x :: nat
   unfolding push_bit_nat_def .
 
-lemma [\<phi>reason 200]:
+lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
   \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
   for x :: int

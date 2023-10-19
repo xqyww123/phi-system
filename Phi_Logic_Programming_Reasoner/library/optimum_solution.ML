@@ -60,7 +60,7 @@ fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
       fun prt () = Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.block [
                       Pretty.str "PLPR_Optimum_Solution: current score: ",
                       Pretty.str (string_of_int cost),
-                      Pretty.str ", swithcing to another search branch..."
+                      Pretty.str ", switching to another search branch..."
                    ])
    in case Stack.get ctxt
         of [] => SOME ((ctxt,sequent), Seq.empty)

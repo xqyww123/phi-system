@@ -129,9 +129,7 @@ section \<open>Abstraction of Instructions\<close>
 
 subsubsection \<open>Constant\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
-lemma op_const_areal_\<phi>app[\<phi>reason %ToA_mk_literal]:
+lemma op_const_areal_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> Is_Literal x
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
