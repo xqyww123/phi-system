@@ -30,8 +30,7 @@ ML \<open>
 structure Phi_Programming_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>\<phi>programming_simps\<close>
-  val comment = "Simplification rules used in the deductive programming.\n\
-                \Any rule declared here is also declared in the system global simp set automatically."
+  val comment = "Simplification rules used in the deductive programming, including the \<phi>programming_base_simps."
   val attribute = NONE
   val post_merging = I
 )
@@ -292,6 +291,7 @@ ML_file \<open>library/system/premise_attribute.ML\<close>
 paragraph \<open>Configuring Existing Antecedents\<close>
 
 declare [[
+  \<phi>premise_attribute? [\<phi>declare] for \<open>PROP _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Is_Literal _\<close>,
 
   \<phi>premise_attribute_ML \<open>fn _ => Thm.declaration_attribute (fn thm => fn ctxt =>

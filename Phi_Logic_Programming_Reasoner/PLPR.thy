@@ -928,6 +928,17 @@ lemma [\<phi>reason %meta_ball]:
 hide_fact Ball_for_reason
 
 
+subsubsection \<open>Contextual Lemmata\<close>
+
+ML \<open>
+structure Useful_Thms = Named_Thms (
+  val name = \<^binding>\<open>useful\<close>
+  val description = "theorems to be inserted in the automatic proving, \
+        \having the same effect of using the @{command using} command."
+) \<close>
+
+setup \<open>Useful_Thms.setup\<close>
+
 
 subsection \<open>General Rules\<close>
 
@@ -1220,6 +1231,15 @@ subsubsection \<open>ML Implementation\<close>
 
 ML_file \<open>library/tools/extracting_pure_facts.ML\<close>
 
+attribute_setup \<phi>declare = \<open>Scan.succeed (Thm.declaration_attribute (fn th => fn ctxt =>
+  let val ctxt' = Context.proof_of ctxt
+      val lemmas = case Phi_Reasoners.extract_implied_fact ctxt' th
+                     of SOME th' => PLPR_Syntax.elim_ant_sequence_or_HOL_conj th'
+                      | NONE => []
+   in fold Useful_Thms.add_thm lemmas ctxt
+  end))\<close>
+  \<open>Extracts pure facts implied inside and augments Useful lemmas with the results. \<close>
+
 subsubsection \<open>Extraction Rules\<close>
 
 lemma [\<phi>reason %extract_pure]:
@@ -1403,15 +1423,6 @@ lemma [\<phi>reason %normalizing]:
   unfolding Premise_def
   by (cases L; simp)
 *)
-
-ML \<open>
-structure Useful_Thms = Named_Thms (
-  val name = \<^binding>\<open>useful\<close>
-  val description = "theorems to be inserted in the automatic proving, \
-        \having the same effect of using the @{command using} command."
-) \<close>
-
-setup \<open>Useful_Thms.setup\<close>
 
 lemma provide_premise_condition:
   \<open>P \<Longrightarrow> Premise mode (P \<longrightarrow> Q) \<Longrightarrow> Premise mode Q\<close>
@@ -1668,6 +1679,16 @@ lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longright
 ML_file_debug \<open>library/simplifier.ML\<close>
 
 hide_fact End_Simplification' End_Simplification
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>Simplify mode A A' \<longrightarrow> A = A' @action \<A>EIF\<close>
+  unfolding Simplify_def Action_Tag_def
+  ..
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>A = A' \<longrightarrow> Simplify mode A A' @action \<A>ESC\<close>
+  unfolding Simplify_def Action_Tag_def
+  ..
 
 subsubsection \<open>Default Simplifier\<close>
 

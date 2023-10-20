@@ -2525,13 +2525,14 @@ lemma transformation_left_frame_ty:
 subsubsection \<open>Abstract Domain\<close>
 
 text \<open>The upper bound of the abstraction domain is simple.\<close>
-
-lemma [\<phi>reason %abstract_domain]:
+(*
+lemma \<comment> \<open>will be derived later\<close>:
   \<open> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Abstract_Domain U D\<^sub>U
 \<Longrightarrow> Abstract_Domain (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y) \<close>
   unfolding Abstract_Domain_def Action_Tag_def Inhabited_def
   by (clarsimp, blast)
+*)
 
 text \<open>However, the lower bound is non-trivial, in which case we have to show the separation combination
   is compatible between the two \<phi>-types. The compatibility is encoded by predicate \<open>Separation_Disj\<close>
@@ -3901,12 +3902,14 @@ lemma [\<phi>reason %object_equiv_cut]:
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
   by (clarsimp simp add: set_mult_expn; blast)
 
+(* \<comment> \<open>derived automatically later\<close>
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> Object_Equiv T\<^sub>a Eq\<^sub>a
 \<Longrightarrow> Object_Equiv T\<^sub>b Eq\<^sub>b
 \<Longrightarrow> Object_Equiv (T\<^sub>a \<^emph> T\<^sub>b) (\<lambda>(x\<^sub>a, x\<^sub>b) (y\<^sub>a, y\<^sub>b). Eq\<^sub>a x\<^sub>a y\<^sub>a \<and> Eq\<^sub>b x\<^sub>b y\<^sub>b) \<close>
   unfolding Object_Equiv_def Transformation_def
   by (clarsimp simp add: set_mult_expn; blast)
+*)
 
 (*
 lemma

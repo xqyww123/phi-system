@@ -1583,7 +1583,8 @@ subsubsection \<open>Make Abstraction\<close>
 
 text \<open>Applies one step of constructing\<close>
 
-definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> where [assertion_simps_source]: \<open>MAKE X \<equiv> X\<close>
+definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close>
+  where [assertion_simps_source, \<phi>programming_simps]: \<open>MAKE X \<equiv> X\<close>
 
 \<phi>reasoner_group ToA_make_\<phi>type = (100, [%ToA_splitting_source+2, %ToA_splitting_target-1])
                                   for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)

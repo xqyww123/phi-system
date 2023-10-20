@@ -473,10 +473,11 @@ sublocale aggregate_mem_resource Res typ_of_blk ..
 
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
-\<Longrightarrow> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
       \<lambda>ret. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (discrete x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
+  unfolding Premise_def
   by (rule "_getter_rule_2_"[OF _ fiction_Map_of_Val_ins_perm_projection,
                                 simplified split_discrete_ExSet inj_image_mem_iff inj_discrete],
       simp)

@@ -654,6 +654,7 @@ declare homo_one_map_option [\<phi>reason %algb_cut]
         homo_sep_map_option [\<phi>reason %algb_cut]
         homo_share_map_option [\<phi>reason %algb_cut]
 
+
 subsubsection \<open>Some\<close>
 
 lemma homo_mul_carrier_Some[simp, \<phi>reason %algb_cut]:

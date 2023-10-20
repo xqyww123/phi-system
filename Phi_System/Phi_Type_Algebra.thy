@@ -5759,6 +5759,7 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
   unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def embedded_func_def OPEN_def MAKE_def Bubbling_def
   by clarsimp
 
+(*TODO: bi-commutativity!*)
 
 ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 

@@ -218,8 +218,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
 
     val bindings = prem_bindings
           |> map2 (fn P => fn ((b,attrs),pats) =>
-              let val attrs' = Premises_Attribute.attribute_of (null attrs) P
-                                                        (Context.Proof (Proof.context_of stat))
+              let val attrs' = Premises_Attribute.attribute_of (null attrs) P (Context.Proof (Proof.context_of stat))
               in ((b, attrs' @ map (Attrib.attribute (Proof.context_of stat)) attrs), pats)
               end) prems
   in

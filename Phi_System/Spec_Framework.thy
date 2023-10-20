@@ -477,12 +477,14 @@ lemma [\<phi>reason %\<phi>functionality]:
   unfolding Is_Functional_def Premise_def
   by simp
 
+(* \<comment> \<open>derived automatically later\<close>
 lemma [\<phi>reason %\<phi>functionality]:
   \<open> Functionality T p\<^sub>T
 \<Longrightarrow> Functionality U p\<^sub>U
 \<Longrightarrow> Functionality (T \<^emph> U) (\<lambda>(x,y). p\<^sub>T x \<and> p\<^sub>U y)\<close>
   unfolding Functionality_def
   by clarsimp blast
+*)
 
 lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional A
@@ -616,12 +618,14 @@ proof clarsimp
     by (induct arbitrary: v rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; metis mul_carrier_closed)
 qed
 
-lemma [\<phi>reason %carrier_set_cut]:
+(*
+lemma \<comment> \<open>derived automatically later\<close>
   \<open> Carrier_Set T P
 \<Longrightarrow> Carrier_Set U Q
 \<Longrightarrow> Carrier_Set (T \<^emph> U) (pred_prod P Q)\<close>
   unfolding Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp simp add: mul_carrier_closed)
+*)
 
 lemma [\<phi>reason %carrier_set_cut]:
   \<open> Within_Carrier_Set A

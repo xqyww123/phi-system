@@ -170,7 +170,6 @@ lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr 0\<close>
 lemma valid_logaddr_0[simp]: \<open>valid_logaddr 0\<close>
   by (simp add: valid_logaddr_def zero_prod_def Valid_MemBlk_def zero_memaddr_def)
 
-
 subsubsection \<open>Basic Operations and Properties of Addresses\<close>
 
 paragraph \<open>Size of Memory Object\<close>
@@ -469,6 +468,15 @@ lemma logaddr_to_raw_phantom_mem_type_gep_N:
                   OF \<open>valid_index (idx_step_type a (index_type ofs (memblk.layout blk))) path\<close>])
     using idx_step_offset_size prems(2) by force .
 
+subsubsection \<open>Reasoning Configuration\<close>
+
+lemma [\<phi>reason %chk_sem_ele_idx]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr = addr'
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> valid_logaddr addr
+\<Longrightarrow> is_valid_index_of (memaddr.index addr) (memblk.layout (memaddr.blk addr')) (logaddr_type addr)\<close>
+  unfolding valid_logaddr_def Premise_def is_valid_index_of_def
+  by clarsimp
+
 subsubsection \<open>Install Semantics\<close>
 
 paragraph \<open>Install Memory\<close>
@@ -544,16 +552,16 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 section \<open>Semantic Operations\<close>
  
 proc op_get_element_pointer[\<phi>overload \<tribullet>]:
-  requires \<open>parse_eleidx_input TY input_index sidx unwinded pidx reject\<close>
-       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> unwinded \<noteq> []\<close>
-       and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of unwinded TY TY'\<close>
+  requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx pidx reject\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   output \<open>addr_geps addr pidx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-    V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sidx))
+    V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
       \<Turnstile> (addr_geps addr pidx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 

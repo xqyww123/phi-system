@@ -119,6 +119,40 @@ ML \<open>assert_derived_properties \<^theory> [
 
 (*TODO: bi-functors of \<phi>Prod?*)
 
+subsection \<open>\<phi>Prod\<close>
+
+setup \<open>Context.theory_map (
+  Phi_Type_Algebra.add_type {no_auto=false}
+        (\<^binding>\<open>\<phi>Prod\<close>, \<^pattern>\<open>\<phi>Prod::(?'c::sep_magma,?'a\<^sub>1) \<phi> \<Rightarrow> (?'c,?'a\<^sub>2) \<phi> \<Rightarrow> (?'c,?'a\<^sub>1 \<times> ?'a\<^sub>2) \<phi>\<close>,
+         Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory>
+            @{lemma' \<open>(x \<Ztypecolon> T \<^emph> U) = (snd x \<Ztypecolon> U) * (fst x \<Ztypecolon> T)\<close>
+                      for T :: \<open>('c::sep_magma,'a\<^sub>1) \<phi>\<close> and U :: \<open>('c::sep_magma,'a\<^sub>2) \<phi>\<close>
+                  by (simp add: \<phi>Prod_expn'')}),
+         \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+   #> snd )\<close>
+
+text \<open>We still derive properties of \<open>\<phi>Prod\<close> for consistency of the internal reasoning system,
+      even though most of the derived rules are already covered by existing rules.\<close>
+  
+let_\<phi>type \<phi>Prod
+  deriving Basic
+       and Functional_Transformation_Functor
+       and Functionality
+       (* and Separation_Homo, bi commutativity is not supported yet *)
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Prod.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain ?U ?Pa \<Longrightarrow> Abstract_Domain (?T \<^emph> ?U) (\<lambda>x. ?Pa (snd x) \<and> ?P (fst x)) \<close>),
+  (@{thm' \<phi>Prod.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er \<Longrightarrow> Object_Equiv ?U ?eq \<Longrightarrow> Object_Equiv (?T \<^emph> ?U) (\<lambda>x y. ?eq (snd x) (snd y) \<and> ?er (fst x) (fst y)) \<close>),
+  (@{thm' \<phi>Prod.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality ?U ?Pa \<Longrightarrow> Functionality (?T \<^emph> ?U) (\<lambda>x. ?P (fst x) \<and> ?Pa (snd x)) \<close>),
+  (@{thm' \<phi>Prod.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set ?U ?Pa \<Longrightarrow> Carrier_Set (?T \<^emph> ?U) (\<lambda>x. ?P (fst x) \<and> ?Pa (snd x)) \<close>),
+  (@{thm' \<phi>Prod.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_BiFunctor (\<^emph>) (\<^emph>) ?T ?U ?Ta ?Ua Basic_BNFs.fsts Basic_BNFs.snds (\<lambda>x. UNIV) (\<lambda>x. UNIV) rel_prod  \<close>),
+  (@{thm' \<phi>Prod.Functional_Transformation_Functor}, \<^pattern_prop>\<open>
+      Functional_Transformation_BiFunctor (\<^emph>) (\<^emph>) ?T ?U ?Ta ?Ua Basic_BNFs.fsts Basic_BNFs.snds (\<lambda>x. UNIV) (\<lambda>x. UNIV)
+                                          (\<lambda>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x. P\<^sub>1 (fst x) \<and> P\<^sub>2 (snd x)) (\<lambda>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2. map_prod f\<^sub>1 f\<^sub>2) \<close>)
+]\<close>
+
+
+
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
