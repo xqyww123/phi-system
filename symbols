@@ -16,3 +16,5 @@
 \<odiv>            code: 0x002A38   font: PhiSymbols   group: operator   abbrev: (-:)
 \<lblbrace>        code: 0x003010   font: PhiSymbols   group: punctuation  abbrev: <[(>  abbrev: <{(>
 \<rblbrace>        code: 0x003011   font: PhiSymbols   group: punctuation  abbrev: <)]>  abbrev: <)}>
+\<lwpar>           code: 0x002985   font: PhiSymbols   group: punctuation  abbrev: \((
+\<rwpar>           code: 0x002986   font: PhiSymbols   group: punctuation  abbrev: \))

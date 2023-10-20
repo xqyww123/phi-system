@@ -16,5 +16,6 @@ Specifically, each glyph in the font is from,
 0x002A74    STIX 2 Math
 0x0029BC    STIX 2 Math
 0x002A38    STIX 2 Math
-
+0x002985    Noto Sans Symbol 2, with modification
+0x002986    Noto Sans Symbol 2, with modification
 

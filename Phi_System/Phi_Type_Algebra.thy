@@ -4931,7 +4931,7 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
   unfolding Guess_Unzip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_interval) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
+  \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
                            F any T (\<lambda>_. True)
                            (\<lambda>s t (x,y). LCRO_Interval.width_of s = length x \<and> LCRO_Interval.width_of t = length y)
                            (\<lambda>_ _ (x,y). y * x)
@@ -4939,7 +4939,7 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
   unfolding Guess_Zip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Unzip_of_Semimodule TYPE(nat lcro_interval) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
+  \<open>Guess_Unzip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
                              F any T (\<lambda>_. True)
                              (\<lambda>s t x. LCRO_Interval.width_of s + LCRO_Interval.width_of t = length x)
                              (\<lambda>s t x. (take (LCRO_Interval.width_of s) x, drop (LCRO_Interval.width_of s) x))
