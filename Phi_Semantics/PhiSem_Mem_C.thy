@@ -181,9 +181,9 @@ thm to_share.share_orthogonal_homo_axioms
 proc op_load_mem:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx pidx reject\<close>
-    and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
-    and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
+    and    \<open>parse_eleidx_input_least1 TY input_index sem_idx idx pidx reject\<close>
+    and    \<open>\<phi>Aggregate_Getter idx T U f\<close>
+    and    \<open>report_unprocessed_element_index reject\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
   including \<phi>sem_type_brute_derive
 \<medium_left_bracket>

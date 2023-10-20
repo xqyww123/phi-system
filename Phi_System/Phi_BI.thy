@@ -3699,7 +3699,7 @@ text \<open>\<phi>-Deriver usually derives the object reachability relation of \
 
 declare [[
   \<phi>reason_default_pattern \<open>Object_Equiv ?T _\<close> \<Rightarrow> \<open>Object_Equiv ?T _\<close> (100),
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Equiv _ _\<close>
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Object_Equiv _ _\<close>
 ]]
 
 \<phi>reasoner_group object_equiv = (100, [1, 3999]) for \<open>Object_Equiv T eq\<close>

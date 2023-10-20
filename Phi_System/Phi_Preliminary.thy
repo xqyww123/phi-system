@@ -282,6 +282,9 @@ lemma [\<phi>reason %meta_ball]:
 
 subsection \<open>Very Early Mechanism\<close>
 
+\<phi>reasoner_group local = (10000, [10000,10000])
+  \<open>local reasoning rules given from the hypothese of a programming context\<close>
+
 subsubsection \<open>Default Attributes in Programming\<close>
 
 text \<open>Registry of default attributes of antecedents in the deductive programming.\<close>
@@ -292,7 +295,7 @@ paragraph \<open>Configuring Existing Antecedents\<close>
 
 declare [[
   \<phi>premise_attribute? [\<phi>declare] for \<open>PROP _\<close>,
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Is_Literal _\<close>,
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Is_Literal _\<close>,
 
   \<phi>premise_attribute_ML \<open>fn _ => Thm.declaration_attribute (fn thm => fn ctxt =>
     let val term_A = case Thm.prop_of thm

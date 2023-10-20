@@ -215,7 +215,10 @@ definition \<open>parse_eleidx_input_least1 TY input sem_idx spec_idx pidx rejec
 declare [[
   \<phi>reason_default_pattern
       \<open>parse_eleidx_input ?TY ?input _ _ _ _ \<close> \<Rightarrow> \<open>parse_eleidx_input ?TY ?input _ _ _ _ \<close> (100)
-  and \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ _ \<close> \<Rightarrow> \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ _ \<close> (100)
+  and \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ _ \<close> \<Rightarrow> \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ _ \<close> (100),
+
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>parse_eleidx_input _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>parse_eleidx_input_least1 _ _ _ _ _ _\<close>
 ]]
 
 \<phi>reasoner_group \<A>parse_eleidx = (1000, [1000,1000]) for \<open>\<phi>arg.dest v \<Turnstile> S @action \<A>parse_eleidx\<close>
@@ -332,7 +335,11 @@ definition \<phi>Aggregate_Constructor :: \<open>(VAL \<phi>arg list \<Rightarro
 declare [[\<phi>reason_default_pattern
     \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> (100)
 and \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> (100)
-and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> (100)
+and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> (100),
+
+    \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Getter _ _ _ _\<close>,
+    \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Mapper _ _ _ _ _ _\<close>,
+    \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Constructor _ _ _ _\<close>
 ]]
 
 \<phi>reasoner_group aggregate_access_all = (100, [1, 2000]) for (\<open>\<phi>Aggregate_Getter idx T U g\<close>,
