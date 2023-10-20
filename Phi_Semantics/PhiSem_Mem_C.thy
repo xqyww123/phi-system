@@ -26,8 +26,7 @@ declare [[\<phi>trace_reasoning = 0]]
 fiction_space aggregate_mem =
   aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout)
-  apply (standard; simp)
-  apply (standard, of_tac \<open>\<lambda>_. UNIV\<close>; simp add: pointwise_set_UNIV)
+  by (standard; simp)
 
 (*
 
@@ -57,10 +56,6 @@ end
 *)
 
 section \<open>\<phi>Type for Semantic Models\<close>
-
-subsection \<open>Pointers\<close>
-
-
 
 
 (* subsubsection \<open>Slice Pointer\<close>
@@ -115,8 +110,12 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 
 subsection \<open>Memory Object\<close>
 
-abbreviation Mem :: \<open>logaddr \<Rightarrow> (aggregate_path \<Rightarrow> VAL nosep share option,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def Mem :: \<open>logaddr \<Rightarrow> (aggregate_path \<Rightarrow> VAL nosep share option,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
   where \<open>Mem addr T \<equiv> FIC.aggregate_mem.\<phi> (memaddr.blk addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+  deriving Sep_Functor_1
+
 
 (*
 definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
@@ -144,6 +143,7 @@ definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 
 
 section \<open>Instructions & Their Specifications\<close>
 
+(*
 lemma
   \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Itself)
     = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Itself)))\<close>
@@ -156,26 +156,21 @@ thm to_share.share_orthogonal_homo_axioms
 
 
 
+*)
 
 
 
 
 
-
-
-
-
-
-
-term Map_of_Val_ins.\<phi>
-thm Map_of_Val_ins.\<phi>insertion
 
 proc op_load_mem:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<coercion> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<coercion> T)\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
-  to Itself \<exists>v
-thm \<phi>
+  to \<open>OPEN _\<close>
+  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
+  note [[\<phi>trace_reasoning = 2]]
+  ;; FIC.aggregate_mem.getter_rule
   thm FIC.aggregate_mem.getter_rule
 
 

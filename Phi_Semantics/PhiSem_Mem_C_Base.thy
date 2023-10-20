@@ -66,6 +66,24 @@ lemma phantom_mem_semantic_type_element:
 
 section \<open>Fiction\<close>
 
+text \<open>They are not semantics, but parameters of the inference system.
+
+\<open>Map_of_Val\<close> can be defined from \<open>valid_idx_step, idx_step_type\<close> and \<open>idx_step_value\<close>, e.g.,
+
+\<open>primrec Map_of_Val :: \<open>TY \<Rightarrow> VAL \<Rightarrow> aggregate_path \<rightharpoonup> VAL\<close>
+  where \<open>Map_of_Val _  v [] = Some v\<close>
+      | \<open>Map_of_Val TY v (i#idx) = (if valid_idx_step TY i
+                                    then Map_of_Val (idx_step_type i TY) (idx_step_value i v) idx
+                                    else None)\<close>
+\<close>
+
+but we do not fix the definition because, \<open>idx_step_value\<close> and \<open>idx_step_type\<close> only determines the
+children of a node but not the value of the node. Whether the node is valued, affects whether and
+how could the tree be separated. The naive definition above actually disables any separation because
+the value bound to the node contains the entire data, so actually meaningless for the purpose of
+being a tree enabling separation of aggregate structures.
+\<close>
+
 debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> aggregate_path \<rightharpoonup> VAL\<close>
                 and Dom_of_TY :: \<open>TY \<Rightarrow> aggregate_path set\<close>
   where Map_of_Val_inj: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> Map_of_Val Va = Map_of_Val Vb \<Longrightarrow> Va = Vb\<close>
@@ -175,11 +193,12 @@ lemma Map_of_Val_ins_eval[simp]:
   \<open>Map_of_Val_ins None = 1\<close>
   unfolding Map_of_Val_ins_def by simp+
 
-lemma
+lemma Map_of_Val_ins_None[simp]:
   \<open> x \<in> Map_of_Val_ins_dom TY
 \<Longrightarrow> (Map_of_Val_ins x = 1) = (x = None)\<close>
   unfolding Map_of_Val_ins_def Map_of_Val_ins_dom_def
-  apply (cases x; clarsimp)
+  by (cases x; clarsimp;
+      smt (verit) Mapof_not_1 dom_1 dom_eq_empty_conv dom_map_option_comp)
 
 lemma Map_of_Val_ins_dom_NONE[simp]:
   \<open> None \<in> Map_of_Val_ins_dom TY \<close>
@@ -370,7 +389,7 @@ lemma fiction_Map_of_Val_ins_refinement:
     have t3: \<open>dom (Map_of_Val v) = Dom_of_TY (index_type idx TY)\<close>
       using Map_of_Val_dom prems(2) by force
     have t4: \<open>idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<noteq> 1\<close>
-      by (smt (verit) Mapof_not_1 dom_1 dom_eq_empty_conv dom_map_option_comp push_map_eq_1)
+      by (metis Map_of_Val_ins_None Map_of_Val_ins_dom_eval Map_of_Val_ins_eval(1) option.distinct(1) prems(3) push_map_eq_1)
     then have t5: \<open> r * idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<noteq> 1\<close> for r
       by (metis (no_types, opaque_lifting) dom1_disjoint_sep_disj dom1_dom dom_eq_empty_conv empty_subsetI inf.orderE one_partial_map sep_no_inverse times_fun_def times_option_none)
     show ?thesis
