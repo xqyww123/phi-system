@@ -1,7 +1,7 @@
 theory PhiSem_Int_ArbiPrec
   imports PhiSem_Generic_Boolean PhiSem_Common_Int
+  abbrevs "<aint>" = "\<a>\<i>\<n>\<t>"
 begin
-
 
 chapter \<open>Integer of Arbitrary Precision\<close>
 
@@ -22,7 +22,7 @@ interpretation \<phi>spec_int_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYP
 
 hide_fact \<phi>spec_int_ty_ax
 
-abbreviation aint where \<open>aint \<equiv> T_aint.mk ()\<close>
+abbreviation aint ("\<a>\<i>\<n>\<t>") where \<open>aint \<equiv> T_aint.mk ()\<close>
 
 subsection \<open>Value\<close>
 

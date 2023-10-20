@@ -2,11 +2,12 @@ chapter \<open>Generic Boolean\<close>
 
 theory PhiSem_Generic_Boolean
   imports PhiSem_Base
+  abbrevs "<bool>" = "\<b>\<o>\<o>\<l>"
 begin
 
 section \<open>Semantics\<close>
 
-consts bool :: TY
+consts bool :: TY ("\<b>\<o>\<o>\<l>")
 
 debt_axiomatization V_bool :: \<open>bool value_entry\<close>
   where V_bool_ax: \<open>VDT_field V_bool\<close>

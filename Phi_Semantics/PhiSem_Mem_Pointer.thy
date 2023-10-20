@@ -4,6 +4,8 @@ theory PhiSem_Mem_Pointer
       "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
       and "\<tribullet>_a"  = "\<tribullet>\<^sub>a"
+      and "<Ptr>" = "\<bbbP>\<t>\<r>"
+      and "<ptr>" = "\<p>\<t>\<r>"
 begin
 
 section \<open>Semantics of Pointer\<close>
@@ -18,7 +20,7 @@ debt_axiomatization T_pointer :: \<open>unit type_entry\<close>
 
 interpretation c_mem_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_pointer using c_mem_ty_ax .
 
-abbreviation \<open>pointer \<equiv> T_pointer.mk ()\<close>
+abbreviation pointer ("\<p>\<t>\<r>") where \<open>pointer \<equiv> T_pointer.mk ()\<close>
 
 subsection \<open>Value\<close>
 
@@ -526,7 +528,7 @@ lemma RawPointer_eqcmp[\<phi>reason 1200]:
 
 subsubsection \<open>Logical Pointer\<close>
 
-\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<p>\<t>\<r> _" [999] 998)
+\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<bbbP>\<t>\<r> _" [999] 998)
   where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> logaddr_type x = TY\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>

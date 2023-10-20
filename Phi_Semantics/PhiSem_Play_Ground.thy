@@ -55,12 +55,13 @@ proc test_ptr:
 no_notation Set.member ("(_/ : _)" [51, 51] 50)
  
 proc test_ptr2:
-  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<p>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: aint, x: \<t>\<u>\<p> {aint, \<s>\<t>\<r>\<u>\<c>\<t> {q: aint, w: aint}}, y: aint}, \<int> \<rbrace>\<close>
-  output \<open>ptr \<tribullet>\<^sub>a x \<tribullet>\<^sub>a 1\<^sup>\<t>\<^sup>\<h>  \<tribullet>\<^sub>a w \<Ztypecolon> \<v>\<a>\<l> \<p>\<t>\<r> aint\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: \<p>\<t>\<r>, x: \<t>\<u>\<p> {\<b>\<o>\<o>\<l>, \<s>\<t>\<r>\<u>\<c>\<t> {q: \<a>\<i>\<n>\<t>, w: \<p>\<t>\<r>}}, y: \<a>\<i>\<n>\<t>}, \<int> \<rbrace>\<close>
+  output \<open>ptr \<tribullet>\<^sub>a x \<tribullet>\<^sub>a 1\<^sup>\<t>\<^sup>\<h>  \<tribullet>\<^sub>a w \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<p>\<t>\<r>\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 1) ;
   $1[$a]\<tribullet>x\<tribullet>$b\<tribullet>w
 \<medium_right_bracket> .
+
 
 proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>

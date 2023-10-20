@@ -3,6 +3,7 @@ theory PhiSem_Machine_Integer
           "Word_Lib.More_Word" (*We use the word lib from seL4*)
           "Word_Lib.Signed_Division_Word"
           "Word_Lib.Word_Lemmas"
+  abbrevs "<int>" = "\<i>\<n>\<t>"
 begin
 
 chapter \<open>Semantics for Machine Integers\<close>
@@ -27,6 +28,7 @@ hide_fact \<phi>machine_int_ty_ax \<phi>machine_int_ty_axioms \<phi>machine_int_
   \<phi>machine_int_ty__names.\<phi>machine_int_ty_names_axioms \<phi>machine_int_ty_prjs.axioms
 
 syntax "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("int'(_')")
+       "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<i>\<n>\<t>'(_')")
 
 translations "int('b)" <= "CONST T_int.mk LENGTH('b)"
 
@@ -44,7 +46,6 @@ parse_ast_translation \<open>
   let open Ast
    in [(\<^syntax_const>\<open>_int_semty_\<close>, (fn _ => fn [V] =>
           Appl [Constant \<^const_syntax>\<open>T_int.mk\<close>, Appl [Constant \<^syntax_const>\<open>_type_length\<close>, add_sort V]]))] end\<close>
-
 
 subsubsection \<open>Value\<close>
 
