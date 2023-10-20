@@ -23,6 +23,8 @@ subsection \<open>Fiction\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
+type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL nosep share option\<close> \<comment> \<open>fiction of a single memory object\<close>
+
 fiction_space aggregate_mem =
   aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout)
@@ -108,11 +110,30 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 
 *)
 
+
+
+subsection \<open>Coercion from Value Spec to Mem Spec\<close>
+
+term \<open>(\<lambda>v. to_share o map_option nosep o Map_of_Val v)\<close>
+term \<open>(o) (to_share o map_option nosep) o Map_of_Val\<close>
+
+declare [[\<phi>trace_reasoning = 3]]
+
+\<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [61] 60)
+  where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option nosep) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
+  deriving (*Basic
+      and Functional_Transformation_Functor
+      and*) Separation_Homo\<^sub>I
+
+term \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<close>
+
+
+
 subsection \<open>Memory Object\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-\<phi>type_def Mem :: \<open>logaddr \<Rightarrow> (aggregate_path \<Rightarrow> VAL nosep share option,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
+\<phi>type_def Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
   where \<open>Mem addr T \<equiv> FIC.aggregate_mem.\<phi> (memaddr.blk addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
   deriving Sep_Functor_1
 

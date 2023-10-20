@@ -472,15 +472,19 @@ subsection \<open>Instances of the Algebraic Properties\<close>
 subsubsection \<open>Identity Function\<close>
 
 lemmas [\<phi>reason %algb_cut] =
-    closed_homo_sep_disj_id
-    homo_sep_disj_id
-    homo_sep_mult_id
     homo_one_id
     homo_sep_id
     closed_homo_sep_id
     homo_mul_carrier_id
 
-subsubsection \<open>Functional Pointwise\<close>
+subsubsection \<open>Functional Point-wise\<close>
+
+declare homo_sep_funcomp[\<phi>reason %algb_cut]
+        closed_homo_sep_funcomp[\<phi>reason %algb_cut]
+        homo_one_funcomp[\<phi>reason %algb_cut]
+        homo_mul_funcomp[\<phi>reason %algb_cut]
+
+subsubsection \<open>Function Update\<close>
 
 \<phi>reasoner_group algb_fun_upd_1 = (1300, [1300, 1330]) for \<open>_ (fun_upd 1 k)\<close> in algb_prop
     \<open>Algebraic properties for \<open>fun_upd 1 k\<close>\<close>
