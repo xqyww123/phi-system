@@ -71,7 +71,7 @@ debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> aggregate_path \<righ
   where Map_of_Val_inj: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> Map_of_Val Va = Map_of_Val Vb \<Longrightarrow> Va = Vb\<close>
   and   Map_of_Val_dom: \<open>Va \<in> Well_Type T \<Longrightarrow> dom (Map_of_Val Va) = Dom_of_TY T\<close>
   and   Dom_of_TY_step: \<open>valid_idx_step T i \<Longrightarrow> Dom_of_TY (idx_step_type i T) \<subseteq> Dom_of_TY T\<close>
-  and   Mapof_not_1[simp]: \<open>Map_of_Val V \<noteq> 1\<close>
+  and   Mapof_not_1[simp]: \<open>V \<in> Well_Type TY \<Longrightarrow> Map_of_Val V \<noteq> 1\<close>
   and   Map_of_Val_pull_step: \<open>valid_idx_step T i \<Longrightarrow> V \<in> Well_Type T
                           \<Longrightarrow> pull_map [i] (Map_of_Val V) = Map_of_Val (idx_step_value i V)\<close>
   and   Map_of_Val_mod_step: \<open>valid_idx_step T i \<Longrightarrow> v \<in> Well_Type T
@@ -174,6 +174,16 @@ lemma Map_of_Val_ins_eval[simp]:
   \<open>Map_of_Val_ins (Some (nosep u)) = (map_option nosep) o Map_of_Val u\<close>
   \<open>Map_of_Val_ins None = 1\<close>
   unfolding Map_of_Val_ins_def by simp+
+
+lemma
+  \<open> x \<in> Map_of_Val_ins_dom TY
+\<Longrightarrow> (Map_of_Val_ins x = 1) = (x = None)\<close>
+  unfolding Map_of_Val_ins_def Map_of_Val_ins_dom_def
+  apply (cases x; clarsimp)
+
+lemma Map_of_Val_ins_dom_NONE[simp]:
+  \<open> None \<in> Map_of_Val_ins_dom TY \<close>
+  unfolding Map_of_Val_ins_dom_def by simp
 
 lemma Map_of_Val_ins_dom_eval[simp]:
   \<open>Some (nosep u) \<in> Map_of_Val_ins_dom TY \<longleftrightarrow> u \<in> Well_Type TY\<close>

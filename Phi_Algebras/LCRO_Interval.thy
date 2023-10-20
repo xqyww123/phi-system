@@ -111,7 +111,7 @@ lemma interval_union_mono2: "set_of A \<subseteq> set_of (sup a A)" for A :: "'a
 
 subsubsection \<open>Partial Addition\<close>
 
-text \<open>Defined as concatenating two adjoint intervals.\<close>
+text \<open>Defined as concatenating two adjacent intervals.\<close>
 
 instantiation lcro_intvl :: (preorder) partial_add_cancel begin
 

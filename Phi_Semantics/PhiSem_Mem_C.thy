@@ -21,10 +21,13 @@ lemma Valid_Mem_1[simp]: \<open>1 \<in> Valid_Mem\<close>
 
 subsection \<open>Fiction\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 fiction_space aggregate_mem =
   aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout)
-  by (standard, of_tac \<open>\<lambda>_. UNIV\<close>; simp add: pointwise_set_UNIV)
+  apply (standard; simp)
+  apply (standard, of_tac \<open>\<lambda>_. UNIV\<close>; simp add: pointwise_set_UNIV)
 
 (*
 
