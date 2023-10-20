@@ -475,12 +475,12 @@ paragraph \<open>Install Memory\<close>
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
-type_synonym mem = \<open>memblk \<rightharpoonup> VAL nosep\<close>
+type_synonym mem = \<open>memblk \<rightharpoonup> VAL discrete\<close>
 
 setup \<open>Sign.parent_path\<close>
 
 resource_space aggregate_mem =
-  aggregate_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` nosep ` Well_Type (memblk.layout seg))}\<close>
+  aggregate_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` discrete ` Well_Type (memblk.layout seg))}\<close>
   (aggregate_mem_resource \<open>memblk.layout\<close>)
   by (standard; simp)
 

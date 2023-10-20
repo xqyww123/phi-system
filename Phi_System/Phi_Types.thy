@@ -2342,8 +2342,8 @@ subsection \<open>Injection into Discrete Algebra\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
   
-\<phi>type_def Nosep :: \<open>('c, 'a) \<phi> \<Rightarrow> ('c nosep, 'a) \<phi>\<close>
-  where \<open>Nosep T = (nosep \<Zcomp>\<^sub>f T)\<close>
+\<phi>type_def Nosep :: \<open>('c, 'a) \<phi> \<Rightarrow> ('c discrete, 'a) \<phi>\<close>
+  where \<open>Nosep T = (discrete \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
        and \<open>Carrier_Set (Nosep T) (\<lambda>_. True)\<close>
        and Functionality 

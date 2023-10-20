@@ -78,7 +78,7 @@ debt_axiomatization
 
 subsubsection \<open>Resource\<close>
 
-type_synonym object_heap = \<open>(object_ref \<Rightarrow> field_name \<Rightarrow> VAL nosep option)\<close>
+type_synonym object_heap = \<open>(object_ref \<Rightarrow> field_name \<Rightarrow> VAL discrete option)\<close>
 
 definition \<open>Valid_Objs = {h::object_heap. h Nil = 1} \<inter> {h. finite (dom1 h)}
        \<inter> {h. (\<forall>cls id. dom (h (object_ref cls id)) \<subseteq> dom (class.fields_of cls) ) }\<close>
@@ -177,7 +177,7 @@ paragraph \<open>Reference Value\<close>
 paragraph \<open>Allocation\<close>
 
 definition initial_value_of_class
-  where \<open>initial_value_of_class cls = map_option (map_nosep (the o Zero)) o class.fields_of cls\<close>
+  where \<open>initial_value_of_class cls = map_option (map_discrete (the o Zero)) o class.fields_of cls\<close>
 
 lemma dom_initial_value_of_class:
   \<open>dom (initial_value_of_class cls) = dom (class.fields_of cls)\<close>
@@ -195,8 +195,8 @@ definition op_obj_load_field :: \<open>field_name \<Rightarrow> TY \<Rightarrow>
   where \<open>op_obj_load_field field TY v =
     \<phi>M_getV reference V_ref.dest v (\<lambda>ref.
     RES.Objs.\<phi>R_get_res_entry ref field (\<lambda>v.
-    \<phi>M_assert (nosep.dest v \<in> Well_Type TY) \<ggreater>
-    Return (\<phi>arg (nosep.dest v))))\<close>
+    \<phi>M_assert (discrete.dest v \<in> Well_Type TY) \<ggreater>
+    Return (\<phi>arg (discrete.dest v))))\<close>
 
 
 paragraph \<open>Store Field\<close>
@@ -206,8 +206,8 @@ definition op_obj_store_field :: \<open>field_name \<Rightarrow> TY \<Rightarrow
     \<phi>M_caseV (\<lambda>vstore vref.
     \<phi>M_getV TY id vstore (\<lambda>store.
     \<phi>M_getV reference V_ref.dest vref (\<lambda>ref.
-    RES.Objs.\<phi>R_get_res_entry ref field (\<lambda>v. \<phi>M_assert (nosep.dest v \<in> Well_Type TY))
- \<ggreater> RES.Objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (nosep store)) field) ref)
+    RES.Objs.\<phi>R_get_res_entry ref field (\<lambda>v. \<phi>M_assert (discrete.dest v \<in> Well_Type TY))
+ \<ggreater> RES.Objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (discrete store)) field) ref)
 )))\<close>
 
 paragraph \<open>Dispose\<close>
@@ -260,8 +260,8 @@ paragraph \<open>Load Field\<close>
 lemma op_obj_load_field_raw_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_load_field field TY raw \<lbrace>
-      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> \<v>\<a>\<l>[raw] (Ref cls)
-  \<longmapsto> nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> \<v>\<a>\<l> v \<Ztypecolon> Itself
+      discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> \<v>\<a>\<l>[raw] (Ref cls)
+  \<longmapsto> discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> \<v>\<a>\<l> v \<Ztypecolon> Itself
 \<rbrace>\<close>
   unfolding op_obj_load_field_def Premise_def
   by (rule \<phi>M_getV_ref, rule, rule \<phi>SEQ, rule \<phi>M_assert, simp, rule, simp add: Itself_expn)
@@ -282,8 +282,8 @@ lemma op_obj_store_field_raw_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
-      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)\<heavy_comma> u \<Ztypecolon> Val rawu Itself
-  \<longmapsto> nosep u \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself
+      discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)\<heavy_comma> u \<Ztypecolon> Val rawu Itself
+  \<longmapsto> discrete u \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself
 \<rbrace>\<close>
   unfolding op_obj_store_field_def Premise_def
   apply (cases rawref; cases rawu; simp, rule, rule, simp add: Itself_expn Premise_def,

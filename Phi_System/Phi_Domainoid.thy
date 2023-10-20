@@ -630,7 +630,7 @@ lemma [\<phi>reason default %domainoid_fallback for \<open>domainoid_mapper _ _ 
 subsection \<open>Instances\<close>
 
 lemma [\<phi>reason %domainoid_cut]:
-  \<open> domainoid TYPE('c::discrete_semigroup) (\<lambda>_. nosep ()) \<close>
+  \<open> domainoid TYPE('c::discrete_semigroup) (\<lambda>_. discrete ()) \<close>
   unfolding domainoid_def
   by simp
 

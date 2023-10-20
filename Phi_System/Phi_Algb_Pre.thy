@@ -462,7 +462,7 @@ lemma [\<phi>reason %algb_falling_lattice]:
 paragraph \<open>Instances\<close>
 
 lemma [\<phi>reason %algb_cut]:
-  \<open> constantly_inside_carrier nosep \<close>
+  \<open> constantly_inside_carrier discrete \<close>
   unfolding constantly_inside_carrier_def
   by simp
 

@@ -24,13 +24,13 @@ subsection \<open>Resource of Scope Frames\<close>
 setup \<open>Sign.mandatory_path "RES"\<close>
 
 type_synonym brk_label = nat
-type_synonym brk_frame = \<open>RES.brk_label \<rightharpoonup> VAL list option nosep\<close>
+type_synonym brk_frame = \<open>RES.brk_label \<rightharpoonup> VAL list option discrete\<close>
 
 setup \<open>Sign.parent_path\<close>
 
 resource_space \<phi>CF_break =
   brk_frame :: \<open>{frames::RES.brk_frame. finite (dom frames)}\<close>
-    (partial_map_resource \<open>\<lambda>_::nat. UNIV :: VAL list option nosep set\<close>)
+    (partial_map_resource \<open>\<lambda>_::nat. UNIV :: VAL list option discrete set\<close>)
   by (standard; simp; metis domIff notin_range_Some)
 
 hide_fact RES.\<phi>CF_break_res_ax
@@ -40,7 +40,7 @@ subsection \<open>Fiction of Scope Frames\<close>
 
 fiction_space \<phi>CF_break =
   brk_frame :: \<open>RES.brk_frame.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
-               (pointwise_fiction_for_partial_mapping_resource RES.brk_frame \<open>\<lambda>_::nat. UNIV :: VAL list option nosep set\<close>)
+               (pointwise_fiction_for_partial_mapping_resource RES.brk_frame \<open>\<lambda>_::nat. UNIV :: VAL list option discrete set\<close>)
   by (standard; simp add: set_eq_iff)
 
 hide_fact FIC.\<phi>CF_break_fic_ax
@@ -72,12 +72,12 @@ lemma [\<phi>reason %abstract_domain]:
   by clarsimp blast
 
 lemma Brk_Frame_eq_identity:
-  \<open>Brk_Frame l = (nosep None \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
+  \<open>Brk_Frame l = (discrete None \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
   unfolding BI_eq_iff Brk_Frame_def
   by simp
 
 lemma Brk_Frame_eq_identity':
-  \<open> Brk_Frame l = (1(l \<mapsto> nosep None) \<Ztypecolon> FIC.brk_frame.\<phi> Itself) \<close>
+  \<open> Brk_Frame l = (1(l \<mapsto> discrete None) \<Ztypecolon> FIC.brk_frame.\<phi> Itself) \<close>
   unfolding BI_eq_iff Brk_Frame_def
   by simp
 
@@ -87,7 +87,7 @@ lemma Brk_Frame_eq_identity'2:
   by simp
 
 lemma Brking_Frame_eq_identity:
-  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nosep (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
+  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> discrete (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
   unfolding BI_eq_iff Brking_Frame_def
   by simp
 
@@ -111,7 +111,7 @@ proc op_brk_scope:
   output \<open>\<lambda>ret. Y ret + Y' ret\<close>
   throws E
 \<medium_left_bracket>
-  apply_rule FIC.brk_frame.allocate_rule[where P=\<open>\<lambda>_. True\<close> and u=\<open>Some (nosep None)\<close>] \<exists>l
+  apply_rule FIC.brk_frame.allocate_rule[where P=\<open>\<lambda>_. True\<close> and u=\<open>Some (discrete None)\<close>] \<exists>l
   try'' \<medium_left_bracket>
     fold Brk_Frame_eq_identity'
 
@@ -120,7 +120,7 @@ proc op_brk_scope:
       by (simp add: useful BLK[of \<open>l\<close>, unfolded Technical_def, simplified]) ;;
 
     apply_rule BLK'
-    apply_rule FIC.brk_frame.setter_rule[where k=\<open>\<phi>arg.dest \<v>0\<close> and k=l and v=\<open>nosep None\<close> and u=\<open>None\<close>,
+    apply_rule FIC.brk_frame.setter_rule[where k=\<open>\<phi>arg.dest \<v>0\<close> and k=l and v=\<open>discrete None\<close> and u=\<open>None\<close>,
                                          folded Brk_Frame_eq_identity' Brk_Frame_eq_identity'2[symmetric]]
 
   \<medium_right_bracket> for \<open>Y \<v>1 + Y' \<v>1\<close>
@@ -134,7 +134,7 @@ proc op_brk_scope:
       apply_rule FIC.brk_frame.setter_rule[where k=\<open>\<phi>arg.dest \<v>0\<close> and k=l and u=None]
       Brk_Frame_eq_identity'2
 
-      have thrw: \<open>\<p>\<r>\<o>\<c> (case nosep.dest (\<phi>arg.dest \<v>1) of Some vs \<Rightarrow> Return (\<phi>arg (from_vals vs))
+      have thrw: \<open>\<p>\<r>\<o>\<c> (case discrete.dest (\<phi>arg.dest \<v>1) of Some vs \<Rightarrow> Return (\<phi>arg (from_vals vs))
                                                         | None \<Rightarrow> throw \<e>)
                        \<lbrace> E \<e> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
         by (simp add: useful "__throw_rule__") ;;
@@ -147,7 +147,7 @@ proc op_brk_scope:
       apply_rule FIC.brk_frame.setter_rule[where k=\<open>\<phi>arg.dest \<v>0\<close> and k=l and u=None]
       Brk_Frame_eq_identity'2
 
-      have thrw: \<open>\<p>\<r>\<o>\<c> (case nosep.dest (\<phi>arg.dest \<v>1) of Some vs \<Rightarrow> Return (\<phi>arg (from_vals vs))
+      have thrw: \<open>\<p>\<r>\<o>\<c> (case discrete.dest (\<phi>arg.dest \<v>1) of Some vs \<Rightarrow> Return (\<phi>arg (from_vals vs))
                                                         | None \<Rightarrow> throw \<e>)
                        \<lbrace> Y' v \<longmapsto> Y' \<rbrace> \<close>
         by (simp add: useful "__Return_rule__") ;;
@@ -164,7 +164,7 @@ proc op_break:
 \<medium_left_bracket>
   unfold Technical_def
   unfold Brk_Frame_eq_identity'
-  apply_rule FIC.brk_frame.setter_rule [where u=\<open>Some (nosep (Some (to_vals (\<phi>arg.dest vs))))\<close>]
+  apply_rule FIC.brk_frame.setter_rule [where u=\<open>Some (discrete (Some (to_vals (\<phi>arg.dest vs))))\<close>]
   apply_rule Brking_Frame_eq_identity[symmetric, where S=S]
   apply_rule throw[where 'a='ret] \<open>ABN_break.mk ()\<close>
 \<medium_right_bracket> .

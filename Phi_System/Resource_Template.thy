@@ -312,7 +312,7 @@ section \<open>Non-separable Monolithic Resource\<close>
 
 locale discrete_mono_resource =
   resource Res
-for Res :: "'T nosep option resource_entry"
+for Res :: "'T discrete option resource_entry"
 begin
 
 (* abbreviation fiction_agree
@@ -323,18 +323,18 @@ end
 
 subsubsection \<open>Interp Agreement\<close>
 
-(*TODO: ('k \<Rightarrow> 'v) nosep option ----> ('k \<Rightarrow> 'v share option)
+(*TODO: ('k \<Rightarrow> 'v) discrete option ----> ('k \<Rightarrow> 'v share option)
   total to that
   none to none
  *)
 
 (*TODO!*)
 (*
-locale agreement_fiction_for_nosepable_mono_resource =
+locale agreement_fiction_for_discrete_mono_resource =
    R: discrete_mono_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.fiction_agree\<close>
-for Res :: "'T nosep option resource_entry"
-and Fic :: "'T nosep agree option fiction_entry"
+for Res :: "'T discrete option resource_entry"
+and Fic :: "'T discrete agree option fiction_entry"
 begin
 
 sublocale basic_fiction Res \<open>\<F>_optionwise \<F>_agree\<close> Fic
@@ -370,7 +370,7 @@ lemma \<phi>_double_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nosep v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (discrete v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: double)
@@ -381,7 +381,7 @@ lemma \<phi>_contract_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nosep v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (discrete v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: contract)
@@ -732,10 +732,10 @@ subsection \<open>Pointwise Fiction\<close>
 locale pointwise_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res P
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
-+  homo_one \<open>\<F>_pointwise (\<lambda>_::'key. \<F>_it::'val nosep option \<Rightarrow> 'val nosep option set)\<close>
-for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
-and P   :: \<open>'key \<Rightarrow> 'val nosep set\<close>
-and Fic :: "('key \<Rightarrow> 'val nosep option) fiction_entry"
++  homo_one \<open>\<F>_pointwise (\<lambda>_::'key. \<F>_it::'val discrete option \<Rightarrow> 'val discrete option set)\<close>
+for Res :: "('key \<Rightarrow> 'val discrete option) resource_entry"
+and P   :: \<open>'key \<Rightarrow> 'val discrete set\<close>
+and Fic :: "('key \<Rightarrow> 'val discrete option) fiction_entry"
 begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambda>_. \<F>_it\<close> Fic P ..
@@ -783,10 +783,10 @@ locale pointwise_share_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res P
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_functional to_share UNIV)\<close>
 +  homo_one \<open>\<F>_pointwise (\<lambda>_. \<F>_functional to_share UNIV)
-                :: ('key \<Rightarrow> 'val nosep share option) \<Rightarrow> ('key \<Rightarrow> 'val nosep option) set\<close>
-for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
-and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
-and P   :: \<open>'key \<Rightarrow> 'val nosep set\<close>
+                :: ('key \<Rightarrow> 'val discrete share option) \<Rightarrow> ('key \<Rightarrow> 'val discrete option) set\<close>
+for Res :: "('key \<Rightarrow> 'val discrete option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'val discrete share option) fiction_entry"
+and P   :: \<open>'key \<Rightarrow> 'val discrete set\<close>
 begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambda>_. \<F>_functional to_share UNIV\<close> Fic P ..
@@ -803,7 +803,7 @@ lemma setter_rule:
   by (rule "_setter_rule_2_"[where k=k and k'=k' and f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u' v,
                   simplified, unfolded refinement_source_subjection,
                   OF _ impI,
-                  OF _ to_share.\<F>_functional_refinement[where 'a=\<open>'val nosep\<close>, simplified], simplified,
+                  OF _ to_share.\<F>_functional_refinement[where 'a=\<open>'val discrete\<close>, simplified], simplified,
                   OF _ to_share.\<F>_functional_projection[where S=\<open>{Some v}\<close>, simplified]],
       simp,
       simp add: Premise_def)
@@ -814,12 +814,12 @@ lemma getter_rule:
       \<lbrace>       1(k' := to_share (Some u)) \<Ztypecolon> \<phi> Itself \<longmapsto>
         \<lambda>ret. 1(k' := to_share (Some u)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> P k' \<and> v = u \<rbrace> \<close>
   by(rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified,
-                            OF _ to_share.\<F>_functional_projection[where S=\<open>{x}\<close> for x :: \<open>'val nosep option\<close>, simplified]],
+                            OF _ to_share.\<F>_functional_projection[where S=\<open>{x}\<close> for x :: \<open>'val discrete option\<close>, simplified]],
      assumption)
 
 lemmas allocate_rule =
   "__allocate_rule_2__"[OF \<F>_pointwise_refinement[where I=\<open>\<lambda>_. \<F>_functional to_share UNIV\<close>,
-                                                  OF to_share.\<F>_functional_refinement[where a=\<open>1::'val nosep option\<close>, simplified],
+                                                  OF to_share.\<F>_functional_refinement[where a=\<open>1::'val discrete option\<close>, simplified],
                                                   simplified],
                         where u = \<open>Some u'\<close> for u', simplified]
 
@@ -958,8 +958,8 @@ subsection \<open>Pointwise Fiction\<close>
 locale pointwise_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_pointwise (\<lambda>_. \<F>_it))\<close>
-for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) resource_entry"
-and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) fiction_entry"
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val discrete option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val discrete option) fiction_entry"
 begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource2 Res \<open>\<lambda>_ _. \<F>_it\<close> Fic ..
@@ -978,8 +978,8 @@ subsection \<open>Pointwise Share Fiction\<close>
 locale pointwise_share_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_pointwise (\<lambda>_. \<F>_functional to_share UNIV))\<close>
-for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) resource_entry"
-and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep share option) fiction_entry"
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val discrete option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val discrete share option) fiction_entry"
 begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource2 Res \<open>\<lambda>_ _. \<F>_functional to_share UNIV\<close> Fic ..

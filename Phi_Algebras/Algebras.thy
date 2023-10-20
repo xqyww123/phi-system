@@ -3106,52 +3106,52 @@ subsection \<open>Non-sepable Semigroup\<close>
 
 (*TODO: rename this to discrete injector or other*)
 
-datatype 'a nosep = nosep (dest: 'a)
+datatype 'a discrete = discrete (dest: 'a)
 hide_const (open) dest
 
-lemma split_nosep_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (nosep x))\<close> by (metis nosep.exhaust)
-lemma split_nosep_ex : \<open>Ex P \<longleftrightarrow> (\<exists>x. P (nosep x))\<close> by (metis nosep.exhaust)
-lemma split_nosep_ExSet: \<open>ExSet P = (\<exists>*x. P (nosep x))\<close>
-  unfolding set_eq_iff ExSet_expn_set split_nosep_ex by simp
-lemma split_nosep_meta_all: \<open>Pure.all P \<equiv> (\<And>x. PROP P (nosep x))\<close>
+lemma split_discrete_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (discrete x))\<close> by (metis discrete.exhaust)
+lemma split_discrete_ex : \<open>Ex P \<longleftrightarrow> (\<exists>x. P (discrete x))\<close> by (metis discrete.exhaust)
+lemma split_discrete_ExSet: \<open>ExSet P = (\<exists>*x. P (discrete x))\<close>
+  unfolding set_eq_iff ExSet_expn_set split_discrete_ex by simp
+lemma split_discrete_meta_all: \<open>Pure.all P \<equiv> (\<And>x. PROP P (discrete x))\<close>
 proof
   fix x
   assume \<open>\<And>x. PROP P x\<close>
-  then show \<open>PROP P (nosep x)\<close> .
+  then show \<open>PROP P (discrete x)\<close> .
 next
-  fix x :: \<open>'a nosep\<close>
-  assume \<open>(\<And>x. PROP P (nosep x))\<close>
-  note this[of \<open>nosep.dest x\<close>, simplified]
+  fix x :: \<open>'a discrete\<close>
+  assume \<open>(\<And>x. PROP P (discrete x))\<close>
+  note this[of \<open>discrete.dest x\<close>, simplified]
   then show \<open>PROP P x\<close> .
 qed
 
-lemma inj_nosep[simp]:
-  \<open>inj nosep\<close>
+lemma inj_discrete[simp]:
+  \<open>inj discrete\<close>
   unfolding inj_def by simp
 
-instantiation nosep :: (type) discrete_semigroup begin
-definition \<open>sep_disj_nosep (x :: 'a nosep) (y :: 'a nosep) = False\<close>
-definition share_nosep :: \<open>rat \<Rightarrow> 'a nosep \<Rightarrow> 'a nosep\<close>
-  where [simp]: \<open>share_nosep _ x = x\<close>
-definition times_nosep :: \<open>'a nosep \<Rightarrow> 'a nosep \<Rightarrow> 'a nosep\<close>
-  where [simp]: \<open>times_nosep x y = undefined\<close>
-instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_nosep_def)
+instantiation discrete :: (type) discrete_semigroup begin
+definition \<open>sep_disj_discrete (x :: 'a discrete) (y :: 'a discrete) = False\<close>
+definition share_discrete :: \<open>rat \<Rightarrow> 'a discrete \<Rightarrow> 'a discrete\<close>
+  where [simp]: \<open>share_discrete _ x = x\<close>
+definition times_discrete :: \<open>'a discrete \<Rightarrow> 'a discrete \<Rightarrow> 'a discrete\<close>
+  where [simp]: \<open>times_discrete x y = undefined\<close>
+instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_discrete_def)
 end
 
-instantiation nosep :: (type) sep_carrier begin
-definition mul_carrier_nosep :: \<open>'a nosep \<Rightarrow> bool\<close>
-  where [simp]: \<open>mul_carrier_nosep = (\<lambda>_. True)\<close>
+instantiation discrete :: (type) sep_carrier begin
+definition mul_carrier_discrete :: \<open>'a discrete \<Rightarrow> bool\<close>
+  where [simp]: \<open>mul_carrier_discrete = (\<lambda>_. True)\<close>
 instance by (standard; simp)
 end
 
-instance nosep :: (type) sep_cancel by (standard; case_tac a; case_tac b; case_tac c; simp)
+instance discrete :: (type) sep_cancel by (standard; case_tac a; case_tac b; case_tac c; simp)
 
-instance nosep :: (type) sep_disj_distrib by (standard; case_tac a; case_tac b; case_tac c; simp)
+instance discrete :: (type) sep_disj_distrib by (standard; case_tac a; case_tac b; case_tac c; simp)
 
-instance nosep :: (type) ab_semigroup_mult
-  by (standard; case_tac a; case_tac b; simp; case_tac c; simp)
+instance discrete :: (type) ab_semigroup_mult
+  by (standard; case_tac a; case_tac b; simp)
 
-instance nosep :: (type) strict_positive_sep_magma
+instance discrete :: (type) strict_positive_sep_magma
   by (standard; case_tac a; case_tac b; simp)
 
 

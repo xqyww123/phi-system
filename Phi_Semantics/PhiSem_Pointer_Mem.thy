@@ -126,7 +126,7 @@ interpretation \<phi>mem_val VAL_CONS_OF _ _ V_pointer using \<phi>mem_val_ax .
 
 subsubsection \<open>Resource\<close>
 
-type_synonym R_mem = \<open>(segidx \<rightharpoonup> VAL nosep)\<close>
+type_synonym R_mem = \<open>(segidx \<rightharpoonup> VAL discrete)\<close>
 
 resource_space \<phi>mem_res = \<phi>empty_res +
   R_mem :: R_mem

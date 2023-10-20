@@ -23,7 +23,7 @@ declare [[typedef_overloaded = false]]
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
-type_synonym Var = \<open>varname \<rightharpoonup> VAL option nosep\<close>
+type_synonym Var = \<open>varname \<rightharpoonup> VAL option discrete\<close>
   \<comment> \<open>NONE: declared but not initialized.\<close>
 
 setup \<open>Sign.parent_path\<close>
@@ -37,7 +37,7 @@ lemma infinite_varname:
 (*TODO: polish this*)
 
 resource_space \<phi>var =
-  Var  :: \<open>{vars::RES.Var. finite (dom vars)}\<close> (partial_map_resource \<open>(\<lambda>_::varname. UNIV :: VAL option nosep set)\<close>)
+  Var  :: \<open>{vars::RES.Var. finite (dom vars)}\<close> (partial_map_resource \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
   by (standard, simp, metis domIff notin_range_Some)
 
 hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields_axioms
@@ -47,7 +47,7 @@ subsubsection \<open>Fiction\<close>
 
 fiction_space \<phi>var =
   Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
-            (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option nosep set)\<close>)
+            (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
   by (standard; simp add: set_eq_iff)
 
 hide_fact FIC.\<phi>var_fic_ax FIC.\<phi>var_fic_axioms
@@ -164,17 +164,17 @@ lemma Var_cast_\<phi>app[\<phi>overload cast]:
 *)
 
 lemma Raw_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> Var v Itself) = (1(v \<mapsto> nosep raw) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
+  \<open>(raw \<Ztypecolon> Var v Itself) = (1(v \<mapsto> discrete raw) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
   unfolding BI_eq_iff
   by simp
 
 lemma UnInited_Var_identity_eq:
-  \<open>(\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[v]) = (nosep None \<Ztypecolon> FIC.Var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
+  \<open>(\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[v]) = (discrete None \<Ztypecolon> FIC.Var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
   unfolding BI_eq_iff
   by simp
 
 lemma Inited_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> \<v>\<a>\<r>[v] Itself) = (1(v \<mapsto> nosep (Some raw)) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
+  \<open>(raw \<Ztypecolon> \<v>\<a>\<r>[v] Itself) = (1(v \<mapsto> discrete (Some raw)) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
   unfolding BI_eq_iff
   by simp
 
@@ -331,8 +331,8 @@ proc op_get_var:
   to Itself
   unfold Inited_Var_identity_eq
   FIC.Var.getter_rule
-  semantic_assert \<open>nosep.dest (\<phi>arg.dest \<v>0) \<Turnstile> Some ` Well_Type TY\<close>
-  semantic_return \<open>the (nosep.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+  semantic_assert \<open>discrete.dest (\<phi>arg.dest \<v>0) \<Turnstile> Some ` Well_Type TY\<close>
+  semantic_return \<open>the (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
   fold Inited_Var_identity_eq
   apply_rule op_get_aggregate[where input_index=input_index and sidx=sidx and unwinded=idx
                                 and pidx=pidx and reject=reject]
@@ -374,8 +374,8 @@ proc op_set_var:
                   is_valid_index_of_def) ;;
 
   apply_rule FIC.Var.setter_rule[
-    where u=\<open>Some (nosep (Some (index_mode_value_opt sidx (\<lambda>_. \<phi>arg.dest \<a>\<r>\<g>1)
-                                (nosep.dest (\<phi>arg.dest \<v>1)))))\<close>]
+    where u=\<open>Some (discrete (Some (index_mode_value_opt sidx (\<lambda>_. \<phi>arg.dest \<a>\<r>\<g>1)
+                                (discrete.dest (\<phi>arg.dest \<v>1)))))\<close>]
   fold Inited_Var_identity_eq
 
   \<medium_right_bracket> certified
@@ -423,7 +423,7 @@ proc op_var_scope:
   output \<open>Y\<close>
   throws  E
   \<medium_left_bracket>
-    apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. varname.type v = TY)\<close> and u=\<open>Some (nosep None)\<close>]
+    apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. varname.type v = TY)\<close> and u=\<open>Some (discrete None)\<close>]
     \<exists>v \<open>() \<Ztypecolon> MAKE (Var v \<circle>)\<close>
     try'' \<medium_left_bracket>
         apply_rule BLK[of \<open>\<phi>arg.dest \<v>0\<close>, unfolded atomize_eq, OF Premise_D[where mode=default], simplified]

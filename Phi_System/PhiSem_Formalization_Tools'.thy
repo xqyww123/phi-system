@@ -644,7 +644,7 @@ subsection \<open>Nosep Monolithic Resource\<close>
 
 locale discrete_mono_resource =
   resource Res
-for Res :: "'T nosep option resource_entry"
+for Res :: "'T discrete option resource_entry"
 begin
 
 definition fiction_agree
@@ -655,16 +655,16 @@ end
 
 subsubsection \<open>Interp Agreement\<close>
 
-(*TODO: ('k \<Rightarrow> 'v) nosep option ----> ('k \<Rightarrow> 'v share option)
+(*TODO: ('k \<Rightarrow> 'v) discrete option ----> ('k \<Rightarrow> 'v share option)
   total to that
   none to none
  *)
 
-locale agreement_fiction_for_nosepable_mono_resource =
+locale agreement_fiction_for_discrete_mono_resource =
    R: discrete_mono_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.fiction_agree\<close>
-for Res :: "'T nosep option resource_entry"
-and Fic :: "'T nosep agree option fiction_entry"
+for Res :: "'T discrete option resource_entry"
+and Fic :: "'T discrete agree option fiction_entry"
 begin
 
 sublocale basic_fiction Res \<open>\<F>_optionwise \<F>_agree\<close> Fic
@@ -672,9 +672,9 @@ sublocale basic_fiction Res \<open>\<F>_optionwise \<F>_agree\<close> Fic
 
 lemma partial_implies:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> r ## mk (Some (agree (nosep x)))
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (Some (agree (nosep x))))
-\<Longrightarrow> R.get res = Some (nosep x)\<close>
+\<Longrightarrow> r ## mk (Some (agree (discrete x)))
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (Some (agree (discrete x))))
+\<Longrightarrow> R.get res = Some (discrete x)\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def
   apply (clarsimp simp add: interp_split'
      R.fiction_agree_def R.basic_fiction_\<I> interp_comp_\<I> \<phi>expns R.\<r>_valid_split'
@@ -684,7 +684,7 @@ lemma partial_implies:
   subgoal for u y a aa
     apply (cases aa; simp)
     subgoal premises prems for xa proof -
-      have \<open>get r ## Some (agree (nosep x))\<close>
+      have \<open>get r ## Some (agree (discrete x))\<close>
         by (metis prems(2) sep_disj_get_name)
       from this [unfolded \<open>get r = _\<close>, simplified]
       show ?thesis .
@@ -718,7 +718,7 @@ lemma \<phi>_double_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nosep v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (discrete v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: double)
@@ -729,7 +729,7 @@ lemma \<phi>_contract_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nosep v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (discrete v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: contract)
@@ -958,13 +958,13 @@ end
 
 locale share_fiction_for_partial_mapping_resource_discrete =
   share_fiction_for_partial_mapping_resource Res Fic
-for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
-and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
+for Res :: "('key \<Rightarrow> 'val discrete option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'val discrete share option) fiction_entry"
 begin
 
 lemma \<phi>discrete_normalize:
   \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nosep Itself)))))
- = (nosep x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Itself))))\<close>
+ = (discrete x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Itself))))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 end
@@ -1377,11 +1377,11 @@ end
 paragraph \<open>discrete_mono_resource\<close>
 
 definition (in discrete_mono_resource) \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
-  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nosep.dest v')
+  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (discrete.dest v')
                                                       | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 lemma (in discrete_mono_resource) \<phi>R_get_res_entry:
-  \<open> get res = Some (nosep v)
+  \<open> get res = Some (discrete v)
 \<Longrightarrow> F v res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<phi>R_get_res_entry F res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp

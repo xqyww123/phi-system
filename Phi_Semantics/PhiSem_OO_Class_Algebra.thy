@@ -96,11 +96,11 @@ definition inherited_members_of :: \<open>'m class_algebra \<Rightarrow> 'm::com
   where \<open>inherited_members_of cls = prod class_algebra.members (self_and_parents_of cls)\<close>
 
 
-type_synonym "class" = \<open>(field_name \<rightharpoonup> TY nosep) class_algebra\<close>
+type_synonym "class" = \<open>(field_name \<rightharpoonup> TY discrete) class_algebra\<close>
 
 setup \<open>Sign.mandatory_path "class"\<close>
 
-abbreviation fields_of :: \<open>class \<Rightarrow> field_name \<rightharpoonup> TY nosep\<close>
+abbreviation fields_of :: \<open>class \<Rightarrow> field_name \<rightharpoonup> TY discrete\<close>
   where \<open>fields_of \<equiv> inherited_members_of\<close>
 
 setup \<open>Sign.parent_path\<close>

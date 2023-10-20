@@ -23,7 +23,7 @@ subsection \<open>Fiction\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL nosep share option\<close> \<comment> \<open>fiction of a single memory object\<close>
+type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share option\<close> \<comment> \<open>fiction of a single memory object\<close>
 
 fiction_space aggregate_mem =
   aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
@@ -114,13 +114,13 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 
 subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
-term \<open>(\<lambda>v. to_share o map_option nosep o Map_of_Val v)\<close>
-term \<open>(o) (to_share o map_option nosep) o Map_of_Val\<close>
+term \<open>(\<lambda>v. to_share o map_option discrete o Map_of_Val v)\<close>
+term \<open>(o) (to_share o map_option discrete) o Map_of_Val\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
 
 \<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [61] 60)
-  where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option nosep) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
+  where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option discrete) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
   deriving (*Basic
       and Functional_Transformation_Functor
       and*) Separation_Homo\<^sub>I
@@ -166,7 +166,7 @@ section \<open>Instructions & Their Specifications\<close>
 
 (*
 lemma
-  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Itself)
+  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Itself)
     = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Itself)))\<close>
   unfolding set_eq_iff
   apply (clarsimp simp add: \<phi>expns to_share.share_orthogonal_homo_axioms)
