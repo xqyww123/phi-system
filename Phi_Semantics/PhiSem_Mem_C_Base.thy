@@ -510,11 +510,12 @@ qed .
 
 lemma setter_rule:
   \<open> valid_index (typ_of_blk blk) idx
-\<Longrightarrow> v \<in> Well_Type (index_type idx (typ_of_blk blk))
-\<Longrightarrow> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (index_type idx (typ_of_blk blk))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at blk (Some \<circ> map_discrete (index_mod_value idx (\<lambda>_. v)) \<circ> the))
       \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
         \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
+  unfolding Premise_def
   by (rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value idx (\<lambda>_. v))\<close>
                         and V=\<open>discrete ` {a. index_value idx a = u_idx}\<close>
                         and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>

@@ -178,7 +178,9 @@ definition \<open>is_valid_index_of idx T U \<longleftrightarrow> valid_index T 
 
 declare [[
   \<phi>reason_default_pattern \<open>is_valid_index_of ?idx ?T _\<close> \<Rightarrow> \<open>is_valid_index_of ?idx ?T _\<close> (100)
-    and \<open>is_valid_step_idx_of ?idx ?T _ \<close> \<Rightarrow> \<open>is_valid_step_idx_of ?idx ?T _ \<close> (100)
+                      and \<open>is_valid_step_idx_of ?idx ?T _ \<close> \<Rightarrow> \<open>is_valid_step_idx_of ?idx ?T _ \<close> (100),
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>is_valid_index_of _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>is_valid_step_idx_of _ _ _\<close>
 ]]
 
 lemma is_valid_index_of_Nil:
@@ -427,6 +429,20 @@ lemma op_get_aggregate:
             parse_eleidx_input_least1_def
   by (cases rv; simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
 
+lemma "_op_set_aggregate_":
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> parse_eleidx_input_least1 TY input_index sem_idx idx pidx reject
+\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY\<^sub>U
+\<Longrightarrow> is_valid_index_of idx TY TY\<^sub>U'
+\<Longrightarrow> Premise eval_aggregate_path (TY\<^sub>U' = TY\<^sub>U \<or> allow_assigning_different_typ TY idx)
+\<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
+\<Longrightarrow> report_unprocessed_element_index reject
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY\<^sub>U sem_idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
+  unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
+            parse_eleidx_input_def is_valid_index_of_def
+            parse_eleidx_input_least1_def
+  by (cases rv; cases ru; simp, rule, rule, simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
+
 lemma op_set_aggregate:
   \<open> Is_Aggregate T
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
@@ -437,10 +453,7 @@ lemma op_set_aggregate:
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
 \<Longrightarrow> report_unprocessed_element_index reject
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 sem_idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
-  unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
-            parse_eleidx_input_def is_valid_index_of_def
-            parse_eleidx_input_least1_def
-  by (cases rv; cases ru; simp, rule, rule, simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
+  by (simp add: "_op_set_aggregate_")
 
 proc op_construct_aggregate:
   input  \<open>Void\<close>

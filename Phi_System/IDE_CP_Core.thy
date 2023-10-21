@@ -1393,7 +1393,7 @@ declare [[\<phi>reason_default_pattern \<open>ToA_App_Conv ?TYa ?TY ?T' (?x \<Zt
 
 subparagraph \<open>Basic Rules\<close>
 
-lemma [\<phi>reason %\<phi>app_conv_success for \<open>ToA_App_Conv ?TY ?TY ?T ?App _\<close>]:
+lemma [\<phi>reason %\<phi>app_conv_success for \<open>ToA_App_Conv ?TY ?TY' ?T ?App _\<close>]:
   \<open> ToA_App_Conv TY TY T App App \<close>
   unfolding ToA_App_Conv_def
   by blast

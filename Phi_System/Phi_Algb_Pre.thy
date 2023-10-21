@@ -215,6 +215,34 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + i
   by (simp, insert order_trans, fastforce)
 
 
+paragraph \<open>List\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id _ + id (_#_) = id (_#_) @action \<A>arith_eval\<close>
+                                       \<open>id (_ # _) + id ?var = id (_#_) @action \<A>arith_eval\<close> ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = z
+\<Longrightarrow> id ys + id xs = id zs @action \<A>arith_eval
+\<Longrightarrow> id ys + id (x#xs) = id (z#zs) @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def plus_list_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id _ + id [] = id _ @action \<A>arith_eval\<close>,
+       \<phi>reason %\<A>_partial_add_cut+10 for \<open>id _ + id ?var = id _ @action \<A>arith_eval\<close>]:
+  \<open> id zs + id [] = id zs @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def plus_list_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [] + id _ = id _ @action \<A>arith_eval\<close> ]:
+  \<open> id [] + id zs = id zs @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def plus_list_def
+  by simp
+
+text \<open>TODO:
+
+\<^item> \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative group)
+\<^item> \<open>?unknown + given + ?unknown = given\<close> (only for non-commutative group)
+
+need some ML
+\<close>
 
 subsection \<open>Auxiliary Annotations\<close>
 

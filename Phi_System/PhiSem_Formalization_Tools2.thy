@@ -138,6 +138,10 @@ lemma semantic_local_value_\<phi>app:
   unfolding \<phi>M_assert_def Premise_def \<phi>SemType_def subset_iff \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
 
+lemma semantic_local_value_nochk_\<phi>app:
+  \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) \<close>
+  unfolding Transformation_def
+  by clarsimp
 
 subsection \<open>Synthesis of Literal Value\<close>
 

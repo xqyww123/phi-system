@@ -178,6 +178,32 @@ thm to_share.share_orthogonal_homo_axioms
 
 *)
 
+term \<open>(a @ (b @ c))\<close>
+
+proc op_load_mem:
+  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr' \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  requires \<open> id diff + id addr = id addr' @action \<A>arith_eval\<close>
+    and    \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and    \<open>parse_eleidx_input_least1 TY input_index sem_idx (diff @ idx) pidx reject\<close>
+    and    \<open>\<phi>Aggregate_Getter idx T U f\<close>
+    and    \<open>report_unprocessed_element_index reject\<close>
+  output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  including \<phi>sem_type_brute_derive
+\<medium_left_bracket>
+  to \<open>OPEN _\<close>
+  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
+  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
+  \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
+    certified by (of_tac v, auto_sledgehammer) ;;
+
+  semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
+  semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+
+  apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx
+                                and pidx=pidx and reject=reject]
+\<medium_right_bracket> .
+
+
 proc op_load_mem:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
@@ -193,14 +219,39 @@ proc op_load_mem:
   \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
     certified by (of_tac v, auto_sledgehammer) ;;
 
+  semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
   semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
 
   apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx
                                 and pidx=pidx and reject=reject]
 \<medium_right_bracket> .
 
+proc op_store_mem:
+  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U'\<close>
+  requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and    \<open>\<phi>SemType (y \<Ztypecolon> U') TY\<^sub>U\<close>
+    and    \<open>parse_eleidx_input_least1 TY input_index sem_idx idx pidx reject\<close>
+    and    \<open>is_valid_index_of idx TY TY\<^sub>U\<close>
+    and    \<open>\<phi>Aggregate_Mapper idx T T' U U' f\<close>
+    and    \<open>report_unprocessed_element_index reject\<close>
+  output \<open>f (\<lambda>_. y) x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T')\<close>
+  including \<phi>sem_type_brute_derive
+\<medium_left_bracket>
+  to \<open>OPEN _\<close>
+  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
+  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
 
+  semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
+  semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+  $y
+  apply_rule "_op_set_aggregate_"[where TY=TY and TY\<^sub>U=TY\<^sub>U and TY\<^sub>U'=TY\<^sub>U and sem_idx=sem_idx and idx=idx
+                                    and pidx=pidx and reject=reject and input_index=input_index]
+
+  semantic_local_value_nochk 
+
+  thm useful
+  thm FIC.aggregate_mem.setter_rule
 
 
 

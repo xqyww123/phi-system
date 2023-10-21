@@ -346,18 +346,18 @@ lemma logaddr_type__rawaddr_to_log__logaddr_type[simp]:
 subsubsection \<open>Address Arithmetic - Shift\<close>
 
 abbreviation shift_addr :: "'idx memaddr \<Rightarrow> ('idx::monoid_add) \<Rightarrow> 'idx memaddr" (infixl "+\<^sub>a" 60)
-  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) addr"
+  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. delta + x) addr"
 
 notation shift_addr (infixl "||+" 60) (*depreciated!*)
 
-lemma mem_shift_shift[simp]: "a +\<^sub>a i +\<^sub>a j = a +\<^sub>a (i + j)" by (cases a) (simp add: add.assoc)
+lemma mem_shift_shift[simp]: "a +\<^sub>a i +\<^sub>a j = a +\<^sub>a (j + i)" by (cases a) (simp add: add.assoc)
 
 lemma memaddr_MemBlk_shift[simp]:
   \<open>memaddr.blk (a +\<^sub>a i) = memaddr.blk a\<close>
   by (cases a, simp)
 
 lemma memaddr_index_shift[simp]:
-  \<open>memaddr.index (a +\<^sub>a i) = memaddr.index a + i\<close>
+  \<open>memaddr.index (a +\<^sub>a i) = i + memaddr.index a\<close>
   by (cases a, simp)
 
 lemma mem_shift_add_cancel[simp]:
