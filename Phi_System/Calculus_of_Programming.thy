@@ -425,6 +425,13 @@ lemma \<phi>M_Success[intro!]: (*depreciated?*)
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val_def \<phi>Type_def)
 
+lemma \<phi>M_Success_P:
+  \<open> v \<Turnstile> (y \<Ztypecolon> T)
+\<Longrightarrow> P (\<phi>arg v)
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<s>\<u>\<b>\<j> P u \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
+  unfolding \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: Val_def \<phi>Type_def INTERP_SPEC_subj Subjection_expn_set)
+
 declare \<phi>M_Success[where X=1, simplified, intro!]
 
 lemma \<phi>M_Success'[intro!]:

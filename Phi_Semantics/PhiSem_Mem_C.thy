@@ -125,6 +125,9 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        and Commutativity_Deriver
 
+definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,61] 60)
+  where \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<equiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<close>
+
 (* \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 Mem_Coercion Mem_Coercion Mem_Coercion (\<^emph>) (\<^emph>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close> *)
 
 
@@ -183,12 +186,13 @@ thm to_share.share_orthogonal_homo_axioms
 
 
 proc op_load_mem:
-  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and    \<open>parse_eleidx_input_least1 TY input_index sem_idx idx pidx reject\<close>
     and    \<open>\<phi>Aggregate_Getter idx T U f\<close>
     and    \<open>report_unprocessed_element_index reject\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_brute_derive
 \<medium_left_bracket>
   to \<open>OPEN _\<close>
@@ -205,7 +209,7 @@ proc op_load_mem:
 \<medium_right_bracket> .
 
 proc op_store_mem:
-  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U'\<close>
+  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U'\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and    \<open>\<phi>SemType (y \<Ztypecolon> U') TY\<^sub>U\<close>
     and    \<open>parse_eleidx_input_least1 TY input_index sem_idx idx pidx reject\<close>
@@ -213,6 +217,7 @@ proc op_store_mem:
     and    \<open>\<phi>Aggregate_Mapper idx T T' U U' f\<close>
     and    \<open>report_unprocessed_element_index reject\<close>
   output \<open>f (\<lambda>_. y) x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T')\<close>
+  unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_brute_derive
 \<medium_left_bracket>
   to \<open>OPEN _\<close>
@@ -228,9 +233,13 @@ proc op_store_mem:
 
   semantic_local_value_nochk 
 
-  thm useful
-  thm FIC.aggregate_mem.setter_rule
+  apply_rule FIC.aggregate_mem.setter_rule[where u_idx=v and idx=\<open>memaddr.index addr\<close>
+                                    and v=\<open>\<phi>arg.dest \<v>2\<close> and blk=\<open>memaddr.blk addr\<close>]
 
+  \<open>f (\<lambda>_. y) x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T')))\<close>
+    certified by (of_tac \<open>\<phi>arg.dest \<v>2\<close>, auto_sledgehammer)
+
+\<medium_right_bracket> .
 
 
 
