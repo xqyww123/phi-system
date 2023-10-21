@@ -119,13 +119,13 @@ term \<open>(o) (to_share o map_option discrete) o Map_of_Val\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-\<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [61] 60)
+\<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [81] 80)
   where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option discrete) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
   deriving Basic
        and Functional_Transformation_Functor
        and Commutativity_Deriver
 
-definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,61] 60)
+definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,81] 80)
   where \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<equiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<close>
 
 (* \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 Mem_Coercion Mem_Coercion Mem_Coercion (\<^emph>) (\<^emph>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close> *)
@@ -186,19 +186,19 @@ thm to_share.share_orthogonal_homo_axioms
 
 
 proc op_load_mem:
-  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and    \<open>parse_eleidx_input_least1 TY input_index sem_idx idx pidx reject\<close>
     and    \<open>\<phi>Aggregate_Getter idx T U f\<close>
     and    \<open>report_unprocessed_element_index reject\<close>
-  output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_brute_derive
 \<medium_left_bracket>
   to \<open>OPEN _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
-  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
-  \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
+  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=n and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
+  \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (n \<odiv> MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
     certified by (of_tac v, auto_sledgehammer) ;;
 
   semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
@@ -207,6 +207,8 @@ proc op_load_mem:
   apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx
                                 and pidx=pidx and reject=reject]
 \<medium_right_bracket> .
+
+thm FIC.aggregate_mem.getter_rule
 
 proc op_store_mem:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U'\<close>
@@ -223,7 +225,7 @@ proc op_store_mem:
   to \<open>OPEN _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
-  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
+  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=1 and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
 
   semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
   semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
@@ -241,7 +243,28 @@ proc op_store_mem:
 
 \<medium_right_bracket> .
 
+proc op_allocate_mem_1:
+  input \<open>Void\<close>
+  requires \<open>Semantic_Zero_Val TY T z\<close>
+  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
+  unfolding Guided_Mem_Coercion_def
+  including Semantic_Zero_Val_EIF_brute
+\<medium_left_bracket>
+  semantic_assert \<open>Zero TY \<noteq> None\<close>
+  apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and v=\<open>the (Zero TY)\<close>]
 
+  \<open>z \<Ztypecolon> MAKE (\<m>\<e>\<m>[memaddr blk 0] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
+    certified by (of_tac \<open>the (Zero TY)\<close>, auto_sledgehammer) ;;
+  
+  semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
+
+\<medium_right_bracket> .
+
+proc op_free_mem:
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  output \<open>\<close>
+
+thm FIC.aggregate_mem.deallocate_rule
 
 
 

@@ -701,6 +701,7 @@ locale share_orthogonal_homo = sep_orthogonal_monoid \<psi> D
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_semimodule\<close> and D
 + assumes share_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
                            a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+    and   share_bounded: \<open>\<lbrakk> b \<in> D \<and> c \<in> D ; a ## \<psi> b ; n > 1 ; \<psi> b \<noteq> 1 \<rbrakk> \<Longrightarrow> a * share n (\<psi> b) \<noteq> \<psi> c\<close>
     and   \<psi>_mul_carrier: \<open>x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
 begin
 
@@ -1336,7 +1337,8 @@ proof -
     apply (meson dom_trans f' g' sep_orthogonal_monoid_comp)
     using g.sep_orthogonal apply auto[1]
     using g.homo_mult apply auto[1]
-    using f.\<psi>_mul_carrier t by blast
+    using f.share_bounded t apply blast
+    using f.\<psi>_mul_carrier t by blast 
 
 qed
 
@@ -2713,6 +2715,11 @@ proof (rule share_orthogonal_homo.intro, rule sep_orthogonal_monoid_pointwise,
                         = (\<exists>a''. a' = (\<psi> \<circ> a'') * (1 - n) \<odivr> (\<psi> \<circ> b) \<and> a'' * b = c \<and> a'' ## b \<and> a'' \<in> D')\<close>
     by (auto simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def xx.share_orthogonal
             share_fun_def pointwise_set_def D'; metis)
+
+  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<psi> \<circ> b) \<Longrightarrow> 1 < n \<Longrightarrow> \<psi> \<circ> b \<noteq> 1 \<Longrightarrow> a' * n \<odivr> (\<psi> \<circ> b) \<noteq> \<psi> \<circ> c\<close>
+    by (clarsimp simp add: fun_eq_iff sep_disj_fun_def times_fun_def share_fun_def,
+        metis D' mem_Collect_eq pointwise_set_def xx.share_bounded)
+
 qed
 
 lemma sep_orthogonal_monoid_pointwise_eq:
@@ -2762,6 +2769,11 @@ proof
             (a2 * n \<odivr> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) \<odivr> \<psi> b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
       by (insert xx.share_orthogonal[where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>];
           clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun pointwise_set_def; rule; auto)
+
+    show \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow> 1 < n \<Longrightarrow> \<psi> b \<noteq> 1 \<Longrightarrow> a2 * n \<odivr> \<psi> b \<noteq> \<psi> c\<close>
+      by (insert xx.share_bounded[where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>];
+          clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun pointwise_set_def)
+
   qed
 next
   show \<open>share_orthogonal_homo \<psi> D \<Longrightarrow> share_orthogonal_homo ((\<circ>) \<psi>) (pointwise_set D)\<close>
@@ -3003,6 +3015,11 @@ proof
     apply (cases \<open>n < 1\<close>; simp)
     apply (smt (verit, ccfv_SIG) diff_add_cancel diff_gt_0_iff_gt sep_cancel sep_disj_commuteI sep_disj_multD2 sep_disj_multI2 sep_disj_share sep_mult_commute times_share)
     by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
+
+  show \<open>b \<in> Collect mul_carrier \<and> c \<in> Collect mul_carrier \<Longrightarrow> a2 ## to_share b \<Longrightarrow> 1 < n \<Longrightarrow> to_share b \<noteq> 1 \<Longrightarrow>
+        a2 * n \<odivr> to_share b \<noteq> to_share c\<close>
+    by (cases a2; cases b; cases c; simp; case_tac a; simp)
+  
 qed
 
 

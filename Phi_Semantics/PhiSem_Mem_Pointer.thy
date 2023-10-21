@@ -204,7 +204,7 @@ definition logaddr_to_raw :: \<open>logaddr \<Rightarrow> rawaddr\<close>
     (case addr of memaddr seg idx \<Rightarrow> memaddr seg (to_size_t (index_offset (memblk.layout seg) idx)))\<close>
 
 lemma logaddr_to_raw_0[simp]:
-  \<open>logaddr_to_raw (memaddr 0 []) = (memaddr 0 0)\<close>
+  \<open>logaddr_to_raw (memaddr blk []) = (memaddr blk 0)\<close>
   unfolding logaddr_to_raw_def by simp
 
 lemma logaddr_to_raw_MemBlk[simp]:
@@ -546,7 +546,7 @@ subsubsection \<open>Logical Pointer\<close>
 lemma Ptr_eqcmp[\<phi>reason 1000]:
     "\<phi>Equal (Ptr TY) (\<lambda>x y. memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
   unfolding \<phi>Equal_def
-  by (simp add: \<phi>expns) (metis logaddr_to_raw_inj)
+  by simp (metis logaddr_to_raw_inj)
 
 
 section \<open>Semantic Operations\<close>

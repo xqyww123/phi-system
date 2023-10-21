@@ -523,10 +523,12 @@ subsubsection \<open>Cancellative Permission Insertion Homomorphism\<close>
 context cancl_share_orthogonal_homo begin
 
 lemma refinement_projection_half_perm:
-  \<open>S \<subseteq> D \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
+  \<open>S \<subseteq> D \<Longrightarrow> 0 < n \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
-  by (auto simp add: set_mult_expn sep_orthogonal share_orthogonal',
-      insert share_orthogonal_homo.share_orthogonal' share_orthogonal_homo_axioms, blast)
+  by (auto simp add: set_mult_expn sep_orthogonal share_orthogonal';
+      cases \<open>n \<le> 1\<close>,
+      ((insert share_orthogonal_homo.share_orthogonal' share_orthogonal_homo_axioms, blast)[1],
+       metis in_mono leI sep_orthogonal share_bounded share_right_one))
 
 
 end

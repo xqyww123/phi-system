@@ -453,6 +453,24 @@ lemma fiction_Map_of_Val_ins_perm_projection:
         where S=\<open>{idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
       simp)
 
+lemma fiction_Map_of_Val_ins_perm_projection_half:
+  \<open> valid_index TY idx
+\<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
+\<Longrightarrow> 0 < n
+\<Longrightarrow> refinement_projection (\<F>_functional ((\<circ>) to_share o Map_of_Val_ins) (Map_of_Val_ins_dom TY))
+                          { n \<odivr> (to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) }
+      \<subseteq> UNIV * Some ` discrete ` {a. index_value idx a = u_idx }\<close>
+  unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
+  apply (rule refinement_projections_stepwise_UNIV_paired,
+      rule fiction_Map_of_Val_ins_projection')
+  by (rule refinement_projections_stepwise_UNIV_paired,
+      rule fiction_Map_of_Val_ins_projection',
+      assumption,
+      assumption,
+      rule pointwise_to_share.refinement_projection_half_perm[
+        where S=\<open>{idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
+      simp, simp)
+
 end
 
 locale aggregate_mem_resource =
@@ -474,21 +492,23 @@ sublocale aggregate_mem_resource Res typ_of_blk ..
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
-      \<lambda>ret. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> n \<le> 1
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself \<longmapsto>
+      \<lambda>ret. 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (discrete x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
   unfolding Premise_def
-  by (rule "_getter_rule_2_"[OF _ fiction_Map_of_Val_ins_perm_projection,
-                                simplified split_discrete_ExSet inj_image_mem_iff inj_discrete],
+  by (rule "_getter_rule_2_"[OF _ fiction_Map_of_Val_ins_perm_projection_half,
+                                simplified split_discrete_ExSet inj_image_mem_iff inj_discrete];
       simp)
 
 context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
 
 lemma allocate_rule:
-  \<open> (\<And>r. finite (dom r) \<Longrightarrow> \<exists>blk. blk \<notin> dom r \<and> typ_of_blk blk = TY)
-\<Longrightarrow> v \<in> Well_Type TY
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>r. finite (dom r) \<longrightarrow> (\<exists>blk. blk \<notin> dom r \<and> typ_of_blk blk = TY))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' (\<lambda>blk. typ_of_blk blk = TY) (Some (discrete v))
       \<lbrace> Void \<longmapsto> \<lambda>ret. 1(blk := to_share \<circ> (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> blk. ret = \<phi>arg blk \<and> typ_of_blk blk = TY  \<rbrace> \<close>
+  unfolding Premise_def
   subgoal premises prems proof-
 
   note pointwise_set_UNIV[simp] \<F>_functional_condition_Map_of_Val_ins_dom[simp]
