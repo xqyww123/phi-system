@@ -143,47 +143,7 @@ abbreviation Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarro
   where \<open>\<m>\<e>\<m>[addr] T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
 
 
-(*
-definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
-  where \<open>Ref T x' = (case x' of (seg |: idx) \<Zinj> (n \<odiv> x) \<Rightarrow>
-    if 0 < n \<and> valid_index (segidx.layout seg) idx then
-    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))
-          |v. v \<in> Well_Type (logaddr_type (seg |: idx)) \<and> v \<in> (x \<Ztypecolon> T) }
-    else {})\<close>
-
-lemma (in agmem) Ref_expn[\<phi>expns]:
-  \<open>fic \<in> ((seg |: idx) \<Zinj> (n \<odiv> v) \<Ztypecolon> Ref Itself)
-    \<longleftrightarrow> 0 < n \<and> valid_index (segidx.layout seg) idx
-        \<and> v \<in> Well_Type (logaddr_type (seg |: idx))
-        \<and> fic = FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))\<close>
-  unfolding Ref_def \<phi>Type_def by (simp add: Itself_def) blast
-
-definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share option list) \<phi>\<close>
-  where \<open>Slice T x' = (case x' of (seg |: i#idx) \<Zinj> l \<Rightarrow>
-    if valid_index (segidx.layout seg) idx
-     \<and> (\<exists>N TY. index_type idx (segidx.layout seg) = \<tau>Array N TY \<and> i + length l \<le> N)
-    then let 
-    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))
-          |v. v \<in> Well_Type (logaddr_type (seg |: idx)) \<and> v \<in> (x \<Ztypecolon> T) }
-    else {} | _ \<Rightarrow> {})\<close> *)
-
 section \<open>Instructions & Their Specifications\<close>
-
-(*
-lemma
-  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Itself)
-    = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Itself)))\<close>
-  unfolding set_eq_iff
-  apply (clarsimp simp add: \<phi>expns to_share.share_orthogonal_homo_axioms)
-
-thm to_share.share_orthogonal_homo_axioms
-
-
-
-
-
-*)
-
 
 proc op_load_mem:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
@@ -241,6 +201,12 @@ proc op_store_mem:
 
 \<medium_right_bracket> .
 
+text \<open>A simplification in the semantics is, we only consider allocation with zero initialization
+  (i.e., \<open>calloc\<close> but not \<open>malloc\<close>), which frees us from modelling uninitialized memory state so
+  simplifies the system a lot. We can do so because we aim to provide a certified language
+  over a subset of C semantics. The absence of non-initialized allocation does not affect the functionality
+  but only little performance which we believe worthy against the simplification in reasoning. \<close>
+
 proc op_allocate_mem_1:
   input \<open>Void\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
@@ -272,7 +238,6 @@ proc op_free_mem:
   apply_rule FIC.aggregate_mem.deallocate_rule[where v=v and blk=\<open>memaddr.blk addr\<close>]
 
 \<medium_right_bracket> .
-
 
 
 

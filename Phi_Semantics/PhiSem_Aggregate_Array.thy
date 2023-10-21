@@ -21,6 +21,7 @@ hide_fact array_ty_ax
 abbreviation \<open>array N T \<equiv> array.mk (T,N)\<close>
 
 
+
 subsubsection \<open>Value\<close>
 
 virtual_datatype array_val =

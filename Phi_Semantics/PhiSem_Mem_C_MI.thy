@@ -11,7 +11,7 @@ proc op_allocate_mem_N:
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] ;;
 
-  semantic_local_value( $n ) \<open>\<i>\<n>\<t>(size_t)\<close>
+  semantic_local_value($n) \<open>\<i>\<n>\<t>(size_t)\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>array n TY\<close>
                                                and v=\<open>V_array.mk (replicate (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]

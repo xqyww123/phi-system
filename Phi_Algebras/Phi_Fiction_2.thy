@@ -1,6 +1,6 @@
 theory Phi_Fiction_2
   imports Algebras
-begin
+begi
 
 section \<open>Interpretation of Fictional Separation\<close>
 
