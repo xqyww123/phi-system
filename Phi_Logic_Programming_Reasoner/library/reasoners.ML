@@ -52,9 +52,9 @@ signature PHI_REASONERS = sig
   structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
       context before applying either the automatic solving*)
 
-  val extract_prem  : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
+(*  val extract_prem  : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
   val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm list
-  val extract_prems_rewr : Proof.context -> cterm -> thm option option
+  val extract_prems_rewr : Proof.context -> cterm -> thm option option*)
   val is_syntactic_premise : term -> bool
 
   (*(* Simplifications that uses the extracted premises.
@@ -334,106 +334,10 @@ fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _
   | is_syntactic_premise (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_syntactic_premise X
   | is_syntactic_premise _ = false
 
-(*TODO: merge the \<phi>-LPR based extraction given in git tag PLPR-based-Premise-Extraction
-        which gives a quick way to extend the extraction universally but heavily and slowly.*)
-val gen_extract_prems_rewr =
-  let fun qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
-            qchk_obj bv_tys A orelse qchk_obj bv_tys B
-        | qchk_obj bv_tys (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
-            qchk_obj bv_tys A orelse qchk_obj bv_tys B
-        | qchk_obj bv_tys (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = qchk_obj bv_tys X
-        | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, T, X)) = qchk_obj (T::bv_tys) X
-        | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = qchk_obj bv_tys (Term.incr_boundvars 1 X $ Bound 0)
-        | qchk_obj _ _ = false
-
-      fun quick_check bv_tys (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check bv_tys X
-        | quick_check bv_tys (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, T, X)) = quick_check (T::bv_tys) X
-        | quick_check bv_tys (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = quick_check bv_tys (Term.incr_boundvars 1 X $ Bound 0)
-        | quick_check bv_tys (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj bv_tys X
-        | quick_check _ _ = false
-
-      exception Not_Meet
-    (*fun wrap C ctm = case C ctm of SOME ret => ret | NONE => raise Not_Meet*)
-
-      fun extract ctxt ctm =
-        case Thm.term_of ctm
-          of Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
-               let val eq1 = Conv.fun_conv (Conv.fun_conv (Conv.rewr_conv @{thm' Ant_Seq_def})) ctm
-                in extract ctxt (Thm.rhs_of eq1)
-                |> Option.map (Thm.transitive eq1)
-               end
-           | Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
-               (SOME ((Phi_Conv.hol_all_conv (fn (_, ctxt) => fn ctm =>
-                          case extract ctxt ctm
-                            of SOME ret => ret
-                             | NONE => raise Not_Meet
-                       ) ctxt then_conv
-                       Conv.rewr_conv @{thm' all_conj_distrib[folded atomize_eq]}) ctm)
-                handle Not_Meet => NONE)
-           | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-               (case (extract ctxt (Thm.dest_arg1 ctm), extract ctxt (Thm.dest_arg ctm))
-                  of (SOME ruleA, SOME ruleB) =>
-                      let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> (Pa \<and> Pb) \<and> (A' \<and> B')\<close>
-                                          by (simp add: atomize_eq, blast)} (*TODO: optimize! replace the RS!*)
-                       in SOME (ruleB RS' (ctxt, ruleA RS' (ctxt, merge)))
-                      end
-                   | (SOME ruleA, NONE) =>
-                      let val idx = Thm.maxidx_of_cterm ctm + 1
-                          val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> A \<and> B \<equiv> Pa \<and> (A' \<and> B)\<close>
-                                          by (simp add: atomize_eq)}
-                                   |> Thm.incr_indexes idx
-                                   |> Thm.instantiate (TVars.empty, Vars.make [((("B",idx),\<^Type>\<open>bool\<close>), Thm.dest_arg ctm)])
-                       in SOME (ruleA RS' (ctxt, merge))
-                      end
-                   | (NONE, SOME ruleB) =>
-                      let val idx = Thm.maxidx_of_cterm ctm + 1
-                          val merge = @{lemma' \<open>B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> Pb \<and> (A \<and> B')\<close>
-                                          by (simp add: atomize_eq, blast)}
-                                   |> Thm.incr_indexes idx
-                                   |> Thm.instantiate (TVars.empty, Vars.make [((("A",idx),\<^Type>\<open>bool\<close>), Thm.dest_arg1 ctm)])
-                       in SOME (ruleB RS' (ctxt, merge))
-                      end
-                   | (NONE, NONE) => NONE)
-           | Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ =>
-               extract ctxt (Thm.dest_arg ctm)
-                |> Option.map (fn ret => (Conv.rewr_conv @{thm' \<r>Guard_def} then_conv (K ret)) ctm)
-           | _ => NONE
-
-      fun simp_tag ctxt = Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
-                                                                   Premise_def[where mode=MODE_GUARD]}
-
-      fun extract' ctxt ctm =
-        case Thm.term_of ctm
-          of Const(\<^const_name>\<open>HOL.Trueprop\<close>, _) $ _ =>
-              (case extract ctxt (Thm.dest_arg ctm)
-                 of SOME rule => Conv.arg_conv (K rule) ctm
-                  | NONE => raise Not_Meet)
-           | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-              (Conv.implies_conv (Phi_Conv.atomize_conv ctxt then_conv simp_tag ctxt) (extract' ctxt) then_conv
-               Conv.rewr_conv @{lemma' \<open>(A \<Longrightarrow> P \<and> W) \<equiv> Trueprop ((A \<longrightarrow> P) \<and> (A \<longrightarrow> W))\<close>
-                                  by (unfold atomize_imp, rule, blast, blast)}) ctm
-           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, _) =>
-              (Phi_Conv.meta_all_conv (extract' o snd) ctxt then_conv
-               Conv.rewr_conv @{lemma' \<open>(\<And>c. P c \<and> W c) \<equiv> Trueprop (All P \<and> All W)\<close>
-                                  by (unfold atomize_all, rule, blast, blast)}) ctm
-           | _ => raise Not_Meet
-   in (quick_check,
-   fn ctxt => fn ctm =>
-   if is_syntactic_premise (Thm.term_of ctm)
-   then SOME NONE
-   else if quick_check [] (Thm.term_of ctm)
-   then SOME (SOME (extract' ctxt ctm))
-        handle Not_Meet => NONE
-   else NONE)
-  end
-
-val extract_prems_rewr = snd gen_extract_prems_rewr
-
 fun strip_premise_tag ctxt ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _ =>
-        Conv.try_conv (Conv.rewrs_conv @{thms' Premise_def[where mode=default]
-                                               Premise_def[where mode=MODE_GUARD]}) ctm
+        Conv.try_conv (Conv.rewrs_conv @{thms' Premise_def}) ctm
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
         Conv.arg_conv (strip_premise_tag ctxt) ctm
      | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
@@ -448,14 +352,13 @@ fun strip_premise_tag ctxt ctm =
 
 fun extract_prem ctxt strip =
   let val ctxt' = Context.proof_of ctxt
-      val (qchk, conv) = gen_extract_prems_rewr
    in fn thm =>
    if is_syntactic_premise (Thm.prop_of thm)
    then SOME (if strip
               then (Raw_Simplifier.norm_hhf ctxt' thm)
                 |> Conv.fconv_rule (strip_premise_tag ctxt')
               else thm)
-   else if qchk [] (Thm.prop_of thm)
+   else (*if qchk [] (Thm.prop_of thm)
         then let val thm = Raw_Simplifier.norm_hhf ctxt' thm
               in (case conv ctxt' (Thm.cprop_of thm)
                     of SOME NONE => SOME (if strip
@@ -466,7 +369,7 @@ fun extract_prem ctxt strip =
                            |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_GUARD]})))
                      | NONE => NONE)
              end
-   else NONE
+   else*) NONE
   end
 
 fun extract_prems ctxt strip thm =
@@ -484,31 +387,6 @@ fun extract_prems ctxt strip thm =
    in the_default [] (Option.map simp (extract_prem ctxt strip thm))
   end
 
-
-(*structure Is_Premise_of_Obligation = Handlers ( type arg = term; type ret = bool )
-structure Local_Premises_of_Obligation = Named_Thms (
-  val name = \<^binding>\<open>__local_premise_of_obligation__\<close>
-  val description = "Facts inside will be added as premises into proof obligations"
-)*)
-
-(*
-fun is_premise_of_obligation ctxt =
-  let val ivk = Is_Premise_of_Obligation.invoke ctxt
-      fun default (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = default M
-        | default (Const(\<^const_name>\<open>default\<close>, _)) = true
-        | default (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
-        | default (Abs (_,_,X)) = default X
-        | default (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = default X
-        | default (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = default X
-        | default (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = default X
-        | default (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = default X
-        | default (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = default X
-        | default _ = false
-   in fn tm => case ivk tm
-    of SOME ret => ret
-     | NONE => default tm
-  end
-*)
 
 (** Applications of the Premise Extraction **)
 
@@ -539,33 +417,23 @@ val asm_full_rewrite = gen_simplify Simplifier.asm_full_rewrite
 val contract_premise_imp =
     @{lemma \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
             by (rule, (simp add: Premise_def)+)}
-val contract_premise_imp' =
-    @{lemma \<open>(P \<and> A \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (A &&& PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
-            by (rule, (simp add: Premise_def conjunction_imp)+)}
 
 (*the term must be beta-eta normalized*)
-fun obligation_collect counter ctxt filter =
+fun obligation_collect counter ctxt =
   let fun conv ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
                 Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
-           | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
-               =>(case filter ctxt (Thm.dest_arg1 ctm)
-                    of SOME NONE => (*A normal premises using the normal rule*)
-                        (counter := !counter + 1;
+           | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ _
+               =>(if is_syntactic_premise A
+                  then (counter := !counter + 1;
                          (Conv.implies_conv
                             (Phi_Conv.atomize_conv ctxt then_conv
                              strip_premise_tag ctxt)
                             conv then_conv
                           Conv.rewr_conv contract_premise_imp) ctm)
-                     | SOME (SOME rule) => (*Not a direct premise but still has something can be extracted
-                                             so we apply_tac the given rule to extract*)
-                        (counter := !counter + 1;
-                         (Conv.implies_conv (Conv.rewr_conv rule) conv then_conv
-                          Conv.rewr_conv contract_premise_imp') ctm)
-                     | NONE => (*Just waste*)
-                         (Conv.arg_conv conv then_conv
-                          Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
+                  else (Conv.arg_conv conv then_conv
+                        Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
            | _ => raise CTERM ("unexpected proof obligation form", [ctm])
    in conv
   end
@@ -668,10 +536,9 @@ fun augment_conditions conds ctxt sequent =
 (*the leading antecedent must be beta-eta normalized*)
 fun collect_obligation_premises option ctxt thm = let open Conv
   val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
-  val filter = extract_prems_rewr
   val new_cond = Unsynchronized.ref 0
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt => 
-                (if collect_premises then obligation_collect new_cond ctxt filter
+                (if collect_premises then obligation_collect new_cond ctxt
                                      else Conv.all_conv) then_conv
                 rewr_conv @{thm Pure.prop_def[symmetric]}) ctxt
               ) 1 thm
@@ -740,7 +607,7 @@ fun defer_obligation_tac cfg contr_mode =
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
 val auto_obligation_solver = oblg_template {can_inst=true, fix_level=0} (fn ctxt => fn th =>
-      let val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+      let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
        in th'
        |> head_only (apply_tac ctxt (fn (ctxt,pre,aux,_) =>
@@ -774,18 +641,19 @@ fun safer_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
                                                         (*it is zero because we will never use tactics
                                                           that instantiate some variable ever.*) }
   (fn ctxt => fn th =>
-      let val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
-          val th' = @{thm' Premise_I} RS th'1
+      let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+          val th' = @{thm' Premise_I} RS th'1*)
+          val th' = th
           fun clarsimp_tac ctxt =
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
                             else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW
                 Classical.clarify_tac (addSss ctxt)
        in apply_tac ctxt (fn (ctxt,pre,aux,_) =>
-             pre THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))
+             pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
                  THEN HEADGOAL (
                               case_split_by_annotations_first_subgoal ctxt 
                  THEN_ALL_NEW Method.insert_tac ctxt aux
-                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac ctxt s x))
+                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x))
                ) Safe_Solver th'
        |> Seq.pull
       end)

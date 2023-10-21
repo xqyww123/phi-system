@@ -43,7 +43,7 @@ lemma layout[simp]:
 setup \<open>Sign.parent_path\<close>
 
 (*TODO: rename: block, offset*)
-datatype 'index memaddr = memaddr (blk: memblk) (index: 'index) (infixl "|:" 60)
+datatype 'index memaddr = memaddr (blk: memblk) (index: 'index)
 declare [[typedef_overloaded = false]]
 
 declare memaddr.sel[iff]
@@ -59,7 +59,7 @@ proof
   then show \<open>PROP P (memaddr blk ofs)\<close> .
 next
   fix x
-  assume \<open>\<And>blk ofs. PROP P (blk |: ofs)\<close>
+  assume \<open>\<And>blk ofs. PROP P (memaddr blk ofs)\<close>
   note this[of \<open>memaddr.blk x\<close> \<open>memaddr.index x\<close>, simplified]
   then show \<open>PROP P x\<close> .
 qed
@@ -96,7 +96,7 @@ instance ..
 end
 
 instantiation memaddr :: (zero) zero begin
-definition "zero_memaddr = (0 |: 0)"
+definition "zero_memaddr = (memaddr 0 0)"
 instance ..
 end
 
@@ -201,10 +201,10 @@ paragraph \<open>Relation between Logical Address and Physical Address\<close>
 
 definition logaddr_to_raw :: \<open>logaddr \<Rightarrow> rawaddr\<close>
   where \<open>logaddr_to_raw addr =
-    (case addr of seg |: idx \<Rightarrow> seg |: to_size_t (index_offset (memblk.layout seg) idx))\<close>
+    (case addr of memaddr seg idx \<Rightarrow> memaddr seg (to_size_t (index_offset (memblk.layout seg) idx)))\<close>
 
 lemma logaddr_to_raw_0[simp]:
-  \<open>logaddr_to_raw (0 |: []) = (0 |: 0)\<close>
+  \<open>logaddr_to_raw (memaddr 0 []) = (memaddr 0 0)\<close>
   unfolding logaddr_to_raw_def by simp
 
 lemma logaddr_to_raw_MemBlk[simp]:
@@ -527,10 +527,10 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Object_Equiv RawPointer (=)\<close>
        and Functionality
        and \<open>\<phi>SemType (x \<Ztypecolon> RawPointer) pointer\<close>
-       and \<open>Semantic_Zero_Val pointer RawPointer (Null |: 0)\<close>
+       and \<open>Semantic_Zero_Val pointer RawPointer 0\<close>
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
-  "\<phi>Equal RawPointer (\<lambda>x y. x = 0 |: 0 \<or> y = 0 |: 0 \<or> memaddr.blk x = memaddr.blk y) (=)"
+  "\<phi>Equal RawPointer (\<lambda>x y. x = 0 \<or> y = 0 \<or> memaddr.blk x = memaddr.blk y) (=)"
   unfolding \<phi>Equal_def by (simp add: zero_memaddr_def; blast)
 
 

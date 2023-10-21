@@ -132,9 +132,12 @@ subsection \<open>Memory Object\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-\<phi>type_def Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
-  where \<open>Mem addr T \<equiv> FIC.aggregate_mem.\<phi> (memaddr.blk addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+\<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
+  where \<open>MemBlk blk T \<equiv> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T)\<close>
   deriving Sep_Functor_1
+
+abbreviation Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
+  where \<open>\<m>\<e>\<m>[addr] T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
 
 
 (*
@@ -177,31 +180,6 @@ thm to_share.share_orthogonal_homo_axioms
 
 
 *)
-
-term \<open>(a @ (b @ c))\<close>
-
-proc op_load_mem:
-  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr' \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  requires \<open> id diff + id addr = id addr' @action \<A>arith_eval\<close>
-    and    \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and    \<open>parse_eleidx_input_least1 TY input_index sem_idx (diff @ idx) pidx reject\<close>
-    and    \<open>\<phi>Aggregate_Getter idx T U f\<close>
-    and    \<open>report_unprocessed_element_index reject\<close>
-  output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
-  including \<phi>sem_type_brute_derive
-\<medium_left_bracket>
-  to \<open>OPEN _\<close>
-  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
-  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
-  \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
-    certified by (of_tac v, auto_sledgehammer) ;;
-
-  semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
-  semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
-
-  apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx
-                                and pidx=pidx and reject=reject]
-\<medium_right_bracket> .
 
 
 proc op_load_mem:
