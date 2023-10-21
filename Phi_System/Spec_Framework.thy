@@ -227,7 +227,7 @@ lemma \<phi>SemType_Itself_brute:
   unfolding Premise_def \<phi>SemType_def subset_iff
   by simp
 
-lemma \<phi>sem_type_brute_derive:
+lemma \<phi>sem_type_by_sat:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)
 \<Longrightarrow> \<phi>SemType S TY \<close>
   unfolding Premise_def \<phi>SemType_def \<r>Guard_def .
@@ -237,9 +237,9 @@ lemma \<phi>sem_type_brute_EIF:
   unfolding Action_Tag_def \<phi>SemType_def
   by blast
 
-bundle \<phi>sem_type_brute_derive = \<phi>sem_type_brute_derive[\<phi>reason default %\<phi>sem_type_brute]
-                                \<phi>sem_type_brute_EIF[\<phi>reason %extract_pure]
-                                \<phi>SemType_Itself_brute[\<phi>reason %\<phi>sem_type_cut+10]
+bundle \<phi>sem_type_sat_EIF = \<phi>sem_type_by_sat[\<phi>reason default %\<phi>sem_type_brute]
+                           \<phi>sem_type_brute_EIF[\<phi>reason %extract_pure]
+                           \<phi>SemType_Itself_brute[\<phi>reason %\<phi>sem_type_cut+10]
 
 
 paragraph \<open>Over Logic Connectives\<close>

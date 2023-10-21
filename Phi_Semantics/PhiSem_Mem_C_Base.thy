@@ -461,8 +461,6 @@ lemma fiction_Map_of_Val_ins_perm_projection_half:
                           { n \<odivr> (to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) }
       \<subseteq> UNIV * Some ` discrete ` {a. index_value idx a = u_idx }\<close>
   unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
-  apply (rule refinement_projections_stepwise_UNIV_paired,
-      rule fiction_Map_of_Val_ins_projection')
   by (rule refinement_projections_stepwise_UNIV_paired,
       rule fiction_Map_of_Val_ins_projection',
       assumption,
@@ -492,7 +490,7 @@ sublocale aggregate_mem_resource Res typ_of_blk ..
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> n \<le> 1
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself \<longmapsto>
       \<lambda>ret. 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (discrete x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
@@ -551,10 +549,11 @@ lemma setter_rule:
       simp add: split_discrete_meta_all inj_image_mem_iff index_mod_value_welltyp)
 
 lemma deallocate_rule:
-  \<open> v \<in> Well_Type (typ_of_blk blk)
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (typ_of_blk blk)
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at blk Map.empty)
       \<lbrace> 1(blk := to_share \<circ> (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<longmapsto>
         \<lambda>\<r>\<e>\<t>. 1 \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
+  unfolding Premise_def
 subgoal premises prems
 proof -
   have [simp]:

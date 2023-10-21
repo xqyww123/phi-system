@@ -71,21 +71,20 @@ consts addrspace_bits :: "nat" \<comment> \<open>bit width of address space, in 
 specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by blast
   \<comment> \<open>We leave it unspecified and only require it is positive\<close>
 
-typedecl addr_cap \<comment> \<open>size of address space\<close>
+typedecl size_t \<comment> \<open>size of address space\<close>
 
-instantiation addr_cap :: len begin
-definition [simp]: "len_of_addr_cap (_::addr_cap itself) = addrspace_bits"
+instantiation size_t :: len begin
+definition [simp]: "len_of_size_t (_::size_t itself) = addrspace_bits"
 instance apply standard using addrspace_bits_L0 by simp
 end
 
-type_synonym size_t = \<open>addr_cap word\<close>
-abbreviation to_size_t :: \<open>nat \<Rightarrow> size_t\<close> where \<open>to_size_t \<equiv> of_nat\<close>
+abbreviation to_size_t :: \<open>nat \<Rightarrow> size_t word\<close> where \<open>to_size_t \<equiv> of_nat\<close>
 
 
 paragraph \<open>Logical and Physical Addresses\<close>
 
 type_synonym logaddr = "aggregate_path memaddr"
-type_synonym rawaddr = \<open>size_t memaddr\<close> \<comment> \<open>physical pointer having physical offset\<close>
+type_synonym rawaddr = \<open>size_t word memaddr\<close> \<comment> \<open>physical pointer having physical offset\<close>
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -315,8 +314,8 @@ lemma logaddr_to_raw_inj:
      \<not> phantom_mem_semantic_type (logaddr_type addr1) \<Longrightarrow>
      logaddr_to_raw addr1 = logaddr_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
   unfolding logaddr_to_raw_def valid_logaddr_def
-  by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp;
-      metis Valid_MemBlk_def add_leD1 index_offset_inj index_offset_upper_bound_0 len_of_addr_cap_def memblk.simps(5) order.strict_trans1 take_bit_nat_eq_self_iff word_of_nat_eq_iff)
+  by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def)
+      
   
 
 definition \<open>rawaddr_to_log T raddr = (@laddr. logaddr_to_raw laddr = raddr \<and> logaddr_type laddr = T \<and> valid_logaddr laddr)\<close>

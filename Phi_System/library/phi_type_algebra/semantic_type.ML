@@ -52,7 +52,7 @@ fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
 
       val ctxt = ctxt0
               |> Config.put Phi_Reasoner.ignore_dup_reasoner true
-              |> Bundle.includes ["Spec_Framework.\<phi>sem_type_brute_derive"]
+              |> Bundle.includes ["Spec_Framework.\<phi>sem_type_sat_EIF"]
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_SemTy_rule},
