@@ -479,6 +479,12 @@ lemma \<Sigma>_pseudo_Transformation_Functor:
   unfolding Transformation_def
   by (cases x; clarsimp; blast)
 
+lemma \<Sigma>_pseudo_Functional_Transformation_Functor:
+  \<open> snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U c \<w>\<i>\<t>\<h> P 
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (c,y) \<Ztypecolon> \<Sigma> U \<w>\<i>\<t>\<h> P \<close>
+  unfolding Transformation_def
+  by (cases x; clarsimp)
+
 lemma \<Sigma>_pseudo_Separation_Homo\<^sub>I:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst (fst x) = fst (snd x)
 \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<^emph> \<Sigma> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst (fst x), (snd (fst x), snd (snd x))) \<Ztypecolon> \<Sigma> c. (T c \<^emph> U c) \<close>
@@ -499,7 +505,46 @@ lemma \<Sigma>_fundef_cong[fundef_cong]:
   unfolding \<phi>Dependent_Sum_def \<phi>Type_def
   by simp
 
-(*TODO: reasoning rules based on the above pseudo properties*)
+
+
+paragraph \<open>Manual Instantiation of Reasoning Rules\<close>
+
+lemma \<Sigma>_simp_cong[\<phi>simp_cong]:
+  \<open> x \<Ztypecolon> T c\<^sub>x \<equiv> y \<Ztypecolon> U c\<^sub>y
+\<Longrightarrow> (c\<^sub>x,x) \<Ztypecolon> \<Sigma> T \<equiv> (c\<^sub>y,y) \<Ztypecolon> \<Sigma> U \<close>
+  by clarsimp
+
+lemma \<Sigma>_To_Transformation[\<phi>reason default %To_ToA_derived_Tr_functor]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action to (Z c)))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action to (\<Sigma> Z) \<close>
+  unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
+  by clarsimp
+
+lemma \<Sigma>_To_Transformation_fuzzy[\<phi>reason default %To_ToA_derived_Tr_functor_fuzzy]:
+  \<open> NO_MATCH TYPE('c\<^sub>a\<^sub>a) TYPE('c) 
+\<Longrightarrow> PROP Reduce_HO_trivial_variable (Trueprop (
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action to Z))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action to Z \<close>
+  for T :: \<open>('p \<Rightarrow> ('c,'a) \<phi>)\<close> and Z :: \<open>('c\<^sub>a\<^sub>a, 'a\<^sub>a\<^sub>a) \<phi>\<close>
+  unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
+  by clarsimp
+
+lemma \<Sigma>_to_traverse[\<phi>reason default %To_ToA_derived_Tr_functor]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z)))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z) \<close>
+  unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
+  by clarsimp
+
+lemma \<Sigma>_\<A>simp[\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action \<A>simp))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action \<A>_transitive_simp \<close>
+  unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
+  by clarsimp
+
+
 
 
 subsubsection \<open>\<Sigma>-Homomorphism (Commutativity over \<Sigma>)\<close>
@@ -2411,6 +2456,8 @@ subsubsection \<open>Interval in Length Representation\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
+term map
+
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> ('c::sep_algebra, 'x) \<phi>
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -2430,6 +2477,8 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>xa<len_intvl.len iv. T\<^sub>P (x ! xa))) \<close>
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
+
+translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant_LenIv.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?iv = ?iva \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iva) ?T ?Ta set (\<lambda>x. UNIV) list_all2 \<close>),

@@ -203,6 +203,7 @@ consts EqCompare :: \<open>VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
 debt_axiomatization Zero :: \<open>TY \<Rightarrow> VAL option\<close>
   where zero_well_typ: "pred_option (\<lambda>v. v \<in> Well_Type T) (Zero T)"
 
+
 (* lemma Well_Type_unique:
   \<open>v \<in> Well_Type ta \<Longrightarrow> v \<in> Well_Type tb \<Longrightarrow> ta = tb\<close>
   using Well_Type_disjoint by blast

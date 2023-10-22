@@ -1,5 +1,5 @@
 theory PhiSem_Mem_C
-  imports PhiSem_Mem_Pointer
+  imports PhiSem_Mem_Pointer "List-Index.List_Index"
   abbrevs "<mem>" = "\<m>\<e>\<m>"
       and "<mem-blk>" = "\<m>\<e>\<m>-\<b>\<l>\<k>"
       and "<slice>" = "\<s>\<l>\<i>\<c>\<e>"
@@ -217,11 +217,34 @@ section \<open>Derivative \<phi>-Types\<close>
 
 subsection \<open>Slice\<close>
 
-typ len_intvl
+declare [[\<phi>trace_reasoning = 3]]
 
-\<phi>type_def Mem_Slice :: \<open>logaddr \<times> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _]")
-  where \<open>l \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : len] T\<close>
+\<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_, _ : _]")
+  where \<open>l \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr, start : len] T \<equiv> map_index (\<lambda>i. Pair (start + i)) l \<Ztypecolon> \<big_ast> \<lbrakk>start : len\<rwpar> (\<Sigma> j. \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T)\<close>
     \<comment> \<open>Length is still required because it determines the domain of the \<phi>-type so guides the reasoning\<close>
+  deriving (*Basic
+       and \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (\<lambda>x. length x = len \<and> list_all P x) \<close>
+       and \<open>Object_Equiv T eq
+        \<Longrightarrow> Object_Equiv (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (list_all2 eq) \<close>
+       and Identity_Elements
+       and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (list_all T\<^sub>D) (\<lambda>x. length x = len \<and> list_all T\<^sub>P x) \<close>
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (\<lambda>x. length x = len \<and> list_all T\<^sub>D x) \<close>
+       and*) Transformation_Functor
 
+term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow>
+    Identity_Elements\<^sub>E (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (\<lambda>x. length x = len \<and> list_all T\<^sub>D x) \<close>
+
+term \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P \<Longrightarrow>
+    Identity_Elements\<^sub>I (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (list_all T\<^sub>D) (\<lambda>x. length x = len \<and> list_all T\<^sub>P x) \<close>
+
+term \<open>Object_Equiv T eq
+  \<Longrightarrow> Object_Equiv (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (list_all2 eq) \<close>
+term \<open>Abstract_Domain T P
+  \<Longrightarrow> Abstract_Domain (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (\<lambda>x. length x = len \<and> list_all P x) \<close>
+
+thm Mem_Slice.unfold
 
 end

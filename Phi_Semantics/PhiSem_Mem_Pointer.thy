@@ -74,12 +74,15 @@ specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by blast
 typedecl size_t \<comment> \<open>size of address space\<close>
 
 instantiation size_t :: len begin
-definition [simp]: "len_of_size_t (_::size_t itself) = addrspace_bits"
+definition [iff]: "len_of_size_t (_::size_t itself) = addrspace_bits"
 instance apply standard using addrspace_bits_L0 by simp
 end
 
 abbreviation to_size_t :: \<open>nat \<Rightarrow> size_t word\<close> where \<open>to_size_t \<equiv> of_nat\<close>
 
+lemma unat_to_size_t[simp]:
+  \<open>n < 2 ^ addrspace_bits \<Longrightarrow> unat (to_size_t n) = n\<close>
+  by (simp add: of_nat_inverse)
 
 paragraph \<open>Logical and Physical Addresses\<close>
 
