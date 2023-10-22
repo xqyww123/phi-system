@@ -10,7 +10,8 @@ theory PhiTest_All_Sem
           Phi_Semantics.PhiSem_Aggregate_Array
           Phi_Semantics.PhiSem_Aggregate_Tuple
           Phi_Semantics.PhiSem_Aggregate_Named_Tuple
-          Phi_Semantics.PhiSem_Mem_C_MI
+          Phi_Semantics.PhiSem_Mem_C
+          (*Phi_Semantics.PhiSem_Mem_C_MI*)
           (*Phi_Semantics.PhiSem_Mem_OO TO BE FIXED*)
 begin
 

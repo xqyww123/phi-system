@@ -971,23 +971,17 @@ consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
 \<phi>reasoner_group To_ToA = (100, [0,4000]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
     \<open>Rules of To-Transformation that transforms \<open>x \<Ztypecolon> T\<close> to \<open>y \<Ztypecolon> U\<close> for certain \<open>y\<close> constrained by a
      relation with \<open>x\<close>.\<close>
- and To_ToA_fail = (0, [0,0]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                in To_ToA and in fail
+ and To_ToA_fail = (0, [0,0]) in To_ToA and in fail
     \<open>Failure report in To-Transformation\<close>
- and To_ToA_system_fallback = (1, [1,1]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                           in To_ToA > To_ToA_fail
+ and To_ToA_system_fallback = (1, [1,1]) in To_ToA > To_ToA_fail
     \<open>System To-Transformation rules falling back to normal transformation.\<close>
- and To_ToA_fallback = (10, [2,20]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                      in To_ToA > To_ToA_system_fallback
+ and To_ToA_fallback = (10, [2,20]) in To_ToA > To_ToA_system_fallback
     \<open>A general group allocating priority space for fallbacks of To-Transformation.\<close>
- and To_ToA_derived = (50, [30,70]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                      in To_ToA > To_ToA_fallback and < default
+ and To_ToA_derived = (50, [30,70]) in To_ToA > To_ToA_fallback and < default
     \<open>Automatically derived To-Transformation rules\<close>
- and To_ToA_cut     = (1000, [1000,1100]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                            in To_ToA
+ and To_ToA_cut     = (1000, [1000,1100]) in To_ToA
     \<open>Cutting To-Transformation rules\<close>
- and To_ToA_success = (4000, [4000,4000]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                            in To_ToA > To_ToA_cut
+ and To_ToA_success = (4000, [4000,4000]) in To_ToA > To_ToA_cut
     \<open>Immediate success\<close>
 
 (* abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close> *)
@@ -1020,10 +1014,6 @@ declare [[
   \<phi>reason_default_pattern
     \<open>?X @action to ?A\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed To-Transformation: \<close> (?X @action to ?A) \<newline>
                                       \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action to _\<close>\<close>)\<close> (1)
-(*depreciate
-and \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. ?rel x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _ @action \<A>\<T>split_step\<close> \<Rightarrow>
-    \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. ?rel x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _ \<w>\<i>\<t>\<h> _ @action \<A>\<T>split_step\<close> (100)
-and \<open>?X @action \<A>\<T>split_step\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form: \<close> (?X @action \<A>\<T>split_step))\<close> (1)*)
 ]]
 
 (*
@@ -1074,6 +1064,39 @@ lemma [\<phi>reason %extract_pure]:
   \<open> P \<longrightarrow> A @action \<A>ESC
 \<Longrightarrow> P \<longrightarrow> (A @action to T) @action \<A>ESC \<close>
   unfolding Action_Tag_def .
+
+
+subsubsection \<open>Preliminary Step: Infer the Target Type before the Reasoning\<close>
+  \<comment> \<open>as some \<phi>-type like \<open>\<Sigma>\<close> may introduce higher-order vars whose instantiation is easily disturbed
+      by the ordinary reasoning consisting of various sub-procedure.
+     Therefore, we infer the target type specifically before any real reasoning process to help
+      the HO vars to be instantiated properly. \<close>
+
+definition Determine_\<phi>Type :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Determine_\<phi>Type source target \<equiv> True\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>Determine_\<phi>Type ?source _ @action to ?T\<close> \<Rightarrow> \<open>Determine_\<phi>Type ?source _ @action to ?T\<close> (100)
+  and \<open>Determine_\<phi>Type ?source ?target\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>unknown form of reasoning\<close> Determine_\<phi>Type ?source ?target())\<close> (0)
+]]
+
+\<phi>reasoner_group determine_\<phi>typ_to__all = (100, [0, 2000]) for \<open>Determine_\<phi>Type source target @action to T\<close> \<open>\<close>
+  and determine_\<phi>typ_to__cut = (1000, [1000,1030]) in determine_\<phi>typ_to__all \<open>cutting\<close>
+  and determine_\<phi>typ_to__fallback = (1, [1, 10]) in determine_\<phi>typ_to__all \<open>fallbacks\<close>
+  and determine_\<phi>typ_to__fail = (0, [0,0]) in determine_\<phi>typ_to__all \<open>failure\<close>
+  and determine_\<phi>typ_to__derived = (50, [30, 70]) in determine_\<phi>typ_to__all \<open>derived\<close>
+
+paragraph \<open>Basic Rules\<close>
+
+lemma [\<phi>reason default %determine_\<phi>typ_to__fail]:
+  \<open> FAIL TEXT(\<open>Fail to determine the target type of transforming\<close> T \<open>to\<close> \<T>)
+\<Longrightarrow> Determine_\<phi>Type T T' @action to \<T> \<close>
+  unfolding Determine_\<phi>Type_def Action_Tag_def ..
+
+lemma [\<phi>reason default %determine_\<phi>typ_to__fallback]:
+  \<open> Determine_\<phi>Type T \<T> @action to \<T> \<close>
+  unfolding Determine_\<phi>Type_def Action_Tag_def ..
+
 
 subsubsection \<open>Entry Point\<close>
 
@@ -1142,47 +1165,95 @@ lemma [\<phi>reason !10]:
   unfolding Action_Tag_def Transformation_def
   by simp
 
+lemma [\<phi>reason %determine_\<phi>typ_to__cut]:
+  \<open> Determine_\<phi>Type T T @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e> \<close>
+  unfolding Determine_\<phi>Type_def Action_Tag_def ..
+
 subsubsection \<open>Pattern\<close>
 
-lemma \<A>_strip_traverse:
+\<phi>reasoner_group To_ToA_pattern_shortcut = (3000, [3000,3000]) in To_ToA and > To_ToA_cut \<open>\<close>
+
+context begin
+
+private lemma \<A>_strip_traverse:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to A
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> A) \<close>
   unfolding Action_Tag_def .
 
-lemma \<A>_pattern_meet:
+private lemma \<A>_strip_traverse_det:
+  \<open> Determine_\<phi>Type T T' @action to A
+\<Longrightarrow> Determine_\<phi>Type T T' @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> A) \<close>
+  unfolding Determine_\<phi>Type_def Action_Tag_def ..
+
+private lemma \<A>_pattern_meet:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to A'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A) \<close>
   unfolding Action_Tag_def .
 
-lemma \<A>_pattern_not_meet:
+private lemma \<A>_pattern_meet_det:
+  \<open> Determine_\<phi>Type T T' @action to A'
+\<Longrightarrow> Determine_\<phi>Type T T' @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A) \<close>
+  unfolding Determine_\<phi>Type_def Action_Tag_def ..
+
+private lemma \<A>_pattern_not_meet:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to \<A> \<close>
   unfolding Action_Tag_def .
 
-lemma \<A>_pattern_meet_this:
+private lemma \<A>_pattern_not_meet_det:
+  \<open> Determine_\<phi>Type T T' @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>
+\<Longrightarrow> Determine_\<phi>Type T T' @action to \<A> \<close>
+  unfolding Action_Tag_def .
+
+private lemma \<A>_pattern_meet_this:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to A'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A \<o>\<r>\<e>\<l>\<s>\<e> others) \<close>
   unfolding Action_Tag_def .
 
-lemma \<A>_pattern_meet_that:
+private lemma \<A>_pattern_meet_this_det:
+  \<open> Determine_\<phi>Type T T' @action to A'
+\<Longrightarrow> Determine_\<phi>Type T T' @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A \<o>\<r>\<e>\<l>\<s>\<e> others) \<close>
+  unfolding Action_Tag_def .
+
+private lemma \<A>_pattern_meet_that:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to that
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (this \<o>\<r>\<e>\<l>\<s>\<e> that) \<close>
   unfolding Action_Tag_def .
 
+private lemma \<A>_pattern_meet_that_det:
+  \<open> Determine_\<phi>Type T T' @action to that
+\<Longrightarrow> Determine_\<phi>Type T T' @action to (this \<o>\<r>\<e>\<l>\<s>\<e> that) \<close>
+  unfolding Action_Tag_def .
 
-\<phi>reasoner_ML \<A>pattern %To_ToA_cut
+
+\<phi>reasoner_ML \<A>pattern %To_ToA_pattern_shortcut
     ( \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
-    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close> ) =
+    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
+    | \<open>Determine_\<phi>Type _ _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
+    | \<open>Determine_\<phi>Type _ _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
+    | \<open>Determine_\<phi>Type _ _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
+    | \<open>Determine_\<phi>Type _ _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close> ) =
 \<open>fn (_, (ctxt, sequent)) => Seq.make (fn () =>
   let fun parse_patterns (Const(\<^const_name>\<open>synt_orelse\<close>, _) $ X $ Y)
             = parse_patterns X @ parse_patterns Y
         | parse_patterns (Const(\<^const_name>\<open>\<A>pattern\<close>, _) $ Pat $ Y) = [(Pat, Y)]
         | parse_patterns _ = []
-      val _ (*Trueprop*) $ (_ (*Action_Tag*)
-            $ (_ (*Transformation*) $ (_ (*\<phi>Type*) $ _ $ T) $ _ $ _)
-            $ (_ (*to*) $ A)) = Thm.major_prem_of sequent
+      val (trivial, pattern_meet_that, strip_traverse, pattern_not_meet, pattern_meet, pattern_meet_this, T, A) =
+          case Thm.major_prem_of sequent
+            of _ (*Trueprop*) $ (_ (*Action_Tag*)
+                $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ (_ (*\<phi>Type*) $ _ $ T) $ _ $ _)
+                $ (_ (*to*) $ A))
+               => (@{thm' ToA_trivial}, @{thm' \<A>_pattern_meet_that}, @{thm' \<A>_strip_traverse},
+                   @{thm' \<A>_pattern_not_meet}, @{thm' \<A>_pattern_meet}, @{thm' \<A>_pattern_meet_this}, T, A)
+             | _ (*Trueprop*) $ (_ (*Action_Tag*)
+                $ (Const(\<^const_name>\<open>Determine_\<phi>Type\<close>, _) $ T $ _)
+                $ (_ (*to*) $ A))
+               => (@{lemma' \<open>Determine_\<phi>Type T T @action to Any\<close> by (simp add: Determine_\<phi>Type_def Action_Tag_def)},
+                   @{thm' \<A>_pattern_meet_that_det}, @{thm' \<A>_strip_traverse_det}, @{thm' \<A>_pattern_not_meet_det},
+                   @{thm' \<A>_pattern_meet_det}, @{thm' \<A>_pattern_meet_this_det}, T, A)
+
       val (is_traverse, A') = case A of Const(\<^const_name>\<open>\<A>traverse\<close>, _) $ A' => (true, A')
                                       | A' => (false, A')
       val pats = parse_patterns A'
@@ -1191,13 +1262,13 @@ lemma \<A>_pattern_meet_that:
 
       fun meet_pattern A (i,len) th =
         if i = 0
-        then let val rule = (if i = len - 1 then @{thm' \<A>_pattern_meet} else @{thm' \<A>_pattern_meet_this})
+        then let val rule = (if i = len - 1 then pattern_meet else pattern_meet_this)
                          |> Drule.infer_instantiate ctxt [(("A'",0), A)]
               in rule RS th
              end
-        else meet_pattern A (i-1,len-1) (@{thm' \<A>_pattern_meet_that} RS th)
+        else meet_pattern A (i-1,len-1) (pattern_meet_that RS th)
       fun meet_pattern' A i th =
-        meet_pattern A (i,len) (if is_traverse then @{thm' \<A>_strip_traverse} RS th else th)
+        meet_pattern A (i,len) (if is_traverse then strip_traverse RS th else th)
 
       fun bad_pattern pat = error ("Bad Pattern: " ^ Syntax.string_of_term ctxt pat)
       fun cannot_shortcut (Abs (_, _, X)) = cannot_shortcut X
@@ -1222,12 +1293,14 @@ lemma \<A>_pattern_meet_that:
          in SOME (Envir.subst_term subst residue)
         end handle Pattern.MATCH => NONE) pats
    of NONE => if cannot_shortcut T then NONE
-              else (SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
+              else (SOME ((ctxt, trivial RS sequent), Seq.empty)
                  handle THM _ =>
-                    SOME ((ctxt, @{thm' \<A>_pattern_not_meet} RS sequent), Seq.empty))
+                    SOME ((ctxt, pattern_not_meet RS sequent), Seq.empty))
     | SOME (i, A) => SOME ((ctxt, meet_pattern' (Thm.cterm_of ctxt A) i sequent), Seq.empty)
   end
 )\<close>
+
+end
 
 (* TODO:
 hide_fact \<A>_strip_traverse \<A>_pattern_meet \<A>_pattern_meet_this \<A>_pattern_meet_that *)
