@@ -2409,18 +2409,14 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
-(*
-context notes list_all2_conv_all_nth[simp]
-              Len_Intvl.forall_alt  [simp]
-begin*)
-
 declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> ('c::sep_algebra, 'x) \<phi>
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
   where \<open>l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<equiv> (\<lambda>i. l ! (i - Len_Intvl.start iv)) \<Ztypecolon> \<big_ast>\<^sup>\<phi> (Len_Intvl.set iv) T \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
-  deriving (*Sep_Functor_1
+  deriving Sep_Functor_1
+       and Semimodule_NonAssoc
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close> \<comment> \<open>simplification is not satisfiable\<close>
        and \<open>Carrier_Set T P
@@ -2434,32 +2430,23 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>xa<len_intvl.len iv. T\<^sub>P (x ! xa))) \<close>
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
-       and*) Semimodule_SDistr_Homo
 
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Mul_Quant_LenIv.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?iv = ?iva \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iva) ?T ?Ta set (\<lambda>x. UNIV) list_all2 \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Functional_Transformation_Functor}, \<^pattern_prop>\<open>
+         \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?iv = ?iva \<Longrightarrow>
+         Functional_Transformation_Functor (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iva) ?T ?Ta set (\<lambda>x. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f) \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) ?Ta ?U {(x, y). length x = length y} zip'  \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) ?Ta ?U unzip'  \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T \<lbrakk>?xa : 0\<rwpar>  \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>l. length l = 1) hd  \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open>
+        Semimodule_SDistr_Homo\<^sub>U \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
+                                                   (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))\<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_SDistr_Homo\<^sub>Z}, \<^pattern_prop>\<open>
+        Semimodule_SDistr_Homo\<^sub>Z \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>)
+]\<close>
 
-term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow>
-    Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
-term \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
-  \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all T\<^sub>D)
-     (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>xa<len_intvl.len iv. T\<^sub>P (x ! xa))) \<close>
-(*26308*)
-
-term \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all P)\<close>
-
-term \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> iv = iv' \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv') T U set (\<lambda>_. UNIV) list_all2\<close>
-term \<open>Object_Equiv T eq
-  \<Longrightarrow> Object_Equiv (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all2 eq)\<close>
-term \<open>Carrier_Set T P \<Longrightarrow>
-    Carrier_Set (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.start iv. P (x ! i)) \<close>
-
-
-
-term \<open>Abstract_Domain T P \<Longrightarrow>
-    Abstract_Domain (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.len iv. P (x ! i)) \<close>
-
-term nth
-
-term \<open>\<big_ast> \<lbrakk>x:n\<rwpar>\<close>
 
 section \<open>Semantics Related\<close> (*TODO: move*)
 

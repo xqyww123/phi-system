@@ -362,10 +362,10 @@ definition \<open>Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U D un \<lon
 
 subsubsection \<open>Semimodule\<close>
 
-definition Semimodule_Zero :: \<open>('s::zero \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
+definition Semimodule_Zero :: \<open>('s \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
   where \<open>Semimodule_Zero F T zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1)\<close>
 
-definition Closed_Semimodule_Zero :: \<open>('s::zero \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
+definition Closed_Semimodule_Zero :: \<open>('s \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
   where \<open>Closed_Semimodule_Zero F T zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero T) = 1)\<close>
   \<comment> \<open>It is actually a very strong property particularly when \<open>T\<close> is an empty \<phi>-type of empty
       abstract domain. It excludes functional homomorphism like \<open>F c T \<equiv> \<psi> c \<Zcomp>\<^sub>f T\<close>.\<close>
@@ -3667,7 +3667,7 @@ lemma SE_Semimodule_SDistr_a_bd_Tr
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> b ##\<^sub>+ d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b d (fst x)
 \<Longrightarrow> fst (uz b d (fst x)) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] snd (uz b d (fst x)) \<Ztypecolon> F1 d T \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, snd (uz b d (fst x))) \<Ztypecolon> F3 b U \<^emph>[True] F1 d T \<w>\<i>\<t>\<h> P \<close>
   unfolding Action_Tag_def \<r>Guard_def id_apply NO_SIMP_def
   \<medium_left_bracket> premises [simp] and SD\<^sub>U[] and SD\<^sub>U_rev[] and _ and _ and _ and _ and Tr
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>U_rev[where s=\<open>b\<close> and t=d and F=F1, OF SD\<^sub>U SD\<^sub>U_rev]
@@ -4861,6 +4861,11 @@ lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
                      F unfolded_F T 0 True True \<close>
   unfolding Guess_Scalar_Zero_def ..
 
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Scalar_Zero TYPE('s len_intvl) TYPE('c::one) TYPE('a) TYPE('a list)
+                     F unfolded_F T \<lbrakk>x:0\<rwpar> True True\<close>
+  unfolding Guess_Scalar_Zero_def ..
+
 paragraph \<open>Guess_Scalar_One\<close>
 
 (* lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
@@ -4871,6 +4876,11 @@ paragraph \<open>Guess_Scalar_One\<close>
 lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
   \<open>Guess_Scalar_One\<^sub>E TYPE('s::one) TYPE('c) TYPE('a) TYPE('a)
                      F whatever T 1 (\<lambda>_. True) (\<lambda>x. x) True True\<close>
+  unfolding Guess_Scalar_One\<^sub>E_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Scalar_One\<^sub>E TYPE('s len_intvl) TYPE('c) TYPE('a) TYPE('a list)
+                     F whatever T \<lbrakk>x:1\<rwpar> (\<lambda>l. length l = 1) hd True True\<close>
   unfolding Guess_Scalar_One\<^sub>E_def ..
 
 (* lemma [\<phi>reason %\<phi>TA_guesser_default]:
@@ -4927,21 +4937,21 @@ paragraph \<open>Guess_(Un)Zip_of_Semimodule\<close>
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Zip_of_Semimodule TYPE(rat) TYPE('c::sep_magma) TYPE('a) TYPE('a)
                            F any T
-                           (\<lambda>x. 0 \<le> x) (\<lambda>s t (x,y). x = y) (\<lambda>_ _ (x,y). x)
+                           (\<lambda>x. 0 \<le> x) (\<lambda>_ _ (x,y). x = y) (\<lambda>_ _ (x,y). x)
                            True True \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Unzip_of_Semimodule TYPE(rat) TYPE('c::sep_magma) TYPE('a) TYPE('a)
                              F any T
-                             (\<lambda>x. 0 \<le> x) (\<lambda>s t x. True) (\<lambda>_ _ x. (x,x))
+                             (\<lambda>x. 0 \<le> x) (\<lambda>_ _ x. True) (\<lambda>_ _ x. (x,x))
                              True True \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
                            F any T (\<lambda>_. True)
-                           (\<lambda>s t (x,y). LCRO_Interval.width_of s = length x \<and> LCRO_Interval.width_of t = length y)
+                           (\<lambda>t s (x,y). LCRO_Interval.width_of s = length x \<and> LCRO_Interval.width_of t = length y)
                            (\<lambda>_ _ (x,y). x @ y)
                            True True\<close>
   unfolding Guess_Zip_of_Semimodule_def ..
@@ -4949,24 +4959,24 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Unzip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
                              F any T (\<lambda>_. True)
-                             (\<lambda>s t x. LCRO_Interval.width_of s + LCRO_Interval.width_of t = length x)
-                             (\<lambda>s t x. (take (LCRO_Interval.width_of s) x, drop (LCRO_Interval.width_of s) x))
+                             (\<lambda>t s x. LCRO_Interval.width_of s + LCRO_Interval.width_of t = length x)
+                             (\<lambda>t s x. (drop (LCRO_Interval.width_of s) x, take (LCRO_Interval.width_of s) x))
                              True True\<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Zip_of_Semimodule TYPE('s len_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
                            F any T (\<lambda>_. True)
-                           (\<lambda>s t (x,y). len_intvl.len s = length x \<and> len_intvl.len t = length y)
-                           (\<lambda>_ _ (x,y). x @ y)
+                           (\<lambda>t s (y,x). len_intvl.len s = length x \<and> len_intvl.len t = length y)
+                           (\<lambda>_ _ (y,x). x @ y)
                            True True\<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Unzip_of_Semimodule TYPE('s len_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
                              F any T (\<lambda>_. True)
-                             (\<lambda>s t x. len_intvl.len s + len_intvl.len t = length x)
-                             (\<lambda>s t x. (take (len_intvl.len s) x, drop (len_intvl.len s) x))
+                             (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
+                             (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))
                              True True\<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
@@ -5165,6 +5175,9 @@ end
 
 \<phi>property_deriver Semimodule_SDistr_Homo 131
   requires Semimodule_SDistr_Homo\<^sub>Z and Semimodule_SDistr_Homo\<^sub>U
+
+\<phi>property_deriver Semimodule_NonAssoc 132
+  requires Semimodule_SDistr_Homo and Semimodule_Zero and Semimodule_Identity
 
 \<phi>property_deriver Semimodule_no0 133
   requires Semimodule_NonDistr_no0 and Semimodule_SDistr_Homo

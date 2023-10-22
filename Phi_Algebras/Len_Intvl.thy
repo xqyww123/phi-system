@@ -34,10 +34,6 @@ lemma forall_alt[simp]:
     (\<forall>i < len_intvl.len iv. P (i + len_intvl.start iv)) \<close>
   by (auto; metis add.commute le_add_diff_inverse less_diff_conv2)
 
-lemma \<open>Len_Intvl.set s ##\<^sub>+ Len_Intvl.set t\<close>
-  apply simp
-
-thm plus_set_def
 
 subsection \<open>Properties\<close>
 
