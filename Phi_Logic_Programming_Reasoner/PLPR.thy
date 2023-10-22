@@ -1233,9 +1233,7 @@ ML_file \<open>library/tools/extracting_pure_facts.ML\<close>
 
 attribute_setup \<phi>declare = \<open>Scan.succeed (Thm.declaration_attribute (fn th => fn ctxt =>
   let val ctxt' = Context.proof_of ctxt
-      val lemmas = case Phi_Reasoners.extract_implied_fact ctxt' th
-                     of SOME th' => PLPR_Syntax.elim_ant_sequence_or_HOL_conj th'
-                      | NONE => []
+      val lemmas = the_default [] (Phi_Reasoners.extract_implied_fact {wrap_all=true} ctxt' th)
    in fold Useful_Thms.add_thm lemmas ctxt
   end))\<close>
   \<open>Extracts pure facts implied inside and augments Useful lemmas with the results. \<close>

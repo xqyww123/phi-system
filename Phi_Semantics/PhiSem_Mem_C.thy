@@ -1,6 +1,8 @@
 theory PhiSem_Mem_C
   imports PhiSem_Mem_Pointer
   abbrevs "<mem>" = "\<m>\<e>\<m>"
+      and "<mem-blk>" = "\<m>\<e>\<m>-\<b>\<l>\<k>"
+      and "<slice>" = "\<s>\<l>\<i>\<c>\<e>"
 begin
 
 section \<open>Semantics\<close>
@@ -30,34 +32,8 @@ fiction_space aggregate_mem =
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout)
   by (standard; simp)
 
-(*
 
-fiction_space (in agmem_sem) agmem_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> = \<phi>min_fic +
-  FIC_mem :: share_mem
-
-
-locale agmem = agmem_fic
-  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                    \<times> ('VAL_N \<Rightarrow> 'VAL::discrete_semigroup)
-                    \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse}))\<close>
-    and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
-    and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
-+ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
-begin
-
-lemma R_mem_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
-    R_mem.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_mem.name = R_mem.inject m \<and> m \<in> Valid_Mem)\<close>
-  by (subst R_mem.split, simp add: Valid_Resource_def times_fun_def res_valid_mem image_iff, blast)
-     
-
-lemma R_mem_valid_split': \<open>NO_MATCH (R_mem.clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
-    R_mem.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_mem.name = R_mem.inject m \<and> m \<in> Valid_Mem)\<close>
-  using R_mem_valid_split .
-
-end
-*)
-
-section \<open>\<phi>Type for Semantic Models\<close>
+section \<open>Basic \<phi>Types for Semantic Models\<close>
 
 
 (* subsubsection \<open>Slice Pointer\<close>
@@ -113,9 +89,6 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 
 
 subsection \<open>Coercion from Value Spec to Mem Spec\<close>
-
-term \<open>(\<lambda>v. to_share o map_option discrete o Map_of_Val v)\<close>
-term \<open>(o) (to_share o map_option discrete) o Map_of_Val\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
@@ -239,6 +212,16 @@ proc op_free_mem:
 
 \<medium_right_bracket> .
 
+
+section \<open>Derivative \<phi>-Types\<close>
+
+subsection \<open>Slice\<close>
+
+typ len_intvl
+
+\<phi>type_def Mem_Slice :: \<open>logaddr \<times> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _]")
+  where \<open>l \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : len] T\<close>
+    \<comment> \<open>Length is still required because it determines the domain of the \<phi>-type so guides the reasoning\<close>
 
 
 end

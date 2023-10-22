@@ -78,11 +78,9 @@ fun the_implication i ctxt =
 fun reason_programming_implication' mode ctxt sequent =
   let val inhabited_rule = #inhabited_rule mode
       val thm = sequent RS inhabited_rule
-      fun extr_fail (SOME ret) = ret
-        | extr_fail NONE = error "Internal BUG: Fail to extract pure fact implied inside"
-   in Phi_Reasoners.extract_implied_fact ctxt thm
-   |> extr_fail
-   |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
+   in case Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt thm
+   of SOME ths => ths
+    | NONE => error "Internal BUG: Fail to extract pure fact implied inside"
   end handle THM _ => []
 
 fun reason_programming_implication ctxt =

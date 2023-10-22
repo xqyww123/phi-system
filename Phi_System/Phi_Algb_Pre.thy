@@ -2,6 +2,7 @@ theory Phi_Algb_Pre
   imports IDE_CP_Reasoning1
           Phi_Algebras.Map_of_Tree
           Phi_Algebras.LCRO_Interval
+          Phi_Algebras.Len_Intvl
 begin 
 
 
@@ -214,6 +215,76 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + i
   unfolding Premise_def Action_Tag_def
   by (simp, insert order_trans, fastforce)
 
+
+paragraph \<open>Len Intvl\<close>
+
+subparagraph \<open>Direct\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var + id (_::_ len_intvl) = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.len c \<ge> len_intvl.len b \<and>
+             len_intvl.start c + len_intvl.len c - len_intvl.len b = len_intvl.start b
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.len c - len_intvl.len b\<rwpar>
+\<Longrightarrow> id a + id b = id c @action \<A>arith_eval\<close>
+  unfolding Action_Tag_def Premise_def Simplify_def
+  by (cases b; cases c; clarsimp)
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (_::_ len_intvl) + id ?var = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.len a \<le> len_intvl.len c \<and> len_intvl.start a = len_intvl.start c
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> b : \<lbrakk>len_intvl.start a + len_intvl.len a : len_intvl.len c - len_intvl.len a\<rwpar>
+\<Longrightarrow> id a + id b = id c @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def Premise_def Simplify_def
+  by (cases a; cases c; clarsimp)
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var_a + id (_::_ len_intvl) = id (_::_ len_intvl) + id ?var_d @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start c \<le> len_intvl.start b \<and>
+            len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
+            len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
+\<Longrightarrow> id a + id b = id c + id d @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def Premise_def Simplify_def
+  by (cases b; cases c; clarsimp)
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var_a + id (_::_ len_intvl) + id ?var_c = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start d \<le> len_intvl.start b \<and>
+            len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> c : \<lbrakk>len_intvl.start b + len_intvl.len b : len_intvl.start d + len_intvl.len d - len_intvl.start b - len_intvl.len b\<rwpar>
+\<Longrightarrow> id a + id b + id c = id d @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def Premise_def Simplify_def
+  by (cases b; cases d; clarsimp)
+
+subparagraph \<open>Wrapped by set\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_cut
+           for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) @action \<A>arith_eval\<close>
+               \<open>id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eval\<close>]:
+  \<open> id a + id b = id c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b
+\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) = id (Len_Intvl.set c) @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def
+  by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
+      metis (full_types) Premise_D add.assoc add_leD1 linorder_not_less)
+
+lemma [\<phi>reason %\<A>_partial_add_cut
+           for \<open>id ?var + id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eval\<close>]:
+  \<open> id a + id b + id c = id d @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
+            len_intvl.start b + len_intvl.len b = len_intvl.start c
+\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) + id (Len_Intvl.set c) = id (Len_Intvl.set d) @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def
+  by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
+      metis (full_types) Premise_E add.assoc add_leE leI trans_less_add1)
+
+lemma [\<phi>reason %\<A>_partial_add_cut
+           for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) + id ?var @action \<A>arith_eval\<close>]:
+  \<open> id a + id b = id c + id d @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
+            len_intvl.start c + len_intvl.len c = len_intvl.start d
+\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) = id (Len_Intvl.set c) + id (Len_Intvl.set d) @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def
+  by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
+      smt (verit, best) Premise_D group_cancel.add1 len_intvl.sel(1) len_intvl.sel(2) linorder_not_le plus_len_intvl_def trans_less_add1)
 
 paragraph \<open>List\<close>
 

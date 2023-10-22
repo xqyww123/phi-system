@@ -2494,6 +2494,14 @@ instance set :: (type) positive_partial_add_magma_0
 
 instance set :: (type) partial_add_ab_monoid ..
 
+paragraph \<open>Rules for Specific Cases\<close>
+
+lemma dom_of_add_lcro_intvl[simp]:
+  \<open> {a..<b} ##\<^sub>+ {c..<d} \<longleftrightarrow> b \<le> a \<or> b \<le> c \<or> d \<le> c \<or> d \<le> a\<close>
+  for a :: \<open>'a::linorder\<close>
+  unfolding dom_of_add_set_def
+  by (auto simp add: set_eq_iff; meson leI nle_le)
+  
 
 subsection \<open>Partial Map\<close>
 

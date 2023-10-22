@@ -7,7 +7,6 @@ theory Phi_Type_Algebra
   imports IDE_CP_Reasoning2
           Phi_Algb_Pre
           Phi_Domainoid
-          Phi_Algebras.LCRO_Interval (*temporarily we add this for testing but will be moved later*)
   keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" :: thy_defn
        and "deriving" :: quasi_command
 begin
@@ -2613,11 +2612,10 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %deriv
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F3 F2 F23 Cr U R Du uz
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x)) \<and> func_mapper f P (z x) \<in> Du
 \<Longrightarrow> (\<And>a \<in> Dom (z x). a \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P a )
-\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph>[Cw] F4 W
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f P (z x)) \<Ztypecolon> F3 U \<^emph>[Cr] F2 R
-    \<w>\<i>\<t>\<h> pred_mapper f P (z x) \<close>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> y : uz (func_mapper f P (z x)) 
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph>[Cw] F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 U \<^emph>[Cr] F2 R \<w>\<i>\<t>\<h> pred_mapper f P (z x) \<close>
   unfolding \<r>Guard_def
-  \<medium_left_bracket> premises FTF[] and SH\<^sub>I[] and SH\<^sub>E[] and _ and Tr
+  \<medium_left_bracket> premises FTF[] and SH\<^sub>I[] and SH\<^sub>E[] and _ and Tr and _
     apply_rule apply_Separation_Homo\<^sub>I_Cond[where Fu=F4 and Ft=F1, OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where U=\<open>U \<^emph>[Cr] R\<close> and f=\<open>f\<close> and P=\<open>P\<close>, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
@@ -4296,6 +4294,16 @@ private lemma \<phi>TA_Ident_I_rule_step_infer:
   unfolding Identity_Element\<^sub>I_def Transformation_def Premise_def
   by simp
 
+(* not enabled, DO NOT REMOVE, I am a bit of hesitate
+lemma \<phi>TA_1I_simp:
+  \<open> Identity_Elements\<^sub>I T D P
+\<Longrightarrow> Abstract_Domain T Q
+\<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q x \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' x : D x)
+\<Longrightarrow> (\<And>x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P' x : P x)
+\<Longrightarrow> Identity_Elements\<^sub>I T D' P' \<close>
+  unfolding Identity_Elements\<^sub>I_def Premise_def Simplify_def Abstract_Domain_def Identity_Element\<^sub>I_def
+            Action_Tag_def Transformation_def Inhabited_def
+  by clarsimp blast*)
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
@@ -4931,18 +4939,34 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
   unfolding Guess_Unzip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
+  \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
                            F any T (\<lambda>_. True)
                            (\<lambda>s t (x,y). LCRO_Interval.width_of s = length x \<and> LCRO_Interval.width_of t = length y)
-                           (\<lambda>_ _ (x,y). y * x)
+                           (\<lambda>_ _ (x,y). x @ y)
                            True True\<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Unzip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
+  \<open>Guess_Unzip_of_Semimodule TYPE(nat lcro_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
                              F any T (\<lambda>_. True)
                              (\<lambda>s t x. LCRO_Interval.width_of s + LCRO_Interval.width_of t = length x)
                              (\<lambda>s t x. (take (LCRO_Interval.width_of s) x, drop (LCRO_Interval.width_of s) x))
+                             True True\<close>
+  unfolding Guess_Unzip_of_Semimodule_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Zip_of_Semimodule TYPE('s len_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
+                           F any T (\<lambda>_. True)
+                           (\<lambda>s t (x,y). len_intvl.len s = length x \<and> len_intvl.len t = length y)
+                           (\<lambda>_ _ (x,y). x @ y)
+                           True True\<close>
+  unfolding Guess_Zip_of_Semimodule_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Unzip_of_Semimodule TYPE('s len_intvl) TYPE('c::sep_magma) TYPE('a) TYPE('a list)
+                             F any T (\<lambda>_. True)
+                             (\<lambda>s t x. len_intvl.len s + len_intvl.len t = length x)
+                             (\<lambda>s t x. (take (len_intvl.len s) x, drop (len_intvl.len s) x))
                              True True\<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 

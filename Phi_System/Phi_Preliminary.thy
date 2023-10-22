@@ -85,6 +85,31 @@ ML_file \<open>contrib/sml-setmap/map/OrderMap.sml\<close>
 ML_file \<open>contrib/sml-setmap/map/StringMap.sml\<close>
 ML_file \<open>contrib/sml-json/json.sml\<close> *)
 
+subsection \<open>Helper Methods\<close>
+
+method_setup subgoal' = \<open>
+     Scan.lift (Scan.option (\<^keyword>\<open>premises\<close> |-- Parse.binding))
+  -- Scan.lift (Scan.option (\<^keyword>\<open>for\<close> |-- Parse.and_list (Scan.repeat1 Parse.binding) >> flat))
+  -- Scan.lift (Parse.token Parse.embedded) >>
+ (fn ((prem_b, fixes), text_tok) => fn ctxt => fn rules =>
+  let fun FOCUS tac ctxt i st =
+        if Thm.nprems_of st < i then Seq.empty
+        else let val (args as {context = ctxt', params, asms, prems, ...}, st') =
+                    (if is_some prem_b then Subgoal.focus else Subgoal.focus_params_fixed) ctxt i fixes st
+                 val ctxt' = case prem_b of SOME b =>
+                                    Proof_Context.note_thms "" ((b,[]), map (fn th => ([th],[])) prems) ctxt'
+                                      |> snd
+                                | _ => ctxt'
+              in Seq.lifts (Subgoal.retrofit ctxt' ctxt params asms i) (tac ctxt' st') st
+             end
+   in Context_Tactic.CONTEXT_TACTIC (HEADGOAL (FOCUS (fn ctxt =>
+      let val (text, src) = Method.read_closure_input ctxt (Token.input_of text_tok)
+       in Context_Tactic.NO_CONTEXT_TACTIC ctxt (Method.evaluate_runtime text ctxt rules)
+      end) ctxt))
+  end)
+\<close>
+
+
 subsection \<open>Helper Lemmas\<close>
 
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+

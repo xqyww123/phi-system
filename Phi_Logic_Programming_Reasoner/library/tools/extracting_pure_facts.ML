@@ -1,7 +1,7 @@
 signature PHI_REASONERS = sig
 include PHI_REASONERS
 
-val extract_implied_fact : Proof.context -> thm -> thm option
+val extract_implied_fact : {wrap_all: bool} -> Proof.context -> thm -> thm list option
 (*val implied_fact_extraction : Phi_Reasoners.pattern -> Phi_Reasoners.extraction*)
 val is_generating_extraction_rule : bool Config.T
 
@@ -57,7 +57,8 @@ val Do_Extract_Implied_Facts =
              \<Longrightarrow> C\<close>
             by (unfold Action_Tag_def, blast)}
 
-fun extract_implied_fact ctxt statement0 =
+(*wrap_all: wrap generated schematic variables by HOL.All*)
+fun extract_implied_fact {wrap_all} ctxt statement0 =
   case try (Phi_Conv.atomize ctxt) statement0
     of SOME statement =>
   let val _ = case Thm.prop_of statement
@@ -70,9 +71,20 @@ fun extract_implied_fact ctxt statement0 =
    in (statement RS' (ctxt, Do_Extract_Implied_Facts))
    |> Phi_Reasoner.reason NONE (SOME 1) ctxt
    |> Option.map (fn th =>
-        let val ((_, [th']), ctxt') = Variable.import false [th] ctxt
-         in Simplifier.full_simplify (Inhabitance_SS.enhance ctxt) th'
-         |> singleton (Variable.export ctxt' ctxt)
+        let val ths = PLPR_Syntax.elim_ant_sequence_or_HOL_conj th
+            val simp = Simplifier.full_simplify (Inhabitance_SS.enhance ctxt)
+            fun holall_intr_vars th =
+              let val vars = Cterms.build (Cterms.add_vars th)
+               in fold_rev (Conv.fconv_rule (Conv.rewr_conv @{thm' atomize_all}) oo Thm.forall_intr)
+                           (Cterms.list_set vars) th
+              end
+         in if wrap_all
+            then map ( holall_intr_vars
+                    #> simp ) ths
+            else let val ((_, ths'), ctxt') = Variable.import false ths ctxt
+                  in map simp ths'
+                  |> Variable.export ctxt' ctxt
+                 end
         end)
   end
     | _ => NONE

@@ -389,13 +389,15 @@ lemma [\<phi>reason %guess_tyop_commute+10]:
 
 subsection \<open>Dependent Sum Type\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-  
+declare [[\<phi>trace_reasoning = 3]]
+   
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
   deriving Basic
     and \<open> (\<And>A. Object_Equiv (T A) (eq A))
-        \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
+      \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
+    and \<open>(\<And>A. Abstract_Domain (T A) (P A)) \<Longrightarrow> Abstract_Domain (\<Sigma> T) (\<lambda>x. P (fst x) (snd x))\<close>
+    and \<open>(\<And>A. Abstract_Domain\<^sub>L (T A) (P A)) \<Longrightarrow> Abstract_Domain\<^sub>L (\<Sigma> T) (\<lambda>x. P (fst x) (snd x))\<close>
     and Identity_Elements
     and Functionality
     and Carrier_Set
@@ -407,8 +409,8 @@ declare [[\<phi>trace_reasoning = 0]]
       \<Longrightarrow> c a \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (a,x) \<Ztypecolon> \<Sigma> T \<close>
 
 ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Dependent_Sum.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain\<^sub>L (?T A) ?P) \<Longrightarrow> Abstract_Domain\<^sub>L (\<Sigma> ?T) (\<lambda>x. ?P (snd x))  \<close>),
-  (@{thm' \<phi>Dependent_Sum.Abstract_Domain}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain (?T A) ?P) \<Longrightarrow> Abstract_Domain (\<Sigma> ?T) (\<lambda>x. ?P (snd x))  \<close>),
+  (@{thm' \<phi>Dependent_Sum.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain\<^sub>L (?T A) (?P A)) \<Longrightarrow> Abstract_Domain\<^sub>L (\<Sigma> ?T) (\<lambda>x. ?P (fst x) (snd x)) \<close>),
+  (@{thm' \<phi>Dependent_Sum.Abstract_Domain}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain (?T A) (?P A)) \<Longrightarrow> Abstract_Domain (\<Sigma> ?T) (\<lambda>x. ?P (fst x) (snd x)) \<close>),
   (@{thm' \<phi>Dependent_Sum.Carrier_Set}, \<^pattern_prop>\<open> (\<And>A. Carrier_Set (?T A) ?P) \<Longrightarrow> Carrier_Set (\<Sigma> ?T) (\<lambda>x. ?P (snd x))  \<close>),
   (@{thm' \<phi>Dependent_Sum.Functionality}, \<^pattern_prop>\<open> (\<And>A. Functionality (?T A) ?P) \<Longrightarrow> Functionality (\<Sigma> ?T) (\<lambda>x. ?P (snd x))  \<close>),
   (@{thm' \<phi>Dependent_Sum.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> (\<And>A. Identity_Elements\<^sub>I (?T A) (?T\<^sub>D A) (?T\<^sub>P A)) \<Longrightarrow> Identity_Elements\<^sub>I (\<Sigma> ?T) (\<lambda>x. ?T\<^sub>D (fst x) (snd x)) (\<lambda>x. ?T\<^sub>P (fst x) (snd x)) \<close>),
@@ -1774,7 +1776,7 @@ lemma [\<phi>reason %abstract_domain]:
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 1 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
@@ -2400,6 +2402,64 @@ ML \<open>assert_derived_properties \<^theory> [
 translations
   "\<coercion> T" <= "\<fish_eye> CONST Nosep T"
 
+
+section \<open>Derivatives\<close>
+
+subsection \<open>From FMQ\<close>
+
+subsubsection \<open>Interval in Length Representation\<close>
+
+(*
+context notes list_all2_conv_all_nth[simp]
+              Len_Intvl.forall_alt  [simp]
+begin*)
+
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
+                              \<Rightarrow> ('c::sep_algebra, 'x) \<phi>
+                              \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
+  where \<open>l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<equiv> (\<lambda>i. l ! (i - Len_Intvl.start iv)) \<Ztypecolon> \<big_ast>\<^sup>\<phi> (Len_Intvl.set iv) T \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
+  deriving (*Sep_Functor_1
+       and \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close> \<comment> \<open>simplification is not satisfiable\<close>
+       and \<open>Carrier_Set T P
+        \<Longrightarrow> Carrier_Set (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all P) \<close>  
+       and \<open>Object_Equiv T eq
+        \<Longrightarrow> Object_Equiv (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all2 eq)\<close>
+       and Transformation_Functor  
+           tactic: (auto ; subgoal' for r l xb R \<open>induct l arbitrary: iv iva xb R\<close>)
+       and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all P)\<close>
+       and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>xa<len_intvl.len iv. T\<^sub>P (x ! xa))) \<close>
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
+       and*) Semimodule_SDistr_Homo
+
+
+term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow>
+    Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
+term \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+  \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all T\<^sub>D)
+     (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>xa<len_intvl.len iv. T\<^sub>P (x ! xa))) \<close>
+(*26308*)
+
+term \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all P)\<close>
+
+term \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> iv = iv' \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv') T U set (\<lambda>_. UNIV) list_all2\<close>
+term \<open>Object_Equiv T eq
+  \<Longrightarrow> Object_Equiv (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all2 eq)\<close>
+term \<open>Carrier_Set T P \<Longrightarrow>
+    Carrier_Set (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.start iv. P (x ! i)) \<close>
+
+
+
+term \<open>Abstract_Domain T P \<Longrightarrow>
+    Abstract_Domain (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.len iv. P (x ! i)) \<close>
+
+term nth
+
+term \<open>\<big_ast> \<lbrakk>x:n\<rwpar>\<close>
 
 section \<open>Semantics Related\<close> (*TODO: move*)
 

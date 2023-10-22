@@ -429,12 +429,10 @@ fun gen_default_process' clean pos (ctxt,sequent) =
              | _ => NONE)
 
     fun setup_lemmata ctxt =
-      let fun extr_fail (SOME ret) = ret
-            | extr_fail NONE = error "Internal BUG: Fail to extract pure fact implied inside"
-          val facts = maps (fn thm =>
-                          Phi_Reasoners.extract_implied_fact ctxt (thm RS @{thm Inhabited_I})
-                       |> extr_fail
-                       |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
+      let val facts = maps (fn thm =>
+                       case Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt (thm RS @{thm Inhabited_I})
+                         of NONE => error "Internal BUG: Fail to extract pure fact implied inside"
+                          | SOME l => l
                       ) rules
        in ctxt |> Context.proof_map (
             fold (fold (fn th => Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th

@@ -24,6 +24,20 @@ subsection \<open>Operations\<close>
 definition set :: \<open>'a::shift_by_nat_ord len_intvl \<Rightarrow> 'a set\<close>
   where [iff]: \<open>set i = {start i ..< shift_by_nat (start i) (len i)}\<close>
 
+lemma forall[simp]:
+  \<open> (\<forall>i\<in>{len_intvl.start iv..<len_intvl.start iv + len_intvl.len iv}. P i) \<longleftrightarrow>
+    (\<forall>i < len_intvl.len iv. P (i + len_intvl.start iv)) \<close>
+  by (auto; metis add.commute le_Suc_ex nat_add_left_cancel_less)
+
+lemma forall_alt[simp]:
+  \<open> (\<forall>i. len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow> P i) \<longleftrightarrow>
+    (\<forall>i < len_intvl.len iv. P (i + len_intvl.start iv)) \<close>
+  by (auto; metis add.commute le_add_diff_inverse less_diff_conv2)
+
+lemma \<open>Len_Intvl.set s ##\<^sub>+ Len_Intvl.set t\<close>
+  apply simp
+
+thm plus_set_def
 
 subsection \<open>Properties\<close>
 
@@ -43,10 +57,17 @@ lemma plus_len_intvl[iff]:
   by simp
 
 lemma dom_of_add_len_intvl[iff]:
-  \<open> \<lbrakk> a : b \<rwpar> ##\<^sub>+ \<lbrakk> c : d \<rwpar> \<longleftrightarrow> shift_by_nat a b = c \<close>
+  \<open> a ##\<^sub>+ b \<longleftrightarrow> shift_by_nat (start a) (len a) = (start b) \<close>
   unfolding dom_of_add_len_intvl_def
-  by simp
+  by (cases a; cases b; simp)
 
+lemma plus_len_intvl_start[simp]:
+  \<open> start (a + b) = start a \<close>
+  by (cases a; cases b; simp)
+
+lemma plus_len_intvl_len[simp]:
+  \<open> len (a + b) = len a + len b \<close>
+  by (cases a; cases b; simp)
 
 instance by (standard; case_tac a; case_tac b; case_tac c; simp)
 
@@ -74,6 +95,6 @@ end
 
 
 hide_const (open) start len set
-hide_fact (open) set_add
+hide_fact (open) set_add forall forall_alt
 
 end
