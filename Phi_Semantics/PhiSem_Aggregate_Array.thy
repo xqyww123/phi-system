@@ -58,6 +58,7 @@ section \<open>\<phi>Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
+
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
   where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
@@ -68,7 +69,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
        and Transformation_Functor
-           tactic: (clarsimp ; subgoal' for g x xa xb \<open>induct x arbitrary: xb N Na\<close>)
+           tactic: (clarsimp ; subgoal' for g x xa xb \<open>induct x arbitrary: xb xa N Na; auto simp add: list_all2_Cons2\<close>)
        and Functional_Transformation_Functor
        and \<open>Functionality T D
         \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all D l)\<close>

@@ -689,12 +689,18 @@ declare [[ \<phi>reason_default_pattern
 
 consts \<A>chk_need_simp :: \<open>bool \<Rightarrow> action\<close>
        \<A>chk_need_transitive_simp :: \<open>bool \<Rightarrow> action\<close>
-       \<A>_apply_simplication :: action
+       \<A>_apply_simplication :: \<open>bool \<Rightarrow> action\<close> \<comment> \<open>bool: whether to apply the global-wide system simplification\<close>
 
-lemma [\<phi>reason %cutting for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication\<close>]:
+lemma [\<phi>reason %cutting+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication False\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>chk_need_transitive_simp False)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication Any' \<close>
+  unfolding Action_Tag_def Transformation_def Simplify_def
+  by simp
+
+lemma [\<phi>reason %cutting for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>chk_need_transitive_simp False)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Y : Ya
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication Any' \<close>
   unfolding Action_Tag_def Transformation_def Simplify_def
   by simp
 
@@ -1082,7 +1088,7 @@ declare [[\<phi>reason_default_pattern
 
 \<phi>reasoner_group determine_\<phi>typ_to__all = (100, [0, 2000]) for \<open>Determine_\<phi>Type source target @action to T\<close> \<open>\<close>
   and determine_\<phi>typ_to__cut = (1000, [1000,1030]) in determine_\<phi>typ_to__all \<open>cutting\<close>
-  and determine_\<phi>typ_to__fallback = (1, [1, 10]) in determine_\<phi>typ_to__all \<open>fallbacks\<close>
+  and determine_\<phi>typ_to__fallback = (2, [1, 10]) in determine_\<phi>typ_to__all \<open>fallbacks\<close>
   and determine_\<phi>typ_to__fail = (0, [0,0]) in determine_\<phi>typ_to__all \<open>failure\<close>
   and determine_\<phi>typ_to__derived = (50, [30, 70]) in determine_\<phi>typ_to__all \<open>derived\<close>
 
@@ -1093,17 +1099,30 @@ lemma [\<phi>reason default %determine_\<phi>typ_to__fail]:
 \<Longrightarrow> Determine_\<phi>Type T T' @action to \<T> \<close>
   unfolding Determine_\<phi>Type_def Action_Tag_def ..
 
-lemma [\<phi>reason default %determine_\<phi>typ_to__fallback]:
+lemma [\<phi>reason default %determine_\<phi>typ_to__fallback-1]:
   \<open> Determine_\<phi>Type T \<T> @action to \<T> \<close>
   unfolding Determine_\<phi>Type_def Action_Tag_def ..
 
+paragraph \<open>Hook injecting to To-Transformation\<close>
+
+\<phi>reasoner_group To_ToA__determine_\<phi>type = (3500, [3500, 3500]) in To_ToA
+  \<open>truns to \<open>Determine_\<phi>Type\<close>\<close>
+
+(*
+lemma [\<phi>reason %To_ToA__determine_\<phi>type
+           for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?var \<s>\<u>\<b>\<j> y. _ @action to _\<close>
+               \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var @action to _\<close>]:
+  \<open> Determine_\<phi>Type T U @action to \<T>
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to \<T>
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to \<T> \<close> .
+*)
 
 subsubsection \<open>Entry Point\<close>
 
 lemma to_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> T
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<w>\<i>\<t>\<h> P @action \<A>_leading_item (to T)
-\<Longrightarrow> Ya \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication
+\<Longrightarrow> Ya \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication True
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Do_def Action_Tag_def Transformation_def
   by simp
@@ -1650,6 +1669,11 @@ lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>E T D
 \<Longrightarrow> Identity_Elements\<^sub>E (OPEN T) D \<close>
   unfolding OPEN_def .
+
+lemma [\<phi>reason default %determine_\<phi>typ_to__fallback[top]]:
+  \<open> FAIL TEXT(\<open>Don't know how to open \<phi>-type\<close> T)
+\<Longrightarrow> Determine_\<phi>Type T T' @action to (OPEN \<T>)\<close>
+  unfolding Determine_\<phi>Type_def Action_Tag_def ..
   
 
 subsubsection \<open>Make Abstraction\<close>
@@ -1658,6 +1682,11 @@ text \<open>Applies one step of constructing\<close>
 
 definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close>
   where [assertion_simps_source, \<phi>programming_simps]: \<open>MAKE X \<equiv> X\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to (MAKE _)\<close> \<Rightarrow>
+     \<open>ERROR TEXT(\<open>There is no need to declare a To-Transformation rule for MAKE. Just use the normal ToA and synthesis\<close>)\<close> (200)
+]]
 
 \<phi>reasoner_group ToA_make_\<phi>type = (100, [%ToA_splitting_source+2, %ToA_splitting_target-1])
                                   for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)

@@ -17,7 +17,7 @@ abbrevs
   and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"
   and "<do>" = "\<^bold>d\<^bold>o"
   and "<param>" = "\<p>\<a>\<r>\<a>\<m>"
-  and "<label>" = "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l"
+  and "<label>" = "\<l>\<a>\<b>\<e>\<l>"
   and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
   and "<by>" = "\<^bold>b\<^bold>y"
   and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
@@ -108,13 +108,13 @@ translations "LABEL name" == "CONST LABEL_TAG (\<lambda>name. ())"
 
 paragraph \<open>Label Input\<close> (*depreciated*)
 
-definition LabelTag :: " label \<Rightarrow> bool" ("\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l _" [1000] 26) where "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x \<equiv> True"
+definition LabelTag :: " label \<Rightarrow> bool" ("\<l>\<a>\<b>\<e>\<l> _" [1000] 26) where "\<l>\<a>\<b>\<e>\<l> x \<equiv> True"
 
-text \<open>The \<^term>\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x\<close> indicate \<^term>\<open>x\<close> is a \<^typ>\<open>label\<close> that should be set by user, e.g.,
-  \<^prop>\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l name \<Longrightarrow> do_something_relating name\<close>.
-  The \<phi>-processor `set_label` processes the \<^term>\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x\<close> antecedent.\<close>
+text \<open>The \<^term>\<open>\<l>\<a>\<b>\<e>\<l> x\<close> indicate \<^term>\<open>x\<close> is a \<^typ>\<open>label\<close> that should be set by user, e.g.,
+  \<^prop>\<open>\<l>\<a>\<b>\<e>\<l> name \<Longrightarrow> do_something_relating name\<close>.
+  The \<phi>-processor `set_label` processes the \<^term>\<open>\<l>\<a>\<b>\<e>\<l> x\<close> antecedent.\<close>
 
-lemma LabelTag: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x" unfolding LabelTag_def ..
+lemma LabelTag: "\<l>\<a>\<b>\<e>\<l> x" unfolding LabelTag_def ..
 
 
 paragraph \<open>Label Binding of Objects\<close>
@@ -2365,7 +2365,7 @@ hide_fact \<phi>cast_exception_UI
 \<phi>lang_parser set_param (%\<phi>parser_cartouch, %\<phi>lang_expr) ["<cartouche>", ""] (\<open>\<p>\<a>\<r>\<a>\<m> ?P \<Longrightarrow> PROP _\<close>)
 \<open>fn s => Parse.term >> (fn term => fn _ => apsnd (Phi_Sys.set_param_cmd term) s)\<close>
 
-\<phi>lang_parser set_label (%\<phi>parser_cartouch, %\<phi>lang_expr) ["<cartouche>"] (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP _\<close>)
+\<phi>lang_parser set_label (%\<phi>parser_cartouch, %\<phi>lang_expr) ["<cartouche>"] (\<open>\<l>\<a>\<b>\<e>\<l> ?P \<Longrightarrow> PROP _\<close>)
 \<open>fn s => Parse.name >> (fn name => fn _ => apsnd (Phi_Sys.set_label name) s)\<close>
 
 \<phi>lang_parser rule (%\<phi>parser_app, %\<phi>lang_expr) [] (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)

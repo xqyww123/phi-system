@@ -106,7 +106,7 @@ definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Righ
 
 subsection \<open>Memory Object\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
   where \<open>MemBlk blk T \<equiv> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T)\<close>
@@ -196,7 +196,7 @@ proc op_allocate_mem_1:
   semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
 
 \<medium_right_bracket> .
-
+ 
 proc op_free_mem:
   input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
@@ -213,26 +213,34 @@ proc op_free_mem:
 \<medium_right_bracket> .
 
 
-section \<open>Derivative \<phi>-Types\<close>
-
-subsection \<open>Slice\<close>
-
-declare [[\<phi>trace_reasoning = 3]]
-
+declare [[\<phi>trace_reasoning = 0]]
+   
 \<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_, _ : _]")
   where \<open>l \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr, start : len] T \<equiv> map_index (\<lambda>i. Pair (start + i)) l \<Ztypecolon> \<big_ast> \<lbrakk>start : len\<rwpar> (\<Sigma> j. \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T)\<close>
     \<comment> \<open>Length is still required because it determines the domain of the \<phi>-type so guides the reasoning\<close>
-  deriving (*Basic
+  deriving Sep_Functor_1
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (\<lambda>x. length x = len \<and> list_all P x) \<close>
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (list_all2 eq) \<close>
-       and Identity_Elements
        and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
         \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (list_all T\<^sub>D) (\<lambda>x. length x = len \<and> list_all T\<^sub>P x) \<close>
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (\<lambda>x. length x = len \<and> list_all T\<^sub>D x) \<close>
-       and*) Transformation_Functor
+       and Transformation_Functor
+            tactic: (auto ; subgoal' for r l xb R \<open>induct l arbitrary: iv iva xb R; clarsimp simp add: list_all2_Cons2\<close>)
+       and \<open>Separation_Homo\<^sub>I \<s>\<l>\<i>\<c>\<e>[addr, start : len] \<s>\<l>\<i>\<c>\<e>[addr, start : len] \<s>\<l>\<i>\<c>\<e>[addr, start : len] T U UNIV zip' \<close>
+            tactic: (auto simp add: list_all2_conv_all_nth zip'_def in_set_conv_nth)
+       and Separation_Homo\<^sub>E
+            tactic: (auto simp add: list_all2_conv_all_nth unzip'_def)
+
+term \<open>Separation_Homo\<^sub>E \<s>\<l>\<i>\<c>\<e>[addr, start : len] \<s>\<l>\<i>\<c>\<e>[addr, start : len] \<s>\<l>\<i>\<c>\<e>[addr, start : len] T U\<close>
+
+
+term \<open>list_all2 (\<lambda>x y. fst y = fst x \<and> snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y))
+           (map_index (\<lambda>n x. (start + n, x, uu ((start + n, x), undefined))) x) (map_index (\<lambda>i. Pair (start + i)) (zip' (x, xa)))\<close>
+
+term \<open>Separation_Homo\<^sub>I \<s>\<l>\<i>\<c>\<e>[addr, start : len] \<s>\<l>\<i>\<c>\<e>[addr, start : len] \<s>\<l>\<i>\<c>\<e>[addr, start : len] Ta U {(x, y). length x = length y} zip' \<close>
 
 term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow>
     Identity_Elements\<^sub>E (\<s>\<l>\<i>\<c>\<e>[addr, start : len] T) (\<lambda>x. length x = len \<and> list_all T\<^sub>D x) \<close>

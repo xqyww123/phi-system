@@ -1286,6 +1286,11 @@ lemma \<phi>open_abstraction:
   unfolding Action_Tag_def Simplify_def
   by simp
 
+lemma \<phi>open_abstraction_det:
+  \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
+\<Longrightarrow> Determine_\<phi>Type T U' @action to (OPEN T) \<close>
+  unfolding Determine_\<phi>Type_def Action_Tag_def ..
+
 
 text \<open>No \<open>Object_Equiv\<close> is used but we use \<open>(=)\<close> directly because we are destructing or constructing
   a \<phi>-type abstraction by its definition where the definition covers every cases covered by the
@@ -2606,7 +2611,7 @@ assigned by constants after the reasoning.
 
 
 
-lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %derived_SE_functor]:
+lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %derived_SE_functor name F1.xxx_t1]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F23 (T \<^emph>[Cw] W) (U \<^emph>[Cr] R) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F1 F4 F14 Cw T W Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F3 F2 F23 Cr U R Du uz
@@ -4039,7 +4044,7 @@ lemma \<phi>TA_reason_rule__\<A>_NToA:
   by (simp add: Transformation_def)
 
 lemma \<phi>TA_reason_rule__simp_NToA:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> Any' @action \<A>_apply_simplication
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> Any' @action \<A>_apply_simplication False
 \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action NToA
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>simp\<close>
   unfolding Action_Tag_def
@@ -4047,7 +4052,7 @@ lemma \<phi>TA_reason_rule__simp_NToA:
 
 lemma \<phi>TA_reason_rule__\<A>_simp_NToA:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item A
-\<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> Any' @action \<A>_apply_simplication
+\<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> Any' @action \<A>_apply_simplication False
 \<Longrightarrow> X'' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action NToA
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action A\<close>
   unfolding Action_Tag_def

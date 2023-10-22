@@ -173,6 +173,43 @@ structure Very_Safe_Oblg_Simp_SS = Simpset(
   val post_merging = I
 )
 
+fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
+  | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
+      = mk_boolean_inst B b (mk_boolean_inst A b ret)
+  | mk_boolean_inst (Const(\<^const_name>\<open>HOL.Not\<close>, _) $ A) b ret
+      = mk_boolean_inst A (not b) ret
+  | mk_boolean_inst (Const(\<^const_name>\<open>id\<close>, _) $ X) b ret
+      = mk_boolean_inst X b ret
+  | mk_boolean_inst _ _ _ = raise Match
+
+fun fast_inst can_inst th =
+  case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
+    of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
+            SOME (@{thm' Premise_True} RS th, Seq.empty)
+     | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ X)) =>
+         (SOME (Thm.instantiate (TVars.empty, mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th,
+                Seq.empty)
+          handle Match => NONE)
+     | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
+                    $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)
+                    $ _)) =>
+         (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
+                     by (simp add: Premise_def)} RS th, Seq.empty)
+          handle THM _ => NONE)
+     | (true, (_, X as Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
+         (SOME (Thm.instantiate (TVars.empty, mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th,
+                Seq.empty)
+          handle Match => NONE)
+     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)) =>
+         (*solves the equation by unification once single resolution*)
+         (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
+          handle THM _ => NONE)
+     | (true, (_, V)) =>
+          if is_Var (Term.head_of V)
+          then SOME (@{thm' Premise_True} RS th, Seq.empty)
+          else NONE
+     | _ => NONE
+
 (*fix_level = 0 for no fix
             | 1 for fixing the conditions of the leading antecedent only but leaves variables
                     in the conclusion of the leading antecedent free
@@ -181,6 +218,9 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
+   in case fast_inst can_inst th01
+   of SOME ret => SOME ret
+    | _ => let
 
       val th = Conv.gconv_rule (Simplifier.full_rewrite ctxt) 1 th01
    in case Thm.major_prem_of th
@@ -206,49 +246,15 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
                      val instc = Phi_Help.certify_vars (Context.Proof ctxt') inst
                   in (ctxt', Thm.instantiate instc th01, instc)
                  end
-
-      fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
-        | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
-            = mk_boolean_inst B b (mk_boolean_inst A b ret)
-        | mk_boolean_inst (Const(\<^const_name>\<open>HOL.Not\<close>, _) $ A) b ret
-            = mk_boolean_inst A (not b) ret
-        | mk_boolean_inst (Const(\<^const_name>\<open>id\<close>, _) $ X) b ret
-            = mk_boolean_inst X b ret
-        | mk_boolean_inst _ _ _ = raise Match
                     
-   in(case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
-        of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
-                SOME (@{thm' Premise_True} RS th, Seq.empty)
-         | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ X)) =>
-             (let val th' = Thm.instantiate (TVars.empty,
-                                mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th
-               in f ctxt' th'
-              end handle Match => f ctxt' th)
-         | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
-                        $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)
-                        $ _)) =>
-             (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
-                         by (simp add: Premise_def)} RS th, Seq.empty)
-              handle THM _ => f ctxt' th)
-         | (true, (_, X as Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
-             (let val th' = Thm.instantiate (TVars.empty,
-                                mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th
-               in f ctxt' th'
-              end handle Match => f ctxt' th)
-         | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)) =>
-             (*solves the equation by unification once single resolution*)
-             (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
-              handle THM _ => f ctxt' th)
-         | (true, (_, V)) =>
-              if is_Var (Term.head_of V)
-              then SOME (@{thm' Premise_True} RS th, Seq.empty)
-              else f ctxt' th
-         | _ => f ctxt' th)
+   in (case fast_inst can_inst th
+   of SOME ret => SOME ret
+    | NONE => f ctxt' th)
    |> not (null fixing_targets) ? Option.map (fn (th, seq') =>
         let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
          in (f th, Seq.map f seq')
         end)
-  end end)
+  end end end)
 
 
 (*** Auxiliaries ***)

@@ -51,7 +51,7 @@ setup \<open>Context.theory_map (
        \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
   
 let_\<phi>type \<phi>None
   deriving Basic
@@ -439,29 +439,58 @@ lemma \<phi>\<s>\<u>\<b>\<j>_over_\<Sigma>[\<phi>programming_simps]:
 
 subsubsection \<open>ToA Reasoning\<close>
 
+lemma \<phi>Dependent_Sum_intro_reasoning_2[\<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                                                        \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((_, _), _) \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T a \<^emph>[C] R a \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((a, fst y), (a, snd y)) \<Ztypecolon> \<Sigma> T \<^emph>[C] \<Sigma> R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Transformation_def
+  by clarsimp
+
+lemma \<phi>Dependent_Sum_elim_reasoning_2[\<phi>reason 1000 for \<open>_ \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
+      (snd (fst x), snd (snd x)) \<Ztypecolon> T (fst (fst x)) \<^emph>[C] W (fst (fst x)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (C \<longrightarrow> fst (snd x) = fst (fst x))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<^emph>[C] \<Sigma> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  unfolding Premise_def Transformation_def Reduce_HO_trivial_variable_def
+  by clarsimp
+
+lemma [\<phi>reason 1010 for \<open>((_,_),_) \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
+      (b, w) \<Ztypecolon> T a \<^emph>[C] W a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
+\<Longrightarrow> ((a, b), a, w) \<Ztypecolon> \<Sigma> T \<^emph>[C] \<Sigma> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Premise_def Transformation_def Reduce_HO_trivial_variable_def
+  by clarsimp
+
+
 declare \<phi>Dependent_Sum.intro_reasoning(1)
         [where x=\<open>(a,b)\<close> for a b, simplified apfst_conv apsnd_conv fst_conv snd_conv,
          \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>
                           \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>]
 
-        \<phi>Dependent_Sum.intro_reasoning(2)
-        [where x=\<open>(a,b)\<close> for a b, simplified apfst_conv apsnd_conv fst_conv snd_conv,
+        (* \<phi>Dependent_Sum.intro_reasoning(2)
+        [where x=\<open>(a,fst y)\<close> and r=\<open>snd y\<close> for a b y, simplified apfst_conv apsnd_conv fst_conv snd_conv prod.collapse,
          \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((_, _), _) \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
-                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]
+                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>, carried by \<open>\<phi>Dependent_Sum_intro_reasoning_2\<close> instead] *)
+       \<comment> \<open>The ToA reasoning inside the elements of \<open>\<Sigma>\<close> may result in a remainder \<open>R\<close> parameterized
+           by the parameter \<open>a\<close> of \<open>\<Sigma>\<close>. A problem is, objects may be parameterized with contextual
+           bound vars that however do not parameterize the type. When \<open>a\<close> is parameterized by those
+           bound vars who only parameterize the object, the instantiation of \<open>R\<close> can fail but \<open>\<Sigma> R\<close>
+           works. Therefore, use rule \<open>\<phi>Dependent_Sum_intro_reasoning_2\<close>.\<close>
 
         \<phi>Dependent_Sum.intro_reasoning\<^sub>R
         [where x=\<open>(a,b)\<close> for a b, simplified fst_conv snd_conv,
          \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
-                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> ]
+                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                       \<comment> \<open>There are no contextual bound vars only parameterizing the objects,
+                           so the rules are safe.\<close>
+        ]
 
-        \<phi>Dependent_Sum.elim_reasoning[\<phi>reason 1000]
+        \<phi>Dependent_Sum.elim_reasoning(1)[\<phi>reason 1000 for \<open>_ \<Ztypecolon> \<Sigma> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close>]
         \<phi>Dependent_Sum.elim_reasoning(1)
         [where x=\<open>(a,b)\<close> for a b, simplified fst_conv snd_conv,
          \<phi>reason 1010 for \<open>(_, _) \<Ztypecolon> \<Sigma> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]
 
-        \<phi>Dependent_Sum.elim_reasoning(2)
-        [where x=\<open>((a,b),w)\<close> for a b w, simplified apfst_conv fst_conv snd_conv,
-         \<phi>reason 1010 for \<open>((_,_),_) \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]
+
 
 subsubsection \<open>Quasi Functor Properties\<close>
 
@@ -514,35 +543,66 @@ lemma \<Sigma>_simp_cong[\<phi>simp_cong]:
 \<Longrightarrow> (c\<^sub>x,x) \<Ztypecolon> \<Sigma> T \<equiv> (c\<^sub>y,y) \<Ztypecolon> \<Sigma> U \<close>
   by clarsimp
 
-lemma \<Sigma>_To_Transformation[\<phi>reason default %To_ToA_derived_Tr_functor]:
-  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
-        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action to (Z c)))
-\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action to (\<Sigma> Z) \<close>
+subparagraph \<open>To-Transformation\<close>
+
+text \<open>To-Transformation is still type-directed and the target type \<open>U\<close> is inferred according to the
+  instruction of the annotation \<open>to \<T>\<close>. In case of \<open>\<Sigma>\<close>, the thing is \<open>to (\<Sigma> c. \<T> c)\<close> does not fix
+  the parameter of \<open>\<T>\<close> because the parameter \<open>c\<close> is from object, and the parameter cannot be left unknown
+  to expect some instantiation in the later reasoning because \<open>U\<close> is also unknown having to be inferred,
+  causing higher order unknowns \<open>U c\<close> which are undecidable and usually not uniquely determined.
+  More annotations have to be given from user.
+  We invent syntax \<open>\<Sigma> c. \<T> c \<p>\<a>\<r>\<a>\<m>: f\<close> to annotate the target parameter by a function \<open>f\<close> over the
+  source object, supporting dynamic choice of the parameter.
+\<close>
+
+definition Param_Annot :: \<open>'a::{} \<Rightarrow> 'p::{} \<Rightarrow> 'a::{}\<close> (infix "\<p>\<a>\<r>\<a>\<m>:" 60)
+  where \<open>x \<p>\<a>\<r>\<a>\<m>: p \<equiv> x\<close>
+
+lemma [\<phi>reason %To_ToA_cut+20]:
+  \<open> WARNING TEXT(\<open>The parameter of the \<open>\<Sigma>\<close> type is not annotated. To prevent higher-order unknowns,\<close>
+                 \<open>we assume the parameter is unchanged throughout the To-Transformation.\<close>)
+\<Longrightarrow> PROP Reduce_HO_trivial_variable (Trueprop (
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U (fst x) \<s>\<u>\<b>\<j> b. g b @action to (Z (fst x))))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = fst x \<and> g (snd y) @action to (\<Sigma> Z) \<close>
   unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
   by clarsimp
 
-lemma \<Sigma>_To_Transformation_fuzzy[\<phi>reason default %To_ToA_derived_Tr_functor_fuzzy]:
+lemma \<Sigma>_To_Transformation[\<phi>reason %To_ToA_cut+30]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U (f x) \<s>\<u>\<b>\<j> b. g b @action to (Z (f x))))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = f x \<and> g (snd y) @action to (\<Sigma> Z \<p>\<a>\<r>\<a>\<m>: f) \<close>
+  unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
+  by clarsimp
+
+lemma \<Sigma>_To_Transformation_fuzzy[\<phi>reason %To_ToA_cut+10]:
   \<open> NO_MATCH TYPE('c\<^sub>a\<^sub>a) TYPE('c) 
 \<Longrightarrow> PROP Reduce_HO_trivial_variable (Trueprop (
-        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action to Z))
-\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action to Z \<close>
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U (fst x) \<s>\<u>\<b>\<j> b. g b @action to Z))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = fst x \<and> g (snd y) @action to Z \<close>
   for T :: \<open>('p \<Rightarrow> ('c,'a) \<phi>)\<close> and Z :: \<open>('c\<^sub>a\<^sub>a, 'a\<^sub>a\<^sub>a) \<phi>\<close>
   unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
   by clarsimp
 
-lemma \<Sigma>_to_traverse[\<phi>reason default %To_ToA_derived_Tr_functor]:
+lemma \<Sigma>_to_traverse[\<phi>reason default %To_ToA_cut+20]:
   \<open> PROP Reduce_HO_trivial_variable (Trueprop (
-        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z)))
-\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z) \<close>
+        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U (fst x) \<s>\<u>\<b>\<j> b. g b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z)))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = fst x \<and> g (snd y) @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z) \<close>
   unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
   by clarsimp
 
 lemma \<Sigma>_\<A>simp[\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]:
-  \<open> PROP Reduce_HO_trivial_variable (Trueprop (
-        snd x \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g b @action \<A>simp))
-\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = c \<and> g (snd y) @action \<A>_transitive_simp \<close>
+  \<open> (\<And>c. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = c \<Longrightarrow> snd x \<Ztypecolon> T c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g c b @action \<A>simp)
+      \<comment> \<open>I don't know how to be right. This part causes a lot of HO problems\<close>
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = fst x \<and> g (fst x) (snd y) @action \<A>_transitive_simp \<close>
   unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
   by clarsimp
+
+lemma \<Sigma>_\<A>simp_sep_homo[\<phi>reason %\<phi>simp_cut]:
+  \<open> x \<Ztypecolon> \<Sigma> c. T\<^sub>L c \<^emph>\<^sub>\<A> T\<^sub>R c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> T\<^sub>L \<^emph>\<^sub>\<A> \<Sigma> T\<^sub>R \<s>\<u>\<b>\<j> y. y = ((fst x, fst (snd x)), (fst x, snd (snd x))) @action \<A>simp\<close>
+  unfolding Action_Tag_def Transformation_def Bubbling_def
+  by clarsimp
+
+
 
 
 
@@ -2454,10 +2514,7 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
-term map
-
+ 
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> ('c::sep_algebra, 'x) \<phi>
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -2471,7 +2528,7 @@ term map
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all2 eq)\<close>
        and Transformation_Functor  
-           tactic: (auto ; subgoal' for r l xb R \<open>induct l arbitrary: iv iva xb R\<close>)
+           tactic: (auto ; subgoal' for r l xb cc \<open>rule exI[where x=\<open>map cc [len_intvl.start iva ..< len_intvl.start iva+len_intvl.len iva]\<close>]\<close>)
        and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all P)\<close>
        and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
         \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>xa<len_intvl.len iv. T\<^sub>P (x ! xa))) \<close>

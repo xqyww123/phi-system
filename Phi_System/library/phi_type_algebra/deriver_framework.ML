@@ -1172,7 +1172,8 @@ fun oblg_solver proof_id text ctxt sequent =
                  | NONE => (ctxt, sequent'1)
        val nprems' = Thm.nprems_of sequent'2
        val ctxt = ctxt addsimps Expansion.simp_rules ctxt
-    in funpow (nprems' - nprems + 1) (Phi_Sledgehammer_Solver.auto (SOME proof_id) ctxt) sequent'2
+    in Phi_Help.ntimes (nprems' - nprems + 1)
+                       (fn i => Phi_Sledgehammer_Solver.auto (SOME (proof_id ^ "\<^sub>" ^ string_of_int i)) ctxt) sequent'2
           |> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
                               @{thm' Premise_True} RS th
