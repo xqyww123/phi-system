@@ -362,10 +362,10 @@ definition \<open>Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U D un \<lon
 
 subsubsection \<open>Semimodule\<close>
 
-definition Semimodule_Zero :: \<open>('s \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
+definition Semimodule_Zero :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::one,'a) \<phi>) \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
   where \<open>Semimodule_Zero F T zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1)\<close>
 
-definition Closed_Semimodule_Zero :: \<open>('s \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
+definition Closed_Semimodule_Zero :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::one,'a) \<phi>) \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
   where \<open>Closed_Semimodule_Zero F T zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero T) = 1)\<close>
   \<comment> \<open>It is actually a very strong property particularly when \<open>T\<close> is an empty \<phi>-type of empty
       abstract domain. It excludes functional homomorphism like \<open>F c T \<equiv> \<psi> c \<Zcomp>\<^sub>f T\<close>.\<close>
@@ -4746,19 +4746,19 @@ ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 
 subsubsection \<open>Configuration for guessing default Semimodule properties\<close>
 
-definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c::one itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
-                              \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                              \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                              \<Rightarrow> ('c,'a\<^sub>T) \<phi>
+definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c::one itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
+                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                              \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                               \<Rightarrow> 's
                               \<Rightarrow> bool \<Rightarrow> bool
                               \<Rightarrow> bool \<close>
-  where \<open>Guess_Scalar_Zero _ _ _ _ F unfolded_F T zero ants conds \<equiv> True\<close>
+  where \<open>Guess_Scalar_Zero _ _ _ _ _ F unfolded_F T zero ants conds \<equiv> True\<close>
 
 definition Guess_Scalar_One :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
                               \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                               \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                              \<Rightarrow> ('c,'a\<^sub>T) \<phi>
+                              \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                               \<Rightarrow> ('c,'a\<^sub>1) \<phi>
                               \<Rightarrow> 's \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a\<^sub>1)
                               \<Rightarrow> bool \<Rightarrow> bool
@@ -4815,8 +4815,8 @@ declare [[ \<phi>reason_default_pattern
       (*\<open>Guess_Scalar_One\<^sub>I ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_One\<^sub>I ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close>   (100)
   and*)
-      \<open>Guess_Scalar_Zero ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close> \<Rightarrow>
-      \<open>Guess_Scalar_Zero ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close>   (100)
+      \<open>Guess_Scalar_Zero ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Scalar_Zero ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close>   (100)
   and \<open>Guess_Scalar_One ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_One ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _ _\<close>   (100)
   and \<open>Guess_Zip_of_Semimodule ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close> \<Rightarrow>
@@ -4836,8 +4836,8 @@ paragraph \<open>Initialization\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
-\<Longrightarrow> Guess_Scalar_Zero TS TC TA\<^sub>T TA F var_unfolded_F T z ants conds
-\<Longrightarrow> Guess_Scalar_Zero TS TC TA\<^sub>T TA F var_unfolded_F T z ants conds\<close> .
+\<Longrightarrow> Guess_Scalar_Zero TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T z ants conds
+\<Longrightarrow> Guess_Scalar_Zero TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T z ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
@@ -4863,12 +4863,12 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 paragraph \<open>Guess_Scalar_Zero\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
-  \<open>Guess_Scalar_Zero TYPE('s::zero) TYPE('c::one) TYPE('a\<^sub>T) TYPE('a)
+  \<open>Guess_Scalar_Zero TYPE('s::zero) TYPE('c\<^sub>T) TYPE('c::one) TYPE('a\<^sub>T) TYPE('a)
                      F unfolded_F T 0 True True \<close>
   unfolding Guess_Scalar_Zero_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Scalar_Zero TYPE('s len_intvl) TYPE('c::one) TYPE('a) TYPE('a list)
+  \<open>Guess_Scalar_Zero TYPE('s len_intvl) TYPE('c\<^sub>T) TYPE('c::one) TYPE('a) TYPE('a list)
                      F unfolded_F T \<lbrakk>x:0\<rwpar> True True\<close>
   unfolding Guess_Scalar_Zero_def ..
 
@@ -4885,7 +4885,7 @@ lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
   unfolding Guess_Scalar_One_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Scalar_One TYPE('s len_intvl) TYPE('c\<^sub>T) TYPE('c) TYPE('a) TYPE('a list)
+  \<open>Guess_Scalar_One TYPE('s len_intvl) TYPE('c) TYPE('c) TYPE('a) TYPE('a list)
                      F whatever T T \<lbrakk>x:1\<rwpar> (\<lambda>l. length l = 1) hd True True\<close>
   unfolding Guess_Scalar_One_def ..
 
@@ -4895,7 +4895,7 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
   unfolding Guess_Scalar_One\<^sub>I_def .. *)
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Scalar_One TYPE('i set) TYPE('c\<^sub>T) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<Rightarrow> 'a)
+  \<open>Guess_Scalar_One TYPE('i set) TYPE('c) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<Rightarrow> 'a)
                     F (\<lambda>s T x. \<big_ast> (A s T x) s) T T {i} (\<lambda>_. True) (\<lambda>f. f i) True True\<close>
   unfolding Guess_Scalar_One_def ..
 
