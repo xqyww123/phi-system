@@ -986,7 +986,7 @@ lemma op_upcast_nat_\<phi>app:
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>('ba) \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> \<nat>('bb) \<rbrace>\<close>
   \<medium_left_bracket> have [useful]: \<open>x < 2 ^ LENGTH('ba)\<close> using \<phi> by blast
   ;; apply_rule op_cast_nat[where 'bb='bb] ($v) \<medium_right_bracket>
-      certified by (metis take_bit_nat_eq_self_iff take_bit_nat_less_eq_self take_bit_tightened_less_eq_nat the_\<phi>(1) the_\<phi>(2) verit_la_disequality) .
+      certified by auto_sledgehammer .
 
 lemma op_upcast_int_\<phi>app:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> LENGTH('ba) \<le> LENGTH('bb)

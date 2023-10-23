@@ -9,9 +9,12 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun meta_Synt_Deriver' (rule, default_group) (_, name) (H, group, pos, text) ctxt phi thy =
+fun meta_Synt_Deriver' (rule, default_group) (_, name) (H, group, pos, text, notes, bundles) ctxt phi thy =
   let val H' = Thm.cterm_of ctxt (the H)
       val result = Thm.instantiate (Thm.match (Thm.cprop_of rule, H')) rule
+      val _ = if null notes then () else error (name^": notes here are meaningless.")
+      val _ = if null bundles then () else error (name^": bundles here are meaningless.")
+      val _ = if is_none text then () else error (name^": tactic hint here is meaningless.")
    in thy
    |> Phi_Help.generic_theory_mapping pos (fn m =>
          Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE

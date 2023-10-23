@@ -1021,7 +1021,8 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
             case deriving_instructions'1
               of [] => [(NONE, get_first #2 deriving_instructions0,
                          (case deriving_instructions0 of [] => pos
-                                                       | H :: _ => #3 H), NONE)]
+                                                       | H :: _ => #3 H),
+                         NONE, [], [])]
                | L => L
 
       val ind = length (lookup_derived_properties thy phi name)
@@ -1066,7 +1067,10 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
           end
       fun invoke (i,H) thy =
         let val iname = suffix_name_by_index (i+ind) name
-         in deriver (i+ind, iname) H ctxt_derv phi thy
+            val ctxt_derv' = ctxt_derv
+                          |> snd o Proof_Context.note_thms "" (Binding.empty_atts, #5 H)
+                          |> Bundle.includes (#6 H)
+         in deriver (i+ind, iname) H ctxt_derv' phi thy
          |-> register_derived_properties phi (name, i+ind, #3 H)
         end
    in fold_index invoke deriving_instructions thy

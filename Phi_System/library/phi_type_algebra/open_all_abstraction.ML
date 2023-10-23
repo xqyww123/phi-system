@@ -193,7 +193,7 @@ fun gen_trans_to_raw_abst (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                 end
                 ) ctxt0)
           ) (#1 instruction)
-      val instruction = (hint, #2 instruction, #3 instruction, #4 instruction)
+      val instruction = (hint, #2 instruction, #3 instruction, #4 instruction, #5 instruction, #6 instruction)
 
       fun parse_hint ctxt _ hint =
             let fun extract (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract X

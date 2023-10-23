@@ -151,9 +151,9 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                 ) ctxt)
             )
       val ind_conv_u = default_ind_conv (
-            fn ctxt => fn _ => @{print} o
+            fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}),
-            fn ctxt => fn _ => @{print} o
+            fn ctxt => fn _ =>
              (Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1}) then_conv
               Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps) then_conv
               Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)

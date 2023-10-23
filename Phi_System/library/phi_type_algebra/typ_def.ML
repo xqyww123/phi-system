@@ -78,6 +78,8 @@ type deriving_instruction = hint option
                           * (Phi_Reasoner.priority * Reasoner_Group.name option) option
                           * Position.T
                           * Method.text option
+                          * (thm list * attribute list) list (*notes*)
+                          * Bundle.name list
 type deriver = {
   priority: priority,
   dependences: (deriver_name * is_weak) list,
@@ -458,6 +460,8 @@ type deriving_instruction = hint option
                           * (Phi_Reasoner.priority * Reasoner_Group.name option) option
                           * Position.T
                           * Method.text option
+                          * (thm list * attribute list) list (*notes*)
+                          * Bundle.name list
 type is_weak = bool
 type quiet = bool
 type deriver = {
@@ -528,11 +532,11 @@ fun match_deriver1 ctxt term =
     of SOME ret => ret
      | NONE => raise Unknown_Hint term
 
-fun add_deriving (hints : deriving_instruction list, (derv_name, derv), pos) dervs =
+fun add_deriving (hints : deriving_instruction list, (derv_name, derv), pos) (dervs : derivings)=
   Derivings.map_default ((#priority derv, derv_name), ([], derv, false, pos))
                         (fn (hints', der', _, pos) => (hints @ hints', der', false, pos)) dervs
 
-fun add_deriving_from_hint ctxt (derv_instr as (SOME hint,_,pos,_)) ders =
+fun add_deriving_from_hint ctxt (derv_instr as (SOME hint,_,pos,_,_,_)) (ders : derivings) =
   add_deriving ([derv_instr], match_deriver1 ctxt (Logic.strip_imp_concl hint), pos) ders
 
 fun add_deriver_dependences _ _ _ [] dervs = dervs
@@ -579,7 +583,7 @@ fun err_derive ctxt prop_name msg hints = let open Pretty in
       )))
       end
 
-fun derive_properties (dervs, bundles) phityp thy = thy
+fun derive_properties (dervs:derivings, bundles) phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
   |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn thy'goal =>
@@ -667,7 +671,10 @@ fun register_derived_properties phi (name, ind, pos) ths thy =
 
 datatype deriving_ast' = Derv_By_Name of xstring * Position.T
                        | Derv_By_Term of (string * Position.T) * Reasoner_Group.priority_syntax option
-type deriving_ast = deriving_ast' * Method.text_range option
+type deriving_ast = deriving_ast'
+                  * (Facts.ref * Token.src list) list (*notes*)
+                  * (xstring * Position.T) list (*bundles used only in the deriving*)
+                  * Method.text_range option (*tactic hint*)
 
 val deriving_name = Parse.position (
         Parse.group (fn () => "name") (Parse.short_ident || Parse.long_ident))
@@ -675,7 +682,11 @@ val one_deriving = deriving_name >> Derv_By_Name
                 || (Parse.position Parse.term -- Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) >> Derv_By_Term)
 val deriving_parser = Scan.repeat (
         \<^keyword>\<open>deriving\<close> |-- Parse.and_list (
-            one_deriving -- Scan.option (Args.$$$ "tactic" |-- \<^keyword>\<open>:\<close> |-- Method.parse))
+            one_deriving --
+            Scan.optional (\<^keyword>\<open>notes\<close> |-- Parse.thms1) [] --
+            Scan.optional (\<^keyword>\<open>opening\<close> |-- Scan.repeat1 Parse.name_position) [] --
+            Scan.option (\<^keyword>\<open>(\<close> |-- Args.$$$ "tactic" |-- \<^keyword>\<open>:\<close> |-- Method.parser 0 --| \<^keyword>\<open>)\<close>)
+        >> (fn (((a,b),c),d) => (a,b,c,d)))
       ) >> flat
 
 (*
@@ -717,16 +728,19 @@ fun check_property_hint ctxt phi_typ_const hint =
    in hd (Variable.export_terms ctxt'1 ctxt props)
   end*)
 
-fun check_deriving_ast ctxt derv_ast =
+fun check_deriving_ast ctxt (derv_ast : deriving_ast list) =
   let val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
       val thy = Context.theory_of ctxt
       fun chk_text text = ( Method.report text ; Method.check_text ctxt_parse (fst text))
+      val chk_bundles = map (Bundle.check ctxt_parse)
+      val chk_notes = map (apfst (Proof_Context.get_fact ctxt_parse) #>
+                           apsnd (map (Attrib.attribute_cmd ctxt_parse)))
    in Derivings.empty
    |> fold_rev (
-        fn (Derv_By_Name name, text) =>
-            add_deriving ([(NONE, NONE, snd name, Option.map chk_text text)],
+        fn (Derv_By_Name name, notes, bundle, text) =>
+            add_deriving ([(NONE, NONE, snd name, Option.map chk_text text, chk_notes notes, chk_bundles bundle)],
                           check_deriver ctxt name, snd name)
-         | (Derv_By_Term ((term, pos), raw_group), text) =>
+         | (Derv_By_Term ((term, pos), raw_group), notes, bundle, text) =>
             let val term' = Syntax.parse_prop ctxt_parse term
                          |> Syntax.check_prop ctxt_parse
                          |> Envir.beta_eta_contract
@@ -734,7 +748,8 @@ fun check_deriving_ast ctxt derv_ast =
                 val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
                 val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
                 val group = Option.map (Reasoner_Group.check_priority true (Context.Proof ctxt'1)) raw_group
-             in add_deriving_from_hint ctxt (SOME term'1, group, pos, Option.map chk_text text)
+             in add_deriving_from_hint ctxt (SOME term'1, group, pos, Option.map chk_text text,
+                                             chk_notes notes, chk_bundles bundle)
             end
        ) derv_ast
    |> complete_deriver_dependences ctxt

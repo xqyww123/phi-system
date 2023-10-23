@@ -63,21 +63,21 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
         \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
-          tactic: (clarsimp ; subgoal' for x \<open>induct x arbitrary: N\<close>)
+          (tactic: clarsimp ; subgoal' for x \<open>induct x arbitrary: N\<close>)
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
        and Transformation_Functor
-           tactic: (clarsimp ; subgoal' for g x xa xb \<open>induct x arbitrary: xb xa N Na; auto simp add: list_all2_Cons2\<close>)
+           (tactic: clarsimp ; subgoal' for g x xa xb \<open>induct x arbitrary: xb xa N Na; auto simp add: list_all2_Cons2\<close>)
        and Functional_Transformation_Functor
        and \<open>Functionality T D
         \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all D l)\<close>
-            tactic: (clarsimp simp add: list_all2_conv_all_nth list_all_length)
+           notes list_all2_conv_all_nth[simp] list_all_length[simp]
        and \<open>Is_Aggregate (Array N T)\<close>
        and \<open>\<forall>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
        and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>
-            tactic: (clarsimp simp add: list_all2_conv_all_nth list_all_length)
+           notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
 
 

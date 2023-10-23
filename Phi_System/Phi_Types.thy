@@ -2528,7 +2528,7 @@ subsubsection \<open>Interval in Length Representation\<close>
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all2 eq)\<close>
        and Transformation_Functor  
-           tactic: (auto ; subgoal' for r l xb cc \<open>rule exI[where x=\<open>map cc [len_intvl.start iva ..< len_intvl.start iva+len_intvl.len iva]\<close>]\<close>)
+           (tactic: auto ; subgoal' for r l xb cc \<open>rule exI[where x=\<open>map cc [len_intvl.start iva ..< len_intvl.start iva+len_intvl.len iva]\<close>]\<close>)
        and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all P)\<close>
        and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
         \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>xa<len_intvl.len iv. T\<^sub>P (x ! xa))) \<close>
