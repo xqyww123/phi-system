@@ -4783,7 +4783,7 @@ definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for \<open>
 
 definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> ('c::sep_magma) itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
                                       \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                      \<Rightarrow> 'expr
+                                      \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                       \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                       \<Rightarrow> ('s \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
@@ -4798,7 +4798,7 @@ definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c\<^sub>T 
 
 definition Guess_Unzip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
                                       \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                      \<Rightarrow> 'expr
+                                      \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                       \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                       \<Rightarrow> ('s \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool) 

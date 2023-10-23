@@ -237,7 +237,8 @@ declare [[\<phi>trace_reasoning = 0]]
             tactic: (clarsimp simp add: list_all2_conv_all_nth zip'_def in_set_conv_nth)
        and Separation_Homo\<^sub>E
             tactic: (clarsimp simp add: list_all2_conv_all_nth unzip'_def)
-       (*and Semimodule_SDistr_Homo\<^sub>Z*)
+       and Semimodule_SDistr_Homo
+       and Semimodule_Zero
 
 term \<open>Semimodule_SDistr_Homo\<^sub>Z (Mem_Slice addr) T (\<lambda>_. True) \<close>
 

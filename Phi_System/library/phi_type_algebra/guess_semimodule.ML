@@ -61,7 +61,7 @@ fun Guess_Scalar_framework (sorts, mk_goal_term_and_parse_result) =
         val ((_, FT_term), ctxt) = fix_phi_term_params phi ctxt
         val (F_term $ _ $ T_term) = FT_term
   
-        val eta_F_term = Var (("unfolded_F", 0), Term.fastype_of F_term)
+        val eta_F_term = Var (("unfolded_F", idx), Term.fastype_of F_term)
 (*Abs ("s", s_ty, Abs ("T", Term.fastype_of T_term, Abs ("x", x_ty,
                             \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ (Term.incr_boundvars 3 F_term $ Bound 2 $ Bound 1))))*)
         val (goal_term, parse_result) =
@@ -202,20 +202,20 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (NONE,
 fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework ( SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
       fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt) =>
           (\<^Const>\<open>Trueprop\<close> $ (
-              (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty module_ty\<close>
-                         else \<^Const>\<open>Guess_Unzip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty module_ty\<close>)
+              (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty\<close>
+                         else \<^Const>\<open>Guess_Unzip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty\<close>)
                 $ \<^Const>\<open>Pure.type s_ty\<close>
                 $ \<^Const>\<open>Pure.type T_model_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ele_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ty\<close>
                 $ F_term $ eta_F_term $ T_term
-                $ Var(("scalar_domain",0), s_ty --> HOLogic.boolT)
-                $ Var(("abstract_domain",0), s_ty --> s_ty --> (if is_zip then \<^Type>\<open>prod x_ty x_ty\<close> else x_ty) --> HOLogic.boolT)
-                $ Var(("f", 0), s_ty --> s_ty -->
+                $ Var(("scalar_domain",idx), s_ty --> HOLogic.boolT)
+                $ Var(("abstract_domain",idx), s_ty --> s_ty --> (if is_zip then \<^Type>\<open>prod x_ty x_ty\<close> else x_ty) --> HOLogic.boolT)
+                $ Var(("f", idx), s_ty --> s_ty -->
                           (if is_zip then \<^Type>\<open>prod x_ty x_ty\<close> --> x_ty else x_ty --> \<^Type>\<open>prod x_ty x_ty\<close>))
-                $ Var(("antecedents", 0), HOLogic.boolT)
-                $ Var(("conditions", 0), HOLogic.boolT)),
+                $ Var(("antecedents", idx), HOLogic.boolT)
+                $ Var(("conditions", idx), HOLogic.boolT)),
             fn _ (*Trueprop*) $ (Const _ (*Guess_(Un)Zip_of_Semimodule*) $ ty_s $ ty_model_T $ ty_model $ ty_x_ele $ ty_x
                     $ F $ _ $ T $ Ds $ Dx $ f $ ants $ conds) =>
               let val (s_ty, T_model_ty, model_ty, x_ele_ty, x_ty) =
