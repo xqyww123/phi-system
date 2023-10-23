@@ -106,7 +106,7 @@ fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result)
 *)
 
 fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>one\<close>),
-      fn (s_ty, x_ele_ty, x_ty, model_ty, T_model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>
+      fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>
           (HOLogic.Trueprop $ (\<^Const>\<open>Guess_Scalar_Zero s_ty model_ty x_ele_ty x_ty\<close>
               $ \<^Const>\<open>Pure.type s_ty\<close>
               $ \<^Const>\<open>Pure.type model_ty\<close>
@@ -116,7 +116,7 @@ fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (SOME (\<^sort>\<open>t
               $ Var (("zero", idx), s_ty)
               $ Var (("ants", idx), HOLogic.boolT)
               $ Var (("conds", idx), HOLogic.boolT)),
-           fn _ (*Trueprop*) $ (_ (*Guess_Scalar_Zero*) $ ty_s $ ty_model $ ty_x_ele $ ty_x
+           fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_Zero*) $ ty_s $ ty_model $ ty_x_ele $ ty_x
                   $ F $ _ $ T $ zero $ ants $ conds) =>
               let val (s_ty, model_ty, x_ele_ty, x_ty) =
                         (Logic.dest_type ty_s, Logic.dest_type ty_model, Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
@@ -130,27 +130,33 @@ fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (SOME (\<^sort>\<open>t
       )
 
 val Guess_Scalar_One_E = Guess_Scalar_framework (NONE,
-      fn (s_ty, x_ele_ty, x_ty, model_ty, T_model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>
-           (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_One\<^sub>E s_ty model_ty x_ele_ty x_ty\<close>
+      fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>
+        let val a1_ty = TVar(("a\<^sub>1",idx),\<^sort>\<open>type\<close>)
+         in (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_One s_ty T_model_ty model_ty x_ele_ty x_ty a1_ty\<close>
                 $ \<^Const>\<open>Pure.type s_ty\<close>
+                $ \<^Const>\<open>Pure.type T_model_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ele_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ty\<close>
                 $ F_term $ eta_F_term $ T_term
+                $ Var (("T\<^sub>1", idx), Phi_Syntax.mk_phi_type_ty (model_ty, a1_ty))
                 $ Var (("one", idx), s_ty)
                 $ Var (("Dx", idx), x_ty --> HOLogic.boolT)
-                $ Var (("f", idx), x_ty --> x_ele_ty)
+                $ Var (("f", idx), x_ty --> a1_ty)
                 $ Var (("ants", idx), HOLogic.boolT)
                 $ Var (("conds", idx), HOLogic.boolT)),
-             fn _ (*Trueprop*) $ (_ (*Guess_Scalar_One\<^sub>E*) $ ty_s $ ty_model $ ty_x_ele $ ty_x
-                    $ F $ _ $ T $ one $ Dx $ f $ ants $ conds) =>
-              let val (s_ty, model_ty, x_ele_ty, x_ty) =
-                        (Logic.dest_type ty_s, Logic.dest_type ty_model, Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
-               in (HOLogic.Trueprop $ (\<^Const>\<open>Semimodule_Identity s_ty x_ele_ty model_ty x_ty\<close>
-                        $ F $ T $ one $ Dx $ f),
+             fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_One*) $ ty_s $ ty_model_T $ ty_model $ ty_x_ele $ ty_x
+                    $ F $ _ $ T $ T1 $ one $ Dx $ f $ ants $ conds) =>
+              let val (s_ty, T_model_ty, model_ty, x_ele_ty, x_ty) =
+                        (Logic.dest_type ty_s, Logic.dest_type ty_model_T, Logic.dest_type ty_model,
+                         Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
+                  val ty_x_1 = domain_type (Term.fastype_of T1)
+               in (HOLogic.Trueprop $ (\<^Const>\<open>Semimodule_One s_ty x_ele_ty T_model_ty x_ty model_ty ty_x_1\<close>
+                        $ F $ T $ T1 $ one $ Dx $ f),
                    NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                    conds, ants)
               end)
+        end
        )
 
 fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (NONE,
@@ -178,7 +184,7 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (NONE,
                 $ Var(("ants", 0), HOLogic.boolT)
                 $ Var(("conds", 0), HOLogic.boolT)),
 
-             fn _ (*Trueprop*) $ (_ (*Guess_Scalar_Assoc*) $ _ $ _ $ _ $ _ $ _ $ _
+             fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_Assoc*) $ _ $ _ $ _ $ _ $ _ $ _
                     $ Fs $ Ft $ Fc $ _ $ T $ Ds $ Dt $ Dx $ smul $ f $ ants $ conds) =>
                  let val \<^Type>\<open>fun ss' \<^Type>\<open>fun st' \<^Type>\<open>fun as_t' ast'\<close>\<close>\<close> = Term.fastype_of f
                      val \<^Type>\<open>fun _ \<^Type>\<open>fun \<^Type>\<open>fun a' \<open>Type(_, [c'])\<close>\<close> \<^Type>\<open>fun at' \<open>Type (_, [ct'])\<close>\<close>\<close>\<close> = Term.fastype_of Ft
@@ -196,9 +202,10 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (NONE,
 fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework ( SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
       fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt) =>
           (\<^Const>\<open>Trueprop\<close> $ (
-              (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty model_ty x_ele_ty x_ty module_ty\<close>
-                         else \<^Const>\<open>Guess_Unzip_of_Semimodule s_ty model_ty x_ele_ty x_ty module_ty\<close>)
+              (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty module_ty\<close>
+                         else \<^Const>\<open>Guess_Unzip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty module_ty\<close>)
                 $ \<^Const>\<open>Pure.type s_ty\<close>
+                $ \<^Const>\<open>Pure.type T_model_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ele_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ty\<close>
@@ -209,18 +216,19 @@ fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework ( SOME (\<^sort>\<op
                           (if is_zip then \<^Type>\<open>prod x_ty x_ty\<close> --> x_ty else x_ty --> \<^Type>\<open>prod x_ty x_ty\<close>))
                 $ Var(("antecedents", 0), HOLogic.boolT)
                 $ Var(("conditions", 0), HOLogic.boolT)),
-            fn _ (*Trueprop*) $ (_ (*Guess_(Un)Zip_of_Semimodule*) $ ty_s $ ty_model $ ty_x_ele $ ty_x
+            fn _ (*Trueprop*) $ (Const _ (*Guess_(Un)Zip_of_Semimodule*) $ ty_s $ ty_model_T $ ty_model $ ty_x_ele $ ty_x
                     $ F $ _ $ T $ Ds $ Dx $ f $ ants $ conds) =>
-              let val (s_ty, model_ty, x_ele_ty, x_ty) =
-                        (Logic.dest_type ty_s, Logic.dest_type ty_model, Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
+              let val (s_ty, T_model_ty, model_ty, x_ele_ty, x_ty) =
+                        (Logic.dest_type ty_s, Logic.dest_type ty_model_T, Logic.dest_type ty_model,
+                         Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
                   val xxx = Thm.cterm_of ctxt (
                               HOLogic.Trueprop $ (
-                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ele_ty model_ty x_ty\<close>
-                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ele_ty model_ty x_ty\<close>)
+                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ele_ty T_model_ty x_ty model_ty\<close>
+                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ele_ty T_model_ty x_ty model_ty\<close>)
                         $ F $ T $ Ds $ Dx $ f))
                in (HOLogic.Trueprop $ (
-                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ele_ty model_ty x_ty\<close>
-                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ele_ty model_ty x_ty\<close>)
+                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ele_ty T_model_ty x_ty model_ty\<close>
+                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ele_ty T_model_ty x_ty model_ty\<close>)
                         $ F $ T $ Ds $ Dx $ f),
                    NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                    conds, ants)
@@ -239,7 +247,7 @@ fun Guess_Scalar_One_E (phi : phi_type) ctxt =
                           \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ (Term.incr_boundvars 3 F_term $ Bound 2 $ Bound 1))))
 
       val goal_term =
-            \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_One\<^sub>E s_ty model_ty x_ele_ty x_ty\<close>
+            \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_One s_ty model_ty x_ele_ty x_ty\<close>
               $ \<^Const>\<open>Pure.type s_ty\<close>
               $ \<^Const>\<open>Pure.type model_ty\<close>
               $ \<^Const>\<open>Pure.type x_ele_ty\<close>
@@ -261,10 +269,10 @@ fun Guess_Scalar_One_E (phi : phi_type) ctxt =
         |> Option.map (apsnd (simplify_guessing_reasoning ctxt))
    of SOME (inst, ret) =>
        (case Thm.prop_of ret
-          of _ (*Trueprop*) $ (_ (*Guess_Scalar_One\<^sub>E*) $ _ $ _ $ _ $ _
+          of _ (*Trueprop*) $ (_ (*Guess_Scalar_One*) $ _ $ _ $ _ $ _
                 $ F $ _ $ T $ one $ Dx $ f $ ants $ conds) =>
             let val ants = constrain_antecedents conds ants
-                val head = \<^Const>\<open>Semimodule_Identity s_ty x_ele_ty model_ty x_ty\<close>
+                val head = \<^Const>\<open>Semimodule_One s_ty x_ele_ty model_ty x_ty\<close>
                 val prop = HOLogic.Trueprop $ (head $ F $ T $ one $ Dx $ f)
              in Seq.single (ants, prop,
                             NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),

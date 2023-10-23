@@ -10,7 +10,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun gen_MI (_, name) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F $ _ $ _ $ _ $ _ ) => F)
+            fn (Const(\<^const_name>\<open>Semimodule_One\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F)
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
         default_reasoning false default_reasoning_configure (K (K NONE))
@@ -46,7 +46,7 @@ fun gen_MI (_, name) instruction ctxt0 (phi : phi_type) thy =
   end
 
 val semimodule_identity = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Identity") gen_MI
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_One") gen_MI
 
 
 end

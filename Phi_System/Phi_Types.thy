@@ -325,16 +325,16 @@ lemma [\<phi>reason default %\<phi>TA_guesser]:
   unfolding Guess_Property_def ..
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:
-  \<open> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
-\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
+  \<open> Guess_Zip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
                             Ds (\<lambda>s t (x,y). P s x \<and> P t y \<longrightarrow> Dx s t (x,y)) zi ants conds \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:
-  \<open> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
-\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
+  \<open> Guess_Unzip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
                               Ds (\<lambda>s t xy. P (s + t) xy \<longrightarrow> Dx s t xy) zi ants conds \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
@@ -1148,7 +1148,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?Ta ?U unzip_fun \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero \<big_ast>\<^sup>\<phi> ?T 0 \<close>),
   (@{thm' \<phi>Mul_Quant.Closed_Semimodule_Zero}, \<^pattern_prop>\<open> Closed_Semimodule_Zero \<big_ast>\<^sup>\<phi> ?T 0 \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity \<big_ast>\<^sup>\<phi> ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i)  \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One \<big_ast>\<^sup>\<phi> ?T ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i)  \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod) \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T finite finite (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod)  \<close>)
 ]\<close>
@@ -1955,10 +1955,10 @@ subsubsection \<open>Reasoning Rules\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
+lemma Semimodule_One_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
-\<Longrightarrow> Semimodule_Identity (\<phi>ScalarMul \<psi>) T 1 (\<lambda>_. True) (\<lambda>x. x) \<close>
-  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+\<Longrightarrow> Semimodule_One (\<phi>ScalarMul \<psi>) T T 1 (\<lambda>_. True) (\<lambda>x. x) \<close>
+  unfolding Semimodule_One_def module_scalar_identity_def scalar_mult_def BI_eq_iff
   by clarsimp
 
 lemma Semimodule_Scalar_Assoc\<^sub>I_by_function[\<phi>reason 1000]:
@@ -2036,18 +2036,18 @@ let_\<phi>type \<phi>ScalarMul deriving \<phi>ScalarMul.Comm\<^sub>I
 
 subsubsection \<open>Guessing Antecedents\<close>
 
-lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
+lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
                             (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst)
                             (Functionality T Dx \<and>\<^sub>\<r> Object_Equiv T eq \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
                             True \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
-lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
+lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
                             (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))
                             (Functionality T Dx \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
@@ -2225,7 +2225,7 @@ ML \<open>assert_derived_properties \<^theory> [
 subsubsection \<open>By List of Keys\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+  
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Sep_Functor_1
@@ -2253,7 +2253,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>MapAt_L.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity (\<^bold>\<rightarrow>\<^sub>@) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
+  (@{thm' \<phi>MapAt_L.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One (\<^bold>\<rightarrow>\<^sub>@) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x)  \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>),
   (@{thm' \<phi>MapAt_L.\<phi>Fun'_Comm\<^sub>I}, \<^pattern_prop>\<open> fun_commute (scalar_mult (\<tribullet>\<^sub>m) ?k) ?f (scalar_mult (\<tribullet>\<^sub>m) ?xa) ?xb \<Longrightarrow>
@@ -2319,7 +2319,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Functional_Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)  \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>Share.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity (\<odiv>) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
+  (@{thm' \<phi>Share.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One (\<odiv>) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
     Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<odiv>) ?T ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
@@ -2545,7 +2545,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant_LenIv.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) ?Ta ?U {(x, y). length x = length y} zip'  \<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) ?Ta ?U unzip'  \<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T \<lbrakk>?xa : 0\<rwpar>  \<close>),
-  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>l. length l = 1) hd  \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>l. length l = 1) hd  \<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open>
         Semimodule_SDistr_Homo\<^sub>U \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
                                                    (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))\<close>),
