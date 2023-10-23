@@ -1117,7 +1117,7 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 subsection \<open>Finite Multiplicative Quantification\<close>
 
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 1 ]]
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
@@ -1135,6 +1135,7 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Closed_Semimodule_Zero
        and Carrier_Set
 
+
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x. \<forall>i\<in>?I. ?P (x i))  \<close>),
   (@{thm' \<phi>Mul_Quant.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (?T:: ?'b \<Rightarrow> ?'c::{sep_algebra,sep_carrier_1} BI) ?P \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
@@ -1148,11 +1149,11 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?Ta ?U unzip_fun \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero \<big_ast>\<^sup>\<phi> ?T 0 \<close>),
   (@{thm' \<phi>Mul_Quant.Closed_Semimodule_Zero}, \<^pattern_prop>\<open> Closed_Semimodule_Zero \<big_ast>\<^sup>\<phi> ?T 0 \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One \<big_ast>\<^sup>\<phi> ?T ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i)  \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I \<big_ast>\<^sup>\<phi> ?T ?T {?i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True) \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E \<big_ast>\<^sup>\<phi> ?T ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod) \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T finite finite (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod)  \<close>)
 ]\<close>
-
 
 
 subsubsection \<open>Syntax\<close>
@@ -1955,10 +1956,18 @@ subsubsection \<open>Reasoning Rules\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma Semimodule_One_by_function [\<phi>reason 1000]:
+lemma Semimodule_One\<^sub>I_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
-\<Longrightarrow> Semimodule_One (\<phi>ScalarMul \<psi>) T T 1 (\<lambda>_. True) (\<lambda>x. x) \<close>
-  unfolding Semimodule_One_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+\<Longrightarrow> Semimodule_One\<^sub>I (\<phi>ScalarMul \<psi>) T T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>
+  unfolding Semimodule_One\<^sub>I_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+            Transformation_def
+  by clarsimp
+
+lemma Semimodule_One\<^sub>E_by_function [\<phi>reason 1000]:
+  \<open> module_scalar_identity \<psi>
+\<Longrightarrow> Semimodule_One\<^sub>E (\<phi>ScalarMul \<psi>) T T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>
+  unfolding Semimodule_One\<^sub>E_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+            Transformation_def
   by clarsimp
 
 lemma Semimodule_Scalar_Assoc\<^sub>I_by_function[\<phi>reason 1000]:
@@ -2241,6 +2250,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
+
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P \<close>),
   (@{thm' \<phi>MapAt_L.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P \<close>),
@@ -2253,7 +2263,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>MapAt_L.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One (\<^bold>\<rightarrow>\<^sub>@) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
+  (@{thm' \<phi>MapAt_L.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<^bold>\<rightarrow>\<^sub>@) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
+  (@{thm' \<phi>MapAt_L.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<^bold>\<rightarrow>\<^sub>@) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x)  \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>),
   (@{thm' \<phi>MapAt_L.\<phi>Fun'_Comm\<^sub>I}, \<^pattern_prop>\<open> fun_commute (scalar_mult (\<tribullet>\<^sub>m) ?k) ?f (scalar_mult (\<tribullet>\<^sub>m) ?xa) ?xb \<Longrightarrow>
@@ -2319,7 +2330,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Functional_Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)  \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>Share.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One (\<odiv>) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
+  (@{thm' \<phi>Share.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<odiv>) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
+  (@{thm' \<phi>Share.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<odiv>) ?T ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
     Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<odiv>) ?T ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
@@ -2514,7 +2526,14 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
- 
+declare [[\<phi>trace_reasoning = 0]]
+
+context begin
+
+private lemma [simp]:
+  \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
+  by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
+
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> ('c::sep_algebra, 'x) \<phi>
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -2535,6 +2554,11 @@ subsubsection \<open>Interval in Length Representation\<close>
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
 
+end
+
+thm \<phi>Mul_Quant_LenIv.scalar_one
+thm \<phi>Mul_Quant_LenIv.scalar_one'
+
 translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -2545,7 +2569,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant_LenIv.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) ?Ta ?U {(x, y). length x = length y} zip'  \<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) ?Ta ?U unzip'  \<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T \<lbrakk>?xa : 0\<rwpar>  \<close>),
-  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_One}, \<^pattern_prop>\<open> Semimodule_One \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>l. length l = 1) hd  \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>),
+  (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open>
         Semimodule_SDistr_Homo\<^sub>U \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
                                                    (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))\<close>),

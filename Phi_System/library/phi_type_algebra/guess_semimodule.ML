@@ -9,7 +9,7 @@ val parse_semimodule_phityp : Proof.context
                            -> typ * typ * typ * typ * typ * Phi_Type_Algebra.phi_type
 
 val Guess_Scalar_Zero : bool -> guess_property
-val Guess_Scalar_One_E : guess_property
+val Guess_Scalar_One : bool -> guess_property
 val Guess_Scalar_Assoc : bool -> guess_property
 val Guess_Zip_of_Semimodule : bool -> guess_property
 
@@ -131,10 +131,14 @@ fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (SOME (\<^sort>\<open>t
               end)
       )
 
-val Guess_Scalar_One_E = Guess_Scalar_framework (NONE,
+fun Guess_Scalar_One is_intro = Guess_Scalar_framework (NONE,
       fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>
         let val a1_ty = TVar(("a\<^sub>1",idx),\<^sort>\<open>type\<close>)
-         in (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_One s_ty T_model_ty model_ty x_ele_ty x_ty a1_ty\<close>
+            val xL = if is_intro then a1_ty else x_ty
+            val xR = if is_intro then x_ty else a1_ty
+         in (\<^Const>\<open>Trueprop\<close> $ (
+              (if is_intro then \<^Const>\<open>Guess_Scalar_One\<^sub>I s_ty T_model_ty model_ty x_ele_ty x_ty a1_ty\<close>
+                           else \<^Const>\<open>Guess_Scalar_One\<^sub>E s_ty T_model_ty model_ty x_ele_ty x_ty a1_ty\<close>)
                 $ \<^Const>\<open>Pure.type s_ty\<close>
                 $ \<^Const>\<open>Pure.type T_model_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
@@ -143,18 +147,21 @@ val Guess_Scalar_One_E = Guess_Scalar_framework (NONE,
                 $ F_term $ eta_F_term $ T_term
                 $ Var (("T\<^sub>1", idx), Phi_Syntax.mk_phi_type_ty (model_ty, a1_ty))
                 $ Var (("one", idx), s_ty)
-                $ Var (("Dx", idx), x_ty --> HOLogic.boolT)
-                $ Var (("f", idx), x_ty --> a1_ty)
+                $ Var (("Dx", idx), xL --> HOLogic.boolT)
+                $ Var (("f", idx), xL --> xR)
+                $ Var (("P", idx), xL --> HOLogic.boolT)
                 $ Var (("ants", idx), HOLogic.boolT)
                 $ Var (("conds", idx), HOLogic.boolT)),
              fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_One*) $ ty_s $ ty_model_T $ ty_model $ ty_x_ele $ ty_x
-                    $ F $ _ $ T $ T1 $ one $ Dx $ f $ ants $ conds) =>
+                    $ F $ _ $ T $ T1 $ one $ Dx $ f $ P $ ants $ conds) =>
               let val (s_ty, T_model_ty, model_ty, x_ele_ty, x_ty) =
                         (Logic.dest_type ty_s, Logic.dest_type ty_model_T, Logic.dest_type ty_model,
                          Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
                   val ty_x_1 = domain_type (Term.fastype_of T1)
-               in (HOLogic.Trueprop $ (\<^Const>\<open>Semimodule_One s_ty x_ele_ty T_model_ty x_ty model_ty ty_x_1\<close>
-                        $ F $ T $ T1 $ one $ Dx $ f),
+               in (HOLogic.Trueprop $ (
+                    (if is_intro then \<^Const>\<open>Semimodule_One\<^sub>I s_ty x_ele_ty T_model_ty x_ty model_ty ty_x_1\<close>
+                                 else \<^Const>\<open>Semimodule_One\<^sub>E s_ty x_ele_ty T_model_ty x_ty model_ty ty_x_1\<close>)
+                        $ F $ T $ T1 $ one $ Dx $ f $ P),
                    NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                    conds, ants)
               end)

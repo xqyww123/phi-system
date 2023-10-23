@@ -214,6 +214,7 @@ proc op_free_mem:
 
 declare [[\<phi>trace_reasoning = 0]]
 
+
 \<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>l \<Ztypecolon> Mem_Slice addr iv T \<equiv>
           zip [len_intvl.start iv ..< len_intvl.start iv + len_intvl.len iv] l
@@ -238,8 +239,11 @@ declare [[\<phi>trace_reasoning = 0]]
            (tactic: clarsimp simp add: list_all2_conv_all_nth zip'_def in_set_conv_nth)
        and Separation_Homo\<^sub>E
            (tactic: clarsimp simp add: list_all2_conv_all_nth unzip'_def)
-       and \<open>Semimodule_One (Mem_Slice addr) T (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd\<close>
+       and \<open>Semimodule_One\<^sub>I (Mem_Slice addr) T (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_One\<^sub>E (Mem_Slice addr) T (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
             notes hd_zip[simp] length_Suc_conv[simp]
+
+term \<open>Semimodule_One\<^sub>I (Mem_Slice addr) T (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
 
 consts Mem_Slice_synt :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _ : _]")
 
