@@ -418,8 +418,8 @@ definition Semimodule_Scalar_Assoc\<^sub>E :: \<open> ('s\<^sub>s \<Rightarrow> 
 text \<open>The extended scalar association operator for Finite Multiplicative Quantification is just uncurrying.\<close>
 
 
-definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                    \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::sep_magma,'a) \<phi>)
+                                    \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                     \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                     \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                     \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
@@ -433,8 +433,8 @@ definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_m
       homomorphism of identity element, are satisfied, it is then a semimodule.
 \<close>
 
-definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                        \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::sep_magma,'a) \<phi>)
+                                        \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                         \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
@@ -458,8 +458,8 @@ definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c::s
         of instantiations is multiplied!\<close>
 
 
-definition Semimodule_SDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                        \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::sep_magma,'a) \<phi>)
+                                        \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                         \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
@@ -468,8 +468,8 @@ definition Semimodule_SDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c::sep_m
             (\<forall>s t x. Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx t s x \<longrightarrow>
                 (x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> F t T \<^emph> F s T ))\<close>
 
-definition Semimodule_SDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                        \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::sep_magma,'a) \<phi>)
+                                        \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                         \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
@@ -4780,31 +4780,31 @@ definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for \<open>
                                  \<Rightarrow> bool\<close>
   where \<open>Guess_Scalar_Assoc _ _ _ _ _ _ Fs Ft Fc unfolded_Fc T Ds Dt Dx smul f ants conds \<equiv> True\<close>
 
-definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> ('c::sep_magma) itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
-                                      \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> ('c::sep_magma) itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
+                                      \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                       \<Rightarrow> 'expr
-                                      \<Rightarrow> ('c,'a\<^sub>T) \<phi>
+                                      \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                       \<Rightarrow> ('s \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
                                       \<Rightarrow> bool \<Rightarrow> bool
                                       \<Rightarrow> bool\<close>
-  where \<open>Guess_Zip_of_Semimodule type_scalar type_concrete type_element_abstract type_abstract
+  where \<open>Guess_Zip_of_Semimodule type_scalar type_ele_concrete type_concrete type_element_abstract type_abstract
                                  F unfolded_F_def T
                                  domain_of_scalar domain_of_abstract zip_opr
                                  antecedents conditions_of_antecedents
        \<equiv> True\<close>
 
-definition Guess_Unzip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
-                                      \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+definition Guess_Unzip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
+                                      \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                       \<Rightarrow> 'expr
-                                      \<Rightarrow> ('c,'a\<^sub>T) \<phi>
+                                      \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                       \<Rightarrow> ('s \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool) 
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
                                       \<Rightarrow> bool \<Rightarrow> bool
                                       \<Rightarrow> bool\<close>
-  where \<open>Guess_Unzip_of_Semimodule type_scalar type_concrete type_element_abstract type_abstract
+  where \<open>Guess_Unzip_of_Semimodule type_scalar type_ele_conc type_concrete type_element_abstract type_abstract
                                    F unfolded_typ_def T
                                    domain_of_scalar domain_of_abstract unzip_opr
                                    antecedents conditions_of_antecedents
@@ -4818,10 +4818,10 @@ declare [[ \<phi>reason_default_pattern
       \<open>Guess_Scalar_Zero ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close>   (100)
   and \<open>Guess_Scalar_One\<^sub>E ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_One\<^sub>E ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _\<close>   (100)
-  and \<open>Guess_Zip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close> \<Rightarrow>
-      \<open>Guess_Zip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close>   (100)
-  and \<open>Guess_Unzip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close> \<Rightarrow>
-      \<open>Guess_Unzip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close>   (100)
+  and \<open>Guess_Zip_of_Semimodule ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Zip_of_Semimodule ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close>   (100)
+  and \<open>Guess_Unzip_of_Semimodule ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Unzip_of_Semimodule ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close>   (100)
   and \<open>Guess_Scalar_Assoc ?mode ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_Assoc ?mode ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close>   (100)
 ]]
