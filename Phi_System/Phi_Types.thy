@@ -2234,7 +2234,7 @@ ML \<open>assert_derived_properties \<^theory> [
 subsubsection \<open>By List of Keys\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-  
+
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Sep_Functor_1
