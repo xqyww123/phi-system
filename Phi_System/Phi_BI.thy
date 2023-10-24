@@ -957,8 +957,32 @@ bundle ToA_extract_pure_sat = ToA_EIF_sat[\<phi>reason %extract_pure_sat]
 
 subsubsection \<open>Reasoning Configure\<close>
 
-
 ML_file \<open>library/tools/helper_reasoners.ML\<close>
+
+paragraph \<open>Auxiliary Tools\<close>
+
+definition May_Assign :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>May_Assign _ _ \<equiv> True\<close>
+
+\<phi>reasoner_group may_assign__all = (100, [1,2000]) for \<open>May_Assign var val\<close> \<open>\<close>
+  and may_assign_success = (2000, [2000,2000]) in may_assign__all \<open>\<close>
+  and may_assign_red = (1500, [1500, 1530]) in may_assign__all \<open>\<close>
+  and may_assign_fallback = (1, [1,1]) in may_assign__all \<open>\<close>
+
+lemma [\<phi>reason %may_assign_success for \<open>May_Assign _ _\<close>]:
+  \<open> May_Assign z z \<close>
+  unfolding May_Assign_def ..
+
+lemma [\<phi>reason %may_assign_fallback]:
+  \<open>May_Assign x y \<close>
+  unfolding May_Assign_def ..
+
+lemma [\<phi>reason %may_assign_red]:
+  \<open> May_Assign y z
+\<Longrightarrow> May_Assign (snd (x,y)) z \<close>
+  unfolding May_Assign_def ..
+
+
 
 paragraph \<open>Inhabitance Reasoning - Part II\<close>
 
@@ -2421,7 +2445,8 @@ TODO: make such annotation syntax.
 \<close>
 
 lemma [\<phi>reason %ToA_top+1]:
-  \<open>x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (undefined, snd x) \<Ztypecolon> \<top>\<^sub>\<phi> \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+  \<open> May_Assign (snd x) undefined
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((), undefined) \<Ztypecolon> \<top>\<^sub>\<phi> \<^emph>[False] \<top>\<^sub>\<phi> \<close>
   unfolding Transformation_def
   by clarsimp
 
@@ -2481,7 +2506,8 @@ paragraph \<open>Separation Extraction\<close>
 (*TODO: more think!*)
 
 lemma [\<phi>reason %ToA_top]:
-  \<open>x \<Ztypecolon> \<bottom>\<^sub>\<phi> \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, ()) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+  \<open> May_Assign (snd x) undefined
+\<Longrightarrow> x \<Ztypecolon> \<bottom>\<^sub>\<phi> \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, undefined) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<close>
   unfolding Transformation_def
   by clarsimp
 
@@ -2917,7 +2943,8 @@ lemma [\<phi>reason %ToA_red]:
   by simp
 
 lemma [\<phi>reason %ToA_success]:
-  \<open> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (undefined, fst x) \<Ztypecolon> \<half_blkcirc>[False] U \<^emph>[True] T \<close>
+  \<open> May_Assign (snd x) undefined
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (undefined, fst x) \<Ztypecolon> \<half_blkcirc>[False] U \<^emph>[True] T \<close>
   by (clarsimp simp add: \<phi>Some_\<phi>None_freeobj)
 
 paragraph \<open>Simplification Protects\<close>
@@ -3988,6 +4015,7 @@ lemma [\<phi>reason default %ToA_falling_latice-1]:
 
 lemma [\<phi>reason default %ToA_falling_latice+3]:
   \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> May_Assign (snd x) undefined
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, undefined) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P\<close>
   unfolding \<r>Guard_def
   by simp
@@ -4004,6 +4032,8 @@ lemma [\<phi>reason default %ToA_falling_latice+1]:
          Pop_Envir_Var prove_obligations_in_time
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, undefined) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P\<close>
   for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
+  \<comment> \<open>the transformation from T to U fails, and the algebra is non-commutative, nor any methods of a higher priority,
+      so \<open>T\<close> or \<open>U\<close> can only be identity if the reasoning can continue\<close>
   unfolding \<r>Guard_def Ant_Seq_def Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp; fastforce)
 
@@ -4125,22 +4155,26 @@ lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<Ztypecolon> _ \<^em
   by simp
 
 lemma transformation_refl_assigning_R [\<phi>reason %ToA_assigning_var]:
-  \<open>x \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst x \<Ztypecolon> T \<^emph>[True] U\<close>
+  \<open> May_Assign (snd x) undefined
+\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst x \<Ztypecolon> T \<^emph>[True] U\<close>
   by simp
 
 lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> T = T'
+\<Longrightarrow> May_Assign (snd x) undefined
 \<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst x \<Ztypecolon> T' \<^emph>[True] U\<close>
   unfolding Premise_def \<r>Guard_def
   by simp
 
 lemma transformation_refl_with_WR [\<phi>reason %ToA_assigning_var+1]:
         \<comment> \<open>Higher than \<open>transformation_refl\<close> to set the condition variable Cr\<close>
-  \<open>x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi>\<close>
+  \<open> May_Assign (snd x) undefined
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi>\<close>
   by simp
 
 lemma [\<phi>reason default %ToA_unified_refl+1 for \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> T = T'
+\<Longrightarrow> May_Assign (snd x) undefined
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T' \<^emph>[False] \<top>\<^sub>\<phi>\<close>
   unfolding Premise_def \<r>Guard_def
   by simp
@@ -5610,6 +5644,7 @@ lemma [\<phi>reason %ToA_splitting+1 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o
         a sum type!
   TODO: the case split now is broken!
 *)
+(*
 lemma (*TODO-0918*)
   \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> (xx, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a a \<Ztypecolon> U\<^sub>a a \<^emph>[C\<^sub>a a] R\<^sub>a a \<w>\<i>\<t>\<h> P\<^sub>a a)
 \<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> (xx, w\<^sub>b b) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>b b] W\<^sub>b b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b b \<Ztypecolon> U\<^sub>b b \<^emph>[C\<^sub>b b] R\<^sub>b b \<w>\<i>\<t>\<h> P\<^sub>b b)
@@ -5618,7 +5653,7 @@ lemma (*TODO-0918*)
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum y\<^sub>a y\<^sub>b x \<Ztypecolon> (case_sum U\<^sub>a U\<^sub>b x) \<^emph>[case_sum C\<^sub>a C\<^sub>b x] (case_sum R\<^sub>a R\<^sub>b x) \<w>\<i>\<t>\<h> case_sum P\<^sub>a P\<^sub>b x \<close>
   unfolding Premise_def Try_def
   sorry
-
+*)
 
 lemma [\<phi>reason %ToA_splitting except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (case_sum _ _ ?var) \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> (fst xx, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a a \<Ztypecolon> U\<^sub>a a \<^emph>[C\<^sub>a a] R\<^sub>a a \<w>\<i>\<t>\<h> P\<^sub>a a)
