@@ -2417,7 +2417,9 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 paragraph \<open>Reasoning when having SDistr\<close>
 
 lemma
-  \<open>  \<close>
+  \<open> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
+\<Longrightarrow> 
+\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
 
 
 paragraph \<open>Introduction\<close>
