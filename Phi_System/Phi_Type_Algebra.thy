@@ -2417,24 +2417,74 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 
 paragraph \<open>Reasoning when having SDistr\<close>
 
+text \<open>The difficulty of reasoning \<phi>-type transformations lies in the two directions that 
+  the transformations can follow, hierarchically swapping an inner \<phi>-type out \<open>F (G T) \<longrightarrow> G (F T)\<close>
+  and horizontally over \<open>*\<close> including splitting and merging.
+
+  As an example example, the reasoning of transformation
+  \<open>x \<Ztypecolon> F a T * others \<longrightarrow> y \<Ztypecolon> F b U\<close> with \<open>a \<le> b\<close> can reduce to 2 subgoals, \<open>T \<longrightarrow> F (b/a) U\<close> which looks
+  for the missed portion from the inner hierarchy of \<open>T\<close>, or \<open>others \<longrightarrow> F (b-a) U\<close> which looks
+  horizontally from the \<phi>-types beside, or even any mixture of the two subgoals -- some portion from inner
+  and some portion beside.
+
+  To reduce the search space, we first normalize an assertion by swapping commutative \<phi>-types to
+  move identical \<phi>-types into the same level, so that the later reasoning only needs to consider
+  horizontal splitting and merging. To do so, we assign a weight to each \<phi>-type, and \<phi>-types of
+  a higher weight will sink towards the leaves during the normalization. So the normalization ensures
+  \<open>weight(F) \<le> weight(G)\<close> for any normalized term \<open>F (G T)\<close>. The weight can be annotated by users, to
+  have a better control to normalization forms, or simplify by lexical order if not significant.
+
+  When identical \<phi>-types are the same level, the reasoning of transformations
+  \<open>x \<Ztypecolon> F a T \<longrightarrow> y \<Ztypecolon> U\<close> or \<open>y \<Ztypecolon> U \<longrightarrow> x \<Ztypecolon> F a T\<close> where a semimodule \<phi>-type is given in the source
+  or the target side but missed in the opposite side, can decide whether to embed the opposite \<phi>-type
+  \<open>U\<close> into a semimodule \<open>F 1 U\<close> of identity scalar, by checking whether the weight of \<open>U\<close> is greater than
+  the weight of \<open>F a T\<close>, which implies no occurrence of semimodule \<open>F\<close> can be seen in \<open>U\<close>.
+
+\<close>
+
 subparagraph \<open>Preliminary\<close>
 
-consts restore_from_semimodule :: \<open>bool \<Rightarrow> ('s \<Rightarrow> ('c, 'b) \<phi> \<Rightarrow> ('e, 'd) \<phi>) \<Rightarrow> 's \<Rightarrow> action\<close> 
+consts restore_from_semimodule :: \<open>bool \<Rightarrow> ('s \<Rightarrow> ('c, 'b) \<phi> \<Rightarrow> ('e, 'd) \<phi>) \<Rightarrow> action\<close> 
 
 declare [[ \<phi>reason_default_pattern
-  \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>  @action restore_from_semimodule True\<close>
+     \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _ @action restore_from_semimodule True ?F\<close> \<Rightarrow>
+     \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _ @action restore_from_semimodule True ?F\<close>     (100)
+ and \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @action restore_from_semimodule False ?F\<close> \<Rightarrow>
+     \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @action restore_from_semimodule False ?F\<close>    (100)
 ]]
 
 lemma
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f x = y
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F one T @action restore_from_semimodule True F one \<close>
+\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one T @action restore_from_semimodule True F \<close>
   unfolding Semimodule_One\<^sub>I_def Action_Tag_def Transformation_def Premise_def \<r>Guard_def
   by blast
 
+lemma
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 @action restore_from_semimodule False F \<close>
+  unfolding Semimodule_One\<^sub>E_def Action_Tag_def Transformation_def Premise_def \<r>Guard_def
+  by blast
+
+lemma
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action restore_from_semimodule Any F \<close>
+  unfolding Action_Tag_def
+  by simp
+
 
 subparagraph \<open>Main\<close>
+
+lemma Semimodule_One_lift_src:
+  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul G' G
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I G T\<^sub>G (F a T) one D f P\<^sub>I
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> G one T\<^sub>G \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> F a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G b U \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x \<close>
+  unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def
+  by blas
 
 lemma Semimodule_One_lift_src:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
@@ -2450,29 +2500,37 @@ lemma Semimodule_One_lift_src\<^sub>R:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
-\<Longrightarrow> (f (fst x), w) \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> snd x \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W  @action restore_from_semimodule True F one
+\<Longrightarrow> (f (fst x), w) \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> if C then (snd x \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W  @action restore_from_semimodule True F)
+         else (w, W') = (snd x, W)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
-\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x) \<close>
+\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def
             Action_Tag_def
-  by (cases C; clarsimp; metis)
+  by (cases C; cases C\<^sub>R; clarsimp; metis)
 
 lemma Semimodule_One_lift_tgt:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P
+  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
+\<Longrightarrow> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x \<close>
+\<Longrightarrow> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x \<close>
   unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def
   by blast
 
 lemma Semimodule_One_lift_tgt\<^sub>R:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P
+  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
+\<Longrightarrow> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> if C then (snd x \<Ztypecolon> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> r \<Ztypecolon> R' @action restore_from_semimodule False F)
+         else (r, R') = (r, R)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x) \<close>
+\<Longrightarrow> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f (fst x), r) \<Ztypecolon> T\<^sub>1 \<^emph>[C] R' \<w>\<i>\<t>\<h> P \<close>
   unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def
-  by (cases C; clarsimp; blast)
+            Action_Tag_def
+  by (cases C; cases C\<^sub>W; clarsimp; blast)
 
 
 paragraph \<open>Introduction\<close>
