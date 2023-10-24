@@ -1,4 +1,5 @@
-(*it excludes scalar algebra of partial_ab_semigroup_add by adding excluding-pattern list*)
+(*the pass adds an excluding-pattern to prevent applying the rule on any scalar algebra of
+  partial_ab_semigroup_add *)
 val phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar =
   (Phi_Type_Template_Properties.no_rule_generation_pass,
    fn _ => fn (data as ([rule], mode_prio, (pats, except), guard, ctxt)) =>

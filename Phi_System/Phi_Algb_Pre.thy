@@ -315,6 +315,37 @@ text \<open>TODO:
 need some ML
 \<close>
 
+subsection \<open>Existence of Solutions of Addition Equation\<close>
+
+definition partial_add_overlaps :: \<open>'a::plus \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>partial_add_overlaps a b \<longleftrightarrow>
+    (\<exists>d c. d + a = b + c) \<or> (\<exists>d c. a + d = c + b) \<or> (\<exists>d c. a = d + b + c) \<or>
+    (\<exists>d c. d + a + c = b) \<or> (\<exists>d. d + a = b) \<or> (\<exists>c. a = b + c) \<or> (\<exists>d. a + d = b) \<or> (\<exists>c. a = c + b)\<close>
+
+\<phi>reasoner_group partial_add_overlaps_all = (100, [0,3000]) for \<open>partial_add_overlaps a b\<close>
+    \<open>used in the reasoning of semimodule \<phi>-type for a quick check of whether two semimodules overlap\<close>
+ and partial_add_overlaps_default = (10, [10,10]) in partial_add_overlaps_all \<open>\<close>
+ and partial_add_overlaps_default_noncomm = (12, [12,12]) in partial_add_overlaps_all \<open>\<close>
+
+subsubsection \<open>Default Implementation falling back to solving the equations\<close>
+
+paragraph \<open>Commutative Additive Group\<close>
+
+lemma
+  \<open> 
+\<Longrightarrow> partial_add_overlaps a b \<close>
+
+paragraph \<open>None_Commutative Additive Group\<close>
+
+lemma
+  \<open> id d + id a = id b + id c @action \<A>arith_eval
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+
+text \<open>TODO\<close>
+
+
 subsection \<open>Auxiliary Annotations\<close>
 
 definition scalar_mult :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b\<close> where \<open>scalar_mult f \<equiv> f\<close>
