@@ -2434,9 +2434,9 @@ text \<open>The difficulty of reasoning \<phi>-type transformations lies in the 
   \<open>weight(F) \<le> weight(G)\<close> for any normalized term \<open>F (G T)\<close>. The weight can be annotated by users, to
   have a better control to normalization forms, or simplify by lexical order if not significant.
 
-  When identical \<phi>-types are the same level, the reasoning of transformations
-  \<open>x \<Ztypecolon> F a T \<longrightarrow> y \<Ztypecolon> U\<close> or \<open>y \<Ztypecolon> U \<longrightarrow> x \<Ztypecolon> F a T\<close> where a semimodule \<phi>-type is given in the source
-  or the target side but missed in the opposite side, can decide whether to embed the opposite \<phi>-type
+  When identical \<phi>-types are on the same level, the reasoning of the transformations
+  \<open>x \<Ztypecolon> F a T \<longrightarrow> y \<Ztypecolon> U\<close> or \<open>y \<Ztypecolon> U \<longrightarrow> x \<Ztypecolon> F a T\<close> where a semimodule \<phi>-type is given in one side but
+  missed in the opposite side, can decide whether to embed the opposite \<phi>-type
   \<open>U\<close> into a semimodule \<open>F 1 U\<close> of identity scalar, by checking whether the weight of \<open>U\<close> is greater than
   the weight of \<open>F a T\<close>, which implies no occurrence of semimodule \<open>F\<close> can be seen in \<open>U\<close>.
 
