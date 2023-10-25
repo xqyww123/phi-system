@@ -1442,6 +1442,7 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
+ML_file \<open>library/phi_type_algebra/weight.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
 (*TODO: move*)
@@ -2427,19 +2428,61 @@ text \<open>The difficulty of reasoning \<phi>-type transformations lies in the 
   horizontally from the \<phi>-types beside, or even any mixture of the two subgoals -- some portion from inner
   and some portion beside.
 
-  To reduce the search space, we first normalize an assertion by swapping commutative \<phi>-types to
-  move identical \<phi>-types into the same level, so that the later reasoning only needs to consider
-  horizontal splitting and merging. To do so, we assign a weight to each \<phi>-type, and \<phi>-types of
-  a higher weight will sink towards the leaves during the normalization. So the normalization ensures
-  \<open>weight(F) \<le> weight(G)\<close> for any normalized term \<open>F (G T)\<close>. The weight can be annotated by users, to
-  have a better control to normalization forms, or simplify by lexical order if not significant.
+  To reduce the search space, we first normalize an assertion by swapping commutative \<phi>-type operators
+  to move identical operators into the same level, so that the later reasoning only needs to consider
+  horizontal splitting and merging. To do so, we assign a weight to each \<phi>-type such that two \<phi>-types
+  are of an identical weight iff they are identical.
+  \<phi>-Types of a higher weight will sink towards the leaves during the normalization,
+  so the normalization ensures \<open>weight(F) \<le> weight(G)\<close> for any normalized term \<open>F (G T)\<close> iff \<open>F\<close>
+  is commutative over \<open>G\<close> and \<open>F,G\<close> have a weight.
+  The weight can be annotated by users, to have a better control of the normalization,
+  or simplify by lexical order if not significant.
 
   When identical \<phi>-types are on the same level, the reasoning of the transformations
   \<open>x \<Ztypecolon> F a T \<longrightarrow> y \<Ztypecolon> U\<close> or \<open>y \<Ztypecolon> U \<longrightarrow> x \<Ztypecolon> F a T\<close> where a semimodule \<phi>-type is given in one side but
   missed in the opposite side, can decide whether to embed the opposite \<phi>-type
   \<open>U\<close> into a semimodule \<open>F 1 U\<close> of identity scalar, by checking whether the weight of \<open>U\<close> is greater than
-  the weight of \<open>F a T\<close>, which implies no occurrence of semimodule \<open>F\<close> can be seen in \<open>U\<close>.
+  the weight of \<open>F a T\<close>, which implies no swappable semimodule \<open>F\<close> that can move here can be seen in \<open>U\<close>.
 
+  If we denote \<open>F \<ge> G \<triangleq> weight(F) \<ge> weight(G) \<and> commutative(F,G)\<close>, the normalization ensures in
+  a given syntactic tree of \<phi>-type operators, any path from the root to a leaf \<phi>-type is non-descending,
+  i.e., \<open>\<not> (F \<ge> G)\<close> for any adjacent \<open>F, G\<close>, i.e., \<open>F\<close> is lighter than \<open>G\<close> if \<open>commutative(F,G)\<close>.
+  A problem is whether all syntactic tree of \<phi>-type operators can be uniquely normalized.
+
+  For the sake of unique normalization, we require all commutativity between the \<phi>-type operators is transitive.
+  We designate \<open>commutative(F,G)\<close> to mean \<open>F\<close> can be swapped into \<open>G\<close>, \<open>\<exists>f. x \<Ztypecolon> F (G T) \<longrightarrow> f(x) \<Ztypecolon> G (F T)\<close>,
+  but not necessarily reversely.
+  The transitivity means \<open>commutative(F\<^sub>1,F\<^sub>2) \<and> commutative(F\<^sub>2,F\<^sub>3) \<longrightarrow> commutative(F\<^sub>1,F\<^sub>3)\<close>.
+  If we draw a directed edge from \<open>F\<close> to \<open>G\<close> to mean \<open>weight(F) \<le> weight(G)\<close> and \<open>F\<close> can be swapped with \<open>G\<close>
+  by any steps of swapping adjacent operators in the sequence (another name of the path).
+  The transitivity ensures any given sequence generates a disjoint union of several fully connected
+  directed acyclic graph.
+  Therefore, for any given sequence, we only need to swap any occurrences of \<open>F, G\<close> where \<open>F \<ge> G\<close> (a bubbling sort),
+  and any order of swapping results in the unique normalized form, which is the topological sorting
+  of the generated graph with connected components in the order of their occurrences in the sequence.
+  Therefore, a path can be uniquely normalized.
+
+  Another issue is many paths exist in the tree. We can normalize the paths one by one in any order.
+  An operator \<open>F\<close> can be of multi-arity, so multiple children. Assume one path of the operand \<open>G\<^sub>i\<close> is
+  normalized, when the normalization of another operand \<open>G\<^sub>j\<close> swaps \<open>G\<^sub>j\<close> out of \<open>F\<close>, \<open>G\<^sub>j\<close> is inserted
+  into the normalized path of \<open>G\<^sub>i\<close>, changing it from \<open>Root \<dots> F G\<^sub>i \<dots> Leaf\<close> to \<open>Root \<dots> G\<^sub>j F G\<^sub>i \<dots> Leaf\<close>.
+  The sub-sequence \<open>G\<^sub>i \<dots> Leaf\<close> is unchanged but the property of \<open>Root \<dots> G\<^sub>j F\<close> is temporarily broken.
+  However, with the normalization of the path \<open>G\<^sub>j\<close>, \<open>Root \<dots> G\<^sub>j F\<close> will be normalized, and the concatenation
+  of the normalized \<open>Root \<dots> G\<^sub>j F\<close> with \<open>G\<^sub>i \<dots> Leaf\<close> also yields a normalized path, because \<open>\<not> (G\<^sub>i \<ge> F)\<close>.
+
+  Besides, not all multi-arity operator pair \<open>(F,G)\<close> has partial commutativity (in sense of fixing
+  all of its operands except one, \<open>F (fixed, G(T)) \<longrightarrow> G (F (fixed, T))\<close>, so reducing the notion of
+  multi-arity commutativity to the normal commutativity of single-arity type operators),
+  but total commutativity where all operands are of the same \<phi>-type and swapped together,
+  e.g., \<open>F (G(T), G(U)) \<longrightarrow> G (F (T, U))\<close> and \<open>F=(\<^emph>), G=((\<^bold>\<rightarrow>) k)\<close> is an instance.
+  It brings no problem to the normalization, because it is swapping \<open>F\<close> and \<open>G\<close> simultaneously in
+  the paths of all its operands, and this swapping is valid in either of the paths in our bubbling sort
+  algorithm.
+
+  At last, not all operators need normalization. Operators like \<open>\<^emph>, +, \<and>, \<Sigma>\<close> are already handled well
+  by the reasoner, so they can occur anywhere in the tree and there is no need to move them onto certain same level.
+  We do not assign a weight to them so they do not have any weight relation with others.
+  It optimizes the normalization performance.
 \<close>
 
 subparagraph \<open>Preliminary\<close>
