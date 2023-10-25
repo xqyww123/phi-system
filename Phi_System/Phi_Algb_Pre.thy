@@ -25,7 +25,8 @@ Also not, as addition can be associative, we use \<open>id\<close> to annotate e
 For instance, \<open>id a + id b + id c = id d\<close> to distinguish with \<open>id (a + b) + id c = id d\<close>.
 
 System rules first normalize the problem into one of
-\<^item> \<open>?unknown + given = given\<close> or \<open>given + ?unknown = given\<close>
+\<^item> \<open>?unknown_d + given_a = given_b\<close> or
+  \<open>given_b + ?unknown_c = given_a\<close> (only for non-commutative group)
 \<^item> \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative group)
 \<^item> \<open>?unknown + given + ?unknown = given\<close> (only for non-commutative group)
 
@@ -51,7 +52,7 @@ There are pre-built reasoning rules for,
  and \<A>_partial_add_splitting = (2500, [2500, 2599]) for \<open>_ = _ @action \<A>arith_eval\<close>
                                                      in \<A>_partial_add and < \<A>_partial_add_normalizing
     \<open>Spliting a complicated equation like \<open>a + b + c = d\<close> into several minimal equations \<open>a + b = c\<close>\<close>
- and \<A>_partial_add_cut = (1000, [1000, 1030]) for \<open>_ = _ @action \<A>arith_eval\<close>
+ and \<A>_partial_add_cut = (1000, [1000, 1100]) for \<open>_ = _ @action \<A>arith_eval\<close>
                                                in \<A>_partial_add and < \<A>_partial_add_splitting
     \<open>Cutting rules\<close>
 
@@ -80,6 +81,25 @@ lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = 
 \<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eval \<close>
   unfolding Action_Tag_def
   by simp
+
+lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id (_::?'a::ab_semigroup_add) @action \<A>arith_eval\<close>
+                                           except \<open>id ?var_d + _ = id _  @action _\<close>]:
+  \<open> id c + id b = id a @action \<A>arith_eval
+\<Longrightarrow> id b + id c = id a @action \<A>arith_eval \<close>
+  for a :: \<open>'a::ab_semigroup_add\<close>
+  unfolding Action_Tag_def
+  by (simp add: add.commute)
+
+lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id (_::?'a::partial_ab_semigroup_add) @action \<A>arith_eval\<close>
+                                           except \<open>id ?var_d + _ = id _  @action _\<close>]:
+  \<open> id c + id b = id a @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c ##\<^sub>+ b
+\<Longrightarrow> id b + id c = id a @action \<A>arith_eval \<close>
+  for a :: \<open>'a::partial_ab_semigroup_add\<close>
+  unfolding Action_Tag_def Premise_def
+  by (simp add: partial_add_commute)
+
+
 
 paragraph \<open>Error Check\<close>
 
@@ -256,7 +276,7 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var_a + id (_::_ len_in
 
 subparagraph \<open>Wrapped by set\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut
+lemma [\<phi>reason %\<A>_partial_add_cut+100
            for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) @action \<A>arith_eval\<close>
                \<open>id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eval\<close>]:
   \<open> id a + id b = id c @action \<A>arith_eval
@@ -318,32 +338,165 @@ need some ML
 subsection \<open>Existence of Solutions of Addition Equation\<close>
 
 definition partial_add_overlaps :: \<open>'a::plus \<Rightarrow> 'a \<Rightarrow> bool\<close>
-  where \<open>partial_add_overlaps a b \<longleftrightarrow>
-    (\<exists>d c. d + a = b + c) \<or> (\<exists>d c. a + d = c + b) \<or> (\<exists>d c. a = d + b + c) \<or>
-    (\<exists>d c. d + a + c = b) \<or> (\<exists>d. d + a = b) \<or> (\<exists>c. a = b + c) \<or> (\<exists>d. a + d = b) \<or> (\<exists>c. a = c + b)\<close>
+  where \<open>partial_add_overlaps a b \<longleftrightarrow> True\<close>
 
 \<phi>reasoner_group partial_add_overlaps_all = (100, [0,3000]) for \<open>partial_add_overlaps a b\<close>
     \<open>used in the reasoning of semimodule \<phi>-type for a quick check of whether two semimodules overlap\<close>
- and partial_add_overlaps_default = (10, [10,10]) in partial_add_overlaps_all \<open>\<close>
- and partial_add_overlaps_default_noncomm = (12, [12,12]) in partial_add_overlaps_all \<open>\<close>
+  and partial_add_overlaps_default = (10, [10,10]) in partial_add_overlaps_all \<open>\<close>
+  and partial_add_overlaps_default_comm = (12, [12,12]) in partial_add_overlaps_all \<open>\<close>
+  and partial_add_overlaps_direct_success = (3000, [3000,3000]) in partial_add_overlaps_all \<open>\<close>
+  and partial_add_overlaps_cancl = (1000, [1000,1000]) in partial_add_overlaps_all \<open>\<close>
+  and partial_add_overlaps_specific = (2000, [2000,2100]) in partial_add_overlaps_all \<open>\<close>
+
+declare [[\<phi>reason_default_pattern \<open>partial_add_overlaps ?a ?b\<close> \<Rightarrow> \<open>partial_add_overlaps ?a ?b\<close> (100)]]
 
 subsubsection \<open>Default Implementation falling back to solving the equations\<close>
 
 paragraph \<open>Commutative Additive Group\<close>
 
-lemma
-  \<open> 
+lemma [\<phi>reason default %partial_add_overlaps_default,
+       \<phi>reason default %partial_add_overlaps_default_comm
+       for \<open>partial_add_overlaps (_::_::ab_semigroup_add) _\<close>
+           \<open>partial_add_overlaps (_::_::partial_ab_semigroup_add) _\<close>]:
+  \<open> id d + id a = id b @action \<A>arith_eval
 \<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason default %partial_add_overlaps_default,
+       \<phi>reason default %partial_add_overlaps_default_comm
+       for \<open>partial_add_overlaps (_::_::ab_semigroup_add) _\<close>
+           \<open>partial_add_overlaps (_::_::partial_ab_semigroup_add) _\<close>]:
+  \<open> id d + id b = id a @action \<A>arith_eval
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
 
 paragraph \<open>None_Commutative Additive Group\<close>
 
-lemma
+lemma [\<phi>reason default %partial_add_overlaps_default]:
+  \<open> id b + id c = id a @action \<A>arith_eval
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason default %partial_add_overlaps_default]:
+  \<open> id a + id d = id b @action \<A>arith_eval
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason default %partial_add_overlaps_default]:
+  \<open> id d + id a + id c = id b @action \<A>arith_eval
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason default %partial_add_overlaps_default]:
+  \<open> id d + id b + id c = id a @action \<A>arith_eval
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason default %partial_add_overlaps_default]:
   \<open> id d + id a = id b + id c @action \<A>arith_eval
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
-text \<open>TODO\<close>
+lemma [\<phi>reason default %partial_add_overlaps_default]:
+  \<open> id a + id d = id c + id b @action \<A>arith_eval
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+
+subsubsection \<open>Specific Instances\<close>
+
+paragraph \<open>Direct Success\<close>
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps a a \<close>
+  unfolding partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps a (d + a + c) \<close>
+  unfolding partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps (d + b + c) b \<close>
+  unfolding partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps a (d + a) \<close>
+  unfolding partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps a (a + d) \<close>
+  unfolding partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps (c + b) b \<close>
+  unfolding partial_add_overlaps_def
+  by blast
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps (b + c) b \<close>
+  unfolding partial_add_overlaps_def
+  by blast
+
+paragraph \<open>Cancellative and Canonically Ordered Commutative Partial Monoid\<close>
+
+lemma [\<phi>reason %partial_add_overlaps_cancl]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<or> b \<le> a
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
+  unfolding partial_add_overlaps_def ..
+
+lemma [\<phi>reason %partial_add_overlaps_cancl]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<or> b \<le> a
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  for a :: \<open>'a::{canonically_ordered_monoid_add, cancel_ab_semigroup_add}\<close>
+  unfolding partial_add_overlaps_def ..
+
+paragraph \<open>Total Group\<close>
+
+lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+  \<open> partial_add_overlaps a b \<close>
+  for a :: \<open>'a::group_add\<close>
+  unfolding partial_add_overlaps_def ..
+
+paragraph \<open>LCRO Interval\<close>
+
+lemma [\<phi>reason %partial_add_overlaps_specific]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c \<le> a \<and> a < d \<or> a \<le> c \<and> c < b
+\<Longrightarrow> partial_add_overlaps [a,b) [c,d) \<close>
+  unfolding partial_add_overlaps_def
+  ..
+
+paragraph \<open>Len Intvl\<close>
+
+lemma [\<phi>reason %partial_add_overlaps_specific]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start b \<le> len_intvl.start a \<and> len_intvl.start a < len_intvl.start b + len_intvl.len b \<or>
+            len_intvl.start a \<le> len_intvl.start b \<and> len_intvl.start b < len_intvl.start a + len_intvl.len a
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding partial_add_overlaps_def
+  ..
+
+subparagraph \<open>Wrapped by set\<close>
+
+lemma [\<phi>reason %partial_add_overlaps_specific + 100]:
+  \<open> partial_add_overlaps a b
+\<Longrightarrow> partial_add_overlaps (Len_Intvl.set a) (Len_Intvl.set b) \<close>
+  unfolding partial_add_overlaps_def ..
+
+paragraph \<open>List\<close>
+
+(*TODO*)
 
 
 subsection \<open>Auxiliary Annotations\<close>

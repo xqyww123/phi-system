@@ -1125,6 +1125,9 @@ definition Require_Weight_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<clos
     \<comment> \<open>a pure syntactical checking\<close>
     \<comment> \<open>parses F,G from F_G_T and asserts \<open>weight(F) \<ge> weight(G) \<and> commutative(F,G)\<close>\<close>
 
+definition Not_Require_Weight_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Not_Require_Weight_Norm F_G_T \<equiv> True\<close>
+
 \<phi>reasoner_ML Require_Weight_Norm %cutting (\<open>Require_Weight_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (bvtys, F_G_T) =
         case Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
@@ -1133,6 +1136,17 @@ definition Require_Weight_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<clos
    in if Phi_Type.require_weight_normalization (Context.Proof ctxt) (bvtys, F_G_T)
       then SOME ((ctxt, @{lemma' \<open>Require_Weight_Norm F\<close> by (simp add: Require_Weight_Norm_def)} RS sequent), Seq.empty)
       else NONE
+  end)
+\<close>
+
+\<phi>reasoner_ML Not_Require_Weight_Norm %cutting (\<open>Not_Require_Weight_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val (bvtys, F_G_T) =
+        case Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+          of (bvtys, _ (*Trueprop*) $ (Const _ (*Not_Require_Weight_Norm*) $ F_G_T)) =>
+             (bvtys, F_G_T)
+   in if Phi_Type.require_weight_normalization (Context.Proof ctxt) (bvtys, F_G_T)
+      then NONE
+      else SOME ((ctxt, @{lemma' \<open>Not_Require_Weight_Norm F\<close> by (simp add: Not_Require_Weight_Norm_def)} RS sequent), Seq.empty)
   end)
 \<close>
 
@@ -2550,7 +2564,7 @@ subparagraph \<open>Main\<close>
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P
@@ -2561,7 +2575,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> (f (fst x), w) \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
@@ -2575,7 +2589,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
 \<Longrightarrow> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P
@@ -2586,7 +2600,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
 \<Longrightarrow> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P

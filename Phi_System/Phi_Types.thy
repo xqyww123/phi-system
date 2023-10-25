@@ -1882,7 +1882,7 @@ lemma [\<phi>reason %abstract_domain]:
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 1 ]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
@@ -2233,11 +2233,11 @@ ML \<open>assert_derived_properties \<^theory> [
 
 subsubsection \<open>By List of Keys\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
+declare [[\<phi>trace_reasoning = 0]]
+ 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
-  deriving Semimodule_One\<^sub>E (*Sep_Functor_1
+  deriving Sep_Functor_1
        and Functionality
        and Semimodule_NonDistr_no0
        and Abstraction_to_Raw
@@ -2249,7 +2249,7 @@ declare [[\<phi>trace_reasoning = 3]]
         \<Longrightarrow> Tyops_Commute \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-*)
+
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P \<close>),
@@ -2295,13 +2295,14 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 3 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Sep_Functor_1
+  deriving Semimodule_SDistr_Homo\<^sub>Z
+(*Sep_Functor_1
        and Functionality
        (*and SE_Trim_Empty*)
        and Semimodule_no0
@@ -2317,6 +2318,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?P) \<Longrightarrow> Abstract_Domain\<^sub>L (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?P x)  \<close>),
