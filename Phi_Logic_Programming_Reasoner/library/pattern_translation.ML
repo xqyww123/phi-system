@@ -5,8 +5,11 @@ type bv_typs = PLPR_Pattern.bv_typs
 val mk_pattern : term -> term
 val does_match_term : theory -> bv_typs -> term * term -> bool
 
-val rewrites : theory -> bv_typs -> term * term list -> term -> term list option
-val rewrite  : theory -> bv_typs -> term * term -> term -> term option
+type redex_residues = term * term list
+type redex_residue = term * term
+
+val rewrites : theory -> bv_typs -> redex_residues -> term -> term list option
+val rewrite  : theory -> bv_typs -> redex_residue -> term -> term option
 
 end
 
@@ -32,6 +35,8 @@ end
 structure Pattern_Translation : PATTERN_REWRITE_GLOBAL = struct
 
 type bv_typs = PLPR_Pattern.bv_typs
+type redex_residues = term * term list
+type redex_residue = term * term
 
 fun mk_pattern raw =
   map_aterms (fn Var ((s,i),T) =>
@@ -126,9 +131,9 @@ fun print_rewrites ctxt =
       writeln (chunks (map (print_rewrite (Context.proof_of ctxt)) (list_rewrites ctxt)))
 end
 
-fun calculate ctxt term (n, pat0, _, By_Pattern ret0) =
+fun do_rewrite ctxt term (n, pat0, _, By_Pattern ret0) =
       Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) [] (pat0, ret0) term)
-  | calculate ctxt term (n, _, _, By_ML rewr) =
+  | do_rewrite ctxt term (n, _, _, By_ML rewr) =
       Option.map (pair n) (rewr ctxt term)
 
 fun rewr_clash ctxt (_,ret) (_,ret2) =
@@ -149,18 +154,18 @@ fun get_distinct_seq ctxt (n,ret) seq =
      | NONE => ret
 
 (*the term cannot contain loose bounded variables*)
-fun gen_translate calc ctxt =
+fun gen_translate rewr ctxt =
   let val data = Data.get ctxt
    in fn term => Net.match_term data term
     |> sort (fn ((n1,_,_,_),(n2,_,_,_)) => int_ord (n2,n1))
     |> Seq.of_list
-    |> Seq.map_filter (calc ctxt term)
+    |> Seq.map_filter (rewr ctxt term)
     |> Seq.pull
     |> (fn SOME ((n,ret), seq) => get_distinct_seq ctxt (n,ret) seq
          | NONE => [])
   end
 
-val translate = gen_translate calculate
+val translate = gen_translate do_rewrite
 
 (*fun parse_pats ctxt ((p1,p2),n) =
   let val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern ctxt

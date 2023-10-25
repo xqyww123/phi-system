@@ -1,5 +1,5 @@
 theory Meta_Analysis_PhiTyp
-  imports Phi_Type_Algebra
+  imports Phi_Type
 begin
 
 section \<open>Analysis of Transformation\<close>

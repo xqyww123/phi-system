@@ -1,12 +1,12 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val open_all_abstraction : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val open_all_abstraction : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 (*Guessing is not supported for recursive \<phi>-types*)
 
@@ -108,7 +108,7 @@ fun instantiate_the_var var phi ctxt sequent =
             = if v' = var
               then case vx of Bound i => ((\<^Const>\<open>HOL.eq y_ty\<close> $ y $ vy) :: concls, opt_join varx i)
                             | _ => ((\<^Const>\<open>HOL.eq y_ty\<close> $ y $ vy) :: concls, varx)
-              else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
+              else error "Phi_Type_Derivers.instantiate_the_var: unexpected schematic variables"
         | pass_conjs (concls,meet) P
             = (if has_the_var P
                then raise Automation_Fail (fn () => let open Pretty in

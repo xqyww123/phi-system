@@ -1,14 +1,14 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val SE_Trim_Empty__generation_pass : Phi_Type_Template_Properties.rule_generation_pass
-val SE_Trim_Empty : quiet -> Phi_Type_Algebra.derive
+val SE_Trim_Empty__generation_pass : PLPR_Template_Properties.rule_generation_pass
+val SE_Trim_Empty : quiet -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+open Phi_Type Phi_Type_Derivers
 
 (*fun set_to_empty th =
   let fun parse (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = parse X
@@ -30,7 +30,7 @@ fun simp ctxt th =
 
 fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
   let fun fetch_properties pattern =
-              Phi_Type_Template_Properties.lookup_property_unify thy pattern
+              PLPR_Template_Properties.lookup_properties_unify thy pattern
            |> map snd
       fun fetch_property name =
             case fetch_properties name

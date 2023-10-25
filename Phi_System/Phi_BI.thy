@@ -377,7 +377,7 @@ declare [[
           ]) end)\<close> (1000)
 ]]
 
-setup \<open> Phi_Type_Template_Properties.add_property_kinds [
+setup \<open> PLPR_Template_Properties.add_property_kinds [
   \<^pattern_prop>\<open>Abstract_Domain _ _\<close>, \<^pattern_prop>\<open>Abstract_Domain\<^sub>L _ _\<close>
 ]\<close>
 

@@ -68,7 +68,7 @@ fun chk2 ctxt thm =
 
 fun chk_rewr' ctxt thm =
       (chk_rewr ctxt thm
-       handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equation ctxt thm))
+       handle THM _ => chk_rewr ctxt (Phi_Type.conv_def_to_equation ctxt thm))
         |> chk2T ctxt
         |> chk2 ctxt
 

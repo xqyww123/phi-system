@@ -4,9 +4,9 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 val parse_semimodule_phityp' : typ -> typ * typ * typ * typ * typ
 
 val parse_semimodule_phityp : Proof.context
-                           -> Phi_Type_Algebra.phi_type
+                           -> Phi_Type.phi_type
                            -> (sort * sort) option (*optionally lift the types to (sort_scalar, sort_model)*)
-                           -> typ * typ * typ * typ * typ * Phi_Type_Algebra.phi_type
+                           -> typ * typ * typ * typ * typ * Phi_Type.phi_type
 
 val Guess_Scalar_Zero : bool -> guess_property
 val Guess_Scalar_One : bool -> guess_property
@@ -15,8 +15,8 @@ val Guess_Zip_of_Semimodule : bool -> guess_property
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 fun parse_semimodule_phityp' ty =
   let val (reversed_argtys', x_ty0, model_ty0) = dest_parameterized_phi_ty ty

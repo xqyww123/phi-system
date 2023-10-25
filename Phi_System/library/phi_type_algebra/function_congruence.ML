@@ -1,9 +1,9 @@
-local open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+local open Phi_Type Phi_Type_Derivers
 in
 val _ = Theory.setup (Context.theory_map (
-  Phi_Type_Template_Properties.add_template false (
+  PLPR_Template_Properties.add_template false (
       [SOME \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>], \<^here>,
-       Phi_Type_Template_Properties.Free_Action (
+       PLPR_Template_Properties.Free_Action (
   fn (pos, (_, [SOME (_, prop)])) => fn ctxt00 =>
     let val (F, oprs) =
            case Thm.concl_of prop

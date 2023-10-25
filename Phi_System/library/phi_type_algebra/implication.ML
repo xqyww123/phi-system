@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val abstract_domain : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
-val abstract_domain_L : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val abstract_domain : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val abstract_domain_L : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 val guess_property_like_abst_domain :
       bool * bool * bool
@@ -28,8 +28,8 @@ val predicate_infer : bool -> string (*name of proof cache*) -> solver*)
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 (*var_based_infer: whether to insert a schematic variable so that one can later infer the predicate
                    from the reported proof obligation which will contain the variable.

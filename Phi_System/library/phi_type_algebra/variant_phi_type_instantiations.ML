@@ -1,6 +1,6 @@
-local open Phi_Type_Algebra in
+local open Phi_Type in
 val _ = Theory.setup (Context.theory_map (
-  Phi_Type_Algebra.Defining_Phi_Type.add 100 (fn phi => fn thy =>
+  Phi_Type.Defining_Phi_Type.add 100 (fn phi => fn thy =>
     let val ctxt' = Context.proof_of thy
         val ctm0 = Drule.dest_term (#cterm phi)
 

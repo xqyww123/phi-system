@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports Phi_Type_Algebra
+  imports Phi_Type
 begin
 
 section \<open>Preliminary\<close>
@@ -31,9 +31,9 @@ declare [[\<phi>trace_reasoning = 1]]
 ML \<open>(Thm.transfer \<^theory> @{thm' Itself_is_primitive})\<close>
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.add_type {no_auto=true}
-        (\<^binding>\<open>Itself\<close>, \<^pattern>\<open>Itself\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
-         \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+  Phi_Type.add_type {no_auto=true}
+        (\<^binding>\<open>Itself\<close>, \<^pattern>\<open>Itself\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
+         \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 text \<open>No deriver is available on \<open>Itself\<close>, and they will trap in infinite loops because the fake
@@ -46,9 +46,9 @@ lemma \<phi>None_def': \<open> (x \<Ztypecolon> \<circle>) = (1 \<Ztypecolon> It
   by (simp add: BI_eq_iff)
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.add_type {no_auto=false}
-      (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
-       \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+  Phi_Type.add_type {no_auto=false}
+      (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
+       \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -75,9 +75,9 @@ ML \<open>assert_derived_properties \<^theory> [
 subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.add_type {no_auto=false}
-      (\<^binding>\<open>\<phi>Any\<close>, \<^pattern>\<open>\<phi>Any::(?'c, ?'x) \<phi>\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
-       \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+  Phi_Type.add_type {no_auto=false}
+      (\<^binding>\<open>\<phi>Any\<close>, \<^pattern>\<open>\<phi>Any::(?'c, ?'x) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
+       \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -97,9 +97,9 @@ declare \<phi>Bot_def[embed_into_\<phi>type]
 thm \<phi>Bot_def
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.add_type {no_auto=false}
-        (\<^binding>\<open>\<phi>Bot\<close>, \<^pattern>\<open>\<phi>Bot::(?'c,?'a) \<phi>\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
-         \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+  Phi_Type.add_type {no_auto=false}
+        (\<^binding>\<open>\<phi>Bot\<close>, \<^pattern>\<open>\<phi>Bot::(?'c,?'a) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
+         \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 let_\<phi>type \<phi>Bot
@@ -122,13 +122,13 @@ ML \<open>assert_derived_properties \<^theory> [
 subsection \<open>\<phi>Prod\<close>
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.add_type {no_auto=false}
+  Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Prod\<close>, \<^pattern>\<open>\<phi>Prod::(?'c::sep_magma,?'a\<^sub>1) \<phi> \<Rightarrow> (?'c,?'a\<^sub>2) \<phi> \<Rightarrow> (?'c,?'a\<^sub>1 \<times> ?'a\<^sub>2) \<phi>\<close>,
-         Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory>
+         Phi_Type.DIRECT_DEF (Thm.transfer \<^theory>
             @{lemma' \<open>(x \<Ztypecolon> T \<^emph> U) = (snd x \<Ztypecolon> U) * (fst x \<Ztypecolon> T)\<close>
                       for T :: \<open>('c::sep_magma,'a\<^sub>1) \<phi>\<close> and U :: \<open>('c::sep_magma,'a\<^sub>2) \<phi>\<close>
                   by (simp add: \<phi>Prod_expn'')}),
-         \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+         \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 text \<open>We still derive properties of \<open>\<phi>Prod\<close> for consistency of the internal reasoning system,
@@ -1184,7 +1184,7 @@ lemma \<phi>Mul_Quant_induct:
         induct rule: finite_induct[OF prems(1)]; clarsimp) .
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.override_ind_rule (\<^pattern>\<open>\<phi>Mul_Quant\<close>, @{thm' \<phi>Mul_Quant_induct}))\<close>
+  Phi_Type.override_ind_rule (\<^pattern>\<open>\<phi>Mul_Quant\<close>, @{thm' \<phi>Mul_Quant_induct}))\<close>
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -1412,7 +1412,7 @@ lemma \<phi>Sum_Comm\<^sub>E_temlpate [\<phi>reason_template name F.\<phi>Sum_Co
                                   (pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True)))) \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
   by (clarify; case_tac x; clarsimp)*)
-
+ 
 lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason %\<phi>type_algebra_prop_cut]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Transformation_def
@@ -1713,9 +1713,9 @@ lemma \<phi>Some_def': \<open> \<black_circle> T = (Some \<Zcomp>\<^sub>f T) \<c
 declare [[\<phi>trace_reasoning = 0]]
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.add_type {no_auto=false}
-        (\<^binding>\<open>\<phi>Some\<close>, \<^pattern>\<open>\<phi>Some\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
-         \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+  Phi_Type.add_type {no_auto=false}
+        (\<^binding>\<open>\<phi>Some\<close>, \<^pattern>\<open>\<phi>Some\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
+         \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
   \<comment> \<open>Setup an alternative definition in the language of \<phi>-types so that we can apply
       derivers over these bootstrap \<phi>-types\<close>
@@ -2066,7 +2066,7 @@ lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _
 
 subsubsection \<open>Configuration\<close>
 
-setup \<open>Context.theory_map (Phi_Type_Algebra.Defining_Phi_Type.add 12 (fn phi => fn thy =>
+setup \<open>Context.theory_map (Phi_Type.Defining_Phi_Type.add 12 (fn phi => fn thy =>
   let exception Found of term * term
       fun find (X as Const(\<^const_name>\<open>\<phi>Composition\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Fun\<close>, _) $ f) $ T)
             = raise Found (X, Const(\<^const_name>\<open>\<phi>Fun'\<close>, dummyT) $ f $ T)
@@ -2233,11 +2233,11 @@ ML \<open>assert_derived_properties \<^theory> [
 
 subsubsection \<open>By List of Keys\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
-  deriving Sep_Functor_1
+  deriving Semimodule_One\<^sub>E (*Sep_Functor_1
        and Functionality
        and Semimodule_NonDistr_no0
        and Abstraction_to_Raw
@@ -2249,7 +2249,7 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Tyops_Commute \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-
+*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P \<close>),

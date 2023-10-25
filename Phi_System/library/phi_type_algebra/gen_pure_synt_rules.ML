@@ -2,12 +2,12 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val meta_Synt_Deriver : string * thm * (priority * Reasoner_Group.name option)
-                     -> quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+                     -> quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 fun meta_Synt_Deriver' (rule, default_group) (_, name) (H, group, pos, text, notes, bundles) ctxt phi thy =
   let fun err s = raise Automation_Fail (fn () => [Pretty.para s])

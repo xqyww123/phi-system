@@ -3,7 +3,7 @@ text \<open>title:
                     and a General Automation for Data Structures, on BI
 \<close>
 
-theory Phi_Type_Algebra
+theory Phi_Type
   imports IDE_CP_Reasoning2
           Phi_Algb_Pre
           Phi_Domainoid
@@ -681,6 +681,78 @@ declare [[
 ]]
 
 
+paragraph \<open>Configuring Property Data Base\<close>
+
+(* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
+          \<phi>inductive_destruction_rule_from_direct_definition'
+          \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
+
+lemmas [simp_for_\<phi>TA_rule_generation] =
+  conj_imp_eq_imp_imp Premise_I sing_times_sing sing_if
+
+setup \<open>
+let fun attach_var F =
+      let val i = maxidx_of_term F + 1
+       in case fastype_of F of \<^Type>\<open>fun T _\<close> => F $ Var(("uu",i),T)
+                             | _ => error "Impossible #8da16473-84ef-4bd8-9a96-331bcff88011"
+      end
+    open PLPR_Template_Properties
+in (*Phi_Type.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\<close>
+  "set the pattern rewrite to parse the functor part and the argument part from a term\
+  \ matching the patter"
+#>*)add_property_kinds [
+  \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_Zero _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_One\<^sub>I _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_One\<^sub>E _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_No_SDistr _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
+]
+
+(*#> Phi_Type.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
+\<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
+  it can have special overridings for singular points like that many type operators \<open>F\<close> have a
+  wider reachability relation at \<open>F \<circle>\<close>. The overloadings multiply the resulted instantiations
+  and they requires priority precedence which is not in the capability of the template
+  instantiation automation.\<close>
+end
+\<close>
+  
+setup \<open>
+PLPR_Template_Properties.add_property_kinds [
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>I _)\<close>,
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>E _)\<close>
+]
+
+\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>I ?FF)\<close> (100)
+                      and \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>E ?FF)\<close> (100)
+]]
+
+text \<open>Candidates of templates instantiation are not prioritized. When a property requires multiple
+  rules ordered by their priorities for overrides and optimizations, the property is not declared
+  as a parameter property in the template instantiation system but just a \<phi>-LPR reasoning goal tagged
+  by \<open>\<A>_template_reason\<close> in the template.
+  Instead, a trigger \<open>TERM (The_Property F)\<close> is used as the parameter property activating
+  the instantiation and (when the trigger is given) indicating when the prioritized rules are all given
+  so when can the instantiation start. \<close>
+
 
 subsection \<open>Conventions\<close>
 
@@ -753,7 +825,7 @@ paragraph \<open>Separation Extraction on Semimodule\<close>
     \<open>Derived rules for scalar distributivity on non-commutative semigroup\<close>
  and derived_SE_sdistr_noassoc = (33, [33, 33]) in derived_SE_scalar_distr < derived_SE_sdistr_noncomm
     \<open>Derived rules for scalar distributivity on separational magma\<close>
- and derived_SE_inj_to_module = (28, [28,28]) for \<open>x \<Ztypecolon> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>
+ and derived_SE_inj_to_module = (28, [28,28]) for (\<open>x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>, \<open>y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T\<close>)
                                               in ToA_derived and < derived_SE_scalar_assoc
     \<open>Derived rules lifting the target part into the module operator \<open>F\<close>\<close>
 
@@ -1033,6 +1105,38 @@ lemma apply_Transformation_Functor:
   by blas
 *)
 
+
+subsubsection \<open>Weight and Commutativity\<close>
+
+lemma []:
+  \<open> Tyops_Commute F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>simp \<close>
+  unfolding Transformation_def Action_Tag_def Tyops_Commute_def Premise_def
+  by clarsimp
+
+
+ML_file \<open>library/phi_type_algebra/commutativity.ML\<close>
+ML_file \<open>library/phi_type_algebra/weight.ML\<close>
+
+
+definition Require_Weight_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Require_Weight_Norm F_G_T \<equiv> True\<close>
+    \<comment> \<open>a pure syntactical checking\<close>
+    \<comment> \<open>parses F,G from F_G_T and asserts \<open>weight(F) \<ge> weight(G) \<and> commutative(F,G)\<close>\<close>
+
+\<phi>reasoner_ML Require_Weight_Norm %cutting (\<open>Require_Weight_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val (bvtys, F_G_T) =
+        case Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+          of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Weight_Norm*) $ F_G_T)) =>
+             (bvtys, F_G_T)
+   in if Phi_Type.require_weight_normalization (Context.Proof ctxt) (bvtys, F_G_T)
+      then SOME ((ctxt, @{lemma' \<open>Require_Weight_Norm F\<close> by (simp add: Require_Weight_Norm_def)} RS sequent), Seq.empty)
+      else NONE
+  end)
+\<close>
+
+
 subsection \<open>Programming Methods to Prove the Properties\<close>
 
 
@@ -1111,80 +1215,6 @@ lemma [\<phi>reason %\<phi>programming_method]:
   unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>U_rev_def Premise_def norm_hhf_eq
   by (clarsimp simp add: \<phi>Prod_expn')
 *)
-
-
-
-subsection \<open>Configuring Property Data Base\<close>
-
-(* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
-          \<phi>inductive_destruction_rule_from_direct_definition'
-          \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
-
-lemmas [simp_for_\<phi>TA_rule_generation] =
-  conj_imp_eq_imp_imp Premise_I sing_times_sing sing_if
-
-setup \<open>
-let fun attach_var F =
-      let val i = maxidx_of_term F + 1
-       in case fastype_of F of \<^Type>\<open>fun T _\<close> => F $ Var(("uu",i),T)
-                             | _ => error "Impossible #8da16473-84ef-4bd8-9a96-331bcff88011"
-      end
-    open Phi_Type_Template_Properties
-in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\<close>
-  "set the pattern rewrite to parse the functor part and the argument part from a term\
-  \ matching the patter"
-#>*)add_property_kinds [
-  \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_Zero _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_One\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_One\<^sub>E _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_No_SDistr _\<close>,
-  \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
-]
-
-(*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
-\<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
-  it can have special overridings for singular points like that many type operators \<open>F\<close> have a
-  wider reachability relation at \<open>F \<circle>\<close>. The overloadings multiply the resulted instantiations
-  and they requires priority precedence which is not in the capability of the template
-  instantiation automation.\<close>
-end
-\<close>
-  
-setup \<open>
-Phi_Type_Template_Properties.add_property_kinds [
-  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>I _)\<close>,
-  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>E _)\<close>
-]
-
-\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>I ?FF)\<close> (100)
-                      and \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>E ?FF)\<close> (100)
-]]
-
-text \<open>Candidates of templates instantiation are not prioritized. When a property requires multiple
-  rules ordered by their priorities for overrides and optimizations, the property is not declared
-  as a parameter property in the template instantiation system but just a \<phi>-LPR reasoning goal tagged
-  by \<open>\<A>_template_reason\<close> in the template.
-  Instead, a trigger \<open>TERM (The_Property F)\<close> is used as the parameter property activating
-  the instantiation and (when the trigger is given) indicating when the prioritized rules are all given
-  so when can the instantiation start. \<close>
 
 
 
@@ -1442,7 +1472,6 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
-ML_file \<open>library/phi_type_algebra/weight.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
 (*TODO: move*)
@@ -1451,7 +1480,7 @@ consts under_\<phi>deriving :: mode
 
 \<phi>reasoner_ML under_\<phi>deriving %cutting (\<open>True @action under_\<phi>deriving\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-      if Config.get ctxt Phi_Type_Algebra.under_deriving_ctxt
+      if Config.get ctxt Phi_Type.under_deriving_ctxt
       then SOME ((ctxt, @{lemma' \<open>True @action under_\<phi>deriving\<close>
                              by (simp add: Action_Tag_def)} RS sequent), Seq.empty)
       else NONE)  
@@ -1459,7 +1488,7 @@ consts under_\<phi>deriving :: mode
 
 \<phi>reasoner_ML \<open>Premise under_\<phi>deriving\<close> %cutting (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] _\<close>) = \<open>
   fn (_, (ctxt, sequent)) => Seq.make (fn () =>
-      if Config.get ctxt Phi_Type_Algebra.under_deriving_ctxt
+      if Config.get ctxt Phi_Type.under_deriving_ctxt
       then SOME ((ctxt, @{lemma' \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P\<close>
                              by (simp add: Premise_def)} RS sequent), Seq.empty)
       else SOME ((ctxt, @{lemma' \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P\<close>
@@ -1567,7 +1596,7 @@ lemma Type_Variant_of_the_Same_Scalar_Mul_I:
 ML_file \<open>library/phi_type_algebra/variant_phi_type_instantiations.ML\<close>
 
 setup \<open>
-   Phi_Type_Template_Properties.add_property_kinds [
+   PLPR_Template_Properties.add_property_kinds [
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator2 _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul _ _\<close>,
@@ -2448,6 +2477,7 @@ text \<open>The difficulty of reasoning \<phi>-type transformations lies in the 
   a given syntactic tree of \<phi>-type operators, any path from the root to a leaf \<phi>-type is non-descending,
   i.e., \<open>\<not> (F \<ge> G)\<close> for any adjacent \<open>F, G\<close>, i.e., \<open>F\<close> is lighter than \<open>G\<close> if \<open>commutative(F,G)\<close>.
   A problem is whether all syntactic tree of \<phi>-type operators can be uniquely normalized.
+  *: The check of \<open>F \<ge> G\<close> is carried by LP reasoner \<open>Require_Weight_Norm\<close> in the code.
 
   For the sake of unique normalization, we require all commutativity between the \<phi>-type operators is transitive.
   We designate \<open>commutative(F,G)\<close> to mean \<open>F\<close> can be swapped into \<open>G\<close>, \<open>\<exists>f. x \<Ztypecolon> F (G T) \<longrightarrow> f(x) \<Ztypecolon> G (F T)\<close>,
@@ -2518,19 +2548,9 @@ lemma
 
 subparagraph \<open>Main\<close>
 
-lemma Semimodule_One_lift_src:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul G' G
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I G T\<^sub>G (F a T) one D f P\<^sub>I
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> G one T\<^sub>G \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G b U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> x \<Ztypecolon> F a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G b U \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x \<close>
-  unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def
-  by blas
-
-lemma Semimodule_One_lift_src:
-  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P
@@ -2539,8 +2559,9 @@ lemma Semimodule_One_lift_src:
   unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def
   by blast
 
-lemma Semimodule_One_lift_src\<^sub>R:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> (f (fst x), w) \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
@@ -2552,8 +2573,9 @@ lemma Semimodule_One_lift_src\<^sub>R:
             Action_Tag_def
   by (cases C; cases C\<^sub>R; clarsimp; metis)
 
-lemma Semimodule_One_lift_tgt:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
 \<Longrightarrow> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P
@@ -2562,8 +2584,9 @@ lemma Semimodule_One_lift_tgt:
   unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def
   by blast
 
-lemma Semimodule_One_lift_tgt\<^sub>R:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
 \<Longrightarrow> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P
@@ -2575,7 +2598,7 @@ lemma Semimodule_One_lift_tgt\<^sub>R:
             Action_Tag_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
 
-
+(*
 paragraph \<open>Introduction\<close>
 
 text \<open>When the source is in a semimodule operator \<open>F\<close> but the target is not, we can lift the target
@@ -2607,7 +2630,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   by (cases C; cases Cw; clarsimp simp add: \<phi>Prod_expn''; metis)
 
 text \<open>No rule in form \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _\<close> makes sense.\<close>
-
+*)
 
 subsubsection \<open>Extended Associative\<close>
 
@@ -3321,6 +3344,7 @@ lemma SE_Semimodule_SDistr_a_cb_i[\<phi>reason_template default %derived_SE_sdis
     b
   \<medium_right_bracket> .
 
+(*
 context
   fixes F\<^sub>1 :: \<open>'a::partial_add_magma \<Rightarrow> ('e, 'b) \<phi> \<Rightarrow> ('c::sep_ab_semigroup, 'f) \<phi>\<close>
     and F\<^sub>3 :: \<open>'a \<Rightarrow> ('g\<^sub>c, 'g\<^sub>x) \<phi> \<Rightarrow> ('c, 'h) \<phi>\<close>
@@ -3409,6 +3433,7 @@ lemmas SE_Semimodule_SDistr_a_cb_i__lift_tgt
                              OF _ SE_Semimodule_SDistr_a_cb_i[where F\<^sub>3=F\<^sub>3 and b=b and U=U]]
 
 end
+*)
 
 (*Done*)
 
@@ -4088,7 +4113,7 @@ consts \<phi>deriver_expansion :: mode
 \<phi>reasoner_ML \<phi>deriver_expansion %cutting
   (\<open>Premise \<phi>deriver_expansion _\<close> | \<open>Simplify \<phi>deriver_expansion ?X' ?X\<close> )
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty)
-        Phi_Type_Algebra_Derivers.Expansion.get' {fix_vars=true}) o snd\<close>
+        Phi_Type_Derivers.Expansion.get' {fix_vars=true}) o snd\<close>
 
 
 subsubsection \<open>Extending Property Guessers\<close>
@@ -4217,8 +4242,8 @@ lemma
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
 \<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn (quiet, _) => fn [] => fn _ => fn phi => fn thy => (
-  if Phi_Type_Algebra.is_Type_Opr (Term.fastype_of (#term phi)) andalso
-     Phi_Type_Algebra.def_contains_satisfaction phi andalso
+  if Phi_Type.is_Type_Opr (Term.fastype_of (#term phi)) andalso
+     Phi_Type.def_contains_satisfaction phi andalso
      not quiet
   then warning ("The \<phi>-type definition contains satisfaction operator (\<Turnstile>).\n\
                 \When a \<phi>-type is specified by satisfaction in a boolean assertion, it looses the ability to guide the reasoning.\n\
@@ -4232,7 +4257,7 @@ subsubsection \<open>Meta Deriver for Pure Syntactical Properties\<close>
 ML_file \<open>library/phi_type_algebra/gen_pure_synt_rules.ML\<close>
 
 \<phi>property_deriver Semimodule_No_SDistr 100
-    = \<open>Phi_Type_Algebra_Derivers.meta_Synt_Deriver
+    = \<open>Phi_Type_Derivers.meta_Synt_Deriver
           ("Semimodule_No_SDistr",
            @{lemma' \<open>Semimodule_No_SDistr F\<close> by (simp add: Semimodule_No_SDistr_def)},
            @{reasoner_group %Semimodule_No_SDistr}) \<close>
@@ -4281,12 +4306,12 @@ end
 (*hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step*)
 
 \<phi>property_deriver Abstract_Domain\<^sub>L 89 for ( \<open>Abstract_Domain\<^sub>L _ _\<close> ) = \<open>
-  Phi_Type_Algebra_Derivers.abstract_domain_L
+  Phi_Type_Derivers.abstract_domain_L
 \<close>
 
 \<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> )
   requires Abstract_Domain\<^sub>L ? = \<open>
-  Phi_Type_Algebra_Derivers.abstract_domain
+  Phi_Type_Derivers.abstract_domain
 \<close>
 
 
@@ -4344,16 +4369,16 @@ end
 
 
 \<phi>property_deriver Identity_Elements\<^sub>I 101 for (\<open>Identity_Elements\<^sub>I _ _ _\<close>)
-  = \<open>Phi_Type_Algebra_Derivers.identity_element_I\<close>
+  = \<open>Phi_Type_Derivers.identity_element_I\<close>
 
 \<phi>property_deriver Identity_Elements\<^sub>E 102 for (\<open>Identity_Elements\<^sub>E _ _\<close>)
-  = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
+  = \<open>Phi_Type_Derivers.identity_element_E\<close>
 
 \<phi>property_deriver Identity_Element_Properties\<^sub>I 103
-  = \<open>fn (_, pos) => (K (Phi_Type_Algebra_Derivers.id_ele_properties pos true))\<close>
+  = \<open>fn (_, pos) => (K (Phi_Type_Derivers.id_ele_properties pos true))\<close>
 
 \<phi>property_deriver Identity_Element_Properties\<^sub>E 103
-  = \<open>fn (_, pos) =>  (K (Phi_Type_Algebra_Derivers.id_ele_properties pos false))\<close>
+  = \<open>fn (_, pos) =>  (K (Phi_Type_Derivers.id_ele_properties pos false))\<close>
 
 \<phi>property_deriver Identity_Element_Properties 104
   requires Identity_Element_Properties\<^sub>I and Identity_Element_Properties\<^sub>E
@@ -4420,10 +4445,10 @@ end
 
 (*
 \<phi>property_deriver Object_Equiv\<^sub>O 104
-  = \<open>Phi_Type_Algebra_Derivers.object_equiv_singular\<close>
+  = \<open>Phi_Type_Derivers.object_equiv_singular\<close>
 *)
 \<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>)
-  = \<open>Phi_Type_Algebra_Derivers.object_equiv\<close>
+  = \<open>Phi_Type_Derivers.object_equiv\<close>
 
 
 subsubsection \<open>Functionality\<close>
@@ -4451,7 +4476,7 @@ ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 end
 
 \<phi>property_deriver Functionality 100 for (\<open>Functionality _ _\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
+    = \<open> Phi_Type_Derivers.is_functional \<close>
 
 
 subsubsection \<open>Carrier Set\<close>
@@ -4479,7 +4504,7 @@ ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
 end
 
 \<phi>property_deriver Carrier_Set 100 for (\<open>Carrier_Set _ _\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.carrier_set \<close>
+    = \<open> Phi_Type_Derivers.carrier_set \<close>
 
 \<phi>property_deriver Basic 109
   requires Object_Equiv and Abstract_Domain and Carrier_Set ?
@@ -4625,12 +4650,12 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 end
 
 \<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _ _ _ _\<close>)
-  = \<open> Phi_Type_Algebra_Derivers.transformation_functor \<close>
+  = \<open> Phi_Type_Derivers.transformation_functor \<close>
 
 \<phi>property_deriver Functional_Transformation_Functor 111
   for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>)
   requires Transformation_Functor
-    = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
+    = \<open>Phi_Type_Derivers.functional_transformation_functor\<close>
 
 
 subsubsection \<open>Separation Homo\<close>
@@ -4709,11 +4734,11 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
           \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C*)
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_I
+  Phi_Type_Derivers.separation_homo_I
 \<close>
 
 \<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_E
+  Phi_Type_Derivers.separation_homo_E
 \<close>
 
 \<phi>property_deriver Separation_Homo 122 requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E
@@ -5085,11 +5110,11 @@ ML_file \<open>library/phi_type_algebra/semimodule_zero.ML\<close>
 end
 
 \<phi>property_deriver Semimodule_Zero 129 for (\<open>Semimodule_Zero _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_zero\<close>
+    = \<open>Phi_Type_Derivers.semimodule_zero\<close>
 
 \<phi>property_deriver Closed_Semimodule_Zero 130
     for (\<open>Closed_Semimodule_Zero _ _ _\<close>) requires Semimodule_Zero
-    = \<open>Phi_Type_Algebra_Derivers.closed_semimodule_zero\<close>
+    = \<open>Phi_Type_Derivers.closed_semimodule_zero\<close>
 
 
 subsubsection \<open>Semimodule Scalar Identity\<close>
@@ -5123,10 +5148,10 @@ ML_file \<open>library/phi_type_algebra/semimodule_identity.ML\<close>
 end
 
 \<phi>property_deriver Semimodule_One\<^sub>I 130 for (\<open>Semimodule_One\<^sub>I _ _ _ _ _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_identity_I\<close>
+    = \<open>Phi_Type_Derivers.semimodule_identity_I\<close>
 
 \<phi>property_deriver Semimodule_One\<^sub>E 130 for (\<open>Semimodule_One\<^sub>E _ _ _ _ _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_identity_E\<close>
+    = \<open>Phi_Type_Derivers.semimodule_identity_E\<close>
 
 \<phi>property_deriver Semimodule_One 131
   requires Semimodule_One\<^sub>I and Semimodule_One\<^sub>E
@@ -5168,10 +5193,10 @@ ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
 end
 
 \<phi>property_deriver Semimodule_Scalar_Assoc\<^sub>I 130 for (\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_assoc_I\<close>
+    = \<open>Phi_Type_Derivers.semimodule_assoc_I\<close>
 
 \<phi>property_deriver Semimodule_Scalar_Assoc\<^sub>E 130 for (\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_assoc_E\<close>
+    = \<open>Phi_Type_Derivers.semimodule_assoc_E\<close>
 
 \<phi>property_deriver Semimodule_Scalar_Assoc 131
   requires Semimodule_Scalar_Assoc\<^sub>I and Semimodule_Scalar_Assoc\<^sub>E
@@ -5230,10 +5255,10 @@ ML_file \<open>library/phi_type_algebra/semimodule_distrib_zip.ML\<close>
 end
 
 \<phi>property_deriver Semimodule_SDistr_Homo\<^sub>Z 130 for (\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_distrib_zip\<close>
+    = \<open>Phi_Type_Derivers.semimodule_distrib_zip\<close>
 
 \<phi>property_deriver Semimodule_SDistr_Homo\<^sub>U 130 for (\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_distrib_unzip\<close>
+    = \<open>Phi_Type_Derivers.semimodule_distrib_unzip\<close>
 
 \<phi>property_deriver Semimodule_SDistr_Homo 131
   requires Semimodule_SDistr_Homo\<^sub>Z and Semimodule_SDistr_Homo\<^sub>U
@@ -5279,7 +5304,7 @@ end
       | \<open>\<forall>x. x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T\<close>
       | \<open>?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T\<close> )
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.Make_Abstraction_from_Raw \<close>
+    = \<open> Phi_Type_Derivers.Make_Abstraction_from_Raw \<close>
 
 
 
@@ -5315,7 +5340,7 @@ end
                                                 | \<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>
                                                 | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction \<close>
+    = \<open> Phi_Type_Derivers.open_all_abstraction \<close>
 
 \<phi>property_deriver Abstraction_to_Raw 131
   requires Open_Abstraction_to_Raw and Make_Abstraction_from_Raw
@@ -5391,9 +5416,9 @@ lemma derive_\<A>SE_trim_E_TH:
 ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 
 \<phi>property_deriver SE_Trim_Empty 110
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.SE_Trim_Empty quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Derivers.SE_Trim_Empty quiet) \<close>
 
-lemmas [\<phi>reason_template default 40 pass: \<open>(Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass, K I)\<close>] =
+lemmas [\<phi>reason_template default 40 pass: \<open>(Phi_Type_Derivers.SE_Trim_Empty__generation_pass, K I)\<close>] =
           derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH
           derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
 *)
@@ -5864,23 +5889,23 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
 ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>I 200
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 1) quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Derivers.meta_Tyops_Commute (false, 1) quiet) \<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>E 200
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 2) quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Derivers.meta_Tyops_Commute (false, 2) quiet) \<close>
 
 \<phi>property_deriver Commutativity_Deriver 200
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 3) quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Derivers.meta_Tyops_Commute (false, 3) quiet) \<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>I_rev 200
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 2) quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Derivers.meta_Tyops_Commute (true, 2) quiet) \<close>
   \<comment> \<open>The name is reversed, i.e., I for E, E for I, but the deriving process is unchanged.\<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>E_rev 200
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 1) quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Derivers.meta_Tyops_Commute (true, 1) quiet) \<close>
 
 \<phi>property_deriver Commutativity_Deriver_rev 200
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 3) quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Derivers.meta_Tyops_Commute (true, 3) quiet) \<close>
 
 
 
@@ -5888,7 +5913,7 @@ section \<open>Deriving Configures for Specific Abstract Algebras\<close>
 
 subsubsection \<open>Common\<close>
 
-setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Expansion.map (fn ctxt => ctxt addsimps
+setup \<open>Context.theory_map (Phi_Type_Derivers.Expansion.map (fn ctxt => ctxt addsimps
   @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
           prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
           ExSet_simps

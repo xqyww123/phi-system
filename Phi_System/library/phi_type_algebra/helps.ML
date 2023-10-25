@@ -1,11 +1,11 @@
-signature PHI_TYPE_ALGEBRA = sig
+signature PHI_TYPE = sig
 
 val conv_def_to_equation : Proof.context -> thm -> thm
 exception Automation_Fail of unit -> Pretty.T list
 
 end
 
-structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
+structure Phi_Type : PHI_TYPE = struct
 
 exception Automation_Fail = PLPR_Rule_Gen.Generation_Fail
 

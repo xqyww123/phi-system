@@ -1,13 +1,13 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val transformation_functor            : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
-val functional_transformation_functor : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val transformation_functor            : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val functional_transformation_functor : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 
 (*** Transformation Functor ***)

@@ -2,16 +2,16 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val subst_ty : (typ * typ) list -> typ -> typ
-val instantiate_phi_to_pair_x : Proof.context -> term * Phi_Type_Algebra.phi_type ->
-        typ TVars.table * ctyp TVars.table * Phi_Type_Algebra.phi_type
+val instantiate_phi_to_pair_x : Proof.context -> term * Phi_Type.phi_type ->
+        typ TVars.table * ctyp TVars.table * Phi_Type.phi_type
 
-val separation_homo_I : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
-val separation_homo_E : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val separation_homo_I : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val separation_homo_E : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 (*** Separation Homo ***)
 

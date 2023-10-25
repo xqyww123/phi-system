@@ -1,12 +1,12 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val sigma_trivial_homomorphism : quiet -> Phi_Type_Algebra.hint list -> Phi_Type_Algebra.derive
+val sigma_trivial_homomorphism : quiet -> Phi_Type.hint list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 
 fun guess_projector bnf i insts =

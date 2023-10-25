@@ -1,12 +1,12 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val Make_Abstraction_from_Raw : quiet -> hint list -> Phi_Type_Algebra.derive
+val Make_Abstraction_from_Raw : quiet -> hint list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 (*Guessing is not supported for recursive \<phi>-types*)
 

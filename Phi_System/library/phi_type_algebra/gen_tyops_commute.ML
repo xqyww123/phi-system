@@ -1,12 +1,12 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val meta_Tyops_Commute : bool * int -> quiet * Position.T -> Phi_Type_Algebra.derive
+val meta_Tyops_Commute : bool * int -> quiet * Position.T -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 
 
@@ -197,7 +197,7 @@ fun meta_Tyops_Commute (reversed,mode) (quiet,_) ctxt (phi : phi_type) thy =
             end) ;
             (name, thy)
           )
-      fun bind pat (name, thy) = (name, Phi_Type_Algebra.bind_derivers_on_patterns [(pat, name)] thy)
+      fun bind pat (name, thy) = (name, Phi_Type.bind_derivers_on_patterns [(pat, name)] thy)
 
       val (intro_deriver, thy) = ("", thy)
             |> gen_I ? (snd

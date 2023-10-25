@@ -2,13 +2,13 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val conv_hol_imp_to_meta_if_has : conv -> conv
-val object_equiv : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
-(*val object_equiv_singular : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive*)
+val object_equiv : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+(*val object_equiv_singular : quiet -> deriving_instruction list -> Phi_Type.derive*)
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 fun conv_hol_imp_to_meta_if_has Cant ctm =
   case Thm.term_of ctm

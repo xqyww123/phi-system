@@ -388,7 +388,7 @@ definition Is_Aggregate :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
       \<open>cutting rules\<close>
 
 \<phi>property_deriver Is_Aggregate 555 for (\<open>Is_Aggregate _\<close>)
-  = \<open>Phi_Type_Algebra_Derivers.meta_Synt_Deriver
+  = \<open>Phi_Type_Derivers.meta_Synt_Deriver
       ("Is_Aggregate", @{lemma' \<open>Is_Aggregate T\<close> by (simp add: Is_Aggregate_def)}, @{reasoner_group %is_aggregate})\<close>
 
 lemma [\<phi>reason %is_aggregate]:

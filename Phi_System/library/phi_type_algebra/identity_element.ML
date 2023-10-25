@@ -1,14 +1,14 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val identity_element_I : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
-val identity_element_E : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
-val id_ele_properties : Position.T -> bool -> Phi_Type_Algebra.derive
+val identity_element_I : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val identity_element_E : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val id_ele_properties : Position.T -> bool -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 (*** Identity Element Intro \& Elim ***)
 
@@ -278,7 +278,7 @@ fun id_ele_properties pos is_intro ctxt0 (phi0 : phi_type) thy =
                  |> Thm.cterm_of ctxt
                  |> Drule.mk_term
 
-      val _ = if not (null (Phi_Type_Template_Properties.lookup_property_match (Context.Proof ctxt0) (Thm.concl_of trigger)))
+      val _ = if not (null (PLPR_Template_Properties.lookup_properties_match (Context.Proof ctxt0) (Thm.concl_of trigger)))
               then raise Automation_Fail (fn () => let open Pretty in
                       [para "The deriver of Identity_Element_Properties can only be invoked once\
                             \ for each \<phi>-type."]
@@ -286,7 +286,7 @@ fun id_ele_properties pos is_intro ctxt0 (phi0 : phi_type) thy =
               else ()
    in thy
    |> Phi_Help.generic_theory_mapping pos (fn m =>
-        Phi_Type_Template_Properties.add_property_instance (pos, Morphism.thm m trigger))
+        PLPR_Template_Properties.add_property_instance (pos, Morphism.thm m trigger))
   end
 
 val identity_element_I = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Identity_Element\<^sub>I") (gen_id_ele true)

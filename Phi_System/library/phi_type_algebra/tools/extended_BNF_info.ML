@@ -107,7 +107,7 @@ end
 
 structure eBNF_Info : eBNF_INFO = struct
 
-open Phi_Type_Algebra
+open Phi_Type
 
 type quasi_BNF = {
   T : typ,

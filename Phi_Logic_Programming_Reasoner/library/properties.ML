@@ -7,15 +7,16 @@ signature PHI_TYPE_TEMPLATE_PROPERTIES = sig
 
 (*** Algebraic Properties ***)
 
-type property_pattern = term (*pattern of the property*)
+type property_pattern = term (*pattern of the property, of type Pure.prop*)
+type property_pattern_i = term
 
-val check_property : theory -> property_pattern -> property_pattern option
+val check_property : theory -> property_pattern -> property_pattern_i option
                      (*returns normalized form if it is a registered property*)
-val assert_property_kind : theory -> property_pattern -> property_pattern
+val assert_property_pattern : theory -> property_pattern -> property_pattern_i
 val add_property_kinds : term list -> theory -> theory
 
-val lookup_property_match : Context.generic -> property_pattern -> (Position.T * thm) list
-val lookup_property_unify : Context.generic -> property_pattern -> (Position.T * thm) list
+val lookup_properties_match : Context.generic -> property_pattern_i -> (Position.T * thm) list
+val lookup_properties_unify : Context.generic -> property_pattern_i -> (Position.T * thm) list
 val add_property_instance : Position.T * thm -> Context.generic -> Context.generic
 (*val list_functors : Context.generic -> term list*)
 
@@ -80,11 +81,12 @@ val assert_derived_properties : theory -> (thm * term) list -> unit
 
 end
 
-structure Phi_Type_Template_Properties : PHI_TYPE_TEMPLATE_PROPERTIES = struct
+structure PLPR_Template_Properties : PHI_TYPE_TEMPLATE_PROPERTIES = struct
 
 exception Automation_Fail = PLPR_Rule_Gen.Generation_Fail
 
 type property_pattern = term
+type property_pattern_i = term
 
 (*** Algebraic Property & Automation ***)
 
@@ -116,10 +118,10 @@ fun err_not_a_property_kind thy k = let open Pretty in
       error (string_of (
         block ([Syntax.pretty_term_global thy k, brk 1] @
                text "is not a known \<phi>-type property. Please use ML function \
-                    \\<open>Phi_Type_Algebra.add_property_kind\<close> to register it.")))
+                    \\<open>Phi_Type.add_property_kind\<close> to register it.")))
     end
 
-fun assert_property_kind thy =
+fun assert_property_pattern thy =
   let val chk = check_property thy
    in fn k => case chk k
                 of SOME x => x
@@ -219,9 +221,12 @@ fun close_phitype_operator phityp =
   if Thm.is_dummy thm then ""
   else fst (Term.dest_Const (Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of thm))))*)
 
-fun lookup_property_match ctxt pattern =
-  Net.match_term (Properties.get ctxt) pattern
+fun lookup_properties_match ctxt =
+  let val properties = Properties.get ctxt
+   in fn pattern =>
+      Net.match_term properties pattern
    |> filter (fn (_, th) => Pattern.matches (Context.theory_of ctxt) (pattern, Thm.concl_of th))
+  end
 
 fun lookup_property_unify' ctxt additions env pattern =
   let val Envir.Envir {maxidx, tenv, tyenv} = env
@@ -237,7 +242,7 @@ fun lookup_property_unify' ctxt additions env pattern =
         end)
   end
 
-fun lookup_property_unify ctxt pattern =
+fun lookup_properties_unify ctxt pattern =
       lookup_property_unify' ctxt [] (Envir.empty (Term.maxidx_of_term pattern)) pattern
         |> map snd
 
@@ -320,7 +325,7 @@ fun invoke_template ((deps, pos, action) : template) =
 
 fun add_template invoke_on_existing_instantiations (template : template) ctxt =
   let val _ = Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty
-               in chunks (str "Registered reasoning rule template depending on " ::
+               in chunks (str "Registering reasoning rule template depending on " ::
                     map (fn NONE => item [str "_"]
                           | SOME pp => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pp])
                         (#1 template))
@@ -473,7 +478,7 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
            end
         | get_prop_kinds [] = []
       val prop_kinds = case raw_dependencies
-                         of SOME deps => List.map (Option.map (assert_property_kind thy)) deps
+                         of SOME deps => List.map (Option.map (assert_property_pattern thy)) deps
                           | NONE => let val prems = map Phi_Help.strip_meta_hhf (Thm.prems_of rule)
                                         val used = Term.add_frees (Thm.prop_of rule) [] |> map fst
                                         val fixes = burrow (map Free o burrow_fst (Name.variant_list used o map (prefix "%"))) (map #1 prems)
@@ -563,5 +568,5 @@ fun assert_derived_properties thy th_prop_pairs =
 
 end
 
-val assert_derived_properties = Phi_Type_Template_Properties.assert_derived_properties
+val assert_derived_properties = PLPR_Template_Properties.assert_derived_properties
 

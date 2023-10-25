@@ -1,12 +1,18 @@
 signature PHI_COP_SIMP = sig
 
 (* check if the simplification is required *)
+type pattern = term
 
 val is_simp_needed : Context.generic -> term -> bool
-val add_simp_pattern : term -> Context.generic -> Context.generic
-val add_simp_trigger : term (*pattern*) * (term -> bool) -> Context.generic -> serial * Context.generic
-val del_simp_pattern : term -> Context.generic -> Context.generic
-val del_simp_trigger : term (*pattern*) * serial -> Context.generic -> Context.generic
+val add_simp_pattern : pattern -> Context.generic -> Context.generic
+val add_simp_trigger : pattern * (term -> bool) -> Context.generic -> serial * Context.generic
+val del_simp_pattern : pattern -> Context.generic -> Context.generic
+val del_simp_trigger : pattern * serial -> Context.generic -> Context.generic
+  (*recursively check every lambda application \<open>f a\<^sub>1 \<dots> a\<^sub>n\<close> where \<open>f\<close> is an atom
+    to see if the simplification is required, by checking if matching any pattern or ML trigger*)
+
+datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * (term -> bool)
+val checkers_binding_on : Context.generic -> pattern -> checker list
 
 (* invoke the simplification if needed *)
 
@@ -23,10 +29,11 @@ structure Phi_CoP_Simp : PHI_COP_SIMP = struct
 
 (*** Check the need of simplification ***)
 
-datatype checker = Chk_Pattern of term | Chk_ML of serial * (term -> bool)
+type pattern = term
+datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * (term -> bool)
 
 fun chker_eq thy (Chk_Pattern pa, Chk_Pattern pb) = Pattern.equiv thy (pa,pb)
-  | chker_eq _ (Chk_ML (s1,_), Chk_ML (s2,_)) = s1 = s2
+  | chker_eq _ (Chk_ML (s1,_,_), Chk_ML (s2,_,_)) = s1 = s2
   | chker_eq _ _ = false
 
 structure Checkers = Generic_Data (
@@ -35,13 +42,20 @@ structure Checkers = Generic_Data (
   val merge = Net.merge pointer_eq
 )
 
+fun checkers_binding_on ctxt tm =
+  let val thy = Context.theory_of ctxt
+   in Net.match_term (Checkers.get ctxt) tm
+   |> filter (fn Chk_Pattern pat => PLPR_Pattern.matches thy [] (pat, tm)
+               | Chk_ML (_, pat, _) => PLPR_Pattern.matches thy [] (pat, tm))
+  end
+
 fun is_simp_needed ctxt =
   let val chkers = Checkers.get ctxt
       val thy = Context.theory_of ctxt
       fun apply_chk bv_tys tm =
         Net.match_term chkers tm
           |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy bv_tys (pat,tm)
-                      | Chk_ML (_, f)   => f tm)
+                      | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy bv_tys (pat,tm) andalso f tm)
       fun chk bv_tys tm =
         let val (h,args) = Term.strip_comb tm
          in (case h
@@ -73,14 +87,14 @@ fun add_simp_trigger (pat,chker) ctxt =
   let val _ = chk_pattern pat
       val id = serial()
    in (id, Checkers.map (Net.insert_term (chker_eq (Context.theory_of ctxt))
-                                         (pat, Chk_ML (id,chker))) ctxt)
+                                         (pat, Chk_ML (id,pat,chker))) ctxt)
   end
 
 fun del_simp_pattern pat ctxt =
   Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_Pattern pat)) ctxt
 
 fun del_simp_trigger (pat,serial) ctxt =
-  Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_ML (serial, K true))) ctxt
+  Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_ML (serial, Term.dummy, K true))) ctxt
 
 
 (* invoke the simplification if needed *)

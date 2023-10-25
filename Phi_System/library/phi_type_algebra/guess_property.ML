@@ -1,20 +1,20 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 (*lame!
-val guess_entire_property : Proof.context -> Phi_Type_Algebra.phi_type -> term -> term option*)
+val guess_entire_property : Proof.context -> Phi_Type.phi_type -> term -> term option*)
 
 val guess_conditions : Proof.context
                     -> term (*constant of the property predicate*)
                      * bool (*True for covariant, False for contra-variant*)
-                    -> Phi_Type_Algebra.phi_type -> term (*the target \<phi>-type term*)
+                    -> Phi_Type.phi_type -> term (*the target \<phi>-type term*)
                     -> term list (*augmented antecedents*)
                      * term (*augmented boolean antecedents*)
                      * term (*conditions*)
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 fun flt tm = not (Term.is_schematic tm) andalso
              not (Term.exists_Const (fn (\<^const_name>\<open>Satisfaction\<close>, _) => true | _ => false) tm)
@@ -81,7 +81,7 @@ fun guess_conditions ctxt0 (const, is_covar) phi T_term0 =
                   Simplifier.rewrite (ctxt addsimps #equations phi)))))) 1
    in case goal
         |> Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
-                                        |> Phi_Type_Algebra_Derivers.Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)))
+                                        |> Phi_Type_Derivers.Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)))
    of NONE => raise Automation_Fail (fn () => let open Pretty in
                       [para "Fail to guess the property. \<phi>-LPR process of \<open>Guess_Property\<close> fails."]
                 end)

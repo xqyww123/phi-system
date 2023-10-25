@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-type phi_type = Phi_Type_Algebra.phi_type
+type phi_type = Phi_Type.phi_type
 
 (*** A common framework to build derivers fast ***)
 
@@ -19,11 +19,11 @@ type induct_inst_params = term option list
 (** Component: unify_hint **)
 
 type hint = term
-type parse_hint = Phi_Type_Algebra.deriving_ctxt -> Phi_Type_Algebra.phi_type ->  hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
+type parse_hint = Phi_Type.deriving_ctxt -> Phi_Type.phi_type ->  hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
 (* Common choices of the unification *)
 
-val malformed_hint : Phi_Type_Algebra.deriving_ctxt -> term -> (unit -> Pretty.T list) -> 'a
+val malformed_hint : Phi_Type.deriving_ctxt -> term -> (unit -> Pretty.T list) -> 'a
 val parse_inst_params_from_phi_term : term -> induct_inst_params
 (*default parsing*)
 val parse_hint : (term -> term) (*extract the phi-type part from the hint. can be either the type assertion,
@@ -38,7 +38,7 @@ type guess_property =
         ( term list (*antecedents*)
         * term (*conclusion*)
         * induct_inst_params
-        * Phi_Type_Algebra.phi_type * Proof.context ) Seq.seq
+        * Phi_Type.phi_type * Proof.context ) Seq.seq
 
 (*If user gives no hint, we need to guess the property to be reasoned.
   The `guess_property` may guess the abstract operator from the logic type of the abstract
@@ -133,14 +133,14 @@ val load_simpset : term list -> Proof.context -> Proof.context
 
 (** A framework for deriving properties **)
 
-type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
+type ind_conv = (Proof.context -> Phi_Type.phi_type -> thm -> thm)
 type reasoning = Proof.context -> thm -> thm
 type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
                             int list (*quant_interps*) option) (*If not given, no induction will be applied*)
                        * ind_conv
-                       * (Phi_Type_Algebra.phi_type -> reasoning)
-type solver = Phi_Type_Algebra.phi_type * Proof.context * thm * Method.text option -> thm option
-type simplifier = Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm
+                       * (Phi_Type.phi_type -> reasoning)
+type solver = Phi_Type.phi_type * Proof.context * thm * Method.text option -> thm option
+type simplifier = Phi_Type.phi_type * Proof.context -> thm -> thm
 
 (*Main Entry Point*)
 val deriving_framework :
@@ -152,7 +152,7 @@ val deriving_framework :
     * subgoal_configure list
     * solver
     * simplifier (*final simplification*)
-   -> Phi_Type_Algebra.phi_type
+   -> Phi_Type.phi_type
    -> deriving_instruction
    -> Proof.context -> thm Seq.seq
 
@@ -190,8 +190,8 @@ val deriving_framework :
     conversion on them.
 *)
 
-val default_ind_conv : (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*converting induction hypotheses*) *
-                       (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*converting subgoals of the induction*)
+val default_ind_conv : (Proof.context -> Phi_Type.phi_type -> conv) (*converting induction hypotheses*) *
+                       (Proof.context -> Phi_Type.phi_type -> conv) (*converting subgoals of the induction*)
                     -> ind_conv
 
 (*To use `default_ind_conv`, you must tag the leading antecedent of the `rule` by `\<phi>TA_ind_target`,
@@ -277,13 +277,13 @@ val deriver_framework : hint_mode * multiple_call * string (*name*)
                      -> (   int (*the times that the deriver has been invoked*)
                           * string (*name suffixed by the time*)
                           -> deriving_instruction
-                          -> Phi_Type_Algebra.deriving_ctxt
-                          -> Phi_Type_Algebra.phi_type
+                          -> Phi_Type.deriving_ctxt
+                          -> Phi_Type.phi_type
                           -> generic_theory
                           -> thm list (*derived rule*) * generic_theory)
                      -> quiet * Position.T
                      -> deriving_instruction list
-                     -> Phi_Type_Algebra.derive
+                     -> Phi_Type.derive
 (*This simple framework handles the issue of invoking a deriver by multiple times,
   and also checks if the proper number of hints are given.
   Then it calls the given diver for each hint one by one, or call it by NONE is no hint is given.
@@ -299,12 +299,12 @@ val deriver_framework : hint_mode * multiple_call * string (*name*)
 
 val deriver_framework_no_hints : multiple_call * string (*name*)
                      -> (string (*name*)
-                          -> Phi_Type_Algebra.deriving_ctxt
-                          -> Phi_Type_Algebra.phi_type
+                          -> Phi_Type.deriving_ctxt
+                          -> Phi_Type.phi_type
                           -> generic_theory
                           -> thm list (*derived rule*) * generic_theory)
                      -> quiet * Position.T
-                     -> Phi_Type_Algebra.derive
+                     -> Phi_Type.derive
 
 (** Misc Tools **)
 
@@ -315,15 +315,15 @@ structure Expansion : SIMPSET (*The standard simpset for deriving*)
 (*convention: do not add transformation_refl any time! *)
 
 (*
-val accept : (hint option -> Phi_Type_Algebra.derive) -> hint list -> Phi_Type_Algebra.derive
+val accept : (hint option -> Phi_Type.derive) -> hint list -> Phi_Type.derive
 val accept_one : string (*name for printing*) ->
-      (hint option -> Phi_Type_Algebra.derive) ->
-       hint list -> Phi_Type_Algebra.derive
+      (hint option -> Phi_Type.derive) ->
+       hint list -> Phi_Type.derive
     (*wraps and checks if the user gives at most one hint*)
 *)
 
-val chk_unfolded : string list (*bads*) -> Phi_Type_Algebra.deriving_ctxt -> Phi_Type_Algebra.phi_type -> term -> unit
-val conv_chk_unfolded : string list -> Phi_Type_Algebra.phi_type -> Phi_Type_Algebra.deriving_ctxt -> conv
+val chk_unfolded : string list (*bads*) -> Phi_Type.deriving_ctxt -> Phi_Type.phi_type -> term -> unit
+val conv_chk_unfolded : string list -> Phi_Type.phi_type -> Phi_Type.deriving_ctxt -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not.
         The bads are constants whose occurrence indicates the \<phi>-type is not expanded*)
 
@@ -336,10 +336,10 @@ end
 
 (**** Implementation ****)
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
-type phi_type = Phi_Type_Algebra.phi_type
+type phi_type = Phi_Type.phi_type
 
 (** Library **)
 
@@ -352,9 +352,9 @@ fun guess_fail ctxt phi msg =
 
 type induct_inst_params = term option list
 type guess_property =
-        Phi_Type_Algebra.phi_type ->
+        Phi_Type.phi_type ->
         Proof.context ->
-        (term list * term * term option list * Phi_Type_Algebra.phi_type * Proof.context ) Seq.seq
+        (term list * term * term option list * Phi_Type.phi_type * Proof.context ) Seq.seq
 
 fun lift_types_sort thy typ_sorts =
   Phi_Help.lift_types_sort thy typ_sorts
@@ -470,7 +470,7 @@ local
       | is_atom (Free _) = true
       | is_atom (Var _) = true
       | is_atom _ = false
-in val eq_simproc = Simplifier.make_simproc \<^context> "Phi_Type_Algebra.eq" {
+in val eq_simproc = Simplifier.make_simproc \<^context> "Phi_Type.eq" {
     lhss = [\<^pattern>\<open>_ = _\<close>],
     proc = fn _ => fn ctxt => fn ctm =>
       case Thm.term_of ctm
@@ -1152,7 +1152,7 @@ end
 
 (* Default Obligation Solver *)
 
-type solver = Phi_Type_Algebra.phi_type * Proof.context * thm * Method.text option -> thm option
+type solver = Phi_Type.phi_type * Proof.context * thm * Method.text option -> thm option
 
 fun oblg_solver proof_id text ctxt sequent =
   (*case Thm.major_prem_of sequent
@@ -1208,7 +1208,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
         val hint' = case hint of NONE => guess_entire_property ctxt0 phi0 property_const
                              | some => some*)
    in (case #1 instruction of SOME H0 =>
-              let (*val idx = Phi_Type_Algebra.maxidx_of_phi phi0 ~1 + 1
+              let (*val idx = Phi_Type.maxidx_of_phi phi0 ~1 + 1
                   val H = Logic.incr_indexes ([],[],idx) H0*)
                   val thy = Proof_Context.theory_of ctxt0
                   val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 phi0 H0
@@ -1226,7 +1226,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                           |> Phi_Help.subst_tyenv
                           |> Phi_Help.certify_tyvars (Context.Proof ctxt)
 
-                  val phi = Phi_Type_Algebra.instantiate_phi (inst, Vars.empty) phi0
+                  val phi = Phi_Type.instantiate_phi (inst, Vars.empty) phi0
 
                   val oprs = extract_oprs_from_hint (extract_hhf H)
                   val ctxt = load_simpset oprs ctxt
@@ -1340,7 +1340,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
           
                 val (lambs, _, rule_concl) = Phi_Help.strip_meta_hhf (Phi_Help.leading_antecedent' rule')
                 val ind_prop = mk_ind_prop 0 (rev lambs) (HOLogic.dest_Trueprop rule_concl)
-                val ind = Phi_Type_Algebra.mk_ind_dest_ToA ctxt phi (K ind_prop)
+                val ind = Phi_Type.mk_ind_dest_ToA ctxt phi (K ind_prop)
           
                 val ((inst,[rule't]), ctxt't) = Variable.import true [rule'] ctxt
                 val ind't = Thm.instantiate inst ind
@@ -1409,7 +1409,7 @@ fun parse_hint extract_phityp ctxt phi hint =
 
 (* Default Conversion of the Induction Rule *)
 
-type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
+type ind_conv = (Proof.context -> Phi_Type.phi_type -> thm -> thm)
 
 fun default_ind_conv (conv_IH, conv_CL) ctxt (phi:phi_type) =
   Conv.fconv_rule (Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
@@ -1573,7 +1573,7 @@ type reasoning = Proof.context -> thm -> thm
 type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
                             int list (*quant_interps*) option) (*If not given, no induction will be applied*)
                        * ind_conv
-                       * (Phi_Type_Algebra.phi_type -> reasoning)
+                       * (Phi_Type.phi_type -> reasoning)
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
@@ -1935,7 +1935,7 @@ fun exhaustive_PLPR_reasoner_by_rule rule chk_unfolds ctxt sequent =
 
 (* Simplifier *)
 
-type simplifier = Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm
+type simplifier = Phi_Type.phi_type * Proof.context -> thm -> thm
 
 fun default_simplifier conv (phi, ctxt) rule =
   let val ((_, [rule'1]), ctxt't1) = Variable.import false [rule] ctxt
@@ -2038,21 +2038,21 @@ fun gen_identity_element is_left phi hints_thy =
 (*** Install Automation ***)
 
 val _ = Theory.setup (
-  Phi_Type_Algebra.define_deriver_global \<^binding>\<open>Identity_Element\<^sub>I\<close> {
+  Phi_Type.define_deriver_global \<^binding>\<open>Identity_Element\<^sub>I\<close> {
       priority = 100,
       dependences = [],
       derive = accept_one "Identity_Element\<^sub>I" (gen_id_ele true)
     } #-> (fn name => Context.theory_map (
-      Phi_Type_Algebra.bind_derivers_on_patterns [(\<^pattern_prop>\<open>Identity_Element\<^sub>I _ _\<close>, name)]))
+      Phi_Type.bind_derivers_on_patterns [(\<^pattern_prop>\<open>Identity_Element\<^sub>I _ _\<close>, name)]))
 )*)
 
 (* val _ = Theory.setup (Context.theory_map (
-   Phi_Type_Algebra.add_automation_on_def 100 (gen_identity_element true)
-#> Phi_Type_Algebra.add_automation_on_def 101 (gen_identity_element false)
-#> Phi_Type_Algebra.add_automation_on_def 105 gen_obj_equal
-#> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
-#> Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
-#> Phi_Type_Algebra.add_automation_on_def 121 (gen_SH false)
+   Phi_Type.add_automation_on_def 100 (gen_identity_element true)
+#> Phi_Type.add_automation_on_def 101 (gen_identity_element false)
+#> Phi_Type.add_automation_on_def 105 gen_obj_equal
+#> Phi_Type.add_automation_on_def 110 gen_TF
+#> Phi_Type.add_automation_on_def 120 (gen_SH true)
+#> Phi_Type.add_automation_on_def 121 (gen_SH false)
 )) *)
 
 end

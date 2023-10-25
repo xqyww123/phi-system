@@ -30,7 +30,7 @@ ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
 end
 
 \<phi>property_deriver Semantic_Type 100 for (\<open>\<phi>SemType (_ \<Ztypecolon> _) _\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.semantic_type \<close> 
+    = \<open> Phi_Type_Derivers.semantic_type \<close> 
 
 
 subsubsection \<open>Semantic Zero Value\<close>
@@ -52,7 +52,7 @@ end
 
 \<phi>property_deriver Semantic_Zero_Val 110 for (\<open>Semantic_Zero_Val _ _ _\<close>)
   requires Semantic_Type
-    = \<open> Phi_Type_Algebra_Derivers.semantic_zero_val \<close> 
+    = \<open> Phi_Type_Derivers.semantic_zero_val \<close> 
 
 
 subsubsection \<open>Semantic Equality Comparison\<close>
@@ -99,10 +99,10 @@ subsection \<open>\<phi>-Type Abstraction\<close>
 declare [[\<phi>trace_reasoning = 0]]
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.add_type {no_auto=true}
+  Phi_Type.add_type {no_auto=true}
         (\<^binding>\<open>Val\<close>, \<^pattern>\<open>Val::VAL \<phi>arg \<Rightarrow> (VAL, ?'a) \<phi> \<Rightarrow> (?'x::one, ?'a) \<phi>\<close>,
-         Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Val_def}),
-         \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+         Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Val_def}),
+         \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 declare [[\<phi>trace_reasoning = 1]]

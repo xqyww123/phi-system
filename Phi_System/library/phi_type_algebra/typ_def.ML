@@ -12,9 +12,9 @@ of lambda applications \<open>H $ A1 $ A2 $ A3\<close> and the head is a constan
 is the last operand i.e. the A3.
 *)
 
-signature PHI_TYPE_ALGEBRA = sig
+signature PHI_TYPE = sig
 
-include PHI_TYPE_ALGEBRA
+include PHI_TYPE
 
 
 (** \<phi>-Type Definition \& Infos **)
@@ -201,9 +201,9 @@ end
 
 (**** Implementation ****)
 
-structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
+structure Phi_Type : PHI_TYPE = struct
 
-open Phi_Type_Algebra
+open Phi_Type
 
 (** Library **)
 
@@ -776,7 +776,7 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
    let 
        val derive =
             case ML' of SOME ML =>
-                let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME (" @
+                let val expr = ML_Lex.read "Phi_Type.ML_sender := SOME (" @
                                ML_Lex.read_source ML @
                                ML_Lex.read ")"
                  in Synchronized.change_result ML_sender_locker (fn () => let
@@ -1412,7 +1412,7 @@ end
 
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 
-type deriving_instruction = Phi_Type_Algebra.deriving_instruction
+type deriving_instruction = Phi_Type.deriving_instruction
 
 val constrain_antecedents : term (*condition*) -> term (*antecedents*) -> term list (*enhanced*)
       (*provides conditions to the given antecedents, e.g,
@@ -1429,9 +1429,9 @@ val simplified_exists_qualify : Proof.context -> typ -> term -> term
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 
-type deriving_instruction = Phi_Type_Algebra.deriving_instruction
+type deriving_instruction = Phi_Type.deriving_instruction
 
 fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
   | constrain_antecedents (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_GUARD\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _))

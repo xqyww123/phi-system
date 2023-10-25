@@ -522,12 +522,12 @@ definition Gen_Br_Join :: \<open> (('b, 'a) \<phi> \<Rightarrow> ('d, 'c) \<phi>
                          \<Rightarrow> bool \<close>
   where \<open> Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds \<equiv> True \<close>
 
-setup \<open>Phi_Type_Template_Properties.add_property_kinds [
+setup \<open>PLPR_Template_Properties.add_property_kinds [
   \<^pattern_prop>\<open>Gen_Br_Join _ _ _ _ _\<close>
 ]\<close>
 
 \<phi>property_deriver Gen_Br_Join 555 for (\<open>Gen_Br_Join _ _ _ _ _\<close>)
-  = \<open>Phi_Type_Algebra_Derivers.meta_Synt_Deriver
+  = \<open>Phi_Type_Derivers.meta_Synt_Deriver
       ("Gen_Br_Join", @{lemma' \<open>Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds\<close> by (simp add: Gen_Br_Join_def)},
        @{reasoner_group %cutting})\<close>
 

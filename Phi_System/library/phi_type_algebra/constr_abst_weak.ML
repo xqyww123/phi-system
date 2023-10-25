@@ -4,12 +4,12 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val Make_Abstraction_from_Raw : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val Make_Abstraction_from_Raw : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 fun guess_property (phi:phi_type) ctxt =
   let val ((x_Term, T_term), ctxt) = fix_phi_term_params phi ctxt

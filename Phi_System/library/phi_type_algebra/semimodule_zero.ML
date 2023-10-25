@@ -1,13 +1,13 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val semimodule_zero : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
-val closed_semimodule_zero : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val semimodule_zero : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val closed_semimodule_zero : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 fun gen_M0 closed (der_id, name) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (fn (Const(\<^const_name>\<open>Semimodule_Zero\<close>, _) $ F1 $ _ $ _ ) => F1)

@@ -1,12 +1,12 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val semantic_zero_val : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val semantic_zero_val : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
-structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type Phi_Type_Derivers
 
 fun guess_property phi0 ctxt =
   let val (_, x_ty0, model_ty0) = parameters_and_typs_of phi0
