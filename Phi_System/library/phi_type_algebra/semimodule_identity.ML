@@ -38,11 +38,11 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m => fn ctxt =>
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE
                                     (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                  (#2 instruction))
-                                    ([],[]) NONE [Morphism.thm m rule'])
+                                    ([],[]) NONE [Morphism.thm m rule'] (if is_intro then @{print} ctxt else ctxt))
         |> note_properties_s phi [(name, [rule'])]
         |> pair [rule']
   end

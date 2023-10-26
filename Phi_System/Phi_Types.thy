@@ -1131,7 +1131,8 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
        and Sep_Functor_1
        and Functionality
-       and Semimodule_NonDistr
+       and Semimodule_Scalar_Assoc
+       and Semimodule_One
        and Closed_Semimodule_Zero
        and Carrier_Set
 
@@ -1998,6 +1999,9 @@ lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
 
+ML \<open>PLPR_Template_Properties.lookup_properties_match (Context.Proof \<^context>)
+      \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z (\<phi>ScalarMul _) _ _ _ _\<close>\<close>
+
 text \<open>The domain of abstract objects constrains to ensure the two middle-level objects
   (namely, the concrete objects of \<open>T\<close> and the abstract objects of \<open>\<psi>\<close>) are identical so that
   we can apply the right distributive law \<open>smult (s + t) a = smult s a * smult t a\<close> of module,
@@ -2295,14 +2299,13 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 3 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Semimodule_SDistr_Homo\<^sub>Z
-(*Sep_Functor_1
+  deriving Sep_Functor_1
        and Functionality
        (*and SE_Trim_Empty*)
        and Semimodule_no0
@@ -2318,7 +2321,6 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?P) \<Longrightarrow> Abstract_Domain\<^sub>L (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?P x)  \<close>),
@@ -2528,14 +2530,14 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 context begin
 
 private lemma [simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
-
+   
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> ('c::sep_algebra, 'x) \<phi>
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -2561,7 +2563,7 @@ end
 thm \<phi>Mul_Quant_LenIv.scalar_one
 thm \<phi>Mul_Quant_LenIv.scalar_one'
 
-translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
+(*translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant_LenIv.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?iv = ?iva \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iva) ?T ?Ta set (\<lambda>x. UNIV) list_all2 \<close>),

@@ -180,6 +180,9 @@ text \<open>A simplification in the semantics is, we only consider allocation wi
   over a subset of C semantics. The absence of non-initialized allocation does not affect the functionality
   but only little performance which we believe worthy against the simplification in reasoning. \<close>
 
+declare [[\<phi>reasoning_step_limit=100,
+      \<phi>trace_reasoning=2]]
+
 proc op_allocate_mem_1:
   input \<open>Void\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
@@ -213,7 +216,6 @@ proc op_free_mem:
 \<medium_right_bracket> .
 
 declare [[\<phi>trace_reasoning = 0]]
-
 
 \<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>l \<Ztypecolon> Mem_Slice addr iv T \<equiv>

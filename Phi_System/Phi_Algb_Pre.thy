@@ -487,6 +487,23 @@ lemma [\<phi>reason %partial_add_overlaps_specific]:
   unfolding partial_add_overlaps_def
   ..
 
+lemma [\<phi>reason %partial_add_overlaps_specific+11]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a \<le> i \<and> i < len_intvl.start a + len_intvl.len a
+\<Longrightarrow> partial_add_overlaps a \<lbrakk>i:1\<rwpar> \<close>
+  unfolding partial_add_overlaps_def
+  ..
+
+lemma [\<phi>reason %partial_add_overlaps_specific+10]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start b \<le> i \<and> i < len_intvl.start b + len_intvl.len b
+\<Longrightarrow> partial_add_overlaps \<lbrakk>i:1\<rwpar> b \<close>
+  unfolding partial_add_overlaps_def
+  ..
+
+lemma leq_le_Suc_eq[simp]:
+  \<open>j \<le> x \<and> x < Suc j \<longleftrightarrow> x = j\<close>
+  by fastforce
+  
+
 subparagraph \<open>Wrapped by set\<close>
 
 lemma [\<phi>reason %partial_add_overlaps_specific + 100]:

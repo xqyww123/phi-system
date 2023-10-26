@@ -1021,7 +1021,9 @@ lemma Semimodule_SDistr_Homo\<^sub>Z_sub:
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def le_fun_def le_bool_def
   by blast
 
-lemma [\<phi>reason %\<phi>TA_varify_out except \<open>Semimodule_SDistr_Homo\<^sub>Z _ _ ?var_Ds ?var_Dx _\<close> ]:
+lemma [\<phi>adding_property = false,
+       \<phi>reason %\<phi>TA_varify_out except \<open>Semimodule_SDistr_Homo\<^sub>Z _ _ ?var_Ds ?var_Dx _\<close>,
+       \<phi>adding_property = true ]:
   \<open> Semimodule_SDistr_Homo\<^sub>Z F T Ds' Dx' z
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds \<le> Ds' \<and> Dx \<le> Dx'
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z\<close>
@@ -1926,7 +1928,11 @@ lemma biFTF_template[no_atp, \<phi>reason_template default %ToA_derived_one_to_o
 
 subsection \<open>Separation Homomorphism\<close>
 
-lemma Object_Sep_Homo\<^sub>I_subdom[\<phi>reason %\<phi>TA_varify_out except \<open>Object_Sep_Homo\<^sub>I _ ?var\<close>]:
+lemma Object_Sep_Homo\<^sub>I_subdom[
+        \<phi>adding_property = false,
+        \<phi>reason %\<phi>TA_varify_out except \<open>Object_Sep_Homo\<^sub>I _ ?var\<close>,
+        \<phi>adding_property = true
+      ]:
   \<open> Object_Sep_Homo\<^sub>I T Da
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Db \<subseteq> Da
 \<Longrightarrow> Object_Sep_Homo\<^sub>I T Db\<close>
@@ -2337,6 +2343,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D\<^sub>E g P\<^sub>E
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_No_SDistr F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>E x
+\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (g x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x) \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def
@@ -2359,6 +2366,7 @@ lemma [\<phi>reason_template no explorative backtrack %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D\<^sub>E g P\<^sub>E
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_No_SDistr F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>E x
+\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (R * (g x \<Ztypecolon> T\<^sub>1) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F one T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x) \<close>
   unfolding Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def
@@ -2380,6 +2388,7 @@ lemma [\<phi>reason_template no explorative backtrack %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D g P\<^sub>E
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_No_SDistr F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D (fst x)
+\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (apfst g x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x)) \<close>
   unfolding Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def
@@ -2401,6 +2410,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_No_SDistr F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x
+\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x) \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Except_Pattern_def
@@ -2422,6 +2432,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_No_SDistr F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x
+\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x) \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def
@@ -2442,6 +2453,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_No_SDistr F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D (fst x)
+\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)) \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def
@@ -2562,29 +2574,31 @@ lemma
 
 subparagraph \<open>Main\<close>
 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module name F'.xxx]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> NO_SIMP (\<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> F (id one) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P)
+      \<comment> \<open>the \<open>id\<close> here protects the lifted semimodule from being reduced immediately\<close>
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x \<close>
-  unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def
-  by blast
+  unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def NO_SIMP_def
+  by simp blast
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
-\<Longrightarrow> (f (fst x), w) \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> if C then (snd x \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W  @action restore_from_semimodule True F)
-         else (w, W') = (snd x, W)
+\<Longrightarrow> NO_SIMP ((f (fst x), w) \<Ztypecolon> F (id one) T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (
+    if C then (snd x \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W  @action restore_from_semimodule True F)
+         else (w, W') = (snd x, W))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def
-            Action_Tag_def
+            Action_Tag_def NO_SIMP_def
   by (cases C; cases C\<^sub>R; clarsimp; metis)
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
@@ -2592,24 +2606,25 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
-\<Longrightarrow> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (id one) T \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x \<close>
-  unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def
-  by blast
+  unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def NO_SIMP_def
+  by simp blast
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
-\<Longrightarrow> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> if C then (snd x \<Ztypecolon> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> r \<Ztypecolon> R' @action restore_from_semimodule False F)
-         else (r, R') = (r, R)
+\<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (id one) T \<^emph>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (
+    if C then (snd x \<Ztypecolon> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> r \<Ztypecolon> R' @action restore_from_semimodule False F)
+         else (r, R') = (r, R))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f (fst x), r) \<Ztypecolon> T\<^sub>1 \<^emph>[C] R' \<w>\<i>\<t>\<h> P \<close>
   unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def
-            Action_Tag_def
+            Action_Tag_def NO_SIMP_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
 
 (*
@@ -2756,27 +2771,12 @@ lemma [\<phi>reason_template 0]:
 
 lemma [\<phi>reason_template 0]:
   \<open> Semimodule_No_SDistr F
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U_rev F T Ds Dx' uz' Dx uz
-\<Longrightarrow> ERROR TEXT(F \<open>is declared as non-scalar-associative but a property is given\<close>
-               (Semimodule_SDistr_Homo\<^sub>U_rev F T Ds Dx' uz' Dx uz)) @action \<A>_template_reason
-\<Longrightarrow> True\<close>
-  ..
-
-lemma [\<phi>reason_template 0]:
-  \<open> Semimodule_No_SDistr F
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F T Ds Du uz
 \<Longrightarrow> ERROR TEXT(F \<open>is declared as non-scalar-associative but a property is given\<close>
                (Semimodule_SDistr_Homo\<^sub>Z F T Ds Du uz)) @action \<A>_template_reason
 \<Longrightarrow> True\<close>
   ..
 
-lemma [\<phi>reason_template 0]:
-  \<open> Semimodule_No_SDistr F
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds Dx' z' Dx z
-\<Longrightarrow> ERROR TEXT(F \<open>is declared as non-scalar-associative but a property is given\<close>
-               (Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds Dx' z' Dx z)) @action \<A>_template_reason
-\<Longrightarrow> True\<close>
-  ..
 
 paragraph \<open>Zip\<close>
 
@@ -2896,7 +2896,7 @@ assigned by constants after the reasoning.
 
 
 
-lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %derived_SE_functor name F\<^sub>1.xxx_t1]:
+lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %derived_SE_functor]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[Cw] W) (U \<^emph>[Cr] R) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 Cw T W Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 Cr U R Du uz
@@ -5217,6 +5217,7 @@ end
 
 \<phi>property_deriver Semimodule_NonDistr_no0 132
   requires Semimodule_Scalar_Assoc and Semimodule_One
+       and Semimodule_No_SDistr
 
 \<phi>property_deriver Semimodule_NonDistr 133
   requires Semimodule_NonDistr_no0 and Semimodule_Zero
@@ -5279,10 +5280,11 @@ end
 
 \<phi>property_deriver Semimodule_NonAssoc 132
   requires Semimodule_SDistr_Homo and Semimodule_Zero
-       and Semimodule_One and Semimodule_No_SDistr
+       and Semimodule_One
 
 \<phi>property_deriver Semimodule_no0 133
-  requires Semimodule_NonDistr_no0 and Semimodule_SDistr_Homo
+  requires Semimodule_Scalar_Assoc and Semimodule_One
+       and Semimodule_SDistr_Homo
 
 \<phi>property_deriver Semimodule 134
   requires Semimodule_no0 and Semimodule_Zero
