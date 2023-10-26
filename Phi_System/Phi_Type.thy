@@ -223,6 +223,47 @@ preserving the syntactic term.
 \<close>
 
 
+
+text \<open>
+
+Real data structures are hierarchical, as composition of abstract data types each of which gives a stratified layer.
+So are \<phi>-types, as composition of \<phi>-type operators corresponding to each ADT.
+We present a stratified ToA reasoning strategy, which peels \<phi>-type operators layer by layer, on both
+of the source and the target assertion simultaneously.
+On each layer, we transform the source \<phi>-type operator to the target operator, and once they reach
+an agreement, by means of the transformation functor we enter their operands which are the inner layers.
+
+It implies the source and the target \<phi>-type should have identical stratified layers.
+It is true in real data structures, because if they are composed by difference layers of ADT, they are
+essentially different objects. However, in \<phi>-types, not all \<phi>-types characterizes a substantial data
+structure but can be (embeddings of) logic connectives or specificational modalities or modifiers,
+such as the remark of sharing permission \<open>\<odiv>\<close>.
+Though substantial \<phi>-types characterizing a physical data structure are almost certainly non-commutative,
+the modalities can be commutative over the stratified layers, because they are essentially
+logic connectives.
+Particularly when a commutative modality is an associative and scalar-distributive semimodule, troubles come.
+The ToA reasoning of the scalar-remarked modalities (\<open>x \<Ztypecolon> F a T * others \<longrightarrow> y \<Ztypecolon> F b U\<close>, with \<open>a \<le> b\<close>) has two directions,
+one looking for the missed scalar portion \<open>(b/a)\<close> from the inner layer \<open>T\<close>, reducing to \<open>T \<longrightarrow> F (b/a) U\<close>, 
+another looking horizontally from its neighbor \<open>others\<close>, reducing to \<open>others \<longrightarrow> F (b-a) U\<close>.
+Even worse, the two reduction can be arithmetically mixed, \<open>T \<longrightarrow> F c U\<close> and \<open>others \<longrightarrow> F d U\<close> such that
+\<open>a * c + d = b\<close>.
+
+To reduce the search space, we apply a normalization before the reasoning, which pushes the modalities
+to the leaves of the syntax tree of a \<phi>-type (i.e., the innermost layers) to collect the modalities 
+all together so that the later reasoning only needs to consider the scalar distributivity by looking
+from the neighbors horizontally.
+
+When there are multiple kinds of modalities, we assign them a order to arrange them in order before the leaves...
+
+\<close>
+
+
+
+
+
+
+
+
 chapter \<open>The Algebra of \<open>\<phi>\<close>-Type\<close>
 
 section \<open>Algebraic Properties of \<phi>-Types\<close>
