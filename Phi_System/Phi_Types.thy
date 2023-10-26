@@ -2558,12 +2558,13 @@ private lemma [simp]:
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
 
+thm \<phi>Mul_Quant_LenIv.aaa
+
 end
 
-thm \<phi>Mul_Quant_LenIv.scalar_one
-thm \<phi>Mul_Quant_LenIv.scalar_one'
+thm \<phi>Mul_Quant_LenIv.aaa
 
-(*translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"*)
+translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant_LenIv.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?iv = ?iva \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?iva) ?T ?Ta set (\<lambda>x. UNIV) list_all2 \<close>),
