@@ -252,7 +252,7 @@ definition \<open>Transformation_Functor F1 F2 T U D R mapper \<longleftrightarr
 
 
   \<open>R\<close> constrains the range of the transformation of the inner elements, which will be a proof obligation
-      reported to user for each transformation application.
+      reported to users for each transformation application.
   It is useful especially for dependent data types like a list of even numbers.
   As \<open>R\<close> is parameterized by the abstract container \<open>x\<close>, by assigning \<open>R\<close> to empty set on certain
   invalid abstract containers, it also constraints the domain of abstract containers on which
@@ -2488,21 +2488,21 @@ text \<open>The difficulty of reasoning \<phi>-type transformations lies in the 
   \<open>U\<close> into a semimodule \<open>F 1 U\<close> of identity scalar, by checking whether the weight of \<open>U\<close> is greater than
   the weight of \<open>F a T\<close>, which implies no swappable semimodule \<open>F\<close> that can move here can be seen in \<open>U\<close>.
 
-  If we denote \<open>F \<ge> G \<triangleq> weight(F) \<ge> weight(G) \<and> commutative(F,G)\<close>, the normalization ensures in
+  If we denote \<open>F > G \<triangleq> weight(F) > weight(G) \<and> commutative(F,G)\<close>, the normalization ensures in
   a given syntactic tree of \<phi>-type operators, any path from the root to a leaf \<phi>-type is non-descending,
-  i.e., \<open>\<not> (F \<ge> G)\<close> for any adjacent \<open>F, G\<close>, i.e., \<open>F\<close> is lighter than \<open>G\<close> if \<open>commutative(F,G)\<close>.
+  i.e., \<open>\<not> (F > G)\<close> for any adjacent \<open>F, G\<close>, i.e., \<open>F\<close> is not heavier than \<open>G\<close> if \<open>commutative(F,G)\<close>.
   A problem is whether all syntactic tree of \<phi>-type operators can be uniquely normalized.
-  *: The check of \<open>F \<ge> G\<close> is carried by LP reasoner \<open>Require_Weight_Norm\<close> in the code.
+  *: The check of \<open>F > G\<close> is carried by LP reasoner \<open>Require_Weight_Norm\<close> in the code.
 
   For the sake of unique normalization, we require all commutativity between the \<phi>-type operators is transitive.
   We designate \<open>commutative(F,G)\<close> to mean \<open>F\<close> can be swapped into \<open>G\<close>, \<open>\<exists>f. x \<Ztypecolon> F (G T) \<longrightarrow> f(x) \<Ztypecolon> G (F T)\<close>,
   but not necessarily reversely.
   The transitivity means \<open>commutative(F\<^sub>1,F\<^sub>2) \<and> commutative(F\<^sub>2,F\<^sub>3) \<longrightarrow> commutative(F\<^sub>1,F\<^sub>3)\<close>.
-  If we draw a directed edge from \<open>F\<close> to \<open>G\<close> to mean \<open>weight(F) \<le> weight(G)\<close> and \<open>F\<close> can be swapped with \<open>G\<close>
+  If we draw a directed edge from \<open>F\<close> to \<open>G\<close> to mean \<open>weight(F) < weight(G)\<close> and \<open>F\<close> can be swapped with \<open>G\<close>
   by any steps of swapping adjacent operators in the sequence (another name of the path).
   The transitivity ensures any given sequence generates a disjoint union of several fully connected
   directed acyclic graph.
-  Therefore, for any given sequence, we only need to swap any occurrences of \<open>F, G\<close> where \<open>F \<ge> G\<close> (a bubbling sort),
+  Therefore, for any given sequence, we only need to swap any occurrences of \<open>F, G\<close> where \<open>F > G\<close> (a bubbling sort),
   and any order of swapping results in the unique normalized form, which is the topological sorting
   of the generated graph with connected components in the order of their occurrences in the sequence.
   Therefore, a path can be uniquely normalized.
@@ -2513,7 +2513,7 @@ text \<open>The difficulty of reasoning \<phi>-type transformations lies in the 
   into the normalized path of \<open>G\<^sub>i\<close>, changing it from \<open>Root \<dots> F G\<^sub>i \<dots> Leaf\<close> to \<open>Root \<dots> G\<^sub>j F G\<^sub>i \<dots> Leaf\<close>.
   The sub-sequence \<open>G\<^sub>i \<dots> Leaf\<close> is unchanged but the property of \<open>Root \<dots> G\<^sub>j F\<close> is temporarily broken.
   However, with the normalization of the path \<open>G\<^sub>j\<close>, \<open>Root \<dots> G\<^sub>j F\<close> will be normalized, and the concatenation
-  of the normalized \<open>Root \<dots> G\<^sub>j F\<close> with \<open>G\<^sub>i \<dots> Leaf\<close> also yields a normalized path, because \<open>\<not> (G\<^sub>i \<ge> F)\<close>.
+  of the normalized \<open>Root \<dots> G\<^sub>j F\<close> with \<open>G\<^sub>i \<dots> Leaf\<close> also yields a normalized path, because \<open>\<not> (G\<^sub>i > F)\<close>.
 
   Besides, not all multi-arity operator pair \<open>(F,G)\<close> has partial commutativity (in sense of fixing
   all of its operands except one, \<open>F (fixed, G(T)) \<longrightarrow> G (F (fixed, T))\<close>, so reducing the notion of
@@ -3905,6 +3905,38 @@ lemma Comm_Tyops_Rewr\<^sub>2_temlpate[\<phi>reason_template name F.G.comm_rewr[
 \<Longrightarrow> (x \<Ztypecolon> F (G T U)) = (f x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U)) \<close>
   unfolding BI_eq_iff Premise_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Transformation_def
   by clarsimp metis
+
+
+paragraph \<open>Deriving ToA\<close>
+
+lemma Comm_Tyops_ToA_temlpate[\<phi>reason_template name F.G.comm[]]:
+  \<open> Tyops_Commute F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F' T) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
+    RE = (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y)
+    @action \<A>_template_reason
+\<Longrightarrow> RE \<close>
+  unfolding Premise_def Action_Tag_def Tyops_Commute_def Orelse_shortcut_def
+  by (elim disjE; simp)
+
+lemma Comm_Tyops\<^sub>1\<^sub>_\<^sub>2_ToA_temlpate[\<phi>reason_template name F.G.comm[]]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
+    RE = (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y)
+\<Longrightarrow> RE \<close>
+  unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Orelse_shortcut_def
+  by (elim disjE; simp)
+
+lemma Comm_Tyops\<^sub>2\<^sub>_\<^sub>1_ToA_temlpate[\<phi>reason_template name F.G.comm[]]:
+  \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F (G T U) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
+    RE = (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y)
+\<Longrightarrow> RE \<close>
+  unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Orelse_shortcut_def
+  by (elim disjE; simp)
+
 
 
 paragraph \<open>Bubbling\<close>

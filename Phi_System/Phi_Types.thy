@@ -9,6 +9,18 @@ section \<open>Preliminary\<close>
 consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
   \<comment> \<open>merely a syntax sugar to be overloaded.\<close>
 
+\<phi>reasoner_group \<phi>type_weight = (100000, [0, 100000])
+      \<open>the range of weights of \<phi>-types\<close>
+  and \<phi>TW_plus = (1000, [951, 1050]) in \<phi>type_weight \<open>(+)\<close>
+  and \<phi>TW_subj = (1500, [1500, 1500]) in \<phi>type_weight \<open>(<subj>)\<close>
+  and \<phi>TW_addi_conj = (4000, [3951, 4050]) in \<phi>type_weight \<open>(\<and>)\<close>
+  and \<phi>TW_FMQ = (10000, [9951, 10050]) in \<phi>type_weight \<open>(\<big_ast>)\<close>
+  and \<phi>TW_arrow = (15000, [14951, 15050]) in \<phi>type_weight \<open>(\<rightarrow>)\<close>
+  and \<phi>TW_sepconj = (20000, [19951,20050]) in \<phi>type_weight \<open>(*)\<close>
+  and \<phi>TW_share = (80000, [79951,80050]) in \<phi>type_weight \<open>(\<odiv>)\<close>
+  and \<phi>TW_sigma = (90000, [89951,90050]) in \<phi>type_weight \<open>(\<Sigma>)\<close>
+
+
 (*reconsider this! may depreciate it!*)
 text \<open>A semantic type is not always required to be annotated if it is known syntactically.
   We use syntax translation to achieve a sugar to do this.
@@ -33,7 +45,7 @@ ML \<open>(Thm.transfer \<^theory> @{thm' Itself_is_primitive})\<close>
 setup \<open>Context.theory_map (
   Phi_Type.add_type {no_auto=true}
         (\<^binding>\<open>Itself\<close>, \<^pattern>\<open>Itself\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
-         \<^here>, Phi_Type.Derivings.empty, [])
+         \<^here>, SOME (Phi_Type.Static_W Phi_Type.Leaf_W), Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 text \<open>No deriver is available on \<open>Itself\<close>, and they will trap in infinite loops because the fake
@@ -48,7 +60,7 @@ lemma \<phi>None_def': \<open> (x \<Ztypecolon> \<circle>) = (1 \<Ztypecolon> It
 setup \<open>Context.theory_map (
   Phi_Type.add_type {no_auto=false}
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
-       \<^here>, Phi_Type.Derivings.empty, [])
+       \<^here>, SOME (Phi_Type.Static_W Phi_Type.Leaf_W), Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -77,7 +89,7 @@ subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 setup \<open>Context.theory_map (
   Phi_Type.add_type {no_auto=false}
       (\<^binding>\<open>\<phi>Any\<close>, \<^pattern>\<open>\<phi>Any::(?'c, ?'x) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
-       \<^here>, Phi_Type.Derivings.empty, [])
+       \<^here>, SOME (Phi_Type.Static_W Phi_Type.Leaf_W), Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -94,12 +106,10 @@ subsection \<open>Embedding of \<open>\<bottom>\<close>\<close>
 
 declare \<phi>Bot_def[embed_into_\<phi>type]
 
-thm \<phi>Bot_def
-
 setup \<open>Context.theory_map (
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Bot\<close>, \<^pattern>\<open>\<phi>Bot::(?'c,?'a) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
-         \<^here>, Phi_Type.Derivings.empty, [])
+         \<^here>, SOME (Phi_Type.Static_W Phi_Type.Leaf_W), Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 let_\<phi>type \<phi>Bot
@@ -128,7 +138,8 @@ setup \<open>Context.theory_map (
             @{lemma' \<open>(x \<Ztypecolon> T \<^emph> U) = (snd x \<Ztypecolon> U) * (fst x \<Ztypecolon> T)\<close>
                       for T :: \<open>('c::sep_magma,'a\<^sub>1) \<phi>\<close> and U :: \<open>('c::sep_magma,'a\<^sub>2) \<phi>\<close>
                   by (simp add: \<phi>Prod_expn'')}),
-         \<^here>, Phi_Type.Derivings.empty, [])
+         \<^here>, SOME (Phi_Type.Static_W (Phi_Type.Weight (@{priority %\<phi>TW_sepconj}, K EQUAL))),
+         Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
 text \<open>We still derive properties of \<open>\<phi>Prod\<close> for consistency of the internal reasoning system,
@@ -205,6 +216,7 @@ declare [[\<phi>trace_reasoning = 0 ]]
 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
+  weight: %\<phi>TW_subj
   deriving Sep_Functor_1
        and Functionality
        and Carrier_Set
@@ -393,6 +405,7 @@ declare [[\<phi>trace_reasoning = 3]]
    
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
+  weight: %\<phi>TW_sigma
   deriving Basic
     and \<open> (\<And>A. Object_Equiv (T A) (eq A))
       \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
@@ -667,6 +680,7 @@ declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced b
 
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
+  
   deriving Sep_Functor_1 \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
@@ -834,7 +848,7 @@ subsubsection \<open>\<S>-Homomorphism (Commutativity over \<S>)\<close>
 
 text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the transformation functor directly.\<close>
 
-lemma \<S>_Homo\<^sub>E [\<phi>reason_template name Fa.\<S>\<^sub>E []]:
+lemma \<S>_Homo\<^sub>E:
   \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason
@@ -842,7 +856,24 @@ lemma \<S>_Homo\<^sub>E [\<phi>reason_template name Fa.\<S>\<^sub>E []]:
   unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
   by clarsimp
 
+lemma Tyops_Commute_\<S>:
+  \<open> Transformation_Functor G G' (\<S> T) T D R mapper
+\<Longrightarrow> Tyops_Commute G G' \<S> \<S> T (\<lambda>s. \<forall>a. a \<in> D s \<longrightarrow> a \<subseteq> R s) (embedded_func (\<lambda>s. Collect (mapper (\<lambda>S x. x \<in> S) s)) (\<lambda>_. True))\<close>
+  unfolding Tyops_Commute_def
+            Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
+  by (clarsimp simp add: subset_iff Ball_def; smt (verit, ccfv_threshold))
+
+lemma [\<phi>reason_template name G.\<S>\<^sub>E_comm []]:
+  \<open> Transformation_Functor G G' (\<S> T) T D R mapper
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>s a. a \<in> D s \<longrightarrow> a \<subseteq> R s) @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>s. Collect (mapper (\<lambda>S x. x \<in> S) s)) (\<lambda>_. True) @action \<A>_template_reason
+\<Longrightarrow> Tyops_Commute G G' \<S> \<S> T (\<lambda>_. True) r'\<close>
+  unfolding Tyops_Commute_def
+            Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
+  by (clarsimp simp add: subset_iff Ball_def; smt (verit, ccfv_threshold))
+
 text \<open>Does the reverse transformation exist?. The commutativity between \<open>F\<close> and \<open>\<S>\<close> gonna be a problem.\<close>
+
 
 lemma \<S>_Homo\<^sub>I [\<phi>reason_template name Fa.\<S>\<^sub>I []]:
   \<open> Functional_Transformation_Functor Fa Fb T (\<S> T) D R pm fm
