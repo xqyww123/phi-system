@@ -241,6 +241,7 @@ such as the remark of sharing permission \<open>\<odiv>\<close>.
 Though substantial \<phi>-types characterizing a physical data structure are almost certainly non-commutative,
 the modalities can be commutative over the stratified layers, because they are essentially
 logic connectives.
+
 Particularly when a commutative modality is an associative and scalar-distributive semimodule, troubles come.
 The ToA reasoning of the scalar-remarked modalities (\<open>x \<Ztypecolon> F a T * others \<longrightarrow> y \<Ztypecolon> F b U\<close>, with \<open>a \<le> b\<close>) has two directions,
 one looking for the missed scalar portion \<open>(b/a)\<close> from the inner layer \<open>T\<close>, reducing to \<open>T \<longrightarrow> F (b/a) U\<close>, 
@@ -248,12 +249,36 @@ another looking horizontally from its neighbor \<open>others\<close>, reducing t
 Even worse, the two reduction can be arithmetically mixed, \<open>T \<longrightarrow> F c U\<close> and \<open>others \<longrightarrow> F d U\<close> such that
 \<open>a * c + d = b\<close>.
 
-To reduce the search space, we apply a normalization before the reasoning, which pushes the modalities
-to the leaves of the syntax tree of a \<phi>-type (i.e., the innermost layers) to collect the modalities 
-all together so that the later reasoning only needs to consider the scalar distributivity by looking
-from the neighbors horizontally.
+To reduce the search space, such associative modalities usually demand specific heuristics,
+because their commutativity over type operators can be various. However, we propose a conjuncture,
+the modalities are either commutative over most of logic connectives and a lot of substantial \<phi>-types,
+or of little commutativity over certain logic connectives and barely no substantial \<phi>-types.
+Sadly, we cannot verify this conjuncture because associative modalities are uncommon, and most of them
+are specific to the inference system. We can only come up with
+and encounter in our case studies two associative modalities, operator of permission sharing \<open>n \<odiv> T\<close>
+and finite multiplicative quantifier \<open>x\<^sub>i \<Ztypecolon> \<big_ast> dom T \<equiv> \<big_ast> i\<in>dom. x\<^sub>i \<Ztypecolon> T \<close>, (except those already having
+specific reasoning heuristics so no need for a general reasoning strategy, e.g., \<open>\<S>\<close>).
+The two modalities correspond respectively to the two cases in our conjuncture.
 
-When there are multiple kinds of modalities, we assign them a order to arrange them in order before the leaves...
+Based on our conjuncture, we come up with a general strategy where we apply a normalization before
+the reasoning, by pushing the modalities to the leaves of the syntax tree of a \<phi>-type
+(i.e., towards the innermost layers) to collect the modalities all together so that the later reasoning only
+needs to consider the scalar distributivity by looking from the neighbors horizontally.
+We push them to the leaves because scalar-parameterized modalities are easier to swap over a multi-arity
+type operator \<open>F\<^sub>a(G(T,U)) \<longrightarrow> G(F\<^sub>a(T),F\<^sub>a(U))\<close> but not easily back \<open>a = b \<Longrightarrow> G(F\<^sub>a(T),F\<^sub>b(U)) \<longrightarrow> F\<^sub>a(G(T,U))\<close>
+which usually requires the scalars of the operands of the multi-arity type operator are equal.
+
+When there are multiple kinds of modalities, we push a modality of better commutativity (in terms of
+the range of type operators that they can swap over into) farther towards leaves, i.e.,
+we assign them a order to arrange them in order before the leaves. It introduces a strong assumption
+where the commutativity of the modalities can be linearly ordered --- the set of type operators that
+a modality of a stronger commutativty can swap over into, is a superset of that of a weaker commutativity.
+
+Certainly, this general strategy is limited due to the strong assumption, but covers what we meet and what we can imagine.
+Again, we recall associative and and scalar-distributive semimodule \<phi>-type operators are usually
+modalities tightly bound to the inference system, which usually demands specific heuristics so our
+general strategy can only cover little.
+
 
 \<close>
 
