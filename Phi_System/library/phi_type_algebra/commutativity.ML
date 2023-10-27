@@ -1,19 +1,35 @@
 signature PHI_TYPE = sig
 include PHI_TYPE
 
-type arity = int list (*Gs, its length is the arity of F, its elements are the arity of each G*)
+type arity = int list (*Gs, its length is the arity of F, its elements are the arities of each G*) *
+             int list (*Fs, its length is the arity of G', its elements are the arities of each F'*)
 
 val parse_F_Gs_of_comm_typor_appl : Context.generic ->
-        Pattern_Translation.bv_typs * term (*combination of F(G(T))*) -> (term (*F*) * term list (*Gs*)) list
+        Pattern_Translation.bv_typs * term (*lambda combination of F(G(T))*) ->
+        ((term (*F*) * term list (*Gs*)) * (term (*G'*) * term list (*Fs'*))) list
 
 val register_comm_tyoprs : (arity * Pattern_Translation.redex_residues) list ->
         Context.generic -> Context.generic
-     (*redex: F (G\<^sub>1 T\<^sub>1\<^sub>1 \<dots> T\<^sub>1\<^sub>n) \<dots> (G\<^sub>m T\<^sub>m\<^sub>1 \<dots> T\<^sub>m\<^sub>n) \<longrightarrow>
-       residues: F, G\<^sub>1, T\<^sub>1\<^sub>1, \<dots>, T\<^sub>1\<^sub>n, \<dots>, G\<^sub>m, T\<^sub>m\<^sub>1, \<dots>, T\<^sub>m\<^sub>n*)
+     (*redex: F (G\<^sub>1 T\<^sub>1\<^sub>,\<^sub>1 \<dots> T\<^sub>1\<^sub>,\<^sub>a\<^sub>(\<^sub>1\<^sub>)) \<dots> (G\<^sub>m T\<^sub>m\<^sub>,\<^sub>1 \<dots> T\<^sub>m\<^sub>,\<^sub>a\<^sub>(\<^sub>m\<^sub>))
+       residues: F,   G\<^sub>1, T\<^sub>1\<^sub>,\<^sub>1, \<dots>, T\<^sub>1\<^sub>,\<^sub>a\<^sub>(\<^sub>1\<^sub>),       \<dots>,  G\<^sub>m, T\<^sub>m\<^sub>,\<^sub>1, \<dots>, T\<^sub>m\<^sub>,\<^sub>a\<^sub>(\<^sub>m\<^sub>),       a(i) gives the arity of G\<^sub>i
+                 G',  F\<^sub>1',T\<^sub>f\<^sub>(\<^sub>1\<^sub>,\<^sub>1\<^sub>), \<dots>, T\<^sub>f\<^sub>(\<^sub>1\<^sub>,\<^sub>b\<^sub>(\<^sub>1\<^sub>)\<^sub>),   \<dots>,  F\<^sub>n', T\<^sub>f\<^sub>(\<^sub>n\<^sub>,\<^sub>1\<^sub>), \<dots>, T\<^sub>f\<^sub>(\<^sub>n\<^sub>,\<^sub>b\<^sub>(\<^sub>n\<^sub>)\<^sub>)  b(j) gives the arity of F'\<^sub>j
+       where the commutativity transforms F (G\<^sub>1 T\<^sub>1\<^sub>,\<^sub>1 \<dots> T\<^sub>1\<^sub>,\<^sub>a\<^sub>(\<^sub>1\<^sub>)) \<dots> (G\<^sub>m T\<^sub>m\<^sub>,\<^sub>1 \<dots> T\<^sub>m\<^sub>,\<^sub>a\<^sub>(\<^sub>m\<^sub>)) to
+                                          G' (F'\<^sub>1 T\<^sub>f\<^sub>(\<^sub>1\<^sub>,\<^sub>1\<^sub>) \<dots> T\<^sub>f\<^sub>(\<^sub>1\<^sub>,\<^sub>b\<^sub>(\<^sub>1\<^sub>)\<^sub>)) \<dots> (F\<^sub>n' T\<^sub>f\<^sub>(\<^sub>n\<^sub>,\<^sub>1\<^sub>) \<dots> T\<^sub>f\<^sub>(\<^sub>n\<^sub>,\<^sub>b\<^sub>(\<^sub>n\<^sub>)\<^sub>))*)
      (*automatically invoked when any \<phi>-LPR rule is registered*)
 
 val register_comm_tyoprs_rule_pass : arity * term -> Context.generic -> Context.generic
       (*see the examples below*)
+
+
+
+type to_normalize = term (*F*) * term list (*Gs*) -> bool option
+      (*whether to invoke the normalization swapping \<open>F\<close> into \<open>Gs\<close>,
+        return None to leave the control to the settings of lower priority*)
+
+val control_swap_normalizations_on : ((term (*F*) * term list (*Gs*)) * priority * to_normalize) list
+                                 -> Context.generic -> Context.generic
+
+val whether_to_swap_normalize : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
 
 (*
 val commutative_rules : Context.generic -> term (*F*) * term list (*Gs*) -> (Position.T * thm) list
@@ -30,9 +46,11 @@ structure Phi_Type : PHI_TYPE = struct
 open Phi_Type
 
 
-type arity = int list (*Gs, its length is the arity of F, its elements are the arity of each G*)
+type arity = int list (*Gs, its length is the arity of F, its elements are the arity of each G*) *
+             int list (*Fs, its length is the arity of G', its elements are the arities of each F'*)
 
 val comm_tyoprs_eq = eq_pair (op =) (eq_pair (op aconv) (eq_list (op aconv)))
+fun comm_tyoprs_eq' thy = eq_pair (op =) (eq_pair (Pattern.equiv thy) (eq_list (Pattern.equiv thy)))
 
 structure Comm_Tyoprs = Generic_Data (
   type T = (arity * Pattern_Translation.redex_residues) iNet.net
@@ -42,29 +60,39 @@ structure Comm_Tyoprs = Generic_Data (
   val merge = iNet.merge comm_tyoprs_eq
 )
 
+fun sum L = fold (fn x => fn y => x + y) L 0
+fun sum_1 L = fold (fn x => fn y => x + y + 1) L 0
+
 fun parse_F_Gs_of_comm_typor_appl ctxt =
   let val rewrites = Comm_Tyoprs.get ctxt
       val thy = Context.theory_of ctxt
       fun split [] [] = []
         | split (n::N) (G::Lg) = G :: split N (drop n Lg)
         | split _ _ = error "BUG: bad patterns"
+      fun split' arity (F::L) = (F, split arity L)
    in fn (bvtys, F_G_T) =>
       iNet.match_term rewrites F_G_T
-   |> map_filter (fn (arities, redex_residues) =>
+   |> map_filter (fn ((arities_F, arities_G'), redex_residues) =>
         Pattern_Translation.rewrites thy bvtys redex_residues F_G_T
-     |> Option.map (fn F::L => (F, split arities L)))
-   |> distinct (eq_pair (op aconv) (eq_list (op aconv)))
+     |> Option.map (fn L =>
+          let val len = sum_1 arities_F + 1
+           in (split' arities_F (List.take (L, len)), split' arities_G' (List.drop (L, len)))
+          end))
+   |> distinct (eq_pair (eq_pair (op aconv) (eq_list (op aconv)))
+                        (eq_pair (op aconv) (eq_list (op aconv))))
   end
 
-fun register_comm_tyoprs arity_redex_residues =
+fun register_comm_tyoprs arity_redex_residues ctxt =
   Comm_Tyoprs.map (fold (fn a_r_r as (_,(comb,_)) =>
-    iNet.insert_term comm_tyoprs_eq (comb,a_r_r)
-  ) arity_redex_residues)
+    iNet.insert_term_safe (comm_tyoprs_eq' (Context.theory_of ctxt)) (comb,a_r_r)
+  ) arity_redex_residues) ctxt
 
 val pass_id_head = Const("tyopr_comm_pass", dummyT)
 fun register_comm_tyoprs_rule_pass (arity,rewr) =
   let val (property::redex_residues) = Logic.dest_conjunction_list rewr
       val redex_residues' = map Logic.dest_term redex_residues
+      val _ = if length redex_residues' = sum_1 (#1 arity) + 3 + sum_1 (#2 arity)
+              then () else error "Bad redex_residues'"
    in Phi_Reasoner.add_pass (pass_id_head $ rewr, property,
         fn _ => fn (rules, prio, pats, guard, ctxt) =>
           let val rewr = map (fn rule =>
@@ -79,15 +107,66 @@ fun register_comm_tyoprs_rule_pass (arity,rewr) =
 
 val _ = Theory.setup (Context.theory_map (
   fold register_comm_tyoprs_rule_pass
-    [([1], \<^pattern_prop>\<open>Tyops_Commute ?F ?F' ?G ?G' ?T ?D ?r &&&
-              TERM(?F (?G ?T)) &&& TERM(?F) &&& TERM(?G) &&& TERM(?T)\<close>),
-     ([2], \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F ?F'\<^sub>T ?F'\<^sub>U ?G ?G' ?T ?U ?D ?r &&&
-              TERM(?F (?G ?T ?U)) &&& TERM(?F) &&& TERM(?G) &&& TERM(?T) &&& TERM(?U)\<close>),
-     ([1,1], \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?F ?F'\<^sub>T ?F'\<^sub>U ?G ?G' ?T ?U ?D ?r &&&
-              TERM(?G' (?F'\<^sub>T ?T) (?F'\<^sub>U ?U)) &&& TERM(?G') &&& TERM(?F'\<^sub>T) &&& TERM(?T) &&& TERM(?F'\<^sub>U) &&& TERM(?U)\<close>)]
+    [(([1], [1]), \<^pattern_prop>\<open>Tyops_Commute ?F ?F' ?G ?G' ?T ?D ?r &&&
+              TERM(?F (?G ?T)) &&& TERM(?F) &&& TERM(?G) &&& TERM(?T)
+                               &&& TERM(?G') &&& TERM(?F') &&& TERM(?T)\<close>),
+     (([2], [1,1]), \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F ?F'\<^sub>T ?F'\<^sub>U ?G ?G' ?T ?U ?D ?r &&&
+              TERM(?F (?G ?T ?U)) &&& TERM(?F) &&& TERM(?G) &&& TERM(?T) &&& TERM(?U)
+                                  &&& TERM(?G') &&& TERM(?F'\<^sub>T) &&& TERM(?T) &&& TERM(?F'\<^sub>U) &&& TERM(?U) \<close>),
+     (([1,1], [2]), \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?F ?F'\<^sub>T ?F'\<^sub>U ?G ?G' ?T ?U ?D ?r &&&
+              TERM(?G' (?F'\<^sub>T ?T) (?F'\<^sub>U ?U)) &&& TERM(?G') &&& TERM(?F'\<^sub>T) &&& TERM(?T) &&& TERM(?F'\<^sub>U) &&& TERM(?U)
+                                           &&& TERM(?F) &&& TERM(?G) &&& TERM(?T) &&& TERM(?U) \<close>)]
 ))
 
 
+
+type to_normalize = term (*F*) * term list (*Gs*) -> bool option
+      (*whether to invoke the normalization swapping \<open>F\<close> into \<open>Gs\<close>*)
+
+type F_Gs_encoding = term
+fun encoding (F,Gs) = Logic.mk_conjunction_list (Logic.mk_term F :: map Logic.mk_term Gs)
+
+val NS_eq = eq_pair3 pointer_eq (op =) (op aconv)
+structure Norm_Swaps = Generic_Data (
+  type T = (to_normalize * priority * F_Gs_encoding) Net.net
+  val empty = Net.empty
+  val merge = Net.merge NS_eq
+)
+
+fun control_swap_normalizations_on settings =
+  Norm_Swaps.map (fold (fn (F_Gs,prio,to_normalize) =>
+      let val enc = encoding F_Gs
+       in Net.insert_term NS_eq (enc, (to_normalize,prio,enc))
+      end
+    ) settings)
+
+fun whether_to_swap_normalize_internal ctxt =
+  let val norm_swaps = Norm_Swaps.get ctxt
+      val thy = Context.theory_of ctxt
+   in fn bvtys => fn (F_Gs, G_Fs') =>
+  let fun check F_Gs =
+        let val enc = encoding F_Gs
+         in Net.match_term norm_swaps enc
+         |> filter (fn (_,_,enc') => PLPR_Pattern.matches thy bvtys (enc', enc))
+         |> sort (int_ord o apply2 #2)
+         |> get_first (fn (chk,prio,_) => Option.map (pair prio) (chk F_Gs))
+        end
+   in case (check F_Gs, check G_Fs')
+   of (SOME (prio_a, result_a), SOME (prio_b, result_b)) =>
+        if prio_a >= prio_b then result_a else result_b
+    | (SOME (_, result), NONE) => result
+    | (NONE, SOME (_, result)) => result
+    | (NONE, NONE) => false
+  end
+  end
+
+fun whether_to_swap_normalize ctxt =
+  let val internal_check = whether_to_swap_normalize_internal ctxt
+      val parse_comm = parse_F_Gs_of_comm_typor_appl ctxt
+   in fn bvtys => fn F_G_T_term =>
+      exists (internal_check bvtys) (parse_comm (bvtys, F_G_T_term))
+  end
+  
 
 
 

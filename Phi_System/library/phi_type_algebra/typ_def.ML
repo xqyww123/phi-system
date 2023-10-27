@@ -144,7 +144,7 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
 val add_type : {no_auto: bool}
-            -> binding * term * def * Position.T * weight' option * derivings * Bundle.name list
+            -> binding * term * def * Position.T * derivings * Bundle.name list
             -> generic_theory -> phi_type * generic_theory
 
 val override_ind_rule : term * thm -> Context.generic -> Context.generic
@@ -947,7 +947,7 @@ fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
 
 (*ctxt: the context used to derive properties*)
 (*term: the term of the phi type, can be parameterized by fixed free variables like those in locales *)
-fun add_type {no_auto} (binding, term, def, pos, opt_weight, dervs, bundles) thy =
+fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
   let val ctxt = open_proof_ctxt bundles thy
 
       fun match_head head (term as f $ _) = head aconv term orelse match_head head f
@@ -1172,24 +1172,16 @@ fun add_type {no_auto} (binding, term, def, pos, opt_weight, dervs, bundles) thy
             is_recursive = is_recursive,
             is_impredicative = false
           } : phi_type
-
-      val weight = case opt_weight of SOME w => w
-                      | NONE => if is_Type_Opr (fastype_of the_term)
-                                then Static_W Undefined_W
-                                else Static_W Leaf_W
    in thy
    |> Context.mapping
-        (Context.theory_map (
-            Phi_Types.map (
+        (Context.theory_map (Phi_Types.map (
               Net.insert_term (phi_typ_term_equiv (Context.theory_of thy))
-                              (the_term, phi_trim_context phi_type))
-         #> assign_weight the_term weight))
+                              (the_term, phi_trim_context phi_type))))
         (Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m => fn ctxt =>
           let val phi = morphism_phi_type m (phi_trim_context phi_type)
            in ctxt
            |> Phi_Types.map (Net.insert_term (phi_typ_term_equiv (Context.theory_of ctxt))
                                              (the_term, phi))
-           |> assign_weight the_term weight
           end))
    |> Phi_Help.generic_theory_mapping pos (fn m =>
         let val expns = Morphism.fact m expansions
@@ -1245,7 +1237,7 @@ fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =
    in (dervs, bundles)
   end
 
-fun add_type_i {no_auto} (name, term, def, pos, weight, raw_derv, raw_bundles) thy =
+fun add_type_i {no_auto} (name, term, def, pos, raw_derv, raw_bundles) thy =
   let val (dervs, bundles) = prep_deriving_and_bundles raw_bundles raw_derv (Context.proof_of thy)
       val (term, def) = case def of DIRECT_DEF def =>
             let val cterm = Drule.mk_term (Context.cases Thm.global_cterm_of Thm.cterm_of thy term)
@@ -1254,7 +1246,7 @@ fun add_type_i {no_auto} (name, term, def, pos, weight, raw_derv, raw_bundles) t
             end
                                   | def => (term, def)
       
-   in add_type {no_auto=no_auto} (name, term, def, pos, weight, dervs, bundles) thy
+   in add_type {no_auto=no_auto} (name, term, def, pos, dervs, bundles) thy
   end
 
 (** Interface **)
@@ -1307,7 +1299,7 @@ fun is_phi_type \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>
   | is_phi_type \<^Type>\<open>fun _ T\<close> = is_phi_type T
   | is_phi_type _ = false
 
-fun gen_add_fun bs weight raw_derv raw_bundles add (thy : generic_theory) =
+fun gen_add_fun bs raw_derv raw_bundles add (thy : generic_theory) =
   let
     fun pat_completeness_auto ctxt =
       Pat_Completeness.pat_completeness_tac ctxt 1
@@ -1327,7 +1319,7 @@ fun gen_add_fun bs weight raw_derv raw_bundles add (thy : generic_theory) =
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
       ) prove_termination
    |-> (fn info => add_type_i {no_auto=false}
-                              (name, const, WFREC_DEF info, Binding.pos_of name, weight,
+                              (name, const, WFREC_DEF info, Binding.pos_of name,
                                raw_derv, raw_bundles) #> snd)
   end
 
@@ -1340,8 +1332,8 @@ fun add_function_cmd a b c tac int lthy = lthy
 in
 
 (* fun add_fun a b c = gen_add_fun (Function.add_function a b c) *)
-fun add_fun_cmd a b c weight raw_derv raw_bundles int generic =
-  gen_add_fun (map #1 a) weight raw_derv raw_bundles
+fun add_fun_cmd a b c raw_derv raw_bundles int generic =
+  gen_add_fun (map #1 a) raw_derv raw_bundles
     (fn tac =>
         Context.mapping_result
           (Named_Target.theory_map_result Function_Common.transform_function_data
@@ -1362,14 +1354,11 @@ fun let_phityp_deriving_cmd (((raw_const_name, pos), raw_bundles), raw_derv) thy
    in derive_properties (prep_deriving_and_bundles raw_bundles raw_derv ctxt) phi thy
   end
 
-val weight_synt' = Scan.option (Args.$$$ "weight" |-- \<^keyword>\<open>:\<close> |-- dynamic_weight_synt)
-
 val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config
-               -- weight_synt'
                -- bundle_parser
                -- deriving_parser
-      >> (fn ((((config, (fixes, specs)), w), raw_bundles), raw_dervs) => fn int => fn thy =>
-                add_fun_cmd fixes specs config (Option.map (fn f => f thy) w) raw_dervs raw_bundles int thy))
+      >> (fn (((config, (fixes, specs)), raw_bundles), raw_dervs) =>
+                add_fun_cmd fixes specs config raw_dervs raw_bundles))
 
 val def_by_function = (Function_Common.function_parser Function_Common.default_config
       >> (fn (config, (fixes, specs)) => Function.function_cmd fixes specs config))
@@ -1383,11 +1372,10 @@ fun my_definition decl params prems spec int lthy = lthy
 
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
       Parse_Spec.if_assumes -- Parse.for_fixes
-        -- weight_synt'
         -- bundle_parser
         -- deriving_parser
         -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ())) (*to distinguish with the `def_by_fun` syntax*)
-   >> (fn (((((((decl, (spec, pos)), prems), params), w), raw_bundles), raw_dervs), _) => fn int =>
+   >> (fn ((((((decl, (spec, pos)), prems), params), raw_bundles), raw_dervs), _) => fn int =>
         let val morph = Morphism.fact
          in Context.mapping_result
           ( Named_Target.theory_map_result morph (my_definition decl params prems spec int) )
@@ -1399,7 +1387,7 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
               let val def_term = Thm.term_of (Drule.dest_term def_term')
                   val name = case decl of SOME (name, _, _) => name
                                         | NONE => Binding.make (Term.term_name def_term, pos)
-               in add_type_i {no_auto=false} (name, def_term, DIRECT_DEF def_eq, pos, (Option.map (fn f => f generic) w),
+               in add_type_i {no_auto=false} (name, def_term, DIRECT_DEF def_eq, pos,
                                               raw_dervs, raw_bundles) generic |> snd
               end)
         end))

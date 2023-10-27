@@ -268,25 +268,19 @@ We push them to the leaves because scalar-parameterized modalities are easier to
 type operator \<open>F\<^sub>a(G(T,U)) \<longrightarrow> G(F\<^sub>a(T),F\<^sub>a(U))\<close> but not easily back \<open>a = b \<Longrightarrow> G(F\<^sub>a(T),F\<^sub>b(U)) \<longrightarrow> F\<^sub>a(G(T,U))\<close>
 which usually requires the scalars of the operands of the multi-arity type operator are equal.
 
-When there are multiple kinds of modalities, we push a modality of better commutativity (in terms of
+When there are multiple kinds of modalities, we push the modalities of better commutativity (in terms of
 the range of type operators that they can swap over into) farther towards leaves, i.e.,
 we assign them a order to arrange them in order before the leaves. It introduces a strong assumption
 where the commutativity of the modalities can be linearly ordered --- the set of type operators that
 a modality of a stronger commutativty can swap over into, is a superset of that of a weaker commutativity.
 
-Certainly, this general strategy is limited due to the strong assumption, but covers what we meet and what we can imagine.
+Certainly, this general strategy is limited due to the strong assumption, but covers any meaningful
+modalities that we meet and can imagine.
 Again, we recall associative and and scalar-distributive semimodule \<phi>-type operators are usually
 modalities tightly bound to the inference system, which usually demands specific heuristics so our
 general strategy can only cover little.
 
-
 \<close>
-
-
-
-
-
-
 
 
 chapter \<open>The Algebra of \<open>\<phi>\<close>-Type\<close>
@@ -845,6 +839,17 @@ subsubsection \<open>General Groups of Properties\<close>
     \<open>Automatically derived properties.\<close>
  and \<phi>TA_varify_out = (3900, [3900,3900]) for \<open>_\<close> in \<phi>type_algebra_all_properties and > \<phi>type_algebra_properties
     \<open>Systematic rules of \<phi>-type algebraic properties that varifies OUT arguments that are not varibales\<close>
+ and \<phi>TA_commutativity = (100, [20, 3800]) for (\<open>Tyops_Commute F F' G G' T D r\<close>,
+                                                   \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>,
+                                                   \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>)
+                                            in \<phi>type_algebra_properties
+    \<open>commutativities\<close>
+ and \<phi>TA_derived_commutativity = (50,[50,50]) in \<phi>TA_commutativity and in \<phi>TA_derived_properties
+    \<open>commutativities. Note, because Tyops_Commute is also a tempalte property which may trigger
+     instantiation of a lot templates. The deriviation should be prudent, which may provide templates
+     to allow users to manually instantiation but registering to the \<phi>-LPR only when the instantiated
+     commutativity is certainly correct, because user overridings cannot override the rules
+     instantiated by the derived commutativity to be overrided. \<close>
 
 subsubsection \<open>Groups for Specific Properties\<close>
 
@@ -1194,36 +1199,36 @@ lemma []:
 
 
 ML_file \<open>library/phi_type_algebra/commutativity.ML\<close>
-ML_file \<open>library/phi_type_algebra/weight.ML\<close>
+(*ML_file \<open>library/phi_type_algebra/weight.ML\<close>*)
 
 
-definition Require_Weight_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
-  where \<open>Require_Weight_Norm F_G_T \<equiv> True\<close>
-    \<comment> \<open>a pure syntactical checking\<close>
-    \<comment> \<open>parses F,G from F_G_T and asserts \<open>weight(F) \<ge> weight(G) \<and> commutative(F,G)\<close>\<close>
+definition Require_Swap_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Require_Swap_Norm F_G_T \<equiv> True\<close>
+    \<comment> \<open>a pure syntactical checking for whether \<open>F\<close> should be swapped into \<open>G\<close>, in \<open>F(G(T))\<close>,
+        or any multi-arity version\<close>
+                         
+definition Not_Require_Swap_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Not_Require_Swap_Norm F_G_T \<equiv> True\<close>
 
-definition Not_Require_Weight_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
-  where \<open>Not_Require_Weight_Norm F_G_T \<equiv> True\<close>
-
-\<phi>reasoner_ML Require_Weight_Norm %cutting (\<open>Require_Weight_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+\<phi>reasoner_ML Require_Swap_Norm %cutting (\<open>Require_Swap_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (bvtys, F_G_T) =
         case Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
-          of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Weight_Norm*) $ F_G_T)) =>
+          of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Swap_Norm*) $ F_G_T)) =>
              (bvtys, F_G_T)
-   in if Phi_Type.require_weight_normalization (Context.Proof ctxt) (bvtys, F_G_T)
-      then SOME ((ctxt, @{lemma' \<open>Require_Weight_Norm F\<close> by (simp add: Require_Weight_Norm_def)} RS sequent), Seq.empty)
+   in if Phi_Type.whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
+      then SOME ((ctxt, @{lemma' \<open>Require_Swap_Norm F\<close> by (simp add: Require_Swap_Norm_def)} RS sequent), Seq.empty)
       else NONE
   end)
 \<close>
 
-\<phi>reasoner_ML Not_Require_Weight_Norm %cutting (\<open>Not_Require_Weight_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+\<phi>reasoner_ML Not_Require_Swap_Norm %cutting (\<open>Not_Require_Swap_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (bvtys, F_G_T) =
         case Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
-          of (bvtys, _ (*Trueprop*) $ (Const _ (*Not_Require_Weight_Norm*) $ F_G_T)) =>
+          of (bvtys, _ (*Trueprop*) $ (Const _ (*Not_Require_Swap_Norm*) $ F_G_T)) =>
              (bvtys, F_G_T)
-   in if Phi_Type.require_weight_normalization (Context.Proof ctxt) (bvtys, F_G_T)
+   in if Phi_Type.whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
       then NONE
-      else SOME ((ctxt, @{lemma' \<open>Not_Require_Weight_Norm F\<close> by (simp add: Not_Require_Weight_Norm_def)} RS sequent), Seq.empty)
+      else SOME ((ctxt, @{lemma' \<open>Not_Require_Swap_Norm F\<close> by (simp add: Not_Require_Swap_Norm_def)} RS sequent), Seq.empty)
   end)
 \<close>
 
@@ -2636,7 +2641,7 @@ subparagraph \<open>Main\<close>
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module name F'.xxx]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> NO_SIMP (\<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> F (id one) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P)
@@ -2648,7 +2653,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module name F'.xxx]:
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> NO_SIMP ((f (fst x), w) \<Ztypecolon> F (id one) T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P)
@@ -2663,7 +2668,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
 \<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (id one) T \<w>\<i>\<t>\<h> P)
@@ -2674,7 +2679,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Weight_Norm (F one T)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
 \<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (id one) T \<^emph>[C] R \<w>\<i>\<t>\<h> P)

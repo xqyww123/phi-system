@@ -547,5 +547,6 @@ fun tha RSN' (ctxt, i, thb) =
 fun tha RS' (ctxt, thb) = tha RSN' (ctxt, 1,thb);
 
 fun apply3 f (a,b,c) = (f a, f b, f c)
+fun eq_pair3 f g h ((a,b,c),(a',b',c')) = f (a,a') andalso g (b,b') andalso h (c,c')
 
 fun select P x = if P x then SOME x else NONE

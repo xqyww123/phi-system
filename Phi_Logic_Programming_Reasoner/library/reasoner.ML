@@ -253,8 +253,8 @@ type reasoner = {name: term,
 
 fun normalize_reasoner f ({name,group,pos,mode,pattern,blacklist,tactic}:reasoner) =
   ({name=name, pos=pos, mode=mode, group=group,
-    pattern = map (fn (x,y) => (Pattern_Translation.mk_pattern (Envir.beta_eta_contract x), f y)) pattern,
-    blacklist = map (Pattern_Translation.mk_pattern o Envir.beta_eta_contract) blacklist,
+    pattern = map (fn (x,y) => (Pattern_Translation.mk_spattern (Envir.beta_eta_contract x), f y)) pattern,
+    blacklist = map (Pattern_Translation.mk_spattern o Envir.beta_eta_contract) blacklist,
     tactic = tactic}:reasoner)
 
 fun transform_reasoner phi ({name,pos,mode,group,pattern,blacklist,tactic}:reasoner) =

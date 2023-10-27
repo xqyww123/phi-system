@@ -2,8 +2,10 @@ signature PATTERN_REWRITE_GLOBAL = sig
 
 type bv_typs = PLPR_Pattern.bv_typs
 
-val mk_pattern : term -> term
-val does_match_term : theory -> bv_typs -> term * term -> bool
+type spattern = term (*improved pattern where variables of a name exactly \<open>var\<close> or leaded by \<open>var_\<close>,
+                       match only schematic variables.*)
+val mk_spattern : term -> spattern
+val does_match_term : theory -> bv_typs -> spattern * term -> bool
 
 type redex_residues = term * term list
 type redex_residue = term * term
@@ -37,8 +39,9 @@ structure Pattern_Translation : PATTERN_REWRITE_GLOBAL = struct
 type bv_typs = PLPR_Pattern.bv_typs
 type redex_residues = term * term list
 type redex_residue = term * term
+type spattern = term
 
-fun mk_pattern raw =
+fun mk_spattern raw =
   map_aterms (fn Var ((s,i),T) =>
                     if i < 0
                     then raise TERM ("Pattern_Translation: the pattern contains negative schematic index", [raw])
@@ -105,7 +108,7 @@ structure Data = Generic_Data (
 
 fun add pat_pats ctxt =
       Data.map (fold (fn (n,p1,pos,p2) =>
-            let val p1' = Pattern_Translation.mk_pattern p1
+            let val p1' = Pattern_Translation.mk_spattern p1
              in Net.insert_term pat_pat_eq (p1',(n,p1',pos,p2))
             end
           ) pat_pats
