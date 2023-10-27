@@ -592,6 +592,7 @@ definition Tyops_Commute :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow
   where \<open>Tyops_Commute F F' G G' T D r \<longleftrightarrow>
             (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y))\<close>
 
+
 paragraph \<open>Unary-to-Binary\<close>
 
 definition Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
@@ -621,6 +622,32 @@ definition Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 :: \<open> (('c\<^sub>G,'a\<^su
                               \<Rightarrow> bool\<close>
   where \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r \<longleftrightarrow>
             (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y))\<close>
+
+paragraph \<open>Over Parameterized Types\<close>
+
+definition Tyops_Commute\<^sub>\<Lambda>\<^sub>I :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                             \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                             \<Rightarrow> (('p \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>) \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                             \<Rightarrow> (('p \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>) \<Rightarrow> ('c,'b) \<phi>)
+                             \<Rightarrow> ('p \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>)
+                             \<Rightarrow> ('a \<Rightarrow> bool)
+                             \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                             \<Rightarrow> bool\<close>
+  where \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y)) \<close>
+
+definition Tyops_Commute\<^sub>\<Lambda>\<^sub>E :: \<open> (('p \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>) \<Rightarrow> ('c,'a) \<phi>)
+                             \<Rightarrow> (('p \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>) \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                             \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                             \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                             \<Rightarrow> ('p \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>)
+                             \<Rightarrow> ('a \<Rightarrow> bool)
+                             \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                             \<Rightarrow> bool\<close>
+  where \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y)) \<close>
+
+
 
 subsubsection \<open>Configurations\<close>
 
@@ -710,6 +737,8 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_SDistr_Homo\<^sub>U_rev _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason?] for \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason?] for \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>,
 
@@ -740,6 +769,8 @@ declare [[
   and \<open>Semimodule_SDistr_Homo\<^sub>U_rev ?F ?T _ _ _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>U_rev ?F ?T _ _ _ _ _\<close> (100)
   and \<open>Semimodule_No_SDistr ?F\<close> \<Rightarrow> \<open>Semimodule_No_SDistr ?F\<close> (100)
   and \<open>Tyops_Commute ?F _ ?G _ ?T _ _\<close> \<Rightarrow> \<open>Tyops_Commute ?F _ ?G _ ?T _ _\<close> (100)
+  and \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I ?F _ ?G _ ?T _ _\<close> \<Rightarrow> \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I ?F _ ?G _ ?T _ _\<close> (100)
+  and \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E ?F _ ?G _ ?T _ _\<close> \<Rightarrow> \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E ?F _ ?G _ ?T _ _\<close> (100)
   and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F _ _ ?G _ ?T ?U _ _\<close> \<Rightarrow>
       \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F _ _ ?G _ ?T ?U _ _\<close>   (100)
   and \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?F _ _ ?G _ ?T ?U _ _\<close> \<Rightarrow>
@@ -785,6 +816,8 @@ in (*Phi_Type.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_No_SDistr _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
 ]
@@ -840,8 +873,8 @@ subsubsection \<open>General Groups of Properties\<close>
  and \<phi>TA_varify_out = (3900, [3900,3900]) for \<open>_\<close> in \<phi>type_algebra_all_properties and > \<phi>type_algebra_properties
     \<open>Systematic rules of \<phi>-type algebraic properties that varifies OUT arguments that are not varibales\<close>
  and \<phi>TA_commutativity = (100, [20, 3800]) for (\<open>Tyops_Commute F F' G G' T D r\<close>,
-                                                   \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>,
-                                                   \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>)
+                                                 \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>,
+                                                 \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>)
                                             in \<phi>type_algebra_properties
     \<open>commutativities\<close>
  and \<phi>TA_derived_commutativity = (50,[50,50]) in \<phi>TA_commutativity and in \<phi>TA_derived_properties
@@ -3961,6 +3994,8 @@ paragraph \<open>Deriving Rewrites\<close>
 
 (*TODO Tyops_Commute\<^sub>1\<^sub>_\<^sub>2*)
 
+subparagraph \<open>1-to-1\<close>
+
 lemma Comm_Tyops_Rewr_temlpate[\<phi>reason_template name F.G.comm_rewr[]]:
   \<open> Tyops_Commute F F' G G' T D (embedded_func f P)
 \<Longrightarrow> Tyops_Commute G' G F' F T D' (embedded_func g Q)
@@ -3977,8 +4012,28 @@ lemma Comm_Tyops_Rewr\<^sub>2_temlpate[\<phi>reason_template name F.G.comm_rewr[
   unfolding BI_eq_iff Premise_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Transformation_def
   by clarsimp metis
 
+subparagraph \<open>1-to-1\<lambda>\<close>
+
+lemma [\<phi>reason_template name F.G.comm_rewr[]]:
+  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D  (embedded_func f P)
+\<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>E G' G F' F T D' (embedded_func g Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> D x \<and> D' (f x)
+\<Longrightarrow> (x \<Ztypecolon> F (G T)) = (f x \<Ztypecolon> G' (\<lambda>p. F' (T p))) \<close>
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def Premise_def BI_eq_iff
+  by clarsimp metis
+
+lemma [\<phi>reason_template name F.G.comm_rewr[]]:
+  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D  (embedded_func f P)
+\<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>I G' G F' F T D' (embedded_func g Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> D x \<and> D' (f x)
+\<Longrightarrow> (x \<Ztypecolon> F (\<lambda>p. G (T p))) = (f x \<Ztypecolon> G' (F' T)) \<close>
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def Premise_def BI_eq_iff
+  by clarsimp metis
+
 
 paragraph \<open>Deriving ToA\<close>
+
+subparagraph \<open>1-to-1\<close>
 
 lemma Comm_Tyops_ToA_temlpate[\<phi>reason_template name F.G.comm[]]:
   \<open> Tyops_Commute F F' G G' T D r
@@ -3989,6 +4044,15 @@ lemma Comm_Tyops_ToA_temlpate[\<phi>reason_template name F.G.comm[]]:
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute_def Orelse_shortcut_def
   by (elim disjE; simp)
+
+subparagraph \<open>1-to-1\<lambda>\<close>
+
+lemma
+  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D \<close>
+
+(*TODO!*)
+
+subparagraph \<open>1-to-2\<close>
 
 lemma Comm_Tyops\<^sub>1\<^sub>_\<^sub>2_ToA_temlpate[\<phi>reason_template name F.G.comm[]]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
@@ -4012,6 +4076,8 @@ lemma Comm_Tyops\<^sub>2\<^sub>_\<^sub>1_ToA_temlpate[\<phi>reason_template name
 
 paragraph \<open>Bubbling\<close>
 
+subparagraph \<open>1-to-1\<close>
+
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
@@ -4020,6 +4086,8 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   unfolding Tyops_Commute_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
   by clarsimp
 
+subparagraph \<open>1-to-2\<close>
+
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
@@ -4027,6 +4095,8 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
 \<Longrightarrow> x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp \<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
   by clarsimp
+
+subparagraph \<open>2-to-1\<close>
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling+1]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
@@ -4054,6 +4124,9 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Action_Tag_def Bubbling_def Except_Pattern_def Simplify_def \<r>Guard_def
   by clarsimp
 
+subparagraph \<open>1-to-1\<lambda>\<close>
+
+(*TODO!*)
 
 paragraph \<open>To-Transformation Interpreter\<close>
 

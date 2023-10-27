@@ -9,18 +9,6 @@ section \<open>Preliminary\<close>
 consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
   \<comment> \<open>merely a syntax sugar to be overloaded.\<close>
 
-\<phi>reasoner_group \<phi>type_weight = (100000, [0, 100000])
-      \<open>the range of weights of \<phi>-types\<close>
-  and \<phi>TW_plus = (1000, [951, 1050]) in \<phi>type_weight \<open>(+)\<close>
-  and \<phi>TW_subj = (1500, [1500, 1500]) in \<phi>type_weight \<open>(<subj>)\<close>
-  and \<phi>TW_addi_conj = (4000, [3951, 4050]) in \<phi>type_weight \<open>(\<and>)\<close>
-  and \<phi>TW_FMQ = (10000, [9951, 10050]) in \<phi>type_weight \<open>(\<big_ast>)\<close>
-  and \<phi>TW_arrow = (15000, [14951, 15050]) in \<phi>type_weight \<open>(\<rightarrow>)\<close>
-  and \<phi>TW_sepconj = (20000, [19951,20050]) in \<phi>type_weight \<open>(*)\<close>
-  and \<phi>TW_share = (80000, [79951,80050]) in \<phi>type_weight \<open>(\<odiv>)\<close>
-  and \<phi>TW_sigma = (90000, [89951,90050]) in \<phi>type_weight \<open>(\<Sigma>)\<close>
-
-
 (*reconsider this! may depreciate it!*)
 text \<open>A semantic type is not always required to be annotated if it is known syntactically.
   We use syntax translation to achieve a sugar to do this.
@@ -619,7 +607,16 @@ lemma \<Sigma>_\<A>simp_sep_homo[\<phi>reason %\<phi>simp_cut]:
 
 subsubsection \<open>\<Sigma>-Homomorphism (Commutativity over \<Sigma>)\<close>
 
+lemma [\<phi>reason_template name G.\<Sigma>\<^sub>I[]]:
+  \<open> (\<And>p. Functional_Transformation_Functor G G' (T p) (\<Sigma> T) (D p) (R p) (pm p) (fm p))
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>(p, x). \<forall>a. a \<in> D p x \<longrightarrow> (p, a) \<in> R p x) @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>(p,x). fm p (\<lambda>a. (p, a)) (\<lambda>_. True) x) (\<lambda>_. True) @action \<A>_template_reason
+\<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> G G' T D' r' \<close>
+  unfolding Functional_Transformation_Functor_def Simplify_def Action_Tag_def
+            Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def
+  by clarsimp
 
+(*
 lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
   \<open> Functional_Transformation_Functor F F' (T (fst x)) (\<Sigma> T) D R pm fm
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D (snd x) \<longrightarrow> (fst x, a) \<in> R (snd x))
@@ -631,14 +628,16 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
                         THEN spec[where x=\<open>\<lambda>_. True\<close>], simplified]
                prems(2-),
         clarsimp simp add: transformation_weaken) .
+*)
 
-lemma [\<phi>reason_template name F.\<Sigma>\<^sub>E[]]:
+lemma \<Sigma>_Comm\<^sub>I_Template:
   \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. fst a = c \<and> snd a \<in> R c x )
-\<Longrightarrow> x \<Ztypecolon> F (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm c snd (\<lambda>_. True) x \<Ztypecolon> F' (T c) \<w>\<i>\<t>\<h> pm c snd (\<lambda>_. True) x \<close>
-  unfolding Premise_def Functional_Transformation_Functor_def
+\<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' \<Sigma> \<Sigma> T (\<lambda>x. \<forall>a \<in> D x. fst a = c \<and> snd a \<in> R c x)
+                               (embedded_func (\<lambda>x. (c, fm c snd (\<lambda>_. True) x)) (pm c snd (\<lambda>_. True))) \<close>
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Functional_Transformation_Functor_def
   by clarsimp force
 
+(*
 lemma [\<phi>reason_template name F.\<Sigma>_rewr[]]:
   \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
 \<Longrightarrow> Functional_Transformation_Functor F' F (T c) (\<Sigma> T) D' R' pm' fm'
@@ -660,7 +659,7 @@ lemma [\<phi>reason_template name F.\<Sigma>_rewr[]]:
                         THEN spec[where x=\<open>\<lambda>_. True\<close>]]
                prems(3-),
         clarsimp simp add: transformation_weaken) .
-
+*)
 
 
 subsection \<open>Nondeterministic Abstraction\<close>
@@ -2325,6 +2324,7 @@ ML \<open>assert_derived_properties \<^theory> [
                                                        \<Longrightarrow> ?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = ?k \<tribullet>\<^sub>m x \<and> ?r ?x x) @action to (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>)  \<close>)
 ]\<close>
 
+thm \<phi>MapAt_L.\<Sigma>\<^sub>I
 thm \<phi>MapAt_L.\<Sigma>\<^sub>E
 thm \<phi>MapAt_L.\<Sigma>_rewr
 thm \<phi>MapAt_L.scalar_one
