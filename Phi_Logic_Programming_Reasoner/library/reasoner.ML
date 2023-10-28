@@ -1223,6 +1223,24 @@ val _ = Theory.setup (
 end)
 "Apply \<phi>-LPR as a proof method."
 
+#> Attrib.setup \<^binding>\<open>\<phi>default_reasoner_group\<close>
+      (Parse.and_list1' (Scan.repeat1
+          (prop_pattern --| Scan.lift \<^keyword>\<open>:\<close> -- Scan.lift Reasoner_Group.parser
+                         -- Scan.lift (\<^keyword>\<open>(\<close> |-- Parse.nat --| \<^keyword>\<open>)\<close>)))
+   >> (fn raw_pat_groups =>
+        Thm.declaration_attribute (fn _ => fn ctxt =>
+          let val ctxt_parse = Context.proof_of ctxt
+              val pat_groups = map (fn ((t,g),p) =>
+                    let val ctxt' = Proof_Context.augment t ctxt_parse
+                        val [t'] = Variable.export_terms ctxt' ctxt_parse [t]
+                     in (p, t', Reasoner_Group.check_priority true ctxt g)
+                    end
+                  ) (flat raw_pat_groups)
+           in assign_default_group pat_groups ctxt
+          end
+      )))
+   "declare the default reasoner group for rules matching the given pattern"
+
 )
 
 

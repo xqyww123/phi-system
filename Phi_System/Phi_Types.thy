@@ -1367,7 +1367,7 @@ subsubsection \<open>Rule\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma \<phi>Sum_Comm\<^sub>I_temlpate [\<phi>reason_template name F.\<phi>Sum_Comm\<^sub>I[]]:
+lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>E[no_atp]]:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D : (\<lambda>x. case x of Inl u \<Rightarrow> (\<forall>a \<in> D\<^sub>T u. Inl a \<in> R\<^sub>T u)
@@ -1379,7 +1379,7 @@ lemma \<phi>Sum_Comm\<^sub>I_temlpate [\<phi>reason_template name F.\<phi>Sum_Co
             Action_Tag_def Simplify_def
   by (clarify; case_tac x; clarsimp)
 
-lemma \<phi>Sum_Comm\<^sub>E_temlpate [\<phi>reason_template name F.\<phi>Sum_Comm\<^sub>E[]]:
+lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>I[no_atp]]:
   \<open> Functional_Transformation_Functor F F'\<^sub>T (T +\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F F'\<^sub>U (T +\<^sub>\<phi> U) U D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x a. a \<in> D\<^sub>T x \<and> isl a \<longrightarrow> projl a \<in> R\<^sub>T x) \<and>
@@ -1535,9 +1535,7 @@ lemma [\<phi>reason 1000]:
 
 (*TODO: transformation rules for \<open>\<and>\<^sub>\<phi>\<close>*)
 
-(* Commutativity of \<open>\<and>\<^sub>\<phi>\<close> cannot be derived simply from transformation functor. *)
-
-lemma \<phi>Inter_comm\<^sub>E_template[\<phi>reason_template name F.\<phi>Inter_Comm\<^sub>E[]]:
+lemma [\<phi>reason_template name F.\<phi>Inter_Comm\<^sub>E[no_atp]]:
   \<open> Functional_Transformation_Functor F F\<^sub>T (T \<and>\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F F\<^sub>U (T \<and>\<^sub>\<phi> U) U D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] D : (\<lambda>x. (\<forall>a \<in> D\<^sub>T x. fst a \<in> R\<^sub>T x) \<and> (\<forall>a \<in> D\<^sub>U x. snd a \<in> R\<^sub>U x))) @action \<A>_template_reason
@@ -1628,15 +1626,20 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Fun'.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?f \<Zcomp>\<^sub>f ?T) ?eq \<close>),
   (@{thm' \<phi>Fun'.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Transformation_Functor ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
   (@{thm' \<phi>Fun'.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Functional_Transformation_Functor ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
-  (@{thm' \<phi>Fun'.\<phi>Sum_Comm\<^sub>E}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<and> ?fa = ?faa \<Longrightarrow>
+  (@{thm' \<phi>Fun'.\<phi>Sum\<^sub>I}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<and> ?fa = ?faa \<Longrightarrow>
         Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ((\<Zcomp>\<^sub>f) ?faa) (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?T ?U (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>x. True))  \<close>),
   (@{thm' \<phi>Fun'.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c2,?'c2) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'c2,?'c2) \<phi>))
                                                     \<Longrightarrow> ?x \<Ztypecolon> ?f \<Zcomp>\<^sub>f ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = ?f x \<and> ?r ?x x) @action to (Itself::(?'c,?'c) \<phi>)  \<close>),
   (@{thm' \<phi>Fun'.Make_Abstraction_from_Raw}, \<^pattern_prop>\<open> ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T \<Longrightarrow> ?f ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?f \<Zcomp>\<^sub>f ?T  \<close>)
 ]\<close>
 
-lemmas \<phi>Fun'_\<phi>Sum_comm_rewr = Comm_Tyops_Rewr\<^sub>2_temlpate[OF \<phi>Fun'.\<phi>Sum_Comm\<^sub>E \<phi>Fun'.\<phi>Sum_Comm\<^sub>I, simplified]
+declare \<phi>Fun'.\<phi>Sum\<^sub>I[\<phi>reason add]
+        \<phi>Fun'.\<phi>Sum\<^sub>E[\<phi>reason add]
 
+declare \<phi>Fun'.\<phi>Inter_Comm\<^sub>E[\<phi>reason add]
+thm \<phi>Fun'.\<phi>Inter_Comm\<^sub>I
+
+thm \<phi>Fun'.\<phi>Inter.rewr
 
 subsubsection \<open>Reasoning Rules\<close>
 
@@ -1945,7 +1948,7 @@ ML \<open>assert_derived_properties \<^theory> [
     Tyops_Commute ((\<Zcomp>\<^sub>f) ?fa) ((\<Zcomp>\<^sub>f) ?xc) (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xa ?xb) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>),
   (@{thm' \<phi>ScalarMul.\<phi>Fun'_Comm\<^sub>I}, \<^pattern_prop>\<open> fun_commute (scalar_mult ?f ?s) ?fa (scalar_mult ?xa ?xb) ?xc \<Longrightarrow>
     Tyops_Commute (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xa ?xb) ((\<Zcomp>\<^sub>f) ?fa) ((\<Zcomp>\<^sub>f) ?xc) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))  \<close>),
-  (@{thm' \<phi>ScalarMul.\<phi>Sum_Comm\<^sub>E}, \<^pattern_prop>\<open>
+  (@{thm' \<phi>ScalarMul.\<phi>Sum\<^sub>I}, \<^pattern_prop>\<open>
       \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (?s = ?sa \<and> ?f = ?fa) \<and> ?sa = ?saa \<and> ?fa = ?faa \<Longrightarrow>
       Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?fa ?sa) (\<phi>ScalarMul ?faa ?saa) (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?T ?U (\<lambda>x. True)
        (embedded_func (\<lambda>x. x) (\<lambda>x. True)) \<close>),
@@ -2121,7 +2124,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List_Item.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (List_Item ?T) ?eq \<close>),
   (@{thm' List_Item.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor List_Item List_Item ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
   (@{thm' List_Item.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor List_Item List_Item ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
-  (@{thm' List_Item.\<phi>Sum_Comm\<^sub>E}, \<^pattern_prop>\<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List_Item List_Item List_Item (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?Ta ?U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>),
+  (@{thm' List_Item.\<phi>Sum\<^sub>I}, \<^pattern_prop>\<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List_Item List_Item List_Item (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?Ta ?U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>),
   (@{thm' List_Item.\<phi>Inter_Comm\<^sub>I}, \<^pattern_prop>\<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 List_Item List_Item List_Item (\<and>\<^sub>\<phi>) (\<and>\<^sub>\<phi>) ?Ta ?U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>),
   (@{thm' List_Item.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'c,?'c) \<phi>))
                                                         \<Longrightarrow> ?x \<Ztypecolon> List_Item ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c list, ?'c list) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = [x] \<and> ?r ?x x) @action to (Itself::(?'c list, ?'c list) \<phi>)  \<close>),
@@ -2236,6 +2239,11 @@ ML \<open>assert_derived_properties \<^theory> [
                                                       \<Longrightarrow> ?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = 1(?k := x) \<and> ?r ?x x) @action to (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>) \<close>)
 ]\<close>
 
+declare \<phi>MapAt.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
+        \<phi>MapAt.\<Sigma>\<^sub>E[\<phi>reason add]
+
+
+
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -2288,15 +2296,11 @@ ML \<open>assert_derived_properties \<^theory> [
 ]\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
+
 declare \<phi>MapAt_L.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
 declare \<phi>MapAt_L.\<Sigma>\<^sub>E[\<phi>reason add]
+declare \<phi>Dependent_Sum.\<phi>MapAt_L.rewr[where k=k and ka=k for k, simplified, simp, assertion_simps]
 
-thm \<phi>MapAt_L.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified]
-thm \<phi>MapAt_L.\<Sigma>\<^sub>E
-thm \<phi>MapAt_L.\<phi>Dependent_Sum.rewr
-thm \<phi>Dependent_Sum.\<phi>MapAt_L.rewr
-thm \<phi>MapAt_L.scalar_one
-thm \<phi>MapAt_L.scalar_assoc[simplified times_list_def]
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
@@ -2377,15 +2381,26 @@ ML \<open>assert_derived_properties \<^theory> [
         \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'a \<Rightarrow> (?'b list \<Rightarrow> ?'c::share_one) set) (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
 ]\<close>
 
-thm \<phi>Share.\<S>_rewr_ty
-thm \<phi>MapAt_L.\<phi>Share.comm_rewr
+declare \<phi>Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
+        \<phi>Share.\<Sigma>\<^sub>E[\<phi>reason add]
 
-thm \<phi>Share.\<phi>Inter_Comm\<^sub>E
-thm \<phi>Share.\<Sigma>_rewr
-thm \<phi>Fun'.\<phi>Fun'.comm_rewr
+        \<phi>Share.\<S>\<^sub>E[where g=\<open>\<lambda>x. x\<close> and f=\<open>\<lambda>s _ _. s\<close>, unfolded Ball_def, simplified, \<phi>reason add]
+        \<phi>Share.\<S>\<^sub>I[\<phi>reason add]
 
+declare \<phi>Dependent_Sum.\<phi>Share.rewr[where n=n and na=n for n, OF \<r>Guard_I, OF Premise_I, OF HOL.refl,
+                                   simp, assertion_simps]
+        Set_Abst.\<phi>Share.rewr      [where n=n and na=n for n, OF \<r>Guard_I, OF Premise_I, OF HOL.refl,
+                                   simp, assertion_simps]
+        \<phi>MapAt.\<phi>Share.rewr        [assertion_simps]
+        \<phi>MapAt_L.\<phi>Share.rewr      [assertion_simps]
+        \<phi>Share.\<phi>Prod              [symmetric, assertion_simps]
 
-thm \<phi>Share.\<phi>Sum_Comm\<^sub>E
+thm \<phi>Share.\<phi>Prod
+
+thm Set_Abst.\<phi>Share.rewr[where n=n and na=n for n, OF \<r>Guard_I, OF Premise_I, OF HOL.refl]
+
+thm \<phi>Share.\<phi>MapAt_Comm\<^sub>E
+
 
 thm \<phi>Share.Identity_Element\<^sub>I
 thm \<phi>Share.unfold_sdistr (*TODO: reduce identical antecedents*)
@@ -2395,10 +2410,6 @@ thm \<phi>Share.\<phi>None
 thm \<phi>Share.scalar_assoc
 thm \<phi>Share.scalar_one
 thm \<phi>Share.Semimodule_Scalar_Assoc\<^sub>E
-thm \<phi>Share.Set_Abst.comm_rewr
-
-
-thm \<phi>Share.Set_Abst.comm_rewr[where n=n and na=n and f=\<open>\<lambda>_. s\<close> and g=s and x=s]
 
 ML \<open>\<^simproc>\<open>defined_all\<close>\<close>
 
@@ -2418,26 +2429,7 @@ ML \<open>
 thm \<phi>Share.\<S>\<^sub>E
 thm \<phi>Share.\<S>\<^sub>I
 
-declare \<phi>Share.\<S>\<^sub>E[where g=\<open>\<lambda>x. x\<close> and f=\<open>\<lambda>s _ _. s\<close>, unfolded Ball_def, simplified, \<phi>reason add]
-        \<phi>Share.\<S>\<^sub>I[\<phi>reason add]
-declare \<phi>Share.Set_Abst.rewr[simp, assertion_simps]
 
-thm \<phi>Share.Set_Abst.comm
-thm Set_Abst.\<phi>Share.comm
-thm \<phi>Share.Set_Abst.comm_rewr
-thm Set_Abst.\<phi>Share.comm_rewr
-
-declare HOL.conj_cong[cong] 
-
-
-lemma \<phi>Share_\<S>_rewr: \<comment> \<open>the derived \<open>\<phi>Share.Set_Abst.comm_rewr\<close> is not in the simplified form\<close>
-  \<open>(s \<Ztypecolon> n \<odiv> \<S> T) = (s \<Ztypecolon> \<S> (n \<odiv> T))\<close>
-  by (simp add: \<phi>Share.Set_Abst.comm_rewr[where n=n and na=n and f=\<open>\<lambda>_. s\<close> and g=s and x=s])
-
-
-thm \<phi>Share.\<S>_rewr
-thm \<phi>Share.\<phi>subj_ty
-thm \<phi>Share.simp_cong
 
 subparagraph \<open>Auxiliary Tag\<close>
 
@@ -2467,13 +2459,6 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
     \<^schematic_prop>\<open> (x \<Ztypecolon> half ?n \<odiv> T) * (x \<Ztypecolon> half ?m \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z\<close>.
 \<close>
 
-subsubsection \<open>Simplification Rules\<close>
-
-declare \<phi>MapAt.\<phi>Share.comm_rewr[symmetric, assertion_simps]
-        \<phi>MapAt_L.\<phi>Share.comm_rewr[symmetric, assertion_simps]
-        \<phi>Share.\<phi>Prod[symmetric, assertion_simps]
-
-thm \<phi>Share.\<S>\<^sub>I
 
 paragraph \<open>Implication \& Action Rules\<close>
 
@@ -2529,6 +2514,12 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
        and Functionality
        and Carrier_Set
+
+declare To_Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
+        To_Share.\<Sigma>\<^sub>E[\<phi>reason add]
+
+
+
 
 subsubsection \<open>Syntax\<close>
 

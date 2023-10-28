@@ -660,6 +660,109 @@ definition Tyops_Commute\<^sub>\<Lambda>\<^sub>E :: \<open> (('p \<Rightarrow> (
             (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y)) \<close>
 
 
+subsection \<open>Conventions\<close>
+
+subsubsection \<open>General Groups of Properties\<close>
+
+\<phi>reasoner_group \<phi>type_algebra_all_properties = (100, [0,4000]) for \<open>_\<close>
+    \<open>The universe group containing every sort of \<phi>-type algebraic properties\<close>
+ and \<phi>TA_system_bottom = (1, [0,19]) for \<open>_\<close> in \<phi>type_algebra_all_properties
+    \<open>Systematic rules of \<phi>-type algebraic properties, of the lowest priority.\<close>
+ and \<phi>TA_fallback_lattice = (14, [10,19]) for \<open>_\<close> in \<phi>TA_system_bottom
+    \<open>Rules of \<phi>-type algebraic forming a lattice giving fallbacks from weak properties to strong properties\<close>
+ and \<phi>type_algebra_properties = (100, [20, 3800]) for \<open>_\<close> in \<phi>type_algebra_all_properties
+                                                          and > \<phi>TA_system_bottom
+    \<open>User rules of \<phi>-type algebraic properties\<close>
+ and \<phi>type_algebra_prop_cut = (1000, [1000, 1030]) for \<open>_\<close> in \<phi>type_algebra_properties
+    \<open>Cutting rules\<close>
+ and \<phi>TA_derived_properties = (50, [50,50]) for \<open>_\<close> in \<phi>type_algebra_properties
+    \<open>Automatically derived properties.\<close>
+ and \<phi>TA_varify_out = (3900, [3900,3900]) for \<open>_\<close> in \<phi>type_algebra_all_properties and > \<phi>type_algebra_properties
+    \<open>Systematic rules of \<phi>-type algebraic properties that varifies OUT arguments that are not varibales\<close>
+ and \<phi>TA_commutativity = (100, [20, 3800]) for (\<open>Tyops_Commute F F' G G' T D r\<close>,
+                                                 \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>,
+                                                 \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>)
+                                            in \<phi>type_algebra_properties
+    \<open>commutativities\<close>
+ and \<phi>TA_commutativity_default = (100, [100, 100]) in \<phi>TA_commutativity
+    \<open>rules not assigned with a specific priority and group\<close>
+ and \<phi>TA_derived_commutativity = (50,[50,50]) in \<phi>TA_commutativity and in \<phi>TA_derived_properties
+    \<open>commutativities. Note, because Tyops_Commute is also a tempalte property which may trigger
+     instantiation of a lot templates. The deriviation should be prudent, which may provide templates
+     to allow users to manually instantiation but registering to the \<phi>-LPR only when the instantiated
+     commutativity is certainly correct, because user overridings cannot override the rules
+     instantiated by the derived commutativity to be overrided. \<close>
+
+subsubsection \<open>Groups for Specific Properties\<close>
+
+\<phi>reasoner_group Object_Sep_Homo_functor = (50, [50,50]) for (\<open>Object_Sep_Homo\<^sub>I T D\<close>, \<open>Object_Sep_Homo\<^sub>E T\<close>)
+                                                         in \<phi>type_algebra_properties
+    \<open>Object_Sep_Homo for functors\<close>
+
+subsubsection \<open>Derived Rules\<close>
+
+\<phi>reasoner_group deriving_local_rules = (200, [180,220]) for \<open>_\<close> > default
+    \<open>Local reasoning rules such as those extracted from induction hypotheses used during deriving.\<close>
+
+ and ToA_derived_one_to_one_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close> in ToA_derived
+    \<open>Derived transformation in form \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close>, of a high priority as this is what
+     should be attempted in reasoning.\<close>
+ and To_ToA_derived_Tr_functor = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                                in To_ToA_derived
+    \<open>Derived To-Transformation rules for transformation functor\<close>
+ and To_ToA_derived_Tr_functor_fuzzy = (55, [55,55]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                                in To_ToA_derived and < To_ToA_derived_Tr_functor
+    \<open>when the annotated target \<phi>-type is in the element algebra but not the container\<close>
+ and To_ToA_derived_to_raw = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to Itself\<close>
+                                            in To_ToA_derived
+    \<open>Derived To-Transformation openning down the raw concrete representation\<close>
+ and \<phi>simp_derived_Tr_functor = (40, [40,45]) for \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>simp\<close>
+                                               in \<phi>simp_derived
+    \<open>Derived transformation-based simplification for transformation functor\<close>
+ and \<phi>simp_derived_bubbling = (60, [60,61]) for \<open>x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YY @action \<A>simp\<close>
+    \<open>Derived transformation-based simplification about bubbling\<close>
+ and derived_SE_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<^emph>[Cw] F(W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U) \<^emph>[Cr] F(R)\<close> in ToA_derived
+    \<open>Derived rules of Separation Extraction, of a high priority as this is what
+     should be attempted in reasoning. No confliction with %ToA_derived_one_to_one_functor\<close>
+
+\<phi>reasoner_group_assert identity_element_ToA < deriving_local_rules
+
+paragraph \<open>Separation Extraction on Semimodule\<close>
+
+\<phi>reasoner_group derived_SE_scalar_assoc = (30, [30,30]) for \<open>x \<Ztypecolon> F (a * b) T \<^emph>[Cw] F (a * b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c*d) U \<^emph>[Cr] F (c*d) R\<close>
+                                              in ToA_derived and < derived_SE_functor
+    \<open>Derived rules for scalar associativity, of a low priority as  it can conflict to scalar distributive rule,
+     see \cref{Semimodule-Scalar-Associative}\<close>
+ and derived_SE_scalar_distr = (35, [31, 39]) for \<open>x \<Ztypecolon> F (a + b) T \<^emph>[Cw] F (a + b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c+d) U \<^emph>[Cr] F (c+d) R\<close>
+                                               in ToA_derived and > derived_SE_scalar_assoc and < derived_SE_functor
+    \<open>Derived rules for scalar distributivity.\<close>
+ and derived_SE_sdistr_comm_no_adz = (39, [39, 39]) in derived_SE_scalar_distr
+    \<open>scalar distributivity on commutative semigroup and non-zero scalar\<close>
+ and derived_SE_sdistr_comm = (38, [38, 38]) in derived_SE_scalar_distr < derived_SE_sdistr_comm_no_adz
+    \<open>Derived rules for scalar distributivity on commutative semigroup\<close>
+ and derived_SE_sdistr_noncomm = (36, [36, 36]) in derived_SE_scalar_distr < derived_SE_sdistr_comm
+    \<open>Derived rules for scalar distributivity on non-commutative semigroup\<close>
+ and derived_SE_sdistr_noassoc = (33, [33, 33]) in derived_SE_scalar_distr < derived_SE_sdistr_noncomm
+    \<open>Derived rules for scalar distributivity on separational magma\<close>
+ and derived_SE_red_scalar_one = (30, [30,30]) for (\<open>x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>, \<open>y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T\<close>)
+                                                in ToA_derived and < derived_SE_sdistr_noassoc
+    \<open>reduce scalar one\<close>
+ and derived_SE_inj_to_module = (28, [28,28]) for (\<open>x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>, \<open>y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T\<close>)
+                                               in ToA_derived and < derived_SE_red_scalar_one
+    \<open>Derived rules lifting the target part into the module operator \<open>F\<close>\<close>
+
+(*
+subsubsection \<open>Guess Algebraic Operators\<close>
+
+\<phi>reasoner_group guess_algebraic_oprs = (100, [0, 3000]) for \<open>_\<close>
+    \<open>A general group consisting of reasoning rules derivign or guessing operators for algbebraic properties\<close>
+ and guess_algebraic_oprs_default = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
+    \<open>Cutting rules derivign or guessing operators for algbebraic properties\<close>
+ and guess_algebraic_oprs_cut = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
+    \<open>Cutting rules derivign or guessing operators for algbebraic properties\<close>
+*)
+
+
 
 subsubsection \<open>Configurations\<close>
 
@@ -696,8 +799,15 @@ The default patterns of the rules are more general here by varifying types.
   only them two are used in the reverse transformation.*)
 
 (*TODO: if we can depreciate this, as the reasonings are by template*)
-
+  
 declare [[
+  \<phi>default_reasoner_group
+      \<open>Tyops_Commute   F F' G G' T D R\<close>        : %\<phi>TA_commutativity_default (100)
+      \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close> : %\<phi>TA_commutativity_default (100)
+      \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close> : %\<phi>TA_commutativity_default (100)
+      \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r\<close>        : %\<phi>TA_commutativity_default (100)
+      \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r\<close>        : %\<phi>TA_commutativity_default (100) ,
+
   \<phi>reason_default_pattern \<open>Object_Sep_Homo\<^sub>I ?T _\<close> \<Rightarrow> \<open>Object_Sep_Homo\<^sub>I ?T _\<close> (100),
 
   \<phi>reason_default_pattern_ML \<open>Separation_Homo\<^sub>I ?Ft ?Fu _ _ _ _ _\<close> \<Rightarrow>
@@ -862,105 +972,6 @@ text \<open>Candidates of templates instantiation are not prioritized. When a pr
   so when can the instantiation start. \<close>
 
 
-subsection \<open>Conventions\<close>
-
-subsubsection \<open>General Groups of Properties\<close>
-
-\<phi>reasoner_group \<phi>type_algebra_all_properties = (100, [0,4000]) for \<open>_\<close>
-    \<open>The universe group containing every sort of \<phi>-type algebraic properties\<close>
- and \<phi>TA_system_bottom = (1, [0,19]) for \<open>_\<close> in \<phi>type_algebra_all_properties
-    \<open>Systematic rules of \<phi>-type algebraic properties, of the lowest priority.\<close>
- and \<phi>TA_fallback_lattice = (14, [10,19]) for \<open>_\<close> in \<phi>TA_system_bottom
-    \<open>Rules of \<phi>-type algebraic forming a lattice giving fallbacks from weak properties to strong properties\<close>
- and \<phi>type_algebra_properties = (100, [20, 3800]) for \<open>_\<close> in \<phi>type_algebra_all_properties
-                                                          and > \<phi>TA_system_bottom
-    \<open>User rules of \<phi>-type algebraic properties\<close>
- and \<phi>type_algebra_prop_cut = (1000, [1000, 1030]) for \<open>_\<close> in \<phi>type_algebra_properties
-    \<open>Cutting rules\<close>
- and \<phi>TA_derived_properties = (50, [50,50]) for \<open>_\<close> in \<phi>type_algebra_properties
-    \<open>Automatically derived properties.\<close>
- and \<phi>TA_varify_out = (3900, [3900,3900]) for \<open>_\<close> in \<phi>type_algebra_all_properties and > \<phi>type_algebra_properties
-    \<open>Systematic rules of \<phi>-type algebraic properties that varifies OUT arguments that are not varibales\<close>
- and \<phi>TA_commutativity = (100, [20, 3800]) for (\<open>Tyops_Commute F F' G G' T D r\<close>,
-                                                 \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>,
-                                                 \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>)
-                                            in \<phi>type_algebra_properties
-    \<open>commutativities\<close>
- and \<phi>TA_derived_commutativity = (50,[50,50]) in \<phi>TA_commutativity and in \<phi>TA_derived_properties
-    \<open>commutativities. Note, because Tyops_Commute is also a tempalte property which may trigger
-     instantiation of a lot templates. The deriviation should be prudent, which may provide templates
-     to allow users to manually instantiation but registering to the \<phi>-LPR only when the instantiated
-     commutativity is certainly correct, because user overridings cannot override the rules
-     instantiated by the derived commutativity to be overrided. \<close>
-
-subsubsection \<open>Groups for Specific Properties\<close>
-
-\<phi>reasoner_group Object_Sep_Homo_functor = (50, [50,50]) for (\<open>Object_Sep_Homo\<^sub>I T D\<close>, \<open>Object_Sep_Homo\<^sub>E T\<close>)
-                                                         in \<phi>type_algebra_properties
-    \<open>Object_Sep_Homo for functors\<close>
-
-subsubsection \<open>Derived Rules\<close>
-
-\<phi>reasoner_group deriving_local_rules = (200, [180,220]) for \<open>_\<close> > default
-    \<open>Local reasoning rules such as those extracted from induction hypotheses used during deriving.\<close>
-
- and ToA_derived_one_to_one_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close> in ToA_derived
-    \<open>Derived transformation in form \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close>, of a high priority as this is what
-     should be attempted in reasoning.\<close>
- and To_ToA_derived_Tr_functor = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                                in To_ToA_derived
-    \<open>Derived To-Transformation rules for transformation functor\<close>
-  and To_ToA_derived_Tr_functor_fuzzy = (55, [55,55]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                                in To_ToA_derived and < To_ToA_derived_Tr_functor
-    \<open>when the annotated target \<phi>-type is in the element algebra but not the container\<close>
- and To_ToA_derived_to_raw = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to Itself\<close>
-                                            in To_ToA_derived
-    \<open>Derived To-Transformation openning down the raw concrete representation\<close>
- and \<phi>simp_derived_Tr_functor = (40, [40,45]) for \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>simp\<close>
-                                               in \<phi>simp_derived
-    \<open>Derived transformation-based simplification for transformation functor\<close>
- and \<phi>simp_derived_bubbling = (60, [60,61]) for \<open>x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YY @action \<A>simp\<close>
-    \<open>Derived transformation-based simplification about bubbling\<close>
- and derived_SE_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<^emph>[Cw] F(W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U) \<^emph>[Cr] F(R)\<close> in ToA_derived
-    \<open>Derived rules of Separation Extraction, of a high priority as this is what
-     should be attempted in reasoning. No confliction with %ToA_derived_one_to_one_functor\<close>
-
-\<phi>reasoner_group_assert identity_element_ToA < deriving_local_rules
-
-paragraph \<open>Separation Extraction on Semimodule\<close>
-
-\<phi>reasoner_group derived_SE_scalar_assoc = (30, [30,30]) for \<open>x \<Ztypecolon> F (a * b) T \<^emph>[Cw] F (a * b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c*d) U \<^emph>[Cr] F (c*d) R\<close>
-                                              in ToA_derived and < derived_SE_functor
-    \<open>Derived rules for scalar associativity, of a low priority as  it can conflict to scalar distributive rule,
-     see \cref{Semimodule-Scalar-Associative}\<close>
- and derived_SE_scalar_distr = (35, [31, 39]) for \<open>x \<Ztypecolon> F (a + b) T \<^emph>[Cw] F (a + b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c+d) U \<^emph>[Cr] F (c+d) R\<close>
-                                               in ToA_derived and > derived_SE_scalar_assoc and < derived_SE_functor
-    \<open>Derived rules for scalar distributivity.\<close>
- and derived_SE_sdistr_comm_no_adz = (39, [39, 39]) in derived_SE_scalar_distr
-    \<open>scalar distributivity on commutative semigroup and non-zero scalar\<close>
- and derived_SE_sdistr_comm = (38, [38, 38]) in derived_SE_scalar_distr < derived_SE_sdistr_comm_no_adz
-    \<open>Derived rules for scalar distributivity on commutative semigroup\<close>
- and derived_SE_sdistr_noncomm = (36, [36, 36]) in derived_SE_scalar_distr < derived_SE_sdistr_comm
-    \<open>Derived rules for scalar distributivity on non-commutative semigroup\<close>
- and derived_SE_sdistr_noassoc = (33, [33, 33]) in derived_SE_scalar_distr < derived_SE_sdistr_noncomm
-    \<open>Derived rules for scalar distributivity on separational magma\<close>
- and derived_SE_red_scalar_one = (30, [30,30]) for (\<open>x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>, \<open>y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T\<close>)
-                                                in ToA_derived and < derived_SE_sdistr_noassoc
-    \<open>reduce scalar one\<close>
- and derived_SE_inj_to_module = (28, [28,28]) for (\<open>x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>, \<open>y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T\<close>)
-                                               in ToA_derived and < derived_SE_red_scalar_one
-    \<open>Derived rules lifting the target part into the module operator \<open>F\<close>\<close>
-
-(*
-subsubsection \<open>Guess Algebraic Operators\<close>
-
-\<phi>reasoner_group guess_algebraic_oprs = (100, [0, 3000]) for \<open>_\<close>
-    \<open>A general group consisting of reasoning rules derivign or guessing operators for algbebraic properties\<close>
- and guess_algebraic_oprs_default = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
-    \<open>Cutting rules derivign or guessing operators for algbebraic properties\<close>
- and guess_algebraic_oprs_cut = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
-    \<open>Cutting rules derivign or guessing operators for algbebraic properties\<close>
-*)
 
 subsection \<open>Direct Applications \& Properties\<close>
 
@@ -4060,7 +4071,7 @@ lemma [\<phi>reason_template name F.G.comm[no_atp]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y)
+    RE = (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Orelse_shortcut_def Transformation_def
   by (elim disjE; simp)
@@ -4069,7 +4080,7 @@ lemma [\<phi>reason_template name F.G.comm[no_atp]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F' T) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y)
+    RE = (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Orelse_shortcut_def Transformation_def
   by (elim disjE; simp)
@@ -4082,7 +4093,7 @@ lemma Comm_Tyops\<^sub>1\<^sub>_\<^sub>2_ToA_temlpate[\<phi>reason_template name
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y)
+    RE = (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Orelse_shortcut_def
   by (elim disjE; simp)
@@ -4091,7 +4102,7 @@ lemma Comm_Tyops\<^sub>2\<^sub>_\<^sub>1_ToA_temlpate[\<phi>reason_template name
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F (G T U) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y)
+    RE = (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Orelse_shortcut_def
   by (elim disjE; simp)

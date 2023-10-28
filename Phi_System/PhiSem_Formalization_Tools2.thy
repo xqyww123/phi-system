@@ -29,8 +29,6 @@ definition \<phi>M_caseV :: \<open>(VAL \<phi>arg \<Rightarrow> ('vr,'ret) proc'
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of \<phi>arg (a1,a2) \<Rightarrow> F (\<phi>arg a1) (\<phi>arg a2))\<close>
 
 
-declare [[\<phi>trace_reasoning = 3]]
-
 lemma Valid_Proc_\<phi>M_assert[intro!, \<phi>reason 1200]:
   \<open>Valid_Proc (\<phi>M_assert P)\<close>
   unfolding Valid_Proc_def \<phi>M_assert_def Return_def det_lift_def

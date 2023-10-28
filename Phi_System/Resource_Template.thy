@@ -114,11 +114,15 @@ declare [[\<phi>trace_reasoning = 1]]
   deriving Sep_Functor_1
        and \<open>Gen_Br_Join \<phi> \<phi> \<phi> P True\<close>
 
-thm \<phi>.unfold
-thm \<phi>.\<phi>Prod_ty
-thm \<phi>.\<phi>None
-thm \<phi>.\<S>_rewr_ty
-thm \<phi>.\<phi>subj_ty
+declare \<phi>.\<S>\<^sub>E[where g=\<open>\<lambda>x. x\<close> and f=\<open>\<lambda>s _ _. s\<close>, unfolded Ball_def, simplified, \<phi>reason add]
+        \<phi>.\<S>\<^sub>I[\<phi>reason add]
+        \<phi>.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
+        \<phi>.\<Sigma>\<^sub>E[\<phi>reason add]
+        \<phi>.\<phi>Sum\<^sub>E[\<phi>reason add]
+        \<phi>.\<phi>Sum\<^sub>I[\<phi>reason add]
+
+declare \<phi>.\<phi>Sum.rewr[assertion_simps]
+
 
 lemma \<phi>_unit:
   \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>

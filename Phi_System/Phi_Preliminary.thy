@@ -114,6 +114,12 @@ subsection \<open>Helper Lemmas\<close>
 
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
+lemma case_sum_collapse[simp]:
+  \<open>case_sum Inl Inr = (\<lambda>x. x)\<close>
+  unfolding fun_eq_iff
+  by (clarsimp simp add: split_sum_all)
+  
+
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 
 subsection \<open>Helper Attributes \& Tactics\<close>
