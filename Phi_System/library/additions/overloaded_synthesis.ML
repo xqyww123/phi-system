@@ -3,7 +3,7 @@ include PHI_SYNTHESIS
 
 datatype ovld_signat = Signature of term list * term | Operator of term
 val declare_overloaded_operator : ovld_signat -> Position.T
-                               -> Phi_Reasoner.mode * (priority * Reasoner_Group.name option)
+                               -> Phi_Reasoner.mode' * Reasoner_Group.group option
                                -> Context.generic -> Context.generic
 
 end
@@ -22,7 +22,7 @@ fun overload_rule_of arity =
 
 datatype ovld_signat = Signature of term list * term | Operator of term
 
-fun declare_overloaded_operator signat0 pos (mode, (priority, group)) ctxt0 =
+fun declare_overloaded_operator signat0 pos (mode, prio_group) ctxt0 =
   let val ctxt = Context.proof_of ctxt0
 
       fun default_signature operator0 =
@@ -80,13 +80,13 @@ fun declare_overloaded_operator signat0 pos (mode, (priority, group)) ctxt0 =
           ) no_val_ret
 
    in ctxt0
-   |> Phi_Reasoner.add_rule pos mode (priority, group) ([],[]) NONE [rule]
-   |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %\<phi>synthesis_gen_by_overloading}
+   |> Phi_Reasoner.add_rule pos mode prio_group ([],[]) NONE [rule]
+   |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT' (SOME @{reasoner_group %\<phi>synthesis_gen_by_overloading})
                    ([(pattern1,NONE)],[]) NONE [@{thm make_overloaded_synthesis_rule}]
-   |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %\<phi>synthesis_gen_by_overloading+10}
+   |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT' (SOME @{reasoner_group %\<phi>synthesis_gen_by_overloading+10})
                    ([(pattern2,NONE)],[]) NONE [@{thm make_overloaded_synthesis_rule'}]
    |> is_some synthesis_mode ? (fn ctxt =>
-      Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %synthesis_gen_mode_overridded}
+      Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT' (SOME @{reasoner_group %synthesis_gen_mode_overridded})
                    ([],[]) NONE [the synthesis_mode] ctxt)
   end
 

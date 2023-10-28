@@ -173,7 +173,7 @@ fun OE_reasoning phi ctxt rule =
   let val ctxt' = Context.proof_map (Phi_Reasoner.add_pass (
             Const("\<phi>TA.OE",TFree("",[])), \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
             fn _ => fn (rules, (_, priority), pats, guard, ctxt) =>
-                       (rules, (Phi_Reasoner.NORMAL_LOCAL_CUT, priority), pats, guard, ctxt))) ctxt
+                       (rules, (Phi_Reasoner.NORMAL_LOCAL_CUT', priority), pats, guard, ctxt))) ctxt
 
    in default_reasoning true
           default_reasoning_configure
@@ -371,9 +371,9 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
-                                        (the_default @{reasoner_group %derived_object_equiv}
-                                                     (#2 instruction))
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %derived_object_equiv}
+                                                           (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])

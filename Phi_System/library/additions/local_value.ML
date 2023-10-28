@@ -118,8 +118,8 @@ fun update_val b rule ctxt =
    in ctxt'
      |> Context.proof_map (
           Phi_Reasoner.del_reasoners [pattern] (fn r => Pattern.matches thy (pattern, #name r))
-       #> Phi_Reasoner.add_rule (Binding.pos_of b)
-                                Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %local_value}
+       #> Phi_Reasoner.add_rule (Binding.pos_of b) Phi_Reasoner.NORMAL_LOCAL_CUT'
+                                (SOME @{reasoner_group %local_value})
                                 ([(pattern, NONE)],[]) NONE [rule])
      |> Generic_Variable_Access.bind_generic_vars
             [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, T)), K V))]

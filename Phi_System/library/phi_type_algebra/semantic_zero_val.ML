@@ -53,9 +53,9 @@ fun gen_semantic_zero_val (_, name) instruction ctxt0 (phi0 : phi_type) thy =
    of SOME (rule, _) => thy
         |> note_properties_s phi0 [(name, [rule])]
         |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
-                  Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE
-                                        (the_default @{reasoner_group %semantic_zero_val_derived}
-                                                     (#2 instruction))
+                  Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %semantic_zero_val_derived}
+                                                           (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

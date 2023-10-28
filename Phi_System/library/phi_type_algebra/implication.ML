@@ -373,9 +373,9 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
-                                        (the_default @{reasoner_group %derived_abstract_domain}
-                                                     (#2 instruction))
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %derived_abstract_domain}
+                                                           (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']

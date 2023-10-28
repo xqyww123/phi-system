@@ -4,7 +4,7 @@ datatype pattern = Arg_and_Ret of term * term | Ret_only of term | No_Pattern
 
 val gen_rule : Proof.context -> thm -> thm
 val declare_rule : Position.T
-                -> Phi_Reasoner.mode * (Phi_Reasoner.priority * Reasoner_Group.name option)
+                -> Phi_Reasoner.mode' * Reasoner_Group.group option
                 -> (pattern * Phi_Reasoner.priority option) list * pattern list
                 -> thm -> Context.generic -> Context.generic
 
@@ -68,7 +68,7 @@ fun encode_pattern _    No_Pattern = \<^term>\<open>TERM ()\<close>
                                 Logic.mk_term (pack true I ret))
       end
 
-fun declare_rule pos (mode, (priority, group)) (patterns0,blacklist0) proc_thm0 ctxt0 =
+fun declare_rule pos (mode, prio_group) (patterns0,blacklist0) proc_thm0 ctxt0 =
   let val ctxt = Context.proof_of ctxt0
       val proc_thm = Drule.zero_var_indexes (gen_rule ctxt proc_thm0)
       val concl = Thm.concl_of proc_thm
@@ -84,17 +84,7 @@ fun declare_rule pos (mode, (priority, group)) (patterns0,blacklist0) proc_thm0 
       val patterns = maps (fn (P,prio) => map (rpair prio) (pat_of P))
                           (if null patterns0 then [(No_Pattern, NONE)] else patterns0)
       val blacklist = maps pat_of blacklist0
-      val _ = Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks ([
-                Pretty.str "The rule is bound on pattern(s):",
-                Pretty.chunks (map (fn (X,N) => Pretty.item [
-                      Pretty.str "(", Pretty.str (string_of_int (the_default priority N)), Pretty.str "): ",
-                      Syntax.pretty_term ctxt X
-                    ]) patterns)] @
-                (if null blacklist then [] else [
-                Pretty.str "excluding pattern(s):",
-                Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) blacklist)
-          ])))
-   in Phi_Reasoner.add_rule pos mode (priority, group) (patterns, blacklist) NONE [proc_thm] ctxt0
+   in Phi_Reasoner.add_rule pos mode prio_group (patterns, blacklist) NONE [proc_thm] ctxt0
   end
 
 

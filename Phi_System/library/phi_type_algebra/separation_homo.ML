@@ -173,9 +173,9 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
          | SOME (rule', _) => generic
              |> note_properties_s phi0 [(name, [rule'])]
              |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
-                                        (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                     (#2 instruction))
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
+                                                           (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
              |> pair [rule']
   end

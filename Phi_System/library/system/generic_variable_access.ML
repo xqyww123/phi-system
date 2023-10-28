@@ -389,7 +389,7 @@ fun register_value_spec_thms pos_rules =
                                    $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
                                    $ Var (("spec",i), fastype_of TM) )
             | _ => raise THM ("Not a specification theorem of a value!", 0, [rule]))
-    in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT, @{reasoner_group %local_values},
+    in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
         [(pattern, NONE)], [], NONE) end
   ) rules) pos_rules)
 

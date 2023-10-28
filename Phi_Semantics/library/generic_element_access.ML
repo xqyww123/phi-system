@@ -71,7 +71,7 @@ fun mk_element_index_input_internal args0 ctxt =
             raise TERM ("bad rule Y6uYVPRLRYeA3oqKVPXWGQ", [X])
       val reasoning_rules = map (fn (pos, rule) =>
             ([rule RS @{thm Action_Tag_I[where A=\<open>\<A>parse_eleidx\<close>]}], pos,
-             Phi_Reasoner.NORMAL_LOCAL_CUT, @{reasoner_group %\<A>parse_eleidx},
+             Phi_Reasoner.NORMAL_LOCAL_CUT', SOME @{reasoner_group %\<A>parse_eleidx},
              [(pattern_of (Thm.prop_of rule), NONE)], [], NONE)
           ) args
       val thy = Proof_Context.theory_of ctxt
@@ -80,8 +80,7 @@ fun mk_element_index_input_internal args0 ctxt =
    |> Context.proof_map (
         Phi_Reasoner.del_reasoners [\<^pattern_prop>\<open>(_ :: VAL) \<Turnstile> _ @action \<A>parse_eleidx\<close>]
           (fn r => exists (fn pat => Pattern.matches thy (pat, #name r)) pats))
-   |> Context.proof_map (
-        Phi_Reasoner.add_rules reasoning_rules)
+   |> Context.proof_map (Phi_Reasoner.add_rules reasoning_rules)
    |> pair idx_input
   end
 

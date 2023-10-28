@@ -82,8 +82,8 @@ val _ = Theory.setup (Context.theory_map (
      in thy
      |> Phi_Help.generic_theory_mapping (#pos phi) (fn m =>
         Phi_Reasoner.add_rules (
-          map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT,
-                           @{reasoner_group %variants_of_type_opr}, [], [], NONE)) (Morphism.fact m rules))
+          map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT',
+                           SOME @{reasoner_group %variants_of_type_opr}, [], [], NONE)) (Morphism.fact m rules))
      )
     end)
 ))

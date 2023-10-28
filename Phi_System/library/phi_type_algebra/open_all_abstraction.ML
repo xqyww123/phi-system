@@ -285,9 +285,9 @@ fun gen_trans_to_raw_abst (_,name) instruction ctxt0 (phi0 : phi_type) thy =
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
-                                        (the_default @{reasoner_group %To_ToA_derived_to_raw}
-                                                     (#2 instruction))
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %To_ToA_derived_to_raw}
+                                                           (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> note_properties_s phi0 [(name, [rule])]
         |> pair [rule]

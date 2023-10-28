@@ -9,15 +9,18 @@ end
 structure Phi_Reasoners : PHI_REASONERS = struct
 
 fun pass_checks_priority name prio = (fn pos => fn data =>
-  if prio < #1 (#2 (#2 data))
-  then data
-  else error (let open Pretty in string_of (
-          block (text "The priority of a" @
-                 [brk 1, str (if name = "" then "reasoning" else name), brk 1] @
-                 text "must be greater than" @
-                 [brk 1, str (string_of_int prio), brk 1] @
-                 here pos)
-      )end)
+  case #2 (#2 data)
+    of SOME (prio', _) =>
+        if prio < prio'
+        then data
+        else error (let open Pretty in string_of (
+                block (text "The priority of a" @
+                       [brk 1, str (if name = "" then "reasoning" else name), brk 1] @
+                       text "must be greater than" @
+                       [brk 1, str (string_of_int prio), brk 1] @
+                       here pos)
+            )end)
+     | NONE => data
   )
 
 end

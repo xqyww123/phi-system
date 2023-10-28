@@ -529,7 +529,7 @@ setup \<open>PLPR_Template_Properties.add_property_kinds [
 \<phi>property_deriver Gen_Br_Join 555 for (\<open>Gen_Br_Join _ _ _ _ _\<close>)
   = \<open>Phi_Type_Derivers.meta_Synt_Deriver
       ("Gen_Br_Join", @{lemma' \<open>Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds\<close> by (simp add: Gen_Br_Join_def)},
-       @{reasoner_group %cutting})\<close>
+       SOME @{reasoner_group %cutting})\<close>
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[br_join] _ : _\<close>)
   = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
@@ -842,11 +842,12 @@ attribute_setup \<phi>synthesis = \<open>
       val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>))
       val pat2 = (Scan.optional (Scan.lift \<^keyword>\<open>for\<close> |-- Parse.and_list1' (pattern -- priority)) [] --
                   Scan.optional (Scan.lift \<^keyword>\<open>except\<close> |-- Parse.and_list1' pattern) [] )
-   in Phi_Reasoner.attr_syntax' @{reasoner_group %\<phi>synthesis} pat2
+   in Phi_Reasoner.attr_syntax' pat2
       (fn (pos, mode, group, raw_pats) =>
         Thm.declaration_attribute (fn rule => fn ctxt =>
           let val pats = apfst (map (apsnd (Option.map (fst o Reasoner_Group.check_priority true ctxt)))) raw_pats
-           in Phi_Synthesis.declare_rule pos (mode, group) pats rule ctxt
+           in Phi_Synthesis.declare_rule pos (mode, SOME (the_default @{reasoner_group %\<phi>synthesis} group))
+                                         pats rule ctxt
           end))
   end
 \<close>
@@ -1530,10 +1531,11 @@ attribute_setup overloaded_operator_in_synthesis = \<open>
                   end))
             || (Parse.term >>
                   (Phi_Synthesis.Operator o Context.cases Syntax.read_term_global Syntax.read_term ctxt)))
-   in Phi_Reasoner.attr_syntax' @{reasoner_group %\<phi>overloaded_synthesis} signat
+   in Phi_Reasoner.attr_syntax' signat
         (fn (pos, mode, group, signat) =>
           Thm.declaration_attribute (K (
-            Phi_Synthesis.declare_overloaded_operator signat pos (mode, group))))
+            Phi_Synthesis.declare_overloaded_operator signat pos
+                (mode, SOME (the_default @{reasoner_group %\<phi>overloaded_synthesis} group)))))
   end
 \<close>
 \<open>Declare the given term will be parsed as an overloaded operator in generating synthesis rules\<close>

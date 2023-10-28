@@ -1834,8 +1834,8 @@ fun reasoning ctxt0 sequent0 =
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (
                   map (fn (rule, group) =>
-                            ([rule], Position.none, Phi_Reasoner.TO_BE_OVERRIDE,
-                             the_default @{reasoner_group %deriving_local_rules} group,
+                            ([rule], Position.none, Phi_Reasoner.TO_BE_OVERRIDE',
+                             SOME (the_default @{reasoner_group %deriving_local_rules} group),
                              [], [], NONE)) reasoner_ants))
             |> Context.proof_map (fold Useful_Thms.add_thm prem_ants)
             (* #> Phi_Reasoner.add_rules (map (fn (pat,rule) =>

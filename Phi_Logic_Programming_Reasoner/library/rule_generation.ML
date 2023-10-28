@@ -21,7 +21,7 @@ structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
 structure Template_Inst_SS_Post_Merging : HOOKS
 
 datatype instantiation_action =
-            Reasonig_Rule of (Phi_Reasoner.mode * Reasoner_Group.group) * Phi_Reasoner.patterns_and_excepts
+            Reasonig_Rule of (Phi_Reasoner.mode' * Reasoner_Group.group option) * Phi_Reasoner.patterns_and_excepts
           | Attributes of Token.src list
           | No_Action
 
@@ -62,7 +62,7 @@ val invoke_generation : template -> instantiation -> Context.generic -> Context.
 (* Syntax Parsers *)
 
 val parse_pass : Context.generic -> Input.source option -> (rule_generation_pass * Phi_Reasoner.rule_pass) option
-val parse_action : Phi_Reasoner.mode * Reasoner_Group.group * Phi_Reasoner.patterns_and_excepts * Token.src list option
+val parse_action : Phi_Reasoner.mode' * Reasoner_Group.group option * Phi_Reasoner.patterns_and_excepts * Token.src list option
                 -> instantiation_action
 val parse_binding_template : Context.generic -> thm -> (string * Position.T) option -> binding_template option
 
@@ -92,7 +92,7 @@ structure Template_Inst_SS = Simpset (
 )
 
 datatype instantiation_action =
-            Reasonig_Rule of (Phi_Reasoner.mode * Reasoner_Group.group) *
+            Reasonig_Rule of (Phi_Reasoner.mode' * Reasoner_Group.group option) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
           | No_Action
@@ -362,17 +362,15 @@ fun parse_pass ctxt =
      in pass
     end)
 
-fun parse_action (mode, (priority, group), pats, attribs) =
-  case (attribs, priority, pats)
-    of (SOME (attrs as _ :: _), 100, ([], [])) => Attributes attrs
-          (*100 is the default priority of \<phi>-LPR. Here we use it to trickily mean
-            an explicit priority is not given*)
-     | (SOME [], 100, ([], [])) => No_Action
+fun parse_action (mode, prio_group, pats, attribs) =
+  case (attribs, prio_group, pats)
+    of (SOME (attrs as _ :: _), NONE, ([], [])) => Attributes attrs
+     | (SOME [], NONE, ([], [])) => No_Action
      | (SOME _, _, _) =>
         error "Prioirty and binding patterns are senseless and not allowed to\
               \ be given once the attributes are given."
      | (NONE, _, _) =>
-        Reasonig_Rule ((mode, (priority,group)), pats)
+        Reasonig_Rule ((mode, prio_group), pats)
 
 fun parse_binding_template ctxt template raw_binding =
   let val ctxt' = Context.proof_of ctxt
@@ -452,7 +450,7 @@ val _ = Theory.setup (
         (Scan.option (Scan.lift (Args.$$$ "name" |-- Parse.position Parse.long_ident))
          -- Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
          -- Scan.option Attrib.attribs)
-        (fn (pos, mode, (priority, group), ((raw_binding, pass_src), attribs), pats, guard) =>
+        (fn (pos, mode, prio_group, ((raw_binding, pass_src), attribs), pats, guard) =>
         Thm.declaration_attribute (fn thm => fn ctxt =>
           let val binding = parse_binding_template ctxt thm raw_binding
 
@@ -460,7 +458,7 @@ val _ = Theory.setup (
                          | _ => error "No guard is allowed here"
 
               val pass = parse_pass ctxt pass_src
-              val action = parse_action (mode, (priority, group), pats, attribs)
+              val action = parse_action (mode, prio_group, pats, attribs)
 
               val template = ((pos, thm), pass, action, binding)
            in setup_rule_generation_pass template ctxt

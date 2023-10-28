@@ -510,7 +510,7 @@ val _ = Theory.setup (
                                              || Parse.term >> SOME)) >> flat)))
        -- Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
        -- Scan.option Attrib.attribs)
-      (fn (pos, mode, (priority, group), (((raw_binding, raw_dependencies), pass_src),attribs), pats, guard) =>
+      (fn (pos, mode, prio_group, (((raw_binding, raw_dependencies), pass_src),attribs), pats, guard) =>
         Thm.declaration_attribute (fn thm => fn ctxt =>
           let val ctxt' = Context.proof_of ctxt
               val (_, ctxt_parse) = Variable.import true [thm] ctxt'
@@ -537,7 +537,7 @@ val _ = Theory.setup (
               val _ = case guard of NONE => ()
                          | _ => error "No guard is allowed here"
               val pass = PLPR_Rule_Gen.parse_pass ctxt pass_src
-              val gen = PLPR_Rule_Gen.parse_action (mode, (priority, group), pats, attribs)
+              val gen = PLPR_Rule_Gen.parse_action (mode, prio_group, pats, attribs)
            in setup_rule_generation (pos,(dependencies,pass),(binding,gen)) thm ctxt
           end)
       ))

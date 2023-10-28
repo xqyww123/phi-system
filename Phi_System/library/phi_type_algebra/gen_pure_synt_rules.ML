@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val meta_Synt_Deriver : string * thm * (priority * Reasoner_Group.name option)
+val meta_Synt_Deriver : string * thm * Reasoner_Group.group option
                      -> quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
@@ -22,8 +22,8 @@ fun meta_Synt_Deriver' (rule, default_group) (_, name) (H, group, pos, text, not
       val _ = if is_none text then () else err "tactic hint here is meaningless."
    in thy
    |> Phi_Help.generic_theory_mapping pos (fn m =>
-         Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE
-                               (the_default default_group group)
+         Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE'
+                               (merge_options (group, default_group))
                                ([],[]) NONE [Morphism.thm m result])
    |> pair [result]
   end

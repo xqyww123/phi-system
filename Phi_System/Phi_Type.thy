@@ -4435,7 +4435,7 @@ ML_file \<open>library/phi_type_algebra/gen_pure_synt_rules.ML\<close>
     = \<open>Phi_Type_Derivers.meta_Synt_Deriver
           ("Semimodule_No_SDistr",
            @{lemma' \<open>Semimodule_No_SDistr F\<close> by (simp add: Semimodule_No_SDistr_def)},
-           @{reasoner_group %Semimodule_No_SDistr}) \<close>
+           SOME (@{reasoner_group %Semimodule_No_SDistr})) \<close>
 
 
 subsubsection \<open>Abstract Domain\<close>

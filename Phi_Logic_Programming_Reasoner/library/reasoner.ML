@@ -16,7 +16,8 @@ signature NU_REASONER = sig
 
   datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
   datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
-  type mode = cut_mode * backtrack_mode
+  type mode  = cut_mode * backtrack_mode
+  type mode' = cut_mode option * backtrack_mode
   (* declare by NO_BACKTRACK to disable applying the reasoner during backtracking.
         It causes the reasoner will not be applied once there is another reasoner of a higher priority,
         no matter if that reasoner's application succeeds.
@@ -32,6 +33,10 @@ signature NU_REASONER = sig
   val NORMAL_MODE : mode
   val NORMAL_LOCAL_CUT : mode
   val TO_BE_OVERRIDE : mode
+
+  val NORMAL_MODE' : mode'
+  val NORMAL_LOCAL_CUT' : mode'
+  val TO_BE_OVERRIDE' : mode'
 
 
   type guarded = bool (*if has the \<open>\<r>Guard\<close> tag*)
@@ -133,18 +138,18 @@ signature NU_REASONER = sig
 
   type guard = context_state -> bool
   val default_mode_of : priority -> cut_mode
-  val add_rule : Position.T -> mode -> (priority * Reasoner_Group.name option)
+  val add_rule : Position.T -> mode' -> Reasoner_Group.group option
                     -> (pattern * priority option) list * pattern list
                     -> guard option
                     -> thm list
                     -> Context.generic -> Context.generic
-  val add_rules: (thm list * Position.T * mode * (priority * Reasoner_Group.name option)
+  val add_rules: (thm list * Position.T * mode' * Reasoner_Group.group option
                        * (pattern * priority option) list * pattern list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
   val del_rules : pattern list option -> thm list -> Context.generic -> Context.generic
 
-  type pass_data = thm list (*rules*) * (mode * (priority * Reasoner_Group.name option)) *
+  type pass_data = thm list (*rules*) * (mode' * Reasoner_Group.group option) *
                    ((pattern * priority option) list * pattern list) * guard option * Context.generic
   type rule_pass = Position.T -> pass_data -> pass_data
   type pass_id = term (*identifier*)
@@ -181,15 +186,14 @@ signature NU_REASONER = sig
   val ML_guard_parser : (context_state -> bool) option context_parser
 
   val attr_syntax' :
-      (priority * Reasoner_Group.name option) (*default reasoner group*) ->
       'ext context_parser (*extension*) ->
-      (Position.T * mode * (priority * Reasoner_Group.name option) * 'ext
+      (Position.T * mode' * Reasoner_Group.group option * 'ext
        -> attribute)
      -> attribute context_parser
 
   val attr_syntax :
       'ext context_parser (*extension*) ->
-      (Position.T * mode * (priority * Reasoner_Group.name option) * 'ext
+      (Position.T * mode' * Reasoner_Group.group option * 'ext
         * ((pattern * priority option) list * pattern list) * ML_guard option
        -> attribute)
      -> attribute context_parser
@@ -219,10 +223,15 @@ type action = cterm
 datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
 datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
 type mode = cut_mode * backtrack_mode
+type mode' = cut_mode option * backtrack_mode
 
 val NORMAL_MODE = (NO_CUT, ALLOW_BACKTRACK)
 val NORMAL_LOCAL_CUT = (LOCAL_CUT, ALLOW_BACKTRACK)
 val TO_BE_OVERRIDE = (NO_CUT, NO_BACKTRACK)
+
+val NORMAL_MODE' = (SOME NO_CUT, ALLOW_BACKTRACK)
+val NORMAL_LOCAL_CUT' = (SOME LOCAL_CUT, ALLOW_BACKTRACK)
+val TO_BE_OVERRIDE' = (SOME NO_CUT, NO_BACKTRACK)
 
 (* NO_CUT < LOCAL_CUT < GLOBAL_CUT *)
 fun cut_mode_ord (GLOBAL_CUT, GLOBAL_CUT) = EQUAL
@@ -840,14 +849,9 @@ val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
 
 val mode_and_priority =
       ((backtrack_mode_parser -- cut_mode_parser >> swap) -- Scan.option Reasoner_Group.parser)
+val mode_and_priority' =
+  Scan.peek (fn ctxt => mode_and_priority >> apsnd (Option.map (Reasoner_Group.check_priority true ctxt)))
 
-fun mode_and_priority' default_group =
-      Scan.peek (fn ctxt => mode_and_priority >> (fn (mode, priority) =>
-        let val (priority, group) = case priority
-                                      of SOME prio => Reasoner_Group.check_priority true ctxt prio
-                                       | NONE => default_group
-         in (check_mode priority mode, (priority, group))
-        end))
 
 val patterns = Parse.$$$ "(" |-- Parse.enum "|"
       (Scan.optional (\<^keyword>\<open>except\<close> >> K false) true -- Parse.term
@@ -961,7 +965,7 @@ val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>re
 
 (** Reasoning Rule Pass **)
 
-type pass_data = thm list (*rules*) * (mode * (priority * Reasoner_Group.name option)) *
+type pass_data = thm list (*rules*) * (mode' * Reasoner_Group.group option) *
                  ((pattern * priority option) list * pattern list) * guard option * Context.generic
 type rule_pass = Position.T -> pass_data -> pass_data
 type pass_id = term (*identifier*)
@@ -993,11 +997,19 @@ fun add_pass rule_pass =
 
 fun intro_reasoner ctxt0 pos mode0 priority0_group0 pats0 guard0 rules0 =
   let
-    val (rules01, (mode, (priority, group)), (patterns, blacklist), ML_guard, ctxt) =
+    val (rules01, (mode, priority_group), (patterns, blacklist), ML_guard, ctxt) =
             run_passes pos (map (Thm.transfer'' ctxt0) rules0, (mode0, priority0_group0), pats0, guard0, ctxt0)
     val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
     val _ = if null rules then error ("No rule is given!") else ()
+
+    val (priority,group) = case priority_group
+          of SOME prio_grp => prio_grp
+           | NONE => (case rules
+          of [rule] => (case the_default_group_of ctxt [] (Thm.concl_of rule)
+          of SOME grp => grp
+           | NONE => (100, NONE)))
+    val mode = check_mode priority mode
 
     fun complete_prio ((e_pat, e_except, inargs), rule) = ((map (rpair NONE) e_pat, e_except, inargs), rule)
     val embedding_rules = map (complete_prio o PLPR_Syntax.elim_embedded_patterns) rules
@@ -1109,13 +1121,13 @@ val ML_guard_parser = option (lift \<^keyword>\<open>if\<close> |-- ML_guard_par
 
 end
 
-fun attr_syntax' default_group ext gen =
+fun attr_syntax' ext gen =
   let open Args Scan Parse
     val pos_parser = Phi_Help.pos_parser "\<phi>reasoner"
     val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
   in
     lift pos_parser
-    -- (lift (option add) |-- mode_and_priority' default_group)
+    -- (lift (option add) |-- mode_and_priority')
     -- ext
     >> (fn ((pos, (mode, priority)), ext) => gen (pos, mode, priority, ext))
   end
@@ -1123,7 +1135,7 @@ fun attr_syntax' default_group ext gen =
 fun attr_syntax ext gen =
   let open Args Scan Parse
       val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
-   in attr_syntax' (100, NONE) (
+   in attr_syntax' (
            ext
         -- (optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
         --  optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
@@ -1206,7 +1218,7 @@ val _ = Theory.setup (
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-               Method.modifier (gen_attr_add_intro' I (pos,NORMAL_MODE,(100, NONE),([],NONE),([],[]),NONE)) \<^here>)
+               Method.modifier (gen_attr_add_intro' I (pos,(NONE, ALLOW_BACKTRACK),NONE,([],NONE),([],[]),NONE)) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths (*what to do?*) => reason_tac NONE num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."

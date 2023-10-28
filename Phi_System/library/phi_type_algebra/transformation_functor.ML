@@ -260,9 +260,9 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
            in generic
            |> note_properties_s phi0 [(name, [rule'])]
            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
-                                        (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
-                                                     (#2 instruction))
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
+                                                           (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
          (*|> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
                               (setup_locale Interpretation.sublocale)*)
@@ -415,9 +415,9 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
            in thy
            |> note_properties_s phi0 [(name, [rule])]
            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
-                                        (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
-                                                     (#2 instruction))
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
+                                                           (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule])
            |> pair [rule]
           end)
