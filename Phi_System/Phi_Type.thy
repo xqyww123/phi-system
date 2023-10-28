@@ -282,6 +282,18 @@ general strategy can only cover little.
 
 \<close>
 
+text \<open>\Concl:
+
+In the domain of data refinement, we found a synthetic method with efficient automation.
+
+From the broader perspective of BI logic, we have re-interpreted the semantics of stateful predicates
+(to distinguish with boolean predicates) on BI by relating them to data refinement.
+By assuming the predicates are organized meaningfully and structurally, we show, an efficient and
+general automation over a lot of data structures can actually be given under such interpretation.
+
+\<close>
+
+
 
 chapter \<open>The Algebra of \<open>\<phi>\<close>-Type\<close>
 
