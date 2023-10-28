@@ -853,14 +853,7 @@ lemma \<S>_Homo\<^sub>E: (*depreciated*)
   unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
   by clarsimp
 
-lemma Tyops_Commute_\<S>:
-  \<open> Transformation_Functor G G' (\<S> T) T D R mapper
-\<Longrightarrow> Tyops_Commute G G' \<S> \<S> T (\<lambda>s. \<forall>a. a \<in> D s \<longrightarrow> a \<subseteq> R s) (embedded_func (\<lambda>s. Collect (mapper (\<lambda>S x. x \<in> S) s)) (\<lambda>_. True))\<close>
-  unfolding Tyops_Commute_def
-            Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
-  by (clarsimp simp add: subset_iff Ball_def; smt (verit, ccfv_threshold))
-
-lemma [\<phi>reason_template %\<phi>TA_derived_commutativity name G.\<S>\<^sub>E_comm]:
+lemma [\<phi>reason_template name G.\<S>\<^sub>E_comm [no_atp]]:
   \<open> Transformation_Functor G G' (\<S> T) T D R mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>s a. a \<in> D s \<longrightarrow> a \<subseteq> R s) @action \<A>_template_reason
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>s. Collect (mapper (\<lambda>S x. x \<in> S) s)) (\<lambda>_. True) @action \<A>_template_reason
