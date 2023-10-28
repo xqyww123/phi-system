@@ -608,7 +608,7 @@ lemma \<Sigma>_\<A>simp_sep_homo[\<phi>reason %\<phi>simp_cut]:
 
 subsubsection \<open>\<Sigma>-Homomorphism (Commutativity over \<Sigma>)\<close>
 
-lemma [\<phi>reason_template name G.\<Sigma>\<^sub>E[]]:
+lemma [\<phi>reason_template name G.\<Sigma>\<^sub>E[no_atp]]:
   \<open> (\<And>p. Functional_Transformation_Functor G G' (T p) (\<Sigma> T) (D p) (R p) (pm p) (fm p))
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a. a \<in> D (fst x) (snd x) \<longrightarrow> (fst x, a) \<in> R (fst x) (snd x)) @action \<A>_template_reason
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>x. fm (fst x) (\<lambda>a. ((fst x), a)) (\<lambda>_. True) (snd x)) (\<lambda>_. True) @action \<A>_template_reason
@@ -631,10 +631,11 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
         clarsimp simp add: transformation_weaken) .
 *)
 
-lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
+lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[no_atp]]:
   \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a \<in> D x. fst a = c \<and> snd a \<in> R c x) @action \<A>_template_reason
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>x. (c, fm c snd (\<lambda>_. True) x)) (pm c snd (\<lambda>_. True)) @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a \<in> D x. fst a = c x \<and> snd a \<in> R (c x) x) @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>x. (c x, fm (c x) snd (\<lambda>_. True) x))
+                              (\<lambda>x. pm (c x) snd (\<lambda>_. True) x) @action \<A>_template_reason
 \<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' \<Sigma> \<Sigma> T D' r' \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Functional_Transformation_Functor_def Simplify_def Action_Tag_def
   by clarsimp force
@@ -674,14 +675,14 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
-declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abstraction\<close>\<close>
+declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abst\<close>\<close>
 
-\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
+\<phi>type_def Set_Abst :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   
   deriving Sep_Functor_1 \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
-       and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
+       and \<open>Functional_Transformation_Functor Set_Abst Set_Abst T U
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Carrier_Set
@@ -691,22 +692,22 @@ declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced b
         \<Longrightarrow> \<forall>s. (s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>x. r x y \<and> x \<in> s) @action to Itself)\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' Set_Abstraction.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa) \<close>),
-  (@{thm' Set_Abstraction.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa)  \<close>),
-  (@{thm' Set_Abstraction.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set (\<S> ?T) (\<lambda>x. \<forall>xa. xa \<in> x \<longrightarrow> ?P xa) \<close>),
-  (@{thm' Set_Abstraction.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (\<S> ?T) (\<lambda>x. \<forall>xa. xa \<in> x \<longrightarrow> ?T\<^sub>D xa) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?T\<^sub>P xa) \<close>),
-  (@{thm' Set_Abstraction.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (\<S> ?T) (\<lambda>x. \<exists>uu. uu \<in> x \<and> ?T\<^sub>D uu) \<close>),
-  (@{thm' Set_Abstraction.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<S> ?T) (\<lambda>Sx Sy. \<forall>x. x \<in> Sx \<longrightarrow> (\<exists>y. y \<in> Sy \<and> ?eq x y)) \<close>),
-  (@{thm' Set_Abstraction.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) \<close>),
-  (@{thm' Set_Abstraction.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. {f x |x. x \<in> X \<and> P x}) \<close>),
-  (@{thm' Set_Abstraction.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<S> \<S> \<S> ?T ?U UNIV (\<lambda>(A, B). A \<times> B) \<close>),
-  (@{thm' Set_Abstraction.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E \<S> \<S> \<S> ?Ta ?U (\<lambda>x. (Domain x, Range x)) \<close>)
+  (@{thm' Set_Abst.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa) \<close>),
+  (@{thm' Set_Abst.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa)  \<close>),
+  (@{thm' Set_Abst.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set (\<S> ?T) (\<lambda>x. \<forall>xa. xa \<in> x \<longrightarrow> ?P xa) \<close>),
+  (@{thm' Set_Abst.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (\<S> ?T) (\<lambda>x. \<forall>xa. xa \<in> x \<longrightarrow> ?T\<^sub>D xa) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?T\<^sub>P xa) \<close>),
+  (@{thm' Set_Abst.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (\<S> ?T) (\<lambda>x. \<exists>uu. uu \<in> x \<and> ?T\<^sub>D uu) \<close>),
+  (@{thm' Set_Abst.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<S> ?T) (\<lambda>Sx Sy. \<forall>x. x \<in> Sx \<longrightarrow> (\<exists>y. y \<in> Sy \<and> ?eq x y)) \<close>),
+  (@{thm' Set_Abst.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) \<close>),
+  (@{thm' Set_Abst.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. {f x |x. x \<in> X \<and> P x}) \<close>),
+  (@{thm' Set_Abst.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<S> \<S> \<S> ?T ?U UNIV (\<lambda>(A, B). A \<times> B) \<close>),
+  (@{thm' Set_Abst.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E \<S> \<S> \<S> ?Ta ?U (\<lambda>x. (Domain x, Range x)) \<close>)
 ]\<close>
 
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
-Together with the \<^const>\<open>SubjectionTY\<close>, \<^const>\<open>\<phi>Dependent_Sum\<close> and \<^const>\<open>Set_Abstraction\<close> embed
+Together with the \<^const>\<open>SubjectionTY\<close>, \<^const>\<open>\<phi>Dependent_Sum\<close> and \<^const>\<open>Set_Abst\<close> embed
   BI connective \<open>\<and>\<close> (\<^const>\<open>Subjection\<close>) and \<open>\<exists>\<close> (\<^const>\<open>ExSet\<close>) into \<phi>-types. The embedding of \<open>\<exists>\<close>
   is in an algebraic way having good properties like the \<Sigma>-Homomorphism and \<S>-Homomorphism introduced below.
 
@@ -734,39 +735,39 @@ e.g., if all the first projection of the elements of \<open>x\<close> are unchan
 \<close>
 
 declare SubjectionTY_def[embed_into_\<phi>type add]
-        Set_Abstraction_def[embed_into_\<phi>type del]
+        Set_Abst_def[embed_into_\<phi>type del]
 
 subsubsection \<open>Rules\<close>
 
 paragraph \<open>Simplifications\<close>
 
-lemma Set_Abstraction_single[embed_into_\<phi>type]:
+lemma Set_Abst_single[embed_into_\<phi>type]:
   \<open>{x} \<Ztypecolon> \<S> T \<equiv> x \<Ztypecolon> T\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
-lemma Set_Abstraction_unfold_defined:
+lemma Set_Abst_unfold_defined:
   \<open> {x. x = y \<and> P} \<Ztypecolon> \<S> T \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> P \<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
-lemma Set_Abstraction_unfold_Ex:
+lemma Set_Abst_unfold_Ex:
   \<open> {x. \<exists>a. P x a} \<Ztypecolon> \<S> T \<equiv> {x. P x a} \<Ztypecolon> \<S> T \<s>\<u>\<b>\<j> a. \<top> \<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp blast
 
-lemma Set_Abstraction_unfold':
+lemma Set_Abst_unfold':
   \<open> NO_MATCH {a} s
 \<Longrightarrow> NO_MATCH {x. x = y'\<and> P'} s
 \<Longrightarrow> NO_MATCH {x. \<exists>a. P'' x a} s
 \<Longrightarrow> (s \<Ztypecolon> \<S> T) = (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  using Set_Abstraction.unfold .
+  using Set_Abst.unfold .
 
 lemmas [\<phi>programming_base_simps, assertion_simps, simp] =
-  Set_Abstraction_single
-  Set_Abstraction_unfold_defined
-  Set_Abstraction_unfold_Ex
-  Set_Abstraction_unfold'
+  Set_Abst_single
+  Set_Abst_unfold_defined
+  Set_Abst_unfold_Ex
+  Set_Abst_unfold'
 
 lemma \<phi>\<s>\<u>\<b>\<j>_over_\<S>[\<phi>programming_simps]:
   \<open>\<S> (T \<phi>\<s>\<u>\<b>\<j> P) \<equiv> (\<S> T) \<phi>\<s>\<u>\<b>\<j> P\<close>
@@ -808,10 +809,10 @@ lemma pure_type_to_ex_quantified_form_3:
   by clarsimp
 
 ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified
-      @{thms' Set_Abstraction_unfold_Ex Set_Abstraction_unfold_defined
+      @{thms' Set_Abst_unfold_Ex Set_Abst_unfold_defined
               SubjectionTY.unfold} ;
     Phi_Conv.set_rules__type_form_to_ex_quantified_single_var
-      @{thms' Set_Abstraction_unfold_Ex pure_type_to_ex_quantified_form_3
+      @{thms' Set_Abst_unfold_Ex pure_type_to_ex_quantified_form_3
               SubjectionTY.unfold} \<close>
 
 
@@ -819,19 +820,19 @@ paragraph \<open>ToA Reasoning\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-thm Set_Abstraction.intro_reasoning\<^sub>R
-thm Set_Abstraction.intro_reasoning
-thm Set_Abstraction.elim_reasoning
+thm Set_Abst.intro_reasoning\<^sub>R
+thm Set_Abst.intro_reasoning
+thm Set_Abst.elim_reasoning
 
-text \<open>Type-level \<open>Set_Abstraction.intro_reasoning\<close> is not activated as the reasoning uses
+text \<open>Type-level \<open>Set_Abst.intro_reasoning\<close> is not activated as the reasoning uses
   transformation functor.
 
-  see Set_Abstraction.intro_reasoning
+  see Set_Abst.intro_reasoning
 
 NG! TODO!\<close>
 
-thm Set_Abstraction.intro_reasoning(1)  [\<phi>reason 60]
-        Set_Abstraction.elim_reasoning(1)[\<phi>reason 1000]
+thm Set_Abst.intro_reasoning(1)  [\<phi>reason 60]
+        Set_Abst.elim_reasoning(1)[\<phi>reason 1000]
 
 (*TODO!!!*)
 
@@ -2324,13 +2325,13 @@ ML \<open>assert_derived_properties \<^theory> [
 ]\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-declare \<phi>MapAt_L.\<Sigma>\<^sub>I[\<phi>reason add]
+declare \<phi>MapAt_L.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
 declare \<phi>MapAt_L.\<Sigma>\<^sub>E[\<phi>reason add]
 
-thm \<phi>MapAt_L.\<Sigma>\<^sub>I
+thm \<phi>MapAt_L.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified]
 thm \<phi>MapAt_L.\<Sigma>\<^sub>E
-thm \<phi>MapAt_L.\<phi>Dependent_Sum.comm_rewr
-thm \<phi>Dependent_Sum.\<phi>MapAt_L.comm_rewr
+thm \<phi>MapAt_L.\<phi>Dependent_Sum.rewr
+thm \<phi>Dependent_Sum.\<phi>MapAt_L.rewr
 thm \<phi>MapAt_L.scalar_one
 thm \<phi>MapAt_L.scalar_assoc[simplified times_list_def]
 
@@ -2431,10 +2432,10 @@ thm \<phi>Share.\<phi>None
 thm \<phi>Share.scalar_assoc
 thm \<phi>Share.scalar_one
 thm \<phi>Share.Semimodule_Scalar_Assoc\<^sub>E
-thm \<phi>Share.Set_Abstraction.comm_rewr
+thm \<phi>Share.Set_Abst.comm_rewr
 
 
-thm \<phi>Share.Set_Abstraction.comm_rewr[where n=n and na=n and f=\<open>\<lambda>_. s\<close> and g=s and x=s]
+thm \<phi>Share.Set_Abst.comm_rewr[where n=n and na=n and f=\<open>\<lambda>_. s\<close> and g=s and x=s]
 
 ML \<open>\<^simproc>\<open>defined_all\<close>\<close>
 
@@ -2451,28 +2452,24 @@ ML \<open>
 \<close>
 *)
 
-lemma x_eq_y_and_y_eq_x[simp]:
-  \<open>x = y \<and> y = x \<longleftrightarrow> x = y\<close>
-  by (simp add: conj_commute conj_left_commute)
-
-
-thm HOL.conj_cong
 thm \<phi>Share.\<S>\<^sub>E
 thm \<phi>Share.\<S>\<^sub>I
 
 declare \<phi>Share.\<S>\<^sub>E[where g=\<open>\<lambda>x. x\<close> and f=\<open>\<lambda>s _ _. s\<close>, unfolded Ball_def, simplified, \<phi>reason add]
- 
-declare \<phi>Share.\<S>\<^sub>I[\<phi>reason add]
+        \<phi>Share.\<S>\<^sub>I[\<phi>reason add]
+declare \<phi>Share.Set_Abst.rewr[simp, assertion_simps]
 
-thm \<phi>Share.Set_Abstraction.comm
-thm Set_Abstraction.\<phi>Share.comm
+thm \<phi>Share.Set_Abst.comm
+thm Set_Abst.\<phi>Share.comm
+thm \<phi>Share.Set_Abst.comm_rewr
+thm Set_Abst.\<phi>Share.comm_rewr
 
 declare HOL.conj_cong[cong] 
-thm \<phi>Share.Set_Abstraction.comm_rewr[simp]
 
-lemma \<phi>Share_\<S>_rewr: \<comment> \<open>the derived \<open>\<phi>Share.Set_Abstraction.comm_rewr\<close> is not in the simplified form\<close>
+
+lemma \<phi>Share_\<S>_rewr: \<comment> \<open>the derived \<open>\<phi>Share.Set_Abst.comm_rewr\<close> is not in the simplified form\<close>
   \<open>(s \<Ztypecolon> n \<odiv> \<S> T) = (s \<Ztypecolon> \<S> (n \<odiv> T))\<close>
-  by (simp add: \<phi>Share.Set_Abstraction.comm_rewr[where n=n and na=n and f=\<open>\<lambda>_. s\<close> and g=s and x=s])
+  by (simp add: \<phi>Share.Set_Abst.comm_rewr[where n=n and na=n and f=\<open>\<lambda>_. s\<close> and g=s and x=s])
 
 
 thm \<phi>Share.\<S>_rewr

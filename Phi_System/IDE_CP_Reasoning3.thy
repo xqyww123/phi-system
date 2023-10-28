@@ -551,7 +551,7 @@ lemma [\<phi>reason_template default %\<phi>br_join_derived]:
             meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def NO_SIMP_def
   by (cases P; clarsimp)
 
-let_\<phi>type Set_Abstraction deriving \<open>Gen_Br_Join \<S> \<S> \<S> P True\<close>
+let_\<phi>type Set_Abst deriving \<open>Gen_Br_Join \<S> \<S> \<S> P True\<close>
 let_\<phi>type \<phi>Composition    deriving \<open>Gen_Br_Join ((\<Zcomp>) B) ((\<Zcomp>) B') ((\<Zcomp>) B) P (B = B')\<close>
 let_\<phi>type \<phi>Mul_Quant      deriving \<open>Gen_Br_Join (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) (\<big_ast>\<^sup>\<phi> (If P I J)) P True\<close>
 let_\<phi>type \<phi>ScalarMul      deriving \<open>Gen_Br_Join (\<phi>ScalarMul f s) (\<phi>ScalarMul f s') (\<phi>ScalarMul f s) P (s' = s)\<close>
