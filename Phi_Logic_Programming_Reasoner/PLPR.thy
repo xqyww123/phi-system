@@ -1754,6 +1754,14 @@ consts \<phi>instantiation :: mode
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
         (PLPR_Rule_Gen.Template_Inst_SS.enhance) {fix_vars=true}) o snd\<close>
 
+lemmas [simp_for_\<phi>LPR_rule_generation] =
+  conj_imp_eq_imp_imp sing_times_sing sing_if
+
+setup \<open>Context.theory_map (PLPR_Rule_Gen.Template_Inst_SS.map (
+  Simplifier.add_cong @{thm' HOL.conj_cong[folded atomize_eq]}
+))\<close>
+
+  (* conj_commute conj_left_commute *)
 
 subsection \<open>Literal Check\<close>
 

@@ -327,11 +327,13 @@ fun case_split_by_annotations_first_subgoal ctxt goal th =
 (*Convention: the rule of premise extraction has form \<open>A \<equiv> Premise \<and> A\<close>*)
 type pattern = term
 
-fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = is_syntactic_premise M
-  | is_syntactic_premise (Const(\<^const_name>\<open>default\<close>, _)) = true
-  | is_syntactic_premise (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
-  | is_syntactic_premise (Const(\<^const_name>\<open>NO_INST\<close>, _)) = true
-  | is_syntactic_premise (Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)) = true
+fun is_syntactic_premise_mode \<^const_name>\<open>MODE_GUARD\<close> = true
+  | is_syntactic_premise_mode \<^const_name>\<open>NO_INST\<close> = true
+  | is_syntactic_premise_mode \<^const_name>\<open>MODE_COLLECT\<close> = true
+  | is_syntactic_premise_mode \<^const_name>\<open>default\<close> = true
+  | is_syntactic_premise_mode _ = false
+
+fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(M, _) $ _) = is_syntactic_premise_mode M
   | is_syntactic_premise (Abs (_,_,X)) = is_syntactic_premise X
   | is_syntactic_premise (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_syntactic_premise X
   | is_syntactic_premise (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_syntactic_premise X
@@ -356,6 +358,7 @@ fun strip_premise_tag ctxt ctm =
         Conv.combination_conv (Conv.arg_conv (strip_premise_tag ctxt)) (strip_premise_tag ctxt) ctm
      | _ => Conv.all_conv ctm
 
+(*
 fun extract_prem ctxt strip =
   let val ctxt' = Context.proof_of ctxt
    in fn thm =>
@@ -377,20 +380,31 @@ fun extract_prem ctxt strip =
              end
    else*) NONE
   end
+*)
 
-fun extract_prems ctxt strip thm =
-  let fun simp th =
+fun extract_prems thm =
+  let fun extract th =
         case Thm.concl_of th
-          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
-                simp (Conv.fconv_rule (Conv.rewr_conv @{thm' atomize_all[symmetric]}) th)
+          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ XX => (
+              case XX
+                of Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
+                    extract (Conv.fconv_rule (Conv.rewr_conv @{thm' atomize_all[symmetric]}) th)
+                 | Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ =>
+                    extract (Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' \<r>Guard_def})) th)
+                 | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+                    maps extract (PLPR_Syntax.elim_ant_sequence_or_HOL_conj th)
+                 | Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
+                    maps extract (PLPR_Syntax.elim_ant_sequence_or_HOL_conj th)
+                 | Const(\<^const_name>\<open>Premise\<close>, _) $ Const (M, _) $ _ =>
+                    if is_syntactic_premise_mode M
+                    then [Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Premise_def})) th]
+                    else []
+                 | _ => []
+             )
            | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
-                simp (Thm.forall_elim_var (Thm.maxidx_of th+1) th)
-           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
-                maps simp (PLPR_Syntax.elim_ant_sequence_or_HOL_conj th)
-           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _) =>
-                maps simp (PLPR_Syntax.elim_ant_sequence_or_HOL_conj th)
-           | _ => [th]
-   in the_default [] (Option.map simp (extract_prem ctxt strip thm))
+                extract (Thm.forall_elim_var (Thm.maxidx_of th+1) th)
+           | _ => []
+   in extract thm
   end
 
 
@@ -399,7 +413,7 @@ fun extract_prems ctxt strip thm =
 
 (* if not use_origin, drops the original premises and only remains the extracted premises. *)
 fun gen_simplify simp use_origin ctxt =
-  let val extract = extract_prems (Context.Proof ctxt) true
+  let val extract = extract_prems
       val extract' = if use_origin
                      then (fn th => th :: extract th)
                      else (fn th => case extract th of [] => [th] | L => L)

@@ -796,9 +796,6 @@ paragraph \<open>Configuring Property Data Base\<close>
           \<phi>inductive_destruction_rule_from_direct_definition'
           \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
 
-lemmas [simp_for_\<phi>TA_rule_generation] =
-  conj_imp_eq_imp_imp Premise_I sing_times_sing sing_if
-
 setup \<open>
 let fun attach_var F =
       let val i = maxidx_of_term F + 1

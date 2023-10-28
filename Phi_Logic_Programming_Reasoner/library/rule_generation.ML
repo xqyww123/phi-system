@@ -82,7 +82,7 @@ type TT = Phi_Reasoner.pattern
 
 structure Template_Inst_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = SOME \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
+  val binding = SOME \<^binding>\<open>simp_for_\<phi>LPR_rule_generation\<close>
   val comment = "Rules simplifying the reasoning rules instantiated from templates."
   val attribute = NONE
   fun post_merging ctxt = ctxt
@@ -149,6 +149,27 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
+val _ = Phi_Reasoners.extract_implied_fact
+
+fun asm_lr_simplify {simp_concl} ctxt rule =
+  let val ((_, [rule']), ctxt') = Variable.import false [rule] ctxt
+      fun pass_premises (rule, ctxt) =
+        if Thm.no_prems rule
+        then (if simp_concl then Conv.fconv_rule (Simplifier.rewrite ctxt) rule
+                            else rule,
+              ctxt)
+        else let val rule = Conv.gconv_rule (Simplifier.rewrite ctxt) 1 rule
+                 val cprem = Thm.cprem_of rule 1
+                 val ([lprem], ctxt) = Assumption.add_assms Assumption.presume_export [cprem] ctxt
+                 val facts = the_default [] (Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt' lprem)
+                 val ctxt = ctxt addsimps facts
+                 val rule = Thm.implies_elim rule lprem
+         in (rule, ctxt)
+        end
+      val (rule, ctxt') = pass_premises (rule', ctxt')
+   in Assumption.export ctxt' ctxt rule
+  end
+
 (*simplify the generated rule except the conclusion by default, unless a part of the conclusion has
   been annotated by \<open>NO_SIMP\<close> (i.e., \<open>NO_SIMP\<close> occurs in the conclusion)*)
 fun pass_generated_rule {simp, masks} ctxt rule =
@@ -160,8 +181,6 @@ fun pass_generated_rule {simp, masks} ctxt rule =
                              else rule RS' (ctxt, @{thm' NO_SIMP'_I})
       val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
       val ctxt's = Template_Inst_SS.enhance ctxt'1
-                |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
-                |> Simplifier.add_cong @{thm' if_cong}
       val rule'3 = rule'2
                 |> simp ? ( Simplification_Protect.protect ctxt's
                          #> Phi_Reasoners.asm_lr_simplify true ctxt's

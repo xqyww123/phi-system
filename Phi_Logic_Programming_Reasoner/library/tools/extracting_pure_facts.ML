@@ -124,6 +124,7 @@ fun generate_extraction_rule ctxt0 thm0 =
       rule))
   end
 
+
 (*
 val add = Thm.declaration_attribute (fn rule =>
       Phi_Reasoner.add_rule )

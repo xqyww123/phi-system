@@ -383,6 +383,8 @@ setup \<open> PLPR_Template_Properties.add_property_kinds [
 
 paragraph \<open>Template Instantiation\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 lemma Inhabited_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
   \<open> Abstract_Domain T D @action \<A>_template_reason
 \<Longrightarrow> Abstract_Domain\<^sub>L T D' @action \<A>_template_reason
@@ -390,7 +392,7 @@ lemma Inhabited_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
 \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<equiv> D x \<close>
   unfolding Action_Tag_def Abstract_Domain_def Abstract_Domain\<^sub>L_def Premise_def
   by (clarsimp, smt (verit, best))
-  
+
 
 (*
 (*depreciate!*)
