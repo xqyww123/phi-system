@@ -66,13 +66,30 @@ term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Ele
 
 
 
-thm List.\<phi>Sum_Comm\<^sub>E
+thm List.\<phi>Sum\<^sub>E
 
 term \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
  (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
 
+declare List.\<Sigma>\<^sub>E[\<phi>reason add]
+        List.\<Sigma>\<^sub>I[where c=\<open>\<lambda>_. c\<close> for c, \<phi>reason add]
+
+lemma List_\<phi>Dependent_Sum_rewr:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>set x. fst a = c)
+\<Longrightarrow> (x \<Ztypecolon> List (\<Sigma> T)) = ((c, map snd x) \<Ztypecolon> \<Sigma> p. List (T p)) \<close>
+  by (rule List.\<phi>Dependent_Sum.rewr;
+      simp add: Premise_def;
+      metis comp_apply map_idI prod.collapse)
+
+lemmas \<phi>Dependent_Sum_List_rewr = \<phi>Dependent_Sum.List.rewr[where x=\<open>(c,x)\<close> and c=c for c x, simplified]
+
+thm List.\<phi>Dependent_Sum.rewr
+thm \<phi>Dependent_Sum.List.rewr
+
+
+thm List.\<Sigma>\<^sub>I
 thm List.\<Sigma>\<^sub>E
-thm List.\<Sigma>_rewr
+
 thm List.functional_transformation
 
 

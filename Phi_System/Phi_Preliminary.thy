@@ -118,7 +118,12 @@ lemma case_sum_collapse[simp]:
   \<open>case_sum Inl Inr = (\<lambda>x. x)\<close>
   unfolding fun_eq_iff
   by (clarsimp simp add: split_sum_all)
-  
+
+lemma snd_o_Pair_eq_id[simp]:
+  \<open> snd \<circ> Pair c = (\<lambda>x. x) \<close>
+  unfolding fun_eq_iff
+  by simp
+
 
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 

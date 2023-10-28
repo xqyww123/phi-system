@@ -4037,7 +4037,7 @@ subparagraph \<open>1-to-1\<lambda>\<close>
 lemma [\<phi>reason_template name F.G.rewr[]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D  (embedded_func f P)
 \<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>E G' G F' F T D' (embedded_func g Q)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> D x \<and> D' (f x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> D' (f x) \<and> g (f x) = x
 \<Longrightarrow> (x \<Ztypecolon> F (G T)) = (f x \<Ztypecolon> G' (\<lambda>p. F' (T p))) \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def Premise_def BI_eq_iff
   by clarsimp metis
@@ -4045,7 +4045,7 @@ lemma [\<phi>reason_template name F.G.rewr[]]:
 lemma [\<phi>reason_template name F.G.rewr[]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D  (embedded_func f P)
 \<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>I G' G F' F T D' (embedded_func g Q)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> D x \<and> D' (f x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> D' (f x) \<and> g (f x) = x
 \<Longrightarrow> (x \<Ztypecolon> F (\<lambda>p. G (T p))) = (f x \<Ztypecolon> G' (F' T)) \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def Premise_def BI_eq_iff
   by clarsimp metis
@@ -4085,7 +4085,6 @@ lemma [\<phi>reason_template name F.G.comm[no_atp]]:
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Orelse_shortcut_def Transformation_def
   by (elim disjE; simp)
 
-(*TODO!*)
 
 subparagraph \<open>1-to-2\<close>
 
