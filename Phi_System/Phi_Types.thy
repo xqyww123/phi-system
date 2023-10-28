@@ -617,20 +617,6 @@ lemma [\<phi>reason_template name G.\<Sigma>\<^sub>E[no_atp]]:
             Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def
   by clarsimp
 
-(*
-lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
-  \<open> Functional_Transformation_Functor F F' (T (fst x)) (\<Sigma> T) D R pm fm
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D (snd x) \<longrightarrow> (fst x, a) \<in> R (snd x))
-\<Longrightarrow> x \<Ztypecolon> \<Sigma> c. F (T c) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>a. (fst x, a)) (\<lambda>_. True) (snd x) \<Ztypecolon> F' (\<Sigma> T)\<close>
-  unfolding Functional_Transformation_Functor_def Premise_def
-  apply clarsimp
-  subgoal premises prems
-    by (insert prems(1)[THEN spec[where x=\<open>snd x\<close>], THEN spec[where x=\<open>\<lambda>a. (fst x, a)\<close>],
-                        THEN spec[where x=\<open>\<lambda>_. True\<close>], simplified]
-               prems(2-),
-        clarsimp simp add: transformation_weaken) .
-*)
-
 lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[no_atp]]:
   \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a \<in> D x. fst a = c x \<and> snd a \<in> R (c x) x) @action \<A>_template_reason
@@ -640,29 +626,6 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[no_atp]]:
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Functional_Transformation_Functor_def Simplify_def Action_Tag_def
   by clarsimp force
 
-(*
-lemma [\<phi>reason_template name F.\<Sigma>_rewr[]]:
-  \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
-\<Longrightarrow> Functional_Transformation_Functor F' F (T c) (\<Sigma> T) D' R' pm' fm'
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. c = fst a \<and> snd a \<in> R c x ) \<and>
-           (\<forall>a. a \<in> D' (fm c snd (\<lambda>_. True) x) \<longrightarrow> (c, a) \<in> R' (fm c snd (\<lambda>_. True) x))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fm' (\<lambda>a. (c, a)) (\<lambda>_. True) (fm c snd (\<lambda>_. True) x) = x
-\<Longrightarrow> (x \<Ztypecolon> F (\<Sigma> T)) = (fm c snd (\<lambda>_. True) x \<Ztypecolon> F' (T c))\<close>
-  unfolding Functional_Transformation_Functor_def Premise_def
-  apply (clarsimp simp del: split_paired_All; rule assertion_eq_intro)
-
-  subgoal premises prems
-    by (insert prems(1)[of c, THEN spec[where x=x], THEN spec[where x=snd], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
-               prems(3-) ;
-        clarsimp simp add: transformation_weaken;
-        metis fst_conv snd_eqD transformation_weaken)
-
-  subgoal premises prems
-    by (insert prems(2)[THEN spec[where x=\<open>fm c snd (\<lambda>_. True) x\<close>], THEN spec[where x=\<open>\<lambda>a. (c, a)\<close>],
-                        THEN spec[where x=\<open>\<lambda>_. True\<close>]]
-               prems(3-),
-        clarsimp simp add: transformation_weaken) .
-*)
 
 
 subsection \<open>Nondeterministic Abstraction\<close>

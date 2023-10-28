@@ -11,6 +11,8 @@ val split_last : 'a list -> 'a list * 'a
 val repeat : ('a -> 'a) -> 'a -> 'a
 val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
+val max_of : ('a * 'a -> order) -> 'a list -> 'a option
+val min_of : ('a * 'a -> order) -> 'a list -> 'a option
 
 
 val leading_antecedent' : thm -> term
@@ -139,6 +141,11 @@ fun repeat f x = repeat f (f x) handle TERM _ => x | CTERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
 
+fun max_of _ [] = NONE
+  | max_of ord L = SOME (foldl1 (fn ab => if ord ab = LESS then snd ab else fst ab) L)
+
+fun min_of _ [] = NONE
+  | min_of ord L = SOME (foldl1 (fn ab => if ord ab = GREATER then snd ab else fst ab) L)
 
 
 fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))

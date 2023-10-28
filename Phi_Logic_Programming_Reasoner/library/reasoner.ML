@@ -164,6 +164,11 @@ signature NU_REASONER = sig
   structure Default_Pattern : PATTERN_REWRITE
   val the_default_pattern_of : Context.generic -> term -> term list
 
+  (* Default Reasoner Group *)
+  val the_default_group_of : Context.generic -> Pattern_Translation.bv_typs -> term -> Reasoner_Group.group option
+  val assign_default_group : (priority * term * Reasoner_Group.group) list
+                          -> Context.generic -> Context.generic
+
   (* Helpful Tools *)
   val chop_seq_head' : 'a Seq.seq -> 'a option
   val chop_seq_head  : 'a Seq.seq -> 'a Seq.seq
@@ -894,6 +899,27 @@ val _ =
 
 (*** Reasoner for Reasoning Rule ***)
 
+(** Default Reasoner Group \& Priority **)
+
+val DRG_eq = eq_pair3 (op =) (op aconv) (op =)
+structure Default_Reasoner_Groups = Generic_Data (
+  type T = (priority * Pattern_Translation.spattern * Reasoner_Group.group) iNet.net
+  val empty = iNet.empty
+  val merge = iNet.merge DRG_eq
+)
+
+fun the_default_group_of ctxt =
+  let val reasoner_groups = Default_Reasoner_Groups.get ctxt
+      val thy = Context.theory_of ctxt
+   in fn bvtys => fn term =>
+      iNet.match_term reasoner_groups term
+        |> filter (fn (_, pat, _) => Pattern_Translation.does_match_term thy bvtys (pat, term))
+        |> Phi_Help.max_of (int_ord o apply2 #1)
+        |> Option.map #3
+  end
+
+fun assign_default_group groups =
+  Default_Reasoner_Groups.map (fold (fn group => iNet.insert_term DRG_eq (#2 group, group)) groups)
 
 
 (** Default Pattern **)
