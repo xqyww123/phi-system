@@ -24,8 +24,8 @@ val space : Context.generic -> T Name_Space.table
 datatype priority_base = Base | Top | Bottom
 datatype priority_syntax = Literal of int | Relative of ((xstring * Position.T) * priority_base) * offset
 val parser : priority_syntax parser
-val check_priority : bool (*if to verify the offset is within the range of the based group*)
-                  -> Context.generic -> priority_syntax -> priority * name option
+val check_group : bool (*if to verify the offset is within the range of the based group*)
+                  -> Context.generic -> priority_syntax -> group
 val print_ML : name -> string
 
 end
@@ -74,8 +74,8 @@ in val parser' = ((name_position -- priority_base) -- offset >> Relative)
              || (int >> Literal)
 end
 
-fun check_priority _ _ (Literal i) = (i, NONE)
-  | check_priority chk_range ctxt (Relative ((name, base), offset)) =
+fun check_group _ _ (Literal i) = (i, NONE)
+  | check_group chk_range ctxt (Relative ((name, base), offset)) =
       let val (name, group) = check ctxt name
           val ret = (case base of Base => #base group
                                 | Top => snd (#range group)
@@ -157,8 +157,8 @@ val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>reasoner_grou
          document_source)
    )) >> flat end >> (fn data => fn int =>
    fold (fn (binding, ((((raw_base, raw_range), raw_tasks), constrains), comment)) => fn lthy =>
-     let val base = fst (check_priority false (Context.Proof lthy) raw_base)
-         val range = apply2 (fst o check_priority false (Context.Proof lthy)) raw_range
+     let val base = fst (check_group false (Context.Proof lthy) raw_base)
+         val range = apply2 (fst o check_group false (Context.Proof lthy)) raw_range
          val tasks = map (Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern lthy)) raw_tasks
          val _ = if int then (
                     Document_Output.check_comments lthy (Input.source_explode comment) ;
@@ -210,12 +210,12 @@ val _ = Theory.setup (
   ML_Antiquotation.value \<^binding>\<open>priority\<close>
     (Scan.peek (fn ctxt => Scan.optional (Args.$$$ "loose" >> K false) true
                         -- parser >> (fn (chk_range, raw_priority) =>
-        check_priority chk_range ctxt raw_priority
+        check_group chk_range ctxt raw_priority
           |> ML_Syntax.print_int o fst
           |> ML_Syntax.atomic )))
 #>ML_Antiquotation.value \<^binding>\<open>reasoner_group\<close>
     (Scan.peek (fn ctxt => parser >> (fn raw_priority =>
-        check_priority true ctxt raw_priority
+        check_group true ctxt raw_priority
           |> ML_Syntax.print_pair ML_Syntax.print_int (ML_Syntax.print_option print_ML)
           |> ML_Syntax.atomic )))
 )

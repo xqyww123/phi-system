@@ -747,7 +747,7 @@ fun check_deriving_ast ctxt (derv_ast : deriving_ast list) =
                          |> Phi_Help.refine_sorts_of_tm thy
                 val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
                 val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
-                val group = Option.map (Reasoner_Group.check_priority true (Context.Proof ctxt'1)) raw_group
+                val group = Option.map (Reasoner_Group.check_group true (Context.Proof ctxt'1)) raw_group
              in add_deriving_from_hint ctxt (SOME term'1, group, pos, Option.map chk_text text,
                                              chk_notes notes, chk_bundles bundle)
             end

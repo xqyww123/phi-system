@@ -2,16 +2,18 @@ signature PHI_COP_SIMP = sig
 
 (* check if the simplification is required *)
 type pattern = term
+type trigger = Context.generic -> PLPR_Pattern.bv_typs * term -> bool
 
 val is_simp_needed : Context.generic -> term -> bool
+    (*checks types and assertions recursively but never enters into objects*)
 val add_simp_pattern : pattern -> Context.generic -> Context.generic
-val add_simp_trigger : pattern * (term -> bool) -> Context.generic -> serial * Context.generic
+val add_simp_trigger : pattern * trigger -> Context.generic -> serial * Context.generic
 val del_simp_pattern : pattern -> Context.generic -> Context.generic
 val del_simp_trigger : pattern * serial -> Context.generic -> Context.generic
   (*recursively check every lambda application \<open>f a\<^sub>1 \<dots> a\<^sub>n\<close> where \<open>f\<close> is an atom
     to see if the simplification is required, by checking if matching any pattern or ML trigger*)
 
-datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * (term -> bool)
+datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * trigger
 val checkers_binding_on : Context.generic -> pattern -> checker list
 
 (* invoke the simplification if needed *)
@@ -19,9 +21,17 @@ val checkers_binding_on : Context.generic -> pattern -> checker list
 val invoke_when_needed : Proof.context * Phi_Working_Mode.working_mode -> thm -> thm
 val force_invoke : Proof.context * Phi_Working_Mode.working_mode -> thm -> thm (*no matter if is needed*)
 
-(* Pass of Reasoning Rules *)
+(* Controllers *)
 
+val extract_pattern_trigger : bool Config.T
+    (*controls if to extract and enable simplification triggers from each new rules otherwise
+      no simplification will be triggered even when the form matches the rules.*)
 (*val enable_rule_pass : bool Config.T*)
+
+(* Helpers *)
+
+val pass_recursively : (PLPR_Pattern.bv_typs -> term -> bool)
+                     -> PLPR_Pattern.bv_typs -> term -> bool
 
 end
 
@@ -30,7 +40,9 @@ structure Phi_CoP_Simp : PHI_COP_SIMP = struct
 (*** Check the need of simplification ***)
 
 type pattern = term
-datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * (term -> bool)
+type trigger = Context.generic -> PLPR_Pattern.bv_typs * term -> bool
+
+datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * trigger
 
 fun chker_eq thy (Chk_Pattern pa, Chk_Pattern pb) = Pattern.equiv thy (pa,pb)
   | chker_eq _ (Chk_ML (s1,_,_), Chk_ML (s2,_,_)) = s1 = s2
@@ -49,26 +61,31 @@ fun checkers_binding_on ctxt tm =
                | Chk_ML (_, pat, _) => PLPR_Pattern.matches thy [] (pat, tm))
   end
 
+fun pass_recursively F =
+  let fun chk bv_tys tm =
+        let val (h,args) = Term.strip_comb tm
+         in (case h
+         of Const (\<^const_name>\<open>\<phi>Type\<close>, _) => F bv_tys tm orelse exists (chk bv_tys) (tl args)
+          | Const _ => F bv_tys tm orelse exists (chk bv_tys) args
+          | Free _  => F bv_tys tm orelse exists (chk bv_tys) args
+          | Var _ => exists (chk bv_tys) args
+          | Bound _ => exists (chk bv_tys) args
+          | Abs (_, T, X) => if null args then chk (T::bv_tys) X
+                             else raise REQUIRE_LAMBDA_NORMLAIZTION
+          | _ => false)
+        end
+   in chk
+  end
+
 fun is_simp_needed ctxt =
   let val chkers = Checkers.get ctxt
       val thy = Context.theory_of ctxt
       fun apply_chk bv_tys tm =
         Net.match_term chkers tm
           |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy bv_tys (pat,tm)
-                      | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy bv_tys (pat,tm) andalso f tm)
-      fun chk bv_tys tm =
-        let val (h,args) = Term.strip_comb tm
-         in (case h
-         of Const _ => apply_chk bv_tys tm
-          | Free _  => apply_chk bv_tys tm
-          | Abs (_, T, X) => if null args then chk (T::bv_tys) X
-                             else raise REQUIRE_LAMBDA_NORMLAIZTION
-          | _ => false)
-         orelse exists (chk bv_tys) args
-        end
-        handle REQUIRE_LAMBDA_NORMLAIZTION =>
-          chk bv_tys (Envir.beta_eta_contract tm)
-   in Phi_Syntax.exists_item_of_assertion (chk [])
+                      | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy bv_tys (pat,tm)
+                                      andalso f ctxt (bv_tys, tm))
+   in Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk [])
   end
 
 fun chk_pattern pat =
@@ -94,7 +111,7 @@ fun del_simp_pattern pat ctxt =
   Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_Pattern pat)) ctxt
 
 fun del_simp_trigger (pat,serial) ctxt =
-  Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_ML (serial, Term.dummy, K true))) ctxt
+  Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_ML (serial, Term.dummy, K (K true)))) ctxt
 
 
 (* invoke the simplification if needed *)
@@ -129,7 +146,7 @@ fun select_trans_rule' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = s
   | select_trans_rule' _ = NONE
 
 (*val enable_rule_pass = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_rule_pass\<close> (K false)*)
-val extract_pattern_trigger = Config.declare_bool ("Phi_CoP_Simp.extract_pattern_trigger", \<^here>) (K true)
+val extract_pattern_trigger = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_extract_trigger\<close> (K true)
 
 fun force_rule_pass rule ctxt =
   let fun bad_rule msg = error ("Malform rule of Transformation-based Simplification:\n" ^
@@ -173,7 +190,7 @@ fun force_rule_pass rule ctxt =
       (case try (add_simp_pattern pat) ctxt
        of SOME ctxt' => (rule', ctxt')
         | NONE => (
-            warning ("Fail to extract the pattern of the source type of the rule\n" ^
+            warning ("Fail to extract the pattern of simplification triger from the source type of the rule\n" ^
                      Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ "\n\
                      \The simplification will not be activated on the source \<phi>-type specified by the rule\n\
                      \You may want to add the trigger manually by ML \<open>setup \<open>Phi_CoP_Simp.add_simp_pattern\<close>\<close> or \<open>Phi_CoP_Simp.add_simp_trigger\<close>") ;

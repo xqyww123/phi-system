@@ -845,7 +845,7 @@ attribute_setup \<phi>synthesis = \<open>
    in Phi_Reasoner.attr_syntax' pat2
       (fn (pos, mode, group, raw_pats) =>
         Thm.declaration_attribute (fn rule => fn ctxt =>
-          let val pats = apfst (map (apsnd (Option.map (fst o Reasoner_Group.check_priority true ctxt)))) raw_pats
+          let val pats = apfst (map (apsnd (Option.map (fst o Reasoner_Group.check_group true ctxt)))) raw_pats
            in Phi_Synthesis.declare_rule pos (mode, SOME (the_default @{reasoner_group %\<phi>synthesis} group))
                                          pats rule ctxt
           end))

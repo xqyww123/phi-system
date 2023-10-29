@@ -140,10 +140,10 @@ val weight_synt =
    || Args.$$$ "undefined" >> K (K Leaf_W)
    || Args.$$$ "_" >> K (K Leaf_W)
    || Reasoner_Group.parser >> (fn w => fn ctxt =>
-          Weight (fst (Reasoner_Group.check_priority true ctxt w), K EQUAL))
+          Weight (fst (Reasoner_Group.check_group true ctxt w), K EQUAL))
    || \<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>,\<close> --| Args.$$$ "lexical" --| \<^keyword>\<open>)\<close> >>
       (fn w => fn ctxt =>
-          Weight (fst (Reasoner_Group.check_priority true ctxt w), Term_Ord.term_ord))
+          Weight (fst (Reasoner_Group.check_group true ctxt w), Term_Ord.term_ord))
    || \<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>,\<close> -- Parse.ML_source --| \<^keyword>\<open>)\<close> >>
       (fn (w,src) => fn ctxt =>
           Synchronized.change_result ML_parser_locker__weight (fn () =>
@@ -154,7 +154,7 @@ val weight_synt =
                        ML_Lex.read ") : term ord)")
                 val ml = the (!ML_sender__weight_ord)
                 val _ = ML_sender__weight_ord := NONE
-             in (Weight (fst (Reasoner_Group.check_priority true ctxt w), ml), ())
+             in (Weight (fst (Reasoner_Group.check_group true ctxt w), ml), ())
             end
           ))
 

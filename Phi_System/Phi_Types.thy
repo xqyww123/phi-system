@@ -2379,6 +2379,8 @@ ML \<open>assert_derived_properties \<^theory> [
         \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'a \<Rightarrow> (?'b list \<Rightarrow> ?'c::share_one) set) (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
 ]\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 declare \<phi>Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
         \<phi>Share.\<Sigma>\<^sub>E[\<phi>reason add]
 
@@ -2392,6 +2394,19 @@ declare \<phi>Dependent_Sum.\<phi>Share.rewr[where n=n and na=n for n, OF \<r>Gu
         \<phi>MapAt.\<phi>Share.rewr        [assertion_simps]
         \<phi>MapAt_L.\<phi>Share.rewr      [assertion_simps]
         \<phi>Share.\<phi>Prod              [symmetric, assertion_simps]
+
+
+declare [[\<phi>ToA_swap_normalization \<open>(\<odiv>) ?n\<close> over \<dots> (100)]]
+
+  
+lemma
+  \<open> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> XX \<close>
+  for T :: \<open>('c::share_one, 'a) \<phi>\<close>
+  \<medium_left_bracket>
+    ;;
+
+
+
 
 thm \<phi>Share.\<phi>Prod
 

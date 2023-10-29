@@ -791,7 +791,7 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
     val (priority, group) = case priority
-                              of SOME prio => Reasoner_Group.check_priority true (Context.Proof ctxt) prio
+                              of SOME prio => Reasoner_Group.check_group true (Context.Proof ctxt) prio
                                | NONE => (100, NONE)
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
@@ -812,7 +812,7 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
     val (priority, group) = case priority
-                              of SOME prio => Reasoner_Group.check_priority true (Context.Proof ctxt) prio
+                              of SOME prio => Reasoner_Group.check_group true (Context.Proof ctxt) prio
                                | NONE => (100, NONE)
     val name = Syntax.read_term ctxt name
     val terms = map (fn ((_,x),_) => x) raw_patterns
@@ -850,7 +850,7 @@ val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
 val mode_and_priority =
       ((backtrack_mode_parser -- cut_mode_parser >> swap) -- Scan.option Reasoner_Group.parser)
 val mode_and_priority' =
-  Scan.peek (fn ctxt => mode_and_priority >> apsnd (Option.map (Reasoner_Group.check_priority true ctxt)))
+  Scan.peek (fn ctxt => mode_and_priority >> apsnd (Option.map (Reasoner_Group.check_group true ctxt)))
 
 
 val patterns = Parse.$$$ "(" |-- Parse.enum "|"
@@ -1233,7 +1233,7 @@ end)
               val pat_groups = map (fn ((t,g),p) =>
                     let val ctxt' = Proof_Context.augment t ctxt_parse
                         val [t'] = Variable.export_terms ctxt' ctxt_parse [t]
-                     in (p, t', Reasoner_Group.check_priority true ctxt g)
+                     in (p, t', Reasoner_Group.check_group true ctxt g)
                     end
                   ) (flat raw_pat_groups)
            in assign_default_group pat_groups ctxt

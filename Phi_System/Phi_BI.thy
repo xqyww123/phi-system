@@ -4561,7 +4561,41 @@ lemma "_NToA_init_having_Q_":
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def Inhabited_def Premise_def Transformation_def
   by clarsimp blast
 
-ML \<open>val augment_ToA_by_implication = Attrib.setup_config_bool \<^binding>\<open>augment_ToA_by_implication\<close> (K false)\<close>
+ML \<open>
+val augment_ToA_by_implication = Attrib.setup_config_bool \<^binding>\<open>augment_ToA_by_implication\<close> (K false)
+
+structure ToA_Hooks = Hooks (
+  type arg = {deep: bool}
+  type state = context_state
+)
+\<close>
+
+\<phi>reasoner_group ToA_hooks_all = (300, [0, 1000])
+      \<open>Hooks that will be invoked when initializing the normalized ToA reasoning\<close>
+  and ToA_hook_assertion_ss = (100, [100, 100]) in ToA_hooks_all
+      \<open>simpification by assertion simps\<close>
+  and ToA_hook_final = (1000, [1000,1000]) in ToA_hooks_all
+      \<open>finalization\<close>
+
+setup \<open>Context.theory_map (
+  ToA_Hooks.add @{priority %ToA_hook_assertion_ss} (fn _ => fn (ctxt, sequent) =>
+    (ctxt, Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+            let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
+                val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
+             in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
+                                               (Simplifier.rewrite target_ctxt)
+                                               Conv.all_conv
+            end) ctxt
+          ) 1 sequent))
+
+#>ToA_Hooks.add @{priority %ToA_hook_final} (fn {deep} => fn (ctxt, sequent) =>
+    let val rule = if deep andalso Config.get ctxt augment_ToA_by_implication
+                   then @{thm "_NToA_init_having_Q_"}
+                   else @{thm "_NToA_init_"}
+     in (ctxt, rule RS sequent)
+    end)
+
+)\<close>
 
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
@@ -4570,19 +4604,10 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
       val sequent = @{thm' Action_Tag_I} RS sequent
 
       val ctxt = Context.proof_map (PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep) ctxt0
-      val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-            let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
-                val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
-             in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
-                                               (Simplifier.rewrite target_ctxt)
-                                               Conv.all_conv
-            end) ctxt
-          ) 1 sequent
+      val deep = case deep of \<^Const>\<open>True\<close> => true | _ => false
+      val (ctxt, sequent) = ToA_Hooks.invoke (Context.Proof ctxt) {deep=deep} (ctxt, sequent)
 
-      val rule = case (deep, Config.get ctxt0 augment_ToA_by_implication)
-                   of (\<^Const>\<open>True\<close>, true) => @{thm "_NToA_init_having_Q_"}
-                    | _ => @{thm "_NToA_init_"}
-   in SOME ((ctxt, rule RS sequent), Seq.empty)
+   in SOME ((ctxt, sequent), Seq.empty)
   end)
 \<close>
 

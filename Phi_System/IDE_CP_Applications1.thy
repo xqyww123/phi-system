@@ -621,16 +621,19 @@ lemma assert_\<phi>app:
 
 subsection \<open>Simplification\<close>
 
-consts \<A>simp' :: \<open> bool \<Rightarrow> action \<close> (*bool: For antecedent, be true to require simplification
+type_synonym substantial_change = bool (*For antecedent, be true to require simplification
                     changing something. For a reasoning rule, be true to represent the simplification
                     provided in the rule does make some substantial change.
                     It is used to prevent infinite loop of unchanging simplifications.*)
 
-       \<A>_transitive_simp' :: \<open>bool \<Rightarrow> action\<close> (*rules where simplifications will be applied
-                                  continuously on the simplified results. The annotation exists only
-                                  in the literal source but reduced once added to \<phi>-LPR by a rule pass
-                                  converting \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_transitive_simp\<close> to
-                                  \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action \<A>simp \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action \<A>simp\<close>*)
+consts \<A>simp' :: \<open> substantial_change \<Rightarrow> action \<close>
+
+       \<A>_transitive_simp' :: \<open>substantial_change \<Rightarrow> action\<close> (*rules where simplifications will be applied
+                    repeatedly on the simplified results given by the previous step.
+                    The annotation exists only in the literal source syntacitcally but once
+                    it is added to \<phi>-LPR, will be reduced by a rule pass
+                    converting \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_transitive_simp\<close> to
+                    \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action \<A>simp \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action \<A>simp\<close>*)
 
 abbreviation \<open>\<A>simp \<equiv> \<A>simp' True\<close>
 abbreviation \<open>\<A>_transitive_simp \<equiv> \<A>_transitive_simp' True\<close>
@@ -687,30 +690,33 @@ declare [[ \<phi>reason_default_pattern
                   \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action \<A>simp\<close>\<close>)\<close> (1)
 ]]
 
-consts \<A>chk_need_simp :: \<open>bool \<Rightarrow> action\<close>
-       \<A>chk_need_transitive_simp :: \<open>bool \<Rightarrow> action\<close>
-       \<A>_apply_simplication :: \<open>bool \<Rightarrow> action\<close> \<comment> \<open>bool: whether to apply the global-wide system simplification\<close>
+consts \<A>chk_need_simp :: \<open>substantial_change \<Rightarrow> action\<close>
+       \<A>chk_need_transitive_simp :: \<open>substantial_change \<Rightarrow> action\<close>
+       \<A>_apply_simplication :: \<open>action\<close>
 
-lemma [\<phi>reason %cutting+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication False\<close>]:
+lemma [\<phi>reason %cutting for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>chk_need_transitive_simp False)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication Any' \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication \<close>
   unfolding Action_Tag_def Transformation_def Simplify_def
   by simp
 
+(*
 lemma [\<phi>reason %cutting for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication _\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>chk_need_transitive_simp False)
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>chk_need_transitive_simp False)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Y : Ya
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication Any' \<close>
   unfolding Action_Tag_def Transformation_def Simplify_def
   by simp
+*)
 
+(*
 lemma [\<phi>reason %\<phi>simp]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>simp' M
 \<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<longrightarrow> (y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @action \<A>chk_need_transitive_simp False)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. (\<exists>y. r y \<and> w y z) @action \<A>_transitive_simp' M \<close>
   unfolding Action_Tag_def Transformation_def Premise_def
   by clarsimp blast
-
+*)
 
 lemma \<A>simp_stage_1:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>chk_need_transitive_simp False)
@@ -721,8 +727,9 @@ lemma \<A>simp_stage_1:
 lemma \<A>simp_trans:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>_transitive_simp' Any
 \<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @action \<A>chk_need_simp M)
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. (\<exists>y. r y \<and> w y z) @action \<A>simp' Any2 \<close>
-  unfolding Action_Tag_def Transformation_def
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. \<exists>y. r y \<and> w y z)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @action \<A>simp' Any2 \<close>
+  unfolding Action_Tag_def Transformation_def Simplify_def
   by simp blast
 
 lemma \<A>simp_trans':
@@ -735,8 +742,9 @@ lemma \<A>simp_trans':
 lemma \<A>simp_trans'P:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P y @action \<A>_transitive_simp' Any
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y' \<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @action \<A>chk_need_simp M)
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z \<and> P y' @action \<A>simp' Any2 \<close>
-  unfolding Action_Tag_def Transformation_def
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. w z \<and> P y')
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @action \<A>simp' Any2 \<close>
+  unfolding Action_Tag_def Transformation_def Simplify_def
   by simp
 
 ML_file \<open>library/tools/CoP_simp.ML\<close>
@@ -761,8 +769,9 @@ private lemma \<A>simp_chk_go:
 private lemma \<A>simp_chk_go_transitive:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>simp' M
 \<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<longrightarrow> (y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @action \<A>chk_need_transitive_simp False)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. (\<exists>y. r y \<and> w y z) @action \<A>chk_need_transitive_simp M\<close>
-  unfolding Action_Tag_def Transformation_def Premise_def
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. \<exists>y. r y \<and> w y z)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @action \<A>chk_need_transitive_simp M\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Simplify_def
   by clarsimp blast
 
 private lemma \<A>simp_chk_no_need_transitive:
@@ -833,10 +842,26 @@ setup \<open>Context.theory_map (
 (*declare [[\<phi>simp_rule_pass]] \<comment> \<open>Must be enabled until all the internal rules are registered as
       it modifies any rule in form \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> into \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?? \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ??\<close>\<close>
 *)
-(*
+(* TODO
 hide_fact \<A>simp_stage_1 \<A>simp_chk_no_need \<A>simp_chk_no_need'
           \<A>simp_chk_go \<A>simp_trans \<A>simp_trans' \<A>simp_trans'P
 *)
+
+paragraph \<open>Invoking CoP-simp in ToA reasoning\<close>
+
+\<phi>reasoner_group ToA_hook_CoP_simp = (150, [150,150]) in ToA_hooks_all and > ToA_hook_assertion_ss
+    \<open>normalizing and simplifying \<close>        
+
+(*
+lemma
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' @action \<A>_map_each_item (\<A>chk_need_transitive_simp False)
+\<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+
+setup \<open>Context.theory_map (
+  ToA_Hooks.add 200)\<close>
+*)
+
 
 subsubsection \<open>Simplification Protect\<close>
 
@@ -1122,7 +1147,7 @@ subsubsection \<open>Entry Point\<close>
 lemma to_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> T
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<w>\<i>\<t>\<h> P @action \<A>_leading_item (to T)
-\<Longrightarrow> Ya \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication True
+\<Longrightarrow> Ya \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Do_def Action_Tag_def Transformation_def
   by simp

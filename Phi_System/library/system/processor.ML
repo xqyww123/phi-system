@@ -339,8 +339,8 @@ fun setup_cmd ((((((name, pos), (raw_priority, raw_precedence)), keywords), raw_
     val ctxt_parse = Proof_Context.init_global thy
     val (_, ctxt_parse') = Proof_Context.add_fixes_cmd fixes ctxt_parse
     val pattern = read_prop_pattern ctxt_parse' raw_pattern
-    val (priority, _) = Reasoner_Group.check_priority true (Context.Theory thy) raw_priority
-    val (precedence, _) = Reasoner_Group.check_priority true (Context.Theory thy) raw_precedence
+    val (priority, _) = Reasoner_Group.check_group true (Context.Theory thy) raw_priority
+    val (precedence, _) = Reasoner_Group.check_group true (Context.Theory thy) raw_precedence
     open ML_Syntax
   in
     thy |> Context.theory_map (
