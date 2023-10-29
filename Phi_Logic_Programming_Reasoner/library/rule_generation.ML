@@ -290,11 +290,11 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
           val binding = Option.map (fn (vs, b') =>
                   let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
                       fun varify_binding i b =
-                        let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
+                        let val b' = if i = 0 then b else Binding.suffix_name ("\<^sub>" ^ string_of_int i) b
                             val iname = Context.cases Sign.full_name Proof_Context.full_name ctxt b'
                          in if Facts.defined facts iname
                             then varify_binding (i+1) b
-                            else b
+                            else b'
                         end
                       fun err () = error (let open Pretty in string_of (chunks [
                                     block (text "The binding target" @ [brk 1] @

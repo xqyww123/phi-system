@@ -242,9 +242,13 @@ val _ = Theory.setup (
       let val guard = the_default swap_normalization_guard guard'
        in ctxt
        |> Config.put_generic Phi_CoP_Simp.extract_pattern_trigger false
-       |> Phi_Reasoner.add_rule pos mode (SOME (the_default @{reasoner_group %\<phi>ToA_swap_norm} group))
+       |> Config.put_generic Phi_CoP_Backward_Simp.extract_pattern_trigger false
+
+       |> Phi_Reasoner.add_rule pos mode (SOME (the_default @{reasoner_group %\<phi>ToA_swap_norm_derived} group))
                                 pats (SOME guard) [rule]
+
        |> Config.restore_generic Phi_CoP_Simp.extract_pattern_trigger ctxt
+       |> Config.restore_generic Phi_CoP_Backward_Simp.extract_pattern_trigger ctxt
       end
   )))
   "declaring a \<phi>simp rule which will be used in swapping normalization.\

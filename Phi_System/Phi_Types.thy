@@ -200,7 +200,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding of Subjection\<close>
 
 declare [[\<phi>trace_reasoning = 2 ]]
-   
+     
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Sep_Functor_1
@@ -209,7 +209,6 @@ declare [[\<phi>trace_reasoning = 2 ]]
      (*and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>*)
      (*and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>*)
        and Abstraction_to_Raw
-
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' SubjectionTY.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?Pa) \<Longrightarrow> Abstract_Domain\<^sub>L (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?Pa x) \<close>),
@@ -2395,6 +2394,8 @@ declare \<phi>Dependent_Sum.\<phi>Share.rewr[where n=n and na=n for n, OF \<r>Gu
         \<phi>MapAt_L.\<phi>Share.rewr      [assertion_simps]
         \<phi>Share.\<phi>Prod              [symmetric, assertion_simps]
 
+thm \<phi>MapAt.\<phi>Share.norm_tgt
+thm \<phi>Share.\<phi>MapAt.norm_tgt
 
 declare [[\<phi>ToA_swap_normalization \<open>(\<odiv>) ?n\<close> over \<dots> (100)]]
 
