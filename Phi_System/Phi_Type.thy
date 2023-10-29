@@ -767,38 +767,6 @@ subsubsection \<open>Guess Algebraic Operators\<close>
 subsubsection \<open>Configurations\<close>
 
 \<phi>reasoner_group Semimodule_No_SDistr = (1000, [1000,1000]) for \<open>Semimodule_No_SDistr F\<close> \<open>\<close>
-
-(*
-declare [[
-  \<phi>reason_default_pattern_ML
-      \<open>Transformation_Functor ?F1 ?F2 _ _ _\<close> \<Rightarrow> \<open>fn generic => fn term =>
-          let val ctxt = Context.proof_of generic
-              val [term'] = Variable.exportT_terms ctxt Phi_Help.empty_ctxt [term]
-              val Trueprop $ (_ (*Transformation_Functor*) $ F1 $ F2 $ D $ mapper) = term'
-              val ind = Int.max (maxidx_of_term F1, maxidx_of_term F2) + 1
-              fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
-              val H = Const(\<^const_name>\<open>Transformation_Functor\<close>, TVar(("'TF",ind),[]))
-           in SOME [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "D" "'D" $ var "R" "'R" $ var "M" "'M"),
-                    Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "D" "'D" $ var "R" "'R" $ var "Ma" "'M")]
-          end\<close> (100)
-]]*)
-
-(* TODO: depreciate!!!
-
-The default patterns of the rules are more general here by varifying types.
-  This is specially designed.
-  In \<^const>\<open>Reverse_Transformation\<close>, as the reverse transformation can have different type,
-    and in the algebraic general rule \<open>_Structural_Extract_general_rule'_\<close> the functors are
-    represented by variables, it means we have no simple way to varify the type of the functors.
-    We use ML (who?) to capture the functor constant and varify the type variables as much as it can
-    (we have no way to know the appropriate extend to which it varifies).
-    Under such varified types, we set the default pattern of the algebraic properties to be also
-    similarly very varified, to hope the rules can still capture the very varified
-    reasoning subgoals.
-  We only need to over-varify Transformation_Functor and Separation_Functor in such way, because
-  only them two are used in the reverse transformation.*)
-
-(*TODO: if we can depreciate this, as the reasonings are by template*)
   
 declare [[
   \<phi>default_reasoner_group
@@ -1466,22 +1434,12 @@ lemma \<phi>elim_reasoning_transformation:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   by simp
 
-(*TODO: move*)
-lemma apfst_id'[simp]:
-  \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
-  by (simp add: fun_eq_iff)
-
 lemma \<phi>elim'SEi_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
 \<Longrightarrow> apfst y x \<Ztypecolon> U (fst x) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   by (cases C; cases x; simp add: \<phi>Prod_expn')
 
-(* TODO!!!:
-lemma \<phi>elim'SE_transformation:
-  \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U))
-\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE True
-\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Auto_Transform_Hint Y' (x' \<Ztypecolon> T') \<and> P @action \<A>SE True\<close>*)
 
 subparagraph \<open>OPEN and MAKE\<close>
 
@@ -2209,93 +2167,8 @@ lemma [\<phi>reason_template default 80]:
   \<medium_right_bracket> .
 *)
 
-(*
-paragraph \<open>\<open>Separation_Homo\<^sub>I\<close> for Non-semigroup\<close> \<comment> \<open>as they cannot be handled by stepwise rule and
-                                                    therefore the NToA procedure\<close>
-*)
-
-(*
-thm apply_Separation_Homo\<^sub>E[unfolded \<phi>Prod_expn''[simplified]]
-declare apply_Separation_Homo\<^sub>E
-        [unfolded \<phi>Prod_expn''[simplified],
-         \<phi>reason_template 45 except \<open>(_ :: ?'a :: sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _\<close>]
-*)
 
 
-(* \<p>\<r>\<e>\<m>\<i>\<s>\<e> mapper {(a * b, (a, b)) |a b. a ## b} = {(a * b, (a, b)) |a b. a ## b}
-\<Longrightarrow>  *)
-
-(* (*Is this really needed?*)
-lemma Separation_Homo_eq_functor:
-  \<open> (\<And>x y z. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (m (\<lambda>(a, b) c. c = a * b \<and> a ## b \<and> (a, b) \<in> D (x, y)) (x, y) z
-                        \<longrightarrow> z = x * y \<and> x ## y))
-\<Longrightarrow> Sep_Homo_Ty F F F' T T
-\<Longrightarrow> Transformation_Functor F F' pred mapper
-\<Longrightarrow> Separation_Homo_eq T
-\<Longrightarrow> Separation_Homo_eq (F T)\<close>
-  unfolding Separation_Homo_eq_def Transformation_Functor_def Sep_Homo_Ty_def
-            Object_Sep_Homo\<^sub>I_def
-  apply (clarsimp simp add: \<phi>Prod_split[symmetric])
-  subgoal premises prems for x y
-  proof -
-    thm prems(2)[THEN spec[where x=T], THEN spec[where x=\<open>T \<^emph> T\<close>],
-                 THEN spec[where x=\<open>{x*y}\<close>],
-                 THEN spec[where x=\<open>{(x * y, (x, y))}\<close>]]
-thm prems
-
-  by (simp; metis \<phi>Prod_split) *)
-
-(*
-\<phi>reasoner_ML Separation_Homo_functor 50 (\<open>Object_Sep_Homo\<^sub>I _\<close>) = \<open>
-fn (ctxt, sequent) => Seq.make (fn () =>
-  let val _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Sep_Homo\<^sub>I\<close>, _) $ T)
-        = Thm.major_prem_of sequent
-   in case Phi_Functor_Detect.detect 1 ctxt T
-        of SOME [Ft,Tt] => let
-            val rule = Drule.infer_instantiate ctxt
-                        [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
-                        @{thm "Separation_Homo_functor"}
-            in SOME ((ctxt, rule RS sequent), Seq.empty) end
-            handle THM _ => NONE
-         | _ => NONE
-  end)
-\<close>
-*)
-
-(*
-\<phi>reasoner_ML Separation_Homo_eq_functor 50 (\<open>Separation_Homo_eq _\<close>) = \<open>
-fn (ctxt, sequent) => Seq.make (fn () =>
-  let val _ (*Trueprop*) $ (Const(\<^const_name>\<open>Separation_Homo_eq\<close>, _) $ T)
-        = Thm.major_prem_of sequent
-   in case Phi_Functor_Detect.detect 1 ctxt T
-        of SOME [Ft,Tt] => let
-              val rule = Drule.infer_instantiate ctxt
-                            [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
-                            @{thm "Separation_Homo_eq_functor"}
-              in SOME ((ctxt, rule RS sequent), Seq.empty) end
-              handle THM _ => NONE
-         | _ => NONE
-  end)
-\<close>
-*)
-
-(* TODO: depreciate
-locale Sep_Homo_Type_zip_L =
-  fixes Fa :: \<open>('b::sep_magma,'a) \<phi> \<Rightarrow> ('d::sep_magma,'c) \<phi>\<close>
-    and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
-    and Fc :: \<open>('b,'a \<times> 'e) \<phi> \<Rightarrow> ('d,'g) \<phi>\<close>
-    and D  :: \<open>('c \<times> 'f) set\<close>
-    and z  :: \<open>'c \<times> 'f \<Rightarrow> 'g\<close>
-    and Prem :: \<open>('b,'a) \<phi> \<Rightarrow> ('b,'e) \<phi> \<Rightarrow> 'c \<times> 'f \<Rightarrow> bool\<close>
-  assumes Separation_Homo\<^sub>I: \<open>Separation_Homo\<^sub>I Fa Fb Fc Prem D z\<close>
-begin
-
-(*TODO!!!!
-
-Do we really need it?*)
-
-end
-*)
 
 subsection \<open>Semimodule\<close>
 
@@ -4050,6 +3923,26 @@ lemma [\<phi>reason_template name F.G.rewr[]]:
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def Premise_def BI_eq_iff
   by clarsimp metis
 
+subparagraph \<open>1-to-2\<close>
+
+lemma [\<phi>reason_template name F.G.rewr[]]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D  (embedded_func f P)
+\<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D' (embedded_func g Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> D' (f x) \<and> g (f x) = x
+\<Longrightarrow> (x \<Ztypecolon> F (G T U)) = (f x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U)) \<close>
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Transformation_def
+            BI_eq_iff
+  by clarsimp metis
+
+lemma [\<phi>reason_template name G'.F.rewr[]]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D  (embedded_func f P)
+\<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D' (embedded_func g Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (g x) \<and> D' x \<and> f (g x) = x
+\<Longrightarrow> (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U)) = (g x \<Ztypecolon> F (G T U)) \<close>
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Transformation_def
+            BI_eq_iff
+  by clarsimp metis
+
 
 paragraph \<open>Deriving ToA\<close>
 
@@ -4115,8 +4008,7 @@ subparagraph \<open>1-to-1\<close>
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
-\<Longrightarrow> x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp \<close>
+\<Longrightarrow> x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>simp \<close>
   unfolding Tyops_Commute_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
   by clarsimp
 
@@ -4125,8 +4017,7 @@ subparagraph \<open>1-to-2\<close>
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
-\<Longrightarrow> x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp \<close>
+\<Longrightarrow> x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y @action \<A>simp \<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
   by clarsimp
 
@@ -4135,16 +4026,14 @@ subparagraph \<open>2-to-1\<close>
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling+1]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
-\<Longrightarrow> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp \<close>
+\<Longrightarrow> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r x y @action \<A>simp \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
   by clarsimp
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
-\<Longrightarrow> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp
+\<Longrightarrow> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r x y @action \<A>simp
     <except-pattern> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY @action \<A>simp \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Action_Tag_def Bubbling_def Except_Pattern_def Simplify_def \<r>Guard_def
   by clarsimp
@@ -4152,23 +4041,34 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
-\<Longrightarrow> x \<Ztypecolon> G' (F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp
+\<Longrightarrow> x \<Ztypecolon> G' (F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r x y @action \<A>simp
     <except-pattern> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY @action \<A>simp \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Action_Tag_def Bubbling_def Except_Pattern_def Simplify_def \<r>Guard_def
   by clarsimp
 
 subparagraph \<open>1-to-1\<lambda>\<close>
 
-(*TODO!*)
+lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
+  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y) @action \<A>simp \<close>
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Premise_def Bubbling_def Action_Tag_def Simplify_def
+  by simp
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
+  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y) @action \<A>simp \<close>
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Premise_def Bubbling_def Action_Tag_def Simplify_def
+  by simp
+
 
 paragraph \<open>To-Transformation Interpreter\<close>
 
 lemma [\<phi>reason_template %To_ToA_derived]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
-\<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> F G) \<close>
+\<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> F G) \<close>
   unfolding Tyops_Commute_def Premise_def Action_Tag_def Except_Pattern_def Simplify_def \<r>Guard_def
   by clarsimp
 
@@ -4574,10 +4474,6 @@ end
 
 paragraph \<open>Guessing Antecedents\<close>
 
-(*TODO:
-declare Is_Contravariant[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
-        Is_Covariant[where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]*)
-
 
 subsubsection \<open>Object Equivalence\<close>
 
@@ -4694,19 +4590,8 @@ end
 \<phi>property_deriver Basic 109
   requires Object_Equiv and Abstract_Domain and Carrier_Set ?
 
-(*declare Is_Contravariant[where PC=\<open>Carrier_Set\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]*)
-
 
 subsubsection \<open>Transformation Functor\<close>
-
-(*TODO: move*)
-
-definition \<open>\<A>\<D>\<V>_target X \<equiv> X\<close>
-
-lemma [\<phi>reason default %\<phi>simp_fallback]:
-  \<open> x \<Ztypecolon> \<A>\<D>\<V>_target T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
-  unfolding Action_Tag_def \<A>\<D>\<V>_target_def
-  by simp
 
 context begin
 
@@ -4719,7 +4604,7 @@ private lemma \<phi>TA_TF_rule:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper\<close>
-  unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def \<A>\<D>\<V>_target_def
+  unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def
   by simp
 
 private lemma \<phi>TA_FT_deriver_cong:
@@ -4755,7 +4640,7 @@ private lemma \<phi>TA_biTF_rule:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper\<close>
-  unfolding Transformation_BiFunctor_def Action_Tag_def Ball_def Premise_def \<A>\<D>\<V>_target_def
+  unfolding Transformation_BiFunctor_def Action_Tag_def Ball_def Premise_def
   by simp
 
 private lemma \<phi>TA_biTF_rewr_C:
@@ -6190,7 +6075,7 @@ setup \<open> Context.theory_map(
   }))
 \<close>
 
-lemma list_all2_reduct_rel[simp]: (*TODO!*)
+lemma list_all2_reduct_rel[simp]:
   \<open>list_all2 (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = map f a' \<and> list_all P a')\<close>
   apply (clarsimp simp add: fun_eq_iff)
   subgoal for x y by (induct x arbitrary: y; simp; case_tac y; simp; blast) .

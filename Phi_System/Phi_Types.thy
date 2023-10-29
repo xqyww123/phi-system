@@ -1638,6 +1638,7 @@ declare \<phi>Fun'.\<phi>Sum\<^sub>I[\<phi>reason add]
         \<phi>Fun'.\<phi>Sum\<^sub>E[\<phi>reason add]
         \<phi>Fun'.\<phi>Inter\<^sub>I[\<phi>reason add]
 
+
 subsubsection \<open>Reasoning Rules\<close>
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>

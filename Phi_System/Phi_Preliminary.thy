@@ -124,6 +124,10 @@ lemma snd_o_Pair_eq_id[simp]:
   unfolding fun_eq_iff
   by simp
 
+lemma apfst_id'[simp]:
+  \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
+  by (simp add: fun_eq_iff)
+
 
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 
