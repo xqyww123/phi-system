@@ -34,13 +34,8 @@ signature PHI_COP_SIMP_RULES = sig
 
 val direction : bool
 
-val trans  : thm
-val trans' : thm
-val trans'P : thm
 val binding_of_extracting_trigger : binding
 val binding_of_rule_declaration_attr : binding
-
-val relax_tag_of_substantial_change : thm
 
 val PLPR_pass_name : string
 val pattern_of_simp_rule : term
@@ -133,10 +128,10 @@ fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _
   | select_trans_rule (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = select_trans_rule X
   | select_trans_rule (Abs (_, _, X)) = select_trans_rule X
   | select_trans_rule (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = select_trans_rule X
-  | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = RULES.trans'
+  | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = @{thm' \<A>simp_trans'}
   | select_trans_rule (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (
-            Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = RULES.trans'P
-  | select_trans_rule _ = RULES.trans
+            Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = @{thm' \<A>simp_trans'P}
+  | select_trans_rule _ = @{thm' \<A>simp_trans }
 
 fun select_trans_rule' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = select_trans_rule' X
   | select_trans_rule' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X
@@ -167,7 +162,8 @@ fun force_rule_pass rule ctxt =
                     of SOME R => rule RS (Thm.transfer (Context.theory_of ctxt) R)
                      | NONE => if has_substantial_changes
                                then rule RS (Thm.transfer (Context.theory_of ctxt)
-                                                          RULES.relax_tag_of_substantial_change)
+                                                          @{lemma' \<open>P @action \<A>simp' forward True \<Longrightarrow> P @action \<A>simp' forward Any\<close>
+                                                               by (simp add: Action_Tag_def)})
                                else rule )
               |> Phi_Help.beta_eta_contract
               |> Drule.zero_var_indexes
@@ -244,20 +240,13 @@ structure Phi_CoP_Simp = Phi_CoP_Simp_GEN (
 
   val direction = true
 
-  val trans  = @{thm' \<A>simp_trans }
-  val trans' = @{thm' \<A>simp_trans'}
-  val trans'P = @{thm' \<A>simp_trans'P}
-
   val binding_of_extracting_trigger = \<^binding>\<open>\<phi>simp_extract_trigger\<close>
   val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_simp\<close>
-
-  val relax_tag_of_substantial_change  =
-        @{lemma' \<open>P @action \<A>simp' forward True \<Longrightarrow> P @action \<A>simp' forward Any\<close>
-             by (simp add: Action_Tag_def)}
 
   val PLPR_pass_name = "Phi_CoP_Simp"
   val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' True _\<close>
   val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' True _\<close>
+
 )
 
 structure Phi_CoP_Simp : PHI_COP_SIMP_FWD = struct
@@ -284,18 +273,11 @@ structure Phi_CoP_Backward_Simp = Phi_CoP_Simp_GEN (
 
   val direction = false
 
-  val trans  = @{thm' \<A>backward_simp_trans }
-  val trans' = @{thm' \<A>backward_simp_trans'}
-  val trans'P = @{thm' \<A>backward_simp_trans'P}
-
   val binding_of_extracting_trigger = \<^binding>\<open>\<phi>backward_simp_extract_trigger\<close>
   val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_backward_simp\<close>
-
-  val relax_tag_of_substantial_change  =
-        @{lemma' \<open>P @action \<A>simp' forward True \<Longrightarrow> P @action \<A>simp' forward Any\<close>
-             by (simp add: Action_Tag_def)}
 
   val PLPR_pass_name = "Phi_CoP_Simp"
   val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' False _\<close>
   val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' False _\<close>
+
 )
