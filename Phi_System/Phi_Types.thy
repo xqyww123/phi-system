@@ -2403,7 +2403,6 @@ lemma
   \<open> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> XX \<close>
   for T :: \<open>('c::share_one, 'a) \<phi>\<close>
   \<medium_left_bracket>
-    ;;
 
 
 

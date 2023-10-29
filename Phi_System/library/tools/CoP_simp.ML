@@ -16,11 +16,6 @@ val del_simp_trigger : pattern * serial -> Context.generic -> Context.generic
 datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * trigger
 val checkers_binding_on : Context.generic -> pattern -> checker list
 
-(* invoke the simplification if needed *)
-
-val invoke_when_needed : Proof.context * Phi_Working_Mode.working_mode -> thm -> thm
-val force_invoke : Proof.context * Phi_Working_Mode.working_mode -> thm -> thm (*no matter if is needed*)
-
 (* Controllers *)
 
 val extract_pattern_trigger : bool Config.T
@@ -35,7 +30,25 @@ val pass_recursively : (PLPR_Pattern.bv_typs -> term -> bool)
 
 end
 
-structure Phi_CoP_Simp : PHI_COP_SIMP = struct
+signature PHI_COP_SIMP_RULES = sig
+
+val direction : bool
+
+val trans  : thm
+val trans' : thm
+val trans'P : thm
+val binding_of_extracting_trigger : binding
+val binding_of_rule_declaration_attr : binding
+
+val relax_tag_of_substantial_change : thm
+
+val PLPR_pass_name : string
+val pattern_of_simp_rule : term
+val pattern_of_transitive_simp_rule : term
+
+end
+
+functor Phi_CoP_Simp_GEN (RULES: PHI_COP_SIMP_RULES) : PHI_COP_SIMP = struct
 
 (*** Check the need of simplification ***)
 
@@ -114,39 +127,24 @@ fun del_simp_trigger (pat,serial) ctxt =
   Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_ML (serial, Term.dummy, K (K true)))) ctxt
 
 
-(* invoke the simplification if needed *)
-
-fun force_invoke (ctxt, mode) sequent =
-  let val sequent' = @{thm' \<A>simp_stage_1} RS (sequent RS' (ctxt, #transformation_rule mode))
-   in Phi_Reasoner.reason1 (fn () => "Simplification fails") NONE (SOME 1) ctxt sequent'
-  end
-
-fun invoke_when_needed (ctxt, mode) sequent =
-  let val assertion = #spec_of mode (Thm.prop_of sequent)
-   in if is_simp_needed (Context.Proof ctxt) assertion
-   then (Phi_Reasoner.info_print ctxt 2 (fn () => "Invoking transformation-based simplification...");
-         force_invoke (ctxt, mode) sequent)
-   else sequent
-  end
-
 (* Simplifier *)
 
 fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
   | select_trans_rule (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = select_trans_rule X
   | select_trans_rule (Abs (_, _, X)) = select_trans_rule X
   | select_trans_rule (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = select_trans_rule X
-  | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = @{thm' \<A>simp_trans'}
+  | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = RULES.trans'
   | select_trans_rule (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (
-            Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = @{thm' \<A>simp_trans'P}
-  | select_trans_rule _ = @{thm' \<A>simp_trans}
+            Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = RULES.trans'P
+  | select_trans_rule _ = RULES.trans
 
 fun select_trans_rule' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = select_trans_rule' X
   | select_trans_rule' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X
-        $ (Const(\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) $ _ )) = SOME (select_trans_rule X)
+        $ (Const(\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) $ _ $ _ )) = SOME (select_trans_rule X)
   | select_trans_rule' _ = NONE
 
 (*val enable_rule_pass = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_rule_pass\<close> (K false)*)
-val extract_pattern_trigger = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_extract_trigger\<close> (K true)
+val extract_pattern_trigger = Attrib.setup_config_bool RULES.binding_of_extracting_trigger (K true)
 
 fun force_rule_pass rule ctxt =
   let fun bad_rule msg = error ("Malform rule of Transformation-based Simplification:\n" ^
@@ -169,15 +167,15 @@ fun force_rule_pass rule ctxt =
                     of SOME R => rule RS (Thm.transfer (Context.theory_of ctxt) R)
                      | NONE => if has_substantial_changes
                                then rule RS (Thm.transfer (Context.theory_of ctxt)
-                                             @{lemma' \<open>P @action \<A>simp' True \<Longrightarrow> P @action \<A>simp' Any\<close>
-                                                  by (simp add: Action_Tag_def)})
+                                                          RULES.relax_tag_of_substantial_change)
                                else rule )
               |> Phi_Help.beta_eta_contract
               |> Drule.zero_var_indexes
 
       fun get_pat (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_pat X
         | get_pat (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = get_pat X
-        | get_pat (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ _ $ _) = get_pat X
+        | get_pat (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _) =
+              if RULES.direction then get_pat X else get_pat Y
         | get_pat (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) = T
         | get_pat X = if Phi_Syntax.is_BI_connective X
                       then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
@@ -200,21 +198,21 @@ fun force_rule_pass rule ctxt =
 
 
 val _ = Theory.setup (Context.theory_map (
-  Phi_Reasoner.add_pass (Const("Phi_CoP_Simp", TFree("",[])), \<^pattern_prop>\<open>_ @action \<A>simp' _\<close>,
+  Phi_Reasoner.add_pass (Const(RULES.PLPR_pass_name, TFree("",[])), RULES.pattern_of_simp_rule,
     fn pos => fn (rules, mode, pats, guard, ctxt) =>
         (*if Config.get_generic ctxt enable_rule_pass
         then*) let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
               in (rules', mode, pats, guard, ctxt')
              end
         (*else (rules, mode, pats, guard, ctxt)*) )
-#>Phi_Reasoner.add_pass (Const("Phi_CoP_Simp", TFree("",[])), \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' _\<close>,
+#>Phi_Reasoner.add_pass (Const(RULES.PLPR_pass_name, TFree("",[])), RULES.pattern_of_transitive_simp_rule,
     fn pos => fn (rules, mode, pats, guard, ctxt) =>
         (*if Config.get_generic ctxt enable_rule_pass
         then*) let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
               in (rules', mode, pats, guard, ctxt')
              end
         (*else (rules, mode, pats, guard, ctxt)*) )
-) #> Attrib.setup \<^binding>\<open>\<phi>transformation_based_simp\<close> (
+) #> Attrib.setup RULES.binding_of_rule_declaration_attr (
   Phi_Reasoner.attr_syntax
     (Scan.lift (Scan.optional (Args.$$$ "no" |-- Args.$$$ "trigger" >> K false) true))
     (fn (pos, mode, priority, add_trigger, patterns, guard) =>
@@ -227,53 +225,77 @@ val _ = Theory.setup (Context.theory_map (
   \of the rule being registered as a trigger activating the simplification reasoning"
 )
 
-(*
-
-fun simplifier (ctxt0,sequent) = Seq.make (fn () =>
-  let val reasoners = Phi_Reasoner.reasoners ctxt0
-      val thy = Proof_Context.theory_of ctxt0
-
-      fun simp_task_mode (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = simp_task_mode X
-        | simp_task_mode (Const(\<^const_name>\<open>Action_Tag\<close>, _)
-              $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _)
-              $ (Const(\<^const_name>\<open>to\<close>, _) $ Const(\<^const_name>\<open>\<A>simp\<close>, _)) ) = 1
-        | simp_task_mode (Const(\<^const_name>\<open>Premise\<close>, _) $ X $ _) = simp_task_mode X
-        | simp_task_mode (Const(\<^const_name>\<open>\<A>simp\<close>, _)) = 2
-        | simp_task_mode (Const(\<^const_name>\<open>default\<close>, _)) = 3
-        | simp_task_mode _ = 0
-
-      
-
-      fun apply_rule rule (ctxt, sequent) =
-        (ctxt, (rule RS' (ctxt, select_trans_rule (Thm.concl_of rule))) RS' (ctxt, sequent))
-
-      fun apply_rules (rule :: L) s = (SOME (apply_rule rule s) handle THM _ => apply_rules L s)
-        | apply_rules [] _ = NONE
-
-      fun call_the_first (r :: L) s =
-           (case #tactic (#4 r)
-              of Phi_Reasoner.Tac_Rule rules => (
-                  case apply_rules rules s of NONE => call_the_first L s
-                     | some => some)
-               | Phi_Reasoner.Tac_ML tac => (
-                  case Seq.pull (tac s) of SOME (s', _) => SOME s'
-                     | NONE => call_the_first L s))
-        | call_the_first [] _ = NONE
-
-      fun simp (ctxt,th0) =
-        let val th = (if Term.could_beta_eta_contract (Thm.major_prem_of th0)
-                      then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th0
-                      else th0)
-            val mprem = Thm.major_prem_of th
-         in case simp_task_mode mprem
-         of 0 => (ctxt, th)
-          | 1 => (case call_the_first (Phi_Reasoner.get_reasoners' thy reasoners mprem) (ctxt, th)
-                    of NONE => (ctxt, th)
-                     | SOME s => simp s)
-          | 2 => simp (ctxt, Phi_Reasoners.safer_obligation_solver)
-        end
-   in SOME (simp (ctxt0,sequent), Seq.empty)
-  end)
-*)
 
 end
+
+
+signature PHI_COP_SIMP_FWD = sig
+include PHI_COP_SIMP
+
+(* invoke the simplification if needed *)
+
+val invoke_when_needed : Proof.context * Phi_Working_Mode.working_mode -> thm -> thm option
+val force_invoke : Proof.context * Phi_Working_Mode.working_mode -> thm -> thm (*no matter if is needed*)
+
+end
+
+
+structure Phi_CoP_Simp = Phi_CoP_Simp_GEN (
+
+  val direction = true
+
+  val trans  = @{thm' \<A>simp_trans }
+  val trans' = @{thm' \<A>simp_trans'}
+  val trans'P = @{thm' \<A>simp_trans'P}
+
+  val binding_of_extracting_trigger = \<^binding>\<open>\<phi>simp_extract_trigger\<close>
+  val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_simp\<close>
+
+  val relax_tag_of_substantial_change  =
+        @{lemma' \<open>P @action \<A>simp' forward True \<Longrightarrow> P @action \<A>simp' forward Any\<close>
+             by (simp add: Action_Tag_def)}
+
+  val PLPR_pass_name = "Phi_CoP_Simp"
+  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' True _\<close>
+  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' True _\<close>
+)
+
+structure Phi_CoP_Simp : PHI_COP_SIMP_FWD = struct
+open Phi_CoP_Simp
+
+(* invoke the simplification if needed *)
+
+fun force_invoke (ctxt, mode) sequent =
+  let val sequent' = @{thm' \<A>simp_invoke} RS (sequent RS' (ctxt, #transformation_rule mode))
+   in Phi_Reasoner.reason1 (fn () => "Simplification fails") NONE (SOME 1) ctxt sequent'
+  end
+
+fun invoke_when_needed (ctxt, mode) sequent =
+  let val assertion = #spec_of mode (Thm.prop_of sequent)
+   in if is_simp_needed (Context.Proof ctxt) assertion
+   then (Phi_Reasoner.info_print ctxt 2 (fn () => "Invoking transformation-based simplification...");
+         SOME (force_invoke (ctxt, mode) sequent))
+   else NONE
+  end
+
+end
+
+structure Phi_CoP_Backward_Simp = Phi_CoP_Simp_GEN (
+
+  val direction = false
+
+  val trans  = @{thm' \<A>backward_simp_trans }
+  val trans' = @{thm' \<A>backward_simp_trans'}
+  val trans'P = @{thm' \<A>backward_simp_trans'P}
+
+  val binding_of_extracting_trigger = \<^binding>\<open>\<phi>backward_simp_extract_trigger\<close>
+  val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_backward_simp\<close>
+
+  val relax_tag_of_substantial_change  =
+        @{lemma' \<open>P @action \<A>simp' forward True \<Longrightarrow> P @action \<A>simp' forward Any\<close>
+             by (simp add: Action_Tag_def)}
+
+  val PLPR_pass_name = "Phi_CoP_Simp"
+  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' False _\<close>
+  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' False _\<close>
+)
