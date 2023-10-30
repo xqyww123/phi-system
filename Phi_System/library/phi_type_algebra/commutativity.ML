@@ -189,8 +189,8 @@ fun swap_normalization_guard (ctxt, sequent) =
       val F_G_T = case Phi_Syntax.dest_transformation ToA
                     of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ F_G_T, _, _) => F_G_T
                      | _ => raise THM("swap_normalization_guard: BUG", 1, [sequent])
-   in (Config.get ctxt enable_swap_normalization_in_CoP_simp orelse
-       Config.get ctxt under_NToA_ctxt) andalso
+   in (*(Config.get ctxt enable_swap_normalization_in_CoP_simp orelse
+       Config.get ctxt under_NToA_ctxt) andalso*)
       whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
   end
 
@@ -222,6 +222,7 @@ fun check_to_normalize_synt ctxt (ML_Code src) =
 
 
 val phi_simp_trigger_id' = Unsynchronized.ref 0
+val phi_backward_simp_trigger_id' = Unsynchronized.ref 0
 
 val _ = Theory.setup (
 
@@ -260,19 +261,31 @@ val _ = Theory.setup (
   "declaring a \<phi>simp rule which will be used in swapping normalization.\
   \ Note the swap still needs to be enabled by declaring \<phi>ToA_swap_normalization"
 
-#> Context.theory_map (Phi_CoP_Simp.add_simp_trigger (\<^pattern>\<open>_ \<Ztypecolon> _\<close>, fn ctxt =>
-    fn (bvtys, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
-      (Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
-       Config.get_generic ctxt under_NToA_ctxt) andalso
-      Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvtys T
-    ) #-> (fn id => fn ctxt => (
-      phi_simp_trigger_id' := id ;
-      ctxt
-    )))
+#> Context.theory_map (
+    Phi_CoP_Simp.add_simp_trigger (\<^pattern>\<open>_ \<Ztypecolon> _\<close>, fn ctxt =>
+      fn (bvtys, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
+        (*(Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
+         Config.get_generic ctxt under_NToA_ctxt) andalso*)
+        Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvtys T
+      ) #-> (fn id => fn ctxt => (
+        phi_simp_trigger_id' := id ;
+        ctxt
+      ))
+ #> Phi_CoP_Backward_Simp.add_simp_trigger (\<^pattern>\<open>_ \<Ztypecolon> _\<close>, fn ctxt =>
+      fn (bvtys, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
+        (*(Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
+         Config.get_generic ctxt under_NToA_ctxt) andalso*)
+        Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvtys T
+      ) #-> (fn id => fn ctxt => (
+        phi_backward_simp_trigger_id' := id ;
+        ctxt
+      ))
+  )
 
 )
 
 val phi_simp_trigger_id = ! phi_simp_trigger_id'
+val phi_backward_simp_trigger_id = ! phi_backward_simp_trigger_id'
 
 
 

@@ -1214,6 +1214,7 @@ subsubsection \<open>Swap Normalization\<close>
 \<phi>reasoner_group \<phi>ToA_swap_norm = (1000, [10,2000]) in \<phi>simp
       \<open>normalize the \<phi>-type by swapping, as that specified by \<open>\<phi>ToA_swap_normalization\<close>\<close>
   and \<phi>ToA_swap_norm_derived = (50, [50, 50]) in \<phi>simp_derived and in \<phi>ToA_swap_norm
+                                              and > \<phi>simp_derived_Tr_functor
       \<open>derived\<close>
 
 
@@ -4075,17 +4076,31 @@ lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default
 
 paragraph \<open>\<open>\<Lambda>\<close>\<close>
 
-lemma [\<phi>reason_template name F.G.norm [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y @action \<A>_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Action_Tag_def Tyops_Commute_def Premise_def
   by clarsimp
 
-lemma [\<phi>reason_template name F.G.norm [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>_transitive_simp \<close>
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Tyops_Commute_def Premise_def
+  by clarsimp
+
+lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
+  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y @action \<A>_backward_transitive_simp \<close>
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Action_Tag_def Tyops_Commute_def Premise_def
+  by clarsimp
+
+lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
+  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>_backward_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Tyops_Commute_def Premise_def
   by clarsimp
 

@@ -131,7 +131,9 @@ setup \<open>Context.theory_map (
 
 text \<open>We still derive properties of \<open>\<phi>Prod\<close> for consistency of the internal reasoning system,
       even though most of the derived rules are already covered by existing rules.\<close>
-  
+
+declare [[\<phi>trace_reasoning = 0]]
+
 let_\<phi>type \<phi>Prod
   deriving Basic
        and Functional_Transformation_Functor
@@ -2379,6 +2381,10 @@ ML \<open>assert_derived_properties \<^theory> [
 ]\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
+  
+declare \<phi>Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
+
+thm \<phi>Share.\<phi>Dependent_Sum.norm_tgt
 
 declare \<phi>Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
         \<phi>Share.\<Sigma>\<^sub>E[\<phi>reason add]
@@ -2401,14 +2407,14 @@ thm \<phi>Share.\<phi>MapAt.norm_tgt
 
 declare [[\<phi>ToA_swap_normalization \<open>(\<odiv>) ?n\<close> over \<dots> (100)]]
 
-declare [[\<phi>trace_reasoning = 2]]
- 
+declare [[\<phi>trace_reasoning = 2, \<phi>reasoning_step_limit=30]]
+  
 lemma
   \<open> AA * (x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> BB
 \<Longrightarrow> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> XX \<close>
   for T :: \<open>('c::share_semimodule, 'a) \<phi>\<close>
   \<medium_left_bracket> premises A
-     A
+     A 
 
     thm transformation_refl
 
