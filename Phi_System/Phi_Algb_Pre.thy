@@ -42,19 +42,20 @@ There are pre-built reasoning rules for,
 \<close>
 
 \<phi>reasoner_group \<A>_partial_add = (1000, [1, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close>
-    \<open>Decision procedure solving equantions of partial additive groups, with finding appropriate instantiations
-     for schematic variables inside.\<close>
- and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close> in \<A>_partial_add
-    \<open>Rules leading to success directly\<close>
- and \<A>_partial_add_normalizing = (3000, [2801, 3399]) for \<open>_ = _ @action \<A>arith_eval\<close>
+      \<open>Decision procedure solving equantions of partial additive groups, with finding appropriate instantiations
+       for schematic variables inside.\<close>
+  and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close> in \<A>_partial_add
+      \<open>Rules leading to success directly\<close>
+  and \<A>_partial_add_normalizing = (3000, [2801, 3399]) for \<open>_ = _ @action \<A>arith_eval\<close>
                                                        in \<A>_partial_add and < \<A>_partial_add_success
-    \<open>Rules normalizing the reasoning\<close>
- and \<A>_partial_add_splitting = (2500, [2500, 2599]) for \<open>_ = _ @action \<A>arith_eval\<close>
+      \<open>Rules normalizing the reasoning\<close>
+  and \<A>_partial_add_splitting = (2500, [2500, 2599]) for \<open>_ = _ @action \<A>arith_eval\<close>
                                                      in \<A>_partial_add and < \<A>_partial_add_normalizing
-    \<open>Spliting a complicated equation like \<open>a + b + c = d\<close> into several minimal equations \<open>a + b = c\<close>\<close>
- and \<A>_partial_add_cut = (1000, [1000, 1100]) for \<open>_ = _ @action \<A>arith_eval\<close>
-                                               in \<A>_partial_add and < \<A>_partial_add_splitting
-    \<open>Cutting rules\<close>
+      \<open>Spliting a complicated equation like \<open>a + b + c = d\<close> into several minimal equations \<open>a + b = c\<close>\<close>
+  and \<A>_partial_add_cut = (1000, [1000, 1100]) in \<A>_partial_add and < \<A>_partial_add_splitting
+      \<open>Cutting rules\<close>
+  and \<A>_partial_add_specific = (1300, [1300, 1700]) in \<A>_partial_add and > \<A>_partial_add_cut
+      \<open>for speicifc structures\<close>
 
 declare [[\<phi>reason_default_pattern \<open>?Eq @action \<A>arith_eval\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eval\<close> (100)]]
 
@@ -236,11 +237,22 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + i
   by (simp, insert order_trans, fastforce)
 
 
+paragraph \<open>Set\<close>
+
+\<phi>reasoner_group \<A>_partial_add__set = (1300, [1300, 1300]) in \<A>_partial_add_specific \<open>Set\<close>
+
+lemma [\<phi>reason %\<A>_partial_add__set for \<open>id ?var + id _ = id _ @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<subseteq> B
+\<Longrightarrow> id (B - A) + id A = id B @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def
+  by clarsimp blast
+
+
 paragraph \<open>Len Intvl\<close>
 
 subparagraph \<open>Direct\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var + id (_::_ len_intvl) = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var + id (_::_ len_intvl) = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.len c \<ge> len_intvl.len b \<and>
              len_intvl.start c + len_intvl.len c - len_intvl.len b = len_intvl.start b
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.len c - len_intvl.len b\<rwpar>
@@ -248,14 +260,14 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var + id (_::_ len_intv
   unfolding Action_Tag_def Premise_def Simplify_def
   by (cases b; cases c; clarsimp)
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (_::_ len_intvl) + id ?var = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id (_::_ len_intvl) + id ?var = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.len a \<le> len_intvl.len c \<and> len_intvl.start a = len_intvl.start c
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> b : \<lbrakk>len_intvl.start a + len_intvl.len a : len_intvl.len c - len_intvl.len a\<rwpar>
 \<Longrightarrow> id a + id b = id c @action \<A>arith_eval \<close>
   unfolding Action_Tag_def Premise_def Simplify_def
   by (cases a; cases c; clarsimp)
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var_a + id (_::_ len_intvl) = id (_::_ len_intvl) + id ?var_d @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var_a + id (_::_ len_intvl) = id (_::_ len_intvl) + id ?var_d @action \<A>arith_eval\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start c \<le> len_intvl.start b \<and>
             len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
             len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
@@ -265,7 +277,7 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var_a + id (_::_ len_in
   unfolding Action_Tag_def Premise_def Simplify_def
   by (cases b; cases c; clarsimp)
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var_a + id (_::_ len_intvl) + id ?var_c = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var_a + id (_::_ len_intvl) + id ?var_c = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start d \<le> len_intvl.start b \<and>
             len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>
@@ -276,7 +288,11 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?var_a + id (_::_ len_in
 
 subparagraph \<open>Wrapped by set\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut+100
+\<phi>reasoner_group \<A>_partial_add__len_intvl_set = (1350, [1350, 1350])
+                                                in \<A>_partial_add_specific and > \<A>_partial_add__set
+                 \<open>Len_Intvl.set\<close>
+
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
            for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) @action \<A>arith_eval\<close>
                \<open>id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eval\<close>]:
   \<open> id a + id b = id c @action \<A>arith_eval
@@ -286,7 +302,7 @@ lemma [\<phi>reason %\<A>_partial_add_cut+100
   by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
       metis (full_types) Premise_D add.assoc add_leD1 linorder_not_less)
 
-lemma [\<phi>reason %\<A>_partial_add_cut
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
            for \<open>id ?var + id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eval\<close>]:
   \<open> id a + id b + id c = id d @action \<A>arith_eval
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
@@ -296,7 +312,7 @@ lemma [\<phi>reason %\<A>_partial_add_cut
   by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
       metis (full_types) Premise_E add.assoc add_leE leI trans_less_add1)
 
-lemma [\<phi>reason %\<A>_partial_add_cut
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
            for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) + id ?var @action \<A>arith_eval\<close>]:
   \<open> id a + id b = id c + id d @action \<A>arith_eval
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
@@ -335,6 +351,7 @@ text \<open>TODO:
 need some ML
 \<close>
 
+
 subsection \<open>Existence of Solutions of Addition Equation\<close>
 
 definition partial_add_overlaps :: \<open>'a::plus \<Rightarrow> 'a \<Rightarrow> bool\<close>
@@ -347,6 +364,7 @@ definition partial_add_overlaps :: \<open>'a::plus \<Rightarrow> 'a \<Rightarrow
   and partial_add_overlaps_direct_success = (3000, [3000,3000]) in partial_add_overlaps_all \<open>\<close>
   and partial_add_overlaps_cancl = (1000, [1000,1000]) in partial_add_overlaps_all \<open>\<close>
   and partial_add_overlaps_specific = (2000, [2000,2100]) in partial_add_overlaps_all \<open>\<close>
+  and partial_add_overlaps_norm = (2500, [2500, 2500]) in partial_add_overlaps_all \<open>\<close>
 
 declare [[\<phi>reason_default_pattern \<open>partial_add_overlaps ?a ?b\<close> \<Rightarrow> \<open>partial_add_overlaps ?a ?b\<close> (100)]]
 
@@ -510,6 +528,27 @@ lemma [\<phi>reason %partial_add_overlaps_specific + 100]:
   \<open> partial_add_overlaps a b
 \<Longrightarrow> partial_add_overlaps (Len_Intvl.set a) (Len_Intvl.set b) \<close>
   unfolding partial_add_overlaps_def ..
+
+paragraph \<open>Set\<close>
+
+lemma [\<phi>reason %partial_add_overlaps_specific]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S
+\<Longrightarrow> partial_add_overlaps S {x} \<close>
+  unfolding partial_add_overlaps_def ..
+
+lemma [\<phi>reason %partial_add_overlaps_specific]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S
+\<Longrightarrow> partial_add_overlaps {x} S \<close>
+  unfolding partial_add_overlaps_def ..
+
+lemma [\<phi>reason %partial_add_overlaps_specific+1]:
+  \<open> partial_add_overlaps S {var} \<close>
+  unfolding partial_add_overlaps_def ..
+
+lemma [\<phi>reason %partial_add_overlaps_specific+1]:
+  \<open> partial_add_overlaps {var} S \<close>
+  unfolding partial_add_overlaps_def ..
+
 
 paragraph \<open>List\<close>
 

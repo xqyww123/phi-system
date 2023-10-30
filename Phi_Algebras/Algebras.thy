@@ -2472,7 +2472,7 @@ paragraph \<open>Partial Additive Commutative Monoid\<close>
 
 instantiation set :: (type) comm_dom_of_add begin
 definition dom_of_add_set :: \<open>'a set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
-  where \<open>dom_of_add_set A B \<longleftrightarrow> (A \<inter> B = {})\<close>
+  where [iff]: \<open>dom_of_add_set A B \<longleftrightarrow> (A \<inter> B = {})\<close>
 
 instance by (standard, simp add: dom_of_add_set_def, blast)
 end
