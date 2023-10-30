@@ -4,7 +4,7 @@ signature PHI_COP_SIMP = sig
 type pattern = term
 type trigger = Context.generic -> PLPR_Pattern.bv_typs * term -> bool
 
-val is_simp_needed : Context.generic -> term -> bool
+val is_simp_needed : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
     (*checks types and assertions recursively but never enters into objects*)
 val add_simp_pattern : pattern -> Context.generic -> Context.generic
 val add_simp_trigger : pattern * trigger -> Context.generic -> serial * Context.generic
@@ -93,7 +93,7 @@ fun is_simp_needed ctxt =
           |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy bv_tys (pat,tm)
                       | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy bv_tys (pat,tm)
                                       andalso f ctxt (bv_tys, tm))
-   in Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk [])
+   in fn bvtys => Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk bvtys)
   end
 
 fun chk_pattern pat =
@@ -261,7 +261,7 @@ fun force_invoke (ctxt, mode) sequent =
 
 fun invoke_when_needed (ctxt, mode) sequent =
   let val assertion = #spec_of mode (Thm.prop_of sequent)
-   in if is_simp_needed (Context.Proof ctxt) assertion
+   in if is_simp_needed (Context.Proof ctxt) [] assertion
    then (Phi_Reasoner.info_print ctxt 2 (fn () => "Invoking transformation-based simplification...");
          SOME (force_invoke (ctxt, mode) sequent))
    else NONE

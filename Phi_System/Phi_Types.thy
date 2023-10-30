@@ -2390,23 +2390,27 @@ declare \<phi>Dependent_Sum.\<phi>Share.rewr[where n=n and na=n for n, OF \<r>Gu
                                    simp, assertion_simps]
         Set_Abst.\<phi>Share.rewr      [where n=n and na=n for n, OF \<r>Guard_I, OF Premise_I, OF HOL.refl,
                                    simp, assertion_simps]
-        \<phi>MapAt.\<phi>Share.rewr        [assertion_simps]
-        \<phi>MapAt_L.\<phi>Share.rewr      [assertion_simps]
+      (*\<phi>Share.\<phi>MapAt.rewr        [assertion_simps]
+        \<phi>Share.\<phi>MapAt_L.rewr      [assertion_simps] *)
         \<phi>Share.\<phi>Prod              [symmetric, assertion_simps]
+
+thm \<phi>Share.\<phi>MapAt_L.rewr
 
 thm \<phi>MapAt.\<phi>Share.norm_tgt
 thm \<phi>Share.\<phi>MapAt.norm_tgt
 
 declare [[\<phi>ToA_swap_normalization \<open>(\<odiv>) ?n\<close> over \<dots> (100)]]
 
-  
+declare [[\<phi>trace_reasoning = 2]]
+ 
 lemma
-  \<open> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> XX \<close>
-  for T :: \<open>('c::share_one, 'a) \<phi>\<close>
-  \<medium_left_bracket>
+  \<open> AA * (x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> BB
+\<Longrightarrow> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> XX \<close>
+  for T :: \<open>('c::share_semimodule, 'a) \<phi>\<close>
+  \<medium_left_bracket> premises A
+     A
 
-
-
+    thm transformation_refl
 
 thm \<phi>Share.\<phi>Prod
 

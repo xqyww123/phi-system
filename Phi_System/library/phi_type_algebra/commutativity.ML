@@ -26,6 +26,7 @@ type to_normalize = term (*F*) * term list (*Gs*) -> bool option
       (*whether to invoke the normalization swapping \<open>F\<close> into \<open>Gs\<close>,
         return None to leave the control to the settings of lower priority*)
 
+val enable_swap_normalization_in_CoP_simp : bool Config.T
 val control_swap_normalizations_on : ((term (*F*) * term list (*Gs*)) * Reasoner_Group.group * to_normalize) list
                                  -> Context.generic -> Context.generic
 
@@ -180,12 +181,17 @@ fun whether_to_swap_normalize ctxt =
       exists (internal_check bvtys) (parse_comm (bvtys, F_G_T_term))
   end
 
+val enable_swap_normalization_in_CoP_simp =
+      Config.declare_bool ("enable_swap_normalization_in_CoP_simp", \<^here>) (K false)
+
 fun swap_normalization_guard (ctxt, sequent) =
   let val (bvtys, ToA) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
       val F_G_T = case Phi_Syntax.dest_transformation ToA
                     of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ F_G_T, _, _) => F_G_T
                      | _ => raise THM("swap_normalization_guard: BUG", 1, [sequent])
-   in whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
+   in (Config.get ctxt enable_swap_normalization_in_CoP_simp orelse
+       Config.get ctxt under_NToA_ctxt) andalso
+      whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
   end
 
 
@@ -256,6 +262,8 @@ val _ = Theory.setup (
 
 #> Context.theory_map (Phi_CoP_Simp.add_simp_trigger (\<^pattern>\<open>_ \<Ztypecolon> _\<close>, fn ctxt =>
     fn (bvtys, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
+      (Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
+       Config.get_generic ctxt under_NToA_ctxt) andalso
       Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvtys T
     ) #-> (fn id => fn ctxt => (
       phi_simp_trigger_id' := id ;

@@ -3768,6 +3768,11 @@ lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::one BI
                                               except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> Object_Equiv U eq
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq y y' \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
+    \<comment> \<open>the relationship between \<open>y\<close> and \<open>y'\<close> is always maintained in any context which is helpful
+        for rules relying on the value of the target object. The rules are though rare and somehow
+        violate the convention of ToA where it infers a function from the source object to the target
+        (so the target object should, always be able to be an unknown variable),
+        can be significant such as the object-dependent destruction rules (\<open>MAKE\<close> rules) \<close>
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def Action_Tag_def Orelse_shortcut_def
@@ -4563,6 +4568,7 @@ lemma "_NToA_init_having_Q_":
 
 ML \<open>
 val augment_ToA_by_implication = Attrib.setup_config_bool \<^binding>\<open>augment_ToA_by_implication\<close> (K false)
+val under_NToA_ctxt = Config.declare_bool ("under_NToA_ctxt", \<^here>) (K false)
 
 structure ToA_Hooks = Hooks (
   type arg = {deep: bool}
@@ -4577,16 +4583,17 @@ structure ToA_Hooks = Hooks (
   and ToA_hook_final = (1000, [1000,1000]) in ToA_hooks_all
       \<open>finalization\<close>
 
+ML \<open>fun conv_transformation_by_assertion_ss ctxt =
+      let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
+          val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
+       in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
+                                         (Simplifier.rewrite target_ctxt)
+                                         Conv.all_conv
+      end\<close>
+
 setup \<open>Context.theory_map (
   ToA_Hooks.add @{priority %ToA_hook_assertion_ss} (fn _ => fn (ctxt, sequent) =>
-    (ctxt, Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-            let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
-                val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
-             in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
-                                               (Simplifier.rewrite target_ctxt)
-                                               Conv.all_conv
-            end) ctxt
-          ) 1 sequent))
+    (ctxt, Conv.gconv_rule (Phi_Conv.hhf_concl_conv (conv_transformation_by_assertion_ss) ctxt) 1 sequent))
 
 #>ToA_Hooks.add @{priority %ToA_hook_final} (fn {deep} => fn (ctxt, sequent) =>
     let val rule = if deep andalso Config.get ctxt augment_ToA_by_implication
@@ -4604,8 +4611,11 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
       val sequent = @{thm' Action_Tag_I} RS sequent
 
       val ctxt = Context.proof_map (PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep) ctxt0
+              |> Config.put under_NToA_ctxt true
       val deep = case deep of \<^Const>\<open>True\<close> => true | _ => false
       val (ctxt, sequent) = ToA_Hooks.invoke (Context.Proof ctxt) {deep=deep} (ctxt, sequent)
+
+      val ctxt = Config.restore under_NToA_ctxt ctxt0 ctxt
 
    in SOME ((ctxt, sequent), Seq.empty)
   end)
@@ -4766,18 +4776,31 @@ val SE_entry_point_normal = SE_entry_point (
 val SE_entry_point_b = SE_entry_point (
       (@{thm' enter_SEbi\<^sub>1}, @{thm' ToA_by_Equiv_Class[OF _ _ enter_SEbi\<^sub>1]}),
       (@{thm' enter_SEbi}, @{thm' ToA_by_Equiv_Class[OF _ _ enter_SEbi]}))
+
+structure Separation_Extraction_Hooks = Hooks (
+  type arg = {boundary: bool}
+  type state = context_state
+)
 \<close>
+
+setup \<open>Context.theory_map (Separation_Extraction_Hooks.add 1000
+  (fn {boundary} => fn (ctxt,sequent) =>
+    let val thy = Proof_Context.theory_of ctxt
+     in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
+        then (ctxt, (if boundary then SE_entry_point_b else SE_entry_point_normal) thy sequent)
+        else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
+              raise Fail "")
+    end)
+)\<close>
+
 
 
 \<phi>reasoner_ML \<A>SE_Entry default %ToA_splitting_source (\<open>(_::?'a::sep_semigroup BI) * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
 = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
-    let val thy = Proof_Context.theory_of ctxt
-     in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
-        then SOME ((ctxt, SE_entry_point_normal thy sequent), Seq.empty)
-        else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
-              NONE)
-    end)\<close>
+    SOME (Separation_Extraction_Hooks.invoke (Context.Proof ctxt) {boundary=false} (ctxt,sequent), Seq.empty)
+    handle Fail _ => NONE
+)\<close>
 
 lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
   " (C,P) = (True, P1 \<and> P2) \<and> (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1) \<and> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P2)) \<or>\<^sub>c\<^sub>u\<^sub>t
@@ -4788,12 +4811,8 @@ lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<
 
 \<phi>reasoner_ML \<A>SEb_Entry default %ToA_splitting_source (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
-    let val thy = Proof_Context.theory_of ctxt
-     in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
-        then SOME ((ctxt, SE_entry_point_b thy sequent), Seq.empty)
-        else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
-              NONE)
-    end)\<close>
+    SOME (Separation_Extraction_Hooks.invoke (Context.Proof ctxt) {boundary=true} (ctxt,sequent), Seq.empty)
+    handle Fail _ => NONE)\<close>
 
 lemma [\<phi>reason default %ToA_falling_latice]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
