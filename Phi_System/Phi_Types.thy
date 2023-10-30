@@ -3107,18 +3107,17 @@ interpretation x2: test 2 .
 thm x1.XX.Object_Equiv
 thm x2.XX.Object_Equiv
 
-declare [[\<phi>trace_reasoning = 2, \<phi>reasoning_step_limit = 40]]
-
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
 \<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
+(*
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> i \<noteq> j
 \<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>[i\<in>S - {i, j}] (\<Sigma> T)) * (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
-
+*)
 
 
 end

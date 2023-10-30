@@ -374,7 +374,8 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
 fun invoke_instantiations_on_property (pos, property) ctxt =
   let val idx = Thm.maxidx_of property
       val prop_concl = Thm.concl_of property
-   in Net.unify_term (Templates.get ctxt) prop_concl
+      val templates = Templates.get ctxt
+   in Net.unify_term templates prop_concl
    |> filter (fn (_,param,_) =>
         is_some (Seq.pull (Unify.hounifiers (ctxt, Envir.empty idx, [(param, prop_concl)]))))
    |> distinct template_eq

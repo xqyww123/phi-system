@@ -42,7 +42,7 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE'
                                     (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                        (#2 instruction)))
-                                    ([],[]) NONE [Morphism.thm m rule'] (if is_intro then @{print} ctxt else ctxt))
+                                    ([],[]) NONE [Morphism.thm m rule'] ctxt)
         |> note_properties_s phi [(name, [rule'])]
         |> pair [rule']
   end
