@@ -34,6 +34,8 @@ signature PHI_COP_SIMP_RULES = sig
 
 val direction : bool
 
+val select_trans_rule : term -> thm
+
 val binding_of_extracting_trigger : binding
 val binding_of_rule_declaration_attr : binding
 
@@ -124,18 +126,9 @@ fun del_simp_trigger (pat,serial) ctxt =
 
 (* Simplifier *)
 
-fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
-  | select_trans_rule (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = select_trans_rule X
-  | select_trans_rule (Abs (_, _, X)) = select_trans_rule X
-  | select_trans_rule (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = select_trans_rule X
-  | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = @{thm' \<A>simp_trans'}
-  | select_trans_rule (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (
-            Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = @{thm' \<A>simp_trans'P}
-  | select_trans_rule _ = @{thm' \<A>simp_trans }
-
 fun select_trans_rule' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = select_trans_rule' X
   | select_trans_rule' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X
-        $ (Const(\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) $ _ $ _ )) = SOME (select_trans_rule X)
+        $ (Const(\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) $ _ $ _ )) = SOME (RULES.select_trans_rule X)
   | select_trans_rule' _ = NONE
 
 (*val enable_rule_pass = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_rule_pass\<close> (K false)*)
@@ -236,6 +229,15 @@ structure Phi_CoP_Simp = Phi_CoP_Simp_GEN (
   val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' True _\<close>
   val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' True _\<close>
 
+  fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
+    | select_trans_rule (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = select_trans_rule X
+    | select_trans_rule (Abs (_, _, X)) = select_trans_rule X
+    | select_trans_rule (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = select_trans_rule X
+    | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = @{thm' \<A>simp_trans'}
+    | select_trans_rule (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (
+              Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = @{thm' \<A>simp_trans'P}
+    | select_trans_rule _ = @{thm' \<A>simp_trans }
+
 )
 
 structure Phi_CoP_Backward_Simp = Phi_CoP_Simp_GEN (
@@ -248,5 +250,7 @@ structure Phi_CoP_Backward_Simp = Phi_CoP_Simp_GEN (
   val PLPR_pass_name = "Phi_CoP_Simp"
   val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' False _\<close>
   val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' False _\<close>
+
+  val select_trans_rule = K @{thm' \<A>simp_trans_backward}
 
 )

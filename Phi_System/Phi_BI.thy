@@ -4525,9 +4525,6 @@ hide_fact \<A>simp_stage_1 \<A>simp_chk_no_need \<A>simp_chk_no_need'
 
 paragraph \<open>Invoking CoP-simp in ToA reasoning\<close>
 
-\<phi>reasoner_group ToA_hook_CoP_simp = (150, [150,150]) in ToA_hooks_all and > ToA_hook_assertion_ss
-    \<open>normalizing and simplifying \<close>
-
 lemma normalize_target:
   \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>transitive_simp_if_need False False)
 \<Longrightarrow> Object_Equiv U eq
@@ -5064,13 +5061,6 @@ structure ToA_Hooks = Hooks (
   type state = context_state
 )
 \<close>
-
-\<phi>reasoner_group ToA_hooks_all = (300, [0, 1000])
-      \<open>Hooks that will be invoked when initializing the normalized ToA reasoning\<close>
-  and ToA_hook_assertion_ss = (100, [100, 100]) in ToA_hooks_all
-      \<open>simpification by assertion simps\<close>
-  and ToA_hook_final = (1000, [1000,1000]) in ToA_hooks_all
-      \<open>finalization\<close>
 
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>

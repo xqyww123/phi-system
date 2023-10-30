@@ -13,6 +13,7 @@ include PHI_SYNTAX
 
   val mk_phi_type_ty : typ (*concrete*) * typ (*abstract*) -> typ
   val mk_phi_type : term * term -> term
+  val dest_phi_type_assertion : term -> term (*x*) * term (*T*)
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
 
@@ -54,6 +55,9 @@ fun mk_phi_type (x,T) =
    in \<^Const>\<open>\<phi>Type a b\<close> $ x $ T end
 
 fun mk_phi_type_ty (tm, tx) = \<^Type>\<open>fun tx \<^Type>\<open>set tm\<close>\<close>
+
+fun dest_phi_type_assertion (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) = (x, T)
+  | dest_phi_type_assertion X = raise TERM ("Not a \<phi>-type assertion", [X])
 
 fun dest_phi_type_ty \<^Type>\<open>fun x \<^Type>\<open>set model\<close>\<close> = (x, model)
   | dest_phi_type_ty T = raise TYPE ("dest_phi_type_ty", [T], [])

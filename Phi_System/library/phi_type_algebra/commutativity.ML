@@ -185,10 +185,28 @@ val enable_swap_normalization_in_CoP_simp =
       Config.declare_bool ("enable_swap_normalization_in_CoP_simp", \<^here>) (K false)
 
 fun swap_normalization_guard (ctxt, sequent) =
-  let val (bvtys, ToA) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvtys, goal) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+      val (ToA, direction) =
+          case PLPR_Syntax.dest_action_of' (fn Const(\<^const_name>\<open>\<A>simp'\<close>, _) $ _ $ _ => true
+                                             | _ => false) goal
+            of (ToA, _ $ direction $ _) =>
+               (ToA, 
+                case direction of Const(\<^const_name>\<open>True\<close>, _) => true
+                                | Const(\<^const_name>\<open>False\<close>, _) => false
+                                | _ => raise THM ("the direction must be a literal", 1, [sequent]))
+             | _ => error "BUG"
+
       val F_G_T = case Phi_Syntax.dest_transformation ToA
-                    of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ F_G_T, _, _) => F_G_T
+                    of (X, Y, _) =>
+                        if direction
+                        then snd (Phi_Syntax.dest_phi_type_assertion X)
+                        else case Y
+                          of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
+                                Const(\<^const_name>\<open>Subjection\<close>, _) $ Y' $ _)
+                               => snd (Phi_Syntax.dest_phi_type_assertion Y')
+                           | _ => snd (Phi_Syntax.dest_phi_type_assertion Y )
                      | _ => raise THM("swap_normalization_guard: BUG", 1, [sequent])
+
    in (*(Config.get ctxt enable_swap_normalization_in_CoP_simp orelse
        Config.get ctxt under_NToA_ctxt) andalso*)
       whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
