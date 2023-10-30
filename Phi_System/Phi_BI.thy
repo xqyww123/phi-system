@@ -3070,6 +3070,7 @@ section \<open>Basic \<phi>-Type Properties\<close>
 
 text \<open>The two properties are essential for reasoning the general transformation including separation extraction.\<close>
 
+
 subsection \<open>Identity Element I\&E\<close>
 
 definition Identity_Element\<^sub>I :: \<open>'a::one BI \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>I S P \<longleftrightarrow> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)\<close>
@@ -3764,15 +3765,10 @@ lemma [\<phi>reason %object_equiv_cut]: \<comment> \<open>for non-unital algebra
 
 subsubsection \<open>Its Role in ToA\<close>
 
-lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::one BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
-                                              except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
+                                              except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close> ]:
   \<open> Object_Equiv U eq
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq y y' \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
-    \<comment> \<open>the relationship between \<open>y\<close> and \<open>y'\<close> is always maintained in any context which is helpful
-        for rules relying on the value of the target object. The rules are though rare and somehow
-        violate the convention of ToA where it infers a function from the source object to the target
-        (so the target object should, always be able to be an unknown variable),
-        can be significant such as the object-dependent destruction rules (\<open>MAKE\<close> rules) \<close>
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def Action_Tag_def Orelse_shortcut_def
@@ -3781,7 +3777,11 @@ lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::one BI
   by clarsimp
 
 (*
-(*TODO: re-enable!*)
+(*It is some historical remain that I forget whether I can remove it safely.
+  The reasoning about identity element should have been solved by the falling lattice completely,
+  so the commented reasoning rules should be able to be removed safely, but I am not sure, and rechecking
+  is demanded later.
+*)
 lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::one BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
                                               except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> Identity_Elements\<^sub>E U D\<^sub>E
@@ -3797,10 +3797,7 @@ lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::one BI
   by clarsimp blast
 *)
 
-lemma ToA_by_Equiv_Class
-      [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
-                                              except \<open>(_::?'c::one BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
-                                                     \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close> ]:
+lemma ToA_by_Equiv_Class:
   \<open> Object_Equiv U eq
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> eq_y_y' : eq y y'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq_y_y' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P) \<comment> \<open>the target object is always constrained even when
@@ -3810,17 +3807,14 @@ lemma ToA_by_Equiv_Class
   unfolding Object_Equiv_def Transformation_def Premise_def Action_Tag_def Simplify_def
   by clarsimp
 
-lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+lemma [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
                                               except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> Object_Equiv U eq
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq y y' \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
-  for X :: \<open>'c::sep_magma_1 BI\<close>
-  unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def Action_Tag_def
-            Identity_Elements\<^sub>E_def Identity_Elements\<^sub>I_def Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def
-            Orelse_shortcut_def Ant_Seq_def
-  by (cases C; clarsimp; metis mult_1_class.mult_1_right sep_magma_1_left)
+  unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def Action_Tag_def Simplify_def
+  by (cases C; clarsimp; meson Transformation_def transformation_left_frame)
 
 (*
 (*TODO: re-enable!*)
@@ -3840,10 +3834,10 @@ lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::sep_ma
   by (cases C; clarsimp; metis mult_1_class.mult_1_right sep_magma_1_left)
 *)
 
-lemma ToA_by_Equiv_Class'
-      [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+lemma ToA_by_Equiv_Class':
+   (* [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
                                               except \<open>(_::?'c::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
-                                                     \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+                                                     \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]: *)
   \<open> Object_Equiv U eq
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> eq_y_y' : eq y y'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq_y_y' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
@@ -4006,6 +4000,597 @@ lemma Object_Equiv_Mul_Quant[\<phi>reason %object_equiv_cut]:
 section \<open>Reasoning\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax0.ML\<close>
+
+subsection \<open>Preliminary\<close>
+
+subsubsection \<open>Mapping \<phi>-Type Items by Transformation\<close>
+
+consts \<A>_map_each_item :: \<open>action \<Rightarrow> action\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item _\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item _\<close>    (100)
+  and \<open>?X @action \<A>_map_each_item ?\<A> \<close> \<Rightarrow>
+      \<open>ERROR TEXT(\<open>Bad Rule: \<close> (?X @action \<A>_map_each_item ?\<A>)) \<close>    (0)
+]]
+
+\<phi>reasoner_group \<A>_map_each_item = (1050, [1010, 3000]) for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item \<A>\<close>)
+      \<open>Reasoning rules applying action \<open>\<A>\<close> onto each atomic items in \<open>X\<close>\<close>
+  and \<A>_map_each_item_fallback = (1000, [1000, 1000]) for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item \<A>\<close>)
+      \<open>Fallback rules ending \<A>_map_each_item\<close>
+
+paragraph \<open>Implementation\<close>
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @action \<A>_map_each_item A \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> 0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 @action \<A>_map_each_item A \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> \<top> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<top> @action \<A>_map_each_item A \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A)
+\<Longrightarrow> X \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
+  unfolding Action_Tag_def Premise_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>
+\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<and>\<^sub>B\<^sub>I Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_map_each_item \<A>\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>
+\<Longrightarrow> A + B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X + Y \<w>\<i>\<t>\<h> P \<or> Q @action \<A>_map_each_item \<A>\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A)
+\<Longrightarrow> ExSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
+  unfolding Action_Tag_def
+  using ExSet_transformation .
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A)
+\<Longrightarrow> AllSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>
+\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_map_each_item \<A> \<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A
+\<Longrightarrow> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item A
+\<Longrightarrow> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> (C \<longrightarrow> Q) @action \<A>_map_each_item A\<close>
+  unfolding REMAINS_def
+  by (cases C; simp add: Action_Tag_def transformation_bi_frame)
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A' \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B' \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>)
+\<Longrightarrow> If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If C A' B' \<w>\<i>\<t>\<h> If C P Q @action \<A>_map_each_item \<A>\<close>
+  unfolding Action_Tag_def Premise_def
+  by (cases C; simp)
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A' a \<w>\<i>\<t>\<h> P a @action \<A>_map_each_item \<A>)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B' b \<w>\<i>\<t>\<h> Q b @action \<A>_map_each_item \<A>)
+\<Longrightarrow> (case_sum A B x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (case_sum A' B' x) \<w>\<i>\<t>\<h> case_sum P Q x @action \<A>_map_each_item \<A>\<close>
+  unfolding Action_Tag_def Premise_def
+  by (cases x; simp)
+
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> (\<And>i\<in>I. A i \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B i \<w>\<i>\<t>\<h> P i @action \<A>_map_each_item \<A>)
+\<Longrightarrow> (\<big_ast>i\<in>I. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. B i) \<w>\<i>\<t>\<h> (\<forall>i \<in> I. P i) @action \<A>_map_each_item \<A> \<close>
+  unfolding Action_Tag_def Premise_def
+  by (clarsimp simp add: sep_quant_transformation)
+
+lemma [\<phi>reason %\<A>_map_each_item_fallback]: \<comment> \<open>fallback\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
+  unfolding Action_Tag_def .
+
+
+subsection \<open>Normalization of Assertions\<close>
+
+subsubsection \<open>Declaring Simpsets\<close>
+
+consts assertion_simps :: \<open>mode \<Rightarrow> mode\<close>
+       SOURCE :: mode
+       TARGET :: mode
+
+ML \<open>
+structure Assertion_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = SOME \<^binding>\<open>assertion_simps\<close>
+  val comment = "Simplification rules normalizing an assertion. \
+                       \It is applied before NToA process."
+  val attribute = NONE
+  val post_merging = I
+)
+
+val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
+      (ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>HOL.defined_All\<close>,
+                         \<^simproc>\<open>defined_all\<close>, \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>,
+                         \<^simproc>\<open>Set.defined_Bex\<close>, \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>,
+                         \<^simproc>\<open>case_prod_eta\<close>, \<^simproc>\<open>Collect_mem\<close>,
+                         Phi_Conv.move_Ex_for_set_notation]
+            addsimps @{thms' Sum_Type.sum.case HOL.simp_thms})
+          (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
+    )))
+
+structure Assertion_SS_Source = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = SOME \<^binding>\<open>assertion_simps_source\<close>
+  val comment = "Simp rules normalizing particularly source part of an assertion."
+  val attribute = NONE
+  val post_merging = I
+)
+
+val _ = Theory.setup (Context.theory_map (Assertion_SS_Source.map (fn ctxt =>
+      ctxt addsimps @{thms' ExSet_simps_ex}
+        |> Simplifier.add_cong @{thm' Subjection_cong}
+    )))
+
+structure Assertion_SS_Target = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = SOME \<^binding>\<open>assertion_simps_target\<close>
+  val comment = "Simp rules normalizing particularly target part of an assertion."
+  val attribute = NONE
+  val post_merging = I
+)
+
+\<close>
+
+lemmas [assertion_simps] =
+  (*algebras*)
+  mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
+  mult_1_right[where 'a=\<open>'a::sep_magma_1 BI\<close>]
+  mult_1_left[where 'a=\<open>'a::sep_magma_1 BI\<close>]
+  add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
+  zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
+  plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
+  distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
+  mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
+  bot_eq_BI_bot
+
+  (*BI connectives*)
+  Subjection_Subjection Subjection_Zero Subjection_True Subjection_Flase
+  Subjection_times Subjection_addconj
+
+  ExSet_simps
+
+  sep_quant_subjection sep_quant_ExSet
+
+  \<phi>Prod_expn'' \<phi>Prod_expn'
+  REMAINS_simp(2)
+  HOL.if_True HOL.if_False
+
+  \<phi>Bot.unfold \<phi>Any.unfold
+
+lemmas [assertion_simps_source] =
+  ExSet_times_left ExSet_times_right ExSet_adconj ExSet_addisj
+
+  REMAINS_simp(1)
+
+  sep_quant_sep
+
+lemmas [assertion_simps_target] =
+  sep_quant_sep[symmetric]
+
+simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
+  = \<open>fn _ => fn ctxt => fn ctm =>
+      case Thm.term_of ctm
+        of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Subjection\<close>, _) $ assn $ P) =>
+      let val Const(\<^const_name>\<open>ExSet\<close>, _) $ X = Thm.term_of ctm
+          val chk_bound_only_objs = Phi_Syntax.forall_item_of_assertion (
+                  fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) => not (Term.is_dependent T)
+                   | X => not (Term.is_dependent X)
+                )
+          val rule = case P
+                       of Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _ =>
+                            SOME @{thm' ExSet_simps_ex(1)}
+                        | Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0 =>
+                            SOME @{thm' ExSet_simps_ex(2)}
+                        | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _ =>
+                            SOME @{thm' ExSet_simps_ex(3)}
+                        | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0) $ _ =>
+                            SOME @{thm' ExSet_simps_ex(4)}
+                        | _ => NONE
+       in if chk_bound_only_objs assn
+       then Option.mapPartial (fn rule' => try (Conv.rewr_conv rule') ctm) rule
+       else NONE
+      end
+        | _ => NONE\<close>
+
+setup \<open>Context.theory_map (Assertion_SS.map (fn ctxt =>
+    ctxt addsimprocs [@{simproc defined_ExSet}]))\<close>
+
+lemmas [\<phi>programming_simps] = plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
+
+
+subsubsection \<open>Reasoners\<close>
+
+\<phi>reasoner_ML assertion_simp_source 1300
+  (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt)) {fix_vars=false}) o snd\<close>
+
+\<phi>reasoner_ML assertion_simp_target 1300
+  (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt)) {fix_vars=false}) o snd\<close>
+
+\<phi>reasoner_ML assertion_simp 1200
+  (\<open>Premise (assertion_simps _) _\<close> | \<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close> )
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get' {fix_vars=false}) o snd\<close>
+
+ML \<open>fun conv_transformation_by_assertion_ss ctxt =
+      let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
+          val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
+       in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
+                                         (Simplifier.rewrite target_ctxt)
+                                         Conv.all_conv
+      end\<close>
+
+
+subsection \<open>Transformation-based Simplification\<close>
+
+type_synonym forward_direction = bool (*false for backward*)
+
+type_synonym substantial_change = bool (*For antecedent, be true to require simplification
+                    changing something. For a reasoning rule, be true to represent the simplification
+                    provided in the rule does make some substantial change.
+                    It is used to prevent infinite loop of unchanging simplifications.*)
+
+consts \<A>simp' :: \<open> forward_direction \<Rightarrow> substantial_change \<Rightarrow> action \<close>
+       \<A>_transitive_simp' :: \<open> forward_direction \<Rightarrow> substantial_change \<Rightarrow> action\<close>
+                  (*rules where simplifications will be applied
+                    repeatedly on the simplified results given by the previous step.
+                    The annotation exists only in the literal source syntacitcally but once
+                    it is added to \<phi>-LPR, will be reduced by a rule pass
+                    converting \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_transitive_simp\<close> to
+                    \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action \<A>simp \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action \<A>simp\<close>*)
+
+abbreviation \<open>\<A>simp \<equiv> \<A>simp' True True\<close>
+abbreviation \<open>\<A>_transitive_simp \<equiv> \<A>_transitive_simp' True True\<close>
+
+abbreviation \<open>\<A>backward_simp \<equiv> \<A>simp' False True\<close>
+abbreviation \<open>\<A>_backward_transitive_simp \<equiv> \<A>_transitive_simp' False True\<close>
+
+text \<open>Potentially weakening transformations designed for simplifying state sequents of the CoP.
+
+  \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>simp\<close>
+
+  Doing this simplification in the framework of To-Transformation benefits it by reusing the
+  To-Transformation support in transformation functors, which brings the simplification into the elements.
+
+  The simplification is very heavy.
+  For the sake of performance, it is indolent and is applied only when the state sequent
+  needs the simplification. There is a mechanism to detect such need. The default strategy is,
+  we collect all the registered simplification rules, get the pattern of the source type of the
+  transformations, and if the types of a state sequent match any of a pattern, the simplification
+  is required and activated.
+
+  This default strategy is not perfect, so we provide hooks by which users can provide ML checkers.
+  The checker can bind on either the whole types or subterms of specific constant heads.
+  The checker only checks the type part.
+
+  Note \<^prop>\<open>A @action \<A>simp\<close> requires the process at least make one meaningful simplification
+  step at least simplifies something, while \<^prop>\<open>A @action \<A>simp' direction False\<close> allows returning with no-change.
+  User can indicate to the system that his reasoning rule \<^prop>\<open>A @action \<A>simp' direction substantial_change\<close> is
+  meaningful by set \<open>substantial_change \<equiv> True\<close>, or \<open>False\<close> otherwise.
+\<close>
+
+subsubsection \<open>Convention\<close>
+
+\<phi>reasoner_group \<phi>simp_all = (100, [1,4000]) for ( \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>simp' direction substantial_change\<close> )
+      \<open>Simplifying the assertion by means of transformation, which may weaken the assertion and
+       refine the abstraction (or backwardly strengthen by \<open>\<A>backward_simp\<close>)\<close>
+ and \<phi>simp_system_fallback = (1, [1,2]) in \<phi>simp_all
+      \<open>System fallbacks of transformation-based simplification rule, which simplify nothing\<close>
+ and \<phi>simp = (1000, [3, 4000]) in \<phi>simp_all and > \<phi>simp_system_fallback
+      \<open>User rules of transformation-based simplification\<close>
+ and \<phi>simp_fallback = (10, [5,20]) in \<phi>simp
+      \<open>Fallbacks of transformation-based simplification\<close>
+ and \<phi>simp_derived = (50, [30,70]) in \<phi>simp and > \<phi>simp_fallback and < default
+      \<open>Automatically derived transformation-based simplification\<close>
+ and \<phi>simp_cut = (1000, [1000, 1030]) in \<phi>simp
+      \<open>Cutting rules of transformation-based simplification\<close>
+
+declare [[ \<phi>reason_default_pattern
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _) \<w>\<i>\<t>\<h> ?P @action \<A>simp' ?direction ?flag\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp' ?direction ?flag\<close> (100)
+  and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _) \<w>\<i>\<t>\<h> ?P @action \<A>_transitive_simp' ?direction ?flag\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_transitive_simp' ?direction ?flag\<close> (100)
+  and \<open>?X @action \<A>simp' ?direction ?flag\<close> \<Rightarrow>
+      \<open>ERROR TEXT(\<open>Bad form: \<close> (?X @action \<A>simp' ?direction ?flag) \<newline>
+                  \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action \<A>simp\<close>\<close>)\<close> (0)
+  and \<open>?X @action \<A>_transitive_simp' ?direction ?flag\<close> \<Rightarrow>
+      \<open>ERROR TEXT(\<open>Bad form: \<close> (?X @action \<A>_transitive_simp' ?direction ?flag) \<newline>
+                  \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action \<A>simp\<close>\<close>)\<close> (0)
+]]
+
+subsubsection \<open>Implementation\<close>
+
+consts \<A>simp_if_need :: \<open>forward_direction \<Rightarrow> substantial_change \<Rightarrow> action\<close>
+       \<A>transitive_simp_if_need :: \<open>forward_direction \<Rightarrow> substantial_change \<Rightarrow> action\<close>
+       \<A>_apply_simplication :: \<open>action\<close>
+
+lemma [\<phi>reason %cutting for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>transitive_simp_if_need True False)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication \<close>
+  unfolding Action_Tag_def Transformation_def Simplify_def
+  by simp
+
+(*
+lemma [\<phi>reason %cutting for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>transitive_simp_if_need False)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Y : Ya
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication Any' \<close>
+  unfolding Action_Tag_def Transformation_def Simplify_def
+  by simp
+*)
+
+(*
+lemma [\<phi>reason %\<phi>simp]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>simp' M
+\<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<longrightarrow> (y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @action \<A>transitive_simp_if_need False)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. (\<exists>y. r y \<and> w y z) @action \<A>_transitive_simp' M \<close>
+  unfolding Action_Tag_def Transformation_def Premise_def
+  by clarsimp blast
+*)
+
+lemma \<A>simp_invoke:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_map_each_item (\<A>transitive_simp_if_need True False)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<close>
+  unfolding Action_Tag_def
+  by (simp add: transformation_weaken)
+
+lemma \<A>simp_trans:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>_transitive_simp' direction Any
+\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @action \<A>simp_if_need direction M)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. \<exists>y. r y \<and> w y z)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @action \<A>simp' direction Any2 \<close>
+  unfolding Action_Tag_def Transformation_def Simplify_def
+  by simp blast
+
+lemma \<A>simp_trans':
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' @action \<A>_transitive_simp' direction Any
+\<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @action \<A>simp_if_need direction M
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @action \<A>simp' direction Any2 \<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
+
+lemma \<A>simp_trans'P:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P y @action \<A>_transitive_simp' direction Any
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y' \<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @action \<A>simp_if_need direction M)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. w z \<and> P y')
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @action \<A>simp' direction Any2 \<close>
+  unfolding Action_Tag_def Transformation_def Simplify_def
+  by simp
+
+ML_file \<open>library/tools/CoP_simp.ML\<close>
+
+context begin
+
+private lemma \<A>simp_chk_no_need:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>simp_if_need direction Any\<close>
+  unfolding Action_Tag_def
+  by simp
+
+private lemma \<A>simp_chk_no_need':
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp_if_need direction Any\<close>
+  unfolding Action_Tag_def
+  by simp
+
+private lemma \<A>simp_chk_go:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>simp' direction M
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>simp_if_need direction M\<close>
+  unfolding Action_Tag_def .
+
+private lemma \<A>simp_chk_go_transitive:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>simp' direction M
+\<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<longrightarrow> (y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @action \<A>transitive_simp_if_need direction False)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. \<exists>y. r y \<and> w y z)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @action \<A>transitive_simp_if_need direction M\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Simplify_def
+  by clarsimp blast
+
+private lemma \<A>simp_chk_no_need_transitive:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>transitive_simp_if_need direction Any\<close>
+  unfolding Action_Tag_def
+  by simp
+
+private lemma \<A>simp_chk_no_need'_transitive:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>transitive_simp_if_need direction Any\<close>
+  unfolding Action_Tag_def
+  by simp
+
+\<phi>reasoner_ML \<A>simp_if_need %cutting (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp_if_need _ _\<close>) = \<open>
+fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val (bvtys, goal) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+      val (ToA, Const _ $ direction_term $ _) = PLPR_Syntax.dest_action_of' (K true) goal
+      val (X'org, Y'org, _) = Phi_Syntax.dest_transformation ToA
+      val direction = case direction_term of Const(\<^const_name>\<open>True\<close>, _) => true
+                                           | Const(\<^const_name>\<open>False\<close>, _) => false
+                                           | _ => raise TERM ("The direction of \<A>simp_if_need must be a literal", [direction_term])
+      val (X,Y) = if direction then (X'org,Y'org) else (Y'org,X'org)
+      val is_simp_needed = if direction then Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt)
+                                        else Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt)
+   in if is_simp_needed bvtys X
+   then SOME ((ctxt, @{thm' \<A>simp_chk_go} RS' (ctxt, sequent)), Seq.empty)
+   else let val rule = case Y of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
+                                    Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _)
+                                   => @{thm' \<A>simp_chk_no_need'}
+                               | _ => @{thm' \<A>simp_chk_no_need}
+    in SOME ((ctxt, rule RS' (ctxt, sequent)), Seq.empty)
+   end
+  end)
+\<close>
+
+\<phi>reasoner_ML \<A>transitive_simp_if_need %cutting (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>transitive_simp_if_need _ _\<close>) = \<open>
+fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val (bvtys, goal) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+      val (ToA, Const _ $ direction_term $ _) = PLPR_Syntax.dest_action_of' (K true) goal
+      val (X'org, Y'org, _) = Phi_Syntax.dest_transformation ToA
+      val direction = case direction_term of Const(\<^const_name>\<open>True\<close>, _) => true
+                                           | Const(\<^const_name>\<open>False\<close>, _) => false
+                                           | _ => raise TERM ("The direction of \<A>simp_if_need must be a literal", [direction_term])
+      val (X,Y) = if direction then (X'org,Y'org) else (Y'org,X'org)
+      val is_simp_needed = if direction then Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt)
+                                        else Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt)
+   in if is_simp_needed bvtys X
+   then SOME ((ctxt, @{thm' \<A>simp_chk_go_transitive} RS' (ctxt, sequent)), Seq.empty)
+   else let val rule = case Y of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
+                                    Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _)
+                                   => @{thm' \<A>simp_chk_no_need'_transitive}
+                               | _ => @{thm' \<A>simp_chk_no_need_transitive}
+    in SOME ((ctxt, rule RS' (ctxt, sequent)), Seq.empty)
+   end
+  end)
+\<close>
+
+end
+
+ 
+lemma [\<phi>reason default ! %\<phi>simp_system_fallback+1]:
+  \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp' direction False\<close>
+  unfolding Action_Tag_def by simp
+
+lemma [\<phi>reason default ! %\<phi>simp_system_fallback for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp' _ False\<close>]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>simp' direction False\<close>
+  unfolding Action_Tag_def by simp
+
+
+print_\<phi>reasoners \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>simp' _ False\<close> 
+print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>simp' _ _\<close> ? ?
+
+(*declare [[\<phi>simp_rule_pass]] \<comment> \<open>Must be enabled until all the internal rules are registered as
+      it modifies any rule in form \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> into \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?? \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ??\<close>\<close>
+*)
+(* TODO
+hide_fact \<A>simp_stage_1 \<A>simp_chk_no_need \<A>simp_chk_no_need'
+          \<A>simp_chk_go \<A>simp_trans \<A>simp_trans' \<A>simp_trans'P
+*)
+
+paragraph \<open>Invoking CoP-simp in ToA reasoning\<close>
+
+\<phi>reasoner_group ToA_hook_CoP_simp = (150, [150,150]) in ToA_hooks_all and > ToA_hook_assertion_ss
+    \<open>normalizing and simplifying \<close>
+
+lemma normalize_target:
+  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>transitive_simp_if_need False False)
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P : (\<forall>y'. r x y' \<longrightarrow> eq y' y)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Q)
+    \<comment> \<open>the relationship between \<open>y\<close> and \<open>y'\<close> is always maintained in any context which is helpful
+        for rules relying on the value of the target object. The rules are though rare and somehow
+        violate the convention of ToA where it infers a function from the source object to the target
+        (so the target object should, always be able to be an unknown variable),
+        can be significant such as the object-dependent destruction rules (\<open>MAKE\<close> rules) \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<and> Q \<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Object_Equiv_def Simplify_def
+  by clarsimp metis
+
+lemma normalize_target_R:
+  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>transitive_simp_if_need False False)
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P : (\<forall>y'. r x y' \<longrightarrow> eq y' y)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> Q\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Object_Equiv_def Simplify_def
+  by (cases C; clarsimp; metis)
+
+lemma normalize_source:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' @action \<A>_map_each_item (\<A>transitive_simp_if_need True False)
+\<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def Transformation_def
+  by clarsimp blast
+
+ML \<open>
+
+fun normalize_source_of_ToA (ctxt, sequent) =
+  let val (bvtys, ToA) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+      val (X, _, _) = Phi_Syntax.dest_transformation ToA
+   in if Phi_Syntax.exists_item_of_assertion (Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvtys) X
+      then (
+        Phi_Reasoner.info_print ctxt 2 (K "normalizing the source assertion of the transformation") ;
+        case Phi_Reasoner.internal_reason NONE (SOME 1) (ctxt, @{thm' normalize_source} RS sequent)
+          of NONE => (ctxt, sequent)
+           | SOME (ctxt', sequent') => 
+                (ctxt', Conv.gconv_rule (Phi_Conv.hhf_concl_conv (conv_transformation_by_assertion_ss) ctxt') 1 sequent'))
+      else (ctxt, sequent)
+  end
+
+fun normalize_target_of_ToA (ctxt, sequent) =
+  let val (bvtys, ToA) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+      val (Y, has_R) = case Phi_Syntax.dest_transformation ToA
+                         of (_, Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ _ $ _, _) => (Y, true)
+                          | (_, Y, _) => (Y, false)
+   in if Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) bvtys Y
+      then (
+        Phi_Reasoner.info_print ctxt 2 (K "normalizing the target assertion of the transformation") ;
+        case Phi_Reasoner.internal_reason NONE (SOME 1)
+                (ctxt, (if has_R then @{thm' normalize_target_R}
+                                 else @{thm' normalize_target}) RS sequent)
+          of NONE => (ctxt, sequent)
+           | SOME ret => ret)
+      else (ctxt, sequent)
+  end
+\<close>
+
+
+
+subsubsection \<open>Simplification Protect\<close>
+
+definition [simplification_protect]:
+  \<open>\<phi>TBS_Simp_Protect X U r direction flag \<equiv> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>simp' direction flag\<close>
+
+lemma [cong]:
+  \<open> X \<equiv> X'
+\<Longrightarrow> U \<equiv> U'
+\<Longrightarrow> r \<equiv> r'
+\<Longrightarrow> \<phi>TBS_Simp_Protect X U r direction flag \<equiv> \<phi>TBS_Simp_Protect X' U' r' direction flag \<close>
+  by simp
+
+subsubsection \<open>Extracting Pure\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<longrightarrow> A @action \<A>ESC
+\<Longrightarrow> P \<longrightarrow> (A @action \<A>simp' direction any) @action \<A>ESC \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> A \<longrightarrow> P @action \<A>EIF
+\<Longrightarrow> (A @action \<A>simp' direction any) \<longrightarrow> P @action \<A>EIF \<close>
+  unfolding Action_Tag_def
+  by blast
+
+
+
+subsection \<open>Essential Reasoning Procedures\<close>
 
 subsubsection \<open>Falling Lattice of Transformations\<close>
 
@@ -4292,6 +4877,13 @@ NToA procedure addresses the transformation between any-to-many \<phi>-type item
 
 \<close>
 
+subsubsection \<open>Varify Target Object\<close>
+
+(*
+declare normalize_target[\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::one BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
+                                                                except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]
+*)
+
 subsubsection \<open>Basic Transformation Rules\<close>
 
 paragraph \<open>Plainize\<close>
@@ -4365,141 +4957,6 @@ lemma [\<phi>reason %ToA_splitting_target+1]:
   unfolding Premise_def
   by (simp, metis (no_types, lifting) mult.assoc transformation_right_frame transformation_trans)
   
-
-
-subsection \<open>Normalization of Assertions\<close>
-
-subsubsection \<open>Declaring Simpsets\<close>
-
-consts assertion_simps :: \<open>mode \<Rightarrow> mode\<close>
-       SOURCE :: mode
-       TARGET :: mode
-
-ML \<open>
-structure Assertion_SS = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = SOME \<^binding>\<open>assertion_simps\<close>
-  val comment = "Simplification rules normalizing an assertion. \
-                       \It is applied before NToA process."
-  val attribute = NONE
-  val post_merging = I
-)
-
-val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
-      (ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>HOL.defined_All\<close>,
-                         \<^simproc>\<open>defined_all\<close>, \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>,
-                         \<^simproc>\<open>Set.defined_Bex\<close>, \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>,
-                         \<^simproc>\<open>case_prod_eta\<close>, \<^simproc>\<open>Collect_mem\<close>,
-                         Phi_Conv.move_Ex_for_set_notation]
-            addsimps @{thms' Sum_Type.sum.case HOL.simp_thms})
-          (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
-    )))
-
-structure Assertion_SS_Source = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS
-  val binding = SOME \<^binding>\<open>assertion_simps_source\<close>
-  val comment = "Simp rules normalizing particularly source part of an assertion."
-  val attribute = NONE
-  val post_merging = I
-)
-
-val _ = Theory.setup (Context.theory_map (Assertion_SS_Source.map (fn ctxt =>
-      ctxt addsimps @{thms' ExSet_simps_ex}
-        |> Simplifier.add_cong @{thm' Subjection_cong}
-    )))
-
-structure Assertion_SS_Target = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS
-  val binding = SOME \<^binding>\<open>assertion_simps_target\<close>
-  val comment = "Simp rules normalizing particularly target part of an assertion."
-  val attribute = NONE
-  val post_merging = I
-)
-
-\<close>
-
-lemmas [assertion_simps] =
-  (*algebras*)
-  mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
-  mult_1_right[where 'a=\<open>'a::sep_magma_1 BI\<close>]
-  mult_1_left[where 'a=\<open>'a::sep_magma_1 BI\<close>]
-  add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
-  zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
-  plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
-  distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
-  mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
-  bot_eq_BI_bot
-
-  (*BI connectives*)
-  Subjection_Subjection Subjection_Zero Subjection_True Subjection_Flase
-  Subjection_times Subjection_addconj
-
-  ExSet_simps
-
-  sep_quant_subjection sep_quant_ExSet
-
-  \<phi>Prod_expn'' \<phi>Prod_expn'
-  REMAINS_simp(2)
-  HOL.if_True HOL.if_False
-
-  \<phi>Bot.unfold \<phi>Any.unfold
-
-lemmas [assertion_simps_source] =
-  ExSet_times_left ExSet_times_right ExSet_adconj ExSet_addisj
-
-  REMAINS_simp(1)
-
-  sep_quant_sep
-
-lemmas [assertion_simps_target] =
-  sep_quant_sep[symmetric]
-
-simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
-  = \<open>fn _ => fn ctxt => fn ctm =>
-      case Thm.term_of ctm
-        of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Subjection\<close>, _) $ assn $ P) =>
-      let val Const(\<^const_name>\<open>ExSet\<close>, _) $ X = Thm.term_of ctm
-          val chk_bound_only_objs = Phi_Syntax.forall_item_of_assertion (
-                  fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) => not (Term.is_dependent T)
-                   | X => not (Term.is_dependent X)
-                )
-          val rule = case P
-                       of Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _ =>
-                            SOME @{thm' ExSet_simps_ex(1)}
-                        | Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0 =>
-                            SOME @{thm' ExSet_simps_ex(2)}
-                        | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _ =>
-                            SOME @{thm' ExSet_simps_ex(3)}
-                        | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0) $ _ =>
-                            SOME @{thm' ExSet_simps_ex(4)}
-                        | _ => NONE
-       in if chk_bound_only_objs assn
-       then Option.mapPartial (fn rule' => try (Conv.rewr_conv rule') ctm) rule
-       else NONE
-      end
-        | _ => NONE\<close>
-
-setup \<open>Context.theory_map (Assertion_SS.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExSet}]))\<close>
-
-lemmas [\<phi>programming_simps] = plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
-
-
-subsubsection \<open>Reasoners\<close>
-
-\<phi>reasoner_ML assertion_simp_source 1300
-  (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt)) {fix_vars=false}) o snd\<close>
-
-\<phi>reasoner_ML assertion_simp_target 1300
-  (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt)) {fix_vars=false}) o snd\<close>
-
-\<phi>reasoner_ML assertion_simp 1200
-  (\<open>Premise (assertion_simps _) _\<close> | \<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close> )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get' {fix_vars=false}) o snd\<close>
 
 
 subsubsection \<open>Normalized Transformation\<close>
@@ -4583,27 +5040,6 @@ structure ToA_Hooks = Hooks (
   and ToA_hook_final = (1000, [1000,1000]) in ToA_hooks_all
       \<open>finalization\<close>
 
-ML \<open>fun conv_transformation_by_assertion_ss ctxt =
-      let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
-          val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
-       in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
-                                         (Simplifier.rewrite target_ctxt)
-                                         Conv.all_conv
-      end\<close>
-
-setup \<open>Context.theory_map (
-  ToA_Hooks.add @{priority %ToA_hook_assertion_ss} (fn _ => fn (ctxt, sequent) =>
-    (ctxt, Conv.gconv_rule (Phi_Conv.hhf_concl_conv (conv_transformation_by_assertion_ss) ctxt) 1 sequent))
-
-#>ToA_Hooks.add @{priority %ToA_hook_final} (fn {deep} => fn (ctxt, sequent) =>
-    let val rule = if deep andalso Config.get ctxt augment_ToA_by_implication
-                   then @{thm "_NToA_init_having_Q_"}
-                   else @{thm "_NToA_init_"}
-     in (ctxt, rule RS sequent)
-    end)
-
-)\<close>
-
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
   let val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ _ $ (Const(\<^const_name>\<open>NToA'\<close>, _) $ deep))
@@ -4613,7 +5049,15 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
       val ctxt = Context.proof_map (PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep) ctxt0
               |> Config.put under_NToA_ctxt true
       val deep = case deep of \<^Const>\<open>True\<close> => true | _ => false
-      val (ctxt, sequent) = ToA_Hooks.invoke (Context.Proof ctxt) {deep=deep} (ctxt, sequent)
+
+      val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (conv_transformation_by_assertion_ss) ctxt) 1 sequent
+
+      val (ctxt, sequent) = normalize_source_of_ToA (ctxt, sequent)
+
+      val rule = if deep andalso Config.get ctxt augment_ToA_by_implication
+                   then @{thm "_NToA_init_having_Q_"}
+                   else @{thm "_NToA_init_"}
+      val sequent = rule RS sequent
 
       val ctxt = Config.restore under_NToA_ctxt ctxt0 ctxt
 
@@ -4777,29 +5221,19 @@ val SE_entry_point_b = SE_entry_point (
       (@{thm' enter_SEbi\<^sub>1}, @{thm' ToA_by_Equiv_Class[OF _ _ enter_SEbi\<^sub>1]}),
       (@{thm' enter_SEbi}, @{thm' ToA_by_Equiv_Class[OF _ _ enter_SEbi]}))
 
-structure Separation_Extraction_Hooks = Hooks (
-  type arg = {boundary: bool}
-  type state = context_state
-)
 \<close>
-
-setup \<open>Context.theory_map (Separation_Extraction_Hooks.add 1000
-  (fn {boundary} => fn (ctxt,sequent) =>
-    let val thy = Proof_Context.theory_of ctxt
-     in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
-        then (ctxt, (if boundary then SE_entry_point_b else SE_entry_point_normal) thy sequent)
-        else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
-              raise Fail "")
-    end)
-)\<close>
-
 
 
 \<phi>reasoner_ML \<A>SE_Entry default %ToA_splitting_source (\<open>(_::?'a::sep_semigroup BI) * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
 = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
-    SOME (Separation_Extraction_Hooks.invoke (Context.Proof ctxt) {boundary=false} (ctxt,sequent), Seq.empty)
-    handle Fail _ => NONE
+    let val thy = Proof_Context.theory_of ctxt
+        val (ctxt, sequent) = normalize_target_of_ToA (ctxt, sequent)
+     in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
+        then SOME ((ctxt, SE_entry_point_normal thy sequent), Seq.empty)
+        else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
+              NONE)
+    end
 )\<close>
 
 lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
@@ -4811,8 +5245,13 @@ lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<
 
 \<phi>reasoner_ML \<A>SEb_Entry default %ToA_splitting_source (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
-    SOME (Separation_Extraction_Hooks.invoke (Context.Proof ctxt) {boundary=true} (ctxt,sequent), Seq.empty)
-    handle Fail _ => NONE)\<close>
+    let val thy = Proof_Context.theory_of ctxt
+        val (ctxt, sequent) = normalize_target_of_ToA (ctxt, sequent)
+     in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
+        then SOME ((ctxt, SE_entry_point_b thy sequent), Seq.empty)
+        else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
+              NONE)
+    end)\<close>
 
 lemma [\<phi>reason default %ToA_falling_latice]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P

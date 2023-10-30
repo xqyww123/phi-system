@@ -2226,6 +2226,7 @@ ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
 ML_file \<open>library/system/modifier.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
+ML_file \<open>library/tools/CoP_simp_supp.ML\<close>
 
 
 hide_fact "__value_access_0__"
@@ -2536,6 +2537,19 @@ setup \<open>Context.theory_map (
     in (ctxt, sequent')
     end
       | _ => (ctxt, sequent)))
+
+#> Phi_CP_IDE.Post_App.add 320 (fn arg => fn (ctxt, sequent) =>
+    case Thm.prop_of sequent
+      of prop as Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+   (case Phi_Working_Mode.mode ctxt
+      of SOME mode =>
+            if #constr_is_ready mode prop
+            then (case Phi_CoP_Simp.invoke_when_needed (ctxt,mode) sequent
+                    of SOME sequent' => raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, sequent'))
+                     | NONE => (ctxt, sequent))
+            else (ctxt, sequent)
+       | NONE => (ctxt, sequent))
+       | _ => (ctxt, sequent))
 
 #> Phi_CP_IDE.Post_App.add 400 (K (fn s => Phi_Sys.move_lemmata s))
 
