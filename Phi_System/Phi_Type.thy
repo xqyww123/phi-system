@@ -459,6 +459,21 @@ definition \<open>Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U D un \<lon
               (\<forall>z. z \<in> D \<longrightarrow> (z \<Ztypecolon> F3 (T \<^emph>[C\<^sub>R] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph>[C\<^sub>R] Fu U))\<close>
 
 
+paragraph \<open>With Parameter\<close>
+
+definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu F3 T U D z \<longleftrightarrow>
+              (\<forall>x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (\<lambda>p. T p \<^emph> U p)))\<close>
+
+definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu F3 T U un \<longleftrightarrow>
+              (\<forall>z. z \<Ztypecolon> F3 (\<lambda>p. T p \<^emph> U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)\<close>
+
+definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U D z \<longleftrightarrow>
+              (\<forall>x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph>[C\<^sub>W] Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (\<lambda>p. T p \<^emph>[C\<^sub>W] U p)))\<close>
+
+definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U D un \<longleftrightarrow>
+              (\<forall>z. z \<in> D \<longrightarrow> (z \<Ztypecolon> F3 (\<lambda>p. T p \<^emph>[C\<^sub>R] U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph>[C\<^sub>R] Fu U))\<close>
+
+
 subsubsection \<open>Semimodule\<close>
 
 text \<open>Convention: the domain \<open>Dx\<close> of object gives proof obligation but the domain \<open>Ds\<close> of scalar is
@@ -803,36 +818,6 @@ declare [[
       \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r\<close>        : %\<phi>TA_commutativity_default (100)
       \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r\<close>        : %\<phi>TA_commutativity_default (100) ,
 
-  \<phi>reason_default_pattern \<open>Object_Sep_Homo\<^sub>I ?T _\<close> \<Rightarrow> \<open>Object_Sep_Homo\<^sub>I ?T _\<close> (100),
-
-  \<phi>reason_default_pattern_ML \<open>Separation_Homo\<^sub>I ?Ft ?Fu _ _ _ _ _\<close> \<Rightarrow>
-    \<open>fn generic => fn term =>
-      let val ctxt = Context.proof_of generic
-          val [term'] = Variable.exportT_terms ctxt Phi_Help.empty_ctxt [term]
-          val Trueprop $ (_ (*Separation_Homo\<^sub>I*) $ F1 $ F2 $ F3 $ _ $ _ $ _ $ _) = term'
-          val ind = Int.max (maxidx_of_term F1, Int.max (maxidx_of_term F2, maxidx_of_term F3)) + 1
-          fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
-          val H = Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, TVar(("'SF",ind),[]))
-       in SOME [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "T" "'T" $ var "U" "'U" $ var "D" "'d" $ var "z" "'z"),
-                Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "T" "'T" $ var "U" "'U" $ var "D" "'d" $ var "z" "'z"),
-                Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "T" "'T" $ var "U" "'U" $ var "D" "'d" $ var "z" "'z")]
-      end
-    \<close> (100),
-
-  \<phi>reason_default_pattern_ML \<open>Separation_Homo\<^sub>E ?Ft ?Fu _ _ _ _\<close> \<Rightarrow>
-    \<open>fn generic => fn term =>
-      let val ctxt = Context.proof_of generic
-          val [term'] = Variable.exportT_terms ctxt Phi_Help.empty_ctxt [term]
-          val Trueprop $ (_ (*Separation_Functor*) $ F1 $ F2 $ F3 $ _ $ _ $ f) = term'
-          val ind = Int.max (maxidx_of_term F1, Int.max (maxidx_of_term F2, maxidx_of_term F3)) + 1
-          fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
-          val H = Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, TVar(("'SF",ind),[]))
-       in SOME [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "T" "'T" $ var "U" "'U" $ var "z" "'z"),
-                Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "T" "'T" $ var "U" "'U" $ var "z" "'z"),
-                Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "T" "'T" $ var "U" "'U" $ var "z" "'z")]
-      end
-    \<close> (100),
-
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Transformation_Functor\<^sub>\<Lambda> _ _ _ _ _ _ _\<close>,
@@ -880,6 +865,11 @@ declare [[
   and \<open>Functional_Transformation_BiFunctor ?Fa ?Fb _ _ _ _ _ _ _ _ _ _ \<close> \<Rightarrow>
       \<open>Functional_Transformation_BiFunctor ?Fa _ _ _ _ _ _ _ _ _ _ _\<close>
       \<open>Functional_Transformation_BiFunctor _ ?Fb _ _ _ _ _ _ _ _ _ _\<close>   (100)
+  and \<open>Separation_Homo\<^sub>I ?Ft ?Fu _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Separation_Homo\<^sub>I ?Ft ?Fu _ _ _ _ _\<close>    (100)
+  and \<open>Separation_Homo\<^sub>E ?Ft ?Fu _ _ _ _\<close> \<Rightarrow>
+      \<open>Separation_Homo\<^sub>E ?Ft ?Fu _ _ _ _\<close>    (100)
+  and \<open>Object_Sep_Homo\<^sub>I ?T _\<close> \<Rightarrow> \<open>Object_Sep_Homo\<^sub>I ?T _\<close> (100)
   and \<open>Separation_Homo\<^sub>I_Cond ?Ft ?Fu ?Fc _ _ _ _ _\<close> \<Rightarrow>
       \<open>Separation_Homo\<^sub>I_Cond ?Ft _ _ _ _ _ _ _\<close>
       \<open>Separation_Homo\<^sub>I_Cond _ ?Fu _ _ _ _ _ _\<close>
