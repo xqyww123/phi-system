@@ -129,10 +129,24 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
   let (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
-             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F)
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
         | extract_oprs_from_hint _ = []
+
+      val parameterized =
+            case #1 instruction
+              of SOME H =>
+                  (case Term.head_of (HOLogic.dest_Trueprop (Logic.strip_imp_concl H))
+                     of Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) => false
+                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) => false
+                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) => true
+                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) => true)
+               | _ => false (*TODO: guessing the form of parameterized SH is not supported yet*)
 
       val simps = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
                 @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
@@ -160,11 +174,16 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u
       val simp = if is_some (#1 instruction) then K I
-                 else simplifier_by_cong (if is_intro then @{thms' \<phi>TA_SH\<^sub>I_DV_cong}
-                                                      else @{thms' \<phi>TA_SH\<^sub>E_DV_cong})
+                 else simplifier_by_cong (if is_intro then if parameterized then @{thms' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_DV_cong}
+                                                                            else @{thms' \<phi>TA_SH\<^sub>I_DV_cong}
+                                                      else if parameterized then @{thms' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_DV_cong}
+                                                                            else @{thms' \<phi>TA_SH\<^sub>E_DV_cong})
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
-                                     (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),
+                                     (if is_intro then if parameterized then @{thm' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_rule}
+                                                                        else @{thm' \<phi>TA_SH\<^sub>I_rule}
+                                                  else if parameterized then @{thm' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_rule}
+                                                                        else @{thm' \<phi>TA_SH\<^sub>E_rule}),
                                      [(K (SOME [0]), ind_conv, SH_reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 instruction ctxt0
