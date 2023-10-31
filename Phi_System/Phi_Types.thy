@@ -389,7 +389,9 @@ lemma [\<phi>reason %guess_tyop_commute+10]:
 
 
 subsection \<open>Dependent Sum Type\<close>
-   
+
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
   deriving Basic
@@ -398,8 +400,9 @@ subsection \<open>Dependent Sum Type\<close>
     and \<open>(\<And>A. Abstract_Domain (T A) (P A)) \<Longrightarrow> Abstract_Domain (\<Sigma> T) (\<lambda>x. P (fst x) (snd x))\<close>
     and \<open>(\<And>A. Abstract_Domain\<^sub>L (T A) (P A)) \<Longrightarrow> Abstract_Domain\<^sub>L (\<Sigma> T) (\<lambda>x. P (fst x) (snd x))\<close>
     and Identity_Elements
-    and Functionality
-    and Carrier_Set
+    and \<open>(\<And>i. Functionality (T i) (P i)) \<Longrightarrow> Functionality (\<Sigma> T) (\<lambda>x. P (fst x) (snd x))\<close>
+    and \<open>(\<And>p. Carrier_Set (T p) (P p)) \<Longrightarrow> Carrier_Set (\<Sigma> T) (\<lambda>x. P (fst x) (snd x)) \<close> \<comment> \<open>Gusser fails to
+                    realize the predicate \<open>P\<close> can also be parameterized, which is a specific feature of the dependent sum\<close>
     and Abstraction_to_Raw
     and \<open>(\<And>a c. a \<Ztypecolon> T c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b c @action to Itself)
       \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b (fst x) \<and> y = b) @action to Itself \<close>
@@ -410,8 +413,6 @@ subsection \<open>Dependent Sum Type\<close>
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Dependent_Sum.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain\<^sub>L (?T A) (?P A)) \<Longrightarrow> Abstract_Domain\<^sub>L (\<Sigma> ?T) (\<lambda>x. ?P (fst x) (snd x)) \<close>),
   (@{thm' \<phi>Dependent_Sum.Abstract_Domain}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain (?T A) (?P A)) \<Longrightarrow> Abstract_Domain (\<Sigma> ?T) (\<lambda>x. ?P (fst x) (snd x)) \<close>),
-  (@{thm' \<phi>Dependent_Sum.Carrier_Set}, \<^pattern_prop>\<open> (\<And>A. Carrier_Set (?T A) ?P) \<Longrightarrow> Carrier_Set (\<Sigma> ?T) (\<lambda>x. ?P (snd x))  \<close>),
-  (@{thm' \<phi>Dependent_Sum.Functionality}, \<^pattern_prop>\<open> (\<And>A. Functionality (?T A) ?P) \<Longrightarrow> Functionality (\<Sigma> ?T) (\<lambda>x. ?P (snd x))  \<close>),
   (@{thm' \<phi>Dependent_Sum.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> (\<And>A. Identity_Elements\<^sub>I (?T A) (?T\<^sub>D A) (?T\<^sub>P A)) \<Longrightarrow> Identity_Elements\<^sub>I (\<Sigma> ?T) (\<lambda>x. ?T\<^sub>D (fst x) (snd x)) (\<lambda>x. ?T\<^sub>P (fst x) (snd x)) \<close>),
   (@{thm' \<phi>Dependent_Sum.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> (\<And>A. Identity_Elements\<^sub>E (?T A) (?T\<^sub>D A)) \<Longrightarrow> Identity_Elements\<^sub>E (\<Sigma> ?T) (\<lambda>x. ?T\<^sub>D (fst x) (snd x)) \<close>),
   (@{thm' \<phi>Dependent_Sum.Object_Equiv}, \<^pattern_prop>\<open> (\<And>A. Object_Equiv (?T A) (?eq A)) \<Longrightarrow> Object_Equiv (\<Sigma> ?T) (\<lambda>x y. fst y = fst x \<and> ?eq (fst x) (snd x) (snd y)) \<close>),
@@ -1159,7 +1160,7 @@ subsection \<open>Finite Multiplicative Quantification\<close>
 
 
 
-declare [[\<phi>trace_reasoning = 1 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
@@ -1317,14 +1318,36 @@ declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>[i\<in>I] (\<Sigma> T)\<close>
-  deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
+  deriving \<open>(\<And>i. Carrier_Set (T i) (P i)) \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+                \<comment> \<open>the guesser fails to realize the \<open>P\<close> can be parameterized, which is a specific
+                    feature of \<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>\<close>
+       and \<open>(\<And>i. Functionality (T i) (P i)) \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+       and \<open>(\<And>p. Object_Equiv (T p) (eq p))
         \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x y. \<forall>i \<in> I. eq i (x i) (y i))\<close>
        and \<open> (\<And>i. Abstract_Domain (T i) (P i))
         \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i\<in>I. P i (x i)) \<close>  
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
         \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
-       
-term \<open>Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) \<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
+        \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
+                                         (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
+       and Identity_Elements
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Identity_Element\<^sub>I}, \<^pattern_prop>\<open>
+      (\<And>A. Identity_Elements\<^sub>I (?T A) (?T\<^sub>D A) (?T\<^sub>P A)) \<Longrightarrow>
+      Identity_Elements\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D xa (x xa)) (\<lambda>x. \<forall>xa\<in>?I. ?T\<^sub>P xa (x xa))  \<close>),
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Identity_Element\<^sub>E}, \<^pattern_prop>\<open>
+      (\<And>A. Identity_Elements\<^sub>E (?T A) (?T\<^sub>D A)) \<Longrightarrow>
+      Identity_Elements\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I ?T) (\<lambda>x. finite ?I \<and> (\<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D xa (x xa))) \<close>)
+]\<close>
+
+term \<open>(\<And>i. Functionality (T i) (P i)) \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+
+term \<open>(\<And>i. Carrier_Set (T i) (P i)) \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+
+term \<open>Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
+                                         (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
 
 term \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
   \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
