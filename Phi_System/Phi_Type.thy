@@ -554,6 +554,32 @@ definition Semimodule_Scalar_Assoc\<^sub>E :: \<open> ('s\<^sub>s \<Rightarrow> 
 
 text \<open>The extended scalar association operator for Finite Multiplicative Quantification is just uncurrying.\<close>
 
+definition Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>I :: \<open> ('s\<^sub>s \<Rightarrow> ('p\<^sub>s \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi>) \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>_\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> ('p\<^sub>t \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>c \<Rightarrow> ('p\<^sub>s \<times> 'p\<^sub>t \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('p\<^sub>s \<Rightarrow> 'p\<^sub>t \<Rightarrow> ('c,'a) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 's\<^sub>c)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
+                                     \<Rightarrow> bool\<close>
+  where \<open>Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
+      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fs s (\<lambda>p\<^sub>s. Ft t (T p\<^sub>s)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fc (smul s t) (case_prod T)))\<close>
+
+definition Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>E :: \<open> ('s\<^sub>s \<Rightarrow> ('p\<^sub>s \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi>) \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>_\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> ('p\<^sub>t \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>c \<Rightarrow> ('p\<^sub>s \<times> 'p\<^sub>t \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('p\<^sub>s \<times> 'p\<^sub>t \<Rightarrow> ('c,'a) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 's\<^sub>c)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
+                                     \<Rightarrow> bool\<close>
+  where \<open>Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
+      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (\<lambda>p\<^sub>s. Ft t (\<lambda>p\<^sub>t. T (p\<^sub>s, p\<^sub>t)))))\<close>
+
 
 definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::sep_magma,'a) \<phi>)
                                     \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
