@@ -1155,8 +1155,6 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                           (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
                           Conv.all_conv))) ctxt))
                 @{thm' \<phi>open_abstraction}
-      val open_abstraction_det = if no_auto then [] else
-                gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_det}
 
       val open_abstraction_ToA = if no_auto then [] else
                                   gen_from_eqs @{thm' \<phi>open_abstraction_ToA} I tagged_eqs
@@ -1225,7 +1223,6 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
          in fn ctxt => ctxt
          |> not no_auto ? (fn ctxt => ctxt
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %determine_\<phi>typ_to__derived+20} open_abstraction_det
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction
              |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10}
                             (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)

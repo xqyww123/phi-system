@@ -734,52 +734,6 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> P \<longrightarrow> (A @action to T) @action \<A>ESC \<close>
   unfolding Action_Tag_def .
 
-
-subsubsection \<open>Preliminary Step: Infer the Target Type before the Reasoning\<close>
-  \<comment> \<open>as some \<phi>-type like \<open>\<Sigma>\<close> may introduce higher-order vars whose instantiation is easily disturbed
-      by the ordinary reasoning consisting of various sub-procedure.
-     Therefore, we infer the target type specifically before any real reasoning process to help
-      the HO vars to be instantiated properly. \<close>
-
-definition Determine_\<phi>Type :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> bool\<close>
-  where \<open>Determine_\<phi>Type source target \<equiv> True\<close>
-
-declare [[\<phi>reason_default_pattern
-      \<open>Determine_\<phi>Type ?source _ @action to ?T\<close> \<Rightarrow> \<open>Determine_\<phi>Type ?source _ @action to ?T\<close> (100)
-  and \<open>Determine_\<phi>Type ?source ?target\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>unknown form of reasoning\<close> Determine_\<phi>Type ?source ?target())\<close> (0)
-]]
-
-\<phi>reasoner_group determine_\<phi>typ_to__all = (100, [0, 2000]) for \<open>Determine_\<phi>Type source target @action to T\<close> \<open>\<close>
-  and determine_\<phi>typ_to__cut = (1000, [1000,1030]) in determine_\<phi>typ_to__all \<open>cutting\<close>
-  and determine_\<phi>typ_to__fallback = (2, [1, 10]) in determine_\<phi>typ_to__all \<open>fallbacks\<close>
-  and determine_\<phi>typ_to__fail = (0, [0,0]) in determine_\<phi>typ_to__all \<open>failure\<close>
-  and determine_\<phi>typ_to__derived = (50, [30, 70]) in determine_\<phi>typ_to__all \<open>derived\<close>
-
-paragraph \<open>Basic Rules\<close>
-
-lemma [\<phi>reason default %determine_\<phi>typ_to__fail]:
-  \<open> FAIL TEXT(\<open>Fail to determine the target type of transforming\<close> T \<open>to\<close> \<T>)
-\<Longrightarrow> Determine_\<phi>Type T T' @action to \<T> \<close>
-  unfolding Determine_\<phi>Type_def Action_Tag_def ..
-
-lemma [\<phi>reason default %determine_\<phi>typ_to__fallback-1]:
-  \<open> Determine_\<phi>Type T \<T> @action to \<T> \<close>
-  unfolding Determine_\<phi>Type_def Action_Tag_def ..
-
-paragraph \<open>Hook injecting to To-Transformation\<close>
-
-\<phi>reasoner_group To_ToA__determine_\<phi>type = (3500, [3500, 3500]) in To_ToA
-  \<open>truns to \<open>Determine_\<phi>Type\<close>\<close>
-
-(*
-lemma [\<phi>reason %To_ToA__determine_\<phi>type
-           for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?var \<s>\<u>\<b>\<j> y. _ @action to _\<close>
-               \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var @action to _\<close>]:
-  \<open> Determine_\<phi>Type T U @action to \<T>
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to \<T>
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to \<T> \<close> .
-*)
-
 subsubsection \<open>Entry Point\<close>
 
 lemma to_\<phi>app:
@@ -847,9 +801,11 @@ lemma [\<phi>reason !10]:
   unfolding Action_Tag_def Transformation_def
   by simp
 
+(*
 lemma [\<phi>reason %determine_\<phi>typ_to__cut]:
   \<open> Determine_\<phi>Type T T @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e> \<close>
   unfolding Determine_\<phi>Type_def Action_Tag_def ..
+*)
 
 subsubsection \<open>Pattern\<close>
 
@@ -862,29 +818,14 @@ private lemma \<A>_strip_traverse:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> A) \<close>
   unfolding Action_Tag_def .
 
-private lemma \<A>_strip_traverse_det:
-  \<open> Determine_\<phi>Type T T' @action to A
-\<Longrightarrow> Determine_\<phi>Type T T' @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> A) \<close>
-  unfolding Determine_\<phi>Type_def Action_Tag_def ..
-
 private lemma \<A>_pattern_meet:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to A'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A) \<close>
   unfolding Action_Tag_def .
 
-private lemma \<A>_pattern_meet_det:
-  \<open> Determine_\<phi>Type T T' @action to A'
-\<Longrightarrow> Determine_\<phi>Type T T' @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A) \<close>
-  unfolding Determine_\<phi>Type_def Action_Tag_def ..
-
 private lemma \<A>_pattern_not_meet:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to \<A> \<close>
-  unfolding Action_Tag_def .
-
-private lemma \<A>_pattern_not_meet_det:
-  \<open> Determine_\<phi>Type T T' @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>
-\<Longrightarrow> Determine_\<phi>Type T T' @action to \<A> \<close>
   unfolding Action_Tag_def .
 
 private lemma \<A>_pattern_meet_this:
@@ -892,31 +833,16 @@ private lemma \<A>_pattern_meet_this:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A \<o>\<r>\<e>\<l>\<s>\<e> others) \<close>
   unfolding Action_Tag_def .
 
-private lemma \<A>_pattern_meet_this_det:
-  \<open> Determine_\<phi>Type T T' @action to A'
-\<Longrightarrow> Determine_\<phi>Type T T' @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A \<o>\<r>\<e>\<l>\<s>\<e> others) \<close>
-  unfolding Action_Tag_def .
-
 private lemma \<A>_pattern_meet_that:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to that
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (this \<o>\<r>\<e>\<l>\<s>\<e> that) \<close>
   unfolding Action_Tag_def .
 
-private lemma \<A>_pattern_meet_that_det:
-  \<open> Determine_\<phi>Type T T' @action to that
-\<Longrightarrow> Determine_\<phi>Type T T' @action to (this \<o>\<r>\<e>\<l>\<s>\<e> that) \<close>
-  unfolding Action_Tag_def .
-
-
 \<phi>reasoner_ML \<A>pattern %To_ToA_pattern_shortcut
     ( \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
-    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
-    | \<open>Determine_\<phi>Type _ _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
-    | \<open>Determine_\<phi>Type _ _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
-    | \<open>Determine_\<phi>Type _ _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
-    | \<open>Determine_\<phi>Type _ _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close> ) =
+    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close> ) =
 \<open>fn (_, (ctxt, sequent)) => Seq.make (fn () =>
   let fun parse_patterns (Const(\<^const_name>\<open>synt_orelse\<close>, _) $ X $ Y)
             = parse_patterns X @ parse_patterns Y
@@ -929,12 +855,6 @@ private lemma \<A>_pattern_meet_that_det:
                 $ (_ (*to*) $ A))
                => (@{thm' ToA_trivial}, @{thm' \<A>_pattern_meet_that}, @{thm' \<A>_strip_traverse},
                    @{thm' \<A>_pattern_not_meet}, @{thm' \<A>_pattern_meet}, @{thm' \<A>_pattern_meet_this}, T, A)
-             | _ (*Trueprop*) $ (_ (*Action_Tag*)
-                $ (Const(\<^const_name>\<open>Determine_\<phi>Type\<close>, _) $ T $ _)
-                $ (_ (*to*) $ A))
-               => (@{lemma' \<open>Determine_\<phi>Type T T @action to Any\<close> by (simp add: Determine_\<phi>Type_def Action_Tag_def)},
-                   @{thm' \<A>_pattern_meet_that_det}, @{thm' \<A>_strip_traverse_det}, @{thm' \<A>_pattern_not_meet_det},
-                   @{thm' \<A>_pattern_meet_det}, @{thm' \<A>_pattern_meet_this_det}, T, A)
 
       val (is_traverse, A') = case A of Const(\<^const_name>\<open>\<A>traverse\<close>, _) $ A' => (true, A')
                                       | A' => (false, A')
@@ -1333,11 +1253,6 @@ lemma [\<phi>reason %identity_element_cut]:
 \<Longrightarrow> Identity_Elements\<^sub>E (OPEN T) D \<close>
   unfolding OPEN_def .
 
-lemma [\<phi>reason default %determine_\<phi>typ_to__fallback[top]]:
-  \<open> FAIL TEXT(\<open>Don't know how to open \<phi>-type\<close> T)
-\<Longrightarrow> Determine_\<phi>Type T T' @action to (OPEN \<T>)\<close>
-  unfolding Determine_\<phi>Type_def Action_Tag_def ..
-  
 
 subsubsection \<open>Make Abstraction\<close>
 
