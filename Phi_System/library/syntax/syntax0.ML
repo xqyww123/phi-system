@@ -11,15 +11,6 @@ include PHI_SYNTAX
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
 
-  val mk_phi_type_ty : typ (*concrete*) * typ (*abstract*) -> typ
-  val mk_phi_type : term * term -> term
-  val dest_phi_type_assertion : term -> term (*x*) * term (*T*)
-  val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
-  val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
-
-  val ExSet_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
-  val Subjection_conv : conv -> conv -> conv
-
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
@@ -49,30 +40,6 @@ val dest_view_shift_c  =
 
 val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>\<phi>arg\<close>
 fun mk_sem_value_T T = Type(\<^type_name>\<open>\<phi>arg\<close>, [T])
-
-fun mk_phi_type (x,T) =
-  let val \<^Type>\<open>fun \<open>a\<close> \<open>\<^Type>\<open>set \<open>b\<close>\<close>\<close>\<close> = Phi_Help.safe_fastype_of  T
-   in \<^Const>\<open>\<phi>Type a b\<close> $ x $ T end
-
-fun mk_phi_type_ty (tm, tx) = \<^Type>\<open>fun tx \<^Type>\<open>set tm\<close>\<close>
-
-fun dest_phi_type_assertion (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) = (x, T)
-  | dest_phi_type_assertion X = raise TERM ("Not a \<phi>-type assertion", [X])
-
-fun dest_phi_type_ty \<^Type>\<open>fun x \<^Type>\<open>set model\<close>\<close> = (x, model)
-  | dest_phi_type_ty T = raise TYPE ("dest_phi_type_ty", [T], [])
-
-fun dest_phi_type_ty_c T =
-  (dest_phi_type_ty (Thm.typ_of T) ;
-   (Thm.dest_ctyp0 T, dest_ctyp0 (dest_ctyp1 T)))
-
-val ExSet_conv = Phi_Conv.quant_conv \<^const_name>\<open>ExSet\<close>
-fun Subjection_conv CX CP ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
-       (Conv.arg1_conv CX then_conv
-        Conv.arg_conv CP) ctm
-     | _ => raise CTERM ("Subjection_conv", [ctm])
 
 end
 

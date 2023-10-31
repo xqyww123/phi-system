@@ -1313,17 +1313,18 @@ thm Tr2
 
 subsection \<open>Parameterized FMQ\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
+declare [[\<phi>trace_reasoning = 0]]
+    
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>[i\<in>I] (\<Sigma> T)\<close>
-  deriving (*\<open>(\<And>p. Object_Equiv (T p) (eq p))
+  deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
         \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x y. \<forall>i \<in> I. eq i (x i) (y i))\<close>
        and \<open> (\<And>i. Abstract_Domain (T i) (P i))
         \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i\<in>I. P i (x i)) \<close>  
-       and*) \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
-  \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
-
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
+        \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
+       
+term \<open>Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) \<close>
 
 term \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
   \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>

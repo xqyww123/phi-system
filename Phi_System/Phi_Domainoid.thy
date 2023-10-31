@@ -516,7 +516,7 @@ declare [[
      let fun chk (\<^Const>\<open>Pure.type \<open>TVar _\<close>\<close>, d) = is_Var d
            | chk (T,d) = is_Var T andalso is_Var d
          val idx = Term.maxidx_of_term prop + 1
-         val rewr = the_list oo Pattern_Translation.rewrite (Context.theory_of ctxt) [] o Logic.dest_conjunction
+         val rewr = the_list oo Pattern_Translation.rewrite (Context.theory_of ctxt) (K false) [] o Logic.dest_conjunction
          val ret = (if chk (T1,d1) then [] else rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper ?T\<^sub>1 _ ?\<delta>\<^sub>1 _\<close> prop)
                  @ (if chk (T2,d2) then [] else rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper _ ?T\<^sub>2 _ ?\<delta>\<^sub>2\<close> prop)
                  @ rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 _ _\<close> prop

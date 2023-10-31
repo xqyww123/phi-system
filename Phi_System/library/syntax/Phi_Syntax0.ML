@@ -11,6 +11,17 @@ include PHI_SYNTAX
   val strip_separations : term -> term list
   val mk_separations : typ -> term list -> term
 
+  val mk_phi_type_ty : typ (*concrete*) * typ (*abstract*) -> typ
+  val mk_phi_type : term * term -> term
+  val dest_phi_type_assertion : term -> term (*x*) * term (*T*)
+  val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
+  val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
+  val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ (*concrete*)
+  val is_Type_Opr : typ -> bool
+  val is_non_parameterized_phityp : typ -> bool
+
+  val ExSet_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
+  val Subjection_conv : conv -> conv -> conv
 
 end
 
@@ -116,6 +127,46 @@ fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separati
 fun mk_separations model_ty [] = \<^Const>\<open>one_class.one model_ty\<close>
   | mk_separations model_ty L = foldr1 (fn (A,X) => \<^Const>\<open>times model_ty\<close> $ A $ X) L
 
+fun mk_phi_type (x,T) =
+  let val \<^Type>\<open>fun \<open>a\<close> \<open>\<^Type>\<open>set \<open>b\<close>\<close>\<close>\<close> = Phi_Help.safe_fastype_of  T
+   in \<^Const>\<open>\<phi>Type a b\<close> $ x $ T end
 
+fun mk_phi_type_ty (tm, tx) = \<^Type>\<open>fun tx \<^Type>\<open>set tm\<close>\<close>
+
+fun dest_phi_type_assertion (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) = (x, T)
+  | dest_phi_type_assertion X = raise TERM ("Not a \<phi>-type assertion", [X])
+
+fun dest_phi_type_ty \<^Type>\<open>fun x \<^Type>\<open>set model\<close>\<close> = (x, model)
+  | dest_phi_type_ty T = raise TYPE ("dest_phi_type_ty", [T], [])
+
+fun dest_phi_type_ty_c T =
+  (dest_phi_type_ty (Thm.typ_of T) ;
+   (Thm.dest_ctyp0 T, Thm.dest_ctyp0 (Thm.dest_ctyp1 T)))
+
+fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
+  | dest_parameterized_phi_ty' args \<^Type>\<open>fun a T\<close> = dest_parameterized_phi_ty' (a::args) T
+  | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
+
+val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
+
+fun is_Type_Opr ty =
+  case dest_parameterized_phi_ty ty
+    of ([],_,_) => false
+     | (args,_,_) => exists (can dest_parameterized_phi_ty) args
+
+fun is_non_parameterized_phityp typ =
+  case try dest_parameterized_phi_ty typ
+    of SOME ([],_,_) => true
+     | _ => false
+
+val ExSet_conv = Phi_Conv.quant_conv \<^const_name>\<open>ExSet\<close>
+fun Subjection_conv CX CP ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
+       (Conv.arg1_conv CX then_conv
+        Conv.arg_conv CP) ctm
+     | _ => raise CTERM ("Subjection_conv", [ctm])
 
 end
+
+val dest_parameterized_phi_ty = Phi_Syntax.dest_parameterized_phi_ty

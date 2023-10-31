@@ -1371,22 +1371,22 @@ definition Not_Require_Swap_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<cl
   where \<open>Not_Require_Swap_Norm F_G_T \<equiv> True\<close>
 
 \<phi>reasoner_ML Require_Swap_Norm %cutting (\<open>Require_Swap_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val (bvtys, F_G_T) =
-        case Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvs, F_G_T) =
+        case Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
           of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Swap_Norm*) $ F_G_T)) =>
              (bvtys, F_G_T)
-   in if Phi_Type.whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
+   in if Phi_Type.whether_to_swap_normalize (Context.Proof ctxt) bvs F_G_T
       then SOME ((ctxt, @{lemma' \<open>Require_Swap_Norm F\<close> by (simp add: Require_Swap_Norm_def)} RS sequent), Seq.empty)
       else NONE
   end)
 \<close>
 
 \<phi>reasoner_ML Not_Require_Swap_Norm %cutting (\<open>Not_Require_Swap_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val (bvtys, F_G_T) =
-        case Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvs, F_G_T) =
+        case Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
           of (bvtys, _ (*Trueprop*) $ (Const _ (*Not_Require_Swap_Norm*) $ F_G_T)) =>
              (bvtys, F_G_T)
-   in if Phi_Type.whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
+   in if Phi_Type.whether_to_swap_normalize (Context.Proof ctxt) bvs F_G_T
       then NONE
       else SOME ((ctxt, @{lemma' \<open>Not_Require_Swap_Norm F\<close> by (simp add: Not_Require_Swap_Norm_def)} RS sequent), Seq.empty)
   end)
@@ -1587,11 +1587,6 @@ lemma \<phi>open_abstraction:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN T) \<close>
   unfolding Action_Tag_def Simplify_def
   by simp
-
-lemma \<phi>open_abstraction_det:
-  \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
-\<Longrightarrow> Determine_\<phi>Type T U' @action to (OPEN T) \<close>
-  unfolding Determine_\<phi>Type_def Action_Tag_def ..
 
 
 text \<open>No \<open>Object_Equiv\<close> is used but we use \<open>(=)\<close> directly because we are destructing or constructing
@@ -2324,7 +2319,8 @@ lemma apply_conditioned_Separation_Functor_unzip:
   unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
   apply (cases C; simp) 
   \<medium_left_bracket> premises FTF[] and [useful] and []
-    apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
+    note [[\<phi>trace_reasoning = 2]] 
+    ;; apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
     \<medium_left_bracket> \<medium_right_bracket>
   \<medium_right_bracket> .
 
@@ -2429,7 +2425,7 @@ lemma apply_conditioned_Separation_Functor\<^sub>\<Lambda>_unzip:
 \<Longrightarrow> x \<Ztypecolon> Fc(\<lambda>p. T p \<^emph>[C] U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then un x else (func_mapper (\<lambda>_. fst) (\<lambda>_ _. True) x, undefined)) \<Ztypecolon> Ft(T) \<^emph>[C] Fu(U)\<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
   apply (cases C; simp)
-  \<medium_left_bracket> premises FTF[] and [useful] and []
+  \<medium_left_bracket> premises FTF[] and [useful] and [] 
     apply_rule apply_Functional_Transformation_Functor\<^sub>\<Lambda>[where f=\<open>\<lambda>_. fst\<close> and P=\<open>\<lambda>_ _. True\<close>, OF FTF]
     \<medium_left_bracket> \<medium_right_bracket>
   \<medium_right_bracket> .
@@ -4813,7 +4809,7 @@ lemma
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
 \<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn (quiet, _) => fn [] => fn _ => fn phi => fn thy => (
-  if Phi_Type.is_Type_Opr (Term.fastype_of (#term phi)) andalso
+  if Phi_Syntax.is_Type_Opr (Term.fastype_of (#term phi)) andalso
      Phi_Type.def_contains_satisfaction phi andalso
      not quiet
   then warning ("The \<phi>-type definition contains satisfaction operator (\<Turnstile>).\n\
@@ -5151,7 +5147,7 @@ private lemma \<phi>TA_TF\<^sub>\<Lambda>_rule:
   \<open> (\<And>g x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>p a b. a \<in> D p x \<and> g p a b \<longrightarrow> b \<in> R p x) \<Longrightarrow>
               (\<forall>p a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D p x \<longrightarrow> (a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U p \<s>\<u>\<b>\<j> b. g p a b @action to (U p))) \<longrightarrow> \<comment> \<open>split D\<close>
               Ant \<longrightarrow>
-              (x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> (T \<v>\<a>\<r>_p) \<Rightarrow> (U \<v>\<a>\<r>_p))))
+              (x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT

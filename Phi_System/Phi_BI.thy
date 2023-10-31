@@ -4452,22 +4452,22 @@ private lemma \<A>simp_chk_no_need'_transitive:
 
 \<phi>reasoner_ML \<A>simp_if_need %cutting (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp_if_need _ _\<close>) = \<open>
 fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val (bvtys, goal) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvs, goal) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (ToA, Const _ $ direction_term $ _) = PLPR_Syntax.dest_action_of' (K true) goal
       val (X, Y', _) = Phi_Syntax.dest_transformation ToA
       val direction = case direction_term of Const(\<^const_name>\<open>True\<close>, _) => true
                                            | Const(\<^const_name>\<open>False\<close>, _) => false
                                            | _ => raise TERM ("The direction of \<A>simp_if_need must be a literal", [direction_term])
-      val (Y, ex_ty) =
-            case Y' of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, Ty,
+      val (Y, ex_bound) =
+            case Y' of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (N, Ty,
                           Const(\<^const_name>\<open>Subjection\<close>, _) $ (Y as Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _)
-                         => (Y, SOME Ty)
+                         => (Y, SOME (N,Ty))
                      | _ => (Y', NONE)
-   in if (if direction then Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvtys X
-                       else Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) (the_list ex_ty @ bvtys) Y)
+   in if (if direction then Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvs X
+                       else Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) (the_list ex_bound @ bvs) Y)
    then SOME ((ctxt, @{thm' \<A>simp_chk_go} RS' (ctxt, sequent)), Seq.empty)
-   else let val rule = if is_some ex_ty then @{thm' \<A>simp_chk_no_need'}
-                                        else @{thm' \<A>simp_chk_no_need}
+   else let val rule = if is_some ex_bound then @{thm' \<A>simp_chk_no_need'}
+                                           else @{thm' \<A>simp_chk_no_need}
     in SOME ((ctxt, rule RS' (ctxt, sequent)), Seq.empty)
    end
   end)
@@ -4475,24 +4475,24 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
 
 \<phi>reasoner_ML \<A>transitive_simp_if_need %cutting (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>transitive_simp_if_need _ _\<close>) = \<open>
 fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val (bvtys, goal) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvs, goal) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (ToA, Const _ $ direction_term $ _) = PLPR_Syntax.dest_action_of' (K true) goal
       val (X, Y', _) = Phi_Syntax.dest_transformation ToA
       val direction = case direction_term of Const(\<^const_name>\<open>True\<close>, _) => true
                                            | Const(\<^const_name>\<open>False\<close>, _) => false
                                            | _ => raise TERM ("The direction of \<A>simp_if_need must be a literal", [direction_term])
-      val (Y, ex_ty) =
-            case Y' of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, Ty,
+      val (Y, ex_bound) =
+            case Y' of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (N, Ty,
                           Const(\<^const_name>\<open>Subjection\<close>, _) $ (Y as Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _)
-                         => (Y, SOME Ty)
+                         => (Y, SOME (N, Ty))
                      | _ => (Y', NONE)
-   in if (if direction then Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvtys X
-                       else Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) (the_list ex_ty @ bvtys) Y)
+   in if (if direction then Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvs X
+                       else Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) (the_list ex_bound @ bvs) Y)
    then SOME ((ctxt, (if direction then @{thm' \<A>simp_chk_go_transitive}
                                    else @{thm' \<A>simp_chk_go_transitive_backward})
                       RS' (ctxt, sequent)), Seq.empty)
-   else let val rule = if is_some ex_ty then @{thm' \<A>simp_chk_no_need'_transitive}
-                                        else @{thm' \<A>simp_chk_no_need_transitive}
+   else let val rule = if is_some ex_bound then @{thm' \<A>simp_chk_no_need'_transitive}
+                                           else @{thm' \<A>simp_chk_no_need_transitive}
     in SOME ((ctxt, rule RS' (ctxt, sequent)), Seq.empty)
    end
   end)
@@ -4560,9 +4560,9 @@ lemma normalize_source:
 ML \<open>
 
 fun normalize_source_of_ToA (ctxt, sequent) =
-  let val (bvtys, ToA) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvs, ToA) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (X, _, _) = Phi_Syntax.dest_transformation ToA
-   in if Phi_Syntax.exists_item_of_assertion (Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvtys) X
+   in if Phi_Syntax.exists_item_of_assertion (Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvs) X
       then (
         Phi_Reasoner.info_print ctxt 2 (K "normalizing the source assertion of the transformation") ;
         case Phi_Reasoner.internal_reason NONE (SOME 1) (ctxt, @{thm' normalize_source} RS sequent)
@@ -4573,11 +4573,11 @@ fun normalize_source_of_ToA (ctxt, sequent) =
   end
 
 fun normalize_target_of_ToA (ctxt, sequent) =
-  let val (bvtys, ToA) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvs, ToA) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (Y, has_R) = case Phi_Syntax.dest_transformation ToA
                          of (_, Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ _ $ _, _) => (Y, true)
                           | (_, Y, _) => (Y, false)
-   in if Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) bvtys Y
+   in if Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) bvs Y
       then (
         Phi_Reasoner.info_print ctxt 2 (K "normalizing the target assertion of the transformation") ;
         case Phi_Reasoner.internal_reason NONE (SOME 1)

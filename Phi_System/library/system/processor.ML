@@ -122,7 +122,7 @@ fun apply_processors thy =
             fun invoke prec cfg (oprs, (ctxt,sequent)) =
               let fun try_app p =
                     if prec < #precedence p andalso
-                       exists (fn pat => PLPR_Pattern.matches (Proof_Context.theory_of ctxt) []
+                       exists (fn pat => PLPR_Pattern.matches (Proof_Context.theory_of ctxt) (K false) []
                                                               (pat, Thm.prop_of sequent))
                               (#pattern p)
                     then SOME ((( Scan.permissive (#proc p (oprs, (ctxt,sequent)))

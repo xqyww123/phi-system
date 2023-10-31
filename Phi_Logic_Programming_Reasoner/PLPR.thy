@@ -57,7 +57,7 @@ end\<close>
 
 ML_file \<open>library/imporved_net.ML\<close>
 ML_file \<open>library/tools/ml_thms.ML\<close>
-ML_file \<open>library/pattern.ML\<close>
+ML_file_debug \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/reasoner_decl.ML\<close>
 ML_file \<open>library/priority_group.ML\<close>
 ML_file_debug \<open>library/helpers0.ML\<close>

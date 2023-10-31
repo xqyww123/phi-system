@@ -107,6 +107,7 @@ val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
                             * term list (*premises of the antecedent*)
                             * term (*conclusion containing loose bound*)
 val strip_meta_hhf_bvtys : term -> PLPR_Pattern.bv_typs * term
+val strip_meta_hhf_bvs : term -> PLPR_Pattern.bvs * term
 val leading_antecedent : term -> (string * typ) list (*quantified variables*)
                                * term list (*premises of the antecedent*)
                                * term (*conclusion containing loose bound*)
@@ -495,6 +496,14 @@ fun strip_meta_hhf_bvtys term =
   let
     fun strip V (Const("Pure.imp", _) $ H $ B) = strip V B
       | strip V (Const("Pure.all", _) $ Abs (_, T, B)) = strip (T::V) B
+      | strip V (Const("Pure.all", _) $ X) = strip V X
+      | strip V X = (V, X)
+  in strip [] term end
+
+fun strip_meta_hhf_bvs term =
+  let
+    fun strip V (Const("Pure.imp", _) $ H $ B) = strip V B
+      | strip V (Const("Pure.all", _) $ Abs (N, T, B)) = strip ((N,T)::V) B
       | strip V (Const("Pure.all", _) $ X) = strip V X
       | strip V X = (V, X)
   in strip [] term end

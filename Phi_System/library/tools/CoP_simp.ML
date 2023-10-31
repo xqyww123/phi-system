@@ -2,9 +2,9 @@ signature PHI_COP_SIMP = sig
 
 (* check if the simplification is required *)
 type pattern = term
-type trigger = Context.generic -> PLPR_Pattern.bv_typs * term -> bool
+type trigger = Context.generic -> PLPR_Pattern.bvs * term -> bool
 
-val is_simp_needed : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
+val is_simp_needed : Context.generic -> PLPR_Pattern.bvs -> term -> bool
     (*checks types and assertions recursively but never enters into objects*)
 val add_simp_pattern : pattern -> Context.generic -> Context.generic
 val add_simp_trigger : pattern * trigger -> Context.generic -> serial * Context.generic
@@ -25,8 +25,8 @@ val extract_pattern_trigger : bool Config.T
 
 (* Helpers *)
 
-val pass_recursively : (PLPR_Pattern.bv_typs -> term -> bool)
-                     -> PLPR_Pattern.bv_typs -> term -> bool
+val pass_recursively : (PLPR_Pattern.bvs -> term -> bool)
+                     -> PLPR_Pattern.bvs -> term -> bool
 
 end
 
@@ -50,7 +50,7 @@ functor Phi_CoP_Simp_GEN (RULES: PHI_COP_SIMP_RULES) : PHI_COP_SIMP = struct
 (*** Check the need of simplification ***)
 
 type pattern = term
-type trigger = Context.generic -> PLPR_Pattern.bv_typs * term -> bool
+type trigger = Context.generic -> PLPR_Pattern.bvs * term -> bool
 
 datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * trigger
 
@@ -67,20 +67,20 @@ structure Checkers = Generic_Data (
 fun checkers_binding_on ctxt tm =
   let val thy = Context.theory_of ctxt
    in Net.match_term (Checkers.get ctxt) tm
-   |> filter (fn Chk_Pattern pat => PLPR_Pattern.matches thy [] (pat, tm)
-               | Chk_ML (_, pat, _) => PLPR_Pattern.matches thy [] (pat, tm))
+   |> filter (fn Chk_Pattern pat => PLPR_Pattern.matches thy (K false) [] (pat, tm)
+               | Chk_ML (_, pat, _) => PLPR_Pattern.matches thy (K false) [] (pat, tm))
   end
 
 fun pass_recursively F =
-  let fun chk bv_tys tm =
+  let fun chk bvs tm =
         let val (h,args) = Term.strip_comb tm
          in (case h
-         of Const (\<^const_name>\<open>\<phi>Type\<close>, _) => F bv_tys tm orelse exists (chk bv_tys) (tl args)
-          | Const _ => F bv_tys tm orelse exists (chk bv_tys) args
-          | Free _  => F bv_tys tm orelse exists (chk bv_tys) args
-          | Var _ => exists (chk bv_tys) args
-          | Bound _ => exists (chk bv_tys) args
-          | Abs (_, T, X) => if null args then chk (T::bv_tys) X
+         of Const (\<^const_name>\<open>\<phi>Type\<close>, _) => F bvs tm orelse exists (chk bvs) (tl args)
+          | Const _ => F bvs tm orelse exists (chk bvs) args
+          | Free _  => F bvs tm orelse exists (chk bvs) args
+          | Var _ => exists (chk bvs) args
+          | Bound _ => exists (chk bvs) args
+          | Abs (N, T, X) => if null args then chk ((N,T)::bvs) X
                              else raise REQUIRE_LAMBDA_NORMLAIZTION
           | _ => false)
         end
@@ -90,12 +90,12 @@ fun pass_recursively F =
 fun is_simp_needed ctxt =
   let val chkers = Checkers.get ctxt
       val thy = Context.theory_of ctxt
-      fun apply_chk bv_tys tm =
+      fun apply_chk bvs tm =
         Net.match_term chkers tm
-          |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy bv_tys (pat,tm)
-                      | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy bv_tys (pat,tm)
-                                      andalso f ctxt (bv_tys, tm))
-   in fn bvtys => Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk bvtys)
+          |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy (K false) bvs (pat,tm)
+                      | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy (K false) bvs (pat,tm)
+                                      andalso f ctxt (bvs, tm))
+   in fn bvs => Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk bvs)
   end
 
 fun chk_pattern pat =

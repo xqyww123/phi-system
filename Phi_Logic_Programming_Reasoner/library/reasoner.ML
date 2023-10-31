@@ -99,7 +99,7 @@ signature NU_REASONER = sig
   (*val call_reasoners : reasoners -> Proof.context -> *)
   val get_reasoners : theory -> reasoners -> pattern -> reasoner list
   (*a faster version but a bit dirty*)
-  val get_reasoners' : theory -> reasoners -> PLPR_Pattern.bv_typs
+  val get_reasoners' : theory -> reasoners -> PLPR_Pattern.bvs
                     -> pattern -> (priority * pattern * serial (*reasoner id*) * reasoner) list
   val pretty : Proof.context -> reasoner -> Pretty.T
   (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
@@ -170,7 +170,8 @@ signature NU_REASONER = sig
   val the_default_pattern_of : Context.generic -> term -> term list
 
   (* Default Reasoner Group *)
-  val the_default_group_of : Context.generic -> Pattern_Translation.bv_typs -> term -> Reasoner_Group.group option
+  val the_default_group_of : Context.generic -> PLPR_Pattern.bvs
+                          -> term -> Reasoner_Group.group option
   val assign_default_group : (priority * term * Reasoner_Group.group) list
                           -> Context.generic -> Context.generic
 
@@ -291,7 +292,7 @@ fun name_of_intro_reasoner rules = Logic.mk_conjunction_list (map Thm.prop_of ru
 fun match_reasoner_name thy pattern name =
   let val name_concls = Logic.dest_conjunction_list name
                      |> map Logic.strip_assums_concl
-   in exists (fn X => Pattern_Translation.does_match_term thy [] (pattern, X)) name_concls
+   in exists (fn X => Pattern_Translation.does_match_term thy (K false) [] (pattern, X)) name_concls
   end
 fun match_reasoner thy pattern reasoner = match_reasoner_name thy pattern (#name reasoner)
 
@@ -551,12 +552,12 @@ fun apply_reasoning_rules _ [] = K Seq.empty
 fun apply_tactic _ bmode (Tac_ML tac) = (fn s => tac (bmode, s))
   | apply_tactic chk_guard _ (Tac_Rule rules) = apply_reasoning_rules chk_guard rules
 
-fun get_reasoners' thy tactics bv_tys term =
+fun get_reasoners' thy tactics bvs term =
   iNet.match_term tactics term
     |> filter (fn (_,pat,_,reasoner) =>
-        Pattern_Translation.does_match_term thy bv_tys (pat,term)
+        Pattern_Translation.does_match_term thy (K true) bvs (pat,term)
         andalso forall (fn pat =>
-          not (Pattern_Translation.does_match_term thy bv_tys (pat,term)))
+          not (Pattern_Translation.does_match_term thy (K true) bvs (pat,term)))
         (#blacklist reasoner))
     |> sort (fn ((c1,_,_,r1),(c2,_,_,r2)) =>
           case int_ord (c1,c2) of EQUAL => mode_ord (#mode r1, #mode r2)
@@ -670,9 +671,9 @@ fun gen_reason (handlers, trace, limit, tactics) =
                                            loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
                                                  [[(score, pos, NORMAL_MODE, Seq.single (ctxt, th))]])
                                             handle Success s => SOME s
-                                     val (bv_tys, concl) = Phi_Help.strip_meta_hhf_bvtys
+                                     val (bvs, concl) = Phi_Help.strip_meta_hhf_bvs
                                                               (fst (Logic.dest_implies (Thm.prop_of th')))
-                              in get_reasoners' (Proof_Context.theory_of ctxt) tactics bv_tys concl
+                              in get_reasoners' (Proof_Context.theory_of ctxt) tactics bvs concl
                                     |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
                                     |> map (fn (priority, _, _, r : reasoner) =>
                                           (priority + score, #pos r, #mode r,
@@ -915,9 +916,9 @@ structure Default_Reasoner_Groups = Generic_Data (
 fun the_default_group_of ctxt =
   let val reasoner_groups = Default_Reasoner_Groups.get ctxt
       val thy = Context.theory_of ctxt
-   in fn bvtys => fn term =>
+   in fn bvs => fn term =>
       iNet.match_term reasoner_groups term
-        |> filter (fn (_, pat, _) => Pattern_Translation.does_match_term thy bvtys (pat, term))
+        |> filter (fn (_, pat, _) => Pattern_Translation.does_match_term thy (K true) bvs (pat, term))
         |> Phi_Help.max_of (int_ord o apply2 #1)
         |> Option.map #3
   end

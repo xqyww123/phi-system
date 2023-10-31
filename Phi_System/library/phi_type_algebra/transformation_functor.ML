@@ -222,9 +222,10 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                             | Const(\<^const_name>\<open>Transformation_BiFunctor\<close>, _) => 2
                             | Const(\<^const_name>\<open>Transformation_Functor\<^sub>\<Lambda>\<close>, _) => ~1
                             | _ => unsupport ())
-                     | _ => let val params = filter (can dest_parameterized_phi_ty o snd) (parameters_of phi0)
+                     | _ => let val params = filter (can dest_parameterized_phi_ty o snd)
+                                                    (parameters_of phi0)
                                 val arity = length params
-                             in if forall (is_non_parameterized_phityp o snd) params
+                             in if forall (Phi_Syntax.is_non_parameterized_phityp o snd) params
                                 then arity
                                 else ~ arity
                             end
@@ -411,7 +412,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
                             | Const(\<^const_name>\<open>Functional_Transformation_BiFunctor\<close>, _) => 2
                             | Const(\<^const_name>\<open>Functional_Transformation_Functor\<^sub>\<Lambda>\<close>, _) => ~1
                             | _ => unsupport ())
-                     | _ => length (filter (is_non_parameterized_phityp o snd) (parameters_of phi0))
+                     | _ => length (filter (Phi_Syntax.is_non_parameterized_phityp o snd) (parameters_of phi0))
      val rule = case arity of 1 => @{thm' \<phi>TA_FTF_rule}
                             | 2 => @{thm' \<phi>TA_biFTF_rule}
                             | ~1 => @{thm' \<phi>TA_FTF\<^sub>\<Lambda>_rule}

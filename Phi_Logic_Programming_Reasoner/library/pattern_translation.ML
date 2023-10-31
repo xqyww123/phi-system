@@ -1,17 +1,19 @@
 signature PATTERN_REWRITE_GLOBAL = sig
 
 type bv_typs = PLPR_Pattern.bv_typs
+type bvs = PLPR_Pattern.bvs
+type fixed_bounds = PLPR_Pattern.fixed_bounds
 
 type spattern = term (*improved pattern where variables of a name exactly \<open>var\<close> or leaded by \<open>var_\<close>,
                        match only schematic variables.*)
 val mk_spattern : term -> spattern
-val does_match_term : theory -> bv_typs -> spattern * term -> bool
+val does_match_term : theory -> fixed_bounds -> bvs -> spattern * term -> bool
 
 type redex_residues = term * term list
 type redex_residue = term * term
 
-val rewrites : theory -> bv_typs -> redex_residues -> term -> term list option
-val rewrite  : theory -> bv_typs -> redex_residue -> term -> term option
+val rewrites : theory -> fixed_bounds -> bvs -> redex_residues -> term -> term list option
+val rewrite  : theory -> fixed_bounds -> bvs -> redex_residue -> term -> term option
 
 end
 
@@ -37,6 +39,9 @@ end
 structure Pattern_Translation : PATTERN_REWRITE_GLOBAL = struct
 
 type bv_typs = PLPR_Pattern.bv_typs
+type bvs = PLPR_Pattern.bvs
+type fixed_bounds = PLPR_Pattern.fixed_bounds
+
 type redex_residues = term * term list
 type redex_residue = term * term
 type spattern = term
@@ -50,24 +55,25 @@ fun mk_spattern raw =
 
 val chk_trick = Vartab.forall (fn ((_,i),(_,tm)) => i >= 0 orelse is_Var (Term.head_of (Envir.beta_eta_contract tm)))
 
-fun match_term thy bv_typs pat_obj env =
-  let val (tys,tms) = PLPR_Pattern.match thy bv_typs pat_obj env
+fun match_term thy fixed_bounds bvs pat_obj env =
+  let val (tys,tms) = PLPR_Pattern.match thy fixed_bounds bvs pat_obj env
    in if chk_trick tms then (tys,tms)
       else raise Pattern.MATCH
   end
 
-fun does_match_term thy bv_typs pat_obj =
-      (match_term thy bv_typs pat_obj (Vartab.empty, Vartab.empty) ; true)
+fun does_match_term thy fixed_bounds bv_typs pat_obj =
+      (match_term thy fixed_bounds bv_typs pat_obj (Vartab.empty, Vartab.empty) ; true)
       handle Pattern.MATCH => false
 
-fun rewrites thy bv_typs (pat,rets) term =
-  let val s = PLPR_Pattern.match thy bv_typs (pat, term) (Vartab.empty, Vartab.empty)
+fun rewrites thy fixed_bounds bv_typs (pat,rets) term =
+  let val s = PLPR_Pattern.match thy fixed_bounds bv_typs (pat, term) (Vartab.empty, Vartab.empty)
       in if chk_trick (snd s)
          then SOME (map (Envir.subst_term s) rets)
          else NONE
    end handle Pattern.MATCH => NONE
 
-fun rewrite thy bv_typs (pat,ret) term = Option.map hd (rewrites thy bv_typs (pat,[ret]) term)
+fun rewrite thy fixed_bounds bv_typs (pat,ret) term =
+      Option.map hd (rewrites thy fixed_bounds bv_typs (pat,[ret]) term)
 
 end
 
@@ -135,7 +141,7 @@ fun print_rewrites ctxt =
 end
 
 fun do_rewrite ctxt term (n, pat0, _, By_Pattern ret0) =
-      Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) [] (pat0, ret0) term)
+      Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) (K false) [] (pat0, ret0) term)
   | do_rewrite ctxt term (n, _, _, By_ML rewr) =
       Option.map (pair n) (rewr ctxt term)
 

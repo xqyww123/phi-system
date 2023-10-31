@@ -10,12 +10,15 @@ signature PLPR_PATTERN = sig
 
 type bv_typs = typ list (*types of contextual bound variables*)
 type bvs = (string * typ) list
+type fixed_bounds = int -> bool
+      (*whether the bound variable is fixed, so regarded as a normal free variable*)
 
-val match: theory -> bv_typs -> term * term -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
+val match: theory -> fixed_bounds
+                  -> bvs -> term * term -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 val first_order_match: theory -> bv_typs -> term *term
                               -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 
-val matches: theory -> bv_typs -> term * term -> bool
+val matches: theory -> fixed_bounds -> bvs -> term * term -> bool
 
 end
 
@@ -24,6 +27,7 @@ open Pattern
 
 type bv_typs = typ list (*types of bound variables of the object.*)
 type bvs = (string * typ) list
+type fixed_bounds = int -> bool
 
 fun idx [] j     = raise Unif
   | idx(i::is) j = if (i:int) =j then length is else idx is j;
@@ -92,17 +96,19 @@ fun first_order_match thy bv_tys (t,u) env =
 
 (* Matching of higher-order patterns *)
 
-fun match thy bv_typs (po as (pat,obj)) envir =
+(*fixed_bounds: bound variables regarded as normal free variables*)
+fun match thy fixed_bounds bvs (po as (pat,obj)) envir =
 let
-  val bs = Inttab.make_set (loose_bnos obj)
+  val len_initial = length bvs
   fun match_bind(itms,binders,ixn,T,is,t) =
     let val len = length binders
+        val diff = len - len_initial
         val js = loose_bnos t
-              |> filter (fn i => not (Inttab.defined bs (i - len)))
+              |> filter (fn i => i < diff orelse not (fixed_bounds (i - diff)))
     in if null is
        then if null js then Vartab.update_new (ixn, (T, t)) itms else raise MATCH
        else if subset (op =) (js, is)
-            then let val t' = if downto0(is, len - 1) then t
+            then let val t' = if downto0(is, diff - 1) then t
                               else mapbnd (idx is) t
                  in Vartab.update_new (ixn, (T, mkabs (binders, is, t'))) itms end
             else raise MATCH
@@ -148,13 +154,14 @@ let
            end
     end;
 
+  val bvtys = map snd bvs
   val pT = fastype_of pat
-  and oT = fastype_of1 (bv_typs, obj)
+  and oT = fastype_of1 (bvtys, obj)
   val envir' = apfst (typ_match thy (pT, oT)) envir;
-in mtch [] po envir' handle Pattern => first_order_match thy bv_typs po envir' end;
+in mtch bvs po envir' handle Pattern => first_order_match thy bvtys po envir' end;
 
-fun matches thy bv_typs po =
-  (match thy bv_typs po (Vartab.empty, Vartab.empty); true) handle MATCH => false;
+fun matches thy fixed_bounds bv_typs po =
+  (match thy fixed_bounds bv_typs po (Vartab.empty, Vartab.empty); true) handle MATCH => false;
 
 
 end

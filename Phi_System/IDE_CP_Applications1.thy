@@ -628,7 +628,7 @@ lemma [\<phi>reason %identity_element_cut]:
 subsection \<open>To\<close>
 
 consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
-       \<A>pattern  :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> ("\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _" [42,42] 41)
+       \<A>pattern  :: \<open>'redex \<Rightarrow> 'residue \<Rightarrow> ('c,'d) \<phi>\<close> ("\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _" [42,42] 41)
        \<A>traverse :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> ("\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> _" [30] 29) \<comment> \<open>enter to elements recursively\<close>
        \<A>then     :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> (infixr "\<t>\<h>\<e>\<n>" 28)
                     \<comment> \<open>\<open>\<A> \<t>\<h>\<e>\<n> \<B>\<close> hints to first transform to \<open>\<A>\<close> and then from \<open>\<A>\<close> to \<open>\<B>\<close>.
@@ -819,8 +819,13 @@ private lemma \<A>_strip_traverse:
   unfolding Action_Tag_def .
 
 private lemma \<A>_pattern_meet:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to A'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A) \<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to U
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U) \<close>
+  unfolding Action_Tag_def .
+
+private lemma \<A>_pattern_meet\<^sub>1:
+  \<open> x \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (U p)
+\<Longrightarrow> x \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U) \<close>
   unfolding Action_Tag_def .
 
 private lemma \<A>_pattern_not_meet:
@@ -829,8 +834,13 @@ private lemma \<A>_pattern_not_meet:
   unfolding Action_Tag_def .
 
 private lemma \<A>_pattern_meet_this:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to A'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A \<o>\<r>\<e>\<l>\<s>\<e> others) \<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to U
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U \<o>\<r>\<e>\<l>\<s>\<e> others) \<close>
+  unfolding Action_Tag_def .
+
+private lemma \<A>_pattern_meet_this\<^sub>1:
+  \<open> x \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (U p)
+\<Longrightarrow> x \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U \<o>\<r>\<e>\<l>\<s>\<e> others) \<close>
   unfolding Action_Tag_def .
 
 private lemma \<A>_pattern_meet_that:
@@ -840,66 +850,75 @@ private lemma \<A>_pattern_meet_that:
 
 \<phi>reasoner_ML \<A>pattern %To_ToA_pattern_shortcut
     ( \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
-    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
-    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
-    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close> ) =
+    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (_ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
+    | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> _)\<close> ) =
 \<open>fn (_, (ctxt, sequent)) => Seq.make (fn () =>
   let fun parse_patterns (Const(\<^const_name>\<open>synt_orelse\<close>, _) $ X $ Y)
             = parse_patterns X @ parse_patterns Y
-        | parse_patterns (Const(\<^const_name>\<open>\<A>pattern\<close>, _) $ Pat $ Y) = [(Pat, Y)]
+        | parse_patterns (Const(\<^const_name>\<open>\<A>pattern\<close>, _) $ Pat $ _) = [Pat]
         | parse_patterns _ = []
-      val (trivial, pattern_meet_that, strip_traverse, pattern_not_meet, pattern_meet, pattern_meet_this, T, A) =
-          case Thm.major_prem_of sequent
-            of _ (*Trueprop*) $ (_ (*Action_Tag*)
-                $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ (_ (*\<phi>Type*) $ _ $ T) $ _ $ _)
-                $ (_ (*to*) $ A))
-               => (@{thm' ToA_trivial}, @{thm' \<A>_pattern_meet_that}, @{thm' \<A>_strip_traverse},
-                   @{thm' \<A>_pattern_not_meet}, @{thm' \<A>_pattern_meet}, @{thm' \<A>_pattern_meet_this}, T, A)
+
+      val (bvs, ToA) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
+      val (T, A) = case ToA of _ (*Trueprop*) $ (_ (*Action_Tag*)
+                              $ (Const _ (*Transformation*) $ (_ (*\<phi>Type*) $ _ $ T) $ _ $ _)
+                              $ (_ (*to*) $ A))
+                             => (T, A)
 
       val (is_traverse, A') = case A of Const(\<^const_name>\<open>\<A>traverse\<close>, _) $ A' => (true, A')
                                       | A' => (false, A')
       val pats = parse_patterns A'
+
+   in if null pats then NONE
+      else
+  let val idx = Thm.maxidx_of sequent
+      val bvtys = map snd bvs
+
+      fun reconstruct_pattern redex =
+        let val param_redex = rev (#1 (dest_parameterized_phi_ty (fastype_of1 (bvtys,redex))))
+            fun reconstruct _ [] redex = Envir.beta_eta_contract redex
+              | reconstruct i (ty::param_tys) redex =
+                  let val var = Var(("\<p>",i+idx), bvtys ---> ty)
+                             |> fold_index (fn (i, _) => fn X => X $ Bound i) bvtys
+                   in reconstruct (i+1) param_tys (redex $ var)
+                  end
+         in (length param_redex, reconstruct 0 param_redex redex)
+        end
+      val pats = map reconstruct_pattern pats
+
       val len = length pats
       val thy = Proof_Context.theory_of ctxt
 
-      fun meet_pattern A (i,len) th =
+      fun meet_pattern rules (i,len) th =
         if i = 0
-        then let val rule = (if i = len - 1 then pattern_meet else pattern_meet_this)
-                         |> Drule.infer_instantiate ctxt [(("A'",0), A)]
+        then let val rule = if i = len - 1 then #1 rules else #2 rules
               in rule RS th
              end
-        else meet_pattern A (i-1,len-1) (pattern_meet_that RS th)
+        else meet_pattern rules (i-1,len-1) (@{thm' \<A>_pattern_meet_that} RS th)
+
       fun meet_pattern' A i th =
-        meet_pattern A (i,len) (if is_traverse then strip_traverse RS th else th)
+        meet_pattern A (i,len) (if is_traverse then @{thm' \<A>_strip_traverse} RS th else th)
 
       fun bad_pattern pat = error ("Bad Pattern: " ^ Syntax.string_of_term ctxt pat)
-      fun cannot_shortcut (Abs (_, _, X)) = cannot_shortcut X
-        | cannot_shortcut tm =
-           (case Term.strip_comb tm of (Const (h, _), args) => (
-                    exists (fn (pat, _) =>
-                      case Term.head_of pat
-                        of Const(N, _) => if N = h then Pattern.matches thy (pat, tm) else false
-                         | Free _ => false
-                         | _ => bad_pattern pat) pats)
-                    orelse exists cannot_shortcut args
-               | (Free (N, _), args) => (
-                    exists (fn (pat, _) =>
-                      case Term.head_of pat
-                        of Const(N, _) => false
-                         | Free(N', _) => if N = N' then Pattern.matches thy (pat, tm) else false
-                         | _ => bad_pattern pat) pats)
-               | (_, args) => exists cannot_shortcut args)
 
-   in case get_index (fn (pat,residue) =>
-        let val subst = Pattern.match thy (pat, T) (Vartab.empty, Vartab.empty)
-         in SOME (Envir.subst_term subst residue)
-        end handle Pattern.MATCH => NONE) pats
+      (*we give a fast but weak check, and expect improving it later*)
+      val const_heads = map_filter ((fn Const(N, _) => SOME N | _ => NONE) o Term.head_of o snd) pats
+      val free_heads = map_filter ((fn Free(N, _) => SOME N | _ => NONE) o Term.head_of o snd) pats
+      val cannot_shortcut = exists_subterm (fn Const (N', _) => member (op =) const_heads N'
+                                             | Free (N', _) => member (op =) free_heads N'
+                                             | _ => false)
+
+   in case get_index (fn (param_num, pat) =>
+        if PLPR_Pattern.matches thy (K false) bvs (pat, T)
+        then SOME (case param_num of 0 => (@{thm' \<A>_pattern_meet}, @{thm' \<A>_pattern_meet_this})
+                                   | 1 => (@{thm' \<A>_pattern_meet\<^sub>1}, @{thm' \<A>_pattern_meet_this\<^sub>1})
+                                   | _ => raise THM ("right now we only support patterns of upto 1 parameter", 1, [sequent]))
+        else NONE) pats
    of NONE => if cannot_shortcut T then NONE
-              else (SOME ((ctxt, trivial RS sequent), Seq.empty)
+              else (SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
                  handle THM _ =>
-                    SOME ((ctxt, pattern_not_meet RS sequent), Seq.empty))
-    | SOME (i, A) => SOME ((ctxt, meet_pattern' (Thm.cterm_of ctxt A) i sequent), Seq.empty)
-  end
+                    SOME ((ctxt, @{thm' \<A>_pattern_not_meet} RS sequent), Seq.empty))
+    | SOME (i, rules) => SOME ((ctxt, meet_pattern' rules i sequent), Seq.empty)
+  end end
 )\<close>
 
 end

@@ -152,8 +152,6 @@ val override_ind_rule : term * thm -> Context.generic -> Context.generic
 (** Tools **)
 
 val is_term_of_phi : phi_type -> term -> bool (*ignores type*)
-val is_Type_Opr : typ -> bool
-val is_non_parameterized_phityp : typ -> bool
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
     (*note the T below is a \<phi>-type parameter*)
@@ -179,9 +177,6 @@ val fix_phi_type : bool -> phi_type -> Proof.context ->
 
 val fix_phi_term_params : phi_type -> Proof.context -> (term * term) * Proof.context
         (*only fix the terms but no types*)
-
-(*depreciated*)
-val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ (*concrete*)
 
 (* Auxiliaries *)
 
@@ -428,12 +423,6 @@ fun def_contains_satisfaction phi =
         | eq_contains_sat X = raise TERM ("def_contains_satisfaction", [X])
    in exists (eq_contains_sat o Thm.prop_of) (#equations phi)
   end
-
-fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
-  | dest_parameterized_phi_ty' args \<^Type>\<open>fun a T\<close> = dest_parameterized_phi_ty' (a::args) T
-  | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
-
-val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
 
 fun parameters_of phi = #params phi ~~ rev (#1 (dest_parameterized_phi_ty (Term.fastype_of (#term phi))))
 fun parameters_and_typs_of phi =
@@ -843,13 +832,8 @@ fun identical_name (Const(N, _), Const(N', _)) = N = N'
 
 fun is_term_of_phi phi term = identical_name (#term phi, term)
 
-fun is_Type_Opr ty =
-  case dest_parameterized_phi_ty ty
-    of ([],_,_) => false
-     | (args,_,_) => exists (can dest_parameterized_phi_ty) args
-
 fun assert_Type_Opr ty =
-  if is_Type_Opr ty then ()
+  if Phi_Syntax.is_Type_Opr ty then ()
   else raise Automation_Fail (fn () => [Pretty.str "Not a \<phi>-type operator!"])
 
 fun is_first_parameter_a_type ty =
@@ -910,22 +894,17 @@ end
 val separate_type_operator_and_its_parameter_safe =
   gen_separate_type_operator_and_its_parameter (can dest_parameterized_phi_ty o Term.fastype_of1)
 
-fun is_non_parameterized_phityp typ =
-  case try dest_parameterized_phi_ty typ
-    of SOME ([],_,_) => true
-     | _ => false
-
 val separate_type_operator_and_its_non_parameterized_parameters =
-  gen_separate_type_operator_and_its_parameters (is_non_parameterized_phityp o Term.fastype_of1 o apfst (map snd))
+  gen_separate_type_operator_and_its_parameters (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1 o apfst (map snd))
 
 val separate_type_operator_and_its_parameterized_parameters =
   gen_separate_type_operator_and_its_parameters (can dest_parameterized_phi_ty o Term.fastype_of1 o apfst (map snd))
 
 val separate_type_operator_and_its_non_parameterized_parameter_safe =
-  gen_separate_type_operator_and_its_parameter (is_non_parameterized_phityp o Term.fastype_of1)
+  gen_separate_type_operator_and_its_parameter (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1)
 
 fun separate_tyop_semimodule_and_its_non_parameterized bvtys tm =
-     gen_separate_type_operator_and_its_parameter (is_non_parameterized_phityp o Term.fastype_of1) bvtys tm
+     gen_separate_type_operator_and_its_parameter (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1) bvtys tm
   |> maps (fn (T, Fc) =>
         gen_separate_type_operator_and_its_parameter (K true) bvtys Fc
           |> map (fn (c, F) => (T, c, F)))

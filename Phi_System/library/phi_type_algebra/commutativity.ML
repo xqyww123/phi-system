@@ -5,7 +5,7 @@ type arity = int list (*Gs, its length is the arity of F, its elements are the a
              int list (*Fs, its length is the arity of G', its elements are the arities of each F'*)
 
 val parse_F_Gs_of_comm_typor_appl : Context.generic ->
-        Pattern_Translation.bv_typs * term (*lambda combination of F(G(T))*) ->
+        Pattern_Translation.bvs * term (*lambda combination of F(G(T))*) ->
         ((term (*F*) * term list (*Gs*)) * (term (*G'*) * term list (*Fs'*))) list
 
 val register_comm_tyoprs : (arity * Pattern_Translation.redex_residues) list ->
@@ -30,7 +30,7 @@ val enable_swap_normalization_in_CoP_simp : bool Config.T
 val control_swap_normalizations_on : ((term (*F*) * term list (*Gs*)) * Reasoner_Group.group * to_normalize) list
                                  -> Context.generic -> Context.generic
 
-val whether_to_swap_normalize : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
+val whether_to_swap_normalize : Context.generic -> PLPR_Pattern.bvs -> term -> bool
 
 (*
 val commutative_rules : Context.generic -> term (*F*) * term list (*Gs*) -> (Position.T * thm) list
@@ -74,10 +74,10 @@ fun parse_F_Gs_of_comm_typor_appl ctxt =
         | split (n::N) (G::Lg) = G :: split N (drop n Lg)
         | split _ _ = error "BUG: bad patterns"
       fun split' arity (F::L) = (F, split arity L)
-   in fn (bvtys, F_G_T) =>
+   in fn (bvs, F_G_T) =>
       iNet.match_term rewrites F_G_T
    |> map_filter (fn ((arities_F, arities_G'), redex_residues) =>
-        Pattern_Translation.rewrites thy bvtys redex_residues F_G_T
+        Pattern_Translation.rewrites thy (K true) bvs redex_residues F_G_T
      |> Option.map (fn L =>
           let val len = sum_1 arities_F + 1
            in (split' arities_F (List.take (L, len)), split' arities_G' (List.drop (L, len)))
@@ -157,11 +157,11 @@ fun control_swap_normalizations_on settings =
 fun whether_to_swap_normalize_internal ctxt =
   let val norm_swaps = Norm_Swaps.get ctxt
       val thy = Context.theory_of ctxt
-   in fn bvtys => fn (F_Gs, G_Fs') =>
+   in fn bvs => fn (F_Gs, G_Fs') =>
   let fun check F_Gs =
         let val enc = encoding F_Gs
          in Net.match_term norm_swaps enc
-         |> filter (fn (_,_,enc') => PLPR_Pattern.matches thy bvtys (enc', enc))
+         |> filter (fn (_,_,enc') => PLPR_Pattern.matches thy (K true) bvs (enc', enc))
          |> sort (int_ord o apply2 (#1 o #2))
          |> get_first (fn (chk,(prio,_),_) => Option.map (pair prio) (chk F_Gs))
         end
@@ -177,15 +177,15 @@ fun whether_to_swap_normalize_internal ctxt =
 fun whether_to_swap_normalize ctxt =
   let val internal_check = whether_to_swap_normalize_internal ctxt
       val parse_comm = parse_F_Gs_of_comm_typor_appl ctxt
-   in fn bvtys => fn F_G_T_term =>
-      exists (internal_check bvtys) (parse_comm (bvtys, F_G_T_term))
+   in fn bvs => fn F_G_T_term =>
+      exists (internal_check bvs) (parse_comm (bvs, F_G_T_term))
   end
 
 val enable_swap_normalization_in_CoP_simp =
       Config.declare_bool ("enable_swap_normalization_in_CoP_simp", \<^here>) (K false)
 
 fun swap_normalization_guard (ctxt, sequent) =
-  let val (bvtys, goal) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+  let val (bvs, goal) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (ToA, direction) =
           case PLPR_Syntax.dest_action_of' (fn Const(\<^const_name>\<open>\<A>simp'\<close>, _) $ _ $ _ => true
                                              | _ => false) goal
@@ -209,7 +209,7 @@ fun swap_normalization_guard (ctxt, sequent) =
 
    in (*(Config.get ctxt enable_swap_normalization_in_CoP_simp orelse
        Config.get ctxt under_NToA_ctxt) andalso*)
-      whether_to_swap_normalize (Context.Proof ctxt) bvtys F_G_T
+      whether_to_swap_normalize (Context.Proof ctxt) bvs F_G_T
   end
 
 
@@ -281,19 +281,19 @@ val _ = Theory.setup (
 
 #> Context.theory_map (
     Phi_CoP_Simp.add_simp_trigger (\<^pattern>\<open>_ \<Ztypecolon> _\<close>, fn ctxt =>
-      fn (bvtys, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
+      fn (bvs, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
         (*(Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
          Config.get_generic ctxt under_NToA_ctxt) andalso*)
-        Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvtys T
+        Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvs T
       ) #-> (fn id => fn ctxt => (
         phi_simp_trigger_id' := id ;
         ctxt
       ))
  #> Phi_CoP_Backward_Simp.add_simp_trigger (\<^pattern>\<open>_ \<Ztypecolon> _\<close>, fn ctxt =>
-      fn (bvtys, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
+      fn (bvs, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
         (*(Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
          Config.get_generic ctxt under_NToA_ctxt) andalso*)
-        Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvtys T
+        Phi_CoP_Simp.pass_recursively (whether_to_swap_normalize ctxt) bvs T
       ) #-> (fn id => fn ctxt => (
         phi_backward_simp_trigger_id' := id ;
         ctxt

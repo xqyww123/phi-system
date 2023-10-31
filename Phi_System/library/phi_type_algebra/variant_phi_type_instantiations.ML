@@ -41,7 +41,7 @@ val _ = Theory.setup (Context.theory_map (
              | _ => []
 
         fun mk_variant_of_scalar_mul (F $ _ $ T) =
-              if can Term.fastype_of T andalso is_non_parameterized_phityp (Term.fastype_of T)
+              if can Term.fastype_of T andalso Phi_Syntax.is_non_parameterized_phityp (Term.fastype_of T)
               then the_list (mk_rule @{thm' Type_Variant_of_the_Same_Scalar_Mul_I} F)
               else []
           | mk_variant_of_scalar_mul _ = []
