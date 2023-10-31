@@ -434,11 +434,35 @@ lemma \<phi>Dependent_Sum_TF[\<phi>type_property \<phi>Dependent_Sum Transformat
   unfolding Transformation_Functor\<^sub>\<Lambda>_def Transformation_def
   by clarsimp
 
+context begin
+
+private lemma [simp]:
+  \<open> NO_MATCH (ya, yb) y
+\<Longrightarrow> (a,b) = y \<longleftrightarrow> a = fst y \<and> b = snd y \<close>
+  by (cases y; simp)
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma \<phi>Dependent_Sum_SH\<^sub>I[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>I]:
+  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I \<Sigma> \<Sigma> \<Sigma> T U {x. fst (fst x) = fst (snd x)} (\<lambda>x. (fst (fst x), (snd (fst x), snd (snd x)))) \<close>
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Transformation_def
+  by clarsimp
+
+lemma \<phi>Dependent_Sum_SH\<^sub>E[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>E]:
+  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> \<Sigma> T U (\<lambda>x. ((fst x, fst (snd x)), (fst x, snd (snd x)))) \<close>
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Transformation_def
+  by clarsimp
+
 let_\<phi>type \<phi>Dependent_Sum
   deriving \<open>Functional_Transformation_Functor\<^sub>\<Lambda> \<Sigma> \<Sigma> T U (\<lambda>p x. if fst x = p then {snd x} else {}) (\<lambda>_ _. UNIV)
                                                         (\<lambda>f P. case_prod P)
                                                         (\<lambda>f P x. apsnd (f (fst x)) x)\<close>
+       
+end
 
+thm \<phi>Dependent_Sum.\<phi>Prod
+
+term \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I \<Sigma> \<Sigma> \<Sigma> T U {(x,y). fst x = fst y} (\<lambda>((p,x),(_,y)). (p, (x,y)))\<close>
 
 subsubsection \<open>Rewrites\<close>
 

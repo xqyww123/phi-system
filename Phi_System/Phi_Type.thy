@@ -2307,12 +2307,14 @@ lemma [\<phi>reason_template name F\<^sub>T\<^sub>U.\<phi>Prod[]]:
             BI_eq_iff
   by (clarsimp; metis prod.collapse)
 
+(* seemly useless
 lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   \<open> Separation_Homo\<^sub>I_Cond Ft Fu Fc C T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu Fc C T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Fc (T \<^emph>[C] U) = Ft T \<^emph>[C] Fu U \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
+*)
 
 lemma apply_conditioned_Separation_Functor_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U un)
@@ -2405,18 +2407,20 @@ lemma [\<phi>reason_template name Fc.\<phi>Prod_ty []]:
 lemma [\<phi>reason_template name F\<^sub>T\<^sub>U.\<phi>Prod[]]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U D\<^sub>z f
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U g
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> x \<in> D\<^sub>z
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D\<^sub>z \<and> g (f x) = x
 \<Longrightarrow> (x \<Ztypecolon> F\<^sub>T T \<^emph> F\<^sub>U U) = (f x \<Ztypecolon> F\<^sub>T\<^sub>U (\<lambda>p. T p \<^emph> U p))\<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Premise_def
             Transformation_def BI_eq_iff
   by (clarsimp; metis (no_types, lifting) prod.collapse)
 
+(*
 lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu Fc C T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu Fc C T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Fc (\<lambda>p. T p \<^emph>[C] U p) = Ft T \<^emph>[C] Fu U \<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
+*)
 
 lemma apply_conditioned_Separation_Functor\<^sub>\<Lambda>_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U un)
@@ -5380,13 +5384,13 @@ end
 hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_rewr_IH \<phi>TA_SH\<^sub>I_rewr_C
           \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C*)
 
-\<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Derivers.separation_homo_I
-\<close>
+\<phi>property_deriver Separation_Homo\<^sub>I 120
+  for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close> | \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I _ _ _ _ _ _ _\<close>)
+    = \<open> Phi_Type_Derivers.separation_homo_I \<close>
 
-\<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Derivers.separation_homo_E
-\<close>
+\<phi>property_deriver Separation_Homo\<^sub>E 121
+  for (\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close> | \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _\<close>)
+    = \<open> Phi_Type_Derivers.separation_homo_E \<close>
 
 \<phi>property_deriver Separation_Homo 122 requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E
 

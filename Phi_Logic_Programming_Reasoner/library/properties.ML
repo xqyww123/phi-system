@@ -428,9 +428,10 @@ fun add_property_instance (pos,property) ctxt =
         end
    in ctxt
    |> chk_clashes
-   |> Config.get_generic ctxt invoking_instantiations ? invoke_instantiations_on_property (pos, property)
    |> Properties.map (Net.insert_term property_eq (prop_concl, (pos, Thm.trim_context property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
+   |> Config.get_generic ctxt invoking_instantiations ? invoke_instantiations_on_property (pos, property)
+                    
    handle SKIP => ctxt
  (* handle Net.INSERT => let open Pretty
       val term = Context.cases Syntax.pretty_term_global Syntax.pretty_term
