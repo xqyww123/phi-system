@@ -19,7 +19,7 @@ fun unsupport () = raise Automation_Fail (fn () => let open Pretty in
 (*types are variables but terms are fixed*)
 fun mk_TF's_two_instantiations ctxt (FT_term, phi) =
   let val delta = maxidx_of_phi phi (maxidx_of_term FT_term) + 1
-      val (Ts, F) = separate_type_operator_and_its_non_parameterized_parameters FT_term
+      val (Ts, F) = separate_type_operator_and_its_parameterized_parameters [] FT_term
       val ele_tys = map (#2 o dest_parameterized_phi_ty o Term.fastype_of) Ts
 
       val param_typs = fold Term.add_tvarsT ele_tys []
@@ -140,16 +140,21 @@ fun guess_property_TF phi0 ctxt =
 
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
 
-      val TF_head = (case (Term.fastype_of F, Term.fastype_of F', Ts, Us)
-                       of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
-                           \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>,
-                           [T], [U]) =>
-                          \<^Const>\<open>Transformation_Functor a b c d e f\<close> $ F $ F' $ T $ U
-                        | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>set f\<close>\<close>\<close>\<close>,
-                           \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>set _\<close>\<close>\<close>\<close>,
-                           [T1,T2], [U1,U2]) =>
-                          \<^Const>\<open>Transformation_BiFunctor a b c d e f g h i\<close> $ F $ F' $ T1 $ T2 $ U1 $ U2
-                        | _ => unsupport ())
+      val (TF_head, parameter) =
+            (case (Term.fastype_of F, Term.fastype_of F', Ts, Us)
+               of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>,
+                   [T], [U]) =>
+                  (\<^Const>\<open>Transformation_Functor a b c d e f\<close> $ F $ F' $ T $ U, NONE)
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>set f\<close>\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>set _\<close>\<close>\<close>\<close>,
+                   [T1,T2], [U1,U2]) =>
+                  (\<^Const>\<open>Transformation_BiFunctor a b c d e f g h i\<close> $ F $ F' $ T1 $ T2 $ U1 $ U2, NONE)
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>fun b \<^Type>\<open>set c\<close>\<close>\<close> \<^Type>\<open>fun d \<^Type>\<open>set e\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>fun f _\<close>\<close> \<^Type>\<open>fun g _\<close>\<close>,
+                   [T], [U]) =>
+                  (\<^Const>\<open>Transformation_Functor\<^sub>\<Lambda> a b c d e f g\<close> $ F $ F' $ T $ U, SOME a)
+                | _ => unsupport ())
 
       val target_ty = Term_Subst.instantiateT_frees inst_ty
 
@@ -166,9 +171,18 @@ fun guess_property_TF phi0 ctxt =
                  end)
         ) target_ty ctxt x_ty ele_tys
    |> Seq.map (fn (rel_mapper, ctxt) =>
-      let val head = fold (fn D => fn X => X $ D) Ds TF_head
-                  |> fold (fn R => fn X => X $ R) Rs
-       in (ants, HOLogic.Trueprop $ (head $ rel_mapper),
+      let val wrap_param = case parameter of NONE => I
+                                           | SOME ty => (fn X => Abs ("\<p>", ty, X))
+          val rel_mapper' = case parameter of NONE => rel_mapper
+                               | SOME p => Abs ("\<g>", p --> domain_type (fastype_of rel_mapper),
+                                              Abs ("\<p>", p, rel_mapper $ (Bound 1 $ Bound 0)))
+                                        |> Phi_Help.beta_eta_contract_term
+              (*TODO: the current version is wrong!
+                      guess a rel mapper constraining the equality of the parameters throught the mapping
+                      and obtaining them to send to the inner mapper*)
+          val head = fold (fn D => fn X => X $ wrap_param D) Ds TF_head
+                  |> fold (fn R => fn X => X $ wrap_param R) Rs
+       in (ants, HOLogic.Trueprop $ (head $ rel_mapper'),
            NONE :: parse_inst_params_from_phi_term (fold (fn _ => fn F => F $ Term.dummy) Ts F),
            phi, ctxt)
       end))
@@ -178,7 +192,12 @@ local
 
 fun TF_reasoning phi ctxt = default_reasoning true
       default_reasoning_configure
-      (K (K NONE))
+      (K (fn term =>
+        let val frees = Term.add_frees term []
+                     |> filter (fn (N, _) => String.isPrefix "\<v>\<a>\<r>_" N)
+         in SOME (map Free frees, fn frees' =>
+              Term_Subst.instantiate_frees (TFrees.empty, Frees.build (fold2 (curry Frees.add) frees frees')) term)
+        end))
       (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded [] ctxt phi)))
       phi ctxt
 
@@ -189,8 +208,10 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                         | X => NONE)) *)
       val parse_hint = parse_hint (
               fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _) => F1
-               | (Const(\<^const_name>\<open>Transformation_BiFunctor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1)
+               | (Const(\<^const_name>\<open>Transformation_BiFunctor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
+               | (Const(\<^const_name>\<open>Transformation_Functor\<^sub>\<Lambda>\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _) => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ M) = [D,R,M]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_Functor\<^sub>\<Lambda>\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ M) = [D,R,M]
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_BiFunctor\<close>, _) $ _ $ _ $ _ $ _ $ _ $ _ $ D1 $ D2 $ R1 $ R2 $ M)
             = [D1,D2,R1,R2,M]
         | extract_oprs_from_hint _ = []
@@ -199,25 +220,36 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                         (case Term.head_of (HOLogic.dest_Trueprop (Logic.strip_imp_concl H))
                            of Const(\<^const_name>\<open>Transformation_Functor\<close>, _) => 1
                             | Const(\<^const_name>\<open>Transformation_BiFunctor\<close>, _) => 2
+                            | Const(\<^const_name>\<open>Transformation_Functor\<^sub>\<Lambda>\<close>, _) => ~1
                             | _ => unsupport ())
-                     | _ => length (filter (is_non_parameterized_phityp o snd) (parameters_of phi0))
+                     | _ => let val params = filter (can dest_parameterized_phi_ty o snd) (parameters_of phi0)
+                                val arity = length params
+                             in if forall (is_non_parameterized_phityp o snd) params
+                                then arity
+                                else ~ arity
+                            end
 
       val rule = case arity of 1 => @{thm' \<phi>TA_TF_rule}
                              | 2 => @{thm' \<phi>TA_biTF_rule}
+                             | ~1 => @{thm' \<phi>TA_TF\<^sub>\<Lambda>_rule}
+                             | _ => unsupport ()
       val TF_rewr = case arity of 1 => @{thm' \<phi>TA_TF_rewr_C}
                                 | 2 => @{thm' \<phi>TA_biTF_rewr_C}
+                                | ~1 => @{thm' \<phi>TA_TF\<^sub>\<Lambda>_rewr_C}
+      fun abs arity = if arity < 0 then ~ arity else arity
       val ind_conv = default_ind_conv (
               K (K (Conv.rewr_conv TF_rewr then_conv
                     Conv.concl_conv arity (Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))),
               fn ctxt => fn phi =>
                   Conv.rewr_conv TF_rewr then_conv
-                  Conv.concl_conv arity (
+                  Conv.concl_conv (abs arity) (
                       Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
                       Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
 
       val simp = if is_some (#1 instruction) then K I
-                 else simplifier_by_cong (case arity of 1 => @{thms' \<phi>TA_FT_deriver_cong}
-                                                      | 2 => @{thms' \<phi>TA_biFT_deriver_cong})
+                 else simplifier_by_cong (case arity of 1 => @{thms' \<phi>TA_TF_deriver_cong}
+                                                      | 2 => @{thms' \<phi>TA_biTF_deriver_cong}
+                                                      | ~1 => @{thms' \<phi>TA_TF\<^sub>\<Lambda>_deriver_cong})
 
       val ctxt = if def_contains_satisfaction phi0 then ctxt0
                       |> Config.put Phi_Reasoner.ignore_dup_reasoner true
@@ -261,7 +293,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
            |> note_properties_s phi0 [(name, [rule'])]
            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
-                                        (SOME (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
+                                        (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
          (*|> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
@@ -284,27 +316,34 @@ fun guess_property_FTF phi ctxt =
 
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
 
-      val FTF_head = (case (Term.fastype_of F, Term.fastype_of F', Ts, Us)
-                       of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
-                           \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>,
-                           [T], [U]) =>
-                          \<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F $ F' $ T $ U
-                              $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
-                              $ Var(("R",0), c --> \<^Type>\<open>set e\<close>)
-                        | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>set f\<close>\<close>\<close>\<close>,
-                           \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>set _\<close>\<close>\<close>\<close>,
-                           [T1,T2], [U1,U2]) =>
-                          \<^Const>\<open>Functional_Transformation_BiFunctor a b c d e f g h i\<close> $ F $ F' $ T1 $ T2 $ U1 $ U2
-                              $ Var(("D\<^sub>1",0), e --> \<^Type>\<open>set a\<close>)
-                              $ Var(("D\<^sub>2",0), e --> \<^Type>\<open>set c\<close>)
-                              $ Var(("R\<^sub>1",0), e --> \<^Type>\<open>set g\<close>)
-                              $ Var(("R\<^sub>2",0), e --> \<^Type>\<open>set h\<close>)
-                        | _ => raise Automation_Fail (fn () => let open Pretty in
-                                  [para "Right now we only support at most bi-functor"]
-                               end))
+      val (FTF_head, parameter) =
+             case (Term.fastype_of F, Term.fastype_of F', Ts, Us)
+               of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>,
+                   [T], [U]) =>
+                  (\<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F $ F' $ T $ U
+                      $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
+                      $ Var(("R",0), c --> \<^Type>\<open>set e\<close>), NONE)
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>set f\<close>\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>set _\<close>\<close>\<close>\<close>,
+                   [T1,T2], [U1,U2]) =>
+                  (\<^Const>\<open>Functional_Transformation_BiFunctor a b c d e f g h i\<close> $ F $ F' $ T1 $ T2 $ U1 $ U2
+                      $ Var(("D\<^sub>1",0), e --> \<^Type>\<open>set a\<close>)
+                      $ Var(("D\<^sub>2",0), e --> \<^Type>\<open>set c\<close>)
+                      $ Var(("R\<^sub>1",0), e --> \<^Type>\<open>set g\<close>)
+                      $ Var(("R\<^sub>2",0), e --> \<^Type>\<open>set h\<close>), NONE)
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>fun b \<^Type>\<open>set c\<close>\<close>\<close> \<^Type>\<open>fun d \<^Type>\<open>set e\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>fun f _\<close>\<close> \<^Type>\<open>fun g _\<close>\<close>,
+                   [T], [U]) =>
+                  (\<^Const>\<open>Functional_Transformation_Functor\<^sub>\<Lambda> a b c d e f g\<close> $ F $ F' $ T $ U, SOME a)
+                | _ => raise Automation_Fail (fn () => let open Pretty in
+                          [para "Right now we only support at most bi-functor"]
+                       end)
 
       val target_ty = Term_Subst.instantiateT_frees inst_ty
       val ele_tys = map (#2 o dest_parameterized_phi_ty o Term.fastype_of) Ts
+
+      (*TODO: support guessing of parameterized transformation*)
 
    in guess_func_mapper target_ty ctxt x_ty ele_tys
    |> Seq.maps (fn (fm, ctxt) =>
@@ -356,23 +395,33 @@ fun guess_property_FTF phi0 ctxt0 =
 *)
 fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
+            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1
+             | Const(\<^const_name>\<open>Functional_Transformation_BiFunctor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1
+             | Const(\<^const_name>\<open>Functional_Transformation_Functor\<^sub>\<Lambda>\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1
+          )
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ f $ p) = [D,R,f,p]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_BiFunctor\<close>, _) $ _ $ _ $ _ $ _ $ _ $ _ $ D1 $ D2 $ R1 $ R2 $ p $ f)
+            = [D1,D2,R1,R2,p,f]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<^sub>\<Lambda>\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ f $ p) = [D,R,f,p]
         | extract_oprs_from_hint _ = []
 
      val arity = case #1 instruction of SOME H =>
                         (case Term.head_of (HOLogic.dest_Trueprop (Logic.strip_imp_concl H))
                            of Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) => 1
                             | Const(\<^const_name>\<open>Functional_Transformation_BiFunctor\<close>, _) => 2
+                            | Const(\<^const_name>\<open>Functional_Transformation_Functor\<^sub>\<Lambda>\<close>, _) => ~1
                             | _ => unsupport ())
                      | _ => length (filter (is_non_parameterized_phityp o snd) (parameters_of phi0))
      val rule = case arity of 1 => @{thm' \<phi>TA_FTF_rule}
                             | 2 => @{thm' \<phi>TA_biFTF_rule}
+                            | ~1 => @{thm' \<phi>TA_FTF\<^sub>\<Lambda>_rule}
+                            | _ => unsupport ()
 
      fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi)) ctxt
      val simp = if is_some (#1 instruction) then K I
                 else simplifier_by_cong (case arity of 1 => @{thms' \<phi>TA_FTF_deriver_cong}
-                                                     | 2 => @{thms' \<phi>TA_biFTF_deriver_cong})
+                                                     | 2 => @{thms' \<phi>TA_biFTF_deriver_cong}
+                                                     | ~1 => @{thms' \<phi>TA_FTF\<^sub>\<Lambda>_deriver_cong})
     (*fun simp (_, ctxt) thm =
         if is_some instruction then thm
         else Conv.fconv_rule (
@@ -416,7 +465,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
            |> note_properties_s phi0 [(name, [rule])]
            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
-                                        (SOME (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
+                                        (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule])
            |> pair [rule]

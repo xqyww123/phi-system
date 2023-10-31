@@ -1017,54 +1017,70 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                       (quiet, pos) (deriving_instructions0 : deriving_instruction list) ctxt_derv phi thy =
   let val deriving_instructions'1 = filter_out (fn DI => not (is_some (#1 DI)) andalso not (is_some (#4 DI)))
                                                deriving_instructions0
-      val deriving_instructions =
-            case deriving_instructions'1
-              of [] => [(NONE, get_first #2 deriving_instructions0,
-                         (case deriving_instructions0 of [] => pos
-                                                       | H :: _ => #3 H),
-                         NONE, [], [])]
-               | L => L
 
       val ind = length (lookup_derived_properties thy phi name)
+      val (deriving_instructions, just_dep) =
+            case deriving_instructions'1
+              of [] => if ind = 0
+                       then ([(NONE, get_first #2 deriving_instructions0,
+                              (case deriving_instructions0 of [] => pos
+                                                           | H :: _ => #3 H),
+                              NONE, [], [])], false)
+                       else ([], true)
+               | L => (L, false)
+
+      val hint_terms = map_filter #1 deriving_instructions
       val _ = let open Pretty in
-          case (multiple_call, ind, deriving_instructions)
-            of (_, 0, _) => ()
-             | (ONLY_ONCE, _, _) => raise Automation_Fail (fn () => [
+          case multiple_call
+            of ONLY_ONCE =>
+               if just_dep orelse ind = 0 then ()
+               else raise Automation_Fail (fn () => [
                   paragraph (str "deriver " :: brk 1 :: str name :: brk 1 :: text "can only be invoked once")
                 ])
-             | (ONLY_ONCE_IF_NO_HINT, _, []) => raise Automation_Fail (fn () => [
+             | ONLY_ONCE_IF_NO_HINT =>
+               if just_dep orelse not (null hint_terms) orelse ind = 0 then ()
+               else raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "has already derived the hint-less case.\
                              \ Please provide the desired form of the rule if you want to derive more.")
                 ])
              | _ => ()
           end
 
-      val hint_terms = map_filter #1 deriving_instructions
       val _ = let open Pretty in
-          case (hint_mode, hint_terms)
-            of (ACCEPT_NO_HINT, _ :: _) => raise Automation_Fail (fn () =>
+          case hint_mode
+            of ACCEPT_NO_HINT =>
+               if just_dep orelse null hint_terms then ()
+               else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts no hint, but given") ::
                   map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       hint_terms
                 )
-             | (ACCEPT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
+             | ACCEPT_ONE_HINT =>
+               if just_dep orelse length hint_terms <= 1 then ()
+               else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts at most one hint, but more hints are given") ::
                   map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       hint_terms
                 )
-             | (REQUIRE_EXACT_ONE_HINT, []) => raise Automation_Fail (fn () => [
+             | REQUIRE_EXACT_ONE_HINT =>
+                if just_dep orelse length hint_terms = 1 then ()
+                else if null hint_terms
+                then raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but no hint is given")
                 ])
-             | (REQUIRE_EXACT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
+                else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
                   map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       hint_terms
                 )
-             | (REQUIRE_HINTS, []) => raise Automation_Fail (fn () => [
+             | REQUIRE_HINTS =>
+                if just_dep orelse not (null hint_terms) then ()
+                else raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "requires some hint(s), but no hint is given")
                 ])
              | _ => ()
           end
+
       fun invoke (i,H) thy =
         let val iname = suffix_name_by_index (i+ind) name
             val ctxt_derv' = ctxt_derv
@@ -1073,6 +1089,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
          in deriver (i+ind, iname) H ctxt_derv' phi thy
          |-> register_derived_properties phi (name, i+ind, #3 H)
         end
+
    in fold_index invoke deriving_instructions thy
   end
   handle (ex as Automation_Fail _) => if quiet then thy else Exn.reraise ex

@@ -9,6 +9,7 @@
 signature PLPR_PATTERN = sig
 
 type bv_typs = typ list (*types of contextual bound variables*)
+type bvs = (string * typ) list
 
 val match: theory -> bv_typs -> term * term -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 val first_order_match: theory -> bv_typs -> term *term
@@ -22,6 +23,7 @@ structure PLPR_Pattern : PLPR_PATTERN = struct
 open Pattern
 
 type bv_typs = typ list (*types of bound variables of the object.*)
+type bvs = (string * typ) list
 
 fun idx [] j     = raise Unif
   | idx(i::is) j = if (i:int) =j then length is else idx is j;

@@ -32,7 +32,7 @@ val _ = Theory.setup (Context.theory_map (
 
         fun mk_variant_of_type_operator ctm =
           map_filter (mk_rule @{thm' Type_Variant_of_the_Same_Type_Operator_I} o #2)
-            (separate_type_operator_and_its_parameter_safe (Thm.term_of ctm))
+            (separate_type_operator_and_its_parameter_safe [] (Thm.term_of ctm))
 
         fun mk_variant_of_type_operator2 ctm =
           case Thm.term_of ctm

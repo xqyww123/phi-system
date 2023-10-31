@@ -387,9 +387,8 @@ lemma [\<phi>reason %guess_tyop_commute+10]:
 \<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
   unfolding Guess_Tyops_Commute_def ..
 
-subsection \<open>Dependent Sum Type\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+subsection \<open>Dependent Sum Type\<close>
    
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
@@ -426,6 +425,19 @@ notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation functor not a separation homomoprhism
   as the element \<phi>-type \<open>T\<close> is parameterized,
   there can be properties very akin to them, see the section \<open>Pseudo properties of \<Sigma>\<close> below.\<close>
+
+subsubsection \<open>Properties Failed to be Derived\<close>
+ 
+lemma \<phi>Dependent_Sum_TF[\<phi>type_property \<phi>Dependent_Sum Transformation_Functor]:
+  \<open>Transformation_Functor\<^sub>\<Lambda> \<Sigma> \<Sigma> T U (\<lambda>p x. if fst x = p then {snd x} else {}) (\<lambda>_ _. UNIV)
+                                    (\<lambda>r x. rel_prod (=) (r (fst x)) x)\<close>
+  unfolding Transformation_Functor\<^sub>\<Lambda>_def Transformation_def
+  by clarsimp
+
+let_\<phi>type \<phi>Dependent_Sum
+  deriving \<open>Functional_Transformation_Functor\<^sub>\<Lambda> \<Sigma> \<Sigma> T U (\<lambda>p x. if fst x = p then {snd x} else {}) (\<lambda>_ _. UNIV)
+                                                        (\<lambda>f P. case_prod P)
+                                                        (\<lambda>f P x. apsnd (f (fst x)) x)\<close>
 
 
 subsubsection \<open>Rewrites\<close>
@@ -1406,7 +1418,7 @@ lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>I[no_atp]]:
 
 
 
-(*lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason %\<phi>type_algebra_prop_cut]:
+(*lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason %\<phi>TA_property]:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U \<phi>Sum \<phi>Sum T U
@@ -1417,7 +1429,7 @@ lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>I[no_atp]]:
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
   by (clarify; case_tac x; clarsimp)*)
  
-lemma \<phi>Composition_\<phi>Sum_Comm [\<phi>reason %\<phi>type_algebra_prop_cut]:
+lemma \<phi>Composition_\<phi>Sum_Comm [\<phi>reason %\<phi>TA_property]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Transformation_def
   by (clarsimp simp add: split_sum_all)
@@ -1552,7 +1564,7 @@ lemma [\<phi>reason_template name F.\<phi>Inter\<^sub>I[no_atp]]:
                prems(3-);
         clarsimp simp add: Transformation_def) .
 
-lemma \<phi>Composition_\<phi>Inter_Comm [\<phi>reason %\<phi>type_algebra_prop_cut]:
+lemma \<phi>Composition_\<phi>Inter_Comm [\<phi>reason %\<phi>TA_property]:
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<and>\<^sub>\<phi>) (\<and>\<^sub>\<phi>) T U
                     (\<lambda>(a,b). \<forall>u v c. u \<Turnstile> (a \<Ztypecolon> T) \<and> v \<Turnstile> (b \<Ztypecolon> U) \<and> c \<Turnstile> (u \<Ztypecolon> B) \<and> c \<Turnstile> (v \<Ztypecolon> B) \<longrightarrow>
                             (\<exists>w. c \<Turnstile> (w \<Ztypecolon> B) \<and> w \<Turnstile> (a \<Ztypecolon> T) \<and> w \<Turnstile> (b \<Ztypecolon> U)))
