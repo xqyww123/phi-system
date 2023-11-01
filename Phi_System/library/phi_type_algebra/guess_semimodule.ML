@@ -115,34 +115,26 @@ fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result)
   end
 *)
 
-fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework true (SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>one\<close>),
-      fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, idx, F_term, eta_F_term, T_term, _) =>
-        let val x_ele_ty = the x_ele_ty
-            val T_model_ty = the T_model_ty
-            val T_term = the T_term
-         in (HOLogic.Trueprop $ (\<^Const>\<open>Guess_Scalar_Zero s_ty T_model_ty model_ty x_ele_ty x_ty\<close>
+fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework false (SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>one\<close>),
+      fn (s_ty, _, x_ty, _, model_ty, idx, F_term, eta_F_term, _, _) =>
+          (HOLogic.Trueprop $ (\<^Const>\<open>Guess_Scalar_Zero s_ty model_ty x_ty\<close>
               $ \<^Const>\<open>Pure.type s_ty\<close>
-              $ \<^Const>\<open>Pure.type T_model_ty\<close>
               $ \<^Const>\<open>Pure.type model_ty\<close>
-              $ \<^Const>\<open>Pure.type x_ele_ty\<close>
               $ \<^Const>\<open>Pure.type x_ty\<close>
-              $ F_term $ eta_F_term $ T_term
+              $ F_term $ eta_F_term
               $ Var (("zero", idx), s_ty)
               $ Var (("ants", idx), HOLogic.boolT)
               $ Var (("conds", idx), HOLogic.boolT)),
-           fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_Zero*) $ ty_s $ ty_model_T $ ty_model $ ty_x_ele $ ty_x
-                  $ F $ _ $ T $ zero $ ants $ conds) =>
-              let val (s_ty, T_model_ty, model_ty, x_ele_ty, x_ty) =
-                        (Logic.dest_type ty_s, Logic.dest_type ty_model_T, Logic.dest_type ty_model,
-                         Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
+           fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_Zero*) $ ty_s $ ty_model $ ty_x
+                  $ F $ _ $ zero $ ants $ conds) =>
+              let val (s_ty, model_ty, x_ty) = (Logic.dest_type ty_s, Logic.dest_type ty_model, Logic.dest_type ty_x)
                in (HOLogic.Trueprop $ (
-                      (if is_closed then \<^Const>\<open>Closed_Semimodule_Zero s_ty x_ele_ty T_model_ty x_ty model_ty\<close>
-                                    else \<^Const>\<open>Semimodule_Zero s_ty x_ele_ty T_model_ty x_ty model_ty\<close>)
-                        $ F $ T $ zero),
-                   NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
+                      (if is_closed then \<^Const>\<open>Closed_Semimodule_Zero s_ty x_ty model_ty\<close>
+                                    else \<^Const>\<open>Semimodule_Zero s_ty x_ty model_ty\<close>)
+                        $ F $ zero),
+                   NONE :: parse_inst_params_from_phi_term (F $ Term.dummy),
                    conds, ants)
               end)
-        end
       )
 
 fun Guess_Scalar_One is_intro = Guess_Scalar_framework false (NONE,

@@ -482,11 +482,11 @@ text \<open>Convention: the domain \<open>Dx\<close> of object gives proof oblig
   \<open>Dx\<close> is totally about objects but \<open>Ds\<close> is about scalar and scalar is in type-level.
 \<close>
 
-definition Semimodule_Zero :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::one,'a) \<phi>) \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
-  where \<open>Semimodule_Zero F T zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1)\<close>
+definition Semimodule_Zero :: \<open>('s \<Rightarrow> ('c::one,'a) \<phi>) \<Rightarrow> 's \<Rightarrow> bool\<close>
+  where \<open>Semimodule_Zero F zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1)\<close>
 
-definition Closed_Semimodule_Zero :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::one,'a) \<phi>) \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> 's \<Rightarrow> bool\<close>
-  where \<open>Closed_Semimodule_Zero F T zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero T) = 1)\<close>
+definition Closed_Semimodule_Zero :: \<open>('s \<Rightarrow> ('c::one,'a) \<phi>) \<Rightarrow> 's \<Rightarrow> bool\<close>
+  where \<open>Closed_Semimodule_Zero F zero \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F zero) = 1)\<close>
   \<comment> \<open>It is actually a very strong property particularly when \<open>T\<close> is an empty \<phi>-type of empty
       abstract domain. It excludes functional homomorphism like \<open>F c T \<equiv> \<psi> c \<Zcomp>\<^sub>f T\<close>.\<close>
 
@@ -851,8 +851,8 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_Zero _ _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason?] for \<open>Closed_Semimodule_Zero _ _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_Zero _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason?] for \<open>Closed_Semimodule_Zero _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_One\<^sub>I _ _ _ _ _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_One\<^sub>E _ _ _ _ _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _ \<close>,
@@ -965,8 +965,8 @@ in (*Phi_Type.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\
   \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_Zero _ _ _\<close>,
+  \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_Zero _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_One\<^sub>I _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_One\<^sub>E _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>,
@@ -2519,123 +2519,146 @@ subsubsection \<open>Zero\<close>
 lemma [\<phi>adding_property = false,
        \<phi>reason default %\<phi>TA_fallback_lattice,
        \<phi>adding_property = true]:
-  \<open> Closed_Semimodule_Zero F T zero
-\<Longrightarrow> Semimodule_Zero F T zero \<close>
+  \<open> Closed_Semimodule_Zero F zero
+\<Longrightarrow> Semimodule_Zero F zero \<close>
   unfolding Closed_Semimodule_Zero_def Semimodule_Zero_def
   by simp
 
+paragraph \<open>Equations\<close>
+
 lemma [\<phi>reason_template name F.scalar_zero [assertion_simps, simp]]:
-  \<open> Closed_Semimodule_Zero F T zero
-\<Longrightarrow> (x \<Ztypecolon> F zero T) = 1 \<close>
+  \<open> Closed_Semimodule_Zero F zero
+\<Longrightarrow> (x \<Ztypecolon> F zero) = 1 \<close>
   unfolding Closed_Semimodule_Zero_def by blast
 
 lemma [\<phi>reason_template name F.scalar_zero' [assertion_simps, simp]]:
-  \<open> Closed_Semimodule_Zero F T zero
+  \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
-\<Longrightarrow> (x \<Ztypecolon> F zero' T) = 1 \<close>
+\<Longrightarrow> (x \<Ztypecolon> F zero') = 1 \<close>
   unfolding Closed_Semimodule_Zero_def Simplify_def Action_Tag_def
   by blast
- 
+
+paragraph \<open>Identity Elements\<close>
+
+lemma [\<phi>reason_template default %derived_identity_element+5]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Closed_Semimodule_Zero F zero
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> zero' = zero
+\<Longrightarrow> Identity_Elements\<^sub>E (F zero') (\<lambda>_. True) \<close>
+  unfolding Identity_Elements\<^sub>E_def Identity_Element\<^sub>E_def \<r>Guard_def
+            Transformation_def Premise_def Closed_Semimodule_Zero_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %derived_identity_element+5]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_Zero F zero
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> zero' = zero
+\<Longrightarrow> Identity_Elements\<^sub>I (F zero') (\<lambda>_. True) (\<lambda>_. True) \<close>
+  unfolding Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def \<r>Guard_def
+            Transformation_def Premise_def Semimodule_Zero_def
+  by clarsimp
+
+
+paragraph \<open>Transformations\<close>
+
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Semimodule_Zero F T zero
+  \<open> Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   unfolding Semimodule_Zero_def NO_SIMP_def
   using mk_elim_transformation by blast
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Semimodule_Zero F T zero
+  \<open> Semimodule_Zero F zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   using mk_elim_transformation by blast
 
 lemma [\<phi>reason_template %ToA_derived_red ]:
-  \<open> Semimodule_Zero F T zero
+  \<open> Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Semimodule_Zero_def NO_SIMP_def
   using transformation_bi_frame
   by fastforce
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Semimodule_Zero F T zero
+  \<open> Semimodule_Zero F zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero' T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   using transformation_bi_frame
   by fastforce
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Semimodule_Zero F T zero
-\<Longrightarrow> NO_SIMP (((), snd x) \<Ztypecolon> F zero T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+  \<open> Semimodule_Zero F zero
+\<Longrightarrow> NO_SIMP (((), snd x) \<Ztypecolon> F zero \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   unfolding Semimodule_Zero_def NO_SIMP_def
   by (cases x; cases C; clarsimp)
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Semimodule_Zero F T zero
+  \<open> Semimodule_Zero F zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
-\<Longrightarrow> NO_SIMP (((), snd x) \<Ztypecolon> F zero T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+\<Longrightarrow> NO_SIMP (((), snd x) \<Ztypecolon> F zero \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   by (cases x; cases C; clarsimp)
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Closed_Semimodule_Zero F T zero
+  \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero T \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero \<w>\<i>\<t>\<h> P) \<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def
   by simp
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Closed_Semimodule_Zero F T zero
+  \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero' T \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero' \<w>\<i>\<t>\<h> P) \<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def Simplify_def Action_Tag_def
   by simp
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Closed_Semimodule_Zero F T zero
+  \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def
   by simp
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Closed_Semimodule_Zero F T zero
+  \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero' T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def Simplify_def Action_Tag_def
   by simp
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Closed_Semimodule_Zero F T zero
+  \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<circle> \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, snd x) \<Ztypecolon> F zero T \<^emph>[C] R \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, snd x) \<Ztypecolon> F zero \<^emph>[C] R \<w>\<i>\<t>\<h> P) \<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def
   by (cases C; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
 
 lemma [\<phi>reason_template %ToA_derived_red]:
-  \<open> Closed_Semimodule_Zero F T zero
+  \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<circle> \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, snd x) \<Ztypecolon> F zero' T \<^emph>[C] R \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, snd x) \<Ztypecolon> F zero' \<^emph>[C] R \<w>\<i>\<t>\<h> P) \<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def Simplify_def Action_Tag_def
   by (cases C; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
 
@@ -5485,14 +5508,13 @@ ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 
 subsubsection \<open>Configuration for guessing default Semimodule properties\<close>
 
-definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c::one itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
-                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                              \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c::one itself \<Rightarrow> 'a itself
+                              \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
+                              \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
                               \<Rightarrow> 's
                               \<Rightarrow> bool \<Rightarrow> bool
                               \<Rightarrow> bool \<close>
-  where \<open>Guess_Scalar_Zero _ _ _ _ _ F unfolded_F T zero ants conds \<equiv> True\<close>
+  where \<open>Guess_Scalar_Zero _ _ _ F unfolded_F zero ants conds \<equiv> True\<close>
 
 definition Guess_Scalar_One\<^sub>I :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow>'a itself
                               \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
@@ -5562,8 +5584,8 @@ declare [[ \<phi>reason_default_pattern
       (*\<open>Guess_Scalar_One\<^sub>I ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_One\<^sub>I ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close>   (100)
   and*)
-      \<open>Guess_Scalar_Zero ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close> \<Rightarrow>
-      \<open>Guess_Scalar_Zero ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close>   (100)
+      \<open>Guess_Scalar_Zero ?S ?C ?A _ ?def _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Scalar_Zero ?S ?C ?A _ ?def _ _ _\<close>   (100)
   and \<open>Guess_Scalar_One\<^sub>I ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_One\<^sub>I ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _ _ _\<close>   (100)
   and \<open>Guess_Scalar_One\<^sub>E ?S ?C\<^sub>T ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _ _ _\<close> \<Rightarrow>
@@ -5584,9 +5606,9 @@ text \<open>Guessing the zip operation of a semimodule is far beyond what can be
 paragraph \<open>Initialization\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
-\<Longrightarrow> Guess_Scalar_Zero TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T z ants conds
-\<Longrightarrow> Guess_Scalar_Zero TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T z ants conds\<close> .
+  \<open> (\<And>s x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s x) : (x \<Ztypecolon> F s) )
+\<Longrightarrow> Guess_Scalar_Zero TS TC TA F var_unfolded_F z ants conds
+\<Longrightarrow> Guess_Scalar_Zero TS TC TA F var_unfolded_F z ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> (\<And>s x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s x) : (x \<Ztypecolon> F s) )
@@ -5617,13 +5639,13 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 paragraph \<open>Guess_Scalar_Zero\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
-  \<open>Guess_Scalar_Zero TYPE('s::zero) TYPE('c\<^sub>T) TYPE('c::one) TYPE('a\<^sub>T) TYPE('a)
-                     F unfolded_F T 0 True True \<close>
+  \<open>Guess_Scalar_Zero TYPE('s::zero) TYPE('c::one) TYPE('a)
+                     F unfolded_F 0 True True \<close>
   unfolding Guess_Scalar_Zero_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Scalar_Zero TYPE('s len_intvl) TYPE('c\<^sub>T) TYPE('c::one) TYPE('a) TYPE('a list)
-                     F unfolded_F T \<lbrakk>x:0\<rwpar> True True\<close>
+  \<open>Guess_Scalar_Zero TYPE('s len_intvl) TYPE('c::one) TYPE('a list)
+                     F unfolded_F \<lbrakk>x:0\<rwpar> True True\<close>
   unfolding Guess_Scalar_Zero_def ..
 
 paragraph \<open>Guess_Scalar_One\<close>
@@ -5778,21 +5800,21 @@ subsubsection \<open>Semimodule Scalar Zero\<close>
 context begin
 
 private lemma \<phi>TA_M0_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> F zero T) True @action \<phi>TA_ind_target undefined)
+  \<open> (\<And>x. Ant \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> F zero) True @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Semimodule_Zero F T zero \<close>
+\<Longrightarrow> Semimodule_Zero F zero \<close>
   unfolding Semimodule_Zero_def Action_Tag_def Premise_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
   by (clarsimp simp add: BI_eq_iff Transformation_def; blast)
 
 private lemma \<phi>TA_M0c_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> F zero T) @action \<phi>TA_ind_target undefined)
-\<Longrightarrow> Semimodule_Zero F T zero
+  \<open> (\<And>x. Ant \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> F zero) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> Semimodule_Zero F zero
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Closed_Semimodule_Zero F T zero \<close>
+\<Longrightarrow> Closed_Semimodule_Zero F zero \<close>
   unfolding Semimodule_Zero_def Action_Tag_def Premise_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
             Closed_Semimodule_Zero_def
   by (clarsimp simp add: BI_eq_iff Transformation_def; blast)
@@ -5801,11 +5823,12 @@ ML_file \<open>library/phi_type_algebra/semimodule_zero.ML\<close>
 
 end
 
-\<phi>property_deriver Semimodule_Zero 129 for (\<open>Semimodule_Zero _ _ _\<close>)
+\<phi>property_deriver Semimodule_Zero 129 for (\<open>Semimodule_Zero _ _\<close>)
     = \<open>Phi_Type_Derivers.semimodule_zero\<close>
 
 \<phi>property_deriver Closed_Semimodule_Zero 130
-    for (\<open>Closed_Semimodule_Zero _ _ _\<close>) requires Semimodule_Zero
+  for (\<open>Closed_Semimodule_Zero _ _\<close>)
+  requires Semimodule_Zero
     = \<open>Phi_Type_Derivers.closed_semimodule_zero\<close>
 
 

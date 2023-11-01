@@ -10,7 +10,9 @@ structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
 
 fun gen_M0 closed (der_id, name) instruction ctxt0 (phi : phi_type) thy =
-  let val parse_hint = parse_hint (fn (Const(\<^const_name>\<open>Semimodule_Zero\<close>, _) $ F1 $ _ $ _ ) => F1)
+  let val parse_hint = parse_hint (
+          fn (Const(\<^const_name>\<open>Semimodule_Zero\<close>, _) $ F1 $ _ ) => F1
+           | (Const(\<^const_name>\<open>Closed_Semimodule_Zero\<close>, _) $ F1 $ _ ) => F1)
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
         default_reasoning false default_reasoning_configure (K (K NONE))
