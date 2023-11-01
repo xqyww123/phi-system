@@ -1159,13 +1159,13 @@ declare [[\<phi>trace_reasoning = 0 ]]
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
 
-\<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
-  where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
+\<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>\<^sub>0")
+  where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi>\<^sub>0 I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
   deriving Basic
-       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P (x i)) \<close>
+       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>x. \<forall>i \<in> I. P (x i)) \<close>
        (*and Abstract_Domain\<^sub>L (*TODO*)*)
-       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
-       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 I) (\<big_ast>\<^sup>\<phi>\<^sub>0 J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 I) (\<big_ast>\<^sup>\<phi>\<^sub>0 J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
        and Sep_Functor_1
        and Functionality
        and Semimodule_Scalar_Assoc
@@ -1174,22 +1174,22 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Carrier_Set
 
 ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Mul_Quant.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x. \<forall>i\<in>?I. ?P (x i))  \<close>),
-  (@{thm' \<phi>Mul_Quant.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (?T:: ?'b \<Rightarrow> ?'c::{sep_algebra,sep_carrier_1} BI) ?P \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
-  (@{thm' \<phi>Mul_Quant.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
-  (@{thm' \<phi>Mul_Quant.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D (x xa)) (\<lambda>x. \<forall>xa\<in>?I. ?T\<^sub>P (x xa)) \<close>),
-  (@{thm' \<phi>Mul_Quant.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x. finite ?I \<and> (\<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D (x xa))) \<close>),
-  (@{thm' \<phi>Mul_Quant.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi> ?I ?T) (\<lambda>x y. \<forall>xa. xa \<in> ?I \<longrightarrow> ?eq (x xa) (y xa)) \<close>),
-  (@{thm' \<phi>Mul_Quant.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>?I. g (x i) (y i))  \<close>),
-  (@{thm' \<phi>Mul_Quant.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>?I. P (x i)) (\<lambda>f _. (\<circ>) f)  \<close>),
-  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?Ta ?U UNIV zip_fun \<close>),
-  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?Ta ?U unzip_fun \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I ?T) 0 \<close>),
-  (@{thm' \<phi>Mul_Quant.Closed_Semimodule_Zero}, \<^pattern_prop>\<open> Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I ?T) 0 \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I ?T) ?T {?i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True) \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I ?T) ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i) (\<lambda>_. True) \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod) \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T finite finite (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod)  \<close>)
+  (@{thm' \<phi>Mul_Quant.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>i\<in>?I. ?P (x i))  \<close>),
+  (@{thm' \<phi>Mul_Quant.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (?T:: ?'b \<Rightarrow> ?'c::{sep_algebra,sep_carrier_1} BI) ?P \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
+  (@{thm' \<phi>Mul_Quant.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
+  (@{thm' \<phi>Mul_Quant.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D (x xa)) (\<lambda>x. \<forall>xa\<in>?I. ?T\<^sub>P (x xa)) \<close>),
+  (@{thm' \<phi>Mul_Quant.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. finite ?I \<and> (\<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D (x xa))) \<close>),
+  (@{thm' \<phi>Mul_Quant.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x y. \<forall>xa. xa \<in> ?I \<longrightarrow> ?eq (x xa) (y xa)) \<close>),
+  (@{thm' \<phi>Mul_Quant.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>?I. g (x i) (y i))  \<close>),
+  (@{thm' \<phi>Mul_Quant.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>?I. P (x i)) (\<lambda>f _. (\<circ>) f)  \<close>),
+  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?Ta ?U UNIV zip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?Ta ?U unzip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) 0 \<close>),
+  (@{thm' \<phi>Mul_Quant.Closed_Semimodule_Zero}, \<^pattern_prop>\<open> Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) 0 \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) ?T {?i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True) \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i) (\<lambda>_. True) \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod) \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 ?T finite finite (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod)  \<close>)
 ]\<close>
 
 
@@ -1200,12 +1200,11 @@ nonterminal "dom_idx"
 syntax
   "_one_dom" :: \<open>pttrns \<Rightarrow> 'a set \<Rightarrow> dom_idx\<close> ("_/\<in>_" [0,51] 50)
   "_more_dom":: \<open>dom_idx \<Rightarrow> dom_idx \<Rightarrow> dom_idx\<close> ("_,/ _" [49, 50] 49)
-  "_\<phi>Mul_Quant" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_]/ _)" [49, 1000] 1000)
-  "_\<phi>Mul_Quant_mid" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"
+  "_\<phi>Mul_Quant\<^sub>0" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>\<^sub>0[_]/ _)" [49, 1000] 1000)
 
 translations
-  "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" == "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I T)"
-  "CONST \<phi>Type x (_\<phi>Mul_Quant (_more_dom d (_one_dom i I)) T)" == "CONST \<phi>Type (\<lambda>i. x) (_\<phi>Mul_Quant d (CONST \<phi>Mul_Quant I T))"
+  "CONST \<phi>Type x (_\<phi>Mul_Quant\<^sub>0 (_one_dom i I) T)" == "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I T)"
+  "CONST \<phi>Type x (_\<phi>Mul_Quant\<^sub>0 (_more_dom d (_one_dom i I)) T)" == "CONST \<phi>Type (\<lambda>i. x) (_\<phi>Mul_Quant\<^sub>0 d (CONST \<phi>Mul_Quant I T))"
 
 
 subsubsection \<open>Configure\<close>
@@ -1231,13 +1230,13 @@ text \<open>Instead of deriving the Scalar Distributivity automatically, we give
   (it is too aggressive to enable it, I believe).\<close>
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>Z[\<phi>reason 1000]:
-  \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
+  \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant.unfold sep_quant_scalar_distr;
       smt (verit) Mul_Quant_def Transformation_def disjoint_iff plus_set_in_iff prod.cong)
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>U[\<phi>reason 1000]:
-  \<open> Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
+  \<open> Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>U_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Mul_Quant.unfold \<phi>Prod_expn' sep_quant_scalar_distr)
 
@@ -1246,7 +1245,7 @@ subsubsection \<open>Rewrites\<close>
 
 lemma \<phi>Mul_Quant_insert:
   \<open> k \<notin> I
-\<Longrightarrow> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T) = ((x k, x) \<Ztypecolon> T \<^emph> \<big_ast>\<^sup>\<phi> I T) \<close>
+\<Longrightarrow> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 (insert k I) T) = ((x k, x) \<Ztypecolon> T \<^emph> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) \<close>
   unfolding \<phi>Mul_Quant.unfold \<phi>Prod_expn'
   by (clarsimp simp add: sep_quant_insert)
 
@@ -1256,22 +1255,22 @@ paragraph \<open>Reduction for individually inserted elements\<close>
 
 lemma [\<phi>reason %ToA_derived_red-10]: \<comment>\<open>The priority must be lower than the derived \<open> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> {x} T\<close>\<close>
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T) * (x k \<Ztypecolon> T) \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) * (x k \<Ztypecolon> T) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 (insert k I) T \<w>\<i>\<t>\<h> P \<close>
   unfolding \<phi>Mul_Quant.unfold \<r>Guard_def Premise_def
   by (clarsimp simp add: sep_quant_insert)
 
 lemma [\<phi>reason %ToA_derived_red-10]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T) * (x k \<Ztypecolon> T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) * (x k \<Ztypecolon> T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 (insert k I) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding \<phi>Mul_Quant.unfold \<r>Guard_def Premise_def
   by (clarsimp simp add: sep_quant_insert)
 
 lemma [\<phi>reason %ToA_derived_red-10]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst (\<lambda>f. (f k, f)) x \<Ztypecolon> (T \<^emph> \<big_ast>\<^sup>\<phi> I T) \<^emph>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst (\<lambda>f. (f k, f)) x \<Ztypecolon> (T \<^emph> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) \<^emph>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 (insert k I) T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding \<r>Guard_def Premise_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant_insert)
 
@@ -1309,39 +1308,96 @@ subsection \<open>Parameterized FMQ\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
     
-\<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda>")
-  where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>[i\<in>I] (\<Sigma> T)\<close>
+\<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
+  where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
   deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
-        \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x y. \<forall>i \<in> I. eq i (x i) (y i))\<close>
-       and \<open>(\<And>i. Carrier_Set (T i) (P i)) \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+        \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x y. \<forall>i \<in> I. eq i (x i) (y i))\<close>
+       and \<open>(\<And>i. Carrier_Set (T i) (P i)) \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
                 \<comment> \<open>the guesser fails to realize the \<open>P\<close> can be parameterized, which is a specific
                     feature of \<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>\<close>
-       and \<open>(\<And>i. Functionality (T i) (P i)) \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+       and \<open>(\<And>i. Functionality (T i) (P i)) \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
        and \<open> (\<And>i. Abstract_Domain (T i) (P i))
-        \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>x. \<forall>i\<in>I. P i (x i)) \<close>  
+        \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i\<in>I. P i (x i)) \<close>  
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
-        \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
+        \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
-        \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
+        \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
                                          (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
            \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
        and Sep_Functor_1
        and Semimodule_NonAssoc
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) T U UNIV zip_fun\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) T U unzip_fun\<close>
-       and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
-       and \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
-       and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) {}\<close>
-       and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) {}\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
+       and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
+       and \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
+       and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
+       and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
 
 thm \<phi>Mul_Quant\<^sub>\<Lambda>.aaa
 
 ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) ?T ?U UNIV zip_fun \<close>),
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) ?T ?U unzip_fun \<close>)
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U UNIV zip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U unzip_fun \<close>)
 ]\<close>
+
+subsubsection \<open>Syntax\<close>
+
+syntax
+  "_\<phi>Mul_Quant"  :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_]/ _)" [49, 1000] 1000)
+
+consts "\<phi>Mul_Quant'" :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd"
+
+print_ast_translation \<open> let open Ast
+  fun append (Appl L) x = Appl (L @ [x])
+    | append X x = Appl [X, x]
+in [(\<^const_syntax>\<open>\<phi>Type\<close>, fn ctxt =>
+  fn [Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+            Appl [Constant \<^syntax_const>\<open>_constrain\<close>, Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vi], _],
+            fx],
+      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom,
+            Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+                  Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vjb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vj], _],
+                  fT]]]
+    => let fun subst (Variable v) = if v = vi then SOME (Variable vj) else NONE
+             | subst (Appl L) =
+                  let fun mapL [] = NONE
+                        | mapL (x::L) = case (subst x, mapL L)
+                                          of (SOME x', SOME L') => SOME (x'::L')
+                                           | (SOME x', NONE) => SOME (x'::L)
+                                           | (NONE, SOME L') => SOME (x::L')
+                                           | (NONE, NONE) => NONE
+                   in Option.map Appl (mapL L)
+                  end
+             | subst _ = NONE
+           val fx' = if vi = vj then fx else the_default fx (subst fx)
+        in Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
+                 fx',
+                 Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
+                       Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vjb, Dom],
+                       fT]]
+       end
+   | [Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+            Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vxb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vi], _],
+            fx],
+      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom, T]]
+    => Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, fx,
+             Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
+                   Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vxb, Dom], append T vxb]]
+   | [x,
+      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom,
+            Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+                  Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vjb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vj], _],
+                  fT]]]
+    => Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, append x vjb,
+             Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
+                   Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vjb, Dom],
+                   fT]]
+)] end \<close>
+
+translations
+  "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" => "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant\<^sub>\<Lambda> I (\<lambda>i. T))"
 
 
 subsection \<open>Sum Type\<close>
@@ -2642,21 +2698,21 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 context begin
 
 private lemma [simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
-  
+
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
-  where \<open>l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<equiv> (\<lambda>i. l ! (i - Len_Intvl.start iv)) \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> (Len_Intvl.set iv) T \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
-  deriving (*Sep_Functor_1
+  where \<open>l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<equiv> (\<lambda>i. l ! (i - Len_Intvl.start iv)) \<Ztypecolon> \<big_ast>\<^sup>\<phi> (Len_Intvl.set iv) T \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
+  deriving Sep_Functor_1
        and Semimodule_NonAssoc
-       and*) \<open>(\<And>i. Carrier_Set (T i) (P i))
+       and \<open>(\<And>i. Carrier_Set (T i) (P i))
         \<Longrightarrow> Carrier_Set (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>l. \<forall>i < Len_Intvl.len iv. P (Len_Intvl.start iv + i) (l ! i)) \<close>  
        and \<open>(\<And>i. Abstract_Domain (T i) (P i))
         \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and>
@@ -2693,6 +2749,8 @@ private lemma [simp]:
                                      (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>
 
 end
+
+thm \<phi>Mul_Quant_LenIv.unfold
 
 translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
@@ -3180,7 +3238,12 @@ declare [[\<phi>trace_reasoning = 2]]
 
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
-\<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
+\<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (T i)) * (f i \<Ztypecolon> T i) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 (*

@@ -2809,9 +2809,7 @@ lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
 
 
 
-
-
-lemma [\<phi>reason_template default %ToA_derived_red name F.aaa]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one' = one
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x

@@ -660,7 +660,7 @@ fun gen_reason (handlers, trace, limit, tactics) =
                             then tracing ("\<phi>reasoning("^string_of_int score^"):"^
                                           Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                             else ()
-                    val _ = if score = 6560 then () else ()
+                    val _ = if score = 14999 then () else ()
 
                     val Z = if Thm.nprems_of th <= N
                             then raise Success (ctxt, th)

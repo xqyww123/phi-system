@@ -48,9 +48,12 @@ fun elim_embedded_patterns thm =
   let val (ret, _) = strip_embedded_patterns (Thm.concl_of thm)
       fun elim ctm =
         case Thm.term_of ctm
-          of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => Conv.rewr_conv @{thm' NO_SIMP'_def} ctm
-           | Const(\<^const_name>\<open>With_Pattern\<close>, _) $ _ $ _ => Conv.rewr_conv @{thm' With_Pattern_def} ctm
-           | Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ _ $ _ => Conv.rewr_conv @{thm' Except_Pattern_def} ctm
+          of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ =>
+                (Conv.rewr_conv @{thm' NO_SIMP'_def} then_conv elim) ctm
+           | Const(\<^const_name>\<open>With_Pattern\<close>, _) $ _ $ _ =>
+                (Conv.rewr_conv @{thm' With_Pattern_def} then_conv elim) ctm
+           | Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ _ $ _ =>
+                (Conv.rewr_conv @{thm' Except_Pattern_def} then_conv elim) ctm
            | _ => Conv.all_conv ctm
    in (ret, Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) elim) thm)
   end
