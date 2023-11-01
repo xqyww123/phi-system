@@ -50,9 +50,7 @@ setup \<open>Context.theory_map (
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
-  
+ 
 let_\<phi>type \<phi>None
   deriving Basic
        and Functionality
@@ -1337,6 +1335,13 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
        and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) {}\<close>
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) {}\<close>
+
+thm \<phi>Mul_Quant\<^sub>\<Lambda>.aaa
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) ?T ?U UNIV zip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> ?I) ?T ?U unzip_fun \<close>)
+]\<close>
 
 
 subsection \<open>Sum Type\<close>
@@ -2637,24 +2642,31 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 3]]
 
 context begin
+
+term \<open>[1..<0]\<close>
 
 private lemma [simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
-   
+  
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
-                              \<Rightarrow> ('c::sep_algebra, 'x) \<phi>
+                              \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
-  where \<open>l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<equiv> (\<lambda>i. l ! (i - Len_Intvl.start iv)) \<Ztypecolon> \<big_ast>\<^sup>\<phi> (Len_Intvl.set iv) T \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
-  deriving Sep_Functor_1
+  where \<open>l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<equiv> (\<lambda>i. l ! (i - Len_Intvl.start iv)) \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> (Len_Intvl.set iv) T \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
+  deriving \<open>(\<And>i. Carrier_Set (T i) (P i))
+        \<Longrightarrow> Carrier_Set (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>l. \<forall>i < Len_Intvl.len iv. P (Len_Intvl.start iv + i) (l ! i)) \<close>  
+       and \<open>(\<And>i. Abstract_Domain (T i) (P i))
+        \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and>
+                                           (\<forall>i < Len_Intvl.len iv. P (Len_Intvl.start iv + i) (x ! i))) \<close> \<comment> \<open>simplification is not satisfiable\<close>
+       and \<open>(\<And>i. Object_Equiv (T i) (eq i))
+        \<Longrightarrow> Object_Equiv (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x y. length y = length x \<and> 
+                                             (\<forall>i < Len_Intvl.len iv. eq (Len_Intvl.start iv + i) (x ! i) (y ! i)))\<close>
+
+(*Sep_Functor_1
        and Semimodule_NonAssoc
-       and \<open>Abstract_Domain T P
-        \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close> \<comment> \<open>simplification is not satisfiable\<close>
-       and \<open>Carrier_Set T P
-        \<Longrightarrow> Carrier_Set (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all P) \<close>  
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (list_all2 eq)\<close>
        and Transformation_Functor  
@@ -2666,7 +2678,6 @@ private lemma [simp]:
         \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
 
 end
-
 
 translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
@@ -2687,7 +2698,7 @@ ML \<open>assert_derived_properties \<^theory> [
         Semimodule_SDistr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv ?T) (\<lambda>_. True)
                                 (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>)
 ]\<close>
-
+*)
 
 section \<open>Semantics Related\<close> (*TODO: move*)
 

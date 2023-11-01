@@ -10,6 +10,15 @@ end
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
 
+fun conv_hol_imps_to_metas_if_has Cant ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
+          (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
+           Conv.implies_conv Cant (conv_hol_imps_to_metas_if_has Cant)) ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+          (Conv.implies_conv Cant (conv_hol_imps_to_metas_if_has Cant)) ctm
+     | _ => Conv.all_conv ctm
+
 fun conv_hol_imp_to_meta_if_has Cant ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
@@ -320,13 +329,19 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                fn ctxt => fn _ =>
                     Conv.rewr_conv @{thm' \<phi>TA_OE_rewr_IH} then_conv
                     Phi_Conv.meta_all_conv (fn _ => Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctxt,
-               fn ctxt => fn _ =>
-                    Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
-                    Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps tagged_eqs) then_conv
+               fn ctxt => fn _ => @{print} o (
+                    (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
+                    (Conv.implies_concl_conv (
+                       Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
+                       Phi_Conv.meta_all_conv (fn _ => Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctxt then_conv
+                      (Phi_Reasoners.asm_full_rewrite true (
+                          Expansion.equip ctxt addsimps (@{thms' ex_pure_imp conj_imp_eq_imp_imp} @ tagged_eqs))))) then_conv
                     Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
-                                      (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
-                                        conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]})
-                                      ) ctxt)
+                                      (Phi_Conv.meta_alls_conv (
+                                        Phi_Conv.hol_alls_to_meta_alls (fn _ =>
+                                        conv_hol_imps_to_metas_if_has (HOLogic.Trueprop_conv (
+                                            Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))
+                                        )) ctxt))
                   (*Conv.implies_conv
                       (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                       (Phi_Conv.hol_alls_to_meta_alls (fn _ =>

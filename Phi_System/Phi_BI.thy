@@ -3100,7 +3100,7 @@ declare [[ \<phi>reason_default_pattern
     \<open>Fallbacks of reasoning Identity_Element.\<close>
  and identity_element_\<phi> = (10, [10, 10]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
     \<open>Turning to \<open>Identity_Elements\<^sub>I\<close> and \<open>Identity_Elements\<^sub>E\<close>\<close>
- and derived_identity_element = (50, [50,50]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
+ and derived_identity_element = (50, [50,55]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > identity_element_\<phi>
     \<open>Automatically derived Identity_Element rules\<close>
  and identity_element_cut = (1000, [1000,1029]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)

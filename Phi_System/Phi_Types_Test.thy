@@ -1,11 +1,11 @@
 theory Phi_Types_Test
   imports Phi_Types
 begin
-
+  
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (*Identity_Elements*) Sep_Functor_1
+      deriving Sep_Functor_1
        and Functionality
        and \<open> homo_one \<delta>
           \<Longrightarrow> closed_homo_sep \<delta>

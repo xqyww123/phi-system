@@ -2977,7 +2977,7 @@ lemma [\<phi>reason %restore_from_semimodule for \<open>_ \<t>\<r>\<a>\<n>\<s>\<
 
 subparagraph \<open>Main\<close>
 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.aaa]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F F'
@@ -5052,6 +5052,29 @@ private lemma \<phi>TA_OE_rewr_IH:
 \<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
   by (rule; blast)
+
+private lemma \<phi>TA_OE_rewr_CL:
+  \<open> Trueprop (Ant \<longrightarrow> (\<forall>y. C y \<longrightarrow> X y) @action \<A>)
+ \<equiv> (Ant \<Longrightarrow> (\<And>y. C y \<Longrightarrow> X y)) \<close>
+  unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
+  by (rule; blast)
+
+lemma ex_pure_imp:
+  \<open> (\<exists>x. P x \<Longrightarrow> PROP Q) \<equiv> (\<And>x. P x \<Longrightarrow> PROP Q) \<close>
+proof
+  fix x
+  assume A: \<open>\<exists>x. P x \<Longrightarrow> PROP Q\<close>
+     and B: \<open>P x\<close>
+  from B have \<open>\<exists>x. P x\<close> by blast
+  from A[OF this] show \<open>PROP Q\<close> .
+next
+  assume A: \<open>\<And>x. P x \<Longrightarrow> PROP Q\<close>
+     and B: \<open>\<exists>x. P x\<close>
+  from B have \<open>P (@x. P x)\<close> by (simp add: someI_ex) 
+  from A[OF this] show \<open>PROP Q\<close> .
+qed
+
+
 
 private lemma \<phi>TA_OE_rewr:
   \<open>Trueprop (\<forall>y. P y \<longrightarrow> Q y) \<equiv> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y \<Longrightarrow> Q y)\<close>

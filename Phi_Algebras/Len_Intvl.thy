@@ -21,6 +21,8 @@ class shift_by_nat_ord = shift_by_nat + linorder +
 
 subsection \<open>Operations\<close>
 
+subsubsection \<open>Set\<close>
+
 definition set :: \<open>'a::shift_by_nat_ord len_intvl \<Rightarrow> 'a set\<close>
   where [iff]: \<open>set i = {start i ..< shift_by_nat (start i) (len i)}\<close>
 
@@ -33,6 +35,11 @@ lemma forall_alt[simp]:
   \<open> (\<forall>i. len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow> P i) \<longleftrightarrow>
     (\<forall>i < len_intvl.len iv. P (i + len_intvl.start iv)) \<close>
   by (auto; metis add.commute le_add_diff_inverse less_diff_conv2)
+
+subsection \<open>List\<close>
+
+abbreviation list\<^sub>N :: \<open>nat len_intvl \<Rightarrow> nat list\<close>
+  where \<open>list\<^sub>N iv \<equiv> [start iv ..< start iv + len iv]\<close>
 
 
 subsection \<open>Properties\<close>
