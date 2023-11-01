@@ -214,35 +214,12 @@ proc op_free_mem:
 
 \<medium_right_bracket> .
 
-declare [[\<phi>trace_reasoning = 3]]
-
+declare [[\<phi>trace_reasoning = 0]]
+  
 \<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>l \<Ztypecolon> Mem_Slice addr iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>j. \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
     \<comment> \<open>Length is still required because it determines the domain of the \<phi>-type so guides the reasoning\<close>
-  deriving \<open>Abstract_Domain T P
-        \<Longrightarrow> Abstract_Domain (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
-            notes list_all_length[simp]
-       and \<open>Object_Equiv T eq
-        \<Longrightarrow> Object_Equiv (Mem_Slice addr iv T) (list_all2 eq) \<close>
-            notes list_all2_conv_all_nth[simp]
-       and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
-        \<Longrightarrow> Identity_Elements\<^sub>I (Mem_Slice addr iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
-       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
-        \<Longrightarrow> Identity_Elements\<^sub>E (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
-       and Transformation_Functor
-       and \<open>Separation_Homo\<^sub>I (Mem_Slice addr iv) (Mem_Slice addr iv) (Mem_Slice addr iv) T U UNIV zip' \<close>
-       and Separation_Homo
-
-(*Sep_Functor_1
-       and Semimodule_NonAssoc
-       and Separation_Homo\<^sub>E
-           (tactic: clarsimp simp add: list_all2_conv_all_nth unzip'_def)
-       and \<open>Semimodule_One\<^sub>I (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_One\<^sub>E (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
-            notes hd_zip[simp] length_Suc_conv[simp]
-*)
-
-(*Sep_Functor_1
+  deriving Sep_Functor_1
        and Semimodule_NonAssoc
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
@@ -255,16 +232,10 @@ declare [[\<phi>trace_reasoning = 3]]
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
        and Transformation_Functor
-           (tactic: auto simp add: in_set_conv_nth list_all2_conv_all_nth list_all_length ;
-                    subgoal' for r l la lc \<open>rule exI[where x=\<open>map snd lc\<close>]\<close>)
        and \<open>Separation_Homo\<^sub>I (Mem_Slice addr iv) (Mem_Slice addr iv) (Mem_Slice addr iv) T U UNIV zip' \<close>
-           (tactic: clarsimp simp add: list_all2_conv_all_nth zip'_def in_set_conv_nth)
-       and Separation_Homo\<^sub>E
-           (tactic: clarsimp simp add: list_all2_conv_all_nth unzip'_def)
+       and Separation_Homo
        and \<open>Semimodule_One\<^sub>I (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
-            notes hd_zip[simp] length_Suc_conv[simp]
-*)
 
 consts Mem_Slice_synt :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _ : _]")
 
