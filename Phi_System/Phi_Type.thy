@@ -425,11 +425,13 @@ definition \<open>Functional_Transformation_Functor\<^sub>\<Lambda> Fa Fb T U D 
 
 lemma infer_FTF\<^sub>\<Lambda>_from_FT\<^sub>\<Lambda>:
   \<open> Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R mapper
+\<Longrightarrow> Abstract_Domain (F1 T) P\<^sub>T
+\<Longrightarrow> Abstract_Domain (F2 U) P\<^sub>U
 \<Longrightarrow> Object_Equiv (F2 U) eq
-\<Longrightarrow> (\<forall>f P x y. mapper (\<lambda>p a b. b = f p a \<and> P p a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x)
+\<Longrightarrow> (\<forall>f P x y. P\<^sub>T x \<and> P\<^sub>U y \<and> mapper (\<lambda>p a b. b = f p a \<and> P p a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x)
 \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R pm fm \<close>
   unfolding Functional_Transformation_Functor\<^sub>\<Lambda>_def Transformation_Functor\<^sub>\<Lambda>_def
-            Object_Equiv_def
+            Object_Equiv_def Abstract_Domain_def Action_Tag_def Inhabited_def
   apply clarsimp
   subgoal premises prems for x f P
     by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>p a b. b = f p a \<and> P p a\<close>]]
@@ -5323,8 +5325,10 @@ paragraph \<open>Parameterization\<close>
 private lemma \<phi>TA_FTF\<^sub>\<Lambda>_rule:
   \<open> Ant \<longrightarrow> Ant' @action \<A>EIF
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R mapper)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain (F1 T) P\<^sub>T)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain (F2 U) P\<^sub>U)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Object_Equiv (F2 U) eq)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P x y. mapper (\<lambda>p a b. b = f p a \<and> P p a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x))
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P x y. P\<^sub>T x \<and> P\<^sub>U y \<and> mapper (\<lambda>p a b. b = f p a \<and> P p a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
