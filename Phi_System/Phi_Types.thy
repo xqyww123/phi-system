@@ -1156,7 +1156,7 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 
 subsection \<open>Finite Multiplicative Quantification\<close>
 
-declare [[\<phi>trace_reasoning = 1 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
@@ -1230,7 +1230,7 @@ subsubsection \<open>Algebraic Properties\<close>
 
 text \<open>Instead of deriving the Scalar Distributivity automatically, we give them manually, as the scalar
   distribution of the assertion-level \<open>\<big_ast>\<close> is not activated in the reasoning system by default
-  (it is too aggressive to enable it).\<close>
+  (it is too aggressive to enable it, I believe).\<close>
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>Z[\<phi>reason 1000]:
   \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
@@ -1309,7 +1309,7 @@ thm Tr2
 
 subsection \<open>Parameterized FMQ\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
     
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>[i\<in>I] (\<Sigma> T)\<close>
@@ -1331,6 +1331,10 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) T U unzip_fun\<close>
        and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
+       and \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
+
+term \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
 
 term \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
 
