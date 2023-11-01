@@ -219,7 +219,7 @@ declare [[\<phi>trace_reasoning = 3]]
 \<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>l \<Ztypecolon> Mem_Slice addr iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>j. \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
     \<comment> \<open>Length is still required because it determines the domain of the \<phi>-type so guides the reasoning\<close>
-  deriving (*\<open>Abstract_Domain T P
+  deriving \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
             notes list_all_length[simp]
        and \<open>Object_Equiv T eq
@@ -231,7 +231,7 @@ declare [[\<phi>trace_reasoning = 3]]
         \<Longrightarrow> Identity_Elements\<^sub>E (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
        and Transformation_Functor
        and \<open>Separation_Homo\<^sub>I (Mem_Slice addr iv) (Mem_Slice addr iv) (Mem_Slice addr iv) T U UNIV zip' \<close>
-       and*) Separation_Homo\<^sub>E
+       and Separation_Homo
 
 (*Sep_Functor_1
        and Semimodule_NonAssoc

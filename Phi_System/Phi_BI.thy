@@ -818,11 +818,13 @@ subsubsection \<open>Allocation of Priorities\<close>
                     \<open>Transformation rules reducing literal or trivial cases.\<close>
   ToA_success     = (3000, [2960, 3499])
                     \<open>Transformation rules that are shortcuts leading to success on special cases\<close>
-  ToA_assigning_var = (4100, [4100, 4110]) in ToA
+  ToA_systop      = (4990, [4990, 4999]) in ToA
+                    \<open>System rules of the highest priority\<close>
+  ToA_assigning_var = (4100, [4100, 4110]) in ToA and < ToA_systop
                     \<open>Tranformation rules assigning variable targets or sources, of the highest priority
                      as occurrences of schematic variables are usually not considered in the subsequent
                      normal process of the reasoning, and may cause unexpected exception in them.\<close>
-  ToA_refl        = (4000, [3990, 4019]) in ToA
+  ToA_refl        = (4000, [3990, 4019]) in ToA and < ToA_assigning_var and > ToA_success
                     \<open>Reflexive tranformation rules\<close>
   ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
                     \<open>split the separation sequent in the source part and reason the tranformation for
@@ -5059,6 +5061,8 @@ subparagraph \<open>ML\<close>
 
 consts ToA_flag_deep :: bool
 
+definition \<open>NToA'' X \<equiv> X\<close> 
+
 lemma "_NToA_init_":
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
@@ -5069,7 +5073,6 @@ lemma "_NToA_init_":
 lemma "_NToA_init_having_Q_":
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def Inhabited_def Premise_def Transformation_def
   by clarsimp blast
@@ -5094,20 +5097,52 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
               |> Config.put under_NToA_ctxt true
       val deep = case deep of \<^Const>\<open>True\<close> => true | _ => false
 
-      val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (conv_transformation_by_assertion_ss) ctxt) 1 sequent
+      fun insert_tag ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+              Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag ctxt) ctxt) ctm
+           | Const(\<^const_name>\<open>AllSet\<close>, _) $ _ =>
+              Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag ctxt) ctxt) ctm
+           | Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
+              Conv.arg1_conv (insert_tag ctxt) ctm
+           | Const(\<^const_name>\<open>plus\<close>, _) $ _ $ _ =>
+              Conv.combination_conv (Conv.arg_conv (insert_tag ctxt)) (insert_tag ctxt) ctm
+           | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
+              Conv.combination_conv (Conv.arg_conv (insert_tag ctxt)) (insert_tag ctxt) ctm
+           | _ => Conv.rewr_conv @{thm' NToA''_def[symmetric]} ctm
 
-      val (ctxt, sequent) = normalize_source_of_ToA (ctxt, sequent)
+      val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+            conv_transformation_by_assertion_ss ctxt then_conv
+            Phi_Syntax.transformation_conv (insert_tag ctxt) Conv.all_conv Conv.all_conv
+          ) ctxt) 1 sequent
 
-      val rule = if deep andalso Config.get ctxt augment_ToA_by_implication
-                   then @{thm "_NToA_init_having_Q_"}
-                   else @{thm "_NToA_init_"}
-      val sequent = rule RS sequent
+      val sequent = @{thm "_NToA_init_"} RS sequent
 
       val ctxt = Config.restore under_NToA_ctxt ctxt0 ctxt
 
    in SOME ((ctxt, sequent), Seq.empty)
   end)
 \<close>
+
+\<phi>reasoner_ML NToA_init\<^sub>2 %ToA_systop (\<open>NToA'' _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>
+fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn _ =>
+            Phi_Syntax.transformation_conv (Conv.rewr_conv @{thm' NToA''_def}) Conv.all_conv Conv.all_conv
+          ) ctxt) 1 sequent
+
+      val deep = case PLPR_Env.get \<^const_name>\<open>ToA_flag_deep\<close> (Context.Proof ctxt)
+                   of SOME (Const(\<^const_name>\<open>True\<close>, _)) => true
+                    | _ => false
+
+      val (ctxt, sequent) = normalize_source_of_ToA (ctxt, sequent)
+
+      val sequent = if deep andalso Config.get ctxt augment_ToA_by_implication
+                    then @{thm' "_NToA_init_having_Q_"} RS sequent
+                    else sequent
+
+   in SOME ((ctxt, sequent), Seq.empty)
+  end
+)\<close>
 
 hide_fact "_NToA_init_"
 

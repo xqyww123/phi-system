@@ -69,7 +69,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
        and Transformation_Functor
-           (tactic: clarsimp ; subgoal' for g x xa xb \<open>induct x arbitrary: xb xa N Na; auto simp add: list_all2_Cons2\<close>)
+           (tactic: clarsimp ; subgoal' for g x xb \<open>induct x arbitrary: xb xa N Na; auto simp add: list_all2_Cons2\<close>)
        and Functional_Transformation_Functor
        and \<open>Functionality T D
         \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all D l)\<close>

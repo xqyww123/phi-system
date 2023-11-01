@@ -9,6 +9,8 @@ val LHS_conv : conv -> conv
 val RHS_conv : conv -> conv
 
 val inverse_eta_conv : conv
+val abs_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
+val abs_conv_eta : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_case_prod_conv : ((cterm * cterm) * Proof.context -> conv) -> conv -> Proof.context -> conv
 val meta_ball_conv : conv -> (cterm * Proof.context -> conv) -> Proof.context -> conv
@@ -104,9 +106,15 @@ fun abs_conv cv ctxt ct =
       in if is_strict_reflexive eq then all_conv ct else Thm.abstract_rule a v eq end
   | _ => raise CTERM ("abs_conv", [ct]));
 
+fun abs_conv_eta C ctxt ctm =
+  case Thm.term_of ctm
+    of Abs _ => abs_conv C ctxt ctm
+     | _ => (inverse_eta_conv then_conv abs_conv C ctxt) ctm
+
+
 fun meta_all_conv cv ctxt ct =
   (case Thm.term_of ct of
-    Const ("Pure.all", _) $ _ => arg_conv (abs_conv cv ctxt) ct
+    Const ("Pure.all", _) $ _ => arg_conv (abs_conv_eta cv ctxt) ct
   | _ => raise CTERM ("meta_all_conv", [ct]))
 
 fun meta_alls_conv cv ctxt ctm =
@@ -117,29 +125,26 @@ fun meta_alls_conv cv ctxt ctm =
 fun meta_ball_conv cs cv ctxt ctm =
   (case Thm.term_of ctm of
     Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ =>
-        combination_conv (arg_conv cs) (abs_conv cv ctxt) ctm
+        combination_conv (arg_conv cs) (abs_conv_eta cv ctxt) ctm
   | _ => raise CTERM ("meta_all_conv", [ctm]))
 
 fun hol_ball_conv cs cv ctxt ctm =
   (case Thm.term_of ctm of
     Const (\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ _ =>
-        combination_conv (arg_conv cs) (abs_conv cv ctxt) ctm
+        combination_conv (arg_conv cs) (abs_conv_eta cv ctxt) ctm
   | _ => raise CTERM ("hol_ball_conv", [ctm]))
 
 fun meta_case_prod_conv cv cx ctxt ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>meta_case_prod\<close>, _) $ _ $ _ =>
-        combination_conv (arg_conv (abs_conv (fn (x,ctxt) =>
-              abs_conv (fn (y,ctxt) => cv ((x,y), ctxt)) ctxt) ctxt)) cx ctm
+        combination_conv (arg_conv (abs_conv_eta (fn (x,ctxt) =>
+              abs_conv_eta (fn (y,ctxt) => cv ((x,y), ctxt)) ctxt) ctxt)) cx ctm
      | _ => raise CTERM ("meta_case_prod_conv", [ctm])
 
 fun quant_conv head cv ctxt ct =
   (case Thm.term_of ct
-     of Const (N, _) $ Abs _ =>
-          if N = head then Conv.arg_conv (abs_conv cv ctxt) ct
-                      else raise CTERM ("quant_conv", [ct])
-      | Const (N, _) $ _ =>
-          if N = head then Conv.arg_conv (inverse_eta_conv then_conv abs_conv cv ctxt) ct
+     of Const (N, _) $ _ =>
+          if N = head then Conv.arg_conv (abs_conv_eta cv ctxt) ct
                       else raise CTERM ("quant_conv", [ct])
       | _ => raise CTERM ("quant_conv", [ct]))
 
@@ -288,7 +293,7 @@ fun premises_conv Cp Cc ctxt ctm =
      | Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
           Conv.combination_conv (Conv.arg_conv (Cp ctxt)) (premises_conv Cp Cc ctxt) ctm
      | Const (\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
-          Conv.arg_conv (abs_conv (premises_conv Cp Cc o snd) ctxt) ctm
+          Conv.arg_conv (abs_conv_eta (premises_conv Cp Cc o snd) ctxt) ctm
      | _ => Cc ctxt ctm
 
 fun recursive_premises_conv C ctxt ctm =
