@@ -515,9 +515,7 @@ lemma [\<phi>reason default %br_join_\<phi>ty-1]:
 
 paragraph \<open>By Transformation Functor\<close>
 
-definition Gen_Br_Join :: \<open> (('b, 'a) \<phi> \<Rightarrow> ('d, 'c) \<phi>)
-                         \<Rightarrow> (('b, 'g) \<phi> \<Rightarrow> ('d, 'h) \<phi>)
-                         \<Rightarrow> (('b, 'e) \<phi> \<Rightarrow> ('d, 'f) \<phi>)
+definition Gen_Br_Join :: \<open> 'a \<Rightarrow> 'b \<Rightarrow> 'c
                          \<Rightarrow> bool \<Rightarrow> bool
                          \<Rightarrow> bool \<close>
   where \<open> Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds \<equiv> True \<close>
@@ -551,6 +549,20 @@ lemma [\<phi>reason_template default %\<phi>br_join_derived]:
             meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def NO_SIMP_def
   by (cases P; clarsimp)
 
+lemma [\<phi>reason_template default %\<phi>br_join_derived]:
+  \<open> Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds \<and>   P \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F\<^sub>T F' T Z D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds \<and> \<not> P \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F\<^sub>U F' U Z D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>p. \<forall>a \<in> D\<^sub>T p x. z p (Inl a) \<in> R\<^sub>T p x) \<and>
+           (\<forall>p. \<forall>b \<in> D\<^sub>U p y. z p (Inr b) \<in> R\<^sub>U p y)
+\<Longrightarrow> (\<And>p. \<And>a \<in> (If P (Inl ` D\<^sub>T p x) (Inr ` D\<^sub>U p y)). If P (projl a \<Ztypecolon> T p) (projr a \<Ztypecolon> U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z p a \<Ztypecolon> Z p @action br_join)
+\<Longrightarrow> NO_SIMP (If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
+    (If P (fm\<^sub>T (\<lambda>p. z p o Inl) (\<lambda>_ _. True) x) (fm\<^sub>U (\<lambda>p. z p o Inr) (\<lambda>_ _. True) y)) \<Ztypecolon> F' Z @action br_join \<close>
+  unfolding Action_Tag_def Premise_def Functional_Transformation_Functor\<^sub>\<Lambda>_def Transformation_def
+            meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def NO_SIMP_def
+  by (cases P; clarsimp)
+
 let_\<phi>type Set_Abst deriving \<open>Gen_Br_Join \<S> \<S> \<S> P True\<close>
 let_\<phi>type \<phi>Composition    deriving \<open>Gen_Br_Join ((\<Zcomp>) B) ((\<Zcomp>) B') ((\<Zcomp>) B) P (B = B')\<close>
 let_\<phi>type \<phi>Mul_Quant      deriving \<open>Gen_Br_Join (\<big_ast>\<^sup>\<phi>\<^sub>0 I) (\<big_ast>\<^sup>\<phi>\<^sub>0 J) (\<big_ast>\<^sup>\<phi>\<^sub>0 (If P I J)) P True\<close>
@@ -564,6 +576,7 @@ let_\<phi>type \<phi>MapAt_L deriving \<open>Gen_Br_Join ((\<^bold>\<rightarrow>
 let_\<phi>type \<phi>Share   deriving \<open>Gen_Br_Join ((\<odiv>) n) ((\<odiv>) m) ((\<odiv>) (If P n m)) P True\<close>
 let_\<phi>type Nosep    deriving \<open>Gen_Br_Join Nosep Nosep Nosep P True\<close>
 let_\<phi>type Val      deriving \<open>Gen_Br_Join (Val v) (Val v) (Val v) P True\<close>
+
 
 (*TODO: improve simplification*)
 
