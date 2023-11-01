@@ -60,7 +60,6 @@ ML_file \<open>library/tools/ml_thms.ML\<close>
 ML_file_debug \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/reasoner_decl.ML\<close>
 ML_file \<open>library/priority_group.ML\<close>
-ML_file_debug \<open>library/helpers0.ML\<close>
 ML_file \<open>library/tools/where_tac.ML\<close>
 
 attribute_setup condition = \<open>
@@ -297,6 +296,7 @@ lemma Except_Pattern_I:
 
 
 ML_file \<open>library/syntax/embedded_pattern.ML\<close>
+ML_file_debug \<open>library/helpers0.ML\<close>
 
 
 subsubsection \<open>Meta Ball\<close>

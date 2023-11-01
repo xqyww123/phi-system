@@ -65,8 +65,14 @@ fun parse_mask masks concl =
             if N = N' then inargs else raise Match
         | filter_inargs inargs (Free (N, _), Free (N', _)) =
             if N = N' then inargs else raise Match
+        | filter_inargs inargs (Bound i, Bound j) =
+            if i = j then inargs else raise Match
         | filter_inargs _ _ = raise Match
-   in fold (fn X => fn inargs => filter_inargs inargs (concl, X) handle Match => inargs) masks []
+   in fold (fn X => fn inargs =>
+        filter_inargs inargs (apply2 Phi_Help.beta_eta_contract_term
+                                     (snd (PLPR_Syntax.strip_embedded_patterns concl), X))
+        handle Match => inargs
+      ) masks []
   end
 
 end

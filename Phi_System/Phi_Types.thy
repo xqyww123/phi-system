@@ -1326,9 +1326,13 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
         \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
                                          (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
-       and Sep_Functor_1
+       and Sep_Functor_1 
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) T U UNIV zip_fun\<close>
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) (\<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I) T U unzip_fun\<close>
+       and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
+
+term \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>\<Lambda> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Identity_Element\<^sub>I}, \<^pattern_prop>\<open>

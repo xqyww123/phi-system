@@ -969,7 +969,11 @@ fun Guess_Framework mk_goal_term_and_parse_result (phi0 : phi_type) ctxt =
                         ctxt)
         end
     | NONE => guess_fail ctxt phi (K [])
-  end
+  end handle Automation_Fail G =>
+    raise Automation_Fail (fn () => let open Pretty in
+            [para "Fail to guess the property expression"] @ G ()
+          end)
+  
 
 fun Guess_Framework' (goal_template, insts_of, parsing_rule) =
   Guess_Framework (

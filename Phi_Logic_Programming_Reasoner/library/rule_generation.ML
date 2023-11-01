@@ -196,7 +196,7 @@ fun pass_generated_rule {simp, masks} ctxt rule =
         | trim_tag (Abs (N,Ty,X)) = trim_tag X
                                  |> Option.map (fn X' => Abs (N, Ty, X'))
         | trim_tag _ = NONE
-      val concl = Thm.concl_of rule'3
+      val concl = snd (PLPR_Syntax.strip_embedded_patterns (Thm.concl_of rule'3))
       val concl' = the_default concl (trim_tag concl)
 
       val masks' = case masks of SOME M => if null M

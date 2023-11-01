@@ -451,7 +451,8 @@ fun instantiate_higher_order_var_in_antecedents' num ctxt thm =
         | get_concl X = X
       val (_, ins) = fold (fn prem => mk_HO_ins [get_concl prem])
                           (case num of ~1 => Thm.prems_of thm
-                                     | ~2 => Thm.prems_of thm @ [Thm.concl_of thm]
+                                     | ~2 => Thm.prems_of thm @
+                                             [snd (PLPR_Syntax.strip_embedded_patterns (Thm.concl_of thm))]
                                      | _  => List.take (Thm.prems_of thm, num))
                           ([],[])
   in if null ins then NONE
@@ -462,7 +463,8 @@ fun instantiate_higher_order_var_in_antecedents num ctxt thm =
   the_default thm (instantiate_higher_order_var_in_antecedents' num ctxt thm)
 
 fun instantiate_higher_order_schematic_var_for_rule' (N, fixes) ctxt rule =
-  let val vars0 = Term.add_vars (Thm.concl_of rule) []
+  let val (_, concl) = PLPR_Syntax.strip_embedded_patterns (Thm.concl_of rule)
+      val vars0 = Term.add_vars concl []
       val typs = map (fn x => case AList.lookup (op =) vars0 x
                                 of SOME ret => ret
                                  | _ => raise THM ("Not a variable occuring in the conclusion", 0, [rule])
