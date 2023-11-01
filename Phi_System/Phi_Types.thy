@@ -325,16 +325,16 @@ lemma [\<phi>reason default %\<phi>TA_guesser]:
   unfolding Guess_Property_def ..
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:
-  \<open> Guess_Zip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
-\<Longrightarrow> Guess_Zip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
+  \<open> Guess_Zip_of_Semimodule TS TC TA F (\<lambda>s x. f s x \<Ztypecolon> T' s x) Ds Dx zi ants conds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA F (\<lambda>s x. f s x \<Ztypecolon> T' s x \<phi>\<s>\<u>\<b>\<j> P s x)
                             Ds (\<lambda>s t (x,y). P s x \<and> P t y \<longrightarrow> Dx s t (x,y)) zi ants conds \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:
-  \<open> Guess_Unzip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
-\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
+  \<open> Guess_Unzip_of_Semimodule TS TC TA F (\<lambda>s x. f s x \<Ztypecolon> T' s x) Ds Dx zi ants conds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA F (\<lambda>s x. f s x \<Ztypecolon> T' s x \<phi>\<s>\<u>\<b>\<j> P s x)
                               Ds (\<lambda>s t xy. P (s + t) xy \<longrightarrow> Dx s t xy) zi ants conds \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
@@ -1233,13 +1233,13 @@ text \<open>Instead of deriving the Scalar Distributivity automatically, we give
   (it is too aggressive to enable it).\<close>
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>Z[\<phi>reason 1000]:
-  \<open> Semimodule_SDistr_Homo\<^sub>Z \<big_ast>\<^sup>\<phi> T (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
+  \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant.unfold sep_quant_scalar_distr;
       smt (verit) Mul_Quant_def Transformation_def disjoint_iff plus_set_in_iff prod.cong)
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>U[\<phi>reason 1000]:
-  \<open> Semimodule_SDistr_Homo\<^sub>U \<big_ast>\<^sup>\<phi> T (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
+  \<open> Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>U_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Mul_Quant.unfold \<phi>Prod_expn' sep_quant_scalar_distr)
 
@@ -2062,16 +2062,13 @@ lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z (\<phi>ScalarMul \<psi>) T Ds
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
                             (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
-
-ML \<open>PLPR_Template_Properties.lookup_properties_match (Context.Proof \<^context>)
-      \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z (\<phi>ScalarMul _) _ _ _ _\<close>\<close>
 
 text \<open>The domain of abstract objects constrains to ensure the two middle-level objects
   (namely, the concrete objects of \<open>T\<close> and the abstract objects of \<open>\<psi>\<close>) are identical so that
@@ -2095,7 +2092,7 @@ lemma Semimodule_SDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<phi>ScalarMul \<psi>) T Ds
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
                             (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))\<close>
   unfolding Semimodule_SDistr_Homo\<^sub>U_def Transformation_def module_S_distr_def Is_Functional_def
@@ -2120,18 +2117,18 @@ let_\<phi>type \<phi>ScalarMul deriving \<phi>ScalarMul.Comm\<^sub>I
 
 subsubsection \<open>Guessing Antecedents\<close>
 
-lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
+lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _ (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> ?T) _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Zip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA F (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) Ds
                             (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst)
                             (Functionality T Dx \<and>\<^sub>\<r> Object_Equiv T eq \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
                             True \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
-lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
+lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ _ (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> ?T) _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC\<^sub>T TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA F (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) Ds
                             (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))
                             (Functionality T Dx \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
@@ -2416,12 +2413,12 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>n. n \<odiv> ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
-    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<odiv>) ?T ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
+    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<lambda>n. n \<odiv> ?T) ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Object_Equiv ?T ?eq \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
     Carrier_Set ?T ?D\<^sub>C \<Longrightarrow>
-    Semimodule_SDistr_Homo\<^sub>Z (\<odiv>) ?T ((<) 0)
+    Semimodule_SDistr_Homo\<^sub>Z (\<lambda>n. n \<odiv> ?T) ((<) 0)
      (\<lambda>s t (x, y). ?D\<^sub>T x \<longrightarrow> ?D\<^sub>T y \<longrightarrow> ?eq x y \<and> ?Dx y \<and> ?D\<^sub>C y \<or> ?eq y x \<and> ?Dx x \<and> ?D\<^sub>C x) (\<lambda>_ _. fst)  \<close>),
   (@{thm' \<phi>Share.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E (\<odiv>) (\<odiv>) (\<odiv>) ?T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>),
   (@{thm' \<phi>Share.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I (\<odiv>) (\<odiv>) (\<odiv>) ?T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x)  \<close>),
@@ -2687,10 +2684,11 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv ?T) ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv ?T) ?T \<lbrakk>?xa : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open>
-        Semimodule_SDistr_Homo\<^sub>U \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
-                                                   (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))\<close>),
+        Semimodule_SDistr_Homo\<^sub>U (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv ?T) (\<lambda>_. True) (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
+                                                  (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))\<close>),
   (@{thm' \<phi>Mul_Quant_LenIv.Semimodule_SDistr_Homo\<^sub>Z}, \<^pattern_prop>\<open>
-        Semimodule_SDistr_Homo\<^sub>Z \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>)
+        Semimodule_SDistr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv ?T) (\<lambda>_. True)
+                                (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>)
 ]\<close>
 
 

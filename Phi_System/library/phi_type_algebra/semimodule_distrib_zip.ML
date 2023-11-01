@@ -11,14 +11,14 @@ open Phi_Type Phi_Type_Derivers
 
 fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
-              fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
-                    F1 $ Term.dummy $ T_term
-               | (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
-                    F1 $ Term.dummy $ T_term
+              fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ _ $ _ $ _) =>
+                    F1 $ Term.dummy
+               | (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ F1 $ _ $ _ $ _) =>
+                    F1 $ Term.dummy
                )
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ _ $ _ $ Ds $ Dx $ zi)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ _ $ Ds $ Dx $ zi)
             = [Ds, Dx, zi]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ _ $ _ $ Ds $ Dx $ uz)
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ _ $ Ds $ Dx $ uz)
             = [Ds, Dx, uz]
         | extract_oprs_from_hint _ = []
 

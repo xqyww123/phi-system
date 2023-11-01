@@ -229,44 +229,37 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework true (NONE,
         end)
 
 
-fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework true ( SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
-      fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, idx, F_term, eta_F_term, T_term, ctxt) =>
-        let val x_ele_ty = the x_ele_ty
-            val T_model_ty = the T_model_ty
-            val T_term = the T_term
-         in (\<^Const>\<open>Trueprop\<close> $ (
-              (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty\<close>
-                         else \<^Const>\<open>Guess_Unzip_of_Semimodule s_ty T_model_ty model_ty x_ele_ty x_ty\<close>)
+fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework false ( SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
+      fn (s_ty, _, x_ty, _, model_ty, idx, F_term, eta_F_term, _, ctxt) =>
+           (\<^Const>\<open>Trueprop\<close> $ (
+              (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty model_ty x_ty\<close>
+                         else \<^Const>\<open>Guess_Unzip_of_Semimodule s_ty model_ty x_ty\<close>)
                 $ \<^Const>\<open>Pure.type s_ty\<close>
-                $ \<^Const>\<open>Pure.type T_model_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
-                $ \<^Const>\<open>Pure.type x_ele_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ty\<close>
-                $ F_term $ eta_F_term $ T_term
+                $ F_term $ eta_F_term
                 $ Var(("scalar_domain",idx), s_ty --> HOLogic.boolT)
                 $ Var(("abstract_domain",idx), s_ty --> s_ty --> (if is_zip then \<^Type>\<open>prod x_ty x_ty\<close> else x_ty) --> HOLogic.boolT)
                 $ Var(("f", idx), s_ty --> s_ty -->
                           (if is_zip then \<^Type>\<open>prod x_ty x_ty\<close> --> x_ty else x_ty --> \<^Type>\<open>prod x_ty x_ty\<close>))
                 $ Var(("antecedents", idx), HOLogic.boolT)
                 $ Var(("conditions", idx), HOLogic.boolT)),
-            fn _ (*Trueprop*) $ (Const _ (*Guess_(Un)Zip_of_Semimodule*) $ ty_s $ ty_model_T $ ty_model $ ty_x_ele $ ty_x
-                    $ F $ _ $ T $ Ds $ Dx $ f $ ants $ conds) =>
-              let val (s_ty, T_model_ty, model_ty, x_ele_ty, x_ty) =
-                        (Logic.dest_type ty_s, Logic.dest_type ty_model_T, Logic.dest_type ty_model,
-                         Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
+            fn _ (*Trueprop*) $ (Const _ (*Guess_(Un)Zip_of_Semimodule*) $ ty_s  $ ty_model $ ty_x
+                    $ F $ _ $ Ds $ Dx $ f $ ants $ conds) =>
+              let val (s_ty, model_ty, x_ty) =
+                        (Logic.dest_type ty_s, Logic.dest_type ty_model, Logic.dest_type ty_x)
                   val xxx = Thm.cterm_of ctxt (
                               HOLogic.Trueprop $ (
-                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ele_ty T_model_ty x_ty model_ty\<close>
-                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ele_ty T_model_ty x_ty model_ty\<close>)
-                        $ F $ T $ Ds $ Dx $ f))
+                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
+                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>)
+                        $ F $ Ds $ Dx $ f))
                in (HOLogic.Trueprop $ (
-                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ele_ty T_model_ty x_ty model_ty\<close>
-                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ele_ty T_model_ty x_ty model_ty\<close>)
-                        $ F $ T $ Ds $ Dx $ f),
-                   NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
+                      (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
+                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>)
+                        $ F $ Ds $ Dx $ f),
+                   NONE :: parse_inst_params_from_phi_term (F $ Term.dummy),
                    conds, ants)
               end)
-        end
 )
 
 
