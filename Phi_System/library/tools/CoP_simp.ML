@@ -92,8 +92,8 @@ fun is_simp_needed ctxt =
       val thy = Context.theory_of ctxt
       fun apply_chk bvs tm =
         Net.match_term chkers tm
-          |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy (K false) bvs (pat,tm)
-                      | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy (K false) bvs (pat,tm)
+          |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy (K true) bvs (pat,tm)
+                      | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy (K true) bvs (pat,tm)
                                       andalso f ctxt (bvs, tm))
    in fn bvs => Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk bvs)
   end

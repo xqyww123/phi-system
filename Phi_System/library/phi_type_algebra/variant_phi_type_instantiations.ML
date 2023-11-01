@@ -32,7 +32,7 @@ val _ = Theory.setup (Context.theory_map (
 
         fun mk_variant_of_type_operator ctm =
           map_filter (mk_rule @{thm' Type_Variant_of_the_Same_Type_Operator_I} o #2)
-            (separate_type_operator_and_its_parameter_safe [] (Thm.term_of ctm))
+            (Seq.list_of (separate_tyopr_and_its_typ_param_safe [] (Thm.term_of ctm)))
 
         fun mk_variant_of_type_operator2 ctm =
           case Thm.term_of ctm
@@ -40,11 +40,18 @@ val _ = Theory.setup (Context.theory_map (
               the_list (mk_rule @{thm' Type_Variant_of_the_Same_Type_Operator2_I} F)
              | _ => []
 
-        fun mk_variant_of_scalar_mul (F $ _ $ T) =
-              if can Term.fastype_of T andalso Phi_Syntax.is_non_parameterized_phityp (Term.fastype_of T)
-              then the_list (mk_rule @{thm' Type_Variant_of_the_Same_Scalar_Mul_I} F)
-              else []
-          | mk_variant_of_scalar_mul _ = []
+        fun mk_variant_of_scalar_mul F_s_T =
+           case separate_module_tyopr [] F_s_T
+             of SOME (Var _, Var _, F) =>
+                     (*\<open>Var\<close> excludes recognizing fixed parameters of a locale to be a scalar*)
+                     the_list (mk_rule @{thm' Type_Variant_of_the_Same_Scalar_Mul_I} F) @
+                     the_list (mk_rule @{thm' Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_I'} F)
+              | _ => (
+           case separate_scalar_tyopr [] F_s_T
+             of SOME (_, Var _, F) => the_list (mk_rule @{thm' Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_I}
+                                                        (Envir.beta_eta_contract F))
+              | _ => [])
+
 
       (*fun mk_parameter_variant Fa =
           let val Fb = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm Fa + 1) Fa
@@ -64,7 +71,7 @@ val _ = Theory.setup (Context.theory_map (
                       @{lemma' \<open>Parameter_Variant_of_the_Same_Type1 Fa Fb\<close>
                            by (simp add: Parameter_Variant_of_the_Same_Type1_def)}
                 end)
-              (separate_type_operator_and_its_non_parameterized_parameter_safe (Thm.term_of ctm))
+              (separate_tyopr_and_its_non_parameterized_typ_param_safe (Thm.term_of ctm))
 *)
       (*fun mk_parameter_variants tm =
           let val d = Thm.maxidx_of_cterm tm + 1

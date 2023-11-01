@@ -17,7 +17,7 @@ open Phi_Type Phi_Type_Derivers
 
 (*
 fun make_phi_for_pair ctxt0 (x_term0, FT_term0, (phi0:phi_type)) =
-  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
+  Seq.of_list (separate_tyopr_and_its_non_parameterized_typ_param FT_term0)
     |> Seq.map (fn (T_term, F_term) =>
   let val (rev_ty_args, _, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val ([],element_ty,_) = dest_parameterized_phi_ty (hd rev_ty_args)
@@ -57,7 +57,7 @@ fun subst_ty redex_residue t =
 
 fun guess_property_SH flag (phi0:phi_type) ctxt =
   let val ((_,FT_term0), ctxt) = fix_phi_term_params phi0 ctxt
-   in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter [] FT_term0)
+   in separate_tyopr_and_its_non_parameterized_typ_param [] FT_term0
   |> Seq.maps (fn (T_term0, F_term0) =>
   let val (instTy, _, phi'1) = instantiate_phi_to_pair_x ctxt (T_term0, phi0)
 

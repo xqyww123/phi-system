@@ -19,7 +19,7 @@ fun unsupport () = raise Automation_Fail (fn () => let open Pretty in
 (*types are variables but terms are fixed*)
 fun mk_TF's_two_instantiations ctxt (FT_term, phi) =
   let val delta = maxidx_of_phi phi (maxidx_of_term FT_term) + 1
-      val (Ts, F) = separate_type_operator_and_its_parameterized_parameters [] FT_term
+      val (Ts, F) = separate_tyopr_and_its_typ_params [] FT_term
       val ele_tys = map (#2 o dest_parameterized_phi_ty o Term.fastype_of) Ts
 
       val param_typs = fold Term.add_tvarsT ele_tys []
@@ -68,7 +68,7 @@ fun mk_TF's_two_instantiations ctxt (FT_term, phi) =
    in (ants, F, F', Ts, Us, phi, inst_ty', ctxt')
   end
 (*
-  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term)
+  Seq.of_list (separate_tyopr_and_its_non_parameterized_typ_param FT_term)
   |> Seq.map (fn (T_term, F_term) => let
       val T_ty = Term.fastype_of T_term
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
@@ -86,7 +86,7 @@ fun mk_TF's_two_instantiations ctxt (FT_term, phi) =
 fun mk_TF's_two_instantiations ctxt0 (FT_term0, phi0) =
   let val (inst0, phi, ctxt) = fix_phi_type true phi0 ctxt0
       val FT_term = Term_Subst.instantiate (Phi_Help.uncertify_vars inst0) FT_term0
-   in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term)
+   in Seq.of_list (separate_tyopr_and_its_non_parameterized_typ_param FT_term)
    |> Seq.map (fn (T_term, F_term) => let
       val T_ty = Term.fastype_of T_term
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty

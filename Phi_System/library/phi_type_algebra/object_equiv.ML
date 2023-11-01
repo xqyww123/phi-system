@@ -139,7 +139,7 @@ fun guess_property_obj_eq (phi:phi_type) ctxt =
 fun guess_obj_eq_singular_None (phi0:phi_type) ctxt =
   let val thy = Proof_Context.theory_of ctxt
       val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
-   in separate_type_operator_and_its_parameter_safe FT_term0
+   in separate_tyopr_and_its_typ_param_safe FT_term0
    |> Seq.of_list
    |> Seq.map_filter (fn (T_term0, F_term0) =>
   let val (rev_args_T0,x_ty_T0,model_ty_T0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)

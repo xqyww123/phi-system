@@ -11,8 +11,8 @@ open Phi_Type Phi_Type_Derivers
 
 fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn (Const(\<^const_name>\<open>Semimodule_One\<^sub>I\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ ) => F
-             | (Const(\<^const_name>\<open>Semimodule_One\<^sub>E\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ ) => F )
+            fn (Const(\<^const_name>\<open>Semimodule_One\<^sub>I\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F
+             | (Const(\<^const_name>\<open>Semimodule_One\<^sub>E\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F )
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
         default_reasoning false default_reasoning_configure (K (K NONE))

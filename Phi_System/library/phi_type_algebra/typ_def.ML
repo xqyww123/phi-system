@@ -155,13 +155,14 @@ val is_term_of_phi : phi_type -> term -> bool (*ignores type*)
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
     (*note the T below is a \<phi>-type parameter*)
-val separate_type_operator_and_its_parameter : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) list
-val separate_type_operator_and_its_non_parameterized_parameter : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) list
-val separate_type_operator_and_its_non_parameterized_parameters : PLPR_Pattern.bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
-val separate_type_operator_and_its_parameterized_parameters : PLPR_Pattern.bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
-val separate_type_operator_and_its_parameter_safe : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) list
-val separate_type_operator_and_its_non_parameterized_parameter_safe : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) list
-val separate_tyop_semimodule_and_its_non_parameterized : PLPR_Pattern.bv_typs -> term (*F\<^sub>c(T)*) -> (term (*T*) * term (*c*) * term (*F*)) list
+val separate_tyopr_and_its_typ_param : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_tyopr_and_its_non_parameterized_typ_param : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_tyopr_and_its_non_parameterized_typ_param_safe : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_tyopr_and_its_non_parameterized_typ_params : PLPR_Pattern.bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
+val separate_tyopr_and_its_typ_params : PLPR_Pattern.bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
+val separate_tyopr_and_its_typ_param_safe : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_module_tyopr : PLPR_Pattern.bv_typs -> term (*F\<^sub>c(T)*) -> (term (*T*) * term (*c*) * term (*F*)) option
+val separate_scalar_tyopr : PLPR_Pattern.bv_typs -> term (*F\<^sub>c(T)*) -> (term option (*T*) * term (*c*) * term (*F*)) option
 
 val def_contains_satisfaction : phi_type -> bool
 
@@ -861,22 +862,24 @@ fun name_of (Free (N,_)) = N
 
 in
 
-fun gen_separate_type_operator_and_its_parameter chk bvtys FT_term =
+(*in the reversed order*)
+fun gen_separate_tyopr_and_its_typ_param chk bvtys FT_term =
   let fun split (lv, prevs, bvtys) (F $ T) =
             if chk (bvtys, T)
-            then F
+            then Seq.make (fn () =>
+                 F
               |> not (null prevs) ? (fn F =>
                       (F $ Bound lv)
                    |> fold assemble prevs 
-                   |> (fn X => Abs("T", Term.fastype_of T, X)))
-              |> (fn X => (T, X) :: split (lv, Arg T :: prevs, bvtys) F )
+                   |> (fn X => Abs("T", Term.fastype_of1 (bvtys, T), X)))
+              |> (fn X => SOME ((T, X), split (lv, Arg T :: prevs, bvtys) F)))
             else split (lv, Arg T :: prevs, bvtys) F
         | split (lv, prevs, bvtys) (Abs (N,ty,X)) = split (lv+1, Abst (N,ty)::prevs, ty::bvtys) X
-        | split _ _ = []
+        | split _ _ = Seq.empty
    in split (0, [], bvtys) (Phi_Help.beta_eta_contract_term FT_term)
   end
 
-fun gen_separate_type_operator_and_its_parameters chk bvs =
+fun gen_separate_tyopr_and_its_typ_params chk bvs =
   let fun split (lv, bvs, Ts, prevs) (F $ T) =
             if chk (bvs, T)
             then split (lv, (name_of T, Term.fastype_of T)::bvs, T :: Ts, Arg (Bound (lv + length bvs)) :: prevs) F
@@ -891,38 +894,62 @@ fun gen_separate_type_operator_and_its_parameters chk bvs =
 
 end
 
-val separate_type_operator_and_its_parameter_safe =
-  gen_separate_type_operator_and_its_parameter (can dest_parameterized_phi_ty o Term.fastype_of1)
+val separate_tyopr_and_its_typ_param_safe =
+  gen_separate_tyopr_and_its_typ_param (can dest_parameterized_phi_ty o Term.fastype_of1)
 
-val separate_type_operator_and_its_non_parameterized_parameters =
-  gen_separate_type_operator_and_its_parameters (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1 o apfst (map snd))
+val separate_tyopr_and_its_non_parameterized_typ_params =
+  gen_separate_tyopr_and_its_typ_params (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1 o apfst (map snd))
 
-val separate_type_operator_and_its_parameterized_parameters =
-  gen_separate_type_operator_and_its_parameters (can dest_parameterized_phi_ty o Term.fastype_of1 o apfst (map snd))
+val separate_tyopr_and_its_typ_params =
+  gen_separate_tyopr_and_its_typ_params (can dest_parameterized_phi_ty o Term.fastype_of1 o apfst (map snd))
 
-val separate_type_operator_and_its_non_parameterized_parameter_safe =
-  gen_separate_type_operator_and_its_parameter (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1)
+val separate_tyopr_and_its_non_parameterized_typ_param_safe =
+  gen_separate_tyopr_and_its_typ_param (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1)
 
+
+fun separate_module_tyopr bvtys tm =
+  case tm of F $ c $ T => if can dest_parameterized_phi_ty (Term.fastype_of1 (bvtys, T)) andalso
+                             not (can dest_parameterized_phi_ty (Term.fastype_of1 (bvtys, c)))
+                          then SOME (T, c, F)
+                          else NONE
+           | _ => NONE
+
+fun separate_scalar_tyopr bvtys tm =
+  case tm of F $ c $ T =>
+              let val ty_c = Term.fastype_of1 (bvtys, c)
+                  val ty_T = Term.fastype_of1 (bvtys, T)
+               in if can dest_parameterized_phi_ty ty_T andalso
+                     not (can dest_parameterized_phi_ty ty_c)
+                  then SOME (SOME T, c, Phi_Help.beta_eta_contract_term (
+                                  Abs ("\<s>", ty_c, Term.incr_boundvars 1 F $ Bound 0 $ Term.incr_boundvars 1 T)))
+                  else NONE
+              end
+           | F $ c => if can dest_parameterized_phi_ty (Term.fastype_of1 (bvtys, c))
+                      then NONE
+                      else SOME (NONE, c, F)
+           | _ => NONE
+
+(*
 fun separate_tyop_semimodule_and_its_non_parameterized bvtys tm =
-     gen_separate_type_operator_and_its_parameter (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1) bvtys tm
+     gen_separate_tyopr_and_its_typ_param (Phi_Syntax.is_non_parameterized_phityp o Term.fastype_of1) bvtys tm
   |> maps (fn (T, Fc) =>
-        gen_separate_type_operator_and_its_parameter (K true) bvtys Fc
+        gen_separate_tyopr_and_its_typ_param (K true) bvtys Fc
           |> map (fn (c, F) => (T, c, F)))
-
+*)
 
 fun warn_separate_type_operator f bvtys FT_term =
-  case f bvtys FT_term
-    of [] => raise Automation_Fail (fn () => let open Pretty in
-                [block [str "Fail to parse", brk 1,
-                        str (Term.term_name (Term.head_of FT_term)),
-                        str "as a type operator."]]
-             end)
-     | ret => ret
+  case Seq.pull (f bvtys FT_term)
+    of NONE => raise Automation_Fail (fn () => let open Pretty in
+                  [block [str "Fail to parse", brk 1,
+                          str (Term.term_name (Term.head_of FT_term)),
+                          str "as a type operator."]]
+               end)
+     | SOME (h,L) => Seq.cons h L
 
-val separate_type_operator_and_its_parameter =
-      warn_separate_type_operator separate_type_operator_and_its_parameter_safe
-val separate_type_operator_and_its_non_parameterized_parameter =
-      warn_separate_type_operator separate_type_operator_and_its_non_parameterized_parameter_safe
+val separate_tyopr_and_its_typ_param =
+      warn_separate_type_operator separate_tyopr_and_its_typ_param_safe
+val separate_tyopr_and_its_non_parameterized_typ_param =
+      warn_separate_type_operator separate_tyopr_and_its_non_parameterized_typ_param_safe
 
 fun chk_zero_index_thm thm =
   if Thm.maxidx_of thm <= 0

@@ -128,7 +128,7 @@ fun guess_ssp_top ctxt sigma_ty T =
 
 fun guess_property_SgTH phi0 ctxt =
   let val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
-   in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
+   in Seq.of_list (separate_tyopr_and_its_non_parameterized_typ_param FT_term0)
    |> Seq.map (fn (T_term0, F_term0) =>
   let val (instTy, _, phi) = instantiate_phi_to_pair_x ctxt (T_term0, phi0)
 

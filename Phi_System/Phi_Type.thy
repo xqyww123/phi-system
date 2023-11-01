@@ -490,19 +490,19 @@ definition Closed_Semimodule_Zero :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^s
   \<comment> \<open>It is actually a very strong property particularly when \<open>T\<close> is an empty \<phi>-type of empty
       abstract domain. It excludes functional homomorphism like \<open>F c T \<equiv> \<psi> c \<Zcomp>\<^sub>f T\<close>.\<close>
 
-definition Semimodule_One\<^sub>I :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                            \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a\<^sub>1) \<phi>
+definition Semimodule_One\<^sub>I :: \<open>('s \<Rightarrow> ('c,'a) \<phi>)
+                            \<Rightarrow> ('c,'a\<^sub>1) \<phi>
                             \<Rightarrow> 's \<Rightarrow> ('a\<^sub>1 \<Rightarrow> bool) \<Rightarrow> ('a\<^sub>1 \<Rightarrow> 'a) \<Rightarrow> ('a\<^sub>1 \<Rightarrow> bool)
                             \<Rightarrow> bool\<close>
-  where \<open>Semimodule_One\<^sub>I F T T\<^sub>1 one D f P \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P x))\<close>
+  where \<open>Semimodule_One\<^sub>I F T\<^sub>1 one D f P \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one \<w>\<i>\<t>\<h> P x))\<close>
   \<comment> \<open>Domain information should be given in types. The unit scalar \<open>one\<close> belongs to domain info.
       So, the value of \<open>one\<close> should be able to be determined solely from \<open>T\<^sub>1\<close> and \<open>F\<close>, but no \<open>x\<close>.\<close>
 
-definition Semimodule_One\<^sub>E :: \<open>('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                            \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a\<^sub>1) \<phi>
+definition Semimodule_One\<^sub>E :: \<open>('s \<Rightarrow> ('c,'a) \<phi>)
+                            \<Rightarrow> ('c,'a\<^sub>1) \<phi>
                             \<Rightarrow> 's \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a\<^sub>1) \<Rightarrow> ('a \<Rightarrow> bool)
                             \<Rightarrow> bool\<close>
-  where \<open>Semimodule_One\<^sub>E F T T\<^sub>1 one D f P \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P x))\<close>
+  where \<open>Semimodule_One\<^sub>E F T\<^sub>1 one D f P \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F one \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P x))\<close>
 
 (* no need, as covered by the rule of \<open>individual \<rightarrow> segment\<close>
 definition Semimodule_Cons :: \<open> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c::sep_magma,'a) \<phi>) \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a\<^sub>1) \<phi>
@@ -858,8 +858,8 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_Zero _ _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Closed_Semimodule_Zero _ _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_One\<^sub>I _ _ _ _ _ _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_One\<^sub>E _ _ _ _ _ _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_One\<^sub>I _ _ _ _ _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_One\<^sub>E _ _ _ _ _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
@@ -972,8 +972,8 @@ in (*Phi_Type.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\
   \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_Zero _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_One\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_One\<^sub>E _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_One\<^sub>I _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_One\<^sub>E _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
@@ -1812,6 +1812,10 @@ definition Type_Variant_of_the_Same_Type_Operator2
      This is for performance. For other interpretations, user may provide the rule of
       \<open>Type_Variant_of_the_Same_Type_Operator2\<close> manually.\<close>
 
+definition Type_Variant_of_the_Same_Scalar_Mul\<^sub>0
+        :: \<open> ('s \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('s2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
+  where \<open> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 Fa Fb \<longleftrightarrow> True \<close>
+
 definition Type_Variant_of_the_Same_Scalar_Mul
         :: \<open> ('s \<Rightarrow> 'a \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('s2 \<Rightarrow> 'a2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
   where \<open> Type_Variant_of_the_Same_Scalar_Mul Fa Fb \<longleftrightarrow> True \<close>
@@ -1826,10 +1830,21 @@ definition Parameter_Variant_of_the_Same_Type1 :: \<open> ('p \<Rightarrow> ('a,
 *)
 declare [[
   \<phi>reason_default_pattern
-      \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> (100)
-  and \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa _\<close> (100)
-  and \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa _\<close> (100)
-  and \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> (100)
+      \<open>Type_Variant_of_the_Same_Type_Operator ?Fa ?Fb\<close> \<Rightarrow>
+      \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close>
+      \<open>Type_Variant_of_the_Same_Type_Operator _ ?Fb\<close>    (100)
+  and \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa ?Fb\<close> \<Rightarrow>
+      \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa _\<close>
+      \<open>Type_Variant_of_the_Same_Type_Operator2 _ ?Fb\<close>   (100)
+  and \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa ?Fb\<close> \<Rightarrow>
+      \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa _\<close>
+      \<open>Type_Variant_of_the_Same_Scalar_Mul _ ?Fb\<close>       (100)
+  and \<open>Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 ?Fa ?Fb\<close> \<Rightarrow>
+      \<open>Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 ?Fa _\<close>
+      \<open>Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 _ ?Fb\<close>      (100)
+  and \<open>Parameter_Variant_of_the_Same_Type ?Fa ?Fb\<close> \<Rightarrow>
+      \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close>
+      \<open>Parameter_Variant_of_the_Same_Type _ ?Fb\<close>        (100)
   (*and \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> (100)*)
   
   (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Type_Variant_of_the_Same_Type_Operator _ _\<close> *)
@@ -1839,6 +1854,7 @@ declare [[
 \<phi>reasoner_group variants_of_type_opr = (%cutting, [%cutting, %cutting])
   for (\<open>Type_Variant_of_the_Same_Type_Operator F F'\<close>,
        \<open>Type_Variant_of_the_Same_Type_Operator2 F F'\<close>,
+       \<open>Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F F'\<close>,
        \<open>Type_Variant_of_the_Same_Scalar_Mul F F'\<close>,
        \<open>Parameter_Variant_of_the_Same_Type F F'\<close>)
   \<open>variants_of_type_opr\<close>
@@ -1859,6 +1875,15 @@ lemma Type_Variant_of_the_Same_Type_Operator2_I:
 lemma Type_Variant_of_the_Same_Scalar_Mul_I:
   \<open>Type_Variant_of_the_Same_Scalar_Mul Fa Fb\<close>
   unfolding Type_Variant_of_the_Same_Scalar_Mul_def ..
+
+lemma Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_I:
+  \<open>Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 Fa Fb\<close>
+  unfolding Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def ..
+
+lemma Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_I':
+  \<open> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 (\<lambda>s. Fa s T) (\<lambda>s. Fb s U) \<close>
+  unfolding Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def ..
+
                     
 ML_file \<open>library/phi_type_algebra/variant_phi_type_instantiations.ML\<close>
 
@@ -1867,6 +1892,7 @@ setup \<open>
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator2 _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul _ _\<close>,
+    \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 _ _\<close>,
     \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type _ _\<close>
   (*\<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type1 _ _\<close>*)
   ]
@@ -2625,39 +2651,39 @@ subsubsection \<open>One\<close>
 paragraph \<open>Rewrites Eliminating Identity Scalar\<close>
 
 lemma [\<phi>reason_template name F.scalar_one_ty [assertion_simps, simp]]:
-  \<open> Semimodule_One\<^sub>I F T T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>I
-\<Longrightarrow> Semimodule_One\<^sub>E F T T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>E
-\<Longrightarrow> F one T = T\<^sub>1 \<close>
+  \<open> Semimodule_One\<^sub>I F T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>I
+\<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>E
+\<Longrightarrow> F one = T\<^sub>1 \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def
   by (rule \<phi>Type_eqI_Tr; clarsimp simp add: Transformation_def)
 
 lemma [\<phi>reason_template name F.scalar_one_ty' [assertion_simps, simp]]:
-  \<open> Semimodule_One\<^sub>I F T T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>I
-\<Longrightarrow> Semimodule_One\<^sub>E F T T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>E
+  \<open> Semimodule_One\<^sub>I F T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>I
+\<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>E
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
-\<Longrightarrow> F one' T = T\<^sub>1 \<close>
+\<Longrightarrow> F one' = T\<^sub>1 \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def Simplify_def Action_Tag_def
   by (rule \<phi>Type_eqI_Tr; clarsimp simp add: Transformation_def)
 
 lemma [\<phi>reason_template name F.scalar_one [assertion_simps, simp]]:
-  \<open> Semimodule_One\<^sub>I F T T\<^sub>1 one D\<^sub>I f P\<^sub>I
-\<Longrightarrow> Semimodule_One\<^sub>E F T T\<^sub>1 one D\<^sub>E g P\<^sub>E
-\<Longrightarrow> Object_Equiv (F one T) eq @action \<A>_template_reason
+  \<open> Semimodule_One\<^sub>I F T\<^sub>1 one D\<^sub>I f P\<^sub>I
+\<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one D\<^sub>E g P\<^sub>E
+\<Longrightarrow> Object_Equiv (F one) eq @action \<A>_template_reason
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D\<^sub>E x \<and> D\<^sub>I (g x) \<and> eq (f (g x)) x
-\<Longrightarrow> (x \<Ztypecolon> F one T) = (g x \<Ztypecolon> T\<^sub>1) \<close>
+\<Longrightarrow> (x \<Ztypecolon> F one) = (g x \<Ztypecolon> T\<^sub>1) \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def BI_eq_iff Transformation_def Premise_def
             Object_Equiv_def Action_Tag_def
   by (clarsimp; metis)
 
 lemma [\<phi>reason_template name F.scalar_one' [assertion_simps, simp]]:
-  \<open> Semimodule_One\<^sub>I F T T\<^sub>1 one D\<^sub>I f P\<^sub>I
-\<Longrightarrow> Semimodule_One\<^sub>E F T T\<^sub>1 one D\<^sub>E g P\<^sub>E
+  \<open> Semimodule_One\<^sub>I F T\<^sub>1 one D\<^sub>I f P\<^sub>I
+\<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one D\<^sub>E g P\<^sub>E
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
-\<Longrightarrow> Object_Equiv (F one T) eq @action \<A>_template_reason
+\<Longrightarrow> Object_Equiv (F one) eq @action \<A>_template_reason
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D\<^sub>E x \<and> D\<^sub>I (g x) \<and> eq (f (g x)) x
-\<Longrightarrow> (x \<Ztypecolon> F one' T) = (g x \<Ztypecolon> T\<^sub>1) \<close>
+\<Longrightarrow> (x \<Ztypecolon> F one') = (g x \<Ztypecolon> T\<^sub>1) \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def BI_eq_iff Transformation_def Premise_def
             Simplify_def Action_Tag_def Object_Equiv_def
   by (clarsimp; metis)
@@ -2710,54 +2736,54 @@ paragraph \<open>ToA Eliminating Identity Scalar\<close>
 subparagraph \<open>Implementation\<close>
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D\<^sub>E g P\<^sub>E
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D\<^sub>E g P\<^sub>E
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one' = one
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D\<^sub>E x
 \<Longrightarrow> NO_SIMP (g x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> x \<Ztypecolon> F one' T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x
-      <except-pattern> x \<Ztypecolon> F (introduced one') T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY \<w>\<i>\<t>\<h> PPP \<close>
+\<Longrightarrow> x \<Ztypecolon> F one' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x
+      <except-pattern> x \<Ztypecolon> F (introduced one') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY \<w>\<i>\<t>\<h> PPP \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def
             Transformation_def Except_Pattern_def
   by (clarsimp; metis)
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D\<^sub>E g P\<^sub>E
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D\<^sub>E g P\<^sub>E
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one' = one
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D\<^sub>E x
 \<Longrightarrow> NO_SIMP (R * (g x \<Ztypecolon> T\<^sub>1) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> R * (x \<Ztypecolon> F one' T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x
-      <except-pattern> RRR * (x \<Ztypecolon> F (introduced one') T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY \<w>\<i>\<t>\<h> PPP \<close>
+\<Longrightarrow> R * (x \<Ztypecolon> F one') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x
+      <except-pattern> RRR * (x \<Ztypecolon> F (introduced one')) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY \<w>\<i>\<t>\<h> PPP \<close>
   unfolding Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def Except_Pattern_def
   by (clarsimp; metis)
   \<comment> \<open>the rule is invoked only once for each \<phi>-type in the source, so no problem to invoke the
       simple tactic for each time.\<close>
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D g P\<^sub>E
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D g P\<^sub>E
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (apfst g x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> x \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x) \<close>
+\<Longrightarrow> x \<Ztypecolon> F one \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x) \<close>
   unfolding Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def Except_Pattern_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn'; metis)
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D g P\<^sub>E
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D g P\<^sub>E
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (apfst g x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> x \<Ztypecolon> F one' T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x) \<close>
+\<Longrightarrow> x \<Ztypecolon> F one' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x) \<close>
   unfolding Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Simplify_def Action_Tag_def
             Transformation_def Except_Pattern_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn'; metis)
 
 lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D g P\<^sub>E
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D g P\<^sub>E
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one' = one
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (apfst g x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> x \<Ztypecolon> F one' T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x)
-      <except-pattern> x \<Ztypecolon> F (introduced one') T \<^emph>[CCC] WWW \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY \<w>\<i>\<t>\<h> PPP \<close>
+\<Longrightarrow> x \<Ztypecolon> F one' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x)
+      <except-pattern> x \<Ztypecolon> F (introduced one') \<^emph>[CCC] WWW \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY \<w>\<i>\<t>\<h> PPP \<close>
   unfolding Semimodule_One\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def Except_Pattern_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn'; metis)
 
@@ -2766,59 +2792,59 @@ lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
 
 
 lemma [\<phi>reason_template default %ToA_derived_red name F.aaa]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one' = one
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one' T \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
-      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' T \<w>\<i>\<t>\<h> PP
-      <except-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x'' \<Ztypecolon> F (introduced one') T \<w>\<i>\<t>\<h> PP \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one' \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
+      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' \<w>\<i>\<t>\<h> PP
+      <except-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x'' \<Ztypecolon> F (introduced one') \<w>\<i>\<t>\<h> PP \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Except_Pattern_def
             Transformation_def With_Pattern_def
   by (simp; metis)
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one' = one
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one' T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
-      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> PP
-      <except-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x'' \<Ztypecolon> F (introduced one') T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> PP \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
+      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> PP
+      <except-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x'' \<Ztypecolon> F (introduced one') \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> PP \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def
             With_Pattern_def Except_Pattern_def
   by (cases C; clarsimp; metis)
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
-      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one T \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
+      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def With_Pattern_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn'; metis)
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one' T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
-      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' T \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one' \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
+      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Simplify_def Action_Tag_def
             Transformation_def With_Pattern_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn'; metis)
 
 lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one' = one
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one' T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
-      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' T \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP
-      <except-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x'' \<Ztypecolon> F (introduced one') T \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one' \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
+      <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one' \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP
+      <except-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x'' \<Ztypecolon> F (introduced one') \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP \<close>
   unfolding Semimodule_One\<^sub>I_def NO_SIMP_def \<r>Guard_def Premise_def Transformation_def
             With_Pattern_def Except_Pattern_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn'; metis)
@@ -2897,7 +2923,7 @@ text \<open>The difficulty of reasoning \<phi>-type transformations lies in the 
 
 subparagraph \<open>Preliminary\<close>
 
-consts restore_from_semimodule :: \<open>bool \<Rightarrow> ('s \<Rightarrow> ('c, 'b) \<phi> \<Rightarrow> ('e, 'd) \<phi>) \<Rightarrow> action\<close> 
+consts restore_from_semimodule :: \<open>bool \<Rightarrow> ('s \<Rightarrow> ('e, 'd) \<phi>) \<Rightarrow> action\<close> 
 
 declare [[ \<phi>reason_default_pattern
      \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _ @action restore_from_semimodule True ?F\<close> \<Rightarrow>
@@ -2912,16 +2938,16 @@ declare [[ \<phi>reason_default_pattern
    lifted semimodule back to the original \<phi>-type, by unwrapping the scalar one. \<close>
 
 lemma [\<phi>reason %restore_from_semimodule+1]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F (introduced one) T @action restore_from_semimodule True F \<close>
+\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F (introduced one) @action restore_from_semimodule True F \<close>
   unfolding Semimodule_One\<^sub>I_def Action_Tag_def Transformation_def Premise_def \<r>Guard_def
   by simp
 
 lemma [\<phi>reason %restore_from_semimodule+1]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D f P\<^sub>E
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> x \<Ztypecolon> F (introduced one) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 @action restore_from_semimodule False F \<close>
+\<Longrightarrow> x \<Ztypecolon> F (introduced one) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 @action restore_from_semimodule False F \<close>
   unfolding Semimodule_One\<^sub>E_def Action_Tag_def Transformation_def Premise_def \<r>Guard_def
   by simp
 
@@ -2933,64 +2959,65 @@ lemma [\<phi>reason %restore_from_semimodule for \<open>_ \<t>\<r>\<a>\<n>\<s>\<
 
 subparagraph \<open>Main\<close>
 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module name F'.xxx]:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
-\<Longrightarrow> NO_SIMP (\<g>\<u>\<a>\<r>\<d> f x \<Ztypecolon> F (introduced one) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F F'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
+\<Longrightarrow> NO_SIMP (f x \<Ztypecolon> F (introduced one) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b \<w>\<i>\<t>\<h> P)
       \<comment> \<open>the \<open>introduced\<close> here protects the lifted semimodule from being reduced immediately\<close>
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
-      <except-pattern> xx \<Ztypecolon> F aa TT \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<w>\<i>\<t>\<h> PP \<close>
+\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
+      <except-pattern> xx \<Ztypecolon> F aa \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b \<w>\<i>\<t>\<h> PP \<close>
   unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def NO_SIMP_def
             Except_Pattern_def
   by simp blast
  
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F F'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I
-\<Longrightarrow> NO_SIMP ((f (fst x), w) \<Ztypecolon> F (introduced one) T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F F'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
+\<Longrightarrow> NO_SIMP ((f (fst x), w) \<Ztypecolon> F (introduced one) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (
     if C then (snd x \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W  @action restore_from_semimodule True F)
          else (w, W') = (snd x, W))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
-\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
-      <except-pattern> xx \<Ztypecolon> F aa TT \<^emph>[C] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
+      <except-pattern> xx \<Ztypecolon> F aa \<^emph>[C] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' b \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>R; clarsimp; metis)
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
-\<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (introduced one) T \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D f P\<^sub>E
+\<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (introduced one) \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x
-      <except-pattern> y \<Ztypecolon> F' a U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xx \<Ztypecolon> F bb TT \<w>\<i>\<t>\<h> PP \<close>
+\<Longrightarrow> y \<Ztypecolon> F' a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P \<and> P\<^sub>E x
+      <except-pattern> y \<Ztypecolon> F' a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xx \<Ztypecolon> F bb \<w>\<i>\<t>\<h> PP \<close>
   unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def NO_SIMP_def
             Except_Pattern_def
   by simp blast
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one T)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul F' F
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E
-\<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (introduced one) T \<^emph>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D f P\<^sub>E
+\<Longrightarrow> NO_SIMP (y \<Ztypecolon> F' a \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (introduced one) \<^emph>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (
     if C then (snd x \<Ztypecolon> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> r \<Ztypecolon> R' @action restore_from_semimodule False F)
          else (r, R') = (r, R))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
-\<Longrightarrow> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f (fst x), r) \<Ztypecolon> T\<^sub>1 \<^emph>[C] R' \<w>\<i>\<t>\<h> P
-      <except-pattern> y \<Ztypecolon> F' a U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xx \<Ztypecolon> F bb TT \<^emph>[C] R' \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> y \<Ztypecolon> F' a \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f (fst x), r) \<Ztypecolon> T\<^sub>1 \<^emph>[C] R' \<w>\<i>\<t>\<h> P
+      <except-pattern> y \<Ztypecolon> F' a \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xx \<Ztypecolon> F bb \<^emph>[C] R' \<w>\<i>\<t>\<h> P \<close>
   unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
+
 
 
 subsubsection \<open>Extended Associative\<close>
@@ -5472,9 +5499,9 @@ definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itsel
                               \<Rightarrow> bool \<close>
   where \<open>Guess_Scalar_Zero _ _ _ _ _ F unfolded_F T zero ants conds \<equiv> True\<close>
 
-definition Guess_Scalar_One\<^sub>I :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
-                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+definition Guess_Scalar_One\<^sub>I :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow>'a itself
+                              \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
+                              \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
                               \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                               \<Rightarrow> ('c,'a\<^sub>1) \<phi>
                               \<Rightarrow> 's \<Rightarrow> ('a\<^sub>1 \<Rightarrow> bool) \<Rightarrow> ('a\<^sub>1 \<Rightarrow> 'a) \<Rightarrow> ('a\<^sub>1 \<Rightarrow> bool)
@@ -5482,10 +5509,9 @@ definition Guess_Scalar_One\<^sub>I :: \<open> 's itself \<Rightarrow> 'c\<^sub>
                               \<Rightarrow> bool \<close>
   where \<open>Guess_Scalar_One\<^sub>I _ _ _ _ _ F unfolded_F T T\<^sub>1 one Dx f P ants conds \<equiv> True\<close>
 
-
-definition Guess_Scalar_One\<^sub>E :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
-                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                              \<Rightarrow> ('s \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+definition Guess_Scalar_One\<^sub>E :: \<open> 's itself \<Rightarrow> 'c\<^sub>T itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself => 'a itself
+                              \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
+                              \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
                               \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                               \<Rightarrow> ('c,'a\<^sub>1) \<phi>
                               \<Rightarrow> 's \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a\<^sub>1) \<Rightarrow> ('a \<Rightarrow> bool)
@@ -5570,12 +5596,12 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 \<Longrightarrow> Guess_Scalar_Zero TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T z ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
+  \<open> (\<And>s x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s x) : (x \<Ztypecolon> F s) )
 \<Longrightarrow> Guess_Scalar_One\<^sub>I TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T T\<^sub>1 one Dx f P ants conds
 \<Longrightarrow> Guess_Scalar_One\<^sub>I TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T T\<^sub>1 one Dx f P ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
+  \<open> (\<And>s x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s x) : (x \<Ztypecolon> F s) )
 \<Longrightarrow> Guess_Scalar_One\<^sub>E TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T T\<^sub>1 one Dx f P ants conds
 \<Longrightarrow> Guess_Scalar_One\<^sub>E TS TC\<^sub>T TC TA\<^sub>T TA F var_unfolded_F T T\<^sub>1 one Dx f P ants conds\<close> .
 
@@ -5641,12 +5667,12 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Scalar_One\<^sub>I TYPE('i set) TYPE('c) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<Rightarrow> 'a)
-                     F (\<lambda>s T x. \<big_ast> (A s T x) s) T T {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True) True True\<close>
+                     F (\<lambda>s x. \<big_ast> (A s x) s) T T {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True) True True\<close>
   unfolding Guess_Scalar_One\<^sub>I_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Scalar_One\<^sub>E TYPE('i set) TYPE('c) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<Rightarrow> 'a)
-                     F (\<lambda>s T x. \<big_ast> (A s T x) s) T T {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True) True True\<close>
+                     F (\<lambda>s x. \<big_ast> (A s x) s) T T {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True) True True\<close>
   unfolding Guess_Scalar_One\<^sub>E_def ..
 
 
@@ -5797,22 +5823,22 @@ context begin
 private lemma \<phi>TA_MI\<^sub>E_rule:
   \<open> (\<And>x. Ant
       \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x
-      \<longrightarrow> (x \<Ztypecolon> F one T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>E x) @action \<phi>TA_ind_target NToA)
+      \<longrightarrow> (x \<Ztypecolon> F one \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>E x) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Semimodule_One\<^sub>E F T T\<^sub>1 one D f P\<^sub>E \<close>
+\<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one D f P\<^sub>E \<close>
   unfolding Semimodule_One\<^sub>E_def Action_Tag_def Premise_def Transformation_def
   by (clarsimp; metis)
 
 private lemma \<phi>TA_MI\<^sub>I_rule:
   \<open> (\<And>x. Ant
       \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x
-      \<longrightarrow> (x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P\<^sub>I x) @action \<phi>TA_ind_target NToA)
+      \<longrightarrow> (x \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one \<w>\<i>\<t>\<h> P\<^sub>I x) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Semimodule_One\<^sub>I F T T\<^sub>1 one D f P\<^sub>I \<close>
+\<Longrightarrow> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I \<close>
   unfolding Semimodule_One\<^sub>I_def Action_Tag_def Premise_def Transformation_def
   by (clarsimp; metis)
 
@@ -5820,10 +5846,10 @@ ML_file \<open>library/phi_type_algebra/semimodule_identity.ML\<close>
 
 end
 
-\<phi>property_deriver Semimodule_One\<^sub>I 130 for (\<open>Semimodule_One\<^sub>I _ _ _ _ _ _ _\<close>)
+\<phi>property_deriver Semimodule_One\<^sub>I 130 for (\<open>Semimodule_One\<^sub>I _ _ _ _ _ _\<close>)
     = \<open>Phi_Type_Derivers.semimodule_identity_I\<close>
 
-\<phi>property_deriver Semimodule_One\<^sub>E 130 for (\<open>Semimodule_One\<^sub>E _ _ _ _ _ _ _\<close>)
+\<phi>property_deriver Semimodule_One\<^sub>E 130 for (\<open>Semimodule_One\<^sub>E _ _ _ _ _ _\<close>)
     = \<open>Phi_Type_Derivers.semimodule_identity_E\<close>
 
 \<phi>property_deriver Semimodule_One 131
