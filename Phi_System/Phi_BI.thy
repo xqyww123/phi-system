@@ -4201,6 +4201,9 @@ lemmas [assertion_simps_source] =
 lemmas [assertion_simps_target] =
   sep_quant_sep[symmetric]
 
+lemmas [\<phi>programming_simps] =
+  mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
+
 simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
   = \<open>fn _ => fn ctxt => fn ctm =>
       case Thm.term_of ctm

@@ -1304,101 +1304,6 @@ thm \<phi>Mul_Quant_insert
 thm Tr2
 *)
 
-subsection \<open>Parameterized FMQ\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
-    
-\<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
-  where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
-  deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
-        \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x y. \<forall>i \<in> I. eq i (x i) (y i))\<close>
-       and \<open>(\<And>i. Carrier_Set (T i) (P i)) \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
-                \<comment> \<open>the guesser fails to realize the \<open>P\<close> can be parameterized, which is a specific
-                    feature of \<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>\<close>
-       and \<open>(\<And>i. Functionality (T i) (P i)) \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
-       and \<open> (\<And>i. Abstract_Domain (T i) (P i))
-        \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i\<in>I. P i (x i)) \<close>  
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
-        \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
-       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
-        \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
-                                         (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
-           \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
-       and Sep_Functor_1
-       and Semimodule_NonAssoc
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
-       and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
-       and \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
-       and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
-       and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
-
-thm \<phi>Mul_Quant\<^sub>\<Lambda>.aaa
-
-ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U UNIV zip_fun \<close>),
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U unzip_fun \<close>)
-]\<close>
-
-subsubsection \<open>Syntax\<close>
-
-syntax
-  "_\<phi>Mul_Quant"  :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_]/ _)" [49, 1000] 1000)
-
-consts "\<phi>Mul_Quant'" :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd"
-
-print_ast_translation \<open> let open Ast
-  fun append (Appl L) x = Appl (L @ [x])
-    | append X x = Appl [X, x]
-in [(\<^const_syntax>\<open>\<phi>Type\<close>, fn ctxt =>
-  fn [Appl [Constant \<^syntax_const>\<open>_abs\<close>,
-            Appl [Constant \<^syntax_const>\<open>_constrain\<close>, Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vi], _],
-            fx],
-      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom,
-            Appl [Constant \<^syntax_const>\<open>_abs\<close>,
-                  Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vjb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vj], _],
-                  fT]]]
-    => let fun subst (Variable v) = if v = vi then SOME (Variable vj) else NONE
-             | subst (Appl L) =
-                  let fun mapL [] = NONE
-                        | mapL (x::L) = case (subst x, mapL L)
-                                          of (SOME x', SOME L') => SOME (x'::L')
-                                           | (SOME x', NONE) => SOME (x'::L)
-                                           | (NONE, SOME L') => SOME (x::L')
-                                           | (NONE, NONE) => NONE
-                   in Option.map Appl (mapL L)
-                  end
-             | subst _ = NONE
-           val fx' = if vi = vj then fx else the_default fx (subst fx)
-        in Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
-                 fx',
-                 Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
-                       Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vjb, Dom],
-                       fT]]
-       end
-   | [Appl [Constant \<^syntax_const>\<open>_abs\<close>,
-            Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vxb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vi], _],
-            fx],
-      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom, T]]
-    => Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, fx,
-             Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
-                   Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vxb, Dom], append T vxb]]
-   | [x,
-      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom,
-            Appl [Constant \<^syntax_const>\<open>_abs\<close>,
-                  Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vjb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vj], _],
-                  fT]]]
-    => Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, append x vjb,
-             Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
-                   Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vjb, Dom],
-                   fT]]
-)] end \<close>
-
-translations
-  "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" => "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant\<^sub>\<Lambda> I (\<lambda>i. T))"
-
 
 subsection \<open>Sum Type\<close>
 
@@ -2694,6 +2599,139 @@ translations
 
 section \<open>Derivatives\<close>
 
+subsection \<open>Parameterized FMQ\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
+    
+\<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
+  where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
+  deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
+        \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x y. \<forall>i \<in> I. eq i (x i) (y i))\<close>
+       and \<open>(\<And>i. Carrier_Set (T i) (P i)) \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+                \<comment> \<open>the guesser fails to realize the \<open>P\<close> can be parameterized, which is a specific
+                    feature of \<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>\<close>
+       and \<open>(\<And>i. Functionality (T i) (P i)) \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P i (x i)) \<close>
+       and \<open> (\<And>i. Abstract_Domain (T i) (P i))
+        \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i\<in>I. P i (x i)) \<close>  
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
+        \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g i (x i) (y i)) \<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J
+        \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
+                                         (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
+           \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
+       and Sep_Functor_1
+       and Semimodule_NonAssoc
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
+       and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
+       and \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
+       and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
+       and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U UNIV zip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U unzip_fun \<close>)
+]\<close>
+
+subsubsection \<open>Syntax\<close>
+
+syntax
+  "_\<phi>Mul_Quant"  :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_]/ _)" [49, 1000] 1000)
+
+consts "\<phi>Mul_Quant'" :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd"
+
+print_ast_translation \<open> let open Ast
+  fun append (Appl L) x = Appl (L @ [x])
+    | append X x = Appl [X, x]
+in [(\<^const_syntax>\<open>\<phi>Type\<close>, fn ctxt =>
+  fn [Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+            Appl [Constant \<^syntax_const>\<open>_constrain\<close>, Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vi], _],
+            fx],
+      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom,
+            Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+                  Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vjb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vj], _],
+                  fT]]]
+    => let fun subst (Variable v) = if v = vi then SOME (Variable vj) else NONE
+             | subst (Appl L) =
+                  let fun mapL [] = NONE
+                        | mapL (x::L) = case (subst x, mapL L)
+                                          of (SOME x', SOME L') => SOME (x'::L')
+                                           | (SOME x', NONE) => SOME (x'::L)
+                                           | (NONE, SOME L') => SOME (x::L')
+                                           | (NONE, NONE) => NONE
+                   in Option.map Appl (mapL L)
+                  end
+             | subst _ = NONE
+           val fx' = if vi = vj then fx else the_default fx (subst fx)
+        in Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
+                 fx',
+                 Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
+                       Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vjb, Dom],
+                       fT]]
+       end
+   | [Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+            Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vxb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vi], _],
+            fx],
+      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom, T]]
+    => Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, fx,
+             Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
+                   Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vxb, Dom], append T vxb]]
+   | [x,
+      Appl [Constant \<^const_syntax>\<open>\<phi>Mul_Quant\<^sub>\<Lambda>\<close>, Dom,
+            Appl [Constant \<^syntax_const>\<open>_abs\<close>,
+                  Appl [Constant \<^syntax_const>\<open>_constrain\<close>, vjb as Appl [Constant \<^syntax_const>\<open>_bound\<close>, Variable vj], _],
+                  fT]]]
+    => Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, append x vjb,
+             Appl [Constant \<^syntax_const>\<open>_\<phi>Mul_Quant\<close>,
+                   Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vjb, Dom],
+                   fT]]
+)] end \<close>
+
+translations
+  "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" => "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant\<^sub>\<Lambda> I (\<lambda>i. T))"
+
+
+subsubsection \<open>Reasoning\<close>
+
+lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_src:
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' i = fst y \<and> i \<in> I \<longrightarrow> ((fst x, w) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U i \<^emph>[C\<^sub>R] R i \<w>\<i>\<t>\<h> P))
+       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y' i = fst y
+\<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W) = ((w, y') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sup>\<phi> (I - {i}) U)) @action \<A>merge
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[C\<^sub>W'] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<big_ast>\<^sup>\<phi> I U \<^emph>[C\<^sub>R] R i \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
+  apply (simp add: cond_prod_transformation_rewr,
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+  \<medium_left_bracket> premises Tr and _ and _ and []
+    Tr
+  \<medium_right_bracket> .
+
+lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_tgt:
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I \<longrightarrow> ((fst x i, snd x) \<Ztypecolon> T i \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P))
+       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I)
+\<Longrightarrow> ((snd y, fst x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>R] R \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sup>\<phi> (I - {i}) T) = (r \<Ztypecolon> \<half_blkcirc>[C\<^sub>R'] R') @action \<A>merge
+\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> U \<^emph>[C\<^sub>R'] R' \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
+  apply (simp add: cond_prod_transformation_rewr,
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+  \<medium_left_bracket> premises Tr and _ and [THEN eq_right_frame, simp]
+    Tr
+  \<medium_right_bracket> .
+
+
+declare \<phi>Mul_Quant\<^sub>\<Lambda>.wrap_module_src[\<phi>reason del]
+        \<phi>Mul_Quant\<^sub>\<Lambda>.wrap_module_tgt[\<phi>reason del]
+
+declare \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_src[\<phi>reason default %derived_SE_inj_to_module]
+        \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_tgt[\<phi>reason default %derived_SE_inj_to_module]
+
+hide_fact \<phi>Mul_Quant\<^sub>\<Lambda>.wrap_module_src
+          \<phi>Mul_Quant\<^sub>\<Lambda>.wrap_module_tgt
+
+
+
 subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
@@ -3211,47 +3249,6 @@ definition \<phi>F_simulation
     \<comment> \<open>Forward Simulation\<close>
   where \<open>(T \<Rrightarrow>\<^sub>r U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>u y. (v,u) \<in> g \<and> (x,y) \<in> f \<and> u \<in> (y \<Ztypecolon> U)) })\<close>
  
- 
-locale test =
-  fixes param :: nat
-begin
-
-\<phi>type_def AA
-  where \<open>(0 \<Ztypecolon> AA) = (param \<Ztypecolon> Itself)\<close>
-      | \<open>(Suc n \<Ztypecolon> AA) = (n \<Ztypecolon> AA)\<close>
- 
-\<phi>type_def XX
-  where \<open>x \<Ztypecolon> XX \<equiv> (x + param \<Ztypecolon> Itself)\<close>
-  deriving Basic
-
-term XX
-
-end
- 
-interpretation x1: test 1 .
-interpretation x2: test 2 .
-
-thm x1.XX.Object_Equiv
-thm x2.XX.Object_Equiv
-
-declare [[\<phi>trace_reasoning = 2]]
-
-lemma
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
-\<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
-  \<medium_left_bracket> \<medium_right_bracket> .
-
-lemma
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
-\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (T i)) * (f i \<Ztypecolon> T i) \<close>
-  \<medium_left_bracket> \<medium_right_bracket> .
-
-(*
-lemma
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> i \<noteq> j
-\<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>[i\<in>S - {i, j}] (\<Sigma> T)) * (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) \<close>
-  \<medium_left_bracket> \<medium_right_bracket> .
-*)
 
 
 end

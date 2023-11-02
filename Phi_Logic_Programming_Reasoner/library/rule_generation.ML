@@ -286,6 +286,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
           val pattern = pattern_of action
           val rules' = case pass of SOME (ps, _) => ps (single o pass_generated_rule {simp=true, masks=pattern} ctxt', pos, ctxt') rule'1
                                   | NONE => single (pass_generated_rule {simp=true, masks=pattern} ctxt' rule'1)
+          val rules'' = map (snd o PLPR_Syntax.elim_embedded_patterns) rules'
 
           val binding = Option.map (fn (vs, b') =>
                   let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
@@ -325,8 +326,8 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
        invoke_action (template_pos, Option.map snd pass) action rules' ctxt
    |> (case binding of NONE => I
           | SOME b =>
-                perhaps (try (Context.mapping (snd o Global_Theory.note_thms "" ((b, []), [(rules',[])]))
-                                              (snd o Proof_Context.note_thms "" ((b, []), [(rules',[])]))))
+                perhaps (try (Context.mapping (snd o Global_Theory.note_thms "" ((b, []), [(rules'',[])]))
+                                              (snd o Proof_Context.note_thms "" ((b, []), [(rules'',[])]))))
                         (*It is not a Local_Theory.note here because the instantiation usually happens
                           inside an attribute and when a locale is interpreted, the attribute will be replayed.*)
                         (*I want to support lazy instantiation, but, to provide this, the Proof.context

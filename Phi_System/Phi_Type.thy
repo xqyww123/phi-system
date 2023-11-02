@@ -2977,7 +2977,8 @@ lemma [\<phi>reason %restore_from_semimodule for \<open>_ \<t>\<r>\<a>\<n>\<s>\<
 
 subparagraph \<open>Main\<close>
 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.aaa]:
+(*
+lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.wrap_module_src\<^sub>1]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F F'
@@ -2990,8 +2991,9 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.aaa]:
   unfolding Semimodule_One\<^sub>I_def Transformation_def Premise_def \<r>Guard_def NO_SIMP_def
             Except_Pattern_def
   by simp blast
- 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
+*)
+
+lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.wrap_module_src]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps one b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F F'
@@ -3007,7 +3009,8 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>R; clarsimp; metis)
 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
+(*
+lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.wrap_module_tgt\<^sub>1]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
@@ -3019,8 +3022,9 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   unfolding Semimodule_One\<^sub>E_def Transformation_def Premise_def \<r>Guard_def NO_SIMP_def
             Except_Pattern_def
   by simp blast
+*)
 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
+lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.wrap_module_tgt]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
@@ -6882,7 +6886,7 @@ declare Lifting.pred_prod_beta[\<phi>deriver_simp]
 
 section \<open>Clean-up\<close>
 
-hide_const introduced
+hide_const (open) introduced
 
 end
                                                           

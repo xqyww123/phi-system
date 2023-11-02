@@ -101,7 +101,7 @@ signature NU_REASONER = sig
   (*a faster version but a bit dirty*)
   val get_reasoners' : theory -> reasoners -> PLPR_Pattern.bvs
                     -> pattern -> (priority * pattern * serial (*reasoner id*) * reasoner) list
-  val pretty : Proof.context -> reasoner -> Pretty.T
+  val pretty : Context.generic -> reasoner -> Pretty.T
   (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
 
   (* Interfaces for Reasoning *)
@@ -403,10 +403,11 @@ fun pretty_mode_priority (mode, priority) =
 
 fun pretty ctxt (r:reasoner) = let open Pretty in
   Pretty.chunks (
-    Pretty.block (Pretty.here (#pos r) @ [brk 1, Syntax.pretty_term ctxt (#name r)]) ::
+    Pretty.block (Pretty.here (#pos r) @
+      [brk 1, Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt (#name r)]) ::
     map (fn (pat,n) => Pretty.item [
           str "(", str (string_of_int n), str "): ",
-          Syntax.pretty_term ctxt pat
+          Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pat
         ]) (#pattern r)
   ) end
 
@@ -445,7 +446,7 @@ fun add reasoner0 ctxt =
   let val reasoner = normalize_reasoner I reasoner0
       val _ = info_pretty_generic ctxt 1 (fn () =>
                 Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
-                               pretty (Context.proof_of ctxt) reasoner])
+                               pretty ctxt reasoner])
    in Reasoners.map (fold (insert_net ctxt reasoner) (#pattern reasoner)) ctxt
   end
 
@@ -454,7 +455,7 @@ fun adds reasoners ctxt = Reasoners.map (
         let val reasoner = normalize_reasoner I reasoner0
             val _ = info_pretty_generic ctxt 1 (fn () =>
                 Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
-                               pretty (Context.proof_of ctxt) reasoner])
+                               pretty ctxt reasoner])
          in fold (insert_net ctxt reasoner) (#pattern reasoner)
         end) reasoners) ctxt
 
@@ -572,6 +573,13 @@ fun del_reasoners patterns filter ctxt =
     let val to_remove = maps ( iNet.unify_term all_reasoners
                             #> List.filter (fn (_,_,_,r) => filter r) ) patterns
                      |> distinct pointer_eq
+        val _ = if null to_remove
+                then warn_pretty ctxt 0 (fn () =>
+                        Pretty.para "No reasoning rule is removed!")
+                else info_pretty_generic ctxt 1 (fn () => let open Pretty in
+                        chunks (para "Removing following reasoing rules..." ::
+                          map (fn (_,_,_,r) => item [pretty ctxt r]) to_remove)
+                     end)
      in fold (fn (c,p,id,R) => iNet.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
     end) ctxt
@@ -897,7 +905,7 @@ val _ =
          in if null reasoners
             then writeln "No reasoner found."
             else writeln (Pretty.string_of (Pretty.chunks
-                              (map (fn (_,_,_,r) => pretty ctxt r) reasoners)))
+                              (map (fn (_,_,_,r) => pretty (Context.Proof ctxt) r) reasoners)))
         end)));
 
 
@@ -1089,13 +1097,15 @@ fun add_rules [] ctxt = ctxt
             |-> adds o flat
 
 fun del_rules pattern rules ctxt =
-      del_reasoners (case pattern of SOME pats => pats
+  let val thy = Context.theory_of ctxt
+   in del_reasoners (case pattern of SOME pats => pats
                                    | NONE => maps (the_default_pattern_of ctxt o Thm.concl_of) rules)
                     (fn r => case #tactic r
                                of Tac_Rule rules' =>
-                                      exists (fn (_,th) => exists (fn th' => Thm.eq_thm (th,th')) rules) rules'
+                                      exists (fn (_,th) => exists (fn th' => Thm.equiv_thm thy (th,th')) rules) rules'
                                 | Tac_ML _ => false)
                     ctxt
+  end
 
 
 (** Interfaces **)

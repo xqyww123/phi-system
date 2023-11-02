@@ -1,7 +1,9 @@
 theory Phi_Types_Test
   imports Phi_Types
 begin
-  
+
+subsection \<open>Testing \<phi>-Types\<close>
+
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -135,5 +137,48 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' rounded_Nat.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv (rounded_Nat ?m) (\<lambda>x y. x mod ?m = y mod ?m) \<close>)
 ]\<close>
 
+locale test =
+  fixes param :: nat
+begin
+
+\<phi>type_def AA
+  where \<open>(0 \<Ztypecolon> AA) = (param \<Ztypecolon> Itself)\<close>
+      | \<open>(Suc n \<Ztypecolon> AA) = (n \<Ztypecolon> AA)\<close>
+ 
+\<phi>type_def XX
+  where \<open>x \<Ztypecolon> XX \<equiv> (x + param \<Ztypecolon> Itself)\<close>
+  deriving Basic
+
+term XX
+
+end
+ 
+interpretation x1: test 1 .
+interpretation x2: test 2 .
+
+thm x1.XX.Object_Equiv
+thm x2.XX.Object_Equiv
+
+subsection \<open>Testing Transformations\<close>
+
+lemma
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
+\<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (T i)) * (f i \<Ztypecolon> T i) \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> i \<noteq> j
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {j} - {i}] (T i)) * (f i \<Ztypecolon> T i) * (f j \<Ztypecolon> T j) \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> k \<in> S \<and> i \<noteq> j \<and> i \<noteq> k \<and> j \<noteq> k
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {k} - {j} - {i}] (T i)) * (f i \<Ztypecolon> T i) * (f j \<Ztypecolon> T j) * (f k \<Ztypecolon> T k) \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
 
 end
