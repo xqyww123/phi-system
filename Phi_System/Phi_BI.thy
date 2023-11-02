@@ -2970,7 +2970,7 @@ declare [[\<phi>reason_default_pattern
       \<open>ERROR TEXT(\<open>Malformed \<A>merge rule\<close> (?X @action \<A>merge))\<close> (0)
 ]]
 
-\<phi>reasoner_group \<A>merge = (%cutting, [%cutting, %cutting+10]) for \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = _\<close>
+\<phi>reasoner_group \<A>merge = (%cutting, [%cutting, %cutting+20]) for \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = _\<close>
   \<open>Rules merging multiple conditioned \<phi>types into one conditioned \<phi>type,
    always using the abstract object(s) given in the left hand side to assign the abstract object(s)
    in the right.\<close>
@@ -2978,11 +2978,37 @@ declare [[\<phi>reason_default_pattern
 text \<open>Information is always given from left to right below.
       They accept arguments from LHS and assign the result to RHS\<close>
 
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>(fst (_,_) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> (x \<Ztypecolon> T) = Y @action \<A>merge
+\<Longrightarrow> (fst (x,y) \<Ztypecolon> T) = Y @action \<A>merge \<close>
+  by simp
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>(snd (_,_) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> (y \<Ztypecolon> U) = Y @action \<A>merge
+\<Longrightarrow> (snd (x,y) \<Ztypecolon> U) = Y @action \<A>merge \<close>
+  by simp_all
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>((_, snd _) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> ((x, z) \<Ztypecolon> U) = Y @action \<A>merge
+\<Longrightarrow> ((x, snd (y,z)) \<Ztypecolon> U) = Y @action \<A>merge \<close>
+  by simp_all
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>((_, fst _) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> ((x, y) \<Ztypecolon> U) = Y @action \<A>merge
+\<Longrightarrow> ((x, fst (y,z)) \<Ztypecolon> U) = Y @action \<A>merge \<close>
+  by simp_all
+
 lemma [\<phi>reason %\<A>merge]: \<comment> \<open>contracts two sides respectively\<close>
   \<open>(x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((fst x, snd x) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
   \<open>(a \<Ztypecolon> \<half_blkcirc>[True] A) = ((a, undefined) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
   \<open>(b \<Ztypecolon> \<half_blkcirc>[True] B) = ((undefined, b) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
   \<open>(c \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((undefined, undefined) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
+  unfolding Action_Tag_def BI_eq_iff
+  by (clarsimp; force)+
+
+lemma [\<phi>reason %\<A>merge+10]:
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((x, y) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
 
