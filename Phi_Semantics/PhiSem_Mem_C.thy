@@ -223,10 +223,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_NonAssoc
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
-            notes list_all_length[simp]
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Mem_Slice addr iv T) (list_all2 eq) \<close>
-            notes list_all2_conv_all_nth[simp]
        and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
         \<Longrightarrow> Identity_Elements\<^sub>I (Mem_Slice addr iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
@@ -237,9 +235,74 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Semimodule_One\<^sub>I (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
 
+term \<open>\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>j. f j \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+
+\<phi>type_def \<phi>Mul_Quant_Tree :: \<open>(nat \<Rightarrow> 'k) \<Rightarrow> nat len_intvl \<Rightarrow> ('k list \<Rightarrow> 'c, 'a) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'c::sep_algebra, 'a list) \<phi> \<close>
+  where \<open>l \<Ztypecolon> \<phi>Mul_Quant_Tree f iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>i. [f i] \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+  deriving Sep_Functor_1
+       and Semimodule_NonAssoc
+       and \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
+       and \<open>Object_Equiv T eq
+        \<Longrightarrow> Object_Equiv (\<phi>Mul_Quant_Tree f iv T) (list_all2 eq) \<close>
+       and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Mul_Quant_Tree f iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
+       and \<open>Semimodule_One\<^sub>I (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
+
+term \<open>Semimodule_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
+
+term \<open>Identity_Elements\<^sub>E T T\<^sub>D
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
+
+
+term \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Mul_Quant_Tree f iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
+
+term \<open>Object_Equiv T eq
+        \<Longrightarrow> Object_Equiv (\<phi>Mul_Quant_Tree f iv T) (list_all2 eq) \<close>
+
+
+
+
+
+
+
 consts Mem_Slice_synt :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _ : _]")
 
 translations "\<s>\<l>\<i>\<c>\<e>[addr : start : len]" == "CONST Mem_Slice addr \<lbrakk>start : len\<rwpar>"
+
+thm Mem_Slice.wrap_module_src
+
+
+lemma
+  \<open>hd (drop (j - start) (take (Suc (j - start)) y)) = y ! (j - start)\<close>
+  apply simp
+
+
+ML \<open>@{term \<open>\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<close>}\<close>
+
+lemma
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
+\<Longrightarrow> y \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : start : len] T
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
+             drop (j - start + 1) y \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : j + 1 : start + len - j - 1] T\<heavy_comma>
+             take (j - start) y \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : start : j - start] T\<close>
+  \<medium_left_bracket> note \<open>length y = len\<close>[useful]
+    
+    thm \<phi> ;; \<open>\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<close> 
+    thm useful note [[\<phi>trace_reasoning = 2]]
+  \<medium_right_bracket> certified by (insert \<phi>, auto_sledgehammer)
+
+  term \<open>snd ((prod.swap \<circ> (\<lambda>x. (drop (len_intvl.len \<lbrakk>start : j - start\<rwpar>) x, take (len_intvl.len \<lbrakk>start : j - start\<rwpar>) x))) (fst (y, undefined)))\<close>
+
+lemma
+  \<open>\<close>
+
+term \<open> \<phi>Aggregate_Getter idx T U f
+   \<Longrightarrow> (x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) = (r \<Ztypecolon> R) * (f x \<Ztypecolon> idx \<^bold>\<rightarrow>\<^sub>@ \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)\<close>
 
 
 end

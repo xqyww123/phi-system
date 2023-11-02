@@ -161,10 +161,12 @@ thm x2.XX.Object_Equiv
 
 subsection \<open>Testing Transformations\<close>
 
+(*
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
 \<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
+*)
 
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S

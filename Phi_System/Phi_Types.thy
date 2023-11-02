@@ -1504,7 +1504,7 @@ subsection \<open>Embedding Additive Conjunction\<close>
 declare [[\<phi>trace_reasoning = 0]]
 
 declare False_def[symmetric, simp]
-
+ 
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
   deriving Basic
@@ -1526,6 +1526,8 @@ declare False_def[symmetric, simp]
         \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x,y) \<Ztypecolon> T \<and>\<^sub>\<phi> U \<close>
        and Functionality
        and Commutativity_Deriver\<^sub>E
+       and \<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow>
+             Identity_Elements\<^sub>I ?U ?U\<^sub>D ?U\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (?T \<and>\<^sub>\<phi> ?U) (\<lambda>x. ?U\<^sub>D (snd x) \<or> ?T\<^sub>D (fst x)) (\<lambda>x. ?U\<^sub>P (snd x) \<or> ?T\<^sub>P (fst x))   \<close>
 
      (*DO NOT REMOVE, they are right but I'm thinking if we really should support so much additive conjunction
               It should be a bi-functor
@@ -2601,7 +2603,7 @@ section \<open>Derivatives\<close>
 
 subsection \<open>Parameterized FMQ\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
     
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
@@ -2760,7 +2762,7 @@ private lemma [simp]:
                                              (\<forall>i < Len_Intvl.len iv. eq (Len_Intvl.start iv + i) (x ! i) (y ! i)))\<close>
        and \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> iv = iv'
         \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv') T U (\<lambda>_. set) (\<lambda>_ x. UNIV)
-                                    (\<lambda>r x y. \<forall>i < Len_Intvl.len iv. r (Len_Intvl.start iv + i) (x ! i) (y ! i)) \<close>
+                                    (\<lambda>r x y. length x = length y \<and> (\<forall>i < Len_Intvl.len iv. r (Len_Intvl.start iv + i) (x ! i) (y ! i))) \<close>
            (tactic: auto ; subgoal' for r l cc \<open>rule exI[where x=\<open>map cc [len_intvl.start iv' ..< len_intvl.start iv'+len_intvl.len iv']\<close>]\<close> )
        and \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> iv = iv'
         \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv') T U (\<lambda>_. set) (\<lambda>_ x. UNIV)
@@ -2807,9 +2809,6 @@ lemma \<phi>Mul_Quant_LenIv_wrap_module_src:
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
   \<medium_left_bracket> premises Tr and _ and _ and _ and []
     Tr
-    note \<open>length y' - Suc len = len'\<close>[useful]
-    note [[\<phi>trace_reasoning = 2]] 
- 
   \<medium_right_bracket> certified by (insert \<phi>, auto simp add: nth_append nth_Cons'; auto_sledgehammer) .
 
 lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:

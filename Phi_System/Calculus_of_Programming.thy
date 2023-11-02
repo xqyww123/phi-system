@@ -77,7 +77,7 @@ lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> I
   unfolding CurrentConstruction_def Inhabited_def
   by (clarsimp simp add: INTERP_SPEC set_mult_expn, blast)
 
-definition ToA_Construction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s> _" [11,11] 10)
+definition ToA_Construction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s>/ _" [11,11] 10)
   where \<open>ToA_Construction = (\<Turnstile>)\<close>
 
 

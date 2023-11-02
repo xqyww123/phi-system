@@ -2467,6 +2467,8 @@ lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 *)
 
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma apply_conditioned_Separation_Functor\<^sub>\<Lambda>_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U un)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> Fc Ft (\<lambda>p. T p \<^emph>[C] U p) T D R pred_mapper func_mapper)
@@ -4992,18 +4994,12 @@ private lemma \<phi>TA_1R_rule:
   by blast
 
 private lemma \<phi>TA_Ident_I_rule_step:
-  \<open> Identity_Element\<^sub>I X Q
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Q \<longrightarrow> P)
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<Longrightarrow> Identity_Element\<^sub>I X Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (A \<longrightarrow> Q \<longrightarrow> P)
 \<Longrightarrow> Identity_Element\<^sub>I X P \<close>
-  unfolding Identity_Element\<^sub>I_def Premise_def
-  by (simp add: transformation_weaken)
-
-private lemma \<phi>TA_Ident_I_rule_step_infer:
-  \<open> Identity_Element\<^sub>I X Q
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Q \<longrightarrow> P)
-\<Longrightarrow> Identity_Element\<^sub>I X (P \<and> Q) \<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def Premise_def
-  by simp
+  unfolding Identity_Element\<^sub>I_def Premise_def Action_Tag_def Transformation_def Inhabited_def
+  by (clarsimp, blast)
 
 (* not enabled, DO NOT REMOVE, I am a bit of hesitate
 lemma \<phi>TA_1I_simp:

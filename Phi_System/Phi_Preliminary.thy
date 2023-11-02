@@ -46,11 +46,6 @@ structure Phi_Programming_Base_Simp_SS = Simpset (
 )
 \<close>
 
-lemmas [\<phi>programming_base_simps] =
-  mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
-  mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>] mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
-  add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
-  zero_fun HOL.simp_thms
 
 setup \<open>Context.theory_map (Phi_Programming_Base_Simp_SS.map (fn ctxt =>
   ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>defined_Ex\<close>]))\<close>

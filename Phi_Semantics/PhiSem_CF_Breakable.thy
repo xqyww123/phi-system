@@ -8,6 +8,8 @@ text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<ope
   necessarily the negative of the loop guard. Therefore here we need 3 assertions, invariance,
   guard, and termination condition.\<close>
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> End: termination x)\<close>
   and S: \<open>U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) @action NToA\<close>
