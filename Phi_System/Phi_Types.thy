@@ -199,7 +199,7 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding of Subjection\<close>
 
-declare [[\<phi>trace_reasoning = 2 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
      
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
@@ -220,8 +220,10 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' SubjectionTY.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er \<Longrightarrow> Object_Equiv (?T \<phi>\<s>\<u>\<b>\<j> ?P) ?er \<close>),
   (@{thm' SubjectionTY.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
   (@{thm' SubjectionTY.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Functional_Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
-  (@{thm' SubjectionTY.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?Ta ?U UNIV (\<lambda>x. x)  \<close>),
-  (@{thm' SubjectionTY.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?Ta ?U (\<lambda>x. x) \<close>)
+ (*(@{thm' SubjectionTY.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?Ta ?U UNIV (\<lambda>x. x)  \<close>),
+  (@{thm' SubjectionTY.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?Ta ?U (\<lambda>x. x) \<close>),*)
+  (@{thm' SubjectionTY.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?C ?Ta ?U UNIV (\<lambda>x. x)  \<close>),
+  (@{thm' SubjectionTY.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?C ?Ta ?U UNIV (\<lambda>x. x) \<close>)
 ]\<close>
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
@@ -442,14 +444,15 @@ private lemma [simp]:
 
 declare [[\<phi>trace_reasoning = 1]]
 
+(*TODO xx*)
 lemma \<phi>Dependent_Sum_SH\<^sub>I[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>I]:
-  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I \<Sigma> \<Sigma> \<Sigma> T U {x. fst (fst x) = fst (snd x)} (\<lambda>x. (fst (fst x), (snd (fst x), snd (snd x)))) \<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Transformation_def
+  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond \<Sigma> \<Sigma> \<Sigma> C T U {x. fst (fst x) = fst (snd x)} (\<lambda>x. (fst (fst x), (snd (fst x), snd (snd x)))) \<close>
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Transformation_def
   by clarsimp
 
 lemma \<phi>Dependent_Sum_SH\<^sub>E[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>E]:
-  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> \<Sigma> T U (\<lambda>x. ((fst x, fst (snd x)), (fst x, snd (snd x)))) \<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Transformation_def
+  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond \<Sigma> \<Sigma> \<Sigma> C T U UNIV (\<lambda>x. ((fst x, fst (snd x)), (fst x, snd (snd x)))) \<close>
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def Transformation_def
   by clarsimp
 
 let_\<phi>type \<phi>Dependent_Sum
@@ -549,6 +552,7 @@ lemma \<Sigma>_pseudo_Functional_Transformation_Functor:
   unfolding Transformation_def
   by (cases x; clarsimp)
 
+(*TODO xxx*)
 lemma \<Sigma>_pseudo_Separation_Homo\<^sub>I:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst (fst x) = fst (snd x)
 \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<^emph> \<Sigma> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst (fst x), (snd (fst x), snd (snd x))) \<Ztypecolon> \<Sigma> c. (T c \<^emph> U c) \<close>
@@ -676,6 +680,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
 declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abst\<close>\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def Set_Abst :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   
@@ -683,7 +689,8 @@ declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced b
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abst Set_Abst T U
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
-       and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
+       (*TODO and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>*)
+       and \<open>Separation_Homo\<^sub>I_Cond \<S> \<S> \<S> C T U UNIV (\<lambda>(A, B). A \<times> (if C then B else {undefined}))\<close>
        and Carrier_Set
        and Open_Abstraction_to_Raw
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
@@ -699,8 +706,10 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' Set_Abst.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<S> ?T) (\<lambda>Sx Sy. \<forall>x. x \<in> Sx \<longrightarrow> (\<exists>y. y \<in> Sy \<and> ?eq x y)) \<close>),
   (@{thm' Set_Abst.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) \<close>),
   (@{thm' Set_Abst.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. {f x |x. x \<in> X \<and> P x}) \<close>),
-  (@{thm' Set_Abst.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<S> \<S> \<S> ?T ?U UNIV (\<lambda>(A, B). A \<times> B) \<close>),
-  (@{thm' Set_Abst.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E \<S> \<S> \<S> ?Ta ?U (\<lambda>x. (Domain x, Range x)) \<close>)
+(*(@{thm' Set_Abst.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<S> \<S> \<S> ?T ?U UNIV (\<lambda>(A, B). A \<times> B) \<close>),
+  (@{thm' Set_Abst.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E \<S> \<S> \<S> ?Ta ?U (\<lambda>x. (Domain x, Range x)) \<close>),*)
+  (@{thm' Set_Abst.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond \<S> \<S> \<S> ?C ?T ?U UNIV (\<lambda>(A, B). A \<times> (if ?C then B else {undefined})) \<close>),
+  (@{thm' Set_Abst.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond \<S> \<S> \<S> ?C ?Ta ?U UNIV (\<lambda>x. (Domain x, Range x)) \<close>)
 ]\<close>
 
 
@@ -1104,15 +1113,15 @@ lemma [\<phi>reason 1200]:
 
 lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>I B UNIV
-\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U UNIV (\<lambda>x. x)\<close>
-  unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
+\<Longrightarrow> Separation_Homo\<^sub>I_Cond ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) C T U UNIV (\<lambda>x. x)\<close>
+  unfolding Separation_Homo\<^sub>I_Cond_def Transformation_def Object_Sep_Homo\<^sub>I_def
   by (clarsimp, insert times_set_I, blast)
 
 lemma (*The above rule is reversible. requiring the sep homo domain being the univ is already the weakest.*)
   \<open> S \<noteq> {}
 \<Longrightarrow> \<forall>T U. Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U S (\<lambda>x. x)
 \<Longrightarrow> Object_Sep_Homo\<^sub>I B UNIV \<close>
-  unfolding Separation_Homo\<^sub>I_def Object_Sep_Homo\<^sub>I_def Transformation_def
+  unfolding Separation_Homo\<^sub>I_Cond_def Object_Sep_Homo\<^sub>I_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
@@ -1124,20 +1133,19 @@ declare [[\<phi>trace_reasoning = 1]]
   
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
-\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x)\<close>
+\<Longrightarrow> Separation_Homo\<^sub>E_Cond ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) C T U UNIV (\<lambda>x. x)\<close>
   for B :: \<open>('d::sep_magma,'e::sep_magma) \<phi>\<close>
-  unfolding Separation_Homo\<^sub>E_def Transformation_def Object_Sep_Homo\<^sub>E_def
+  unfolding Separation_Homo\<^sub>E_Cond_def Transformation_def Object_Sep_Homo\<^sub>E_def
   by (clarsimp simp add: set_mult_expn; blast)
 
 lemma (*The above rule is reversible*)
-  \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
-  unfolding Separation_Homo\<^sub>E_def Object_Sep_Homo\<^sub>E_def Transformation_def
+  \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U UNIV (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
+  unfolding Separation_Homo\<^sub>E_Cond_def Object_Sep_Homo\<^sub>E_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def Satisfaction_def)
   subgoal premises prems for x y v
     by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
                prems(2-3), blast) .
-
 
 
 (* subsection \<open>Embedding Universal Quantification\<close>
@@ -1182,8 +1190,10 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x y. \<forall>xa. xa \<in> ?I \<longrightarrow> ?eq (x xa) (y xa)) \<close>),
   (@{thm' \<phi>Mul_Quant.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>?I. g (x i) (y i))  \<close>),
   (@{thm' \<phi>Mul_Quant.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>?I. P (x i)) (\<lambda>f _. (\<circ>) f)  \<close>),
-  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?Ta ?U UNIV zip_fun \<close>),
-  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?Ta ?U unzip_fun \<close>),
+(*(@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?Ta ?U UNIV zip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?Ta ?U unzip_fun \<close>),*)
+  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?C ?Ta ?U UNIV zip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) ?C ?Ta ?U UNIV unzip_fun \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) 0 \<close>),
   (@{thm' \<phi>Mul_Quant.Closed_Semimodule_Zero}, \<^pattern_prop>\<open> Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) 0 \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) ?T {?i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True) \<close>),
@@ -1638,7 +1648,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
-       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
+     (*TODO and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>*)
+       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E_Cond (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) C T U UNIV (\<lambda>x. x)\<close>
        and \<open>\<g>\<u>\<a>\<r>\<d> homo_mul_carrier f
         \<Longrightarrow> Carrier_Set U P
         \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
@@ -1678,12 +1689,13 @@ text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> 
 
 declare [[\<phi>trace_reasoning = 2]]
 
-lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
+(*TODO xx*)
+lemma \<phi>Fun'_Separation_Homo\<^sub>I_Cond[\<phi>reason 1000]:
   \<open> homo_sep \<psi>
 \<Longrightarrow> closed_homo_sep \<psi> \<and>\<^sub>\<r> Dx = UNIV \<or>\<^sub>c\<^sub>u\<^sub>t
     Separation_Disj\<^sub>\<phi> \<psi> Dx U T
-\<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U Dx (\<lambda>x. x) \<close>
-  unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
+\<Longrightarrow> Separation_Homo\<^sub>I_Cond (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) C T U Dx (\<lambda>x. x) \<close>
+  unfolding Separation_Homo\<^sub>I_Cond_def Transformation_def Object_Sep_Homo\<^sub>I_def
             Separation_Disj\<^sub>\<phi>_def Separation_Disj_def closed_homo_sep_def
             homo_sep_def closed_homo_sep_disj_def Ant_Seq_def
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
@@ -1773,8 +1785,10 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Some.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (\<black_circle> ?T) (\<lambda>_. False) \<close>),
   (@{thm' \<phi>Some.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor \<phi>Some \<phi>Some ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>g. g) \<close>),
   (@{thm' \<phi>Some.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor \<phi>Some \<phi>Some ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>f P. P) (\<lambda>f P. f) \<close>),
-  (@{thm' \<phi>Some.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<phi>Some \<phi>Some \<phi>Some ?Ta ?U UNIV (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>Some.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E \<phi>Some \<phi>Some \<phi>Some ?Ta ?U (\<lambda>x. x) \<close>),
+(*TODO (@{thm' \<phi>Some.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<phi>Some \<phi>Some \<phi>Some ?Ta ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>Some.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E \<phi>Some \<phi>Some \<phi>Some ?Ta ?U (\<lambda>x. x) \<close>), *)
+  (@{thm' \<phi>Some.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond \<phi>Some \<phi>Some \<phi>Some ?C ?Ta ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>Some.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond \<phi>Some \<phi>Some \<phi>Some ?C ?Ta ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Some.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<black_circle> ?T) ?eq \<close>),
   (@{thm' \<phi>Some.Make_Abstraction_from_Raw}, \<^pattern_prop>\<open> ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T \<Longrightarrow> Some ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<black_circle> ?T \<close>),
   (@{thm' \<phi>Some.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c, ?'c) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'c, ?'c) \<phi>))
@@ -1812,6 +1826,20 @@ declare [[\<phi>trace_reasoning = 0]]
 
       and \<open> comm_domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>' f f'
         \<Longrightarrow> Tyops_Commute ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') \<DD>[\<delta>] \<DD>[\<delta>'] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' Domainoid.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<DD>[?\<delta>] ?T) (\<lambda>x. closed_homo_sep ?\<delta> \<and> ?P x) \<close>),
+  (@{thm' Domainoid.Abstract_Domain},  \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<DD>[?\<delta>] ?T) (\<lambda>x. closed_homo_sep ?\<delta> \<and> ?P x) \<close>),
+  (@{thm' Domainoid.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<DD>[?\<delta>] ?T) ?eq \<close>),
+  (@{thm' Domainoid.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?\<delta> = ?\<delta>' \<Longrightarrow>
+          Transformation_Functor \<DD>[?\<delta>] \<DD>[?\<delta>'] ?T ?Ta (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>g. g) \<close>),
+  (@{thm' Domainoid.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond \<DD>[?\<delta>] \<DD>[?\<delta>] \<DD>[?\<delta>] ?C ?Ta ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' Domainoid.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond \<DD>[?\<delta>] \<DD>[?\<delta>] \<DD>[?\<delta>] ?C ?Ta ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' Domainoid.\<phi>Fun'_Comm\<^sub>E}, \<^pattern_prop>\<open> comm_domainoid_mapper TYPE(?'a::sep_magma) TYPE(?'b::sep_magma) ?\<delta> ?\<delta>' ?f ?f' \<Longrightarrow>
+          Tyops_Commute ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?f') \<DD>[?\<delta>] \<DD>[?\<delta>'] ?T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))  \<close>),
+  (@{thm' Domainoid.\<phi>Fun'_Comm\<^sub>I}, \<^pattern_prop>\<open> comm_domainoid_mapper_rev TYPE(?'a::sep_magma) TYPE(?'b::sep_magma) ?\<delta> ?\<delta>' ?f ?f' \<Longrightarrow>
+          Tyops_Commute \<DD>[?\<delta>] \<DD>[?\<delta>'] ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?f') ?T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))  \<close>)
+]\<close>
 
 
 subsubsection \<open>Basic Rules\<close>
@@ -1919,7 +1947,7 @@ lemma [\<phi>reason %abstract_domain]:
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 1 ]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
@@ -1947,12 +1975,18 @@ declare [[\<phi>trace_reasoning = 1 ]]
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
-       and \<open> homo_sep (scalar_mult \<psi> s)
+   (*TODO xx     and \<open> homo_sep (scalar_mult \<psi> s)
          \<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
              Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
        and \<open> homo_sep (\<psi> s)
-         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
+         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>*)
+       and \<open> homo_sep (scalar_mult \<psi> s)
+         \<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
+             Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T
+         \<Longrightarrow> Separation_Homo\<^sub>I_Cond (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) C T U Dx (\<lambda>x. x)\<close>
+       and \<open> homo_sep (\<psi> s)
+         \<Longrightarrow> Separation_Homo\<^sub>E_Cond (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) C T U UNIV (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
@@ -1965,6 +1999,7 @@ declare [[\<phi>trace_reasoning = 1 ]]
 
        and \<open> comm_domainoid_mapper_rev TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>' (scalar_mult f s) (scalar_mult f' s')
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>'] (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>ScalarMul.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?P  \<close>),
@@ -2246,8 +2281,10 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?k \<^bold>\<rightarrow> ?T) ?eq \<close>),
   (@{thm' \<phi>MapAt.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
   (@{thm' \<phi>MapAt.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)\<close>),
-  (@{thm' \<phi>MapAt.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U UNIV (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>MapAt.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U (\<lambda>x. x) \<close>),
+(*TODO (@{thm' \<phi>MapAt.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>MapAt.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U (\<lambda>x. x) \<close>),*)
+  (@{thm' \<phi>MapAt.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ?C (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>MapAt.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ?C (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt.\<phi>Fun'_Comm\<^sub>E}, \<^pattern_prop>\<open> fun_commute ?f (fun_upd 1 ?k) ?xb (fun_upd 1 ?xa) \<Longrightarrow>
         Tyops_Commute ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?xb) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?xa) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))  \<close>),
 
@@ -2306,8 +2343,10 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?eq \<close>),
   (@{thm' \<phi>MapAt_L.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
   (@{thm' \<phi>MapAt_L.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
-  (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U (\<lambda>x. x) \<close>),
+(* TODO (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U (\<lambda>x. x) \<close>), *)
+  (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ?C (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ?C (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>k. k \<^bold>\<rightarrow>\<^sub>@ ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>k. k \<^bold>\<rightarrow>\<^sub>@ ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x)  \<close>),
@@ -2375,8 +2414,10 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?n \<odiv> ?T) ?eq \<close>),
   (@{thm' \<phi>Share.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
   (@{thm' \<phi>Share.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Functional_Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)  \<close>),
-  (@{thm' \<phi>Share.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>Share.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U (\<lambda>x. x) \<close>),
+(* TODO (@{thm' \<phi>Share.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>Share.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U (\<lambda>x. x) \<close>), *)
+  (@{thm' \<phi>Share.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I_Cond ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) ?C (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>Share.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E_Cond ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) ?C (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Share.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>n. n \<odiv> ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Share.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>n. n \<odiv> ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
@@ -2550,9 +2591,9 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def To_Share
   where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
-       and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U (\<lambda>x. x) \<close>
+       and \<open>Separation_Homo\<^sub>E_Cond (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share C T U UNIV (\<lambda>x. x) \<close>
        and \<open>Separation_Disj\<^sub>\<phi> to_share Dx U T
-        \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
+        \<Longrightarrow> Separation_Homo\<^sub>I_Cond (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share C T U Dx (\<lambda>x. x) \<close>
        and Functionality
        and Carrier_Set
 
@@ -2605,8 +2646,6 @@ translations
 section \<open>Derivatives\<close>
 
 subsection \<open>Parameterized FMQ\<close>
-
-declare [[\<phi>trace_reasoning = 3]]
     
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
@@ -2626,8 +2665,9 @@ declare [[\<phi>trace_reasoning = 3]]
            \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
        and Sep_Functor_1
        and Semimodule_NonAssoc
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) C T U UNIV zip_fun\<close>
+           (tactic: rule, clarsimp, subgoal' for x xa \<open>rule exI[where x=\<open>\<lambda>(a,b). (b, xa a)\<close>]\<close>)
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) C T U UNIV unzip_fun\<close>
        and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
        and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
@@ -2636,8 +2676,8 @@ declare [[\<phi>trace_reasoning = 3]]
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U UNIV zip_fun \<close>),
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U unzip_fun \<close>)
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?C ?T ?U UNIV zip_fun \<close>),
+  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E_Cond}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?C ?T ?U UNIV unzip_fun \<close>)
 ]\<close>
 
 subsubsection \<open>Syntax\<close>
@@ -2739,9 +2779,8 @@ hide_fact \<phi>Mul_Quant\<^sub>\<Lambda>.wrap_module_src
 
 subsection \<open>From FMQ\<close>
 
-subsubsection \<open>Interval in Length Representation\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+subsubsection \<open>Interval in Length Representation\<close>
 
 context begin
 
@@ -2780,8 +2819,12 @@ private lemma [simp]:
                                                 (\<forall>i < len_intvl.len iv. T\<^sub>D (len_intvl.start iv + i) (x ! i))) \<close>
        and \<open>(\<And>i. Functionality (T i) (P i))
         \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.len iv. P (len_intvl.start iv + i) (x ! i))\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U {(x, y). length x = length y} zip'\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U unzip'\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) C T U
+                                  {x. C \<longrightarrow> length (fst x) = length (snd x)}
+                                  (\<lambda>x. if C then zip' x else map (\<lambda>x. (x, undefined)) (fst x))\<close>
+            (tactic: rule conjI, clarsimp, tactic \<open>all_tac o @{print}\<close>,
+                     subgoal' for x \<open>rule exI[where x=\<open>\<lambda>a b. (b, snd (x ! (a - len_intvl.start iv)))\<close>]\<close>)
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) C T U UNIV unzip'\<close>
        and \<open> Semimodule_Zero (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) \<lbrakk>i : 0\<rwpar> \<close>
        and \<open> Semimodule_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>
        and \<open> Semimodule_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True) \<close>
@@ -2790,6 +2833,7 @@ private lemma [simp]:
                                      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) \<close>
        and \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
                                      (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>
+
 
 end
 
@@ -2812,7 +2856,7 @@ lemma \<phi>Mul_Quant_LenIv_wrap_module_src:
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
   \<medium_left_bracket> premises Tr and _ and _ and _ and []
     Tr
-  \<medium_right_bracket> certified by (insert \<phi>, auto simp add: nth_append nth_Cons'; auto_sledgehammer) .
+  \<medium_right_bracket> certified by (auto; auto_sledgehammer) .
 
 lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow>

@@ -544,6 +544,10 @@ abbreviation Bubbling_\<phi>Sep (infixr "\<^emph>\<^sub>\<A>" 70)
     where "A \<^emph>\<^sub>\<A> B \<equiv> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> \<phi>Prod A B"
   \<comment> \<open>The separation operator that will expand by the system automatically\<close>
 
+abbreviation Bubbling_Cond_\<phi>Sep ("_ \<^emph>\<^sub>\<A>[_] _" [71,40,70] 70)
+    where "A \<^emph>\<^sub>\<A>[C] B \<equiv> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> Cond_\<phi>Prod A C B"
+
+
 lemma [\<phi>reason %\<phi>simp_cut]:
   \<open> NO_MATCH (Ua \<^emph>\<^sub>\<A> Ub) U
 \<Longrightarrow> x \<Ztypecolon> (Ta \<^emph>\<^sub>\<A> Tb) \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Ta \<^emph> U) \<^emph>\<^sub>\<A> Tb \<s>\<u>\<b>\<j> y. y = ((fst (fst x), snd x), snd (fst x)) @action \<A>simp \<close>
@@ -553,8 +557,23 @@ lemma [\<phi>reason %\<phi>simp_cut]:
       metis sep_disj_commuteI sep_disj_multD1 sep_disj_multI2 sep_mult_assoc sep_mult_commute) 
 
 lemma [\<phi>reason %\<phi>simp_cut]:
+  \<open> NO_MATCH (Ua \<^emph>\<^sub>\<A>[C] Ub) U
+\<Longrightarrow> x \<Ztypecolon> (Ta \<^emph>\<^sub>\<A>[C] Tb) \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Ta \<^emph> U) \<^emph>\<^sub>\<A>[C] Tb \<s>\<u>\<b>\<j> y. y = ((fst (fst x), snd x), snd (fst x)) @action \<A>simp \<close>
+  for U :: \<open>('c::sep_ab_semigroup,'a) \<phi>\<close>
+  unfolding Bubbling_def Action_Tag_def Transformation_def
+  by (cases x; clarsimp;
+      metis sep_disj_commuteI sep_disj_multD1 sep_disj_multI2 sep_mult_assoc sep_mult_commute)
+
+lemma [\<phi>reason %\<phi>simp_cut]:
   \<open> NO_MATCH (Ta \<^emph>\<^sub>\<A> Tb) T
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> (Ua \<^emph>\<^sub>\<A> Ub) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (T \<^emph> Ua) \<^emph>\<^sub>\<A> Ub \<s>\<u>\<b>\<j> y. y = ((fst x, fst (snd x)), snd (snd x)) @action \<A>simp \<close>
+  for T :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
+  unfolding Bubbling_def Action_Tag_def Transformation_def
+  by (cases x; clarsimp; insert sep_disj_multD2 sep_disj_multI2 sep_mult_assoc; blast)
+
+lemma [\<phi>reason %\<phi>simp_cut]:
+  \<open> NO_MATCH (Ta \<^emph>\<^sub>\<A>[C] Tb) T
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> (Ua \<^emph>\<^sub>\<A>[C] Ub) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (T \<^emph> Ua) \<^emph>\<^sub>\<A>[C] Ub \<s>\<u>\<b>\<j> y. y = ((fst x, fst (snd x)), snd (snd x)) @action \<A>simp \<close>
   for T :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
   unfolding Bubbling_def Action_Tag_def Transformation_def
   by (cases x; clarsimp; insert sep_disj_multD2 sep_disj_multI2 sep_mult_assoc; blast)
@@ -566,6 +585,15 @@ lemma [\<phi>reason %\<phi>simp_cut+10]:
   unfolding Bubbling_def Action_Tag_def Transformation_def
   by (cases x; clarsimp; smt (verit, ccfv_threshold) sep_disj_commuteI sep_disj_multD1
                              sep_disj_multI1 sep_mult_assoc' sep_mult_commute)
+
+lemma [\<phi>reason %\<phi>simp_cut+10]:
+  \<open> x \<Ztypecolon> (Ta \<^emph>\<^sub>\<A>[C] Tb) \<^emph> (Ua \<^emph>\<^sub>\<A>[C] Ub) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Ta \<^emph> Ua) \<^emph>\<^sub>\<A>[C] (Tb \<^emph> Ub) \<s>\<u>\<b>\<j> y.
+              y = ((fst (fst x), fst (snd x)), (snd (fst x), snd (snd x))) @action \<A>simp \<close>
+  for Ta :: \<open>('c::sep_ab_semigroup,'a) \<phi>\<close>
+  unfolding Bubbling_def Action_Tag_def Transformation_def
+  by (cases x; clarsimp; smt (verit, ccfv_threshold) sep_disj_commuteI sep_disj_multD1
+                             sep_disj_multI1 sep_mult_assoc' sep_mult_commute)
+
 
 paragraph \<open>Transformation\<close>
 
@@ -1488,6 +1516,11 @@ text \<open>Syntax:
 
 lemma [\<phi>reason %To_ToA_cut]:
   \<open> x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<^emph>\<^sub>\<A> U \<s>\<u>\<b>\<j> x'. x' = x @action to \<s>\<p>\<l>\<i>\<t> \<close>
+  unfolding Action_Tag_def Transformation_def Bubbling_def
+  by simp
+
+lemma [\<phi>reason %To_ToA_cut]:
+  \<open> x \<Ztypecolon> T \<^emph>[C] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<^emph>\<^sub>\<A>[C] U \<s>\<u>\<b>\<j> x'. x' = x @action to \<s>\<p>\<l>\<i>\<t> \<close>
   unfolding Action_Tag_def Transformation_def Bubbling_def
   by simp
 

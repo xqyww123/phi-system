@@ -94,16 +94,25 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
       val ([T_name, U_name], ctxt) = Variable.variant_fixes ["T","U"] ctxt
       val T = Free (T_name, subst_ty [(element_ty, fst target)] (Term.fastype_of T_term))
       val U = Free (U_name, subst_ty [(element_ty, snd target)] (Term.fastype_of T_term))
+      val ([C_name], ctxt) = Variable.variant_fixes ["C"] ctxt
+      val C_term = Free (C_name, HOLogic.boolT)
       val SH = (case (Term.fastype_of Fa, Term.fastype_of Fb)
                   of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                       \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
                     (if flag
-                     then \<^Const>\<open>Separation_Homo\<^sub>I a b c d e f x_ty\<close>
-                       $ Fa $ Fb $ F_term $ T $ U
+                     then \<^Const>\<open>Separation_Homo\<^sub>I_Cond a b c d e f x_ty\<close>
+                       $ Fa $ Fb $ F_term $ C_term $ T $ U
                        $ (\<^Const>\<open>Collect \<^Type>\<open>prod c f\<close>\<close> $ (\<^Const>\<open>case_prod c f \<^Type>\<open>bool\<close>\<close> $ dom))
+                         (*TODO: consider \<open>C\<close>,
+                            Abs ("\<x>", \<^Type>\<open>prod c f\<close>,
+                              \<^Const>\<open>HOL.implies\<close>
+                                $ C_term
+                                $ (\<^Const>\<open>case_prod c f \<^Type>\<open>bool\<close>\<close> $ dom $ Bound 0))*)
                        $ zip
-                     else \<^Const>\<open>Separation_Homo\<^sub>E a b c d e f x_ty\<close>
-                       $ Fa $ Fb $ F_term $ T $ U $ zip)
+                     else \<^Const>\<open>Separation_Homo\<^sub>E_Cond a b c d e f x_ty\<close>
+                       $ Fa $ Fb $ F_term $ C_term $ T $ U
+                       $ (\<^Const>\<open>top \<^Type>\<open>set x_ty\<close>\<close>)
+                       $ zip)
                    | _ => error "Internal bug")
 
    in Seq.single ([], HOLogic.Trueprop $ SH, NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
@@ -128,24 +137,24 @@ fun SH_reasoning is_intro phi ctxt =
 fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
   let (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint (
-            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
-             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F
-             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
-             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
+            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I_Cond\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E_Cond\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ $ _ => F)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I_Cond\<close>, _) $ _ $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E_Cond\<close>, _) $ _ $ _ $ _ $ _ $ _ $ _ $ D $ u) = [D,u]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond\<close>, _) $ _ $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond\<close>, _) $ _ $ _ $ _ $ _ $ _ $ _ $ D $ u) = [D,u]
         | extract_oprs_from_hint _ = []
 
       val parameterized =
             case #1 instruction
               of SOME H =>
                   (case Term.head_of (HOLogic.dest_Trueprop (Logic.strip_imp_concl H))
-                     of Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) => false
-                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) => false
-                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) => true
-                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) => true)
+                     of Const(\<^const_name>\<open>Separation_Homo\<^sub>I_Cond\<close>, _) => false
+                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>E_Cond\<close>, _) => false
+                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond\<close>, _) => true
+                      | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond\<close>, _) => true)
                | _ => false (*TODO: guessing the form of parameterized SH is not supported yet*)
 
       val simps = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
@@ -153,9 +162,10 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                 @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
                 @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
 
-      val ind_conv_z = default_ind_conv (
-            fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_IH}),
+      fun ind_conv_z times = default_ind_conv (
+            fn ctxt => fn _ => fn ctm => (@{print} o
+              Conv.rewr_conv (Thm.transfer' ctxt (if times = 1 then @{thm' \<phi>TA_SH\<^sub>I_rewr_IH}
+                                                               else @{thm' \<phi>TA_SH\<^sub>I_rewr_IH\<^sub>2}))) ctm,
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
               Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps) then_conv
@@ -168,11 +178,13 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}),
             fn ctxt => fn _ =>
-             (Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1}) then_conv
+             (Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp2'}) then_conv
               Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps) then_conv
-              Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
+              Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                (conv_hol_imps_to_metas_if_has (HOLogic.Trueprop_conv (
+                    Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))))
             )
-      val ind_conv = if is_intro then ind_conv_z else ind_conv_u
+      fun ind_conv times = if is_intro then ind_conv_z times else ind_conv_u
       val simp = if is_some (#1 instruction) then K I
                  else simplifier_by_cong (if is_intro then if parameterized then @{thms' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_DV_cong}
                                                                             else @{thms' \<phi>TA_SH\<^sub>I_DV_cong}
@@ -184,7 +196,8 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                                                         else @{thm' \<phi>TA_SH\<^sub>I_rule}
                                                   else if parameterized then @{thm' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_rule}
                                                                         else @{thm' \<phi>TA_SH\<^sub>E_rule}),
-                                     [(K (SOME [0]), ind_conv, SH_reasoning is_intro)],
+                                     [(K (SOME [0]), ind_conv 1, SH_reasoning is_intro),
+                                      (K (SOME [0]), ind_conv 2, SH_reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules
@@ -199,8 +212,8 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
              |> pair [rule']
   end
 
-val separation_homo_I = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Separation_Homo\<^sub>I") (gen_SH true)
-val separation_homo_E = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Separation_Homo\<^sub>E") (gen_SH false)
+val separation_homo_I = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Separation_Homo\<^sub>I_Cond") (gen_SH true)
+val separation_homo_E = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Separation_Homo\<^sub>E_Cond") (gen_SH false)
 
 
 end

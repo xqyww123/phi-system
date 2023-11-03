@@ -448,26 +448,17 @@ definition Object_Sep_Homo\<^sub>I :: \<open>('b::sep_magma, 'a::sep_magma) \<ph
 
 definition \<open>Object_Sep_Homo\<^sub>E T \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> ( (x * y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T) ))\<close>
 
-definition \<open>Separation_Homo\<^sub>I Ft Fu F3 T U D z \<longleftrightarrow>
-              (\<forall>x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (T \<^emph> U)))\<close>
-
-definition \<open>Separation_Homo\<^sub>E Ft Fu F3 T U un \<longleftrightarrow> \<comment> \<open>Does it need a domain constraint?\<close>
-              (\<forall>z. z \<Ztypecolon> F3 (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)\<close>
-
 definition \<open>Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U D z \<longleftrightarrow>
               (\<forall>x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph>[C\<^sub>W] Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (T \<^emph>[C\<^sub>W] U)))\<close>
 
 definition \<open>Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U D un \<longleftrightarrow> \<comment> \<open>Does it need a domain constraint?\<close>
               (\<forall>z. z \<in> D \<longrightarrow> (z \<Ztypecolon> F3 (T \<^emph>[C\<^sub>R] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph>[C\<^sub>R] Fu U))\<close>
 
+abbreviation \<open>Separation_Homo\<^sub>I Ft Fu F3 T U D z \<equiv> Separation_Homo\<^sub>I_Cond Ft Fu F3 True T U D z\<close>
+abbreviation \<open>Separation_Homo\<^sub>E Ft Fu F3 T U D u \<equiv> Separation_Homo\<^sub>E_Cond Ft Fu F3 True T U D u\<close>
+
 
 paragraph \<open>With Parameter\<close>
-
-definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu F3 T U D z \<longleftrightarrow>
-              (\<forall>x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (\<lambda>p. T p \<^emph> U p)))\<close>
-
-definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu F3 T U un \<longleftrightarrow>
-              (\<forall>z. z \<Ztypecolon> F3 (\<lambda>p. T p \<^emph> U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)\<close>
 
 definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U D z \<longleftrightarrow>
               (\<forall>x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph>[C\<^sub>W] Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (\<lambda>p. T p \<^emph>[C\<^sub>W] U p)))\<close>
@@ -475,6 +466,8 @@ definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu F3 C\<^sub>
 definition \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U D un \<longleftrightarrow>
               (\<forall>z. z \<in> D \<longrightarrow> (z \<Ztypecolon> F3 (\<lambda>p. T p \<^emph>[C\<^sub>R] U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph>[C\<^sub>R] Fu U))\<close>
 
+abbreviation \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu F3 T U D z \<equiv> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu F3 True T U D z\<close>
+abbreviation \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu F3 T U D u \<equiv> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu F3 True T U D u\<close>
 
 subsubsection \<open>Semimodule\<close>
 
@@ -849,8 +842,6 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Object_Sep_Homo\<^sub>I _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Object_Sep_Homo\<^sub>E _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason?] for \<open>Semimodule_Zero _ _ \<close>,
@@ -888,22 +879,6 @@ declare [[
   and \<open>Functional_Transformation_BiFunctor ?Fa ?Fb _ _ _ _ _ _ _ _ _ _ \<close> \<Rightarrow>
       \<open>Functional_Transformation_BiFunctor ?Fa _ _ _ _ _ _ _ _ _ _ _\<close>
       \<open>Functional_Transformation_BiFunctor _ ?Fb _ _ _ _ _ _ _ _ _ _\<close>   (100)
-  and \<open>Separation_Homo\<^sub>I ?Ft ?Fu ?Fc _ _ _ _\<close> \<Rightarrow>
-      \<open>Separation_Homo\<^sub>I ?Ft _ _ _ _ _ _\<close>
-      \<open>Separation_Homo\<^sub>I _ ?Fu _ _ _ _ _\<close>
-      \<open>Separation_Homo\<^sub>I _ _ ?Fc _ _ _ _\<close>    (100)
-  and \<open>Separation_Homo\<^sub>E ?Ft ?Fu ?Fc _ _ _\<close> \<Rightarrow>
-      \<open>Separation_Homo\<^sub>E _ _ ?Fc _ _ _\<close>
-      \<open>Separation_Homo\<^sub>E _ ?Fu _ _ _ _\<close>
-      \<open>Separation_Homo\<^sub>E ?Ft _ _ _ _ _\<close>    (100)
-  and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I ?Ft ?Fu ?Fc _ _ _ _\<close> \<Rightarrow>
-      \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I ?Ft _ _ _ _ _ _\<close>
-      \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I _ ?Fu _ _ _ _ _\<close>
-      \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I _ _ ?Fc _ _ _ _\<close>  (100)
-  and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E ?Ft ?Fu ?Fc _ _ _\<close> \<Rightarrow>
-      \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E ?Ft _ _ _ _ _\<close>
-      \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E _ ?Fu _ _ _ _\<close>
-      \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E _ _ ?Fc _ _ _\<close>    (100)
   and \<open>Object_Sep_Homo\<^sub>I ?T _\<close> \<Rightarrow> \<open>Object_Sep_Homo\<^sub>I ?T _\<close> (100)
   and \<open>Separation_Homo\<^sub>I_Cond ?Ft ?Fu ?Fc _ _ _ _ _\<close> \<Rightarrow>
       \<open>Separation_Homo\<^sub>I_Cond ?Ft _ _ _ _ _ _ _\<close>
@@ -959,12 +934,8 @@ in (*Phi_Type.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\
   \<^pattern_prop>\<open>Functional_Transformation_Functor\<^sub>\<Lambda> _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _\<close>,
@@ -1159,13 +1130,6 @@ lemma apply_sep_homo_unzip:
 \<Longrightarrow> (x * y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T)\<close>
   unfolding Object_Sep_Homo\<^sub>E_def Premise_def by blast
 
-lemma Separation_Homo\<^sub>I_sub_D:
-  \<open> D' \<subseteq> D
-\<Longrightarrow> Separation_Homo\<^sub>I F\<^sub>a F\<^sub>b F\<^sub>c T U D  z
-\<Longrightarrow> Separation_Homo\<^sub>I F\<^sub>a F\<^sub>b F\<^sub>c T U D' z\<close>
-  unfolding Separation_Homo\<^sub>I_def
-  by blast
-
 lemma Separation_Homo\<^sub>I_Cond_sub_D:
   \<open> D' \<subseteq> D
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond F\<^sub>a F\<^sub>b F\<^sub>c C\<^sub>W T U D  z
@@ -1184,13 +1148,14 @@ lemma apply_Separation_Homo\<^sub>I:
   \<open> Separation_Homo\<^sub>I Ft Fu Fc T U D z
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
 \<Longrightarrow> x \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z x \<Ztypecolon> Fc(T \<^emph> U)\<close>
-  unfolding Separation_Homo\<^sub>I_def Premise_def meta_Ball_def meta_case_prod_def split_paired_all
+  unfolding Separation_Homo\<^sub>I_Cond_def Premise_def meta_Ball_def meta_case_prod_def split_paired_all
   by (cases x; simp)
 
 lemma apply_Separation_Homo\<^sub>E:
-  \<open> Separation_Homo\<^sub>E Ft Fu Fc T U un
+  \<open> Separation_Homo\<^sub>E Ft Fu Fc T U D un
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
 \<Longrightarrow> x \<Ztypecolon> Fc(T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un x \<Ztypecolon> Ft(T) \<^emph> Fu(U)\<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric]
+  unfolding Separation_Homo\<^sub>E_Cond_def \<phi>Prod_expn'[symmetric] Premise_def
   by simp
 
 lemma apply_Separation_Homo\<^sub>I_Cond:
@@ -1208,13 +1173,6 @@ lemma apply_Separation_Homo\<^sub>E_Cond:
   by simp
 
 paragraph \<open>With Parameterization\<close>
-
-lemma Separation_Homo\<^sub>\<Lambda>\<^sub>I_sub_D:
-  \<open> D' \<subseteq> D
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I F\<^sub>a F\<^sub>b F\<^sub>c T U D  z
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I F\<^sub>a F\<^sub>b F\<^sub>c T U D' z\<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_def
-  by blast
 
 lemma Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_sub_D:
   \<open> D' \<subseteq> D
@@ -1234,13 +1192,14 @@ lemma apply_Separation_Homo\<^sub>\<Lambda>\<^sub>I:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu Fc T U D z
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
 \<Longrightarrow> x \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z x \<Ztypecolon> Fc(\<lambda>p. T p \<^emph> U p)\<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Premise_def meta_Ball_def meta_case_prod_def split_paired_all
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Premise_def meta_Ball_def meta_case_prod_def split_paired_all
   by (cases x; simp)
 
 lemma apply_Separation_Homo\<^sub>\<Lambda>\<^sub>E:
-  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U un
+  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U D un
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
 \<Longrightarrow> x \<Ztypecolon> Fc(\<lambda>p. T p \<^emph> U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un x \<Ztypecolon> Ft(T) \<^emph> Fu(U)\<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def \<phi>Prod_expn'[symmetric]
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def \<phi>Prod_expn'[symmetric] Premise_def
   by simp
 
 lemma apply_Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond:
@@ -2297,9 +2256,18 @@ lemma Object_Sep_Homo\<^sub>I_subdom[
   by blast
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
-  \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
+  \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R D un
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> D
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
-  unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def
+  unfolding Separation_Homo\<^sub>E_Cond_def Action_Tag_def Bubbling_def \<r>Guard_def Premise_def
+  by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo']:
+  \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond Fa\<^sub>L Fa\<^sub>R Fb C U\<^sub>L U\<^sub>R D un
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> D
+\<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A>[C] U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A>[C] Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
+  unfolding Separation_Homo\<^sub>E_Cond_def Action_Tag_def Bubbling_def Premise_def
+            \<r>Guard_def
   by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
 
 (*Object_Sep_Homo\<^sub>I is necessary at least for composition \<phi>-type
@@ -2311,6 +2279,7 @@ Object_Sep_Homo\<^sub>I B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcom
   Note here \<open>c = b * a\<close> only if the \<open>*\<close> is defined between b and a.
 *)
 
+(*TODO: rethink the necessaryness of this*)
 lemma Separation_Homo_functor[\<phi>reason_template %Object_Sep_Homo_functor]:
   \<open> Separation_Homo\<^sub>I F F F' T T Ds zz
 \<Longrightarrow> Transformation_Functor F' F (T \<^emph> T) T D R m
@@ -2319,7 +2288,7 @@ lemma Separation_Homo_functor[\<phi>reason_template %Object_Sep_Homo_functor]:
            (\<forall>x y a b. (a, b) \<in> D (zz (x, y)) \<longrightarrow> b * a \<in> R (zz (x, y)))
 \<Longrightarrow> Object_Sep_Homo\<^sub>I T (Set.bind Ds (D o zz))
 \<Longrightarrow> Object_Sep_Homo\<^sub>I (F T) Ds\<close>
-  unfolding Object_Sep_Homo\<^sub>I_def Transformation_Functor_def Separation_Homo\<^sub>I_def Premise_def
+  unfolding Object_Sep_Homo\<^sub>I_def Transformation_Functor_def Separation_Homo\<^sub>I_Cond_def Premise_def
             meta_Ball_def meta_case_prod_def split_paired_all
   apply (simp (no_asm_use) add: \<phi>Prod_expn'[symmetric] del: split_paired_All; clarify)
   subgoal premises prems for x y
@@ -2337,18 +2306,18 @@ lemma Separation_Homo_functor[\<phi>reason_template %Object_Sep_Homo_functor]:
 
 lemma [\<phi>reason_template name Fc.\<phi>Prod_ty []]:
   \<open> Separation_Homo\<^sub>I Ft Fu Fc T U UNIV (\<lambda>x. x)
-\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U (\<lambda>x. x)
+\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Fc (T \<^emph> U) = Ft T \<^emph> Fu U \<close>
-  unfolding Separation_Homo\<^sub>I_def Separation_Homo\<^sub>E_def
+  unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 
 lemma [\<phi>reason_template name F\<^sub>T\<^sub>U.\<phi>Prod[]]:
   \<open> Separation_Homo\<^sub>I F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U D\<^sub>z f
-\<Longrightarrow> Separation_Homo\<^sub>E F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U g
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> x \<in> D\<^sub>z
+\<Longrightarrow> Separation_Homo\<^sub>E F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U D\<^sub>u g
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> x \<in> D\<^sub>z \<and> f x \<in> D\<^sub>u
 \<Longrightarrow> (x \<Ztypecolon> F\<^sub>T T \<^emph> F\<^sub>U U) = (f x \<Ztypecolon> F\<^sub>T\<^sub>U (T \<^emph> U))\<close>
-  unfolding Separation_Homo\<^sub>E_def Separation_Homo\<^sub>I_def Premise_def Transformation_def
-            BI_eq_iff
+  unfolding Separation_Homo\<^sub>E_Cond_def Separation_Homo\<^sub>I_Cond_def
+            Premise_def Transformation_def BI_eq_iff
   by (clarsimp; metis prod.collapse)
 
 (* seemly useless
@@ -2359,7 +2328,7 @@ lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 *)
-
+(*
 lemma apply_conditioned_Separation_Functor_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U un)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor Fc Ft (T \<^emph>[C] U) T D R pred_mapper func_mapper)
@@ -2372,8 +2341,10 @@ lemma apply_conditioned_Separation_Functor_unzip:
     ;; apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
     \<medium_left_bracket> \<medium_right_bracket>
   \<medium_right_bracket> .
+*)
 
-
+(*TODO remove*)
+(*
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' R' pred' func' )
@@ -2418,7 +2389,7 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
       clarsimp;
       metis (no_types, lifting) case_prodD transformation_weaken)
 
-
+*)
 
 (*
 subsubsection \<open>Transformation of Single \<phi>-Type with Remainders\<close>
@@ -2448,24 +2419,32 @@ lemma [\<phi>reason_template default 80]:
 subsubsection \<open>With Parameterization\<close>
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
-  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
+  \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>\<Lambda>\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R D un
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> D
 \<Longrightarrow> x \<Ztypecolon> Fb (\<lambda>p. U\<^sub>L p \<^emph>\<^sub>\<A> U\<^sub>R p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Bubbling_def
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def Action_Tag_def Bubbling_def \<r>Guard_def Premise_def
+  by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Fa\<^sub>L Fa\<^sub>R Fb C U\<^sub>L U\<^sub>R D un
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
+\<Longrightarrow> x \<Ztypecolon> Fb (\<lambda>p. U\<^sub>L p \<^emph>\<^sub>\<A>[C] U\<^sub>R p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A>[C] Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def Action_Tag_def Bubbling_def Premise_def \<r>Guard_def Premise_def
   by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
 
 lemma [\<phi>reason_template name Fc.\<phi>Prod_ty []]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu Fc T U UNIV (\<lambda>x. x)
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U (\<lambda>x. x)
+\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Fc (\<lambda>p. T p \<^emph> U p) = Ft T \<^emph> Fu U \<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Separation_Homo\<^sub>\<Lambda>\<^sub>E_def
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 
 lemma [\<phi>reason_template name F\<^sub>T\<^sub>U.\<phi>Prod[]]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U D\<^sub>z f
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U g
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D\<^sub>z \<and> g (f x) = x
+\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U D\<^sub>u g
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D\<^sub>z \<and> f x \<in> D\<^sub>u \<and> g (f x) = x
 \<Longrightarrow> (x \<Ztypecolon> F\<^sub>T T \<^emph> F\<^sub>U U) = (f x \<Ztypecolon> F\<^sub>T\<^sub>U (\<lambda>p. T p \<^emph> U p))\<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Premise_def
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Premise_def
             Transformation_def BI_eq_iff
   by (clarsimp; metis (no_types, lifting) prod.collapse)
 
@@ -2478,28 +2457,14 @@ lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 *)
 
-declare [[\<phi>trace_reasoning = 2]]
-
-lemma apply_conditioned_Separation_Functor\<^sub>\<Lambda>_unzip:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U un)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> Fc Ft (\<lambda>p. T p \<^emph>[C] U p) T D R pred_mapper func_mapper)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>p a. a \<in> D p x \<and> \<not> C \<longrightarrow> fst a \<in> R p x)
-\<Longrightarrow> x \<Ztypecolon> Fc(\<lambda>p. T p \<^emph>[C] U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then un x else (func_mapper (\<lambda>_. fst) (\<lambda>_ _. True) x, undefined)) \<Ztypecolon> Ft(T) \<^emph>[C] Fu(U)\<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
-  apply (cases C; simp)
-  \<medium_left_bracket> premises FTF[] and [useful] and [] 
-    apply_rule apply_Functional_Transformation_Functor\<^sub>\<Lambda>[where f=\<open>\<lambda>_. fst\<close> and P=\<open>\<lambda>_ _. True\<close>, OF FTF]
-    \<medium_left_bracket> \<medium_right_bracket>
-  \<medium_right_bracket> .
-
-
+(* TODO: remove
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> Ft F3 T (\<lambda>p. T p \<^emph>[C\<^sub>W] U p) D' R' pred' func' )
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>W then D else {x. \<forall>p a. a \<in> D' p (fst x) \<longrightarrow> (a, undefined) \<in> R' p (fst x)})) @action \<A>_template_reason
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (if case_split C\<^sub>W then z else func' (\<lambda>_ x. (x, undefined)) (\<lambda>_ _. True) o fst)) @action \<A>_template_reason
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Premise_def Action_Tag_def Simplify_def
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Premise_def Action_Tag_def Simplify_def
             case_split_def
   by (cases C\<^sub>W; clarsimp;
       insert apply_Functional_Transformation_Functor\<^sub>\<Lambda>
@@ -2524,7 +2489,7 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
                         D=D' and R=R'];
       clarsimp;
       metis (no_types, lifting) case_prodD transformation_weaken)
-
+*)
 
 
 subsection \<open>Semimodule\<close>
@@ -3519,8 +3484,9 @@ lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we hav
     apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where f=f and P=P, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
-    apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E]
-    apply_rule apply_Semimodule_SAssoc\<^sub>I[OF SA, THEN transformation_right_frame_conditioned_ty]
+        ;;  apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E]
+          thm apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E]
+          ;; apply_rule apply_Semimodule_SAssoc\<^sub>I[OF SA, THEN transformation_right_frame_conditioned_ty]
   \<medium_right_bracket> .
 
 declare SE_general_Semimodule_Scalar_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template default %derived_SE_scalar_assoc]
@@ -5396,27 +5362,39 @@ paragraph \<open>Normal\<close>
 
 private lemma \<phi>TA_SH\<^sub>I_rule:
   \<open> (\<And>z. Ant \<longrightarrow>
-            (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
-                \<longrightarrow> ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (T \<^emph> U)))) @action \<phi>TA_ind_target undefined)
+         (\<forall>x y. C\<^sub>W \<and> (x,y) \<in> D \<and> w(x,y) = z \<longrightarrow>
+            ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (T \<^emph> U)))) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>z. Ant \<longrightarrow>
+         (\<forall>x y. \<not> C\<^sub>W \<and> (x,y) \<in> D \<and> w(x,y) = z \<longrightarrow>
+            (x \<Ztypecolon> OPEN (Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (T \<^emph>[False] U)))) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Separation_Homo\<^sub>I Fa Fb Fc T U D w \<close>
-  unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def MAKE_def OPEN_def
-  by simp
+\<Longrightarrow> Separation_Homo\<^sub>I_Cond Fa Fb Fc C\<^sub>W T U D w \<close>
+  unfolding Separation_Homo\<^sub>I_Cond_def \<phi>Prod_expn' Action_Tag_def MAKE_def OPEN_def
+  by (cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'; blast)
 
 private lemma \<phi>TA_SH\<^sub>E_rule:
-  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN (Fc (T \<^emph>\<^sub>\<A> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U)) @action \<phi>TA_ind_target \<A>simp)
+  \<open> (\<And>z. Ant \<longrightarrow> C\<^sub>R \<and> z \<in> D \<longrightarrow> (z \<Ztypecolon> OPEN (Fc (T \<^emph>\<^sub>\<A> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U)) @action \<phi>TA_ind_target \<A>simp)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>z. Ant \<longrightarrow> \<not> C\<^sub>R \<and> z \<in> D \<longrightarrow> (z \<Ztypecolon> OPEN (Fc (T \<^emph>\<^sub>\<A>[False] U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst (uz z) \<Ztypecolon> MAKE (Ft T)) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def
-  by simp
+\<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu Fc C\<^sub>R T U D uz \<close>
+  unfolding Separation_Homo\<^sub>E_Cond_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def
+  by (cases C\<^sub>R; clarsimp)
 
 private lemma \<phi>TA_SH\<^sub>I_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> ((y \<Ztypecolon> OPEN Tb) * (x \<Ztypecolon> OPEN Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE Tc)) @action \<phi>TA_ind_target undefined)
 \<equiv> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x y \<Longrightarrow> ((y \<Ztypecolon> Tb) * (x \<Ztypecolon> Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Tc) @action \<phi>TA_ToA_elim)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
+  by (rule; blast)
+
+private lemma \<phi>TA_SH\<^sub>I_rewr_IH\<^sub>2:
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> ((x \<Ztypecolon> OPEN Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE Tc)) @action \<phi>TA_ind_target undefined)
+\<equiv> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x y \<Longrightarrow> ((x \<Ztypecolon> Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Tc) @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
   by (rule; blast)
 
@@ -5437,55 +5415,67 @@ text \<open>This conditioned template is necessary because, see,
 \<close>
 
 private lemma \<phi>TA_SH\<^sub>E_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> MAKE U1 \<^emph> MAKE U2) @action \<phi>TA_ind_target A)
-\<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U1 \<^emph> U2 \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all OPEN_def MAKE_def
+  \<open>Trueprop (Ant \<longrightarrow> Q \<longrightarrow> (z \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> MAKE U1 \<^emph> MAKE U2) @action \<phi>TA_ind_target A)
+\<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U1 \<^emph> U2 \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all OPEN_def MAKE_def Premise_def
   by simp
 
 private lemma \<phi>TA_SH\<^sub>I_DV_cong:
   \<open> D \<equiv> D'
 \<Longrightarrow> z \<equiv> z'
-\<Longrightarrow> Separation_Homo\<^sub>I Ft Fu Fc T U D z \<equiv> Separation_Homo\<^sub>I Ft Fu Fc T U D' z' \<close>
+\<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu Fc C T U D z \<equiv> Separation_Homo\<^sub>I_Cond Ft Fu Fc C T U D' z' \<close>
   by simp
 
 private lemma \<phi>TA_SH\<^sub>E_DV_cong:
-  \<open> u \<equiv> u'
-\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U u \<equiv> Separation_Homo\<^sub>E Ft Fu Fc T U u' \<close>
+  \<open> D \<equiv> D'
+\<Longrightarrow> u \<equiv> u'
+\<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu Fc C T U D u \<equiv> Separation_Homo\<^sub>E_Cond Ft Fu Fc C T U D u' \<close>
   by simp
 
 paragraph \<open>With Parameterization\<close>
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_rule:
   \<open> (\<And>z. Ant \<longrightarrow>
-            (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
+            (\<forall>x y. C \<and> (x,y) \<in> D \<and> w(x,y) = z
                 \<longrightarrow> ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (\<lambda>p. T p \<^emph> U p))))
+            @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>z. Ant \<longrightarrow>
+            (\<forall>x y. \<not> C \<and> (x,y) \<in> D \<and> w(x,y) = z
+                \<longrightarrow> (x \<Ztypecolon> OPEN (Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (\<lambda>p. T p \<^emph>[False] U p))))
             @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I Fa Fb Fc T U D w \<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_def \<phi>Prod_expn' Action_Tag_def MAKE_def OPEN_def
-  by simp
+\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Fa Fb Fc C T U D w \<close>
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def \<phi>Prod_expn' Action_Tag_def MAKE_def OPEN_def
+  by (cases C; clarsimp simp add: \<phi>Prod_expn'; blast)
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_rule:
-  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN (Fc (\<lambda>p. T p \<^emph>\<^sub>\<A> U p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U))
+  \<open> (\<And>z. Ant \<longrightarrow> C \<and> z \<in> D \<longrightarrow>
+          (z \<Ztypecolon> OPEN (Fc (\<lambda>p. T p \<^emph>\<^sub>\<A> U p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U))
+          @action \<phi>TA_ind_target \<A>simp)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>z. Ant \<longrightarrow> \<not> C \<and> z \<in> D \<longrightarrow>
+          (z \<Ztypecolon> OPEN (Fc (\<lambda>p. T p \<^emph>\<^sub>\<A>[False] U p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst (uz z) \<Ztypecolon> MAKE (Ft T))
           @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def
-  by simp
+\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu Fc C T U D uz \<close>
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def
+  by (cases C; simp)
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_DV_cong:
   \<open> D \<equiv> D'
 \<Longrightarrow> z \<equiv> z'
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu Fc T U D z \<equiv> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu Fc T U D' z' \<close>
+\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu Fc T U D z \<equiv> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu Fc T U D' z' \<close>
   by simp
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_DV_cong:
-  \<open> u \<equiv> u'
-\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U u \<equiv> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U u' \<close>
+  \<open> D \<equiv> D'
+\<Longrightarrow> u \<equiv> u'
+\<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu Fc T U D u \<equiv> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu Fc T U D u' \<close>
   by simp
 
 
@@ -5498,11 +5488,11 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
           \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C*)
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120
-  for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close> | \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I _ _ _ _ _ _ _\<close>)
+  for (\<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close> | \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>)
     = \<open> Phi_Type_Derivers.separation_homo_I \<close>
 
 \<phi>property_deriver Separation_Homo\<^sub>E 121
-  for (\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close> | \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _\<close>)
+  for (\<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close> | \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>)
     = \<open> Phi_Type_Derivers.separation_homo_E \<close>
 
 \<phi>property_deriver Separation_Homo 122 requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E

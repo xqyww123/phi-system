@@ -104,6 +104,15 @@ method_setup subgoal' = \<open>
   end)
 \<close>
 
+method_setup prefer' = \<open>
+  Scan.lift (Parse.nat) >> (fn n => fn _ => fn _ =>
+    Context_Tactic.CONTEXT_TACTIC (fn th =>
+      case Thm.concl_of th
+        of Const(\<^const_name>\<open>Pure.prop\<close>, _) $ (Const(\<^const_name>\<open>Pure.term\<close>, _) $ _) =>
+              all_tac th
+         | _ => prefer_tac n th))
+\<close>
+
 
 subsection \<open>Helper Lemmas\<close>
 
