@@ -246,4 +246,86 @@ lemma [\<phi>reason 1010]:
 *)
 
 
+section \<open>Derivatives of Transformation \<close>
+
+definition ToA_Getter :: \<open>'c::sep_magma BI \<Rightarrow> 'c BI \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>ToA_Getter Src R T x \<equiv> Src = (x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R)\<close>
+
+definition ToA_Getter' :: \<open>'a \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 'c::sep_magma BI \<Rightarrow> bool \<Rightarrow> 'c BI \<Rightarrow> bool \<Rightarrow> 'w \<Rightarrow> ('c,'w) \<phi> \<Rightarrow> bool\<close>
+           ("\<g>\<e>\<t> _ \<Ztypecolon> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<Ztypecolon> _" [21,21,19,19,19,19,21,21] 18)
+  where \<open>ToA_Getter' x T Src C\<^sub>R R C\<^sub>W w W \<equiv> (Src \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>W] w \<Ztypecolon> W) = (x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R)\<close>
+
+definition ToA_Mapper :: \<open>'c::sep_magma BI \<Rightarrow> 'c BI \<Rightarrow> 'c BI \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> 'a \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
+  where \<open>ToA_Mapper Src Ret R T U x f \<equiv> (Src \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<and>
+                                        (f x \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ret)\<close>
+
+subsection \<open>Reasoning\<close>
+
+lemma
+  \<open> ToA_Getter S M T\<^sub>1 x\<^sub>1
+\<Longrightarrow> ToA_Getter M R T\<^sub>2 x\<^sub>2 
+\<Longrightarrow> ToA_Getter S R (T\<^sub>1 \<^emph> T\<^sub>2) (x\<^sub>1, x\<^sub>2)  \<close>
+  for S :: \<open>'c::sep_semigroup BI\<close>
+  unfolding ToA_Getter_def BI_eq_iff
+  by ((clarsimp; rule; clarsimp),
+      metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc,
+      metis sep_disj_multD1 sep_disj_multI1 sep_mult_assoc')
+
+lemma \<phi>Some_mult_contract:
+  \<open>(x \<Ztypecolon> \<black_circle> T) * (y \<Ztypecolon> \<black_circle> U) = ((y,x) \<Ztypecolon> \<black_circle> (U \<^emph> T)) \<close>
+  by (metis \<phi>Prod_expn' \<phi>Some_\<phi>Prod)
+
+lemma \<phi>Some_not_1:
+  \<open>(x \<Ztypecolon> \<black_circle> T) \<noteq> 1\<close>
+  by (metis One_expn \<phi>Some_expn one_option_def option.distinct(1))
+
+lemma
+  \<open> \<g>\<e>\<t> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] M \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R\<^sub>1
+\<Longrightarrow> \<g>\<e>\<t> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<f>\<r>\<o>\<m> M \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
+\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
+\<Longrightarrow> \<g>\<e>\<t> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
+  for S :: \<open>'c::sep_semigroup BI\<close>
+  unfolding ToA_Getter'_def Premise_def Action_Tag_def
+  by (cases C\<^sub>R\<^sub>2; cases C\<^sub>W\<^sub>1; cases C\<^sub>W\<^sub>2; cases C\<^sub>W;
+      clarsimp simp add: \<phi>Prod_expn' \<phi>Some_mult_contract \<phi>Some_eq_term_strip \<phi>Some_not_1;
+      metis mult.assoc)
+
+lemma
+  \<open> \<g>\<e>\<t> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] M \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1
+\<Longrightarrow> if C\<^sub>R\<^sub>1 then \<g>\<e>\<t> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<f>\<r>\<o>\<m> M \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
+           else Identity_Elements\<^sub>I T\<^sub>2 D\<^sub>I P\<^sub>I
+             \<and>\<^sub>\<r> Identity_Elements\<^sub>E T\<^sub>2 D\<^sub>E
+             \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> (D\<^sub>I x\<^sub>2 \<and> D\<^sub>E x\<^sub>2))
+\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
+\<Longrightarrow> \<g>\<e>\<t> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
+  for S :: \<open>'c::sep_monoid BI\<close>
+  unfolding ToA_Getter'_def Premise_def Action_Tag_def Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
+  apply (cases C\<^sub>R\<^sub>1; cases C\<^sub>R\<^sub>2; cases C\<^sub>W\<^sub>1; cases C\<^sub>W\<^sub>2; cases C\<^sub>W;
+        clarsimp simp add: \<phi>Prod_expn' \<phi>Some_mult_contract \<phi>Some_eq_term_strip \<phi>Some_not_1)
+               apply (metis mult.assoc)
+              apply (metis mult.assoc)
+             apply (metis mult.assoc)
+  apply (metis mult.assoc)
+           apply (metis mult.assoc)
+  apply (metis mult.assoc)
+
+
+
+lemma
+  \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> w\<^sub>2 \<Ztypecolon> W\<^sub>2
+\<Longrightarrow> \<g>\<e>\<t> w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<f>\<r>\<o>\<m> S\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> w \<Ztypecolon> W
+\<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<^sub>1 * R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> w \<Ztypecolon> W \<close>
+  for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
+  unfolding ToA_Getter'_def
+  by (clarsimp, metis mult.assoc)
+
+
+
+lemma
+  \<open> ToA_Getter' S\<^sub>2 W\<^sub>1 w\<^sub>1 R\<^sub>2 T x
+\<Longrightarrow> ToA_Getter' S\<^sub>1 W w R\<^sub>1 T x
+\<Longrightarrow> ToA_Getter' (S\<^sub>1 * S\<^sub>2) W w (R\<^sub>1 * R\<^sub>2) T x \<close>
+
+
 end

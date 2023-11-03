@@ -6934,4 +6934,3 @@ section \<open>Clean-up\<close>
 hide_const (open) introduced
 
 end
-                                                          

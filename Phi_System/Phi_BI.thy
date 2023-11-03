@@ -65,6 +65,12 @@ theory Phi_BI
       and "<subj>" = "\<s>\<u>\<b>\<j>"
       and "<when>" = "\<w>\<h>\<e>\<n>"
       and "<remains>" = "\<r>\<e>\<m>\<a>\<i>\<n>\<s>"
+      and "<get>" = "\<g>\<e>\<t>"
+      and "<map>" = "\<m>\<a>\<p>"
+      and "<by>" = "\<b>\<y>"
+      and "<from>" = "\<f>\<r>\<o>\<m>"
+      and "<remaining>" = "\<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>"
+      and "<demanding>" = "\<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>"
 begin
 
 type_synonym 'a BI = \<open>'a set\<close>
@@ -4028,7 +4034,6 @@ lemma Object_Equiv_Mul_Quant[\<phi>reason %object_equiv_cut]:
           metis)
   qed
 
-
 section \<open>Reasoning\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax0.ML\<close>
@@ -6475,7 +6480,6 @@ method_setup represent_BI_pred_in_\<phi>Type = \<open>Args.term >> (fn X => fn c
     | _ => Seq.empty
   end
 )))\<close>
-
 
 
 end
