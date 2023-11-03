@@ -71,6 +71,10 @@ theory Phi_BI
       and "<from>" = "\<f>\<r>\<o>\<m>"
       and "<remaining>" = "\<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>"
       and "<demanding>" = "\<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>"
+      and "<to>" = "\<t>\<o>"
+      and "<over>" = "\<o>\<v>\<e>\<r>"
+      and "<subst>" = "\<s>\<u>\<b>\<s>\<t>"
+      and "<for>" = "\<f>\<o>\<r>" 
 begin
 
 type_synonym 'a BI = \<open>'a set\<close>
@@ -2759,6 +2763,7 @@ lemma \<phi>Some_eq_term_strip:
   \<open> (x \<Ztypecolon> \<black_circle> T) = (y \<Ztypecolon> \<black_circle> U) \<equiv> (x \<Ztypecolon> T) = (y \<Ztypecolon> U) \<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp blast
+  
 
 
 subsubsection \<open>Transformation Rules\<close>
@@ -2820,6 +2825,8 @@ definition \<phi>Cond_Unital_Ins :: \<open>bool \<Rightarrow> ('v, 'x) \<phi> \<
   \<comment> \<open>Conditional Unital Insertion\<close>
   where \<open>\<half_blkcirc>[C] T = (if C then \<black_circle> T else \<circle>\<^sub>\<x>)\<close>
 
+definition Cond_Unital_Ins_BI :: \<open>bool \<Rightarrow> 'c BI \<Rightarrow> 'c option BI\<close> ("\<half_blkcirc>\<^sub>B\<^sub>I[_] _" [20,91] 90)
+  where \<open>\<half_blkcirc>\<^sub>B\<^sub>I[C] A = (if C then \<Psi>[Some] A else 1)\<close>
 
 
 paragraph \<open>Rewrites\<close>
@@ -2835,9 +2842,19 @@ lemma \<phi>Cond_Unital_Ins_unfold_simp[simp]:
   unfolding \<phi>Cond_Unital_Ins_unfold
   by simp+
 
+lemma \<phi>Cond_Unital_Ins_BI_unfold_simp[simp]:
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[False] A \<equiv> 1 \<close>
+  unfolding Cond_Unital_Ins_BI_def
+  by simp
+
 lemma \<phi>Cond_Unital_Ins_expn[simp, \<phi>expns]:
   \<open> p \<Turnstile> (x \<Ztypecolon> \<half_blkcirc>[C] T) \<longleftrightarrow> (if C then (\<exists>v. p = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)) else p = None) \<close>
   unfolding \<phi>Cond_Unital_Ins_unfold
+  by clarsimp
+
+lemma \<phi>Cond_Unital_BI_Ins_expn[simp, \<phi>expns]:
+  \<open> p \<Turnstile> (\<half_blkcirc>\<^sub>B\<^sub>I[C] A) \<longleftrightarrow> (if C then (\<exists>v. p = Some v \<and> v \<Turnstile> A) else p = None) \<close>
+  unfolding Cond_Unital_Ins_BI_def
   by clarsimp
 
 lemma \<phi>Cond_Unital_Prod:
@@ -2860,6 +2877,11 @@ lemma cond_prod_transformation_rewr:
   \<open> x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P \<equiv> x' \<Ztypecolon> \<black_circle> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding atomize_eq
   by (cases C; clarsimp simp add: \<phi>Some_\<phi>Prod \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip)+
+
+lemma \<phi>Cond_Unital_BI_eq_strip:
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] A = \<half_blkcirc>\<^sub>B\<^sub>I[True] B \<equiv> A = B \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
 
 
 paragraph \<open>Reasoning Properties\<close>
@@ -2968,6 +2990,10 @@ declare [[\<phi>reason_default_pattern
       \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close>   (100)
   and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>
       \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100)
+
+  and \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
+      \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
+
 (*and \<open>_ = (if ?flag then _ else _) @action \<A>merge \<close> \<Rightarrow>
       \<open>_ = (if ?flag then _ else _) @action \<A>merge \<close>   (100)*)
 (*  and \<open>?flag \<longrightarrow> _ @action \<A>merge\<close> \<Rightarrow>
@@ -3032,6 +3058,15 @@ lemma [\<phi>reason %\<A>merge+10]:
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
 
+paragraph \<open>Merging Conditioned BI Assertion\<close>
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] (A * B) = (\<half_blkcirc>\<^sub>B\<^sub>I[True] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[True] B) @action \<A>merge \<close>
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] A = (\<half_blkcirc>\<^sub>B\<^sub>I[True] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[False] B) @action \<A>merge \<close>
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] B = (\<half_blkcirc>\<^sub>B\<^sub>I[False] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[True] B) @action \<A>merge \<close>
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[False] \<top> = (\<half_blkcirc>\<^sub>B\<^sub>I[False] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[False] B) @action \<A>merge \<close>
+  unfolding Action_Tag_def BI_eq_iff
+  by (clarsimp; force)+
 
 subsubsection \<open>Separation Extraction of \<open>\<phi>\<close>Prod\<close>
 
@@ -3116,6 +3151,20 @@ definition Identity_Elements\<^sub>I :: \<open>('c::one,'a) \<phi> \<Rightarrow>
 definition Identity_Elements\<^sub>E :: \<open>('c::one,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Identity_Elements\<^sub>E T D \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T))\<close>
 
+definition Identity_Elements :: \<open>('c::one,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Identity_Elements T D \<longleftrightarrow> Identity_Elements\<^sub>I T D (\<lambda>_. True) \<and> Identity_Elements\<^sub>E T D\<close>
+
+lemma Identity_Elements_alt_def:
+  \<open>Identity_Elements T D \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> T) = 1)\<close>
+  unfolding Identity_Elements_def Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
+            Identity_Elements\<^sub>E_def Identity_Element\<^sub>E_def BI_eq_ToA
+  by (rule; clarsimp)
+  
+
+definition Hint_Identity_Element :: \<open>('c::one,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>Hint_Identity_Element T one \<equiv> True\<close>
+  \<comment> \<open>a pure syntactical hint\<close>
+
 declare [[ \<phi>reason_default_pattern
       \<open>Identity_Element\<^sub>I ?S _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I ?S _\<close> (100)
   and \<open>Identity_Element\<^sub>I (_ \<Ztypecolon> ?T) _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I (_ \<Ztypecolon> ?T) _\<close> (110)
@@ -3124,6 +3173,9 @@ declare [[ \<phi>reason_default_pattern
 
   and \<open>Identity_Elements\<^sub>I ?T _ _\<close> \<Rightarrow> \<open>Identity_Elements\<^sub>I ?T _ _\<close> (100)
   and \<open>Identity_Elements\<^sub>E ?T _\<close> \<Rightarrow> \<open>Identity_Elements\<^sub>E ?T _\<close> (100)
+
+  and \<open>Hint_Identity_Element ?T _\<close> \<Rightarrow> \<open>Hint_Identity_Element ?T _\<close> (100)
+  and \<open>Identity_Elements ?T _\<close> \<Rightarrow> \<open>Identity_Elements ?T _\<close> (100)
 ]]
 
 \<phi>reasoner_group identity_element = (100,[1,3000]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
@@ -3132,7 +3184,7 @@ declare [[ \<phi>reason_default_pattern
  and identity_element_fallback = (1,[1,1]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > fail
     \<open>Fallbacks of reasoning Identity_Element.\<close>
- and identity_element_\<phi> = (10, [10, 10]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
+ and identity_element_\<phi> = (10, [10, 11]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
     \<open>Turning to \<open>Identity_Elements\<^sub>I\<close> and \<open>Identity_Elements\<^sub>E\<close>\<close>
  and derived_identity_element = (50, [50,55]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > identity_element_\<phi>
@@ -3145,6 +3197,9 @@ declare [[ \<phi>reason_default_pattern
     \<open>Literal Reduction\<close>
  and identity_element_ToA = (50, [50,51]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
     \<open>Entry points from ToA to Identity_Element\<close>
+
+ and identity_element_hint = (1000, [10, 2000]) for \<open>Hint_Identity_Element T ie\<close>
+    \<open>syntactical hints suggesting an identity element of the given \<phi>-type\<close>
 
 subsubsection \<open>Extracting Pure Facts\<close>
 
@@ -3206,6 +3261,22 @@ lemma [\<phi>reason %extract_pure]:
   unfolding Action_Tag_def Identity_Elements\<^sub>E_def
   by clarsimp
 
+subsubsection \<open>System Rules\<close>
+
+lemma Identity_Elements\<^sub>I_sub:
+  \<open> D' \<le> D
+\<Longrightarrow> P \<le> P'
+\<Longrightarrow> Identity_Elements\<^sub>I T D P 
+\<Longrightarrow> Identity_Elements\<^sub>I T D' P' \<close>
+  unfolding Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def Transformation_def
+  by (clarsimp simp add: le_fun_def; blast)
+
+lemma [\<phi>reason %cutting]:
+  \<open> Identity_Elements\<^sub>I T D\<^sub>I P
+\<Longrightarrow> Identity_Elements\<^sub>E T D\<^sub>E
+\<Longrightarrow> Identity_Elements T (\<lambda>x. D\<^sub>I x \<and> D\<^sub>E x) \<close>
+  unfolding Identity_Elements_def
+  by (smt (verit, best) Identity_Elements\<^sub>E_def Identity_Elements\<^sub>I_sub predicate1I)
 
 
 subsubsection \<open>Fallback\<close>
@@ -3501,6 +3572,15 @@ lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) \<close>
   unfolding Identity_Element\<^sub>I_def Identity_Elements\<^sub>I_def Premise_def
+  using transformation_trans by fastforce
+
+lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>+1 for \<open>Identity_Element\<^sub>I (?var \<Ztypecolon> _) _\<close>]:
+  \<open> Identity_Elements\<^sub>I T D P
+\<Longrightarrow> Hint_Identity_Element T x \<or>\<^sub>c\<^sub>u\<^sub>t True
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) \<close>
+  unfolding Identity_Element\<^sub>I_def Identity_Elements\<^sub>I_def Premise_def
+            Orelse_shortcut_def Ant_Seq_def
   using transformation_trans by fastforce
 
 lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>]:
