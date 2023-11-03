@@ -50,8 +50,10 @@ setup \<open>Context.theory_map (
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
  
-let_\<phi>type \<phi>None
+let_\<phi>type \<phi>None 
   deriving Basic
        and Functionality
        and Identity_Elements
@@ -63,7 +65,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>None.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (\<circle> :: ('c::sep_carrier_1, unit) \<phi>) (\<lambda>x. True) \<close>),
   (@{thm' \<phi>None.Functionality}, \<^pattern_prop>\<open> Functionality \<circle> (\<lambda>x. True) \<close>),
   (@{thm' \<phi>None.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I \<circle> (\<lambda>x. True) (\<lambda>a. True)\<close>),
-  (@{thm' \<phi>None.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E \<circle> (\<lambda>x. True)\<close>),
+  (@{thm' \<phi>None.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E \<circle> (\<lambda>x. True) (Some ())\<close>),
   (@{thm' \<phi>None.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv \<circle> (\<lambda>_ _. True) \<close>),
   (@{thm' \<phi>None.Make_Abstraction_from_Raw}, \<^pattern_prop>\<open> 1 \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?xa \<Ztypecolon> \<circle>  \<close>),
   (@{thm' \<phi>None.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> ?x \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c::one,?'c) \<phi>) \<s>\<u>\<b>\<j> y. y = 1 @action to (Itself::(?'c,?'c) \<phi>) \<close>)
@@ -157,7 +159,7 @@ declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
-  deriving \<open>Identity_Elements\<^sub>E (\<phi>Fun f) (\<lambda>x. f x = 1)\<close>
+  deriving \<open>Identity_Elements\<^sub>E (\<phi>Fun f) (\<lambda>x. f x = 1) None\<close>
        and \<open>Identity_Elements\<^sub>I (\<phi>Fun f) (\<lambda>x. f x = 1) (\<lambda>_. True)\<close>
        and Basic
        and Functionality
@@ -172,8 +174,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Fun.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain (\<phi>Fun ?f) (\<lambda>x. True) \<close>),
   (@{thm' \<phi>Fun.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (\<phi>Fun ?f) (\<lambda>x. mul_carrier (?f x)) \<close>),
   (@{thm' \<phi>Fun.Functionality}, \<^pattern_prop>\<open> Functionality (\<phi>Fun ?f) (\<lambda>x. True)  \<close>),
-  (@{thm' \<phi>Fun.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I (\<phi>Fun ?f) (\<lambda>x. ?f x = 1) (\<lambda>_. True)  \<close>),
-  (@{thm' \<phi>Fun.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (\<phi>Fun ?f) (\<lambda>x. ?f x = 1)  \<close>),
+  (@{thm' \<phi>Fun.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I (\<phi>Fun ?f) (\<lambda>x. ?f x = 1) (\<lambda>_. True) \<close>),
+  (@{thm' \<phi>Fun.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (\<phi>Fun ?f) (\<lambda>x. ?f x = 1) None \<close>),
   (@{thm' \<phi>Fun.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv (\<phi>Fun ?f) (\<lambda>x y. ?f x = ?f y)  \<close>),
   (@{thm' \<phi>Fun.Make_Abstraction_from_Raw}, \<^pattern_prop>\<open> ?f ?xa \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?xa \<Ztypecolon> \<phi>Fun ?f \<close>),
   (@{thm' \<phi>Fun.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> ?x \<Ztypecolon> \<phi>Fun ?f \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself :: (?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> y. y = ?f ?x @action to (Itself :: (?'c,?'c) \<phi>) \<close>)
@@ -199,7 +201,7 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding of Subjection\<close>
 
-declare [[\<phi>trace_reasoning = 2 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
      
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
@@ -216,7 +218,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' SubjectionTY.Carrier_Set}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Carrier_Set ?T ?Pa) \<Longrightarrow> Carrier_Set (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<longrightarrow> ?Pa x) \<close>),
   (@{thm' SubjectionTY.Functionality}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Functionality ?T ?Pa) \<Longrightarrow> Functionality (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<longrightarrow> ?Pa x) \<close>),
   (@{thm' SubjectionTY.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P) \<Longrightarrow> Identity_Elements\<^sub>I (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<longrightarrow> ?T\<^sub>D x) (\<lambda>x. ?P \<and> ?T\<^sub>P x) \<close>),
-  (@{thm' SubjectionTY.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?T\<^sub>D x) \<close>),
+  (@{thm' SubjectionTY.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>e \<Longrightarrow> Identity_Elements\<^sub>E (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?T\<^sub>D x) None \<close>),
   (@{thm' SubjectionTY.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er \<Longrightarrow> Object_Equiv (?T \<phi>\<s>\<u>\<b>\<j> ?P) ?er \<close>),
   (@{thm' SubjectionTY.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
   (@{thm' SubjectionTY.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Functional_Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
@@ -412,7 +414,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Dependent_Sum.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain\<^sub>L (?T A) (?P A)) \<Longrightarrow> Abstract_Domain\<^sub>L (\<Sigma> ?T) (\<lambda>x. ?P (fst x) (snd x)) \<close>),
   (@{thm' \<phi>Dependent_Sum.Abstract_Domain}, \<^pattern_prop>\<open> (\<And>A. Abstract_Domain (?T A) (?P A)) \<Longrightarrow> Abstract_Domain (\<Sigma> ?T) (\<lambda>x. ?P (fst x) (snd x)) \<close>),
   (@{thm' \<phi>Dependent_Sum.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> (\<And>A. Identity_Elements\<^sub>I (?T A) (?T\<^sub>D A) (?T\<^sub>P A)) \<Longrightarrow> Identity_Elements\<^sub>I (\<Sigma> ?T) (\<lambda>x. ?T\<^sub>D (fst x) (snd x)) (\<lambda>x. ?T\<^sub>P (fst x) (snd x)) \<close>),
-  (@{thm' \<phi>Dependent_Sum.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> (\<And>A. Identity_Elements\<^sub>E (?T A) (?T\<^sub>D A)) \<Longrightarrow> Identity_Elements\<^sub>E (\<Sigma> ?T) (\<lambda>x. ?T\<^sub>D (fst x) (snd x)) \<close>),
+  (@{thm' \<phi>Dependent_Sum.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> (\<And>A. Identity_Elements\<^sub>E (?T A) (?T\<^sub>D A) (?T\<^sub>E A)) \<Longrightarrow> Identity_Elements\<^sub>E (\<Sigma> ?T) (\<lambda>x. ?T\<^sub>D (fst x) (snd x)) None \<close>),
   (@{thm' \<phi>Dependent_Sum.Object_Equiv}, \<^pattern_prop>\<open> (\<And>A. Object_Equiv (?T A) (?eq A)) \<Longrightarrow> Object_Equiv (\<Sigma> ?T) (\<lambda>x y. fst y = fst x \<and> ?eq (fst x) (snd x) (snd y)) \<close>),
   (@{thm' \<phi>Dependent_Sum.Make_Abstraction_from_Raw}, \<^pattern_prop>\<open> (\<And>A. ?c A \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y A \<Ztypecolon> ?T A) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ?y ?a = ?x \<Longrightarrow> ?c ?a \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (?a, ?x) \<Ztypecolon> \<Sigma> ?T   \<close>),
   (@{thm' \<phi>Dependent_Sum.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> (\<And>a c. a \<Ztypecolon> ?T c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> (Itself::(?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> b. ?r a b c @action to (Itself::(?'c,?'c) \<phi>)) \<Longrightarrow>
@@ -676,6 +678,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
 declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abst\<close>\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def Set_Abst :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   
@@ -695,7 +699,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' Set_Abst.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa)  \<close>),
   (@{thm' Set_Abst.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set (\<S> ?T) (\<lambda>x. \<forall>xa. xa \<in> x \<longrightarrow> ?P xa) \<close>),
   (@{thm' Set_Abst.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (\<S> ?T) (\<lambda>x. \<forall>xa. xa \<in> x \<longrightarrow> ?T\<^sub>D xa) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?T\<^sub>P xa) \<close>),
-  (@{thm' Set_Abst.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (\<S> ?T) (\<lambda>x. \<exists>uu. uu \<in> x \<and> ?T\<^sub>D uu) \<close>),
+  (@{thm' Set_Abst.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>E \<Longrightarrow> Identity_Elements\<^sub>E (\<S> ?T) (\<lambda>x. \<exists>uu. uu \<in> x \<and> ?T\<^sub>D uu) None \<close>),
   (@{thm' Set_Abst.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<S> ?T) (\<lambda>Sx Sy. \<forall>x. x \<in> Sx \<longrightarrow> (\<exists>y. y \<in> Sy \<and> ?eq x y)) \<close>),
   (@{thm' Set_Abst.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) \<close>),
   (@{thm' Set_Abst.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor \<S> \<S> ?T ?U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. {f x |x. x \<in> X \<and> P x}) \<close>),
@@ -1078,8 +1082,8 @@ lemma [\<phi>reason %identity_element_cut]:
 (*TODO: analysis of completeness*)
 
 lemma [\<phi>reason 1000]:
-  \<open> Identity_Elements\<^sub>E B D\<^sub>B
-\<Longrightarrow> Identity_Elements\<^sub>E (B \<Zcomp> T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> D\<^sub>B v) \<close>
+  \<open> Identity_Elements\<^sub>E B D\<^sub>B e
+\<Longrightarrow> Identity_Elements\<^sub>E (B \<Zcomp> T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> D\<^sub>B v) None \<close>
   unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def
   by clarsimp blast
  
@@ -1180,7 +1184,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (?T:: ?'b \<Rightarrow> ?'c::{sep_algebra,sep_carrier_1} BI) ?P \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
   (@{thm' \<phi>Mul_Quant.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
   (@{thm' \<phi>Mul_Quant.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D (x xa)) (\<lambda>x. \<forall>xa\<in>?I. ?T\<^sub>P (x xa)) \<close>),
-  (@{thm' \<phi>Mul_Quant.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. finite ?I \<and> (\<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D (x xa))) \<close>),
+  (@{thm' \<phi>Mul_Quant.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>E \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. finite ?I \<and> (\<forall>xa. xa \<in> ?I \<longrightarrow> ?T\<^sub>D (x xa))) None \<close>),
   (@{thm' \<phi>Mul_Quant.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x y. \<forall>xa. xa \<in> ?I \<longrightarrow> ?eq (x xa) (y xa)) \<close>),
   (@{thm' \<phi>Mul_Quant.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>?I. g (x i) (y i))  \<close>),
   (@{thm' \<phi>Mul_Quant.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?I = ?J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I) (\<big_ast>\<^sup>\<phi>\<^sub>0 ?J) ?T ?U (\<lambda>x. x ` ?I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>?I. P (x i)) (\<lambda>f _. (\<circ>) f)  \<close>),
@@ -1332,9 +1336,9 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Carrier_Set U Q
         \<Longrightarrow> Carrier_Set (T +\<^sub>\<phi> U) (pred_sum P Q)\<close> (*simplification fails*)
        and Identity_Elements
-       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
-        \<Longrightarrow> Identity_Elements\<^sub>E U U\<^sub>D
-        \<Longrightarrow> Identity_Elements\<^sub>E (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D) \<close> (*The inference works, but the result is not in an ideal form,
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D T\<^sub>E
+        \<Longrightarrow> Identity_Elements\<^sub>E U U\<^sub>D U\<^sub>E
+        \<Longrightarrow> Identity_Elements\<^sub>E (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D) None \<close> (*The inference works, but the result is not in an ideal form,
                                                             so we give the annotation manually*)
        and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
         \<Longrightarrow> Identity_Elements\<^sub>I U U\<^sub>D U\<^sub>P 
@@ -1474,9 +1478,9 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Union.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P
                                                \<Longrightarrow> Identity_Elements\<^sub>I ?U ?U\<^sub>D ?U\<^sub>P
                                                \<Longrightarrow> Identity_Elements\<^sub>I (?T \<or>\<^sub>\<phi> ?U) (\<lambda>x. ?U\<^sub>D (snd x) \<and> ?T\<^sub>D (fst x)) (\<lambda>x. ?T\<^sub>P (fst x) \<or> ?U\<^sub>P (snd x)) \<close>),
-  (@{thm' \<phi>Union.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D
-                                               \<Longrightarrow> Identity_Elements\<^sub>E ?U ?U\<^sub>D
-                                               \<Longrightarrow> Identity_Elements\<^sub>E (?T \<or>\<^sub>\<phi> ?U) (\<lambda>x. ?U\<^sub>D (snd x) \<or> ?T\<^sub>D (fst x)) \<close>),
+  (@{thm' \<phi>Union.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>E
+                                               \<Longrightarrow> Identity_Elements\<^sub>E ?U ?U\<^sub>D ?U\<^sub>E
+                                               \<Longrightarrow> Identity_Elements\<^sub>E (?T \<or>\<^sub>\<phi> ?U) (\<lambda>x. ?U\<^sub>D (snd x) \<or> ?T\<^sub>D (fst x)) None \<close>),
   (@{thm' \<phi>Union.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er
                                           \<Longrightarrow> Object_Equiv ?U ?eq
                                           \<Longrightarrow> Object_Equiv (?T \<or>\<^sub>\<phi> ?U) (\<lambda>x y. ?er (fst x) (fst y) \<and> ?eq (snd x) (snd y))\<close>)
@@ -1548,7 +1552,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Inter.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality ?U ?Pa \<Longrightarrow> Functionality (?T \<and>\<^sub>\<phi> ?U) (\<lambda>x. ?Pa (snd x) \<and> ?P (fst x)) \<close>),
   (@{thm' \<phi>Inter.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow>
              Identity_Elements\<^sub>I ?U ?U\<^sub>D ?U\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (?T \<and>\<^sub>\<phi> ?U) (\<lambda>x. ?U\<^sub>D (snd x) \<or> ?T\<^sub>D (fst x)) (\<lambda>x. ?U\<^sub>P (snd x) \<or> ?T\<^sub>P (fst x))   \<close>),
-  (@{thm' \<phi>Inter.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E ?U ?U\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?T \<and>\<^sub>\<phi> ?U) (\<lambda>x. ?U\<^sub>D (snd x) \<and> ?T\<^sub>D (fst x)) \<close>),
+  (@{thm' \<phi>Inter.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>E \<Longrightarrow> Identity_Elements\<^sub>E ?U ?U\<^sub>D ?U\<^sub>E \<Longrightarrow> Identity_Elements\<^sub>E (?T \<and>\<^sub>\<phi> ?U) (\<lambda>x. ?U\<^sub>D (snd x) \<and> ?T\<^sub>D (fst x)) None \<close>),
   (@{thm' \<phi>Inter.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er \<Longrightarrow> Object_Equiv ?U ?eq \<Longrightarrow> Object_Equiv (?T \<and>\<^sub>\<phi> ?U) (\<lambda>x y. ?eq (snd x) (snd y) \<and> ?er (fst x) (fst y)) \<close>)
 ]\<close>
 
@@ -1629,13 +1633,13 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f v = 1) (\<lambda>x. Inhabited (x \<Ztypecolon> T))\<close>
            (%identity_elements_of_\<phi>Fun)
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
-         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) None \<close>
            (%identity_elements_of_\<phi>Fun+40)
        and \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
-         \<Longrightarrow> Identity_Elements\<^sub>E T D
-         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) D \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>E T D e
+         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) D e \<close>
            (%identity_elements_of_\<phi>Fun+20)
-       and \<open> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> f v = 1) \<close>
+       and \<open> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> f v = 1) None \<close>
            (%identity_elements_of_\<phi>Fun)
        and Functionality
        and Functional_Transformation_Functor
@@ -1763,7 +1767,7 @@ let_\<phi>type \<phi>Some
        and Carrier_Set
        and Functionality
        and \<open>Identity_Elements\<^sub>I (\<black_circle> T) (\<lambda>_. False) (\<lambda>_. False)\<close>
-       and \<open>Identity_Elements\<^sub>E (\<black_circle> T) (\<lambda>_. False)\<close>
+       and \<open>Identity_Elements\<^sub>E (\<black_circle> T) (\<lambda>_. False) None\<close>
        and Abstraction_to_Raw
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -1772,7 +1776,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Some.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set (\<black_circle> ?T) ?P  \<close>),
   (@{thm' \<phi>Some.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (\<black_circle> ?T) ?P   \<close>),
   (@{thm' \<phi>Some.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I (\<black_circle> ?T) (\<lambda>_. False) (\<lambda>_. False)  \<close>),
-  (@{thm' \<phi>Some.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (\<black_circle> ?T) (\<lambda>_. False) \<close>),
+  (@{thm' \<phi>Some.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (\<black_circle> ?T) (\<lambda>_. False) None \<close>),
   (@{thm' \<phi>Some.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor \<phi>Some \<phi>Some ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>g. g) \<close>),
   (@{thm' \<phi>Some.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor \<phi>Some \<phi>Some ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>f P. P) (\<lambda>f P. f) \<close>),
   (@{thm' \<phi>Some.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<phi>Some \<phi>Some \<phi>Some ?Ta ?U UNIV (\<lambda>x. x) \<close>),
@@ -1805,8 +1809,8 @@ declare [[\<phi>trace_reasoning = 0]]
 
       and \<open> closed_homo_sep \<delta>
         \<Longrightarrow> constant_1 \<delta> \<and>\<^sub>\<r> Abstract_Domain\<^sub>L T D \<or>\<^sub>c\<^sub>u\<^sub>t
-            homo_one \<delta> \<and>\<^sub>\<r> Identity_Elements\<^sub>E T D
-        \<Longrightarrow> Identity_Elements\<^sub>E (\<DD>[\<delta>] T) D \<close>
+            homo_one \<delta> \<and>\<^sub>\<r> Identity_Elements\<^sub>E T D e
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<DD>[\<delta>] T) D None \<close>
 
       and Commutativity_Deriver
       and \<open> comm_domainoid_mapper_rev TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>' f f'
@@ -1937,13 +1941,13 @@ declare [[\<phi>trace_reasoning = 1 ]]
        and \<open> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f s v = 1) (\<lambda>x. Inhabited (x \<Ztypecolon> T))\<close>
            (%identity_elements_of_\<phi>Fun)
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
-         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) None \<close>
            (%identity_elements_of_\<phi>Fun+40)
        and \<open> \<g>\<u>\<a>\<r>\<d> homo_one (f s)
-         \<Longrightarrow> Identity_Elements\<^sub>E T D
-         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>E T D e
+         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D e \<close>
            (%identity_elements_of_\<phi>Fun+20)
-       and \<open> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> f s v = 1) \<close>
+       and \<open> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> f s v = 1) None \<close>
            (%identity_elements_of_\<phi>Fun)
        and Functionality
        and Functional_Transformation_Functor
@@ -2189,7 +2193,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' Empty_List.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set Empty_List (\<lambda>x. True) \<close>),
   (@{thm' Empty_List.Functionality}, \<^pattern_prop>\<open> Functionality Empty_List (\<lambda>x. True) \<close>),
   (@{thm' Empty_List.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I Empty_List (\<lambda>x. True) (\<lambda>a. True) \<close>),
-  (@{thm' Empty_List.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E Empty_List (\<lambda>x. True) \<close>),
+  (@{thm' Empty_List.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E Empty_List (\<lambda>x. True) (Some ())\<close>),
   (@{thm' Empty_List.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv Empty_List (\<lambda>x y. True) \<close>)
 ]\<close>
 
@@ -2235,6 +2239,7 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) \<DD>[\<delta>] \<DD>[(\<circ>) \<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[(\<circ>) \<delta>] \<DD>[\<delta>] ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D T\<^sub>e \<Longrightarrow> Identity_Elements\<^sub>E (k \<^bold>\<rightarrow> T) T\<^sub>D T\<^sub>e \<close> \<comment> \<open>can be gussed\<close>
 
 \<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. [] \<^bold>\<rightarrow> T\<close>
 
@@ -2244,7 +2249,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (?T::?'a1 \<Rightarrow> ?'b1::sep_carrier_1 set) ?P \<Longrightarrow> Carrier_Set (?k \<^bold>\<rightarrow> ?T) ?P \<close>),
   (@{thm' \<phi>MapAt.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (?k \<^bold>\<rightarrow> ?T) ?P \<close>),
   (@{thm' \<phi>MapAt.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (?k \<^bold>\<rightarrow> ?T) ?T\<^sub>D ?T\<^sub>P \<close>),
-  (@{thm' \<phi>MapAt.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?k \<^bold>\<rightarrow> ?T) ?T\<^sub>D \<close>),
+  (@{thm' \<phi>MapAt.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>E \<Longrightarrow> Identity_Elements\<^sub>E (?k \<^bold>\<rightarrow> ?T) ?T\<^sub>D ?T\<^sub>E \<close>),
   (@{thm' \<phi>MapAt.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?k \<^bold>\<rightarrow> ?T) ?eq \<close>),
   (@{thm' \<phi>MapAt.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
   (@{thm' \<phi>MapAt.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)\<close>),
@@ -2293,6 +2298,7 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Tyops_Commute \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D T\<^sub>e \<Longrightarrow> Identity_Elements\<^sub>E (k \<^bold>\<rightarrow>\<^sub>@ T) T\<^sub>D T\<^sub>e \<close> \<comment> \<open>can be guessed\<close>
 
 thm \<phi>MapAt_L.transformation
 thm \<phi>MapAt_L.separation_extraction
@@ -2305,7 +2311,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (?T::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'c::sep_carrier_1) set) ?P \<Longrightarrow> Carrier_Set (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P  \<close>),
   (@{thm' \<phi>MapAt_L.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P \<close>),
   (@{thm' \<phi>MapAt_L.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?T\<^sub>D ?T\<^sub>P \<close>),
-  (@{thm' \<phi>MapAt_L.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?T\<^sub>D \<close>),
+  (@{thm' \<phi>MapAt_L.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>e \<Longrightarrow> Identity_Elements\<^sub>E (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?T\<^sub>D ?T\<^sub>e \<close>),
   (@{thm' \<phi>MapAt_L.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?eq \<close>),
   (@{thm' \<phi>MapAt_L.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
   (@{thm' \<phi>MapAt_L.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
@@ -2367,6 +2373,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+       and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < ?n \<Longrightarrow> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>e \<Longrightarrow> Identity_Elements\<^sub>E (?n \<odiv> ?T) ?T\<^sub>D ?T\<^sub>e \<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?P) \<Longrightarrow> Abstract_Domain\<^sub>L (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?P x)  \<close>),
@@ -2374,7 +2381,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Carrier_Set}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Carrier_Set (?T::?'a \<Rightarrow> ?'b::share_nun_semimodule set) ?P) \<Longrightarrow> Carrier_Set (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<longrightarrow> ?P x) \<close>),
   (@{thm' \<phi>Share.Functionality}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Functionality ?T ?P) \<Longrightarrow> Functionality (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<longrightarrow> ?P x) \<close>),
   (@{thm' \<phi>Share.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Identity_Elements\<^sub>I (?T::?'a \<Rightarrow> ?'b::share_one set) ?T\<^sub>D ?T\<^sub>P) \<Longrightarrow> Identity_Elements\<^sub>I (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<longrightarrow> ?T\<^sub>D x) (\<lambda>x. 0 < ?n \<and> ?T\<^sub>P x) \<close>),
-  (@{thm' \<phi>Share.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (?T::?'a \<Rightarrow> ?'b::share_one set) ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?T\<^sub>D x) \<close>),
+  (@{thm' \<phi>Share.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < ?n \<Longrightarrow> Identity_Elements\<^sub>E (?T::?'a \<Rightarrow> ?'b::share_one set) ?T\<^sub>D ?T\<^sub>e \<Longrightarrow> Identity_Elements\<^sub>E (?n \<odiv> ?T) ?T\<^sub>D ?T\<^sub>e \<close>),
   (@{thm' \<phi>Share.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?n \<odiv> ?T) ?eq \<close>),
   (@{thm' \<phi>Share.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
   (@{thm' \<phi>Share.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Functional_Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)  \<close>),
@@ -2778,9 +2785,9 @@ private lemma [simp]:
         \<Longrightarrow> Identity_Elements\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T)
                                (\<lambda>x. \<forall>i < Len_Intvl.len iv. T\<^sub>D (len_intvl.start iv + i) (x ! i))
                                (\<lambda>x. length x = len_intvl.len iv \<and> (\<forall>i<len_intvl.len iv. T\<^sub>P (len_intvl.start iv + i) (x ! i))) \<close>
-       and \<open>(\<And>i. Identity_Elements\<^sub>E (T i) (T\<^sub>D i))
+       and \<open>(\<And>i. Identity_Elements\<^sub>E (T i) (T\<^sub>D i) (T\<^sub>E i))
         \<Longrightarrow> Identity_Elements\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. length x = len_intvl.len iv \<and>
-                                                (\<forall>i < len_intvl.len iv. T\<^sub>D (len_intvl.start iv + i) (x ! i))) \<close>
+                                                (\<forall>i < len_intvl.len iv. T\<^sub>D (len_intvl.start iv + i) (x ! i))) None \<close>
        and \<open>(\<And>i. Functionality (T i) (P i))
         \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.len iv. P (len_intvl.start iv + i) (x ! i))\<close>
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U {(x, y). length x = length y} zip'\<close>

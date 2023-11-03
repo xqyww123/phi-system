@@ -2587,7 +2587,7 @@ paragraph \<open>Identity Elements\<close>
 lemma [\<phi>reason_template default %derived_identity_element+5]:
   \<open> \<g>\<u>\<a>\<r>\<d> Closed_Semimodule_Zero F zero
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> zero' = zero
-\<Longrightarrow> Identity_Elements\<^sub>E (F zero') (\<lambda>_. True) \<close>
+\<Longrightarrow> Identity_Elements\<^sub>E (F zero') (\<lambda>_. True) (Some any) \<close>
   unfolding Identity_Elements\<^sub>E_def Identity_Element\<^sub>E_def \<r>Guard_def
             Transformation_def Premise_def Closed_Semimodule_Zero_def
   by clarsimp
@@ -5023,12 +5023,13 @@ private lemma \<phi>TA_1L_rule:
   by blast
 
 private lemma \<phi>TA_1R_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+  \<open> Ant \<longrightarrow> Ant' @action \<A>EIF
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (Ant' \<longrightarrow> pred_option D e)
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Identity_Elements\<^sub>E T D\<close>
-  unfolding Action_Tag_def Identity_Elements\<^sub>E_def
+\<Longrightarrow> Identity_Elements\<^sub>E T D e \<close>
+  unfolding Action_Tag_def Identity_Elements\<^sub>E_def Premise_def
   by blast
 
 private lemma \<phi>TA_Ident_I_rule_step:
@@ -5058,7 +5059,7 @@ end
 \<phi>property_deriver Identity_Elements\<^sub>I 101 for (\<open>Identity_Elements\<^sub>I _ _ _\<close>)
   = \<open>Phi_Type_Derivers.identity_element_I\<close>
 
-\<phi>property_deriver Identity_Elements\<^sub>E 102 for (\<open>Identity_Elements\<^sub>E _ _\<close>)
+\<phi>property_deriver Identity_Elements\<^sub>E 102 for (\<open>Identity_Elements\<^sub>E _ _ _\<close>)
   = \<open>Phi_Type_Derivers.identity_element_E\<close>
 
 \<phi>property_deriver Identity_Element_Properties\<^sub>I 103
@@ -6154,7 +6155,7 @@ lemma [\<phi>reason_template name F.\<phi>None [assertion_simps, simp]]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> TERM (Identity_Elements\<^sub>I (F \<circle>))
 \<Longrightarrow> Identity_Elements\<^sub>I (F \<circle>) D\<^sub>I P\<^sub>I @action \<A>_template_reason
-\<Longrightarrow> Identity_Elements\<^sub>E (F \<circle>) D\<^sub>E @action \<A>_template_reason
+\<Longrightarrow> Identity_Elements\<^sub>E (F \<circle>) D\<^sub>E e @action \<A>_template_reason
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (D\<^sub>I () \<and> D\<^sub>E ())
 \<Longrightarrow> NO_SIMP (F \<circle> = \<circle>) \<close>
   unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def NO_SIMP_def Action_Tag_def
@@ -6537,8 +6538,8 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding Has_Bubbling_def .
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E T D
-\<Longrightarrow> Identity_Elements\<^sub>E (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D \<close>
+  \<open> Identity_Elements\<^sub>E T D e
+\<Longrightarrow> Identity_Elements\<^sub>E (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D e \<close>
   unfolding Has_Bubbling_def .
 
 

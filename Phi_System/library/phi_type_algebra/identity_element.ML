@@ -136,15 +136,17 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
               of SOME (rev_atys, x_ty, m_ty) =>
                   if Sign.of_sort thy (m_ty, \<^sort>\<open>one\<close>) then
                     let fun name s s' = the_default s (Option.map (suffix s') (#name info))
-                        val ([D,P], ctxt) = Variable.variant_fixes [name "D" "\<^sub>D", name "P" "\<^sub>P"] ctxt
+                        val ([D,P,e], ctxt) = Variable.variant_fixes [name "D" "\<^sub>D", name "P" "\<^sub>P", name "e" "\<^sub>e"] ctxt
                         val atys = rev rev_atys
                         val D = Free(D, atys ---> x_ty --> HOLogic.boolT)
                              |> fold_index (fn (i,_) => fn X => X $ Bound i) atys
                         val P = Free(P, atys ---> x_ty --> HOLogic.boolT)
                              |> fold_index (fn (i,_) => fn X => X $ Bound i) atys
+                        val e = Free(e, atys ---> \<^Type>\<open>option x_ty\<close>)
+                             |> fold_index (fn (i,_) => fn X => X $ Bound i) atys
                         val A_term = fold_index (fn (i,_) => fn X => X $ Bound i) atys A_term0
                      in (SOME ((if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close> $ A_term $ D $ P
-                                       else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close> $ A_term $ D)
+                                            else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close> $ A_term $ D $ e)
                                   |> fold_rev (fn T => fn X => \<^Const>\<open>All T\<close> $ Abs ("A", T, X)) rev_atys,
                                (x_ty, D),
                                (x_ty, P)),
@@ -184,12 +186,16 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
       val infer_D = if #is_recursive phi then I
                     else fn D => Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (D $ Bound 0) $ (Var(("D", 0), x_ty --> HOLogic.boolT) $ Bound 0))
 
+      val E = if Sign.of_sort thy (x_ty, \<^sort>\<open>one\<close>)
+              then \<^Const>\<open>Some x_ty\<close> $ \<^Const>\<open>one_class.one x_ty\<close>
+              else \<^Const>\<open>None x_ty\<close>
+
    in seq |> Seq.map (fn (D,P,ctxt) =>
         (maps (constrain_antecedents_by_boolean (simplified_exists_qualify ctxt x_ty cond_delta))
               (ants_delta @ ants),
          HOLogic.Trueprop $   
               (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close> $ T_term $ infer_D (pass_D D) $ infer_P (pass_P P)
-                           else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ infer_D (pass_D D) ),
+                           else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ infer_D (pass_D D) $ E),
          NONE :: parse_inst_params_from_phi_term T_term,
          phi, ctxt))
   end
@@ -197,10 +203,10 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
 fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ T $ _ $ _ => T
-             | Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ T $ _ => T
+             | Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ T $ _ $ _ => T
              | _ => raise TERM ("",[]))
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ _ $ D $ P) = [D,P]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ _ $ D) = [D]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ _ $ D $ e) = [D,e]
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
@@ -232,7 +238,7 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
             then if is_left
             then predicate_infer true  (fn _ $ (_ $ _ $ P) => parse_abs P) (
                  predicate_infer false (fn _ $ (_ $ D $ _) => parse_abs D) (oblg_solver' name) )
-            else predicate_infer false (fn _ $ (_ $ D ) => parse_abs D) (oblg_solver' name)
+            else predicate_infer false (fn _ $ (_ $ D $ _) => parse_abs D) (oblg_solver' name)
             else K NONE
 
       val simp = simplifier_by_cong [
@@ -242,14 +248,18 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                       by (clarsimp simp add: Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
                                              Transformation_def Inhabited_def atomize_eq, blast)},
               @{lemma' \<open> D \<equiv> D'
-                    \<Longrightarrow> Identity_Elements\<^sub>E T D \<equiv> Identity_Elements\<^sub>E T D' \<close>
+                    \<Longrightarrow> e \<equiv> e'
+                    \<Longrightarrow> Identity_Elements\<^sub>E T D e \<equiv> Identity_Elements\<^sub>E T D' e' \<close>
                       by simp}
             ]
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property is_left, rule,
-                                     [(K (SOME [0]), ind_conv, reasoning)],
+                                     if is_left
+                                     then [(K (SOME [0]), ind_conv, reasoning)]
+                                     else [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
+                                           (K (SOME [0]), ind_conv, reasoning)],
                                      id_ele_infer, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules

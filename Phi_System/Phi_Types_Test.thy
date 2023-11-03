@@ -20,7 +20,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set (List ?T) (list_all ?P)  \<close>),
   (@{thm' List.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (List ?T) (list_all ?P) \<close>),
   (@{thm' List.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (List ?T) (list_all ?T\<^sub>D) (list_all ?T\<^sub>P) \<close>),
-  (@{thm' List.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (List ?T) (list_all ?T\<^sub>D) \<close>),
+  (@{thm' List.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D ?T\<^sub>E \<Longrightarrow> Identity_Elements\<^sub>E (List ?T) (list_all ?T\<^sub>D) (Some []) \<close>),
   (@{thm' List.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (List ?T) (list_all2 ?eq) \<close>),
   (@{thm' List.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor List List ?T ?U set (\<lambda>_. UNIV) list_all2  \<close>),
   (@{thm' List.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor List List ?T ?U set (\<lambda>_. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f) \<close>),
@@ -33,11 +33,9 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>(l \<Ztypecolon> List\<^sub>S 0 T) = (Void \<s>\<u>\<b>\<j> l = [])\<close>
       | \<open>(l \<Ztypecolon> List\<^sub>S (Suc n) T) = (h \<Ztypecolon> T\<heavy_comma> l' \<Ztypecolon> List\<^sub>S n T \<s>\<u>\<b>\<j> h l'. l = h # l')\<close>
-  deriving \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>l. list_all T\<^sub>D l \<and> length l = n)\<close>
+  deriving \<open>Identity_Elements\<^sub>E T T\<^sub>D T\<^sub>E \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>l. list_all T\<^sub>D l \<and> length l = n) None\<close>
        and Identity_Elements\<^sub>I
 
-
-term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>l. list_all T\<^sub>D l \<and> length l = n)\<close>
 
 
 \<phi>type_def List\<^sub>S'  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
@@ -45,8 +43,8 @@ term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Ele
       | \<open>(x # l \<Ztypecolon> List\<^sub>S' n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S' (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
       deriving \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
             \<Longrightarrow> Identity_Elements\<^sub>I (List\<^sub>S' n T) (list_all T\<^sub>D) (\<lambda>x. list_all T\<^sub>P x \<and> n = length x)\<close> (*TODO: derive such n = length x*)
-           and \<open>Identity_Elements\<^sub>E T T\<^sub>D
-            \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S' n T) (\<lambda>x. list_all T\<^sub>D x \<and> n = length x)\<close>
+           and \<open>Identity_Elements\<^sub>E T T\<^sub>D T\<^sub>E
+            \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S' n T) (\<lambda>x. list_all T\<^sub>D x \<and> n = length x) None\<close>
  (*\<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = 0 \<Longrightarrow> Identity_Element\<^sub>E ([] \<Ztypecolon> List\<^sub>S n T)\<close>
            and \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>

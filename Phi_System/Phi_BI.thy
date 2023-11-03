@@ -3113,8 +3113,8 @@ definition Identity_Element\<^sub>E :: \<open>'a::one BI \<Rightarrow> bool\<clo
 definition Identity_Elements\<^sub>I :: \<open>('c::one,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Identity_Elements\<^sub>I T D P \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x))\<close>
 
-definition Identity_Elements\<^sub>E :: \<open>('c::one,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
-  where \<open>Identity_Elements\<^sub>E T D \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T))\<close>
+definition Identity_Elements\<^sub>E :: \<open>('c::one,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'a option \<Rightarrow> bool\<close>
+  where \<open>Identity_Elements\<^sub>E T D e \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)) \<and> pred_option D e\<close>
 
 declare [[ \<phi>reason_default_pattern
       \<open>Identity_Element\<^sub>I ?S _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I ?S _\<close> (100)
@@ -3123,7 +3123,7 @@ declare [[ \<phi>reason_default_pattern
   and \<open>Identity_Element\<^sub>E (_ \<Ztypecolon> ?T)\<close> \<Rightarrow> \<open>Identity_Element\<^sub>E (_ \<Ztypecolon> ?T)\<close> (110)
 
   and \<open>Identity_Elements\<^sub>I ?T _ _\<close> \<Rightarrow> \<open>Identity_Elements\<^sub>I ?T _ _\<close> (100)
-  and \<open>Identity_Elements\<^sub>E ?T _\<close> \<Rightarrow> \<open>Identity_Elements\<^sub>E ?T _\<close> (100)
+  and \<open>Identity_Elements\<^sub>E ?T _ _\<close> \<Rightarrow> \<open>Identity_Elements\<^sub>E ?T _ _\<close> (100)
 ]]
 
 \<phi>reasoner_group identity_element = (100,[1,3000]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
@@ -3132,7 +3132,7 @@ declare [[ \<phi>reason_default_pattern
  and identity_element_fallback = (1,[1,1]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > fail
     \<open>Fallbacks of reasoning Identity_Element.\<close>
- and identity_element_\<phi> = (10, [10, 10]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
+ and identity_element_\<phi> = (10, [10, 11]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
     \<open>Turning to \<open>Identity_Elements\<^sub>I\<close> and \<open>Identity_Elements\<^sub>E\<close>\<close>
  and derived_identity_element = (50, [50,55]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > identity_element_\<phi>
@@ -3145,6 +3145,8 @@ declare [[ \<phi>reason_default_pattern
     \<open>Literal Reduction\<close>
  and identity_element_ToA = (50, [50,51]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
     \<open>Entry points from ToA to Identity_Element\<close>
+ and identity_element_systop = (3000, [3000, 3000]) in identity_element
+    \<open>system rules of the highest priority\<close>
 
 subsubsection \<open>Extracting Pure Facts\<close>
 
@@ -3202,7 +3204,7 @@ lemma [\<phi>reason %extract_pure]:
 
 lemma [\<phi>reason %extract_pure]:
   \<open> (\<And>x. Identity_Element\<^sub>E (x \<Ztypecolon> T) \<longrightarrow> Q x @action \<A>EIF)
-\<Longrightarrow> Identity_Elements\<^sub>E T D \<longrightarrow> (\<forall>x. D x \<longrightarrow> Q x) @action \<A>EIF\<close>
+\<Longrightarrow> Identity_Elements\<^sub>E T D e \<longrightarrow> (\<forall>x. D x \<longrightarrow> Q x) \<and> pred_option D e @action \<A>EIF\<close>
   unfolding Action_Tag_def Identity_Elements\<^sub>E_def
   by clarsimp
 
@@ -3240,10 +3242,16 @@ lemma [\<phi>reason default %identity_element_fallback]:
   by blast
 
 lemma [\<phi>reason default %identity_element_fallback]:
-  \<open> Identity_Elements\<^sub>E T (\<lambda>_. False) \<close>
+  \<open> Identity_Elements\<^sub>E T (\<lambda>_. False) None \<close>
   unfolding Identity_Elements\<^sub>E_def
-  by blast
+  by simp
 
+lemma [\<phi>reason %identity_element_systop for \<open>Identity_Elements\<^sub>E _ _ (Some _)\<close>]:
+  \<open> Identity_Elements\<^sub>E T D e'
+\<Longrightarrow> (Some e) = e' \<or>\<^sub>c\<^sub>u\<^sub>t (\<p>\<r>\<e>\<m>\<i>\<s>\<e> D e)
+\<Longrightarrow> Identity_Elements\<^sub>E T D (Some e) \<close>
+  unfolding Orelse_shortcut_def Premise_def Identity_Elements\<^sub>E_def
+  by (cases e'; clarsimp)
 
 
 subsubsection \<open>Termination\<close>
@@ -3323,13 +3331,13 @@ lemma [\<phi>reason %identity_element_red]:
   by simp
 
 lemma [\<phi>reason %identity_element_red]:
-  \<open> Identity_Elements\<^sub>E A D
-\<Longrightarrow> Identity_Elements\<^sub>E (If True A B) D \<close>
+  \<open> Identity_Elements\<^sub>E A D e
+\<Longrightarrow> Identity_Elements\<^sub>E (If True A B) D e \<close>
   by simp
 
 lemma [\<phi>reason %identity_element_red]:
-  \<open> Identity_Elements\<^sub>E B D
-\<Longrightarrow> Identity_Elements\<^sub>E (If False A B) D \<close>
+  \<open> Identity_Elements\<^sub>E B D e
+\<Longrightarrow> Identity_Elements\<^sub>E (If False A B) D e\<close>
   by simp
 
 
@@ -3354,9 +3362,9 @@ lemma [\<phi>reason %identity_element_cut]:
   by (cases C; simp)
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>  C \<Longrightarrow> Identity_Elements\<^sub>E (If C A B) D\<^sub>A)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not>C \<Longrightarrow> Identity_Elements\<^sub>E (If C A B) D\<^sub>B)
-\<Longrightarrow> Identity_Elements\<^sub>E (If C A B) (If C D\<^sub>A D\<^sub>B)\<close>
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>  C \<Longrightarrow> Identity_Elements\<^sub>E (If C A B) D\<^sub>A e\<^sub>A)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not>C \<Longrightarrow> Identity_Elements\<^sub>E (If C A B) D\<^sub>B e\<^sub>B)
+\<Longrightarrow> Identity_Elements\<^sub>E (If C A B) (If C D\<^sub>A D\<^sub>B) (If C e\<^sub>A e\<^sub>B)\<close>
   by (cases C; simp)
 
 lemma [\<phi>reason %identity_element_cut]:
@@ -3396,13 +3404,13 @@ lemma [\<phi>reason %identity_element_red]:
   by simp
 
 lemma [\<phi>reason %identity_element_red]:
-  \<open> Identity_Elements\<^sub>E (A a) D
-\<Longrightarrow> Identity_Elements\<^sub>E (case_sum A B (Inl a)) D \<close>
+  \<open> Identity_Elements\<^sub>E (A a) D e
+\<Longrightarrow> Identity_Elements\<^sub>E (case_sum A B (Inl a)) D e \<close>
   by simp
 
 lemma [\<phi>reason %identity_element_red]:
-  \<open> Identity_Elements\<^sub>E (B b) D
-\<Longrightarrow> Identity_Elements\<^sub>E (case_sum A B (Inr b)) D \<close>
+  \<open> Identity_Elements\<^sub>E (B b) D e
+\<Longrightarrow> Identity_Elements\<^sub>E (case_sum A B (Inr b)) D e \<close>
   by simp
 
 lemma [\<phi>reason %identity_element_red]:
@@ -3439,9 +3447,9 @@ lemma [\<phi>reason %identity_element_cut]:
   by (cases x; clarsimp)
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> Identity_Elements\<^sub>E (A a) (D\<^sub>A a))
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> Identity_Elements\<^sub>E (B b) (D\<^sub>B b))
-\<Longrightarrow> Identity_Elements\<^sub>E (case_sum A B x) (case_sum D\<^sub>A D\<^sub>B x) \<close>
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> Identity_Elements\<^sub>E (A a) (D\<^sub>A a) (e\<^sub>A a))
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> Identity_Elements\<^sub>E (B b) (D\<^sub>B b) (e\<^sub>B b))
+\<Longrightarrow> Identity_Elements\<^sub>E (case_sum A B x) (case_sum D\<^sub>A D\<^sub>B x) (case_sum e\<^sub>A e\<^sub>B x) \<close>
   unfolding Premise_def
   by (cases x; clarsimp)
 
@@ -3492,7 +3500,7 @@ lemma [\<phi>reason %identity_element_cut]:
   by clarsimp
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E Itself (\<lambda>x. x = 1) \<close>
+  \<open> Identity_Elements\<^sub>E Itself (\<lambda>x. x = 1) (Some 1) \<close>
   unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def
   by clarsimp
 
@@ -3503,12 +3511,21 @@ lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>]:
   unfolding Identity_Element\<^sub>I_def Identity_Elements\<^sub>I_def Premise_def
   using transformation_trans by fastforce
 
+(*
 lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>]:
-  \<open> Identity_Elements\<^sub>E T D
+  \<open> Identity_Elements\<^sub>E T D e
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<close>
   unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Premise_def
   using transformation_trans by fastforce
+*)
+
+lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>]:
+  \<open> Identity_Elements\<^sub>E T D (Some e)
+\<Longrightarrow> Identity_Element\<^sub>E (e \<Ztypecolon> T) \<close>
+  unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Premise_def
+  using transformation_trans by fastforce
+
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Element\<^sub>I A P1
@@ -3628,12 +3645,15 @@ lemma [\<phi>reason %identity_element_cut]:
   by (simp add: set_mult_expn, insert mult_1_class.mult_1_left, blast)
 
 lemma [\<phi>reason %identity_element_cut]: 
-  \<open> Identity_Elements\<^sub>E T D\<^sub>T
-\<Longrightarrow> Identity_Elements\<^sub>E U D\<^sub>U
-\<Longrightarrow> Identity_Elements\<^sub>E (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y) \<close>
+  \<open> Identity_Elements\<^sub>E T D\<^sub>T e\<^sub>T
+\<Longrightarrow> Identity_Elements\<^sub>E U D\<^sub>U e\<^sub>U
+\<Longrightarrow> (e, Some e\<^sub>T', Some e\<^sub>U') = (Some (e\<^sub>T', e\<^sub>U'), e\<^sub>T, e\<^sub>U) \<or>\<^sub>c\<^sub>u\<^sub>t
+    e = None
+\<Longrightarrow> Identity_Elements\<^sub>E (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y) e\<close>
   for T :: \<open>'a \<Rightarrow> 'b::sep_magma_1 BI\<close>
-  unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def
-  by (clarsimp simp add: \<phi>Prod_expn', insert set_mult_expn, fastforce)
+  unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def Orelse_shortcut_def
+  by (cases e; clarsimp simp add: \<phi>Prod_expn';
+      insert mult_1_class.mult_1_left sep_magma_1_left; blast)
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>I T D\<^sub>T P
@@ -3659,13 +3679,33 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding Identity_Element\<^sub>I_def Transformation_def Premise_def REMAINS_def
   by (clarsimp, insert mult_1_class.mult_1_right, blast)
 
+lemma [\<phi>reason %identity_element_cut+10]:
+  \<open> Identity_Elements\<^sub>E T D\<^sub>T e\<^sub>T
+\<Longrightarrow> (e, Some e\<^sub>T') = (Some (e\<^sub>T', undefined), e\<^sub>T) \<or>\<^sub>c\<^sub>u\<^sub>t
+    e = map_option (\<lambda>x. (x, undefined)) e\<^sub>T
+\<Longrightarrow> Identity_Elements\<^sub>E (T \<^emph>[False] U) (\<lambda>x. D\<^sub>T (fst x)) e \<close>
+  unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def Premise_def
+            Orelse_shortcut_def
+  by (cases e; cases e\<^sub>T; clarsimp; blast)
+
+lemma [\<phi>reason %identity_element_cut+10]:
+  \<open> Identity_Elements\<^sub>E (T \<^emph> U) D e
+\<Longrightarrow> Identity_Elements\<^sub>E (T \<^emph>[True] U) D e \<close>
+  by simp
+
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E T D\<^sub>T
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Elements\<^sub>E U D\<^sub>U)
-\<Longrightarrow> Identity_Elements\<^sub>E (T \<^emph>[C] U) (\<lambda>(x,y). D\<^sub>T x \<and> (C \<longrightarrow> D\<^sub>U y)) \<close>
+  \<open> Identity_Elements\<^sub>E T D\<^sub>T e\<^sub>T
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Elements\<^sub>E U D\<^sub>U e\<^sub>U)
+\<Longrightarrow> (e, Some e\<^sub>T', Some e\<^sub>U') = (Some (e\<^sub>T', e\<^sub>U'), e\<^sub>T, e\<^sub>U) \<or>\<^sub>c\<^sub>u\<^sub>t e = None
+    \<comment> \<open>\<open>(if C then (case e\<^sub>U of Some e\<^sub>U' \<Rightarrow> (case e\<^sub>T of Some e\<^sub>T' \<Rightarrow> Some (e\<^sub>T', e\<^sub>U') | _ \<Rightarrow> None) | _ \<Rightarrow> None)
+              else map_option (\<lambda>x. (x, undefined)) e\<^sub>T)\<close>\<close>
+\<Longrightarrow> Identity_Elements\<^sub>E (T \<^emph>[C] U) (\<lambda>(x,y). D\<^sub>T x \<and> (C \<longrightarrow> D\<^sub>U y)) e\<close>
   for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
   unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def Premise_def
-  by (cases C; clarsimp simp add: \<phi>Prod_expn'; insert mult_1_class.mult_1_right sep_magma_1_left; blast)
+            Orelse_shortcut_def
+  by (cases C; cases e; cases e\<^sub>U; cases e\<^sub>T; clarsimp simp add: \<phi>Prod_expn';
+      insert mult_1_class.mult_1_left mult_1_class.mult_1_right sep_magma_1_left;
+      blast)
 
 lemma [\<phi>reason %identity_element_cut]: 
   \<open> Identity_Element\<^sub>E A
@@ -3727,7 +3767,7 @@ lemma [\<phi>reason %identity_element_cut]:
   by simp
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E (\<half_blkcirc>[C] T) (\<lambda>_. \<not> C) \<close>
+  \<open> Identity_Elements\<^sub>E (\<half_blkcirc>[C] T) (\<lambda>_. \<not> C) None \<close>
   unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def Premise_def
   by clarsimp
 
@@ -3783,7 +3823,7 @@ declare [[
 
 lemma [\<phi>reason %object_equiv_cut+1]:
   \<open> Identity_Elements\<^sub>I T D\<^sub>I P
-\<Longrightarrow> Identity_Elements\<^sub>E T D\<^sub>E
+\<Longrightarrow> Identity_Elements\<^sub>E T D\<^sub>E e
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Object_Equiv T (\<lambda>x y. eq x y \<or> D\<^sub>I x \<and> (P x \<longrightarrow> D\<^sub>E y)) @action \<A>_singular_unit \<close>
   unfolding Object_Equiv_def Identity_Elements\<^sub>E_def Identity_Elements\<^sub>I_def Action_Tag_def

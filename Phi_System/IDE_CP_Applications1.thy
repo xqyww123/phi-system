@@ -621,8 +621,8 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding Bubbling_def .
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E T D
-\<Longrightarrow> Identity_Elements\<^sub>E (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D \<close>
+  \<open> Identity_Elements\<^sub>E T D e
+\<Longrightarrow> Identity_Elements\<^sub>E (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D e \<close>
   unfolding Bubbling_def .
 
 subsection \<open>To\<close>
@@ -1268,8 +1268,8 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding OPEN_def .
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E T D
-\<Longrightarrow> Identity_Elements\<^sub>E (OPEN T) D \<close>
+  \<open> Identity_Elements\<^sub>E T D e
+\<Longrightarrow> Identity_Elements\<^sub>E (OPEN T) D e \<close>
   unfolding OPEN_def .
 
 
@@ -1384,8 +1384,8 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding MAKE_def .
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E T D
-\<Longrightarrow> Identity_Elements\<^sub>E (MAKE T) D \<close>
+  \<open> Identity_Elements\<^sub>E T D e
+\<Longrightarrow> Identity_Elements\<^sub>E (MAKE T) D e \<close>
   unfolding MAKE_def .
 
 (*
