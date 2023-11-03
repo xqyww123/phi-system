@@ -253,6 +253,9 @@ term \<open>\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (
        and \<open>Semimodule_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
 
 thm \<phi>Mul_Quant_Tree.wrap_module_src
+thm \<phi>Mul_Quant_Tree.separation_extraction
+thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>I_Cond
+thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>E_Cond
 
 
 
@@ -270,8 +273,10 @@ lemma
   apply (simp add: cond_prod_transformation_rewr,
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
   \<medium_left_bracket> premises Tr and _ and _ and _ and []
-    Tr
     note [[\<phi>trace_reasoning = 2]]
+    ;; Tr
+      thm Tr
+    
   \<medium_right_bracket> certified
 
 

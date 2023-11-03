@@ -2373,10 +2373,15 @@ lemma apply_conditioned_Separation_Functor_unzip:
     \<medium_left_bracket> \<medium_right_bracket>
   \<medium_right_bracket> .
 
+(*TODO: a deriver controlling the form of \<open>Separation_Homo\<^sub>I_Cond\<close>
+Here we give a quick but imperfect deriving without such control
+note, also refer to the git branch Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond
+*)
 
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' R' pred' func' )
+\<Longrightarrow> NO_MATCH (\<lambda>f _. f) func' \<or> NO_MATCH (\<lambda>_. UNIV) R' @action \<A>_template_reason
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. if case_split C\<^sub>W then x \<in> D else (\<forall>a. a \<in> D' (fst x) \<longrightarrow> (a, undefined) \<in> R' (fst x))})) @action \<A>_template_reason
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if case_split C\<^sub>W then z x else func' (\<lambda>x. (x, undefined)) (\<lambda>_. True) (fst x))) @action \<A>_template_reason
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
@@ -2391,21 +2396,29 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
       clarsimp;
       insert transformation_weaken; blast)
 
-(*
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' R' pred' (\<lambda>f _. f) )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. if case_split C\<^sub>W then x \<in> D else (\<forall>a. a \<in> D' (fst x) \<longrightarrow> (a, undefined) \<in> R' (fst x))})) @action \<A>_template_reason
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' (\<lambda>_. UNIV) pred' (\<lambda>f _. f) )
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. case_split C\<^sub>W \<longrightarrow> x \<in> D})) @action \<A>_template_reason
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if case_split C\<^sub>W then z x else x)) @action \<A>_template_reason
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>I_def Premise_def Action_Tag_def Simplify_def
             case_split_def
   apply (cases C\<^sub>W; clarsimp)
-*)
+  subgoal for x y
+    by (insert apply_Functional_Transformation_Functor
+                [unfolded Argument_def Premise_def,
+                  where Fa=Ft and Fb=F3 and func_mapper=\<open>\<lambda>f _. f\<close> and f=\<open>(\<lambda>x. (x, y))\<close> and
+                        pred_mapper=pred' and P=\<open>\<lambda>_. True\<close> and T=T and U=\<open>T \<^emph>[C\<^sub>W] U\<close> and
+                        D=D' and R=\<open>\<lambda>_. UNIV\<close>],
+       clarsimp,
+       insert transformation_weaken, blast) .
+
 
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor F3 Ft (T \<^emph>[C\<^sub>R] U) T D' R' pred' func' )
+\<Longrightarrow> NO_MATCH (\<lambda>f _. f) func' @action \<A>_template_reason
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>R then UNIV else {x. \<forall>(a,b) \<in> D' x. a \<in> R' x})) @action \<A>_template_reason
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if case_split C\<^sub>R then uz else (\<lambda>x. (func' fst (\<lambda>_. True) x, undefined)))) @action \<A>_template_reason
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
@@ -2418,6 +2431,21 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
       clarsimp;
       metis (no_types, lifting) case_prodD transformation_weaken)
 
+
+lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu F3 T U uz)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor F3 Ft (T \<^emph>[C\<^sub>R] U) T D' R' pred' (\<lambda>f _. f) )
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : {x. \<not> case_split C\<^sub>R \<longrightarrow> (\<forall>(a,b) \<in> D' x. a \<in> R' x)}) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (\<lambda>x. if case_split C\<^sub>R then uz x else x)) @action \<A>_template_reason
+\<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
+  unfolding Separation_Homo\<^sub>E_Cond_def Separation_Homo\<^sub>E_def Premise_def Action_Tag_def Simplify_def
+  by ((cases C\<^sub>R; clarsimp),
+      insert apply_Functional_Transformation_Functor[unfolded Argument_def Premise_def,
+                  where Fa=F3 and Fb=Ft and func_mapper=\<open>\<lambda>f _. f\<close> and f=\<open>fst\<close> and
+                        pred_mapper=pred' and P=\<open>\<lambda>_. True\<close> and U=T and T=\<open>T \<^emph>[C\<^sub>R] U\<close> and
+                        D=D' and R=R'],
+     clarsimp,
+     metis (no_types, lifting) case_prod_conv transformation_weaken)
 
 
 (*

@@ -1173,6 +1173,8 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Closed_Semimodule_Zero
        and Carrier_Set
 
+thm \<phi>Mul_Quant.separation_extraction
+
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>i\<in>?I. ?P (x i))  \<close>),
   (@{thm' \<phi>Mul_Quant.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (?T:: ?'b \<Rightarrow> ?'c::{sep_algebra,sep_carrier_1} BI) ?P \<Longrightarrow> Carrier_Set (\<big_ast>\<^sup>\<phi>\<^sub>0 ?I ?T) (\<lambda>x. \<forall>xa. xa \<in> ?I \<longrightarrow> ?P (x xa)) \<close>),
@@ -2295,6 +2297,7 @@ declare [[\<phi>trace_reasoning = 0]]
 thm \<phi>MapAt_L.transformation
 thm \<phi>MapAt_L.separation_extraction
 thm \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond
+thm \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P \<close>),
@@ -2606,8 +2609,8 @@ section \<open>Derivatives\<close>
 
 subsection \<open>Parameterized FMQ\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-    
+declare [[\<phi>trace_reasoning = 0]]
+     
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
   deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
@@ -2625,9 +2628,9 @@ declare [[\<phi>trace_reasoning = 3]]
                                          (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
            \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
        and Sep_Functor_1
-       and Semimodule_NonAssoc
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
+       and Semimodule_NonAssoc 
        and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
        and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
