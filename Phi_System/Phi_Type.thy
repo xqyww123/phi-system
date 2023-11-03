@@ -3248,7 +3248,7 @@ lemma SDirst_in_comm_sep_implies_rev\<^sub>U
 
 subsection \<open>Separation Extraction\<close>
 
-paragraph \<open>Transformation Functor\<close>
+subsubsection \<open>Transformation Functor\<close>
 
 (* preserved for documenting
 declare [[\<phi>trace_reasoning = 1]]
@@ -3452,7 +3452,15 @@ lemma "_Structural_Extract\<^sub>\<Lambda>_general_rule_i_"[\<phi>reason_templat
     apply_rule apply_Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond[OF SH\<^sub>E]
   \<medium_right_bracket> .
 
-paragraph \<open>Semimodule Scalar Associative \label{Semimodule-Scalar-Associative}\<close>
+
+subsubsection \<open>Transformation Mapper\<close>
+
+lemma
+  \<open> 
+\<Longrightarrow> \<g>\<e>\<t> x' \<Ztypecolon> F T \<f>\<r>\<o>\<m> x \<Ztypecolon> F \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W \<close>
+
+
+subsubsection \<open>Semimodule Scalar Associative \label{Semimodule-Scalar-Associative}\<close>
 
 text \<open>The proof search is inefficient for semimodule \<phi>-type that satisfies both scalar associativity
   and scalar distributivity.
