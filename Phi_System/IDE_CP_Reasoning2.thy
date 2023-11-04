@@ -11,8 +11,6 @@ subsection \<open>For Specific \<phi>-Types\<close>
 subsubsection \<open>Value\<close>
 
 
-text \<open>Priority shouldn't exceed 2000.\<close>
-
 
 (*DO NOT REMOVE, for Auto_Transform_Hint
 lemma [\<phi>reason 2000]:
@@ -273,6 +271,13 @@ abbreviation ToA_Mapper' :: \<open>'c BI \<Rightarrow> 'c BI \<Rightarrow> 'c::s
                             ("\<s>\<u>\<b>\<s>\<t> _ \<f>\<o>\<r> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> _" [19,19,19,19,19,19,19,19,19] 18)
   where \<open>\<s>\<u>\<b>\<s>\<t> residue \<f>\<o>\<r> redex \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> W' \<equiv>
             \<s>\<u>\<b>\<s>\<t> residue \<f>\<o>\<r> redex \<f>\<r>\<o>\<m> (Src \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>W] W) \<t>\<o> (Ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>W] W') \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+
+definition ToA_Mapper_Ty :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_magma, 'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('c,'r) \<phi>
+                          \<Rightarrow> ('x \<Rightarrow> 'y) \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'y) \<phi> \<Rightarrow> ('x \<Rightarrow> 'a \<times> 'r) \<Rightarrow> ('b \<times> 'r \<Rightarrow> 'y) \<Rightarrow> bool\<close>
+                            ("\<m>\<a>\<p> _ : _ \<mapsto> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _" [21,21,21,19,21,21,21,21,21,21] 18)
+  where \<open>\<m>\<a>\<p> g : U \<mapsto> U' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<equiv>
+            (\<forall>x. \<s>\<u>\<b>\<s>\<t> g (fst (h x)) \<Ztypecolon> U' \<f>\<o>\<r> fst (h x) \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<t>\<o> f x \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] snd (h x) \<Ztypecolon> R) \<and>
+            (f = s o apfst g o h)\<close>
 
 subsection \<open>Conventions\<close>
 

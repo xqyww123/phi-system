@@ -3455,9 +3455,35 @@ lemma "_Structural_Extract\<^sub>\<Lambda>_general_rule_i_"[\<phi>reason_templat
 
 subsubsection \<open>Transformation Mapper\<close>
 
+lemma inj_on_sing:
+  \<open>inj_on f {x}\<close>
+  unfolding inj_on_def
+  by simp
+
 lemma
-  \<open> 
-\<Longrightarrow> \<g>\<e>\<t> x' \<Ztypecolon> F T \<f>\<r>\<o>\<m> x \<Ztypecolon> F \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W \<close>
+  \<open>the_inv_into {}\<close>
+
+term inj_on
+term inv
+
+lemma
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[C\<^sub>W] W) (U \<^emph>[C\<^sub>R] R) Dom Rng pred_mapper func_mapper
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>3\<^sub>2 F\<^sub>1\<^sub>4 (U \<^emph>[C\<^sub>R] R) (T \<^emph>[C\<^sub>W] W) Dom' Rng' pred_mapper' func_mapper'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 C\<^sub>W T W Dz z
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 C\<^sub>R U R Dz' z'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 C\<^sub>R U R Du uz
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 C\<^sub>W T W Du' uz'
+\<Longrightarrow> (\<And>a \<in> Dom (z x). \<g>\<e>\<t> f a \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<f>\<r>\<o>\<m> a \<Ztypecolon> T \<^emph>[C\<^sub>W] W)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> y : uz (func_mapper f (\<lambda>_. True) (z x))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x)) \<and> func_mapper f (\<lambda>_. True) (z x) \<in> Du \<and>
+           (f ` Dom (z x) \<subseteq> Dom' (z' y)) \<and>
+          (inj_on f (Dom (z x)) \<longrightarrow> uz' (func_mapper' (the_inv_into (Dom (z x)) f) (\<lambda>_. True) (z' y)) = x)
+\<Longrightarrow> \<g>\<e>\<t> y \<Ztypecolon> F\<^sub>3 U \<^emph>[C\<^sub>R] F\<^sub>2 R \<f>\<r>\<o>\<m> x \<Ztypecolon> F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W  \<close>
+
+lemma
+  \<open> \<m>\<a>\<p> f \<f>\<r>\<o>\<m> U \<t>\<o> U' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<o>\<v>\<e>\<r> x \<Ztypecolon> F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W \<t>\<o> y \<Ztypecolon> F\<^sub>1' T' \<^emph>[C\<^sub>W] F\<^sub>4' W'
+\<Longrightarrow> \<m>\<a>\<p> f \<f>\<r>\<o>\<m> F\<^sub>3 U \<t>\<o> F\<^sub>3' U' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] F\<^sub>2 R \<o>\<v>\<e>\<r> x \<Ztypecolon> F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W \<t>\<o> y \<Ztypecolon> F\<^sub>1' T' \<^emph>[C\<^sub>W] F\<^sub>4' W'\<close>
+
 
 
 subsubsection \<open>Semimodule Scalar Associative \label{Semimodule-Scalar-Associative}\<close>
