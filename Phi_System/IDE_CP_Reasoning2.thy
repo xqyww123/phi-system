@@ -486,9 +486,93 @@ lemma [\<phi>reason %\<phi>mapToA_init+10]:
 
 subsubsection \<open>Product\<close>
 
+(*if C\<^sub>R\<^sub>1 then *)
+setup \<open>Sign.mandatory_path "prod"\<close>
+
+definition assoc :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
+  where \<open>assoc x = ((fst x, fst (snd x)), snd (snd x))\<close>
+
+definition assoc\<^sub>R :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times> 'b \<times> 'c\<close>
+  where \<open>assoc\<^sub>R x = (fst (fst x), snd (fst x), snd x)\<close>
+
+lemma assoc[simp]:
+  \<open>prod.assoc (a,b,c) = ((a,b),c)\<close>
+  \<open>prod.assoc\<^sub>R ((a,b),c) = (a,b,c)\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma assoc_assoc\<^sub>R[simp]:
+  \<open>prod.assoc (prod.assoc\<^sub>R x) = x\<close>
+  \<open>prod.assoc\<^sub>R (prod.assoc y) = y\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma assoc_prj[simp]:
+  \<open>fst (fst (prod.assoc x)) = fst x\<close>
+  \<open>snd (fst (prod.assoc x)) = fst (snd x)\<close>
+  \<open>snd (prod.assoc x) = snd (snd x)\<close>
+  \<open>fst (prod.assoc (a, bc)) = (a, fst bc) \<close>
+  \<open>fst (prod.assoc\<^sub>R y) = fst (fst y)\<close>
+  \<open>snd (prod.assoc\<^sub>R (ab, c)) = (snd ab, c)\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma ap_assoc[simp]:
+  \<open>apfst f_ab (prod.assoc\<^sub>R (ab, c)) = prod.assoc\<^sub>R (apfst f_ab ab, c)\<close>
+  
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+setup \<open>Sign.parent_path\<close>
+
 lemma
-  \<open> \<m>\<a>\<p> g\<^sub>1 : U\<^sub>1 \<mapsto> U\<^sub>1' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<o>\<v>\<e>\<r> f : T \<mapsto> T'
-\<Longrightarrow> \<m>\<a>\<p> map_prod g\<^sub>1 g\<^sub>2 : U\<^sub>1 \<^emph> U\<^sub>2 \<mapsto> U\<^sub>1' \<^emph> U\<^sub>2' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  \<open> \<m>\<a>\<p> g\<^sub>1 : U\<^sub>1 \<^emph>[C\<^sub>R\<^sub>1] R\<^sub>1 \<mapsto> U\<^sub>1' \<^emph>[C\<^sub>R\<^sub>1] R\<^sub>1' \<o>\<v>\<e>\<r> f\<^sub>1 : T \<^emph>[C\<^sub>W\<^sub>1] W\<^sub>1 \<mapsto> T' \<^emph>[C\<^sub>W\<^sub>1] W\<^sub>1' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>1 \<i>\<n> apsnd fst ` D
+\<Longrightarrow> \<m>\<a>\<p> g\<^sub>2 : U\<^sub>2 \<^emph>[C\<^sub>R] R \<mapsto> U\<^sub>2' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f\<^sub>2 : R\<^sub>1 \<^emph>[C\<^sub>W\<^sub>2] W\<^sub>2 \<mapsto> R\<^sub>1' \<^emph>[C\<^sub>W\<^sub>2] W\<^sub>2' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> apfst (snd o h\<^sub>1) ` prod.assoc ` D
+\<Longrightarrow> W = W\<^sub>1 \<^emph> W\<^sub>2
+\<Longrightarrow> W' = W\<^sub>1' \<^emph> W\<^sub>2'
+\<Longrightarrow> \<m>\<a>\<p> g : (U\<^sub>1 \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R] R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> prod.assoc o apsnd h\<^sub>2 o prod.assoc\<^sub>R o apfst h\<^sub>1 o prod.assoc
+        \<s>\<e>\<t>\<t>\<e>\<r> prod.assoc\<^sub>R o apfst s\<^sub>1 o prod.assoc o apsnd s\<^sub>2 o prod.assoc\<^sub>R
+    \<i>\<n> D \<close>
+  for T :: \<open>('e::sep_semigroup, 'f) \<phi>\<close>
+  unfolding ToA_Mapper_def Action_Tag_def
+  apply (cases C\<^sub>R\<^sub>1; cases C\<^sub>R; cases C\<^sub>W\<^sub>1; cases C\<^sub>W\<^sub>2; cases C\<^sub>W;
+      clarsimp simp add: \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_mult_contract \<phi>Some_eq_term_strip \<phi>Some_not_1
+                         Ball_def[where A=D])
+                      apply (rule, clarsimp)
+  apply (smt (verit, ccfv_threshold)
+        transformation_trans[where P=True and Q=True, simplified]
+        transformation_left_frame transformation_right_frame
+        mult.assoc)
+  apply (rule, clarsimp)
+
+
+  thm Ball_def[where A=D]
+(*
+h (a, b, c) = ((fst (h\<^sub>1 ?), fst (h\<^sub>2 ?)), snd (h\<^sub>2 _))
+*)
+
+lemma
+  \<open> \<m>\<a>\<p> apfst g\<^sub>1 : U\<^sub>1 \<^emph>[C\<^sub>R\<^sub>1] R\<^sub>1 \<mapsto> U\<^sub>1' \<^emph>[C\<^sub>R\<^sub>1] R\<^sub>1' \<o>\<v>\<e>\<r> f\<^sub>1 : T \<^emph>[C\<^sub>W\<^sub>1] W\<^sub>1 \<mapsto> T' \<^emph>[C\<^sub>W\<^sub>1] W\<^sub>1' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>1 \<i>\<n> apsnd fst ` D
+\<Longrightarrow> \<m>\<a>\<p> apfst g\<^sub>2 : U\<^sub>2 \<^emph>[C\<^sub>R] R \<mapsto> U\<^sub>2' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f\<^sub>2 : R\<^sub>1 \<^emph>[C\<^sub>W\<^sub>2] W\<^sub>2 \<mapsto> R\<^sub>1' \<^emph>[C\<^sub>W\<^sub>2] W\<^sub>2' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> apfst (snd o h\<^sub>1) ` prod.assoc ` D
+\<Longrightarrow> W = W\<^sub>1 \<^emph> W\<^sub>2
+\<Longrightarrow> W' = W\<^sub>1' \<^emph> W\<^sub>2'
+\<Longrightarrow> \<m>\<a>\<p> apfst (map_prod g\<^sub>1 g\<^sub>2) : (U\<^sub>1 \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R] R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> prod.assoc o apsnd h\<^sub>2 o prod.assoc\<^sub>R o apfst h\<^sub>1 o prod.assoc
+        \<s>\<e>\<t>\<t>\<e>\<r> prod.assoc\<^sub>R o apfst s\<^sub>1 o prod.assoc o apsnd s\<^sub>2 o prod.assoc\<^sub>R
+    \<i>\<n> D \<close>
+
+  term \<open>apfst f\<^sub>1 o prod.assoc\<close>
+  term \<open>prod.assoc\<^sub>R o apfst s\<^sub>1 o prod.assoc o apsnd s\<^sub>2 o prod.assoc\<^sub>R\<close>
+
+  term \<open>\<lambda>x. (h\<^sub>1 (fst x, fst (snd x)))\<close>
+  term \<open>prod.assoc o apsnd h\<^sub>2 o prod.assoc\<^sub>R o apfst h\<^sub>1 o prod.assoc\<close>
+  term \<open>(\<lambda>x. (snd (h\<^sub>1 (fst x, fst (snd x))), snd (snd x))) ` D\<close>
+  term \<open>apfst (snd o h\<^sub>1) ` prod.assoc ` D\<close>
+  term \<open>apsnd fst ` D\<close>
+  term \<open>apfst h\<^sub>1 ` D\<close>
+  typ \<open>'a \ti 'b\<close>
+
 
 lemma [\<phi>reason %\<phi>mapToA_split_goal]:
   \<open> \<s>\<u>\<b>\<s>\<t> fst y \<Ztypecolon> U\<^sub>1 \<f>\<o>\<r> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1 \<t>\<o> Y \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>1' \<Ztypecolon> W\<^sub>1' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>1'
