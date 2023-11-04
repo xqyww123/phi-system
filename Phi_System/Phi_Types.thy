@@ -2222,8 +2222,8 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
- 
+declare [[\<phi>trace_reasoning = 1]]
+
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
@@ -2273,9 +2273,14 @@ ML \<open>assert_derived_properties \<^theory> [
 
 declare \<phi>MapAt.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
         \<phi>MapAt.\<Sigma>\<^sub>E[\<phi>reason add]
-
+                  
 declare \<phi>MapAt.ToA_mapper[where f=f and f'=f and g=g and g'=g for g f, simplified, \<phi>reason add]
 
+lemma [\<phi>reason add]:
+  \<open> \<g>\<e>\<t>\<t>\<e>\<r> h : T \<^emph>[C\<^sub>W] W \<mapsto> U \<^emph>[C\<^sub>R] R \<i>\<n> D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> \<g>\<e>\<t>\<t>\<e>\<r> h : k \<^bold>\<rightarrow> T \<^emph>[C\<^sub>W] k \<^bold>\<rightarrow> W \<mapsto> k \<^bold>\<rightarrow> U \<^emph>[C\<^sub>R] k \<^bold>\<rightarrow> R \<i>\<n> D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s \<close>
+  for h :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> and T :: \<open>('c::sep_magma_1, 'a) \<phi>\<close>
+  by (rule \<phi>MapAt.ToA_mapper[where f=id and f'=id and g=\<open>id\<close> and g'=\<open>id\<close>, simplified]; simp)
 
 
 subsubsection \<open>By List of Keys\<close>

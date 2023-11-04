@@ -228,9 +228,11 @@ fun lookup_properties_match ctxt =
    |> filter (fn (_, th) => Pattern.matches (Context.theory_of ctxt) (pattern, Thm.concl_of th))
   end
 
-fun lookup_property_unify' ctxt additions env pattern =
+fun lookup_property_unify' ctxt =
+  let val properties = Properties.get ctxt
+   in fn additions => fn env => fn pattern =>
   let val Envir.Envir {maxidx, tenv, tyenv} = env
-   in (additions @ Net.unify_term (Properties.get ctxt) pattern)
+   in (additions @ Net.unify_term properties pattern)
    |> map_filter (fn (pos, th) =>
         let val concl = Thm.concl_of th
                      |> maxidx >= 0 ? Logic.incr_indexes ([], [], maxidx+1)
@@ -241,10 +243,14 @@ fun lookup_property_unify' ctxt additions env pattern =
           | NONE => NONE
         end)
   end
+  end
 
-fun lookup_properties_unify ctxt pattern =
-      lookup_property_unify' ctxt [] (Envir.empty (Term.maxidx_of_term pattern)) pattern
+fun lookup_properties_unify ctxt =
+  let val lookup = lookup_property_unify' ctxt
+   in fn pattern =>
+      lookup [] (Envir.empty (Term.maxidx_of_term pattern)) pattern
         |> map snd
+  end
 
 (* Invoke template instantiation *)
 
@@ -288,7 +294,8 @@ fun check_dependencies params action (pos,property) ctxt =
             fn SOME param =>
                 is_some (Seq.pull (Unify.hounifiers (ctxt, Envir.empty eidx, [(param, prop_concl)])))
              | NONE => false) params
-      then let fun get_property env (SOME p) = map (apsnd SOME) (lookup_property_unify' ctxt [(pos,property)] env p)
+      then let val lookup = lookup_property_unify' ctxt
+               fun get_property env (SOME p) = map (apsnd SOME) (lookup [(pos,property)] env p)
                  | get_property env NONE = [(Seq.single env, NONE)]
                val ruless = instantiations_of_parameters get_property ctxt params
                          |> filter (exists (fn SOME (_, th) => pointer_eq (th, property) | _ => false) o snd)
@@ -321,7 +328,11 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
         ctxt)
 
 fun invoke_template ((deps, pos, action) : template) =
+( case action of Instantiate_Rule (_, _, _, SOME (_, b)) =>
+    if Binding.name_of b = "ToA_mapper" then () else () (*debug usage*)
+    | _ => ();
       check_dependencies deps (invoke_template_action pos action)
+)
 
 fun add_template invoke_on_existing_instantiations (template : template) ctxt =
   let val _ = Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty

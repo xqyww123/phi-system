@@ -53,16 +53,13 @@ val _ = Theory.setup (Context.theory_map (
               | _ => [])
 
 
-      (*fun mk_parameter_variant Fa =
+      fun mk_parameter_variant Fa =
           let val Fb = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm Fa + 1) Fa
-              val A = Thm.ctyp_of_cterm Fa
-              val B = Thm.ctyp_of_cterm Fb
-           in \<^instantiate>\<open>'a=\<open>Thm.dest_ctyp0 A\<close> and 'b=\<open>Thm.dest_ctyp0 (Thm.dest_ctyp1 A)\<close> and
-                          'c=\<open>Thm.dest_ctyp0 B\<close> and 'd=\<open>Thm.dest_ctyp0 (Thm.dest_ctyp1 B)\<close> and Fa and Fb
+           in \<^instantiate>\<open>'a=\<open>Thm.ctyp_of_cterm Fa\<close> and 'b=\<open>Thm.ctyp_of_cterm Fb\<close> and Fa and Fb
                            in lemma \<open>Parameter_Variant_of_the_Same_Type Fa Fb\<close>
                                  by (simp add: Parameter_Variant_of_the_Same_Type_def)\<close>
           end
-
+(*
         fun mk_parameter_variant1 ctm =
           map (fn (_,F) =>
                 let val Fa = Thm.incr_indexes_cterm 1 (Thm.cterm_of ctxt' F)
@@ -84,6 +81,7 @@ val _ = Theory.setup (Context.theory_map (
         val rules = mk_variant_of_type_operator  ctm (*@ mk_parameter_variants ctm*)
                   @ mk_variant_of_type_operator2 ctm
                   @ mk_variant_of_scalar_mul (Thm.term_of ctm)
+                  @ [mk_parameter_variant ctm]
                 (*@ mk_parameter_variant1 ctm
                   @ [mk_parameter_variant ctm]*)
      in thy

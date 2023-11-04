@@ -33,12 +33,7 @@ lemma [simp]:
   unfolding zip'_def unzip'_def
   by (simp add: zip_eq_conv)
 
-lemma
-  \<open>unzip' \<circ> zip' = (\<lambda>x. x)\<close>
-  
-  term map2
-lemma
-  \<open>unzip' ()\<close>
+thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True, simplified]
 
   thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True and g=g and g'=\<open>map g\<close> and s=s and h=h 
         and f=f and f'=\<open>unzip' o map f o zip'\<close> for g s h f, simplified]
@@ -58,7 +53,7 @@ lemma
 
 term \<open>unzip' (map f (zip' x))\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>(l \<Ztypecolon> List\<^sub>S 0 T) = (Void \<s>\<u>\<b>\<j> l = [])\<close>
