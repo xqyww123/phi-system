@@ -3480,6 +3480,50 @@ lemma
           (inj_on f (Dom (z x)) \<longrightarrow> uz' (func_mapper' (the_inv_into (Dom (z x)) f) (\<lambda>_. True) (z' y)) = x)
 \<Longrightarrow> \<g>\<e>\<t> y \<Ztypecolon> F\<^sub>3 U \<^emph>[C\<^sub>R] F\<^sub>2 R \<f>\<r>\<o>\<m> x \<Ztypecolon> F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W  \<close>
 
+lemma [\<phi>reason_template name F\<^sub>1.ToA_mapper[]]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x \<in> D.
+      (\<forall>a \<in> Dom (z x). f a = s (apfst g (h a))) \<longrightarrow>
+      f' x = (uz' o func_mapper' s (\<lambda>_. True) o z' o apfst g' o uz o func_mapper h (\<lambda>_. True) o z) x)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[C\<^sub>W] W) (U \<^emph>[C\<^sub>R] R) Dom Rng pred_mapper func_mapper
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>2\<^sub>3' F\<^sub>1\<^sub>4' (U' \<^emph>[C\<^sub>R] R) (T' \<^emph>[C\<^sub>W] W') Dom' Rng' pred_mapper' func_mapper'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 C\<^sub>W T W Dz z
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>3' F\<^sub>2 F\<^sub>2\<^sub>3' C\<^sub>R U' R Dz' z'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 C\<^sub>R U R Du uz
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>1' F\<^sub>4' F\<^sub>1\<^sub>4' C\<^sub>W T' W' Du' uz'
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D \<subseteq> Dz \<and> (\<forall>x \<in> D. \<forall>a \<in> Dom (z x). h a \<in> Rng (z x)) \<and>
+           (\<forall>x\<in>D. func_mapper h (\<lambda>_. True) (z x) \<in> Du) \<and>
+           (\<forall>x\<in>D. apfst g' (uz (func_mapper h (\<lambda>_. True) (z x))) \<in> Dz') \<and>
+           (\<forall>x\<in>D. Dom' (z' (apfst g' (uz (func_mapper h (\<lambda>_. True) (z x))))) = apfst g ` h ` Dom (z x)) \<and>
+           (\<forall>x \<in> apfst g' ` uz ` func_mapper h (\<lambda>_. True) ` z ` D. \<forall>a \<in> Dom' (z' x). s a \<in> Rng' (z' x)) \<and>
+           (\<forall>x \<in> apfst g' ` uz ` func_mapper h (\<lambda>_. True) ` z ` D. func_mapper' s (\<lambda>_. True) (z' x) \<in> Du')
+\<Longrightarrow> \<m>\<a>\<p> g  : U \<mapsto> U' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> \<Union> (Dom ` z ` D)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> h' : uz o func_mapper h (\<lambda>_. True) o z @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : uz' o func_mapper' s (\<lambda>_. True) o z' @action \<A>_template_reason
+\<Longrightarrow> \<m>\<a>\<p> g' : F\<^sub>3 U \<mapsto> F\<^sub>3' U' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] F\<^sub>2 R \<o>\<v>\<e>\<r> f' : F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W \<mapsto> F\<^sub>1' T' \<^emph>[C\<^sub>W] F\<^sub>4' W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D\<close>
+  unfolding \<r>Guard_def Action_Tag_def
+  \<medium_left_bracket> premises [] and FTF[] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[] and _ and Tr and [simp] and [simp]
+    apply_rule apply_Separation_Homo\<^sub>I_Cond[where Fu=F\<^sub>4 and Ft=F\<^sub>1, OF SH\<^sub>I]
+    apply_rule apply_Functional_Transformation_Functor[where U=\<open>U \<^emph>[C\<^sub>R] R\<close> and f=\<open>h\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
+    \<medium_left_bracket> apply_rule apply_ToA_Mapper_onward[OF Tr] \<medium_right_bracket>
+        apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E]
+  \<medium_right_bracket> apply (rule conjunctionI, simp)
+  \<medium_left_bracket> premises [] and FTF[] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[] and _ and Tr and [simp] and [simp]
+    apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I']
+    apply_rule apply_Functional_Transformation_Functor[where f=s and P=\<open>\<lambda>_. True\<close>, OF FTF']
+    \<medium_left_bracket> for a
+      apply_rule apply_ToA_Mapper_backward[OF Tr] certified
+      using \<open>a \<in> Dom' (z' x)\<close>
+            \<open>x \<in> apfst g' ` (\<lambda>x. uz (func_mapper h (\<lambda>_. True) (z x))) ` D\<close>
+            \<open>\<forall>x\<in>D. Dom' _ = apfst g ` h ` Dom (z x)\<close> by (auto simp add: image_UN)
+    \<medium_right_bracket>
+    apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E']
+  \<medium_right_bracket> by (rule conjunctionI, simp, drule ToA_Mapper_f_expn,
+        clarsimp simp add: Premise_def Simplify_def)
+
+
+
 lemma
   \<open> \<m>\<a>\<p> f \<f>\<r>\<o>\<m> U \<t>\<o> U' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<o>\<v>\<e>\<r> x \<Ztypecolon> F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W \<t>\<o> y \<Ztypecolon> F\<^sub>1' T' \<^emph>[C\<^sub>W] F\<^sub>4' W'
 \<Longrightarrow> \<m>\<a>\<p> f \<f>\<r>\<o>\<m> F\<^sub>3 U \<t>\<o> F\<^sub>3' U' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] F\<^sub>2 R \<o>\<v>\<e>\<r> x \<Ztypecolon> F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W \<t>\<o> y \<Ztypecolon> F\<^sub>1' T' \<^emph>[C\<^sub>W] F\<^sub>4' W'\<close>

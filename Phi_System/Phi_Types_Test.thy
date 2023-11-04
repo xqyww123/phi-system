@@ -28,6 +28,36 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List List List ?Ta ?U unzip' \<close>)
 ]\<close>
 
+lemma [simp]:
+  \<open>zip' (apfst (map g) (unzip' x)) = map (apfst g) x\<close>
+  unfolding zip'_def unzip'_def
+  by (simp add: zip_eq_conv)
+
+lemma
+  \<open>unzip' \<circ> zip' = (\<lambda>x. x)\<close>
+  
+  term map2
+lemma
+  \<open>unzip' ()\<close>
+
+  thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True and g=g and g'=\<open>map g\<close> and s=s and h=h 
+        and f=f and f'=\<open>unzip' o map f o zip'\<close> for g s h f, simplified]
+
+  thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True and g=\<open>\<lambda>x. x\<close> and g'=\<open>map (\<lambda>x. x)\<close> and s=s and h=h 
+        and f=\<open>\<lambda>x. x\<close> and f'=\<open>unzip' o map (\<lambda>x. x) o zip'\<close> for g s h f, simplified]
+
+
+term map2
+
+
+  
+  term \<open>zip' (apfst g (unzip' x))\<close>
+
+lemma
+  \<open>unzip' (map f (zip' x))\<close>
+
+term \<open>unzip' (map f (zip' x))\<close>
+
 declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>

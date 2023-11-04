@@ -199,7 +199,7 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding of Subjection\<close>
 
-declare [[\<phi>trace_reasoning = 2 ]]
+declare [[\<phi>trace_reasoning = 0]]
      
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
@@ -209,6 +209,8 @@ declare [[\<phi>trace_reasoning = 2 ]]
      (*and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>*)
      (*and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>*)
        and Abstraction_to_Raw
+
+thm SubjectionTY.ToA_mapper[where f=f and f'=f and g=g and g'=g for g f, simplified]
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' SubjectionTY.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?Pa) \<Longrightarrow> Abstract_Domain\<^sub>L (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?Pa x) \<close>),
@@ -2272,6 +2274,7 @@ ML \<open>assert_derived_properties \<^theory> [
 declare \<phi>MapAt.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
         \<phi>MapAt.\<Sigma>\<^sub>E[\<phi>reason add]
 
+declare \<phi>MapAt.ToA_mapper[where f=f and f'=f and g=g and g'=g for g f, simplified, \<phi>reason add]
 
 
 
@@ -2334,6 +2337,8 @@ declare [[\<phi>trace_reasoning = 1]]
 declare \<phi>MapAt_L.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
 declare \<phi>MapAt_L.\<Sigma>\<^sub>E[\<phi>reason add]
 declare \<phi>Dependent_Sum.\<phi>MapAt_L.rewr[where k=k and ka=k for k, simplified, simp, assertion_simps]
+
+declare \<phi>MapAt_L.ToA_mapper[where f=f and f'=f and g=g and g'=g for f g, simplified, \<phi>reason add]
 
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
@@ -2798,6 +2803,7 @@ end
 
 translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
+thm \<phi>Mul_Quant_LenIv.ToA_mapper
 
 subsubsection \<open>Reasoning\<close>
 

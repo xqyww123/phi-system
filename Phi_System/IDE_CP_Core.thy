@@ -325,6 +325,12 @@ hide_fact introduce_Ex_ToA_subj_P introduce_Ex_ToA_subj introduce_Ex_ToA
 subsubsection \<open>General Rules Normalizing Programming Methods\<close>
 
 lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method G\<^sub>1 M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (PROP G\<^sub>1 &&& PROP G\<^sub>2) M D R (PROP F &&& PROP G\<^sub>2) \<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp
+  by (rule conjunctionI)
+
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (Trueprop Q) M D R F
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (P \<longrightarrow> Q)) M (P \<Longrightarrow> PROP D) (P \<Longrightarrow> PROP R) (P \<Longrightarrow> PROP F)\<close>
   unfolding \<phi>Programming_Method_def
