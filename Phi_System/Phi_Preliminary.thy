@@ -253,6 +253,10 @@ lemma assoc_eq_simp[simp]:
   unfolding prod.assoc_def prod.assoc\<^sub>R_def
   by (clarsimp; rule; clarsimp)+
 
+lemma assoc_eq_ap_simp[simp]:
+  \<open>(x, prod.assoc y) = apsnd prod.assoc z \<longleftrightarrow> (x, y) = z\<close>
+  by (cases z; cases y; clarsimp)
+
 setup \<open>Sign.parent_path\<close>
 
 lemma map_prod_eq_apfst_apsnd:
@@ -265,6 +269,15 @@ lemma map_prod_eq_apsnd_apfst:
   unfolding fun_eq_iff
   by clarsimp
 
+lemma map_prod_ap_simp[simp]:
+  \<open>map_prod f g (apsnd h x) = map_prod f (g o h) x\<close>
+  \<open>apsnd h' (map_prod f g x') = map_prod f (h' o g) x'\<close>
+  \<open>map_prod f g (apfst l y) = map_prod (f o l) g y\<close>
+  \<open>apfst l' (map_prod f g y') = map_prod (l' o f) g y'\<close>
+  by ((cases x; clarsimp),
+      (cases x'; clarsimp),
+      (cases y; clarsimp),
+      (cases y'; clarsimp))
 
 subsection \<open>Helper Conversion\<close>
 
