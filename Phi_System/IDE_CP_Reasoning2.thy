@@ -243,6 +243,45 @@ lemma [\<phi>reason 1010]:
   by (simp add: \<phi>Prod_expn')
 *)
 
+setup \<open>Sign.mandatory_path "prod"\<close>
+
+definition assoc :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
+  where \<open>assoc x = ((fst x, fst (snd x)), snd (snd x))\<close>
+
+definition assoc\<^sub>R :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times> 'b \<times> 'c\<close>
+  where \<open>assoc\<^sub>R x = (fst (fst x), snd (fst x), snd x)\<close>
+
+lemma assoc[simp]:
+  \<open>prod.assoc (a,b,c) = ((a,b),c)\<close>
+  \<open>prod.assoc\<^sub>R ((a,b),c) = (a,b,c)\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma assoc_assoc\<^sub>R[simp]:
+  \<open>prod.assoc (prod.assoc\<^sub>R x) = x\<close>
+  \<open>prod.assoc\<^sub>R (prod.assoc y) = y\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma assoc_prj[simp]:
+  \<open>fst (fst (prod.assoc x)) = fst x\<close>
+  \<open>snd (fst (prod.assoc x)) = fst (snd x)\<close>
+  \<open>snd (prod.assoc x) = snd (snd x)\<close>
+  \<open>fst (prod.assoc (a, bc)) = (a, fst bc) \<close>
+  \<open>fst (prod.assoc\<^sub>R y) = fst (fst y)\<close>
+  \<open>snd (prod.assoc\<^sub>R (ab, c)) = (snd ab, c)\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma ap_assoc[simp]:
+  \<open>apfst f_ab (prod.assoc\<^sub>R (ab, c)) = prod.assoc\<^sub>R (apfst f_ab ab, c)\<close>
+  
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+setup \<open>Sign.parent_path\<close>
+
+
 
 section \<open>Derivatives of Transformation \<close>
 
@@ -275,13 +314,16 @@ abbreviation ToA_Subst'' :: \<open>'c BI \<Rightarrow> 'c BI \<Rightarrow> 'c::s
   where \<open>\<s>\<u>\<b>\<s>\<t> residue \<f>\<o>\<r> redex \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R' \<equiv>
             \<s>\<u>\<b>\<s>\<t> (residue \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R') \<f>\<o>\<r> (redex \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R) \<f>\<r>\<o>\<m> (Src \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>W] W) \<t>\<o> (Ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>W] W')\<close>
 
-definition ToA_Mapper :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_magma, 'a) \<phi> \<Rightarrow> ('c,'b) \<phi>
-                       \<Rightarrow> ('x \<Rightarrow> 'y) \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'y) \<phi> \<Rightarrow> ('x \<Rightarrow> 'a) \<Rightarrow> ('b \<Rightarrow> 'y) \<Rightarrow> 'x set \<Rightarrow> bool\<close>
-                          ("\<m>\<a>\<p> _ : _ \<mapsto> _/ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _/ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _" [21,21,21,21,21,21,21,21,21] 18)
-  where \<open>\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> domain \<equiv>
-            (\<forall>x \<in> domain. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U) \<and>
-            (\<forall>y \<in> g ` h ` domain. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s y \<Ztypecolon> T') \<and>
-            (\<forall>x \<in> domain. f x = s (g (h x)))\<close>
+definition ToA_Mapper :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a\<^sub>R \<times> 'x\<^sub>W \<Rightarrow> 'b\<^sub>R \<times> 'y\<^sub>W)
+                       \<Rightarrow> ('c::sep_magma, 'a) \<phi> \<Rightarrow> bool \<Rightarrow> ('c,'a\<^sub>R) \<phi> \<Rightarrow>  bool \<Rightarrow> ('c,'x\<^sub>W) \<phi>
+                       \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> ('c,'b\<^sub>R) \<phi> \<Rightarrow> ('c,'y\<^sub>W) \<phi>
+                       \<Rightarrow> ('x \<times> 'x\<^sub>W \<Rightarrow> 'y \<times> 'y\<^sub>W) \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'y) \<phi> \<Rightarrow> ('x \<Rightarrow> 'a \<times> 'a\<^sub>R) \<Rightarrow> ('b \<times>  'b\<^sub>R \<Rightarrow> 'y) \<Rightarrow> ('x \<times> 'x\<^sub>W) set \<Rightarrow> bool\<close>
+                          ("\<m>\<a>\<p> '(_, _') : _ \<^emph>[_] _ \<^emph>[_] _ \<mapsto> _ \<^emph> _ \<^emph> _/ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _/ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _" [21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21] 18)
+  where \<open>\<m>\<a>\<p> (g, g\<^sub>W) : U \<^emph>[C\<^sub>R] R \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph> R' \<^emph> W' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> domain \<equiv>
+            (\<forall>x \<in> fst ` domain. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U \<^emph>[C\<^sub>R] R) \<and>
+            (\<forall>x \<in> fst ` prod.assoc ` map_prod g g\<^sub>W ` prod.assoc\<^sub>R ` apfst h ` domain.
+                    x \<Ztypecolon> U' \<^emph>[C\<^sub>R] R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T') \<and>
+            (\<forall>x \<in> domain. f x = apfst s (prod.assoc (map_prod g g\<^sub>W (prod.assoc\<^sub>R (apfst h x)))))\<close>
 
 abbreviation ToA_Getter :: \<open>('x \<Rightarrow> 'a) \<Rightarrow> ('c::sep_magma, 'x) \<phi> \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 'x set \<Rightarrow> ('a \<Rightarrow> 'x) \<Rightarrow> bool\<close>
                            ("\<g>\<e>\<t>\<t>\<e>\<r> _ : _ \<mapsto> _ \<i>\<n> _ \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> _")
@@ -355,22 +397,23 @@ lemma Cond_Unital_Ins_BI_eq_1:
 subsection \<open>Basic Rules\<close>
 
 lemma apply_ToA_Mapper_onward:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U\<close>
+  \<open> \<m>\<a>\<p> (g, g\<^sub>W) : U \<^emph>[C\<^sub>R] R \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph> R' \<^emph> W' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> fst ` D
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U \<^emph>[C\<^sub>R] R\<close>
   unfolding ToA_Mapper_def Premise_def
-  by (clarsimp simp add: \<phi>Prod_expn'')
+  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
 
 lemma apply_ToA_Mapper_backward:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> g ` h ` D
-\<Longrightarrow> x \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T'\<close>
+  \<open> \<m>\<a>\<p> (g, g\<^sub>W) : U \<^emph>[C\<^sub>R] R \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph> R' \<^emph> W' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> fst ` prod.assoc ` map_prod g g\<^sub>W ` prod.assoc\<^sub>R ` apfst h ` D
+\<Longrightarrow> x \<Ztypecolon> U' \<^emph>[C\<^sub>R] R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T'\<close>
   unfolding ToA_Mapper_def Premise_def
-  by (clarsimp simp add: \<phi>Prod_expn'')
+  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def[where A=D];
+      metis fst_eqD fst_map_prod prod.assoc_def snd_conv snd_map_prod)
 
 lemma ToA_Mapper_f_expn:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<forall>x \<in> D. f x = s (g (h x)) \<close>
+  \<open> \<m>\<a>\<p> (g, g\<^sub>W) : U \<^emph>[C\<^sub>R] R \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph> R' \<^emph> W' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<forall>x \<in> D. f x = apfst s (prod.assoc (map_prod g g\<^sub>W (prod.assoc\<^sub>R (apfst h x)))) \<close>
   unfolding ToA_Mapper_def
   by clarsimp
 
@@ -393,10 +436,11 @@ lemma ToA_Mapper_cong:
 subsubsection \<open>Extracting Implied Facts\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> D \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U)) \<longrightarrow> Q\<^sub>1 x @action \<A>EIF)
-\<Longrightarrow> (\<And>x. (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> g ` h ` D \<longrightarrow> (x \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T')) \<longrightarrow> Q\<^sub>2 x @action \<A>EIF)
-\<Longrightarrow> (\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D)
-      \<longrightarrow> (\<forall>x. Q\<^sub>1 x \<and> Q\<^sub>2 x) \<and> (\<forall>x \<in> D. f x = s (g (h x))) @action \<A>EIF \<close>
+  \<open> (\<And>x. (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> fst ` D \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U \<^emph>[C\<^sub>R] R)) \<longrightarrow> Q\<^sub>1 x @action \<A>EIF)
+\<Longrightarrow> (\<And>x. (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> fst ` prod.assoc ` map_prod g g\<^sub>W ` prod.assoc\<^sub>R ` apfst h ` D \<longrightarrow>
+            (x \<Ztypecolon> U' \<^emph>[C\<^sub>R] R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T')) \<longrightarrow> Q\<^sub>2 x @action \<A>EIF)
+\<Longrightarrow> (\<m>\<a>\<p> (g, g\<^sub>W) : U \<^emph>[C\<^sub>R] R \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph> R' \<^emph> W' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D)
+      \<longrightarrow> (\<forall>x. Q\<^sub>1 x \<and> Q\<^sub>2 x) \<and> (\<forall>x \<in> D. f x = apfst s (prod.assoc (map_prod g g\<^sub>W (prod.assoc\<^sub>R (apfst h x))))) @action \<A>EIF \<close>
   unfolding Action_Tag_def ToA_Mapper_def ToA_Subst_def Premise_def Ball_def
   by (clarsimp simp add: \<phi>Prod_expn'')
 
@@ -404,16 +448,16 @@ subsubsection \<open>Programming Method\<close>
 
 lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method
-      (\<forall>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> D \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U) &&&
-       \<forall>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> g ` h ` D \<longrightarrow> (x \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T') &&&
-       \<forall>x \<in> D. f x = s (g (h x)))
+      (\<forall>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> fst ` D \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U \<^emph>[C\<^sub>R] R) &&&
+       \<forall>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> fst ` prod.assoc ` map_prod g g\<^sub>W ` prod.assoc\<^sub>R ` apfst h ` D \<longrightarrow> (x \<Ztypecolon> U' \<^emph>[C\<^sub>R] R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T') &&&
+       \<forall>x \<in> D. f x = apfst s (prod.assoc (map_prod g g\<^sub>W (prod.assoc\<^sub>R (apfst h x)))))
       MM DD RR FF
 \<Longrightarrow> PROP \<phi>Programming_Method
-      (Trueprop (\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D)) MM DD RR FF \<close>
+      (Trueprop (\<m>\<a>\<p> (g, g\<^sub>W) : U \<^emph>[C\<^sub>R] R \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph> R' \<^emph> W' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D)) MM DD RR FF \<close>
   unfolding \<phi>Programming_Method_def Premise_def
   subgoal premises prems
     by (insert prems(1)[OF \<open>PROP DD\<close> \<open>PROP RR\<close> \<open>PROP FF\<close>];
-        clarsimp simp add: conjunction_imp ToA_Mapper_def ToA_Subst_def) .
+        clarsimp simp add: conjunction_imp ToA_Mapper_def image_iff Bex_def Ball_def) .
 
 subsection \<open>Reasoning\<close>
 
@@ -487,43 +531,7 @@ lemma [\<phi>reason %\<phi>mapToA_init+10]:
 subsubsection \<open>Product\<close>
 
 (*if C\<^sub>R\<^sub>1 then *)
-setup \<open>Sign.mandatory_path "prod"\<close>
 
-definition assoc :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
-  where \<open>assoc x = ((fst x, fst (snd x)), snd (snd x))\<close>
-
-definition assoc\<^sub>R :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times> 'b \<times> 'c\<close>
-  where \<open>assoc\<^sub>R x = (fst (fst x), snd (fst x), snd x)\<close>
-
-lemma assoc[simp]:
-  \<open>prod.assoc (a,b,c) = ((a,b),c)\<close>
-  \<open>prod.assoc\<^sub>R ((a,b),c) = (a,b,c)\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
-  by simp_all
-
-lemma assoc_assoc\<^sub>R[simp]:
-  \<open>prod.assoc (prod.assoc\<^sub>R x) = x\<close>
-  \<open>prod.assoc\<^sub>R (prod.assoc y) = y\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
-  by simp_all
-
-lemma assoc_prj[simp]:
-  \<open>fst (fst (prod.assoc x)) = fst x\<close>
-  \<open>snd (fst (prod.assoc x)) = fst (snd x)\<close>
-  \<open>snd (prod.assoc x) = snd (snd x)\<close>
-  \<open>fst (prod.assoc (a, bc)) = (a, fst bc) \<close>
-  \<open>fst (prod.assoc\<^sub>R y) = fst (fst y)\<close>
-  \<open>snd (prod.assoc\<^sub>R (ab, c)) = (snd ab, c)\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
-  by simp_all
-
-lemma ap_assoc[simp]:
-  \<open>apfst f_ab (prod.assoc\<^sub>R (ab, c)) = prod.assoc\<^sub>R (apfst f_ab ab, c)\<close>
-  
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
-  by simp_all
-
-setup \<open>Sign.parent_path\<close>
 
 lemma
   \<open> \<m>\<a>\<p> g\<^sub>1 : U\<^sub>1 \<^emph>[C\<^sub>R\<^sub>1] R\<^sub>1 \<mapsto> U\<^sub>1' \<^emph>[C\<^sub>R\<^sub>1] R\<^sub>1' \<o>\<v>\<e>\<r> f\<^sub>1 : T \<^emph>[C\<^sub>W\<^sub>1] W\<^sub>1 \<mapsto> T' \<^emph>[C\<^sub>W\<^sub>1] W\<^sub>1' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>1 \<i>\<n> apsnd fst ` D
