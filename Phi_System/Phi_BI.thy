@@ -3141,11 +3141,24 @@ lemma [\<phi>reason 1201]:
   using Structural_Extract_\<phi>Prod_left_i .
 *)
 
+subsubsection \<open>Conditioned Product at Left\<close>
+
+definition LeftCond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ [_]\<^emph> _" [69,20,70] 68)
+  where \<open>(T [C\<^sub>T]\<^emph> U) \<equiv> if C\<^sub>T then T \<^emph> U else (\<lambda>x. snd x \<Ztypecolon> U)\<close>
+
+lemma LeftCond_\<phi>Prod_expn[\<phi>expns, simp]:
+  \<open> c \<Turnstile> (x \<Ztypecolon> T [C\<^sub>T]\<^emph> U) \<longleftrightarrow> (if C\<^sub>T then c \<Turnstile> (x \<Ztypecolon> T \<^emph> U) else c \<Turnstile> (snd x \<Ztypecolon> U))\<close>
+  unfolding LeftCond_\<phi>Prod_def \<phi>Type_def
+  by (cases C\<^sub>T; clarsimp)
+
+lemma LeftCond_single_Cond_const_red[simp]:
+  \<open> T [True]\<^emph> U = T \<^emph> U \<close>
+  by (rule \<phi>Type_eqI, clarsimp)+
 
 
 subsubsection \<open>Bi-Conditioned Product\<close>
 
-definition BiCond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ [_]\<^emph>[_] _" [71,20,20,70] 70)
+definition BiCond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ [_]\<^emph>[_] _" [71,20,20,71] 70)
     \<comment> \<open>\<phi>Type embedding of conditional remainder\<close>
   where \<open>(T [C\<^sub>T]\<^emph>[C\<^sub>U] U) \<equiv> if C\<^sub>T then if C\<^sub>U then T \<^emph> U else (\<lambda>x. fst x \<Ztypecolon> T) else if C\<^sub>U then (\<lambda>x. snd x \<Ztypecolon> U) else (\<lambda>_. \<top>)\<close>
 
@@ -3168,7 +3181,7 @@ lemma BiCond_single_Cond_rewrite:
       
 
 lemma BiCond_assoc:
-  \<open> (x \<Ztypecolon> (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3) = (prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)\<close>
+  \<open> (x \<Ztypecolon> (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3) = (prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3))\<close>
   for T\<^sub>1 :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
   unfolding BI_eq_iff
   by ((cases x; cases C\<^sub>1; cases C\<^sub>2; cases C\<^sub>3; clarsimp; rule; clarsimp),
@@ -3176,7 +3189,7 @@ lemma BiCond_assoc:
       metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc')
 
 lemma BiCond_assoc':
-  \<open> (x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] ((T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)) = (apsnd prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)) \<close>
+  \<open> (x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] ((T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)) = (apsnd prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3))) \<close>
   for T\<^sub>0 :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
   unfolding BI_eq_iff
   by ((cases x; cases C\<^sub>1; cases C\<^sub>2; cases C\<^sub>3; clarsimp; rule; clarsimp),
@@ -3199,15 +3212,6 @@ lemma BiCond_expn_BiCond:
       metis sep_disj_option(1) times_option(1),
       blast)
 
-lemma map_prod_eq_apfst_apsnd:
-  \<open>map_prod f g = apfst f o apsnd g\<close>
-  unfolding fun_eq_iff
-  by clarsimp
-
-lemma map_prod_eq_apsnd_apfst:
-  \<open>map_prod f g = apsnd g o apfst f\<close>
-  unfolding fun_eq_iff
-  by clarsimp
 
 paragraph \<open>Syntax\<close>
 
@@ -3220,21 +3224,31 @@ text \<open>
 \<close>
 
 no_notation Cond_\<phi>Prod ("_ \<^emph>[_]/ _" [71,20,70] 70)
-        and BiCond_\<phi>Prod ("_ [_]\<^emph>[_] _" [71,20,20,70] 70)
-                                    
+        and BiCond_\<phi>Prod ("_ [_]\<^emph>[_] _" [71,20,20,71] 70)
+        and LeftCond_\<phi>Prod ("_ [_]\<^emph> _" [69,20,70] 68)
+
 syntax "_Cond_\<phi>Prods" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic \<Rightarrow> logic\<close> ("_ \<^emph>[_]/ _" [71,20,71] 70)
        "_BiCond_\<phi>Prods" :: \<open>logic \<Rightarrow> logic \<Rightarrow> tuple_args \<Rightarrow> logic \<Rightarrow> logic\<close> ("_ [_]\<^emph>[_]/ _" [71,20,20,71] 70)
+       "_LCond_\<phi>Prods" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic \<Rightarrow> logic\<close> ("_ [_]\<^emph>/ _" [69,20,70] 68)
 
 parse_translation \<open>
-let fun parse (A, Ac, Cs, B) =
+let fun parse is_left (A, Ac, Cs, B) =
       let fun strip_tuple (Const(\<^syntax_const>\<open>_tuple_args\<close>, _) $ C $ Cs) = C :: strip_tuple Cs
             | strip_tuple (Const(\<^syntax_const>\<open>_tuple_arg\<close>, _) $ C) = [C]
           fun strip_pair (Const(\<^const_syntax>\<open>Pair\<close>, _) $ B $ Bs) = B :: strip_pair Bs
             | strip_pair X = [X]
-          val Bs = strip_pair B
-          val Cs = strip_tuple Cs
+          val Bs = strip_pair B   |> is_left ? rev
+          val Cs = strip_tuple Cs |> is_left ? rev
           val _ = if length Bs = length Cs then ()
                   else error "Bad Syntax: Unbalanced length of \<open>_ \<^emph>[_,_,this] (_,_,and,this)\<close>"
+          fun mkL A _ [] [] = A
+            | mkL A Ac [B] [C] = Const(\<^const_name>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ B $ C $ Ac $ A
+            | mkL A Ac (B::Bs) (C::Cs) =
+                Const(\<^const_name>\<open>BiCond_\<phi>Prod\<close>, dummyT)
+                  $ (mkL B C Bs Cs)
+                  $ foldr1 (fn (a,b) => HOLogic.mk_disj (b,a)) (C::Cs)
+                  $ Ac
+                  $ A
           fun mk A _ [] [] = A
             | mk A Ac [B] [C] = Const(\<^const_name>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ A $ Ac $ C $ B
             | mk A Ac (B::Bs) (C::Cs) =
@@ -3242,18 +3256,45 @@ let fun parse (A, Ac, Cs, B) =
                   $ Ac
                   $ foldr1 HOLogic.mk_disj (C::Cs)
                   $ (mk B C Bs Cs)
-       in case Ac
-       of SOME Ac => mk A Ac Bs Cs
-        | _ => Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, dummyT) $ A
-                  $ foldr1 HOLogic.mk_disj Cs
-                  $ mk (hd Bs) (hd Cs) (tl Bs) (tl Cs)
+       in if is_left
+       then Const(\<^const_name>\<open>LeftCond_\<phi>Prod\<close>, dummyT)
+                    $ mkL (hd Bs) (hd Cs) (tl Bs) (tl Cs)
+                    $ foldl1 HOLogic.mk_disj (rev Cs)
+                    $ A
+       else case Ac
+         of SOME Ac => mk A Ac Bs Cs
+          | _ => Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, dummyT) $ A
+                    $ foldr1 HOLogic.mk_disj Cs
+                    $ mk (hd Bs) (hd Cs) (tl Bs) (tl Cs)
       end
- in [(\<^syntax_const>\<open>_Cond_\<phi>Prods\<close>, fn _ => fn [A,Cs,B] => parse (A,NONE,Cs,B)),
-     (\<^syntax_const>\<open>_BiCond_\<phi>Prods\<close>, fn _ => fn [A,Ac,Cs,B] => parse (A,SOME Ac,Cs,B))]
+ in [(\<^syntax_const>\<open>_Cond_\<phi>Prods\<close>, fn _ => fn [A,Cs,B] => parse false (A,NONE,Cs,B)),
+     (\<^syntax_const>\<open>_BiCond_\<phi>Prods\<close>, fn _ => fn [A,Ac,Cs,B] => parse false (A,SOME Ac,Cs,B)),
+     (\<^syntax_const>\<open>_LCond_\<phi>Prods\<close>, fn _ => fn [A,Cs,B] => parse true (B,NONE,Cs,A))]
 end\<close>
 
+(*TEST:
+term \<open>U \<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close>
+term \<open>U [C]\<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close> 
+term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U \<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close>
+term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U\<close>
+term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U [C]\<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close>
+*)
+
 print_translation \<open>
-  let fun parse (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ T $ CT
+  let fun parseL (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _)
+                  $ (Us' as Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ _ $ _ $ _ $ _)
+                  $ (CUs' as Const(\<^const_syntax>\<open>HOL.disj\<close>, _) $ _ $ _)
+                  $ CT $ T) =
+            let fun strip_disj (Const(\<^const_syntax>\<open>HOL.disj\<close>, _) $ Cs $ C) = C :: strip_disj Cs
+                  | strip_disj C = [C]
+                val (Us, CUs) = parseL Us'
+                val myCUs = strip_disj CUs'
+                val _ = if eq_list Term.aconv_untyped (CUs, myCUs) then () else raise Match
+             in (T::Us, CT::CUs)
+            end
+        | parseL (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ U $ CU $ CT $ T) = ([T,U], [CT,CU])
+
+      fun parse (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ T $ CT
                   $ (CUs' as Const(\<^const_syntax>\<open>HOL.disj\<close>, _) $ _ $ _)
                   $ (Us' as Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ _ $ _ $ _ $ _)) =
             let fun strip_disj (Const(\<^const_syntax>\<open>HOL.disj\<close>, _) $ C $ Cs) = C :: strip_disj Cs
@@ -3265,28 +3306,44 @@ print_translation \<open>
             end
         | parse (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ T $ CT $ CU $ U) = ([T,U], [CT,CU])
 
-      fun mk (T::Us) (CT::CUs) =
-            (if pointer_eq (CT, Term.dummy_prop)
-             then Const(\<^syntax_const>\<open>_Cond_\<phi>Prods\<close>, dummyT) $ T
-             else Const(\<^syntax_const>\<open>_BiCond_\<phi>Prods\<close>, dummyT) $ T $ CT)
-              $ (case CUs
-                   of [_] => hd CUs
-                    | _ => foldl1 (fn (a,b) => Const(\<^syntax_const>\<open>_tuple_args\<close>, dummyT) $ a $ b) CUs)
-              $ (case Us
-                   of [_] => hd Us
-                    | U::Uss =>
-                        Const(\<^syntax_const>\<open>_tuple\<close>, dummyT) $ U
-                          $ foldl1 (fn (a,b) => Const(\<^syntax_const>\<open>_tuple_args\<close>, dummyT) $ a $ b) Uss)
-
-      fun print (T',CT',CU',U') =
-        let val (Ts,Cs) = parse (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ T' $ CT' $ CU' $ U')
-         in mk Ts Cs
+      fun mk is_left (T::Us) (CT::CUs) =
+        let val head = (if pointer_eq (CT, Term.dummy_prop)
+                        then if is_left then Const(\<^syntax_const>\<open>_LCond_\<phi>Prods\<close>, dummyT)
+                                        else Const(\<^syntax_const>\<open>_Cond_\<phi>Prods\<close>, dummyT) $ T
+                        else Const(\<^syntax_const>\<open>_BiCond_\<phi>Prods\<close>, dummyT) $ T $ CT)
+            val CUs = case CUs
+                        of [_] => hd CUs
+                         | _ => foldl1 (fn (a,b) => Const(\<^syntax_const>\<open>_tuple_args\<close>, dummyT) $ a $ b)
+                                       (if is_left then rev CUs else CUs)
+            val Us = case (if is_left then rev Us else Us)
+                       of [_] => hd Us
+                        | U::Uss =>
+                            Const(\<^syntax_const>\<open>_tuple\<close>, dummyT) $ U
+                              $ foldl1 (fn (a,b) => Const(\<^syntax_const>\<open>_tuple_args\<close>, dummyT) $ a $ b) Uss
+         in if is_left then head $ Us $ CUs $ T
+            else head $ CUs $ Us
         end
-   in [(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, fn _ => fn [T,CT,CU,U] => print (T,CT,CU,U)),
-       (\<^const_syntax>\<open>Cond_\<phi>Prod\<close>, fn _ => fn [T,CU,U] => print (T,Term.dummy_prop,CU,U))]
+
+      fun print is_left (T',CT',CU',U') =
+        let val (Ts,Cs) = if is_left
+                          then parseL (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ T' $ CT' $ CU' $ U')
+                          else parse  (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ T' $ CT' $ CU' $ U')
+         in mk is_left Ts Cs
+        end
+   in [(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, fn _ => fn [T,CT,CU,U] => print false (T,CT,CU,U)),
+       (\<^const_syntax>\<open>Cond_\<phi>Prod\<close>, fn _ => fn [T,CU,U] => print false (T,Term.dummy_prop,CU,U)),
+       (\<^const_syntax>\<open>LeftCond_\<phi>Prod\<close>, fn _ => fn [T,CU,U] => print true (T,CU,Term.dummy_prop,U))]
   end
 \<close>
 
+(*TEST:
+term \<open>U \<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close>
+term \<open>U [C]\<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close> 
+term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U \<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close>
+term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U [C]\<^emph>[C\<^sub>1, C\<^sub>2, C\<^sub>3] (R\<^sub>1, R\<^sub>2, R\<^sub>3)\<close>
+term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U\<close>
+ 
+term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U\<close>*)
 
 
 section \<open>Basic \<phi>-Type Properties\<close>

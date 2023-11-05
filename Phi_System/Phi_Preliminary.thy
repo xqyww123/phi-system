@@ -255,6 +255,15 @@ lemma assoc_eq_simp[simp]:
 
 setup \<open>Sign.parent_path\<close>
 
+lemma map_prod_eq_apfst_apsnd:
+  \<open>map_prod f g = apfst f o apsnd g\<close>
+  unfolding fun_eq_iff
+  by clarsimp
+
+lemma map_prod_eq_apsnd_apfst:
+  \<open>map_prod f g = apsnd g o apfst f\<close>
+  unfolding fun_eq_iff
+  by clarsimp
 
 subsection \<open>Helper Conversion\<close>
 
