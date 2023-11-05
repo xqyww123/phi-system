@@ -1200,6 +1200,14 @@ lemma apply_Separation_Homo\<^sub>I_Cond:
   unfolding Separation_Homo\<^sub>I_Cond_def Premise_def split_paired_all
   by (cases x; simp)
 
+lemma apply_Separation_Homo\<^sub>I_Cond\<^sub>3:
+  \<open> Separation_Homo\<^sub>I_Cond F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U C\<^sub>U T U D\<^sub>1 z\<^sub>1
+\<Longrightarrow> Separation_Homo\<^sub>I_Cond F\<^sub>T\<^sub>U F\<^sub>W F\<^sub>3 C\<^sub>W (T \<^emph>[C\<^sub>U] U) W D\<^sub>2 z\<^sub>2
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x \<in> D\<^sub>1 \<and> apfst z\<^sub>1 x \<in> D\<^sub>2
+\<Longrightarrow> x \<Ztypecolon> (F\<^sub>T T \<^emph>[C\<^sub>U] F\<^sub>U U) \<^emph>[C\<^sub>W] F\<^sub>W W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z\<^sub>2 (apfst z\<^sub>1 x) \<Ztypecolon> F\<^sub>3 ((T \<^emph>[C\<^sub>U] U) \<^emph>[C\<^sub>W] W) \<close>
+  unfolding Separation_Homo\<^sub>I_Cond_def Premise_def split_paired_all Transformation_def
+  by (cases C\<^sub>U; cases C\<^sub>W; cases x; simp; metis prod.collapse)
+
 lemma apply_Separation_Homo\<^sub>E_Cond:
   \<open> Separation_Homo\<^sub>E_Cond Ft Fu Fc C\<^sub>W T U D un
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D

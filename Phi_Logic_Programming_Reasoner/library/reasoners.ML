@@ -202,6 +202,7 @@ fun fast_inst can_inst th =
           handle Match => NONE)
      | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)) =>
          (*solves the equation by unification once single resolution*)
+         (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
          (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
           handle THM _ => NONE)
      | (true, (_, V)) =>

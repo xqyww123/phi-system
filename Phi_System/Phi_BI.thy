@@ -741,7 +741,7 @@ abbreviation ALWAYS_REMAINS :: \<open> 'a::sep_magma BI \<Rightarrow> 'a BI \<Ri
 definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 70)
   where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
 
-definition Cond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ \<^emph>[_] _" [71,40,70] 70)
+definition Cond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ \<^emph>[_]/ _" [71,20,70] 70)
     \<comment> \<open>\<phi>Type embedding of conditional remainder\<close>
   where \<open>(T \<^emph>[C] U) \<equiv> if C then T \<^emph> U else (\<lambda>x. fst x \<Ztypecolon> T)\<close>
 
@@ -2528,7 +2528,7 @@ lemma \<phi>Prod_expn' [\<phi>programming_base_simps, \<phi>programming_simps]:
   \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
   unfolding BI_eq_iff by (simp add: set_mult_expn)
 
-lemma \<phi>Prod_expn''[\<phi>programming_base_simps, \<phi>programming_simps]:
+lemma \<phi>Prod_expn'':
   \<open> NO_MATCH (xx,yy) x
 \<Longrightarrow> (x \<Ztypecolon> A \<^emph> B) = (snd x \<Ztypecolon> B) * (fst x \<Ztypecolon> A)\<close>
   unfolding BI_eq_iff by (cases x; simp add: set_mult_expn)
@@ -2657,6 +2657,7 @@ lemma transformation_left_frame_conditioned_ty:
 subsubsection \<open>Transformation Rules\<close>
 
 text \<open>see \<section>\<open>Reasoning/Supplementary Transformations/Type-embedding of Conditioned Remains\<close>\<close>
+
 
 subsection \<open>Embedding of Empty\<close>
 
@@ -2871,6 +2872,11 @@ lemma Cond_\<phi>Prod_expn_\<phi>Some:
   \<open>\<black_circle> (T \<^emph>[C] U) \<equiv> \<black_circle> T \<^emph> \<half_blkcirc>[C] U\<close>
   unfolding atomize_eq
   by (rule \<phi>Type_eqI; cases C; clarsimp; force)
+
+lemma Cond_\<phi>Prod_expn_Cond_\<phi>Prod:
+  \<open>\<half_blkcirc>[C\<^sub>1] (T \<^emph>[C\<^sub>2] U) \<equiv> \<half_blkcirc>[C\<^sub>1] T \<^emph> \<half_blkcirc>[C\<^sub>1 \<and> C\<^sub>2] U\<close>
+  unfolding atomize_eq
+  by (rule \<phi>Type_eqI; cases C\<^sub>1; cases C\<^sub>2; clarsimp; force)
 
 lemma cond_prod_transformation_rewr:
   \<open> x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<w>\<i>\<t>\<h> P \<equiv> x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> \<black_circle> U' \<w>\<i>\<t>\<h> P\<close>
@@ -3134,6 +3140,146 @@ lemma [\<phi>reason 1201]:
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using Structural_Extract_\<phi>Prod_left_i .
 *)
+
+
+
+subsubsection \<open>Bi-Conditioned Product\<close>
+
+definition BiCond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ [_]\<^emph>[_] _" [71,20,20,70] 70)
+    \<comment> \<open>\<phi>Type embedding of conditional remainder\<close>
+  where \<open>(T [C\<^sub>T]\<^emph>[C\<^sub>U] U) \<equiv> if C\<^sub>T then if C\<^sub>U then T \<^emph> U else (\<lambda>x. fst x \<Ztypecolon> T) else if C\<^sub>U then (\<lambda>x. snd x \<Ztypecolon> U) else (\<lambda>_. \<top>)\<close>
+
+lemma BiCond_\<phi>Prod_expn[\<phi>expns, simp]:
+  \<open> c \<Turnstile> (x \<Ztypecolon> T [C\<^sub>T]\<^emph>[C\<^sub>U] U) \<longleftrightarrow> (if C\<^sub>T then if C\<^sub>U then c \<Turnstile> (x \<Ztypecolon> T \<^emph> U) else c \<Turnstile> (fst x \<Ztypecolon> T) else if C\<^sub>U then c \<Turnstile> (snd x \<Ztypecolon> U) else True)\<close>
+  unfolding BiCond_\<phi>Prod_def \<phi>Type_def
+  by (cases C\<^sub>T; cases C\<^sub>U; clarsimp)
+
+lemma BiCond_single_Cond_const_red[simp]:
+  \<open> T [True]\<^emph>[True] U = T \<^emph> U \<close>
+  \<open> T [False]\<^emph>[False] U = \<top>\<^sub>\<phi> \<close>
+  by (rule \<phi>Type_eqI, clarsimp)+
+
+lemma BiCond_single_Cond_rewrite:
+  \<open> (x \<Ztypecolon> T \<^emph>[C\<^sub>U \<or> C\<^sub>W] (U [C\<^sub>U]\<^emph>[C\<^sub>W] W)) = (prod.assoc x \<Ztypecolon> (T \<^emph>[C\<^sub>U] U) \<^emph>[C\<^sub>W] W)\<close>
+  for T :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
+  by ((clarsimp simp add: BI_eq_iff; rule; clarsimp),
+      metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc',
+      metis sep_disj_multD1 sep_disj_multI1 sep_mult_assoc)
+      
+
+lemma BiCond_assoc:
+  \<open> (x \<Ztypecolon> (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3) = (prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)\<close>
+  for T\<^sub>1 :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
+  unfolding BI_eq_iff
+  by ((cases x; cases C\<^sub>1; cases C\<^sub>2; cases C\<^sub>3; clarsimp; rule; clarsimp),
+      metis sep_disj_multD1 sep_disj_multI1 sep_mult_assoc',
+      metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc')
+
+lemma BiCond_assoc':
+  \<open> (x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] ((T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)) = (apsnd prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)) \<close>
+  for T\<^sub>0 :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
+  unfolding BI_eq_iff
+  by ((cases x; cases C\<^sub>1; cases C\<^sub>2; cases C\<^sub>3; clarsimp; rule; clarsimp),
+      metis sep_disj_multD1 sep_disj_multI1 sep_mult_assoc,
+      metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc)
+
+lemma BiCond_expn_\<phi>Some:
+  \<open> C\<^sub>1 \<or> C\<^sub>2
+\<Longrightarrow> \<black_circle> (T [C\<^sub>1]\<^emph>[C\<^sub>2] U) \<equiv> \<half_blkcirc>[C\<^sub>1] T \<^emph> \<half_blkcirc>[C\<^sub>2] U\<close>
+  unfolding atomize_eq
+  by ((rule \<phi>Type_eqI; cases C\<^sub>1; cases C\<^sub>2; clarsimp; rule; clarsimp),
+      metis sep_disj_option(1) times_option(1),
+      blast)
+
+lemma BiCond_expn_BiCond:
+  \<open> C \<longrightarrow> C\<^sub>1 \<or> C\<^sub>2
+\<Longrightarrow> \<half_blkcirc>[C] (T [C\<^sub>1]\<^emph>[C\<^sub>2] U) \<equiv> \<half_blkcirc>[C \<and> C\<^sub>1] T \<^emph> \<half_blkcirc>[C \<and> C\<^sub>2] U \<close>
+  unfolding atomize_eq
+  by ((rule \<phi>Type_eqI; cases C; cases C\<^sub>1; cases C\<^sub>2; clarsimp; rule; clarsimp),
+      metis sep_disj_option(1) times_option(1),
+      blast)
+
+lemma map_prod_eq_apfst_apsnd:
+  \<open>map_prod f g = apfst f o apsnd g\<close>
+  unfolding fun_eq_iff
+  by clarsimp
+
+lemma map_prod_eq_apsnd_apfst:
+  \<open>map_prod f g = apsnd g o apfst f\<close>
+  unfolding fun_eq_iff
+  by clarsimp
+
+paragraph \<open>Syntax\<close>
+
+no_notation Cond_\<phi>Prod ("_ \<^emph>[_]/ _" [71,20,70] 70)
+        and BiCond_\<phi>Prod ("_ [_]\<^emph>[_] _" [71,20,20,70] 70)
+                                    
+syntax "_Cond_\<phi>Prods" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic \<Rightarrow> logic\<close> ("_ \<^emph>[_]/ _" [71,20,71] 70)
+       "_BiCond_\<phi>Prods" :: \<open>logic \<Rightarrow> logic \<Rightarrow> tuple_args \<Rightarrow> logic \<Rightarrow> logic\<close> ("_ [_]\<^emph>[_]/ _" [71,20,20,71] 70)
+
+parse_translation \<open>
+let fun parse (A, Ac, Cs, B) =
+      let fun strip_tuple (Const(\<^syntax_const>\<open>_tuple_args\<close>, _) $ C $ Cs) = C :: strip_tuple Cs
+            | strip_tuple (Const(\<^syntax_const>\<open>_tuple_arg\<close>, _) $ C) = [C]
+          fun strip_pair (Const(\<^const_syntax>\<open>Pair\<close>, _) $ B $ Bs) = B :: strip_pair Bs
+            | strip_pair X = [X]
+          val Bs = strip_pair B
+          val Cs = strip_tuple Cs
+          val _ = if length Bs = length Cs then ()
+                  else error "Bad Syntax: Unbalanced length of \<open>_ \<^emph>[_,_] (_,_)\<close>"
+          fun mk A _ [] [] = A
+            | mk A Ac [B] [C] = Const(\<^const_name>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ A $ Ac $ C $ B
+            | mk A Ac (B::Bs) (C::Cs) =
+                Const(\<^const_name>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ A
+                  $ Ac
+                  $ foldr1 HOLogic.mk_disj (C::Cs)
+                  $ (mk B C Bs Cs)
+       in case Ac
+       of SOME Ac => mk A Ac Bs Cs
+        | _ => Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, dummyT) $ A
+                  $ foldr1 HOLogic.mk_disj Cs
+                  $ mk (hd Bs) (hd Cs) (tl Bs) (tl Cs)
+      end
+ in [(\<^syntax_const>\<open>_Cond_\<phi>Prods\<close>, fn _ => fn [A,Cs,B] => parse (A,NONE,Cs,B)),
+     (\<^syntax_const>\<open>_BiCond_\<phi>Prods\<close>, fn _ => fn [A,Ac,Cs,B] => parse (A,SOME Ac,Cs,B))]
+end\<close>
+
+print_translation \<open>
+  let fun parse (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ T $ CT
+                  $ (CUs' as Const(\<^const_syntax>\<open>HOL.disj\<close>, _) $ _ $ _)
+                  $ (Us' as Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ _ $ _ $ _ $ _)) =
+            let fun strip_disj (Const(\<^const_syntax>\<open>HOL.disj\<close>, _) $ C $ Cs) = C :: strip_disj Cs
+                  | strip_disj C = [C]
+                val (Us, CUs) = parse Us'
+                val myCUs = strip_disj CUs'
+                val _ = if eq_list Term.aconv_untyped (CUs, myCUs) then () else raise Match
+             in (T::Us, CT::CUs)
+            end
+        | parse (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, _) $ T $ CT $ CU $ U) = ([T,U], [CT,CU])
+
+      fun mk (T::Us) (CT::CUs) =
+            (if pointer_eq (CT, Term.dummy_prop)
+             then Const(\<^syntax_const>\<open>_Cond_\<phi>Prods\<close>, dummyT) $ T
+             else Const(\<^syntax_const>\<open>_BiCond_\<phi>Prods\<close>, dummyT) $ T $ CT)
+              $ (case CUs
+                   of [_] => hd CUs
+                    | _ => foldl1 (fn (a,b) => Const(\<^syntax_const>\<open>_tuple_args\<close>, dummyT) $ a $ b) CUs)
+              $ (case Us
+                   of [_] => hd Us
+                    | U::Uss =>
+                        Const(\<^syntax_const>\<open>_tuple\<close>, dummyT) $ U
+                          $ foldl1 (fn (a,b) => Const(\<^syntax_const>\<open>_tuple_args\<close>, dummyT) $ a $ b) Uss)
+
+      fun print (T',CT',CU',U') =
+        let val (Ts,Cs) = parse (Const(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ T' $ CT' $ CU' $ U')
+         in mk Ts Cs
+        end
+   in [(\<^const_syntax>\<open>BiCond_\<phi>Prod\<close>, fn _ => fn [T,CT,CU,U] => print (T,CT,CU,U)),
+       (\<^const_syntax>\<open>Cond_\<phi>Prod\<close>, fn _ => fn [T,CU,U] => print (T,Term.dummy_prop,CU,U))]
+  end
+\<close>
+
+
 
 section \<open>Basic \<phi>-Type Properties\<close>
 
@@ -6539,7 +6685,9 @@ declare [[
 (*TODO: the source part!*)
 
 
-subsection \<open>Helper Stuffs\<close>
+section \<open>Helpful Stuffs\<close>
+
+subsection \<open>Methods\<close>
 
 method_setup represent_BI_pred_in_\<phi>Type = \<open>Args.term >> (fn X => fn ctxt => Method.METHOD (K (fn th =>
   let val T = Thm.cterm_of ctxt X
@@ -6560,6 +6708,7 @@ method_setup represent_BI_pred_in_\<phi>Type = \<open>Args.term >> (fn X => fn c
     | _ => Seq.empty
   end
 )))\<close>
+
 
 
 end

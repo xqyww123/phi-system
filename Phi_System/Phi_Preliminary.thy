@@ -200,6 +200,61 @@ lemma [iff]:
   \<open> n < 16 \<Longrightarrow> Big n = n \<close>
   unfolding Big_def by simp+
 
+subsubsection \<open>Product\<close>
+
+(*if C\<^sub>R\<^sub>1 then *)
+setup \<open>Sign.mandatory_path "prod"\<close>
+
+definition assoc :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
+  where \<open>assoc x = ((fst x, fst (snd x)), snd (snd x))\<close>
+
+definition assoc\<^sub>R :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times> 'b \<times> 'c\<close>
+  where \<open>assoc\<^sub>R x = (fst (fst x), snd (fst x), snd x)\<close>
+
+lemma assoc[simp]:
+  \<open>prod.assoc (a,b,c) = ((a,b),c)\<close>
+  \<open>prod.assoc\<^sub>R ((a,b),c) = (a,b,c)\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma assoc_assoc\<^sub>R[simp]:
+  \<open>prod.assoc (prod.assoc\<^sub>R x) = x\<close>
+  \<open>prod.assoc\<^sub>R (prod.assoc y) = y\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma assoc_prj[simp]:
+  \<open>fst (fst (prod.assoc x)) = fst x\<close>
+  \<open>snd (fst (prod.assoc x)) = fst (snd x)\<close>
+  \<open>snd (prod.assoc x) = snd (snd x)\<close>
+  \<open>fst (prod.assoc (a, bc)) = (a, fst bc) \<close>
+  \<open>snd (snd (prod.assoc\<^sub>R y)) = snd y\<close>
+  \<open>fst (snd (prod.assoc\<^sub>R y)) = snd (fst y)\<close>
+  \<open>fst (prod.assoc\<^sub>R y) = fst (fst y)\<close>
+  \<open>snd (prod.assoc\<^sub>R (ab, c)) = (snd ab, c)\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma ap_assoc[simp]:
+  \<open>apfst f_ab (prod.assoc\<^sub>R (ab, c)) = prod.assoc\<^sub>R (apfst f_ab ab, c)\<close>
+  
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by simp_all
+
+lemma map_prod_assoc[simp]:
+  \<open>map_prod (map_prod g\<^sub>1 g\<^sub>2) g\<^sub>3 (prod.assoc x) = prod.assoc (map_prod g\<^sub>1 (map_prod g\<^sub>2 g\<^sub>3) x)\<close>
+  \<open>map_prod f\<^sub>1 (map_prod f\<^sub>2 f\<^sub>3) (prod.assoc\<^sub>R y) = prod.assoc\<^sub>R (map_prod (map_prod f\<^sub>1 f\<^sub>2) f\<^sub>3 y)\<close>
+  unfolding prod.assoc\<^sub>R_def prod.assoc_def
+  by simp_all
+
+lemma assoc_eq_simp[simp]:
+  \<open>((a,b),c) = prod.assoc x \<longleftrightarrow> (a,b,c) = x\<close>
+  \<open>(a,b,c) = prod.assoc\<^sub>R y \<longleftrightarrow> ((a,b),c) = y\<close>
+  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+  by (clarsimp; rule; clarsimp)+
+
+setup \<open>Sign.parent_path\<close>
+
 
 subsection \<open>Helper Conversion\<close>
 
