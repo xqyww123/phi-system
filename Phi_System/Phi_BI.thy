@@ -3211,6 +3211,14 @@ lemma map_prod_eq_apsnd_apfst:
 
 paragraph \<open>Syntax\<close>
 
+text \<open>
+  \<open>U\<^sub>0 [C\<^sub>0]\<^emph>[C\<^sub>1,C\<^sub>2,\<dots>] (U\<^sub>1,U\<^sub>2,\<dots>) := U\<^sub>0 [C\<^sub>0]\<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> \<dots>] (U\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3 \<or> \<dots>] (U\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3 \<or> \<dots>] \<dots>)) \<close>
+  is self-similar, where a pattern of \<open>U\<^sub>0 [C\<^sub>0]\<^emph>[C\<^sub>1,\<dots>,C\<^sub>n] (U\<^sub>1,\<dots>,U\<^sub>n)\<close> matches any structure
+  \<open>U\<^sub>0 [C\<^sub>0]\<^emph>[C\<^sub>1,\<dots>,C\<^sub>m] (U\<^sub>1,\<dots>,U\<^sub>m)\<close> for \<open>m \<ge> n\<close>.
+
+  \<open>T \<^emph>[C\<^sub>0,\<dots>,C\<^sub>n] (U\<^sub>0,\<dots>,U\<^sub>n) := T \<^emph>[C\<^sub>0 \<or> \<dots> \<or> C\<^sub>0] (U\<^sub>0 [C\<^sub>0]\<^emph>[C\<^sub>1,\<dots>,C\<^sub>n] (U\<^sub>1,\<dots>,U\<^sub>n))\<close>
+\<close>
+
 no_notation Cond_\<phi>Prod ("_ \<^emph>[_]/ _" [71,20,70] 70)
         and BiCond_\<phi>Prod ("_ [_]\<^emph>[_] _" [71,20,20,70] 70)
                                     
@@ -3226,7 +3234,7 @@ let fun parse (A, Ac, Cs, B) =
           val Bs = strip_pair B
           val Cs = strip_tuple Cs
           val _ = if length Bs = length Cs then ()
-                  else error "Bad Syntax: Unbalanced length of \<open>_ \<^emph>[_,_] (_,_)\<close>"
+                  else error "Bad Syntax: Unbalanced length of \<open>_ \<^emph>[_,_,this] (_,_,and,this)\<close>"
           fun mk A _ [] [] = A
             | mk A Ac [B] [C] = Const(\<^const_name>\<open>BiCond_\<phi>Prod\<close>, dummyT) $ A $ Ac $ C $ B
             | mk A Ac (B::Bs) (C::Cs) =
