@@ -293,6 +293,45 @@ general automation over a lot of data structures can actually be given under suc
 
 \<close>
 
+text \<open>
+int c = (a + b + d);
+
+\<open>int t1 = a + b;
+ int c = t1 + d;\<close>
+
+free conversion between \<phi>-types <-> fictions
+  impredicativeness 
+
+'a BI  :=  'a set
+'a BI  :=  ('a \<times> step-index) set  ,   step-index := nat
+
+
+semantic models <-| fictions <-|-> \<phi>-types
+
+Hash-table |-> fictions
+
+Array 
+
+\<^item> *synthetic approach* towards conventional data refinement -> automatic algorithm
+\<^item> *new dimension* of composition of data refinement -- hierarchical dimension -- functors of data refinement and
+    their transformations -> automatic algorithm & more levels of composition
+\<^item> automatic algorithm for transformations
+    \<^item> identify key properties (transformation functor, separation homomorphism, semimodule ...)
+      from which a reasoning algorithm can be instantiated
+    \<^item> derive automatically the properties from definitions of \<phi>-types
+    \<^item> guess the expression of the properties by various means, such as Natural Bounded Functor (the major
+      tool used to define algebraic datatype in modern proof assitants)
+\<^item> first fully-automated verification on some algorithm (like quicksort) down to C semantics
+  automated verification about Hash-table to C semantics
+
+Scalability is determined by level of composition. We give 1. new level of dimension, 2. automation over 
+that dimension
+
+ they don't use functors, so no composition
+    List(T) -> List(U)
+    we : T -> U
+    conventional : List(T) -> List(U)
+\<close>
 
 
 chapter \<open>The Algebra of \<open>\<phi>\<close>-Type\<close>
