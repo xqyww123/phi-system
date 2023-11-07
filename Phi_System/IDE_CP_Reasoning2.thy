@@ -533,7 +533,7 @@ context
   notes BiCond_assoc[simp] BiCond_assoc'[simp] \<phi>Prod_expn''[simp, \<phi>programming_simps]
 begin
 
-private lemma t1:
+qualified lemma [simp]:
   \<open>(C\<^sub>W\<^sub>2 \<or> C\<^sub>E) \<and> C\<^sub>W\<^sub>2 \<longleftrightarrow> C\<^sub>W\<^sub>2\<close>
   \<open>(C\<^sub>W\<^sub>2 \<or> C\<^sub>E) \<and> C\<^sub>E \<longleftrightarrow> C\<^sub>E\<close>
   \<open>(C\<^sub>W\<^sub>1 \<or> C\<^sub>W\<^sub>2 \<or> C\<^sub>E) \<and> C\<^sub>W\<^sub>2 \<longleftrightarrow> C\<^sub>W\<^sub>2\<close>
@@ -558,8 +558,11 @@ lemma
     \<i>\<n> D \<close>
   for T :: \<open>('e::sep_semigroup, 'f) \<phi>\<close>
   unfolding conj_imp_eq_imp_imp
+  term \<open>h\<^sub>1 o apsnd prod.assoc\<^sub>R\<close>
+  term \<open>prod.assoc o apsnd h\<^sub>2 o h\<^sub>1 o apsnd prod.assoc\<^sub>R\<close>
+
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
-         simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric] t1)
+         simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric])
   \<medium_left_bracket> premises MP\<^sub>1 and _ and _ and MP\<^sub>2
     apply_rule apply_ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>apsnd prod.assoc\<^sub>R x\<close>]
     apply_rule apply_ToA_Mapper_onward[OF MP\<^sub>2, where x=\<open>snd (h\<^sub>1 (apsnd prod.assoc\<^sub>R x))\<close>, THEN transformation_right_frame, simplified]
@@ -573,7 +576,6 @@ lemma
                   ToA_Mapper_f_expn[OF MP\<^sub>2],
               clarsimp simp add: image_iff map_prod_eq_apfst_apsnd; force)
   \<medium_right_bracket> by (drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn, simp add: map_prod_eq_apfst_apsnd)
-
 
 lemma
   \<open> \<m>\<a>\<p> map_prod g\<^sub>1 f\<^sub>2 : U\<^sub>1 \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1, W\<^sub>2, E) \<mapsto> U\<^sub>1' \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1', W\<^sub>2', E')
@@ -601,7 +603,7 @@ lemma
       Convention: \<open>T \<^emph>[W or R, E]\<close>\<close>
   unfolding conj_imp_eq_imp_imp
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
-         simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric] t1)
+         simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric])
   \<medium_left_bracket> premises MP\<^sub>1 and _ and _ and MP\<^sub>2
     apply_rule apply_ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>apsnd prod.assoc\<^sub>R x\<close>]
     apply_rule apply_ToA_Mapper_onward[OF MP\<^sub>2, where x=\<open>snd (h\<^sub>1 (apsnd prod.assoc\<^sub>R x))\<close>, THEN transformation_right_frame, simplified]
@@ -616,7 +618,7 @@ lemma
               clarsimp simp add: image_iff map_prod_eq_apfst_apsnd; force)
   \<medium_right_bracket> by (drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn, simp add: map_prod_eq_apfst_apsnd)
 
-private lemma t2:
+private lemma [simp]:
   \<open> (C\<^sub>R\<^sub>1 \<or> C\<^sub>R\<^sub>2 \<or> C\<^sub>E) \<and> (C\<^sub>R\<^sub>1 \<or> C\<^sub>R\<^sub>2) \<longleftrightarrow> C\<^sub>R\<^sub>1 \<or> C\<^sub>R\<^sub>2 \<close>
   by blast
 
@@ -637,7 +639,7 @@ lemma
   for U :: \<open>('i::sep_semigroup, 'a) \<phi>\<close>
   unfolding conj_imp_eq_imp_imp
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
-         simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric] t1 t2)
+         simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric])
   \<medium_left_bracket> premises MP\<^sub>1 and _ and _ and MP\<^sub>2
     apply_rule apply_ToA_Mapper_onward[OF MP\<^sub>2, where x=\<open>snd (prod.assoc\<^sub>R x)\<close>, THEN transformation_right_frame, simplified]
     apply_rule apply_ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>apsnd h\<^sub>2 (prod.assoc\<^sub>R x)\<close>]
@@ -653,22 +655,7 @@ lemma
                   metis comp_apply snd_map_prod)
   \<medium_right_bracket> by (drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn, simp add: map_prod_eq_apsnd_apfst, metis apsnd_conv)
 
-
 end
-
-lemma
-  \<open> \<m>\<a>\<p> g\<^sub>1 : U \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>E] (R\<^sub>1,E) \<mapsto> U' \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>E] (R\<^sub>1',E')
-    \<o>\<v>\<e>\<r> f\<^sub>1 : T\<^sub>1 \<^emph>[C\<^sub>W\<^sub>1,C\<^sub>E] (W\<^sub>1,E) \<mapsto> T\<^sub>1' \<^emph>[C\<^sub>W\<^sub>1,C\<^sub>E] (W\<^sub>1,E')
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>1 \<i>\<n> D\<^sub>1
-\<Longrightarrow> \<m>\<a>\<p> g\<^sub>2 : W\<^sub>1 [C\<^sub>W\<^sub>1]\<^emph>[C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>2,E) \<mapsto> W\<^sub>1' [C\<^sub>w\<^sub>1]\<^emph>[C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>2',E')
-    \<o>\<v>\<e>\<r> f\<^sub>2 : T\<^sub>2 \<^emph>[C\<^sub>W,C\<^sub>E] (W,E) \<mapsto> T\<^sub>2' \<^emph>[C\<^sub>W,C\<^sub>E] (W',E')
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> D\<^sub>2
-\<Longrightarrow> R  = R\<^sub>1  \<^emph> R\<^sub>2
-\<Longrightarrow> R' = R\<^sub>1' \<^emph> R\<^sub>2'
-\<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R,C\<^sub>E] (R,E) \<mapsto> U' \<^emph>[C\<^sub>R,C\<^sub>E] (R',E')
-    \<o>\<v>\<e>\<r> f : (T\<^sub>1 \<^emph> T\<^sub>2) \<^emph>[C\<^sub>W,C\<^sub>E] (W,E) \<mapsto> (T\<^sub>1' \<^emph> T\<^sub>2') \<^emph>[C\<^sub>W,C\<^sub>E] (W',E')
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
-
 
 
 lemma [\<phi>reason %\<phi>mapToA_split_goal]:

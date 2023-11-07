@@ -202,6 +202,8 @@ lemma [iff]:
 
 subsubsection \<open>Product\<close>
 
+notation map_prod (infixr "\<otimes>\<^sub>f" 56)
+
 (*if C\<^sub>R\<^sub>1 then *)
 setup \<open>Sign.mandatory_path "prod"\<close>
 
@@ -223,6 +225,18 @@ lemma assoc_assoc\<^sub>R[simp]:
   unfolding prod.assoc_def prod.assoc\<^sub>R_def
   by simp_all
 
+lemma assoc_assoc\<^sub>R_comp[simp]:
+  \<open> prod.assoc o prod.assoc\<^sub>R = id \<close>
+  \<open> prod.assoc\<^sub>R o prod.assoc = id \<close>
+  unfolding fun_eq_iff
+  by simp_all
+
+lemma assoc_assoc\<^sub>R_comp'[simp]:
+  \<open> x o prod.assoc o prod.assoc\<^sub>R = x \<close>
+  \<open> y o prod.assoc\<^sub>R o prod.assoc = y \<close>
+  unfolding fun_eq_iff
+  by simp_all
+
 lemma assoc_prj[simp]:
   \<open>fst (fst (prod.assoc x)) = fst x\<close>
   \<open>snd (fst (prod.assoc x)) = fst (snd x)\<close>
@@ -236,16 +250,17 @@ lemma assoc_prj[simp]:
   by simp_all
 
 lemma ap_assoc[simp]:
-  \<open>apfst f_ab (prod.assoc\<^sub>R (ab, c)) = prod.assoc\<^sub>R (apfst f_ab ab, c)\<close>
-  
+  \<open>prod.assoc\<^sub>R (apfst (apfst f) x) = apfst f (prod.assoc\<^sub>R x)\<close>
   unfolding prod.assoc_def prod.assoc\<^sub>R_def
   by simp_all
 
-lemma map_prod_assoc[simp]:
-  \<open>map_prod (map_prod g\<^sub>1 g\<^sub>2) g\<^sub>3 (prod.assoc x) = prod.assoc (map_prod g\<^sub>1 (map_prod g\<^sub>2 g\<^sub>3) x)\<close>
-  \<open>map_prod f\<^sub>1 (map_prod f\<^sub>2 f\<^sub>3) (prod.assoc\<^sub>R y) = prod.assoc\<^sub>R (map_prod (map_prod f\<^sub>1 f\<^sub>2) f\<^sub>3 y)\<close>
-  unfolding prod.assoc\<^sub>R_def prod.assoc_def
-  by simp_all
+term \<open>apsnd (apsnd f) (prod.assoc\<^sub>R x) = prod.assoc\<^sub>R (apsnd f x)\<close>
+term \<open>apsnd (apfst f) (prod.assoc\<^sub>R x) = prod.assoc\<^sub>R (apfst (apsnd f) x)\<close>
+
+lemma
+  \<open>prod.assoc\<^sub>R o apfst (apfst f) = apfst f o prod.assoc\<^sub>R\<close>
+
+
 
 lemma assoc_eq_simp[simp]:
   \<open>((a,b),c) = prod.assoc x \<longleftrightarrow> (a,b,c) = x\<close>
@@ -258,6 +273,32 @@ lemma assoc_eq_ap_simp[simp]:
   by (cases z; cases y; clarsimp)
 
 setup \<open>Sign.parent_path\<close>
+
+lemma map_prod_assoc[simp]:
+  \<open>map_prod (map_prod g\<^sub>1 g\<^sub>2) g\<^sub>3 (prod.assoc x) = prod.assoc (map_prod g\<^sub>1 (map_prod g\<^sub>2 g\<^sub>3) x)\<close>
+  \<open>map_prod f\<^sub>1 (map_prod f\<^sub>2 f\<^sub>3) (prod.assoc\<^sub>R y) = prod.assoc\<^sub>R (map_prod (map_prod f\<^sub>1 f\<^sub>2) f\<^sub>3 y)\<close>
+  unfolding prod.assoc\<^sub>R_def prod.assoc_def
+  by simp_all
+
+lemma map_prod_assoc_comp[simp]:
+  \<open>((g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f g\<^sub>3) o prod.assoc = prod.assoc o (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2 \<otimes>\<^sub>f g\<^sub>3)\<close>
+  \<open>(f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3) o prod.assoc\<^sub>R = prod.assoc\<^sub>R o ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f f\<^sub>3)\<close>
+  unfolding prod.assoc\<^sub>R_def prod.assoc_def fun_eq_iff
+  by simp_all
+
+lemma map_prod_swap[simp]:
+  \<open>(f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) (prod.swap x) = prod.swap ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) x)\<close>
+  by (cases x; simp)+
+
+lemma map_prod_swap_comp[simp]:
+  \<open>(f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) o prod.swap = prod.swap o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2)\<close>
+  unfolding fun_eq_iff
+  by clarsimp
+
+lemma map_prod_swap_comp'[simp]:
+  \<open>g o (f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) o prod.swap = g o prod.swap o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2)\<close>
+  unfolding fun_eq_iff
+  by clarsimp
 
 lemma map_prod_eq_apfst_apsnd:
   \<open>map_prod f g = apfst f o apsnd g\<close>
@@ -278,6 +319,36 @@ lemma map_prod_ap_simp[simp]:
       (cases x'; clarsimp),
       (cases y; clarsimp),
       (cases y'; clarsimp))
+
+declare map_prod.compositionality[simp]
+        map_prod.comp [simp]
+
+lemma map_prod_comp'[simp]:
+  \<open>x o f \<otimes>\<^sub>f g \<circ> h \<otimes>\<^sub>f i = x o (f \<circ> h) \<otimes>\<^sub>f (g \<circ> i)\<close>
+  unfolding fun_eq_iff
+  by clarsimp
+
+lemma map_prod_ap_simp_comp[simp]:
+  \<open> (f \<otimes>\<^sub>f g) o apsnd h = (f \<otimes>\<^sub>f (g \<circ> h)) \<close>
+  \<open> apsnd h' o (f \<otimes>\<^sub>f g) = f \<otimes>\<^sub>f (h' \<circ> g) \<close>
+  \<open> (f \<otimes>\<^sub>f g) o apfst l = (f \<circ> l) \<otimes>\<^sub>f g \<close>
+  \<open> apfst l' o (f \<otimes>\<^sub>f g) = (l' \<circ> f) \<otimes>\<^sub>f g \<close>
+  by (simp_all add: fun_eq_iff)
+
+lemma map_prod_ap_simp_comp'[simp]:
+  \<open> x\<^sub>1 o (f \<otimes>\<^sub>f g) o apsnd h = x\<^sub>1 o (f \<otimes>\<^sub>f (g \<circ> h)) \<close>
+  \<open> x\<^sub>2 o apsnd h' o (f \<otimes>\<^sub>f g) = x\<^sub>2 o f \<otimes>\<^sub>f (h' \<circ> g) \<close>
+  \<open> x\<^sub>3 o (f \<otimes>\<^sub>f g) o apfst l = x\<^sub>3 o (f \<circ> l) \<otimes>\<^sub>f g \<close>
+  \<open> x\<^sub>4 o apfst l' o (f \<otimes>\<^sub>f g) = x\<^sub>4 o (l' \<circ> f) \<otimes>\<^sub>f g \<close>
+  by (simp_all add: fun_eq_iff)
+
+lemma
+  \<open>apsnd f (prod.swap x) = prod.swap\<close>
+
+lemma
+  \<open>apsnd f o prod.swap = prod.swap o apfst f\<close>
+  
+
 
 subsection \<open>Helper Conversion\<close>
 
