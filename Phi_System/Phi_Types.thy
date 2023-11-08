@@ -210,6 +210,7 @@ declare [[\<phi>trace_reasoning = 0]]
      (*and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>*)
        and Abstraction_to_Raw
 
+thm SubjectionTY.ToA_mapper
 thm SubjectionTY.ToA_mapper[where f=f and f'=f and g=g and g'=g for g f, simplified]
 
 ML \<open>assert_derived_properties \<^theory> [
