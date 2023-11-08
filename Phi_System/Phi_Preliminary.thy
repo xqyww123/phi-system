@@ -388,6 +388,40 @@ lemma swap_ap_comp'[prod_opr_norm]:
   unfolding fun_eq_iff
   by (simp_all add: prod.swap_ap)
 
+lemma prj_rot_apS_rot[prod_opr_norm]:
+  \<open>fst (prod.rotL (apsnd prod.swap (prod.rotR x))) = apfst fst x\<close>
+  \<open>snd (prod.rotR (apfst prod.swap (prod.rotL y))) = apsnd snd y\<close>
+  by ((cases x; clarsimp),
+      (cases y; clarsimp))
+
+lemma prj_rot_apS_rot_comp[prod_opr_norm]:
+  \<open>fst \<circ> prod.rotL \<circ> apsnd prod.swap \<circ> prod.rotR = apfst fst\<close>
+  \<open>snd \<circ> prod.rotR \<circ> apfst prod.swap \<circ> prod.rotL = apsnd snd\<close>
+  unfolding fun_eq_iff
+  by simp_all
+
+lemma prj_rot_apS_rot_comp'[prod_opr_norm]:
+  \<open>x o fst \<circ> prod.rotL \<circ> apsnd prod.swap \<circ> prod.rotR = x o apfst fst\<close>
+  \<open>y o snd \<circ> prod.rotR \<circ> apfst prod.swap \<circ> prod.rotL = y o apsnd snd\<close>
+  unfolding fun_eq_iff
+  by simp_all
+
+lemma ap_ap[prod_opr_norm]:
+  \<open>apfst f (apfst g x) = apfst (f o g) x\<close>
+  \<open>apsnd f (apsnd g y) = apsnd (f o g) y\<close>
+  by ((cases x; simp), (cases y; simp))
+
+lemma ap_ap_comp[prod_opr_norm]:
+  \<open>apfst f o apfst g = apfst (f o g)\<close>
+  \<open>apsnd f o apsnd g = apsnd (f o g)\<close>
+  unfolding fun_eq_iff
+  by simp_all
+
+lemma ap_ap_comp'[prod_opr_norm]:
+  \<open>a o apfst f o apfst g = a o apfst (f o g)\<close>
+  \<open>b o apsnd f o apsnd g = b o apsnd (f o g)\<close>
+  unfolding fun_eq_iff
+  by simp_all
 
 setup \<open>Sign.parent_path\<close>
 
@@ -472,6 +506,7 @@ lemma swap_comp_swap'[simp]:
   \<open>x o prod.swap \<circ> prod.swap = x\<close>
   unfolding fun_eq_iff
   by simp
+
 
 
 subsection \<open>Helper Conversion\<close>
