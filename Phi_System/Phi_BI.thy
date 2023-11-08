@@ -3173,7 +3173,7 @@ lemma BiCond_single_Cond_const_red[simp]:
   by (rule \<phi>Type_eqI, clarsimp)+
 
 lemma BiCond_single_Cond_rewrite:
-  \<open> (x \<Ztypecolon> T \<^emph>[C\<^sub>U \<or> C\<^sub>W] (U [C\<^sub>U]\<^emph>[C\<^sub>W] W)) = (prod.assoc x \<Ztypecolon> (T \<^emph>[C\<^sub>U] U) \<^emph>[C\<^sub>W] W)\<close>
+  \<open> (x \<Ztypecolon> T \<^emph>[C\<^sub>U \<or> C\<^sub>W] (U [C\<^sub>U]\<^emph>[C\<^sub>W] W)) = (prod.rotL x \<Ztypecolon> (T \<^emph>[C\<^sub>U] U) \<^emph>[C\<^sub>W] W)\<close>
   for T :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
   by ((clarsimp simp add: BI_eq_iff; rule; clarsimp),
       metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc',
@@ -3181,7 +3181,7 @@ lemma BiCond_single_Cond_rewrite:
       
 
 lemma BiCond_assoc:
-  \<open> (x \<Ztypecolon> (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3) = (prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3))\<close>
+  \<open> (x \<Ztypecolon> (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3) = (prod.rotR x \<Ztypecolon> T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3))\<close>
   for T\<^sub>1 :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
   unfolding BI_eq_iff
   by ((cases x; cases C\<^sub>1; cases C\<^sub>2; cases C\<^sub>3; clarsimp; rule; clarsimp),
@@ -3189,7 +3189,7 @@ lemma BiCond_assoc:
       metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc')
 
 lemma BiCond_assoc':
-  \<open> (x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] ((T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)) = (apsnd prod.assoc\<^sub>R x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3))) \<close>
+  \<open> (x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] ((T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2] T\<^sub>2) [C\<^sub>1 \<or> C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3)) = (apsnd prod.rotR x \<Ztypecolon> T\<^sub>0 \<^emph>[C\<^sub>1 \<or> C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>1 [C\<^sub>1]\<^emph>[C\<^sub>2 \<or> C\<^sub>3] (T\<^sub>2 [C\<^sub>2]\<^emph>[C\<^sub>3] T\<^sub>3))) \<close>
   for T\<^sub>0 :: \<open>('c::sep_semigroup,'a) \<phi>\<close>
   unfolding BI_eq_iff
   by ((cases x; cases C\<^sub>1; cases C\<^sub>2; cases C\<^sub>3; clarsimp; rule; clarsimp),

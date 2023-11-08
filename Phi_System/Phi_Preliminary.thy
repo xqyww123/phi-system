@@ -202,103 +202,227 @@ lemma [iff]:
 
 subsubsection \<open>Product\<close>
 
+
+text \<open>An algorithm of normalizing tuple operations.
+
+Primitive operations:
+
+\<^item> rotL : left rotation
+\<^item> rotR : right rotation
+\<^item> prod.swap
+\<^item> fst, snd
+\<^item> apfst, apsnd, map_prod
+
+Composite operations are only combined from the primitive operations and functional composition.
+\<open>case_prod\<close> is not allowed (because it mixes operations together and cannot be separated any more,
+cause certain operations that could be reduced e.g. \<open>map (apfst f) o zip_list \<equiv> zip_list o apfst f\<close>
+cannot be reduced any more).
+
+We apply the following normalization strategy to hope two equivalent sequences of the operations can
+be normalized to an identical form.
+
+\<^item> apfst, apsnd, map_prod are aggregated together, and split to each projection when need.
+  They are swapped over prod.swap, rotations, down to the left most.
+  The reason is, projectors (fst, snd) are always given at the left side, so we hope when the projectors
+  meet the apfst, apsnd, map_prod first, their reduction can eliminate irrelevant mappings as early
+  as possible.
+\<^item> swap, rotation are reduced if possible, i.e. the following 6 rules
+    (S for swap, L for L-rotate, R for R-rotate, A B for A o B, rewrites from LHS to RHS)
+    L S L S = S R
+    S L S L = R S
+    S R S = L S L
+    R S R = S L S
+    L R = id, R L = id
+
+Key facts why this normalization can work are,
+1. Below, we only need to consider operations \<open>h = apfst f | apsnd g\<close>, and we split \<open>map_prod f g\<close>
+   to \<open>apfst f o apsnd g\<close> and consider them separately.
+   Note any \<open>h\<close> can swap over \<open>S\<close>.
+2. any operation \<open>h\<close> that can swap over LHS in any of the equation above, can also swap over the RHS
+   and result in an identical form.
+3. S L S h L, if h can swap over the right L, h can also swap over the left \<open>S L S\<close>
+   Similarly for the other rewrites.
+4. L S h L, if h can swap over the right L to \<open>h'\<close>, \<open>h'\<close> can also swap over \<open>S R S\<close> from right,
+   and results in the identical form with \<open>h\<close> swapping over \<open>L S\<close> from right
+It means, swapping any \<open>h\<close> in any order towards the left end, doesn't break the normalization-ability.
+The order doesn't matter.
+
+So, any \<open>apfst, apsnd, map_prod\<close> can be swapped to the left most end, if it can.
+
+Now, the sequence only remains \<open>S, L, R\<close>, ... the proof is to be completed
+
+idk, maybe we lost some assumption, like, requiring the first projection of the tuple is always
+single-element or a pair but no more nested level.
+
+I am not sure if the normaliza is complete but is terminating.
+\<close>
+
+named_theorems prod_opr_norm \<open>normalizations of product operations\<close>
+
 notation map_prod (infixr "\<otimes>\<^sub>f" 56)
 
 (*if C\<^sub>R\<^sub>1 then *)
 setup \<open>Sign.mandatory_path "prod"\<close>
 
-definition assoc :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
-  where \<open>assoc x = ((fst x, fst (snd x)), snd (snd x))\<close>
+definition rotL :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
+  where \<open>rotL x = ((fst x, fst (snd x)), snd (snd x))\<close>
 
-definition assoc\<^sub>R :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times> 'b \<times> 'c\<close>
-  where \<open>assoc\<^sub>R x = (fst (fst x), snd (fst x), snd x)\<close>
+definition rotR :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times> 'b \<times> 'c\<close>
+  where \<open>rotR x = (fst (fst x), snd (fst x), snd x)\<close>
 
-lemma assoc[simp]:
-  \<open>prod.assoc (a,b,c) = ((a,b),c)\<close>
-  \<open>prod.assoc\<^sub>R ((a,b),c) = (a,b,c)\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+lemma rot[simp]:
+  \<open>prod.rotL (a,b,c) = ((a,b),c)\<close>
+  \<open>prod.rotR ((a,b),c) = (a,b,c)\<close>
+  unfolding prod.rotL_def prod.rotR_def
   by simp_all
 
-lemma assoc_assoc\<^sub>R[simp]:
-  \<open>prod.assoc (prod.assoc\<^sub>R x) = x\<close>
-  \<open>prod.assoc\<^sub>R (prod.assoc y) = y\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+lemma rot_rot[simp]:
+  \<open>prod.rotL (prod.rotR x) = x\<close>
+  \<open>prod.rotR (prod.rotL y) = y\<close>
+  unfolding prod.rotL_def prod.rotR_def
   by simp_all
 
-lemma assoc_assoc\<^sub>R_comp[simp]:
-  \<open> prod.assoc o prod.assoc\<^sub>R = id \<close>
-  \<open> prod.assoc\<^sub>R o prod.assoc = id \<close>
+lemma rot_rot_comp[simp]:
+  \<open> prod.rotL o prod.rotR = id \<close>
+  \<open> prod.rotR o prod.rotL = id \<close>
   unfolding fun_eq_iff
   by simp_all
 
-lemma assoc_assoc\<^sub>R_comp'[simp]:
-  \<open> x o prod.assoc o prod.assoc\<^sub>R = x \<close>
-  \<open> y o prod.assoc\<^sub>R o prod.assoc = y \<close>
+lemma rot_rot_comp'[simp]:
+  \<open> x o prod.rotL o prod.rotR = x \<close>
+  \<open> y o prod.rotR o prod.rotL = y \<close>
   unfolding fun_eq_iff
   by simp_all
 
-lemma assoc_prj[simp]:
-  \<open>fst (fst (prod.assoc x)) = fst x\<close>
-  \<open>snd (fst (prod.assoc x)) = fst (snd x)\<close>
-  \<open>snd (prod.assoc x) = snd (snd x)\<close>
-  \<open>fst (prod.assoc (a, bc)) = (a, fst bc) \<close>
-  \<open>snd (snd (prod.assoc\<^sub>R y)) = snd y\<close>
-  \<open>fst (snd (prod.assoc\<^sub>R y)) = snd (fst y)\<close>
-  \<open>fst (prod.assoc\<^sub>R y) = fst (fst y)\<close>
-  \<open>snd (prod.assoc\<^sub>R (ab, c)) = (snd ab, c)\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+lemma rot_prj[simp]:
+  \<open>fst (fst (prod.rotL x)) = fst x\<close>
+  \<open>snd (fst (prod.rotL x)) = fst (snd x)\<close>
+  \<open>snd (prod.rotL x) = snd (snd x)\<close>
+  \<open>fst (prod.rotL (a, bc)) = (a, fst bc) \<close>
+  \<open>snd (snd (prod.rotR y)) = snd y\<close>
+  \<open>fst (snd (prod.rotR y)) = snd (fst y)\<close>
+  \<open>fst (prod.rotR y) = fst (fst y)\<close>
+  \<open>snd (prod.rotR (ab, c)) = (snd ab, c)\<close>
+  unfolding prod.rotL_def prod.rotR_def
   by simp_all
 
-lemma ap_assoc[simp]:
-  \<open>prod.assoc\<^sub>R (apfst (apfst f) x) = apfst f (prod.assoc\<^sub>R x)\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+lemma rot_prj_comp[simp]:
+  \<open>fst o fst o prod.rotL = fst\<close>
+  \<open>snd o fst o prod.rotL = fst o snd\<close>
+  \<open>snd o prod.rotL = snd o snd\<close>
+  \<open>snd o snd o prod.rotR = snd\<close>
+  \<open>fst o snd o prod.rotR = snd o fst\<close>
+  \<open>fst o prod.rotR = fst o fst\<close>
+  unfolding prod.rotL_def prod.rotR_def fun_eq_iff
   by simp_all
 
-term \<open>apsnd (apsnd f) (prod.assoc\<^sub>R x) = prod.assoc\<^sub>R (apsnd f x)\<close>
-term \<open>apsnd (apfst f) (prod.assoc\<^sub>R x) = prod.assoc\<^sub>R (apfst (apsnd f) x)\<close>
-
-lemma
-  \<open>prod.assoc\<^sub>R o apfst (apfst f) = apfst f o prod.assoc\<^sub>R\<close>
 
 
+lemma ap_rotate[prod_opr_norm]:
+  \<open>prod.rotL (apfst f y) = apfst (apfst f) (prod.rotL y)\<close>
+  \<open>prod.rotL (apsnd (apfst f) y\<^sub>2) = apfst (apsnd f) (prod.rotL y\<^sub>2)\<close>
+  \<open>prod.rotL (apsnd (apsnd f) y\<^sub>3) = apsnd f (prod.rotL y\<^sub>3)\<close>
+  \<open>prod.rotR (apfst (apfst f) x) = apfst f (prod.rotR x)\<close>
+  \<open>prod.rotR (apsnd f x\<^sub>2) = apsnd (apsnd f) (prod.rotR x\<^sub>2)\<close>
+  \<open>prod.rotR (apfst (apsnd f) x\<^sub>3) = apsnd (apfst f) (prod.rotR x\<^sub>3)\<close>
+  unfolding prod.rotL_def prod.rotR_def
+  by simp_all
 
-lemma assoc_eq_simp[simp]:
-  \<open>((a,b),c) = prod.assoc x \<longleftrightarrow> (a,b,c) = x\<close>
-  \<open>(a,b,c) = prod.assoc\<^sub>R y \<longleftrightarrow> ((a,b),c) = y\<close>
-  unfolding prod.assoc_def prod.assoc\<^sub>R_def
+lemma ap_rotate_comp[prod_opr_norm]:
+  \<open>prod.rotL o apfst f = apfst (apfst f) o prod.rotL\<close>
+  \<open>prod.rotL o apsnd (apfst f) = apfst (apsnd f) o prod.rotL\<close>
+  \<open>prod.rotL o apsnd (apsnd f) = apsnd f o prod.rotL\<close>
+  \<open>prod.rotR o apfst (apfst f) = apfst f o prod.rotR\<close>
+  \<open>prod.rotR o apsnd f = apsnd (apsnd f) o prod.rotR\<close>
+  \<open>prod.rotR o apfst (apsnd f) = apsnd (apfst f) o prod.rotR\<close>
+  unfolding fun_eq_iff
+  by (simp_all add: prod.ap_rotate)
+
+lemma ap_rotate_comp'[prod_opr_norm]:
+  \<open>x\<^sub>1 o prod.rotL o apfst f = x\<^sub>1 o apfst (apfst f) o prod.rotL\<close>
+  \<open>x\<^sub>2 o prod.rotL o apsnd (apfst f) = x\<^sub>2 o apfst (apsnd f) o prod.rotL\<close>
+  \<open>x\<^sub>3 o prod.rotL o apsnd (apsnd f) = x\<^sub>3 o apsnd f o prod.rotL\<close>
+  \<open>x\<^sub>4 o prod.rotR o apfst (apfst f) = x\<^sub>4 o apfst f o prod.rotR\<close>
+  \<open>x\<^sub>5 o prod.rotR o apsnd f = x\<^sub>5 o apsnd (apsnd f) o prod.rotR\<close>
+  \<open>x\<^sub>6 o prod.rotR o apfst (apsnd f) = x\<^sub>6 o apsnd (apfst f) o prod.rotR\<close>
+  unfolding fun_eq_iff
+  by (simp_all add: prod.ap_rotate)
+
+
+lemma rotate_eq_simp[simp]:
+  \<open>((a,b),c) = prod.rotL x \<longleftrightarrow> (a,b,c) = x\<close>
+  \<open>(a,b,c) = prod.rotR y \<longleftrightarrow> ((a,b),c) = y\<close>
+  unfolding prod.rotL_def prod.rotR_def
   by (clarsimp; rule; clarsimp)+
 
-lemma assoc_eq_ap_simp[simp]:
-  \<open>(x, prod.assoc y) = apsnd prod.assoc z \<longleftrightarrow> (x, y) = z\<close>
+lemma rotate_eq_ap_simp[simp]:
+  \<open>(x, prod.rotL y) = apsnd prod.rotL z \<longleftrightarrow> (x, y) = z\<close>
   by (cases z; cases y; clarsimp)
+
+lemma swap_proj_comp[simp]:
+  \<open>fst o prod.swap = snd\<close>
+  \<open>snd o prod.swap = fst\<close>
+  unfolding fun_eq_iff
+  by simp_all
+
+lemma swap_proj_comp'[simp]:
+  \<open>x o fst o prod.swap = x o snd\<close>
+  \<open>y o snd o prod.swap = y o fst\<close>
+  unfolding fun_eq_iff
+  by simp_all
+
+lemma swap_ap[prod_opr_norm]:
+  \<open>prod.swap (apfst f x) = apsnd f (prod.swap x)\<close>
+  \<open>prod.swap (apsnd g x) = apfst g (prod.swap x)\<close>
+  by (cases x; simp)+
+
+lemma swap_ap_comp[prod_opr_norm]:
+  \<open>prod.swap o apfst f = apsnd f o prod.swap\<close>
+  \<open>prod.swap o apsnd g = apfst g o prod.swap\<close>
+  unfolding fun_eq_iff
+  by (simp_all add: prod.swap_ap)
+
+lemma swap_ap_comp'[prod_opr_norm]:
+  \<open>x\<^sub>1 o prod.swap o apfst f = x\<^sub>1 o apsnd f o prod.swap\<close>
+  \<open>x\<^sub>2 o prod.swap o apsnd g = x\<^sub>2 o apfst g o prod.swap\<close>
+  unfolding fun_eq_iff
+  by (simp_all add: prod.swap_ap)
+
 
 setup \<open>Sign.parent_path\<close>
 
-lemma map_prod_assoc[simp]:
-  \<open>map_prod (map_prod g\<^sub>1 g\<^sub>2) g\<^sub>3 (prod.assoc x) = prod.assoc (map_prod g\<^sub>1 (map_prod g\<^sub>2 g\<^sub>3) x)\<close>
-  \<open>map_prod f\<^sub>1 (map_prod f\<^sub>2 f\<^sub>3) (prod.assoc\<^sub>R y) = prod.assoc\<^sub>R (map_prod (map_prod f\<^sub>1 f\<^sub>2) f\<^sub>3 y)\<close>
-  unfolding prod.assoc\<^sub>R_def prod.assoc_def
+lemma rotate_map_prod[prod_opr_norm]:
+  \<open>prod.rotL (map_prod g\<^sub>1 (map_prod g\<^sub>2 g\<^sub>3) x) = map_prod (map_prod g\<^sub>1 g\<^sub>2) g\<^sub>3 (prod.rotL x)\<close>
+  \<open>prod.rotR (map_prod (map_prod f\<^sub>1 f\<^sub>2) f\<^sub>3 y) = map_prod f\<^sub>1 (map_prod f\<^sub>2 f\<^sub>3) (prod.rotR y)\<close>
+  unfolding prod.rotR_def prod.rotL_def
   by simp_all
 
-lemma map_prod_assoc_comp[simp]:
-  \<open>((g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f g\<^sub>3) o prod.assoc = prod.assoc o (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2 \<otimes>\<^sub>f g\<^sub>3)\<close>
-  \<open>(f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3) o prod.assoc\<^sub>R = prod.assoc\<^sub>R o ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f f\<^sub>3)\<close>
-  unfolding prod.assoc\<^sub>R_def prod.assoc_def fun_eq_iff
+lemma rotate_map_prod_comp[prod_opr_norm]:
+  \<open>prod.rotL o (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2 \<otimes>\<^sub>f g\<^sub>3) = ((g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f g\<^sub>3) o prod.rotL\<close>
+  \<open>prod.rotR o ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f f\<^sub>3) = (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3) o prod.rotR\<close>
+  unfolding prod.rotR_def prod.rotL_def fun_eq_iff
   by simp_all
 
-lemma map_prod_swap[simp]:
-  \<open>(f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) (prod.swap x) = prod.swap ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) x)\<close>
+lemma rotate_map_prod_comp'[prod_opr_norm]:
+  \<open>g o prod.rotL o (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2 \<otimes>\<^sub>f g\<^sub>3) = g o ((g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f g\<^sub>3) o prod.rotL\<close>
+  \<open>f o prod.rotR o ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f f\<^sub>3) = f o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3) o prod.rotR\<close>
+  unfolding prod.rotR_def prod.rotL_def fun_eq_iff
+  by simp_all
+
+lemma swap_map_prod[prod_opr_norm]:
+  \<open>prod.swap ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) x) = (f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) (prod.swap x)\<close>
   by (cases x; simp)+
 
-lemma map_prod_swap_comp[simp]:
-  \<open>(f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) o prod.swap = prod.swap o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2)\<close>
+lemma swap_map_prod_comp[prod_opr_norm]:
+  \<open>prod.swap o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) = (f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) o prod.swap\<close>
   unfolding fun_eq_iff
   by clarsimp
 
-lemma map_prod_swap_comp'[simp]:
-  \<open>g o (f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) o prod.swap = g o prod.swap o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2)\<close>
+lemma swap_map_prod_comp'[prod_opr_norm]:
+  \<open>g o prod.swap o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) = g o (f\<^sub>2 \<otimes>\<^sub>f f\<^sub>1) o prod.swap\<close>
   unfolding fun_eq_iff
   by clarsimp
+
 
 lemma map_prod_eq_apfst_apsnd:
   \<open>map_prod f g = apfst f o apsnd g\<close>
@@ -310,7 +434,9 @@ lemma map_prod_eq_apsnd_apfst:
   unfolding fun_eq_iff
   by clarsimp
 
-lemma map_prod_ap_simp[simp]:
+
+
+lemma map_prod_ap_simp[prod_opr_norm]:
   \<open>map_prod f g (apsnd h x) = map_prod f (g o h) x\<close>
   \<open>apsnd h' (map_prod f g x') = map_prod f (h' o g) x'\<close>
   \<open>map_prod f g (apfst l y) = map_prod (f o l) g y\<close>
@@ -320,10 +446,10 @@ lemma map_prod_ap_simp[simp]:
       (cases y; clarsimp),
       (cases y'; clarsimp))
 
-declare map_prod.compositionality[simp]
-        map_prod.comp [simp]
+declare map_prod.compositionality[prod_opr_norm]
+        map_prod.comp [prod_opr_norm]
 
-lemma map_prod_comp'[simp]:
+lemma map_prod_comp'[prod_opr_norm]:
   \<open>x o f \<otimes>\<^sub>f g \<circ> h \<otimes>\<^sub>f i = x o (f \<circ> h) \<otimes>\<^sub>f (g \<circ> i)\<close>
   unfolding fun_eq_iff
   by clarsimp
@@ -342,12 +468,10 @@ lemma map_prod_ap_simp_comp'[simp]:
   \<open> x\<^sub>4 o apfst l' o (f \<otimes>\<^sub>f g) = x\<^sub>4 o (l' \<circ> f) \<otimes>\<^sub>f g \<close>
   by (simp_all add: fun_eq_iff)
 
-lemma
-  \<open>apsnd f (prod.swap x) = prod.swap\<close>
-
-lemma
-  \<open>apsnd f o prod.swap = prod.swap o apfst f\<close>
-  
+lemma swap_comp_swap'[simp]:
+  \<open>x o prod.swap \<circ> prod.swap = x\<close>
+  unfolding fun_eq_iff
+  by simp
 
 
 subsection \<open>Helper Conversion\<close>
