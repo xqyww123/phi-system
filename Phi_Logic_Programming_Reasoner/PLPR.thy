@@ -101,7 +101,7 @@ lemma \<r>Guard_reduct[simp]:
 
 subsubsection \<open>Antecedent Sequence\<close>
 
-definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
+definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 26)
   where \<open>Ant_Seq \<equiv> (\<and>)\<close>
 
 text \<open>The key distinction of \<^const>\<open>Ant_Seq\<close> is that its congruence rule is enabled by default,
@@ -180,15 +180,14 @@ consts default :: mode
 
 subsubsection \<open>Annotations for Proof Obligations\<close>
 
-definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
+definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,28] 27)
   where "Premise mode x \<equiv> x"
 
-(*TODO: increase the syntactic priority to 40*)
-abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
+abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [28] 27)
   where "Normal_Premise \<equiv> Premise default"
-abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [27] 26)
+abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [28] 27)
   where "Simp_Premise \<equiv> Premise MODE_GUARD"
-abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
+abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [28] 27)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
 
 
@@ -2040,7 +2039,7 @@ declare [[
 
 subsubsection \<open>Cutting Branch\<close>
 
-definition Orelse_shortcut (infixr "\<or>\<^sub>c\<^sub>u\<^sub>t" 30) where \<open>(\<or>\<^sub>c\<^sub>u\<^sub>t) \<equiv> (\<or>)\<close>
+definition Orelse_shortcut (infixr "\<or>\<^sub>c\<^sub>u\<^sub>t" 20) where \<open>(\<or>\<^sub>c\<^sub>u\<^sub>t) \<equiv> (\<or>)\<close>
 
 text \<open>\<^prop>\<open>A \<or>\<^sub>c\<^sub>u\<^sub>t B\<close>, if \<^prop>\<open>A\<close> succeeds, \<^prop>\<open>B\<close> will not be attempted in any future backtrack.\<close>
 

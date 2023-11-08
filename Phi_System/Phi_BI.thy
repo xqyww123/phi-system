@@ -2992,10 +2992,15 @@ lemma [cong]:
 paragraph \<open>Merging Conditioned \<phi>-Types\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close> \<Rightarrow>
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close>   (100)
-  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100)
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close> \<Rightarrow>  (*objects: LHS determines RHS*)
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close>   (100) (*types:   LHS determines RHS*)
+  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>      (*objects: RHS determines LHS*)
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100) (*types:   LHS determines RHS*)
+
+  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) @action \<A>merge\<close> \<Rightarrow>
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) @action \<A>merge\<close>   (100)
+  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100)
 
   and \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
       \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
@@ -3041,12 +3046,7 @@ lemma [\<phi>reason %\<A>merge]: \<comment> \<open>contracts two sides respectiv
   \<open>(x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((fst x, snd x) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
   \<open>(a \<Ztypecolon> \<half_blkcirc>[True] A) = ((a, undefined) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
   \<open>(b \<Ztypecolon> \<half_blkcirc>[True] B) = ((undefined, b) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
-  \<open>(c \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((undefined, undefined) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
-  unfolding Action_Tag_def BI_eq_iff
-  by (clarsimp; force)+
-
-lemma [\<phi>reason %\<A>merge+10]:
-  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((x, y) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
+  \<open>(undefined \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((undefined, undefined) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
 
@@ -3063,6 +3063,52 @@ lemma [\<phi>reason %\<A>merge+10]:
   \<open> ((x,y) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) = (y \<Ztypecolon> \<half_blkcirc>[True] B) @action \<A>merge \<close>
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) = (x \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((fst x, fst (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((fst x, snd (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (fst x \<Ztypecolon> \<half_blkcirc>[True] T) @action \<A>merge\<close>
+
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) = ((fst (snd x), snd (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (fst (snd x) \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (snd (snd x) \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (undefined \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by (cases x, clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
+
+lemma [\<phi>reason %\<A>merge+5]:
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((x, fst y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((x, snd y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (x \<Ztypecolon> \<half_blkcirc>[True] T) @action \<A>merge\<close>
+
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) = (y \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (fst y \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (snd y \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by (cases y, clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
+
+lemma [\<phi>reason %\<A>merge+10]:
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((x,y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((x,z) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (y \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (z \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by(clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open>(x1 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) = ((fst x1, fst (snd x1), snd (snd x1)) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) @action \<A>merge\<close>
+  \<open>(x2 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) = ((fst x2, snd x2, undefined) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+  \<open>(x3 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) = ((fst x3, undefined, snd x3) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(x4 \<Ztypecolon> \<half_blkcirc>[True] T) = ((x4, undefined, undefined) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+
+  \<open>(x5 \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) = ((undefined, fst x5, snd x5) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(x6 \<Ztypecolon> \<half_blkcirc>[True] U) = ((undefined, x6, undefined) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+  \<open>(x7 \<Ztypecolon> \<half_blkcirc>[True] R) = ((undefined, undefined, x7) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(undefined \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((undefined, undefined, undefined) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by (clarsimp simp add: \<phi>Some_\<phi>Prod[symmetric] \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>None_freeobj)+
+
 
 paragraph \<open>Merging Conditioned BI Assertion\<close>
 
@@ -5324,8 +5370,8 @@ lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_magma_1 B
 
 lemma [\<phi>reason %ToA_splitting_target]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P1
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (if C\<^sub>R then (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P2)
-                            else Identity_Element\<^sub>E Y \<and>\<^sub>\<r> P2 = True))
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (if C\<^sub>R then (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P2)
+                           else Identity_Element\<^sub>E Y \<and>\<^sub>\<r> P2 = True)
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y * X \<w>\<i>\<t>\<h> P1 \<and> P2"
   for A :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
@@ -5668,10 +5714,10 @@ val SE_entry_point_b = SE_entry_point (
 )\<close>
 
 lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
-  " (C,P) = (True, P1 \<and> P2) \<and> (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1) \<and> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P2)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    C = False \<and> (A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+  " (C,P) = (True, P1 \<and> P2) \<and>\<^sub>\<r> (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1) \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P2)) \<or>\<^sub>c\<^sub>u\<^sub>t
+    C = False \<and>\<^sub>\<r> (A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P"
-  unfolding Orelse_shortcut_def Transformation_def REMAINS_def Premise_def
+  unfolding Orelse_shortcut_def Transformation_def REMAINS_def Premise_def Ant_Seq_def
   by clarsimp blast
 
 \<phi>reasoner_ML \<A>SEb_Entry default %ToA_splitting_source (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
@@ -6369,9 +6415,9 @@ paragraph \<open>Case Split\<close>
 subparagraph \<open>Source\<close>
 
 lemma [\<phi>reason %ToA_splitting]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and>\<^sub>\<r> (y\<^sub>a,P,Cwa,W\<^sub>a,C\<^sub>R\<^sub>a,R\<^sub>a,y\<^sub>a) = (undefined, False, True, \<bottom>\<^sub>\<phi>, True, \<bottom>\<^sub>\<phi>, undefined)) \<or>\<^sub>c\<^sub>u\<^sub>t
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>a,P,Cwa,W\<^sub>a,C\<^sub>R\<^sub>a,R\<^sub>a,y\<^sub>a) = (undefined, False, True, \<bottom>\<^sub>\<phi>, True, \<bottom>\<^sub>\<phi>, undefined) \<or>\<^sub>c\<^sub>u\<^sub>t
                       (x \<Ztypecolon> (T1 \<^emph> T2) \<^emph>[Cwa] W\<^sub>a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> U \<^emph>[C\<^sub>R\<^sub>a] R\<^sub>a \<w>\<i>\<t>\<h> P))
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and>\<^sub>\<r> (y\<^sub>b,Q,Cwb,W\<^sub>b,C\<^sub>R\<^sub>b,R\<^sub>b,y\<^sub>b) = (undefined, False, True, \<bottom>\<^sub>\<phi>, True, \<bottom>\<^sub>\<phi>, undefined)) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>b,Q,Cwb,W\<^sub>b,C\<^sub>R\<^sub>b,R\<^sub>b,y\<^sub>b) = (undefined, False, True, \<bottom>\<^sub>\<phi>, True, \<bottom>\<^sub>\<phi>, undefined) \<or>\<^sub>c\<^sub>u\<^sub>t
                       (apfst fst x \<Ztypecolon> T1 \<^emph>[Cwb] W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>[C\<^sub>R\<^sub>b] R\<^sub>b \<w>\<i>\<t>\<h> Q))
 \<Longrightarrow> x \<Ztypecolon> (T1 \<^emph>[C] T2) \<^emph>[If C Cwa Cwb] If C W\<^sub>a W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If C y\<^sub>a y\<^sub>b \<Ztypecolon> U \<^emph>[If C C\<^sub>R\<^sub>a C\<^sub>R\<^sub>b] If C R\<^sub>a R\<^sub>b \<w>\<i>\<t>\<h> If C P Q \<close>
   unfolding Orelse_shortcut_def Premise_def Ant_Seq_def
@@ -6421,9 +6467,9 @@ lemma ToA_cond_septy_src_R':
 subparagraph \<open>Target\<close>
 
 lemma [\<phi>reason %ToA_splitting except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[?var] _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and>\<^sub>\<r> (y\<^sub>a,CCa,RRa,P) = (undefined,True,\<bottom>\<^sub>\<phi>,False)) \<or>\<^sub>c\<^sub>u\<^sub>t
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>a,CCa,RRa,P) = (undefined,True,\<bottom>\<^sub>\<phi>,False) \<or>\<^sub>c\<^sub>u\<^sub>t
                      (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> (U \<^emph> R) \<^emph>[CCa] RRa \<w>\<i>\<t>\<h> P))
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and>\<^sub>\<r> (y\<^sub>b,CCb,RRb,Q) = (undefined,True,\<bottom>\<^sub>\<phi>,False)) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>b,CCb,RRb,Q) = (undefined,True,\<bottom>\<^sub>\<phi>,False) \<or>\<^sub>c\<^sub>u\<^sub>t
                      (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>[CCb] RRb \<w>\<i>\<t>\<h> Q))
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then y\<^sub>a else apfst (\<lambda>x. (x, undefined)) y\<^sub>b) \<Ztypecolon> (U \<^emph>[C] R) \<^emph>[If C CCa CCb] If C RRa RRb \<w>\<i>\<t>\<h> If C P Q\<close>
   unfolding Ant_Seq_def Orelse_shortcut_def Premise_def
@@ -6590,17 +6636,17 @@ subparagraph \<open>Source\<close>
 
 lemma ToA_case_sum_src:
   \<open> Y = case_sum Ya Yb x
-\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> P = (\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t (A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<w>\<i>\<t>\<h> P a))
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> Q = (\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t (B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<w>\<i>\<t>\<h> Q b))
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> P = (\<lambda>_. False) \<or>\<^sub>c\<^sub>u\<^sub>t (A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<w>\<i>\<t>\<h> P a))
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> Q = (\<lambda>_. False) \<or>\<^sub>c\<^sub>u\<^sub>t (B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<w>\<i>\<t>\<h> Q b))
 \<Longrightarrow> case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> case_sum P Q x \<close>
-  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def)
+  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def Ant_Seq_def)
 
 lemma ToA_case_sum_src_R:
   \<open> Y = case_sum Ya Yb x
-\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> (Ca,Ra,P) = ((\<lambda>_. True),0,(\<lambda>_. False))) \<or>\<^sub>c\<^sub>u\<^sub>t (A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Ca a] Ra a \<w>\<i>\<t>\<h> P a))
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> (Cb,Rb,Q) = ((\<lambda>_. True),0,(\<lambda>_. False))) \<or>\<^sub>c\<^sub>u\<^sub>t (B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Cb b] Rb b \<w>\<i>\<t>\<h> Q b))
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (Ca,Ra,P) = ((\<lambda>_. True),0,(\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t (A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Ca a] Ra a \<w>\<i>\<t>\<h> P a))
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (Cb,Rb,Q) = ((\<lambda>_. True),0,(\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t (B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Cb b] Rb b \<w>\<i>\<t>\<h> Q b))
 \<Longrightarrow> case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[case_sum Ca Cb x] case_sum Ra Rb x \<w>\<i>\<t>\<h> case_sum P Q x \<close>
-  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def)
+  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def Ant_Seq_def)
 
 (*lemma ToA_case_sum_src_R':
   \<open> Y \<equiv> case_sum Ya Yb x
@@ -6610,13 +6656,13 @@ lemma ToA_case_sum_src_R:
   by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def)*)
 
 lemma [\<phi>reason %ToA_splitting for \<open>case_sum (\<lambda>_. _ \<Ztypecolon> _ \<^emph>[_] _) (\<lambda>_. _ \<Ztypecolon> _ \<^emph>[_] _) _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> (y\<^sub>a,C\<^sub>W\<^sub>a,W\<^sub>a,Ca,Ra,P) = (undefined, (\<lambda>_. True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_. True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_. False))) \<or>\<^sub>c\<^sub>u\<^sub>t
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>a,C\<^sub>W\<^sub>a,W\<^sub>a,Ca,Ra,P) = (undefined, (\<lambda>_. True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_. True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t
                                 (x\<^sub>a a \<Ztypecolon> T\<^sub>a a \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a a \<Ztypecolon> U \<^emph>[Ca a] Ra a \<w>\<i>\<t>\<h> P a))
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> (y\<^sub>b,C\<^sub>W\<^sub>b,W\<^sub>b,Cb,Rb,Q) = (undefined, (\<lambda>_.True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_.True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_. False))) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>b,C\<^sub>W\<^sub>b,W\<^sub>b,Cb,Rb,Q) = (undefined, (\<lambda>_.True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_.True), (\<lambda>_. \<bottom>\<^sub>\<phi>), (\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t
                                 (x\<^sub>b b \<Ztypecolon> T\<^sub>b b \<^emph>[C\<^sub>W\<^sub>b b] W\<^sub>b b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b b \<Ztypecolon> U \<^emph>[Cb b] Rb b \<w>\<i>\<t>\<h> Q b))
 \<Longrightarrow> (case x of Inl a \<Rightarrow> x\<^sub>a a \<Ztypecolon> T\<^sub>a a \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a | Inr b \<Rightarrow> x\<^sub>b b \<Ztypecolon> T\<^sub>b b \<^emph>[C\<^sub>W\<^sub>b b] W\<^sub>b b)
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum y\<^sub>a y\<^sub>b x \<Ztypecolon> U \<^emph>[case_sum Ca Cb x] case_sum Ra Rb x \<w>\<i>\<t>\<h> case_sum P Q x \<close>
-  unfolding Try_def Simplify_def Premise_def Orelse_shortcut_def
+  unfolding Try_def Simplify_def Premise_def Orelse_shortcut_def Ant_Seq_def
   by (cases x; simp)
 
 (*
@@ -6630,19 +6676,19 @@ lemma [\<phi>reason %ToA_splitting+1 for \<open>case_sum _ _ _ \<t>\<r>\<a>\<n>\
 
 lemma ToA_case_sum_src_W:
   \<open> Y = case_sum Ya Yb x
-\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> P = (\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t (W * A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<w>\<i>\<t>\<h> P a))
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> Q = (\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t (W * B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<w>\<i>\<t>\<h> Q b))
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> P = (\<lambda>_. False) \<or>\<^sub>c\<^sub>u\<^sub>t (W * A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<w>\<i>\<t>\<h> P a))
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> Q = (\<lambda>_. False) \<or>\<^sub>c\<^sub>u\<^sub>t (W * B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<w>\<i>\<t>\<h> Q b))
 \<Longrightarrow> W * case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> case_sum P Q x \<close>
-  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def)
+  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def Ant_Seq_def)
 
 lemma ToA_case_sum_src_WR:
   \<open> Y = case_sum Ya Yb x
-\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> (Ca,Ra,P) = ((\<lambda>_. True),0,(\<lambda>_. False))) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (Ca,Ra,P) = ((\<lambda>_. True),0,(\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t
                                 (W * A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Ca a] Ra a \<w>\<i>\<t>\<h> P a))
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<and> (Cb,Rb,Q) = ((\<lambda>_. True),0,(\<lambda>_. False))) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (Cb,Rb,Q) = ((\<lambda>_. True),0,(\<lambda>_. False)) \<or>\<^sub>c\<^sub>u\<^sub>t
                                 (W * B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Cb b] Rb b \<w>\<i>\<t>\<h> Q b))
 \<Longrightarrow> W * case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[case_sum Ca Cb x] case_sum Ra Rb x \<w>\<i>\<t>\<h> case_sum P Q x \<close>
-  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def)
+  by (cases x; simp add: Simplify_def Premise_def Orelse_shortcut_def Ant_Seq_def)
 
 (*lemma ToA_case_sum_src_WR':
   \<open> Y \<equiv> case_sum Ya Yb x

@@ -8,7 +8,39 @@ begin
 
 section \<open>Arithmetic Evaluation\<close>
 
-consts \<A>arith_eval :: action
+consts \<A>arith_eq :: action
+
+subsection \<open>Preliminary\<close>
+
+
+definition cond ("?\<^sub>+") where \<open>?\<^sub>+ C x = (if C then Some x else None) \<close>
+
+hide_const (open) cond
+
+lemma conditioned_eq_red[simp]:
+  \<open> ?\<^sub>+ True A = ?\<^sub>+ True B \<longleftrightarrow> A = B \<close>
+  \<open> ?\<^sub>+ False A = ?\<^sub>+ False B \<close>
+  unfolding cond_def
+  by simp_all
+
+lemma conditioned_plus[simp]:
+  \<open> ?\<^sub>+ C A + ?\<^sub>+ C B = ?\<^sub>+ C (A + B) \<close>
+  unfolding cond_def
+  by clarsimp
+
+lemma conditioned_times[simp]:
+  \<open> ?\<^sub>+ C A * ?\<^sub>+ C B = ?\<^sub>+ C (A * B) \<close>
+  unfolding cond_def
+  by clarsimp
+
+lemma conditioned_plus_red[simp]:
+  \<open> ?\<^sub>+ False A + ?\<^sub>+ C B = ?\<^sub>+ C B \<close>
+  \<open> ?\<^sub>+ C B + ?\<^sub>+ False A = ?\<^sub>+ C B \<close>
+  \<open> X + ?\<^sub>+ False A + ?\<^sub>+ C B = X + ?\<^sub>+ C B \<close>
+  \<open> X + ?\<^sub>+ C B + ?\<^sub>+ False A = X + ?\<^sub>+ C B \<close>
+  unfolding cond_def
+  by simp_all
+
 
 subsection \<open>Partial Addition\<close>
 
@@ -17,7 +49,11 @@ text \<open>Solves partial addition equations consisting of
 \<^item> \<open>given + ?unknown = given\<close>, \<open>?unknown + given = given\<close>,
   \<open>given = given + ?unknown\<close>, \<open>given = ?unknown + given\<close>
 \<^item> \<open>given + ?unknown = ?unknown + given\<close>, \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative group)
-\<^item> \<open>?unknown + given + ?unknown = given\<close>, \<open>given = ?unknown + given + ?unknown\<close> (only for non-commutative group)
+\<^item> \<open>?\<^sub>+ ?unknown + ?\<^sub>+ given + ?\<^sub>+ ?unknown = ?\<^sub>+ given\<close>,
+  \<open>?\<^sub>+ given = ?\<^sub>+ ?unknown + ?\<^sub>+ given + ?\<^sub>+ ?unknown\<close> (only for non-commutative group)
+
+NOTE, the reasoning ignores any case when the given in the LHS equals the given in the RHS.
+You MUST check the trivial case before calling the reasoning process if can happen.
 
 Note some forms are only meaningful for non-commutative group as if not they can be reduced to the
 first form.
@@ -26,9 +62,10 @@ For instance, \<open>id a + id b + id c = id d\<close> to distinguish with \<ope
 
 System rules first normalize the problem into one of
 \<^item> \<open>?unknown_d + given_a = given_b\<close> or
-  \<open>given_b + ?unknown_c = given_a\<close> (only for non-commutative group)
-\<^item> \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative group)
-\<^item> \<open>?unknown + given + ?unknown = given\<close> (only for non-commutative group)
+  \<open>given_b + ?unknown_c = given_a\<close> (only for non-commutative algebra)
+\<^item> \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative algebra)
+\<^item> \<open>?\<^sub>+ ?unknown + ?\<^sub>+ given + ?\<^sub>+ ?unknown = ?\<^sub>+ given\<close> (necessary for non-commutative algebra, optional
+    for commutative algebra in which it reduces to \<open>?unknown_d + given_a = given_b\<close>)
 
 Then the above three forms are what user rules have to handle for specific algebras.
 
@@ -41,15 +78,16 @@ There are pre-built reasoning rules for,
   formalized in Isabelle standard library.
 \<close>
 
-\<phi>reasoner_group \<A>_partial_add = (1000, [1, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close>
+\<phi>reasoner_group \<A>_partial_add = (1000, [1, 4000]) for \<open>_ = _ @action \<A>arith_eq\<close>
       \<open>Decision procedure solving equantions of partial additive groups, with finding appropriate instantiations
        for schematic variables inside.\<close>
-  and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close> in \<A>_partial_add
+  and \<A>_partial_add_default = (10, [10,20]) in \<A>_partial_add \<open>\<close>
+  and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @action \<A>arith_eq\<close> in \<A>_partial_add
       \<open>Rules leading to success directly\<close>
-  and \<A>_partial_add_normalizing = (3000, [2801, 3399]) for \<open>_ = _ @action \<A>arith_eval\<close>
+  and \<A>_partial_add_normalizing = (3000, [2801, 3399]) for \<open>_ = _ @action \<A>arith_eq\<close>
                                                        in \<A>_partial_add and < \<A>_partial_add_success
       \<open>Rules normalizing the reasoning\<close>
-  and \<A>_partial_add_splitting = (2500, [2500, 2599]) for \<open>_ = _ @action \<A>arith_eval\<close>
+  and \<A>_partial_add_splitting = (2500, [2500, 2599]) for \<open>_ = _ @action \<A>arith_eq\<close>
                                                      in \<A>_partial_add and < \<A>_partial_add_normalizing
       \<open>Spliting a complicated equation like \<open>a + b + c = d\<close> into several minimal equations \<open>a + b = c\<close>\<close>
   and \<A>_partial_add_cut = (1000, [1000, 1100]) in \<A>_partial_add and < \<A>_partial_add_splitting
@@ -57,94 +95,130 @@ There are pre-built reasoning rules for,
   and \<A>_partial_add_specific = (1300, [1300, 1700]) in \<A>_partial_add and > \<A>_partial_add_cut
       \<open>for speicifc structures\<close>
 
-declare [[\<phi>reason_default_pattern \<open>?Eq @action \<A>arith_eval\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eval\<close> (100)]]
+declare [[
+  \<phi>reason_default_pattern
+      \<open>?Eq @action \<A>arith_eq\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eq\<close> (10)
+  and \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close> \<Rightarrow>
+      \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close>   (100)
+]]
 
 
 subsubsection \<open>Normalizing Equations\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_success]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = b
-\<Longrightarrow> id a = id b @action \<A>arith_eval \<close>
+\<Longrightarrow> id a = id b @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def
   by simp
 
 paragraph \<open>Flipping\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_normalizing]:
-  \<open> A = id a @action \<A>arith_eval
-\<Longrightarrow> id a = A @action \<A>arith_eval\<close>
+  \<open> A = id a @action \<A>arith_eq
+\<Longrightarrow> id a = A @action \<A>arith_eq\<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id ?var_c + id _ @action \<A>arith_eval\<close>
+lemma [\<phi>reason %\<A>_partial_add_normalizing]:
+  \<open> A = ?\<^sub>+ C a @action \<A>arith_eq
+\<Longrightarrow> ?\<^sub>+ C a = A @action \<A>arith_eq\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id ?var_c + id _ @action \<A>arith_eq\<close>
                                            except \<open>id ?var_d + _ = _ + id ?var_c @action _\<close>]:
-  \<open> id c + id b = id a + id d @action \<A>arith_eval
-\<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eval \<close>
+  \<open> id c + id b = id a + id d @action \<A>arith_eq
+\<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eq \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id (_::?'a::ab_semigroup_add) @action \<A>arith_eval\<close>
+lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id (_::?'a::ab_semigroup_add) @action \<A>arith_eq\<close>
                                            except \<open>id ?var_d + _ = id _  @action _\<close>]:
-  \<open> id c + id b = id a @action \<A>arith_eval
-\<Longrightarrow> id b + id c = id a @action \<A>arith_eval \<close>
+  \<open> id c + id b = id a @action \<A>arith_eq
+\<Longrightarrow> id b + id c = id a @action \<A>arith_eq \<close>
   for a :: \<open>'a::ab_semigroup_add\<close>
   unfolding Action_Tag_def
   by (simp add: add.commute)
 
-lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id (_::?'a::partial_ab_semigroup_add) @action \<A>arith_eval\<close>
+lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id (_::?'a::partial_ab_semigroup_add) @action \<A>arith_eq\<close>
                                            except \<open>id ?var_d + _ = id _  @action _\<close>]:
-  \<open> id c + id b = id a @action \<A>arith_eval
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c ##\<^sub>+ b
-\<Longrightarrow> id b + id c = id a @action \<A>arith_eval \<close>
+  \<open> id c + id b = id a @action \<A>arith_eq
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] c ##\<^sub>+ b
+\<Longrightarrow> id b + id c = id a @action \<A>arith_eq \<close>
   for a :: \<open>'a::partial_ab_semigroup_add\<close>
   unfolding Action_Tag_def Premise_def
   by (simp add: partial_add_commute)
 
+paragraph \<open>Reduce 3-1 equation for commutative algebra\<close>
 
+lemma [\<phi>reason default %\<A>_partial_add_default]:
+  \<open> id a + id b = id d @action \<A>arith_eq
+\<Longrightarrow> ?\<^sub>+ True a + ?\<^sub>+ True b + ?\<^sub>+ False undefined = ?\<^sub>+ True d @action \<A>arith_eq \<close>
+  for a :: \<open>'a::partial_ab_semigroup_add\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason default %\<A>_partial_add_default+1]:
+  \<open> id a + id b = id d @action \<A>arith_eq
+\<Longrightarrow> ?\<^sub>+ True a + ?\<^sub>+ True b + ?\<^sub>+ False undefined = ?\<^sub>+ True d @action \<A>arith_eq \<close>
+  for a :: \<open>'a::ab_semigroup_add\<close>
+  unfolding Action_Tag_def
+  by simp
 
 paragraph \<open>Error Check\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_normalizing
-               for \<open>id _ + id _ = (id _ + id _ :: ?'a :: partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
+               for \<open>id _ + id _ = (id _ + id _ :: ?'a :: partial_ab_semigroup_add) @action \<A>arith_eq\<close>]:
   \<open> ERROR TEXT(\<open>Invalid equation\<close> (id a + id d = id c + id b) \<open>on commutative group,\<close>
                \<open>which can always be reduced to either \<open>c + a = b\<close> or \<open>c + b = a\<close>. Some reasoning rule is configured wrong.\<close>)
-\<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eval \<close>
+\<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eq \<close>
   unfolding ERROR_def
   by blast
-
-lemma [\<phi>reason %\<A>_partial_add_normalizing
-               for \<open>id _ + id _ + id _ = (id _ :: ?'a :: partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
-  \<open> ERROR TEXT(\<open>Invalid equation\<close> (id c + id a + id d = id b) \<open>on commutative group,\<close>
-               \<open>which can always be reduced to \<open>c + a = b\<close>. Some reasoning rule is configured wrong.\<close>)
-\<Longrightarrow> id c + id a + id d = id b @action \<A>arith_eval \<close>
-  unfolding ERROR_def
-  by blast
-
 
 
 subsubsection \<open>Solving the Equations on Specific Algberas\<close>
 
 paragraph \<open>Direct Success\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?a + id ?b = id (?a + ?b) @action \<A>arith_eval\<close>
-                                           \<open>id ?a + id ?var = id (?a + ?b) @action \<A>arith_eval\<close>
-                                           \<open>id ?var + id ?b = id (?a + ?b) @action \<A>arith_eval\<close> ]:
-  \<open> id a + id b = id (a + b) @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?a + id ?b = id (?a + ?b) @action \<A>arith_eq\<close>
+                                           \<open>id ?a + id ?var = id (?a + ?b) @action \<A>arith_eq\<close>
+                                           \<open>id ?var + id ?b = id (?a + ?b) @action \<A>arith_eq\<close> ]:
+  \<open> id a + id b = id (a + b) @action \<A>arith_eq \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?a + id ?b + id ?c = id (?a + ?b + ?c) @action \<A>arith_eval\<close>
-                                           \<open>id ?var_a + id ?b + id ?var_c = id (_ + ?b + _) @action \<A>arith_eval\<close>]:
-  \<open> id a + id b + id c = id (a + b + c) @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?a + id ?b + id ?c = id (?a + ?b + ?c) @action \<A>arith_eq\<close>
+                                           \<open>id ?var_a + id ?b + id ?var_c = id (_ + ?b + _) @action \<A>arith_eq\<close>]:
+  \<open> id a + id b + id c = id (a + b + c) @action \<A>arith_eq \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?c + id (?x + ?d) = id (?c + ?x) + id ?d @action \<A>arith_eval\<close>
-                                           \<open>id ?var_c + id (?x + ?d) = id (?c + ?x) + id ?var_d @action \<A>arith_eval\<close>]:
-  \<open> id c + id (x + d) = id (c + x) + id d @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?c + id (?x + ?d) = id (?c + ?x) + id ?d @action \<A>arith_eq\<close>
+                                           \<open>id ?var_c + id (?x + ?d) = id (?c + ?x) + id ?var_d @action \<A>arith_eq\<close>]:
+  \<open> id c + id (x + d) = id (c + x) + id d @action \<A>arith_eq \<close>
   for x :: \<open>'a :: semigroup_add\<close>
   unfolding Action_Tag_def
   by (simp add: add.assoc)
+
+lemma [\<phi>reason %\<A>_partial_add_success]:
+  \<open> ?\<^sub>+ True a + ?\<^sub>+ True b + ?\<^sub>+ True c = ?\<^sub>+ True (a + b + c) @action \<A>arith_eq \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_success]:
+  \<open> ?\<^sub>+ False a + ?\<^sub>+ True b + ?\<^sub>+ True c = ?\<^sub>+ True (b + c) @action \<A>arith_eq \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_success]:
+  \<open> ?\<^sub>+ True a + ?\<^sub>+ True b + ?\<^sub>+ False c = ?\<^sub>+ True (a + b) @action \<A>arith_eq \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_success]:
+  \<open> ?\<^sub>+ False a + ?\<^sub>+ True b + ?\<^sub>+ False c = ?\<^sub>+ True b @action \<A>arith_eq \<close>
+  unfolding Action_Tag_def
+  by simp
 
 
 paragraph \<open>Cancellative and Canonically Ordered Commutative Partial Monoid\<close>
@@ -152,18 +226,18 @@ paragraph \<open>Cancellative and Canonically Ordered Commutative Partial Monoid
 text \<open>The rules do not conflict with those for groups because a canonically ordered monoid can never
   be a group.\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (?a :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) @action \<A>arith_eval\<close> 
-                                      \<open>id _ + (?var :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) = id _ @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (?a :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) @action \<A>arith_eq\<close> 
+                                      \<open>id _ + (?var :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) = id _ @action \<A>arith_eq\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b      
-\<Longrightarrow> id a + id (b - a) = id b @action \<A>arith_eval \<close>
+\<Longrightarrow> id a + id (b - a) = id b @action \<A>arith_eq \<close>
   for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
   unfolding Action_Tag_def Premise_def
   by (simp add: partial_le_iff_add; force)
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (?a :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) @action \<A>arith_eval\<close>
-                                       \<open>(?var :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) + id _ = id _ @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (?a :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) @action \<A>arith_eq\<close>
+                                       \<open>(?var :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) + id _ = id _ @action \<A>arith_eq\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
-\<Longrightarrow> id (b - a) + id a = id b @action \<A>arith_eval \<close>
+\<Longrightarrow> id (b - a) + id a = id b @action \<A>arith_eq \<close>
   for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
   unfolding Action_Tag_def Premise_def
   by (simp, metis partial_add_commute partial_add_diff_cancel_left' partial_le_iff_add)
@@ -174,10 +248,10 @@ paragraph \<open>Cancellative and Canonically Ordered Commutative Total Monoid\<
 text \<open>The rules do not conflict with those for groups because a canonically ordered monoid can never
   be a group.\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (?a :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) @action \<A>arith_eval\<close> 
-                                      \<open>id _ + (?var :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) = id _ @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (?a :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) @action \<A>arith_eq\<close> 
+                                      \<open>id _ + (?var :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) = id _ @action \<A>arith_eq\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
-\<Longrightarrow> id a + id (b - a) = id b @action \<A>arith_eval \<close>
+\<Longrightarrow> id a + id (b - a) = id b @action \<A>arith_eq \<close>
   for a :: \<open>'a::{canonically_ordered_monoid_add, cancel_ab_semigroup_add}\<close>
   \<comment>\<open>The unital property is not required.
      It can be even weaker as {canonically_ordered_ab_semigroup_add, cancel_ab_semigroup_add}, but
@@ -186,10 +260,10 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (
   by (simp, metis add_diff_cancel_left' le_iff_add)
   
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (?a :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) @action \<A>arith_eval\<close>
-                                       \<open>(?var :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) + id _ = id _ @action \<A>arith_eval\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (?a :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) @action \<A>arith_eq\<close>
+                                       \<open>(?var :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) + id _ = id _ @action \<A>arith_eq\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
-\<Longrightarrow> id (b - a) + id a = id b @action \<A>arith_eval \<close>
+\<Longrightarrow> id (b - a) + id a = id b @action \<A>arith_eq \<close>
   for a :: \<open>'a::{canonically_ordered_monoid_add, cancel_ab_semigroup_add}\<close>
   unfolding Action_Tag_def Premise_def
   by (simp, metis add.commute add_diff_cancel_left' le_iff_add)
@@ -197,16 +271,16 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (
 
 paragraph \<open>Total Group\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id ?b @action \<A>arith_eval\<close>
-                                       \<open>id ?var + id ?a = id ?b @action \<A>arith_eval\<close> ]:
-  \<open> id (b - a) + id a = id b @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id ?b @action \<A>arith_eq\<close>
+                                       \<open>id ?var + id ?a = id ?b @action \<A>arith_eq\<close> ]:
+  \<open> id (b - a) + id a = id b @action \<A>arith_eq \<close>
   for a :: \<open>'a::group_add\<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id ?b @action \<A>arith_eval\<close>
-                                       \<open>id ?a + id ?var = id ?b @action \<A>arith_eval\<close> ]:
-  \<open> id a + id (b - a) = id b @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id ?b @action \<A>arith_eq\<close>
+                                       \<open>id ?a + id ?var = id ?b @action \<A>arith_eq\<close> ]:
+  \<open> id a + id (b - a) = id b @action \<A>arith_eq \<close>
   for a :: \<open>'a::ab_group_add\<close>
   unfolding Action_Tag_def
   by (simp add: algebra_simps)
@@ -214,36 +288,44 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id ?
 
 paragraph \<open>LCRO Interval\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) = id [?a,?c) @action \<A>arith_eval\<close>
-                                       \<open>id [?a,?b) + id ?var = id [?a,?c) @action \<A>arith_eval\<close>
-                                       \<open>id ?var + id [?b,?c) = id [?a,?c) @action \<A>arith_eval\<close> ]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<and> b \<le> c
-\<Longrightarrow> id [a,b) + id [b,c) = id [a,c) @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) = id [?a,?c) @action \<A>arith_eq\<close>
+                                       \<open>id [?a,?b) + id ?var = id [?a,?c) @action \<A>arith_eq\<close>
+                                       \<open>id ?var + id [?b,?c) = id [?a,?c) @action \<A>arith_eq\<close> ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> c
+\<Longrightarrow> id [a,b) + id [b,c) = id [a,c) @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?d) = id [?a,?c) + id [?c,?d) @action \<A>arith_eval\<close>
-                                       \<open>id ?var_c + id [?b,?d) = id [?a,?c) + id ?var_d @action \<A>arith_eval\<close> ]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<and> b \<le> d \<and> a \<le> c \<and> c \<le> d
-\<Longrightarrow> id [a,b) + id [b,d) = id [a,c) + id [c,d) @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?d) = id [?a,?c) + id [?c,?d) @action \<A>arith_eq\<close>
+                                       \<open>id ?var_c + id [?b,?d) = id [?a,?c) + id ?var_d @action \<A>arith_eq\<close> ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> d \<and> a \<le> c \<and> c \<le> d
+\<Longrightarrow> id [a,b) + id [b,d) = id [a,c) + id [c,d) @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + id [?c,?d) = id [?a,?d) @action \<A>arith_eval\<close>
-                                       \<open>id ?var_c + id [?b,?c) + id ?var_d = id [?a,?d) @action \<A>arith_eval\<close> ]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<and> b \<le> c \<and> c \<le> d
-\<Longrightarrow> id [a,b) + id [b,c) + id [c,d) = id [a,d) @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + id [?c,?d) = id [?a,?d) @action \<A>arith_eq\<close>
+                                       \<open>id ?var_c + id [?b,?c) + id ?var_d = id [?a,?d) @action \<A>arith_eq\<close> ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> c \<and> c \<le> d
+\<Longrightarrow> id [a,b) + id [b,c) + id [c,d) = id [a,d) @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def
   by (simp, insert order_trans, fastforce)
+
+lemma [\<phi>reason %\<A>_partial_add_cut]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> c \<and> c \<le> d
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a = b \<and>\<^sub>\<r> C\<^sub>A = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>A = True
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] c = d \<and>\<^sub>\<r> C\<^sub>C = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>C = True
+\<Longrightarrow> ?\<^sub>+ C\<^sub>A [a,b) + ?\<^sub>+ True [b,c) + ?\<^sub>+ C\<^sub>C [c,d) = ?\<^sub>+ True [a,d) @action \<A>arith_eq \<close>
+  unfolding Premise_def Action_Tag_def Orelse_shortcut_def Ant_Seq_def
+  by (cases C\<^sub>A; cases C\<^sub>C; simp; meson add_lcro_intvl order_trans)
 
 
 paragraph \<open>Set\<close>
 
 \<phi>reasoner_group \<A>_partial_add__set = (1300, [1300, 1300]) in \<A>_partial_add_specific \<open>Set\<close>
 
-lemma [\<phi>reason %\<A>_partial_add__set for \<open>id ?var + id _ = id _ @action \<A>arith_eval\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<subseteq> B
-\<Longrightarrow> id (B - A) + id A = id B @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add__set for \<open>id ?var + id _ = id _ @action \<A>arith_eq\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] A \<subseteq> B
+\<Longrightarrow> id (B - A) + id A = id B @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def
   by clarsimp blast
 
@@ -252,39 +334,43 @@ paragraph \<open>Len Intvl\<close>
 
 subparagraph \<open>Direct\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var + id (_::_ len_intvl) = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.len c \<ge> len_intvl.len b \<and>
-             len_intvl.start c + len_intvl.len c - len_intvl.len b = len_intvl.start b
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var + id (_::_ len_intvl) = id (_::_ len_intvl) @action \<A>arith_eq\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len c \<ge> len_intvl.len b \<and>
+                      len_intvl.start c + len_intvl.len c - len_intvl.len b = len_intvl.start b
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.len c - len_intvl.len b\<rwpar>
-\<Longrightarrow> id a + id b = id c @action \<A>arith_eval\<close>
+\<Longrightarrow> id a + id b = id c @action \<A>arith_eq\<close>
   unfolding Action_Tag_def Premise_def Simplify_def
   by (cases b; cases c; clarsimp)
 
-lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id (_::_ len_intvl) + id ?var = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.len a \<le> len_intvl.len c \<and> len_intvl.start a = len_intvl.start c
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id (_::_ len_intvl) + id ?var = id (_::_ len_intvl) @action \<A>arith_eq\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len a \<le> len_intvl.len c \<and> len_intvl.start a = len_intvl.start c
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> b : \<lbrakk>len_intvl.start a + len_intvl.len a : len_intvl.len c - len_intvl.len a\<rwpar>
-\<Longrightarrow> id a + id b = id c @action \<A>arith_eval \<close>
+\<Longrightarrow> id a + id b = id c @action \<A>arith_eq \<close>
   unfolding Action_Tag_def Premise_def Simplify_def
   by (cases a; cases c; clarsimp)
 
-lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var_a + id (_::_ len_intvl) = id (_::_ len_intvl) + id ?var_d @action \<A>arith_eval\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start c \<le> len_intvl.start b \<and>
-            len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
-            len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var_a + id (_::_ len_intvl) = id (_::_ len_intvl) + id ?var_d @action \<A>arith_eq\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start c \<le> len_intvl.start b \<and>
+                      len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
+                      len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
-\<Longrightarrow> id a + id b = id c + id d @action \<A>arith_eval \<close>
+\<Longrightarrow> id a + id b = id c + id d @action \<A>arith_eq \<close>
   unfolding Action_Tag_def Premise_def Simplify_def
   by (cases b; cases c; clarsimp)
 
-lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var_a + id (_::_ len_intvl) + id ?var_c = id (_::_ len_intvl) @action \<A>arith_eval\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start d \<le> len_intvl.start b \<and>
-            len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
+lemma [\<phi>reason %\<A>_partial_add_specific]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start d \<le> len_intvl.start b \<and>
+                           len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> c : \<lbrakk>len_intvl.start b + len_intvl.len b : len_intvl.start d + len_intvl.len d - len_intvl.start b - len_intvl.len b\<rwpar>
-\<Longrightarrow> id a + id b + id c = id d @action \<A>arith_eval \<close>
-  unfolding Action_Tag_def Premise_def Simplify_def
-  by (cases b; cases d; clarsimp)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len a = 0 \<and>\<^sub>\<r> C\<^sub>a = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>a = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len c = 0 \<and>\<^sub>\<r> C\<^sub>c = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>c = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
+\<Longrightarrow> ?\<^sub>+ C\<^sub>a a + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c = ?\<^sub>+ True d @action \<A>arith_eq \<close>
+  unfolding Action_Tag_def Premise_def Simplify_def \<r>Guard_def
+            Orelse_shortcut_def Ant_Seq_def
+  by (cases b; cases d; auto)
+
 
 subparagraph \<open>Wrapped by set\<close>
 
@@ -293,53 +379,65 @@ subparagraph \<open>Wrapped by set\<close>
                  \<open>Len_Intvl.set\<close>
 
 lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
-           for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) @action \<A>arith_eval\<close>
-               \<open>id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eval\<close>]:
-  \<open> id a + id b = id c @action \<A>arith_eval
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b
-\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) = id (Len_Intvl.set c) @action \<A>arith_eval \<close>
+           for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) @action \<A>arith_eq\<close>
+               \<open>id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eq\<close>]:
+  \<open> id a + id b = id c @action \<A>arith_eq
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start a + len_intvl.len a = len_intvl.start b
+\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) = id (Len_Intvl.set c) @action \<A>arith_eq \<close>
   unfolding Action_Tag_def
   by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
       metis (full_types) Premise_D add.assoc add_leD1 linorder_not_less)
 
 lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
-           for \<open>id ?var + id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eval\<close>]:
-  \<open> id a + id b + id c = id d @action \<A>arith_eval
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
-            len_intvl.start b + len_intvl.len b = len_intvl.start c
-\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) + id (Len_Intvl.set c) = id (Len_Intvl.set d) @action \<A>arith_eval \<close>
-  unfolding Action_Tag_def
-  by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
-      metis (full_types) Premise_E add.assoc add_leE leI trans_less_add1)
-
-lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
-           for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) + id ?var @action \<A>arith_eval\<close>]:
-  \<open> id a + id b = id c + id d @action \<A>arith_eval
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
-            len_intvl.start c + len_intvl.len c = len_intvl.start d
-\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) = id (Len_Intvl.set c) + id (Len_Intvl.set d) @action \<A>arith_eval \<close>
+           for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) + id ?var @action \<A>arith_eq\<close>]:
+  \<open> id a + id b = id c + id d @action \<A>arith_eq
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
+                      len_intvl.start c + len_intvl.len c = len_intvl.start d
+\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) = id (Len_Intvl.set c) + id (Len_Intvl.set d) @action \<A>arith_eq \<close>
   unfolding Action_Tag_def
   by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
       smt (verit, best) Premise_D group_cancel.add1 len_intvl.sel(1) len_intvl.sel(2) linorder_not_le plus_len_intvl_def trans_less_add1)
 
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
+           for \<open>id ?var + id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eq\<close>]:
+  \<open> id a + id b + id c = id d @action \<A>arith_eq
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
+                      len_intvl.start b + len_intvl.len b = len_intvl.start c
+\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) + id (Len_Intvl.set c) = id (Len_Intvl.set d) @action \<A>arith_eq \<close>
+  unfolding Action_Tag_def
+  by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
+      metis (full_types) Premise_E add.assoc add_leE leI trans_less_add1)
+
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
+  \<open> ?\<^sub>+ C\<^sub>a a + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c = ?\<^sub>+ True d @action \<A>arith_eq
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
+            len_intvl.start b + len_intvl.len b = len_intvl.start c
+\<Longrightarrow> ?\<^sub>+ C\<^sub>a (Len_Intvl.set a) + ?\<^sub>+ True (Len_Intvl.set b) + ?\<^sub>+ C\<^sub>c (Len_Intvl.set c) = ?\<^sub>+ True (Len_Intvl.set d) @action \<A>arith_eq \<close>
+  unfolding Action_Tag_def Premise_def
+  by (cases a; cases b; cases c; cases C\<^sub>a; cases C\<^sub>c;
+      clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
+      linarith)
+
+
+
 paragraph \<open>List\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id _ + id (_#_) = id (_#_) @action \<A>arith_eval\<close>
-                                       \<open>id (_ # _) + id ?var = id (_#_) @action \<A>arith_eval\<close> ]:
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id _ + id (_#_) = id (_#_) @action \<A>arith_eq\<close>
+                                       \<open>id (_ # _) + id ?var = id (_#_) @action \<A>arith_eq\<close> ]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = z
-\<Longrightarrow> id ys + id xs = id zs @action \<A>arith_eval
-\<Longrightarrow> id ys + id (x#xs) = id (z#zs) @action \<A>arith_eval \<close>
+\<Longrightarrow> id ys + id xs = id zs @action \<A>arith_eq
+\<Longrightarrow> id ys + id (x#xs) = id (z#zs) @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def plus_list_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id _ + id [] = id _ @action \<A>arith_eval\<close>,
-       \<phi>reason %\<A>_partial_add_cut+10 for \<open>id _ + id ?var = id _ @action \<A>arith_eval\<close>]:
-  \<open> id zs + id [] = id zs @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id _ + id [] = id _ @action \<A>arith_eq\<close>,
+       \<phi>reason %\<A>_partial_add_cut+10 for \<open>id _ + id ?var = id _ @action \<A>arith_eq\<close>]:
+  \<open> id zs + id [] = id zs @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def plus_list_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [] + id _ = id _ @action \<A>arith_eval\<close> ]:
-  \<open> id [] + id zs = id zs @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [] + id _ = id _ @action \<A>arith_eq\<close> ]:
+  \<open> id [] + id zs = id zs @action \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def plus_list_def
   by simp
 
@@ -376,7 +474,7 @@ lemma [\<phi>reason default %partial_add_overlaps_default,
        \<phi>reason default %partial_add_overlaps_default_comm
        for \<open>partial_add_overlaps (_::_::ab_semigroup_add) _\<close>
            \<open>partial_add_overlaps (_::_::partial_ab_semigroup_add) _\<close>]:
-  \<open> id d + id a = id b @action \<A>arith_eval
+  \<open> id d + id a = id b @action \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
@@ -385,45 +483,47 @@ lemma [\<phi>reason default %partial_add_overlaps_default,
        \<phi>reason default %partial_add_overlaps_default_comm
        for \<open>partial_add_overlaps (_::_::ab_semigroup_add) _\<close>
            \<open>partial_add_overlaps (_::_::partial_ab_semigroup_add) _\<close>]:
-  \<open> id d + id b = id a @action \<A>arith_eval
+  \<open> id d + id b = id a @action \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
 paragraph \<open>None_Commutative Additive Group\<close>
 
+(*
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id b + id c = id a @action \<A>arith_eval
+  \<open> id b + id c = id a @action \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id a + id d = id b @action \<A>arith_eval
+  \<open> id a + id d = id b @action \<A>arith_eq
+\<Longrightarrow> partial_add_overlaps a b \<close>
+  unfolding Action_Tag_def partial_add_overlaps_def
+  by blast
+*)
+
+lemma [\<phi>reason default %partial_add_overlaps_default]:
+  \<open> ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a + ?\<^sub>+ C\<^sub>c c = ?\<^sub>+ True b @action \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id d + id a + id c = id b @action \<A>arith_eval
+  \<open> ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c = ?\<^sub>+ True a @action \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id d + id b + id c = id a @action \<A>arith_eval
+  \<open> id d + id a = id b + id c @action \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id d + id a = id b + id c @action \<A>arith_eval
-\<Longrightarrow> partial_add_overlaps a b \<close>
-  unfolding Action_Tag_def partial_add_overlaps_def
-  by blast
-
-lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id a + id d = id c + id b @action \<A>arith_eval
+  \<open> id a + id d = id c + id b @action \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast

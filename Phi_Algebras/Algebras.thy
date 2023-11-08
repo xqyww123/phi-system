@@ -1364,8 +1364,30 @@ lemma times_option_not_none[simp]:
 instance ..
 end
 
+instantiation option :: (plus) plus begin
+definition \<open>plus_option x' y' = (case x' of Some x \<Rightarrow> (case y' of Some y \<Rightarrow> Some (x + y) | _ \<Rightarrow> x') | _ \<Rightarrow> y')\<close>
+
+lemma plus_option[simp]:
+  \<open>Some x + Some y = Some (x + y)\<close>
+  \<open>x' + None = x'\<close>
+  \<open>None + x' = x'\<close>
+  by (cases x'; simp add: plus_option_def)+
+
+lemma plus_option_not_none[simp]:
+  \<open>x + Some y \<noteq> None\<close>
+  \<open>Some y + x \<noteq> None\<close>
+  by (cases x; simp)+
+
+instance ..
+end
+
 instantiation option :: (type) one begin
 definition [simp]: "one_option = None"
+instance ..
+end
+
+instantiation option :: (type) zero begin
+definition [simp]: "zero_option = None"
 instance ..
 end
 
@@ -1374,6 +1396,14 @@ instance proof
   fix x :: \<open>'a option\<close>
   show \<open>1 * x = x\<close> by (cases x; simp)
   show \<open>x * 1 = x\<close> by (cases x; simp)
+qed
+end
+
+instantiation option :: (plus) add_0 begin
+instance proof
+  fix x :: \<open>'a option\<close>
+  show \<open>0 + x = x\<close> by (cases x; simp)
+  show \<open>x + 0 = x\<close> by (cases x; simp)
 qed
 end
 

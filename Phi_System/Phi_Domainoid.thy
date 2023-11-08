@@ -430,10 +430,11 @@ lemma [\<phi>reason default 10]:
 \<Longrightarrow> domainoid TYPE('c\<^sub>\<psi>::sep_magma) \<delta>\<^sub>\<psi>
 \<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<delta> \<Longrightarrow> \<Psi>[domainoid_tag \<delta>] (x \<Ztypecolon> T) \<le> \<DD>\<^sub>T x)
 \<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<delta> \<Longrightarrow> \<Psi>[domainoid_tag \<delta>] (y \<Ztypecolon> U) \<le> \<DD>\<^sub>U y)
-\<Longrightarrow> fun_commute \<delta>\<^sub>\<psi> \<psi> \<delta> \<psi>\<^sub>D \<and> has_\<psi>\<^sub>D = True \<or>\<^sub>c\<^sub>u\<^sub>t has_\<psi>\<^sub>D = False
+\<Longrightarrow> fun_commute \<delta>\<^sub>\<psi> \<psi> \<delta> \<psi>\<^sub>D \<and>\<^sub>\<r> has_\<psi>\<^sub>D = True \<or>\<^sub>c\<^sub>u\<^sub>t has_\<psi>\<^sub>D = False
 \<Longrightarrow> Separation_Disj\<^sub>\<phi> \<psi> {(y,x). \<forall>d\<^sub>x d\<^sub>y. d\<^sub>x \<Turnstile> \<DD>\<^sub>T x \<and> d\<^sub>y \<Turnstile> \<DD>\<^sub>U y \<and> (has_\<psi>\<^sub>D \<longrightarrow> \<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y) \<longrightarrow> d\<^sub>x ## d\<^sub>y} T U
                           \<comment> \<open>\<open>\<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y\<close> reflects the condition \<open>\<psi> u ## \<psi> v\<close> in \<open>Separation_Disj\<close>\<close> \<close>
-  unfolding Separation_Disj\<^sub>\<phi>_def Separation_Disj_def Orelse_shortcut_def BI_sub_iff domainoid_tag_def
+  unfolding Separation_Disj\<^sub>\<phi>_def Separation_Disj_def Orelse_shortcut_def BI_sub_iff
+            domainoid_tag_def Ant_Seq_def
   by (clarsimp simp add: domainoid_def Premise_def fun_commute_def[unfolded fun_eq_iff, simplified]
                          closed_homo_sep_def closed_homo_sep_disj_def; metis)
 

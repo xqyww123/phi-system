@@ -345,7 +345,7 @@ subparagraph \<open>\<open>Guess_Tyops_Commute\<^sub>I\<close>\<close>
 lemma [\<phi>reason %guess_tyop_commute+10]:
   \<open> Guess_Tyops_Commute True G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' uF uF' T D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute True G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' uF uF' T
-                        (\<lambda>x. P \<longrightarrow> D x) r ants ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> conds) \<close>
+                        (\<lambda>x. P \<longrightarrow> D x) r ants (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<and>\<^sub>\<r> conds) \<close>
   unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
@@ -361,7 +361,7 @@ lemma [\<phi>reason %guess_tyop_commute]:
 
 lemma [\<phi>reason %guess_tyop_commute+10]:
   \<open> Guess_Tyops_Commute True G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) uF uF' T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute True G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') uF uF' T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') uF uF' T D r (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P' \<and>\<^sub>\<r> ants) conds \<close>
   unfolding Guess_Tyops_Commute_def ..
 
 subparagraph \<open>\<open>Guess_Tyops_Commute\<^sub>E\<close>\<close>
@@ -369,7 +369,7 @@ subparagraph \<open>\<open>Guess_Tyops_Commute\<^sub>E\<close>\<close>
 lemma [\<phi>reason %guess_tyop_commute+10]:
   \<open> Guess_Tyops_Commute False F F' G G' uF uF' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' T
-                        (\<lambda>x. P \<longrightarrow> D x) r ants ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> conds) \<close>
+                        (\<lambda>x. P \<longrightarrow> D x) r ants (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<and>\<^sub>\<r> conds) \<close>
   unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
@@ -384,7 +384,7 @@ lemma [\<phi>reason %guess_tyop_commute]:
 
 lemma [\<phi>reason %guess_tyop_commute+10]:
   \<open> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P' \<and>\<^sub>\<r> ants) conds \<close>
   unfolding Guess_Tyops_Commute_def ..
 
 
@@ -2378,6 +2378,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
+
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?P) \<Longrightarrow> Abstract_Domain\<^sub>L (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?P x)  \<close>),
   (@{thm' \<phi>Share.Abstract_Domain}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Abstract_Domain ?T ?P) \<Longrightarrow> Abstract_Domain (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?P x) \<close>),
@@ -2715,7 +2716,7 @@ subsubsection \<open>Reasoning\<close>
 
 lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_src:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' i = fst y \<and> i \<in> I \<longrightarrow> ((fst x, w) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U i \<^emph>[C\<^sub>R] R i \<w>\<i>\<t>\<h> P))
-       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I)
+       \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y' i = fst y
 \<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W) = ((w, y') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sup>\<phi> (I - {i}) U)) @action \<A>merge
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[C\<^sub>W'] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<big_ast>\<^sup>\<phi> I U \<^emph>[C\<^sub>R] R i \<w>\<i>\<t>\<h> P \<close>
@@ -2728,7 +2729,7 @@ lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_src:
 
 lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_tgt:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I \<longrightarrow> ((fst x i, snd x) \<Ztypecolon> T i \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P))
-       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I)
+       \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I
 \<Longrightarrow> ((snd y, fst x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>R] R \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sup>\<phi> (I - {i}) T) = (r \<Ztypecolon> \<half_blkcirc>[C\<^sub>R'] R') @action \<A>merge
 \<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> U \<^emph>[C\<^sub>R'] R' \<w>\<i>\<t>\<h> P \<close>
   unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
@@ -2815,7 +2816,7 @@ subsubsection \<open>Reasoning\<close>
 lemma \<phi>Mul_Quant_LenIv_wrap_module_src:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y \<and> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow>
               ((fst x, w) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U i \<^emph>[C\<^sub>R] R i \<w>\<i>\<t>\<h> P))
-       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv)
+       \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length y' = len_intvl.len iv \<and> y' ! (i - len_intvl.start iv) = fst y
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
                                  i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
@@ -2831,7 +2832,7 @@ lemma \<phi>Mul_Quant_LenIv_wrap_module_src:
 lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow>
               ((fst x ! (i - len_intvl.start iv), snd x) \<Ztypecolon> T i \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P))
-       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv)
+       \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
                                  i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
 \<Longrightarrow> ((snd y, take len (fst x), drop (len+1) (fst x)) \<Ztypecolon> \<half_blkcirc>[C\<^sub>R] R \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j:len\<rwpar> T) \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j':len'\<rwpar> T)) = (r \<Ztypecolon> \<half_blkcirc>[C\<^sub>R'] R') @action \<A>merge

@@ -210,7 +210,7 @@ lemma [\<phi>reason default %\<phi>sem_type_fail]:
 
 lemma [\<phi>reason default %\<phi>sem_type_assertion except \<open>\<phi>SemType _ ?var\<close>]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<Longrightarrow> \<phi>SemType A TY')
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY) \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>expecting\<close> A \<open>of semantic type\<close> TY \<open>but actually of\<close> TY')
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>expecting\<close> A \<open>of semantic type\<close> TY \<open>but actually of\<close> TY')
 \<Longrightarrow> \<phi>SemType A TY \<close>
   unfolding Premise_def Orelse_shortcut_def ERROR_def
   by blast

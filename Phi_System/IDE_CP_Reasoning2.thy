@@ -473,7 +473,7 @@ lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<g>\<e>\<t> _ \<f>\<r>\
   \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
 \<Longrightarrow> if C\<^sub>W then (Identity_Elements W D \<or>\<^sub>c\<^sub>u\<^sub>t
                 ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>due to the absence of\<close> (w \<Ztypecolon> W)))
-            \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> D w)
+            \<and>\<^sub>\<r> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D w
           else True
 \<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<close>
   for Src :: \<open>'c::sep_magma_1 BI\<close>
