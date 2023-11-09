@@ -15,7 +15,7 @@ sufficient properties are registered to the database.
 
 signature PLPR_RULE_GEN = sig
 
-exception Generation_Fail of (unit -> Pretty.T list)
+exception Generation_Fail of Phi_Reasoner.info_level * (unit -> Pretty.T list)
 
 structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
 structure Template_Inst_SS_Post_Merging : HOOKS
@@ -143,7 +143,7 @@ fun invoke_action (template_pos, pass) action rules' ctxt =
       | No_Action => ctxt
   )
 
-exception Generation_Fail of (unit -> Pretty.T list)
+exception Generation_Fail of Phi_Reasoner.info_level * (unit -> Pretty.T list)
 
 fun normalize th = th
   |> Phi_Help.beta_eta_contract
@@ -236,7 +236,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                           Const(\<^const_name>\<open>Action_Tag\<close>, _)
                                               $ _
-                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) =>
+                                              $ (Const(\<^const_name>\<open>\<A>_template_reason\<close>, _))) =>
                                             (true, prop'', @{thm' Action_Tag_I} RSN (i+1, thm))
                                      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) =>
                                         (case prop'' of SOME prop' =>
@@ -257,7 +257,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                             val (delt,thm'2) = (case prop'
                                                   of SOME prop => ((Thm.nprems_of prop, prop RSN' (ctxt', i+1, thm'1))
                                                        handle THM _ => let open Pretty in
-                                                          raise Generation_Fail (fn () =>
+                                                          raise Generation_Fail (3, fn () =>
                                                             [block (text "Unification fails in instantiating the" @
                                                                    [brk 1, str (string_of_int (i+1)), str "th", brk 1] @
                                                                    text "antecedent of the template" @ [brk 1] @ here pos),
@@ -271,7 +271,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                             |> Phi_Reasoner.reason NONE (SOME delt)
                                                                    (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
                                             |> (fn SOME th => th
-                                                 | NONE => raise Generation_Fail (fn () =>
+                                                 | NONE => raise Generation_Fail (1, fn () =>
                                                     let open Pretty
                                                      in [para "Fail to reason a compulsory antecedent",
                                                          Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))]
@@ -338,8 +338,8 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                           some test is required.*)
       )
     ) end
-      handle Generation_Fail prt => (
-        Phi_Reasoner.warn_pretty ctxt 2 (Pretty.chunks o prt) ;
+      handle Generation_Fail (lev, prt) => (
+        Phi_Reasoner.warn_pretty ctxt lev (Pretty.chunks o prt) ;
         ctxt))
 
 

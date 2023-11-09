@@ -60,10 +60,11 @@ signature NU_REASONER = sig
   val step_limit : int Config.T (*limit of the number of reasoning steps*)
   val ignore_dup_reasoner : bool Config.T
 
-  val info_print : Proof.context -> int (*level*) -> (unit -> string) -> unit
-  val info_pretty: Proof.context -> int (*level*) -> (unit -> Pretty.T) -> unit
-  val info_pretty_generic : Context.generic -> int (*level*) -> (unit -> Pretty.T) -> unit
-  val warn_pretty: Context.generic -> int (*level*) -> (unit -> Pretty.T) -> unit
+  type info_level = int
+  val info_print : Proof.context -> info_level -> (unit -> string) -> unit
+  val info_pretty: Proof.context -> info_level -> (unit -> Pretty.T) -> unit
+  val info_pretty_generic : Context.generic -> info_level -> (unit -> Pretty.T) -> unit
+  val warn_pretty: Context.generic -> info_level -> (unit -> Pretty.T) -> unit
   val error : string -> 'a
   val bad_config : string -> 'a
 
@@ -307,6 +308,8 @@ val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_
 
 
 (* Debug Info *)
+type info_level = int
+
 fun info_pretty ctxt level G =
   if level <= Config.get ctxt trace
   then tracing (Pretty.string_of (G ()))

@@ -7,7 +7,7 @@ end
 
 structure Phi_Type : PHI_TYPE = struct
 
-exception Automation_Fail = PLPR_Rule_Gen.Generation_Fail
+exception Automation_Fail of unit -> Pretty.T list
 
 (*converts a given definition in various forms into \<open>(x \<Ztypecolon> T) = \<dots>\<close>*)
 fun conv_def_to_equation ctxt def =

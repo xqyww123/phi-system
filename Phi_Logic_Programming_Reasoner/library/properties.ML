@@ -301,11 +301,11 @@ fun check_dependencies params action (pos,property) ctxt =
                          |> filter (exists (fn SOME (_, th) => pointer_eq (th, property) | _ => false) o snd)
             in fold (fn rules => fn ctxt =>
                           action (pos,rules) ctxt
-                          handle Automation_Fail msg =>
+                          handle Automation_Fail (lev, msg) =>
                             let open Pretty
                                 val msg' = msg ()
                              in if null msg' then ()
-                                else warning (string_of (chunks (str "Automation Fail:" :: msg'))) ;
+                                else Phi_Reasoner.warn_pretty ctxt lev (fn () => (chunks (str "Automation Fail:" :: msg'))) ;
                               ctxt
                             end
                     ) ruless ctxt
@@ -323,8 +323,8 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
       PLPR_Rule_Gen.invoke_generation ((template_pos, template), pass, action, bind)
                                       (pos, env, positioned_props) ctxt
   | invoke_template_action _ (Free_Action action) arg ctxt = action arg ctxt
-      handle Automation_Fail prt => (
-        Phi_Reasoner.warn_pretty ctxt 2 (Pretty.chunks o prt) ;
+      handle Automation_Fail (lev, prt) => (
+        Phi_Reasoner.warn_pretty ctxt lev (Pretty.chunks o prt) ;
         ctxt)
 
 fun invoke_template ((deps, pos, action) : template) =
