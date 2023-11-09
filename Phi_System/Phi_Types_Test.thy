@@ -4,20 +4,18 @@ begin
 
 subsection \<open>Testing \<phi>-Types\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
-thm "_tagging_has_bubbling_"
-
+declare [[\<phi>trace_reasoning = 0]]
+  
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
       deriving Sep_Functor_1
-       (*and Functionality
-       and \<open> homo_one \<delta>
-          \<Longrightarrow> closed_homo_sep \<delta>
-          \<Longrightarrow> Tyops_Commute List List \<DD>[\<delta>] \<DD>[\<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-       *)and \<open>homo_one \<delta>
-          \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] List List Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+           and Functionality
+           and \<open> homo_one \<delta>
+              \<Longrightarrow> closed_homo_sep \<delta>
+              \<Longrightarrow> Tyops_Commute List List \<DD>[\<delta>] \<DD>[\<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+           and \<open>homo_one \<delta>
+              \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] List List Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (List ?T) (list_all ?P) \<close>),

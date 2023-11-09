@@ -314,6 +314,27 @@ lemma [\<phi>reason 1000]:
   unfolding Transformation_Functor_def Transformation_def Action_Tag_def
   by simp
 
+paragraph \<open>Commutativity\<close>
+
+lemma [\<phi>reason_template name G.\<phi>\<s>\<u>\<b>\<j>\<^sub>E]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor G G' T (T \<phi>\<s>\<u>\<b>\<j> P) D R pm fm
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a \<in> D x. a \<in> R x) @action \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (fm (\<lambda>x. x) (\<lambda>_. True)) (\<lambda>_. True) @action \<A>_template_reason undefined
+\<Longrightarrow> Tyops_Commute (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) G G' T D' r' \<close>
+  unfolding Action_Tag_def Simplify_def \<r>Guard_def
+            Functional_Transformation_Functor_def Transformation_def Tyops_Commute_def
+  by clarsimp
+
+lemma [\<phi>reason_template name F.\<phi>\<s>\<u>\<b>\<j>\<^sub>I]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F F' (T \<phi>\<s>\<u>\<b>\<j> P) T D R pm fm
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. (\<forall>a \<in> D x. a \<in> R x) \<and> (pm (\<lambda>x. x) (\<lambda>_. P) x \<longrightarrow> P)) @action \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (fm (\<lambda>x. x) (\<lambda>_. P)) (\<lambda>_. True) @action \<A>_template_reason undefined
+\<Longrightarrow> Tyops_Commute F F' (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) T D' r' \<close>
+  unfolding Action_Tag_def Simplify_def \<r>Guard_def
+            Functional_Transformation_Functor_def Transformation_def Tyops_Commute_def
+  by clarsimp
+
+
 subsubsection \<open>Guessing Antecedents\<close>
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:
@@ -1679,11 +1700,6 @@ declare \<phi>Fun'.\<phi>Sum\<^sub>I[\<phi>reason add]
         \<phi>Fun'.\<phi>Sum\<^sub>E[\<phi>reason add]
         \<phi>Fun'.\<phi>Inter\<^sub>I[\<phi>reason add]
 
-(*TODO: move me*)
-
-let_\<phi>type SubjectionTY
-  deriving \<open>Tyops_Commute ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
-       and \<open>Tyops_Commute (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
 subsubsection \<open>Reasoning Rules\<close>
 
@@ -1928,12 +1944,6 @@ lemma [\<phi>reason %abstract_domain]:
             Abstract_Domain\<^sub>L_def
   by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; metis)
 
-subsubsection \<open>Commutativity over Existing \<phi>-Types\<close>
-
-let_\<phi>type SubjectionTY
-  deriving \<open>Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
-       and \<open>Tyops_Commute (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
-
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
@@ -2005,13 +2015,6 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>ScalarMul.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c2,?'c2) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'c2,?'c2) \<phi>))
                                                           \<Longrightarrow> ?x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = ?f ?s x \<and> ?r ?x x) @action to (Itself::(?'c,?'c) \<phi>)  \<close>)
 ]\<close>
-
-
-(*TODO: move me*)
-
-let_\<phi>type SubjectionTY
-  deriving \<open>Tyops_Commute (\<phi>ScalarMul f s) (\<phi>ScalarMul f s) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
-       and \<open>Tyops_Commute (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<phi>ScalarMul f s) (\<phi>ScalarMul f s) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -2305,13 +2308,6 @@ lemma [\<phi>reason add]:
   by (rule \<phi>MapAt.ToA_mapper[where f=id and f'=id and g=\<open>id\<close> and g'=\<open>id\<close>, simplified]; simp)
 *)
 
-paragraph \<open>Commutativity over Existing \<phi>-Types\<close>
-
-let_\<phi>type SubjectionTY
-  deriving \<open>Tyops_Commute ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
-       and \<open>Tyops_Commute (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
-
-
 
 subsubsection \<open>By List of Keys\<close>
  
@@ -2384,7 +2380,7 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 3 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
  
