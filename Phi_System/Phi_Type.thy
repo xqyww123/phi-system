@@ -4968,7 +4968,7 @@ lemma SE_Semimodule_SDistr_ad_cb_i_ToA_mapper:
             simp add: image_iff comp_assoc[symmetric] separatable_module_zip_def del: split_paired_All)
     qed .
 
-
+(* TODO XXX
 lemma SE_Semimodule_SDistr_da_bc_i_ToA_mapper:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> id d + id a + id c = id b @action \<A>arith_eq)z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx\<^sub>z z
@@ -4998,7 +4998,7 @@ lemma SE_Semimodule_SDistr_da_bc_i_ToA_mapper:
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
   term \<open>prod.rotL o apsnd prod.swap\<close>
-
+*)
 
 end
 

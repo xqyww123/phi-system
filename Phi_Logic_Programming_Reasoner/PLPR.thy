@@ -1431,7 +1431,7 @@ lemma provide_premise_condition_p:
   unfolding Premise_def
   by blast
 
-ML_file \<open>library/PLPR_Syntax.ML\<close>
+ML_file_debug \<open>library/PLPR_Syntax.ML\<close>
 
 
 paragraph \<open>Contract Premises for Reporting Obligation\<close>

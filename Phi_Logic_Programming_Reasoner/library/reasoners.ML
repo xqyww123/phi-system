@@ -686,7 +686,7 @@ fun safer_obligation_solver1 can_inst ctxt sequent =
     error (Pretty.string_of (Pretty.chunks [
         Pretty.str "Fail to solve the proof obligation automatically:",
         Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
-  ]))) (ctxt addsimps @{thms Premise_def}) sequent
+  ]))) ctxt sequent
 (*case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
         (*Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [

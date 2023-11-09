@@ -9,7 +9,6 @@ theory PhiSem_Play_Ground
     PhiSem_Aggregate_Named_Tuple
     PhiSem_Mem_Pointer
 begin
- 
 
 declare [[\<phi>trace_reasoning = 0]]
 
@@ -191,6 +190,9 @@ proc
 declare [[\<phi>trace_reasoning = 2]]
 declare [[\<phi>hide_techinicals=false]]
 
+
+
+
 proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   premises \<open>x < 10\<close>
@@ -202,12 +204,12 @@ proc
   \<medium_left_bracket> ;; $v \<rightarrow> $v ;; \<open>$v = 10\<close> note [[\<phi>trace_reasoning = 2]] ;;
         if ( \<open>$v = 10\<close> )
         \<medium_left_bracket> 
-          ;; break 
+          ;; break  
           \<medium_right_bracket> 
             \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v ;; continue \<medium_right_bracket>
-    assert \<open>\<bottom>\<^sub>B\<^sub>I\<close>
+    assert \<open>\<bottom>\<^sub>B\<^sub>I\<close> 
   \<medium_right_bracket> (*loop body*)
-  $v
+    ;; $v
 \<medium_right_bracket>.
 
 proc

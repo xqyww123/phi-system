@@ -13,6 +13,11 @@ val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
 val max_of : ('a * 'a -> order) -> 'a list -> 'a option
 val min_of : ('a * 'a -> order) -> 'a list -> 'a option
+val max_of' : ('a * 'a -> order) -> 'a option list -> 'a option
+val min_of' : ('a * 'a -> order) -> 'a option list -> 'a option
+
+val binop_opt : ('a * 'a -> 'a) -> 'a option * 'a option -> 'a option
+val foldl_opt : ('a * 'a -> 'a) -> 'a option list -> 'a option
 
 
 val leading_antecedent' : thm -> term
@@ -148,6 +153,21 @@ fun max_of _ [] = NONE
 
 fun min_of _ [] = NONE
   | min_of ord L = SOME (foldl1 (fn ab => if ord ab = GREATER then snd ab else fst ab) L)
+
+fun binop_opt f (SOME a, SOME b) = SOME (f (a,b))
+  | binop_opt f (SOME a, NONE) = SOME a
+  | binop_opt f (NONE, SOME b) = SOME b
+  | binop_opt f (NONE, NONE) = NONE
+
+fun foldl_opt f =
+  let fun fold ret [] = ret
+        | fold ret (x::L) = fold (binop_opt f (ret,x)) L
+   in fold NONE
+  end
+
+fun max_of' ord = foldl_opt (fn ab => if ord ab = LESS then snd ab else fst ab)
+fun min_of' ord = foldl_opt (fn ab => if ord ab = GREATER then snd ab else fst ab)
+
 
 
 fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
@@ -568,5 +588,7 @@ fun tha RS' (ctxt, thb) = tha RSN' (ctxt, 1,thb);
 
 fun apply3 f (a,b,c) = (f a, f b, f c)
 fun eq_pair3 f g h ((a,b,c),(a',b',c')) = f (a,a') andalso g (b,b') andalso h (c,c')
+fun eq_pair4 f g h i ((a,b,c,d),(a',b',c',d')) =
+      f (a,a') andalso g (b,b') andalso h (c,c') andalso i (d,d')
 
 fun select P x = if P x then SOME x else NONE

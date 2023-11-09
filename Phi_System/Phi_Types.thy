@@ -2472,7 +2472,7 @@ thm \<phi>Share.\<phi>MapAt_L.rewr
 thm \<phi>MapAt.\<phi>Share.norm_tgt
 thm \<phi>Share.\<phi>MapAt.norm_tgt
 
-declare [[\<phi>ToA_swap_normalization \<open>(\<odiv>) ?n\<close> over \<dots> (100)]]
+declare [[\<phi>ToA_swap_normalization \<open>(\<odiv>) ?n\<close> into \<dots> (100)]]
 
 
 thm \<phi>Share.\<phi>Prod

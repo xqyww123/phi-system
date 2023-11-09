@@ -102,7 +102,7 @@ fun assign_weight term w
   = Weights.map (Net.insert_term record_eq (pad_phi term, (pad_phi term, w)))
 
 fun require_weight_normalization ctxt =
-  let val parse = parse_F_Gs_of_comm_typor_appl ctxt
+  let val parse = parse_comm_F_Gs_from_appl ctxt
       val w_of = weight_of ctxt
    in fn (bvtys, F_G_T) =>
       exists (fn (F,Gs) => forall (fn G => weight_gt (F,G) (w_of (bvtys,F), w_of (bvtys,G))) Gs)

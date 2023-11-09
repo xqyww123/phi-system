@@ -1,10 +1,12 @@
 signature PHI_TYPE = sig
 include PHI_TYPE
 
+(** distinguish commutative \<phi>-type operators from its lambda application **)
+
 type arity = int list (*Gs, its length is the arity of F, its elements are the arities of each G*) *
              int list (*Fs, its length is the arity of G', its elements are the arities of each F'*)
 
-val parse_F_Gs_of_comm_typor_appl : Context.generic ->
+val parse_comm_F_Gs_from_appl : Context.generic ->
         Pattern_Translation.bvs * term (*lambda combination of F(G(T))*) ->
         ((term (*F*) * term list (*Gs*)) * (term (*G'*) * term list (*Fs'*))) list
 
@@ -21,14 +23,17 @@ val register_comm_tyoprs_rule_pass : arity * term -> Context.generic -> Context.
       (*see the examples below*)
 
 
+(** Control of Swap Normalization **)
 
-type to_normalize = term (*F*) * term list (*Gs*) -> bool option
+type whether_swap_norm = term (*F*) * term list (*Gs*) -> bool option
       (*whether to invoke the normalization swapping \<open>F\<close> into \<open>Gs\<close>,
         return None to leave the control to the settings of lower priority*)
 
-val enable_swap_normalization_in_CoP_simp : bool Config.T
-val control_swap_normalizations_on : ((term (*F*) * term list (*Gs*)) * Reasoner_Group.group * to_normalize) list
+datatype swap_direction = S_In | S_Out
+val control_swap_normalizations_on : (swap_direction * (term (*F*) * term list (*Gs*)) * whether_swap_norm * Reasoner_Group.group) list
                                  -> Context.generic -> Context.generic
+    (*if S_In, swap \<open>F\<close> into all of the operands \<open>Gs\<close>, \<open>F(Gs(T)) \<rightarrow> G(Fs(T))\<close>
+      if S_Out, \<open>Gs\<close> can only have 1 element, and it swaps \<open>F\<close> out of the \<open>G\<close>, \<open>G(F(T)) \<rightarrow> F(G(T))\<close>*)
 
 val whether_to_swap_normalize : Context.generic -> PLPR_Pattern.bvs -> term -> bool
 
@@ -41,7 +46,7 @@ val is_commutative : Context.generic -> term (*F*) -> int list (*available ariti
 val comm_patterns : ((term (*pattern*) * term (*F*) * term list (*Gs*)) * int (*arity of F*)) list Unsynchronized.ref
 *)
 
-val to_normalize__sender : to_normalize option Unsynchronized.ref
+val whether_swap_norm__sender : whether_swap_norm option Unsynchronized.ref
 val phi_simp_trigger_id : serial
 
 end
@@ -67,7 +72,7 @@ structure Comm_Tyoprs = Generic_Data (
 (*fun sum L = fold (fn x => fn y => x + y) L 0*)
 fun sum_1 L = fold (fn x => fn y => x + y + 1) L 0
 
-fun parse_F_Gs_of_comm_typor_appl ctxt =
+fun parse_comm_F_Gs_from_appl ctxt =
   let val rewrites = Comm_Tyoprs.get ctxt
       val thy = Context.theory_of ctxt
       fun split [] [] = []
@@ -124,33 +129,44 @@ val _ = Theory.setup (Context.theory_map (
 
 
 
-type to_normalize = term (*F*) * term list (*Gs*) -> bool option
+type whether_swap_norm = term (*F*) * term list (*Gs*) -> bool option
       (*whether to invoke the normalization swapping \<open>F\<close> into \<open>Gs\<close>*)
-
 type F_Gs_encoding = term
-fun encoding (F,Gs) =
+type G_F_encoding = term
+type encoding = term (*either F_Gs_encoding or G_F_encoding*)
+
+datatype swap_direction = S_In | S_Out
+
+fun encoding_F_Gs (F,Gs) =
   let fun is_dddot (Var (N, _)) = N = Auto_Bind.dddot
         | is_dddot _ = false
-      fun pass_dddot [] = []
-        | pass_dddot (L as [X]) =
-            if is_dddot X then [Var (Auto_Bind.dddot, \<^typ>\<open>prop\<close>)] else  L
+      fun pass_dddot [] = [] (*disabled: (*with the tailing unit, dddot can match zero or any terms*)*)
+        | pass_dddot [X] =
+            if is_dddot X then [Var (Auto_Bind.dddot, \<^typ>\<open>prop\<close>)] else [X]
         | pass_dddot (X::L) =
             if is_dddot X then error "\<open>\<dots>\<close> should only be seen at the last"
                           else Logic.mk_term X :: pass_dddot L
    in Logic.mk_conjunction_list (Logic.mk_term F :: pass_dddot Gs)
   end
 
-val NS_eq = eq_pair3 pointer_eq (op =) (op aconv)
+fun encoding_G_F (G,F) = HOLogic.mk_prod (G,F)
+
+fun encoding S_In  F_Gs = encoding_F_Gs F_Gs
+  | encoding S_Out (F,[G]) = encoding_G_F (G,F)
+  | encoding S_Out (_,Gs) = raise TERM ("Gs must be of single element in S_Out mode", Gs)
+
+val NS_eq = eq_pair4 (op =) (op aconv) pointer_eq (op =)
+
 structure Norm_Swaps = Generic_Data (
-  type T = (to_normalize * Reasoner_Group.group * F_Gs_encoding) Net.net
+  type T = (swap_direction * encoding * whether_swap_norm * Reasoner_Group.group) Net.net
   val empty = Net.empty
   val merge = Net.merge NS_eq
 )
 
 fun control_swap_normalizations_on settings =
-  Norm_Swaps.map (fold (fn (F_Gs,prio,to_normalize) =>
-      let val enc = encoding F_Gs
-       in Net.insert_term NS_eq (enc, (to_normalize,prio,enc))
+  Norm_Swaps.map (fold (fn (direction,terms,chk,prio) =>
+      let val enc = encoding direction terms
+       in Net.insert_term NS_eq (enc, (direction,enc,chk,prio))
       end
     ) settings)
 
@@ -158,14 +174,20 @@ fun whether_to_swap_normalize_internal ctxt =
   let val norm_swaps = Norm_Swaps.get ctxt
       val thy = Context.theory_of ctxt
    in fn bvs => fn (F_Gs, G_Fs') =>
-  let fun check F_Gs =
-        let val enc = encoding F_Gs
-         in Net.match_term norm_swaps enc
-         |> filter (fn (_,_,enc') => PLPR_Pattern.matches thy (K true) bvs (enc', enc))
-         |> sort (int_ord o apply2 (#1 o #2))
-         |> get_first (fn (chk,(prio,_),_) => Option.map (pair prio) (chk F_Gs))
-        end
-   in case (check F_Gs, check G_Fs')
+  let fun chk_enc enc = Net.match_term norm_swaps enc
+           |> filter (fn (_,enc',_,_) => PLPR_Pattern.matches thy (K true) bvs (enc', enc))
+           |> sort (int_ord o apply2 (#1 o #4))
+           |> get_first (fn (_,_,chk,(prio,_)) => Option.map (pair prio) (chk F_Gs))
+      val check_In = chk_enc o encoding_F_Gs
+      val check_Out1 = chk_enc o encoding_G_F
+      fun chk_oprs F_Gs =
+            Phi_Help.max_of' (int_ord o apply2 fst)
+                             (check_In F_Gs :: map (check_Out1 o pair (fst F_Gs)) (snd F_Gs))
+
+      val chk_F_Gs = chk_oprs F_Gs
+      val chk_G_Fs'= chk_oprs G_Fs'
+
+   in case (chk_F_Gs, chk_G_Fs')
    of (SOME (prio_a, result_a), SOME (prio_b, result_b)) =>
         if prio_a >= prio_b then result_a else not result_b
     | (SOME (_, result), NONE) => result
@@ -176,13 +198,10 @@ fun whether_to_swap_normalize_internal ctxt =
 
 fun whether_to_swap_normalize ctxt =
   let val internal_check = whether_to_swap_normalize_internal ctxt
-      val parse_comm = parse_F_Gs_of_comm_typor_appl ctxt
+      val parse_comm = parse_comm_F_Gs_from_appl ctxt
    in fn bvs => fn F_G_T_term =>
       exists (internal_check bvs) (parse_comm (bvs, F_G_T_term))
   end
-
-val enable_swap_normalization_in_CoP_simp =
-      Config.declare_bool ("enable_swap_normalization_in_CoP_simp", \<^here>) (K false)
 
 fun swap_normalization_guard (ctxt, sequent) =
   let val (bvs, goal) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
@@ -213,8 +232,11 @@ fun swap_normalization_guard (ctxt, sequent) =
   end
 
 
-datatype to_normalize_synt = Literal of to_normalize
-                           | ML_Code of Input.source
+datatype whether_swap_norm_synt =
+            Literal of whether_swap_norm | ML_Code of Input.source
+
+val direction_synt = Args.$$$ "into" >> K S_In
+                  || Args.$$$ "from" >> K S_Out
 
 val to_normalize_synt =
       Scan.optional (\<^keyword>\<open>is\<close> |-- (  Args.$$$ "false" >> K (Literal (K (SOME false)))
@@ -223,20 +245,20 @@ val to_normalize_synt =
                     (Literal (K (SOME true)))
          
 
-val to_normalize__sender = Unsynchronized.ref (NONE : to_normalize option)
-val to_normalize__parse_locker = Synchronized.var "to_normalize__parse_locker" ()
+val whether_swap_norm__sender = Unsynchronized.ref (NONE : whether_swap_norm option)
+val whether_swap_norm__parse_locker = Synchronized.var "to_normalize__parse_locker" ()
 
-fun check_to_normalize_synt ctxt (ML_Code src) = 
-      Synchronized.change_result to_normalize__parse_locker (fn () =>
+fun check_whether_swap_norm_synt ctxt (ML_Code src) = 
+      Synchronized.change_result whether_swap_norm__parse_locker (fn () =>
         let val _ = ML_Context.expression (Input.pos_of src)
                       (ML_Lex.read "Phi_Type.to_normalize__sender := SOME ((" @
                        ML_Lex.read_source src @
                        ML_Lex.read ") : Phi_Type.to_normalize)") ctxt
-            val ret = the (!to_normalize__sender)
-            val _ = to_normalize__sender := NONE
+            val ret = the (!whether_swap_norm__sender)
+            val _ = whether_swap_norm__sender := NONE
          in (ret, ())
         end)
-  | check_to_normalize_synt _ (Literal tn) = tn
+  | check_whether_swap_norm_synt _ (Literal tn) = tn
 
 
 val phi_simp_trigger_id' = Unsynchronized.ref 0
@@ -246,16 +268,16 @@ val _ = Theory.setup (
 
   Attrib.setup \<^binding>\<open>\<phi>ToA_swap_normalization\<close> (
     Parse.and_list1' (
-      Args.term_pattern --| Scan.lift (Args.$$$ "over") -- Parse.and_list1' Args.term_pattern --
+      Args.term_pattern -- Scan.lift direction_synt -- Parse.and_list1' Args.term_pattern --
         Scan.lift (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) --
         Scan.lift to_normalize_synt
         ) >> (
     fn raw_controls =>
       Thm.declaration_attribute (fn _ => fn ctxt =>
-        let val controls = map (fn ((F_Gs, group), to_normalize_synt) =>
-                                (F_Gs,
-                                 Reasoner_Group.check_group true ctxt group,
-                                 check_to_normalize_synt ctxt to_normalize_synt)
+        let val controls = map (fn ((((F, direction), Gs), group), to_normalize_synt) =>
+                                (direction, (F, Gs),
+                                 check_whether_swap_norm_synt ctxt to_normalize_synt,
+                                 Reasoner_Group.check_group true ctxt group)
                            ) raw_controls
          in control_swap_normalizations_on controls ctxt
         end)
