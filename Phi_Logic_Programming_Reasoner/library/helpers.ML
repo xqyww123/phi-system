@@ -53,6 +53,8 @@ val simplify_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
 val conj_sequence_conv : conv -> conv
       (*applies the conv to every element in a HOL.conj sequent (or a tree)*)
 
+val bottom_conv_by_comb_layers : (Proof.context -> conv) -> Proof.context -> conv
+
 end
 
 structure Phi_Conv : PHI_CONV = struct
@@ -323,6 +325,20 @@ fun conj_sequence_conv C ctm =
     of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
        Conv.combination_conv (Conv.arg_conv (conj_sequence_conv C)) (conj_sequence_conv C) ctm
      | _ => C ctm
+
+(* bottom-up converts every currying function \<open>f\<close> with its all arguments \<open>a\<^sub>1, a\<^sub>2, \<dots>\<close>, where
+   \<open>f\<close> is not an application. That is, for any occurrence of \<open>f $ a\<^sub>1 $ a\<^sub>n $ ...\<close> in a term, in a
+   bottom-up order, we send the entire \<open>f $ a\<^sub>1 $ a\<^sub>n $ ...\<close> to \<open>C\<close> instead of \<open>f\<close>, \<open>f $ a\<^sub>1\<close>, \<open>f $ a\<^sub>1 $ a\<^sub>2\<close>
+   by several times as that in \<open>Conv.bottom_conv\<close>*)
+fun bottom_conv_by_comb_layers C ctxt ctm =
+  case Thm.term_of ctm
+    of Abs _ => Conv.abs_conv (C o snd) ctxt ctm
+     | X as (_ $ _) =>
+        let val (_,args) = Term.strip_comb X
+         in (funpow (length args) (fn C' => Conv.combination_conv C' (C ctxt)) Conv.all_conv then_conv
+             C ctxt) ctm
+        end
+     | _ => C ctxt ctm
 
 
 end

@@ -44,7 +44,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
               (if not is_intro andalso not is_IH
                then Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
                        Phi_Syntax.transformation_conv Conv.all_conv
-                                                      (Simplifier.rewrite (Tag_Has_Bubbling.equip ctxt))
+                                                      (@{print} o Phi_Reasoners.tag_having_bubbling ctxt)
                                                       Conv.all_conv))
                else Conv.all_conv)) ctxt) ctm
       val ind_conv = default_ind_conv (gen_ind_conv true, gen_ind_conv false)

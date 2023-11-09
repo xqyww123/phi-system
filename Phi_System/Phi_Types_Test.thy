@@ -6,6 +6,8 @@ subsection \<open>Testing \<phi>-Types\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
 
+thm "_tagging_has_bubbling_"
+
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>

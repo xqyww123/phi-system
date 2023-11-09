@@ -7,6 +7,7 @@ include PHI_SYNTAX
   val forall_item_of_assertion : (term -> bool) -> term -> bool
   val forall_item_of_assertion_blv : (int (*level of lambda abstractions*) -> term -> bool)
                                   -> term -> bool
+  val conv_items_of_assertion : (Proof.context -> conv) -> Proof.context -> conv
 
   val strip_separations : term -> term list
   val mk_separations : typ -> term list -> term
@@ -34,6 +35,7 @@ fun is_BI_connective (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>f
   | is_BI_connective (Const(\<^const_name>\<open>\<phi>Type\<close>, _)) = true
   | is_BI_connective (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>)) = true
   | is_BI_connective (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) = true
   | is_BI_connective (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = true
   | is_BI_connective (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = true
   | is_BI_connective (Const(\<^const_name>\<open>Additive_Conj\<close>, _)) = true
@@ -54,6 +56,7 @@ fun fold_items_of_assertion f =
         | fold (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) x = fold X x
         | fold (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) x = fold A (fold B x)
         | fold (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) x = fold Y (fold X x)
@@ -72,6 +75,7 @@ fun exists_item_of_assertion P =
         | exists (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = false
         | exists (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = false
         | exists (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = false
+        | exists (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) = false
         | exists (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) = exists X
         | exists (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) = exists B orelse exists A
         | exists (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = exists X orelse exists Y
@@ -90,6 +94,7 @@ fun forall_item_of_assertion P =
         | forall (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = true
         | forall (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = true
         | forall (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) = true
         | forall (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) = forall X
         | forall (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) = forall B andalso forall A
         | forall (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = forall X andalso forall Y
@@ -109,6 +114,7 @@ fun forall_item_of_assertion_blv P =
         | forall _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = true
         | forall _ (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = true
         | forall _ (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall _ (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) = true
         | forall lv (Const(\<^const_name>\<open>AllSet\<close>, _) $ Abs (_, _, X)) = forall (lv + 1) X
         | forall lv (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) = forall (lv + 1) (Term.incr_boundvars 1 X $ Bound 0)
         | forall lv (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) = forall lv B andalso forall lv A
@@ -117,6 +123,30 @@ fun forall_item_of_assertion_blv P =
         | forall lv X = P lv X
    in forall 0
   end
+
+fun conv_items_of_assertion C ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>set _\<close>) $ _ $ _ =>
+          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
+     | Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
+          Conv.arg1_conv (C ctxt) ctm
+     | Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+          Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt) ctm
+     | Const(\<^const_name>\<open>AllSet\<close>, _) $ _ =>
+          Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt) ctm
+     | Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ _ =>
+          Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt) ctm
+     | Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>set _\<close>) $ _ $ _ =>
+          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
+     | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
+          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
+     | Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ =>
+          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
+     | Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+     | Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+     | Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+     | Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+     | _ => C ctxt ctm
 
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T

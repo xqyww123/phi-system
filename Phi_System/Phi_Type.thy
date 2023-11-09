@@ -7036,11 +7036,19 @@ text \<open>where we do a 'reversed' ToA reasoning where we look for a source \<
   the annotated bubbling target in the given target \<phi>-type to the outermost.
   This process is usedin the elimination side of generic Tyopr-Commutativity deriver
     (fixing F, moving G out of F, \<open>F (G T) \<longrightarrow> G' (F' T)\<close>)
+
+  For any target \<phi>-type \<open>F\<^sub>1 (F\<^sub>2 (F\<^sub>3 (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T)))\<close> having a bubbling target \<open>T\<close> in certain nest depth,
+  we first rewrite the \<phi>-type by a conversion, to \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F\<^sub>1 (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F\<^sub>2 (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F\<^sub>3 (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T)))\<close>,
+  i.e., tagging by \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>\<close> each type operator in the path towards the inner \<open>T\<close>.
+  The \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>\<close> gives a pattern on which commuting rules can be triggered, so finally guiding the
+  reasoning system to swap the bubbling target to the outermost.
 \<close>
 
 consts bubbling_target :: action
 
 definition Has_Bubbling :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>\<close> ("\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _" [61] 60) where [iff]: \<open>Has_Bubbling X \<equiv> X\<close>
+
+ML_file \<open>library/phi_type_algebra/taging_bubbling.ML\<close>
 
 subparagraph \<open>Bubbling_Target in Transformation\<close>
 
@@ -7058,13 +7066,13 @@ declare [[ \<phi>reason_default_pattern
   and derived_bubbling_target = (40, [40,42]) for \<open>X @action bubbling_target\<close> in bubbling_target
     \<open>Derived rules.\<close>
 
-lemma [\<phi>reason_template default %derived_bubbling_target]:
+lemma [\<phi>reason_template default %derived_bubbling_target name Fb.xxa]:
   \<open> Functional_Transformation_Functor Fa Fb T U D R pm fm
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a @action bubbling_target)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. f a \<in> R x)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fa (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) \<w>\<i>\<t>\<h> Q @action bubbling_target
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm f P x \<Ztypecolon> Fb (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> U) \<w>\<i>\<t>\<h> pm f P x \<and> Q @action bubbling_target
-    <with-pattern> (XX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> Fb (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> UU) \<w>\<i>\<t>\<h> QQ)\<close>
+    <with-pattern> (XX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> Fb (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> UU) \<w>\<i>\<t>\<h> QQ @action bubbling_target)\<close>
   unfolding Functional_Transformation_Functor_def meta_Ball_def Premise_def Has_Bubbling_def
             Transformation_def Action_Tag_def Bubbling_def With_Pattern_def
   by clarsimp metis
@@ -7142,42 +7150,6 @@ lemma [\<phi>reason %identity_element_cut]:
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>E T D
 \<Longrightarrow> Identity_Elements\<^sub>E (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D \<close>
-  unfolding Has_Bubbling_def .
-
-
-subparagraph \<open>Simpset adding \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>\<close>\<close>
-
-ML \<open> structure Tag_Has_Bubbling = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS_configure (fn ctxt =>
-                      Simplifier.add_cong @{lemma' \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T\<close>
-                                                by (unfold Has_Bubbling_def)} ctxt)
-  val post_merging = I
-  val binding = SOME \<^binding>\<open>_tagging_has_bubbling_\<close>
-  val attribute = NONE
-  val comment = "Rules adding \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>\<close> tag, should of form \<open>F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> (F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T))\<close>"
-)
-\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
-
-lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
-  \<open> TERM (Tyops_Commute F F' G G' T D r)
-\<Longrightarrow> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)\<close>
-  unfolding Has_Bubbling_def .
-
-lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
-  \<open> TERM (Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r)
-\<Longrightarrow> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) FU \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) FU\<close>
-  unfolding Has_Bubbling_def .
-
-lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
-  \<open> TERM (Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r)
-\<Longrightarrow> G' FT (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' FT (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)\<close>
-  unfolding Has_Bubbling_def .
-
-lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
-  \<open> TERM (Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r)
-\<Longrightarrow> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U)\<close>
   unfolding Has_Bubbling_def .
 
 

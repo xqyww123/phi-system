@@ -329,7 +329,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                fn ctxt => fn _ =>
                     Conv.rewr_conv @{thm' \<phi>TA_OE_rewr_IH} then_conv
                     Phi_Conv.meta_all_conv (fn _ => Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctxt,
-               fn ctxt => fn _ => @{print} o (
+               fn ctxt => fn _ =>
                     (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
                     (Conv.implies_concl_conv (
                        Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
@@ -341,7 +341,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                         Phi_Conv.hol_alls_to_meta_alls (fn _ =>
                                         conv_hol_imps_to_metas_if_has (HOLogic.Trueprop_conv (
                                             Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))
-                                        )) ctxt))
+                                        )) ctxt)
                   (*Conv.implies_conv
                       (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                       (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
