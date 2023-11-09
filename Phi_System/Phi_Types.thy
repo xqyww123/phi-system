@@ -211,7 +211,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Abstraction_to_Raw
 
 thm SubjectionTY.ToA_mapper
-thm SubjectionTY.ToA_mapper[where f=f and f'=f and g=g and g'=g for g f, simplified]
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' SubjectionTY.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?Pa) \<Longrightarrow> Abstract_Domain\<^sub>L (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?Pa x) \<close>),
@@ -2274,8 +2273,8 @@ ML \<open>assert_derived_properties \<^theory> [
 
 declare \<phi>MapAt.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
         \<phi>MapAt.\<Sigma>\<^sub>E[\<phi>reason add]
-                  
-declare \<phi>MapAt.ToA_mapper[where f=f and f'=f and g=g and g'=g for g f, simplified, \<phi>reason add]
+
+thm \<phi>MapAt.ToA_mapper
 
 lemma [\<phi>reason add]:
   \<open> \<g>\<e>\<t>\<t>\<e>\<r> h : T \<^emph>[C\<^sub>W] W \<mapsto> U \<^emph>[C\<^sub>R] R \<i>\<n> D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s
@@ -2344,6 +2343,7 @@ declare \<phi>MapAt_L.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \
 declare \<phi>MapAt_L.\<Sigma>\<^sub>E[\<phi>reason add]
 declare \<phi>Dependent_Sum.\<phi>MapAt_L.rewr[where k=k and ka=k for k, simplified, simp, assertion_simps]
 
+thm \<phi>MapAt_L.ToA_mapper
 declare \<phi>MapAt_L.ToA_mapper[where f=f and f'=f and g=g and g'=g for f g, simplified, \<phi>reason add]
 
 

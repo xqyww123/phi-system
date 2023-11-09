@@ -33,6 +33,8 @@ lemma [simp]:
   unfolding zip'_def unzip'_def
   by (simp add: zip_eq_conv)
 
+thm List.ToA_mapper
+
 thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True, simplified]
 
   thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True and g=g and g'=\<open>map g\<close> and s=s and h=h 

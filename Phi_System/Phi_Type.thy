@@ -403,30 +403,56 @@ paragraph \<open>Convention\<close>
       \<open>If and how could a pairwise separated mapping \<open>f \<oplus>\<^sub>f g\<close> that is applied on an unzipped structure
        \<open>F(T\<^emph>U)\<close> over some pair data \<open>T\<^emph>U\<close>, be represneted as element-wise mapping over the original structure.\<close>
   and separatable_unzip = (1000, [1000,1030]) in separatable_unzip__all \<open>default group\<close>
+
   and separatable_zip__all = (1000, [1,3000]) for \<open>separatable_zip uz z D\<^sub>z m m\<^sub>1 m\<^sub>2 f g\<close>
       \<open>If and how could an element-wise mapping \<open>m (f \<oplus>\<^sub>f g)\<close> of pairwisely separated element mapping \<open>f \<oplus>\<^sub>f g\<close>
        that is applied on the zip of two structure \<open>F(T)\<close> and \<open>F(U)\<close>, be separated to two mappings
        \<open>m\<^sub>1\<close> and \<open>m\<^sub>2\<close> over \<open>F(T)\<close> and \<open>F(U)\<close> respectively\<close>
   and separatable_zip = (1000, [1000,1030]) in separatable_zip__all \<open>default group\<close>
 
+  and compositional_mapper__all = (1000, [1, 3000]) for \<open>compositional_mapper m\<^sub>1 m\<^sub>2 m\<^sub>3 D f g\<close> \<open>\<close>
+  and compositional_mapper = (1000, [1000,1030]) in compositional_mapper__all \<open>\<close>
+
+  and domain_of_inner_map__all = (1000, [1, 3000]) for \<open>domain_of_inner_map mapper D\<^sub>i\<close> \<open>\<close>
+  and domain_of_inner_map = (1000, [1000,1030]) in domain_of_inner_map__all \<open>\<close>
 
 declare [[
   \<phi>reason_default_pattern
-      \<open>separatable_unzip ?z ?uz _ _ ?f ?g\<close> \<Rightarrow> \<open>separatable_unzip ?z ?uz _ _ ?f ?g\<close>        (100)
-  and \<open>separatable_zip ?uz ?z _ ?m _ _ ?f ?g\<close> \<Rightarrow> \<open>separatable_zip ?uz ?z _ ?m _ _ ?f ?g\<close>  (100)
-  and \<open>compositional_mapper ?m\<^sub>1 ?m\<^sub>2 _ _ ?f ?g\<close> \<Rightarrow> \<open>compositional_mapper ?m\<^sub>1 ?m\<^sub>2 _ _ ?f ?g\<close> (100)
+      \<open>separatable_unzip ?z ?uz _ _ ?var_f ?var_g\<close> \<Rightarrow> \<open>separatable_unzip ?z ?uz _ _ _ _\<close>        (100)
+  and \<open>separatable_zip ?uz ?z _ ?m _ _ ?var_f ?var_g\<close> \<Rightarrow> \<open>separatable_zip ?uz ?z _ ?m _ _ _ _\<close>  (100)
+  and \<open>compositional_mapper ?m\<^sub>1 ?m\<^sub>2 _ _ ?var_f ?var_g\<close> \<Rightarrow> \<open>compositional_mapper ?m\<^sub>1 ?m\<^sub>2 _ _ _ _\<close> (100)
   and \<open>domain_of_inner_map ?m _\<close> \<Rightarrow> \<open>domain_of_inner_map ?m _\<close>                            (100),
 
   \<phi>default_reasoner_group
       \<open>separatable_unzip _ _ _ _ _ _\<close>   : %separatable_unzip    (100)
   and \<open>separatable_zip _ _ _ _ _ _ _ _\<close> : %separatable_zip      (100)
+  and \<open>compositional_mapper _ _ _ _ _ _\<close>: %compositional_mapper (100)
+  and \<open>domain_of_inner_map _ _\<close>         : %domain_of_inner_map  (100)
 ]]
 
+
 paragraph \<open>Instances\<close>
+
+subparagraph \<open>Identity Mappers\<close>
 
 lemma [\<phi>reason add]:
   \<open> separatable_unzip (\<lambda>x. x) (\<lambda>x. x) UNIV (\<lambda>f. f) g r \<close>
   unfolding separatable_unzip_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> separatable_zip (\<lambda>x. x) (\<lambda>x. x) UNIV (\<lambda>f. f) (\<lambda>f. f) (\<lambda>f. f) f g \<close>
+  unfolding separatable_zip_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> compositional_mapper (\<lambda>f. f) (\<lambda>f. f) (\<lambda>f. f) UNIV f g \<close>
+  unfolding compositional_mapper_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> domain_of_inner_map (\<lambda>f. f) (\<lambda>x. {x}) \<close>
+  unfolding domain_of_inner_map_def
   by simp
 
 
@@ -3639,7 +3665,7 @@ lemma t1:
   \<open>(C\<^sub>R \<or> C\<^sub>E) \<and> C\<^sub>E \<longleftrightarrow> C\<^sub>E\<close>
   by blast+
 
-lemma XXX[\<phi>reason_template name F\<^sub>1.ToA_mapper[]]:
+lemma ToA_mapper_template[\<phi>reason_template name F\<^sub>1.ToA_mapper[]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[C\<^sub>W] W) (U \<^emph>[C\<^sub>R] R) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_Type (F\<^sub>1\<^sub>4 (T \<^emph>[C\<^sub>W] W)) (F\<^sub>2\<^sub>3' (T' \<^emph>[C\<^sub>W] W'))
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>2\<^sub>3' F\<^sub>1\<^sub>4' (U' \<^emph>[C\<^sub>R] R') (T' \<^emph>[C\<^sub>W] W') Dom' Rng' pred_mapper' func_mapper'
@@ -3647,14 +3673,14 @@ lemma XXX[\<phi>reason_template name F\<^sub>1.ToA_mapper[]]:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>3' F\<^sub>2' F\<^sub>2\<^sub>3' C\<^sub>R U' R' Dz' z'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 C\<^sub>R U R Du uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>1' F\<^sub>4' F\<^sub>1\<^sub>4' C\<^sub>W T' W' Du' uz'
+\<Longrightarrow> separatable_unzip z' uz Du\<^sub>s mapper\<^sub>1 g r @action \<A>_template_reason
+\<Longrightarrow> compositional_mapper mapper\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) mapper\<^sub>2 Dm\<^sub>1 (map_prod g r) h @action \<A>_template_reason
+\<Longrightarrow> compositional_mapper (\<lambda>s. func_mapper' s (\<lambda>_. True)) mapper\<^sub>2 mapper\<^sub>3 Dm\<^sub>2 s (map_prod g r o h) @action \<A>_template_reason
+\<Longrightarrow> separatable_zip uz' z Dz\<^sub>s mapper\<^sub>3 mapper\<^sub>f mapper\<^sub>w f w @action \<A>_template_reason
+\<Longrightarrow> domain_of_inner_map mapper\<^sub>3 Dm\<^sub>3 @action \<A>_template_reason
 \<Longrightarrow> \<m>\<a>\<p> map_prod g r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> map_prod f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> \<Union> (Dom ` z ` D)
-\<Longrightarrow> separatable_unzip z' uz Du\<^sub>s mapper\<^sub>1 g r
-\<Longrightarrow> compositional_mapper mapper\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) mapper\<^sub>2 Dm\<^sub>1 (map_prod g r) h
-\<Longrightarrow> compositional_mapper (\<lambda>s. func_mapper' s (\<lambda>_. True)) mapper\<^sub>2 mapper\<^sub>3 Dm\<^sub>2 s (map_prod g r o h)
-\<Longrightarrow> separatable_zip uz' z Dz\<^sub>s mapper\<^sub>3 mapper\<^sub>f mapper\<^sub>w f w
-\<Longrightarrow> domain_of_inner_map mapper\<^sub>3 Dm\<^sub>3
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D \<subseteq> Dz \<and> D \<subseteq> Dz\<^sub>s \<and> (\<forall>x \<in> D. \<forall>a \<in> Dom (z x). h a \<in> Rng (z x)) \<and>
            (\<forall>x\<in>D. z x \<in> Dm\<^sub>1) \<and> (\<forall>x\<in>D. z x \<in> Dm\<^sub>2) \<and> (\<forall>x\<in>D. Dm\<^sub>3 (z x) \<subseteq> Dom (z x)) \<and>
            (\<forall>x\<in>D. func_mapper h  (\<lambda>_. True) (z x) \<in> Du) \<and>
@@ -3670,16 +3696,16 @@ lemma XXX[\<phi>reason_template name F\<^sub>1.ToA_mapper[]]:
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D\<close>
   unfolding \<r>Guard_def Action_Tag_def separatable_unzip_def compositional_mapper_def
             separatable_zip_def domain_of_inner_map_def
-  \<medium_left_bracket> premises FTF[] and [] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[] and Tr
-         and [useful] and [useful] and [useful] and [useful] and []
+  \<medium_left_bracket> premises FTF[] and [] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[]
+         and [useful] and [useful] and [useful] and [useful] and [] and Tr
          and _ and [simp] and [simp]
     apply_rule apply_Separation_Homo\<^sub>I_Cond[where Fu=F\<^sub>4 and Ft=F\<^sub>1, OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where U=\<open>U \<^emph>[C\<^sub>R] R\<close> and f=\<open>h\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
     \<medium_left_bracket> apply_rule apply_ToA_Mapper_onward[OF Tr] \<medium_right_bracket>
     apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E]
   \<medium_right_bracket> apply (rule conjunctionI, rule, simp add: image_image del: split_paired_All)
-  \<medium_left_bracket> premises FTF[] and [] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[] and Tr
-         and [useful] and [useful] and [useful] and [useful] and []
+  \<medium_left_bracket> premises FTF[] and [] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[]
+         and [useful] and [useful] and [useful] and [useful] and [] and Tr
          and _ and [simp] and [simp]
     apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I']
     apply_rule apply_Functional_Transformation_Functor[where f=s and P=\<open>\<lambda>_. True\<close>, OF FTF']
