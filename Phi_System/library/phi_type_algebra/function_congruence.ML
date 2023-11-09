@@ -12,9 +12,12 @@ val _ = Theory.setup (Context.theory_map (
                       [D,R,M])
               | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
 
-        val ctxt0 = Context.proof_of ctxt00
+        val ctxt0' = Context.proof_of ctxt00
+        val ctxt0 = ctxt0'
+                 |> Context_Position.set_visible false
                  |> load_simpset oprs
                  |> (fn ctxt => ctxt addsimps Expansion.simp_rules ctxt)
+                 |> Context_Position.restore_visible ctxt0'  
 
         fun incr_term_idx_only d (Var ((N,i),T)) = Var ((N,i+d),T)
           | incr_term_idx_only d (A $ B) = incr_term_idx_only d A $ incr_term_idx_only d B

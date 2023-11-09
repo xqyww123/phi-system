@@ -227,33 +227,37 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
           val _ = case bind of SOME (_,b) => if Binding.name_of b = "ToA_mapper" then () else ()
                              | _ => ()
+
           val rule'1 = (0, Thm.transfer' ctxt' template)
                     |> fold_pad (fn positioned_prop'' => fn (i, thm) =>
                         let (*datatype mode = Reason | Oblg | Normal*)
                             val prop'' = Option.map snd positioned_prop''
+                            
+                            fun parse_position (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) data = parse_position X data
+                              | parse_position (Const(\<^const_name>\<open>Action_Tag\<close>, _)
+                                                  $ X
+                                                  $ (Const(\<^const_name>\<open>\<A>_template_reason\<close>, _) $ text))
+                                               data
+                                 = (case parse_position X data of (_, prop, thm) =>
+                                      (SOME text, prop, @{thm' Action_Tag_I} RSN (i+1, thm)) )
+                              | parse_position (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) (LPR, prop, thm)
+                                 = (case prop
+                                      of SOME propx =>
+                                          (LPR, SOME (PLPR_Syntax.guardize {merge_cond=true} ctxt' (Thm.nprems_of propx) propx),
+                                           @{thm' \<r>Guard_I} RSN (i+1, thm))
+                                       | _ => (LPR, prop, thm))
+                              | parse_position (\<^Const>\<open>Pure.term \<^Type>\<open>prop\<close>\<close> $ X) data
+                                 = (case parse_position X data of (LPR, prop, thm) =>
+                                      (LPR, Option.map (Drule.mk_term o Thm.cconcl_of o Thm.transfer'' ctxt) prop, thm) )
+                              | parse_position (\<^Const>\<open>Pure.term \<^Type>\<open>bool\<close>\<close> $ X) data
+                                 = (case parse_position X data of (LPR, prop, thm) =>
+                                      (LPR, Option.map (Drule.mk_term o PLPR_Syntax.dest_Trueprop_c o Thm.cconcl_of o Thm.transfer'' ctxt) prop, thm) )
+                              | parse_position _ data = data
+
                             val (is_reasoning_goal, prop', thm'1) =
-                                  case Logic.strip_assums_concl (Logic.nth_prem (i+1, Thm.prop_of thm))
-                                    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                                          Const(\<^const_name>\<open>Action_Tag\<close>, _)
-                                              $ _
-                                              $ (Const(\<^const_name>\<open>\<A>_template_reason\<close>, _))) =>
-                                            (true, prop'', @{thm' Action_Tag_I} RSN (i+1, thm))
-                                     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) =>
-                                        (case prop'' of SOME prop' =>
-                                                (false,
-                                                 SOME (PLPR_Syntax.guardize {merge_cond=true} ctxt' (Thm.nprems_of prop') prop'),
-                                                 @{thm' \<r>Guard_I} RSN (i+1, thm))
-                                            | _ => (false, prop'', thm)
-                                            )
-                                   (*| Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                                          Const(\<^const_name>\<open>Premise\<close>, _)
-                                              $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)
-                                              $ P) =>
-                                        if exists_subterm (fn (Const(\<^const_name>\<open>\<A>_template_condition\<close>, _)) => true
-                                                            | _ => false) P
-                                        then Oblg
-                                        else Normal*)
-                                     | _ => (false, prop'', thm)
+                                  parse_position (Logic.strip_assums_concl (Logic.nth_prem (i+1, Thm.prop_of thm)))
+                                                 (NONE, prop'', thm)
+
                             val (delt,thm'2) = (case prop'
                                                   of SOME prop => ((Thm.nprems_of prop, prop RSN' (ctxt', i+1, thm'1))
                                                        handle THM _ => let open Pretty in
@@ -266,22 +270,34 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                                         end)
                                                    | NONE => (1, thm'1))
                             val thm'3 =
-                                 if is_reasoning_goal
-                                 then thm'2 |> Thm.permute_prems 0 i
+                                 case is_reasoning_goal
+                                   of SOME err_term =>
+                                      thm'2 |> Thm.permute_prems 0 i
                                             |> Phi_Reasoner.reason NONE (SOME delt)
                                                                    (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
                                             |> (fn SOME th => th
-                                                 | NONE => raise Generation_Fail (1, fn () =>
+                                                 | NONE =>
                                                     let open Pretty
-                                                     in [para "Fail to reason a compulsory antecedent",
-                                                         Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))]
-                                                    end))
+                                                     in case err_term
+                                                     of Const(\<^const_name>\<open>Some\<close>, _) $ text =>
+                                                          raise Generation_Fail (0, fn () =>
+                                                            [Text_Encoding.decode_text_pretty ctxt' text])
+                                                      | Const(\<^const_name>\<open>undefined\<close>, _) =>
+                                                          raise Generation_Fail (0, fn () => 
+                                                            [para "Fail to reason a compulsory antecedent",
+                                                             Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))])
+                                                      | Const(\<^const_name>\<open>None\<close>, _) =>
+                                                          raise Generation_Fail (3, fn () => 
+                                                            [para "Fail to reason a compulsory antecedent",
+                                                             Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))])
+                                                      | X => raise TERM("Unrecognizable error text", [X])
+                                                    end)
                                             |> Thm.permute_prems 0 (~i)
                                   (*| Oblg => Conv.gconv_rule (
                                                 Raw_Simplifier.rewrite ctxt' false @{thms' \<A>_template_condition_def}
                                              ) (i+1) thm'2*)
-                                 else thm'2
-                         in (if is_reasoning_goal then i else i + delt, thm'3)
+                                    | _ => thm'2
+                         in (if is_some is_reasoning_goal then i else i + delt, thm'3)
                         end) (Thm.nprems_of template) positioned_props
                     |> snd
                     |> Phi_Help.beta_eta_contract

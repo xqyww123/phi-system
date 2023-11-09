@@ -9,6 +9,8 @@ val premise_tag_conv : conv -> conv
 
 val provide_premise_condition : thm -> thm -> thm
 
+val dest_Trueprop_c : cterm -> cterm
+
 end
 
 structure PLPR_Syntax : PLPR_SYNTAX = struct

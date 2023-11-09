@@ -393,12 +393,10 @@ setup \<open> PLPR_Template_Properties.add_property_kinds [
 
 paragraph \<open>Template Instantiation\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma Inhabited_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
-  \<open> Abstract_Domain T D @action \<A>_template_reason
-\<Longrightarrow> Abstract_Domain\<^sub>L T D' @action \<A>_template_reason
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. D' x = D x) @action \<A>_template_reason
+  \<open> Abstract_Domain T D
+\<Longrightarrow> Abstract_Domain\<^sub>L T D'
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. D' x = D x) @action \<A>_template_reason None
 \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<equiv> D x \<close>
   unfolding Action_Tag_def Abstract_Domain_def Abstract_Domain\<^sub>L_def Premise_def
   by (clarsimp, smt (verit, best))

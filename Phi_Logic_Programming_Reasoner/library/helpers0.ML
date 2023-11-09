@@ -43,7 +43,8 @@ val conj_elims : thm -> thm list*)
 (*For tyenv/tenv given from Pattern.match*)
 val subst_tyenv : Type.tyenv -> typ TVars.table
 val subst_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
-val subst_env : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
+val subst_env   : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
+val subst_env'  : Envir.env -> typ TVars.table * term Vars.table
 
 (*For tyenv/tenv given from Pattern.unify*)
 val norm_tyenv : Type.tyenv -> typ TVars.table
@@ -355,6 +356,7 @@ fun norm_tenv tyenv tenv =
                                 |> Envir.eta_contract)) tenv)
 
 fun subst_env (TY,TM) = (subst_tyenv TY, subst_tenv TY TM)
+fun subst_env' (Envir.Envir {tyenv, tenv, ...}) = subst_env (tyenv, tenv)
 fun norm_env (TY,TM) = (norm_tyenv TY, norm_tenv TY TM)
 
 fun certify_tyvars ctxt = TVars.map (K (Context.cases Thm.global_ctyp_of Thm.ctyp_of ctxt))

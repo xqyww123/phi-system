@@ -1739,11 +1739,10 @@ lemma [\<phi>reason %\<phi>LPR_imp+10]:
 
 subsection \<open>Rule Generation\<close>
 
-(*text option \<Rightarrow>*)
-consts \<A>_template_reason :: \<open> action\<close>
+consts \<A>_template_reason :: \<open>text option \<Rightarrow> action\<close>
   \<comment> \<open>tagging the antecedent has to be solved during the time of template instantiation.
-      The text is printed when the reasoning fails. None for no printing, \<open>undefined\<close> for default
-      printing\<close>
+      The text is printed when the reasoning fails. None for no printing (silently stopping the rule
+      generation), \<open>undefined\<close> for default printing (printing the term of the failed antecedent)\<close>
 definition \<open>template_NO_SIMP_USE (X::bool) \<equiv> X\<close>
   \<comment> \<open>prevent using the protected proposition in the simplification during a template instantiation.\<close>
 

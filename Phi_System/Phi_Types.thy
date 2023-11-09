@@ -289,6 +289,7 @@ lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name Fa.\<phi>subj [asse
                prems(3-),
         clarsimp) .
 
+declare [[\<phi>trace_reasoning = 1]]
 
 lemma \<phi>\<s>\<u>\<b>\<j>_Homo_ty[\<phi>reason_template name Fa.\<phi>subj_ty [assertion_simps]]:
   \<open> Functional_Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R pm fm
@@ -648,8 +649,8 @@ subsubsection \<open>\<Sigma>-Homomorphism (Commutativity over \<Sigma>)\<close>
 
 lemma [\<phi>reason_template name G.\<Sigma>\<^sub>E[no_atp]]:
   \<open> (\<And>p. Functional_Transformation_Functor G G' (T p) (\<Sigma> T) (D p) (R p) (pm p) (fm p))
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a. a \<in> D (fst x) (snd x) \<longrightarrow> (fst x, a) \<in> R (fst x) (snd x)) @action \<A>_template_reason
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>x. fm (fst x) (\<lambda>a. ((fst x), a)) (\<lambda>_. True) (snd x)) (\<lambda>_. True) @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a. a \<in> D (fst x) (snd x) \<longrightarrow> (fst x, a) \<in> R (fst x) (snd x)) @action \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>x. fm (fst x) (\<lambda>a. ((fst x), a)) (\<lambda>_. True) (snd x)) (\<lambda>_. True) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> G G' T D' r' \<close>
   unfolding Functional_Transformation_Functor_def Simplify_def Action_Tag_def
             Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Transformation_def
@@ -657,9 +658,9 @@ lemma [\<phi>reason_template name G.\<Sigma>\<^sub>E[no_atp]]:
 
 lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[no_atp]]:
   \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a \<in> D x. fst a = c x \<and> snd a \<in> R (c x) x) @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>x. \<forall>a \<in> D x. fst a = c x \<and> snd a \<in> R (c x) x) @action \<A>_template_reason undefined
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>x. (c x, fm (c x) snd (\<lambda>_. True) x))
-                              (\<lambda>x. pm (c x) snd (\<lambda>_. True) x) @action \<A>_template_reason
+                              (\<lambda>x. pm (c x) snd (\<lambda>_. True) x) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' \<Sigma> \<Sigma> T D' r' \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Functional_Transformation_Functor_def Simplify_def Action_Tag_def
   by clarsimp force
@@ -851,15 +852,15 @@ text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the tran
 lemma \<S>_Homo\<^sub>E: (*depreciated*)
   \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason undefined
 \<Longrightarrow> s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> \<S> (Fb T)\<close>
   unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
   by clarsimp
 
 lemma [\<phi>reason_template name G.\<S>\<^sub>I [no_atp]]:
   \<open> Transformation_Functor G G' (\<S> T) T D R mapper
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>s. \<forall>a. a \<in> D s \<longrightarrow> a \<subseteq> R s) @action \<A>_template_reason
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>s. Collect (mapper (\<lambda>S x. x \<in> S) s)) (\<lambda>_. True) @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>s. \<forall>a. a \<in> D s \<longrightarrow> a \<subseteq> R s) @action \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func (\<lambda>s. Collect (mapper (\<lambda>S x. x \<in> S) s)) (\<lambda>_. True) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute G G' \<S> \<S> T D' r'\<close>
   unfolding Tyops_Commute_def
             Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
@@ -870,8 +871,8 @@ text \<open>Does the reverse transformation exist?. The commutativity between \<
 lemma [\<phi>reason_template name F.\<S>\<^sub>E [no_atp]]:
   \<open> Functional_Transformation_Functor F F' T (\<S> T) D R pm fm
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<lambda>s. (\<forall>x \<in> s. \<forall>a \<in> D x. f s x a \<in> R x \<and> a \<in> f s x a) \<and>
-                     (\<forall>x \<in> s. fm (f s x) (\<lambda>_. True) x = g s)) @action \<A>_template_reason
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func g (\<lambda>_. True) @action \<A>_template_reason
+                     (\<forall>x \<in> s. fm (f s x) (\<lambda>_. True) x = g s)) @action \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : embedded_func g (\<lambda>_. True) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute \<S> \<S> F F' T D' r' \<close>
   unfolding Functional_Transformation_Functor_def Tyops_Commute_def Transformation_def
             Action_Tag_def Simplify_def
@@ -1044,12 +1045,14 @@ lemma [\<phi>reason 1000]:
   unfolding Functionality_def Premise_def
   by clarsimp blast
 
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma [\<phi>reason 1000]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B'
 \<Longrightarrow> Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') T U (\<lambda>x. {x}) (\<lambda>_. UNIV) (\<lambda>r. r)\<close>
   unfolding Transformation_Functor_def Transformation_def \<r>Guard_def Premise_def
   by clarsimp blast
-
+  
 lemma [\<phi>reason 1000]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B'
 \<Longrightarrow> Functional_Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') T U (\<lambda>x. {x}) (\<lambda>_. UNIV) (\<lambda>_ P. P) (\<lambda>f _. f)\<close>
@@ -1406,9 +1409,9 @@ lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>E[no_atp]]:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D : (\<lambda>x. case x of Inl u \<Rightarrow> (\<forall>a \<in> D\<^sub>T u. Inl a \<in> R\<^sub>T u)
-                              | Inr v \<Rightarrow> (\<forall>b \<in> D\<^sub>U v. Inr b \<in> R\<^sub>U v))) @action \<A>_template_reason
+                             | Inr v \<Rightarrow> (\<forall>b \<in> D\<^sub>U v. Inr b \<in> R\<^sub>U v))) @action \<A>_template_reason undefined
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r : (embedded_func (case_sum (fm\<^sub>T Inl (\<lambda>_. True)) (fm\<^sub>U Inr (\<lambda>_. True)))
-                                (pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True))))) @action \<A>_template_reason
+                               (pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True))))) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U D r \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
             Action_Tag_def Simplify_def
@@ -1419,13 +1422,13 @@ lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>I[no_atp]]:
 \<Longrightarrow> Functional_Transformation_Functor F F'\<^sub>U (T +\<^sub>\<phi> U) U D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x a. a \<in> D\<^sub>T x \<and> isl a \<longrightarrow> projl a \<in> R\<^sub>T x) \<and>
            (\<forall>x a. a \<in> D\<^sub>U x \<and> \<not> isl a \<longrightarrow> projr a \<in> R\<^sub>U x)
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] D : (\<lambda>x. (\<forall>a \<in> D\<^sub>T x. isl a) \<or> (\<forall>b \<in> D\<^sub>U x. \<not> isl b))) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] D : (\<lambda>x. (\<forall>a \<in> D\<^sub>T x. isl a) \<or> (\<forall>b \<in> D\<^sub>U x. \<not> isl b))) @action \<A>_template_reason undefined
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] r : (embedded_func (\<lambda>x. if (\<forall>a \<in> D\<^sub>T x. isl a)
                                     then Inl (fm\<^sub>T projl (\<lambda>_. True) x)
                                     else Inr (fm\<^sub>U projr (\<lambda>_. True) x))
                                (\<lambda>x. if (\<forall>a \<in> D\<^sub>T x. isl a)
                                     then pm\<^sub>T projl (\<lambda>_. True) x
-                                    else pm\<^sub>U projr (\<lambda>_. True) x))) @action \<A>_template_reason
+                                    else pm\<^sub>U projr (\<lambda>_. True) x))) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U D r \<close>
   unfolding Functional_Transformation_Functor_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Simplify_def Action_Tag_def
   apply (clarify; case_tac \<open>Ball (D\<^sub>T x) isl\<close>; auto)
@@ -1575,9 +1578,9 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason_template name F.\<phi>Inter\<^sub>I[no_atp]]:
   \<open> Functional_Transformation_Functor F F\<^sub>T (T \<and>\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F F\<^sub>U (T \<and>\<^sub>\<phi> U) U D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] D : (\<lambda>x. (\<forall>a \<in> D\<^sub>T x. fst a \<in> R\<^sub>T x) \<and> (\<forall>a \<in> D\<^sub>U x. snd a \<in> R\<^sub>U x))) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] D : (\<lambda>x. (\<forall>a \<in> D\<^sub>T x. fst a \<in> R\<^sub>T x) \<and> (\<forall>a \<in> D\<^sub>U x. snd a \<in> R\<^sub>U x))) @action \<A>_template_reason undefined
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] r : (embedded_func (\<lambda>x. (fm\<^sub>T fst (\<lambda>_. True) x, fm\<^sub>U snd (\<lambda>_. True) x))
-                                                (\<lambda>x. pm\<^sub>T fst (\<lambda>_. True) x \<and> pm\<^sub>U snd (\<lambda>_. True) x))) @action \<A>_template_reason
+                                                (\<lambda>x. pm\<^sub>T fst (\<lambda>_. True) x \<and> pm\<^sub>U snd (\<lambda>_. True) x))) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F\<^sub>T F\<^sub>U (\<and>\<^sub>\<phi>) (\<and>\<^sub>\<phi>) T U D r\<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Functional_Transformation_Functor_def Premise_def
             Simplify_def Action_Tag_def
@@ -2276,16 +2279,15 @@ declare \<phi>MapAt.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<p
 
 thm \<phi>MapAt.ToA_mapper
 
+(*
 lemma [\<phi>reason add]:
   \<open> \<g>\<e>\<t>\<t>\<e>\<r> h : T \<^emph>[C\<^sub>W] W \<mapsto> U \<^emph>[C\<^sub>R] R \<i>\<n> D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s
 \<Longrightarrow> \<g>\<e>\<t>\<t>\<e>\<r> h : k \<^bold>\<rightarrow> T \<^emph>[C\<^sub>W] k \<^bold>\<rightarrow> W \<mapsto> k \<^bold>\<rightarrow> U \<^emph>[C\<^sub>R] k \<^bold>\<rightarrow> R \<i>\<n> D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s \<close>
   for h :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> and T :: \<open>('c::sep_magma_1, 'a) \<phi>\<close>
   by (rule \<phi>MapAt.ToA_mapper[where f=id and f'=id and g=\<open>id\<close> and g'=\<open>id\<close>, simplified]; simp)
-
+*)
 
 subsubsection \<open>By List of Keys\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>

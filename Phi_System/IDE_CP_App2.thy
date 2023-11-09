@@ -70,7 +70,7 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason_template default %\<phi>app_conv_derived+10]:
   \<open> Functional_Transformation_Functor Fa Fb T U (\<lambda>x. {D x}) R pm fm
-\<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('c\<^sub>a \<times> 'x\<^sub>a) TYPE('c \<times> 'x) @action \<A>_template_reason
+\<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('c\<^sub>a \<times> 'x\<^sub>a) TYPE('c \<times> 'x) @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x = a \<and> b \<in> R x
 \<Longrightarrow> NO_SIMP (ToA_App_Conv TYPE('c\<^sub>a\<^sub>a) TYPE('c\<^sub>a) T ToA (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
 \<Longrightarrow> ToA_App_Conv TYPE('c\<^sub>a\<^sub>a) TYPE('c) (Fa T) ToA (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>_. b) (\<lambda>_. P) x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm (\<lambda>_. b) (\<lambda>_. P) x) \<close>

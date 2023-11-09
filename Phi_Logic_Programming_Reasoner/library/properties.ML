@@ -228,28 +228,32 @@ fun lookup_properties_match ctxt =
    |> filter (fn (_, th) => Pattern.matches (Context.theory_of ctxt) (pattern, Thm.concl_of th))
   end
 
+(*no transfer*)
 fun lookup_property_unify' ctxt =
   let val properties = Properties.get ctxt
    in fn additions => fn env => fn pattern =>
   let val Envir.Envir {maxidx, tenv, tyenv} = env
-   in (additions @ Net.unify_term properties pattern)
-   |> map_filter (fn (pos, th) =>
-        let val concl = Thm.concl_of th
-                     |> maxidx >= 0 ? Logic.incr_indexes ([], [], maxidx+1)
-            val cidx = if maxidx >= 0 then Thm.maxidx_of th + maxidx + 1 else Thm.maxidx_of th
-            val env' = Envir.Envir {maxidx = cidx, tenv=tenv, tyenv=tyenv}
-         in case Seq.pull (Unify.hounifiers (ctxt, env', [(pattern, concl)]))
-         of SOME env => SOME (Seq.map fst (uncurry Seq.cons env), (pos, th))
-          | NONE => NONE
-        end)
+      val filter = map_filter (fn (pos, th) =>
+                      let val concl = Thm.concl_of th
+                                   |> maxidx >= 0 ? Logic.incr_indexes ([], [], maxidx+1)
+                          val cidx = if maxidx >= 0 then Thm.maxidx_of th + maxidx + 1 else Thm.maxidx_of th
+                          val env' = Envir.Envir {maxidx = cidx, tenv=tenv, tyenv=tyenv}
+                       in case Seq.pull (Unify.hounifiers (ctxt, env', [(pattern, concl)]))
+                       of SOME env => SOME (Seq.map fst (uncurry Seq.cons env), (pos,th))
+                        | NONE => NONE
+                      end)
+   in union (pointer_eq o apply2 (snd o snd))
+            (filter additions)
+            (filter (Net.unify_term properties pattern))
   end
   end
 
 fun lookup_properties_unify ctxt =
   let val lookup = lookup_property_unify' ctxt
+      val thy = Context.theory_of ctxt
    in fn pattern =>
       lookup [] (Envir.empty (Term.maxidx_of_term pattern)) pattern
-        |> map snd
+        |> map (snd #> apsnd (Thm.transfer thy))
   end
 
 (* Invoke template instantiation *)
@@ -283,6 +287,7 @@ fun existing_instantiations_of_parameters ctxt =
       instantiations_of_parameters
           (fn env => (fn SOME p => map (apsnd SOME) (lookup_property_unify' ctxt [] env p)
                        | NONE => [(Seq.single env, NONE)])) ctxt
+
 
 fun check_dependencies params action (pos,property) ctxt =
   let exception Dep
@@ -322,16 +327,23 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                            (pos, (env, positioned_props)) ctxt =
       PLPR_Rule_Gen.invoke_generation ((template_pos, template), pass, action, bind)
                                       (pos, env, positioned_props) ctxt
-  | invoke_template_action _ (Free_Action action) arg ctxt = action arg ctxt
+  | invoke_template_action template_pos (Free_Action action) arg ctxt = (
+      Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty in
+          block (text "invoking free template" @ [brk 1] @ here template_pos)
+        end) ;
+      action (apsnd (apsnd (map (Option.map (apsnd (Thm.transfer (Context.theory_of ctxt)))))) arg) ctxt
       handle Automation_Fail (lev, prt) => (
         Phi_Reasoner.warn_pretty ctxt lev (Pretty.chunks o prt) ;
         ctxt)
+      )
 
 fun invoke_template ((deps, pos, action) : template) =
 ( case action of Instantiate_Rule (_, _, _, SOME (_, b)) =>
     if Binding.name_of b = "ToA_mapper" then () else () (*debug usage*)
     | _ => ();
-      check_dependencies deps (invoke_template_action pos action)
+
+  check_dependencies deps (invoke_template_action pos action)
+
 )
 
 fun add_template invoke_on_existing_instantiations (template : template) ctxt =
@@ -437,11 +449,14 @@ fun add_property_instance (pos,property) ctxt =
                 raise SKIP
             end
         end
+      val property = Thm.trim_context property
    in ctxt
    |> chk_clashes
-   |> Properties.map (Net.insert_term property_eq (prop_concl, (pos, Thm.trim_context property)))
+   |> Properties.map (Net.insert_term property_eq (prop_concl, (pos, property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
    |> Config.get_generic ctxt invoking_instantiations ? invoke_instantiations_on_property (pos, property)
+      (*Note: must ensure the property theorem inserted into the Net Data must be pointer-equal to
+        the one sent to \<open>invoke_instantiations_on_property\<close>*)
                     
    handle SKIP => ctxt
  (* handle Net.INSERT => let open Pretty
@@ -485,9 +500,12 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
   let val thy = Context.theory_of ctxt
       val rule = normalize rule0
       val is_prop = check_property thy
+      fun trim_Pure_term (\<^Const>\<open>Pure.term \<^Type>\<open>prop\<close>\<close> $ X) = X
+        | trim_Pure_term (\<^Const>\<open>Pure.term \<^Type>\<open>bool\<close>\<close> $ X) = HOLogic.Trueprop $ X
+        | trim_Pure_term X = X
       fun get_prop_kinds (TM::L) =
            let val base = case get_prop_kinds L of [NONE] => [] | L => L
-            in is_prop TM :: base
+            in is_prop (trim_Pure_term TM) :: base
            end
         | get_prop_kinds [] = []
       val prop_kinds = case raw_dependencies

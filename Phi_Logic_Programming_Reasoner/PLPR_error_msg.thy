@@ -61,17 +61,17 @@ fun decode_text_ast' ret (Appl [Constant \<^const_syntax>\<open>text.literal\<cl
 
 in
 
-fun decode_text _ (\<^const>\<open>text.literal\<close> $ Abs (text, _, _)) = [Pretty.str (recovery_string text)]
+fun decode_text _ (\<^const>\<open>text.literal\<close> $ Abs (text, _, _)) = (Pretty.text (recovery_string text))
   | decode_text ctxt (Const (\<^const_name>\<open>text.term\<close>, _) $ x) = [Syntax.pretty_term ctxt x]
   | decode_text ctxt (Const (\<^const_name>\<open>text.type\<close>, _) $ \<^Const_>\<open>Pure.type T\<close>) =
       [Syntax.pretty_typ ctxt T]
   | decode_text ctxt (\<^const>\<open>text.cat\<close> $ A $ B) =
-      decode_text ctxt A @ decode_text ctxt B
-  | decode_text _ (\<^const>\<open>text.newline\<close>) = [Pretty.brk 0]
+      decode_text ctxt A @ [Pretty.brk 1] @ decode_text ctxt B
+  | decode_text _ (\<^const>\<open>text.newline\<close>) = [Pretty.fbrk]
   | decode_text ctxt (\<^const>\<open>text.text\<close> $ X) = decode_text ctxt X
   | decode_text _ tm = raise TERM ("decode_text", [tm])
 
-fun decode_text_pretty ctxt X = Pretty.block (Pretty.separate "" (decode_text ctxt X))
+fun decode_text_pretty ctxt X = Pretty.block (decode_text ctxt X)
 fun decode_text_str ctxt X = Pretty.string_of (decode_text_pretty ctxt X)
 
 fun decode_text_ast ast =

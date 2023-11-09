@@ -2578,9 +2578,9 @@ note, also refer to the git branch Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' R' pred' func' )
-\<Longrightarrow> NO_MATCH (\<lambda>f _. f) func' \<or> NO_MATCH (\<lambda>_. UNIV) R' @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. if case_split C\<^sub>W then x \<in> D else (\<forall>a. a \<in> D' (fst x) \<longrightarrow> (a, undefined) \<in> R' (fst x))})) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if case_split C\<^sub>W then z x else func' (\<lambda>x. (x, undefined)) (\<lambda>_. True) (fst x))) @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (\<lambda>f _. f) func' \<or> NO_MATCH (\<lambda>_. UNIV) R' @action \<A>_template_reason None
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. if case_split C\<^sub>W then x \<in> D else (\<forall>a. a \<in> D' (fst x) \<longrightarrow> (a, undefined) \<in> R' (fst x))})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if case_split C\<^sub>W then z x else func' (\<lambda>x. (x, undefined)) (\<lambda>_. True) (fst x))) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>I_def Premise_def Action_Tag_def Simplify_def
             case_split_def 
@@ -2596,8 +2596,8 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' (\<lambda>_. UNIV) pred' (\<lambda>f _. f) )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. case_split C\<^sub>W \<longrightarrow> x \<in> D})) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if case_split C\<^sub>W then z x else x)) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. case_split C\<^sub>W \<longrightarrow> x \<in> D})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if case_split C\<^sub>W then z x else x)) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>I_def Premise_def Action_Tag_def Simplify_def
             case_split_def
@@ -2615,9 +2615,9 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor F3 Ft (T \<^emph>[C\<^sub>R] U) T D' R' pred' func' )
-\<Longrightarrow> NO_MATCH (\<lambda>f _. f) func' @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>R then UNIV else {x. \<forall>(a,b) \<in> D' x. a \<in> R' x})) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if case_split C\<^sub>R then uz else (\<lambda>x. (func' fst (\<lambda>_. True) x, undefined)))) @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (\<lambda>f _. f) func' @action \<A>_template_reason None
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>R then UNIV else {x. \<forall>(a,b) \<in> D' x. a \<in> R' x})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if case_split C\<^sub>R then uz else (\<lambda>x. (func' fst (\<lambda>_. True) x, undefined)))) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
   unfolding Separation_Homo\<^sub>E_Cond_def Separation_Homo\<^sub>E_def Premise_def Action_Tag_def Simplify_def
   by (cases C\<^sub>R; clarsimp;
@@ -2632,8 +2632,8 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor F3 Ft (T \<^emph>[C\<^sub>R] U) T D' R' pred' (\<lambda>f _. f) )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : {x. \<not> case_split C\<^sub>R \<longrightarrow> (\<forall>(a,b) \<in> D' x. a \<in> R' x)}) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (\<lambda>x. if case_split C\<^sub>R then uz x else x)) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : {x. \<not> case_split C\<^sub>R \<longrightarrow> (\<forall>(a,b) \<in> D' x. a \<in> R' x)}) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (\<lambda>x. if case_split C\<^sub>R then uz x else x)) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
   unfolding Separation_Homo\<^sub>E_Cond_def Separation_Homo\<^sub>E_def Premise_def Action_Tag_def Simplify_def
   by ((cases C\<^sub>R; clarsimp),
@@ -2721,8 +2721,8 @@ lemma apply_conditioned_Separation_Functor\<^sub>\<Lambda>_unzip:
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> Ft F3 T (\<lambda>p. T p \<^emph>[C\<^sub>W] U p) D' R' pred' func' )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>W then D else {x. \<forall>p a. a \<in> D' p (fst x) \<longrightarrow> (a, undefined) \<in> R' p (fst x)})) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (if case_split C\<^sub>W then z else func' (\<lambda>_ x. (x, undefined)) (\<lambda>_ _. True) o fst)) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>W then D else {x. \<forall>p a. a \<in> D' p (fst x) \<longrightarrow> (a, undefined) \<in> R' p (fst x)})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (if case_split C\<^sub>W then z else func' (\<lambda>_ x. (x, undefined)) (\<lambda>_ _. True) o fst)) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Premise_def Action_Tag_def Simplify_def
             case_split_def
@@ -2738,8 +2738,8 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F3 Ft (\<lambda>p. T p \<^emph>[C\<^sub>R] U p) T D' R' pred' func' )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>R then UNIV else {x. \<forall>p. \<forall>(a,b) \<in> D' p x. a \<in> R' p x})) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if case_split C\<^sub>R then uz else (\<lambda>x. (func' (\<lambda>_. fst) (\<lambda>_ _. True) x, undefined)))) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>R then UNIV else {x. \<forall>p. \<forall>(a,b) \<in> D' p x. a \<in> R' p x})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if case_split C\<^sub>R then uz else (\<lambda>x. (func' (\<lambda>_. fst) (\<lambda>_ _. True) x, undefined)))) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Premise_def Action_Tag_def Simplify_def
   by (cases C\<^sub>R; clarsimp;
@@ -2773,8 +2773,8 @@ lemma [\<phi>reason_template name F.scalar_zero [assertion_simps, simp]]:
 
 lemma [\<phi>reason_template name F.scalar_zero' [assertion_simps, simp]]:
   \<open> Closed_Semimodule_Zero F zero
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason None
 \<Longrightarrow> (x \<Ztypecolon> F zero') = 1 \<close>
   unfolding Closed_Semimodule_Zero_def Simplify_def Action_Tag_def
   by blast
@@ -2809,8 +2809,8 @@ lemma [\<phi>reason_template %ToA_derived_red]:
 
 lemma [\<phi>reason_template %ToA_derived_red]:
   \<open> Semimodule_Zero F zero
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
@@ -2827,8 +2827,8 @@ lemma [\<phi>reason_template %ToA_derived_red ]:
 
 lemma [\<phi>reason_template %ToA_derived_red]:
   \<open> Semimodule_Zero F zero
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
@@ -2845,8 +2845,8 @@ lemma [\<phi>reason_template %ToA_derived_red]:
 
 lemma [\<phi>reason_template %ToA_derived_red]:
   \<open> Semimodule_Zero F zero
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (((), snd x) \<Ztypecolon> F zero \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
@@ -2861,8 +2861,8 @@ lemma [\<phi>reason_template %ToA_derived_red]:
 
 lemma [\<phi>reason_template %ToA_derived_red]:
   \<open> Closed_Semimodule_Zero F zero
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero' \<w>\<i>\<t>\<h> P) \<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def Simplify_def Action_Tag_def
@@ -2878,8 +2878,8 @@ lemma [\<phi>reason_template %ToA_derived_red]:
 
 lemma [\<phi>reason_template %ToA_derived_red]:
   \<open> Closed_Semimodule_Zero F zero
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
@@ -2895,8 +2895,8 @@ lemma [\<phi>reason_template %ToA_derived_red]:
 
 lemma [\<phi>reason_template %ToA_derived_red]:
   \<open> Closed_Semimodule_Zero F zero
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<circle> \<^emph>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, snd x) \<Ztypecolon> F zero' \<^emph>[C] R \<w>\<i>\<t>\<h> P) \<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def Simplify_def Action_Tag_def
@@ -2918,8 +2918,8 @@ lemma [\<phi>reason_template name F.scalar_one_ty [assertion_simps, simp]]:
 lemma [\<phi>reason_template name F.scalar_one_ty' [assertion_simps, simp]]:
   \<open> Semimodule_One\<^sub>I F T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>I
 \<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one (\<lambda>_. True) (\<lambda>x. x) P\<^sub>E
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason None
 \<Longrightarrow> F one' = T\<^sub>1 \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def Simplify_def Action_Tag_def
   by (rule \<phi>Type_eqI_Tr; clarsimp simp add: Transformation_def)
@@ -2927,7 +2927,7 @@ lemma [\<phi>reason_template name F.scalar_one_ty' [assertion_simps, simp]]:
 lemma [\<phi>reason_template name F.scalar_one [assertion_simps, simp]]:
   \<open> Semimodule_One\<^sub>I F T\<^sub>1 one D\<^sub>I f P\<^sub>I
 \<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one D\<^sub>E g P\<^sub>E
-\<Longrightarrow> Object_Equiv (F one) eq @action \<A>_template_reason
+\<Longrightarrow> Object_Equiv (F one) eq @action \<A>_template_reason undefined
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D\<^sub>E x \<and> D\<^sub>I (g x) \<and> eq (f (g x)) x
 \<Longrightarrow> (x \<Ztypecolon> F one) = (g x \<Ztypecolon> T\<^sub>1) \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def BI_eq_iff Transformation_def Premise_def
@@ -2937,9 +2937,9 @@ lemma [\<phi>reason_template name F.scalar_one [assertion_simps, simp]]:
 lemma [\<phi>reason_template name F.scalar_one' [assertion_simps, simp]]:
   \<open> Semimodule_One\<^sub>I F T\<^sub>1 one D\<^sub>I f P\<^sub>I
 \<Longrightarrow> Semimodule_One\<^sub>E F T\<^sub>1 one D\<^sub>E g P\<^sub>E
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
-\<Longrightarrow> Object_Equiv (F one) eq @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason None
+\<Longrightarrow> Object_Equiv (F one) eq @action \<A>_template_reason undefined
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D\<^sub>E x \<and> D\<^sub>I (g x) \<and> eq (f (g x)) x
 \<Longrightarrow> (x \<Ztypecolon> F one') = (g x \<Ztypecolon> T\<^sub>1) \<close>
   unfolding Semimodule_One\<^sub>I_def Semimodule_One\<^sub>E_def BI_eq_iff Transformation_def Premise_def
@@ -3026,8 +3026,8 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D g P\<^sub>E
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason None
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (apfst g x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> x \<Ztypecolon> F one' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x) \<close>
@@ -3074,7 +3074,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
-\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (id one'') one @action \<A>_template_reason undefined
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
       <with-pattern> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> F one \<^emph>[CC] RR \<w>\<i>\<t>\<h> PP \<close>
@@ -3083,8 +3083,8 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
-\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason None
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one' \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
@@ -3384,7 +3384,7 @@ lemma [\<phi>reason_template 0]:
   \<open> Semimodule_No_SDistr F
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U F Ds Du uz
 \<Longrightarrow> ERROR TEXT(F \<open>is declared as non-scalar-associative but a property is given\<close>
-               (Semimodule_SDistr_Homo\<^sub>U F Ds Du uz)) @action \<A>_template_reason
+               (Semimodule_SDistr_Homo\<^sub>U F Ds Du uz)) @action \<A>_template_reason undefined
 \<Longrightarrow> True\<close>
   ..
 
@@ -3392,7 +3392,7 @@ lemma [\<phi>reason_template 0]:
   \<open> Semimodule_No_SDistr F
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F Ds Du uz
 \<Longrightarrow> ERROR TEXT(F \<open>is declared as non-scalar-associative but a property is given\<close>
-               (Semimodule_SDistr_Homo\<^sub>Z F Ds Du uz)) @action \<A>_template_reason
+               (Semimodule_SDistr_Homo\<^sub>Z F Ds Du uz)) @action \<A>_template_reason undefined
 \<Longrightarrow> True\<close>
   ..
 
@@ -3673,11 +3673,11 @@ lemma ToA_mapper_template[\<phi>reason_template name F\<^sub>1.ToA_mapper[]]:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>3' F\<^sub>2' F\<^sub>2\<^sub>3' C\<^sub>R U' R' Dz' z'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 C\<^sub>R U R Du uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>1' F\<^sub>4' F\<^sub>1\<^sub>4' C\<^sub>W T' W' Du' uz'
-\<Longrightarrow> separatable_unzip z' uz Du\<^sub>s mapper\<^sub>1 g r @action \<A>_template_reason
-\<Longrightarrow> compositional_mapper mapper\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) mapper\<^sub>2 Dm\<^sub>1 (map_prod g r) h @action \<A>_template_reason
-\<Longrightarrow> compositional_mapper (\<lambda>s. func_mapper' s (\<lambda>_. True)) mapper\<^sub>2 mapper\<^sub>3 Dm\<^sub>2 s (map_prod g r o h) @action \<A>_template_reason
-\<Longrightarrow> separatable_zip uz' z Dz\<^sub>s mapper\<^sub>3 mapper\<^sub>f mapper\<^sub>w f w @action \<A>_template_reason
-\<Longrightarrow> domain_of_inner_map mapper\<^sub>3 Dm\<^sub>3 @action \<A>_template_reason
+\<Longrightarrow> separatable_unzip z' uz Du\<^sub>s mapper\<^sub>1 g r @action \<A>_template_reason undefined
+\<Longrightarrow> compositional_mapper mapper\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) mapper\<^sub>2 Dm\<^sub>1 (map_prod g r) h @action \<A>_template_reason undefined
+\<Longrightarrow> compositional_mapper (\<lambda>s. func_mapper' s (\<lambda>_. True)) mapper\<^sub>2 mapper\<^sub>3 Dm\<^sub>2 s (map_prod g r o h) @action \<A>_template_reason undefined
+\<Longrightarrow> separatable_zip uz' z Dz\<^sub>s mapper\<^sub>3 mapper\<^sub>f mapper\<^sub>w f w @action \<A>_template_reason undefined
+\<Longrightarrow> domain_of_inner_map mapper\<^sub>3 Dm\<^sub>3 @action \<A>_template_reason undefined
 \<Longrightarrow> \<m>\<a>\<p> map_prod g r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> map_prod f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> \<Union> (Dom ` z ` D)
@@ -3689,8 +3689,8 @@ lemma ToA_mapper_template[\<phi>reason_template name F\<^sub>1.ToA_mapper[]]:
            (\<forall>x\<in>D. Dom' (z' (map_prod g r (uz (func_mapper h (\<lambda>_. True) (z x))))) = map_prod g r ` h ` Dom (z x)) \<and>
            (\<forall>x \<in> z' ` map_prod g r ` uz ` func_mapper h (\<lambda>_. True) ` z ` D. \<forall>a \<in> Dom' x. s a \<in> Rng' x) \<and>
            (\<forall>x \<in> z' ` map_prod g r ` uz ` func_mapper h (\<lambda>_. True) ` z ` D. func_mapper' s (\<lambda>_. True) x \<in> Du')
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> h' : uz o func_mapper h (\<lambda>_. True) o z @action \<A>_template_reason
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : uz' o func_mapper' s (\<lambda>_. True) o z' @action \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> h' : uz o func_mapper h (\<lambda>_. True) o z @action \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : uz' o func_mapper' s (\<lambda>_. True) o z' @action \<A>_template_reason undefined
 \<Longrightarrow> \<m>\<a>\<p> map_prod g r : F\<^sub>3 U \<^emph>[C\<^sub>R] F\<^sub>2 R \<mapsto> F\<^sub>3' U' \<^emph>[C\<^sub>R] F\<^sub>2' R'
     \<o>\<v>\<e>\<r> map_prod (mapper\<^sub>f f) (mapper\<^sub>w w) : F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W \<mapsto> F\<^sub>1' T' \<^emph>[C\<^sub>W] F\<^sub>4' W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D\<close>
@@ -3983,7 +3983,7 @@ lemma SE_Semimodule_SDistr_da_bc_nc_i
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U_rev F\<^sub>1 Dx\<^sub>o uz\<^sub>o Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>1
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' a d (fst x, x\<^sub>d) \<and> Dx b c (z a d (fst x,x\<^sub>d))
 \<Longrightarrow> (fst (uz b c (z a d (fst x, x\<^sub>d))), w) \<Ztypecolon> F\<^sub>1 b \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>1 b \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
@@ -4014,7 +4014,7 @@ lemma SE_Semimodule_SDistr_ad_cb_nc_i
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx'\<^sub>o z\<^sub>o
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z_rev F\<^sub>1 Ds Dx'\<^sub>o z\<^sub>o Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>1
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> a ##\<^sub>+ d \<and> Ds c \<and> Ds b \<and> c ##\<^sub>+ b
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' a d (fst x, x\<^sub>d) \<and> Dx b c (z a d (fst x, x\<^sub>d))
 \<Longrightarrow> (fst (uz b c (z a d (fst x, x\<^sub>d))), w) \<Ztypecolon> F\<^sub>1 b \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>1 b \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
@@ -4052,7 +4052,7 @@ lemma SE_Semimodule_SDistr_a_dbc_nc_i
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U F\<^sub>1 Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U_rev F\<^sub>1 Dx uz Ds Dx' uz'
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>1
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (?\<^sub>+ True db) : ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>c \<longrightarrow> Ds c \<and> Ds db \<and> db ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds b \<and> d ##\<^sub>+ b)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> x' : (fst (?\<^sub>s\<^sub>R C\<^sub>d (uz b d) (fst (?\<^sub>s\<^sub>R C\<^sub>c (uz' db c) (fst x)))), snd x)
@@ -4089,7 +4089,7 @@ lemma SE_Semimodule_SDistr_dac_b_nc_i
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z_rev F\<^sub>1 Ds Dx z Dx' z'
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>1
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (?\<^sub>+ True da) : ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds a \<and> d ##\<^sub>+ a) \<and> (C\<^sub>c \<longrightarrow> Ds da \<and> Ds c \<and> da ##\<^sub>+ c)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (C\<^sub>d \<longrightarrow> Dx a d (fst x, x\<^sub>d)) \<and>
@@ -4520,7 +4520,7 @@ lemma SE_Semimodule_SDistr_a_bd_Tr
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U F1 Ds Dx\<^sub>o uz\<^sub>o
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U_rev F1 Dx\<^sub>o uz\<^sub>o Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F1 F3
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> b ##\<^sub>+ d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b d (fst x)
 \<Longrightarrow> fst (uz b d (fst x)) \<Ztypecolon> F1 b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b \<w>\<i>\<t>\<h> P
@@ -4561,7 +4561,7 @@ lemma SE_Semimodule_SDistr_ad_b_noassoc
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F1 Ds Dx\<^sub>o z\<^sub>o
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z_rev F1 Ds Dx\<^sub>o z\<^sub>o Dx z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F1 F3
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> a ##\<^sub>+ d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx a d x
 \<Longrightarrow> z a d x \<Ztypecolon> F1 b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b \<w>\<i>\<t>\<h> P
@@ -4735,7 +4735,7 @@ lemma SE_Semimodule_SDistr_da_bc_i_ToA_mapper:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx\<^sub>z z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U F\<^sub>1' Ds' Dx\<^sub>u' uz'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1' Ds' Dx\<^sub>z' z'
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> Ds b \<and> Ds c \<and> b ##\<^sub>+ c \<and>
                   Ds' b \<and> Ds' c \<and> Ds' d \<and> Ds' a
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>(fst o prod.rotL) ` D. Dx\<^sub>z a d x \<and> Dx\<^sub>u c b (z a d x)) \<and>
@@ -4817,7 +4817,7 @@ lemma SE_Semimodule_SDistr_da_bc_i_ToA_mapper':
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx\<^sub>z z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U F\<^sub>1' Ds' Dx\<^sub>u' uz'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1' Ds' Dx\<^sub>z' z'
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> Ds b \<and> Ds c \<and> b ##\<^sub>+ c \<and>
                   Ds' b \<and> Ds' c \<and> Ds' d \<and> Ds' a
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>fst ` prod.rotL ` apsnd prod.swap ` D. Dx\<^sub>z a d x \<and> Dx\<^sub>u c b (z a d x)) \<and>
@@ -4897,7 +4897,7 @@ lemma SE_Semimodule_SDistr_ad_cb_i_ToA_mapper:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx\<^sub>z z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U F\<^sub>1' Ds' Dx\<^sub>u' uz'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1' Ds' Dx\<^sub>z' z'
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> a ##\<^sub>+ d \<and> Ds c \<and> Ds b \<and> c ##\<^sub>+ b \<and>
                   Ds' c \<and> Ds' b \<and> Ds' a \<and> Ds' d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>prod.swap ` fst ` prod.rotL ` apsnd prod.swap ` D. Dx\<^sub>z d a x \<and> Dx\<^sub>u b c (z d a x)) \<and>
@@ -4974,7 +4974,7 @@ lemma SE_Semimodule_SDistr_da_bc_i_ToA_mapper:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx\<^sub>z z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U F\<^sub>1' Ds' Dx\<^sub>u' uz'
-\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds (d + a) \<and> Ds c \<and> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> d + a ##\<^sub>+ c \<and>
                   Ds' (d + a) \<and> Ds' c \<and> Ds' d \<and> Ds' a
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>fst ` prod.rotL ` apsnd prod.swap ` D. Dx\<^sub>z a d x \<and> Dx\<^sub>u c b (z a d x)) \<and>
@@ -5076,7 +5076,7 @@ lemma [\<phi>reason_template name F.G.comm[no_atp]]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F' T) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
     RE = (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y)
-    @action \<A>_template_reason
+    @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute_def Orelse_shortcut_def
   by (elim disjE; simp)
@@ -5087,7 +5087,7 @@ lemma [\<phi>reason_template name F.G.comm[no_atp]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
+    RE = (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Orelse_shortcut_def Transformation_def
   by (elim disjE; simp)
@@ -5096,7 +5096,7 @@ lemma [\<phi>reason_template name F.G.comm[no_atp]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F' T) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
+    RE = (x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Orelse_shortcut_def Transformation_def
   by (elim disjE; simp)
@@ -5108,7 +5108,7 @@ lemma Comm_Tyops\<^sub>1\<^sub>_\<^sub>2_ToA_temlpate[\<phi>reason_template name
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
+    RE = (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Orelse_shortcut_def
   by (elim disjE; simp)
@@ -5117,7 +5117,7 @@ lemma Comm_Tyops\<^sub>2\<^sub>_\<^sub>1_ToA_temlpate[\<phi>reason_template name
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (r, RE) = (embedded_func f P, (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F (G T U) \<w>\<i>\<t>\<h> P x)) \<or>\<^sub>c\<^sub>u\<^sub>t
-    RE = (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason
+    RE = (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Orelse_shortcut_def
   by (elim disjE; simp)
@@ -5130,7 +5130,7 @@ subparagraph \<open>1-to-1\<close>
 lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason)
+\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action \<A>_transitive_simp \<close>
   unfolding Transformation_def Action_Tag_def Tyops_Commute_def Premise_def
             Simplify_def Action_Tag_def
@@ -5139,7 +5139,7 @@ lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason)
+\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action \<A>_backward_transitive_simp \<close>
   unfolding Transformation_def Action_Tag_def Tyops_Commute_def Premise_def
             Simplify_def Action_Tag_def
@@ -5150,7 +5150,7 @@ paragraph \<open>1-to-2\<close>
 lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason)
+\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
   by clarsimp
@@ -5158,7 +5158,7 @@ lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason)
+\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_backward_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
   by clarsimp
@@ -5168,7 +5168,7 @@ paragraph \<open>2-to-1\<close>
 lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason)
+\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
   by clarsimp
@@ -5176,7 +5176,7 @@ lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason)
+\<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_backward_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
   by clarsimp
@@ -6756,8 +6756,8 @@ text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules 
 lemma [\<phi>reason_template name F.\<phi>None [assertion_simps, simp]]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> TERM (Identity_Elements\<^sub>I (F \<circle>))
-\<Longrightarrow> Identity_Elements\<^sub>I (F \<circle>) D\<^sub>I P\<^sub>I @action \<A>_template_reason
-\<Longrightarrow> Identity_Elements\<^sub>E (F \<circle>) D\<^sub>E @action \<A>_template_reason
+\<Longrightarrow> Identity_Elements\<^sub>I (F \<circle>) D\<^sub>I P\<^sub>I @action \<A>_template_reason undefined
+\<Longrightarrow> Identity_Elements\<^sub>E (F \<circle>) D\<^sub>E @action \<A>_template_reason undefined
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (D\<^sub>I () \<and> D\<^sub>E ())
 \<Longrightarrow> NO_SIMP (F \<circle> = \<circle>) \<close>
   unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def NO_SIMP_def Action_Tag_def
@@ -7158,20 +7158,26 @@ ML \<open> structure Tag_Has_Bubbling = Simpset (
 )
 \<close>
 
-lemma [\<phi>reason_template requires \<open>Tyops_Commute _ F' _ G' _ _ _\<close> ["_tagging_has_bubbling_"]]:
-  \<open> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)\<close>
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
+  \<open> TERM (Tyops_Commute F F' G G' T D r)
+\<Longrightarrow> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)\<close>
   unfolding Has_Bubbling_def .
 
-lemma [\<phi>reason_template requires \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ F'\<^sub>T _ _ G' _ _ _ _\<close> ["_tagging_has_bubbling_"]]:
-  \<open> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) U \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) U\<close>
+lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
+  \<open> TERM (Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r)
+\<Longrightarrow> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) FU \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) FU\<close>
   unfolding Has_Bubbling_def .
 
-lemma [\<phi>reason_template requires \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ F'\<^sub>U _ G' _ _ _ _\<close> ["_tagging_has_bubbling_"]]:
-  \<open> G' T (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' T (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)\<close>
+lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
+  \<open> TERM (Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r)
+\<Longrightarrow> G' FT (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' FT (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)\<close>
   unfolding Has_Bubbling_def .
 
-lemma [\<phi>reason_template requires \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F _ _ G _ T U _ _\<close> ["_tagging_has_bubbling_"]]:
-  \<open> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U)\<close>
+lemma [\<phi>reason_template ["_tagging_has_bubbling_"]]:
+  \<open> TERM (Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r)
+\<Longrightarrow> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U)\<close>
   unfolding Has_Bubbling_def .
 
 
