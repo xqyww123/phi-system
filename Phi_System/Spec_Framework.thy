@@ -1033,9 +1033,13 @@ lemma view_shift_by_implication[intro?, \<phi>reason 10]:
   unfolding Transformation_def View_Shift_def INTERP_SPEC_def Satisfaction_def
   by (clarsimp simp add: set_mult_expn) blast
 
-lemma view_shift_0[\<phi>reason 2000 for \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> ?X \<w>\<i>\<t>\<h> ?P\<close>]:
-  \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> X\<close>
+lemma view_shift_0[simp]:
+  \<open> 0 \<s>\<h>\<i>\<f>\<t>\<s> X \<w>\<i>\<t>\<h> any \<close>
   by (blast intro: view_shift_by_implication zero_implies_any)
+
+lemma [\<phi>reason 2000 for \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> ?X \<w>\<i>\<t>\<h> ?P\<close>]:
+  \<open> 0 \<s>\<h>\<i>\<f>\<t>\<s> X \<w>\<i>\<t>\<h> False \<close>
+  by simp
 
 lemma view_shift_refl[\<phi>reason 2000 for \<open>?A \<s>\<h>\<i>\<f>\<t>\<s> ?B \<w>\<i>\<t>\<h> ?P\<close>]:
   "A \<s>\<h>\<i>\<f>\<t>\<s> A"

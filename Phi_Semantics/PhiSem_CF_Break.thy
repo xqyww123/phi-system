@@ -130,7 +130,7 @@ proc op_brk_scope:
     unfold Technical_def
     case_analysis \<medium_left_bracket>
       unfold Brk_Frame_eq_identity'
-      apply_rule FIC.brk_frame.getter_rule[where k=\<open>\<phi>arg.dest \<v>0\<close> and k=l] \<exists>\<v>\<^sub>l
+      apply_rule FIC.brk_frame.getter_rule[where k=\<open>\<phi>arg.dest \<v>0\<close> and k=l]
       apply_rule FIC.brk_frame.setter_rule[where k=\<open>\<phi>arg.dest \<v>0\<close> and k=l and u=None]
       Brk_Frame_eq_identity'2
 

@@ -302,14 +302,15 @@ fun synthesis term ctxt sequent =
       ) NONE NONE ctxt sequent'
   end
 
-
-fun obligation_proof print_results mode kind before_qed after_qed fixes assumes sequent0 =
+(*the sequent must be leaded by a premises antecedent*)
+fun obligation_proof print_results mode kind before_qed after_qed fixes assumes sequent0 state =
   let
+    val sequent01 = Phi_Reasoners.obligation_intro_Ex_conv ~1 (Proof.context_of state) sequent0
     val (oblg,sequent) =
-        let val th = @{thm Premise_I} RS sequent0
-            handle THM _ => @{thm Simplify_I} RS sequent0
+        let val th = @{thm Premise_I} RS sequent01
+            (*handle THM _ => @{thm Simplify_I} RS sequent01*)
          in ([Phi_Help.leading_antecedent' th], th) end
-        handle THM _ => ([], sequent0)
+        handle THM _ => ([], sequent01)
     fun after_qed' (ctxt, thmss) stat =
       let
         val ctxt' = Proof.context_of stat
@@ -318,9 +319,9 @@ fun obligation_proof print_results mode kind before_qed after_qed fixes assumes 
        in after_qed sequent' stat
       end
     val setup_environ = Phi_Envir.freeze_dynamic_lemmas
-  in
-    Proof.map_context setup_environ
-  #>Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
+  in state
+  |> Proof.map_context setup_environ
+  |> Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
        (map (fn t => (Binding.empty_atts,[(t,[])])) oblg)
   end
 

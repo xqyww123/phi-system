@@ -207,7 +207,7 @@ proc
           ;; break  
           \<medium_right_bracket> 
             \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v ;; continue \<medium_right_bracket>
-    assert \<open>\<bottom>\<^sub>B\<^sub>I\<close> 
+    assert \<open>\<bottom>\<^sub>B\<^sub>I\<close>  
   \<medium_right_bracket> (*loop body*)
     ;; $v
 \<medium_right_bracket>.

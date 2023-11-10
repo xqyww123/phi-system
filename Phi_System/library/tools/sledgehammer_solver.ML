@@ -1,6 +1,7 @@
 signature PHI_SLEDGEHAMMER_SOLVER = sig
 
 val auto : Phi_Cache_DB.proof_id option -> Proof.context -> thm -> thm
+
 val assync_proof : bool Config.T
 
 end
@@ -328,7 +329,7 @@ fun sledgehammer (ctxt,sequent0) =
   end
 
 
-fun auto' id (ctxt,sequent') =
+fun auto'i id (ctxt,sequent') =
   let
     val thy = Proof_Context.theory_of ctxt
     val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
@@ -399,7 +400,7 @@ if no_cache
 (* val proof = raw_sledgehammer stat *)
 
 fun auto id ctxt sequent =
-  wrapper (case id of SOME id' => auto' id'
+  wrapper (case id of SOME id' => auto'i id'
                     | NONE => Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1 #> snd) (ctxt,sequent)
   handle Auto_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
        | Phi_Reasoners.Automation_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))

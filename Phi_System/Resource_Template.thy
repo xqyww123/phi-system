@@ -767,9 +767,9 @@ lemma getter_rule:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace>
               1(k' \<mapsto> u) \<Ztypecolon> \<phi> Itself \<longmapsto>
-        \<lambda>ret. 1(k' \<mapsto> u) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> P k' \<and> v = u
+        \<lambda>ret. 1(k' \<mapsto> u) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> ret = \<phi>arg u \<and> u \<in> P k'
       \<rbrace> \<close>
-  by (rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified singleton_iff],
+  by (rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified singleton_iff, simplified],
       assumption,
       rule \<F>_it_refinement_projection,
       simp)
@@ -816,10 +816,10 @@ lemma getter_rule:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k
       \<lbrace>       1(k' := to_share (Some u)) \<Ztypecolon> \<phi> Itself \<longmapsto>
-        \<lambda>ret. 1(k' := to_share (Some u)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> P k' \<and> v = u \<rbrace> \<close>
-  by(rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified,
+        \<lambda>ret. 1(k' := to_share (Some u)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> ret = \<phi>arg u \<and> u \<in> P k' \<rbrace> \<close>
+  by (rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified,
                             OF _ to_share.\<F>_functional_projection[where S=\<open>{x}\<close> for x :: \<open>'val discrete option\<close>, simplified]],
-     assumption)
+      assumption)
 
 lemmas allocate_rule =
   "__allocate_rule_2__"[OF \<F>_pointwise_refinement[where I=\<open>\<lambda>_. \<F>_functional to_share UNIV\<close>,

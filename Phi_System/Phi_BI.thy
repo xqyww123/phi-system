@@ -1119,7 +1119,7 @@ lemma bot_eq_BI_bot [\<phi>programming_base_simps, \<phi>programming_simps]:
   unfolding zero_set_def ..
 
 lemma zero_implies_any[simp]:
-  \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<close>
+  \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any\<close>
   unfolding Transformation_def zero_set_def Satisfaction_def by simp
 
 subsubsection \<open>Rewrites\<close>
@@ -1137,13 +1137,18 @@ subsubsection \<open>Transformation Rules\<close>
     and the usual reasoning procedure is still required to unfold the target connective-by-connective
     to ensure every variables inside is instantiated.\<close>
 
-declare zero_implies_any[\<phi>reason %ToA_cut for \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
-                                              \<open>?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]
+lemma [\<phi>reason %ToA_cut for \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+                            \<open>?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> False\<close>
+  by simp
+
 
 lemma [\<phi>reason %ToA_bot for \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ \<close>
                             \<open>?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ \<close> ]:
-  \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Any] 0\<close>
-  using zero_implies_any .
+  \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Any] 0 \<w>\<i>\<t>\<h> False\<close>
+  using zero_implies_any Transformation_def
+  by simp
+
 
 paragraph \<open>Reductions\<close>
 
@@ -1497,6 +1502,14 @@ text \<open>Semantically, an existential quantification in BI actually represent
 
 lemma " Union { S x |x. P x } = (S x \<s>\<u>\<b>\<j> x. P x) "
   by (simp add: set_eq_iff ExSet_def Subjection_def) blast
+
+subsubsection \<open>Basic Rules\<close>
+
+lemma BI_Ex_comm:
+  \<open>(\<exists>* x y. A x y) = (\<exists>* y x. A x y)\<close>
+  unfolding BI_eq_iff
+  by (simp, blast)
+
 
 subsubsection \<open>Simplifications\<close>
 
@@ -2227,6 +2240,11 @@ lemma AllSet_trans:
 \<Longrightarrow> trans (\<forall>\<^sub>B\<^sub>I x. B x)\<close>
   unfolding AllSet_def
   by (smt (verit) mem_Collect_eq transD transI)
+
+lemma BI_All_comm:
+  \<open>(\<forall>\<^sub>B\<^sub>I x y. A x y) = (\<forall>\<^sub>B\<^sub>I y x. A x y)\<close>
+  unfolding BI_eq_iff
+  by (simp, blast)
 
 lemma [elim!]:
   \<open>Inhabited (AllSet S) \<Longrightarrow> (Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -4518,7 +4536,7 @@ structure Assertion_SS_Source = Simpset (
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS_Source.map (fn ctxt =>
       ctxt addsimps @{thms' ExSet_simps_ex}
-        |> Simplifier.add_cong @{thm' Subjection_cong}
+        (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
     )))
 
 structure Assertion_SS_Target = Simpset (
@@ -4589,6 +4607,11 @@ lemmas [\<phi>programming_base_simps] =
   HOL.if_True HOL.if_False
 
 
+ML_file \<open>library/reasoning/quantifier.ML\<close>
+
+simproc_setup defined_ExSet ( \<open>ExSet A\<close> ) = \<open>K BI_Quantifiers.defined_Ex\<close>
+
+(*
 simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
   = \<open>fn _ => fn ctxt => fn ctm =>
       case Thm.term_of ctm
@@ -4613,6 +4636,7 @@ simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
        else NONE
       end
         | _ => NONE\<close>
+*)
 
 setup \<open>Context.theory_map (Assertion_SS.map (fn ctxt =>
     ctxt addsimprocs [@{simproc defined_ExSet}]))\<close>

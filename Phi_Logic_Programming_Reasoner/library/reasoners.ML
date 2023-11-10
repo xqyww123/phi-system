@@ -5,20 +5,24 @@ signature PHI_REASONERS = sig
   exception Automation_Fail of (Proof.context * thm) option
   val error_message : (Proof.context * thm) option -> string
 
-  type contraction_mode = bool * bool * int
-  (*contraction_mode = (collect_premises, conv_all, conv_schematic)
+  type schm_by_ex = int
+  (*whether to replace schematic variables by existential quantified variables if feasible.
+      0: do not generate existence in obligations, leaving them schematic variables, so this feature
+         is disabled at all.
+      1: generate existences in obligations, which are given at the beginning the obligations.
+      2: generate existences in obligations and try to push them over (\<longrightarrow>, \<and>) to the bottom.
+         This pushing is done by the mechanism of special existences (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R).
+      ~1: take \<open>Config.get existential_obligation\<close> *)
 
-    collect_premises: if collect premises into the reported proof oblgiation
-    conv_all: if convert all meta-all into hol-all inside the reported obligation
-    conv_schematic: if replace feasible schematic variables by existential quantified variables.
-      0: do not generate existence in obligations, leaving them schematic variables
-      1: generate existence in obligations
-      2: generate existence in obligations and apply_tac a special patch on them to enhance the automation
-         of Isabelle for solving them (using introduction rules)
-      ~1: take \<open>Config.get existential_obligation\<close>
-  *)
+  type contraction_mode = bool * bool * schm_by_ex
+  (*contraction_mode = (collect_premises, conv_all, schm_by_ex)
+
+    collect_premises: whether to collect premises into the reported proof oblgiation
+    conv_all: whether to convert all meta-all into hol-all inside the reported obligation *)
+
   val collect_obligation_premises : contraction_mode -> Proof.context -> thm
                                  -> int (*number of new conditions introduced*) * thm
+  val obligation_intro_Ex_conv : schm_by_ex -> Proof.context -> thm -> thm
 
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
   val wrap': (Proof.context -> thm -> thm option) -> (context_state -> context_state option)
@@ -479,6 +483,16 @@ fun obligation_collect ctxt filter ctm =
   ) ctm
 *)
 
+type schm_by_ex = int
+type contraction_mode = bool * bool * schm_by_ex
+
+fun chk_schm_by_ex ctxt ~1 = Config.get ctxt existential_obligation
+  | chk_schm_by_ex _ i = i
+
+fun chk_option ctxt (a,b,~1) = (a,b,Config.get ctxt existential_obligation)
+  | chk_option _ option = option
+
+
 fun obligation_conv_all ctxt ctm =
   Phi_Help.lambda_normalization_conv (fn ctm =>
   case Thm.term_of ctm
@@ -490,12 +504,12 @@ fun obligation_conv_all ctxt ctm =
      | _ => raise CTERM ("internal bug 6733574a-42dc-4592-a08e-ddc223bb6b94", [ctm])
   ) ctm
 
-fun obligation_intro_Ex_conv conv_schematic ctxt thm0 =
+fun obligation_intro_Ex_conv' conv_schematic ctxt thm0 =
   let val thm = Phi_Help.beta_eta_contract thm0
              |> (fn th => if null (Thm.tpairs_of th) then th
                           else case Seq.chop 2 (Thm.flexflex_rule (SOME ctxt) th)
                                  of ([th'], _) => th'
-                                  | _ => th (*fails to solving flex-flex*))
+                                  | _ => th (*fails to solve flex-flex pairs*))
       fun dest' (\<^Const>\<open>Pure.imp\<close> $ (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (
                       Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ P)) $ Q) = (P,Q)
         | dest' tm = raise TERM ("obligation_intro_Ex", [tm])
@@ -526,7 +540,8 @@ fun obligation_intro_Ex_conv conv_schematic ctxt thm0 =
                 if mode
                 then Phi_Conv.leading_antecedent_conv (
                     PLPR_Syntax.premise_tag_conv (
-                      (fn ctm => Phi_Conv.move_sp_Ex_inside (K Conv.all_conv) ctxt ctm)
+                      (Phi_Conv.move_sp_Ex_inside (K (
+                                    Conv.fun_conv (Conv.rewr_conv @{thm' special_Ex_def}))) ctxt)
                       (*mv_Ex_All (fn _ => mv_Ex_Disj Conv.all_conv) ctxt*) )
                   )
                 else Conv.all_conv)
@@ -534,9 +549,8 @@ fun obligation_intro_Ex_conv conv_schematic ctxt thm0 =
    in fold intro_Ex vars' thm
   end
 
-type contraction_mode = bool * bool * int
-fun chk_option ctxt (a,b,~1) = (a,b,Config.get ctxt existential_obligation)
-  | chk_option _ option = option
+fun obligation_intro_Ex_conv conv_schematic ctxt thm =
+  obligation_intro_Ex_conv' (chk_schm_by_ex ctxt conv_schematic) ctxt thm
 
 fun augment_conditions conds ctxt sequent =
   let val _ = if can (PLPR_Syntax.dest_premise_tag o HOLogic.dest_Trueprop o Phi_Help.leading_antecedent') sequent
@@ -583,7 +597,7 @@ fun collect_obligation_premises option ctxt thm = let open Conv
 
    in drop_wastes rule1
    |> conv_all ? gconv_rule (obligation_conv_all ctxt) 1
-   |> conv_schematic > 0 ? obligation_intro_Ex_conv conv_schematic ctxt
+   |> conv_schematic > 0 ? obligation_intro_Ex_conv' conv_schematic ctxt
    |> pair (!new_cond)
   end
 

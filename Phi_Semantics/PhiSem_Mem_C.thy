@@ -132,7 +132,6 @@ proc op_load_mem:
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
   apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=n and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
   \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (n \<odiv> MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
-    certified by (of_tac v, auto_sledgehammer) ;;
 
   semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
   semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
@@ -170,7 +169,6 @@ proc op_store_mem:
                                     and v=\<open>\<phi>arg.dest \<v>2\<close> and blk=\<open>memaddr.blk addr\<close>]
 
   \<open>f (\<lambda>_. y) x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T')))\<close>
-    certified by (of_tac \<open>\<phi>arg.dest \<v>2\<close>, auto_sledgehammer)
 
 \<medium_right_bracket> .
 
@@ -193,7 +191,6 @@ proc op_allocate_mem_1:
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and v=\<open>the (Zero TY)\<close>]
 
   \<open>z \<Ztypecolon> MAKE (\<m>\<e>\<m>[memaddr blk 0] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
-    certified by (of_tac \<open>the (Zero TY)\<close>, auto_sledgehammer) ;;
   
   semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
 

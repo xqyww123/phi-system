@@ -2476,6 +2476,8 @@ subsubsection \<open>Post-Application Process\<close>
 
 setup \<open>Context.theory_map (
 
+   (*automatically solve proof obligations, if no \<^keyword>\<open>certified\<close> is appended*)
+
    Phi_CP_IDE.Post_App.add 50 (fn arg => fn (ctxt, sequent) =>
     case Thm.prop_of sequent
       of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
@@ -2490,7 +2492,8 @@ setup \<open>Context.theory_map (
            not (Symtab.defined (#config arg) "no_oblg")   andalso
            not (can \<^keyword>\<open>certified\<close> (#toks arg))
         then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
-              in raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent))
+                 val sequent' = Phi_Reasoners.obligation_intro_Ex_conv ~1 ctxt sequent
+              in raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent'))
               handle Phi_Reasoners.Automation_Fail err =>
                   error (Phi_Reasoners.error_message err)
              end
@@ -2500,6 +2503,7 @@ setup \<open>Context.theory_map (
    )
 
    (* process \<phi>-LPR antecedents *)
+
 #> Phi_CP_IDE.Post_App.add 100 (fn arg => fn (ctxt, sequent0) =>
     case Thm.prop_of sequent0
       of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
@@ -2600,7 +2604,9 @@ setup \<open>Context.theory_map (
 \<phi>lang_parser enter_proof (%\<phi>parser_unique, %\<phi>lang_expr) ["certified"]
                          (\<open>Premise _ _ \<Longrightarrow> PROP _\<close> | \<open>Simplify _ _ _ \<Longrightarrow> PROP _\<close> | \<open>?Bool\<close>)
   \<open>fn stat => \<^keyword>\<open>certified\<close> |-- Phi_Opr_Stack.end_of_input >> (fn _ => fn cfg => stat
-   |>  apsnd (Phi_CP_IDE.proof_state_call (snd o Phi_Toplevel.prove_prem (cfg,false) I))
+   |> apsnd (
+        Phi_Reasoners.wrap'' (Phi_Reasoners.obligation_intro_Ex_conv ~1)
+     #> Phi_CP_IDE.proof_state_call (snd o Phi_Toplevel.prove_prem (cfg,false) I))
    |> Phi_Opr_Stack.interrupt
  )\<close>
 
