@@ -27,9 +27,9 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val ind_rewr_I = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
                              \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
                           by (unfold atomize_imp Action_Tag_def)}
-      val ind_rewr_E_IH = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target undefined)
-                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>backward_simp)\<close>
-                          by (simp add: atomize_imp Action_Tag_def atomize_all)}
+      val ind_rewr_E_IH = @{lemma' \<open> Trueprop (A \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> B \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_ind_target undefined)
+                                  \<equiv> (\<And>x'. A \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> B \<and> x' = x \<Longrightarrow> (x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<A>backward_simp)\<close>
+                          by (simp add: atomize_imp Action_Tag_def atomize_all Premise_def)}
       val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target undefined)
                                   \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action NToA)\<close>
                                 by (simp add: atomize_imp Action_Tag_def Bubbling_def atomize_all)}
@@ -39,7 +39,8 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                                                       else ind_rewr_E_CL) then_conv
             (if is_IH then (@{print} o Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def}))
                       else Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)) then_conv
-            (*(if is_intro then I else (Phi_Conv.meta_all_conv o (fn C => C o snd)))*) (fn _ =>
+            (if not is_intro andalso is_IH then Phi_Conv.meta_all_conv o (fn C => C o snd)
+                                           else I) (fn _ =>
             Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]})) Conv.all_conv
               (*(if not is_intro andalso not is_IH
                then Conv.implies_concl_conv (Phi_Conv.action_tag_conv (

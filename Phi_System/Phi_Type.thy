@@ -7129,11 +7129,6 @@ lemma \<phi>TA_TyComm\<^sub>E_gen:
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
            (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target undefined)
-                            \<comment>\<open>^ target of inductive expansion. We only support a function \<open>embedded_func f P\<close>
-          instead of a relation. It is a limitation. The main difficulty is here if it is a relation,
-          we lose the location \<open>y \<Ztypecolon> G' _\<close> to apply induction. \<open>y\<close> is fixed here, but if we consider
-          a relation, then \<open>y\<close> is existentially quantified. We have no idea how to overcome this
-          limitation right now.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT

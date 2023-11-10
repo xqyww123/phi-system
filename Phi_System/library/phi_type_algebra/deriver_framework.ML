@@ -217,7 +217,7 @@ val default_reasoning :
   Given a term, `varifier` returns the subterms that should be schematic variables, and
                 a function substituting schematic variables for those subterms.
 
-  `reasoning_configure` parse the role of local premises.
+  `reasoning_configure` parses the role of local premises.
   It receives the subgoal context, local premises, local sequent, and should classify the local premises
   into three sorts, pure conditions, rewrites and reasoners respectively.
 *)
