@@ -538,6 +538,11 @@ lemma [\<phi>reason default %\<phi>simp_fallback]:
   unfolding Action_Tag_def Bubbling_def Transformation_def
   by simp
 
+lemma [\<phi>reason default %\<phi>simp_fallback]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<s>\<u>\<b>\<j> x'. x' = x @action \<A>backward_simp \<close>
+  unfolding Action_Tag_def Bubbling_def Transformation_def
+  by simp
+
 paragraph \<open>Bubbling \<phi>Sep\<close>
 
 abbreviation Bubbling_\<phi>Sep (infixr "\<^emph>\<^sub>\<A>" 70)

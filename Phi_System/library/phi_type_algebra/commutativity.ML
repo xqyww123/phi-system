@@ -200,6 +200,8 @@ fun whether_to_swap_normalize ctxt =
   let val internal_check = whether_to_swap_normalize_internal ctxt
       val parse_comm = parse_comm_F_Gs_from_appl ctxt
    in fn bvs => fn F_G_T_term =>
+      exists_Const (fn (\<^const_name>\<open>Bubbling\<close>, _) => true
+                     | _ => false) F_G_T_term orelse
       exists (internal_check bvs) (parse_comm (bvs, F_G_T_term))
   end
 
@@ -224,7 +226,7 @@ fun swap_normalization_guard (ctxt, sequent) =
                                 Const(\<^const_name>\<open>Subjection\<close>, _) $ Y' $ _)
                                => snd (Phi_Syntax.dest_phi_type_assertion Y')
                            | _ => snd (Phi_Syntax.dest_phi_type_assertion Y )
-                     | _ => raise THM("swap_normalization_guard: BUG", 1, [sequent])
+                     | _ => raise THM("swap_normalization_guard", 1, [sequent])
 
    in (*(Config.get ctxt enable_swap_normalization_in_CoP_simp orelse
        Config.get ctxt under_NToA_ctxt) andalso*)
@@ -236,7 +238,7 @@ datatype whether_swap_norm_synt =
             Literal of whether_swap_norm | ML_Code of Input.source
 
 val direction_synt = Args.$$$ "into" >> K S_In
-                  || Args.$$$ "from" >> K S_Out
+                  || Args.$$$ "out" >> K S_Out
 
 val to_normalize_synt =
       Scan.optional (\<^keyword>\<open>is\<close> |-- (  Args.$$$ "false" >> K (Literal (K (SOME false)))
@@ -298,7 +300,7 @@ val _ = Theory.setup (
        |> Config.restore_generic Phi_CoP_Backward_Simp.extract_pattern_trigger ctxt
       end
   )))
-  "declaring a \<phi>simp rule which will be used in swapping normalization.\
+  "declares a \<phi>simp rule which will be used in swapping normalization.\
   \ Note the swap still needs to be enabled by declaring \<phi>ToA_swap_normalization"
 
 #> Context.theory_map (

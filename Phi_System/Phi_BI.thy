@@ -4797,8 +4797,8 @@ lemma \<A>simp_trans:
   by simp blast
 
 lemma \<A>simp_trans_backward:
-  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>_transitive_simp' direction Any)
-\<Longrightarrow> (\<And>z. z \<Ztypecolon> Z \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. w x z @action \<A>simp_if_need direction M)
+  \<open> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> w x z \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>_transitive_simp' direction Any)
+\<Longrightarrow> z \<Ztypecolon> Z \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. w x z @action \<A>simp_if_need direction M
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>y. \<exists>x. r x y \<and> w x z)
 \<Longrightarrow> z \<Ztypecolon> Z \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r' y @action \<A>simp' direction Any2 \<close>
   unfolding Action_Tag_def Transformation_def Simplify_def
@@ -4856,7 +4856,7 @@ private lemma \<A>simp_chk_go_transitive':
   by clarsimp blast
 
 private lemma \<A>simp_chk_go_transitive_backward:
-  \<open> (\<And>y. y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r y z @action \<A>simp' direction M)
+  \<open> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> w y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r y z @action \<A>simp' direction M)
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. w y @action \<A>transitive_simp_if_need direction False
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. \<exists>y. w y \<and> r y z)
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @action \<A>transitive_simp_if_need direction M\<close>
@@ -4864,7 +4864,7 @@ private lemma \<A>simp_chk_go_transitive_backward:
   by clarsimp blast
 
 private lemma \<A>simp_chk_go_transitive_backward':
-  \<open> (\<And>y. y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r y z @action \<A>simp' direction M)
+  \<open> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> w y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r y z @action \<A>simp' direction M)
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. w y @action \<A>transitive_simp_if_need direction False
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' : (\<lambda>z. \<exists>y. w y \<and> r y z)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps SOURCE] Z' : z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z
@@ -4962,7 +4962,7 @@ hide_fact \<A>simp_stage_1 \<A>simp_chk_no_need \<A>simp_chk_no_need'
 paragraph \<open>Invoking CoP-simp in ToA reasoning\<close>
 
 lemma normalize_target:
-  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>transitive_simp_if_need False False)
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>transitive_simp_if_need False False
 \<Longrightarrow> Object_Equiv U eq
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P : (\<forall>y'. r x y' \<longrightarrow> eq y' y)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Q)
@@ -4977,7 +4977,7 @@ lemma normalize_target:
   by clarsimp metis
 
 lemma normalize_target_R:
-  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>transitive_simp_if_need False False)
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action \<A>transitive_simp_if_need False False
 \<Longrightarrow> Object_Equiv U eq
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P : (\<forall>y'. r x y' \<longrightarrow> eq y' y)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q)

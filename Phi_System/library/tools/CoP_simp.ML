@@ -107,8 +107,8 @@ fun chk_pattern pat =
 (*the (type part of) \<phi>-types matching this pattern will invoke the simplification*)
 fun add_simp_pattern pat ctxt =
   (chk_pattern pat ;
-   Checkers.map (Net.insert_term (chker_eq (Context.theory_of ctxt))
-                                 (pat, Chk_Pattern pat)) ctxt)
+   Checkers.map (Net.insert_term_safe (chker_eq (Context.theory_of ctxt))
+                                      (pat, Chk_Pattern pat)) ctxt)
 
 fun add_simp_trigger (pat,chker) ctxt =
   let val _ = chk_pattern pat
@@ -165,9 +165,18 @@ fun force_rule_pass rule ctxt =
         | get_pat (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = get_pat X
         | get_pat (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _) =
               if RULES.direction then get_pat X else get_pat Y
-        | get_pat (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) = T
+        | get_pat (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =
+              if RULES.direction then T else
+              bad_rule "\nThe target of the backward-transformation should be in \<open>y : Y subj y. r y\<close> form."
+        | get_pat (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
+              Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _)) =
+              if RULES.direction
+              then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
+              else T
         | get_pat X = if Phi_Syntax.is_BI_connective X
-                      then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
+                      then if RULES.direction
+                           then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
+                           else bad_rule "\nThe target of the backward-transformation should be in \<open>y : Y subj y. r y\<close> form."
                       else X
       val pat = if Config.get_generic ctxt extract_pattern_trigger
                 then SOME (get_pat (Thm.concl_of rule))

@@ -27,26 +27,26 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val ind_rewr_I = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
                              \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
                           by (unfold atomize_imp Action_Tag_def)}
-      val ind_rewr_E_IH = @{lemma' \<open> Trueprop (A \<longrightarrow> (\<forall>x. B x \<longrightarrow> C x) @action \<phi>TA_ind_target \<A>)
-                                  \<equiv> (\<And>x. A \<Longrightarrow> B x \<Longrightarrow> C x @action \<A>)\<close>
+      val ind_rewr_E_IH = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target undefined)
+                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>backward_simp)\<close>
                           by (simp add: atomize_imp Action_Tag_def atomize_all)}
-      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> (\<forall>x. B x \<longrightarrow> (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> FT \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P x)) @action \<phi>TA_ind_target \<A>)
-                                  \<equiv> (\<And>x. A \<Longrightarrow> B x \<Longrightarrow> (x \<Ztypecolon> FT \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P x) @action NToA)\<close>
+      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target undefined)
+                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action NToA)\<close>
                                 by (simp add: atomize_imp Action_Tag_def Bubbling_def atomize_all)}
-      fun gen_ind_conv is_IH ctxt _ ctm = (@{print} o
+      fun gen_ind_conv is_IH ctxt _ ctm = (@{print} o (
             Conv.rewr_conv (if is_intro then ind_rewr_I
                                         else if is_IH then ind_rewr_E_IH
                                                       else ind_rewr_E_CL) then_conv
-            (if is_IH then Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def})
+            (if is_IH then (@{print} o Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def}))
                       else Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)) then_conv
-            (if is_intro then I else (Phi_Conv.meta_all_conv o (fn C => C o snd))) (fn ctxt =>
-            Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]}))
-              (if not is_intro andalso not is_IH
+            (*(if is_intro then I else (Phi_Conv.meta_all_conv o (fn C => C o snd)))*) (fn _ =>
+            Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]})) Conv.all_conv
+              (*(if not is_intro andalso not is_IH
                then Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
                        Phi_Syntax.transformation_conv Conv.all_conv
                                                       (@{print} o Phi_Reasoners.tag_having_bubbling ctxt)
                                                       Conv.all_conv))
-               else Conv.all_conv)) ctxt) ctm
+               else Conv.all_conv)*)) ctxt)) ctm
       val ind_conv = default_ind_conv (gen_ind_conv true, gen_ind_conv false)
       (*val ind_conv = default_ind_conv (
             fn ctxt => fn _ =>
@@ -99,7 +99,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                    end) phi ctxt
 
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
-                                     [(K (SOME (if is_intro then [0] else [0,~1])), ind_conv, reasoning is_intro)],
+                                     [(K (SOME (if is_intro then [0] else [0])), ind_conv, reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules

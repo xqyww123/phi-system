@@ -1638,6 +1638,8 @@ declare [[\<phi>trace_reasoning = 0]]
 
                              in carrier_set and > derived_carrier_set and < carrier_set_cut \<open>\<close>
 
+
+
 declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
