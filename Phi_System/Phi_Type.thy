@@ -20,29 +20,22 @@ and strategies to derive the properties are given. Our case studies show the cap
 refinement of challenging data structures down to C semantics.
 
 
-
-
-
-
-
+<Other notes>:
 
 When the refinement relations of all parties of a program are identical, a verification is easy and
 proof obligations can be extracted on the abstract domain provided by the refinement.
 The difficulty lies in constructing / destructing refinements between layers of abstraction, and
 converting 
 
+------------------------
 
+The work closest to us is by Dinsdale et al, who try to bring hierarchical composition into data refinement
+on specific data structures.
+However, it lacks of a general meta theory and a general automation over any data structures like us.
+They failed to give the meta theory because they chose wrong formalization, whereas ours thanking to
+the unification of DR and predicates, can express it simply using the language of higher order predicates.
 
-
-
-
-
-
-
-
-
-
-
+------------------------
 
 title:
             Three Pigs: A Synthetic Approach to Data Refinement, an Algebra of Predicates,
