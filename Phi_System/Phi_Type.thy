@@ -5103,10 +5103,12 @@ lemma SE_Semimodule_SDistr_ad_cb_i_ToA_mapper:
 \<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G' \<^emph> \<half_blkcirc>[True] F\<^sub>1' d
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f\<^sub>c' \<otimes>\<^sub>f w \<otimes>\<^sub>f f' : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1' a \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> prod.rotR o apfst h o prod.swap o prod.rotR o apfst (uz b c o z d a) o prod.rotL o apsnd prod.swap
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> prod.rotR o apfst h o prod.swap o prod.rotR o apfst (prod.swap o uz b c o z d a o prod.swap) o prod.rotL o apsnd prod.swap
          \<s>\<e>\<t>\<t>\<e>\<r> apsnd prod.swap o prod.rotR o apfst (prod.swap o uz' d a o z' b c o prod.swap) o prod.rotL o prod.swap o apfst s o prod.rotL
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
+
+  
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
@@ -5114,9 +5116,14 @@ lemma SE_Semimodule_SDistr_ad_cb_i_ToA_mapper:
 
   \<medium_left_bracket> premises [simp] and _ and [] and _ and _ and _ and _ and _ and _ and Tr and IF[]
          and [] and [] and [] and [] and [] and _
-    apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_rev_\<phi>Some[where t=d and s=a and F=F\<^sub>1 and x=\<open>(fst \<circ> prod.rotL \<circ> apsnd prod.swap) x\<close>]
-    apply_rule apply_Semimodule_SDistr_Homo\<^sub>U_\<phi>Some[where t=b and s=c and F=F\<^sub>1]
+    have \<open>apfst prod.swap o prod.rotL o apsnd prod.swap = XXX\<close>
+      apply simp
+    ;; apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_rev_\<phi>Some[where t=a and s=d and F=F\<^sub>1 and x=\<open>(prod.swap o fst o prod.rotL o apsnd prod.swap) x\<close>]
+    ;; apply_rule apply_Semimodule_SDistr_Homo\<^sub>U_\<phi>Some[where t=b and s=c and F=F\<^sub>1]
     apply_rule swap_\<phi>Cond_Ins_by_raw_class[OF IF, THEN eq_right_frame]
+    have \<open>apfst prod.swap o prod.rotL o apsnd prod.swap = XXX\<close>
+      apply simp
+
     have \<open>fst o fst o prod.swap o prod.rotR o apfst (prod.swap o uz b c o z d a) o prod.rotL o apsnd prod.swap = AAA\<close>
       apply simp
       thm apply_ToA_Mapper_onward[OF Tr]
