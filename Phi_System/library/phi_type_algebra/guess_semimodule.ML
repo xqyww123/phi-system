@@ -243,11 +243,11 @@ fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework false ( SOME (\<^sor
                   val xxx = Thm.cterm_of ctxt (
                               HOLogic.Trueprop $ (
                       (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
-                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>)
+                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>S s_ty x_ty model_ty\<close>)
                         $ F $ Ds $ Dx $ f))
                in (HOLogic.Trueprop $ (
                       (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
-                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>)
+                                 else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>S s_ty x_ty model_ty\<close>)
                         $ F $ Ds $ Dx $ f),
                    NONE :: parse_inst_params_from_phi_term (F $ Term.dummy),
                    conds, ants)

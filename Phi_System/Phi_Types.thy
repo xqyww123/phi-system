@@ -1264,9 +1264,9 @@ lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>Z[\<phi>reason 1000]:
   by (clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant.unfold sep_quant_scalar_distr;
       smt (verit) Mul_Quant_def Transformation_def disjoint_iff plus_set_in_iff prod.cong)
 
-lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>U[\<phi>reason 1000]:
-  \<open> Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>U_def dom_of_add_set_def
+lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>S[\<phi>reason 1000]:
+  \<open> Semimodule_SDistr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>S_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Mul_Quant.unfold \<phi>Prod_expn' sep_quant_scalar_distr)
 
 
@@ -2082,15 +2082,15 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
   unfolding Transformation_def
   by auto metis
     
-lemma Semimodule_SDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
+lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
                             (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))\<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>U_def Transformation_def module_S_distr_def Is_Functional_def
+  unfolding Semimodule_SDistr_Homo\<^sub>S_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
@@ -2420,9 +2420,9 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Share.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>n. n \<odiv> ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Share.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>n. n \<odiv> ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
-  (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
+  (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>S}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
-    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<lambda>n. n \<odiv> ?T) ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
+    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>n. n \<odiv> ?T) ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Object_Equiv ?T ?eq \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
@@ -2672,7 +2672,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
        and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
-       and \<open>Semimodule_SDistr_Homo\<^sub>U (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
+       and \<open>Semimodule_SDistr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
        and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
 
@@ -2826,7 +2826,7 @@ private lemma [simp]:
        and \<open> Semimodule_Zero (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) \<lbrakk>i : 0\<rwpar> \<close>
        and \<open> Semimodule_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>
        and \<open> Semimodule_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True) \<close>
-       and \<open> Semimodule_SDistr_Homo\<^sub>U (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
+       and \<open> Semimodule_SDistr_Homo\<^sub>S (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
                                      (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
                                      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) \<close>
        and \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
