@@ -1,5 +1,5 @@
 text \<open>title:
-       A New Dimension of Composition towards More Scalarable Verification on Separation Logic
+       A New Dimension of Composition towards More Scalable Verification on Separation Logic
 
 abstract:
 
