@@ -408,6 +408,12 @@ lemma ToA_Mapper_f_expn:
   unfolding ToA_Mapper_def
   by clarsimp
 
+lemma ToA_Mapper_f_expn_rev[no_atp]:
+  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<forall>x \<in> D. s (g (h x)) = f x \<close>
+  unfolding ToA_Mapper_def
+  by clarsimp
+
 lemma ToA_Mapper_cong:
   \<open> U \<equiv> U'
 \<Longrightarrow> U\<^sub>1 \<equiv> U\<^sub>1'
