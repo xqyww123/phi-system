@@ -38,6 +38,38 @@ However, it lacks of a general meta theory and a general automation over any dat
 They failed to give the meta theory because they chose wrong formalization, whereas ours thanking to
 the unification of DR and predicates, can express it simply using the language of higher order predicates.
 
+
+
+The mechanized reasoning is able to solve stratified transformations where any refinement operator (type operator)
+\<open>F\<close> that requires a shift between hierarchical layers like \<open>F (G T) \<longrightarrow> G (F T)\<close> must be able to be normalized
+into a form where no shift is required, so that the reasoning can solve the transformation layer by layer
+recursively, e.g., \<open>F\<^sub>1 \<longrightarrow> G\<^sub>1\<close>, \<open>F\<^sub>2 \<longrightarrow> G\<^sub>2\<close>, ... recursively til \<open>T \<rightarrow> U\<close> for \<open>F\<^sub>1 (F\<^sub>2 (\<dots>(T))) \<rightarrow> G\<^sub>1 (G\<^sub>2 (\<dots>(U)))\<close>.
+
+The shift between layers is commutativity of the type operator.
+We believe most of type operators for substantial data structures (that do have some representation in physical memory)
+are non-commutative, and commutative operators are closer to specificational logic connectives like modalities,
+such as the permission modality (specifying whether do we have total share of a memory reference so we can write to it),
+finite multiplicative quantifier, domainoid operator (elucidated later) which are the only commutative operators occurring in our case studies and
+that we can imagine. As they are closer to logic connectives, we require specific strategy to be given
+and do not provide a general automation.
+
+Among stratified transformations, we support the transformation between \<open>F(T)\<close> and \<open>G(U)\<close> when,
+\<^item> \<open>F = G\<close> and the related algebraic properties (transformation functor, separation homomorphism) are given on \<open>F\<close>
+\<^item> \<open>F = F\<^sub>a\<close> and \<open>G = F\<^sub>b\<close> are one kind of semimodule type operator of scalars \<open>a, b\<close> respectively, and
+  the related properties are given.
+
+
+If any refinement operator (type operator)
+
+
+
+
+
+
+
+
+
+
 ------------------------
 
 title:
