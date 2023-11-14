@@ -3018,6 +3018,8 @@ declare [[\<phi>reason_default_pattern
   and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>
       \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100)
 
+  and \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
+      \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
   and \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
       \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
 
@@ -3136,6 +3138,16 @@ lemma [\<phi>reason %\<A>merge]:
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
 
+lemma
+  \<open> \<half_blkcirc>[True] (A \<^emph> B) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph> \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> \<^emph> B) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[False] \<top>\<^sub>\<phi> = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
+  unfolding Action_Tag_def
+     apply (rule \<phi>Type_eqI_BI, clarsimp simp add: BI_eq_iff, force)
+apply (rule \<phi>Type_eqI_BI, clarsimp simp add: BI_eq_iff)
+
+
 subsubsection \<open>Separation Extraction of \<open>\<phi>\<close>Prod\<close>
 
 text \<open>Using the technical auxiliaries, we can give the separation extraction for \<open>\<phi>Prod\<close>\<close>
@@ -3230,9 +3242,11 @@ lemma BiCond_\<phi>Prod_expn[\<phi>expns, simp]:
   by (cases C\<^sub>T; cases C\<^sub>U; clarsimp)
 
 lemma BiCond_single_Cond_const_red[simp]:
-  \<open> T [True]\<^emph>[True] U = T \<^emph> U \<close>
+  \<open> (x \<Ztypecolon> T [False]\<^emph>[True] U) = (snd x \<Ztypecolon> U)\<close>
+  \<open> T [True]\<^emph>[C] U = T \<^emph>[C] U \<close>
   \<open> T [False]\<^emph>[False] U = \<top>\<^sub>\<phi> \<close>
-  by (rule \<phi>Type_eqI, clarsimp)+
+  by ((cases x, simp add: BI_eq_iff),
+      (rule \<phi>Type_eqI, clarsimp)+)
 
 lemma BiCond_single_Cond_rewrite:
   \<open> (x \<Ztypecolon> T \<^emph>[C\<^sub>U \<or> C\<^sub>W] (U [C\<^sub>U]\<^emph>[C\<^sub>W] W)) = (prod.rotL x \<Ztypecolon> (T \<^emph>[C\<^sub>U] U) \<^emph>[C\<^sub>W] W)\<close>
@@ -3614,6 +3628,14 @@ lemma Identity_Element\<^sub>I_empty[\<phi>reason %identity_element_cut]:
   \<open>Identity_Element\<^sub>I (any \<Ztypecolon> \<circle>) True\<close>
   unfolding Identity_Element\<^sub>I_def by simp
 
+lemma [\<phi>reason %identity_element_cut]:
+  \<open>Identity_Element\<^sub>E (any \<Ztypecolon> \<circle>\<^sub>\<x>)\<close>
+  unfolding Identity_Element\<^sub>E_def by simp
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open>Identity_Element\<^sub>I (any \<Ztypecolon> \<circle>\<^sub>\<x>) True\<close>
+  unfolding Identity_Element\<^sub>I_def by simp
+
 (*
 lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
   \<open>Identity_Element\<^sub>I {1} True\<close>
@@ -3623,6 +3645,7 @@ lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>E {_
   \<open>Identity_Element\<^sub>E {1}\<close>
   unfolding Identity_Element\<^sub>E_def one_set_def by simp
 *)
+
 
 subsubsection \<open>Special Forms\<close>
 
