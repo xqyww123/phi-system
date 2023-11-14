@@ -200,6 +200,33 @@ lemma [iff]:
   \<open> n < 16 \<Longrightarrow> Big n = n \<close>
   unfolding Big_def by simp+
 
+
+subsubsection \<open>Combinators\<close>
+
+lemma fun_comp_intr_left[no_atp]:
+  \<open>f = g \<Longrightarrow> x o f = x o g\<close>
+  by simp
+
+setup \<open>Sign.mandatory_path "comb"\<close>
+
+definition \<open>K x = (\<lambda>_. x)\<close> \<comment> \<open>to improve the performance as any lambda expression \<open>\<lambda>_. x\<close> is not
+  cached within the internal system of Isabelle.\<close>
+
+lemma K_app[simp]:
+  \<open> comb.K x y = x \<close>
+  unfolding comb.K_def ..
+
+lemma K_comp[simp]:
+  \<open> comb.K x o f = comb.K x \<close>
+  unfolding fun_eq_iff comb.K_def
+  by simp
+
+lemmas K_comp'[simp] = comb.K_comp[THEN fun_comp_intr_left, folded comp_assoc]
+  
+
+setup \<open>Sign.parent_path\<close>
+
+
 subsubsection \<open>Product\<close>
 
 
@@ -261,10 +288,6 @@ named_theorems prod_opr_norm \<open>normalizations of product operations\<close>
 
 notation map_prod (infixr "\<otimes>\<^sub>f" 56)
 
-lemma fun_comp_intr_left[no_atp]:
-  \<open>f = g \<Longrightarrow> x o f = x o g\<close>
-  by simp
-
 (*if C\<^sub>R\<^sub>1 then *)
 setup \<open>Sign.mandatory_path "prod"\<close>
 
@@ -273,6 +296,9 @@ definition rotL :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 
 
 definition rotR :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times> 'b \<times> 'c\<close>
   where \<open>rotR x = (fst (fst x), snd (fst x), snd x)\<close>
+
+abbreviation rpair :: \<open>'a \<Rightarrow> 'b \<Rightarrow> 'b \<times> 'a\<close>
+  where \<open>rpair x \<equiv> prod.swap o Pair x\<close>
 
 lemma rot[simp]:
   \<open>prod.rotL (a,b,c) = ((a,b),c)\<close>
@@ -299,6 +325,16 @@ lemma rot_prj_comp[simp]:
 
 lemmas rot_prj[simp] = prod.rot_prj_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
 lemmas rot_prj_comp'[simp] = prod.rot_prj_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+
+
+lemma prj_Pair_comp[simp]:
+  \<open>fst o Pair x = comb.K x\<close>
+  \<open>snd o Pair x = id\<close>
+  unfolding fun_eq_iff
+  by simp_all
+
+lemmas prj_Pair_comp' [simp] = prod.prj_Pair_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+
 
 lemma ap_prj\<^sub>0_rot_comp[simp]:
   \<open>(f \<otimes>\<^sub>f fst) o prod.rotR = apfst f o fst\<close>
@@ -349,6 +385,7 @@ lemma ap_rotate_comp[no_atp, prod_opr_norm]:
 
 lemmas ap_rotate[no_atp, prod_opr_norm] = prod.ap_rotate_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
 lemmas ap_rotate_comp'[no_atp, prod_opr_norm] = prod.ap_rotate_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+
 
 
 
@@ -457,6 +494,11 @@ lemma rot_aprot_rot_comp\<^sub>f[no_atp, prod_opr_norm]:
 
 lemmas rot_aprot_rot\<^sub>f[no_atp, prod_opr_norm] = prod.rot_aprot_rot_comp\<^sub>f [simplified fun_eq_iff id_def comp_apply, THEN spec]
 lemmas rot_aprot_rot_comp\<^sub>f'[no_atp, prod_opr_norm] = prod.rot_aprot_rot_comp\<^sub>f [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+
+
+
+
+
 
 
 setup \<open>Sign.parent_path\<close>

@@ -957,11 +957,14 @@ For example,
 
 subsubsection \<open>Basic Reasoning Rules\<close>
 
+\<phi>reasoner_group unify_assign = (%cutting, [%cutting, %cutting])
+  \<open>the default assignment by unification\<close>
+
 declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
         allI [\<phi>reason %cutting]
         exI  [\<phi>reason %cutting]
-        HOL.refl [\<phi>reason %cutting for \<open>_ = _\<close>]
+        HOL.refl [\<phi>reason %unify_assign for \<open>_ = _\<close>]
 
 \<phi>reasoner_group \<phi>LPR_imp = (%cutting, [%cutting, %cutting+100]) for \<open>_ \<longrightarrow> _\<close>
   \<open>Rules handling implifications, may involving different optimizations for specific cases\<close>

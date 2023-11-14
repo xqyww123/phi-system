@@ -2820,10 +2820,22 @@ lemma \<phi>Some_\<phi>None_freeobj:
   unfolding atomize_eq BI_eq_iff
   by ((rule \<phi>Type_eqI)?; clarsimp)+
 
+subsubsection \<open>Conditioned Product at Left\<close>
+
+definition LeftCond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ [_]\<^emph> _" [69,20,70] 68)
+  where \<open>(T [C\<^sub>T]\<^emph> U) \<equiv> if C\<^sub>T then T \<^emph> U else (\<lambda>x. snd x \<Ztypecolon> U)\<close>
+
+lemma LeftCond_\<phi>Prod_expn[\<phi>expns, simp]:
+  \<open> c \<Turnstile> (x \<Ztypecolon> T [C\<^sub>T]\<^emph> U) \<longleftrightarrow> (if C\<^sub>T then c \<Turnstile> (x \<Ztypecolon> T \<^emph> U) else c \<Turnstile> (snd x \<Ztypecolon> U))\<close>
+  unfolding LeftCond_\<phi>Prod_def \<phi>Type_def
+  by (cases C\<^sub>T; clarsimp)
+
+lemma LeftCond_single_Cond_const_red[simp]:
+  \<open> T [True]\<^emph> U = T \<^emph> U \<close>
+  by (rule \<phi>Type_eqI, clarsimp)+
+
 
 subsubsection \<open>Conditional Insertion into Unital Algebra\<close>
-
-consts \<A>merge :: action
 
 text \<open>This section we give an equivalent representation \<open>\<black_circle> T \<^emph> \<half_blkcirc>[C] R\<close> of the conditioned separation \<^term>\<open>T \<^emph>[C] R\<close>.
   \<open>\<half_blkcirc>\<close> is convenient to specify element-wise existence, and makes it easy to merge two conditioned remainders
@@ -2893,6 +2905,12 @@ lemma Cond_\<phi>Prod_expn_Cond_\<phi>Prod:
   \<open>\<half_blkcirc>[C\<^sub>1] (T \<^emph>[C\<^sub>2] U) \<equiv> \<half_blkcirc>[C\<^sub>1] T \<^emph> \<half_blkcirc>[C\<^sub>1 \<and> C\<^sub>2] U\<close>
   unfolding atomize_eq
   by (rule \<phi>Type_eqI; cases C\<^sub>1; cases C\<^sub>2; clarsimp; force)
+
+lemma LCond_\<phi>Prod_expn_\<phi>Some:
+  \<open> \<black_circle> (T [C]\<^emph> U) \<equiv> \<half_blkcirc>[C] T \<^emph> \<black_circle> U \<close>
+  unfolding atomize_eq
+  by (rule \<phi>Type_eqI; cases C; clarsimp; force)
+
 
 lemma cond_prod_transformation_rewr:
   \<open> x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<w>\<i>\<t>\<h> P \<equiv> x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> \<black_circle> U' \<w>\<i>\<t>\<h> P\<close>
@@ -2997,15 +3015,10 @@ lemma [\<phi>reason %ToA_success]:
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (undefined, fst x) \<Ztypecolon> \<half_blkcirc>[False] U \<^emph>[True] T \<close>
   by (clarsimp simp add: \<phi>Some_\<phi>None_freeobj)
 
-paragraph \<open>Simplification Protects\<close>
-
-definition [simplification_protect]:
-  \<open>\<A>merge_SP P \<equiv> P @action \<A>merge\<close>
-
-lemma [cong]:
-  \<open>\<A>merge_SP P \<equiv> \<A>merge_SP P\<close> .
 
 paragraph \<open>Merging Conditioned \<phi>-Types\<close>
+
+consts \<A>merge :: action
 
 declare [[\<phi>reason_default_pattern
       \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close> \<Rightarrow>  (*objects: LHS determines RHS*)
@@ -3020,6 +3033,9 @@ declare [[\<phi>reason_default_pattern
 
   and \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
       \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
+  and \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ \<^emph> \<half_blkcirc>[?C\<^sub>C] _ @action \<A>merge\<close> \<Rightarrow>
+      \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ \<^emph> \<half_blkcirc>[?C\<^sub>C] _ @action \<A>merge\<close>    (100)
+
   and \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
       \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
 
@@ -3039,6 +3055,15 @@ declare [[\<phi>reason_default_pattern
 text \<open>Information is always given from left to right below.
       They accept arguments from LHS and assign the result to RHS\<close>
 
+subparagraph \<open>Simplification Protects\<close>
+
+definition [simplification_protect]:
+  \<open>\<A>merge_SP P \<equiv> P @action \<A>merge\<close>
+
+lemma [cong]:
+  \<open>\<A>merge_SP P \<equiv> \<A>merge_SP P\<close> .
+
+subparagraph \<open>Implementation\<close>
 
 lemma [\<phi>reason %\<A>merge+20 for \<open>(fst (_,_) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
   \<open> (x \<Ztypecolon> T) = Y @action \<A>merge
@@ -3138,14 +3163,25 @@ lemma [\<phi>reason %\<A>merge]:
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
 
-lemma
+lemma [\<phi>reason %\<A>merge]:
   \<open> \<half_blkcirc>[True] (A \<^emph> B) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (A \<^emph> \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> \<^emph> B) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> B) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
   \<open> \<half_blkcirc>[False] \<top>\<^sub>\<phi> = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
   unfolding Action_Tag_def
-     apply (rule \<phi>Type_eqI_BI, clarsimp simp add: BI_eq_iff, force)
-apply (rule \<phi>Type_eqI_BI, clarsimp simp add: BI_eq_iff)
+  by (rule \<phi>Type_eqI_BI; clarsimp simp add: BI_eq_iff; force)+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open> \<half_blkcirc>[True] (A \<^emph> B \<^emph> C) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph> B \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph> (\<top>\<^sub>\<phi> [False]\<^emph> C)) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> B \<^emph> C) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> (\<top>\<^sub>\<phi> [False]\<^emph> C)) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> (B \<^emph>[False] \<top>\<^sub>\<phi>)) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[False] \<top>\<^sub>\<phi> = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  unfolding Action_Tag_def
+  by (rule \<phi>Type_eqI_BI; clarsimp simp add: BI_eq_iff; force)+
 
 
 subsubsection \<open>Separation Extraction of \<open>\<phi>\<close>Prod\<close>
@@ -3214,20 +3250,6 @@ lemma [\<phi>reason 1201]:
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using Structural_Extract_\<phi>Prod_left_i .
 *)
-
-subsubsection \<open>Conditioned Product at Left\<close>
-
-definition LeftCond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ [_]\<^emph> _" [69,20,70] 68)
-  where \<open>(T [C\<^sub>T]\<^emph> U) \<equiv> if C\<^sub>T then T \<^emph> U else (\<lambda>x. snd x \<Ztypecolon> U)\<close>
-
-lemma LeftCond_\<phi>Prod_expn[\<phi>expns, simp]:
-  \<open> c \<Turnstile> (x \<Ztypecolon> T [C\<^sub>T]\<^emph> U) \<longleftrightarrow> (if C\<^sub>T then c \<Turnstile> (x \<Ztypecolon> T \<^emph> U) else c \<Turnstile> (snd x \<Ztypecolon> U))\<close>
-  unfolding LeftCond_\<phi>Prod_def \<phi>Type_def
-  by (cases C\<^sub>T; clarsimp)
-
-lemma LeftCond_single_Cond_const_red[simp]:
-  \<open> T [True]\<^emph> U = T \<^emph> U \<close>
-  by (rule \<phi>Type_eqI, clarsimp)+
 
 
 subsubsection \<open>Bi-Conditioned Product\<close>
