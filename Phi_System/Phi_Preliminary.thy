@@ -337,13 +337,14 @@ lemma ap_rotate_comp[no_atp, prod_opr_norm]:
   \<open>prod.rotL o apsnd (apfst f) = apfst (apsnd f) o prod.rotL\<close>
   \<open>prod.rotL o apsnd (apsnd f) = apsnd f o prod.rotL\<close>
   \<open>prod.rotL o apsnd (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) = (apsnd f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) o prod.rotL\<close>
-  \<open>prod.rotR o apfst (apfst f) = apfst f o prod.rotR\<close>
+  \<open>prod.rotR o apfst (apfst f o f'\<^sub>1) = apfst f o prod.rotR o apfst f'\<^sub>1\<close>
   \<open>prod.rotR o apsnd f = apsnd (apsnd f) o prod.rotR\<close>
   \<open>prod.rotR o apfst (apsnd f) = apsnd (apfst f) o prod.rotR\<close>
+  \<open>prod.rotR o apfst (apsnd f o f') = apsnd (apfst f) o prod.rotR o apfst f'\<close>
   \<open>prod.rotR o apfst (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) = (f\<^sub>1 \<otimes>\<^sub>f apfst f\<^sub>2) o prod.rotR\<close>
   \<open>prod.rotL o (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2 \<otimes>\<^sub>f g\<^sub>3) = ((g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f g\<^sub>3) o prod.rotL\<close>
   \<open>prod.rotR o ((f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f f\<^sub>3) = (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3) o prod.rotR\<close>
-  unfolding fun_eq_iff
+  unfolding fun_eq_iff prod.rotR_def
   by (clarsimp)+
 
 lemmas ap_rotate[no_atp, prod_opr_norm] = prod.ap_rotate_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]

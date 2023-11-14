@@ -5290,9 +5290,12 @@ lemma SE_Semimodule_SDistr_dac_b_nc_i_ToA_mapper:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z_rev F\<^sub>1 Ds Dx z Dx' z'
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds' Dx\<^sub>S uz
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S_rev F\<^sub>1 Dx\<^sub>S uz Ds' Dx\<^sub>S' uz'
 \<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (?\<^sub>+ True da) : ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds a \<and> d ##\<^sub>+ a) \<and> (C\<^sub>c \<longrightarrow> Ds da \<and> Ds c \<and> da ##\<^sub>+ c)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds a \<and> d ##\<^sub>+ a) \<and>
+                  (C\<^sub>c \<longrightarrow> Ds da \<and> Ds c \<and> da ##\<^sub>+ c \<and> Ds' da \<and> Ds' c)
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G \<mapsto> F\<^sub>1 b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G'
@@ -5309,17 +5312,19 @@ lemma SE_Semimodule_SDistr_dac_b_nc_i_ToA_mapper:
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f f\<^sub>d \<otimes>\<^sub>f f\<^sub>c \<otimes>\<^sub>f w : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 a \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h o apfst (?\<^sub>j\<^sub>R C\<^sub>c (z' da c) \<circ> apfst (?\<^sub>j\<^sub>R C\<^sub>d (z a d))) \<circ> prod.rotL \<circ> prod.rotL
-         \<s>\<e>\<t>\<t>\<e>\<r> ss
+         \<s>\<e>\<t>\<t>\<e>\<r> prod.rotR \<circ> prod.rotR o apfst (apfst (?\<^sub>s\<^sub>R C\<^sub>d (uz a d)) o ?\<^sub>s\<^sub>R C\<^sub>c (uz' da c)) o s
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
 
+  term \<open>prod.rotR \<circ> prod.rotR o apfst (apfst (?\<^sub>s\<^sub>R C\<^sub>d (uz a d)) o ?\<^sub>s\<^sub>R C\<^sub>c (uz' da c)) o s\<close>
   term \<open>(h o apfst (z' da c) o prod.rotL o apfst (?\<^sub>j\<^sub>R C\<^sub>d (z a d)) o prod.rotL) ` D\<close>
+  term \<open>prod.rotR o apfst (?\<^sub>s\<^sub>R C\<^sub>d (uz a d)) o prod.rotR o apfst (?\<^sub>s\<^sub>R C\<^sub>j (uz' da c)) o s\<close>
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
 
-  \<medium_left_bracket> premises [symmetric, simp] and SZ[] and SZ\<^sub>R[] and [] and [simp] and _ and Tr[] and IF[]
+  \<medium_left_bracket> premises [symmetric, simp] and SZ[] and SZ\<^sub>R[] and [] and [] and [] and [simp] and _ and Tr[] and IF[]
          and _ and [] and [] and _
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_LCond_\<phi>Some[OF SZ, where s=d and t=a and r=da and C=C\<^sub>d
                                                                   and x=\<open>apsnd fst x\<close>]
@@ -5327,7 +5332,13 @@ lemma SE_Semimodule_SDistr_dac_b_nc_i_ToA_mapper:
                                                                          and x=\<open>(apsnd fst \<circ> apfst (?\<^sub>j\<^sub>R C\<^sub>d (z a d)) \<circ> prod.rotL) x\<close>]
     apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>(apfst (?\<^sub>j\<^sub>R C\<^sub>c (z' da c) \<circ> apfst (?\<^sub>j\<^sub>R C\<^sub>d (z a d))) \<circ> prod.rotL \<circ> prod.rotL) x\<close>]
   \<medium_right_bracket> apply (rule conjunctionI, rule)
+  \<medium_left_bracket> premises [symmetric, simp] and SZ[] and SZ\<^sub>R[] and [] and SS[] and SS\<^sub>R[] and [simp] and _ and Tr[] and IF[]
+         and _ and [] and [] and _
+    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
+    apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_rev_RCond_\<phi>Some[OF SS SS\<^sub>R, where x=\<open>(fst o s) x\<close> and s=da and t=c and r=b and C=C\<^sub>c]
+    certified 
 
+    thm apply_Semimodule_SDistr_Homo\<^sub>S_rev_RCond_\<phi>Some[OF SS SS\<^sub>R, where x=\<open>(fst o s) x\<close> and s=da and t=c and r=b and C=C\<^sub>c]
 
     thm apply_Semimodule_SDistr_Homo\<^sub>Z_rev_LCond_\<phi>Some[OF SZ, where s=da and t=c and r=b and C=C\<^sub>c
                                                            and x=\<open>(apsnd fst \<circ> apfst (?\<^sub>j\<^sub>R C\<^sub>d (z a d)) \<circ> prod.rotL) x\<close>]
