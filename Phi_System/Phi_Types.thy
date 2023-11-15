@@ -210,9 +210,6 @@ declare [[\<phi>trace_reasoning = 1]]
      (*and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>*)
        and Abstraction_to_Raw
 
-thm SubjectionTY.ToA_mapper
-thm SubjectionTY.xxa
-
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' SubjectionTY.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?Pa) \<Longrightarrow> Abstract_Domain\<^sub>L (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?Pa x) \<close>),
   (@{thm' SubjectionTY.Abstract_Domain}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Abstract_Domain ?T ?Pa) \<Longrightarrow> Abstract_Domain (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?Pa x) \<close>),
@@ -2055,10 +2052,9 @@ lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Object_Equiv T eq
-\<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
-                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
+                            (\<lambda>s t (x,y). (eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
@@ -2085,13 +2081,12 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
 lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
-\<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
-                            (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
+                            (\<lambda>s t x. Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))\<close>
   unfolding Semimodule_SDistr_Homo\<^sub>S_def Transformation_def module_S_distr_def Is_Functional_def
-            Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
+            Object_Equiv_def Functionality_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
 
@@ -2115,18 +2110,18 @@ subsubsection \<open>Guessing Antecedents\<close>
 lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _ (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> ?T) _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA F (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) Ds
-                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
+                            (\<lambda>s t (x,y). (eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst)
-                            (Functionality T Dx \<and>\<^sub>\<r> Object_Equiv T eq \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
+                            (Functionality T Dx \<and>\<^sub>\<r> Object_Equiv T eq \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
                             True \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ _ (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> ?T) _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA F (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) Ds
-                            (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
+                            (\<lambda>s t x. Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))
-                            (Functionality T Dx \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
+                            (Functionality T Dx \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
                             True \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
@@ -2382,10 +2377,10 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 1]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
- 
+  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Sep_Functor_1
@@ -2405,6 +2400,14 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
+thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>S
+thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z
+thm \<phi>MapAt.ToA_mapper
+thm \<phi>Share.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b
+thm \<phi>Share.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b\<^sub>c[]
+thm SE_Semimodule_SDistr_ad_cb_i_ToA_mapper[unfolded \<r>Guard_def,
+      OF _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>S _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z
+         _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>S _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z]
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?P) \<Longrightarrow> Abstract_Domain\<^sub>L (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?P x)  \<close>),
@@ -2421,14 +2424,12 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>n. n \<odiv> ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Share.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>n. n \<odiv> ?T) ?T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>S}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
-    Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
-    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>n. n \<odiv> ?T) ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
+    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>n. n \<odiv> ?T) ((<) 0) (\<lambda>s t xy. ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Object_Equiv ?T ?eq \<Longrightarrow>
-    Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
     Carrier_Set ?T ?D\<^sub>C \<Longrightarrow>
     Semimodule_SDistr_Homo\<^sub>Z (\<lambda>n. n \<odiv> ?T) ((<) 0)
-     (\<lambda>s t (x, y). ?D\<^sub>T x \<longrightarrow> ?D\<^sub>T y \<longrightarrow> ?eq x y \<and> ?Dx y \<and> ?D\<^sub>C y \<or> ?eq y x \<and> ?Dx x \<and> ?D\<^sub>C x) (\<lambda>_ _. fst)  \<close>),
+     (\<lambda>s t (x, y). ?eq x y \<and> ?Dx y \<and> ?D\<^sub>C y \<or> ?eq y x \<and> ?Dx x \<and> ?D\<^sub>C x) (\<lambda>_ _. fst)  \<close>),
   (@{thm' \<phi>Share.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E (\<odiv>) (\<odiv>) (\<odiv>) ?T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>),
   (@{thm' \<phi>Share.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I (\<odiv>) (\<odiv>) (\<odiv>) ?T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x)  \<close>),
   (@{thm' \<phi>Share.\<phi>Fun'_Comm\<^sub>E}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (0 < ?n \<longrightarrow> 0 < ?xa) \<Longrightarrow>
