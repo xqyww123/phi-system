@@ -291,6 +291,10 @@ notation map_prod (infixr "\<otimes>\<^sub>f" 56)
 (*if C\<^sub>R\<^sub>1 then *)
 setup \<open>Sign.mandatory_path "prod"\<close>
 
+lemma map_beta:
+  \<open>(f \<otimes>\<^sub>f g) x = (f (fst x), g (snd x))\<close>
+  by (cases x; simp)
+
 definition rotL :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
   where \<open>rotL x = ((fst x, fst (snd x)), snd (snd x))\<close>
 
@@ -314,6 +318,14 @@ lemma rot_rot_comp[simp]:
 
 lemmas rot_rot_comp'[simp] = prod.rot_rot_comp[THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 lemmas rot_rot[simp] = prod.rot_rot_comp[unfolded fun_eq_iff comp_def id_def, THEN spec]
+
+term zip
+
+lemma
+  \<open>fst (prod.rotL x) = (fst x, fst (snd x))\<close>
+  \<open>snd (prod.rotR y) = (snd (fst y), snd y)\<close>
+  by ((cases x; simp),
+      (cases y; clarsimp))
 
 lemma rot_prj_comp[simp]:
   \<open>fst o prod.rotL = apsnd fst\<close>
