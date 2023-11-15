@@ -126,6 +126,19 @@ lemma apfst_id'[simp]:
 
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 
+
+subsubsection \<open>Simple Boolean Conversions\<close>
+
+lemma boolean_conversions:
+  \<open>(C\<^sub>R \<or> C\<^sub>E) \<and> C\<^sub>R \<longleftrightarrow> C\<^sub>R\<close>
+  \<open>(C\<^sub>R \<or> C\<^sub>E) \<and> C\<^sub>E \<longleftrightarrow> C\<^sub>E\<close>
+  \<open>(C\<^sub>W\<^sub>1 \<or> C\<^sub>W\<^sub>2 \<or> C\<^sub>E) \<and> C\<^sub>W\<^sub>2 \<longleftrightarrow> C\<^sub>W\<^sub>2\<close>
+  \<open>(C\<^sub>W\<^sub>1 \<or> C\<^sub>W\<^sub>2 \<or> C\<^sub>E) \<and> C\<^sub>E \<longleftrightarrow> C\<^sub>E\<close>
+  \<open>(C\<^sub>R\<^sub>1 \<or> (C\<^sub>R \<or> C\<^sub>E) \<and> (C\<^sub>W\<^sub>2 \<or> C\<^sub>E)) \<longleftrightarrow> (C\<^sub>R\<^sub>1 \<or> C\<^sub>R \<or> C\<^sub>E) \<and> (C\<^sub>R\<^sub>1 \<or> C\<^sub>W\<^sub>2 \<or> C\<^sub>E)\<close>
+  \<open>(C\<^sub>R\<^sub>1 \<or> C\<^sub>R\<^sub>2 \<or> C\<^sub>E) \<and> (C\<^sub>R\<^sub>1 \<or> C\<^sub>R\<^sub>2) \<longleftrightarrow> C\<^sub>R\<^sub>1 \<or> C\<^sub>R\<^sub>2\<close>
+  by blast+
+
+
 subsection \<open>Helper Attributes \& Tactics\<close>
 
 attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.optional Parse.int 0) >>
