@@ -2836,7 +2836,7 @@ translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk
 
 thm \<phi>Mul_Quant_LenIv.ToA_mapper
 
-subsubsection \<open>Reasoning\<close>
+paragraph \<open>Reasoning\<close>
 
 lemma \<phi>Mul_Quant_LenIv_wrap_module_src:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y \<and> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow>
@@ -2879,6 +2879,50 @@ declare \<phi>Mul_Quant_LenIv_wrap_module_src[\<phi>reason default %derived_SE_i
 hide_fact \<phi>Mul_Quant_LenIv.wrap_module_src
           \<phi>Mul_Quant_LenIv.wrap_module_tgt
 
+
+
+subsubsection \<open>Array of Tree Nodes\<close>
+
+lemma [\<phi>reason add]:
+  \<open>separatable_module_zip (\<lambda>x. (drop d x, take d x)) (\<lambda>(y, x). x @ y)
+                          (\<lambda>x. (drop b x, take b x)) (\<lambda>(y, x). x @ y)
+                          (\<lambda>(x\<^sub>a,x\<^sub>d) (y\<^sub>c,y\<^sub>b). length x\<^sub>d = d) (map f\<^sub>c) (map f)
+                          (if d \<le> b then (\<lambda>x. map f (take (b-d) x) @ map f\<^sub>c (drop (b-d) x)) else map f\<^sub>c)
+                          (if d \<le> b then map f else (\<lambda>x. map f (take b x) @ map f\<^sub>c (drop b x))) \<close>
+  unfolding separatable_module_zip_def
+  by clarsimp
+
+declare [[\<phi>trace_reasoning = 0]]
+    
+\<phi>type_def \<phi>Mul_Quant_Tree :: \<open>(nat \<Rightarrow> 'k) \<Rightarrow> nat len_intvl \<Rightarrow> ('k list \<Rightarrow> 'c, 'a) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'c::sep_algebra, 'a list) \<phi> \<close>
+  where \<open>l \<Ztypecolon> \<phi>Mul_Quant_Tree f iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>i. f i \<^bold>\<rightarrow>\<^sub># T)\<close>
+  deriving Sep_Functor_1
+       and Semimodule_NonAssoc
+       and \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
+       and \<open>Object_Equiv T eq
+        \<Longrightarrow> Object_Equiv (\<phi>Mul_Quant_Tree f iv T) (list_all2 eq) \<close>
+       and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Mul_Quant_Tree f iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
+       and \<open>Semimodule_One\<^sub>I (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
+       and \<open>Semimodule_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
+
+thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>I_Cond
+thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>E_Cond
+thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>Z
+thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>S
+
+thm \<phi>Mul_Quant_Tree.ToA_mapper
+thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
+
+(* [--d--][----a----]
+   [----b----][--c--]*)
+
+
+lemma
+  \<open>separatable_module_zip\<^sub>2\<^sub>1 (\<lambda>x. (drop N x, take N x)) (\<lambda>(y, x). x @ y) ?D\<^sub>s\<^sub>m ?f ?f' ?f\<^sub>d \<close>
 
 
 section \<open>Semantics Related\<close> (*TODO: move*)

@@ -456,8 +456,8 @@ lemma swap_\<phi>Cond_Ins_by_raw_class[no_atp]:
 subsubsection \<open>Separatable Mapping\<close> \<comment> \<open>those used in transformation mapper\<close>
 
 definition separatable_unzip
-  where \<open>separatable_unzip z uz D\<^sub>u mapper f g \<longleftrightarrow>
-          (\<forall>x\<in>D\<^sub>u. z (map_prod f g (uz x)) = mapper (map_prod f g) x) \<close>
+  where \<open>separatable_unzip z uz D\<^sub>u m m\<^sub>1 m\<^sub>2 f g \<longleftrightarrow>
+          (\<forall>x\<in>D\<^sub>u. z (map_prod (m\<^sub>1 f) (m\<^sub>2 g) (uz x)) = m (map_prod f g) x) \<close>
 
 definition separatable_zip
   where \<open>separatable_zip uz z D\<^sub>z m m\<^sub>1 m\<^sub>2 f g \<longleftrightarrow>
@@ -471,9 +471,12 @@ definition domain_of_inner_map
   where \<open>domain_of_inner_map mapper D\<^sub>i \<longleftrightarrow>
           (\<forall>f g x. (\<forall>a \<in> D\<^sub>i x. f a = g a) \<longrightarrow> mapper f x = mapper g x)\<close>
 
+definition domain_by_mapper
+  where \<open>domain_by_mapper D' m D f D\<^sub>x \<longleftrightarrow> (\<forall>x\<in>D\<^sub>x. f ` D x \<subseteq> D' (m f x))\<close>
+
 definition separatable_module_zip
   where \<open>separatable_module_zip uz' z' uz z D f g f' g' \<longleftrightarrow>
-            (\<forall>x\<in>D. (uz' o z' o f \<otimes>\<^sub>f g o uz o z) x = (f' \<otimes>\<^sub>f g') x)\<close>
+            (\<forall>x. D x ((f \<otimes>\<^sub>f g o uz o z) x) \<longrightarrow> (uz' o z' o f \<otimes>\<^sub>f g o uz o z) x = (f' \<otimes>\<^sub>f g') x)\<close>
 
 definition separatable_module_zip\<^sub>1\<^sub>3
   where \<open>separatable_module_zip\<^sub>1\<^sub>3 z\<^sub>2 z\<^sub>1 s\<^sub>1 s\<^sub>2 D f\<^sub>1 f\<^sub>2 f\<^sub>3 f \<longleftrightarrow>
@@ -527,7 +530,7 @@ declare [[
   and \<open>domain_of_inner_map ?m _\<close> \<Rightarrow> \<open>domain_of_inner_map ?m _\<close>                                  (100)
   and \<open>separatable_module_zip\<^sub>2\<^sub>1 ?s ?z _ ?var_f _ _\<close> \<Rightarrow> \<open>separatable_module_zip\<^sub>2\<^sub>1 ?s ?z _ _ _ _\<close>  (100)
   and \<open>separatable_module_zip\<^sub>1\<^sub>2 ?z ?s _ ?var_f\<^sub>1 ?var_f\<^sub>2 _\<close> \<Rightarrow> \<open>separatable_module_zip\<^sub>1\<^sub>2 ?z ?s _ _ _ _\<close> (100)
-  and \<open>separatable_module_zip ?uz' ?z' ?uz ?z _ ?var_f ?var_g _ _\<close> \<Rightarrow>
+  and \<open>separatable_module_zip ?uz' ?z' ?uz ?z _ _ _ _ _\<close> \<Rightarrow>
       \<open>separatable_module_zip ?uz' ?z' ?uz ?z _ _ _ _ _\<close>                      (100)
   and \<open>separatable_module_zip\<^sub>1\<^sub>3 ?z\<^sub>2 ?z\<^sub>1 ?s\<^sub>z ?s\<^sub>2 _ ?var_f\<^sub>1 ?var_f\<^sub>2 ?var_f\<^sub>3 _\<close> \<Rightarrow> 
       \<open>separatable_module_zip\<^sub>1\<^sub>3 ?z\<^sub>2 ?z\<^sub>1 ?s\<^sub>z ?s\<^sub>2 _ _ _ _ _\<close>                      (100)
@@ -3816,6 +3819,44 @@ lemma ToA_mapper_template[\<phi>reason_template %\<phi>mapToA_derived_TF name F\
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>3' F\<^sub>2' F\<^sub>2\<^sub>3' C\<^sub>R U' R' Dz' z'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 C\<^sub>R U R Du uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>1' F\<^sub>4' F\<^sub>1\<^sub>4' C\<^sub>W T' W' Du' uz'
+\<Longrightarrow> separatable_unzip z' uz Du\<^sub>s m\<^sub>1 m\<^sub>g m\<^sub>r g r @action \<A>_template_reason undefined
+\<Longrightarrow> compositional_mapper m\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) m\<^sub>2 Dm\<^sub>1 (g \<otimes>\<^sub>f r) h @action \<A>_template_reason undefined
+\<Longrightarrow> compositional_mapper (\<lambda>s. func_mapper' s (\<lambda>_. True)) m\<^sub>2 m\<^sub>3 Dm\<^sub>2 s (g \<otimes>\<^sub>f r o h) @action \<A>_template_reason undefined
+\<Longrightarrow> separatable_zip uz' z Dz\<^sub>s m\<^sub>3 m\<^sub>f m\<^sub>w f w @action \<A>_template_reason undefined
+\<Longrightarrow> domain_of_inner_map m\<^sub>3 Dm\<^sub>3 @action \<A>_template_reason undefined
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> \<Union> (Dom ` z ` D)
+
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D.
+      x \<in> Dz \<and> x \<in> Dz\<^sub>s \<and> z x \<in> Dm\<^sub>1 \<and> z x \<in> Dm\<^sub>2 \<and>
+      (\<forall>a \<in> Dm\<^sub>3 (z x). a \<in> Dom (z x)) \<and>
+      (\<forall>a \<in> Dom (z x). h a \<in> Rng (z x)) \<and>
+      (let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p x\<^sub>1 = func_mapper h  (\<lambda>_. True) (z x) in
+                x\<^sub>1 \<in> Du \<and> x\<^sub>1 \<in> Du\<^sub>s \<and>
+      (let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p x\<^sub>2 = (m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r) (uz x\<^sub>1) in
+                x\<^sub>2 \<in> Dz' )) )
+
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> h' : uz o func_mapper h (\<lambda>_. True) o z @action \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : uz' o func_mapper' s (\<lambda>_. True) o z' @action \<A>_template_reason undefined
+\<Longrightarrow> \<m>\<a>\<p> m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r : F\<^sub>3 U \<^emph>[C\<^sub>R] F\<^sub>2 R \<mapsto> F\<^sub>3' U' \<^emph>[C\<^sub>R] F\<^sub>2' R'
+    \<o>\<v>\<e>\<r> m\<^sub>f f \<otimes>\<^sub>f m\<^sub>w w : F\<^sub>1 T \<^emph>[C\<^sub>W] F\<^sub>4 W \<mapsto> F\<^sub>1' T' \<^emph>[C\<^sub>W] F\<^sub>4' W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D\<close>
+
+  term \<open>(\<forall>x\<in>D. Dom' (z' ((m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r) (uz (func_mapper h (\<lambda>_. True) (z x))))) = (g \<otimes>\<^sub>f r) ` h ` Dom (z x))\<close>
+  term \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>
+           (\<forall>x \<in> z' ` (m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r) ` uz ` func_mapper h (\<lambda>_. True) ` z ` D. \<forall>a \<in> Dom' x. s a \<in> Rng' x) \<and>
+           (\<forall>x \<in> z' ` (m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r) ` uz ` func_mapper h (\<lambda>_. True) ` z ` D. func_mapper' s (\<lambda>_. True) x \<in> Du')\<close>
+
+
+lemma ToA_mapper_template[\<phi>reason_template %\<phi>mapToA_derived_TF name F\<^sub>1.ToA_mapper]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[C\<^sub>W] W) (U \<^emph>[C\<^sub>R] R) Dom Rng pred_mapper func_mapper
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_Type (F\<^sub>1\<^sub>4 (T \<^emph>[C\<^sub>W] W)) (F\<^sub>2\<^sub>3' (T' \<^emph>[C\<^sub>W] W'))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>2\<^sub>3' F\<^sub>1\<^sub>4' (U' \<^emph>[C\<^sub>R] R') (T' \<^emph>[C\<^sub>W] W') Dom' Rng' pred_mapper' func_mapper'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 C\<^sub>W T W Dz z
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>3' F\<^sub>2' F\<^sub>2\<^sub>3' C\<^sub>R U' R' Dz' z'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 C\<^sub>R U R Du uz
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>1' F\<^sub>4' F\<^sub>1\<^sub>4' C\<^sub>W T' W' Du' uz'
 \<Longrightarrow> separatable_unzip z' uz Du\<^sub>s mapper\<^sub>1 g r @action \<A>_template_reason undefined
 \<Longrightarrow> compositional_mapper mapper\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) mapper\<^sub>2 Dm\<^sub>1 (map_prod g r) h @action \<A>_template_reason undefined
 \<Longrightarrow> compositional_mapper (\<lambda>s. func_mapper' s (\<lambda>_. True)) mapper\<^sub>2 mapper\<^sub>3 Dm\<^sub>2 s (map_prod g r o h) @action \<A>_template_reason undefined
@@ -4753,6 +4794,12 @@ subsection \<open>ToA mapper over Semimodules\<close>
 context notes prod_opr_norm[simp] \<phi>Prod_expn''[simp] comp_assoc[symmetric, simp]
 begin
 
+(* [--d--][-----a-----]
+   [-----b-----][--c--]
+   Give a, expect b; Need d, remain c.
+   d, c \<noteq> 0; the scalar has to be non-commutative, otherwise reduces to either \<open>SE_Module_SDistr_da_b_i\<close> or \<open>SE_Module_SDistr_a_cb_i\<close>
+   as we assume non-commutative scalar, the concrete algebra must be commutative*)
+
 lemma SE_Module_SDistr_da_bc_ToA_mapper
       [\<phi>reason_template %\<phi>mapToA_derived_module
           name F\<^sub>1.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
@@ -4769,25 +4816,23 @@ lemma SE_Module_SDistr_da_bc_ToA_mapper
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> Ds b \<and> Ds c \<and> b ##\<^sub>+ c \<and>
                   Ds' b \<and> Ds' c \<and> Ds' d \<and> Ds' a
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>(\<lambda>(x\<^sub>a,w,x\<^sub>d). (x\<^sub>a,x\<^sub>d)) ` D. Dx\<^sub>z a d x \<and> Dx\<^sub>u c b (z a d x)) \<and>
-           (\<forall>x\<in>(\<lambda>(x\<^sub>a,w,x\<^sub>d). (f\<^sub>c \<otimes>\<^sub>f f) (uz c b (z a d (x\<^sub>a,x\<^sub>d)))) ` D.
-                Dx\<^sub>z' c b x \<and> Dx\<^sub>u' a d (z' c b x)) \<and>
-           ((\<lambda>(x\<^sub>a,w,x\<^sub>d). (x\<^sub>a,x\<^sub>d)) ` D \<subseteq> D\<^sub>s\<^sub>z)
 
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
-    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G \<mapsto> F\<^sub>1' b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G'
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>(x\<^sub>a,w,x\<^sub>d)\<in>D. let (y\<^sub>c, y) = uz c b (z a d (x\<^sub>a,x\<^sub>d))
+                           in D\<^sub>s\<^sub>z (x\<^sub>a,x\<^sub>d) (f\<^sub>c y\<^sub>c, f y) \<and>
+                              Dx\<^sub>z a d (x\<^sub>a,x\<^sub>d) \<and>
+                              Dx\<^sub>u c b (z a d (x\<^sub>a,x\<^sub>d)) \<and>
+                              Dx\<^sub>z' c b (f\<^sub>c y\<^sub>c, f y) \<and>
+                              Dx\<^sub>u' a d (z' c b (f\<^sub>c y\<^sub>c, f y)) )
+
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1' b \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
       \<i>\<n> (\<lambda>(x\<^sub>a,w,x\<^sub>d). case uz c b (z a d (x\<^sub>a,x\<^sub>d)) of (x\<^sub>c,x\<^sub>b) \<Rightarrow> (x\<^sub>b,w)) ` D
 
 \<Longrightarrow> separatable_module_zip (uz' a d) (z' c b) (uz c b) (z a d) D\<^sub>s\<^sub>z f\<^sub>c f f' f\<^sub>d @action \<A>_template_reason undefined
 
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R  = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G  \<^emph> \<half_blkcirc>[True] F\<^sub>1  c @action \<A>merge
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G' \<^emph> \<half_blkcirc>[True] F\<^sub>1' c @action \<A>merge
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G  \<^emph> \<half_blkcirc>[True] F\<^sub>1  d @action \<A>merge
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G' \<^emph> \<half_blkcirc>[True] F\<^sub>1' d @action \<A>merge
-
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1' a \<^emph>[C\<^sub>W] W'
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[True] (R [C\<^sub>R]\<^emph> F\<^sub>1 c) \<mapsto> F\<^sub>3' b \<^emph>[True] (R' [C\<^sub>R]\<^emph> F\<^sub>1' c)
+    \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[True] (W [C\<^sub>W]\<^emph> F\<^sub>1 d) \<mapsto> F\<^sub>1' a \<^emph>[True] (W' [C\<^sub>W]\<^emph> F\<^sub>1' d)
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x\<^sub>a,w,x\<^sub>d). let (x\<^sub>c,x\<^sub>b) = uz c b (z a d (x\<^sub>a,x\<^sub>d))
                              ; (y,r) = h (x\<^sub>b,w)
                             in (y,r,x\<^sub>c))
@@ -4799,20 +4844,21 @@ lemma SE_Module_SDistr_da_bc_ToA_mapper
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
+                   Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
 
   \<medium_left_bracket> premises [simp] and _ and [] and _ and _ and _ and _ and _ and Tr
-         and [] and [] and [] and [] and [] and _
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=a and s=d and F=F\<^sub>1 and x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> (x\<^sub>a,x\<^sub>d)\<close>]
-      certified by (clarsimp split: prod.split simp add: \<phi>) ;;
+    certified by (insert useful(1) useful(2)[THEN bspec[OF _ \<open>x \<in> D\<close>]],
+                  clarsimp split: prod.split simp add: useful(3-)) ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=c and s=b and F=F\<^sub>1]
-      certified by (clarsimp split: prod.split simp add: \<phi>) ;;
+    certified by (insert useful(1) useful(2)[THEN bspec[OF _ \<open>x \<in> D\<close>]],
+                  clarsimp split: prod.split simp add: useful(3-)) ;;
     apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> case uz c b (z a d (x\<^sub>a,x\<^sub>d)) of (x\<^sub>c,x\<^sub>b) \<Rightarrow> (x\<^sub>b,w)\<close>]
       certified by (clarsimp split: prod.split simp add: \<phi> image_iff, insert \<phi>(4), force)
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply(rule conjunctionI, rule)
   \<medium_left_bracket> premises [symmetric, simp] and _ and [] and _ and _ and _ and _ and _ and Tr
-         and [] and [] and [] and [] and [] and _
     apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> (y,r)\<close>]
       certified by (insert useful(1), clarsimp split: prod.split simp add: \<phi> image_iff,
                     case_tac \<open>uz c b (z a d (aa, ba))\<close>, clarsimp,
@@ -4821,28 +4867,28 @@ lemma SE_Module_SDistr_da_bc_ToA_mapper
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=c and s=b and F=F\<^sub>1' and x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> case s (y,r) of (x\<^sub>b,w) \<Rightarrow> (x\<^sub>c,x\<^sub>b)\<close>]
     certified apply (insert useful(1), simp add: image_iff del: split_paired_All, elim bexE)
               subgoal premises prems for y
-                by (insert prems(2) useful(3)[THEN bspec[OF _ prems(1)]]
+                by (insert prems(2) useful(2)[THEN bspec[OF _ prems(1)]]
                              ToA_Mapper_f_expn[OF Tr, simplified, THEN bspec[OF _ prems(1)], symmetric],
-                    clarsimp simp add: prod.rotL_def useful(4-) split: prod.split) . ;;
+                    clarsimp simp add: prod.rotL_def useful(3-) split: prod.split) . ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=a and s=d and F=F\<^sub>1' and x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> case s (y,r) of (x\<^sub>b,w) \<Rightarrow> z' c b (x\<^sub>c,x\<^sub>b)\<close>]
     certified apply (insert useful(1), simp add: image_iff del: split_paired_All, elim bexE)
               subgoal premises prems for y
-                by (insert prems(2) useful(3)[THEN bspec[OF _ prems(1)]]
+                by (insert prems(2) useful(2)[THEN bspec[OF _ prems(1)]]
                              ToA_Mapper_f_expn[OF Tr, simplified, THEN bspec[OF _ prems(1)], symmetric],
-                    clarsimp simp add: prod.rotL_def useful(4-) split: prod.split) . 
+                    clarsimp simp add: prod.rotL_def useful(3-) split: prod.split) . 
 
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply (rule conjunctionI, rule, unfold Premise_def conj_imp_eq_imp_imp, rule ballI)
     subgoal premises prems for x proof -
-      have t2: \<open>(case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> (x\<^sub>a,x\<^sub>d)) \<in> D\<^sub>s\<^sub>z\<close>
-        using prems(19) prems(26) by auto
 
       show ?thesis
         by (insert ToA_Mapper_f_expn_rev[OF \<open>\<m>\<a>\<p> g \<otimes>\<^sub>f r : _ \<mapsto> _ \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> _\<close>,
                                      simplified, THEN bspec[OF _ \<open>x \<in> D\<close>]]
-                      \<open>separatable_module_zip _ _ _ _ _ _ _ _ _\<close>[unfolded separatable_module_zip_def, THEN bspec[OF _ t2]],
-            clarsimp split: prod.split)
+                      \<open>separatable_module_zip _ _ _ _ _ _ _ _ _\<close>
+                            [unfolded separatable_module_zip_def, THEN spec[where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> (x\<^sub>a,x\<^sub>d)\<close>]],
+            clarsimp split: prod.split,
+            insert prems(17) prems(20), fastforce)
     qed .
 
 
@@ -4863,25 +4909,21 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
                   Ds' c \<and> Ds' b \<and> Ds' a \<and> Ds' d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p (x\<^sub>a,w,x\<^sub>d) = x
                     ; (x\<^sub>b,x\<^sub>c) = uz b c (z d a (x\<^sub>d,x\<^sub>a))
-                   in Dx\<^sub>z d a (x\<^sub>d,x\<^sub>a) \<and>
+                   in (x\<^sub>d,x\<^sub>a) \<in> D\<^sub>s\<^sub>z \<and>
+                      Dx\<^sub>z d a (x\<^sub>d,x\<^sub>a) \<and>
                       Dx\<^sub>u b c (z d a (x\<^sub>d,x\<^sub>a)) \<and>
-                      (x\<^sub>d,x\<^sub>a) \<in> D\<^sub>s\<^sub>z \<and>
                       Dx\<^sub>z' b c (f x\<^sub>b, f\<^sub>c x\<^sub>c) \<and>
                       Dx\<^sub>u' d a (z' b c (f x\<^sub>b, f\<^sub>c x\<^sub>c)) )
 
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
-    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G \<mapsto> F\<^sub>1' b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G'
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1' b \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
       \<i>\<n> (\<lambda>(x\<^sub>a,w,x\<^sub>d). let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p (x\<^sub>b,x\<^sub>c) = uz b c (z d a (x\<^sub>d,x\<^sub>a)) in (x\<^sub>b,w)) ` D
 
 \<Longrightarrow> separatable_module_zip (uz' d a) (z' b c) (uz b c) (z d a) D\<^sub>s\<^sub>z f f\<^sub>c f\<^sub>d f' @action undefined
 
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R  = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G  \<^emph> \<half_blkcirc>[True] F\<^sub>1  c
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G' \<^emph> \<half_blkcirc>[True] F\<^sub>1' c
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G  \<^emph> \<half_blkcirc>[True] F\<^sub>1  d
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G' \<^emph> \<half_blkcirc>[True] F\<^sub>1' d
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1' a \<^emph>[C\<^sub>W] W'
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[True] (R [C\<^sub>R]\<^emph> F\<^sub>1 c) \<mapsto> F\<^sub>3' b \<^emph>[True] (R' [C\<^sub>R]\<^emph> F\<^sub>1' c)
+    \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[True] (W [C\<^sub>W]\<^emph> F\<^sub>1 d) \<mapsto> F\<^sub>1' a \<^emph>[True] (W' [C\<^sub>W]\<^emph> F\<^sub>1' d)
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x\<^sub>a,w,x\<^sub>d). let (x\<^sub>b,x\<^sub>c) = uz b c (z d a (x\<^sub>d,x\<^sub>a))
                              ; (y,r) = h (x\<^sub>b,w)
                             in (y,r,x\<^sub>c))
@@ -4893,10 +4935,10 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
+                   Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
 
   \<medium_left_bracket> premises [simp] and _ and [] and _ and _ and _ and _ and _ and Tr
-         and [] and [] and [] and [] and [] and _
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=d and s=a and F=F\<^sub>1]
       certified by (clarsimp split: prod.split simp add: useful, insert useful(1,2), force) ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=b and s=c and F=F\<^sub>1]
@@ -4905,7 +4947,6 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
   \<medium_right_bracket> certified by (clarsimp split: prod.split simp add: useful)
     apply(rule conjunctionI, rule)
   \<medium_left_bracket> premises [symmetric, simp] and _ and [] and _ and _ and _ and _ and _ and Tr
-         and [] and [] and [] and [] and [] and _
 
     apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> (y,r)\<close>]
     certified apply (clarsimp simp add: image_iff useful split: prod.split,
@@ -5138,8 +5179,8 @@ lemma SE_Module_SDistr_dac_b_nc_ToA_mapper
                               Dx\<^sub>S' da c y) \<and>
                       ((x\<^sub>a,x\<^sub>d),x\<^sub>c) \<in> D\<^sub>s\<^sub>m)
 
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>d] F\<^sub>1 d \<^emph> \<half_blkcirc>[C\<^sub>c] F\<^sub>1 c \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>d] F\<^sub>1 d \<^emph> \<half_blkcirc>[C\<^sub>c] F\<^sub>1 c \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G'
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>d] F\<^sub>1 d \<^emph> \<half_blkcirc>[C\<^sub>c] F\<^sub>1 c \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G  @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>d] F\<^sub>1 d \<^emph> \<half_blkcirc>[C\<^sub>c] F\<^sub>1 c \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>G] W\<^sub>G' @action \<A>merge
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f f\<^sub>d \<otimes>\<^sub>f f\<^sub>c \<otimes>\<^sub>f w : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 a \<^emph>[C\<^sub>W] W'
@@ -5197,8 +5238,6 @@ lemma SE_Module_SDistr_dac_b_nc_ToA_mapper
       qed .
 
 
-
-
 lemma SE_Module_SDistr_da_b_comm_ToA_mapper
       [\<phi>reason_template %\<phi>mapToA_derived_module name F\<^sub>1.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> d + a = b @action \<A>arith_eq)
@@ -5224,7 +5263,7 @@ lemma SE_Module_SDistr_da_b_comm_ToA_mapper
                       ; (x\<^sub>a,x\<^sub>d) = uz a d x\<^sub>b
                      in (x\<^sub>a,x\<^sub>d,w))
       \<i>\<n> D \<close>
-  for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
+  for F\<^sub>1 :: \<open>'s::partial_ab_semigroup_add \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
