@@ -225,7 +225,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
           fun fold_pad _ 0 _ x = x
             | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
-          val _ = case bind of SOME (_,b) => if Binding.name_of b = "module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b\<^sub>c" then () else ()
+          val _ = case bind of SOME (_,b) => if Binding.name_of b = "module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b" then () else ()
                              | _ => ()
 
           val rule'1 = (0, Thm.transfer' ctxt' template)
@@ -262,7 +262,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                                   of SOME prop => ((Thm.nprems_of prop, prop RSN' (ctxt', i+1, thm'1))
                                                        handle THM _ => let open Pretty in
                                                           raise Generation_Fail (3, fn () =>
-                                                            [block (text "Unification fails in instantiating the" @
+                                                            [block (text "unification fails in instantiating the" @
                                                                    [brk 1, str (string_of_int (i+1)), str "th", brk 1] @
                                                                    text "antecedent of the template" @ [brk 1] @ here pos),
                                                              item [str "template:", brk 1, Thm.pretty_thm ctxt' thm'1],
@@ -284,11 +284,11 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                                             [Text_Encoding.decode_text_pretty ctxt' text])
                                                       | Const(\<^const_name>\<open>undefined\<close>, _) =>
                                                           raise Generation_Fail (0, fn () => 
-                                                            [para "Fail to reason a compulsory antecedent",
+                                                            [para "fail to reason a compulsory antecedent",
                                                              Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))])
                                                       | Const(\<^const_name>\<open>None\<close>, _) =>
                                                           raise Generation_Fail (3, fn () => 
-                                                            [para "Fail to reason a compulsory antecedent",
+                                                            [para "fail to reason a compulsory antecedent",
                                                              Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))])
                                                       | X => raise TERM("Unrecognizable error text", [X])
                                                     end)
@@ -355,7 +355,13 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
       )
     ) end
       handle Generation_Fail (lev, prt) => (
-        Phi_Reasoner.warn_pretty ctxt lev (Pretty.chunks o prt) ;
+        Phi_Reasoner.warn_pretty ctxt lev (fn () => let open Pretty in
+          chunks (
+              [block (text "During instantiating" @ [brk 1] @
+                (case bind of NONE => text "a template"
+                            | SOME (_, b) => [Binding.pretty b]) @ [brk 1] @ here template_pos @ [str ","])]
+            @ prt ())
+          end) ;
         ctxt))
 
 

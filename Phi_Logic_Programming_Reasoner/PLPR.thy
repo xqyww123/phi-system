@@ -250,6 +250,13 @@ lemma NO_SIMP'_cong[cong]: \<open>NO_SIMP' X \<equiv> NO_SIMP' X\<close> .
 lemma NO_SIMP_I: \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
 lemma NO_SIMP'_I: \<open>PROP P \<Longrightarrow> PROP NO_SIMP' P\<close> unfolding NO_SIMP'_def .
 
+syntax
+  "_Let_NS"      :: "[letbinds, 'a] \<Rightarrow> 'a"                ("(let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p (_)/ in (_))" [0, 10] 10)
+
+translations
+  "_Let_NS (_binds b bs) e"  \<rightleftharpoons> "_Let_NS b (_Let_NS bs e)"
+  "let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p x = a in e"        \<rightleftharpoons> "CONST NO_SIMP (CONST Let) a (\<lambda>x. e)"
+
 
 subsubsection \<open>Annotation Distinguishing IN-Argument \& OUT-Argument\<close>
 

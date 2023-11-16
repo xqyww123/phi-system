@@ -456,6 +456,20 @@ lemma ToA_Mapper_\<phi>Some_rewr_origin[no_atp]:
   unfolding ToA_Mapper_def \<phi>Some_transformation_strip .
 
 
+lemma ToA_Mapper_LPR_gen_cong:
+  \<open> D \<equiv> D'
+\<Longrightarrow> (\<And>x. x \<in> D' \<Longrightarrow> h x \<equiv> h' x)
+\<Longrightarrow> (\<And>x. x \<in> g ` h' ` D' \<Longrightarrow> s x \<equiv> s' x)
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U\<^sub>1 \<o>\<v>\<e>\<r> f : T \<mapsto> T\<^sub>1 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+  \<equiv> \<m>\<a>\<p> g : U \<mapsto> U\<^sub>1 \<o>\<v>\<e>\<r> f : T \<mapsto> T\<^sub>1 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D'\<close>
+  unfolding ToA_Mapper_def atomize_eq
+  by (clarsimp simp add: image_iff Bex_def; rule; clarsimp; metis)
+
+setup \<open>Context.theory_map (PLPR_Rule_Gen.Template_Inst_SS.map (
+  Simplifier.add_cong @{thm' ToA_Mapper_LPR_gen_cong}))\<close>
+
+hide_fact ToA_Mapper_LPR_gen_cong
+
 
 subsubsection \<open>Extracting Implied Facts\<close>
 

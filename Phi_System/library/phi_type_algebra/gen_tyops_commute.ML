@@ -33,11 +33,11 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target undefined)
                                   \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action NToA)\<close>
                                 by (simp add: atomize_imp Action_Tag_def Bubbling_def atomize_all)}
-      fun gen_ind_conv is_IH ctxt _ ctm = (@{print} o (
+      fun gen_ind_conv is_IH ctxt _ ctm = (
             Conv.rewr_conv (if is_intro then ind_rewr_I
                                         else if is_IH then ind_rewr_E_IH
                                                       else ind_rewr_E_CL) then_conv
-            (if is_IH then (@{print} o Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def}))
+            (if is_IH then Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def})
                       else Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)) then_conv
             (if not is_intro andalso is_IH then Phi_Conv.meta_all_conv o (fn C => C o snd)
                                            else I) (fn _ =>
@@ -47,7 +47,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                        Phi_Syntax.transformation_conv Conv.all_conv
                                                       (@{print} o Phi_Reasoners.tag_having_bubbling ctxt)
                                                       Conv.all_conv))
-               else Conv.all_conv)*)) ctxt)) ctm
+               else Conv.all_conv)*)) ctxt) ctm
       val ind_conv = default_ind_conv (gen_ind_conv true, gen_ind_conv false)
       (*val ind_conv = default_ind_conv (
             fn ctxt => fn _ =>

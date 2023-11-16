@@ -2077,7 +2077,7 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
 \<Longrightarrow> (\<forall>u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> T) \<longrightarrow> u = v) \<longrightarrow> ((D\<^sub>Tx \<longrightarrow> eq x y \<and> p y) \<or> (D\<^sub>Ty \<longrightarrow> eq y x \<and> p x)) \<close>
   unfolding Transformation_def
   by auto metis
-    
+      
 lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
@@ -2090,6 +2090,7 @@ lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
 
+thm \<phi>ScalarMul.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b
 
 subsubsection \<open>Commutativity\<close>
 
@@ -2365,7 +2366,6 @@ declare \<phi>MapAt_L.\<Sigma>\<^sub>E[\<phi>reason add]
 declare \<phi>Dependent_Sum.\<phi>MapAt_L.rewr[where k=k and ka=k for k, simplified, simp, assertion_simps]
 
 thm \<phi>MapAt_L.ToA_mapper
-declare \<phi>MapAt_L.ToA_mapper[where f=f and f'=f and g=g and g'=g for f g, simplified, \<phi>reason add]
 
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
@@ -2377,7 +2377,7 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
   
@@ -2403,11 +2403,8 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
 thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>S
 thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z
 thm \<phi>MapAt.ToA_mapper
-thm \<phi>Share.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b
-thm \<phi>Share.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b\<^sub>c[]
-thm SE_Semimodule_SDistr_ad_cb_i_ToA_mapper[unfolded \<r>Guard_def,
-      OF _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>S _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z
-         _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>S _ \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z]
+thm \<phi>Share.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b
+thm \<phi>Share.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Abstract_Domain\<^sub>L ?T ?P) \<Longrightarrow> Abstract_Domain\<^sub>L (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?P x)  \<close>),

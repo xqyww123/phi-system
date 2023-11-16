@@ -534,7 +534,7 @@ val _ = Theory.setup (
 
 #>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (
     Phi_Reasoner.attr_syntax
-      (Scan.option (Scan.lift (Args.$$$ "name" |-- Parse.position Parse.long_ident))
+      (Scan.option (Scan.lift (Args.$$$ "name" |-- Scan.option \<^keyword>\<open>:\<close> |-- Parse.position Parse.long_ident))
        -- Scan.lift (Scan.option (
              \<^keyword>\<open>requires\<close> |--
                 (Parse.and_list (Scan.repeat (  Args.$$$ "_" >> K NONE
