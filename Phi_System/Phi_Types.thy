@@ -2895,8 +2895,6 @@ lemma [\<phi>reason add]:
   unfolding separatable_module_zip_def
   by clarsimp
 
-lemma
-  \<open>separatable_module_zip  \<close>
 
 
 
