@@ -2079,7 +2079,7 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
 \<Longrightarrow> (\<forall>u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> T) \<longrightarrow> u = v) \<longrightarrow> ((D\<^sub>Tx \<longrightarrow> eq x y \<and> p y) \<or> (D\<^sub>Ty \<longrightarrow> eq y x \<and> p x)) \<close>
   unfolding Transformation_def
   by auto metis
-      
+ 
 lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx

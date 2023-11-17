@@ -8,6 +8,7 @@ signature PLPR_SYNTAX = sig
   val is_action_of : string (*the leading constant name*) -> term -> bool
   val is_action_of' : (term -> bool) -> term -> bool
 
+  val find_premise : (term -> 'a option) -> thm -> 'a option
   val find_tagged_premise': (term -> bool) -> thm -> (term * term) option
           (*scanning over every premises, compacted forms including \<and>, \<and>\<^sub>\<r>, \<longrightarrow>*)
   val find_tagged_premise : string -> thm -> (term * term) option
@@ -50,23 +51,26 @@ fun dest_action_of name =
       dest_action_of' (fn tm => case Term.head_of tm of Const (N',_) => name = N'
                         | _ => false) #> fst
 
-fun find_tagged_premise' P =
-  let fun find [] = NONE
-        | find ((Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ A) :: R) =
-            if P A then SOME (A, X) else find R
-        | find ((Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ X $ A) :: R) =
-            if P A then SOME (A, X) else find R
-        | find (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X :: R) = find (X :: R)
-        | find (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X :: R) = find (X :: R)
-        | find (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B :: R) = find (A :: B :: R)
-        | find (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B :: R) = find (A :: B :: R)
-        | find (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X :: R) = find (X :: R)
-        | find (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X) :: R) = find (X :: R)
-        | find (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X) :: R) = find (X :: R)
-        | find (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X :: R) = find (X :: R)
-        | find (_ :: L) = find L
-   in find o Thm.prems_of
+fun find_premise P =
+  let fun find (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = find X
+        | find (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = find X
+        | find (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
+            (case find A of NONE => find B | some => some)
+        | find (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
+            (case find A of NONE => find B | some => some)
+        | find (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = find X
+        | find (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = find X
+        | find (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = find X
+        | find (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = find X
+        | find X = P X
+   in get_first find o Thm.prems_of
   end
+
+fun find_tagged_premise' P = find_premise (
+    fn Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ A => if P A then SOME (A, X) else NONE
+     | Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ X $ A => if P A then SOME (A, X) else NONE
+     | _ => NONE
+  )
 
 fun find_tagged_premise name =
       find_tagged_premise' (fn tm => case Term.head_of tm of Const (N',_) => name = N'

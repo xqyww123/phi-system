@@ -47,6 +47,11 @@ subsection \<open>Partial Addition\<close>
 definition dabc_equation
   where \<open>dabc_equation d a b c \<longleftrightarrow> (d + a = b + c) \<and> (\<exists>x. x + c = a \<and> d + x = b) \<and> d ##\<^sub>+ a \<and> b ##\<^sub>+ c\<close>
 
+lemma dabc_equation_D_main:
+  \<open>dabc_equation d a b c \<Longrightarrow> d + a = b + c\<close>
+  unfolding dabc_equation_def
+  by blast
+
 text \<open>Solves partial addition equations consisting of
 
 \<^item> \<open>given + ?unknown = given\<close>, \<open>?unknown + given = given\<close>,
