@@ -1187,16 +1187,6 @@ consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts entailed from t
 definition \<A>EIF' :: \<open>prop \<Rightarrow> bool \<Rightarrow> prop\<close> where \<open>\<A>EIF' P Q \<equiv> (PROP P \<Longrightarrow> Q)\<close>
 definition \<A>ESC' :: \<open>bool \<Rightarrow> prop \<Rightarrow> prop\<close> where \<open>\<A>ESC' P Q \<equiv> (P \<Longrightarrow> PROP Q)\<close>
 
-declare [[
-  \<phi>reason_default_pattern
-      \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
-  and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
-  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
-  and \<open>_ @action \<A>ESC\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
-  and \<open>PROP \<A>EIF' ?X _\<close> \<Rightarrow> \<open>PROP \<A>EIF' ?X _\<close> (100)
-  and \<open>PROP \<A>ESC' _ ?X\<close> \<Rightarrow> \<open>PROP \<A>ESC' _ ?X\<close> (100)
-]]
-
 \<phi>reasoner_group extract_pure_all = (%cutting, [2, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
   and extract_pure = (%cutting, [%cutting, %cutting+30]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
@@ -1209,6 +1199,22 @@ declare [[
                                                            in extract_pure_all
     \<open>Rules derived from premise extraction\<close>
 
+
+declare [[
+  \<phi>reason_default_pattern
+      \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
+  and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
+  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
+  and \<open>_ @action \<A>ESC\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
+  and \<open>PROP \<A>EIF' ?X _\<close> \<Rightarrow> \<open>PROP \<A>EIF' ?X _\<close> (100)
+  and \<open>PROP \<A>ESC' _ ?X\<close> \<Rightarrow> \<open>PROP \<A>ESC' _ ?X\<close> (100),
+
+  \<phi>default_reasoner_group
+      \<open>_ \<longrightarrow> _ @action \<A>EIF\<close> : %extract_pure  (10)
+  and \<open>_ \<longrightarrow> _ @action \<A>ESC\<close> : %extract_pure  (10)
+  and \<open>PROP \<A>EIF' _ _\<close> : %extract_pure  (10)
+  and \<open>PROP \<A>ESC' _ _\<close> : %extract_pure  (10)
+]]
 
 
 (* ML_file \<open>library/tools/elimination_rule.ML\<close> *)
@@ -1386,6 +1392,27 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> PROP \<A>ESC' (\<forall>x. A x) (\<And>x. PROP A' x) \<close>
   unfolding \<A>EIF'_def \<A>ESC'_def atomize_all[symmetric]
   by (simp add: norm_hhf_eq)
+
+lemma [\<phi>reason add]:
+  \<open> X \<longrightarrow> P @action \<A>EIF
+\<Longrightarrow> NO_SIMP X \<longrightarrow> P @action \<A>EIF \<close>
+  unfolding NO_SIMP_def .
+
+lemma [\<phi>reason add]:
+  \<open> P \<longrightarrow> X @action \<A>ESC
+\<Longrightarrow> P \<longrightarrow> NO_SIMP X @action \<A>ESC \<close>
+  unfolding NO_SIMP_def .
+
+lemma [\<phi>reason add]:
+  \<open> PROP \<A>EIF' X P
+\<Longrightarrow> PROP \<A>EIF' (NO_SIMP' X) P \<close>
+  unfolding NO_SIMP'_def .
+
+lemma [\<phi>reason add]:
+  \<open> PROP \<A>ESC' P X
+\<Longrightarrow> PROP \<A>ESC' P (NO_SIMP' X) \<close>
+  unfolding NO_SIMP'_def .
+
 
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>

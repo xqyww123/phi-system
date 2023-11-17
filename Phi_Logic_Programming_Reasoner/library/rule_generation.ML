@@ -234,7 +234,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
           fun fold_pad _ 0 _ x = x
             | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
-          val _ = case bind of SOME (_,b) => if Binding.name_of b = "ToA_mapper" then () else ()
+          val _ = case bind of SOME (_,b) => if Binding.name_of b = "module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c" then () else ()
                              | _ => ()
 
           val rule'1 = (0, Thm.transfer' ctxt' template)

@@ -103,25 +103,29 @@ There are pre-built reasoning rules for,
   and \<A>_partial_add_specific = (1300, [1300, 1700]) in \<A>_partial_add and > \<A>_partial_add_cut
       \<open>for speicifc structures\<close>
 
-declare [[
-  \<phi>reason_default_pattern
-      \<open>?Eq @action \<A>arith_eq\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eq\<close> (10)
-  and \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close> \<Rightarrow>
-      \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close>    (100)
-  and \<open>dabc_equation _ ?a ?b _\<close> \<Rightarrow> \<open>dabc_equation _ ?a ?b _\<close>             (100)
-]]
-
-
-subsubsection \<open>Extract Implied Facts inside\<close>
-
 \<phi>reasoner_group EIF_dabc = (%cutting, [10, 3000]) for \<open>dabc_equation d a b c \<longrightarrow> what @action \<A>EIF\<close>
                                                    in extract_pure_all
       \<open>extracting pure facts implied inside a dbac-equation of specific algberas\<close>
   and EIF_dabc_default = (5, [5,5]) in extract_pure_all and < EIF_dabc
       \<open>default rules\<close>
 
+
+declare [[
+  \<phi>reason_default_pattern
+      \<open>?Eq @action \<A>arith_eq\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eq\<close> (10)
+  and \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close> \<Rightarrow>
+      \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close>    (100)
+  and \<open>dabc_equation _ ?a ?b _\<close> \<Rightarrow> \<open>dabc_equation _ ?a ?b _\<close>             (100),
+
+  \<phi>default_reasoner_group
+      \<open>dabc_equation _ _ _ _ \<longrightarrow> _ @action \<A>EIF\<close> : %EIF_dabc            (100)
+]]
+
+
+subsubsection \<open>Extract Implied Facts inside\<close>
+
 lemma [\<phi>reason default %EIF_dabc_default]:
-  \<open> dabc_equation d a b c \<longrightarrow> d + a = b + c @action \<A>EIF\<close>
+  \<open> dabc_equation d a b c \<longrightarrow> d + a = b + c \<and> d ##\<^sub>+ a \<and> b ##\<^sub>+ c @action \<A>EIF\<close>
   unfolding Action_Tag_def dabc_equation_def
   by simp
 
@@ -479,8 +483,18 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
 
 subparagraph \<open>EIF\<close>
 
-lemma
-  \<open>dabc_equation d a b c \<longrightarrow> d + a = b + c \<and>  \<close>
+lemma [\<phi>reason add]:
+  \<open>dabc_equation d a b c \<longrightarrow>
+    d + a = b + c \<and>
+    len_intvl.start b = len_intvl.start d \<and>
+    len_intvl.start a = len_intvl.start d + len_intvl.len d \<and>
+    len_intvl.start c = len_intvl.start d + len_intvl.len b \<and>
+    len_intvl.len d \<le> len_intvl.len b \<and>
+    len_intvl.len d + len_intvl.len a = len_intvl.len b + len_intvl.len c
+  @action \<A>EIF\<close>
+  unfolding Action_Tag_def dabc_equation_def
+  by clarsimp
+
 
 
 paragraph \<open>List\<close>
