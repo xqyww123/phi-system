@@ -420,7 +420,7 @@ definition cond_splitR ("?\<^sub>s\<^sub>R") \<comment> \<open>conditioned modul
   where \<open>?\<^sub>s\<^sub>R C f = (if C then f else (\<lambda>x. (x, undefined))) \<close>
 
 abbreviation cond_splitR' ("?\<^sub>s\<^sub>R[_]" [30] 1000)
-  where \<open>?\<^sub>s\<^sub>R[C] \<equiv> ?\<^sub>s\<^sub>R (case_split C)\<close>
+  where \<open>?\<^sub>s\<^sub>R[C] \<equiv> ?\<^sub>s\<^sub>R (LPR_ctrl C)\<close>
 
 lemma cond_split_red[simp]:
   \<open>?\<^sub>s\<^sub>R True f = f\<close>
@@ -433,7 +433,7 @@ definition cond_unionR ("?\<^sub>j\<^sub>R") \<comment> \<open>conditioned modul
   where \<open>?\<^sub>j\<^sub>R C f = (if C then f else fst) \<close>
 
 abbreviation cond_unionR' ("?\<^sub>j\<^sub>R[_]" [30] 1000)
-  where \<open>?\<^sub>j\<^sub>R[C] \<equiv> ?\<^sub>j\<^sub>R (case_split C)\<close>
+  where \<open>?\<^sub>j\<^sub>R[C] \<equiv> ?\<^sub>j\<^sub>R (LPR_ctrl C)\<close>
 
 lemma cond_union_red[simp]:
   \<open>?\<^sub>j\<^sub>R True f = f\<close>
@@ -443,7 +443,7 @@ lemma cond_union_red[simp]:
 
 lemma cond_union_simp[simp]:
   \<open>?\<^sub>j\<^sub>R C fst = fst\<close>
-  unfolding case_split_def cond_unionR_def
+  unfolding LPR_ctrl_def cond_unionR_def
   by simp_all
 
 
@@ -453,7 +453,7 @@ definition cond_mapper :: \<open>bool \<Rightarrow> (('a \<Rightarrow> 'b) \<Rig
   where \<open>?\<^sub>M C m = (if C then m else (\<lambda>_ _. undefined))\<close>
 
 abbreviation cond_mapper' ("?\<^sub>M[_]" [30] 1000)
-  where \<open>?\<^sub>M[C] \<equiv> ?\<^sub>M (case_split C)\<close>
+  where \<open>?\<^sub>M[C] \<equiv> ?\<^sub>M (LPR_ctrl C)\<close>
 
 lemma cond_mapper_red[simp]:
   \<open>?\<^sub>M True m = m\<close>
@@ -463,7 +463,7 @@ lemma cond_mapper_red[simp]:
 
 lemma cond_mapper_simp[simp]:
   \<open>?\<^sub>M C (\<lambda>_ _. undefined) = (\<lambda>_ _. undefined)\<close>
-  unfolding case_split_def cond_mapper_def
+  unfolding LPR_ctrl_def cond_mapper_def
   by simp_all
 
 
@@ -501,16 +501,16 @@ definition cond_unzip_dom ("?\<^sub>U\<^sub>Z\<^sub>D")
 
 
 abbreviation cond_zip' ("?\<^sub>Z[_]" [30] 1000)
-  where \<open>?\<^sub>Z[C] \<equiv> ?\<^sub>Z (case_split C)\<close>
+  where \<open>?\<^sub>Z[C] \<equiv> ?\<^sub>Z (LPR_ctrl C)\<close>
 
 abbreviation cond_zip_dom' ("?\<^sub>Z\<^sub>D[_]" [30] 1000)
-  where \<open>?\<^sub>Z\<^sub>D[C] \<equiv> ?\<^sub>Z\<^sub>D (case_split C)\<close>
+  where \<open>?\<^sub>Z\<^sub>D[C] \<equiv> ?\<^sub>Z\<^sub>D (LPR_ctrl C)\<close>
 
 abbreviation cond_unzip' ("?\<^sub>U\<^sub>Z[_]" [30] 1000)
-  where \<open>?\<^sub>U\<^sub>Z[C] \<equiv> ?\<^sub>U\<^sub>Z (case_split C)\<close>
+  where \<open>?\<^sub>U\<^sub>Z[C] \<equiv> ?\<^sub>U\<^sub>Z (LPR_ctrl C)\<close>
 
 abbreviation cond_unzip_dom' ("?\<^sub>U\<^sub>Z\<^sub>D[_]" [30] 1000)
-  where \<open>?\<^sub>U\<^sub>Z\<^sub>D[C] \<equiv> ?\<^sub>U\<^sub>Z\<^sub>D (case_split C)\<close>
+  where \<open>?\<^sub>U\<^sub>Z\<^sub>D[C] \<equiv> ?\<^sub>U\<^sub>Z\<^sub>D (LPR_ctrl C)\<close>
 
 
 
@@ -743,14 +743,14 @@ lemma [\<phi>reason add]:
 subparagraph \<open>Conditioned\<close>
 
 lemma [\<phi>reason %separatable_zip__norm]:
-  \<open> separatable_cond_unzip (case_split C) (?\<^sub>Z (case_split C) z m\<^sub>Z) (?\<^sub>U\<^sub>Z (case_split C) uz m\<^sub>U) D\<^sub>U' m m\<^sub>f m\<^sub>g f g
-\<Longrightarrow> separatable_cond_unzip C (?\<^sub>Z (case_split C) z m\<^sub>Z) (?\<^sub>U\<^sub>Z (case_split C) uz m\<^sub>U) D\<^sub>U' m m\<^sub>f m\<^sub>g f g \<close>
-  unfolding case_split_def .
+  \<open> separatable_cond_unzip (LPR_ctrl C) (?\<^sub>Z (LPR_ctrl C) z m\<^sub>Z) (?\<^sub>U\<^sub>Z (LPR_ctrl C) uz m\<^sub>U) D\<^sub>U' m m\<^sub>f m\<^sub>g f g
+\<Longrightarrow> separatable_cond_unzip C (?\<^sub>Z (LPR_ctrl C) z m\<^sub>Z) (?\<^sub>U\<^sub>Z (LPR_ctrl C) uz m\<^sub>U) D\<^sub>U' m m\<^sub>f m\<^sub>g f g \<close>
+  unfolding LPR_ctrl_def .
 
 lemma [\<phi>reason %separatable_zip__norm]:
-  \<open> separatable_cond_zip (case_split C) (?\<^sub>U\<^sub>Z (case_split C) uz m\<^sub>U) (?\<^sub>Z (case_split C) z m\<^sub>Z) D\<^sub>U' m m\<^sub>f m\<^sub>g f g
-\<Longrightarrow> separatable_cond_zip C (?\<^sub>U\<^sub>Z (case_split C) uz m\<^sub>U) (?\<^sub>Z (case_split C) z m\<^sub>Z) D\<^sub>U' m m\<^sub>f m\<^sub>g f g \<close>
-  unfolding case_split_def .
+  \<open> separatable_cond_zip (LPR_ctrl C) (?\<^sub>U\<^sub>Z (LPR_ctrl C) uz m\<^sub>U) (?\<^sub>Z (LPR_ctrl C) z m\<^sub>Z) D\<^sub>U' m m\<^sub>f m\<^sub>g f g
+\<Longrightarrow> separatable_cond_zip C (?\<^sub>U\<^sub>Z (LPR_ctrl C) uz m\<^sub>U) (?\<^sub>Z (LPR_ctrl C) z m\<^sub>Z) D\<^sub>U' m m\<^sub>f m\<^sub>g f g \<close>
+  unfolding LPR_ctrl_def .
 
 lemma [\<phi>reason add]:
   \<open> \<g>\<u>\<a>\<r>\<d> separatable_unzip z uz D\<^sub>U m m\<^sub>f m\<^sub>g f g \<and>\<^sub>\<r>
@@ -2897,7 +2897,7 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' R' pred' func' )
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U (?\<^sub>Z\<^sub>D[C\<^sub>W] D D' R') (?\<^sub>Z[C\<^sub>W] z (\<lambda>f. func' f (\<lambda>_. True))) \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>I_def Premise_def Action_Tag_def Simplify_def
-            case_split_def
+            LPR_ctrl_def
   by (cases C\<^sub>W; clarsimp;
       insert apply_Functional_Transformation_Functor
                 [unfolded Argument_def Premise_def,
@@ -2911,8 +2911,8 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' (\<lambda>_. UNIV) pred' (\<lambda>f _. f) )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. case_split C\<^sub>W \<longrightarrow> x \<in> D})) @action \<A>_template_reason undefined
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if case_split C\<^sub>W then z x else x)) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : ({x. LPR_ctrl C\<^sub>W \<longrightarrow> x \<in> D})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (\<lambda>x. if LPR_ctrl C\<^sub>W then z x else x)) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>I_def Premise_def Action_Tag_def Simplify_def
             case_split_def
@@ -2944,8 +2944,8 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor F3 Ft (T \<^emph>[C\<^sub>R] U) T D' R' pred' (\<lambda>f _. f) )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : {x. \<not> case_split C\<^sub>R \<longrightarrow> (\<forall>(a,b) \<in> D' x. a \<in> R' x)}) @action \<A>_template_reason undefined
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (\<lambda>x. if case_split C\<^sub>R then uz x else x)) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : {x. \<not> LPR_ctrl C\<^sub>R \<longrightarrow> (\<forall>(a,b) \<in> D' x. a \<in> R' x)}) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (\<lambda>x. if LPR_ctrl C\<^sub>R then uz x else x)) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
   unfolding Separation_Homo\<^sub>E_Cond_def Separation_Homo\<^sub>E_def Premise_def Action_Tag_def Simplify_def
   by ((cases C\<^sub>R; clarsimp),
@@ -3034,11 +3034,11 @@ lemma apply_conditioned_Separation_Functor\<^sub>\<Lambda>_unzip:
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> Ft F3 T (\<lambda>p. T p \<^emph>[C\<^sub>W] U p) D' R' pred' func' )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>W then D else {x. \<forall>p a. a \<in> D' p (fst x) \<longrightarrow> (a, undefined) \<in> R' p (fst x)})) @action \<A>_template_reason undefined
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (if case_split C\<^sub>W then z else func' (\<lambda>_ x. (x, undefined)) (\<lambda>_ _. True) o fst)) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if LPR_ctrl C\<^sub>W then D else {x. \<forall>p a. a \<in> D' p (fst x) \<longrightarrow> (a, undefined) \<in> R' p (fst x)})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (if LPR_ctrl C\<^sub>W then z else func' (\<lambda>_ x. (x, undefined)) (\<lambda>_ _. True) o fst)) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>I_def Premise_def Action_Tag_def Simplify_def
-            case_split_def
+            LPR_ctrl_def
   by (cases C\<^sub>W; clarsimp;
       insert apply_Functional_Transformation_Functor\<^sub>\<Lambda>
                 [unfolded Argument_def Premise_def,
@@ -3051,8 +3051,8 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F3 Ft (\<lambda>p. T p \<^emph>[C\<^sub>R] U p) T D' R' pred' func' )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>R then UNIV else {x. \<forall>p. \<forall>(a,b) \<in> D' p x. a \<in> R' p x})) @action \<A>_template_reason undefined
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if case_split C\<^sub>R then uz else (\<lambda>x. (func' (\<lambda>_. fst) (\<lambda>_ _. True) x, undefined)))) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if LPR_ctrl C\<^sub>R then UNIV else {x. \<forall>p. \<forall>(a,b) \<in> D' p x. a \<in> R' p x})) @action \<A>_template_reason undefined
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if LPR_ctrl C\<^sub>R then uz else (\<lambda>x. (func' (\<lambda>_. fst) (\<lambda>_ _. True) x, undefined)))) @action \<A>_template_reason undefined
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Premise_def Action_Tag_def Simplify_def
   by (cases C\<^sub>R; clarsimp;
@@ -6934,7 +6934,7 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Zip_of_Semimodule TYPE('s len_intvl) TYPE('c::sep_magma) TYPE('a list)
                            F any (\<lambda>_. True)
-                           (\<lambda>t s (y,x). len_intvl.len s = length x \<and> len_intvl.len t = length y)
+                           (\<lambda>t s (y,x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
                            (\<lambda>_ _ (y,x). x @ y)
                            True True\<close>
   unfolding Guess_Zip_of_Semimodule_def ..
@@ -6942,7 +6942,7 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Unzip_of_Semimodule TYPE('s len_intvl) TYPE('c::sep_magma) TYPE('a list)
                              F any (\<lambda>_. True)
-                             (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
+                             (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
                              (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))
                              True True\<close>
   unfolding Guess_Unzip_of_Semimodule_def ..

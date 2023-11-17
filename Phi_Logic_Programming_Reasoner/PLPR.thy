@@ -1547,6 +1547,30 @@ lemma case_split_red_sum[simp]:
   unfolding case_split_def
   by simp
 
+paragraph \<open>Annotations of Controllers\<close>
+
+definition \<open>LPR_ctrl x \<equiv> x\<close>
+  \<comment> \<open>tagging (especially boolean) flags which will be instantiated during the reasoning process,
+      so they are treated as fixed variables and never instantiated by boolean proposition solvers
+      (e.g., \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close>), and are split by case analysis by the solvers (i.e., identical to
+      \<open>case_split\<close> annotation plus non-instantiation indication).\<close>
+
+subparagraph \<open>Reductions\<close>
+
+lemma LPR_ctrl_red_bool[simp]:
+  \<open>LPR_ctrl True  \<equiv> True \<close>
+  \<open>LPR_ctrl False \<equiv> False\<close>
+  unfolding LPR_ctrl_def
+  by simp
+
+lemma LPR_ctrl_sum[simp]:
+  \<open>LPR_ctrl (Inl x) \<equiv> Inl x\<close>
+  \<open>LPR_ctrl (Inr y) \<equiv> Inr y\<close>
+  unfolding LPR_ctrl_def
+  by simp
+
+
+
 paragraph \<open>Setup\<close>
 
 ML_file_debug "library/reasoners.ML"
@@ -2133,6 +2157,11 @@ lemma [\<phi>reason %\<r>if+10]:
   \<open> if C then P else Q
 \<Longrightarrow> if case_split C then P else Q \<close>
   unfolding case_split_def .
+
+lemma [\<phi>reason %\<r>if+10]:
+  \<open> if C then P else Q
+\<Longrightarrow> if LPR_ctrl C then P else Q \<close>
+  unfolding LPR_ctrl_def .
 
 
 subsubsection \<open>Try\<close>

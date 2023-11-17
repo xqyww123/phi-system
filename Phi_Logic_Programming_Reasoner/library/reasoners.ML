@@ -177,6 +177,14 @@ structure Very_Safe_Oblg_Simp_SS = Simpset(
   val post_merging = I
 )
 
+(** Annot of Fixing **)
+
+fun annot_of_fixing ret (Const(\<^const_name>\<open>LPR_ctrl\<close>, _) $ X) = Term.add_vars X ret
+  | annot_of_fixing ret (A $ B) = annot_of_fixing (annot_of_fixing ret A) B
+  | annot_of_fixing ret (Abs (_,_,X)) = annot_of_fixing ret X
+  | annot_of_fixing ret _ = ret
+
+
 fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
   | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
       = mk_boolean_inst B b (mk_boolean_inst A b ret)
@@ -237,13 +245,14 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
                   Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
              ) ctxt) 1 th01) *)
 
-      val fixing_targets = case fix_level
-                             of 1 => let val (_,prems,concl) = Phi_Help.leading_antecedent (Thm.prop_of th)
-                                      in subtract (op =) (add_vars concl []) (fold add_vars prems [])
-                                      |> map Var
-                                     end
-                              | 2 => [Phi_Help.leading_antecedent' th]
-                              | _ => []
+      val (_,prems,concl) = Phi_Help.leading_antecedent (Thm.prop_of th)
+      val annotated_fixs = annot_of_fixing [] concl
+      val fixing_targets = map Var (
+             case fix_level
+               of 1 => merge (op =) (subtract (op =) (add_vars concl []) (fold add_vars prems []),
+                                     annotated_fixs)
+                | 2 => add_vars (Phi_Help.leading_antecedent' th) annotated_fixs
+                | _ => annotated_fixs )
 
       val (ctxt', th, instc) =
             if null fixing_targets then (ctxt, th, (TVars.empty, Vars.empty))
@@ -295,12 +304,13 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
      | NONE => NONE *)
 
 
-(*** Case Split ***)
+(** Case Split **)
 
 fun case_split_by_annotations term =
   let fun insrt x splits = if Term.is_open x then splits else insert (op aconv) x splits
-      fun parse_split (\<^Const_>\<open>case_split T\<close> $ X) splits =
-           (case (T,X)
+      fun parse_split (Const(N, Type("fun", [T,_])) $ X) splits =
+            if N = \<^const_name>\<open>case_split\<close> orelse N = \<^const_name>\<open>LPR_ctrl\<close>
+            then (case (T,X)
               of (\<^Type>\<open>prod _ _\<close>, Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) => splits
                | (\<^Type>\<open>prod _ _\<close>, x) => insrt x splits
                | (\<^Type>\<open>bool\<close>, Const(\<^const_name>\<open>True\<close>, _)) => splits
@@ -310,6 +320,7 @@ fun case_split_by_annotations term =
                | (\<^Type>\<open>sum _ _\<close>, Const(\<^const_name>\<open>Inr\<close>, _) $ _) => splits
                | (\<^Type>\<open>sum _ _\<close>, x) => insrt x splits
                | _ => insrt X splits)
+            else parse_split X splits
        | parse_split (A $ B) splits = parse_split B (parse_split A splits)
        | parse_split (Abs (_, _, X)) splits = parse_split X splits
        | parse_split _ splits = splits
@@ -319,7 +330,7 @@ fun case_split_by_annotations term =
                              (map (fn tm => Induct.cases_tac ctxt true [[SOME tm]] NONE []) L)
   end
 
-fun case_split_by_annotations_first_subgoal ctxt goal th =
+fun case_split_by_annotations_leading_subgoal ctxt goal th =
       case_split_by_annotations (Phi_Help.leading_antecedent' th) ctxt goal th
   
 
@@ -686,7 +697,7 @@ fun safer_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
        in apply_tac ctxt (fn (ctxt,pre,aux,_) =>
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
                  THEN HEADGOAL (
-                              case_split_by_annotations_first_subgoal ctxt 
+                              case_split_by_annotations_leading_subgoal ctxt 
                  THEN_ALL_NEW Method.insert_tac ctxt aux
                  THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x))
                ) Safe_Solver th'
