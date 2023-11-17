@@ -45,7 +45,7 @@ lemma conditioned_plus_red[simp]:
 subsection \<open>Partial Addition\<close>
 
 definition dabc_equation
-  where \<open>dabc_equation d a b c \<longleftrightarrow> (d + a = b + c) \<and> (\<exists>x. x + c = a \<and> d + x = b)\<close>
+  where \<open>dabc_equation d a b c \<longleftrightarrow> (d + a = b + c) \<and> (\<exists>x. x + c = a \<and> d + x = b) \<and> d ##\<^sub>+ a \<and> b ##\<^sub>+ c\<close>
 
 text \<open>Solves partial addition equations consisting of
 
@@ -157,12 +157,14 @@ lemma [\<phi>reason %\<A>_partial_add_normalizing]:
   unfolding Action_Tag_def
   by simp
 
+(*
 lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id ?var_c + id _ @action \<A>arith_eq\<close>
                                            except \<open>id ?var_d + _ = _ + id ?var_c @action _\<close>]:
   \<open> id c + id b = id a + id d @action \<A>arith_eq
 \<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eq \<close>
   unfolding Action_Tag_def
   by simp
+*)
 
 lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id (_::?'a::ab_semigroup_add) @action \<A>arith_eq\<close>
                                            except \<open>id ?var_d + _ = id _  @action _\<close>]:
@@ -204,6 +206,14 @@ lemma [\<phi>reason %\<A>_partial_add_normalizing
   \<open> ERROR TEXT(\<open>Invalid equation\<close> (id a + id d = id c + id b) \<open>on commutative group,\<close>
                \<open>which can always be reduced to either \<open>c + a = b\<close> or \<open>c + b = a\<close>. Some reasoning rule is configured wrong.\<close>)
 \<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eq \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason %\<A>_partial_add_normalizing
+               for \<open>id _ + id _ = (id _ + id _ :: ?'a :: partial_ab_semigroup_add) @action \<A>arith_eq\<close>]:
+  \<open> ERROR TEXT(\<open>Invalid\<close> (dabc_equation d a b c) \<open>on commutative group,\<close>
+               \<open>which can always be reduced to either\<close> (dc + a = b) \<open>or\<close> (b + cd = a) \<open>Some reasoning rule is configured wrong\<close>)
+\<Longrightarrow> dabc_equation d a b c @action \<A>arith_eq \<close>
   unfolding ERROR_def
   by blast
 
@@ -328,12 +338,11 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) = i
   unfolding Premise_def Action_Tag_def
   by simp
 
-lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?d) = id [?a,?c) + id [?c,?d) @action \<A>arith_eq\<close>
-                                       \<open>id ?var_c + id [?b,?d) = id [?a,?c) + id ?var_d @action \<A>arith_eq\<close> ]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> d \<and> a \<le> c \<and> c \<le> d
-\<Longrightarrow> id [a,b) + id [b,d) = id [a,c) + id [c,d) @action \<A>arith_eq \<close>
-  unfolding Premise_def Action_Tag_def
-  by simp
+lemma [\<phi>reason %\<A>_partial_add_cut]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> d \<and> b \<le> c \<and> a \<le> c \<and> c \<le> d
+\<Longrightarrow> dabc_equation [a,b) [b,d) [a,c) [c,d) \<close>
+  unfolding dabc_equation_def Premise_def
+  by (clarsimp, insert add_lcro_intvl, blast)
 
 lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + id [?c,?d) = id [?a,?d) @action \<A>arith_eq\<close>
                                        \<open>id ?var_c + id [?b,?c) + id ?var_d = id [?a,?d) @action \<A>arith_eq\<close> ]:
@@ -381,15 +390,16 @@ lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id (_::_ len_intvl) + 
   unfolding Action_Tag_def Premise_def Simplify_def
   by (cases a; cases c; clarsimp)
 
-lemma [\<phi>reason %\<A>_partial_add_specific for \<open>id ?var_a + id (_::_ len_intvl) = id (_::_ len_intvl) + id ?var_d @action \<A>arith_eq\<close>]:
+lemma [\<phi>reason %\<A>_partial_add_specific]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start c \<le> len_intvl.start b \<and>
                       len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
                       len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
-\<Longrightarrow> id a + id b = id c + id d @action \<A>arith_eq \<close>
-  unfolding Action_Tag_def Premise_def Simplify_def
-  by (cases b; cases c; clarsimp)
+\<Longrightarrow> dabc_equation a b c d\<close>
+  unfolding dabc_equation_def Premise_def Simplify_def
+  by (cases b; cases c; clarsimp;
+      metis add_diff_cancel_left' le_add_diff_inverse len_intvl.sel(1) len_intvl.sel(2) ordered_cancel_comm_monoid_diff_class.add_diff_assoc2 plus_len_intvl_def)
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start d \<le> len_intvl.start b \<and>
@@ -420,15 +430,21 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
   by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
       metis (full_types) Premise_D add.assoc add_leD1 linorder_not_less)
 
-lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
-           for \<open>id ?var + id (Len_Intvl.set _) = id (Len_Intvl.set _) + id ?var @action \<A>arith_eq\<close>]:
-  \<open> id a + id b = id c + id d @action \<A>arith_eq
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start a + len_intvl.len a = len_intvl.start b \<and>
-                      len_intvl.start c + len_intvl.len c = len_intvl.start d
-\<Longrightarrow> id (Len_Intvl.set a) + id (Len_Intvl.set b) = id (Len_Intvl.set c) + id (Len_Intvl.set d) @action \<A>arith_eq \<close>
-  unfolding Action_Tag_def
-  by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
-      smt (verit, best) Premise_D group_cancel.add1 len_intvl.sel(1) len_intvl.sel(2) linorder_not_le plus_len_intvl_def trans_less_add1)
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
+  \<open> dabc_equation a b c d
+\<Longrightarrow> dabc_equation (Len_Intvl.set a) (Len_Intvl.set b) (Len_Intvl.set c) (Len_Intvl.set d) \<close>
+  unfolding dabc_equation_def
+  apply (cases a; cases b; cases c; cases d; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord)
+  subgoal for e f g h i j
+    apply (rule)
+    apply (smt (verit, best) dual_order.trans len_intvl.sel(1) len_intvl.sel(2) linorder_not_le plus_len_intvl_len plus_len_intvl_start shift_by_nat_assoc shift_by_nat_ord)
+    apply rule
+    apply (cases j; clarsimp)
+    subgoal for k
+      by (rule exI[where x=\<open>Len_Intvl.set \<lbrakk>shift_by_nat e f : k\<rwpar>\<close>], clarsimp,
+          smt (verit, best) linorder_not_le order_le_less_trans shift_by_nat_assoc shift_by_nat_ord)
+    by force .
+    
 
 lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
            for \<open>id ?var + id (Len_Intvl.set _) + id ?var = id (Len_Intvl.set _) @action \<A>arith_eq\<close>]:
@@ -549,14 +565,14 @@ lemma [\<phi>reason default %partial_add_overlaps_default]:
   by blast
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id d + id a = id b + id c @action \<A>arith_eq
+  \<open> dabc_equation d a b c
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id a + id d = id c + id b @action \<A>arith_eq
-\<Longrightarrow> partial_add_overlaps a b \<close>
+  \<open> dabc_equation d a b c
+\<Longrightarrow> partial_add_overlaps b a \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
