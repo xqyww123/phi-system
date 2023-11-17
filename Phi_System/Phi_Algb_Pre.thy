@@ -44,6 +44,9 @@ lemma conditioned_plus_red[simp]:
 
 subsection \<open>Partial Addition\<close>
 
+definition dabc_equation
+  where \<open>dabc_equation d a b c \<longleftrightarrow> (d + a = b + c) \<and> (\<exists>x. x + c = a \<and> d + x = b)\<close>
+
 text \<open>Solves partial addition equations consisting of
 
 \<^item> \<open>given + ?unknown = given\<close>, \<open>?unknown + given = given\<close>,
@@ -63,7 +66,7 @@ For instance, \<open>id a + id b + id c = id d\<close> to distinguish with \<ope
 System rules first normalize the problem into one of
 \<^item> \<open>?unknown_d + given_a = given_b\<close> or
   \<open>given_b + ?unknown_c = given_a\<close> (only for non-commutative algebra)
-\<^item> \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative algebra)
+\<^item> \<open>dabc_equation ?unknown given given ?unknown\<close> (only for non-commutative algebra)
 \<^item> \<open>?\<^sub>+ ?unknown + ?\<^sub>+ given + ?\<^sub>+ ?unknown = ?\<^sub>+ given\<close> (necessary for non-commutative algebra, optional
     for commutative algebra in which it reduces to \<open>?unknown_d + given_a = given_b\<close>)
 
@@ -99,8 +102,37 @@ declare [[
   \<phi>reason_default_pattern
       \<open>?Eq @action \<A>arith_eq\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eq\<close> (10)
   and \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close> \<Rightarrow>
-      \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close>   (100)
+      \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close>    (100)
+  and \<open>dabc_equation _ ?a ?b _\<close> \<Rightarrow> \<open>dabc_equation _ ?a ?b _\<close>             (100)
 ]]
+
+
+subsubsection \<open>Extract Implied Facts inside\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (id d + id a = id b + id c @action \<A>arith_eq) \<longrightarrow> d + a = b + c @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (id d + id a = id b @action \<A>arith_eq) \<longrightarrow> d + a = b @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (id a = id b + id c @action \<A>arith_eq) \<longrightarrow> a = b + c @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>(?\<^sub>+ True a = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c @action \<A>arith_eq) \<longrightarrow> ?\<^sub>+ True a = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>(?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a + ?\<^sub>+ C\<^sub>c c = ?\<^sub>+ True b @action \<A>arith_eq) \<longrightarrow> ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a + ?\<^sub>+ C\<^sub>c c = ?\<^sub>+ True b @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by simp
 
 
 subsubsection \<open>Normalizing Equations\<close>

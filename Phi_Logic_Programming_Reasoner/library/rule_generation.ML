@@ -190,7 +190,7 @@ fun pass_generated_rule {simp, masks} ctxt rule =
       val ctxt's = Template_Inst_SS.enhance ctxt'1
       val rule'3 = rule'2
                 |> simp ? ( Simplification_Protect.protect ctxt's
-                         #> asm_lr_simplify {simp_concl=false} ctxt's
+                         #> asm_lr_simplify {simp_concl=true} ctxt's
                             (*Phi_Reasoners.asm_lr_simplify true ctxt's*)
                          #> Simplification_Protect.unprotect ctxt's )
                 |> singleton (Variable.export ctxt'1 ctxt)

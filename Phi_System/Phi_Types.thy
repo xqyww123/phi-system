@@ -2919,7 +2919,9 @@ thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>S
 
 thm \<phi>Mul_Quant_Tree.ToA_mapper
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
+thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[simplified]
 
+term NO_SIMP
 (* [--d--][----a----]
    [----b----][--c--]*)
 
