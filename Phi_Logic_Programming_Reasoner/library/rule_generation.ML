@@ -55,6 +55,7 @@ type instantiation = Position.T (*where the instantiation happens*)
 (* Controller *)
 
 val enable_reason_generator : bool Config.T
+val trace : int Config.T
 
 (* Main Entry *)
 val invoke_generation : template -> instantiation -> Context.generic -> Context.generic
@@ -149,25 +150,31 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
-val _ = Phi_Reasoners.extract_implied_fact
+val trace = Attrib.setup_config_int \<^binding>\<open>\<phi>trace_template_inst\<close> (K 0);
 
 fun asm_lr_simplify {simp_concl} ctxt rule =
   let val ((_, [rule']), ctxt') = Variable.import false [rule] ctxt
-      fun pass_premises (rule, ctxt) =
+      fun pass_premises (hyps, rule, ctxt) =
         if Thm.no_prems rule
-        then (if simp_concl then Conv.fconv_rule (Simplifier.rewrite ctxt) rule
+        then (hyps,
+              if simp_concl then Conv.fconv_rule (Simplifier.rewrite ctxt) rule
                             else rule,
               ctxt)
-        else let val rule = Conv.gconv_rule (Simplifier.rewrite ctxt) 1 rule
-                 val cprem = Thm.cprem_of rule 1
-                 val ([lprem], ctxt) = Assumption.add_assms Assumption.presume_export [cprem] ctxt
+        else let val rule'1 = Conv.gconv_rule (Phi_Reasoners.asm_lr_rewrite false ctxt) 1 rule
+                 val cprem = Thm.cprem_of rule'1 1
+         in case Thm.term_of cprem
+         of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) =>
+            pass_premises (hyps, Conv.fconv_rule (Conv.rewr_conv @{thm' True_implies_equals}) rule'1, ctxt)
+          | _ => let
+                 val (lprem, ctxt) = Thm.assume_hyps cprem ctxt
                  val facts = the_default [] (Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt' lprem)
                  val ctxt = ctxt addsimps facts
-                 val rule = Thm.implies_elim rule lprem
-         in (rule, ctxt)
-        end
-      val (rule, ctxt') = pass_premises (rule', ctxt')
-   in Assumption.export ctxt' ctxt rule
+                 val rule'2 = Thm.implies_elim rule'1 lprem
+         in pass_premises (cprem::hyps, rule'2, ctxt)
+        end end
+      val (hyps, rule, _) = pass_premises ([], rule', ctxt')
+   in fold Thm.implies_intr hyps rule
+   |> Thm.transfer' ctxt'
   end
 
 (*simplify the generated rule except the conclusion by default, unless a part of the conclusion has
@@ -183,7 +190,8 @@ fun pass_generated_rule {simp, masks} ctxt rule =
       val ctxt's = Template_Inst_SS.enhance ctxt'1
       val rule'3 = rule'2
                 |> simp ? ( Simplification_Protect.protect ctxt's
-                         #> Phi_Reasoners.asm_lr_simplify true ctxt's
+                         #> asm_lr_simplify {simp_concl=false} ctxt's
+                            (*Phi_Reasoners.asm_lr_simplify true ctxt's*)
                          #> Simplification_Protect.unprotect ctxt's )
                 |> singleton (Variable.export ctxt'1 ctxt)
                 |> Phi_Help.unique_flexflex ctxt
@@ -222,6 +230,7 @@ fun short_name_of_leading_const (Abs (_,_,X)) = short_name_of_leading_const X
 fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, positioned_props) ctxt =
      (let val ctxt' = Context.proof_of ctxt
                    |> Config.put Phi_Reasoner_solve_obligation_and_no_defer 1
+                   |> Config.put Phi_Reasoner.trace (Config.get_generic ctxt trace)
           fun fold_pad _ 0 _ x = x
             | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)

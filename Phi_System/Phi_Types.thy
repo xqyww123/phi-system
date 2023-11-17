@@ -448,13 +448,13 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
   there can be properties very akin to them, see the section \<open>Pseudo properties of \<Sigma>\<close> below.\<close>
 
 subsubsection \<open>Properties Failed to be Derived\<close>
- 
+
 lemma \<phi>Dependent_Sum_TF[\<phi>type_property \<phi>Dependent_Sum Transformation_Functor]:
   \<open>Transformation_Functor\<^sub>\<Lambda> \<Sigma> \<Sigma> T U (\<lambda>p x. if fst x = p then {snd x} else {}) (\<lambda>_ _. UNIV)
                                     (\<lambda>r x. rel_prod (=) (r (fst x)) x)\<close>
   unfolding Transformation_Functor\<^sub>\<Lambda>_def Transformation_def
   by clarsimp
-
+ 
 context begin
 
 private lemma [simp]:
