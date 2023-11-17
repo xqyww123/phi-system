@@ -308,6 +308,12 @@ lemma map_beta:
   \<open>(f \<otimes>\<^sub>f g) x = (f (fst x), g (snd x))\<close>
   by (cases x; simp)
 
+lemma case_prod_map_prod[simp]:
+  \<open>(case (f \<otimes>\<^sub>f g) x of (a,b) \<Rightarrow> r a b) = (case x of (a,b) \<Rightarrow> let a' = f a ; b' = g b in r a' b')\<close>
+  unfolding Let_def
+  using BNF_Fixpoint_Base.case_prod_map_prod .
+
+
 definition rotL :: \<open>'a \<times> 'b \<times> 'c \<Rightarrow> ('a \<times> 'b) \<times> 'c\<close>
   where \<open>rotL x = ((fst x, fst (snd x)), snd (snd x))\<close>
 

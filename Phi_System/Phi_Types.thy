@@ -698,6 +698,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
 declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abst\<close>\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def Set_Abst :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   
@@ -2244,7 +2246,7 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
@@ -2308,7 +2310,9 @@ lemma [\<phi>reason add]:
 
 
 subsubsection \<open>By List of Keys\<close>
- 
+
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Sep_Functor_1
@@ -2367,7 +2371,6 @@ declare \<phi>Dependent_Sum.\<phi>MapAt_L.rewr[where k=k and ka=k for k, simplif
 
 thm \<phi>MapAt_L.ToA_mapper
 
-
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
 
@@ -2402,8 +2405,8 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
 
 thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>S
 thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z
-thm \<phi>MapAt.ToA_mapper
-thm \<phi>Share.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b
+thm \<phi>Share.ToA_mapper
+thm \<phi>Share.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b (*TODO: reduce the premises of this rule to empty*)
 thm \<phi>Share.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -2787,7 +2790,7 @@ context begin
 private lemma [simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
-
+ 
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -2894,7 +2897,7 @@ lemma [\<phi>reason add]:
 
 declare [[\<phi>trace_reasoning = 0]]
     
-\<phi>type_def \<phi>Mul_Quant_Tree :: \<open>(nat \<Rightarrow> 'k) \<Rightarrow> nat len_intvl \<Rightarrow> ('k list \<Rightarrow> 'c, 'a) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'c::sep_algebra, 'a list) \<phi> \<close>
+\<phi>type_def \<phi>Mul_Quant_Tree :: \<open>(nat \<Rightarrow> 'k) \<Rightarrow> nat len_intvl \<Rightarrow> ('k list \<Rightarrow> 'c, 'a) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'c::sep_algebra, 'a list) \<phi> \<close> ("\<big_ast>\<^sub>\<bbbT>")
   where \<open>l \<Ztypecolon> \<phi>Mul_Quant_Tree f iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>i. f i \<^bold>\<rightarrow>\<^sub># T)\<close>
   deriving Sep_Functor_1
        and Semimodule_NonAssoc

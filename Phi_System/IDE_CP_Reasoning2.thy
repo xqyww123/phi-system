@@ -331,7 +331,7 @@ abbreviation ToA_Subst'' :: \<open>'c BI \<Rightarrow> 'c BI \<Rightarrow> 'c::s
 
 definition ToA_Mapper :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_magma, 'a) \<phi> \<Rightarrow> ('c,'b) \<phi>
                        \<Rightarrow> ('x \<Rightarrow> 'y) \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'y) \<phi> \<Rightarrow> ('x \<Rightarrow> 'a) \<Rightarrow> ('b \<Rightarrow> 'y) \<Rightarrow> 'x set \<Rightarrow> bool\<close>
-                          ("\<m>\<a>\<p> _ : _ \<mapsto> _/ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _/ \<w>\<i>\<t>\<h> (\<g>\<e>\<t>\<t>\<e>\<r> _/ \<s>\<e>\<t>\<t>\<e>\<r> _)/ \<i>\<n> _" [21,21,21,21,21,21,21,21,21] 18)
+                          ("\<m>\<a>\<p> (_ :/ _ \<mapsto>/ _)/ \<o>\<v>\<e>\<r> (_ :/ _ \<mapsto>/ _)/ \<w>\<i>\<t>\<h> (\<g>\<e>\<t>\<t>\<e>\<r> _/ \<s>\<e>\<t>\<t>\<e>\<r> _)/ \<i>\<n> _" [21,21,21,21,21,21,21,21,21] 18)
   where \<open>\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> domain \<equiv>
             (\<forall>x \<in> domain. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U) \<and>
             (\<forall>y \<in> g ` h ` domain. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s y \<Ztypecolon> T') \<and>
