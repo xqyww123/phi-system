@@ -48,7 +48,7 @@ definition dabc_equation
   where \<open>dabc_equation d a b c \<longleftrightarrow> (d + a = b + c) \<and> (\<exists>x. x + c = a \<and> d + x = b) \<and> d ##\<^sub>+ a \<and> b ##\<^sub>+ c\<close>
 
 lemma dabc_equation_D_main:
-  \<open>dabc_equation d a b c \<Longrightarrow> d + a = b + c\<close>
+  \<open>dabc_equation d a b c \<Longrightarrow> d + a = b + c \<and> d ##\<^sub>+ a \<and> b ##\<^sub>+ c\<close>
   unfolding dabc_equation_def
   by blast
 
@@ -114,9 +114,15 @@ declare [[
 
 subsubsection \<open>Extract Implied Facts inside\<close>
 
-lemma [\<phi>reason %extract_pure]:
-  \<open> (id d + id a = id b + id c @action \<A>arith_eq) \<longrightarrow> d + a = b + c @action \<A>EIF\<close>
-  unfolding Action_Tag_def
+\<phi>reasoner_group EIF_dabc = (%cutting, [10, 3000]) for \<open>dabc_equation d a b c \<longrightarrow> what @action \<A>EIF\<close>
+                                                   in extract_pure_all
+      \<open>extracting pure facts implied inside a dbac-equation of specific algberas\<close>
+  and EIF_dabc_default = (5, [5,5]) in extract_pure_all and < EIF_dabc
+      \<open>default rules\<close>
+
+lemma [\<phi>reason default %EIF_dabc_default]:
+  \<open> dabc_equation d a b c \<longrightarrow> d + a = b + c @action \<A>EIF\<close>
+  unfolding Action_Tag_def dabc_equation_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
@@ -471,6 +477,10 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
       clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord;
       linarith)
 
+subparagraph \<open>EIF\<close>
+
+lemma
+  \<open>dabc_equation d a b c \<longrightarrow> d + a = b + c \<and>  \<close>
 
 
 paragraph \<open>List\<close>

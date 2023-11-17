@@ -1197,13 +1197,13 @@ declare [[
   and \<open>PROP \<A>ESC' _ ?X\<close> \<Rightarrow> \<open>PROP \<A>ESC' _ ?X\<close> (100)
 ]]
 
-\<phi>reasoner_group extract_pure_all = (%cutting, [1, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+\<phi>reasoner_group extract_pure_all = (%cutting, [2, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
   and extract_pure = (%cutting, [%cutting, %cutting+30]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
                                                           in extract_pure_all
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
   and extract_pure_fallback = (1, [1,1]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
-                                          in extract_pure_all and < extract_pure
+                                           < extract_pure_all
     \<open>Fallbacks of extracting pure facts, typically returning the unsimplified original term\<close>
   and derived_\<A>EIF_from_premis_extraction = (50, [50,50]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
                                                            in extract_pure_all
