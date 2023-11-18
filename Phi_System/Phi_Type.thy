@@ -5065,13 +5065,14 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds Dx\<^sub>u uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>1'
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>3 F\<^sub>3'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx\<^sub>z z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1' Ds' Dx\<^sub>u' uz'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1' Ds' Dx\<^sub>z' z'
 \<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> Ds' c \<and> Ds' b \<and> Ds' a \<and> Ds' d
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p (x\<^sub>a,w,x\<^sub>d) = x
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. let (x\<^sub>a,w,x\<^sub>d) = x
                     ; (x\<^sub>b,x\<^sub>c) = uz b c (z d a (x\<^sub>d,x\<^sub>a))
                    in D\<^sub>s\<^sub>z (x\<^sub>d,x\<^sub>a) (f x\<^sub>b, f\<^sub>c x\<^sub>c) \<and>
                       Dx\<^sub>z d a (x\<^sub>d,x\<^sub>a) \<and>

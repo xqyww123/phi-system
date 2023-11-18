@@ -2937,6 +2937,7 @@ thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>S
 
 thm \<phi>Mul_Quant_Tree.ToA_mapper
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b
+thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b[simplified]
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>c\<^sub>_\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
