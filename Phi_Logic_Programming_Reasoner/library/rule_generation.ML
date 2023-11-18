@@ -152,13 +152,20 @@ fun normalize th = th
 
 val trace = Attrib.setup_config_int \<^binding>\<open>\<phi>trace_template_inst\<close> (K 0);
 
+fun SIMP_conv ctxt ctm =
+  let
+   in 1
+  end
+
 fun asm_lr_simplify {simp_concl} ctxt rule =
   let val ((_, [rule']), ctxt') = Variable.import false [rule] ctxt
       fun pass_premises (hyps, rule, ctxt) =
         if Thm.no_prems rule
         then (hyps,
               if simp_concl then Conv.fconv_rule (Simplifier.rewrite ctxt) rule
-                            else rule,
+                            else Conv.fconv_rule (Conv.top_conv (fn ctxt =>
+                                    1
+                                  ) ctxt) rule,
               ctxt)
         else let val rule'1 = Conv.gconv_rule (Phi_Reasoners.asm_lr_rewrite false ctxt) 1 rule
                  val cprem = Thm.cprem_of rule'1 1
@@ -180,17 +187,18 @@ fun asm_lr_simplify {simp_concl} ctxt rule =
 (*simplify the generated rule except the conclusion by default, unless a part of the conclusion has
   been annotated by \<open>NO_SIMP\<close> (i.e., \<open>NO_SIMP\<close> occurs in the conclusion)*)
 fun pass_generated_rule {simp, masks} ctxt rule =
-  let val rule'1 = case Thm.concl_of rule
+  let (*val rule'1 = case Thm.concl_of rule
                      of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
                       | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
                       | X => if exists_Const (fn (\<^const_name>\<open>NO_SIMP\<close>, _) => true | _ => false) X
                              then rule
-                             else rule RS' (ctxt, @{thm' NO_SIMP'_I})
+                             else rule RS' (ctxt, @{thm' NO_SIMP'_I})*)
+      val rule'1 = rule
       val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
       val ctxt's = Template_Inst_SS.enhance ctxt'1
       val rule'3 = rule'2
                 |> simp ? ( Simplification_Protect.protect ctxt's
-                         #> asm_lr_simplify {simp_concl=true} ctxt's
+                         #> asm_lr_simplify {simp_concl=false} ctxt's
                             (*Phi_Reasoners.asm_lr_simplify true ctxt's*)
                          #> Simplification_Protect.unprotect ctxt's )
                 |> singleton (Variable.export ctxt'1 ctxt)
@@ -216,7 +224,7 @@ fun pass_generated_rule {simp, masks} ctxt rule =
    in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule' (~1, inargs) ctxt rule'3
          of SOME th => simplify ctxt th
           | NONE => rule'3)
-   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
+   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def SIMP_def}
    |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
    |> normalize
   end

@@ -1804,8 +1804,10 @@ consts \<A>_template_reason :: \<open>text option \<Rightarrow> action\<close>
   \<comment> \<open>tagging the antecedent has to be solved during the time of template instantiation.
       The text is printed when the reasoning fails. None for no printing (silently stopping the rule
       generation), \<open>undefined\<close> for default printing (printing the term of the failed antecedent)\<close>
-definition \<open>template_NO_SIMP_USE (X::bool) \<equiv> X\<close>
-  \<comment> \<open>prevent using the protected proposition in the simplification during a template instantiation.\<close>
+
+definition [iff]: \<open>SIMP X \<equiv> X\<close>
+  \<comment> \<open>By default, the conclusion of a template will not be simplified. However, user may annotate
+      terms by \<open>SIMP\<close> to re-enable the simplification over the wrapped terms.\<close>
 
 ML_file_debug \<open>library/rule_generation.ML\<close>
 ML_file \<open>library/properties.ML\<close>
