@@ -4996,12 +4996,12 @@ lemma SE_Module_SDistr_da_bc_ToA_mapper
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[True] (R [C\<^sub>R]\<^emph> F\<^sub>1 c) \<mapsto> F\<^sub>3' b \<^emph>[True] (R' [C\<^sub>R]\<^emph> F\<^sub>1' c)
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[True] (W [C\<^sub>W]\<^emph> F\<^sub>1 d) \<mapsto> F\<^sub>1' a \<^emph>[True] (W' [C\<^sub>W]\<^emph> F\<^sub>1' d)
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x\<^sub>a,w,x\<^sub>d). let (x\<^sub>c,x\<^sub>b) = uz c b (z a d (x\<^sub>a,x\<^sub>d))
-                             ; (y,r) = h (x\<^sub>b,w)
-                            in (y,r,x\<^sub>c))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y,r,x\<^sub>c). let (x\<^sub>b,w) = s (y,r)
-                            ; (x\<^sub>a,x\<^sub>d) = uz' a d (z' c b (x\<^sub>c,x\<^sub>b))
-                           in (x\<^sub>a,w,x\<^sub>d))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(x\<^sub>a,w,x\<^sub>d). let (x\<^sub>c,x\<^sub>b) = uz c b (z a d (x\<^sub>a,x\<^sub>d))
+                                 ; (y,r) = h (x\<^sub>b,w)
+                                in (y,r,x\<^sub>c))
+         \<s>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(y,r,x\<^sub>c). let (x\<^sub>b,w) = s (y,r)
+                                 ; (x\<^sub>a,x\<^sub>d) = uz' a d (z' c b (x\<^sub>c,x\<^sub>b))
+                                in (x\<^sub>a,w,x\<^sub>d))
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
@@ -5088,16 +5088,16 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[True] (R [C\<^sub>R]\<^emph> F\<^sub>1 c) \<mapsto> F\<^sub>3' b \<^emph>[True] (R' [C\<^sub>R]\<^emph> F\<^sub>1' c)
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[True] (W [C\<^sub>W]\<^emph> F\<^sub>1 d) \<mapsto> F\<^sub>1' a \<^emph>[True] (W' [C\<^sub>W]\<^emph> F\<^sub>1' d)
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x\<^sub>a,w,x\<^sub>d). let (x\<^sub>b,x\<^sub>c) = uz b c (z d a (x\<^sub>d,x\<^sub>a))
-                             ; (y,r) = h (x\<^sub>b,w)
-                            in (y,r,x\<^sub>c))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y,r,x\<^sub>c). let (x\<^sub>b,w) = s (y,r)
-                            ; (x\<^sub>d,x\<^sub>a) = uz' d a (z' b c (x\<^sub>b,x\<^sub>c))
-                           in (x\<^sub>a,w,x\<^sub>d))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(x\<^sub>a,w,x\<^sub>d). let (x\<^sub>b,x\<^sub>c) = uz b c (z d a (x\<^sub>d,x\<^sub>a))
+                                 ; (y,r) = h (x\<^sub>b,w)
+                                in (y,r,x\<^sub>c))
+         \<s>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(y,r,x\<^sub>c). let (x\<^sub>b,w) = s (y,r)
+                                 ; (x\<^sub>d,x\<^sub>a) = uz' d a (z' b c (x\<^sub>b,x\<^sub>c))
+                                in (x\<^sub>a,w,x\<^sub>d))
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
-  unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
+  unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def SIMP_def
             Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def
   apply (drule dabc_equation_D_main;
          simp add: ToA_Mapper_\<phi>Some_rewr_origin conj_imp_eq_imp_imp;
@@ -5188,12 +5188,12 @@ lemma SE_Module_SDistr_a_dbc_nc_ToA_mapper
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f f\<^sub>d \<otimes>\<^sub>f f\<^sub>c : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 a \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,w). let (x\<^sub>d\<^sub>b, x\<^sub>c) = ?\<^sub>s\<^sub>R C\<^sub>c (uz' db c) x
-                         ; (x\<^sub>b, x\<^sub>d) = ?\<^sub>s\<^sub>R C\<^sub>d (uz b d) x\<^sub>d\<^sub>b
-                         ; (y,r) = h (x\<^sub>b, w)
-                        in (y, r, x\<^sub>d, x\<^sub>c))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y,r,x\<^sub>d,x\<^sub>c). case s (y,r) of (x\<^sub>b,w) \<Rightarrow>
-                      (?\<^sub>j\<^sub>R C\<^sub>c (z' db c) (?\<^sub>j\<^sub>R C\<^sub>d (z b d) (x\<^sub>b,x\<^sub>d), x\<^sub>c), w))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(x,w). let (x\<^sub>d\<^sub>b, x\<^sub>c) = ?\<^sub>s\<^sub>R C\<^sub>c (uz' db c) x
+                              ; (x\<^sub>b, x\<^sub>d) = ?\<^sub>s\<^sub>R C\<^sub>d (uz b d) x\<^sub>d\<^sub>b
+                              ; (y,r) = h (x\<^sub>b, w)
+                             in (y, r, x\<^sub>d, x\<^sub>c))
+         \<s>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(y,r,x\<^sub>d,x\<^sub>c). case s (y,r) of (x\<^sub>b,w) \<Rightarrow>
+                        (?\<^sub>j\<^sub>R C\<^sub>c (z' db c) (?\<^sub>j\<^sub>R C\<^sub>d (z b d) (x\<^sub>b,x\<^sub>d), x\<^sub>c), w))
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
 
@@ -5267,10 +5267,10 @@ lemma SE_Module_SDistr_a_dbc_comm_ToA_mapper
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f f\<^sub>d : F\<^sub>3 b \<^emph>[True] (R\<^sub>G [C\<^sub>R]\<^emph> F\<^sub>1 d) \<mapsto> F\<^sub>3' b \<^emph>[True] (R\<^sub>G' [C\<^sub>R]\<^emph> F\<^sub>1 d)
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 a \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,w). let (x\<^sub>b, x\<^sub>d) = uz b d x
-                         ; (y,r) = h (x\<^sub>b, w)
-                        in (y, r, x\<^sub>d))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y,r,x\<^sub>d). case s (y,r) of (x\<^sub>b,w) \<Rightarrow> (z b d (x\<^sub>b,x\<^sub>d), w))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(x,w). let (x\<^sub>b, x\<^sub>d) = uz b d x
+                              ; (y,r) = h (x\<^sub>b, w)
+                             in (y, r, x\<^sub>d))
+         \<s>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(y,r,x\<^sub>d). case s (y,r) of (x\<^sub>b,w) \<Rightarrow> (z b d (x\<^sub>b,x\<^sub>d), w))
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_ab_semigroup_add \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
 
@@ -5353,11 +5353,11 @@ lemma SE_Module_SDistr_dac_b_nc_ToA_mapper
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f f\<^sub>d \<otimes>\<^sub>f f\<^sub>c \<otimes>\<^sub>f w : F\<^sub>1 a \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 a \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x\<^sub>a,x\<^sub>d,x\<^sub>c,w). h (?\<^sub>j\<^sub>R C\<^sub>c (z' da c) (?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d), x\<^sub>c), w))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>yr. let (x\<^sub>b,w) = s yr
-                      ; (x\<^sub>d\<^sub>a,x\<^sub>c) = ?\<^sub>s\<^sub>R C\<^sub>c (uz' da c) x\<^sub>b
-                      ; (x\<^sub>a,x\<^sub>d) = ?\<^sub>s\<^sub>R C\<^sub>d (uz a d) x\<^sub>d\<^sub>a
-                     in (x\<^sub>a,x\<^sub>d,x\<^sub>c,w))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(x\<^sub>a,x\<^sub>d,x\<^sub>c,w). h (?\<^sub>j\<^sub>R C\<^sub>c (z' da c) (?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d), x\<^sub>c), w))
+         \<s>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>yr. let (x\<^sub>b,w) = s yr
+                           ; (x\<^sub>d\<^sub>a,x\<^sub>c) = ?\<^sub>s\<^sub>R C\<^sub>c (uz' da c) x\<^sub>b
+                           ; (x\<^sub>a,x\<^sub>d) = ?\<^sub>s\<^sub>R C\<^sub>d (uz a d) x\<^sub>d\<^sub>a
+                          in (x\<^sub>a,x\<^sub>d,x\<^sub>c,w))
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
 
@@ -5428,10 +5428,10 @@ lemma SE_Module_SDistr_da_b_comm_ToA_mapper
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f f\<^sub>d \<otimes>\<^sub>f w : F\<^sub>1 a \<^emph>[True] (F\<^sub>1 d \<^emph>[C\<^sub>W] W) \<mapsto> F\<^sub>1 a \<^emph>[True] (F\<^sub>1 d \<^emph>[C\<^sub>W] W')
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x\<^sub>a,x\<^sub>d,w). h (z a d (x\<^sub>a, x\<^sub>d), w))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>yr. let (x\<^sub>b,w) = s yr
-                      ; (x\<^sub>a,x\<^sub>d) = uz a d x\<^sub>b
-                     in (x\<^sub>a,x\<^sub>d,w))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(x\<^sub>a,x\<^sub>d,w). h (z a d (x\<^sub>a, x\<^sub>d), w))
+         \<s>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>yr. let (x\<^sub>b,w) = s yr
+                           ; (x\<^sub>a,x\<^sub>d) = uz a d x\<^sub>b
+                          in (x\<^sub>a,x\<^sub>d,w))
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_ab_semigroup_add \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
 

@@ -152,34 +152,42 @@ fun normalize th = th
 
 val trace = Attrib.setup_config_int \<^binding>\<open>\<phi>trace_template_inst\<close> (K 0);
 
-fun SIMP_conv ctxt ctm =
-  let
-   in 1
+fun SIMP_conv C =
+  let fun conv ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>SIMP\<close>, _) $ _ => Conv.arg_conv (C ctxt) ctm
+           | _ => Conv.sub_conv conv ctxt ctm
+   in conv
   end
 
-fun asm_lr_simplify {simp_concl} ctxt rule =
-  let val ((_, [rule']), ctxt') = Variable.import false [rule] ctxt
-      fun pass_premises (hyps, rule, ctxt) =
+fun asm_lr_simplify {simp_concl} ctxt rule0 =
+  let val ((_, [rule']), ctxt') = Variable.import false [rule0] ctxt
+      fun pass_premises (i, hyps, rule, ctxt) =
         if Thm.no_prems rule
         then (hyps,
               if simp_concl then Conv.fconv_rule (Simplifier.rewrite ctxt) rule
-                            else Conv.fconv_rule (Conv.top_conv (fn ctxt =>
-                                    1
-                                  ) ctxt) rule,
+                            else if Term.exists_Const (fn (\<^const_name>\<open>SIMP\<close>, _) => true
+                                                        | _ => false) (Thm.prop_of rule)
+                            then Conv.fconv_rule (SIMP_conv Simplifier.rewrite ctxt) rule
+                            else rule,
               ctxt)
         else let val rule'1 = Conv.gconv_rule (Phi_Reasoners.asm_lr_rewrite false ctxt) 1 rule
                  val cprem = Thm.cprem_of rule'1 1
          in case Thm.term_of cprem
          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) =>
-            pass_premises (hyps, Conv.fconv_rule (Conv.rewr_conv @{thm' True_implies_equals}) rule'1, ctxt)
-          | _ => let
+            pass_premises (i+1, hyps, Conv.fconv_rule (Conv.rewr_conv @{thm' True_implies_equals}) rule'1, ctxt)
+          | prem_tm => let
+                 val _ = if Term.exists_Const (fn (\<^const_name>\<open>SIMP\<close>, _) => true
+                                                | _ => false) prem_tm
+                         then raise THM ("SIMP tag can only occur in conclusion", i, [rule0])
+                         else ()
                  val (lprem, ctxt) = Thm.assume_hyps cprem ctxt
                  val facts = the_default [] (Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt' lprem)
                  val ctxt = ctxt addsimps facts
                  val rule'2 = Thm.implies_elim rule'1 lprem
-         in pass_premises (cprem::hyps, rule'2, ctxt)
+         in pass_premises (i+1, cprem::hyps, rule'2, ctxt)
         end end
-      val (hyps, rule, _) = pass_premises ([], rule', ctxt')
+      val (hyps, rule, _) = pass_premises (1, [], rule', ctxt')
    in fold Thm.implies_intr hyps rule
    |> Thm.transfer' ctxt'
   end
@@ -194,15 +202,7 @@ fun pass_generated_rule {simp, masks} ctxt rule =
                              then rule
                              else rule RS' (ctxt, @{thm' NO_SIMP'_I})*)
       val rule'1 = rule
-      val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
-      val ctxt's = Template_Inst_SS.enhance ctxt'1
-      val rule'3 = rule'2
-                |> simp ? ( Simplification_Protect.protect ctxt's
-                         #> asm_lr_simplify {simp_concl=false} ctxt's
-                            (*Phi_Reasoners.asm_lr_simplify true ctxt's*)
-                         #> Simplification_Protect.unprotect ctxt's )
-                |> singleton (Variable.export ctxt'1 ctxt)
-                |> Phi_Help.unique_flexflex ctxt
+      val ctxt's = Template_Inst_SS.enhance ctxt
 
       fun trim_tag (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X) = SOME (the_default X (trim_tag X))
         | trim_tag (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X) = SOME (the_default X (trim_tag X))
@@ -212,18 +212,34 @@ fun pass_generated_rule {simp, masks} ctxt rule =
         | trim_tag (Abs (N,Ty,X)) = trim_tag X
                                  |> Option.map (fn X' => Abs (N, Ty, X'))
         | trim_tag _ = NONE
-      val concl = snd (PLPR_Syntax.strip_embedded_patterns (Thm.concl_of rule'3))
-      val concl' = the_default concl (trim_tag concl)
 
-      val masks' = case masks of SOME M => if null M
-                                           then IN_Arg.default_mask_of (Context.Proof ctxt) concl'
-                                           else M
-                               | NONE => IN_Arg.default_mask_of (Context.Proof ctxt) concl'
-      val inargs = IN_Arg.parse_mask masks' concl'
+      fun simplify' rule'1 = 
+        let val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt's
+         in rule'2
+          |> simp ? ( Simplification_Protect.protect ctxt'1
+                   #> asm_lr_simplify {simp_concl=false} ctxt'1
+                      (*Phi_Reasoners.asm_lr_simplify true ctxt's*)
+                   #> Simplification_Protect.unprotect ctxt'1 )
+          |> singleton (Variable.export ctxt'1 ctxt)
+          |> Phi_Help.unique_flexflex ctxt
+        end
+      fun simplify rule'1 =
+        let val rule'3 = (simp ? simplify') rule'1
 
-   in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule' (~1, inargs) ctxt rule'3
-         of SOME th => simplify ctxt th
-          | NONE => rule'3)
+            val concl  = snd (PLPR_Syntax.strip_embedded_patterns (Thm.concl_of rule'3))
+            val concl' = the_default concl (trim_tag concl)
+
+            val masks' = case masks of SOME M => if null M
+                                                 then IN_Arg.default_mask_of (Context.Proof ctxt) concl'
+                                                 else M
+                                     | NONE => IN_Arg.default_mask_of (Context.Proof ctxt) concl'
+            val inargs = IN_Arg.parse_mask masks' concl'
+         in case Phi_Help.instantiate_higher_order_schematic_var_for_rule' (~1, inargs) ctxt rule'3
+              of SOME th => (simp ? simplify) th
+               | NONE => rule'3
+        end
+
+   in simplify rule'1
    |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def SIMP_def}
    |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
    |> normalize

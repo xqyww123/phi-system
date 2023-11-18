@@ -676,7 +676,7 @@ lemma [\<phi>reason %domainoid_cut]:
 \<Longrightarrow> comm_domainoid_mapper TYPE('c) TYPE('k \<Rightarrow> 'c::sep_magma_1) \<delta> ((o) \<delta>) (fun_upd 1 k) (fun_upd 1 k) \<close>
   unfolding comm_domainoid_mapper_def fun_commute_def domainoid_mapper_def domainoid_def
   by (simp; simp add: fun_eq_iff)
-
+ 
 lemma [\<phi>reason %domainoid_cut]:
   \<open> homo_one \<delta>
 \<Longrightarrow> comm_domainoid_mapper_rev TYPE('k \<Rightarrow> 'c::sep_magma_1) TYPE('c) ((o) \<delta>) \<delta> (fun_upd 1 k) (fun_upd 1 k) \<close>

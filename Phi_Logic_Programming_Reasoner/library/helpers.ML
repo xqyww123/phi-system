@@ -8,6 +8,11 @@ val unprotect_conv : conv
 val LHS_conv : conv -> conv
 val RHS_conv : conv -> conv
 
+(*
+type opt_conv = cterm -> thm option
+val sub_conv_opt : (Proof.context -> opt_conv) -> Proof.context -> opt_conv
+*)
+
 val inverse_eta_conv : conv
 val abs_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val abs_conv_eta : (cterm * Proof.context -> conv) -> Proof.context -> conv
@@ -83,6 +88,23 @@ fun RHS_conv cv ctm =
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) =>
           Conv.arg_conv (Conv.arg_conv cv) ctm
      | _ => raise CTERM ("Not an equation", [ctm])
+
+
+(*
+type opt_conv = cterm -> thm option
+
+fun sub_conv_opt C ctxt ctm =
+  case Thm.term_of ctm
+    of _ $ _ => let val (f,a) = Thm.dest_comb ctm
+                 in case (C ctxt f, C ctxt a)
+                      of (SOME thf, SOME tha) => SOME (Thm.combination thf tha)
+                       | (SOME thf, NONE) => SOME (Thm.combination thf (Conv.all_conv a))
+                       | (NONE, SOME tha) => SOME (Thm.combination (Conv.all_conv f) tha)
+                       | (NONE, NONE) => NONE
+                end
+     | Abs _ => *)
+
+
 
 val inverse_eta = Thm.eta_conversion \<^schematic_cterm>\<open>\<lambda>x. (?f::'a::{} \<Rightarrow> 'b::{}) x\<close>
                |> Thm.symmetric

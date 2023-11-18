@@ -1949,7 +1949,7 @@ lemma [\<phi>reason %abstract_domain]:
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
 declare [[\<phi>trace_reasoning = 0 ]]
- 
+
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
@@ -2895,7 +2895,15 @@ lemma [\<phi>reason add]:
   unfolding separatable_module_zip_def
   by clarsimp
 
+lemma
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>c \<and> C\<^sub>d \<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 s\<^sub>2 s\<^sub>1 z\<^sub>1 z\<^sub>2 D f f\<^sub>1 f\<^sub>2 f\<^sub>3)
 
+\<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d s\<^sub>2) (?\<^sub>s\<^sub>R C\<^sub>c s\<^sub>1) (?\<^sub>j\<^sub>R C\<^sub>c z\<^sub>1) (?\<^sub>j\<^sub>R C\<^sub>d z\<^sub>2) D f f\<^sub>1 (?\<^sub>M C\<^sub>d f\<^sub>2) (?\<^sub>M C\<^sub>c f\<^sub>3)\<close>
+
+lemma
+  \<open>separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d (\<lambda>x. (drop (len_intvl.len d) x, take (len_intvl.len d) x))) (?\<^sub>s\<^sub>R C\<^sub>c (uz' da c))
+                            (?\<^sub>j\<^sub>R C\<^sub>c (z' da c)) (?\<^sub>j\<^sub>R C\<^sub>d (\<lambda>(y, x). x @ y))
+                            D\<^sub>s\<^sub>m f f' f\<^sub>d f\<^sub>c \<close>
 
 
 

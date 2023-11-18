@@ -1244,7 +1244,7 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>ML Implementation\<close>
 
-ML_file \<open>library/tools/extracting_pure_facts.ML\<close>
+ML_file_debug \<open>library/tools/extracting_pure_facts.ML\<close>
 
 attribute_setup \<phi>declare = \<open>Scan.succeed (Thm.declaration_attribute (fn th => fn ctxt =>
   let val ctxt' = Context.proof_of ctxt
