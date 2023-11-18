@@ -2895,10 +2895,62 @@ lemma [\<phi>reason add]:
   unfolding separatable_module_zip_def
   by clarsimp
 
+term \<open>a[1:=2]\<close>
+ML \<open>@{term \<open>a[1:=2]\<close>}\<close>
+
+lemma
+  \<open> separatable_module_zip\<^sub>2\<^sub>1 s z D f f\<^sub>1 f\<^sub>2
+\<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 (?\<^sub>s\<^sub>R C s) (?\<^sub>j\<^sub>R C z) (\<lambda>x. C \<longrightarrow> D x) f f\<^sub>1 (?\<^sub>f C f\<^sub>2) \<close>
+  unfolding separatable_module_zip\<^sub>2\<^sub>1_def
+  apply (cases C; clarsimp)
+
+lemma
+  \<open> separatable_module_zip\<^sub>2\<^sub>1 s z D f f\<^sub>1 f\<^sub>2
+\<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 (?\<^sub>s\<^sub>L C s) (?\<^sub>j\<^sub>L C z) (\<lambda>x. C \<longrightarrow> D x) f (?\<^sub>f C f\<^sub>1) f\<^sub>2 \<close>
+  unfolding separatable_module_zip\<^sub>2\<^sub>1_def
+  apply (cases C; clarsimp)
+
+lemma
+  \<open> separatable_module_zip\<^sub>1\<^sub>2 z s D f\<^sub>1 f\<^sub>2 f
+\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>2 (?\<^sub>j\<^sub>L C z) (?\<^sub>s\<^sub>L C s) (\<lambda>x. C \<longrightarrow> D x) f\<^sub>1 f\<^sub>2 f \<close>
+  unfolding separatable_module_zip\<^sub>1\<^sub>2_def
+  apply (cases C; clarsimp)
+
+lemma
+  \<open> separatable_module_zip\<^sub>1\<^sub>2 z s D f\<^sub>1 f\<^sub>2 f
+\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>2 (?\<^sub>j\<^sub>R C z) (?\<^sub>s\<^sub>R C s) (\<lambda>x. C \<longrightarrow> D x) f\<^sub>1 f\<^sub>2 f \<close>
+  unfolding separatable_module_zip\<^sub>1\<^sub>2_def
+  apply (cases C; clarsimp)
+
+lemma
+  \<open> separatable_module_zip\<^sub>2\<^sub>1 (\<lambda>x. (drop n x, take n x)) (\<lambda>(y, x). x @ y)
+                            (\<lambda>(y,x). length x = n) (map f) (map f) (map f) \<close>
+  unfolding separatable_module_zip\<^sub>2\<^sub>1_def
+  by clarsimp
+
+lemma
+  \<open> separatable_module_zip\<^sub>2\<^sub>1 (?\<^sub>s\<^sub>L ?C\<^sub>c (\<lambda>x. (drop (len_intvl.len ?da) x, take (len_intvl.len ?da) x))) (?\<^sub>j\<^sub>L ?C\<^sub>c (\<lambda>(y, x). x @ y)) \<close>
+
+lemma
+  \<open> separatable_module_zip\<^sub>2\<^sub>1 s\<^sub>1 z\<^sub>1 D\<^sub>1 f f\<^sub>1 f\<^sub>2\<^sub>3
+\<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 s\<^sub>2 z\<^sub>2 D\<^sub>2 f\<^sub>2\<^sub>3 f\<^sub>2 f\<^sub>3
+\<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 s\<^sub>2 s\<^sub>1 z\<^sub>1 z\<^sub>2 (\<lambda>(c,a,d). D\<^sub>1 (c, z\<^sub>2 (a,d)) \<and> D\<^sub>2 (a,d)) f f\<^sub>1 f\<^sub>2 f\<^sub>3 \<close>
+  unfolding separatable_module_zip\<^sub>3\<^sub>1_def
+            separatable_module_zip\<^sub>2\<^sub>1_def
+  by clarsimp
+
+lemma
+  \<open> separatable_module_zip\<^sub>1\<^sub>2 z\<^sub>1 s\<^sub>1 D\<^sub>1 f\<^sub>2 f\<^sub>3 f\<^sub>2\<^sub>3
+\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>2 z\<^sub>2 s\<^sub>2 D\<^sub>2 f\<^sub>1 f\<^sub>2\<^sub>3 f
+\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>3 z\<^sub>2 z\<^sub>1 s\<^sub>1 s\<^sub>2 (\<lambda>x. D\<^sub>1 (snd (s\<^sub>2 x)) \<and> D\<^sub>2 x) f\<^sub>1 f\<^sub>2 f\<^sub>3 f \<close>
+  unfolding separatable_module_zip\<^sub>1\<^sub>3_def
+            separatable_module_zip\<^sub>1\<^sub>2_def
+  by (clarsimp simp add: map_prod_ap_simp prod.map_beta)
+
 lemma
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>c \<and> C\<^sub>d \<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 s\<^sub>2 s\<^sub>1 z\<^sub>1 z\<^sub>2 D f f\<^sub>1 f\<^sub>2 f\<^sub>3)
-
-\<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d s\<^sub>2) (?\<^sub>s\<^sub>R C\<^sub>c s\<^sub>1) (?\<^sub>j\<^sub>R C\<^sub>c z\<^sub>1) (?\<^sub>j\<^sub>R C\<^sub>d z\<^sub>2) D f f\<^sub>1 (?\<^sub>M C\<^sub>d f\<^sub>2) (?\<^sub>M C\<^sub>c f\<^sub>3)\<close>
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>d \<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 s\<^sub>2 z\<^sub>2 f f\<^sub>2 f\<^sub>3)
+\<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d s\<^sub>2) (?\<^sub>s\<^sub>L C\<^sub>c s\<^sub>1) (?\<^sub>j\<^sub>L C\<^sub>c z\<^sub>1) (?\<^sub>j\<^sub>R C\<^sub>d z\<^sub>2) D f (?\<^sub>M C\<^sub>c f\<^sub>1) f\<^sub>2 (?\<^sub>M C\<^sub>d f\<^sub>3)\<close>
 
 lemma
   \<open>separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d (\<lambda>x. (drop (len_intvl.len d) x, take (len_intvl.len d) x))) (?\<^sub>s\<^sub>R C\<^sub>c (uz' da c))
@@ -2934,6 +2986,8 @@ thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>I_Cond
 thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>E_Cond
 thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>Z
 thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>S
+
+term \<open>A =simp=> B\<close>
 
 thm \<phi>Mul_Quant_Tree.ToA_mapper
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b

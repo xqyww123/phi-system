@@ -562,15 +562,6 @@ lemma map_prod_eq_apsnd_apfst:
 
 
 
-lemma map_prod_ap_simp[no_atp, prod_opr_norm]:
-  \<open>map_prod f g (apsnd h x) = map_prod f (g o h) x\<close>
-  \<open>apsnd h' (map_prod f g x') = map_prod f (h' o g) x'\<close>
-  \<open>map_prod f g (apfst l y) = map_prod (f o l) g y\<close>
-  \<open>apfst l' (map_prod f g y') = map_prod (l' o f) g y'\<close>
-  by ((cases x; clarsimp),
-      (cases x'; clarsimp),
-      (cases y; clarsimp),
-      (cases y'; clarsimp))
 
 declare map_prod.compositionality[prod_opr_norm]
         map_prod.comp [prod_opr_norm]
@@ -587,6 +578,7 @@ lemma map_prod_ap_simp_comp[simp]:
   \<open> apfst l' o (f \<otimes>\<^sub>f g) = (l' \<circ> f) \<otimes>\<^sub>f g \<close>
   by (simp_all add: fun_eq_iff)
 
+lemmas map_prod_ap_simp[no_atp, prod_opr_norm] = map_prod_ap_simp_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
 lemmas map_prod_ap_simp_comp'[no_atp, prod_opr_norm] = map_prod_ap_simp_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 
 lemma swap_comp_swap'[simp]:
