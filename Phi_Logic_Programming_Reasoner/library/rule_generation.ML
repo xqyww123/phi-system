@@ -160,9 +160,31 @@ fun SIMP_conv C =
    in conv
   end
 
+fun mk_simp_rule ctxt =
+  let fun mk rule =
+        case Thm.concl_of rule
+          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>  
+                mk (rule RS' (ctxt, @{thm' spec})) (*TODO: names of the variables*)
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+                Thm.forall_elim_vars (Thm.maxidx_of rule) (Simplifier.norm_hhf ctxt rule)
+                  |> mk
+           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>case_prod\<close>, _) $ _ $ v) =>
+                if is_Var (Term.head_of v)
+                then (rule RS' (ctxt, @{lemma' \<open> (case (x,y) of (a,b) \<Rightarrow> P a b) \<Longrightarrow> P x y\<close>
+                                           by simp}) (*TODO: names of the variables*))
+                       |> mk
+                else [rule] (*TODO: case split*)
+           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Ball\<close>, _) $ _ $ _) =>
+                mk (rule RS' (ctxt, @{thm' bspec})) (*TODO: names of the variables*)
+           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ _) =>
+                mk (rule RS' (ctxt, @{thm' conjunct1})) @ mk (rule RS' (ctxt, @{thm' conjunct2}))
+           | _ => [rule]
+   in mk
+  end
+          
+
 fun asm_lr_simplify {simp_concl} ctxt rule0 =
-  let val ((_, [rule']), ctxt') = Variable.import false [rule0] ctxt
-      fun pass_premises (i, hyps, rule, ctxt) =
+  let fun pass_premises (i, hyps, rule, ctxt) =
         if Thm.no_prems rule
         then (hyps,
               if simp_concl then Conv.fconv_rule (Simplifier.rewrite ctxt) rule
@@ -182,11 +204,13 @@ fun asm_lr_simplify {simp_concl} ctxt rule0 =
                          then raise THM ("SIMP tag can only occur in conclusion", i, [rule0])
                          else ()
                  val (lprem, ctxt) = Thm.assume_hyps cprem ctxt
-                 val facts = the_default [] (Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt' lprem)
+                 val facts = the_default [] (Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt lprem)
+                          |> maps (mk_simp_rule ctxt)
                  val ctxt = ctxt addsimps facts
                  val rule'2 = Thm.implies_elim rule'1 lprem
          in pass_premises (i+1, cprem::hyps, rule'2, ctxt)
         end end
+      val ((_, [rule']), ctxt') = Variable.import false [rule0] ctxt
       val (hyps, rule, _) = pass_premises (1, [], rule', ctxt')
    in fold Thm.implies_intr hyps rule
    |> Thm.transfer' ctxt'

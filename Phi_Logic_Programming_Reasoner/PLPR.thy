@@ -1825,6 +1825,8 @@ setup \<open>Context.theory_map (PLPR_Rule_Gen.Template_Inst_SS.map (
   Simplifier.add_cong @{thm' HOL.conj_cong[folded atomize_eq]}
 ))\<close>
 
+
+
   (* conj_commute conj_left_commute *)
 
 subsection \<open>Literal Check\<close>

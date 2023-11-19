@@ -4419,7 +4419,6 @@ lemma SE_Module_SDistr_dac_b_nc_i
    All problems on semimodules of commutative scalars (and associative separation algebra) reduces to
     \<open>SE_Module_SDistr_da_b_i\<close> and \<open>SE_Module_SDistr_a_cb_i\<close>
 *)
-(*
 lemma SE_Module_SDistr_da_b_i
       [where Cw'=True, \<phi>reason_template default %derived_SE_sdistr_comm_no_adz]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> id d + id a = id b @action \<A>arith_eq)
@@ -4438,7 +4437,7 @@ lemma SE_Module_SDistr_da_b_i
     ;; apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=a and s=d and F=F\<^sub>1 and x=\<open>(fst x, x\<^sub>d)\<close>]
        Tr
   \<medium_right_bracket> .
-*)
+
 
 (*
 (* [--------a---------]
@@ -4496,31 +4495,34 @@ lemma SE_Module_SDistr_ad_b_i
   \<medium_right_bracket> .
 *)
 
-(*
+
 (* [---------a--------]
    [--c--][-----b-----]
    Give a, expect b; Remain c, d = 0. c \<noteq> 0
    All problems on semimodules of commutative scalars (and associative separation algebra) reduces to
-    \<open>SE_Module_SDistr_da_b_i\<close> and \<open>SE_Module_SDistr_a_cb_i\<close>
+    \<open>SE_Module_SDistr_da_b\<close> and \<open>SE_Module_SDistr_a_cb\<close>
 *)
-lemma SE_Module_SDistr_a_cb_i[\<phi>reason_template default %derived_SE_sdistr_comm_no_adz]:
+lemma SE_Module_SDistr_a_cb[\<phi>reason_template default %derived_SE_sdistr_comm_no_adz]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> id a = id c + id b @action \<A>arith_eq)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds c \<and> Ds b \<and> c ##\<^sub>+ b
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b c (fst x)
 \<Longrightarrow> (fst (uz b c (fst x)), snd x) \<Ztypecolon> F\<^sub>1 b \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>3 b \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> ((snd (uz b c (fst x)), snd y) \<Ztypecolon> \<half_blkcirc>[True] F\<^sub>1 c \<^emph> \<half_blkcirc>[Cr] R) = (r \<Ztypecolon> \<half_blkcirc>[Cr'] R') @action \<A>merge
+\<Longrightarrow> if Cw then class.ab_semigroup_mult ( (*) :: 'c option BI \<Rightarrow> 'c option BI \<Rightarrow> 'c option BI ) else True
+\<Longrightarrow> ((snd y, snd (uz b c (fst x))) \<Ztypecolon> \<half_blkcirc>[Cr] R \<^emph> \<half_blkcirc>[True] F\<^sub>1 c) = (r \<Ztypecolon> \<half_blkcirc>[Cr'] R') @action \<A>merge
 \<Longrightarrow> x \<Ztypecolon> F\<^sub>1 a \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> F\<^sub>3 b \<^emph>[Cr'] R' \<w>\<i>\<t>\<h> P \<close>
-  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  for W :: \<open>('c::sep_semigroup,'d) \<phi>\<close>
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: cond_prod_transformation_rewr; simp add:  Cond_\<phi>Prod_expn_\<phi>Some)
-  \<medium_left_bracket> premises a and _ and _ and _ and _ and Tr and b
+  \<medium_left_bracket> premises a and _ and _ and _ and _ and Tr and IF[] and b
+    note \<phi>Prod_expn'' [simp] ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=b and s=c and F=F\<^sub>1]
+    apply_rule swap_\<phi>Cond_Ins_by_raw_class[OF IF, THEN eq_right_frame]
     Tr
-    b
+    apply_rule b[THEN eq_right_frame[where R=\<open>fst y \<Ztypecolon> \<black_circle> F\<^sub>3 b\<close>]]
   \<medium_right_bracket> .
-*)
+
 
 (*
 context
@@ -7923,9 +7925,6 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
 } end)
 )\<close>
 
-term \<open>(\<times>)\<close>
-term \<open>(\<lambda>s. (Domain s, Range s)) :: ('a \<times> 'b) set \<Rightarrow> 'a set \<times> 'b set\<close>
-term \<open>case_prod (\<times>)\<close>
 
 lemmas [\<phi>constraint_expansion for set] =
   Set.ball_Un Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image
