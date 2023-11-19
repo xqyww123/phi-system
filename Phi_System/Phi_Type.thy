@@ -4318,31 +4318,30 @@ lemma SE_Module_SDistr_ad_cb
    [--d--][--b--][--c--]
    Give a, expect b, remain d, c.
    d, c \<noteq> 0; scalar has to be non-commutative; otherwise go \<open>SE_Module_SDistr_a_cb_i\<close>*) 
-lemma SE_Module_SDistr_a_dbc_nc_i
+lemma SE_Module_SDistr_a_dbc
       [where Cr'=True, \<phi>reason_template default %derived_SE_sdistr+1]:
   \<comment> \<open>Boundary situations (when c or d equals zero) are captured here, so the rule has a higher priority
       than \<open>SE_Module_SDistr_da_bc_nc_i\<close> and \<open>SE_Module_SDistr_ad_cb_nc_i\<close> in order to preempt the
       boundary situations.\<close>
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> ?\<^sub>+ True a = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c @action \<A>arith_eq)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds Dx uz
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S_rev F\<^sub>1 Dx uz Ds Dx' uz'
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
 \<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (?\<^sub>+ True db) : ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>c \<longrightarrow> Ds c \<and> Ds db \<and> db ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds b \<and> d ##\<^sub>+ b)
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> x' : (fst (?\<^sub>s\<^sub>R C\<^sub>d (uz b d) (fst (?\<^sub>s\<^sub>R C\<^sub>c (uz' db c) (fst x)))), snd x)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> x' : (fst (?\<^sub>s\<^sub>R C\<^sub>d (uz b d) (snd (?\<^sub>s\<^sub>L C\<^sub>c (uz c db) (fst x)))), snd x)
 \<Longrightarrow> x' \<Ztypecolon> F\<^sub>1 b \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>3 b \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (C\<^sub>c \<longrightarrow> Dx' db c (fst x)) \<and> (C\<^sub>d \<longrightarrow> Dx b d (fst (?\<^sub>s\<^sub>R C\<^sub>c (uz' db c) (fst x))))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (C\<^sub>c \<longrightarrow> Dx c db (fst x)) \<and> (C\<^sub>d \<longrightarrow> Dx b d (snd (?\<^sub>s\<^sub>L C\<^sub>c (uz c db) (fst x))))
 \<Longrightarrow> if Cw then class.ab_semigroup_mult ( (*) :: 'c option BI \<Rightarrow> 'c option BI \<Rightarrow> 'c option BI ) else True
-\<Longrightarrow> ((snd y, snd (?\<^sub>s\<^sub>R C\<^sub>d (uz b d) (fst (?\<^sub>s\<^sub>R C\<^sub>c (uz' db c) (fst x)))), snd (?\<^sub>s\<^sub>R C\<^sub>c (uz' db c) (fst x))) \<Ztypecolon> \<half_blkcirc>[Cr] R \<^emph> \<half_blkcirc>[C\<^sub>d] F\<^sub>1 d \<^emph> \<half_blkcirc>[C\<^sub>c] F\<^sub>1 c)
+\<Longrightarrow> ((snd y, snd (?\<^sub>s\<^sub>R C\<^sub>d (uz b d) (snd (?\<^sub>s\<^sub>L C\<^sub>c (uz c db) (fst x)))), fst (?\<^sub>s\<^sub>L C\<^sub>c (uz c db) (fst x))) \<Ztypecolon> \<half_blkcirc>[Cr] R \<^emph> \<half_blkcirc>[C\<^sub>d] F\<^sub>1 d \<^emph> \<half_blkcirc>[C\<^sub>c] F\<^sub>1 c)
       = (r \<Ztypecolon> \<half_blkcirc>[Cr'] R') @action \<A>merge
 \<Longrightarrow> x \<Ztypecolon> F\<^sub>1 a \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> F\<^sub>3 b \<^emph>[Cr'] R' \<w>\<i>\<t>\<h> P \<close>
-  for R :: \<open>('c::sep_semigroup,'d) \<phi>\<close>
+  for R :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: cond_prod_transformation_rewr;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
-  \<medium_left_bracket> premises _ and SU[] and SU\<^sub>R[] and _ and _ and _ and _ and Tr and _ and IF[] and b
-    apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_rev_RCond_\<phi>Some[OF SU SU\<^sub>R, where s=\<open>db\<close> and t=c and r=a and C=C\<^sub>c]
+  \<medium_left_bracket> premises _ and SU[] and _ and _ and _ and _ and Tr and _ and IF[] and b
+    apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_LCond_\<phi>Some[OF SU, where s=\<open>db\<close> and t=c and r=a and C=C\<^sub>c]
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_RCond_\<phi>Some[OF SU, where s=\<open>d\<close> and t=b and r=db and C=C\<^sub>d]
     apply_rule swap_\<phi>Cond_Ins_by_raw_class[OF IF, THEN eq_right_frame, THEN eq_right_frame]
     apply_rule swap_\<phi>Cond_Ins_by_raw_class[OF IF, THEN eq_right_frame]
@@ -4350,38 +4349,36 @@ lemma SE_Module_SDistr_a_dbc_nc_i
     apply_rule b[THEN eq_right_frame[where R=\<open>fst y \<Ztypecolon> \<black_circle> F\<^sub>3 b\<close>]]
   \<medium_right_bracket> .
 
-  thm SE_Module_SDistr_a_dbc_nc_i[where C\<^sub>c=False and C\<^sub>d=True, simplified]
 
 (* [--d--][--a--][--c--]
    [---------b---------]
    Give a, expect b, need d, c.
    d, c \<noteq> 0; scalar has to be non-commutative; otherwise go to \<open>SE_Module_SDistr_da_b_i\<close> *)
-lemma SE_Module_SDistr_dac_b_nc_i
+lemma SE_Module_SDistr_dac_b
       [\<phi>reason_template default %derived_SE_sdistr+1]:
   \<comment> \<open>Boundary situations (when c or d equals zero) are captured here, so the rule has a higher priority
       than \<open>SE_Module_SDistr_da_bc_nc_i\<close> and \<open>SE_Module_SDistr_ad_cb_nc_i\<close> in order to preempt the
       boundary situations.\<close>
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a + ?\<^sub>+ C\<^sub>c c = ?\<^sub>+ True b @action \<A>arith_eq)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx z
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z_rev F\<^sub>1 Ds Dx z Dx' z'
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
 \<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (?\<^sub>+ True da) : ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds a \<and> d ##\<^sub>+ a) \<and> (C\<^sub>c \<longrightarrow> Ds da \<and> Ds c \<and> da ##\<^sub>+ c)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (C\<^sub>d \<longrightarrow> Dx a d (fst x, x\<^sub>d)) \<and>
-           (C\<^sub>c \<longrightarrow> Dx' da c (?\<^sub>j\<^sub>R C\<^sub>d (z a d) (fst x, x\<^sub>d), x\<^sub>c))
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> x' : (?\<^sub>j\<^sub>R C\<^sub>c (z' da c) (?\<^sub>j\<^sub>R C\<^sub>d  (z a d) (fst x, x\<^sub>d), x\<^sub>c), w)
+           (C\<^sub>c \<longrightarrow> Dx c da (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (fst x, x\<^sub>d)))
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> x' : (?\<^sub>j\<^sub>L C\<^sub>c (z c da) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d  (z a d) (fst x, x\<^sub>d)), w)
 \<Longrightarrow> x' \<Ztypecolon> F\<^sub>1 b \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>3 b \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (snd x \<Ztypecolon> \<half_blkcirc>[Cw'] W') = ((x\<^sub>d, x\<^sub>c, w) \<Ztypecolon> \<half_blkcirc>[C\<^sub>d] F\<^sub>1 d \<^emph> \<half_blkcirc>[C\<^sub>c] F\<^sub>1 c \<^emph> \<half_blkcirc>[Cw] W) @action \<A>merge
 \<Longrightarrow> x \<Ztypecolon> F\<^sub>1 a \<^emph>[Cw'] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>3 b \<^emph>[Cr] R \<w>\<i>\<t>\<h> P \<close>
-  for R :: \<open>('c::sep_semigroup,'d) \<phi>\<close>
+  for R :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: cond_prod_transformation_rewr;
          simp add: Cond_\<phi>Prod_expn_\<phi>Some \<phi>Prod_expn'')
-  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and _ and _ and _ and Tr and _
+  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and _ and _ and Tr and _
     note \<phi>Some_\<phi>Prod[symmetric, simp]
     ;; apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_RCond_\<phi>Some[where s=d and t=a and F=F\<^sub>1 and x=\<open>(fst x, x\<^sub>d)\<close> and C=C\<^sub>d]
-       apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_rev_LCond_\<phi>Some[where s=da and t=c and F=F\<^sub>1 and x=\<open>(?\<^sub>j\<^sub>R C\<^sub>d  (z a d) (fst x, x\<^sub>d), x\<^sub>c)\<close> and C=C\<^sub>c]
+       apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_LCond_\<phi>Some[where s=da and t=c and F=F\<^sub>1 and x=\<open>(x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d  (z a d) (fst x, x\<^sub>d))\<close> and C=C\<^sub>c]
        Tr
   \<medium_right_bracket> .
 
@@ -5172,7 +5169,7 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
                     ToA_Mapper_f_expn[OF Tr, simplified, THEN bspec[OF _ prems(1)], symmetric],
                     clarsimp simp add: useful(4-) split: prod.split) . ;;
 
-    apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_rev_\<phi>Some[where t=d and s=a and F=F\<^sub>1' and x=\<open>(z' b c o apfst (fst \<circ> s) \<circ> prod.rotL) x\<close>]
+    apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=d and s=a and F=F\<^sub>1' and x=\<open>(z' b c o apfst (fst \<circ> s) \<circ> prod.rotL) x\<close>]
     certified apply (insert useful(1)[simplified image_image], simp add: image_iff del: split_paired_All, elim bexE)
               subgoal premises prems for y
                 by (insert prems(2) useful(2)[THEN bspec[OF _ prems(1)]]
@@ -5216,7 +5213,9 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
 
 \<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>3 (?\<^sub>j\<^sub>L C\<^sub>c (z c db)) (?\<^sub>j\<^sub>R C\<^sub>d (z b d))
                             (?\<^sub>s\<^sub>R C\<^sub>d (uz b d)) (?\<^sub>s\<^sub>L C\<^sub>c (uz c db))
-                            D\<^sub>s\<^sub>m f\<^sub>c f f\<^sub>d f' @action \<A>_template_reason undefined
+                            D\<^sub>s\<^sub>m f\<^sub>c f f\<^sub>d f'
+    \<comment> \<open>the antecedent is solved at runtime but not instantiation-time because we rely on runtime
+        assignment of \<open>C\<^sub>d\<close> and \<open>C\<^sub>c\<close> to eliminate \<open>?\<^sub>s\<^sub>R C\<^sub>d\<close> etc.\<close>
 
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. let (x, _) = x
                     ; (x\<^sub>c, x\<^sub>d\<^sub>b) = ?\<^sub>s\<^sub>L C\<^sub>c (uz c db) x
@@ -5381,7 +5380,9 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper
 
 \<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d (uz a d)) (?\<^sub>s\<^sub>L C\<^sub>c (uz c da))
                             (?\<^sub>j\<^sub>L C\<^sub>c (z c da)) (?\<^sub>j\<^sub>R C\<^sub>d (z a d))
-                             D\<^sub>s\<^sub>m f f\<^sub>c f' f\<^sub>d @action \<A>_template_reason undefined
+                             D\<^sub>s\<^sub>m f f\<^sub>c f' f\<^sub>d
+    \<comment> \<open>the antecedent is solved at runtime but not instantiation-time because we rely on runtime
+        assignment of \<open>C\<^sub>d\<close> and \<open>C\<^sub>c\<close> to eliminate \<open>?\<^sub>s\<^sub>R C\<^sub>d\<close> etc.\<close>
 
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) = x
                     ; y = f (?\<^sub>j\<^sub>L C\<^sub>c (z c da) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d)))
