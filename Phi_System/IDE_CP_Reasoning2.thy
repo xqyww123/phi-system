@@ -710,13 +710,13 @@ lemma [\<phi>reason %\<phi>mapToA_aux for \<open>(True \<or> _) \<and> (\<m>\<a>
 
 lemma [\<phi>reason %\<phi>mapToA_aux for \<open>(False \<or> _) \<and> (\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ [False]\<^emph>[_] _ \<mapsto> _ [False]\<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _)\<close>]:
   \<open> (False \<or> True \<or> C\<^sub>E) \<and>
-   (\<m>\<a>\<p> g \<otimes>\<^sub>f (\<lambda>_. undefined) \<otimes>\<^sub>f e : U \<^emph>[False, C\<^sub>E] (\<top>\<^sub>\<phi>, E) \<mapsto> U' \<^emph>[False, C\<^sub>E] (\<top>\<^sub>\<phi>, E')
-    \<o>\<v>\<e>\<r> (\<lambda>_. undefined) \<otimes>\<^sub>f g \<otimes>\<^sub>f e : R [False]\<^emph>[True, C\<^sub>E] (U, E) \<mapsto> R' [False]\<^emph>[True, C\<^sub>E] (U', E')
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(_,r,e). (r,undefined,e))
-        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(r,_,e). (undefined,r,e))
+   (\<m>\<a>\<p> g \<otimes>\<^sub>f any' \<otimes>\<^sub>f e : U \<^emph>[False, C\<^sub>E] (\<top>\<^sub>\<phi>, E) \<mapsto> U' \<^emph>[False, C\<^sub>E] (\<top>\<^sub>\<phi>, E')
+    \<o>\<v>\<e>\<r> any \<otimes>\<^sub>f g \<otimes>\<^sub>f e : R [False]\<^emph>[True, C\<^sub>E] (U, E) \<mapsto> R' [False]\<^emph>[True, C\<^sub>E] (U', E')
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(u,r,e). (r,gg u,e))
+        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(r,u,e). (ff u,r,e))
       \<i>\<n> D) \<close>
   unfolding ToA_Mapper_def
-  by (cases C\<^sub>E; clarsimp simp add: \<phi>Prod_expn'' split: prod.split)
+  apply (cases C\<^sub>E; clarsimp simp add: \<phi>Prod_expn'' split: prod.split)
 
 
 lemma [\<phi>reason %\<phi>mapToA_aux for \<open>(False \<or> _) \<and> (\<m>\<a>\<p> _ : _ [False]\<^emph>[_] _ \<mapsto> _ [False]\<^emph>[_] _
