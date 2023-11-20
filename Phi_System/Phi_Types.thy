@@ -2380,7 +2380,7 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
   
@@ -2887,13 +2887,38 @@ hide_fact \<phi>Mul_Quant_LenIv.wrap_module_src
 subsubsection \<open>Array of Tree Nodes\<close>
 
 lemma [\<phi>reason add]:
-  \<open>separatable_module_zip (\<lambda>x. (drop d x, take d x)) (\<lambda>(y, x). x @ y)
+  \<open>separatable_module_zip True d a b c
+                          (\<lambda>_ d x. (drop (len_intvl.len d) x, take (len_intvl.len d) x)) (\<lambda>_ _ (y, x). x @ y)
+                          (\<lambda>_ b x. (drop (len_intvl.len b) x, take (len_intvl.len b) x)) (\<lambda>_ _ (y, x). x @ y)
+                          (\<lambda>(x\<^sub>a,x\<^sub>d) (y\<^sub>c,y\<^sub>b). length x\<^sub>d = len_intvl.len d) (map f\<^sub>c) (map f)
+                          (\<lambda>x. map f (take (len_intvl.len b - len_intvl.len d) x) @ map f\<^sub>c (drop (len_intvl.len b - len_intvl.len d) x))
+                          (map f) \<close>
+  for d :: \<open>nat len_intvl\<close>
+  unfolding separatable_module_zip_def
+  by (clarsimp dest!: dabc_equation__len_intvl_D)
+
+lemma [\<phi>reason add]:
+  \<open>separatable_module_zip False d a b c
+                          (\<lambda>_ d x. (drop (len_intvl.len d) x, take (len_intvl.len d) x)) (\<lambda>_ _ (y, x). x @ y)
+                          (\<lambda>_ b x. (drop (len_intvl.len b) x, take (len_intvl.len b) x)) (\<lambda>_ _ (y, x). x @ y)
+                          (\<lambda>(x\<^sub>a,x\<^sub>d) (y\<^sub>c,y\<^sub>b). length x\<^sub>d = len_intvl.len d) (map f\<^sub>c) (map f)
+                          (map f\<^sub>c)
+                          (\<lambda>x. map f (take (len_intvl.len b) x) @ map f\<^sub>c (drop (len_intvl.len b) x)) \<close>
+  for d :: \<open>nat len_intvl\<close>
+  unfolding separatable_module_zip_def
+  by (clarsimp dest!: dabc_equation__len_intvl_D)
+
+(* TODO
+lemma [\<phi>reason add]:
+  \<open>separatable_module_zip True d a b c
+                          (\<lambda>x. (drop d x, take d x)) (\<lambda>(y, x). x @ y)
                           (\<lambda>x. (drop b x, take b x)) (\<lambda>(y, x). x @ y)
                           (\<lambda>(x\<^sub>a,x\<^sub>d) (y\<^sub>c,y\<^sub>b). length x\<^sub>d = d) (map f\<^sub>c) (map f)
                           (if d \<le> b then (\<lambda>x. map f (take (b-d) x) @ map f\<^sub>c (drop (b-d) x)) else map f\<^sub>c)
                           (if d \<le> b then map f else (\<lambda>x. map f (take b x) @ map f\<^sub>c (drop b x))) \<close>
   unfolding separatable_module_zip_def
   by clarsimp
+*)
 
 term \<open>a[1:=2]\<close>
 ML \<open>@{term \<open>a[1:=2]\<close>}\<close>
@@ -2990,6 +3015,7 @@ thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>S
 term \<open>A =simp=> B\<close>
 
 thm \<phi>Mul_Quant_Tree.ToA_mapper
+thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c_cond
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b[simplified]
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b\<^sub>c

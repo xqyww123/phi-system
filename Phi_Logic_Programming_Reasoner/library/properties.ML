@@ -339,7 +339,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
 
 fun invoke_template ((deps, pos, action) : template) =
 ( case action of Instantiate_Rule (_, _, _, SOME (_, b)) =>
-    if Binding.name_of b = "ToA_mapper" then () else () (*debug usage*)
+    if Binding.name_of b = "module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b" then () else () (*debug usage*)
     | _ => ();
 
   check_dependencies deps (invoke_template_action pos action)

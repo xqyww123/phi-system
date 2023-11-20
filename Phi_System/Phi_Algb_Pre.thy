@@ -69,7 +69,7 @@ Also not, as addition can be associative, we use \<open>id\<close> to annotate e
 For instance, \<open>id a + id b + id c = id d\<close> to distinguish with \<open>id (a + b) + id c = id d\<close>.
 
 System rules first normalize the problem into one of
-\<^item> \<open>?unknown_d + given_a = given_b\<close> or
+\<^item> \<open>?unknown_d + given_a = given_b\<close> (the only property required in commutative algebra) or
   \<open>given_b + ?unknown_c = given_a\<close> (only for non-commutative algebra)
 \<^item> \<open>dabc_equation ?unknown given given ?unknown\<close> (only for non-commutative algebra)
 \<^item> \<open>?\<^sub>+ ?unknown + ?\<^sub>+ given + ?\<^sub>+ ?unknown = ?\<^sub>+ given\<close> (necessary for non-commutative algebra, optional
@@ -482,6 +482,17 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
       linarith)
 
 subparagraph \<open>EIF\<close>
+
+lemma dabc_equation__len_intvl_D:
+  \<open>dabc_equation d a b c
+\<Longrightarrow> d + a = b + c \<and>
+    len_intvl.start b = len_intvl.start d \<and>
+    len_intvl.start a = len_intvl.start d + len_intvl.len d \<and>
+    len_intvl.start c = len_intvl.start d + len_intvl.len b \<and>
+    len_intvl.len d \<le> len_intvl.len b \<and>
+    len_intvl.len d + len_intvl.len a = len_intvl.len b + len_intvl.len c \<close>
+  unfolding Action_Tag_def dabc_equation_def
+  by clarsimp
 
 lemma [\<phi>reason add]:
   \<open>dabc_equation d a b c \<longrightarrow>
