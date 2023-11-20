@@ -2982,6 +2982,58 @@ lemma
                             (?\<^sub>j\<^sub>R C\<^sub>c (z' da c)) (?\<^sub>j\<^sub>R C\<^sub>d (\<lambda>(y, x). x @ y))
                             D\<^sub>s\<^sub>m f f' f\<^sub>d f\<^sub>c \<close>
 
+  term list_update
+
+definition sublist_map_L :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> 'a list) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
+  \<comment> \<open>applies on the left N elements\<close>
+  where \<open>sublist_map_L N f l = f (take N l) @ drop N l\<close>
+
+definition sublist_map_R :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> 'a list) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
+  \<comment> \<open>applies on the right (len-N) elements\<close>
+  where \<open>sublist_map_R N f l = take N l @ f (drop N l)\<close>
+
+definition list_upd_map :: \<open>nat \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
+  where \<open>list_upd_map i f l = l[i := f (l ! i)]\<close>
+
+lemma sublist_map_L_id[simp]:
+  \<open> sublist_map_L N id = id \<close>
+  unfolding fun_eq_iff sublist_map_L_def
+  by clarsimp
+
+lemma sublist_map_R_id[simp]:
+  \<open> sublist_map_R N id = id \<close>
+  unfolding sublist_map_R_def fun_eq_iff
+  by clarsimp
+
+lemma
+  \<open> i < N
+\<Longrightarrow> sublist_map_L N (list_upd_map i f) = list_upd_map i f\<close>
+  unfolding fun_eq_iff sublist_map_L_def list_upd_map_def
+  by (clarsimp, metis append_take_drop_id drop_update_cancel take_update_swap)
+
+lemma
+  \<open> sublist_map_R N (list_upd_map i f) = list_upd_map (N+i) f\<close>
+  unfolding fun_eq_iff sublist_map_R_def list_upd_map_def
+  by (clarsimp,
+      smt (verit) add_diff_cancel_left' append_take_drop_id drop_all length_take less_or_eq_imp_le linorder_not_less list_update_append list_update_nonempty min.absorb4 min_less_iff_conj not_add_less1 nth_drop)
+
+
+lemma
+  \<open>module_getter\<^sub>\<epsilon>\<^sub>3 c \<lbrakk>j : 1\<rwpar> d
+                  (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))
+                  (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
+                  (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+                  (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
+                  (\<lambda>x. len_intvl.start c + len_intvl.len c = j \<and>
+                       j + 1 = len_intvl.start d)
+                  f\<^sub>c f f\<^sub>d
+                  ( sublist_map_L (len_intvl.len c) f\<^sub>c
+                  o list_upd_map (len_intvl.len c) f
+                  o sublist_map_R (len_intvl.len c+1) f\<^sub>d )
+                  (\<lambda>l. (take (len_intvl.len c) l, l ! (len_intvl.len c), drop (len_intvl.len c + 1) l)) \<close>
+
+  term nth
+
 
 
   
