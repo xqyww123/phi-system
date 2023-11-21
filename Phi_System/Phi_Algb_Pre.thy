@@ -128,13 +128,14 @@ declare [[
   \<phi>reason_default_pattern
       \<open>?Eq @action \<A>arith_eq\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eq\<close> (10)
   and \<open>equation\<^sub>3\<^sub>1 _ ?a _ ?b\<close> \<Rightarrow> \<open>equation\<^sub>3\<^sub>1 _ ?a _ ?b\<close>     (100)
-  and \<open>equation\<^sub>2\<^sub>1 _ ?a ?b\<close> \<Rightarrow> \<open>equation\<^sub>2\<^sub>1 _ ?a ?b\<close>         (100)
   and \<open>equation\<^sub>3\<^sub>1_cond _ _ _ ?a _ _ ?b\<close> \<Rightarrow>
       \<open>equation\<^sub>3\<^sub>1_cond _ _ _ ?a _ _ ?b\<close>                (100)
 
   and \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close> \<Rightarrow>
       \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close>    (100)
-  and \<open>dabc_equation _ ?a ?b _\<close> \<Rightarrow> \<open>dabc_equation _ ?a ?b _\<close>             (100),
+  and \<open>dabc_equation _ ?a ?b _\<close> \<Rightarrow> \<open>dabc_equation _ ?a ?b _\<close>             (100)
+
+  and \<open>equation\<^sub>2\<^sub>1 ?c ?a ?b\<close> \<Rightarrow> \<open>ERROR TEXT((equation\<^sub>2\<^sub>1 ?c ?a ?b) \<open>must be indicated with explicit LPR pattern\<close>)\<close> (0),
 
   \<phi>default_reasoner_group
       \<open>dabc_equation _ _ _ _ \<longrightarrow> _ @action \<A>EIF\<close> : %EIF_dabc            (100)

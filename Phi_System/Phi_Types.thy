@@ -2380,7 +2380,7 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
   
@@ -2984,6 +2984,40 @@ lemma
 
   term list_update
 
+declare [[\<phi>trace_reasoning = 1]]
+
+definition length_preserving_map :: \<open>('a list \<Rightarrow> 'a list) \<Rightarrow> bool\<close>
+  where \<open>length_preserving_map f \<longleftrightarrow> (\<forall>l. length (f l) = length l)\<close>
+
+\<phi>reasoner_group length_preserving_map__all = (100, [1, 2000]) for \<open>length_preserving_map f\<close> \<open>\<close>
+  and length_preserving_map = (1000, [1000,1030]) in length_preserving_map__all \<open>\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>length_preserving_map ?f\<close> \<Rightarrow> \<open>length_preserving_map ?f\<close> (100),
+  \<phi>default_reasoner_group \<open>length_preserving_map ?f\<close> : %length_preserving_map (100)
+]]
+
+lemma length_preserving_map__map[simp, intro!, \<phi>reason add]:
+  \<open> length_preserving_map (map f) \<close>
+  unfolding length_preserving_map_def
+  by simp 
+
+lemma length_preserving_map__id[simp, intro!, \<phi>reason add]:
+  \<open> length_preserving_map id \<close>
+  unfolding length_preserving_map_def by simp
+
+lemma length_preserving_map__id'[simp, intro!, \<phi>reason add]:
+  \<open> length_preserving_map (\<lambda>x. x) \<close>
+  unfolding length_preserving_map_def by simp
+
+lemma length_preserving_map__funcomp[simp, intro!, \<phi>reason add]:
+  \<open> length_preserving_map f
+\<Longrightarrow> length_preserving_map g
+\<Longrightarrow> length_preserving_map (f o g) \<close>
+  unfolding length_preserving_map_def
+  by clarsimp
+
+
 definition sublist_map_L :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> 'a list) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
   \<comment> \<open>applies on the left N elements\<close>
   where \<open>sublist_map_L N f l = f (take N l) @ drop N l\<close>
@@ -2995,6 +3029,23 @@ definition sublist_map_R :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> 'a l
 definition list_upd_map :: \<open>nat \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
   where \<open>list_upd_map i f l = l[i := f (l ! i)]\<close>
 
+lemma length_preserving_map__list_upd_map [simp, intro!, \<phi>reason add]:
+  \<open> length_preserving_map (list_upd_map i f) \<close>
+  unfolding length_preserving_map_def list_upd_map_def
+  by force
+
+lemma length_preserving_map__sublist_map_R [simp, intro!, \<phi>reason add]:
+  \<open> length_preserving_map f
+\<Longrightarrow> length_preserving_map (sublist_map_R N f) \<close>
+  unfolding length_preserving_map_def sublist_map_R_def
+  by (clarify, simp)
+
+lemma length_preserving_map__sublist_map_L [simp, intro!, \<phi>reason add]:
+  \<open> length_preserving_map f
+\<Longrightarrow> length_preserving_map (sublist_map_L N f) \<close>
+  unfolding length_preserving_map_def
+  by (clarify, simp add: sublist_map_L_def)
+
 lemma sublist_map_L_id[simp]:
   \<open> sublist_map_L N id = id \<close>
   unfolding fun_eq_iff sublist_map_L_def
@@ -3005,34 +3056,44 @@ lemma sublist_map_R_id[simp]:
   unfolding sublist_map_R_def fun_eq_iff
   by clarsimp
 
-lemma
+lemma sublist_map_L_sublist_map_L[simp]:
+  \<open> M \<le> N
+\<Longrightarrow> sublist_map_L N (sublist_map_L M f) = sublist_map_L M f \<close>
+  unfolding sublist_map_L_def
+  by (clarsimp, metis (no_types, opaque_lifting) append_take_drop_id diff_add drop_drop take_drop)
+
+lemma sublist_map_L_funcomp[simp]:
+  \<open> length_preserving_map f
+\<Longrightarrow> length_preserving_map g
+\<Longrightarrow> sublist_map_L N (f o g) = sublist_map_L N f o sublist_map_L N g \<close>
+  unfolding sublist_map_L_def fun_eq_iff length_preserving_map_def
+  by (clarsimp simp add: min_def)
+
+lemma sublist_map_R_sublist_map_R[simp]:
+  \<open> sublist_map_R N (sublist_map_R M f) = sublist_map_R (N+M) f \<close>
+  unfolding sublist_map_R_def
+  by (clarsimp, metis add.commute append_assoc take_add)
+
+lemma sublist_map_R_funcomp[simp]:
+  \<open> length_preserving_map f
+\<Longrightarrow> length_preserving_map g
+\<Longrightarrow> sublist_map_R N (f o g) = sublist_map_R N f o sublist_map_R N g \<close>
+  unfolding sublist_map_R_def length_preserving_map_def
+  by (clarsimp, metis (no_types, opaque_lifting) append_Nil append_take_drop_id cancel_comm_monoid_add_class.diff_cancel diff_le_self drop_all list.size(3) min_def take0)
+
+lemma sublist_map_L_at_i[simp]:
   \<open> i < N
 \<Longrightarrow> sublist_map_L N (list_upd_map i f) = list_upd_map i f\<close>
   unfolding fun_eq_iff sublist_map_L_def list_upd_map_def
   by (clarsimp, metis append_take_drop_id drop_update_cancel take_update_swap)
 
-lemma
+lemma sublist_map_R_at_i[simp]:
   \<open> sublist_map_R N (list_upd_map i f) = list_upd_map (N+i) f\<close>
   unfolding fun_eq_iff sublist_map_R_def list_upd_map_def
   by (clarsimp,
       smt (verit) add_diff_cancel_left' append_take_drop_id drop_all length_take less_or_eq_imp_le linorder_not_less list_update_append list_update_nonempty min.absorb4 min_less_iff_conj not_add_less1 nth_drop)
 
 
-lemma
-  \<open>module_getter\<^sub>\<epsilon>\<^sub>3 c \<lbrakk>j : 1\<rwpar> d
-                  (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x))
-                  (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
-                  (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
-                  (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
-                  (\<lambda>x. len_intvl.start c + len_intvl.len c = j \<and>
-                       j + 1 = len_intvl.start d)
-                  f\<^sub>c f f\<^sub>d
-                  ( sublist_map_L (len_intvl.len c) f\<^sub>c
-                  o list_upd_map (len_intvl.len c) f
-                  o sublist_map_R (len_intvl.len c+1) f\<^sub>d )
-                  (\<lambda>l. (take (len_intvl.len c) l, l ! (len_intvl.len c), drop (len_intvl.len c + 1) l)) \<close>
-
-  term nth
 
 
 
@@ -3075,6 +3136,27 @@ thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>c\<^sub>_\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[simplified]
+
+
+lemma
+  \<open>module_getter\<^sub>3\<^sub>\<epsilon> c \<lbrakk>j : 1\<rwpar> d
+     (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
+     (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+     (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
+     (\<lambda>x. length x = len_intvl.len d + 1 + len_intvl.len c \<and> length_preserving_map f\<^sub>c \<and> length_preserving_map f\<^sub>d)
+     f\<^sub>c f f\<^sub>d
+     ( sublist_map_L (len_intvl.len d) f\<^sub>d
+     o list_upd_map (len_intvl.len d) f
+     o sublist_map_R (len_intvl.len d+1) f\<^sub>c )
+     (\<lambda>l. (drop (len_intvl.len d + 1) l, l ! (len_intvl.len d), take (len_intvl.len d) l))\<close>
+  unfolding module_getter\<^sub>3\<^sub>\<epsilon>_def sublist_map_L_def list_upd_map_def sublist_map_R_def
+            length_preserving_map_def
+  by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
+  
+  apply (clarsimp simp:)
+
+
+
 
 term NO_SIMP
 (* [--d--][----a----]
