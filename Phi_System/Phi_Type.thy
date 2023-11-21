@@ -819,6 +819,8 @@ paragraph \<open>Convention\<close>
       \<open>the default group\<close>
   and module_mapper_default = (10,[10,30]) in module_mapper__all
       \<open>default rules\<close>
+  and module_mapper_syserr = (0,[0,0]) < module_mapper__all
+      \<open>sys error\<close>
 
 declare [[
   \<phi>reason_default_pattern
@@ -897,9 +899,84 @@ declare [[
   and \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>           : %module_mapper (100)
 ]]
 
-paragraph \<open>Basic Conversions\<close>
+paragraph \<open>Basic Rules\<close>
 
-subparagraph \<open>Module\<close>
+subparagraph \<open>Module Error\<close>
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>, joiner\<close> jn
+               \<open>, identity constructor\<close> i\<^sub>\<epsilon> \<open>and destructor\<close> e\<^sub>\<epsilon> \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g) \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>, joiner\<close> jn
+               \<open>, identity constructor\<close> i\<^sub>\<epsilon> \<open>and destructor\<close> e\<^sub>\<epsilon> \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g) \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>, joiner\<close> jn
+               \<open>, identity constructor\<close> i\<^sub>\<epsilon> \<open>and destructor\<close> e\<^sub>\<epsilon> \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g) \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>joiner\<close> jn
+               \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>1\<^sub>3 d a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g) \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>3 d a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>joiner\<close> jn
+               \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>1\<^sub>2\<^sub>L d a sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f) \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>2\<^sub>L d a sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>joiner\<close> jn
+               \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>1\<^sub>2\<^sub>R a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>a f\<^sub>c f) \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>2\<^sub>R a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>a f\<^sub>c f \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>joiner\<close> jn
+               \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>3\<^sub>1 c b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g) \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>1 c b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>joiner\<close> jn
+               \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>2\<^sub>1\<^sub>L b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f') \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>1\<^sub>L b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason default %module_mapper_syserr]:
+  \<open> ERROR TEXT(\<open>Fail to apply transformation mapper the module of spliter\<close> sp \<open>joiner\<close> jn
+               \<open>, you may provide a LPR reasoning rule\<close>
+               (module_mapper\<^sub>2\<^sub>1\<^sub>R c b sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f') \<open>to address the issue.\<close>)
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>1\<^sub>R c b sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' \<close>
+  unfolding ERROR_def
+  by blast
+
+
+subparagraph \<open>Module Conversions\<close>
 
 lemma [\<phi>reason default %module_mapper_default]:
   \<open> module_mapper\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g
@@ -5626,9 +5703,9 @@ lemma SE_Module_SDistr_a_db_ToA_mapper
 
 
 
-lemma SE_Module_SDistr_a_d\<epsilon>c_cond_ToA_mapper
+lemma SE_Module_SDistr_a_d\<epsilon>c_ToA_mapper
       [\<phi>reason_template %\<phi>mapToA_derived_module
-        name: F\<^sub>1.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c_cond
+        name: F\<^sub>1.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c
         pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c d \<epsilon> d\<epsilon> c a )
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds Dx uz
