@@ -3,7 +3,32 @@ theory Phi_Algb_Pre
           Phi_Algebras.Map_of_Tree
           Phi_Algebras.LCRO_Interval
           Phi_Algebras.Len_Intvl
+          Phi_Aug
 begin 
+
+section \<open>Setup Phi_Aug\<close>
+
+subsection \<open>List\<close>
+
+subsubsection \<open>Length Preserving Maps\<close>
+
+\<phi>reasoner_group length_preserving_map__all = (100, [1, 2000]) for \<open>length_preserving_map f\<close> \<open>\<close>
+  and length_preserving_map = (1000, [1000,1030]) in length_preserving_map__all \<open>\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>length_preserving_map ?f\<close> \<Rightarrow> \<open>length_preserving_map ?f\<close> (100),
+  \<phi>default_reasoner_group \<open>length_preserving_map ?f\<close> : %length_preserving_map (100)
+]]
+
+declare length_preserving_map__map[\<phi>reason add]
+        length_preserving_map__id [\<phi>reason add]
+        length_preserving_map__id'[\<phi>reason add]
+        length_preserving_map__funcomp [\<phi>reason add]
+
+        length_preserving_map__list_upd_map  [\<phi>reason add]
+
+        length_preserving_map__sublist_map_R [\<phi>reason add]
+        length_preserving_map__sublist_map_L [\<phi>reason add]
 
 
 section \<open>Arithmetic Evaluation\<close>

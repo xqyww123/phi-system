@@ -2908,196 +2908,6 @@ lemma [\<phi>reason add]:
   unfolding separatable_module_zip_def
   by (clarsimp dest!: dabc_equation__len_intvl_D)
 
-(* TODO
-lemma [\<phi>reason add]:
-  \<open>separatable_module_zip True d a b c
-                          (\<lambda>x. (drop d x, take d x)) (\<lambda>(y, x). x @ y)
-                          (\<lambda>x. (drop b x, take b x)) (\<lambda>(y, x). x @ y)
-                          (\<lambda>(x\<^sub>a,x\<^sub>d) (y\<^sub>c,y\<^sub>b). length x\<^sub>d = d) (map f\<^sub>c) (map f)
-                          (if d \<le> b then (\<lambda>x. map f (take (b-d) x) @ map f\<^sub>c (drop (b-d) x)) else map f\<^sub>c)
-                          (if d \<le> b then map f else (\<lambda>x. map f (take b x) @ map f\<^sub>c (drop b x))) \<close>
-  unfolding separatable_module_zip_def
-  by clarsimp
-*)
-
-term \<open>a[1:=2]\<close>
-ML \<open>@{term \<open>a[1:=2]\<close>}\<close>
-
-lemma
-  \<open> separatable_module_zip\<^sub>2\<^sub>1 s z D f f\<^sub>1 f\<^sub>2
-\<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 (?\<^sub>s\<^sub>R C s) (?\<^sub>j\<^sub>R C z) (\<lambda>x. C \<longrightarrow> D x) f f\<^sub>1 (?\<^sub>f C f\<^sub>2) \<close>
-  unfolding separatable_module_zip\<^sub>2\<^sub>1_def
-  apply (cases C; clarsimp)
-
-lemma
-  \<open> separatable_module_zip\<^sub>2\<^sub>1 s z D f f\<^sub>1 f\<^sub>2
-\<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 (?\<^sub>s\<^sub>L C s) (?\<^sub>j\<^sub>L C z) (\<lambda>x. C \<longrightarrow> D x) f (?\<^sub>f C f\<^sub>1) f\<^sub>2 \<close>
-  unfolding separatable_module_zip\<^sub>2\<^sub>1_def
-  apply (cases C; clarsimp)
-
-lemma
-  \<open> separatable_module_zip\<^sub>1\<^sub>2 z s D f\<^sub>1 f\<^sub>2 f
-\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>2 (?\<^sub>j\<^sub>L C z) (?\<^sub>s\<^sub>L C s) (\<lambda>x. C \<longrightarrow> D x) f\<^sub>1 f\<^sub>2 f \<close>
-  unfolding separatable_module_zip\<^sub>1\<^sub>2_def
-  apply (cases C; clarsimp)
-
-lemma
-  \<open> separatable_module_zip\<^sub>1\<^sub>2 z s D f\<^sub>1 f\<^sub>2 f
-\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>2 (?\<^sub>j\<^sub>R C z) (?\<^sub>s\<^sub>R C s) (\<lambda>x. C \<longrightarrow> D x) f\<^sub>1 f\<^sub>2 f \<close>
-  unfolding separatable_module_zip\<^sub>1\<^sub>2_def
-  apply (cases C; clarsimp)
-
-lemma
-  \<open> separatable_module_zip\<^sub>2\<^sub>1 (\<lambda>x. (drop n x, take n x)) (\<lambda>(y, x). x @ y)
-                            (\<lambda>(y,x). length x = n) (map f) (map f) (map f) \<close>
-  unfolding separatable_module_zip\<^sub>2\<^sub>1_def
-  by clarsimp
-
-lemma
-  \<open> separatable_module_zip\<^sub>2\<^sub>1 (?\<^sub>s\<^sub>L ?C\<^sub>c (\<lambda>x. (drop (len_intvl.len ?da) x, take (len_intvl.len ?da) x))) (?\<^sub>j\<^sub>L ?C\<^sub>c (\<lambda>(y, x). x @ y)) \<close>
-
-lemma
-  \<open> separatable_module_zip\<^sub>2\<^sub>1 s\<^sub>1 z\<^sub>1 D\<^sub>1 f f\<^sub>1 f\<^sub>2\<^sub>3
-\<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 s\<^sub>2 z\<^sub>2 D\<^sub>2 f\<^sub>2\<^sub>3 f\<^sub>2 f\<^sub>3
-\<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 s\<^sub>2 s\<^sub>1 z\<^sub>1 z\<^sub>2 (\<lambda>(c,a,d). D\<^sub>1 (c, z\<^sub>2 (a,d)) \<and> D\<^sub>2 (a,d)) f f\<^sub>1 f\<^sub>2 f\<^sub>3 \<close>
-  unfolding separatable_module_zip\<^sub>3\<^sub>1_def
-            separatable_module_zip\<^sub>2\<^sub>1_def
-  by clarsimp
-
-lemma
-  \<open> separatable_module_zip\<^sub>1\<^sub>2 z\<^sub>1 s\<^sub>1 D\<^sub>1 f\<^sub>2 f\<^sub>3 f\<^sub>2\<^sub>3
-\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>2 z\<^sub>2 s\<^sub>2 D\<^sub>2 f\<^sub>1 f\<^sub>2\<^sub>3 f
-\<Longrightarrow> separatable_module_zip\<^sub>1\<^sub>3 z\<^sub>2 z\<^sub>1 s\<^sub>1 s\<^sub>2 (\<lambda>x. D\<^sub>1 (snd (s\<^sub>2 x)) \<and> D\<^sub>2 x) f\<^sub>1 f\<^sub>2 f\<^sub>3 f \<close>
-  unfolding separatable_module_zip\<^sub>1\<^sub>3_def
-            separatable_module_zip\<^sub>1\<^sub>2_def
-  by (clarsimp simp add: map_prod_ap_simp prod.map_beta)
-
-lemma
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>c \<and> C\<^sub>d \<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 s\<^sub>2 s\<^sub>1 z\<^sub>1 z\<^sub>2 D f f\<^sub>1 f\<^sub>2 f\<^sub>3)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>d \<Longrightarrow> separatable_module_zip\<^sub>2\<^sub>1 s\<^sub>2 z\<^sub>2 f f\<^sub>2 f\<^sub>3)
-\<Longrightarrow> separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d s\<^sub>2) (?\<^sub>s\<^sub>L C\<^sub>c s\<^sub>1) (?\<^sub>j\<^sub>L C\<^sub>c z\<^sub>1) (?\<^sub>j\<^sub>R C\<^sub>d z\<^sub>2) D f (?\<^sub>M C\<^sub>c f\<^sub>1) f\<^sub>2 (?\<^sub>M C\<^sub>d f\<^sub>3)\<close>
-
-lemma
-  \<open>separatable_module_zip\<^sub>3\<^sub>1 (?\<^sub>s\<^sub>R C\<^sub>d (\<lambda>x. (drop (len_intvl.len d) x, take (len_intvl.len d) x))) (?\<^sub>s\<^sub>R C\<^sub>c (uz' da c))
-                            (?\<^sub>j\<^sub>R C\<^sub>c (z' da c)) (?\<^sub>j\<^sub>R C\<^sub>d (\<lambda>(y, x). x @ y))
-                            D\<^sub>s\<^sub>m f f' f\<^sub>d f\<^sub>c \<close>
-
-  term list_update
-
-declare [[\<phi>trace_reasoning = 1]]
-
-definition length_preserving_map :: \<open>('a list \<Rightarrow> 'a list) \<Rightarrow> bool\<close>
-  where \<open>length_preserving_map f \<longleftrightarrow> (\<forall>l. length (f l) = length l)\<close>
-
-\<phi>reasoner_group length_preserving_map__all = (100, [1, 2000]) for \<open>length_preserving_map f\<close> \<open>\<close>
-  and length_preserving_map = (1000, [1000,1030]) in length_preserving_map__all \<open>\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>length_preserving_map ?f\<close> \<Rightarrow> \<open>length_preserving_map ?f\<close> (100),
-  \<phi>default_reasoner_group \<open>length_preserving_map ?f\<close> : %length_preserving_map (100)
-]]
-
-lemma length_preserving_map__map[simp, intro!, \<phi>reason add]:
-  \<open> length_preserving_map (map f) \<close>
-  unfolding length_preserving_map_def
-  by simp 
-
-lemma length_preserving_map__id[simp, intro!, \<phi>reason add]:
-  \<open> length_preserving_map id \<close>
-  unfolding length_preserving_map_def by simp
-
-lemma length_preserving_map__id'[simp, intro!, \<phi>reason add]:
-  \<open> length_preserving_map (\<lambda>x. x) \<close>
-  unfolding length_preserving_map_def by simp
-
-lemma length_preserving_map__funcomp[simp, intro!, \<phi>reason add]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map g
-\<Longrightarrow> length_preserving_map (f o g) \<close>
-  unfolding length_preserving_map_def
-  by clarsimp
-
-
-definition sublist_map_L :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> 'a list) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
-  \<comment> \<open>applies on the left N elements\<close>
-  where \<open>sublist_map_L N f l = f (take N l) @ drop N l\<close>
-
-definition sublist_map_R :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> 'a list) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
-  \<comment> \<open>applies on the right (len-N) elements\<close>
-  where \<open>sublist_map_R N f l = take N l @ f (drop N l)\<close>
-
-definition list_upd_map :: \<open>nat \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a list \<Rightarrow> 'a list\<close>
-  where \<open>list_upd_map i f l = l[i := f (l ! i)]\<close>
-
-lemma length_preserving_map__list_upd_map [simp, intro!, \<phi>reason add]:
-  \<open> length_preserving_map (list_upd_map i f) \<close>
-  unfolding length_preserving_map_def list_upd_map_def
-  by force
-
-lemma length_preserving_map__sublist_map_R [simp, intro!, \<phi>reason add]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map (sublist_map_R N f) \<close>
-  unfolding length_preserving_map_def sublist_map_R_def
-  by (clarify, simp)
-
-lemma length_preserving_map__sublist_map_L [simp, intro!, \<phi>reason add]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map (sublist_map_L N f) \<close>
-  unfolding length_preserving_map_def
-  by (clarify, simp add: sublist_map_L_def)
-
-lemma sublist_map_L_id[simp]:
-  \<open> sublist_map_L N id = id \<close>
-  unfolding fun_eq_iff sublist_map_L_def
-  by clarsimp
-
-lemma sublist_map_R_id[simp]:
-  \<open> sublist_map_R N id = id \<close>
-  unfolding sublist_map_R_def fun_eq_iff
-  by clarsimp
-
-lemma sublist_map_L_sublist_map_L[simp]:
-  \<open> M \<le> N
-\<Longrightarrow> sublist_map_L N (sublist_map_L M f) = sublist_map_L M f \<close>
-  unfolding sublist_map_L_def
-  by (clarsimp, metis (no_types, opaque_lifting) append_take_drop_id diff_add drop_drop take_drop)
-
-lemma sublist_map_L_funcomp[simp]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map g
-\<Longrightarrow> sublist_map_L N (f o g) = sublist_map_L N f o sublist_map_L N g \<close>
-  unfolding sublist_map_L_def fun_eq_iff length_preserving_map_def
-  by (clarsimp simp add: min_def)
-
-lemma sublist_map_R_sublist_map_R[simp]:
-  \<open> sublist_map_R N (sublist_map_R M f) = sublist_map_R (N+M) f \<close>
-  unfolding sublist_map_R_def
-  by (clarsimp, metis add.commute append_assoc take_add)
-
-lemma sublist_map_R_funcomp[simp]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map g
-\<Longrightarrow> sublist_map_R N (f o g) = sublist_map_R N f o sublist_map_R N g \<close>
-  unfolding sublist_map_R_def length_preserving_map_def
-  by (clarsimp, metis (no_types, opaque_lifting) append_Nil append_take_drop_id cancel_comm_monoid_add_class.diff_cancel diff_le_self drop_all list.size(3) min_def take0)
-
-lemma sublist_map_L_at_i[simp]:
-  \<open> i < N
-\<Longrightarrow> sublist_map_L N (list_upd_map i f) = list_upd_map i f\<close>
-  unfolding fun_eq_iff sublist_map_L_def list_upd_map_def
-  by (clarsimp, metis append_take_drop_id drop_update_cancel take_update_swap)
-
-lemma sublist_map_R_at_i[simp]:
-  \<open> sublist_map_R N (list_upd_map i f) = list_upd_map (N+i) f\<close>
-  unfolding fun_eq_iff sublist_map_R_def list_upd_map_def
-  by (clarsimp,
-      smt (verit) add_diff_cancel_left' append_take_drop_id drop_all length_take less_or_eq_imp_le linorder_not_less list_update_append list_update_nonempty min.absorb4 min_less_iff_conj not_add_less1 nth_drop)
-
-
-
-
-
-  
 
 
 
@@ -3139,7 +2949,7 @@ thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[s
 
 
 lemma
-  \<open>module_getter\<^sub>3\<^sub>\<epsilon> c \<lbrakk>j : 1\<rwpar> d
+  \<open>module_mapper\<^sub>3\<^sub>\<epsilon> c \<lbrakk>j : 1\<rwpar> d
      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
      (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
      (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
@@ -3149,11 +2959,10 @@ lemma
      o list_upd_map (len_intvl.len d) f
      o sublist_map_R (len_intvl.len d+1) f\<^sub>c )
      (\<lambda>l. (drop (len_intvl.len d + 1) l, l ! (len_intvl.len d), take (len_intvl.len d) l))\<close>
-  unfolding module_getter\<^sub>3\<^sub>\<epsilon>_def sublist_map_L_def list_upd_map_def sublist_map_R_def
+  unfolding module_mapper\<^sub>3\<^sub>\<epsilon>_def sublist_map_L_def list_upd_map_def sublist_map_R_def
             length_preserving_map_def
   by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
-  
-  apply (clarsimp simp:)
+
 
 
 

@@ -623,31 +623,24 @@ definition separatable_module_zip
                  (if flag then dabc_equation d a b c else dabc_equation b c d a) \<longrightarrow>
                  (uz' a d o z' c b o f \<otimes>\<^sub>f g o uz c b o z a d) x = (f' \<otimes>\<^sub>f g') x)\<close>
 
-definition separatable_module_zip\<^sub>1\<^sub>3
-  where \<open>separatable_module_zip\<^sub>1\<^sub>3 z\<^sub>2 z\<^sub>1 s\<^sub>1 s\<^sub>2 D f\<^sub>1 f\<^sub>2 f\<^sub>3 f \<longleftrightarrow>
-            (\<forall>x. D x \<longrightarrow> ((z\<^sub>2 o apsnd z\<^sub>1) o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3) o (apsnd s\<^sub>1 o s\<^sub>2)) x = f x)\<close>
 
-definition separatable_module_zip\<^sub>\<epsilon>\<^sub>3
-  where \<open>separatable_module_zip\<^sub>\<epsilon>\<^sub>3 z\<^sub>2 z\<^sub>1 I\<^sub>\<epsilon> E\<^sub>\<epsilon> s\<^sub>1 s\<^sub>2 D f\<^sub>1 f\<^sub>2 f\<^sub>3 f \<longleftrightarrow>
-            (\<forall>x. D x \<longrightarrow> ((z\<^sub>2 o apsnd z\<^sub>1) o (f\<^sub>1 \<otimes>\<^sub>f (I\<^sub>\<epsilon> o f\<^sub>2 o E\<^sub>\<epsilon>) \<otimes>\<^sub>f f\<^sub>3) o (apsnd s\<^sub>1 o s\<^sub>2)) x = f x)\<close>
+definition module_mapper\<^sub>2\<^sub>2
+  where \<open>module_mapper\<^sub>2\<^sub>2 flag d a b c sp' jn' sp jn D\<^sub>s\<^sub>p' D\<^sub>j\<^sub>n' D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D\<^sub>M f\<^sub>c f\<^sub>b f\<^sub>a f\<^sub>d \<longleftrightarrow>
+    (\<forall>x. D\<^sub>M x \<longrightarrow>
+         (if flag then dabc_equation d a b c else dabc_equation b c d a) \<longrightarrow>
+         (let (x\<^sub>a,x\<^sub>d) = x
+            ; (x\<^sub>c,x\<^sub>b) = sp c b (jn a d (x\<^sub>a,x\<^sub>d))
+            ; (y\<^sub>c,y\<^sub>b) = (f\<^sub>c x\<^sub>c, f\<^sub>b x\<^sub>b)
+            ; (y\<^sub>a,y\<^sub>d) = sp' a d (jn' c b (y\<^sub>c,y\<^sub>b))
+           in (y\<^sub>a,y\<^sub>d) = (f\<^sub>a x\<^sub>a, f\<^sub>d x\<^sub>d) \<and>
+              D\<^sub>j\<^sub>n a d (x\<^sub>a,x\<^sub>d) \<and>
+              D\<^sub>s\<^sub>p c b (jn a d (x\<^sub>a,x\<^sub>d)) \<and>
+              D\<^sub>j\<^sub>n' c b (y\<^sub>c,y\<^sub>b) \<and>
+              D\<^sub>s\<^sub>p' a d (jn' c b (y\<^sub>c,y\<^sub>b))
+))\<close>
 
-definition separatable_module_zip\<^sub>1\<^sub>2
-  where \<open>separatable_module_zip\<^sub>1\<^sub>2 z s D f\<^sub>1 f\<^sub>2 f \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> (z o (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) o s) x = f x)\<close>
-
-definition separatable_module_zip\<^sub>\<epsilon>\<^sub>2\<^sub>L
-  where \<open>separatable_module_zip\<^sub>\<epsilon>\<^sub>2\<^sub>L z I\<^sub>\<epsilon> E\<^sub>\<epsilon> s D f\<^sub>1 f\<^sub>2 f \<longleftrightarrow>
-            (\<forall>x. D x \<longrightarrow> (z o ((I\<^sub>\<epsilon> o f\<^sub>1 o E\<^sub>\<epsilon>) \<otimes>\<^sub>f f\<^sub>2) o s) x = f x)\<close>
-
-definition separatable_module_zip\<^sub>\<epsilon>\<^sub>2\<^sub>R
-  where \<open>separatable_module_zip\<^sub>\<epsilon>\<^sub>2\<^sub>R z I\<^sub>\<epsilon> E\<^sub>\<epsilon> s D f\<^sub>1 f\<^sub>2 f \<longleftrightarrow>
-            (\<forall>x. D x \<longrightarrow> (z o (f\<^sub>1 \<otimes>\<^sub>f (I\<^sub>\<epsilon> o f\<^sub>2 o E\<^sub>\<epsilon>)) o s) x = f x)\<close>
-
-definition separatable_module_zip\<^sub>3\<^sub>1
-  where \<open>separatable_module_zip\<^sub>3\<^sub>1 s\<^sub>2 s\<^sub>1 z\<^sub>1 z\<^sub>2 D f f\<^sub>1 f\<^sub>2 f\<^sub>3 \<longleftrightarrow>
-            (\<forall>x. D x \<longrightarrow> (apsnd s\<^sub>2 o s\<^sub>1 o f o z\<^sub>1 o apsnd z\<^sub>2) x = (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3) x)\<close>
-
-definition module_getter\<^sub>1\<^sub>3\<^sub>C
-  where \<open>module_getter\<^sub>1\<^sub>3\<^sub>C C\<^sub>c C\<^sub>d d a da c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g \<longleftrightarrow>
+definition module_mapper\<^sub>1\<^sub>3\<^sub>C
+  where \<open>module_mapper\<^sub>1\<^sub>3\<^sub>C C\<^sub>c C\<^sub>d d a da c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow>
          ?\<^sub>+ True da = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a \<and> (C\<^sub>c \<longrightarrow> da ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> d ##\<^sub>+ a) \<longrightarrow>
          (let (x\<^sub>a,x\<^sub>d,x\<^sub>c) = x
@@ -661,8 +654,21 @@ definition module_getter\<^sub>1\<^sub>3\<^sub>C
               (C\<^sub>c \<longrightarrow> D\<^sub>j\<^sub>n c da (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (jn a d) (x\<^sub>a, x\<^sub>d)) \<and>
                       D\<^sub>s\<^sub>p c da y)))\<close>
 
-definition module_getter\<^sub>1\<^sub>2\<^sub>L
-  where \<open>module_getter\<^sub>1\<^sub>2\<^sub>L d a sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f \<longleftrightarrow>
+definition module_mapper\<^sub>1\<^sub>3
+  where \<open>module_mapper\<^sub>1\<^sub>3 d a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g \<longleftrightarrow>
+    (\<forall>x. D x \<longrightarrow>
+         d+a ##\<^sub>+ c \<and> d ##\<^sub>+ a \<longrightarrow>
+         (let (x\<^sub>a,x\<^sub>d,x\<^sub>c) = x
+            ; y = f (jn c (d+a) (x\<^sub>c, jn a d (x\<^sub>a, x\<^sub>d)))
+            ; (y\<^sub>c,y\<^sub>d\<^sub>a) = sp c (d+a) y
+            ; (y\<^sub>a,y\<^sub>d) = sp a d y\<^sub>d\<^sub>a
+           in g x = jn c (d+a) (x\<^sub>c, jn a d (x\<^sub>a, x\<^sub>d)) \<and>
+              (y\<^sub>a,y\<^sub>d,y\<^sub>c) = (f\<^sub>a x\<^sub>a, f\<^sub>d x\<^sub>d, f\<^sub>c x\<^sub>c) \<and>
+              D\<^sub>j\<^sub>n a d (x\<^sub>a, x\<^sub>d) \<and> D\<^sub>s\<^sub>p a d y\<^sub>d\<^sub>a \<and>
+              D\<^sub>j\<^sub>n c (d+a) (x\<^sub>c, jn a d (x\<^sub>a, x\<^sub>d)) \<and> D\<^sub>s\<^sub>p c (d+a) y))\<close>
+
+definition module_mapper\<^sub>1\<^sub>2\<^sub>L
+  where \<open>module_mapper\<^sub>1\<^sub>2\<^sub>L d a sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow>
          d ##\<^sub>+ a \<longrightarrow>
          (let (x\<^sub>a,x\<^sub>d) = x
@@ -671,22 +677,31 @@ definition module_getter\<^sub>1\<^sub>2\<^sub>L
            in (y\<^sub>a,y\<^sub>d) = (f\<^sub>a x\<^sub>a, f\<^sub>d x\<^sub>d) \<and>
               D\<^sub>j\<^sub>n a d (x\<^sub>a, x\<^sub>d) \<and> D\<^sub>s\<^sub>p a d y))\<close>
 
-definition module_getter\<^sub>3\<^sub>1\<^sub>C
-  where \<open>module_getter\<^sub>3\<^sub>1\<^sub>C C\<^sub>c C\<^sub>d c b db d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
+definition module_mapper\<^sub>1\<^sub>2\<^sub>R
+  where \<open>module_mapper\<^sub>1\<^sub>2\<^sub>R a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>a f\<^sub>c f \<longleftrightarrow>
+    (\<forall>x. D x \<longrightarrow>
+         a ##\<^sub>+ c \<longrightarrow>
+         (let (x\<^sub>a,x\<^sub>c) = x
+            ; y = f (jn c a (x\<^sub>c, x\<^sub>a))
+            ; (y\<^sub>c,y\<^sub>a) = sp c a y
+           in (y\<^sub>a,y\<^sub>c) = (f\<^sub>a x\<^sub>a, f\<^sub>c x\<^sub>c) \<and> D\<^sub>j\<^sub>n c a (x\<^sub>c, x\<^sub>a) \<and> D\<^sub>s\<^sub>p c a y))\<close>
+
+definition module_mapper\<^sub>3\<^sub>1\<^sub>C
+  where \<open>module_mapper\<^sub>3\<^sub>1\<^sub>C C\<^sub>c C\<^sub>d c b db d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow>
          (?\<^sub>+ True db = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b) \<and> (C\<^sub>c \<longrightarrow> db ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> d ##\<^sub>+ b) \<longrightarrow>
-             (let (x\<^sub>c, x\<^sub>d\<^sub>\<epsilon>) = ?\<^sub>s\<^sub>L C\<^sub>c (sp c db) x
-                ; (x\<^sub>b, x\<^sub>d) = ?\<^sub>s\<^sub>R C\<^sub>d (sp b d) x\<^sub>d\<^sub>\<epsilon>
+             (let (x\<^sub>c, x\<^sub>d\<^sub>b) = ?\<^sub>s\<^sub>L C\<^sub>c (sp c db) x
+                ; (x\<^sub>b, x\<^sub>d) = ?\<^sub>s\<^sub>R C\<^sub>d (sp b d) x\<^sub>d\<^sub>b
                in g x = (x\<^sub>c, x\<^sub>b, x\<^sub>d) \<and>
                   (((?\<^sub>j\<^sub>L C\<^sub>c (jn c db) o apsnd (?\<^sub>j\<^sub>R C\<^sub>d (jn b d))) o
                     (f\<^sub>c \<otimes>\<^sub>f f \<otimes>\<^sub>f f\<^sub>d) o
                     (apsnd (?\<^sub>s\<^sub>R C\<^sub>d (sp b d)) o ?\<^sub>s\<^sub>L C\<^sub>c (sp c db))) x = f' x) \<and>
-                  (C\<^sub>d \<longrightarrow> D\<^sub>j\<^sub>n b d (f x\<^sub>b, f\<^sub>d x\<^sub>d) \<and> D\<^sub>s\<^sub>p b d x\<^sub>d\<^sub>\<epsilon>) \<and>
+                  (C\<^sub>d \<longrightarrow> D\<^sub>j\<^sub>n b d (f x\<^sub>b, f\<^sub>d x\<^sub>d) \<and> D\<^sub>s\<^sub>p b d x\<^sub>d\<^sub>b) \<and>
                   (C\<^sub>c \<longrightarrow> D\<^sub>j\<^sub>n c db (f\<^sub>c x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (jn b d) (f x\<^sub>b, f\<^sub>d x\<^sub>d)) \<and>
                           D\<^sub>s\<^sub>p c db x)))\<close>
 
-definition module_getter\<^sub>3\<^sub>1
-  where \<open>module_getter\<^sub>3\<^sub>1 c b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
+definition module_mapper\<^sub>3\<^sub>1
+  where \<open>module_mapper\<^sub>3\<^sub>1 c b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow> (let (x\<^sub>c, x\<^sub>d\<^sub>b) = sp c (d+b) x
                     ; (x\<^sub>b, x\<^sub>d) = sp b d x\<^sub>d\<^sub>b
                    in g x = (x\<^sub>c, x\<^sub>b, x\<^sub>d) \<and>
@@ -697,28 +712,23 @@ definition module_getter\<^sub>3\<^sub>1
                       D\<^sub>j\<^sub>n c (d+b) (f\<^sub>c x\<^sub>c, jn b d (f x\<^sub>b, f\<^sub>d x\<^sub>d)) \<and>
                       D\<^sub>s\<^sub>p c (d+b) x))\<close>
 
-(*
-definition module_getter\<^sub>2\<^sub>1\<^sub>R
-  where \<open>module_getter\<^sub>2\<^sub>1\<^sub>R c b sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g \<longleftrightarrow>
+definition module_mapper\<^sub>2\<^sub>1\<^sub>R
+  where \<open>module_mapper\<^sub>2\<^sub>1\<^sub>R c b sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow> (let (x\<^sub>c, x\<^sub>b) = sp c b x
-                   in g x = (x\<^sub>c, x\<^sub>b) \<and>
-                      ((jn c b o f\<^sub>c \<otimes>\<^sub>f f o sp c b) x = f' x) \<and>
+                   in ((jn c b o f\<^sub>c \<otimes>\<^sub>f f o sp c b) x = f' x) \<and>
                       D\<^sub>j\<^sub>n c b (f\<^sub>c x\<^sub>c, f x\<^sub>b) \<and>
                       D\<^sub>s\<^sub>p c b x))\<close>
-*)
 
-definition module_getter\<^sub>2\<^sub>1\<^sub>L
-  where \<open>module_getter\<^sub>2\<^sub>1\<^sub>L b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' \<longleftrightarrow>
+definition module_mapper\<^sub>2\<^sub>1\<^sub>L
+  where \<open>module_mapper\<^sub>2\<^sub>1\<^sub>L b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow>
          d ##\<^sub>+ b \<longrightarrow>
         (let (x\<^sub>b, x\<^sub>d) = sp b d x
           in ((jn b d o f \<otimes>\<^sub>f f\<^sub>d o sp b d) x = f' x) \<and>
              D\<^sub>j\<^sub>n b d (f x\<^sub>b, f\<^sub>d x\<^sub>d) \<and> D\<^sub>s\<^sub>p b d x))\<close>
 
-
-
-definition module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C
-  where \<open>module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
+definition module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C
+  where \<open>module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow>
          (?\<^sub>+ True d\<epsilon> = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True \<epsilon>) \<and> (C\<^sub>c \<longrightarrow> d\<epsilon> ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> d ##\<^sub>+ \<epsilon>) \<longrightarrow>
          (let (x\<^sub>c, x\<^sub>d\<^sub>\<epsilon>) = ?\<^sub>s\<^sub>L C\<^sub>c (sp c d\<epsilon>) x
@@ -732,8 +742,8 @@ definition module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C
               (C\<^sub>c \<longrightarrow> D\<^sub>j\<^sub>n c d\<epsilon> (f\<^sub>c x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (jn \<epsilon> d) (i\<^sub>\<epsilon> (f (e\<^sub>\<epsilon> x\<^sub>\<epsilon>)), f\<^sub>d x\<^sub>d)) \<and>
                       D\<^sub>s\<^sub>p c d\<epsilon> x)))\<close>
 
-definition module_getter\<^sub>3\<^sub>\<epsilon>
-  where \<open>module_getter\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
+definition module_mapper\<^sub>3\<^sub>\<epsilon>
+  where \<open>module_mapper\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow> (let (x\<^sub>c, x\<^sub>d\<^sub>\<epsilon>) = sp c (d+\<epsilon>) x
                     ; (x\<^sub>\<epsilon>, x\<^sub>d) = sp \<epsilon> d x\<^sub>d\<^sub>\<epsilon>
                    in g x = (x\<^sub>c, e\<^sub>\<epsilon> x\<^sub>\<epsilon>, x\<^sub>d) \<and>
@@ -746,8 +756,8 @@ definition module_getter\<^sub>3\<^sub>\<epsilon>
                       D\<^sub>s\<^sub>p c (d+\<epsilon>) x))\<close>
 
 
-definition module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R
-  where \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g \<longleftrightarrow>
+definition module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R
+  where \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow> (let (x\<^sub>c, x\<^sub>\<epsilon>) = sp c \<epsilon> x
                    in g x = (x\<^sub>c, e\<^sub>\<epsilon> x\<^sub>\<epsilon>) \<and>
                       ((jn c \<epsilon> o f\<^sub>c \<otimes>\<^sub>f (i\<^sub>\<epsilon> o f o e\<^sub>\<epsilon>) o sp c \<epsilon>) x = f' x) \<and>
@@ -755,8 +765,8 @@ definition module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R
                       D\<^sub>j\<^sub>n c \<epsilon> (f\<^sub>c x\<^sub>c, i\<^sub>\<epsilon> (f (e\<^sub>\<epsilon> x\<^sub>\<epsilon>))) \<and>
                       D\<^sub>s\<^sub>p c \<epsilon> x))\<close>
 
-definition module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L
-  where \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g \<longleftrightarrow>
+definition module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L
+  where \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g \<longleftrightarrow>
     (\<forall>x. D x \<longrightarrow>
          d ##\<^sub>+ \<epsilon> \<longrightarrow>
          (let (x\<^sub>\<epsilon>, x\<^sub>d) = sp \<epsilon> d x
@@ -790,20 +800,20 @@ paragraph \<open>Convention\<close>
   and domain_of_inner_map = (1000, [1000,1030]) in domain_of_inner_map__all \<open>\<close>
 
   and separatable_module_zip__all = (1000, [1, 3000])
-      for (\<open>separatable_module_zip flag d a b c uz' z' uz z D f g f' g'\<close>,
-           \<open>separatable_module_zip\<^sub>1\<^sub>3 z\<^sub>2 z\<^sub>1 s\<^sub>1 s\<^sub>2 D f\<^sub>1 f\<^sub>2 f\<^sub>3 f\<close>,
-           \<open>separatable_module_zip\<^sub>1\<^sub>2 z s D f\<^sub>1 f\<^sub>2 f\<close>,
-           \<open>separatable_module_zip\<^sub>3\<^sub>1 s\<^sub>2 s\<^sub>1 z\<^sub>1 z\<^sub>2 D f f\<^sub>1 f\<^sub>2 f\<^sub>3\<close>,
-           \<open>separatable_module_zip\<^sub>2\<^sub>1 s z D f f\<^sub>1 f\<^sub>2\<close>)
+      for (\<open>separatable_module_zip flag d a b c uz' z' uz z D f g f' g'\<close>)
       \<open>separatable zip and unzip operations of a module \<phi>-type\<close>
   and separatable_module_zip = (1000, [1000,1030]) in separatable_module_zip__all
       \<open>the default group\<close>
 
   and module_mapper__all = (1000, [1, 3000])
-      for (\<open>module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g\<close>,
-           \<open>module_getter\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g\<close>,
-           \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g\<close>,
-           \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g\<close>)
+      for (\<open>module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g\<close>,
+           \<open>module_mapper\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g\<close>,
+           \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g\<close>,
+           \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g\<close>,
+           \<open>module_mapper\<^sub>1\<^sub>3\<^sub>C C\<^sub>c C\<^sub>d d a da c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g\<close>,
+           \<open>module_mapper\<^sub>1\<^sub>2\<^sub>L d a sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<close>,
+           \<open>module_mapper\<^sub>3\<^sub>1\<^sub>C C\<^sub>c C\<^sub>d c b db d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g\<close>,
+           \<open>module_mapper\<^sub>2\<^sub>1\<^sub>L b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f'\<close>)
       \<open>transformation mappers of module \<phi>-types\<close>
   and module_mapper = (1000, [1000, 1030]) in module_mapper__all
       \<open>the default group\<close>
@@ -825,23 +835,35 @@ declare [[
       \<open>compositional_mapper ?m\<^sub>1 _ _ _ _ _\<close>
       \<open>compositional_mapper _ ?m\<^sub>2 _ _ _ _\<close>                           (100)
   and \<open>domain_of_inner_map ?m _\<close> \<Rightarrow> \<open>domain_of_inner_map ?m _\<close>                                  (100)
-  and \<open>separatable_module_zip\<^sub>2\<^sub>1 ?s ?z _ ?var_f _ _\<close> \<Rightarrow> \<open>separatable_module_zip\<^sub>2\<^sub>1 ?s ?z _ _ _ _\<close>  (100)
-  and \<open>separatable_module_zip\<^sub>1\<^sub>2 ?z ?s _ ?var_f\<^sub>1 ?var_f\<^sub>2 _\<close> \<Rightarrow> \<open>separatable_module_zip\<^sub>1\<^sub>2 ?z ?s _ _ _ _\<close> (100)
   and \<open>separatable_module_zip ?flag ?var_d ?var_a ?var_b ?var_c ?uz' ?z' ?uz ?z _ _ _ _ _\<close> \<Rightarrow>
       \<open>separatable_module_zip ?flag _ _ _ _  ?uz' ?z' ?uz ?z _ _ _ _ _\<close>                      (100)
-  and \<open>separatable_module_zip\<^sub>1\<^sub>3 ?z\<^sub>2 ?z\<^sub>1 ?s\<^sub>z ?s\<^sub>2 _ ?var_f\<^sub>1 ?var_f\<^sub>2 ?var_f\<^sub>3 _\<close> \<Rightarrow> 
-      \<open>separatable_module_zip\<^sub>1\<^sub>3 ?z\<^sub>2 ?z\<^sub>1 ?s\<^sub>z ?s\<^sub>2 _ _ _ _ _\<close>                      (100)
-  and \<open>separatable_module_zip\<^sub>3\<^sub>1 ?s\<^sub>2 ?s\<^sub>1 ?z\<^sub>1 ?z\<^sub>2 _ ?var_f _ _ _\<close> \<Rightarrow>
-      \<open>separatable_module_zip\<^sub>3\<^sub>1 ?s\<^sub>2 ?s\<^sub>1 ?z\<^sub>1 ?z\<^sub>2 _ _ _ _ _\<close>                      (100)
 
-  and \<open>module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C ?C\<^sub>c ?C\<^sub>d ?c ?\<epsilon> _ ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
-      \<open>module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C ?C\<^sub>c ?C\<^sub>d ?c ?\<epsilon> _ ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>    (100)
-  and \<open>module_getter\<^sub>3\<^sub>\<epsilon> ?c ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
-      \<open>module_getter\<^sub>3\<^sub>\<epsilon> ?c ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>              (100)
-  and \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c ?\<epsilon> ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close> \<Rightarrow>
-      \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c ?\<epsilon> ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close>                   (100)
-  and \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close> \<Rightarrow>
-      \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close>                   (100)
+  and \<open>module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C ?C\<^sub>c ?C\<^sub>d ?c ?\<epsilon> ?d\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C ?C\<^sub>c ?C\<^sub>d ?c ?\<epsilon> ?d\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>    (100)
+  and \<open>module_mapper\<^sub>3\<^sub>\<epsilon> ?c ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>3\<^sub>\<epsilon> ?c ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>              (100)
+  and \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c ?\<epsilon> ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c ?\<epsilon> ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close>                   (100)
+  and \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L ?\<epsilon> ?d ?sp ?jn ?e\<^sub>\<epsilon> ?i\<^sub>\<epsilon> ?D\<^sub>\<epsilon>\<^sub>E ?D\<^sub>\<epsilon>\<^sub>I ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _\<close>                   (100)
+
+  and \<open>module_mapper\<^sub>1\<^sub>3\<^sub>C ?C\<^sub>c ?C\<^sub>d ?d ?a ?da ?c ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>1\<^sub>3\<^sub>C ?C\<^sub>c ?C\<^sub>d ?d ?a ?da ?c ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>                   (100)
+  and \<open>module_mapper\<^sub>1\<^sub>3 ?d ?a ?c ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>1\<^sub>3 ?d ?a ?c ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>                               (100)
+  and \<open>module_mapper\<^sub>1\<^sub>2\<^sub>L ?d ?a ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>1\<^sub>2\<^sub>L ?d ?a ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close>                                      (100)
+  and \<open>module_mapper\<^sub>1\<^sub>2\<^sub>R ?a ?c ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>1\<^sub>2\<^sub>R ?a ?c ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close>                                      (100)
+
+  and \<open>module_mapper\<^sub>3\<^sub>1\<^sub>C ?C\<^sub>c ?C\<^sub>d ?c ?b ?db ?d ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>3\<^sub>1\<^sub>C ?C\<^sub>c ?C\<^sub>d ?c ?b ?db ?d ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>                    (100)
+  and \<open>module_mapper\<^sub>3\<^sub>1 ?c ?b ?d ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>3\<^sub>1 ?c ?b ?d ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _ _ _\<close>                                (100)
+  and \<open>module_mapper\<^sub>2\<^sub>1\<^sub>R ?c ?b ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>2\<^sub>1\<^sub>R ?c ?b ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close>                                      (100)
+  and \<open>module_mapper\<^sub>2\<^sub>1\<^sub>L ?b ?d ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close> \<Rightarrow>
+      \<open>module_mapper\<^sub>2\<^sub>1\<^sub>L ?b ?d ?sp ?jn ?D\<^sub>s\<^sub>p ?D\<^sub>j\<^sub>n _ _ _ _\<close>                                      (100)
 
 
   and \<open>domain_by_mapper ?D' ?m ?D ?f ?D\<^sub>d\<^sub>m\<close> \<Rightarrow>
@@ -860,15 +882,6 @@ declare [[
       \<open>ERROR TEXT(\<open>Malformed Rule\<close> (domain_of_inner_map ?m ?D\<^sub>i))\<close>                   (0)
   and \<open>separatable_module_zip ?flag ?d ?a ?b ?c ?uz' ?z' ?uz ?z ?D ?f ?g ?f' ?g'\<close> \<Rightarrow>
       \<open>ERROR TEXT(\<open>Malformed Rule\<close> (separatable_module_zip ?flag ?d ?a ?b ?c ?uz' ?z' ?uz ?z ?D ?f ?g ?f' ?g'))\<close>  (0)
-  and \<open>separatable_module_zip\<^sub>1\<^sub>3 ?z\<^sub>2 ?z\<^sub>1 ?s\<^sub>1 ?s\<^sub>2 ?D ?f\<^sub>1 ?f\<^sub>2 ?f\<^sub>3 ?f\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (separatable_module_zip\<^sub>1\<^sub>3 ?z\<^sub>2 ?z\<^sub>1 ?s\<^sub>1 ?s\<^sub>2 ?D ?f\<^sub>1 ?f\<^sub>2 ?f\<^sub>3 ?f))\<close>  (0)
-  and \<open>separatable_module_zip\<^sub>1\<^sub>2 ?z ?s ?D ?f\<^sub>1 ?f\<^sub>2 ?f\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (separatable_module_zip\<^sub>1\<^sub>2 ?z ?s ?D ?f\<^sub>1 ?f\<^sub>2 ?f))\<close>              (0)
-  and \<open>separatable_module_zip\<^sub>3\<^sub>1 ?s\<^sub>2 ?s\<^sub>1 ?z\<^sub>1 ?z\<^sub>2 ?D ?f ?f\<^sub>1 ?f\<^sub>2 ?f\<^sub>3\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (separatable_module_zip\<^sub>3\<^sub>1 ?s\<^sub>2 ?s\<^sub>1 ?z\<^sub>1 ?z\<^sub>2 ?D ?f ?f\<^sub>1 ?f\<^sub>2 ?f\<^sub>3))\<close>  (0)
-  and \<open>separatable_module_zip\<^sub>2\<^sub>1 ?s ?z ?D ?f ?f\<^sub>1 ?f\<^sub>2\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (separatable_module_zip\<^sub>2\<^sub>1 ?s ?z ?D ?f ?f\<^sub>1 ?f\<^sub>2))\<close>              (0)
-
 ,
   \<phi>default_reasoner_group
       \<open>separatable_unzip _ _ _ _ _ _ _ _\<close> : %separatable_unzip  (100)
@@ -878,14 +891,10 @@ declare [[
   and \<open>compositional_mapper _ _ _ _ _ _\<close>: %compositional_mapper (100)
   and \<open>domain_of_inner_map _ _\<close>         : %domain_of_inner_map  (100)
   and \<open>separatable_module_zip _ _ _ _ _  _ _ _ _ _ _ _ _ _\<close>  : %separatable_module_zip (100)
-  and \<open>separatable_module_zip\<^sub>1\<^sub>3 _ _ _ _ _ _ _ _ _\<close> : %separatable_module_zip (100)
-  and \<open>separatable_module_zip\<^sub>3\<^sub>1 _ _ _ _ _ _ _ _ _\<close> : %separatable_module_zip (100)
-  and \<open>separatable_module_zip\<^sub>1\<^sub>2 _ _ _ _ _ _\<close> : %separatable_module_zip (100)
-  and \<open>separatable_module_zip\<^sub>2\<^sub>1 _ _ _ _ _ _\<close> : %separatable_module_zip (100)
-  and \<open>module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close> : %module_mapper (100)
-  and \<open>module_getter\<^sub>3\<^sub>\<epsilon> _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>        : %module_mapper (100)
-  and \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>           : %module_mapper (100)
-  and \<open>module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>           : %module_mapper (100)
+  and \<open>module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close> : %module_mapper (100)
+  and \<open>module_mapper\<^sub>3\<^sub>\<epsilon> _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>        : %module_mapper (100)
+  and \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>           : %module_mapper (100)
+  and \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>           : %module_mapper (100)
 ]]
 
 paragraph \<open>Basic Conversions\<close>
@@ -893,22 +902,63 @@ paragraph \<open>Basic Conversions\<close>
 subparagraph \<open>Module\<close>
 
 lemma [\<phi>reason default %module_mapper_default]:
-  \<open> module_getter\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g
-\<Longrightarrow> module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C True True c \<epsilon> (d+\<epsilon>) d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<close>
-  unfolding module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_getter\<^sub>3\<^sub>\<epsilon>_def
+  \<open> module_mapper\<^sub>3\<^sub>\<epsilon> c \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C True True c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<close>
+  unfolding module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_mapper\<^sub>3\<^sub>\<epsilon>_def
   by simp
 
 lemma [\<phi>reason default %module_mapper_default]:
-  \<open> module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g
-\<Longrightarrow> module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C True False c \<epsilon> \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (c,\<epsilon>) \<Rightarrow> (c,\<epsilon>,undefined)) \<close>
-  unfolding module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R_def
+  \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C True False c \<epsilon> \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (c,\<epsilon>) \<Rightarrow> (c,\<epsilon>,undefined)) \<close>
+  unfolding module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R_def
   by clarsimp fastforce
 
 lemma [\<phi>reason default %module_mapper_default]:
-  \<open> module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g
-\<Longrightarrow> module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C False True c \<epsilon> (d+\<epsilon>) d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (\<epsilon>,d) \<Rightarrow> (undefined,\<epsilon>,d)) \<close>
-  unfolding module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L_def
+  \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C False True c \<epsilon> (d+\<epsilon>) d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (\<epsilon>,d) \<Rightarrow> (undefined,\<epsilon>,d)) \<close>
+  unfolding module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L_def
   by clarsimp
+
+lemma [\<phi>reason default %module_mapper_default]:
+  \<open> module_mapper\<^sub>1\<^sub>3 d a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>3\<^sub>C True True d a da c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g \<close>
+  unfolding module_mapper\<^sub>1\<^sub>3\<^sub>C_def module_mapper\<^sub>1\<^sub>3_def
+  by clarsimp
+
+lemma [\<phi>reason default %module_mapper_default]:
+  \<open> module_mapper\<^sub>1\<^sub>2\<^sub>L d a sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>3\<^sub>C False True d a da c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n
+                    (\<lambda>(x\<^sub>a,x\<^sub>d,x\<^sub>c). D (x\<^sub>a,x\<^sub>d)) f\<^sub>d f\<^sub>a (\<lambda>_. undefined) f (\<lambda>(x\<^sub>a,x\<^sub>d,x\<^sub>c). jn a d (x\<^sub>a,x\<^sub>d)) \<close>
+  unfolding module_mapper\<^sub>1\<^sub>3\<^sub>C_def module_mapper\<^sub>1\<^sub>2\<^sub>L_def
+  by clarsimp
+
+lemma [\<phi>reason default %module_mapper_default]:
+  \<open> module_mapper\<^sub>1\<^sub>2\<^sub>R a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>a f\<^sub>c f
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>3\<^sub>C True False d a da c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n
+                    (\<lambda>(x\<^sub>a,x\<^sub>d,x\<^sub>c). D (x\<^sub>a,x\<^sub>c)) (\<lambda>_. undefined) f\<^sub>a f\<^sub>c f (\<lambda>(x\<^sub>a,x\<^sub>d,x\<^sub>c). jn c a (x\<^sub>c,x\<^sub>a)) \<close>
+  unfolding module_mapper\<^sub>1\<^sub>3\<^sub>C_def module_mapper\<^sub>1\<^sub>2\<^sub>R_def
+  by clarsimp
+
+lemma [\<phi>reason default %module_mapper_default]:
+  \<open> module_mapper\<^sub>3\<^sub>1 c b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>1\<^sub>C True True c b db d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' g \<close>
+  unfolding module_mapper\<^sub>3\<^sub>1_def module_mapper\<^sub>3\<^sub>1\<^sub>C_def
+  by clarsimp
+
+lemma [\<phi>reason default %module_mapper_default]:
+  \<open> module_mapper\<^sub>2\<^sub>1\<^sub>L b d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f'
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>1\<^sub>C False True c b db d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f'
+                    (\<lambda>x. case sp b d x of (x\<^sub>b,x\<^sub>d) \<Rightarrow> (undefined, x\<^sub>b, x\<^sub>d)) \<close>
+  unfolding module_mapper\<^sub>2\<^sub>1\<^sub>L_def module_mapper\<^sub>3\<^sub>1\<^sub>C_def
+  by clarsimp fastforce
+
+lemma [\<phi>reason default %module_mapper_default]:
+  \<open> module_mapper\<^sub>2\<^sub>1\<^sub>R c b sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f'
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>1\<^sub>C True False c b db d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f'
+                    (\<lambda>x. case sp c b x of (x\<^sub>c,x\<^sub>a) \<Rightarrow> (x\<^sub>c, x\<^sub>a, undefined))\<close>
+  unfolding module_mapper\<^sub>3\<^sub>1\<^sub>C_def module_mapper\<^sub>2\<^sub>1\<^sub>R_def
+  by clarsimp fastforce
+
 
 
 paragraph \<open>Instances\<close>
@@ -938,18 +988,6 @@ lemma [\<phi>reason add]:
 lemma [\<phi>reason add]:
   \<open>domain_by_mapper (\<lambda>x. {x}) (\<lambda>f. f) (\<lambda>x. {x}) f UNIV\<close>
   unfolding domain_by_mapper_def
-  by clarsimp
-
-subparagraph \<open>identity module zip \& unzip\<close>
-
-lemma [\<phi>reason add]:
-  \<open>separatable_module_zip\<^sub>2\<^sub>1 (\<lambda>x. (x, x)) fst (\<lambda>(x,y). x = y) f f f\<close>
-  unfolding separatable_module_zip\<^sub>2\<^sub>1_def
-  by clarsimp
-
-lemma [\<phi>reason add]:
-  \<open>separatable_module_zip\<^sub>1\<^sub>2 fst (\<lambda>x. (x, x)) (\<lambda>_. True) f f f \<close>
-  unfolding separatable_module_zip\<^sub>1\<^sub>2_def
   by clarsimp
 
 subparagraph \<open>Conditioned\<close>
@@ -5238,23 +5276,24 @@ lemma SE_Module_SDistr_da_bc_ToA_mapper
 \<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> Ds b \<and> Ds c \<and> Ds' b \<and> Ds' c \<and> Ds' d \<and> Ds' a
+\<comment> \<open>TODO: \<open>module_mapper\<^sub>2\<^sub>2 True d a b c uz' z' uz z Dx' Dx\<^sub>u' Dx Dx\<^sub>u D\<^sub>M f\<^sub>c f\<^sub>b f\<^sub>a f\<^sub>d\<close>\<close>
 
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>(x\<^sub>a,w,x\<^sub>d)\<in>D. let (y\<^sub>c, y) = uz c b (z a d (x\<^sub>a,x\<^sub>d))
-                           in D\<^sub>s\<^sub>z (x\<^sub>a,x\<^sub>d) (f\<^sub>c y\<^sub>c, f y) \<and>
+                           in D\<^sub>s\<^sub>z (x\<^sub>a,x\<^sub>d) (f\<^sub>c y\<^sub>c, f\<^sub>b y) \<and>
                               Dx\<^sub>z a d (x\<^sub>a,x\<^sub>d) \<and>
                               Dx\<^sub>u c b (z a d (x\<^sub>a,x\<^sub>d)) \<and>
-                              Dx\<^sub>z' c b (f\<^sub>c y\<^sub>c, f y) \<and>
-                              Dx\<^sub>u' a d (z' c b (f\<^sub>c y\<^sub>c, f y)) )
+                              Dx\<^sub>z' c b (f\<^sub>c y\<^sub>c, f\<^sub>b y) \<and>
+                              Dx\<^sub>u' a d (z' c b (f\<^sub>c y\<^sub>c, f\<^sub>b y)) )
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1' b \<^emph>[C\<^sub>W] W'
+    \<o>\<v>\<e>\<r> f\<^sub>b \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1' b \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
       \<i>\<n> (\<lambda>(x\<^sub>a,w,x\<^sub>d). case uz c b (z a d (x\<^sub>a,x\<^sub>d)) of (x\<^sub>c,x\<^sub>b) \<Rightarrow> (x\<^sub>b,w)) ` D
 
-\<Longrightarrow> separatable_module_zip True d a b c uz' z' uz z D\<^sub>s\<^sub>z f\<^sub>c f f' f\<^sub>d @action \<A>_template_reason undefined
+\<Longrightarrow> separatable_module_zip True d a b c uz' z' uz z D\<^sub>s\<^sub>z f\<^sub>c f\<^sub>b f\<^sub>a f\<^sub>d @action \<A>_template_reason undefined
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r \<otimes>\<^sub>f f\<^sub>c) : F\<^sub>3 b \<^emph>[True] (R [C\<^sub>R]\<^emph> F\<^sub>1 c) \<mapsto> F\<^sub>3' b \<^emph>[True] (R' [C\<^sub>R]\<^emph> F\<^sub>1' c)
-    \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[True] (W [C\<^sub>W]\<^emph> F\<^sub>1 d) \<mapsto> F\<^sub>1' a \<^emph>[True] (W' [C\<^sub>W]\<^emph> F\<^sub>1' d)
+    \<o>\<v>\<e>\<r> f\<^sub>a \<otimes>\<^sub>f w \<otimes>\<^sub>f f\<^sub>d : F\<^sub>1 a \<^emph>[True] (W [C\<^sub>W]\<^emph> F\<^sub>1 d) \<mapsto> F\<^sub>1' a \<^emph>[True] (W' [C\<^sub>W]\<^emph> F\<^sub>1' d)
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> SIMP (\<lambda>(x\<^sub>a,w,x\<^sub>d). let (x\<^sub>c,x\<^sub>b) = uz c b (z a d (x\<^sub>a,x\<^sub>d))
                                  ; (y,r) = h (x\<^sub>b,w)
                                 in (y,r,x\<^sub>c))
@@ -5306,7 +5345,7 @@ lemma SE_Module_SDistr_da_bc_ToA_mapper
     apply (rule conjunctionI, rule, unfold Premise_def conj_imp_eq_imp_imp, rule ballI)
     subgoal premises prems for x proof -
       show ?thesis
-        by (insert ToA_Mapper_f_expn_rev[OF \<open>\<m>\<a>\<p> g \<otimes>\<^sub>f r : _ \<mapsto> _ \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> _\<close>,
+        by (insert ToA_Mapper_f_expn_rev[OF \<open>\<m>\<a>\<p> g \<otimes>\<^sub>f r : _ \<mapsto> _ \<o>\<v>\<e>\<r> f\<^sub>b \<otimes>\<^sub>f w : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> _\<close>,
                                      simplified, THEN bspec[OF _ \<open>x \<in> D\<close>]]
                       \<open>separatable_module_zip _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>
                             [unfolded separatable_module_zip_def, THEN spec[where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> (x\<^sub>a,x\<^sub>d)\<close>]],
@@ -5431,7 +5470,7 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>c \<longrightarrow> Ds c \<and> Ds db \<and> Ds' db \<and> Ds' c) \<and>
                   (C\<^sub>d \<longrightarrow> Ds d \<and> Ds b \<and> Ds' d \<and> Ds' b )
-\<Longrightarrow> NO_SIMP (module_getter\<^sub>3\<^sub>1\<^sub>C C\<^sub>c C\<^sub>d c b db d uz z Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f\<^sub>d f' getter)
+\<Longrightarrow> NO_SIMP (module_mapper\<^sub>3\<^sub>1\<^sub>C C\<^sub>c C\<^sub>d c b db d uz z Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f\<^sub>d f' getter)
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 b \<^emph>[C\<^sub>W] W'
@@ -5453,7 +5492,7 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
-  unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def module_getter\<^sub>3\<^sub>1\<^sub>C_def
+  unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def module_mapper\<^sub>3\<^sub>1\<^sub>C_def
             Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
@@ -5508,7 +5547,7 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
 
 
 lemma SE_Module_SDistr_a_db_ToA_mapper
-      [\<phi>reason_template name F\<^sub>1.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b []]:
+      [\<phi>reason_template %\<phi>mapToA_derived_module name F\<^sub>1.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> equation\<^sub>2\<^sub>1 d b a)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
@@ -5516,7 +5555,7 @@ lemma SE_Module_SDistr_a_db_ToA_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds' Dx\<^sub>z z
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> Ds' d \<and> Ds' b
-\<Longrightarrow> module_getter\<^sub>2\<^sub>1\<^sub>L b d uz z Dx Dx\<^sub>z D\<^sub>G f f\<^sub>d f'
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>1\<^sub>L b d uz z Dx Dx\<^sub>z D\<^sub>G f f\<^sub>d f'
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R\<^sub>G \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 b \<^emph>[C\<^sub>W] W'
@@ -5536,7 +5575,7 @@ lemma SE_Module_SDistr_a_db_ToA_mapper
       \<i>\<n> D \<close>
   for F\<^sub>1 :: \<open>'s::partial_semigroup_add \<Rightarrow> ('c::sep_semigroup, 'a) \<phi>\<close>
 
-  unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def module_getter\<^sub>2\<^sub>1\<^sub>L_def
+  unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def module_mapper\<^sub>2\<^sub>1\<^sub>L_def
             Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
@@ -5601,7 +5640,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_cond_ToA_mapper
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>c \<longrightarrow> Ds c \<and> Ds d\<epsilon> \<and> Ds' d\<epsilon> \<and> Ds' c) \<and>
                   (C\<^sub>d \<longrightarrow> Ds d \<and> Ds \<epsilon> \<and> Ds' d \<and> Ds' \<epsilon>)
-\<Longrightarrow> NO_SIMP (module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<epsilon> d\<epsilon> d uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f\<^sub>d f' getter)
+\<Longrightarrow> NO_SIMP (module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<epsilon> d\<epsilon> d uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f\<^sub>d f' getter)
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> T' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : U \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W'
@@ -5624,7 +5663,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_cond_ToA_mapper
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
-            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_getter\<^sub>3\<^sub>\<epsilon>\<^sub>C_def
+            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
 
@@ -5700,7 +5739,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_ToA_mapper
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds c \<and> Ds (d + \<epsilon>) \<and> d + \<epsilon> ##\<^sub>+ c \<and> Ds' (d + \<epsilon>) \<and> Ds' c \<and>
                   Ds d \<and> Ds \<epsilon> \<and> Ds' d \<and> Ds' \<epsilon> \<and> d ##\<^sub>+ \<epsilon>
-\<Longrightarrow> module_getter\<^sub>3\<^sub>\<epsilon> c \<epsilon> d uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f\<^sub>d f' getter @action \<A>_template_reason undefined
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon> c \<epsilon> d uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f\<^sub>d f' getter @action \<A>_template_reason undefined
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> T' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : U \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W'
@@ -5722,7 +5761,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_ToA_mapper
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
-            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_getter\<^sub>3\<^sub>\<epsilon>_def
+            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_mapper\<^sub>3\<^sub>\<epsilon>_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
 
@@ -5813,7 +5852,7 @@ lemma SE_Module_SDistr_a_\<epsilon>c_ToA_mapper
 \<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds c \<and> Ds \<epsilon> \<and> \<epsilon> ##\<^sub>+ c \<and> Ds' \<epsilon> \<and> Ds' c
-\<Longrightarrow> module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f' getter @action \<A>_template_reason None
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f\<^sub>c f f' getter @action \<A>_template_reason None
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> T' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : U \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W'
@@ -5835,7 +5874,7 @@ lemma SE_Module_SDistr_a_\<epsilon>c_ToA_mapper
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
-            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>R_def
+            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
 
@@ -5903,7 +5942,7 @@ lemma SE_Module_SDistr_a_\<epsilon>c_ToA_mapper
 
 
 lemma SE_Module_SDistr_a_d\<epsilon>_ToA_mapper
-      [\<phi>reason_template name: F\<^sub>1.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon> []]:
+      [\<phi>reason_template %\<phi>mapToA_derived_module name: F\<^sub>1.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> equation\<^sub>2\<^sub>1 d \<epsilon> a)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
@@ -5912,7 +5951,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>_ToA_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F\<^sub>1 U' \<epsilon> D\<^sub>\<epsilon>\<^sub>I I\<^sub>\<epsilon> Any_P\<^sub>I
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds \<epsilon> \<and> Ds' d \<and> Ds' \<epsilon>
-\<Longrightarrow> module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f f\<^sub>d f' getter
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d uz z E\<^sub>\<epsilon> I\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I Dx Dx\<^sub>z D\<^sub>G f f\<^sub>d f' getter
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> T' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : U \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W'
@@ -5934,7 +5973,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>_ToA_mapper
   for F\<^sub>1 :: \<open>'s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup, 'a) \<phi>\<close>
 
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
-            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_getter\<^sub>2\<^sub>\<epsilon>\<^sub>L_def
+            Type_Variant_of_the_Same_Scalar_Mul\<^sub>0_def module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
 
@@ -5990,8 +6029,8 @@ lemma SE_Module_SDistr_a_d\<epsilon>_ToA_mapper
 
 
 
-lemma SE_Module_SDistr_dac_b_ToA_mapper_cond
-      [\<phi>reason_template name: F\<^sub>1.module_mapper\<^sub>d\<^sub>a\<^sub>c\<^sub>_\<^sub>b_cond[]]:
+lemma SE_Module_SDistr_dac_b_ToA_mapper
+      [\<phi>reason_template %\<phi>mapToA_derived_module name: F\<^sub>1.module_mapper\<^sub>d\<^sub>a\<^sub>c\<^sub>_\<^sub>b]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c d a da c b)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
@@ -6001,7 +6040,7 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper_cond
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds a \<and> Ds' d \<and> Ds' a) \<and>
                   (C\<^sub>c \<longrightarrow> Ds da \<and> Ds c \<and> Ds' da \<and> Ds' c)
-\<Longrightarrow> module_getter\<^sub>1\<^sub>3\<^sub>C C\<^sub>c C\<^sub>d d a da c uz z Dx\<^sub>S Dx D\<^sub>G f\<^sub>d f\<^sub>a f\<^sub>c f getter
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>3\<^sub>C C\<^sub>c C\<^sub>d d a da c uz z Dx\<^sub>S Dx D\<^sub>G f\<^sub>d f\<^sub>a f\<^sub>c f getter
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G \<mapsto> F\<^sub>1 b \<^emph>[C\<^sub>W\<^sub>G] W\<^sub>G'
@@ -6030,7 +6069,7 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper_cond
          and MG and Tr[] and D\<^sub>G[] and [] and [] and Dom
     from D\<^sub>G[THEN bspec[OF _ Dom]]
     have D\<^sub>G': \<open>D\<^sub>G (case x of (x\<^sub>a, x\<^sub>d, x\<^sub>c, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d, x\<^sub>c))\<close> by (cases x; clarsimp)
-    note t1[useful] = MG[unfolded module_getter\<^sub>1\<^sub>3\<^sub>C_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
+    note t1[useful] = MG[unfolded module_mapper\<^sub>1\<^sub>3\<^sub>C_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_RCond_\<phi>Some[OF SZ, where s=d and t=a and r=da and C=C\<^sub>d
                                                                   and x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (x\<^sub>a, x\<^sub>d)\<close>]
@@ -6054,7 +6093,7 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper_cond
 
     from D\<^sub>G[THEN bspec[OF _ Dom]]
     have D\<^sub>G': \<open>D\<^sub>G (case y of (x\<^sub>a, x\<^sub>d, x\<^sub>c, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d, x\<^sub>c))\<close> by (cases x; clarsimp)
-    note t1[useful] = MG[unfolded module_getter\<^sub>1\<^sub>3\<^sub>C_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
+    note t1[useful] = MG[unfolded module_mapper\<^sub>1\<^sub>3\<^sub>C_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
     apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
     certified by (insert t1 Dom, clarsimp split: prod.split simp: image_iff, force) ;;
@@ -6068,7 +6107,7 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper_cond
                  clarsimp split: prod.split simp: image_iff)
 
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
-    apply (rule conjunctionI, rule, rule, unfold Premise_def conj_imp_eq_imp_imp module_getter\<^sub>1\<^sub>3\<^sub>C_def)
+    apply (rule conjunctionI, rule, rule, unfold Premise_def conj_imp_eq_imp_imp module_mapper\<^sub>1\<^sub>3\<^sub>C_def)
   subgoal premises prems for x proof -
     from \<open>\<forall>(x\<^sub>a, x\<^sub>d, x\<^sub>c, w)\<in>D. D\<^sub>G (x\<^sub>a, x\<^sub>d, x\<^sub>c)\<close>[THEN bspec[OF _ \<open>x \<in> D\<close>]]
     have D\<^sub>G': \<open>D\<^sub>G (case x of (x\<^sub>a, x\<^sub>d, x\<^sub>c, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d, x\<^sub>c))\<close> by (cases x; clarsimp)
@@ -6358,7 +6397,7 @@ lemma SE_Module_SDistr_da_b_ToA_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>S F\<^sub>1 Ds' Dx\<^sub>S uz
 
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> Ds' d \<and> Ds' a
-\<Longrightarrow> module_getter\<^sub>1\<^sub>2\<^sub>L d a uz z Dx\<^sub>S Dx D\<^sub>G f\<^sub>d f\<^sub>a f
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>2\<^sub>L d a uz z Dx\<^sub>S Dx D\<^sub>G f\<^sub>d f\<^sub>a f
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F\<^sub>3 b \<^emph>[C\<^sub>R] R \<mapsto> F\<^sub>3' b \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F\<^sub>1 b \<^emph>[C\<^sub>W] W \<mapsto> F\<^sub>1 b \<^emph>[C\<^sub>W] W'
@@ -6386,7 +6425,7 @@ lemma SE_Module_SDistr_da_b_ToA_mapper
 
     from D\<^sub>G[THEN bspec[OF _ Dom]]
     have D\<^sub>G': \<open>D\<^sub>G (case x of (x\<^sub>a, x\<^sub>d, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d))\<close> by (cases x; clarsimp)
-    note t1[useful] = MG[unfolded module_getter\<^sub>1\<^sub>2\<^sub>L_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
+    note t1[useful] = MG[unfolded module_mapper\<^sub>1\<^sub>2\<^sub>L_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[OF SZ, where s=d and t=a
                                                             and x=\<open>case x of (x\<^sub>a,x\<^sub>d,w) \<Rightarrow> (x\<^sub>a, x\<^sub>d)\<close>]
@@ -6406,7 +6445,7 @@ lemma SE_Module_SDistr_da_b_ToA_mapper
 
     from D\<^sub>G[THEN bspec[OF _ Dom]]
     have D\<^sub>G': \<open>D\<^sub>G (case y of (x\<^sub>a, x\<^sub>d, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d))\<close> by (cases x; clarsimp)
-    note t1[useful] = MG[unfolded module_getter\<^sub>1\<^sub>2\<^sub>L_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
+    note t1[useful] = MG[unfolded module_mapper\<^sub>1\<^sub>2\<^sub>L_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
     apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
     certified by (insert t1 Dom, clarsimp split: prod.split simp: Let_def image_iff, force) ;;
@@ -6421,7 +6460,7 @@ lemma SE_Module_SDistr_da_b_ToA_mapper
 
       from \<open>\<forall>(x\<^sub>a, x\<^sub>d, w)\<in>D. D\<^sub>G (x\<^sub>a, x\<^sub>d)\<close>[THEN bspec[OF _ \<open>x \<in> D\<close>]]
       have D\<^sub>G': \<open>D\<^sub>G (case x of (x\<^sub>a, x\<^sub>d, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d))\<close> by (cases x; clarsimp)
-      note t1 = \<open>module_getter\<^sub>1\<^sub>2\<^sub>L d a uz z Dx\<^sub>S Dx D\<^sub>G f\<^sub>d f\<^sub>a f\<close>[unfolded module_getter\<^sub>1\<^sub>2\<^sub>L_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF \<open>d ##\<^sub>+ a\<close>]
+      note t1 = \<open>module_mapper\<^sub>1\<^sub>2\<^sub>L d a uz z Dx\<^sub>S Dx D\<^sub>G f\<^sub>d f\<^sub>a f\<close>[unfolded module_mapper\<^sub>1\<^sub>2\<^sub>L_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF \<open>d ##\<^sub>+ a\<close>]
 
       show ?thesis
         by (insert ToA_Mapper_f_expn_rev[OF \<open>\<m>\<a>\<p> g \<otimes>\<^sub>f r : _ \<mapsto> _ \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> _\<close>,
