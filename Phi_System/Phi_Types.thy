@@ -2499,6 +2499,12 @@ ML \<open>\<^simproc>\<open>defined_all\<close>\<close>
 thm \<phi>Share.\<S>\<^sub>E[where g=\<open>\<lambda>x. x\<close> and f=\<open>\<lambda>s _ _. s\<close>, unfolded Ball_def, simplified]
 thm \<phi>Share.\<S>\<^sub>I
 
+text \<open>TODO:
+
+The \<open>Functional\<close> condition in \<open>Semimodule_SDistr_Homo\<^sub>S\<close> is not necessary when the sep disj \<open>a ## b\<close>
+can constrain \<open>a = b\<close>.
+\<close>
+
 (*
 lemma
   \<open> x = y \<and> (P \<and> y = x) \<and> P \<longleftrightarrow> x = y \<and> P \<close>
@@ -2941,9 +2947,8 @@ thm \<phi>Mul_Quant_Tree.ToA_mapper
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c_cond
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b[simplified]
-thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b\<^sub>c
+thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>c\<^sub>_\<^sub>b
-thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[simplified]
 

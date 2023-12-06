@@ -1324,6 +1324,7 @@ lemma [\<phi>reason %ToA_splitting]:
 \<Longrightarrow> R * (A + B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P1 \<or> P2\<close>
   by (simp add: Transformation_def distrib_left) blast
 
+
 lemma [\<phi>reason %ToA_splitting+10]:
   \<open> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] RB \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] RA \<w>\<i>\<t>\<h> P2
@@ -2256,6 +2257,72 @@ lemma [\<phi>inhabitance_rule 1000]:
 \<Longrightarrow> AllSet S \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<close>
   unfolding Action_Tag_def
   by clarsimp blast
+
+lemma
+  \<open> (\<And>a. A a * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B * R a)
+\<Longrightarrow> (ExSet A) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B * (ExSet R) \<close>
+  unfolding Transformation_def
+  apply clarsimp
+  by blast
+
+lemma
+  \<open> (\<And>a. A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B a)
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet B \<close>
+unfolding Transformation_def
+  apply clarsimp
+
+lemma
+  \<open> (\<And>a. A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B a * R)
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet B * R \<close>
+  unfolding Transformation_def atomize_all
+  apply clarsimp
+  apply (fold ex_simps(6), unfold choice_iff)
+  apply clarify
+
+  subgoal premises prems for v
+    thm prems
+    apply (insert prems(1)[THEN spec, THEN mp, OF prems(2)])
+
+lemma
+  \<open> AllSet A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<forall>\<^sub>B\<^sub>I x. A x * B) \<close>
+  unfolding Transformation_def
+  apply (clarsimp, rule)
+  by blast
+
+lemma
+  \<open> (\<forall>\<^sub>B\<^sub>I x. A x * B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet A * B \<close>
+  for B :: \<open>'a::{total_sep_disj,sep_magma} set\<close>
+  unfolding Transformation_def
+  apply (clarsimp)
+
+lemma
+  \<open> (\<And>a. W a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B a)
+\<Longrightarrow> AllSet W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet B \<close>
+  unfolding Transformation_def
+  apply clarsimp
+
+lemma
+  \<open> (\<And>a. A * W a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B a * R)
+\<Longrightarrow> A * AllSet W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet B * R \<close>
+  unfolding Transformation_def
+  apply clarsimp
+  subgoal premises prems for u v
+    thm prems(1)
+    thm prems
+    apply (rule exI[where x=u], rule exI[where x=v], simp, rule)
+    prefer 2
+
+lemma
+  \<open> (\<forall>\<^sub>B\<^sub>I x. A x * B x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<forall>\<^sub>B\<^sub>I x. A x) * (\<exists>* x. B x)\<close>
+  unfolding Transformation_def
+  apply (clarsimp simp: choice_iff)
+  subgoal for v f g
+
+lemma
+  \<open> (\<forall>\<^sub>B\<^sub>I x. A x) * (\<forall>\<^sub>B\<^sub>I x. B x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<forall>\<^sub>B\<^sub>I x. A x * B x)\<close>
+  unfolding Transformation_def
+  apply (clarsimp simp: choice_iff)
+  by force
 
 
 subsection \<open>Supplementary Connective\<close>

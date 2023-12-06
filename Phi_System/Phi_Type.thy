@@ -976,6 +976,18 @@ lemma [\<phi>reason default %module_mapper_syserr]:
   by blast
 
 
+text \<open>
+
+every stepwise refinement is made with substantial program operations.
+
+\<open>Par \<Longrightarrow>\<^sub>\<alpha> Par'\<close>
+\<open>P(Par) \<Longrightarrow>\<^sub>\<delta>\<^sub>(\<^sub>\<alpha>\<^sub>) P(Par') \<close>
+
+They would need 
+
+\<close>
+
+
 subparagraph \<open>Module Conversions\<close>
 
 lemma [\<phi>reason default %module_mapper_default]:
