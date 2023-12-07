@@ -190,8 +190,9 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework true (NONE,
                             Var (("F\<^sub>t", idx), st --> mk_phi_type_ty(T_model_ty, x_ele_ty) --> mk_phi_type_ty(ct, at)))
             
             val as_t = TVar (("a\<^sub>s\<^sub>_\<^sub>t", idx), \<^sort>\<open>type\<close>)
-         in (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_Assoc s_ty T_model_ty model_ty x_ele_ty x_ty ss at ct as_t st\<close>
-                $ (if is_intro then \<^Const>\<open>True\<close> else \<^Const>\<open>False\<close>)
+         in (\<^Const>\<open>Trueprop\<close> $ (
+                  (if is_intro then \<^Const>\<open>Guess_Scalar_Assoc\<^sub>I s_ty T_model_ty model_ty x_ele_ty x_ty ss at ct as_t st\<close>
+                               else \<^Const>\<open>Guess_Scalar_Assoc\<^sub>E s_ty T_model_ty model_ty x_ele_ty x_ty ss at ct as_t st\<close>)
                 $ \<^Const>\<open>Pure.type s_ty\<close>
                 $ \<^Const>\<open>Pure.type T_model_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
@@ -200,15 +201,16 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework true (NONE,
                 $ Fs $ Ft $ F_term $ eta_F_term $ T_term
                 $ Var(("Ds",0), ss --> HOLogic.boolT)
                 $ Var(("Dt",0), st --> HOLogic.boolT)
-                $ Var(("Dx",0), ss --> st --> as_t --> HOLogic.boolT)
+                $ Var(("Dx",0), ss --> st --> (if is_intro then as_t --> HOLogic.boolT else x_ty --> HOLogic.boolT))
                 $ Var(("smul",0), ss --> st --> s_ty)
-                $ Var(("f", 0), ss --> st --> as_t --> x_ty)
+                $ Var(("f", 0), ss --> st --> (if is_intro then as_t --> x_ty else x_ty --> as_t))
                 $ Var(("ants", 0), HOLogic.boolT)
                 $ Var(("conds", 0), HOLogic.boolT)),
 
-             fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_Assoc*) $ _ $ _ $ _ $ _ $ _ $ _
+             fn _ (*Trueprop*) $ (Const _ (*Guess_Scalar_Assoc*) $ _ $ _ $ _ $ _ $ _
                     $ Fs $ Ft $ Fc $ _ $ T $ Ds $ Dt $ Dx $ smul $ f $ ants $ conds) =>
-                 let val \<^Type>\<open>fun ss' \<^Type>\<open>fun st' \<^Type>\<open>fun as_t' ast'\<close>\<close>\<close> = Term.fastype_of f
+                 let val \<^Type>\<open>fun ss' \<^Type>\<open>fun st' \<^Type>\<open>fun t1 t2\<close>\<close>\<close> = Term.fastype_of f
+                     val (as_t', ast') = if is_intro then (t1, t2) else (t2, t1)
                      val \<^Type>\<open>fun _ \<^Type>\<open>fun \<^Type>\<open>fun a' \<open>Type(_, [c'])\<close>\<close> \<^Type>\<open>fun at' \<open>Type (_, [ct'])\<close>\<close>\<close>\<close> = Term.fastype_of Ft
                      val \<^Type>\<open>fun sc' \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<open>Type(_, [cst'])\<close>\<close>\<close>\<close> = Term.fastype_of Fc
                      val head = if is_intro then \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>I ss' at' ct' as_t' cst' st' a' c' sc' ast'\<close>

@@ -1348,12 +1348,12 @@ definition Semimodule_Scalar_Assoc\<^sub>E :: \<open> ('s\<^sub>s \<Rightarrow> 
                                      \<Rightarrow> ('c,'a) \<phi>
                                      \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
                                      \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
-                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t \<Rightarrow> bool)
                                      \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 's\<^sub>c)
-                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t)
                                      \<Rightarrow> bool\<close>
   where \<open>Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
-      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T)))\<close>
+      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fs s (Ft t T)))\<close>
 
 text \<open>The extended scalar association operator for Finite Multiplicative Quantification is just uncurrying.\<close>
 
@@ -2080,7 +2080,7 @@ lemma apply_Semimodule_SAssoc\<^sub>I:
 lemma apply_Semimodule_SAssoc\<^sub>E:
   \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Dt t \<and> Dx s t x
-\<Longrightarrow> f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T) \<close>
+\<Longrightarrow> x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fs s (Ft t T) \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def
   by clarsimp
 
@@ -3986,6 +3986,7 @@ lemma scalar_assoc_template[\<phi>reason_template name Fc.scalar_assoc [assertio
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Semimodule_Scalar_Assoc\<^sub>I_def
   by (rule \<phi>Type_eqI_Tr; simp)
 
+(* XXX
 lemma [\<phi>reason_template name Fc.scalar_functor []]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs' Ft' Fc' U Ds' Dt' Dx' smul' f'
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
@@ -4010,6 +4011,7 @@ lemma [\<phi>reason_template name Fc.scalar_functor []]:
             Transformation_def Premise_def Functional_Transformation_Functor_def
             meta_Ball_def
   by clarsimp metis
+*)
 
 
 
@@ -4032,16 +4034,16 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fc (smul s t) T \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T) \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fc (smul s t) T \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fs s (Ft t T) \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def NO_SIMP_def \<r>Guard_def
   using mk_intro_transformation by blast
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fc (smul s t) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fc (smul s t) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fs s (Ft t T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def NO_SIMP_def \<r>Guard_def
   apply (cases C; simp)
   using transformation_left_frame mk_intro_transformation apply blast
@@ -7825,8 +7827,7 @@ definition Guess_Scalar_One\<^sub>E :: \<open> 's itself \<Rightarrow> 'c\<^sub>
                               \<Rightarrow> bool \<close>
   where \<open>Guess_Scalar_One\<^sub>E _ _ _ _ _ F unfolded_F T T\<^sub>1 one Dx f P ants conds \<equiv> True\<close>
 
-definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for \<open>Scalar_Assoc\<^sub>I\<close>, False for \<open>Scalar_Assoc\<^sub>E\<close>\<close>
-                                 \<Rightarrow> 's\<^sub>c itself \<Rightarrow> 'c itself \<Rightarrow> 'c\<^sub>s\<^sub>t itself \<Rightarrow> 'a itself \<Rightarrow> 'a\<^sub>s\<^sub>t itself
+definition Guess_Scalar_Assoc\<^sub>I :: \<open> 's\<^sub>c itself \<Rightarrow> 'c itself \<Rightarrow> 'c\<^sub>s\<^sub>t itself \<Rightarrow> 'a itself \<Rightarrow> 'a\<^sub>s\<^sub>t itself
                                  \<Rightarrow> ('s\<^sub>s \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi> \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>_\<^sub>t) \<phi>)
                                  \<Rightarrow> ('s\<^sub>t \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi>)
                                  \<Rightarrow> ('s\<^sub>c \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>t) \<phi>)
@@ -7839,7 +7840,23 @@ definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for \<open>
                                  \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
                                  \<Rightarrow> bool \<Rightarrow> bool
                                  \<Rightarrow> bool\<close>
-  where \<open>Guess_Scalar_Assoc _ _ _ _ _ _ Fs Ft Fc unfolded_Fc T Ds Dt Dx smul f ants conds \<equiv> True\<close>
+  where \<open>Guess_Scalar_Assoc\<^sub>I _ _ _ _ _ Fs Ft Fc unfolded_Fc T Ds Dt Dx smul f ants conds \<equiv> True\<close>
+
+definition Guess_Scalar_Assoc\<^sub>E :: \<open> 's\<^sub>c itself \<Rightarrow> 'c itself \<Rightarrow> 'c\<^sub>s\<^sub>t itself \<Rightarrow> 'a itself \<Rightarrow> 'a\<^sub>s\<^sub>t itself
+                                 \<Rightarrow> ('s\<^sub>s \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi> \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>_\<^sub>t) \<phi>)
+                                 \<Rightarrow> ('s\<^sub>t \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c\<^sub>t,'a\<^sub>t) \<phi>)
+                                 \<Rightarrow> ('s\<^sub>c \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>t) \<phi>)
+                                 \<Rightarrow> ('s\<^sub>c \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c\<^sub>s\<^sub>t,'a\<^sub>s\<^sub>t) \<phi>)
+                                 \<Rightarrow> ('c,'a) \<phi>
+                                 \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
+                                 \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
+                                 \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t \<Rightarrow> bool)
+                                 \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 's\<^sub>c)
+                                 \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t)
+                                 \<Rightarrow> bool \<Rightarrow> bool
+                                 \<Rightarrow> bool\<close>
+  where \<open>Guess_Scalar_Assoc\<^sub>E _ _ _ _ _ Fs Ft Fc unfolded_Fc T Ds Dt Dx smul f ants conds \<equiv> True\<close>
+
 
 definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> ('c::sep_magma) itself \<Rightarrow> 'a itself
                                       \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
@@ -7883,8 +7900,10 @@ declare [[ \<phi>reason_default_pattern
       \<open>Guess_Zip_of_Semimodule ?S ?C ?A _ ?def _ _ _ _ _\<close>   (100)
   and \<open>Guess_Unzip_of_Semimodule ?S ?C ?A _ ?def _ _ _ _ _\<close> \<Rightarrow>
       \<open>Guess_Unzip_of_Semimodule ?S ?C ?A _ ?def _ _ _ _ _\<close>   (100)
-  and \<open>Guess_Scalar_Assoc ?mode ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close> \<Rightarrow>
-      \<open>Guess_Scalar_Assoc ?mode ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close>   (100)
+  and \<open>Guess_Scalar_Assoc\<^sub>I ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Scalar_Assoc\<^sub>I ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close>   (100)
+  and \<open>Guess_Scalar_Assoc\<^sub>E ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Scalar_Assoc\<^sub>E ?S ?C\<^sub>T ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close>   (100)
 ]]
 
 text \<open>Guessing the zip operation of a semimodule is far beyond what can be inferred from BNF,
@@ -7911,8 +7930,13 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_Fc s T x) : (x \<Ztypecolon> Fc s T) )
-\<Longrightarrow> Guess_Scalar_Assoc flag TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds
-\<Longrightarrow> Guess_Scalar_Assoc flag TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds\<close> .
+\<Longrightarrow> Guess_Scalar_Assoc\<^sub>I TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds
+\<Longrightarrow> Guess_Scalar_Assoc\<^sub>I TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_Fc s T x) : (x \<Ztypecolon> Fc s T) )
+\<Longrightarrow> Guess_Scalar_Assoc\<^sub>E TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds
+\<Longrightarrow> Guess_Scalar_Assoc\<^sub>E TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> (\<And>s x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s x) : (x \<Ztypecolon> F s) )
@@ -7983,39 +8007,54 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
 paragraph \<open>Guess_Scalar_Assoc\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_default[bottom]]:
-  \<open>Guess_Scalar_Assoc both_modes TYPE('s::times) TYPE('c) TYPE('c) TYPE('a) TYPE('a)
+  \<open>Guess_Scalar_Assoc\<^sub>I TYPE('s::times) TYPE('c) TYPE('c) TYPE('a) TYPE('a)
                       F F F whatever T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
-  unfolding Guess_Scalar_Assoc_def ..
+  unfolding Guess_Scalar_Assoc\<^sub>I_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Scalar_Assoc both_mode TYPE(rat) TYPE('c::share) TYPE('c) TYPE('a) TYPE('a)
+  \<open>Guess_Scalar_Assoc\<^sub>I TYPE(rat) TYPE('c::share) TYPE('c) TYPE('a) TYPE('a)
                       F F F whatever T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
-  unfolding Guess_Scalar_Assoc_def ..
+  unfolding Guess_Scalar_Assoc\<^sub>I_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default+1]:
-  \<open>Guess_Scalar_Assoc both_mode TYPE(rat) TYPE('c::share_one) TYPE('c) TYPE('a) TYPE('a)
+  \<open>Guess_Scalar_Assoc\<^sub>I TYPE(rat) TYPE('c::share_one) TYPE('c) TYPE('a) TYPE('a)
                       F F F whatever T ((\<le>) 0) ((\<le>) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
-  unfolding Guess_Scalar_Assoc_def ..
+  unfolding Guess_Scalar_Assoc\<^sub>I_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default[bottom]]:
+  \<open>Guess_Scalar_Assoc\<^sub>E TYPE('s::times) TYPE('c) TYPE('c) TYPE('a) TYPE('a)
+                      F F F whatever T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
+  unfolding Guess_Scalar_Assoc\<^sub>E_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Scalar_Assoc\<^sub>E TYPE(rat) TYPE('c::share) TYPE('c) TYPE('a) TYPE('a)
+                      F F F whatever T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
+  unfolding Guess_Scalar_Assoc\<^sub>E_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default+1]:
+  \<open>Guess_Scalar_Assoc\<^sub>E TYPE(rat) TYPE('c::share_one) TYPE('c) TYPE('a) TYPE('a)
+                      F F F whatever T ((\<le>) 0) ((\<le>) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
+  unfolding Guess_Scalar_Assoc\<^sub>E_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default for
-        \<open>Guess_Scalar_Assoc True TYPE(_ set) TYPE(_) TYPE(_) TYPE(_) TYPE(_) _ _ _ (\<lambda>s T x. \<big_ast> (?A s T x) s) _
+        \<open>Guess_Scalar_Assoc\<^sub>I TYPE(_ set) TYPE(_) TYPE(_) TYPE(_) TYPE(_) _ _ _ (\<lambda>s T x. \<big_ast> (?A s T x) s) _
                             _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Scalar_Mul Fc Fs
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul Fc Ft
-\<Longrightarrow> Guess_Scalar_Assoc True TYPE(('i \<times> 'j) set) TYPE('c::sep_algebra) TYPE('c) TYPE('a) TYPE('i \<times> 'j \<Rightarrow> 'a)
+\<Longrightarrow> Guess_Scalar_Assoc\<^sub>I TYPE(('i \<times> 'j) set) TYPE('c::sep_algebra) TYPE('c) TYPE('a) TYPE('i \<times> 'j \<Rightarrow> 'a)
                       Fs Ft Fc (\<lambda>s T x. \<big_ast> (A s T x) s) T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True)
                       (\<times>) (\<lambda>_ _. case_prod) True True \<close>
-  unfolding Guess_Scalar_Assoc_def ..
+  unfolding Guess_Scalar_Assoc\<^sub>I_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default for
-        \<open>Guess_Scalar_Assoc False TYPE(_ set) TYPE(_) TYPE(_) TYPE(_) TYPE(_) _ _ _ (\<lambda>s T x. \<big_ast> (?A s T x) s) _
+        \<open>Guess_Scalar_Assoc\<^sub>E TYPE(_ set) TYPE(_) TYPE(_) TYPE(_) TYPE(_) _ _ _ (\<lambda>s T x. \<big_ast> (?A s T x) s) _
                             _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Scalar_Mul Fc Fs
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul Fc Ft
-\<Longrightarrow> Guess_Scalar_Assoc False TYPE(('i \<times> 'j) set) TYPE('c::sep_algebra) TYPE('c) TYPE('a) TYPE('i \<times> 'j \<Rightarrow> 'a)
+\<Longrightarrow> Guess_Scalar_Assoc\<^sub>E TYPE(('i \<times> 'j) set) TYPE('c::sep_algebra) TYPE('c) TYPE('a) TYPE('i \<times> 'j \<Rightarrow> 'a)
                       Fs Ft Fc (\<lambda>s T x. \<big_ast> (A s T x) s) T finite finite (\<lambda>_ _ _. True)
-                      (\<times>) (\<lambda>_ _. case_prod) True True \<close>
-  unfolding Guess_Scalar_Assoc_def ..
+                      (\<times>) (\<lambda>_ _. curry) True True \<close>
+  unfolding Guess_Scalar_Assoc\<^sub>E_def ..
 
 
 paragraph \<open>Guess_(Un)Zip_of_Semimodule\<close>
@@ -8182,9 +8221,9 @@ private lemma \<phi>TA_MS\<^sub>I_rule:
   by clarsimp
 
 private lemma \<phi>TA_MS\<^sub>E_rule:
-  \<open> (\<And>t s x r y. Ant
-         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> r = smul s t \<and> Dx s t x \<and> f s t x = y
-         \<longrightarrow> (y \<Ztypecolon> OPEN (Fc r T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (Fs s (MAKE (Ft t T)))) @action \<phi>TA_ind_target NToA)
+  \<open> (\<And>t s r x. Ant
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> r = smul s t \<and> Dx s t x
+         \<longrightarrow> (x \<Ztypecolon> OPEN (Fc r T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> MAKE (Fs s (MAKE (Ft t T)))) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT

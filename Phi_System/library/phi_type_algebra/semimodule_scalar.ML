@@ -128,11 +128,11 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                   Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps eqs) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (conv_hol_imp_to_meta_if_has Conv.all_conv))
-
+                                   
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_Assoc is_intro,
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
-                                      [(K (SOME [0,2,~1,~1,~1]), ind_conv, reasoning)],
+                                      [(K (SOME [0,2,~1,~1]), ind_conv, reasoning)],
                                       K NONE, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules

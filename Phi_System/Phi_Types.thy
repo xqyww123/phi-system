@@ -1217,7 +1217,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>I}, \<^pattern_prop>\<open> Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) ?T {?i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_One\<^sub>E}, \<^pattern_prop>\<open> Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I ?T) ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i) (\<lambda>_. True) \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod) \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 ?T finite finite (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod)  \<close>)
+  (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 \<big_ast>\<^sup>\<phi>\<^sub>0 ?T finite finite (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. curry)  \<close>)
 ]\<close>
 
 

@@ -233,7 +233,7 @@ fun assync_prove f (ctxt,sequent) =
                val goal_term' = Drule.list_implies (hyps,goal_term)
                val goal_stat = Goal.init goal_term
                val future = Execution.fork {name="\<phi>System-async-proof", pos=pos, pri = ~1} (fn _ =>
-                       f (ctxt, goal_stat)
+                        f (ctxt, goal_stat)
                     (*|> Thm.solve_constraints
                     |> Thm.strip_shyps *)
                     |> fold_rev Thm.implies_intr hyps
