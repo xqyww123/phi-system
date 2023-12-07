@@ -239,6 +239,7 @@ thm \<phi>Mul_Quant_Tree.separation_extraction
 thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>I_Cond
 thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>E_Cond
 
+thm \<phi>Mul_Quant_Tree.wrap_module_src
 
 
 lemma
@@ -248,19 +249,32 @@ lemma
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length y' = len_intvl.len iv \<and> y' ! (i - len_intvl.start iv) = fst y
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
                                  i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
-\<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W) = (
+\<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W') = (
         (w, take len y', drop (len+1) y') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j:len\<rwpar> U) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j':len'\<rwpar> U)) @action \<A>merge
-\<Longrightarrow> x \<Ztypecolon> (f i # ks) \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W'] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<phi>Mul_Quant_Tree f iv U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> (f i # ks) \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W'] f i \<^bold>\<rightarrow>\<^sub># W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<phi>Mul_Quant_Tree f iv U \<^emph>[C\<^sub>R] f i \<^bold>\<rightarrow>\<^sub># R \<w>\<i>\<t>\<h> P \<close>
   unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
-  apply (simp add: cond_prod_transformation_rewr,
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+  (*apply (simp add: cond_prod_transformation_rewr,
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some) *)
   \<medium_left_bracket> premises Tr and _ and _ and _ and []
     note [[\<phi>trace_reasoning = 2]]
-    ;; Tr
+    ;;
       thm Tr
-    
-  \<medium_right_bracket> certified
+      thm apply_Separation_Homo\<^sub>I_Cond[OF \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond]
+    ;; apply_rule apply_Separation_Homo\<^sub>I_Cond[OF \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond]
+    thm \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond
+    ;; apply_rule apply_Semimodule_SAssoc\<^sub>E[OF \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E, where s=\<open>[f i]\<close> and t=\<open>ks\<close>,
+            unfolded times_list_def append_Cons append_Nil]
 
+      thm Tr
+      thm 
+      thm \<phi>MapAt_L.scalar_transformation
+      thm \<phi>MapAt_L.scalar_transformation[OF Tr]
+
+      thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E
+      thm apply_Semimodule_SAssoc\<^sub>E[OF \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E, where s=\<open>[f i]\<close> and t=\<open>ks\<close>,
+            unfolded times_list_def append_Cons append_Nil]
+
+      thm times_list_def
 
 
 

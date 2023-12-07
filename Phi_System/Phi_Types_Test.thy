@@ -39,13 +39,6 @@ thm List.ToA_mapper
 
 thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True, simplified]
 
-  thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True and g=g and g'=\<open>map g\<close> and s=s and h=h 
-        and f=f and f'=\<open>unzip' o map f o zip'\<close> for g s h f, simplified]
-
-  thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True and g=\<open>\<lambda>x. x\<close> and g'=\<open>map (\<lambda>x. x)\<close> and s=s and h=h 
-        and f=\<open>\<lambda>x. x\<close> and f'=\<open>unzip' o map (\<lambda>x. x) o zip'\<close> for g s h f, simplified]
-
-
 term map2
 
 

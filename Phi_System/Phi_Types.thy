@@ -2328,10 +2328,20 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
+lemma
+  \<open> x \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U \<s>\<u>\<b>\<j> b. g b
+\<Longrightarrow> x \<Ztypecolon> (k @ k') \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (k @ k') \<^bold>\<rightarrow>\<^sub>@ U \<s>\<u>\<b>\<j> y. g y \<close>
+  unfolding Transformation_def
+  thm \<phi>MapAt_L.scalar_assoc[where t=k' and s=k, unfolded append_Cons append_Nil]
+  apply clarsimp
+  thm \<phi>MapAt_L.scalar_transformation
+
 thm \<phi>MapAt_L.transformation
 thm \<phi>MapAt_L.separation_extraction
 thm \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond
 thm \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond
+thm \<phi>MapAt_L.scalar_assoc
+
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?P \<close>),
@@ -2837,7 +2847,7 @@ end
 
 translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
-thm \<phi>Mul_Quant_LenIv.ToA_mapper
+text \<open>TODO: \<phi>Mul_Quant_LenIv.ToA_mapper, requires ToA_mapper_template_\<Lambda> x\<close>
 
 paragraph \<open>Reasoning\<close>
 
@@ -2938,17 +2948,16 @@ thm \<phi>Mul_Quant_Tree.Semimodule_SDistr_Homo\<^sub>S
 term \<open>A =simp=> B\<close>
 
 thm \<phi>Mul_Quant_Tree.ToA_mapper
-thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c_cond
+thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>d\<^sub>_\<^sub>c\<^sub>b[simplified]
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>b\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>c\<^sub>_\<^sub>b
-thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[simplified]
 
 
-lemma
+lemma [\<phi>reason add]:
   \<open>module_mapper\<^sub>3\<^sub>\<epsilon> c \<lbrakk>j : 1\<rwpar> d
      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
      (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
@@ -2963,17 +2972,6 @@ lemma
             length_preserving_map_def
   by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
 
-
-
-
-
-term NO_SIMP
-(* [--d--][----a----]
-   [----b----][--c--]*)
-
-
-lemma
-  \<open>separatable_module_zip\<^sub>2\<^sub>1 (\<lambda>x. (drop N x, take N x)) (\<lambda>(y, x). x @ y) ?D\<^sub>s\<^sub>m ?f ?f' ?f\<^sub>d \<close>
 
 
 section \<open>Semantics Related\<close> (*TODO: move*)

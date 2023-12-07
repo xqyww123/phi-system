@@ -3978,13 +3978,40 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.wrap_modul
 
 subsubsection \<open>Extended Associative\<close>
 
-lemma scalar_assoc_template[\<phi>reason_template name Fc.scalar_assoc [assertion_simps, simp]]:
+lemma scalar_assoc_template[\<phi>reason_template name Fc.scalar_assoc [assertion_simps]]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt (\<lambda>_ _ _. True) smul (\<lambda>_ _ x. x)
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt (\<lambda>_ _ _. True) smul (\<lambda>_ _ x. x)
 \<Longrightarrow> Ds s \<and> Dt t
 \<Longrightarrow> Fs s (Ft t T) = Fc (smul s t) T \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Semimodule_Scalar_Assoc\<^sub>I_def
   by (rule \<phi>Type_eqI_Tr; simp)
+
+lemma [\<phi>reason_template name Fc.scalar_functor []]:
+  \<open> Semimodule_Scalar_Assoc\<^sub>I Fs' Ft' Fc' U Ds' Dt' Dx' smul' f'
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
+\<Longrightarrow> Functional_Transformation_Functor (Fs s) (Fs' s') (Ft t T) (Ft' t' U) D R pm fm
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Dt t \<and> Ds' s' \<and> Dt' t' \<and> Dx s t x \<and> Dx' s' t' (fm g P x) \<and> (\<forall> a \<in> D x. g a \<in> R x)
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> Ft t T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g a \<Ztypecolon> Ft' t' U \<w>\<i>\<t>\<h> P a )
+\<Longrightarrow> f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f' s' t' (fm g P x) \<Ztypecolon> Fc' (smul' s' t') U \<w>\<i>\<t>\<h> pm g P x \<close>
+  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Semimodule_Scalar_Assoc\<^sub>E_def
+            Transformation_def Premise_def Functional_Transformation_Functor_def
+            meta_Ball_def
+  by clarsimp metis
+
+lemma [\<phi>reason_template name Fc.scalar_functor []]:
+  \<open> Semimodule_Scalar_Assoc\<^sub>I Fs' Ft' Fc' U Ds' Dt' Dx' smul' f'
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
+\<Longrightarrow> Separation_Homo\<^sub>I_Cond (Fs s) F\<^sub>W F\<^sub>s\<^sub>W C\<^sub>W T W Dz z
+\<Longrightarrow> Functional_Transformation_Functor F\<^sub>s\<^sub>W F\<^sub>s\<^sub>W' (Ft t T \<^emph>[C\<^sub>W] W) (Ft' t' U \<^emph>[C\<^sub>R] R) D R pm fm
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Dt t \<and> Ds' s' \<and> Dt' t' \<and> Dx s t x \<and> Dx' s' t' (fm g P x) \<and> (\<forall> a \<in> D x. g a \<in> R x)
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> Ft t T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g a \<Ztypecolon> Ft' t' U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P a )
+\<Longrightarrow> f s t x \<Ztypecolon> Fc (smul s t) T \<^emph>[C\<^sub>W] F\<^sub>W W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f' s t' (fm g P x) \<Ztypecolon> Fc' (smul' s t') U \<^emph>[C\<^sub>R] F\<^sub>R R \<w>\<i>\<t>\<h> pm g P x \<close>
+  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Semimodule_Scalar_Assoc\<^sub>E_def
+            Transformation_def Premise_def Functional_Transformation_Functor_def
+            meta_Ball_def
+  by clarsimp metis
+
+
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
