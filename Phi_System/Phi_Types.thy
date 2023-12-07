@@ -2311,7 +2311,7 @@ lemma [\<phi>reason add]:
 
 subsubsection \<open>By List of Keys\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
@@ -2328,13 +2328,24 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
+(*
 lemma
   \<open> x \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U \<s>\<u>\<b>\<j> b. g b
 \<Longrightarrow> x \<Ztypecolon> (k @ k') \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (k @ k') \<^bold>\<rightarrow>\<^sub>@ U \<s>\<u>\<b>\<j> y. g y \<close>
   unfolding Transformation_def
   thm \<phi>MapAt_L.scalar_assoc[where t=k' and s=k, unfolded append_Cons append_Nil]
   apply clarsimp
-  thm \<phi>MapAt_L.scalar_transformation
+*)
+  thm \<phi>MapAt_L.scalar_functor
+  thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I
+thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E
+thm template_scalar_partial_functor[OF \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E
+      Action_Tag_I, OF \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond, OF Action_Tag_I,
+      OF \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond, OF Action_Tag_I, OF \<phi>MapAt_L.Functional_Transformation_Functor, simplified]
+thm \<phi>MapAt_L.Functional_Transformation_Functor
+thm \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond
+thm \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond
+  thm \<phi>MapAt_L.scalar_partial_functor
 
 thm \<phi>MapAt_L.transformation
 thm \<phi>MapAt_L.separation_extraction

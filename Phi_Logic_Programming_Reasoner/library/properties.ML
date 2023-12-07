@@ -296,8 +296,7 @@ fun check_dependencies params action (pos,property) ctxt =
                     |> didx >= 0 ? Logic.incr_indexes ([],[],didx+1)
       val eidx = Thm.maxidx_of property + (if didx >= 0 then didx + 1 else 0)
    in(if not (Thm.is_dummy property) andalso exists (
-            fn SOME param =>
-                is_some (Seq.pull (Unify.hounifiers (ctxt, Envir.empty eidx, [(param, prop_concl)])))
+            fn SOME param => Term.could_unify (param, prop_concl)
              | NONE => false) params
       then let val lookup = lookup_property_unify' ctxt
                fun get_property env (SOME p) = map (apsnd SOME) (lookup [(pos,property)] env p)
@@ -395,12 +394,10 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
   end
 
 fun invoke_instantiations_on_property (pos, property) ctxt =
-  let val idx = Thm.maxidx_of property
-      val prop_concl = Thm.concl_of property
+  let val prop_concl = Thm.concl_of property
       val templates = Templates.get ctxt
    in Net.unify_term templates prop_concl
-   |> filter (fn (_,param,_) =>
-        is_some (Seq.pull (Unify.hounifiers (ctxt, Envir.empty idx, [(param, prop_concl)]))))
+   |> filter (fn (_,param,_) => Term.could_unify (param, prop_concl))
    |> distinct template_eq
    |> (fn templates =>
         fold (fn (_,_,template) => invoke_template template (pos, property)) templates ctxt)
