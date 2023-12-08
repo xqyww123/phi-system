@@ -449,7 +449,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
           fun fold_pad _ 0 _ x = x
             | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
-          val _ = case bind of SOME (_,b) => if Binding.name_of b = "module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c" then () else ()
+          val _ = case bind of SOME (_,b) => if Binding.name_of b = "ToR_scala_assoc_right" then () else ()
                              | _ => ()
 
           val rule'1 = (0, Thm.transfer' ctxt' template)
@@ -563,7 +563,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
 
        in if null rules' then ctxt
        else (
-       Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
+       Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty in
          chunks ([paragraph (text "Instantiate reasoning template" @ [brk 1] @
                              (case binding of SOME b => [Binding.pretty b, brk 1] | _ => []) @
                              here template_pos)] @

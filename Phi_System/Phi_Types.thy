@@ -1199,7 +1199,7 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Closed_Semimodule_Zero
        and Carrier_Set
 
-thm \<phi>Mul_Quant.aaaa
+thm \<phi>Mul_Quant.scalar_partial_functor
 
 thm \<phi>Mul_Quant.separation_extraction
 
@@ -2310,11 +2310,13 @@ lemma [\<phi>reason add]:
   by (rule \<phi>MapAt.ToA_mapper[where f=id and f'=id and g=\<open>id\<close> and g'=\<open>id\<close>, simplified]; simp)
 *)
 
+setup \<open>Config.put_global PLPR_Rule_Gen.simp_timeout ~1\<close>
+
 
 subsubsection \<open>By List of Keys\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-
+      
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Sep_Functor_1
@@ -2338,16 +2340,15 @@ lemma
   thm \<phi>MapAt_L.scalar_assoc[where t=k' and s=k, unfolded append_Cons append_Nil]
   apply clarsimp
 *)
+thm \<phi>MapAt_L.scalar_partial_functor
+
   thm \<phi>MapAt_L.scalar_functor
   thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I
 thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E
-thm template_scalar_partial_functor[OF \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E
-      Action_Tag_I, OF \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond, OF Action_Tag_I,
-      OF \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond, OF Action_Tag_I, OF \<phi>MapAt_L.Functional_Transformation_Functor, simplified]
 thm \<phi>MapAt_L.Functional_Transformation_Functor
 thm \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond
 thm \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond
-  thm \<phi>MapAt_L.scalar_partial_functor
+thm \<phi>MapAt_L.scalar_partial_functor
 
 thm \<phi>MapAt_L.transformation
 thm \<phi>MapAt_L.separation_extraction
@@ -2385,6 +2386,12 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a list \<Rightarrow> ?'c::one, ?'a list \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>))
                                                        \<Longrightarrow> ?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = ?k \<tribullet>\<^sub>m x \<and> ?r ?x x) @action to (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>)  \<close>)
 ]\<close>
+ 
+thm \<phi>MapAt_L.ToR_scala_assoc_partial_right
+thm \<phi>MapAt_L.ToR_scala_assoc_partial_left
+thm \<phi>MapAt_L.ToR_scala_assoc_right
+thm \<phi>MapAt_L.ToR_scala_assoc_left
+
 
 declare [[\<phi>trace_reasoning = 1]]
 
@@ -2984,6 +2991,61 @@ lemma [\<phi>reason add]:
   unfolding module_mapper\<^sub>3\<^sub>\<epsilon>_def sublist_map_L_def list_upd_map_def sublist_map_R_def
             length_preserving_map_def
   by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
+
+
+\<phi>reasoner_group \<phi>Mul_Quant_Tree_wrap_module
+              = (27, [27,27]) < derived_SE_inj_to_module
+  \<open>Supplemantary wrappers injecting into module\<close>
+
+lemma \<phi>Mul_Quant_Tree_wrap_module_src[\<phi>reason default %\<phi>Mul_Quant_Tree_wrap_module]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
+       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y \<longrightarrow>
+              (?\<^sub>Z[C\<^sub>W] (\<lambda>x. x) (\<lambda>f. f) (fst x, w) \<Ztypecolon> ks \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length y' = len_intvl.len iv \<and> y' ! (i - len_intvl.start iv) = fst y
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
+                                 i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
+\<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W') = (
+        (w, take len y', drop (len+1) y') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] (f i \<^bold>\<rightarrow>\<^sub># W) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j:len\<rwpar> U) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j':len'\<rwpar> U)) @action \<A>merge
+\<Longrightarrow> x \<Ztypecolon> (f i # ks) \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W'] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd (?\<^sub>U\<^sub>Z[C\<^sub>R] (\<lambda>x. x) (\<lambda>f. f) y)) \<Ztypecolon> \<phi>Mul_Quant_Tree f iv U \<^emph>[C\<^sub>R] f i \<^bold>\<rightarrow>\<^sub># R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
+  apply (simp add: cond_prod_transformation_rewr,
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+  \<medium_left_bracket> premises _ and Tr and _ and _ and []
+    note Tr' = Tr[folded \<phi>Prod_expn' Cond_\<phi>Prod_expn_\<phi>Some,
+                  unfolded \<phi>Some_transformation_strip prod.collapse]
+    note t1 = \<phi>MapAt_L.scalar_partial_functor[where t'=\<open>[]\<close> and s=\<open>[f i]\<close>, simplified,
+          OF _ Tr'[THEN mp], unfolded times_list_def append_Cons append_Nil,
+          simplified cond_prod_transformation_rewr,
+          unfolded \<phi>Prod_expn' \<phi>Prod_expn'' Cond_\<phi>Prod_expn_\<phi>Some
+                   times_list_def append_Cons append_Nil append_Nil2] ;;
+    t1
+  \<medium_right_bracket> certified by auto_sledgehammer .
+
+
+lemma \<phi>Mul_Quant_Tree_wrap_module_tgt[\<phi>reason default %\<phi>Mul_Quant_Tree_wrap_module]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
+       \<and>\<^sub>\<r> (?\<^sub>Z[C\<^sub>W] (\<lambda>x. x) (\<lambda>f. f) (apfst (\<lambda>x. x ! (i - len_intvl.start iv)) x) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ks \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
+                                 i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
+\<Longrightarrow> ((snd (?\<^sub>U\<^sub>Z[C\<^sub>R] (\<lambda>x. x) (\<lambda>f. f) y), take len (fst x), drop (len+1) (fst x))
+      \<Ztypecolon> \<half_blkcirc>[C\<^sub>R] (f i \<^bold>\<rightarrow>\<^sub># R) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j:len\<rwpar> T) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j':len'\<rwpar> T))
+      = (r \<Ztypecolon> \<half_blkcirc>[C\<^sub>R'] R') @action \<A>merge
+\<Longrightarrow> x \<Ztypecolon> \<phi>Mul_Quant_Tree f iv T \<^emph>[C\<^sub>W] f i \<^bold>\<rightarrow>\<^sub># W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> (f i # ks) \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R'] R' \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
+  apply (simp add: cond_prod_transformation_rewr,
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+  \<medium_left_bracket> premises _ and Tr and _ and A[]
+    note Tr' = Tr[folded \<phi>Prod_expn' Cond_\<phi>Prod_expn_\<phi>Some,
+                  unfolded \<phi>Some_transformation_strip prod.collapse]
+    note t1 = \<phi>MapAt_L.scalar_partial_functor[where t=\<open>[]\<close> and s=\<open>[f i]\<close> and s'=\<open>[f i]\<close>, simplified,
+          OF Tr', unfolded times_list_def append_Cons append_Nil append_Nil2,
+          simplified cond_prod_transformation_rewr,
+          unfolded \<phi>Prod_expn' \<phi>Prod_expn'' Cond_\<phi>Prod_expn_\<phi>Some
+                   times_list_def append_Cons append_Nil append_Nil2] ;;  ;;
+    t1 certified by auto_sledgehammer ;;
+     A certified by auto_sledgehammer 
+  \<medium_right_bracket> .
+
 
 
 

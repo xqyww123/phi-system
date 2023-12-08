@@ -252,7 +252,7 @@ lemma [\<phi>reason %\<A>_partial_add_normalizing
   by blast
 
 
-subsubsection \<open>Solving the Equations on Specific Algberas\<close>
+subsubsection \<open>Algorithms for Specific Algberas\<close>
 
 paragraph \<open>Direct Success\<close>
 
@@ -745,6 +745,93 @@ lemma [\<phi>reason %partial_add_overlaps_specific+1]:
 paragraph \<open>List\<close>
 
 (*TODO*)
+
+
+subsection \<open>Multiplication Equations\<close>
+
+definition common_multiplicator_2 :: \<open>('a \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>common_multiplicator_2 mul a b c \<longleftrightarrow> mul a b = c\<close>
+
+\<phi>reasoner_group common_multiplicator_2 = (1000, [1,3000]) for \<open>common_multiplicator_2 mul a b c\<close>
+    \<open>Equation \<open>?a * b = c\<close>\<close>
+  and common_multiplicator_2_algos = (1000, [1000, 1050]) in common_multiplicator_2
+    \<open>default group for algorithms of specific algebras\<close>
+  and common_multiplicator_2_direct_success = (2950, [2950, 2980]) in common_multiplicator_2 \<open>\<close>
+
+declare [[\<phi>reason_default_pattern
+    \<open>common_multiplicator_2 ?mul _ ?b ?c\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>explict pattern has to be given\<close>)\<close> (100),
+
+  \<phi>default_reasoner_group
+    \<open>common_multiplicator_2 _ _ _ _\<close> : %common_multiplicator_2_algos (100)
+]]
+
+subsubsection \<open>Algorithms for Specific Algberas\<close>
+
+paragraph \<open>Direct Solution\<close>
+
+lemma [\<phi>reason %common_multiplicator_2_direct_success for \<open>common_multiplicator_2 ?mul ?a _ (?mul ?a _)\<close>
+                                                          \<open>common_multiplicator_2 ?mul ?a _ (?mul _ ?b)\<close> ]:
+  \<open> common_multiplicator_2 mul a b (mul a b) \<close>
+  unfolding common_multiplicator_2_def ..
+
+paragraph \<open>List\<close>
+
+\<phi>reasoner_group common_multiplicator_2_list =
+  (%common_multiplicator_2_algos, [%common_multiplicator_2_algos, %common_multiplicator_2_algos+20])
+  \<open>\<close>
+
+ML \<open>
+structure List_Reductions = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val post_merging = I
+  val binding = SOME (\<^binding>\<open>list_reductions\<close>)
+  val attribute = NONE
+  val comment = "Simplification rules evaluating lists"
+)
+\<close>
+
+
+lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (\<lambda>a b. b * a) _ _ _\<close>]:
+  \<open> common_multiplicator_2 (@) a b c
+\<Longrightarrow> common_multiplicator_2 (\<lambda>a b. b * a) a b c \<close>
+  unfolding common_multiplicator_2_def times_list_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplicator_2 (@) ?b _ ?b\<close>
+                                                   \<open>common_multiplicator_2 (@) _ [] ?b\<close>]:
+  \<open> common_multiplicator_2 (@) b [] b \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplicator_2 (@) _ ?b ?b\<close>
+                                                   \<open>common_multiplicator_2 (@) [] _ ?b\<close>]:
+  \<open> common_multiplicator_2 (@) [] b b \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+5 for \<open>common_multiplicator_2 (@) _ _ (_ # _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b L
+\<Longrightarrow> common_multiplicator_2 (@) (h # a) b (h # L) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+5 for \<open>common_multiplicator_2 (@) (_ @ _) _ (_ @ _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b c
+\<Longrightarrow> common_multiplicator_2 (@) (L @ a) b (L @ c) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) ((_ # _) @ _) _ _\<close>]:
+  \<open> common_multiplicator_2 (@) (h # L @ a) b c
+\<Longrightarrow> common_multiplicator_2 (@) ((h # L) @ a) b c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ _ ((_ # _) @ _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b (h # L @ c)
+\<Longrightarrow> common_multiplicator_2 (@) a b ((h # L) @ c) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
 
 
 subsection \<open>Auxiliary Annotations\<close>

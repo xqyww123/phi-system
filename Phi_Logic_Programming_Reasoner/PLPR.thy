@@ -15,6 +15,7 @@ theory PLPR
   and "!!" = "!!"
   and "??" = "??"
   and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
+  and "<safe>" = "\<s>\<a>\<f>\<e>"
 begin
 
 subsection \<open>Preliminaries\<close>
@@ -173,9 +174,9 @@ consts default :: mode
                               goal but never instantiating the contextual premises\<close>
        NO_INST :: mode \<comment> \<open>prohibiting instantiation\<close>
        MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
-       MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close>
+       MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*depreciated!*)
        MODE_SAT :: mode
-
+       MODE_SAFE :: mode ("\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
 
 
 subsubsection \<open>Annotations for Proof Obligations\<close>
@@ -223,7 +224,9 @@ lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by s
 lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma Premise_const_True[simp]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] True\<close>
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] True\<close>
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] True\<close>
   unfolding Premise_def by simp+
 
 lemma Premise_norm:

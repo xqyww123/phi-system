@@ -567,6 +567,12 @@ lemma cond_unzip_red[simp]:
   unfolding cond_unzip_def
   by simp_all
 
+lemma cond_unzip[simp]:
+  \<open> fst (uz x) = m fst x
+\<Longrightarrow> fst (?\<^sub>U\<^sub>Z flag uz m x) = m fst x \<close>
+  unfolding cond_unzip_def
+  by clarsimp
+
 lemma cond_unzip_dom_red[simp]:
   \<open> ?\<^sub>U\<^sub>Z\<^sub>D True D' R' = UNIV \<close>
   \<open> ?\<^sub>U\<^sub>Z\<^sub>D False D' R' = {x. \<forall>(a,b) \<in> D' x. a \<in> R' x} \<close>
@@ -3988,7 +3994,7 @@ lemma scalar_assoc_template[\<phi>reason_template name Fc.scalar_assoc [assertio
   by (rule \<phi>Type_eqI_Tr; simp)
 
 
-lemma [\<phi>reason_template name Fc.scalar_functor []]:
+lemma [\<phi>reason_template name Fc.scalar_functor [no_atp]]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs' Ft' Fc' U Ds' Dt' Dx' smul' f'
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> Functional_Transformation_Functor (Fs s) (Fs' s') (Ft t T) (Ft' t' U) D R pm fm
@@ -4001,7 +4007,7 @@ lemma [\<phi>reason_template name Fc.scalar_functor []]:
             meta_Ball_def Action_Tag_def
   by clarsimp metis
 
-lemma template_scalar_partial_functor[\<phi>reason_template name Fc.scalar_partial_functor []]:
+lemma template_scalar_partial_functor[\<phi>reason_template name Fc.scalar_partial_functor [no_atp]]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs' Ft' Fc' U Ds' Dt' Dx' smul' f'
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond (Fs s) F\<^sub>W F\<^sub>s\<^sub>W C\<^sub>W (Ft t T) W Dz z
@@ -4563,11 +4569,57 @@ lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have 
 declare SE_general_Semimodule_Scalar_left[THEN \<A>SE_clean_waste, \<phi>reason_template default 30]
   \<comment> \<open>The priority is smaller than the default rule of functional transformation\<close>
 *)
- 
-lemma SE_general_Semimodule_Scalar_right:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> smul a c = b)
+
+lemma SE_Semimodule_Scalar_right
+      [\<phi>reason_template default %derived_SE_scalar_assoc name: F3\<^sub>b.ToR_scala_assoc_right]:
+  \<open> \<g>\<u>\<a>\<r>\<d> common_multiplicator_2 smul a c b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>a a \<and> D\<^sub>c c
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I F3\<^sub>a F3\<^sub>c F3\<^sub>b U D\<^sub>a D\<^sub>c D\<^sub>x smul g\<^sub>s
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F3\<^sub>a F1
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F3\<^sub>a F4
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F3\<^sub>a F2
+\<Longrightarrow> Functional_Transformation_Functor (F1 a) (F3\<^sub>a a) T (F3\<^sub>c c U) Dom Rng pred_mapper func_mapper
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> Dom x \<longrightarrow> f a \<in> Rng x) \<and> D\<^sub>x a c (func_mapper f P x)
+\<Longrightarrow> (\<And>x \<in> Dom x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F3\<^sub>c c U \<w>\<i>\<t>\<h> P x)
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g\<^sub>s a c (func_mapper f P x) \<Ztypecolon> F3\<^sub>b b U
+    \<w>\<i>\<t>\<h> pred_mapper f P x \<close>
+  unfolding \<r>Guard_def common_multiplicator_2_def
+  \<medium_left_bracket> premises [simp] and _ and SA[] and _ and _ and _ and FTF[] and _ and Tr[]
+    apply_rule apply_Functional_Transformation_Functor[where f=f and P=P, OF FTF]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+    apply_rule apply_Semimodule_SAssoc\<^sub>I[OF SA]
+  \<medium_right_bracket> .
+
+lemma SE_Semimodule_Scalar_left
+      [\<phi>reason_template default %derived_SE_scalar_assoc name: F1\<^sub>b.ToR_scala_assoc_left]:
+  \<open> \<g>\<u>\<a>\<r>\<d> common_multiplicator_2 smul a c b
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>a a \<and> D\<^sub>c c
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E F1\<^sub>a F1\<^sub>c F1\<^sub>b T D\<^sub>a D\<^sub>c D\<^sub>x smul g\<^sub>s
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1\<^sub>a F3
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1\<^sub>a F4
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1\<^sub>a F2
+\<Longrightarrow> Functional_Transformation_Functor (F1\<^sub>a a) (F3 a) (F1\<^sub>c c T) U Dom Rng pred_mapper func_mapper
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D\<^sub>x a c x \<and> (\<forall>e \<in> Dom (g\<^sub>s a c x). f e \<in> Rng (g\<^sub>s a c x)) \<and>
+           func_mapper f P (g\<^sub>s a c x) \<in> Du
+\<Longrightarrow> (\<And>x \<in> Dom (g\<^sub>s a c x). x \<Ztypecolon> F1\<^sub>c c T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<w>\<i>\<t>\<h> P x )
+\<Longrightarrow> x \<Ztypecolon> F1\<^sub>b b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P (g\<^sub>s a c x) \<Ztypecolon> F3 a U
+    \<w>\<i>\<t>\<h> pred_mapper f P (g\<^sub>s a c x) \<close>
+  unfolding \<r>Guard_def common_multiplicator_2_def
+  \<medium_left_bracket> premises A and _ and SA[] and _ and _ and _ and FTF[] and _ and Tr[]
+    apply_rule apply_Semimodule_SAssoc\<^sub>E[where s=a and t=c and smul=smul, OF SA, unfolded A]
+    apply_rule apply_Functional_Transformation_Functor[where f=f and P=P, OF FTF]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+  \<medium_right_bracket> .
+
+
+ 
+lemma SE_Semimodule_Scalar_partial_right:
+  \<open> \<g>\<u>\<a>\<r>\<d> common_multiplicator_2 smul a c b
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>a a \<and> D\<^sub>c c
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I F3\<^sub>a F3\<^sub>c F3\<^sub>b U D\<^sub>a D\<^sub>c D\<^sub>x smul g\<^sub>s
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F3\<^sub>a F1
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F3\<^sub>a F4
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F3\<^sub>a F2
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond (F1 a) (F4 a) F14 Cw T W Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond (F3\<^sub>a a) (F2 a) F23 Cr (F3\<^sub>c c U) R Du uz
 \<Longrightarrow> Functional_Transformation_Functor F14 F23 (T \<^emph>[Cw] W) (F3\<^sub>c c U \<^emph>[Cr] R) Dom Rng pred_mapper func_mapper
@@ -4578,8 +4630,8 @@ lemma SE_general_Semimodule_Scalar_right:
 \<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[Cw] F4 a W
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst (g\<^sub>s a c) (uz (func_mapper f P (z x))) \<Ztypecolon> F3\<^sub>b b U \<^emph>[Cr] F2 a R
     \<w>\<i>\<t>\<h> pred_mapper f P (z x) \<close>
-  unfolding \<r>Guard_def
-  \<medium_left_bracket> premises [simp] and _ and SA and SH\<^sub>I and SH\<^sub>E and FTF and _ and Tr
+  unfolding \<r>Guard_def common_multiplicator_2_def
+  \<medium_left_bracket> premises [simp] and _ and SA and _ and _ and _ and SH\<^sub>I and SH\<^sub>E and FTF and _ and Tr
     apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where f=f and P=P, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
@@ -4587,14 +4639,18 @@ lemma SE_general_Semimodule_Scalar_right:
     apply_rule apply_Semimodule_SAssoc\<^sub>I[OF SA, THEN transformation_right_frame_conditioned_ty]
   \<medium_right_bracket> .
 
-declare SE_general_Semimodule_Scalar_right[(*THEN SE_clean_waste,*) \<phi>reason_template default %derived_SE_scalar_assoc]
+declare SE_Semimodule_Scalar_partial_right[(*THEN SE_clean_waste,*)
+    \<phi>reason_template default %derived_SE_scalar_assoc name: F3\<^sub>b.ToR_scala_assoc_partial_right]
 
 
-lemma SE_general_Semimodule_Scalar_left
-      [\<phi>reason_template default %derived_SE_scalar_assoc name: F1\<^sub>b.aaaa]:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> smul a c = b)
+lemma SE_Semimodule_Scalar_partial_left
+      [\<phi>reason_template default %derived_SE_scalar_assoc name: F1\<^sub>b.ToR_scala_assoc_partial_left]:
+  \<open> \<g>\<u>\<a>\<r>\<d> common_multiplicator_2 smul a c b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>a a \<and> D\<^sub>c c
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E F1\<^sub>a F1\<^sub>c F1\<^sub>b T D\<^sub>a D\<^sub>c D\<^sub>x smul g\<^sub>s
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1\<^sub>a F3
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1\<^sub>a F4
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1\<^sub>a F2
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond (F1\<^sub>a a) (F4 a) F14 Cw (F1\<^sub>c c T) W Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond (F3 a) (F2 a) F23 Cr U R Du uz
 \<Longrightarrow> Functional_Transformation_Functor F14 F23 (F1\<^sub>c c T \<^emph>[Cw] W) (U \<^emph>[Cr] R) Dom Rng pred_mapper func_mapper
@@ -4605,8 +4661,8 @@ lemma SE_general_Semimodule_Scalar_left
 \<Longrightarrow> x \<Ztypecolon> F1\<^sub>b b T \<^emph>[Cw] F4 a W
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f P (z (apfst (g\<^sub>s a c) x))) \<Ztypecolon> F3 a U \<^emph>[Cr] F2 a R
     \<w>\<i>\<t>\<h> pred_mapper f P (z (apfst (g\<^sub>s a c) x)) \<close>
-  unfolding \<r>Guard_def
-  \<medium_left_bracket> premises A and _ and SA[] and SH\<^sub>I[] and SH\<^sub>E[] and FTF[] and _ and Tr[]
+  unfolding \<r>Guard_def common_multiplicator_2_def
+  \<medium_left_bracket> premises A and _ and SA[] and _ and _ and _ and SH\<^sub>I[] and SH\<^sub>E[] and FTF[] and _ and Tr[]
     apply_rule apply_Semimodule_SAssoc\<^sub>E[where s=a and t=c and smul=smul, OF SA, THEN transformation_right_frame_conditioned_ty, unfolded A]
     apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where f=f and P=P, OF FTF]

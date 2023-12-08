@@ -1414,7 +1414,7 @@ lemma [\<phi>reason default %\<phi>app_conv_failure for \<open>ToA_App_Conv _ _ 
   unfolding ERROR_def
   by blast
 
-subsubsection \<open>Applying on Procedure Mode\<close>
+subsubsection \<open>Application on Procedure Mode\<close>
 
 text \<open>TODO: move this to user manual.
 
@@ -1664,7 +1664,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason %\<phi>app_proc_on_proc_or_VS for
 
 
 
-subsubsection \<open>Applying on a Block / End a Block\<close>
+subsubsection \<open>Application on a Block / End a Block\<close>
 
 definition \<open>Simple_HO_Unification f f' \<longleftrightarrow> (f = f')\<close>
 
@@ -1772,7 +1772,7 @@ lemma [\<phi>reason %\<phi>app_conv for \<open>\<phi>App_Conv (?X \<s>\<h>\<i>\<
   by (metis View_Shift_def view_shift_by_implication)
 
 
-subsubsection \<open>Applying on ToA Construction\<close>
+subsubsection \<open>Application on ToA Construction\<close>
 
 \<phi>reasoner_group \<phi>app_ToA_on_ToA = (1000, [1000, 1200])
   for \<open>PROP \<phi>Application (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
@@ -1841,25 +1841,50 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA+50]:
       meson \<phi>apply_implication_impl transformation_left_frame)
 
 
-lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P)"
+  for S' :: \<open>'c::sep_magma set\<close>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication_impl transformation_left_frame)
 
-lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T'))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T))"
+  for S' :: \<open>'c::sep_magma set\<close>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication_impl transformation_left_frame)
+
+
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
+  " S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Any @action NToA
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> S))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> T) \<and> P)"
+  for S' :: \<open>'c::type set\<close>
+  unfolding \<phi>Application_def Action_Tag_def ToA_Construction_def Transformation_def
+  by metis
+
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
+  " S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Any @action NToA
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T))
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T))"
+  for S' :: \<open>'c::type set\<close>
+  unfolding \<phi>Application_def Action_Tag_def ToA_Construction_def Transformation_def
+  by metis
+  
+
 
 
 

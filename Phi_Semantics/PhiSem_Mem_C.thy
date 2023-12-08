@@ -112,7 +112,7 @@ declare [[\<phi>trace_reasoning = 1]]
   where \<open>MemBlk blk T \<equiv> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T)\<close>
   deriving Sep_Functor_1
 
-abbreviation Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
+abbreviation Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
   where \<open>\<m>\<e>\<m>[addr] T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
 
 
@@ -212,7 +212,31 @@ proc op_free_mem:
 \<medium_right_bracket> .
 
 declare [[\<phi>trace_reasoning = 0]]
-  
+
+
+
+(*consts Mem_Slice_synt :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _ : _]")
+
+translations "\<s>\<l>\<i>\<c>\<e>[addr : start : len]" == "CONST Mem_Slice addr \<lbrakk>start : len\<rwpar>"
+*)
+
+abbreviation Slice :: \<open>nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close>
+  where \<open>Slice \<equiv> \<big_ast>\<^sub>\<bbbT> AgIdx_N\<close>
+
+consts Slice_synt :: \<open>nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_, _] _" [10,10,911] 910)
+
+translations "\<s>\<l>\<i>\<c>\<e>[start, len] T" == "CONST Slice \<lbrakk>start : len\<rwpar> T"
+
+
+
+
+
+
+
+
+
+(*
+
 \<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>l \<Ztypecolon> Mem_Slice addr iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>j. \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
     \<comment> \<open>Length is still required because it determines the domain of the \<phi>-type so guides the reasoning\<close>
@@ -242,85 +266,55 @@ thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>E_Cond
 thm \<phi>Mul_Quant_Tree.wrap_module_src
 
 
-lemma
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y \<and> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow>
-              ((fst x, w) \<Ztypecolon> ks \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P))
-       \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length y' = len_intvl.len iv \<and> y' ! (i - len_intvl.start iv) = fst y
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
-                                 i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
-\<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W') = (
-        (w, take len y', drop (len+1) y') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j:len\<rwpar> U) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j':len'\<rwpar> U)) @action \<A>merge
-\<Longrightarrow> x \<Ztypecolon> (f i # ks) \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W'] f i \<^bold>\<rightarrow>\<^sub># W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<phi>Mul_Quant_Tree f iv U \<^emph>[C\<^sub>R] f i \<^bold>\<rightarrow>\<^sub># R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
-  (*apply (simp add: cond_prod_transformation_rewr,
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some) *)
-  \<medium_left_bracket> premises Tr and _ and _ and _ and []
-    note [[\<phi>trace_reasoning = 2]]
-    ;;
-      thm Tr
-      thm apply_Separation_Homo\<^sub>I_Cond[OF \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond]
-    ;; apply_rule apply_Separation_Homo\<^sub>I_Cond[OF \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond]
-    thm \<phi>MapAt_L.Separation_Homo\<^sub>I_Cond
-    ;; apply_rule apply_Semimodule_SAssoc\<^sub>E[OF \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E, where s=\<open>[f i]\<close> and t=\<open>ks\<close>,
-            unfolded times_list_def append_Cons append_Nil]
-
-      thm Tr
-      thm 
-      thm \<phi>MapAt_L.scalar_transformation
-      thm \<phi>MapAt_L.scalar_transformation[OF Tr]
-
-      thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E
-      thm apply_Semimodule_SAssoc\<^sub>E[OF \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E, where s=\<open>[f i]\<close> and t=\<open>ks\<close>,
-            unfolded times_list_def append_Cons append_Nil]
-
-      thm times_list_def
-
-
-
-
-
-
-term \<open>Semimodule_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
-
-term \<open>Identity_Elements\<^sub>E T T\<^sub>D
-        \<Longrightarrow> Identity_Elements\<^sub>E (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
-
-
-term \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
-        \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Mul_Quant_Tree f iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
-
-term \<open>Object_Equiv T eq
-        \<Longrightarrow> Object_Equiv (\<phi>Mul_Quant_Tree f iv T) (list_all2 eq) \<close>
-
-
-
-
-
-
 
 consts Mem_Slice_synt :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _ : _]")
 
 translations "\<s>\<l>\<i>\<c>\<e>[addr : start : len]" == "CONST Mem_Slice addr \<lbrakk>start : len\<rwpar>"
 
-thm Mem_Slice.wrap_module_src
 
 
-lemma
-  \<open>hd (drop (j - start) (take (Suc (j - start)) y)) = y ! (j - start)\<close>
-  apply simp
+*)
 
+declare [[\<phi>trace_reasoning = 1]]
 
-ML \<open>@{term \<open>\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<close>}\<close>
+lemma [\<phi>reason for \<open>common_multiplicator_2 (@) (memaddr.index (memaddr _ _)) _ (memaddr.index (memaddr _ _))\<close>
+                   \<open>common_multiplicator_2 (@) _ (memaddr.index (memaddr _ _)) (memaddr.index (memaddr _ _))\<close>]:
+  \<open> common_multiplicator_2 (@) pa pb pc
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (memaddr a pa)) (memaddr.index (memaddr b pb)) (memaddr.index (memaddr c pc)) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+5 for \<open>common_multiplicator_2 (@) (memaddr.index _) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)))\<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a) b (memaddr.index c)
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index a) (b @ [i]) (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i))) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplicator_2 (@) (memaddr.index ?a) _ (memaddr.index ?a)\<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a) [] (memaddr.index a) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
 
 lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
-\<Longrightarrow> y \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : start : len] T
+\<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
-             drop (j - start + 1) y \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : j + 1 : start + len - j - 1] T\<heavy_comma>
-             take (j - start) y \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[addr : start : j - start] T\<close>
-  \<medium_left_bracket> 
-  \<medium_right_bracket> certified by (insert \<phi>, auto_sledgehammer)
+             drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<heavy_comma>
+             take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
+  \<medium_left_bracket> note [[\<phi>trace_reasoning = 2]]
+
+  \<medium_right_bracket> certified by auto_sledgehammer .
+
+lemma
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
+\<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<heavy_comma>
+             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
+             take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
+  \<medium_left_bracket> note [[\<phi>trace_reasoning = 2]]
+
+  \<medium_right_bracket> certified by auto_sledgehammer
 
   term \<open>snd ((prod.swap \<circ> (\<lambda>x. (drop (len_intvl.len \<lbrakk>start : j - start\<rwpar>) x, take (len_intvl.len \<lbrakk>start : j - start\<rwpar>) x))) (fst (y, undefined)))\<close>
 

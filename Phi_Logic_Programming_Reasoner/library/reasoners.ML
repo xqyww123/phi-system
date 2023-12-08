@@ -166,6 +166,7 @@ fun apply_tac ctxt tactic mode =
           (fn mode => fn (aux,tac,ctxt) =>
               ([], tactic (ctxt,tac,aux,mode), ctxt)) mode (aux_thms ctxt, all_tac, ctxt)))))
 
+(*
 (** Tactic Template **)
 
 structure Very_Safe_Oblg_Simp_SS = Simpset(
@@ -175,7 +176,7 @@ structure Very_Safe_Oblg_Simp_SS = Simpset(
   val attribute = NONE
   val comment = "Very safe rewrite rules normalizing proof obligations"
   val post_merging = I
-)
+)*)
 
 (** Annot of Fixing **)
 
@@ -254,16 +255,16 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
                 | 2 => add_vars (Phi_Help.leading_antecedent' th) annotated_fixs
                 | _ => annotated_fixs )
 
-      val (ctxt', th, instc) =
+      val (ctxt', th2, instc) =
             if null fixing_targets then (ctxt, th, (TVars.empty, Vars.empty))
             else let val (inst, ctxt') = Variable.import_inst false fixing_targets ctxt
                      val instc = Phi_Help.certify_vars (Context.Proof ctxt') inst
-                  in (ctxt', Thm.instantiate instc th01, instc)
+                  in (ctxt', Thm.instantiate instc th, instc)
                  end
                     
-   in (case fast_inst can_inst th
+   in (case fast_inst can_inst th2
    of SOME ret => SOME ret
-    | NONE => f ctxt' th)
+    | NONE => f ctxt' th2)
    |> not (null fixing_targets) ? Option.map (fn (th, seq') =>
         let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
          in (f th, Seq.map f seq')
@@ -683,16 +684,16 @@ fun auto_obligation_solver1 ctxt sequent =  (
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
 fun safer_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
-                                                        fix_level= if can_inst then 1 else 0
-                                                        (*it is zero because we will never use tactics
-                                                          that instantiate some variable ever.*) }
+                                                        fix_level= if can_inst then 1 else 2 }
   (fn ctxt => fn th =>
       let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1*)
           val th' = th
           fun clarsimp_tac ctxt =
+                Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
+             (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
-                            else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW
+                            else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW *)
                 Classical.clarify_tac (addSss ctxt)
        in apply_tac ctxt (fn (ctxt,pre,aux,_) =>
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
