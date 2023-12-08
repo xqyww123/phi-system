@@ -777,24 +777,21 @@ lemma [\<phi>reason %common_multiplicator_2_direct_success for \<open>common_mul
 paragraph \<open>List\<close>
 
 \<phi>reasoner_group common_multiplicator_2_list =
-  (%common_multiplicator_2_algos, [%common_multiplicator_2_algos, %common_multiplicator_2_algos+20])
-  \<open>\<close>
-
-ML \<open>
-structure List_Reductions = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS
-  val post_merging = I
-  val binding = SOME (\<^binding>\<open>list_reductions\<close>)
-  val attribute = NONE
-  val comment = "Simplification rules evaluating lists"
-)
-\<close>
+  (%common_multiplicator_2_algos, [%common_multiplicator_2_algos, %common_multiplicator_2_algos+20]) \<open>\<close>
 
 
-lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (\<lambda>a b. b * a) _ _ _\<close>]:
+lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (\<lambda>a b. b * a) ?var _ _\<close>]:
   \<open> common_multiplicator_2 (@) a b c
-\<Longrightarrow> common_multiplicator_2 (\<lambda>a b. b * a) a b c \<close>
-  unfolding common_multiplicator_2_def times_list_def
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a' : a
+\<Longrightarrow> common_multiplicator_2 (\<lambda>a b. b * a) a' b c \<close>
+  unfolding common_multiplicator_2_def times_list_def Simplify_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (\<lambda>a b. b * a) _ ?var _\<close>]:
+  \<open> common_multiplicator_2 (@) a b c
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] b' : b
+\<Longrightarrow> common_multiplicator_2 (\<lambda>a b. b * a) a b' c \<close>
+  unfolding common_multiplicator_2_def times_list_def Simplify_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplicator_2 (@) ?b _ ?b\<close>

@@ -381,6 +381,14 @@ ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 ML_file_debug \<open>library/tools/simpset.ML\<close>
 
+paragraph \<open>Setup Simpset\<close>
+
+declare HOL.simp_thms[\<phi>safe_simp]
+
+lemmas [\<phi>safe_simp] =
+  append.right_neutral append.left_neutral append_Cons
+
+
 subsubsection \<open>Isomorphic Atomize\<close>
 
 text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Logic.rulify\<close> is not isomorphic in the sense
@@ -1613,8 +1621,8 @@ fun defer_premise ctxt =
           of 0 => Phi_Reasoners.defer_obligation_tac {can_inst=true, fix_level=0} (true,true,~1) ctxt
            | 1 => (fn th => if Phi_Reasoners.has_obligations_tag th
                             then Phi_Reasoners.defer_obligation_tac {can_inst=true, fix_level=0} (true,true,~1) ctxt th
-                            else Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt th)
-           | 2 => Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt
+                            else Phi_Reasoners.weak_obligation_solver {can_inst=true} ctxt th)
+           | 2 => Phi_Reasoners.weak_obligation_solver {can_inst=true} ctxt
            | 3 => Phi_Reasoners.auto_obligation_solver ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
 \<close>
@@ -1623,18 +1631,19 @@ fun defer_premise ctxt =
   = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
 
 \<phi>reasoner_ML Simp_Premise %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safer_obligation_solver {can_inst=true}) o snd\<close>
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.weak_obligation_solver {can_inst=true}) o snd\<close>
 
 \<phi>reasoner_ML NO_INST %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safer_obligation_solver {can_inst=false}) o snd\<close>
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.weak_obligation_solver {can_inst=false}) o snd\<close>
 
-declare [[ML_debugger]]
+\<phi>reasoner_ML \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] ?P\<close>)
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=true}) o snd\<close>
 
 \<phi>reasoner_ML \<open>Premise MODE_SAT\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (fn ctxt => fn sequent => Seq.make (fn () =>
       let val goal = Thm.dest_arg1 (Thm.cprop_of sequent)
           val test = Thm.implies_intr goal (Thm.transfer' ctxt @{thm' TrueI})
-                  |> Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt
+                  |> Phi_Reasoners.weak_obligation_solver {can_inst=true} ctxt
                   |> Seq.pull
                   |> is_some
        in if test
@@ -1758,7 +1767,11 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
   = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
-                         (fn ctxt => ctxt addsimps Useful_Thms.get ctxt) {fix_vars=false})
+                         (fn ctxt => ctxt addsimps Useful_Thms.get ctxt) {fix_vars=false} (*TODO: set this fix_vars to true*))
+    o snd\<close>
+
+\<phi>reasoner_ML \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] x : y\<close> %cutting (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ?X' : ?X\<close>)
+  = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) Phi_Safe_Simps.equip {fix_vars=true})
     o snd\<close>
 
 

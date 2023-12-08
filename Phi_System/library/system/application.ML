@@ -106,7 +106,7 @@ fun MPs ctxt th1s' th2 =
     fun obligation_fail S = raise Phi_Reasoners.Attemption_Fail S
   in
     case snd (Phi_Reasoner.reason_s ctxt (K ((), stats)))
-      of SOME stat => Phi_Reasoners.safer_obligation_solver' obligation_fail stat
+      of SOME stat => Phi_Reasoners.weak_obligation_solver' obligation_fail stat
        | NONE => Phi_Reasoner.error "Meta Modus Pones"
   end
 

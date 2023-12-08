@@ -7,7 +7,8 @@ signature PLPR_SIMPLIFIER = sig
    Specific reasoning apps may fix the variables to boost its ability. *)
 
 val simplifier : (thm -> thm Seq.seq) -> (Proof.context -> Proof.context)
-              -> {fix_vars: bool} (*if to fix schematic variable so boost the simplification*)
+              -> {fix_vars: bool} (*if to fix schematic variable so enables equation conditions
+                                    to be used in the rewrite*)
               -> Proof.context -> thm -> thm Seq.seq
 val simplifier_by_ss : (thm -> thm Seq.seq) -> simpset -> {fix_vars: bool} -> Proof.context -> thm -> thm Seq.seq
 val simplifier_by_ss' : (thm -> thm Seq.seq) -> (Proof.context -> simpset)
@@ -50,6 +51,7 @@ fun aseq_to_conjs ctm =
 fun simplification {simp_conj_items, fix_vars} fallback F ctxt sequent = Seq.make (fn () =>
   let val ((inst, [sequent']), ctxt') = if fix_vars
              then Variable.import true [sequent] ctxt
+                  (*TODO optimization: only fix variables in the leading antecedent*)
              else (((TVars.empty, Vars.empty), [sequent]), ctxt)
 
       val has_bare_conj = case Thm.major_prem_of sequent'

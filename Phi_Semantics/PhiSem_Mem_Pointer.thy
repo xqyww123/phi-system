@@ -550,7 +550,7 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
   by simp (metis logaddr_to_raw_inj)
 
 
-section \<open>Semantic Operations\<close>
+section \<open>Primitive Instructions\<close>
  
 proc op_get_element_pointer[\<phi>overload \<tribullet>]:
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx pidx reject\<close>
@@ -566,7 +566,28 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
       \<Turnstile> (addr_geps addr pidx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 
+section \<open>Reasoning Configuration\<close>
 
+subsection \<open>common_multiplicator of path\<close>
+
+
+lemma [\<phi>reason for \<open>common_multiplicator_2 (@) (memaddr.index (memaddr _ _)) _ (memaddr.index (memaddr _ _))\<close>
+                   \<open>common_multiplicator_2 (@) _ (memaddr.index (memaddr _ _)) (memaddr.index (memaddr _ _))\<close>]:
+  \<open> common_multiplicator_2 (@) pa pb pc
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (memaddr a pa)) (memaddr.index (memaddr b pb)) (memaddr.index (memaddr c pc)) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+5 for \<open>common_multiplicator_2 (@) (memaddr.index _) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)))\<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a) b (memaddr.index c)
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index a) (b @ [i]) (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i))) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplicator_2 (@) (memaddr.index ?a) _ (memaddr.index ?a)\<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a) [] (memaddr.index a) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
 
 
 end

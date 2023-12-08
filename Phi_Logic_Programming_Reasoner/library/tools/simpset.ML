@@ -76,8 +76,8 @@ fun map f generic = Data.map (Raw_Simplifier.simpset_map (Context.proof_of gener
 fun map' f = Context.proof_map (map f)
 fun map_with_result f generic =
   let val ss = Data.get generic
-      val (result,ctxt') = Raw_Simplifier.put_simpset ss (Context.proof_of generic) |> f
-   in (result, Data.put (Raw_Simplifier.simpset_of ctxt') generic) end
+      val (result,ctxt') = Simplifier.put_simpset ss (Context.proof_of generic) |> f
+   in (result, Data.put (Simplifier.simpset_of ctxt') generic) end
 
 structure Thms = Named_Thms (
   val name = the_default Binding.empty Config.binding

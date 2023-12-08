@@ -348,7 +348,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Pretty.block (Pretty.here \<^here>)
                   ]))
                 val result = Phi_Apply.apply [sequent'] ctxt' goal'
-                          |> Phi_Reasoners.safer_obligation_solver1 {can_inst=true} ctxt'
+                          |> Phi_Reasoners.weak_obligation_solver1 {can_inst=true} ctxt'
               in result end
               handle E => raise (@{print} E)
             ))

@@ -275,54 +275,5 @@ translations "\<s>\<l>\<i>\<c>\<e>[addr : start : len]" == "CONST Mem_Slice addr
 
 *)
 
-declare [[\<phi>trace_reasoning = 1]]
-
-lemma [\<phi>reason for \<open>common_multiplicator_2 (@) (memaddr.index (memaddr _ _)) _ (memaddr.index (memaddr _ _))\<close>
-                   \<open>common_multiplicator_2 (@) _ (memaddr.index (memaddr _ _)) (memaddr.index (memaddr _ _))\<close>]:
-  \<open> common_multiplicator_2 (@) pa pb pc
-\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (memaddr a pa)) (memaddr.index (memaddr b pb)) (memaddr.index (memaddr c pc)) \<close>
-  unfolding common_multiplicator_2_def
-  by clarsimp
-
-lemma [\<phi>reason %common_multiplicator_2_list+5 for \<open>common_multiplicator_2 (@) (memaddr.index _) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)))\<close>]:
-  \<open> common_multiplicator_2 (@) (memaddr.index a) b (memaddr.index c)
-\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index a) (b @ [i]) (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i))) \<close>
-  unfolding common_multiplicator_2_def
-  by clarsimp
-
-lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplicator_2 (@) (memaddr.index ?a) _ (memaddr.index ?a)\<close>]:
-  \<open> common_multiplicator_2 (@) (memaddr.index a) [] (memaddr.index a) \<close>
-  unfolding common_multiplicator_2_def
-  by clarsimp
-
-
-lemma
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
-\<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
-             drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<heavy_comma>
-             take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
-  \<medium_left_bracket> note [[\<phi>trace_reasoning = 2]]
-
-  \<medium_right_bracket> certified by auto_sledgehammer .
-
-lemma
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
-\<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<heavy_comma>
-             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
-             take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
-  \<medium_left_bracket> note [[\<phi>trace_reasoning = 2]]
-
-  \<medium_right_bracket> certified by auto_sledgehammer
-
-  term \<open>snd ((prod.swap \<circ> (\<lambda>x. (drop (len_intvl.len \<lbrakk>start : j - start\<rwpar>) x, take (len_intvl.len \<lbrakk>start : j - start\<rwpar>) x))) (fst (y, undefined)))\<close>
-
-lemma
-  \<open>\<close>
-
-term \<open> \<phi>Aggregate_Getter idx T U f
-   \<Longrightarrow> (x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) = (r \<Ztypecolon> R) * (f x \<Ztypecolon> idx \<^bold>\<rightarrow>\<^sub>@ \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)\<close>
-
 
 end
