@@ -97,7 +97,7 @@ fun preplay_ord ((_, Sledgehammer_Proof_Methods.Played t1, _),
                  (_, Sledgehammer_Proof_Methods.Play_Timed_Out _, _))
       = EQUAL
 
-datatype fail_reason = Too_Many_Subgoals | Timeout | Application_Fails | Unknown
+datatype fail_reason = Too_Many_Subgoals | Timeout | Application_Fails | Subgoal_unsolved | Unknown
 exception Auto_Fail of fail_reason
 
 fun eval_prf_str timeout "" (ctxt,sequent) =
@@ -108,14 +108,14 @@ fun eval_prf_str timeout "" (ctxt,sequent) =
                   |  err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
                              raise Auto_Fail Unknown) )
   | eval_prf_str timeout prf (ctxt,sequent) =
-      let val meth =
+      let val seq =
             Method.evaluate (
               Parse.read_embedded ctxt (Thy_Header.get_keywords (Proof_Context.theory_of ctxt))
                                        Method.parse (Input.string prf)
                 |> fst
                 |> Method.check_text ctxt
-              ) ctxt
-        in case Timeout.apply timeout (Timing.timing Seq.pull) (meth [] (ctxt, sequent))
+              ) ctxt [] (ctxt, sequent)
+        in case Timeout.apply timeout (Timing.timing Seq.pull) seq
              of ({elapsed=time,...}, SOME (Seq.Result ret, _)) => ((time,prf), ret)
               | _ => raise Auto_Fail Application_Fails
       end handle Timeout.TIMEOUT _ => raise Auto_Fail Timeout
@@ -343,9 +343,12 @@ fun auto'i id (ctxt,sequent') =
      (case Phi_Cache_DB.get_cached_proof thy id
         of NONE => fallback true
          | SOME (time,prf) =>
-            let val ctxt' = if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt
-             in eval_prf_str (Time.scale 1.5 time + time_delt) prf (ctxt', sequent)
-                  |> snd |> snd
+            let val nprem = Thm.nprems_of sequent
+                val ctxt' = if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt
+             in (case eval_prf_str (Time.scale 1.5 time + time_delt) prf (ctxt', sequent)
+                   of (_, (_, sequent')) =>
+                      if Thm.nprems_of sequent' < nprem then sequent'
+                      else raise Auto_Fail Subgoal_unsolved)
                 handle Auto_Fail _ => fallback false
             end)
 
@@ -358,7 +361,7 @@ fun auto'i id (ctxt,sequent') =
             tracing "Proof search by default tactic fails. Invoking sledgehammer...";
             sledgehammer (ctxt, sequent) ))
       handle Timeout.TIMEOUT _ => (
-        tracing "Proof search by default tactic is time out. Invoking sledgehammer...";
+        tracing "Proof search by default tactic times out. Invoking sledgehammer...";
         sledgehammer (ctxt, sequent) )
 
      fun update_cache hash (prf', (ctxt, sequent')) = (

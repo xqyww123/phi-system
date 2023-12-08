@@ -399,51 +399,51 @@ TODO ...
 \<close>
 
 
-lemma addr_gep_memblk[iff]:
+lemma addr_gep_memblk[iff, \<phi>safe_simp]:
   \<open>memaddr.blk (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.blk addr\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
-lemma addr_geps_memblk[iff]:
+lemma addr_geps_memblk[iff, \<phi>safe_simp]:
   \<open>memaddr.blk (addr_geps addr path) = memaddr.blk addr\<close>
   unfolding addr_geps_def by (cases addr; simp)
 
-lemma addr_gep_path[iff]:
+lemma addr_gep_path[iff, \<phi>safe_simp]:
   \<open>memaddr.index (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.index addr @ [i]\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
-lemma addr_geps_path[iff]:
+lemma addr_geps_path[iff, \<phi>safe_simp]:
   \<open>memaddr.index (addr_geps addr path) = memaddr.index addr @ path\<close>
   unfolding addr_geps_def by (cases addr; simp)
 
-lemma addr_gep_eq[iff]:
+lemma addr_gep_eq[iff, \<phi>safe_simp]:
   \<open>addra \<tribullet>\<^sub>a LOGIC_IDX(ia) = addrb \<tribullet>\<^sub>a LOGIC_IDX(ib) \<longleftrightarrow> addra = addrb \<and> ia = ib\<close>
   unfolding addr_gep_def by (cases addra; cases addrb; simp)
 
-lemma addr_geps_simp[iff]:
+lemma addr_geps_simp[iff, \<phi>safe_simp]:
   \<open>addr_geps addr (i#path) = addr_geps (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) path\<close>
   unfolding addr_geps_def addr_gep_def by (cases addr; simp)
 
-lemma addr_geps0_simp[iff]:
+lemma addr_geps0_simp[iff, \<phi>safe_simp]:
   \<open>addr_geps addr [] = addr\<close>
   unfolding addr_geps_def by (cases addr; simp)
 
-lemma addr_gep_not_eq_zero[intro!, simp]:
+lemma addr_gep_not_eq_zero[intro!, simp, \<phi>safe_simp]:
   \<open>addr \<noteq> 0 \<Longrightarrow> addr \<tribullet>\<^sub>a LOGIC_IDX(i) \<noteq> 0\<close>
   unfolding zero_memaddr_def addr_gep_def
   by (cases addr) simp
 
-lemma logaddr_type_gep[iff]:
+lemma logaddr_type_gep[iff, \<phi>safe_simp]:
   \<open>logaddr_type (addr \<tribullet>\<^sub>a LOGIC_IDX(x)) = idx_step_type x (logaddr_type addr)\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
-lemma addr_gep_valid[intro!, simp]:
+lemma addr_gep_valid[intro!, simp, \<phi>safe_simp]:
   \<open> valid_idx_step (logaddr_type addr) i
 \<Longrightarrow> valid_logaddr addr
 \<Longrightarrow> valid_logaddr (addr \<tribullet>\<^sub>a LOGIC_IDX(i))\<close>
   unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
   by (cases addr; clarsimp simp add: valid_idx_step_void)
 
-lemma addr_geps_valid[intro!, simp]:
+lemma addr_geps_valid[intro!, simp, \<phi>safe_simp]:
   \<open> valid_index (logaddr_type addr) path
 \<Longrightarrow> valid_logaddr addr
 \<Longrightarrow> valid_logaddr (addr_geps addr path)\<close>
