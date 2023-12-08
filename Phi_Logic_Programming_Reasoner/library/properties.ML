@@ -294,7 +294,6 @@ fun check_dependencies params action (pos,property) ctxt =
       val didx = fold (fn SOME p => Term.maxidx_term p | _ => I) params ~1
       val prop_concl = Thm.concl_of property
                     |> didx >= 0 ? Logic.incr_indexes ([],[],didx+1)
-      val eidx = Thm.maxidx_of property + (if didx >= 0 then didx + 1 else 0)
    in(if not (Thm.is_dummy property) andalso exists (
             fn SOME param => Term.could_unify (param, prop_concl)
              | NONE => false) params
@@ -338,7 +337,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
 
 fun invoke_template ((deps, pos, action) : template) =
 ( case action of Instantiate_Rule (_, _, _, SOME (_, b)) =>
-    if Binding.name_of b = "module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b" then () else () (*debug usage*)
+    if Binding.name_of b = "aaaa" then () else () (*debug usage*)
     | _ => ();
 
   check_dependencies deps (invoke_template_action pos action)

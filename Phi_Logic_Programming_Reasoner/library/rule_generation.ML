@@ -45,7 +45,11 @@ val invoke_action : Position.T (*the position where the instantiation happens*) 
                 -> instantiation_action
                 -> thm list -> Context.generic -> Context.generic
 
-val pass_generated_rule : {simp: bool, masks: IN_Arg.mask list option (*can be None by default*)}
+val pass_generated_rule : {simp: bool,
+                           masks: IN_Arg.mask list option (*can be None by default*),
+                           rule_pos: (Position.T (*template position*) *
+                                      Position.T (*position of instantiation*) *
+                                      binding option (*name of the instantiation*))}
                        -> Proof.context -> thm -> thm
 
 type instantiation = Position.T (*where the instantiation happens*)
@@ -56,6 +60,18 @@ type instantiation = Position.T (*where the instantiation happens*)
 
 val enable_reason_generator : bool Config.T
 val trace : int Config.T
+
+(* Controlling Simplification of Generated Rules *)
+
+val simp_timeout : int Config.T (*in milliseconds*)
+
+structure Simp_Reorient : PROOF_DATA
+
+val default_reorient : Proof.context -> term list -> term -> term -> bool
+val default_mk_eq_True : Proof.context -> thm -> thm option
+val default_mk_sym : Proof.context -> thm -> thm option
+
+val asm_lr_simplify : {simp_concl: bool} -> Proof.context -> thm -> thm
 
 (* Main Entry *)
 val invoke_generation : template -> instantiation -> Context.generic -> Context.generic
@@ -181,10 +197,142 @@ fun mk_simp_rule ctxt =
            | _ => [rule]
    in mk
   end
-          
+
+(* Simplification stolen from Isabelle *)
+
+local
+fun rewrite_rule_extra_vars prems elhs erhs =
+  let
+    val elhss = elhs :: prems;
+    val tvars = TVars.build (fold TVars.add_tvars elhss);
+    val vars = Vars.build (fold Vars.add_vars elhss);
+  in
+    erhs |> Term.exists_type (Term.exists_subtype
+      (fn TVar v => not (TVars.defined tvars v) | _ => false)) orelse
+    erhs |> Term.exists_subterm
+      (fn Var v => not (Vars.defined vars v) | _ => false)
+  end
+
+in
+
+fun default_reorient ctxt prems lhs rhs =
+  rewrite_rule_extra_vars prems lhs rhs
+    orelse
+  is_Var (head_of lhs)
+    orelse
+(* turns t = x around, which causes a headache if x is a local variable -
+   usually it is very useful :-(
+  is_Free rhs andalso not(is_Free lhs) andalso not(Logic.occs(rhs,lhs))
+  andalso not(exists_subterm is_Var lhs)
+    orelse
+*)
+  exists (fn t => Logic.occs (lhs, t)) (rhs :: prems)
+    orelse
+  null prems andalso Pattern.matches (Proof_Context.theory_of ctxt) (lhs, rhs)
+    (*the condition "null prems" is necessary because conditional rewrites
+      with extra variables in the conditions may terminate although
+      the rhs is an instance of the lhs; example: ?m < ?n \<Longrightarrow> f ?n \<equiv> f ?m *)
+    orelse
+  is_Const lhs andalso not (is_Const rhs);
+
+fun default_mk_eq_True (_: Proof.context) r =
+  SOME (HOLogic.mk_obj_eq r RS @{thm Eq_TrueI}) handle Thm.THM _ => NONE;
+
+fun default_mk_sym _ th = SOME (th RS Drule.symmetric_thm);
+
+structure Simp_Reorient = Proof_Data (
+  type T = (Proof.context -> term list -> term -> term -> bool)
+         * (Proof.context -> thm -> thm option)
+         * (Proof.context -> thm -> thm option)
+  val init = K (default_reorient, default_mk_eq_True, default_mk_sym)
+)
+end
+
+local
+
+val vars_set = Vars.build o Vars.add_vars;
+
+fun vperm (Var _, Var _) = true
+  | vperm (Abs (_, _, s), Abs (_, _, t)) = vperm (s, t)
+  | vperm (t1 $ t2, u1 $ u2) = vperm (t1, u1) andalso vperm (t2, u2)
+  | vperm (t, u) = (t = u);
+
+fun var_perm (t, u) = vperm (t, u) andalso Vars.eq_set (apply2 vars_set (t, u));
+
+fun decomp_simp thm =
+  let
+    val prop = Thm.prop_of thm;
+    val prems = Logic.strip_imp_prems prop;
+    val concl = Drule.strip_imp_concl (Thm.cprop_of thm);
+    val (lhs, rhs) = Thm.dest_equals concl handle TERM _ =>
+      raise Raw_Simplifier.SIMPLIFIER ("Rewrite rule not a meta-equality", [thm]);
+    val elhs = Thm.dest_arg (Thm.cprop_of (Thm.eta_conversion lhs));
+    val erhs = Envir.eta_contract (Thm.term_of rhs);
+    val perm =
+      var_perm (Thm.term_of elhs, erhs) andalso
+      not (Thm.term_of elhs aconv erhs) andalso
+      not (is_Var (Thm.term_of elhs));
+  in (prems, Thm.term_of lhs, elhs, Thm.term_of rhs, perm) end;
+
+fun mk_eq_True mk_eq_True ctxt (thm, name) =
+  case mk_eq_True ctxt thm
+    of NONE => []
+     | SOME eq_True =>
+        let val (_, lhs, elhs, _, _) = decomp_simp eq_True;
+        in [{thm = eq_True, name = name, lhs = lhs, elhs = elhs, perm = false}] end
+
+fun rewrite_rule_extra_vars prems elhs erhs =
+  let
+    val elhss = elhs :: prems;
+    val tvars = TVars.build (fold TVars.add_tvars elhss);
+    val vars = Vars.build (fold Vars.add_vars elhss);
+  in
+    erhs |> Term.exists_type (Term.exists_subtype
+      (fn TVar v => not (TVars.defined tvars v) | _ => false)) orelse
+    erhs |> Term.exists_subterm
+      (fn Var v => not (Vars.defined vars v) | _ => false)
+  end;
+
+fun rrule_eq_True meT ctxt thm name lhs elhs rhs thm2 =
+  let val rrule = {thm = thm, name = name, lhs = lhs, elhs = elhs, perm = false} in
+    if rewrite_rule_extra_vars [] lhs rhs then
+      mk_eq_True meT ctxt (thm2, name) @ [rrule]
+    else [rrule]
+  end;
+
+
+fun orient_rrule (reorient,meT,mk_sym) ctxt (thm, name) =
+  let
+    val (prems, lhs, elhs, rhs, perm) = decomp_simp thm;
+  in
+    if perm then [{thm = thm, name = name, lhs = lhs, elhs = elhs, perm = true}]
+    else if reorient ctxt prems lhs rhs then
+      if reorient ctxt prems rhs lhs
+      then mk_eq_True meT ctxt (thm, name)
+      else
+        (case mk_sym ctxt thm of
+          NONE => []
+        | SOME thm' =>
+            let val (_, lhs', elhs', rhs', _) = decomp_simp thm'
+            in rrule_eq_True meT ctxt thm' name lhs' elhs' rhs' thm end)
+    else rrule_eq_True meT ctxt thm name lhs elhs rhs thm
+  end
+
+fun extract_rews ctxt thms =
+  let val mk = Simplifier.mksimps
+  in maps (fn thm => map (rpair (Thm.get_name_hint thm)) (mk ctxt thm)) thms
+  end;
+
+fun extract_safe_rrules cfg ctxt thm =
+  maps (map #thm o orient_rrule cfg ctxt) (extract_rews ctxt [thm]);
+
+in
+
+val simp_timeout = Config.declare_int ("\<phi>LPR.rule_gen.timeout", \<^here>) (K 100)
 
 fun asm_lr_simplify {simp_concl} ctxt rule0 =
-  let fun pass_premises (i, hyps, rule, ctxt) =
+  let val reorient_cfg = Simp_Reorient.get ctxt
+      fun pass_premises (i, hyps, rule, ctxt) =
         if Thm.no_prems rule
         then (hyps,
               if simp_concl then Conv.fconv_rule (Simplifier.rewrite ctxt) rule
@@ -206,6 +354,7 @@ fun asm_lr_simplify {simp_concl} ctxt rule0 =
                  val (lprem, ctxt) = Thm.assume_hyps cprem ctxt
                  val facts = the_default [] (Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt lprem)
                           |> maps (mk_simp_rule ctxt)
+                          |> maps (extract_safe_rrules reorient_cfg ctxt)
                  val ctxt = ctxt addsimps facts
                  val rule'2 = Thm.implies_elim rule'1 lprem
          in pass_premises (i+1, cprem::hyps, rule'2, ctxt)
@@ -216,9 +365,24 @@ fun asm_lr_simplify {simp_concl} ctxt rule0 =
    |> Thm.transfer' ctxt'
   end
 
+fun asm_lr_simplify' {simp_concl,timeout,rule_pos=(template_pos,inst_pos,binding)} ctxt rule0 =
+  Timeout.apply timeout (asm_lr_simplify {simp_concl=simp_concl} ctxt) rule0
+  handle Timeout.TIMEOUT _ => (
+    raise Generation_Fail (0, fn () =>
+      let open Pretty
+       in [block ( text "Simplification for" @ [brk 1]
+                 @ (case binding of SOME B => [Binding.pretty B] | _ => text "an instantiation")
+                 @ [brk 1] @ here inst_pos @ [brk 1]
+                 @ text "of template" @ [brk 1] @ here template_pos
+                 @ [brk 1] @ text "timeouts" )]
+      end)
+    )
+
+end
+
 (*simplify the generated rule except the conclusion by default, unless a part of the conclusion has
   been annotated by \<open>NO_SIMP\<close> (i.e., \<open>NO_SIMP\<close> occurs in the conclusion)*)
-fun pass_generated_rule {simp, masks} ctxt rule =
+fun pass_generated_rule {simp, masks, rule_pos} ctxt rule =
   let (*val rule'1 = case Thm.concl_of rule
                      of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
                       | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
@@ -241,7 +405,10 @@ fun pass_generated_rule {simp, masks} ctxt rule =
         let val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt's
          in rule'2
           |> simp ? ( Simplification_Protect.protect ctxt'1
-                   #> asm_lr_simplify {simp_concl=false} ctxt'1
+                   #> asm_lr_simplify' {simp_concl=false,
+                                        timeout=Time.fromMilliseconds (Config.get ctxt'1 simp_timeout),
+                                        rule_pos=rule_pos}
+                      ctxt'1
                       (*Phi_Reasoners.asm_lr_simplify true ctxt's*)
                    #> Simplification_Protect.unprotect ctxt'1 )
           |> singleton (Variable.export ctxt'1 ctxt)
@@ -358,10 +525,6 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                         end) (Thm.nprems_of template) positioned_props
                     |> snd
                     |> Phi_Help.beta_eta_contract
-          val pattern = pattern_of action
-          val rules' = case pass of SOME (ps, _) => ps (single o pass_generated_rule {simp=true, masks=pattern} ctxt', pos, ctxt') rule'1
-                                  | NONE => single (pass_generated_rule {simp=true, masks=pattern} ctxt' rule'1)
-          val rules'' = map (snd o PLPR_Syntax.elim_embedded_patterns) rules'
 
           val binding = Option.map (fn (vs, b') =>
                   let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
@@ -387,6 +550,16 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                    in varify_binding 0 (qualify b')
                   end
                 ) bind
+
+          val pattern = pattern_of action
+          val rules' = case pass
+             of SOME (ps, _) =>
+                ps (single o pass_generated_rule {simp=true, masks=pattern, rule_pos=(template_pos, pos, binding)}
+                                                 ctxt', pos, ctxt') rule'1
+              | NONE =>
+                single (pass_generated_rule {simp=true, masks=pattern, rule_pos=(template_pos, pos, binding)}
+                                            ctxt' rule'1)
+          val rules'' = map (snd o PLPR_Syntax.elim_embedded_patterns) rules'
 
        in if null rules' then ctxt
        else (
@@ -522,7 +695,9 @@ val _ = Theory.setup (
               then (NONE, NONE)
               else (SOME x, SOME (f x th))
    in Attrib.setup \<^binding>\<open>\<phi>simplify_reasoning_rule\<close> (
-      Scan.succeed (rule_attribute (pass_generated_rule {simp=true, masks=NONE} o Context.proof_of)))
+      Scan.succeed (rule_attribute (
+          pass_generated_rule {simp=true, masks=NONE, rule_pos=(Position.none, Position.none, NONE)}
+        o Context.proof_of)))
     "Simplify a reasoning rule, using the same process as that in template instantiation.\n\
     \The conclusion of the rule is remained untouched and any antecedents are simplified and reduced\
     \if possible. \<open>NO_SIMP\<close> tag is recognized and supresses the simplification on the protected terms."

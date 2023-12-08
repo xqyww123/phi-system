@@ -1181,7 +1181,7 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 subsection \<open>Finite Multiplicative Quantification\<close>
 
 declare [[\<phi>trace_reasoning = 0 ]]
-
+  
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
 
@@ -1198,6 +1198,8 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Semimodule_One
        and Closed_Semimodule_Zero
        and Carrier_Set
+
+thm \<phi>Mul_Quant.aaaa
 
 thm \<phi>Mul_Quant.separation_extraction
 
