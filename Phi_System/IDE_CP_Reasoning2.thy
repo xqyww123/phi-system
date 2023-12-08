@@ -305,6 +305,7 @@ definition ToA_Extract :: \<open>'c::sep_magma BI \<Rightarrow> 'c BI \<Rightarr
 
 abbreviation ToA_Extract' :: \<open>'c::sep_magma BI \<Rightarrow> 'c BI \<Rightarrow> bool \<Rightarrow> 'c BI \<Rightarrow> bool\<close>
                             ("\<g>\<e>\<t> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _" [19,19,19,19] 18)
+    \<comment> \<open>\<open>ToA_Extract\<close> is very limited. \<open>ToA_Extract'\<close> is the major entry point\<close>
   where \<open>\<g>\<e>\<t> object \<f>\<r>\<o>\<m> source \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<equiv> \<g>\<e>\<t> (object \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R) \<f>\<r>\<o>\<m> source\<close>
 
 abbreviation ToA_Extract'' :: \<open>'c::sep_magma BI \<Rightarrow> 'c BI \<Rightarrow> bool \<Rightarrow> 'c BI \<Rightarrow> bool \<Rightarrow> 'c BI \<Rightarrow> bool\<close>
@@ -407,6 +408,29 @@ declare [[
 
 
 subsection \<open>Basic Rules\<close>
+
+lemma ToA_Extract_onward:
+  \<open> \<g>\<e>\<t> target \<f>\<r>\<o>\<m> source \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
+\<Longrightarrow> source \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> target \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<close>
+  unfolding ToA_Extract_def
+  by simp
+
+thm ToA_Extract_onward[unfolded Remains_\<phi>Cond_Item]
+thm Remains_\<phi>Cond_Item
+
+lemma ToA_Extract_onward':
+  \<open> \<g>\<e>\<t> target \<f>\<r>\<o>\<m> source \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
+\<Longrightarrow> source \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> target \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<close>
+  unfolding ToA_Extract_def
+  by simp
+
+term \<open>\<half_blkcirc>[a] T\<close>
+
+lemma ToA_Extract_backward:
+  \<open> \<g>\<e>\<t> target \<f>\<r>\<o>\<m> source \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
+\<Longrightarrow> target \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> source \<close>
+  unfolding ToA_Extract_def
+  by simp
 
 lemma apply_ToA_Mapper_onward:
   \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D

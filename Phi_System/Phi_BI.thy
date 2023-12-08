@@ -3182,6 +3182,26 @@ lemma [\<phi>reason %\<A>merge]:
   by (rule \<phi>Type_eqI_BI; clarsimp simp add: BI_eq_iff; force)+
 
 
+subsubsection \<open>Conditional Item on Unital Algebra\<close>
+
+abbreviation \<phi>Cond_Item :: \<open>bool \<Rightarrow> 'v BI \<Rightarrow> 'v::one BI\<close> ("\<half_blkcirc>\<^sub>\<one>[_] _" [20,91] 90)
+  \<comment> \<open>Conditional Unital Insertion\<close>
+  where \<open>\<half_blkcirc>\<^sub>\<one>[C] A \<equiv> (if C then A else 1)\<close>
+
+paragraph \<open>Rewrites\<close>
+
+lemma \<phi>Cond_Item_simp[simp]:
+  \<open> \<half_blkcirc>\<^sub>\<one>[True] A \<equiv> A \<close>
+  \<open> \<half_blkcirc>\<^sub>\<one>[False] A \<equiv> 1 \<close>
+  by simp+
+
+lemma Remains_\<phi>Cond_Item:
+  \<open> (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) = \<half_blkcirc>\<^sub>\<one>[C] R * A \<close>
+  for A :: \<open>'c::sep_magma_1 BI\<close>
+  unfolding REMAINS_def
+  by (cases C; simp)
+
+
 subsubsection \<open>Separation Extraction of \<open>\<phi>\<close>Prod\<close>
 
 text \<open>Using the technical auxiliaries, we can give the separation extraction for \<open>\<phi>Prod\<close>\<close>
