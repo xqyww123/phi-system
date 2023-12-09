@@ -415,22 +415,24 @@ lemma ToA_Extract_onward:
   unfolding ToA_Extract_def
   by simp
 
-thm ToA_Extract_onward[unfolded Remains_\<phi>Cond_Item]
-thm Remains_\<phi>Cond_Item
-
-lemma ToA_Extract_onward':
-  \<open> \<g>\<e>\<t> target \<f>\<r>\<o>\<m> source \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
-\<Longrightarrow> source \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> target \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<close>
-  unfolding ToA_Extract_def
-  by simp
-
-term \<open>\<half_blkcirc>[a] T\<close>
-
 lemma ToA_Extract_backward:
   \<open> \<g>\<e>\<t> target \<f>\<r>\<o>\<m> source \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
 \<Longrightarrow> target \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> source \<close>
   unfolding ToA_Extract_def
   by simp
+
+lemma ToA_Subst_onward:
+  \<open> \<s>\<u>\<b>\<s>\<t> residue \<f>\<o>\<r> redex \<f>\<r>\<o>\<m> Src \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
+\<Longrightarrow> Src \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> redex \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<close>
+  unfolding ToA_Subst_def
+  by blast
+
+lemma ToA_Subst_backward:
+  \<open> \<s>\<u>\<b>\<s>\<t> residue \<f>\<o>\<r> redex \<f>\<r>\<o>\<m> Src \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
+\<Longrightarrow> residue \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ret \<close>
+  unfolding ToA_Subst_def
+  by blast
+
 
 lemma apply_ToA_Mapper_onward:
   \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
