@@ -46,6 +46,35 @@ subsection \<open>Push a map to a location\<close>
 definition push_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b::one)\<close> (infixr "\<tribullet>\<^sub>m" 75)
   where \<open>push_map idx f = (\<lambda>x. if take (length idx) x = idx then f (drop (length idx) x) else 1 )\<close>
 
+lemma push_map_cons[simp]:
+  \<open> push_map (h#depth) f (h#L) = push_map depth f L \<close>
+  unfolding push_map_def
+  by clarsimp
+
+lemma push_map_cons_neq:
+  \<open> h \<noteq> h2
+\<Longrightarrow> push_map (h#depth) f (h2#L) = 1 \<close>
+  unfolding push_map_def
+  by clarsimp
+
+lemma push_map_Nil[simp]:
+  \<open> push_map [] f L = f L \<close>
+  unfolding push_map_def
+  by clarsimp
+
+lemma push_map_access_Nil[simp]:
+  \<open> ofs \<noteq> []
+\<Longrightarrow> push_map ofs f [] = 1 \<close>
+  unfolding push_map_def
+  by clarsimp
+
+lemma push_map_access_less:
+  \<comment> \<open>not added to the default simpset because of heavy computation cost\<close>
+  \<open> length L < length ofs
+\<Longrightarrow> push_map ofs f L = 1 \<close>
+  unfolding push_map_def
+  by clarsimp
+
 lemma push_map_unit[simp]:
   \<open>push_map ia (1(ib := x)) = 1(ia@ib := x)\<close>
   unfolding push_map_def

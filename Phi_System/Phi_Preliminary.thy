@@ -139,6 +139,12 @@ lemma boolean_conversions:
   by blast+
 
 
+subsubsection \<open>Setup Safe Simpset\<close>
+
+lemmas [\<phi>safe_simp] =
+    fmdom_fmupd fmdom_empty finsert_iff fempty_iff
+
+
 subsection \<open>Helper Attributes \& Tactics\<close>
 
 attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.optional Parse.int 0) >>

@@ -101,6 +101,10 @@ declare [[\<phi>trace_reasoning = 0]]
 definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,81] 80)
   where \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<equiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<close>
 
+
+
+  
+
 (* \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 Mem_Coercion Mem_Coercion Mem_Coercion (\<^emph>) (\<^emph>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close> *)
 
 
@@ -197,48 +201,46 @@ abbreviation Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarro
 
 
 
-
-
-
-
-
-
-
-
 section \<open>Instructions & Their Specifications\<close>
 
 proc op_load_mem:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+  requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
   apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
   have [useful]: \<open>0 < n\<close>
-    by (simp add: the_\<phi>(2)) ;;
+    by (simp add: the_\<phi>(2))
+
+  note sem = \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>[useful del, \<phi>reason add] ;;
 
   to \<open>OPEN _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
   apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=n and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
   \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (n \<odiv> MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
+
   apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
   semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
   semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+
 \<medium_right_bracket> .
 
 
 proc op_store_mem:
   input  \<open>State\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
-  requires Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)
-                   \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)
+  requires Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
+                   \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
                  \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
        and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   output \<open>\<lambda>_::unit \<phi>arg. State'\<close>
   including \<phi>sem_type_sat_EIF
+  unfolding Guided_Mem_Coercion_def
 \<medium_left_bracket>
   apply_rule ToA_Subst_onward[OF Map, unfolded Remains_\<phi>Cond_Item]
 
@@ -265,8 +267,7 @@ text \<open>(depreciated! as we can have non-deterministic monad)
 proc op_allocate_mem_1:
   input \<open>Void\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
-  unfolding Guided_Mem_Coercion_def
+  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
@@ -279,11 +280,10 @@ proc op_allocate_mem_1:
 \<medium_right_bracket> .
  
 proc op_free_mem:
-  input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   premises \<open>memaddr.index addr = 0\<close>
   output \<open>Void\<close>
-  unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
   to \<open>OPEN _\<close>

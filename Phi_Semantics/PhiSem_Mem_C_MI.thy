@@ -5,8 +5,7 @@ begin
 proc op_allocate_mem_N:
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>replicate n z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n TY] (Array n T))\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr (array n TY) \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
-  unfolding Guided_Mem_Coercion_def
+  output \<open>replicate n z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr (array n TY) \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] ;;
@@ -17,8 +16,7 @@ proc op_allocate_mem_N:
                                                and v=\<open>V_array.mk (replicate (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
 
   \<open>replicate n z \<Ztypecolon> MAKE (\<m>\<e>\<m>[memaddr blk 0] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
-  certified by (of_tac \<open>V_array.mk (replicate (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>,
-              auto_sledgehammer) ;;
+  certified by auto_sledgehammer ;;
   
   semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr (array n TY))\<close>
 

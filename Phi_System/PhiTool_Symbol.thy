@@ -22,7 +22,7 @@ ML_file \<open>PhiTool_Symbol.ML\<close>
 nonterminal "\<phi>_symbol_"
 
 syntax "_ID_SYMBOL_" :: \<open>id \<Rightarrow> \<phi>_symbol_\<close> ("_")
-       "_LOG_EXPR_SYMBOL_" :: \<open>logic \<Rightarrow> \<phi>_symbol_\<close> ("LOGIC'_SYMBOL'(_')")
+       "_LOG_EXPR_SYMBOL_" :: \<open>logic \<Rightarrow> \<phi>_symbol_\<close> ("SYMBOL'_VAR'(_')")
        "_MK_SYMBOL_" :: \<open>\<phi>_symbol_ \<Rightarrow> symbol\<close> ("SYMBOL'(_')")
 
 declare [[ML_debugger]]
