@@ -2518,7 +2518,7 @@ setup \<open>Context.theory_map (
            not (can \<^keyword>\<open>certified\<close> (#toks arg))
         then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
                  val sequent' = Phi_Reasoners.obligation_intro_Ex_conv ~1 ctxt sequent
-              in raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent'))
+              in raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent'))
               handle Phi_Reasoners.Automation_Fail err =>
                   error (Phi_Reasoners.error_message err)
              end
@@ -2547,7 +2547,7 @@ setup \<open>Context.theory_map (
                                                ) end)
                                      NONE (SOME 1) ctxt sequent
                 |> (fn sequent =>
-                        raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, sequent)) ))
+                        raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt, sequent)) ))
              else (ctxt, sequent0)
           end
        | _ => (ctxt, sequent0)
@@ -2580,7 +2580,7 @@ setup \<open>Context.theory_map (
       of SOME mode =>
             if #constr_is_ready mode prop
             then (case Phi_CoP_Simp.invoke_when_needed (ctxt,mode) sequent
-                    of SOME sequent' => raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, sequent'))
+                    of SOME sequent' => raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt, sequent'))
                      | NONE => (ctxt, sequent))
             else (ctxt, sequent)
        | NONE => (ctxt, sequent))
@@ -2594,7 +2594,7 @@ setup \<open>Context.theory_map (
              | _ => false) andalso
          not (Symtab.defined (#config arg) "no_accept_proc") andalso
          not (can \<^keyword>\<open>throws\<close> (#toks arg))
-      then raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, Phi_Sys.accept_proc s)
+      then raise Phi_CP_IDE.Post_App.ReEntry (arg, Phi_Sys.accept_proc s)
       else s)
 
    (*automatic elimination of existential quantifiers*)
@@ -2607,7 +2607,7 @@ setup \<open>Context.theory_map (
     then let val mode = Phi_Working_Mode.mode1 ctxt
       in case #spec_of mode (Thm.concl_of sequent)
            of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
-                raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, Phi_CP_IDE.proof_state_call NuObtain.auto_choose (ctxt,sequent))
+                raise Phi_CP_IDE.Post_App.ReEntry (arg, Phi_CP_IDE.proof_state_call NuObtain.auto_choose (ctxt,sequent))
             | _ => (ctxt,sequent)
      end
     else (ctxt,sequent)

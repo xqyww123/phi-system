@@ -114,8 +114,95 @@ declare [[\<phi>trace_reasoning = 0]]
 
 term \<open>FIC.aggregate_mem.\<phi>\<close>
 
+
+
+
+
+consts Mem_synt :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
+
+ML \<open>
+structure Phi_Mem_Parser = Handlers (
+  type arg = Proof.context * (Proof.context -> term -> term) * term
+  type ret = term
+)
+structure Phi_Mem_Printer = Handlers (
+  type arg = Proof.context * (Proof.context -> term -> term) * term
+  type ret = term
+)
+\<close>
+
+print_translation \<open>
+  [(\<^const_syntax>\<open>MemBlk\<close>, fn ctxt => fn [Const(\<^const_syntax>\<open>memaddr.blk\<close>, _) $ addr,
+                                         Const(\<^const_syntax>\<open>\<phi>MapAt_L\<close>, _) $ (Const(\<^const_syntax>\<open>memaddr.index\<close>, _) $ addr') $ T] =>
+  let val _ = if addr aconv addr' then () else raise Match
+      val printers = Phi_Mem_Printer.invoke (Context.Proof ctxt)
+      fun print ctxt term =
+        case printers (ctxt, print, term)
+          of SOME ret => ret
+           | NONE => (case term of Const(\<^const_syntax>\<open>Mem_Coercion\<close>, _) $ X => X
+                                 | _ => term)
+   in Const(\<^const_syntax>\<open>Mem_synt\<close>, dummyT)
+    $ addr
+    $ print ctxt T
+  end )]
+\<close>
+
+parse_translation \<open>[
+  (\<^const_syntax>\<open>Mem_synt\<close>, fn ctxt => fn [addr, T] =>
+  let val parsers = Phi_Mem_Parser.invoke (Context.Proof ctxt)
+      fun parse ctxt term =
+        case parsers (ctxt, parse, term)
+          of SOME ret => ret
+           | NONE => if Term.exists_Const (fn (\<^const_syntax>\<open>Mem_Coercion\<close>, _) => true
+                                            | (\<^const_syntax>\<open>Guided_Mem_Coercion\<close>, _) => true
+                                            | _ => false) term
+                     then term
+                     else Const(\<^const_syntax>\<open>Mem_Coercion\<close>, dummyT) $ term
+  in Const(\<^const_name>\<open>MemBlk\<close>, dummyT)
+      $ (Const(\<^const_name>\<open>memaddr.blk\<close>, dummyT) $ addr)
+      $ (
+     Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, dummyT)
+      $ (Const(\<^const_name>\<open>memaddr.index\<close>, dummyT) $ addr)
+      $ parse ctxt T)
+  end)
+]\<close>
+
+setup \<open>Context.theory_map (
+  Phi_Mem_Parser.add 100 (
+    fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ A $ B) =>
+          SOME (Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ f ctxt A $ f ctxt B)
+     | (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Share\<close>, Ty) $ n $ T) =>
+          SOME (Const(\<^const_syntax>\<open>\<phi>Share\<close>, Ty) $ n $ f ctxt T)
+     | _ => NONE)
+
+#>Phi_Mem_Printer.add 100 (
+    fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ A $ B) =>
+          SOME (Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ f ctxt A $ f ctxt B)
+     | _ => NONE)
+)\<close>
+
+term \<open>n \<odiv> T\<close>
+term \<open>\<m>\<e>\<m>[addr] T\<close>
+term \<open>MAKE\<close>
+ML \<open>\<^const_name>\<open>MAKE\<close>\<close>
+ML \<open>@{term \<open>MAKE (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<close>}\<close>
+ML \<open>@{term \<open>\<m>\<e>\<m>[addr] (MAKE (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))\<close>}\<close>
+
+(*
 abbreviation Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
   where \<open>\<m>\<e>\<m>[addr] T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+
+*)
+
+
+
+
+
+
+
+
+
+
 
 
 section \<open>Instructions & Their Specifications\<close>
@@ -168,7 +255,8 @@ proc op_store_mem:
 \<medium_right_bracket> .
 
 
-text \<open>A simplification in the semantics is, we only consider allocation with zero initialization
+text \<open>(depreciated! as we can have non-deterministic monad)
+  A simplification in the semantics is, we only consider allocation with zero initialization
   (i.e., \<open>calloc\<close> but not \<open>malloc\<close>), which frees us from modelling uninitialized memory state so
   simplifies the system a lot. We can do so because we aim to provide a certified language
   over a subset of C semantics. The absence of non-initialized allocation does not affect the functionality
