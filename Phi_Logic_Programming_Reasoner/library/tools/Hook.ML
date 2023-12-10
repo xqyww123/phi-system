@@ -3,7 +3,7 @@ type arg
 type state
 end
 
-type priority = int (*small value is in higher priority to be executed*)
+type priority = int (*smaller value is of higher priority in execution*)
 
 signature HOOKS = sig
 

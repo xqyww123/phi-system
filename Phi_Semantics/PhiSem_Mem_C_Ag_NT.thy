@@ -22,20 +22,20 @@ translations
   "_\<phi>Tuple (_\<phi>tuple_arg (\<phi>_shared_named_tuple_ n s X))" => "\<phi>_shared_named_tuple_ n s X"
 
 setup \<open>Context.theory_map (
-  Phi_Mem_Parser.add 100 (
-    fn (ctxt, f, Const(\<^const_name>\<open>Named_Tuple_Field\<close>, _) $ s $ T) =>
+  Phi_Mem_Parser.add 110 (
+    fn ((ctxt,_), f, Const(\<^const_name>\<open>Named_Tuple_Field\<close>, _) $ s $ T) =>
         SOME (Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, dummyT)
                 $ (Const(\<^const_name>\<open>Cons\<close>, dummyT) $ (Const(\<^const_name>\<open>AgIdx_S\<close>, dummyT) $ s) $ Const(\<^const_name>\<open>Nil\<close>, dummyT))
-                $ f ctxt T)
-     | (ctxt, f, Const(\<^syntax_const>\<open>\<phi>_shared_named_tuple_\<close>, _) $ sh $ s $ T) =>
+                $ f (ctxt,0) T)
+     | ((ctxt,_), f, Const(\<^syntax_const>\<open>\<phi>_shared_named_tuple_\<close>, _) $ sh $ s $ T) =>
         SOME (Const(\<^const_name>\<open>\<phi>Share\<close>, dummyT)
           $ sh
           $ (Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, dummyT)
                 $ (Const(\<^const_name>\<open>Cons\<close>, dummyT) $ (Const(\<^const_name>\<open>AgIdx_S\<close>, dummyT) $ s) $ Const(\<^const_name>\<open>Nil\<close>, dummyT))
-                $ f ctxt T))
+                $ f (ctxt,0) T))
      | _ => NONE)
 
-#>Phi_Mem_Printer.add 100 (
+#>Phi_Mem_Printer.add 110 (
     fn (ctxt, f, Const(\<^const_syntax>\<open>Phi_Types.\<phi>MapAt_L1\<close>, _)
           $ (Const(\<^const_syntax>\<open>AgIdx_S\<close>, _) $ s)
           $ T) =>

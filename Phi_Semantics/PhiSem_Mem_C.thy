@@ -126,7 +126,7 @@ consts Mem_synt :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow
 
 ML \<open>
 structure Phi_Mem_Parser = Handlers (
-  type arg = Proof.context * (Proof.context -> term -> term) * term
+  type arg = (Proof.context * int (*index in \<open>*\<close>-sequence*)) * (Proof.context * int -> term -> term) * term
   type ret = term
 )
 structure Phi_Mem_Printer = Handlers (
@@ -167,14 +167,15 @@ parse_translation \<open>[
       $ (
      Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, dummyT)
       $ (Const(\<^const_name>\<open>memaddr.index\<close>, dummyT) $ addr)
-      $ parse ctxt T)
+      $ parse (ctxt, 0) T)
   end)
 ]\<close>
 
 setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 100 (
-    fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ A $ B) =>
-          SOME (Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ f ctxt A $ f ctxt B)
+    fn ((ctxt,i), f, Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ A $ B) =>
+         (case A of Const(\<^const_syntax>\<open>\<phi>Prod\<close>, _) => NONE (*nested product-sequence is rejected*)
+             | _ => SOME (Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ f (ctxt,i) A $ f (ctxt,i+1) B))
      | (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Share\<close>, Ty) $ n $ T) =>
           SOME (Const(\<^const_syntax>\<open>\<phi>Share\<close>, Ty) $ n $ f ctxt T)
      | _ => NONE)
