@@ -42,11 +42,6 @@ thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True, simplified]
 term map2
 
 
-  
-  term \<open>zip' (apfst g (unzip' x))\<close>
-
-lemma
-  \<open>unzip' (map f (zip' x))\<close>
 
 term \<open>unzip' (map f (zip' x))\<close>
 

@@ -335,7 +335,7 @@ proc op_get_var:
   semantic_return \<open>the (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
   fold Inited_Var_identity_eq
   apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx
-                                and pidx=pidx and reject=reject]
+                                and pidx=pidx and reject=reject, unfolded Is_Aggregate_def]
  \<medium_right_bracket> .
 
 lemma op_get_var0:

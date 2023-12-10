@@ -432,8 +432,11 @@ ML_file \<open>syntax/index_param.ML\<close>
 
 section \<open>First-level Abstraction of Instructions\<close>
 
+term \<open>Is_Aggregate\<close>
+
 lemma op_get_aggregate:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> Is_Aggregate T
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> parse_eleidx_input_least1 TY input_index sem_idx spec_idx pidx reject
 \<Longrightarrow> \<phi>Aggregate_Getter spec_idx T U f
 \<Longrightarrow> report_unprocessed_element_index reject

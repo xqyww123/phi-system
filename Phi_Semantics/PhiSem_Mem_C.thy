@@ -354,7 +354,7 @@ setup \<open>fn thy => thy
 \<close>
 
 
-proc(nodef) "_load_mem_bracket_":
+proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<close>
   requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx pidx reject\<close>
        and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
@@ -368,7 +368,24 @@ proc(nodef) "_load_mem_bracket_":
   apply_rule op_load_mem[OF Extr L01]
 \<medium_right_bracket> .
 
-thm "_load_mem_bracket__\<phi>app"
+
+proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
+  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx pidx reject\<close>
+       and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
+       and L4[]: \<open>report_unprocessed_element_index reject\<close>
+  requires Map[]: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
+                     \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
+                   \<f>\<r>\<o>\<m> state \<t>\<o> state' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+       and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+       and L02[]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  output \<open>\<lambda>_::unit \<phi>arg. state'\<close>
+\<medium_left_bracket>
+  $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
+  $y apply_rule op_store_mem[OF Map L01 L02]
+\<medium_right_bracket> .
+
 
 
 end
