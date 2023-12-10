@@ -349,10 +349,27 @@ proc op_free_mem:
 
 section \<open>IDE-CP Interfaces\<close>
 
+declare_\<phi>lang_operator postfix %\<phi>lang_deref "!"
+
+declare op_load_mem_\<phi>app[\<phi>overload "!"]
+        op_store_mem_\<phi>app[\<phi>overload ":="]
+
+thm "!_\<phi>app"
+
+text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
+  \<open>\<leftarrow>\<close> is used to update the value of a local variable.
+  \<open>:=\<close> is used to change the value of a memory object.
+  Without this differentiation, ambiguity occurs when we have a local variable of a pointer
+  pointing to a memory object which also stores a pointer, and an assignment can ambiguously refer
+  to updating the variable or writing to the memory object.
+\<close>
+
+
+(*
 setup \<open>fn thy => thy
 |> Phi_Opr_Stack.decl_postfix (@{priority %\<phi>lang_deref}, "!", SOME 0) |> snd
 \<close>
-
+*)
 
 proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<close>

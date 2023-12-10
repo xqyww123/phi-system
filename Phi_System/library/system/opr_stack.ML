@@ -268,11 +268,13 @@ val _ =
         (( \<^keyword>\<open>infixl\<close> >> K decl_infixl' || \<^keyword>\<open>infixr\<close> >> K decl_infixr' ||
            \<^keyword>\<open>infix\<close> >> K decl_infix' ||
          Args.$$$ "prefix" >> K decl_prefix' || Args.$$$ "postfix" >> K decl_postfix')
-       -- Parse.nat
+       -- Reasoner_Group.parser
        -- Parse.position symbol
        -- Scan.option (Parse.int >> SOME || \<^keyword>\<open>var\<close> >> K NONE))
     >> (fn decls => Toplevel.theory (
-            fold (fn (((f,prec),(sym,_)),arity) => f (prec, sym, arity)) decls
+            fold (fn (((f,prec),(sym,_)),arity) => fn thy =>
+                f (fst (Reasoner_Group.check_group true (Context.Theory thy) prec),
+                   sym, arity) thy) decls
          #> Named_Target.theory_map (
               fold (fn ((_,sym),_) =>
                 Named_Theorems.declare (Binding.suffix_name "_\<phi>app" (Binding.make sym))

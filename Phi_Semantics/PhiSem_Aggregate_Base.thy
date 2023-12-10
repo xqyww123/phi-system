@@ -575,6 +575,14 @@ let open Phi_Opr_Stack
 end
 )) \<close>
 
+text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
+  \<open>\<leftarrow>\<close> is used to update the value of a local variable.
+  \<open>:=\<close> is used to change the value of a memory object.
+  Without this differentiation, ambiguity occurs when we have a local variable of a pointer
+  pointing to a memory object which also stores a pointer, and an assignment can ambiguously refer
+  to updating the variable or writing to the memory object.
+\<close>
+
 \<phi>lang_parser assignment_opr (%\<phi>parser_left_arrow, %\<phi>lang_top) ["\<leftarrow>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<leftarrow>\<close> >> (fn (_, pos) => fn cfg => (
 let open Phi_Opr_Stack

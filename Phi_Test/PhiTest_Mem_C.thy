@@ -1,6 +1,37 @@
 theory PhiTest_Mem_C
   imports Phi_Semantics.PhiSem_Mem_C
+          Phi_Semantics.PhiSem_Int_ArbiPrec
 begin
+
+
+proc test_mem1:
+  input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
+  output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  \<medium_left_bracket>
+    note [[\<phi>trace_reasoning = 2]];;
+  $addr !
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len

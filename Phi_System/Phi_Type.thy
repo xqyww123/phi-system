@@ -3981,6 +3981,19 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.wrap_modul
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
 
+lemma
+  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D\<^sub>1 I\<^sub>1 P\<^sub>E
+
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F' a \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F (introduced one) \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> apfst I\<^sub>1 ` D
+
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F' a \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> (f o I\<^sub>1) \<otimes>\<^sub>f w : T\<^sub>1 \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h o apfst I\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  for F :: \<open>'a \<Rightarrow> 'b \<Rightarrow> 'c::sep_magma set\<close>
+  and T\<^sub>1 :: \<open>'b2 \<Rightarrow> 'c set\<close>
+
 
 
 subsubsection \<open>Extended Associative\<close>
