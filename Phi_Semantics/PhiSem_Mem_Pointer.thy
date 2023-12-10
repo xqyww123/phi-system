@@ -143,11 +143,12 @@ lemma Mem_freshness:
   by (smt (verit, del_insts) Collect_mono finite_Collect_disjI finite_subset memblk_infinite_TY)
 
 
-
-subsubsection \<open>Validity of Mem Block and Addresses\<close>
+subsubsection \<open>Semantic Types that can be stored in Memory\<close>
 
 abbreviation \<open>type_storable_in_mem T \<equiv> MemObj_Size T < 2^addrspace_bits\<close>
-  \<comment> \<open>the size of type \<open>T\<close> is representable / less than the cap size of address space\<close>
+
+
+subsubsection \<open>Validity of Mem Block and Addresses\<close>
 
 definition \<open>Valid_MemBlk seg = (
     case seg of Null \<Rightarrow> True
@@ -185,7 +186,8 @@ lemmas MemObj_Size_LE_idx_0 = MemObj_Size_LE_idx[where base = "[]", simplified]
 
 lemma index_type_type_storable_in_mem:
   \<open>type_storable_in_mem T \<Longrightarrow> valid_index T idx \<Longrightarrow> type_storable_in_mem (index_type idx T)\<close>
-  using MemObj_Size_LE_idx_0 order.strict_trans1 by blast
+  using MemObj_Size_LE_idx_0 order.strict_trans1
+  by blast
 
 
 paragraph \<open>The type of the object that a pointer points to\<close>
@@ -196,8 +198,7 @@ abbreviation logaddr_type :: \<open>logaddr \<Rightarrow> TY\<close>
 lemma logaddr_storable_in_mem:
   \<open>valid_logaddr addr \<Longrightarrow> type_storable_in_mem (logaddr_type addr)\<close>
   unfolding valid_logaddr_def Valid_MemBlk_def zero_memaddr_def
-  by (cases addr; case_tac x1; simp;
-      insert index_type_type_storable_in_mem; blast)
+  by (cases addr; case_tac x1; simp; insert index_type_type_storable_in_mem; blast)
 
 
 
@@ -320,7 +321,8 @@ lemma logaddr_to_raw_inj:
      logaddr_to_raw addr1 = logaddr_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
   unfolding logaddr_to_raw_def valid_logaddr_def
   by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def;
-      metis Valid_MemBlk_def add_leD1 index_offset_inj index_offset_upper_bound_0 memblk.simps(5) not_gr_zero order_le_less_trans phantom_mem_semantic_type_def unat_to_size_t)
+      metis add_leD1 index_offset_inj index_offset_upper_bound_0 index_type_idem logaddr_storable_in_mem memaddr.sel(1) memaddr.sel(2) memblk.layout(2) not_gr_zero order_le_less_trans phantom_mem_semantic_type_def unat_to_size_t valid_index.simps(1) valid_logaddr_def)
+      
 
 
 definition \<open>rawaddr_to_log T raddr = (@laddr. logaddr_to_raw laddr = raddr \<and> logaddr_type laddr = T \<and> valid_logaddr laddr)\<close>
@@ -362,12 +364,15 @@ lemma dereference_pointer_value:
       meson dereference_pointer_type index_value_welltyp phantom_mem_semantic_type_single_value valid_logaddr_def,
       simp)
 
-lemma
+lemma dereference_pointer_update:
   \<open> valid_logaddr addr
-\<Longrightarrow> c \<in> Well_Type (memblk.layout (memaddr.blk addr))
-\<Longrightarrow> index_mod_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) c
-  = index_mod_value (memaddr.index addr) c \<close>
-
+\<Longrightarrow> u \<in> Well_Type (memblk.layout (memaddr.blk addr))
+\<Longrightarrow> v \<in> Well_Type (logaddr_type addr)
+\<Longrightarrow> index_mod_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) (\<lambda>_. v) u
+  = index_mod_value (memaddr.index addr) (\<lambda>_. v) u \<close>
+  by (cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>,
+      metis dereference_pointer_type dereference_pointer_value index_mod_value_unchanged logaddr_to_raw logaddr_to_raw_MemBlk phantom_mem_semantic_type_single_value valid_logaddr_def,
+      simp)
 
 subsubsection \<open>Address Arithmetic - Shift\<close>
 

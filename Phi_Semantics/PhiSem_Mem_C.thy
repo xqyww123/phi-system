@@ -290,14 +290,6 @@ proc op_store_mem:
   $addr semantic_local_value \<open>pointer\<close>
   $y semantic_local_value \<open>TY\<close>
 
-  thm useful
-  thm FIC.aggregate_mem.setter_rule[
-        where u_idx=v and idx=\<open>memaddr.index addr\<close>
-          and v=\<open>\<phi>arg.dest \<a>\<r>\<g>2\<close>
-          and blk=\<open>memaddr.blk addr\<close>
-          and cblk = \<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
-          and cidx = \<open>memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
-  ;;
   apply_rule FIC.aggregate_mem.setter_rule[
         where u_idx=v and idx=\<open>memaddr.index addr\<close>
           and v=\<open>\<phi>arg.dest \<a>\<r>\<g>2\<close>
@@ -328,9 +320,16 @@ proc op_allocate_mem_1:
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and v=\<open>the (Zero TY)\<close>]
 
   \<open>z \<Ztypecolon> MAKE (\<m>\<e>\<m>[memaddr blk 0] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
-  
-  semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
 
+  semantic_assumption \<open>type_storable_in_mem TY\<close>
+
+  have t1: \<open>valid_logaddr (memaddr blk [])\<close>
+    unfolding valid_logaddr_def Valid_MemBlk_def
+    using \<open>memblk.layout blk = TY\<close>
+    by (cases blk; clarsimp simp: \<open>type_storable_in_mem TY\<close>) ;;
+
+  semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
+    
 \<medium_right_bracket> .
  
 proc op_free_mem:
@@ -366,14 +365,10 @@ proc(nodef) "_load_mem_bracket_":
   output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
   $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
-  
+  apply_rule op_load_mem[OF Extr L01]
+\<medium_right_bracket> .
 
-  thm op_load_mem_\<phi>app[OF Extr L01]
-
-  thm op_get_element_pointer_\<phi>app[OF L1 Premise_I[OF L2] L3 L4]
-  thm L3
-  thm Premise_I
-
+thm "_load_mem_bracket__\<phi>app"
 
 
 end

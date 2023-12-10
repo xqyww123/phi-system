@@ -365,11 +365,13 @@ lemma fiction_Map_of_Val_ins_projection':
       using fiction_Map_of_Val_ins_projection prems(1) prems(2) by blast
   qed .
 
+
 lemma fiction_Map_of_Val_ins_refinement:
   \<open> valid_index TY idx
 \<Longrightarrow> v \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
-\<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_discrete (index_mod_value idx (\<lambda>_. v))) u)}
+\<Longrightarrow> (\<forall>x \<in> Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x )
+\<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
                     \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx}
                       \<and> u \<in> discrete ` Well_Type TY)
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
@@ -388,11 +390,11 @@ lemma fiction_Map_of_Val_ins_refinement:
     have t1: \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close> for A B B'
       by (clarsimp simp add: subset_iff set_mult_expn; blast)
     have \<open>pairself Map_of_Val_ins `
-            ({(Some u, (Some \<circ> map_discrete (index_mod_value idx (\<lambda>_. v))) u)} \<s>\<u>\<b>\<j> u.
+            ({(Some u, (Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))) u)} \<s>\<u>\<b>\<j> u.
              u \<in> discrete ` {a. index_value idx a = u_idx} \<and> u \<in> discrete ` Well_Type TY)
         \<subseteq> ({(a, a ++ (idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j> a. dom a = Dom_of_TY TY)\<close>
       apply (clarsimp simp add: set_eq_iff ExSet_image Subjection_image;
-             auto simp add: ExSet_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff)
+             auto simp add: \<open>\<forall>x\<in>_. _\<close> ExSet_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff)
       apply (metis Map_of_Val_mod map_option_funcomp_map_add homo_one_map_option prems(1) prems(2) push_map_homo)
       using Map_of_Val_dom apply blast
       using Map_of_Val_dom by blast
@@ -403,6 +405,7 @@ lemma fiction_Map_of_Val_ins_refinement:
       by (metis Map_of_Val_ins_None Map_of_Val_ins_dom_eval Map_of_Val_ins_eval(1) option.distinct(1) prems(3) push_map_eq_1)
     then have t5: \<open> r * idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) \<noteq> 1\<close> for r
       by (metis (no_types, opaque_lifting) dom1_disjoint_sep_disj dom1_dom dom_eq_empty_conv empty_subsetI inf.orderE one_partial_map sep_no_inverse times_fun_def times_option_none)
+
     show ?thesis
       apply (rule t2)
       apply (rule map_tree_refinement_modify)
@@ -428,7 +431,8 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
   \<open> valid_index TY idx
 \<Longrightarrow> v \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
-\<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_discrete (index_mod_value idx (\<lambda>_. v))) u)}
+\<Longrightarrow> \<forall>x\<in>Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x
+\<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
                     \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx}
                       \<and> u \<in> discrete ` Well_Type TY)
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
@@ -438,6 +442,7 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
   unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
   by (rule sep_refinement_stepwise,
       rule refinement_frame[OF fiction_Map_of_Val_ins_refinement],
+      assumption,
       assumption,
       assumption,
       assumption,
@@ -537,37 +542,21 @@ lemma allocate_rule:
       clarsimp simp add: R.in_invariant Ball_def dom1_dom, metis dom_map_option_comp prems(1))
 qed .
 
-declare [[unify_trace_failure]]
-
 lemma setter_rule:
   assumes EQ: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> cblk = blk\<close>
   shows \<open> valid_index (typ_of_blk blk) idx
       \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (index_type idx (typ_of_blk blk))
       \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
+      \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>Well_Type (typ_of_blk blk). index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x)
       \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at cblk (Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v)) \<circ> the))
             \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
               \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   unfolding Premise_def
-  apply (simp only: EQ[unfolded Premise_def])
-  thm "_setter_rule_2_"
-  thm "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))\<close>
-                        and V=\<open>discrete ` {a. index_value idx a = u_idx}\<close>
-                        and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>
-                      for idx v u_idx]
-  thm fiction_Map_of_Val_perm_partial_refinement
-
-  apply (rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))\<close>
+  by (simp only: EQ[unfolded Premise_def],
+      rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))\<close>
                         and V=\<open>discrete ` {a. index_value idx a = u_idx}\<close>
                         and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>
                         for idx cidx v u_idx,
-                      OF _ fiction_Map_of_Val_perm_partial_refinement
-                         fiction_Map_of_Val_ins_perm_projection])
-
-  by (simp only: EQ[unfolded Premise_def],
-      rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value idx (\<lambda>_. v))\<close>
-                        and V=\<open>discrete ` {a. index_value idx a = u_idx}\<close>
-                        and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>
-                        for idx v u_idx,
                       OF _ fiction_Map_of_Val_perm_partial_refinement
                          fiction_Map_of_Val_ins_perm_projection],
       simp,
@@ -576,7 +565,9 @@ lemma setter_rule:
       assumption,
       assumption,
       assumption,
+      assumption,
       simp add: split_discrete_meta_all inj_image_mem_iff index_mod_value_welltyp)
+
 
 lemma deallocate_rule:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (typ_of_blk blk)

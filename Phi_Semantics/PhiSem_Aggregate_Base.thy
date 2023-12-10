@@ -27,6 +27,11 @@ and   idx_step_mod_value :
         \<Longrightarrow> v \<in> Well_Type T
         \<Longrightarrow> idx_step_value i (idx_step_mod_value j f v) =
               (if i = j then f (idx_step_value j v) else idx_step_value i v) \<close>
+and   idx_step_mod_value_unchanged :
+          \<open> valid_idx_step T i
+        \<Longrightarrow> u \<in> Well_Type T
+        \<Longrightarrow> f (idx_step_value i u) = idx_step_value i u
+        \<Longrightarrow> idx_step_mod_value i f u = u \<close>
 and   idx_step_mod_value_welltyp:
            \<open>valid_idx_step T i
         \<Longrightarrow> v \<in> Well_Type T
@@ -105,6 +110,14 @@ lemma index_type_idem:
   apply (cases idx; simp; rule)
   using index_type_measure
   by (metis fold_simps(2) list.discI order_less_irrefl valid_index.simps(2))
+
+lemma index_mod_value_unchanged:
+  \<open> valid_index T idx
+\<Longrightarrow> u \<in> Well_Type T
+\<Longrightarrow> f (index_value idx u) = (index_value idx u)
+\<Longrightarrow> index_mod_value idx f u = u \<close>
+  by (induct idx arbitrary: T u f; clarsimp simp add: idx_step_mod_value_unchanged idx_step_value_welltyp)
+  
 
 subsection \<open>Semantics of aggregate path\<close>
 
