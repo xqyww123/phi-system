@@ -1716,7 +1716,7 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
     Separation_Disj\<^sub>\<phi> \<psi> Dx U T
 \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U Dx (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
-            Separation_Disj\<^sub>\<phi>_def Separation_Disj_def closed_homo_sep_def
+            Separation_Disj\<^sub>\<phi>_def Separation_Disj\<^sub>\<psi>_def closed_homo_sep_def
             homo_sep_def closed_homo_sep_disj_def Ant_Seq_def
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp simp add: Ball_def; metis)
@@ -2943,7 +2943,7 @@ lemma [\<phi>reason add]:
 
 
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
    
 \<phi>type_def \<phi>Mul_Quant_Tree :: \<open>(nat \<Rightarrow> 'k) \<Rightarrow> nat len_intvl \<Rightarrow> ('k list \<Rightarrow> 'c, 'a) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'c::sep_algebra, 'a list) \<phi> \<close> ("\<big_ast>\<^sub>\<bbbT>")
   where \<open>l \<Ztypecolon> \<phi>Mul_Quant_Tree f iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>i. f i \<^bold>\<rightarrow>\<^sub># T)\<close>
@@ -3162,10 +3162,10 @@ lemma [\<phi>reason add]:
 
 lemma \<phi>Composition_Separation_Homo\<^sub>I'[\<phi>reason 1200]:
   \<open> Separation_Homo\<^sub>I ((\<Zcomp>) (\<phi>sep_homo \<psi>)) ((\<Zcomp>) (\<phi>sep_homo \<psi>)) ((\<Zcomp>) (\<phi>sep_homo \<psi>))
-                     (\<lambda>T U xy. Separation_Disj \<psi> (snd xy \<Ztypecolon> U) (fst xy \<Ztypecolon> T))
+                     (\<lambda>T U xy. Separation_Disj\<^sub>\<psi> \<psi> (snd xy \<Ztypecolon> U) (fst xy \<Ztypecolon> T))
                      UNIV (\<lambda>x. x)\<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
-            Separation_Disj_def
+            Separation_Disj\<^sub>\<psi>_def
   by (clarsimp; metis homo_sep_def homo_sep_mult_def)
   
 

@@ -77,4 +77,29 @@ setup \<open>Context.theory_map (
 term \<open>\<m>\<e>\<m>[addr] (AG_IDX(2\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> E \<^emph> AG_IDX(1\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U \<^emph> AG_IDX(0\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<close>
 *)
 
+subsection \<open>Reasoning\<close>
+
+subsubsection \<open>ToA Mapper\<close>
+
+lemma Mem_Coerce_NTup:
+  \<open> (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> T \<rbrace>) = (AgIdx_N 0 \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<close>
+  apply (rule \<phi>Type_eqI_BI; unfold BI_eq_iff; clarsimp; rule; clarsimp)
+  subgoal for x v
+    by (rule exI[where x=\<open>to_share \<circ> map_option discrete \<circ> Map_of_Val v\<close>],
+        auto simp add: Map_of_Val_tup fun_eq_iff push_map_cons_neq
+             split: aggregate_index'.split list.split)
+  subgoal for x v
+    by (rule exI[where x=\<open>V_tup.mk [v]\<close>],
+        auto simp add: Map_of_Val_tup fun_eq_iff push_map_cons_neq
+             split: aggregate_index'.split list.split) .
+
+definition shift_map
+
+lemma
+  \<open> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (T \<^emph> U) = \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U \<close>
+
+
+
+
+
 end

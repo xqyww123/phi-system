@@ -2587,7 +2587,7 @@ lemma \<comment> \<open>will be derived later\<close>:
 *)
 
 text \<open>However, the lower bound is non-trivial, in which case we have to show the separation combination
-  is compatible between the two \<phi>-types. The compatibility is encoded by predicate \<open>Separation_Disj\<close>
+  is compatible between the two \<phi>-types. The compatibility is encoded by predicate \<open>Separation_Disj\<^sub>\<psi>\<close>
   and \<open>Separation_Disj\<^sub>\<phi>\<close> which are solved by means of the domainoid introduced later.
   So the rules are given until \cref{phi-types/Domainoid/App}.
 \<close>
@@ -5482,7 +5482,7 @@ lemma [\<phi>reason %ToA_splitting_target]:
       blast,
       metis mult_1_class.mult_1_left sep_magma_1_right)
 
-lemma [\<phi>reason %ToA_splitting_target+1]:
+lemma [\<phi>reason %ToA_splitting_target+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> P2)
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y * X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> P1 \<and> P2"

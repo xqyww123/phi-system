@@ -302,16 +302,43 @@ proc op_free_mem:
 translations "\<s>\<l>\<i>\<c>\<e>[addr : start : len]" == "CONST Mem_Slice addr \<lbrakk>start : len\<rwpar>"
 *)
 
-abbreviation Slice :: \<open>nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close>
-  where \<open>Slice \<equiv> \<big_ast>\<^sub>\<bbbT> AgIdx_N\<close>
-
 consts Slice_synt :: \<open>nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_, _] _" [10,10,911] 910)
 
-translations "\<s>\<l>\<i>\<c>\<e>[start, len] T" == "CONST Slice \<lbrakk>start : len\<rwpar> T"
+translations "\<s>\<l>\<i>\<c>\<e>[start, len] T" == "\<big_ast>\<^sub>\<bbbT> CONST AgIdx_N \<lbrakk>start : len\<rwpar> T"
 
+setup \<open>Context.theory_map (
+  Phi_Mem_Parser.add 101 (
+    fn ((ctxt,_), f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ T ) =>
+          SOME (Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ f (ctxt,0) T )
+     | ((ctxt,_), f, Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
+                        $ iv
+                        $ T ) =>
+          SOME (Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
+                        $ iv
+                        $ f (ctxt,0) T )
+     | X => NONE)
 
-
-
+#>Phi_Mem_Printer.add 101 (
+    fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ T) =>
+          SOME (Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ f ctxt T)
+     | _ => NONE)
+)\<close>
+  
+term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T\<close>
 
 
 

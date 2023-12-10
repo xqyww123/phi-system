@@ -133,5 +133,6 @@ lemma [\<phi>reason %\<phi>mapToA_norm]:
           insert prems(4), this)
   qed .
 
+term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> a: A, b: B \<rbrace>)\<close>
 
 end

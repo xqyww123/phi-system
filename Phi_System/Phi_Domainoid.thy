@@ -13,19 +13,22 @@ have defined separation operation between them, denoted by \<open>u ## v\<close>
 The motivation to infer such compatibility is based on two reasons.
 
 \<^enum> The first mechanism focuses on the following property,
-  \<open>Separation_Disj \<psi> X Y\<close> and \<open>Separation_Disj\<^sub>\<phi> \<psi> D T U\<close>
+  \<open>Separation_Disj\<^sub>\<psi> \<psi> X Y\<close> and \<open>Separation_Disj\<^sub>\<phi> \<psi> D T U\<close>
 \<close>
 
-definition Separation_Disj :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma) \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
-  where \<open>Separation_Disj \<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
+definition Sep_Disj :: \<open>('a::sep_magma) BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
+  where \<open>Sep_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>
+
+definition Separation_Disj\<^sub>\<psi> :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma) \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
+  where \<open>Separation_Disj\<^sub>\<psi> \<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
 
 definition Separation_Disj\<^sub>\<phi> :: \<open>('ca::sep_magma \<Rightarrow> 'cb::sep_magma) \<Rightarrow> ('ay \<times> 'ax) set \<Rightarrow> ('ca, 'ax) \<phi> \<Rightarrow> ('ca, 'ay) \<phi> \<Rightarrow> bool\<close>
-  where \<open>Separation_Disj\<^sub>\<phi> \<psi> D T U \<longleftrightarrow> (\<forall>x y. (y,x) \<in> D \<longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U))\<close>
+  where \<open>Separation_Disj\<^sub>\<phi> \<psi> D T U \<longleftrightarrow> (\<forall>x y. (y,x) \<in> D \<longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U))\<close>
 
 
 declare [[
 \<phi>reason_default_pattern
-      \<open>Separation_Disj ?\<psi> ?A ?B\<close> \<Rightarrow> \<open>Separation_Disj ?\<psi> ?A ?B\<close> (100)
+      \<open>Separation_Disj\<^sub>\<psi> ?\<psi> ?A ?B\<close> \<Rightarrow> \<open>Separation_Disj\<^sub>\<psi> ?\<psi> ?A ?B\<close> (100)
   and \<open>Separation_Disj\<^sub>\<phi> ?\<psi> _ ?W ?T\<close> \<Rightarrow> \<open>Separation_Disj\<^sub>\<phi> ?\<psi> _ _ ?T\<close> (130)
 ]]
 
@@ -46,11 +49,11 @@ text \<open>
   We fail to find a reasoning rule splitting \<open>SD\<^sub>\<psi>'(A, B\<^sub>1 \<^emph> B\<^sub>2)\<close> to the respective cases for \<open>B\<^sub>1\<close> and \<open>B\<^sub>2\<close>.
   Due to this, we apply an approximation assuming the \<open>u',v'\<close> are equal to the \<open>u,v\<close>, and then
   we get the form of \<open>Separation_Disj\<^sub>\<psi>\<close> and it has simpler reasoning rules such as
-  \<open> Separation_Disj \<psi> A B\<^sub>1
-\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>2
-\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close> for separation homomorphism \<open>\<psi>\<close>.
+  \<open> Separation_Disj\<^sub>\<psi> \<psi> A B\<^sub>1
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A B\<^sub>2
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A (B\<^sub>1 * B\<^sub>2)\<close> for separation homomorphism \<open>\<psi>\<close>.
 
-  See \<section>\<open>Domainoid gives Separation_Disj\<close>
+  See \<section>\<open>Domainoid gives Separation_Disj\<^sub>\<psi>\<close>
 
 \<^enum> The second mechanism focuses on satisfaction of multiplicative conjunction, of the following form,
   \<open>Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> with_what_condition \<longrightarrow> Inhabited (A * B)\<close>
@@ -432,8 +435,8 @@ lemma [\<phi>reason default 10]:
 \<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<delta> \<Longrightarrow> \<Psi>[domainoid_tag \<delta>] (y \<Ztypecolon> U) \<le> \<DD>\<^sub>U y)
 \<Longrightarrow> fun_commute \<delta>\<^sub>\<psi> \<psi> \<delta> \<psi>\<^sub>D \<and>\<^sub>\<r> has_\<psi>\<^sub>D = True \<or>\<^sub>c\<^sub>u\<^sub>t has_\<psi>\<^sub>D = False
 \<Longrightarrow> Separation_Disj\<^sub>\<phi> \<psi> {(y,x). \<forall>d\<^sub>x d\<^sub>y. d\<^sub>x \<Turnstile> \<DD>\<^sub>T x \<and> d\<^sub>y \<Turnstile> \<DD>\<^sub>U y \<and> (has_\<psi>\<^sub>D \<longrightarrow> \<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y) \<longrightarrow> d\<^sub>x ## d\<^sub>y} T U
-                          \<comment> \<open>\<open>\<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y\<close> reflects the condition \<open>\<psi> u ## \<psi> v\<close> in \<open>Separation_Disj\<close>\<close> \<close>
-  unfolding Separation_Disj\<^sub>\<phi>_def Separation_Disj_def Orelse_shortcut_def BI_sub_iff
+                          \<comment> \<open>\<open>\<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y\<close> reflects the condition \<open>\<psi> u ## \<psi> v\<close> in \<open>Separation_Disj\<^sub>\<psi>\<close>\<close> \<close>
+  unfolding Separation_Disj\<^sub>\<phi>_def Separation_Disj\<^sub>\<psi>_def Orelse_shortcut_def BI_sub_iff
             domainoid_tag_def Ant_Seq_def
   by (clarsimp simp add: domainoid_def Premise_def fun_commute_def[unfolded fun_eq_iff, simplified]
                          closed_homo_sep_def closed_homo_sep_disj_def; metis)
@@ -441,48 +444,48 @@ lemma [\<phi>reason default 10]:
 lemma [\<phi>reason 1000]:
   \<open> Separation_Disj\<^sub>\<phi> \<psi> D T U
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y,x) \<in> D
-\<Longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<close>
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<close>
   unfolding Separation_Disj\<^sub>\<phi>_def Premise_def
   by simp
 
 lemma [\<phi>reason 1000]:
   \<open> MEMOIZE homo_sep \<psi>
-\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>1
-\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>2
-\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close>
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A B\<^sub>1
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A B\<^sub>2
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A (B\<^sub>1 * B\<^sub>2)\<close>
   for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
-  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  unfolding Separation_Disj\<^sub>\<psi>_def homo_sep_def homo_sep_mult_def
   by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_right)
 
 lemma [\<phi>reason 1000]:
   \<open> MEMOIZE homo_sep \<psi>
-\<Longrightarrow> Separation_Disj \<psi> A (fst y \<Ztypecolon> U\<^sub>1)
-\<Longrightarrow> Separation_Disj \<psi> A (snd y \<Ztypecolon> U\<^sub>2)
-\<Longrightarrow> Separation_Disj \<psi> A (y \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2)\<close>
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A (fst y \<Ztypecolon> U\<^sub>1)
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A (snd y \<Ztypecolon> U\<^sub>2)
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A (y \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2)\<close>
   for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
-  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  unfolding Separation_Disj\<^sub>\<psi>_def homo_sep_def homo_sep_mult_def
   by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_right)
 
 lemma [\<phi>reason 1000]:
   \<open> MEMOIZE homo_sep \<psi>
-\<Longrightarrow> Separation_Disj \<psi> A\<^sub>1 B
-\<Longrightarrow> Separation_Disj \<psi> A\<^sub>2 B
-\<Longrightarrow> Separation_Disj \<psi> (A\<^sub>1 * A\<^sub>2) B\<close>
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A\<^sub>1 B
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> A\<^sub>2 B
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> (A\<^sub>1 * A\<^sub>2) B\<close>
   for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
-  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  unfolding Separation_Disj\<^sub>\<psi>_def homo_sep_def homo_sep_mult_def
   by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_left)
 
 lemma [\<phi>reason 1000]:
   \<open> MEMOIZE homo_sep \<psi>
-\<Longrightarrow> Separation_Disj \<psi> (fst x \<Ztypecolon> T\<^sub>1) B
-\<Longrightarrow> Separation_Disj \<psi> (snd x \<Ztypecolon> T\<^sub>2) B
-\<Longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2) B\<close>
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> (fst x \<Ztypecolon> T\<^sub>1) B
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> (snd x \<Ztypecolon> T\<^sub>2) B
+\<Longrightarrow> Separation_Disj\<^sub>\<psi> \<psi> (x \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2) B\<close>
   for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
-  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  unfolding Separation_Disj\<^sub>\<psi>_def homo_sep_def homo_sep_mult_def
   by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_left)
 
-(*definition Separation_Disj :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
-  where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>*)
+(*definition Separation_Disj\<^sub>\<psi> :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where \<open>Separation_Disj\<^sub>\<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>*)
 
 
 section \<open>Reasoning Subgoals about Domainoid\<close>
