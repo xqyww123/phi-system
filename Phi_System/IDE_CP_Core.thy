@@ -11,7 +11,7 @@ theory IDE_CP_Core
   and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>lang_parser" :: thy_decl % "ML"
-  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>operator" :: thy_decl
+  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>lang_operator" :: thy_decl
 abbrevs
   "!!" = "!!"
   and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"

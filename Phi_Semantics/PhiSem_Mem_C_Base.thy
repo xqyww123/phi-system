@@ -1,5 +1,5 @@
 theory PhiSem_Mem_C_Base
-  imports PhiSem_Aggregate_Base Phi_System.Resource_Template
+  imports PhiSem_Aggregate_Base Phi_System.Resource_Template PhiSem_Void
 begin
 
 section \<open>Semantics\<close>
@@ -16,6 +16,7 @@ debt_axiomatization
                 idx_step_offset T j < idx_step_offset T i + MemObj_Size (idx_step_type i T) \<Longrightarrow>
                 i = j\<close>
     and memobj_size_void[simp]: \<open>MemObj_Size void = 0\<close>
+    and phantom_mem_value_uniq: \<open>MemObj_Size TY = 0 \<Longrightarrow> u \<in> Well_Type TY \<Longrightarrow> v \<in> Well_Type TY \<Longrightarrow> u = v\<close>
 
 primrec index_offset :: \<open>TY \<Rightarrow> aggregate_path \<Rightarrow> nat\<close>
   where \<open>index_offset T [] = 0\<close>
@@ -48,12 +49,22 @@ lemma index_offset_bound:
 definition phantom_mem_semantic_type :: \<open>TY \<Rightarrow> bool\<close>
   where \<open>phantom_mem_semantic_type TY \<longleftrightarrow> MemObj_Size TY = 0\<close>
 
+lemma phantom_mem_semantic_type_single_value:
+  \<open> phantom_mem_semantic_type TY
+\<Longrightarrow> u \<in> Well_Type TY
+\<Longrightarrow> v \<in> Well_Type TY
+\<Longrightarrow> u = v \<close>
+  unfolding phantom_mem_semantic_type_def
+  using phantom_mem_value_uniq[unfolded is_singleton_def]
+  by metis
+
 lemma index_offset_bound_strict:
   \<open>valid_index T (base@idx) \<Longrightarrow> \<not> phantom_mem_semantic_type (index_type (base@idx) T) \<Longrightarrow>
   index_offset T base \<le> index_offset T (base@idx) \<and> index_offset T (base@idx) < index_offset T base + MemObj_Size (index_type base T)\<close>
   unfolding phantom_mem_semantic_type_def
   by (induct idx arbitrary: base rule: rev_induct;
-      simp del: append_assoc add: append_assoc[symmetric] fold_tail)
+      simp del: append_assoc add: append_assoc[symmetric] fold_tail;
+      insert idx_step_offset_size index_offset_upper_bound, fastforce)
 
 lemma phantom_mem_semantic_type_element:
   \<open> valid_idx_step TY i
@@ -489,9 +500,9 @@ sublocale aggregate_mem_resource Res typ_of_blk ..
 
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk)) \<and> cblk = blk
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself \<longmapsto>
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' cblk \<lbrace> 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself \<longmapsto>
       \<lambda>ret. 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (discrete x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
   unfolding Premise_def
@@ -526,15 +537,34 @@ lemma allocate_rule:
       clarsimp simp add: R.in_invariant Ball_def dom1_dom, metis dom_map_option_comp prems(1))
 qed .
 
+declare [[unify_trace_failure]]
+
 lemma setter_rule:
-  \<open> valid_index (typ_of_blk blk) idx
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (index_type idx (typ_of_blk blk))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at blk (Some \<circ> map_discrete (index_mod_value idx (\<lambda>_. v)) \<circ> the))
-      \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
-        \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
+  assumes EQ: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> cblk = blk\<close>
+  shows \<open> valid_index (typ_of_blk blk) idx
+      \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (index_type idx (typ_of_blk blk))
+      \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
+      \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at cblk (Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v)) \<circ> the))
+            \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
+              \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   unfolding Premise_def
-  by (rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value idx (\<lambda>_. v))\<close>
+  apply (simp only: EQ[unfolded Premise_def])
+  thm "_setter_rule_2_"
+  thm "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))\<close>
+                        and V=\<open>discrete ` {a. index_value idx a = u_idx}\<close>
+                        and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>
+                      for idx v u_idx]
+  thm fiction_Map_of_Val_perm_partial_refinement
+
+  apply (rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))\<close>
+                        and V=\<open>discrete ` {a. index_value idx a = u_idx}\<close>
+                        and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>
+                        for idx cidx v u_idx,
+                      OF _ fiction_Map_of_Val_perm_partial_refinement
+                         fiction_Map_of_Val_ins_perm_projection])
+
+  by (simp only: EQ[unfolded Premise_def],
+      rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (index_mod_value idx (\<lambda>_. v))\<close>
                         and V=\<open>discrete ` {a. index_value idx a = u_idx}\<close>
                         and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>
                         for idx v u_idx,

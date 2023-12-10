@@ -116,11 +116,10 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>MemBlk blk T \<equiv> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T)\<close>
   deriving Sep_Functor_1
 
-term \<open>FIC.aggregate_mem.\<phi>\<close>
 
+subsubsection \<open>Syntax\<close>
 
-
-
+paragraph \<open>Memory Object\<close>
 
 consts Mem_synt :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
 
@@ -186,23 +185,59 @@ setup \<open>Context.theory_map (
      | _ => NONE)
 )\<close>
 
+(* examples
 term \<open>n \<odiv> T\<close>
 term \<open>\<m>\<e>\<m>[addr] T\<close>
 term \<open>MAKE\<close>
 ML \<open>\<^const_name>\<open>MAKE\<close>\<close>
 ML \<open>@{term \<open>MAKE (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<close>}\<close>
 ML \<open>@{term \<open>\<m>\<e>\<m>[addr] (MAKE (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))\<close>}\<close>
-
-(*
-abbreviation Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
-  where \<open>\<m>\<e>\<m>[addr] T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
-
 *)
 
+paragraph \<open>Slice\<close>
 
+consts Slice_synt :: \<open>nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_, _] _" [10,10,911] 910)
 
+translations "\<s>\<l>\<i>\<c>\<e>[start, len] T" == "\<big_ast>\<^sub>\<bbbT> CONST AgIdx_N \<lbrakk>start : len\<rwpar> T"
+
+setup \<open>Context.theory_map (
+  Phi_Mem_Parser.add 101 (
+    fn ((ctxt,_), f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ T ) =>
+          SOME (Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ f (ctxt,0) T )
+     | ((ctxt,_), f, Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
+                        $ iv
+                        $ T ) =>
+          SOME (Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
+                        $ iv
+                        $ f (ctxt,0) T )
+     | X => NONE)
+
+#>Phi_Mem_Printer.add 101 (
+    fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ T) =>
+          SOME (Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
+                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
+                        $ iv
+                        $ f ctxt T)
+     | _ => NONE)
+)\<close>
+
+(* example
+term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T\<close>
+*)
 
 section \<open>Instructions & Their Specifications\<close>
+
 
 proc op_load_mem:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
@@ -212,23 +247,27 @@ proc op_load_mem:
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
+  $addr semantic_local_value \<open>pointer\<close>
+
   apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
   have [useful]: \<open>0 < n\<close>
-    by (simp add: the_\<phi>(2))
-
-  note sem = \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>[useful del, \<phi>reason add] ;;
+    by (simp add: the_\<phi>(2)) ;;
 
   to \<open>OPEN _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
-  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=n and blk=\<open>memaddr.blk addr\<close> and idx=\<open>memaddr.index addr\<close>]
+
+  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=n
+                and cblk=\<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+                and blk=\<open>memaddr.blk addr\<close>
+                and idx=\<open>memaddr.index addr\<close>]
+
   \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (n \<odiv> MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
 
-  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item]
+  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
 
-  semantic_assert \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<in> Well_Type TY\<close>
-  semantic_return \<open>index_value (memaddr.index addr) (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
-
+  semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
+  semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
 
 
@@ -248,10 +287,24 @@ proc op_store_mem:
   to \<open>OPEN _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
+  $addr semantic_local_value \<open>pointer\<close>
   $y semantic_local_value \<open>TY\<close>
 
-  apply_rule FIC.aggregate_mem.setter_rule[where u_idx=v and idx=\<open>memaddr.index addr\<close>
-                                    and v=\<open>\<phi>arg.dest \<a>\<r>\<g>2\<close> and blk=\<open>memaddr.blk addr\<close>]
+  thm useful
+  thm FIC.aggregate_mem.setter_rule[
+        where u_idx=v and idx=\<open>memaddr.index addr\<close>
+          and v=\<open>\<phi>arg.dest \<a>\<r>\<g>2\<close>
+          and blk=\<open>memaddr.blk addr\<close>
+          and cblk = \<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+          and cidx = \<open>memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
+  ;;
+  apply_rule FIC.aggregate_mem.setter_rule[
+        where u_idx=v and idx=\<open>memaddr.index addr\<close>
+          and v=\<open>\<phi>arg.dest \<a>\<r>\<g>2\<close>
+          and blk=\<open>memaddr.blk addr\<close>
+          and cblk = \<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+          and cidx = \<open>memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
+
   \<open>y \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)))\<close>
 
   apply_rule ToA_Subst_backward[OF Map, unfolded Remains_\<phi>Cond_Item]
@@ -295,94 +348,32 @@ proc op_free_mem:
 \<medium_right_bracket> .
 
 
+section \<open>IDE-CP Interfaces\<close>
+
+setup \<open>fn thy => thy
+|> Phi_Opr_Stack.decl_postfix (@{priority %\<phi>lang_deref}, "!", SOME 0) |> snd
+\<close>
 
 
-(*consts Mem_Slice_synt :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _ : _]")
-
-translations "\<s>\<l>\<i>\<c>\<e>[addr : start : len]" == "CONST Mem_Slice addr \<lbrakk>start : len\<rwpar>"
-*)
-
-consts Slice_synt :: \<open>nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_, _] _" [10,10,911] 910)
-
-translations "\<s>\<l>\<i>\<c>\<e>[start, len] T" == "\<big_ast>\<^sub>\<bbbT> CONST AgIdx_N \<lbrakk>start : len\<rwpar> T"
-
-setup \<open>Context.theory_map (
-  Phi_Mem_Parser.add 101 (
-    fn ((ctxt,_), f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
-                        $ iv
-                        $ T ) =>
-          SOME (Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2)
-                        $ iv
-                        $ f (ctxt,0) T )
-     | ((ctxt,_), f, Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
-                        $ iv
-                        $ T ) =>
-          SOME (Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
-                        $ iv
-                        $ f (ctxt,0) T )
-     | X => NONE)
-
-#>Phi_Mem_Printer.add 101 (
-    fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
-                        $ iv
-                        $ T) =>
-          SOME (Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
-                        $ iv
-                        $ f ctxt T)
-     | _ => NONE)
-)\<close>
+proc(nodef) "_load_mem_bracket_":
+  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<close>
+  requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx pidx reject\<close>
+       and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
+       and L4[]: \<open>report_unprocessed_element_index reject\<close>
+  requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+       and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+\<medium_left_bracket>
+  $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
   
-term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T\<close>
 
+  thm op_load_mem_\<phi>app[OF Extr L01]
 
+  thm op_get_element_pointer_\<phi>app[OF L1 Premise_I[OF L2] L3 L4]
+  thm L3
+  thm Premise_I
 
-
-
-(*
-
-\<phi>type_def Mem_Slice :: \<open>logaddr \<Rightarrow> nat len_intvl \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
-  where \<open>l \<Ztypecolon> Mem_Slice addr iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>j. \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<s>\<u>\<b>\<j> length l = len_intvl.len iv\<close>
-    \<comment> \<open>Length is still required because it determines the domain of the \<phi>-type so guides the reasoning\<close>
-  deriving Sep_Functor_1
-       and Semimodule_NonAssoc
-       and \<open>Abstract_Domain T P
-        \<Longrightarrow> Abstract_Domain (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
-       and \<open>Object_Equiv T eq
-        \<Longrightarrow> Object_Equiv (Mem_Slice addr iv T) (list_all2 eq) \<close>
-       and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
-        \<Longrightarrow> Identity_Elements\<^sub>I (Mem_Slice addr iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
-       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
-        \<Longrightarrow> Identity_Elements\<^sub>E (Mem_Slice addr iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
-       and Transformation_Functor
-       and \<open>Separation_Homo\<^sub>I (Mem_Slice addr iv) (Mem_Slice addr iv) (Mem_Slice addr iv) T U UNIV zip' \<close>
-       and Separation_Homo
-       and \<open>Semimodule_One\<^sub>I (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_One\<^sub>E (\<lambda>iv. Mem_Slice addr iv T) (\<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
-
-term \<open>\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>j. f j \<^bold>\<rightarrow>\<^sub>@ T)\<close>
-
-thm \<phi>Mul_Quant_Tree.wrap_module_src
-thm \<phi>Mul_Quant_Tree.separation_extraction
-thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>I_Cond
-thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>E_Cond
-
-thm \<phi>Mul_Quant_Tree.wrap_module_src
-
-
-
-consts Mem_Slice_synt :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_ : _ : _]")
-
-translations "\<s>\<l>\<i>\<c>\<e>[addr : start : len]" == "CONST Mem_Slice addr \<lbrakk>start : len\<rwpar>"
-
-
-
-*)
 
 
 end

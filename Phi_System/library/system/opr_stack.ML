@@ -262,7 +262,7 @@ fun lookup_operator thy symbol = Symtab.lookup (Operators.get thy) symbol
 val symbol = Parse.group (fn () => "symbol") (Parse.sym_ident || Parse.keyword || Parse.string)
 
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>declare_\<phi>operator\<close>
+  Outer_Syntax.command \<^command_keyword>\<open>declare_\<phi>lang_operator\<close>
     "declare operators in \<phi>-programming"
     (Scan.repeat1
         (( \<^keyword>\<open>infixl\<close> >> K decl_infixl' || \<^keyword>\<open>infixr\<close> >> K decl_infixr' ||

@@ -178,13 +178,14 @@ paragraph \<open>Size of Memory Object\<close>
 
 lemma MemObj_Size_LE_idx:
   \<open>valid_index T (base@idx) \<Longrightarrow> MemObj_Size (index_type (base@idx) T) \<le> MemObj_Size (index_type base T)\<close>
-  by (induct base arbitrary: T idx; simp)
+  by (induct base arbitrary: T idx; simp;
+      insert add_leD2 index_offset_upper_bound_0; blast)
 
 lemmas MemObj_Size_LE_idx_0 = MemObj_Size_LE_idx[where base = "[]", simplified]
 
 lemma index_type_type_storable_in_mem:
   \<open>type_storable_in_mem T \<Longrightarrow> valid_index T idx \<Longrightarrow> type_storable_in_mem (index_type idx T)\<close>
-  by simp
+  using MemObj_Size_LE_idx_0 order.strict_trans1 by blast
 
 
 paragraph \<open>The type of the object that a pointer points to\<close>
@@ -195,7 +196,8 @@ abbreviation logaddr_type :: \<open>logaddr \<Rightarrow> TY\<close>
 lemma logaddr_storable_in_mem:
   \<open>valid_logaddr addr \<Longrightarrow> type_storable_in_mem (logaddr_type addr)\<close>
   unfolding valid_logaddr_def Valid_MemBlk_def zero_memaddr_def
-  by (cases addr; simp)
+  by (cases addr; case_tac x1; simp;
+      insert index_type_type_storable_in_mem; blast)
 
 
 
@@ -317,7 +319,8 @@ lemma logaddr_to_raw_inj:
      \<not> phantom_mem_semantic_type (logaddr_type addr1) \<Longrightarrow>
      logaddr_to_raw addr1 = logaddr_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
   unfolding logaddr_to_raw_def valid_logaddr_def
-  by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def)
+  by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def;
+      metis Valid_MemBlk_def add_leD1 index_offset_inj index_offset_upper_bound_0 memblk.simps(5) not_gr_zero order_le_less_trans phantom_mem_semantic_type_def unat_to_size_t)
 
 
 definition \<open>rawaddr_to_log T raddr = (@laddr. logaddr_to_raw laddr = raddr \<and> logaddr_type laddr = T \<and> valid_logaddr laddr)\<close>
@@ -342,6 +345,28 @@ lemma logaddr_type__rawaddr_to_log__logaddr_type[simp]:
 \<Longrightarrow> logaddr_type (rawaddr_to_log (logaddr_type laddr) (logaddr_to_raw laddr)) = logaddr_type laddr\<close>
   unfolding rawaddr_to_log_def
   by (rule someI2; simp)
+
+
+lemma dereference_pointer_type:
+  \<open> valid_logaddr addr
+\<Longrightarrow> c \<in> Well_Type (memblk.layout (memaddr.blk addr))
+\<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) c \<in> Well_Type (logaddr_type addr) \<close>
+  by (smt (verit, del_insts) index_value_welltyp logaddr_to_raw_MemBlk rawaddr_to_log_def someI valid_logaddr_def)
+
+lemma dereference_pointer_value:
+  \<open> valid_logaddr addr
+\<Longrightarrow> c \<in> Well_Type (memblk.layout (memaddr.blk addr))
+\<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) c
+  = index_value (memaddr.index addr) c \<close>
+  by (cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>,
+      meson dereference_pointer_type index_value_welltyp phantom_mem_semantic_type_single_value valid_logaddr_def,
+      simp)
+
+lemma
+  \<open> valid_logaddr addr
+\<Longrightarrow> c \<in> Well_Type (memblk.layout (memaddr.blk addr))
+\<Longrightarrow> index_mod_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) c
+  = index_mod_value (memaddr.index addr) c \<close>
 
 
 subsubsection \<open>Address Arithmetic - Shift\<close>
@@ -464,10 +489,17 @@ lemma logaddr_to_raw_phantom_mem_type_gep_N:
 \<Longrightarrow> logaddr_to_raw (addr_geps addr path) = logaddr_to_raw addr\<close>
   unfolding logaddr_to_raw_def phantom_mem_semantic_type_def addr_geps_def
   apply (induct path arbitrary: addr; clarsimp simp add: split_memaddr_meta_all)
-  subgoal premises prems for a path blk ofs
-    apply (simp add: prems(1)[of \<open>ofs @ [a]\<close> blk, simplified,
-                  OF \<open>valid_index (idx_step_type a (index_type ofs (memblk.layout blk))) path\<close>])
-    using idx_step_offset_size prems(2) by force .
+  subgoal premises prems for a path blk ofs proof -
+    have t1: \<open>MemObj_Size (index_type (ofs @ [a]) (memblk.layout blk)) = 0\<close>
+      using phantom_mem_semantic_type_def phantom_mem_semantic_type_element prems(2) prems(3) by force
+    have t2: \<open>valid_index (index_type (ofs @ [a]) (memblk.layout blk)) path\<close>
+      by (simp add: prems(4))
+    thm prems(1)[of \<open>ofs @ [a]\<close> blk, OF t1 t2]
+    show ?thesis
+      by (insert prems(1)[of \<open>ofs @ [a]\<close> blk, OF t1 t2]
+                 idx_step_offset_size prems(2) prems(3), fastforce)
+  qed .
+
 
 subsubsection \<open>Reasoning Configuration\<close>
 

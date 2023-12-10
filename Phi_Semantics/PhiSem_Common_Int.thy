@@ -132,7 +132,7 @@ declare [[
 ]]
 
 
-declare_\<phi>operator
+declare_\<phi>lang_operator
   infixl 65 +
   infixl 65 -
   prefix 80 ~

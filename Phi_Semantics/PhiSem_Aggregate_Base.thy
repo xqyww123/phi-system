@@ -461,6 +461,8 @@ lemma op_set_aggregate:
   by ((rule \<phi>CONSEQ[OF "_op_set_aggregate_" view_shift_refl view_shift_by_implication view_shift_refl]; simp?),
       simp add: Transformation_def, blast)
 
+hide_fact "_op_set_aggregate_"
+
 proc op_construct_aggregate:
   input  \<open>Void\<close>
   requires C[unfolded \<phi>Aggregate_Constructor_def, useful]:
@@ -496,7 +498,7 @@ ML \<open>fun strip_phi_tuple_args (Const(\<^syntax_const>\<open>_\<phi>tuple_ar
 
 section \<open>IDE Interface\<close>
 
-declare_\<phi>operator infix 40 :=
+declare_\<phi>lang_operator infix 40 :=
 
 \<phi>overloads "[]" and "[]:=" and "\<tribullet>"
 
@@ -590,9 +592,6 @@ fn (oprs,(ctxt,sequent)) =>
      | _ => Scan.fail
 \<close>
 
-setup \<open>fn thy => thy
-|> Phi_Opr_Stack.decl_postfix (@{priority %\<phi>lang_deref}, "!", SOME 0) |> snd
-\<close>
 
 
 
