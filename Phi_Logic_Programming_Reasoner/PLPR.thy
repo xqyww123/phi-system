@@ -387,6 +387,7 @@ declare HOL.simp_thms[\<phi>safe_simp]
 
 lemmas [\<phi>safe_simp] =
   append.right_neutral append.left_neutral append_Cons
+  fst_conv snd_conv id_apply o_apply
 
 
 subsubsection \<open>Isomorphic Atomize\<close>
@@ -975,14 +976,17 @@ For example,
 
 subsubsection \<open>Basic Reasoning Rules\<close>
 
-\<phi>reasoner_group unify_assign = (%cutting, [%cutting, %cutting])
-  \<open>the default assignment by unification\<close>
+\<phi>reasoner_group lambda_unify_all = (1000, [1000, 3000]) for \<open>LHS = RHS\<close>
+      \<open>lambda unification\<close>
+  and lambda_unify__default = (1000, [1000, 1000]) in lambda_unify_all \<open>system default\<close>
+  and lambda_unify = (1100, [1100, 3000]) in lambda_unify_all and > lambda_unify__default
+      \<open>user rules\<close>
 
 declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
         allI [\<phi>reason %cutting]
         exI  [\<phi>reason %cutting]
-        HOL.refl [\<phi>reason %unify_assign for \<open>_ = _\<close>]
+        HOL.refl [\<phi>reason %lambda_unify__default for \<open>_ = _\<close>]
 
 \<phi>reasoner_group \<phi>LPR_imp = (%cutting, [%cutting, %cutting+100]) for \<open>_ \<longrightarrow> _\<close>
   \<open>Rules handling implifications, may involving different optimizations for specific cases\<close>
@@ -1595,7 +1599,7 @@ definition \<open>LPR_ctrl x \<equiv> x\<close>
 
 subparagraph \<open>Reductions\<close>
 
-lemma LPR_ctrl_red_bool[simp]:
+lemma LPR_ctrl_red_bool[simp, \<phi>safe_simp]:
   \<open>LPR_ctrl True  \<equiv> True \<close>
   \<open>LPR_ctrl False \<equiv> False\<close>
   unfolding LPR_ctrl_def
@@ -1678,6 +1682,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P \<longrightarrow> P @action \<A>EIF \<close>
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P \<longrightarrow> P @action \<A>EIF \<close>
   \<open> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P \<longrightarrow> P @action \<A>EIF \<close>
   unfolding Action_Tag_def Premise_def
   by blast+
 
@@ -1687,6 +1692,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P @action \<A>ESC \<close>
   \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P @action \<A>ESC \<close>
   \<open> P \<longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
+  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P @action \<A>ESC \<close>
   unfolding Action_Tag_def Premise_def
   by blast+
 

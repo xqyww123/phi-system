@@ -383,7 +383,7 @@ fun whether_to_SA_normalize ctxt =
   let val swap = whether_to_swap_normalize ctxt
       val assoc = whether_to_assoc_normalize ctxt
    in fn direction => fn bvs => fn F_G_T =>
-      swap bvs F_G_T andalso assoc direction bvs F_G_T
+      swap bvs F_G_T orelse assoc direction bvs F_G_T
   end
 
 

@@ -663,7 +663,7 @@ lemma [\<phi>reason %partial_add_overlaps_cancl]:
 
 paragraph \<open>Total Group\<close>
 
-lemma [\<phi>reason %partial_add_overlaps_direct_success]:
+lemma [\<phi>reason default %partial_add_overlaps_default]:
   \<open> partial_add_overlaps a b \<close>
   for a :: \<open>'a::group_add\<close>
   unfolding partial_add_overlaps_def ..
@@ -745,6 +745,15 @@ lemma [\<phi>reason %partial_add_overlaps_specific+1]:
 paragraph \<open>List\<close>
 
 (*TODO*)
+
+
+paragraph \<open>Permission\<close>
+
+lemma [\<phi>reason default %partial_add_overlaps_specific]:
+  \<open> partial_add_overlaps a b \<close> 
+  for a :: rat
+  unfolding partial_add_overlaps_def ..
+
 
 
 subsection \<open>Multiplication Equations\<close>

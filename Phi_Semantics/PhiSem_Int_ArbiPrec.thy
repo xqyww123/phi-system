@@ -24,6 +24,10 @@ hide_fact \<phi>spec_int_ty_ax
 
 abbreviation aint ("\<a>\<i>\<n>\<t>") where \<open>aint \<equiv> T_aint.mk ()\<close>
 
+lemma [\<phi>reason add]:
+  \<open> Atomic_SemTyp \<a>\<i>\<n>\<t> \<close>
+  unfolding Atomic_SemTyp_def ..
+
 subsection \<open>Value\<close>
 
 virtual_datatype \<phi>spec_int_val =

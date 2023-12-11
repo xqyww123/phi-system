@@ -2290,12 +2290,13 @@ Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
 
 declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>,
           \<phi>premise_attribute  [elim_premise_tag] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>,
-          \<phi>premise_attribute  [elim_premise_tag] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?x\<close>,
+          \<phi>premise_attribute  [elim_premise_tag] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] ?x\<close>,
           \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>,
           \<phi>premise_attribute  [elim_Simplify_tag] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>,
           \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Is_Functional ?S\<close>,
           \<phi>premise_attribute? [\<phi>reason? %local] for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
 ]]
+
 
 subsection \<open>User Interface Processors\<close>
 

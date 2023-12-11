@@ -3,15 +3,21 @@ theory PhiTest_Mem_C
           Phi_Semantics.PhiSem_Int_ArbiPrec
 begin
 
-(*
+ 
 proc test_mem1:
   input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  \<medium_left_bracket>      
-    note [[\<phi>trace_reasoning = 2]];;
-  $addr !
+  \<medium_left_bracket>
+    $addr !
+  \<medium_right_bracket> .
 
-*)
+proc test_mem2:
+  input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
+  output \<open>2 \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<close>
+  \<medium_left_bracket>
+    $addr := \<open>2 \<Ztypecolon> \<nat>\<close>
+  \<medium_right_bracket> .
+
 
 
 

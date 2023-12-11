@@ -346,11 +346,13 @@ definition ToA_Mapper :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_mag
 
 subsection \<open>Conventions\<close>
 
-\<phi>reasoner_group \<phi>mapToA_all = (100, [0, 3000])
+\<phi>reasoner_group \<phi>mapToA_all = (100, [0, 4000])
       \<open>Transformation Mappers\<close>
   and \<phi>mapToA_init = (1000, [1000,1020]) in \<phi>mapToA_all
       \<open>initializaton\<close>
-  and \<phi>mapToA_norm = (2800, [2800,2899]) in \<phi>mapToA_all
+  and \<phi>mapToA_refl = (3800, [3800, 3849]) in \<phi>mapToA_all
+      \<open>reflexive\<close>
+  and \<phi>mapToA_norm = (2600, [2600,2899]) in \<phi>mapToA_all
       \<open>normalizations like removing empty slots\<close>
   and \<phi>mapToA_split_goal = (2520, [2520, 2520]) in \<phi>mapToA_all
       \<open>splitting the goal of the extraction\<close>
@@ -361,11 +363,14 @@ subsection \<open>Conventions\<close>
   and \<phi>mapToA_mapper = (1000, [1000,1000]) in \<phi>mapToA_all \<open>\<close>
 (*  and \<phi>mapToA_getter = (1000, [1000,1000]) in \<phi>mapToA_all \<open>\<close> *)
   and \<phi>mapToA_aux = (1000, [1000,1030]) in \<phi>mapToA_all \<open>system auxiliaries\<close>
-  and \<phi>mapToA_derived = (50, [30,70]) in \<phi>mapToA_all \<open>derived\<close>
+  and \<phi>mapToA_sysbot = (10, [0,10]) in \<phi>mapToA_all \<open>sysme rule of the bottom priority\<close>
+  and \<phi>mapToA_derived = (50, [30,70]) in \<phi>mapToA_all > \<phi>mapToA_sysbot \<open>derived\<close>
   and \<phi>mapToA_derived_TF = (65, [65,65]) in \<phi>mapToA_derived
       \<open>ToA mapper derived from Transformation Functor\<close>
   and \<phi>mapToA_derived_module = (45, [45,45]) in \<phi>mapToA_derived and < \<phi>mapToA_derived_TF
       \<open>ToA mapper derived from Semimodules\<close>
+  and \<phi>mapToA_unify = (5, [5,6]) in \<phi>mapToA_sysbot
+      \<open>apply lambda unification\<close>
 
 
 declare [[
@@ -375,9 +380,9 @@ declare [[
   and \<open>\<g>\<e>\<t> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<close> \<Rightarrow>
       \<open>\<g>\<e>\<t> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<close>    (100)
   and \<open>\<s>\<u>\<b>\<s>\<t> ?var_y \<Ztypecolon> ?U \<f>\<o>\<r> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<Ztypecolon> _ \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> _ \<Ztypecolon> _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> _\<close> \<Rightarrow>
-      \<open>\<s>\<u>\<b>\<s>\<t> ?var_y \<Ztypecolon> ?U \<f>\<o>\<r> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<Ztypecolon> _ \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> _ \<Ztypecolon> _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> _\<close>    (110)
+      \<open>\<s>\<u>\<b>\<s>\<t> _ \<Ztypecolon> ?U \<f>\<o>\<r> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<Ztypecolon> _ \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> _ \<Ztypecolon> _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> _\<close>    (110)
   and \<open>\<s>\<u>\<b>\<s>\<t> ?var_y \<Ztypecolon> ?U \<f>\<o>\<r> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _\<close> \<Rightarrow>
-      \<open>\<s>\<u>\<b>\<s>\<t> ?var_y \<Ztypecolon> ?U \<f>\<o>\<r> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _\<close>    (100)
+      \<open>\<s>\<u>\<b>\<s>\<t> _ \<Ztypecolon> ?U \<f>\<o>\<r> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _\<close>    (100)
   and \<open>\<m>\<a>\<p> _ : ?U \<^emph>[_,_] (?out_R, ?var_E) \<mapsto> ?U' \<^emph>[_,_] (?out_R', ?var_E')
        \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_,_] (_, ?var_E) \<mapsto> _ \<^emph>[_,_] (_, ?var_E')
        \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> ?D\<close> \<Rightarrow>
@@ -522,6 +527,67 @@ lemma [\<phi>reason %\<phi>programming_method]:
     by (insert prems(1)[OF \<open>PROP DD\<close> \<open>PROP RR\<close> \<open>PROP FF\<close>];
         clarsimp simp add: conjunction_imp ToA_Mapper_def ToA_Subst_def) .
 
+subsection \<open>Reasoning Auxiliaries\<close>
+
+subsubsection \<open>Assign Id\<close>
+
+definition mapToA_assign_id
+  where \<open>mapToA_assign_id f \<longleftrightarrow> f = id\<close>
+
+\<phi>reasoner_group mapToA_assign_id = (1000, [1000, 3000]) for \<open>mapToA_assign_id f\<close>
+      \<open>assign \<open>id\<close> to separated mappings \<open>?f \<otimes>\<^sub>f ?g\<close>\<close>
+  and mapToA_assign_id_success = (3000, [3000,3000]) in mapToA_assign_id \<open>success\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>mapToA_assign_id ?f\<close> \<Rightarrow> \<open>mapToA_assign_id ?f\<close> (100),
+  \<phi>default_reasoner_group \<open>mapToA_assign_id _\<close> : %mapToA_assign_id (100)
+]]
+
+paragraph \<open>Rules\<close>
+
+lemma [\<phi>reason add]:
+  \<open> mapToA_assign_id f
+\<Longrightarrow> mapToA_assign_id g
+\<Longrightarrow> mapToA_assign_id (f \<otimes>\<^sub>f g) \<close>
+  unfolding fun_eq_iff mapToA_assign_id_def
+  by simp
+
+lemma [\<phi>reason %mapToA_assign_id_success for \<open>mapToA_assign_id ?var\<close> \<open>mapToA_assign_id id\<close>]:
+  \<open> mapToA_assign_id id \<close>
+  unfolding mapToA_assign_id_def ..
+
+lemma [\<phi>reason %mapToA_assign_id_success]:
+  \<open> mapToA_assign_id (\<lambda>x. x) \<close>
+  unfolding mapToA_assign_id_def fun_eq_iff
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> mapToA_assign_id f
+\<Longrightarrow> mapToA_assign_id g
+\<Longrightarrow> mapToA_assign_id (f o g) \<close>
+  unfolding mapToA_assign_id_def fun_eq_iff
+  by simp
+
+subsubsection \<open>Unify Assertion\<close>
+
+definition mapToA_unify_A :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
+  where \<open>mapToA_unify_A Tgt Src A B \<longleftrightarrow> A = B\<close>
+
+lemma [\<phi>reason %cutting+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] A = B
+\<Longrightarrow> mapToA_unify_A Tgt Src A B \<close>
+  unfolding Premise_def mapToA_unify_A_def \<r>Guard_def
+  by simp
+
+lemma [\<phi>reason %cutting]:
+  \<open> ERROR TEXT(\<open>Transformation Mapper fails to extract\<close> Tgt \<open>from\<close> Src
+               \<open>because fails to unify\<close> R \<open>with\<close> R'
+               \<open>It typically suggests the substitution is not structure-preserving\<close>)
+\<Longrightarrow> mapToA_unify_A Tgt Src A B \<close>
+  unfolding ERROR_def
+  by blast
+
+
 subsection \<open>Reasoning\<close>
 
 subsubsection \<open>Initialization\<close>
@@ -549,19 +615,17 @@ lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<g>\<e>\<t> _ \<f>\<r>\
 
 lemma [\<phi>reason %\<phi>mapToA_init except \<open>\<s>\<u>\<b>\<s>\<t> _ \<f>\<o>\<r> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> _\<close>]:
   \<open> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R'
-\<Longrightarrow> R = R' \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>because fail to unify\<close> R \<open>with\<close> R'
-                           \<open>which suggests typically the substitution is not structure-preserving\<close>)
+\<Longrightarrow> mapToA_unify_A (x \<Ztypecolon> T) Src R R'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>due to the absence of\<close> (w \<Ztypecolon> W))
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<close>
   for Src :: \<open>'c::sep_magma_1 BI\<close>
   unfolding ToA_Subst_def Identity_Elements_alt_def Orelse_shortcut_def Ant_Seq_def
-            ERROR_def Premise_def Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def
+            ERROR_def Premise_def Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def mapToA_unify_A_def
   by (cases C\<^sub>R; clarsimp)
 
 lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<s>\<u>\<b>\<s>\<t> _ \<f>\<o>\<r> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> _\<close>]:
   \<open> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R'
-\<Longrightarrow> R = R' \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>because fail to unify\<close> R \<open>with\<close> R'
-                           \<open>which suggests typically the substitution is not structure-preserving\<close>)
+\<Longrightarrow> mapToA_unify_A (x \<Ztypecolon> T) Src R R'
 \<Longrightarrow> if C\<^sub>W then (Identity_Element\<^sub>E (w \<Ztypecolon> W)
              \<and>\<^sub>\<r> Identity_Element\<^sub>I (w' \<Ztypecolon> W') Any)
              \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>due to the absence of\<close> (w \<Ztypecolon> W))
@@ -569,7 +633,7 @@ lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<s>\<u>\<b>\<s>\<t> _ \
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<close>
   for Src :: \<open>'c::sep_magma_1 BI\<close>
   unfolding ToA_Subst_def Identity_Elements_alt_def Orelse_shortcut_def Ant_Seq_def
-            ERROR_def Premise_def Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def
+            ERROR_def Premise_def Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def mapToA_unify_A_def
   by (cases C\<^sub>W; cases C\<^sub>R; clarsimp;
       smt (verit, ccfv_threshold)
         transformation_trans[where P=True and Q=True, simplified]
@@ -587,15 +651,17 @@ lemma [\<phi>reason %\<phi>mapToA_init]:
   by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
 
 lemma [\<phi>reason %\<phi>mapToA_init+10]:
-  \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
-    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T \<^emph>[C\<^sub>W] W
+  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>f : U \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w\<^sub>f : T \<^emph>[C\<^sub>W] W \<mapsto> T \<^emph>[C\<^sub>W] W
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> {(x,w)}
-\<Longrightarrow> g = id
-\<Longrightarrow> f = id
+\<Longrightarrow> mapToA_assign_id g
+\<Longrightarrow> mapToA_assign_id f
+\<Longrightarrow> if C\<^sub>R then mapToA_assign_id r\<^sub>f else True
+\<Longrightarrow> if C\<^sub>W then mapToA_assign_id w\<^sub>f else True
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst (h (x, w)) = y
 \<Longrightarrow> \<g>\<e>\<t> y \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] snd (h (x, w)) \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
-  unfolding ToA_Extract_def ToA_Mapper_def BI_eq_ToA Premise_def
-  by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
+  unfolding ToA_Extract_def ToA_Mapper_def BI_eq_ToA Premise_def mapToA_assign_id_def
+  by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn'; metis fst_eqD)
 
 (*
 lemma [\<phi>reason %\<phi>mapToA_init+10]:
@@ -607,19 +673,6 @@ lemma [\<phi>reason %\<phi>mapToA_init+10]:
 *)
 
 subsubsection \<open>Internal System\<close>
-
-paragraph \<open>Assign \<open>id\<close> to separated mappings \<open>\<otimes>\<^sub>f\<close>\<close>
-
-\<phi>reasoner_group assign_sep_mappings_to_id = (1100, [1100,1100]) for \<open>id = ?f \<otimes>\<^sub>f ?g\<close>
-                                                                  > unify_assign
-  \<open>assign \<open>id\<close> to separated mappings \<open>?f \<otimes>\<^sub>f ?g\<close>\<close>
-
-lemma [\<phi>reason %assign_sep_mappings_to_id]:
-  \<open> f = id
-\<Longrightarrow> g = id
-\<Longrightarrow> f \<otimes>\<^sub>f g = id \<close>
-  unfolding fun_eq_iff
-  by simp
 
 paragraph \<open>Filter out empty slots\<close>
 
@@ -1080,5 +1133,23 @@ lemma
 \<Longrightarrow> ToA_Extract' S\<^sub>1 W w R\<^sub>1 T x
 \<Longrightarrow> ToA_Extract' (S\<^sub>1 * S\<^sub>2) W w (R\<^sub>1 * R\<^sub>2) T x \<close>
 *)
+
+subsubsection \<open>Reflexive\<close>
+
+lemma [\<phi>reason %\<phi>mapToA_refl for \<open>\<m>\<a>\<p> _ : ?T \<mapsto> ?U \<o>\<v>\<e>\<r> _ : ?T \<mapsto> ?U \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
+       \<phi>reason default %\<phi>mapToA_unify for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<m>\<a>\<p> f : T \<mapsto> U \<o>\<v>\<e>\<r> f : T \<mapsto> U \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> id \<s>\<e>\<t>\<t>\<e>\<r> id \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def
+  by clarsimp
+
+lemma [\<phi>reason %\<phi>mapToA_refl+1 for \<open>\<m>\<a>\<p> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _
+                                    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
+       \<phi>reason default %\<phi>mapToA_unify+1 for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<m>\<a>\<p> f : T \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> U \<^emph>[False] \<top>\<^sub>\<phi>
+    \<o>\<v>\<e>\<r> f : T \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> U \<^emph>[False] \<top>\<^sub>\<phi>
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> id \<s>\<e>\<t>\<t>\<e>\<r> id \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def
+  by clarsimp
+
 
 end
