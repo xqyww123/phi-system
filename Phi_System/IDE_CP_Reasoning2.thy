@@ -624,8 +624,13 @@ lemma [\<phi>reason %assign_sep_mappings_to_id]:
 paragraph \<open>Filter out empty slots\<close>
 
 context
+  includes prevent_eliminate_IE_\<phi>Cond_Unital
   notes \<phi>Prod_expn''[simp] prod.split[split]
+      (*ToA_splitting_source_no_remainder_first[\<phi>reason del]
+        ToA_splitting_source_has_remainder_first[\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]*)
 begin
+
+
 
 lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ [False]\<^emph> _) \<^emph>[_] _ \<mapsto> (_ [False]\<^emph> _) \<^emph>[_] _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:

@@ -2315,11 +2315,12 @@ setup \<open>Config.put_global PLPR_Rule_Gen.simp_timeout ~1\<close>
 
 subsubsection \<open>By List of Keys\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 3]]
       
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
-  deriving Sep_Functor_1
+  deriving Semimodule_Scalar_Assoc\<^sub>E
+(*Sep_Functor_1
        and Functionality
        and Semimodule_NonDistr_no0
        and Abstraction_to_Raw
@@ -2331,6 +2332,7 @@ declare [[\<phi>trace_reasoning = 1]]
         \<Longrightarrow> Tyops_Commute \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+*)
 
 (*
 lemma

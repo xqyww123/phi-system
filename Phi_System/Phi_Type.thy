@@ -2266,11 +2266,11 @@ lemma apply_Transformation_Functor:
 *)
 
 
-subsubsection \<open>Swap Normalization\<close>
+subsubsection \<open>Swap \& Assoc Normalization\<close>
 
-\<phi>reasoner_group \<phi>ToA_swap_norm = (1000, [10,2000]) in \<phi>simp
+\<phi>reasoner_group \<phi>ToA_SA_norm = (1000, [10,2000]) in \<phi>simp
       \<open>normalize the \<phi>-type by swapping, as that specified by \<open>\<phi>ToA_swap_normalization\<close>\<close>
-  and \<phi>ToA_swap_norm_derived = (50, [50, 50]) in \<phi>simp_derived and in \<phi>ToA_swap_norm
+  and \<phi>ToA_SA_derived = (50, [50, 50]) in \<phi>simp_derived and in \<phi>ToA_SA_norm
                                               and > \<phi>simp_derived_Tr_functor
       \<open>derived\<close>
 
@@ -2282,9 +2282,16 @@ definition Require_Swap_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
   where \<open>Require_Swap_Norm F_G_T \<equiv> True\<close>
     \<comment> \<open>a pure syntactical checking for whether \<open>F\<close> should be swapped into \<open>G\<close>, in \<open>F(G(T))\<close>,
         or any multi-arity version\<close>
-                         
+
 definition Not_Require_Swap_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
   where \<open>Not_Require_Swap_Norm F_G_T \<equiv> True\<close>
+
+definition Require_Assoc_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Require_Assoc_Norm F_G_T direction \<equiv> True\<close>
+  \<comment> \<open>\<open>direction = True\<close> for using intro rules only ; \<open>False\<close> for elim rules only ; \<open>undefined\<close> for any rules\<close>
+
+definition Not_Require_Assoc_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Not_Require_Assoc_Norm F_G_T direction \<equiv> True\<close>
 
 \<phi>reasoner_ML Require_Swap_Norm %cutting (\<open>Require_Swap_Norm _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (bvs, F_G_T) =
@@ -2305,6 +2312,34 @@ definition Not_Require_Swap_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<cl
    in if Phi_Type.whether_to_swap_normalize (Context.Proof ctxt) bvs F_G_T
       then NONE
       else SOME ((ctxt, @{lemma' \<open>Not_Require_Swap_Norm F\<close> by (simp add: Not_Require_Swap_Norm_def)} RS sequent), Seq.empty)
+  end)
+\<close>
+
+\<phi>reasoner_ML Require_Assoc_Norm %cutting (\<open>Require_Assoc_Norm _ _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val (bvs, F_G_T, direction) =
+        case Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
+          of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Swap_Norm*) $ F_G_T $ direction)) =>
+             (bvtys, F_G_T, (case direction of \<^Const>\<open>True\<close> => SOME Phi_Type.DA_INTRO
+                                             | \<^Const>\<open>False\<close> => SOME Phi_Type.DA_ELIM
+                                             | \<^Const>\<open>undefined bool\<close> => NONE
+                                             | _ => raise TERM ("Bad direction of Require_Assoc_Norm", [direction])))
+   in if Phi_Type.whether_to_assoc_normalize direction (Context.Proof ctxt) bvs F_G_T
+      then SOME ((ctxt, @{lemma' \<open>Require_Assoc_Norm F Any\<close> by (simp add: Require_Assoc_Norm_def)} RS sequent), Seq.empty)
+      else NONE
+  end)
+\<close>
+
+\<phi>reasoner_ML Not_Require_Assoc_Norm %cutting (\<open>Not_Require_Assoc_Norm _ _\<close>) = \<open> fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val (bvs, F_G_T, direction) =
+        case Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
+          of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Swap_Norm*) $ F_G_T $ direction)) =>
+             (bvtys, F_G_T, (case direction of \<^Const>\<open>True\<close> => SOME Phi_Type.DA_INTRO
+                                             | \<^Const>\<open>False\<close> => SOME Phi_Type.DA_ELIM
+                                             | \<^Const>\<open>undefined bool\<close> => NONE
+                                             | _ => raise TERM ("Bad direction of Require_Assoc_Norm", [direction])))
+   in if Phi_Type.whether_to_assoc_normalize direction (Context.Proof ctxt) bvs F_G_T
+      then SOME ((ctxt, @{lemma' \<open>Not_Require_Assoc_Norm F Any\<close> by (simp add: Not_Require_Assoc_Norm_def)} RS sequent), Seq.empty)
+      else NONE
   end)
 \<close>
 
@@ -3981,8 +4016,17 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module name F.wrap_modul
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
 
-lemma
-  \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D\<^sub>1 I\<^sub>1 P\<^sub>E
+declare [[\<phi>trace_reasoning = 0]]
+
+lemma ToA_mapper_MOne_src
+  [no_atp, \<phi>reason_template default %derived_SE_inj_to_module name F.mapper_wrap_module_src]:
+  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
+
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D\<^sub>1 I\<^sub>1 P\<^sub>E
+
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>fst ` D. D\<^sub>1 x)
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F' a \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F (introduced one) \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W
@@ -3991,12 +4035,133 @@ lemma
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : F' a \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
     \<o>\<v>\<e>\<r> (f o I\<^sub>1) \<otimes>\<^sub>f w : T\<^sub>1 \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h o apfst I\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
-  for F :: \<open>'a \<Rightarrow> 'b \<Rightarrow> 'c::sep_magma set\<close>
+  unfolding \<r>Guard_def
+  including prevent_eliminate_IE_\<phi>Cond_Unital
+  apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin conj_imp_eq_imp_imp;
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
+                   Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
+\<medium_left_bracket> premises _ and _ and _ and  S1I[] and _ and Tr[]
+
+  apply_rule apply_Semimodule_One\<^sub>I[OF S1I, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
+  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
+\<medium_right_bracket> apply(rule conjunctionI, rule)
+\<medium_left_bracket> premises _ and _ and _ and S1I[] and _ and Tr[]
+  apply_rule apply_ToA_Mapper_backward[OF Tr]
+\<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp)
+
+
+
+lemma ToA_mapper_MOne_src'
+  [no_atp, \<phi>reason_template default %derived_SE_inj_to_module name F.mapper_wrap_module_src']:
+  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
+
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D\<^sub>1 I\<^sub>1 P\<^sub>E
+
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. D\<^sub>1 (fst (h x)))
+
+\<Longrightarrow> \<m>\<a>\<p> (g o I\<^sub>1) \<otimes>\<^sub>f r : F (introduced one) \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F' a \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T\<^sub>1 \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F' a \<^emph>[C\<^sub>W] W \<mapsto> U' \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> apfst I\<^sub>1 o h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  for F :: \<open>'a::plus \<Rightarrow> 'b \<Rightarrow> 'c::sep_magma set\<close>
   and T\<^sub>1 :: \<open>'b2 \<Rightarrow> 'c set\<close>
+  unfolding \<r>Guard_def
+  including prevent_eliminate_IE_\<phi>Cond_Unital
+  apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin conj_imp_eq_imp_imp;
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
+                   Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
+\<medium_left_bracket> premises _ and _ and _ and  S1E[] and _ and Tr[]
+  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
+  apply_rule apply_Semimodule_One\<^sub>E[OF S1E, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
+\<medium_right_bracket> apply(rule conjunctionI, rule)
+\<medium_left_bracket> premises _ and _ and _ and S1I[] and _ and Tr[]
+  apply_rule apply_ToA_Mapper_backward[OF Tr]
+  certified by (insert ToA_Mapper_f_expn[OF Tr] useful, auto_sledgehammer) ;;
+\<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp simp: Premise_def prod.map_beta)
 
 
 
-subsubsection \<open>Extended Associative\<close>
+lemma ToA_mapper_MOne_tgt
+  [no_atp, \<phi>reason_template default %derived_SE_inj_to_module name F.mapper_wrap_module_tgt]:
+  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
+
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F U\<^sub>1 one D\<^sub>1 I\<^sub>1 P\<^sub>E
+
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>(f \<otimes>\<^sub>f w) ` D. D\<^sub>1 (fst x))
+
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R] R \<mapsto> F' a \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T' \<^emph>[C\<^sub>W] W \<mapsto> F (introduced one) \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R] R \<mapsto> F' a \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> (I\<^sub>1 o f) \<otimes>\<^sub>f w : T' \<^emph>[C\<^sub>W] W \<mapsto> U\<^sub>1 \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> apfst I\<^sub>1 o s \<i>\<n> D \<close>
+  unfolding \<r>Guard_def
+  including prevent_eliminate_IE_\<phi>Cond_Unital
+  apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin conj_imp_eq_imp_imp;
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
+                   Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
+\<medium_left_bracket> premises _ and _ and _ and  S1E[] and _ and Tr[]
+  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
+\<medium_right_bracket> apply(rule conjunctionI, rule)
+\<medium_left_bracket> premises _ and _ and _ and S1E[] and _ and Tr[]
+  apply_rule apply_ToA_Mapper_backward[OF Tr]
+
+  apply_rule apply_Semimodule_One\<^sub>E[OF S1E, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
+  certified by (insert ToA_Mapper_f_expn[OF Tr] useful, auto_sledgehammer) ;;
+
+\<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp)
+
+
+lemma ToA_mapper_MOne_tgt'
+  [no_atp, \<phi>reason_template default %derived_SE_inj_to_module name F.mapper_wrap_module_tgt']:
+  \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Not_Require_Swap_Norm (F one)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F' F
+
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F U\<^sub>1 one D\<^sub>1 I\<^sub>1 P\<^sub>E
+
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in> g ` fst ` h ` D. D\<^sub>1 x)
+
+\<Longrightarrow> \<m>\<a>\<p> (I\<^sub>1 o g) \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R] R \<mapsto> F (introduced one) \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T' \<^emph>[C\<^sub>W] W \<mapsto> F' a \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T \<^emph>[C\<^sub>R] R \<mapsto> U\<^sub>1 \<^emph>[C\<^sub>R] R
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T' \<^emph>[C\<^sub>W] W \<mapsto> F' a \<^emph>[C\<^sub>W] W
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s o apfst I\<^sub>1 \<i>\<n> D \<close>
+  for F :: \<open>'a::plus \<Rightarrow> 'b \<Rightarrow> 'c::sep_magma set\<close>
+  and U\<^sub>1 :: \<open>'b2 \<Rightarrow> 'c set\<close>
+  unfolding \<r>Guard_def
+  including prevent_eliminate_IE_\<phi>Cond_Unital
+  apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin conj_imp_eq_imp_imp;
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
+                   Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
+\<medium_left_bracket> premises _ and _ and _ and S1I[] and _ and Tr[]
+  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
+\<medium_right_bracket> apply(rule conjunctionI, rule)
+\<medium_left_bracket> premises _ and _ and _ and S1I[] and _ and Tr[]
+
+  apply_rule apply_Semimodule_One\<^sub>I[OF S1I, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
+  certified by auto_sledgehammer ;;
+  apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
+  certified by auto_sledgehammer
+
+\<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp simp: apfst_def prod.map_comp)
+
+
+
+
+
+
+subsubsection \<open>Associativity\<close>
 
 lemma scalar_assoc_template[\<phi>reason_template name Fc.scalar_assoc [assertion_simps]]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt (\<lambda>_ _ _. True) smul (\<lambda>_ _ x. x)
@@ -4047,7 +4212,8 @@ lemma template_scalar_partial_functor[\<phi>reason_template name Fc.scalar_parti
 
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
+  \<open> \<g>\<u>\<a>\<r>\<d> Require_Assoc_Norm (Fs s (Ft t T)) True
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
 \<Longrightarrow> NO_SIMP (f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
@@ -4055,7 +4221,8 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   using mk_elim_transformation by blast
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
+  \<open> \<g>\<u>\<a>\<r>\<d> Require_Assoc_Norm (Fs s (Ft t T)) True
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
 \<Longrightarrow> NO_SIMP (R * (f s t x \<Ztypecolon> Fc (smul s t) T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> Fs s (Ft t T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
@@ -4063,7 +4230,8 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   using transformation_left_frame mk_elim_transformation by blast
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
+  \<open> \<g>\<u>\<a>\<r>\<d> Require_Assoc_Norm (Fs s (Ft t T)) False
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fc (smul s t) T \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fs s (Ft t T) \<w>\<i>\<t>\<h> P) \<close>
@@ -4071,7 +4239,8 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   using mk_intro_transformation by blast
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
+  \<open> \<g>\<u>\<a>\<r>\<d> Require_Assoc_Norm (Fs s (Ft t T)) False
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fc (smul s t) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fs s (Ft t T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
@@ -6812,7 +6981,7 @@ paragraph \<open>Swapping Normalization\<close>
 
 subparagraph \<open>1-to-1\<close>
 
-lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
@@ -6821,7 +6990,7 @@ lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default
             Simplify_def Action_Tag_def
   by clarsimp
 
-lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
@@ -6832,7 +7001,7 @@ lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default
 
 paragraph \<open>1-to-2\<close>
 
-lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
@@ -6840,7 +7009,7 @@ lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
   by clarsimp
 
-lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
@@ -6850,7 +7019,7 @@ lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default
 
 paragraph \<open>2-to-1\<close>
 
-lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
@@ -6858,7 +7027,7 @@ lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
   by clarsimp
 
-lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
@@ -6868,28 +7037,28 @@ lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default
 
 paragraph \<open>\<open>\<Lambda>\<close>\<close>
 
-lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y @action \<A>_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Action_Tag_def Tyops_Commute_def Premise_def
   by clarsimp
 
-lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Tyops_Commute_def Premise_def
   by clarsimp
 
-lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y @action \<A>_backward_transitive_simp \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Action_Tag_def Tyops_Commute_def Premise_def
   by clarsimp
 
-lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_swap_norm_simp default]]:
+lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
   \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>_backward_transitive_simp \<close>

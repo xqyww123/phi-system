@@ -9,8 +9,8 @@ type spattern = term (*improved pattern where variables of a name exactly \<open
 val mk_spattern : term -> spattern
 val does_match_term : theory -> fixed_bounds -> bvs -> spattern * term -> bool
 
-type redex_residues = term * term list
-type redex_residue = term * term
+type redex_residues = spattern * term list
+type redex_residue = spattern * term
 
 val rewrites : theory -> fixed_bounds -> bvs -> redex_residues -> term -> term list option
 val rewrite  : theory -> fixed_bounds -> bvs -> redex_residue -> term -> term option

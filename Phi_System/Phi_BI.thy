@@ -3516,8 +3516,9 @@ declare [[ \<phi>reason_default_pattern
  and derived_identity_element = (50, [50,55]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > identity_element_\<phi>
     \<open>Automatically derived Identity_Element rules\<close>
+ and identity_element_top = (2900, [2900,2999]) in identity_element \<open>top\<close>
  and identity_element_cut = (1000, [1000,1029]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
-     in identity_element > derived_identity_element
+     in identity_element > derived_identity_element < identity_element_top
     \<open>Cutting rules for Identity_Element\<close>
  and identity_element_red = (2500, [2500, 2530]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > identity_element_cut
@@ -4147,6 +4148,19 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def Premise_def
   by clarsimp
 
+lemma prevent_eliminate_IEE_\<phi>Cond_Unital[no_atp]:
+  \<open> False
+\<Longrightarrow> Identity_Elements\<^sub>E (\<half_blkcirc>[C] T) Any \<close>
+  by blast
+
+lemma prevent_eliminate_IEI_\<phi>Cond_Unital[no_atp]:
+  \<open> False
+\<Longrightarrow> Identity_Elements\<^sub>I (\<half_blkcirc>[C] T) Any Any' \<close>
+  by blast
+
+bundle prevent_eliminate_IE_\<phi>Cond_Unital =
+  prevent_eliminate_IEE_\<phi>Cond_Unital[\<phi>reason %identity_element_top]
+  prevent_eliminate_IEI_\<phi>Cond_Unital[\<phi>reason %identity_element_top]
 
 
 subsection \<open>Equivalence of Objects\<close>
@@ -5460,7 +5474,7 @@ lemma [\<phi>reason %ToA_splitting_target]:
             Identity_Element\<^sub>E_def Ant_Seq_def
   by (cases C\<^sub>R; clarsimp; force)
 
-lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_semigroup BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R1 \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P2)
@@ -5795,7 +5809,15 @@ val SE_entry_point_b = SE_entry_point (
     end
 )\<close>
 
-lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
+lemma ToA_splitting_source_no_remainder_first
+      [no_atp, \<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
+  " C = False \<and>\<^sub>\<r> (A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<or>\<^sub>c\<^sub>u\<^sub>t
+    (C,P) = (True, P1 \<and> P2) \<and>\<^sub>\<r> (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1) \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P2))
+\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P"
+  unfolding Orelse_shortcut_def Transformation_def REMAINS_def Premise_def Ant_Seq_def
+  by clarsimp blast
+
+lemma ToA_splitting_source_has_remainder_first[no_atp]:
   " (C,P) = (True, P1 \<and> P2) \<and>\<^sub>\<r> (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1) \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P2)) \<or>\<^sub>c\<^sub>u\<^sub>t
     C = False \<and>\<^sub>\<r> (A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P"
