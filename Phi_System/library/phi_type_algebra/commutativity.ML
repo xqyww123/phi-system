@@ -21,6 +21,7 @@ val is_assoc_appl : direction_of_assoc option (*using intro rule only, or elim r
                  -> Pattern_Translation.bvs * term (*lambda combination of F(G(T))*)
                  -> bool
 
+
 val register_comm_tyoprs : ((arity * arity) * Pattern_Translation.redex_residues) list ->
         Context.generic -> Context.generic
      (*redex: F (G\<^sub>1 T\<^sub>1\<^sub>,\<^sub>1 \<dots> T\<^sub>1\<^sub>,\<^sub>a\<^sub>(\<^sub>1\<^sub>)) \<dots> (G\<^sub>m T\<^sub>m\<^sub>,\<^sub>1 \<dots> T\<^sub>m\<^sub>,\<^sub>a\<^sub>(\<^sub>m\<^sub>))
@@ -110,6 +111,7 @@ fun encoding_assoc' (SOME d) tm = encoding_assoc d tm
 fun select_direction (SOME d) d' = d = d'
   | select_direction NONE _ = true
 
+
 (*fun sum L = fold (fn x => fn y => x + y) L 0*)
 fun sum_1 L = fold (fn x => fn y => x + y + 1) L 0
 
@@ -171,9 +173,10 @@ fun register_comm_tyoprs arity_redex_residues ctxt =
   ) arity_redex_residues) ctxt
 
 fun register_assoc_tyoprs arity_redex_residues ctxt =
-  Assoc_Tyops.map (fold (fn a_r_r as (_,(comb,_),d) =>
+  Assoc_Tyops.map (fold (fn a_r_r as (_,(comb,_),_) =>
     iNet.insert_term_safe (assoc_tyoprs_eq' (Context.theory_of ctxt)) (comb, a_r_r)
   ) arity_redex_residues) ctxt
+
 
 val pass_id_head = Const("tyopr_comm_pass", dummyT)
 fun register_comm_tyoprs_rule_pass (arity,rewr) =
@@ -352,41 +355,39 @@ fun swap_normalization_guard (ctxt, sequent) =
 
 (** Assoc Norm **)
 
-datatype norm_A_action = NA_Assoc | NA_Ignore
-
-val NA_eq = eq_pair4 (op =) (op aconv) pointer_eq (op =)
-fun NA_eq' thy = eq_pair4 (op =) (Pattern.equiv thy) pointer_eq (op =)
+val NA_eq = eq_pair3 (op aconv) pointer_eq (op =)
+fun NA_eq' thy = eq_pair3 (Pattern.equiv thy) pointer_eq (op =)
 
 structure Norm_Assoc = Generic_Data (
-  type T = (norm_A_action * F_Gs_encoding * whether_SA_norm * Reasoner_Group.group) Net.net
+  type T = (Pattern_Translation.spattern * whether_SA_norm * Reasoner_Group.group) Net.net
   val empty = Net.empty
   val merge = Net.merge NA_eq
 )
 
 fun control_assoc_normalizations_on settings ctxt =
-  Norm_Assoc.map (fold (fn (act,terms,chk,prio) =>
+  Norm_Assoc.map (fold (fn (terms,chk,prio) =>
       let val enc = encoding_F_Gs terms
        in Net.insert_term (NA_eq' (Context.theory_of ctxt))
-                          (enc, (act,enc,chk,prio))
+                          (enc, (enc,chk,prio))
       end
     ) settings) ctxt
 
-fun whether_to_assoc_normalize_internal direction ctxt =
+fun whether_to_assoc_normalize_internal ctxt =
   let val norm_assoc = Norm_Assoc.get ctxt
       val thy = Context.theory_of ctxt
-   in fn bvs =>
-  let fun chk_enc enc = Net.match_term norm_assoc enc
-           |> filter (fn (_,enc',_,_) => PLPR_Pattern.matches thy (K true) bvs (enc', enc))
-           |> sort (int_ord o apply2 (#1 o #4))
-           |> (fn [] => false
-                | ((NA_Assoc ,_,_,_) :: _) => true
-                | ((NA_Ignore,_,_,_) :: _) => false)
-   in chk_enc o encoding_F_Gs
-  end
+   in fn bvs => fn F_Gs =>
+   let val enc = encoding_F_Gs F_Gs
+    in Net.match_term norm_assoc enc
+           |> filter (fn (enc',_,_) => PLPR_Pattern.matches thy (K true) bvs (enc', enc))
+           |> sort (int_ord o apply2 (#1 o #3))
+           |> get_first (fn (_,chk,_) => chk F_Gs)
+           |> (fn NONE => false
+                | SOME ret => ret)
+   end
   end
 
 fun whether_to_assoc_normalize direction ctxt =
-  let val internal_check = whether_to_assoc_normalize_internal direction ctxt
+  let val internal_check = whether_to_assoc_normalize_internal ctxt
       val parse_assoc = parse_assoc_F_Gs_from_appl direction ctxt
    in fn bvs => fn F_G_T_term =>
       exists_Const (fn (\<^const_name>\<open>Bubbling\<close>, _) => true
@@ -411,8 +412,6 @@ datatype whether_swap_norm_synt =
 
 val S_direction_synt = Args.$$$ "into" >> K S_In
                     || Args.$$$ "out" >> K S_Out
-val A_action_synt = Args.$$$ "assoc" >> K NA_Assoc
-                 || Args.$$$ "no" --| Args.$$$ "assoc" >> K NA_Ignore
 
 val to_normalize_synt =
       Scan.optional (\<^keyword>\<open>is\<close> |-- (  Args.$$$ "false" >> K (Literal (K (SOME false)))
@@ -461,14 +460,14 @@ val _ = Theory.setup (
 
 #>Attrib.setup \<^binding>\<open>\<phi>ToA_assoc_normalization\<close> (
     Parse.and_list1' (
-      Args.term_pattern -- Scan.lift A_action_synt -- Parse.and_list1' Args.term_pattern --
+      Args.term_pattern --| Scan.lift \<^keyword>\<open>,\<close> -- Parse.enum1' "," Args.term_pattern --
         Scan.lift (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) --
         Scan.lift to_normalize_synt
         ) >> (
     fn raw_controls =>
       Thm.declaration_attribute (fn _ => fn ctxt =>
-        let val controls = map (fn ((((F, direction), Gs), group), to_normalize_synt) =>
-                                (direction, (F, Gs),
+        let val controls = map (fn (((F, Gs), group), to_normalize_synt) =>
+                                ((F, Gs),
                                  check_whether_swap_norm_synt ctxt to_normalize_synt,
                                  Reasoner_Group.check_group true ctxt group)
                            ) raw_controls

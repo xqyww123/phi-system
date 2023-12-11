@@ -2020,6 +2020,9 @@ ML \<open>assert_derived_properties \<^theory> [
 ]\<close>
 
 
+declare [[\<phi>ToA_assoc_normalization ]]
+
+
 subsubsection \<open>Reasoning Rules\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
