@@ -2288,7 +2288,7 @@ definition Not_Require_Swap_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<cl
 
 definition Require_Assoc_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Require_Assoc_Norm F_G_T direction \<equiv> True\<close>
-  \<comment> \<open>\<open>direction = True\<close> for using intro rules only ; \<open>False\<close> for elim rules only ; \<open>undefined\<close> for any rules\<close>
+  \<comment> \<open>\<open>direction = True\<close> for using intro rules only ; \<open>False\<close> for elim rules only\<close>
 
 definition Not_Require_Assoc_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Not_Require_Assoc_Norm F_G_T direction \<equiv> True\<close>
@@ -2319,11 +2319,10 @@ definition Not_Require_Assoc_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool \<
   let val (bvs, F_G_T, direction) =
         case Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
           of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Swap_Norm*) $ F_G_T $ direction)) =>
-             (bvtys, F_G_T, (case direction of \<^Const>\<open>True\<close> => SOME Phi_Type.DA_INTRO
-                                             | \<^Const>\<open>False\<close> => SOME Phi_Type.DA_ELIM
-                                             | \<^Const>\<open>undefined bool\<close> => NONE
+             (bvtys, F_G_T, (case direction of \<^Const>\<open>True\<close> => Phi_Type.AD_INTRO
+                                             | \<^Const>\<open>False\<close> => Phi_Type.AD_ELIM
                                              | _ => raise TERM ("Bad direction of Require_Assoc_Norm", [direction])))
-   in if Phi_Type.whether_to_assoc_normalize direction (Context.Proof ctxt) bvs F_G_T
+   in if Phi_Type.whether_to_assoc_normalize (Context.Proof ctxt) direction bvs F_G_T
       then SOME ((ctxt, @{lemma' \<open>Require_Assoc_Norm F Any\<close> by (simp add: Require_Assoc_Norm_def)} RS sequent), Seq.empty)
       else NONE
   end)
@@ -2333,11 +2332,10 @@ definition Not_Require_Assoc_Norm :: \<open>('c,'a) \<phi> \<Rightarrow> bool \<
   let val (bvs, F_G_T, direction) =
         case Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
           of (bvtys, _ (*Trueprop*) $ (Const _ (*Require_Swap_Norm*) $ F_G_T $ direction)) =>
-             (bvtys, F_G_T, (case direction of \<^Const>\<open>True\<close> => SOME Phi_Type.DA_INTRO
-                                             | \<^Const>\<open>False\<close> => SOME Phi_Type.DA_ELIM
-                                             | \<^Const>\<open>undefined bool\<close> => NONE
+             (bvtys, F_G_T, (case direction of \<^Const>\<open>True\<close> => Phi_Type.AD_INTRO
+                                             | \<^Const>\<open>False\<close> => Phi_Type.AD_ELIM
                                              | _ => raise TERM ("Bad direction of Require_Assoc_Norm", [direction])))
-   in if Phi_Type.whether_to_assoc_normalize direction (Context.Proof ctxt) bvs F_G_T
+   in if Phi_Type.whether_to_assoc_normalize (Context.Proof ctxt) direction bvs F_G_T
       then SOME ((ctxt, @{lemma' \<open>Not_Require_Assoc_Norm F Any\<close> by (simp add: Not_Require_Assoc_Norm_def)} RS sequent), Seq.empty)
       else NONE
   end)

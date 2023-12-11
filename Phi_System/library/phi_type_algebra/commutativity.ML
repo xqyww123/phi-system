@@ -4,23 +4,10 @@ include PHI_TYPE
 (** distinguish commutative \<phi>-type operators from its lambda application **)
 
 type arity = int list (*Gs, its length is the arity of F, its elements are the arities of each G*)
-datatype direction_of_assoc = DA_INTRO | DA_ELIM
 
 val parse_comm_F_Gs_from_appl : Context.generic ->
         Pattern_Translation.bvs * term (*lambda combination of F(G(T))*) ->
         ((term (*F*) * term list (*Gs*)) * (term (*G'*) * term list (*Fs'*))) list
-
-val parse_assoc_F_Gs_from_appl : direction_of_assoc option (*using intro rule only, or elim rule only,
-                                                             or any rules*)
-                              -> Context.generic
-     -> Pattern_Translation.bvs * term (*lambda combination of F(G(T))*)
-     -> (direction_of_assoc * term(*FG'*) * (term (*F*) * term list (*Gs*))) list
-
-val is_assoc_appl : direction_of_assoc option (*using intro rule only, or elim rule only, or any rules*)
-                 -> Context.generic
-                 -> Pattern_Translation.bvs * term (*lambda combination of F(G(T))*)
-                 -> bool
-
 
 val register_comm_tyoprs : ((arity * arity) * Pattern_Translation.redex_residues) list ->
         Context.generic -> Context.generic
@@ -31,28 +18,30 @@ val register_comm_tyoprs : ((arity * arity) * Pattern_Translation.redex_residues
                                           G' (F'\<^sub>1 T\<^sub>f\<^sub>(\<^sub>1\<^sub>,\<^sub>1\<^sub>) \<dots> T\<^sub>f\<^sub>(\<^sub>1\<^sub>,\<^sub>b\<^sub>(\<^sub>1\<^sub>)\<^sub>)) \<dots> (F\<^sub>n' T\<^sub>f\<^sub>(\<^sub>n\<^sub>,\<^sub>1\<^sub>) \<dots> T\<^sub>f\<^sub>(\<^sub>n\<^sub>,\<^sub>b\<^sub>(\<^sub>n\<^sub>)\<^sub>))*)
      (*automatically invoked when any \<phi>-LPR rule is registered*)
 
-val register_assoc_tyoprs : (arity * Pattern_Translation.redex_residues * direction_of_assoc) list ->
-        Context.generic -> Context.generic
-
 val register_comm_tyoprs_rule_pass : (arity * arity) * term -> Context.generic -> Context.generic
       (*see the examples in the file*)
 
 
 (** Control of Swap Normalization **)
 
-type whether_SA_norm = term (*F*) * term list (*Gs*) -> bool option
+datatype assoc_direction = AD_INTRO | AD_ELIM
+  (* AD_INTRO: \<open>F\<^sub>s (F\<^sub>t T) \<rightarrow> F\<^sub>s\<^sub>+\<^sub>t T\<close>
+     AD_ELIM : \<open>F\<^sub>s\<^sub>+\<^sub>t T \<rightarrow> F\<^sub>s (F\<^sub>t T)\<close> *)
+
+type whether_swap_norm = term (*F*) * term list (*Gs*) -> bool option
       (*whether to invoke the normalization swapping \<open>F\<close> into \<open>Gs\<close>,
         return None to leave the control to the settings of lower priority*)
+type whether_assoc_norm = Context.generic * assoc_direction * term (*F_G_T*) -> bool option
 
 datatype swap_direction = S_In | S_Out
-val control_swap_normalizations_on : (swap_direction * (term (*F*) * term list (*Gs*)) * whether_SA_norm * Reasoner_Group.group) list
+val control_swap_normalizations_on : (swap_direction * (term (*F*) * term list (*Gs*)) * whether_swap_norm * Reasoner_Group.group) list
                                  -> Context.generic -> Context.generic
     (*if S_In, swap \<open>F\<close> into all of the operands \<open>Gs\<close>, \<open>F(Gs(T)) \<rightarrow> G(Fs(T))\<close>
       if S_Out, \<open>Gs\<close> can only have 1 element, and it swaps \<open>F\<close> out of the \<open>G\<close>, \<open>G(F(T)) \<rightarrow> F(G(T))\<close>*)
 
 val whether_to_swap_normalize  : Context.generic -> PLPR_Pattern.bvs -> term -> bool
-val whether_to_assoc_normalize : direction_of_assoc option -> Context.generic -> PLPR_Pattern.bvs -> term -> bool
-val whether_to_SA_normalize : direction_of_assoc option -> Context.generic -> PLPR_Pattern.bvs -> term -> bool
+val whether_to_assoc_normalize : Context.generic -> assoc_direction -> PLPR_Pattern.bvs -> term -> bool
+val whether_to_SA_normalize : Context.generic -> assoc_direction -> PLPR_Pattern.bvs -> term -> bool
 
 (*
 val commutative_rules : Context.generic -> term (*F*) * term list (*Gs*) -> (Position.T * thm) list
@@ -63,7 +52,8 @@ val is_commutative : Context.generic -> term (*F*) -> int list (*available ariti
 val comm_patterns : ((term (*pattern*) * term (*F*) * term list (*Gs*)) * int (*arity of F*)) list Unsynchronized.ref
 *)
 
-val whether_swap_norm__sender : whether_SA_norm option Unsynchronized.ref
+val whether_swap_norm__sender : whether_swap_norm option Unsynchronized.ref
+val whether_assoc_norm__sender : whether_assoc_norm option Unsynchronized.ref
 val phi_simp_trigger_id : serial
 
 end
@@ -244,9 +234,8 @@ val _ = Theory.setup (Context.theory_map (
 
 (*** Triggers of Normalization ***)
 
-type whether_SA_norm = term (*F*) * term list (*Gs*) -> bool option
-      (*whether to invoke the normalization either swapping \<open>F\<close> over \<open>Gs\<close>
-                                            or compacting \<open>F\<close> and \<open>Gs\<close> by associativity*)
+type whether_swap_norm = term (*F*) * term list (*Gs*) -> bool option
+      (*whether to invoke the normalization swapping \<open>F\<close> over \<open>Gs\<close>*)
 
 (** Swap Norm **)
 
@@ -277,7 +266,7 @@ fun encoding S_In  F_Gs = encoding_F_Gs F_Gs
 val NS_eq = eq_pair4 (op =) (op aconv) pointer_eq (op =)
 
 structure Norm_Swaps = Generic_Data (
-  type T = (swap_direction * encoding * whether_SA_norm * Reasoner_Group.group) Net.net
+  type T = (swap_direction * encoding * whether_swap_norm * Reasoner_Group.group) Net.net
   val empty = Net.empty
   val merge = Net.merge NS_eq
 )
@@ -355,51 +344,46 @@ fun swap_normalization_guard (ctxt, sequent) =
 
 (** Assoc Norm **)
 
+datatype assoc_direction = AD_INTRO | AD_ELIM
+
 val NA_eq = eq_pair3 (op aconv) pointer_eq (op =)
 fun NA_eq' thy = eq_pair3 (Pattern.equiv thy) pointer_eq (op =)
 
+  (* AD_INTRO: \<open>F\<^sub>s (F\<^sub>t T) \<rightarrow> F\<^sub>s\<^sub>+\<^sub>t T\<close>
+     AD_ELIM : \<open>F\<^sub>s\<^sub>+\<^sub>t T \<rightarrow> F\<^sub>s (F\<^sub>t T)\<close> *)
+
+type whether_assoc_norm = Context.generic * assoc_direction * term (*F_G_T*) -> bool option
+
 structure Norm_Assoc = Generic_Data (
-  type T = (Pattern_Translation.spattern * whether_SA_norm * Reasoner_Group.group) Net.net
+  type T = (Pattern_Translation.spattern * whether_assoc_norm * Reasoner_Group.group) Net.net
   val empty = Net.empty
   val merge = Net.merge NA_eq
 )
 
 fun control_assoc_normalizations_on settings ctxt =
-  Norm_Assoc.map (fold (fn (terms,chk,prio) =>
-      let val enc = encoding_F_Gs terms
-       in Net.insert_term (NA_eq' (Context.theory_of ctxt))
-                          (enc, (enc,chk,prio))
-      end
+  Norm_Assoc.map (fold (fn (pattern,chk,prio) =>
+      Net.insert_term (NA_eq' (Context.theory_of ctxt))
+                      (pattern, (pattern,chk,prio))
     ) settings) ctxt
 
-fun whether_to_assoc_normalize_internal ctxt =
+fun whether_to_assoc_normalize ctxt =
   let val norm_assoc = Norm_Assoc.get ctxt
       val thy = Context.theory_of ctxt
-   in fn bvs => fn F_Gs =>
-   let val enc = encoding_F_Gs F_Gs
-    in Net.match_term norm_assoc enc
-           |> filter (fn (enc',_,_) => PLPR_Pattern.matches thy (K true) bvs (enc', enc))
+   in fn direction => fn bvs => fn F_G_T =>
+      Net.match_term norm_assoc F_G_T
+           |> filter (fn (term',_,_) =>
+                Pattern_Translation.does_match_term thy (K true) bvs (term', F_G_T))
            |> sort (int_ord o apply2 (#1 o #3))
-           |> get_first (fn (_,chk,_) => chk F_Gs)
+           |> get_first (fn (_,chk,_) => chk (ctxt, direction, F_G_T))
            |> (fn NONE => false
                 | SOME ret => ret)
-   end
   end
 
-fun whether_to_assoc_normalize direction ctxt =
-  let val internal_check = whether_to_assoc_normalize_internal ctxt
-      val parse_assoc = parse_assoc_F_Gs_from_appl direction ctxt
-   in fn bvs => fn F_G_T_term =>
-      exists_Const (fn (\<^const_name>\<open>Bubbling\<close>, _) => true
-                     | _ => false) F_G_T_term orelse
-      exists (internal_check bvs o #3) (parse_assoc (bvs, F_G_T_term))
-  end
-
-fun whether_to_SA_normalize direction ctxt =
+fun whether_to_SA_normalize ctxt =
   let val swap = whether_to_swap_normalize ctxt
-      val assoc = whether_to_assoc_normalize direction ctxt
-   in fn bvs => fn F_G_T =>
-      swap bvs F_G_T andalso assoc bvs F_G_T
+      val assoc = whether_to_assoc_normalize ctxt
+   in fn direction => fn bvs => fn F_G_T =>
+      swap bvs F_G_T andalso assoc direction bvs F_G_T
   end
 
 
@@ -407,8 +391,7 @@ fun whether_to_SA_normalize direction ctxt =
 
 (*** Toplevel ***)
 
-datatype whether_swap_norm_synt =
-            Literal of whether_SA_norm | ML_Code of Input.source
+datatype 'a whether_norm_synt = Literal of 'a | ML_Code of Input.source
 
 val S_direction_synt = Args.$$$ "into" >> K S_In
                     || Args.$$$ "out" >> K S_Out
@@ -418,22 +401,41 @@ val to_normalize_synt =
                                      || Args.$$$ "true"  >> K (Literal (K (SOME true)))
                                      || Parse.ML_source  >> ML_Code ))
                     (Literal (K (SOME true)))
-         
+val whether_norm_synt =
+      Scan.optional (\<^keyword>\<open>is\<close> |-- (  Args.$$$ "false" >> K (Literal (K (SOME false)))
+                                     || Args.$$$ "true"  >> K (Literal (K (SOME true)))
+                                     || Parse.ML_source  >> ML_Code ))
+                    (Literal (K (SOME true)))
 
-val whether_swap_norm__sender = Unsynchronized.ref (NONE : whether_SA_norm option)
+
+val whether_swap_norm__sender = Unsynchronized.ref (NONE : whether_swap_norm option)
+val whether_assoc_norm__sender = Unsynchronized.ref (NONE : whether_assoc_norm option)
 val whether_swap_norm__parse_locker = Synchronized.var "to_normalize__parse_locker" ()
 
 fun check_whether_swap_norm_synt ctxt (ML_Code src) = 
       Synchronized.change_result whether_swap_norm__parse_locker (fn () =>
         let val _ = ML_Context.expression (Input.pos_of src)
-                      (ML_Lex.read "Phi_Type.to_normalize__sender := SOME ((" @
+                      (ML_Lex.read "Phi_Type.whether_swap_norm__sender := SOME ((" @
                        ML_Lex.read_source src @
-                       ML_Lex.read ") : Phi_Type.to_normalize)") ctxt
+                       ML_Lex.read ") : Phi_Type.whether_swap_norm)") ctxt
             val ret = the (!whether_swap_norm__sender)
             val _ = whether_swap_norm__sender := NONE
          in (ret, ())
         end)
   | check_whether_swap_norm_synt _ (Literal tn) = tn
+
+fun check_whether_assoc_norm_synt ctxt (ML_Code src) = 
+      Synchronized.change_result whether_swap_norm__parse_locker (fn () =>
+        let val _ = ML_Context.expression (Input.pos_of src)
+                      (ML_Lex.read "Phi_Type.whether_assoc_norm__sender := SOME ((" @
+                       ML_Lex.read_source src @
+                       ML_Lex.read ") : Phi_Type.whether_assoc_norm)") ctxt
+            val ret = the (!whether_assoc_norm__sender)
+            val _ = whether_swap_norm__sender := NONE
+         in (ret, ())
+        end)
+  | check_whether_assoc_norm_synt _ (Literal tn) = tn
+
 
 
 val phi_simp_trigger_id' = Unsynchronized.ref 0
@@ -460,15 +462,15 @@ val _ = Theory.setup (
 
 #>Attrib.setup \<^binding>\<open>\<phi>ToA_assoc_normalization\<close> (
     Parse.and_list1' (
-      Args.term_pattern --| Scan.lift \<^keyword>\<open>,\<close> -- Parse.enum1' "," Args.term_pattern --
+      Args.term_pattern --
         Scan.lift (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) --
-        Scan.lift to_normalize_synt
+        Scan.lift whether_norm_synt
         ) >> (
     fn raw_controls =>
       Thm.declaration_attribute (fn _ => fn ctxt =>
-        let val controls = map (fn (((F, Gs), group), to_normalize_synt) =>
-                                ((F, Gs),
-                                 check_whether_swap_norm_synt ctxt to_normalize_synt,
+        let val controls = map (fn ((pattern, group), to_normalize_synt) =>
+                                (pattern,
+                                 check_whether_assoc_norm_synt ctxt to_normalize_synt,
                                  Reasoner_Group.check_group true ctxt group)
                            ) raw_controls
          in control_assoc_normalizations_on controls ctxt
@@ -499,7 +501,7 @@ val _ = Theory.setup (
       fn (bvs, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
         (*(Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
          Config.get_generic ctxt under_NToA_ctxt) andalso*)
-        Phi_CoP_Simp.pass_recursively (whether_to_SA_normalize (SOME DA_INTRO) ctxt) bvs T
+        Phi_CoP_Simp.pass_recursively (whether_to_SA_normalize ctxt AD_INTRO) bvs T
       ) #-> (fn id => fn ctxt => (
         phi_simp_trigger_id' := id ;
         ctxt
@@ -508,7 +510,7 @@ val _ = Theory.setup (
       fn (bvs, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
         (*(Config.get_generic ctxt enable_swap_normalization_in_CoP_simp orelse
          Config.get_generic ctxt under_NToA_ctxt) andalso*)
-        Phi_CoP_Simp.pass_recursively (whether_to_SA_normalize (SOME DA_ELIM) ctxt) bvs T
+        Phi_CoP_Simp.pass_recursively (whether_to_SA_normalize ctxt AD_ELIM) bvs T
       ) #-> (fn id => fn ctxt => (
         phi_backward_simp_trigger_id' := id ;
         ctxt

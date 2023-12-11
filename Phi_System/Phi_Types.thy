@@ -2020,7 +2020,7 @@ ML \<open>assert_derived_properties \<^theory> [
 ]\<close>
 
 
-declare [[\<phi>ToA_assoc_normalization ]]
+declare [[\<phi>ToA_assoc_normalization \<open>\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?t \<Zcomp> ?T\<close> (100)]]
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -2317,13 +2317,10 @@ setup \<open>Config.put_global PLPR_Rule_Gen.simp_timeout ~1\<close>
 
 
 subsubsection \<open>By List of Keys\<close>
-
-declare [[\<phi>trace_reasoning = 3]]
       
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
-  deriving Semimodule_Scalar_Assoc\<^sub>E
-(*Sep_Functor_1
+  deriving Sep_Functor_1
        and Functionality
        and Semimodule_NonDistr_no0
        and Abstraction_to_Raw
@@ -2335,7 +2332,8 @@ declare [[\<phi>trace_reasoning = 3]]
         \<Longrightarrow> Tyops_Commute \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) \<DD>[(o) \<delta>] \<DD>[(o) \<delta>] T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-*)
+
+declare [[\<phi>ToA_assoc_normalization \<open>?k\<^sub>1 \<^bold>\<rightarrow>\<^sub>@ ?k\<^sub>2 \<^bold>\<rightarrow>\<^sub>@ ?T\<close> (100)]]
 
 (*
 lemma
@@ -2437,6 +2435,8 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+
+declare [[\<phi>ToA_assoc_normalization \<open>?n \<odiv> ?m \<odiv> ?T\<close> (100)]]
 
 thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>S
 thm \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z
