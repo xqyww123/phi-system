@@ -65,7 +65,31 @@ proc test_mem6:
     $addr \<tribullet> d \<tribullet> f \<tribullet> j !
   \<medium_right_bracket> .
 
+declare [[\<phi>reasoning_step_limit = 80]]
 
+proc test_mem7:
+  input  \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
+  output \<open>(x,2) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<close>
+  \<medium_left_bracket>
+    $addr \<tribullet> b := \<open>2 \<Ztypecolon> \<nat>\<close>
+  \<medium_right_bracket> .
+
+proc test_mem8:
+  input  \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>}}\<close>
+  output \<open>(x,(y,2)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<close>
+  \<medium_left_bracket>
+    $addr \<tribullet> d \<tribullet> e := \<open>2 \<Ztypecolon> \<nat>\<close>
+  \<medium_right_bracket> .
+
+declare [[\<phi>reasoning_step_limit = 140]]
+
+proc test_mem9:
+  input  \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<s>\<t>\<r>\<u>\<c>\<t> {g: \<a>\<i>\<n>\<t>, h: \<a>\<i>\<n>\<t>, i: \<a>\<i>\<n>\<t>, j: \<a>\<i>\<n>\<t>}}}\<close>
+  output \<open>(x,(y,z,(g,h,i,2))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<close>
+  \<medium_left_bracket>
+    $addr \<tribullet> d \<tribullet> f \<tribullet> j := \<open>2 \<Ztypecolon> \<nat>\<close>
+  \<medium_right_bracket> .
 
 
 

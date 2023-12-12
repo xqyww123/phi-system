@@ -1007,7 +1007,7 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal,
 lemma \<phi>mapToA_split_source
   [\<phi>reason %\<phi>mapToA_split_source
       for \<open>\<m>\<a>\<p> _ : _ \<^emph>[_,_] (_,_) \<mapsto> _ \<^emph>[_,_] (_,_)
-           \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[_,_] (_,_) \<mapsto> (_ \<^emph> _) \<^emph>[_,_] (_,_)
+           \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[_,_] (_,_) \<mapsto> _ \<^emph>[_,_] (_,_)
            \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
 
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 \<otimes>\<^sub>f e : U  \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>1,R\<^sub>2,E) \<mapsto> U' \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>1',R\<^sub>2',E')
@@ -1064,7 +1064,7 @@ declare ToA_mapper_intro_Ex
     [OF _ _ \<phi>mapToA_split_source, \<phi>reasoned 2,
      \<phi>reason %\<phi>mapToA_split_source
       for \<open>\<m>\<a>\<p> _ : _ \<^emph>[?var_C\<^sub>R] ?var_R \<mapsto> _ \<^emph>[?var_C\<^sub>R] ?var_R'
-           \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W'
+           \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> _ \<^emph>[?var_C\<^sub>W] ?var_W'
            \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]
 
 end
