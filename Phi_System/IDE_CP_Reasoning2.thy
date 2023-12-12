@@ -367,8 +367,10 @@ subsection \<open>Conventions\<close>
   and \<phi>mapToA_derived = (50, [30,70]) in \<phi>mapToA_all > \<phi>mapToA_sysbot \<open>derived\<close>
   and \<phi>mapToA_derived_TF = (65, [65,65]) in \<phi>mapToA_derived
       \<open>ToA mapper derived from Transformation Functor\<close>
-  and \<phi>mapToA_derived_module = (45, [45,45]) in \<phi>mapToA_derived and < \<phi>mapToA_derived_TF
-      \<open>ToA mapper derived from Semimodules\<close>
+  and \<phi>mapToA_derived_module_SDistri = (37, [37,38]) in \<phi>mapToA_derived and < \<phi>mapToA_derived_TF
+      \<open>derived ToA mapper for module scalar distributivity\<close>
+  and \<phi>mapToA_derived_module_assoc = (30, [30,30]) in \<phi>mapToA_derived and < \<phi>mapToA_derived_module_SDistri
+      \<open>derived ToA mapper for module scalar associativity\<close>
   and \<phi>mapToA_unify = (5, [5,6]) in \<phi>mapToA_sysbot
       \<open>apply lambda unification\<close>
 
@@ -385,16 +387,16 @@ declare [[
       \<open>\<s>\<u>\<b>\<s>\<t> _ \<Ztypecolon> ?U \<f>\<o>\<r> _ \<Ztypecolon> ?T \<f>\<r>\<o>\<m> ?Src \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _\<close>    (100)
   and \<open>\<m>\<a>\<p> _ : ?U \<^emph>[_,_] (?out_R, ?var_E) \<mapsto> ?U' \<^emph>[_,_] (?out_R', ?var_E')
        \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_,_] (_, ?var_E) \<mapsto> _ \<^emph>[_,_] (_, ?var_E')
-       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> ?D\<close> \<Rightarrow>
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
       \<open>\<m>\<a>\<p> _ : ?U \<^emph>[_,_] (_,_) \<mapsto> ?U' \<^emph>[_,_] (_,_)
        \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_,_] (_,_) \<mapsto> _ \<^emph>[_,_] (_,_)
-       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> ?D\<close>    (100)
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>    (100)
   and \<open>\<m>\<a>\<p> ?in_g  : ?U \<^emph>[_] ?out_R \<mapsto> ?U' \<^emph>[_] ?out_R'
        \<o>\<v>\<e>\<r> ?out_f : ?T \<^emph>[_] ?out_W \<mapsto> ?out_T' \<^emph>[_] ?out_W'
-       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> ?D\<close> \<Rightarrow>
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
       \<open>\<m>\<a>\<p> _ : ?U \<^emph>[_] _ \<mapsto> ?U' \<^emph>[_] _
        \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
-       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> ?D\<close>    (120)
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>    (120)
 (*  and \<open>\<g>\<e>\<t>\<t>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<i>\<n> ?D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> _\<close> \<Rightarrow>
       \<open>\<g>\<e>\<t>\<t>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<i>\<n> ?D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> _\<close>   (200) *)
 
@@ -586,6 +588,11 @@ lemma [\<phi>reason %cutting]:
 \<Longrightarrow> mapToA_unify_A Tgt Src A B \<close>
   unfolding ERROR_def
   by blast
+
+subsubsection \<open>Conditioned Map ToA\<close>
+
+definition \<open>mapToA_cond A B C D \<equiv> (A \<or> B \<or> C) \<and> D\<close>
+
 
 
 subsection \<open>Reasoning\<close>
@@ -812,7 +819,10 @@ context
 begin
   
 
-lemma [\<phi>reason %\<phi>mapToA_post_split]:
+lemma [\<phi>reason %\<phi>mapToA_post_split
+          for \<open>\<m>\<a>\<p> _ : _ \<^emph>[_,_] (_,_) \<mapsto> _ \<^emph>[_,_] (_,_)
+               \<o>\<v>\<e>\<r> _ : _ \<^emph>[_,_] (_,_) \<mapsto> _ \<^emph>[_,_] (_,_)
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> (\<lambda>(x,w,e). (x,w)) ` D
@@ -835,6 +845,7 @@ lemma [\<phi>reason %\<phi>mapToA_post_split]:
     certified by (insert useful, clarsimp simp add: image_iff split: prod.split, force)
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     by (drule ToA_Mapper_f_expn, clarsimp split: prod.split, fastforce)
+
 
 lemma ToA_mapper_intro_Ex[no_atp]:
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f (\<lambda>_. undefined) : U \<^emph>[C\<^sub>R,False] (R,\<top>\<^sub>\<phi>) \<mapsto> U' \<^emph>[C\<^sub>R,False] (R',\<top>\<^sub>\<phi>)
@@ -971,7 +982,7 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal,
           case_tac \<open>s\<^sub>1 (g\<^sub>1 ab, s\<^sub>2 (g\<^sub>2 ac, r\<^sub>2 (bb, cb)))\<close>, simp) .
 *)
 
-lemma [\<phi>reason %\<phi>mapToA_split_source]:
+lemma \<phi>mapToA_split_source[\<phi>reason %\<phi>mapToA_split_source]:
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 \<otimes>\<^sub>f e : U  \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>1,R\<^sub>2,E) \<mapsto> U' \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>1',R\<^sub>2',E')
     \<o>\<v>\<e>\<r> f\<^sub>1 \<otimes>\<^sub>f w\<^sub>1 : T\<^sub>1 \<^emph>[C\<^sub>W\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (W\<^sub>1,R\<^sub>2,E) \<mapsto> T\<^sub>1' \<^emph>[C\<^sub>W\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (W\<^sub>1',R\<^sub>2',E')
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>1 \<i>\<n> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e))) ` D
