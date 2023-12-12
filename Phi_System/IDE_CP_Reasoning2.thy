@@ -859,31 +859,31 @@ lemma [\<phi>reason %\<phi>mapToA_post_split
 
 
 lemma ToA_mapper_intro_Ex[no_atp]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f (\<lambda>_. unspec) : U \<^emph>[C\<^sub>R,False] (R,\<top>\<^sub>\<phi>) \<mapsto> U' \<^emph>[C\<^sub>R,False] (R',\<top>\<^sub>\<phi>)
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> h' : (\<lambda>(x,w). case h (x,w,unspec) of (y,r,_) \<Rightarrow> (y,r))
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : (\<lambda>(y,r). case s (y,r,unspec) of (x,w,_) \<Rightarrow> (x,w))
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f (\<lambda>_. unspec) : U \<^emph>[C\<^sub>R,False] (R,\<top>\<^sub>\<phi>) \<mapsto> U' \<^emph>[C\<^sub>R,False] (R',\<top>\<^sub>\<phi>)
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w \<otimes>\<^sub>f (\<lambda>_. unspec) : T \<^emph>[C\<^sub>W,False] (W,\<top>\<^sub>\<phi>) \<mapsto> T' \<^emph>[C\<^sub>W,False] (W',\<top>\<^sub>\<phi>)
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
       \<i>\<n> (\<lambda>(x,w). (x,w,unspec)) ` D
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,w). case h (x,w,unspec) of (y,r,_) \<Rightarrow> (y,r))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y,r). case s (y,r,unspec) of (x,w,_) \<Rightarrow> (x,w))
-      \<i>\<n> D \<close>
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D \<close>
   for T :: \<open>('e::sep_semigroup,'f) \<phi>\<close>
-
+  unfolding Simplify_def
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric])
-  \<medium_left_bracket> premises MP
+  \<medium_left_bracket> premises [] and [] and MP
     apply_rule apply_ToA_Mapper_onward[OF MP, where x=\<open>case x of (x,w) \<Rightarrow> (x,w,unspec)\<close>]
     certified by (clarsimp simp add: image_iff split: prod.split, insert the_\<phi>(3), blast)
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply (rule conjunctionI, rule)
-  \<medium_left_bracket> premises MP
+  \<medium_left_bracket> premises [] and [] and MP
     apply_rule apply_ToA_Mapper_backward[OF MP, where x=\<open>(prod.rotR \<circ> prod.swap \<circ> Pair unspec) x\<close>]
     certified by (insert useful, clarsimp simp add: image_iff split: prod.split, force)
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply (rule conjunctionI, rule, rule)
     subgoal premises prems for y
-      by (insert ToA_Mapper_f_expn[OF prems(1), simplified, THEN bspec[OF _ prems(2)]],
+      by (insert ToA_Mapper_f_expn[OF prems(3), simplified, THEN bspec[OF _ prems(4)]],
           clarsimp split: prod.split) .
 
 end
@@ -903,12 +903,6 @@ lemma \<phi>mapToA_split_goal_Ty[
       \<phi>reason %\<phi>mapToA_split_goal
           for \<open>\<m>\<a>\<p> _ : (_ \<^emph> _) \<^emph>[_, _] (_, _) \<mapsto> (_ \<^emph> _) \<^emph>[_, _] (_, _)
                \<o>\<v>\<e>\<r> _ : _ \<^emph>[_, _] (_, _) \<mapsto> _ \<^emph>[_, _] (_, _)
-               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
-      THEN ToA_mapper_intro_Ex, simplified,
-      (*where C\<^sub>E = False and E=\<open>\<top>\<^sub>\<phi>\<close>,*)
-      \<phi>reason %\<phi>mapToA_split_goal
-          for \<open>\<m>\<a>\<p> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>R] ?var_R \<mapsto> (_ \<^emph> _) \<^emph>[?var_C\<^sub>R] ?var_R'
-               \<o>\<v>\<e>\<r> _ : _ \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> _ \<^emph>[?var_C\<^sub>W] ?var_W'
                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 : U\<^sub>1 \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1, W\<^sub>2, E) \<mapsto> U\<^sub>1' \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1', W\<^sub>2', E')
     \<o>\<v>\<e>\<r> f\<^sub>1 \<otimes>\<^sub>f w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2 \<otimes>\<^sub>f e : T \<^emph>[C\<^sub>W\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>1, W\<^sub>2, E) \<mapsto> T' \<^emph>[C\<^sub>W\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>1', W\<^sub>2', E')
@@ -956,6 +950,13 @@ lemma \<phi>mapToA_split_goal_Ty[
       by (insert prems(4,5)[THEN bspec[OF _ prems(6)]],
           cases y, clarsimp, case_tac \<open>h\<^sub>1 (a, aa, b, c)\<close>, simp, case_tac \<open>h\<^sub>2 (ba, ca, d)\<close>, simp,
           case_tac \<open>s\<^sub>1 (g\<^sub>1 ab, s\<^sub>2 (g\<^sub>2 ac, r\<^sub>2 (bb, cb)))\<close>, simp) .
+
+declare ToA_mapper_intro_Ex
+        [OF _ _ \<phi>mapToA_split_goal_Ty, \<phi>reasoned 2,
+         \<phi>reason %\<phi>mapToA_split_goal
+            for \<open>\<m>\<a>\<p> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>R] ?var_R \<mapsto> (_ \<^emph> _) \<^emph>[?var_C\<^sub>R] ?var_R'
+                 \<o>\<v>\<e>\<r> _ : _ \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> _ \<^emph>[?var_C\<^sub>W] ?var_W'
+                 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]
 
 (*
 lemma [\<phi>reason %\<phi>mapToA_split_goal,
@@ -1007,11 +1008,6 @@ lemma \<phi>mapToA_split_source
   [\<phi>reason %\<phi>mapToA_split_source
       for \<open>\<m>\<a>\<p> _ : _ \<^emph>[_,_] (_,_) \<mapsto> _ \<^emph>[_,_] (_,_)
            \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[_,_] (_,_) \<mapsto> (_ \<^emph> _) \<^emph>[_,_] (_,_)
-           \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
-   THEN ToA_mapper_intro_Ex, simplified,
-   \<phi>reason %\<phi>mapToA_split_source
-      for \<open>\<m>\<a>\<p> _ : _ \<^emph>[?var_C\<^sub>R] ?var_R \<mapsto> _ \<^emph>[?var_C\<^sub>R] ?var_R'
-           \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W'
            \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
 
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 \<otimes>\<^sub>f e : U  \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>1,R\<^sub>2,E) \<mapsto> U' \<^emph>[C\<^sub>R\<^sub>1,C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>1',R\<^sub>2',E')
@@ -1063,6 +1059,13 @@ lemma \<phi>mapToA_split_source
     subgoal premises prems
       by (insert prems(4,5)[THEN bspec[OF _ \<open>_ \<in> D\<close>]],
           insert prems(7-), clarsimp) .
+
+declare ToA_mapper_intro_Ex
+    [OF _ _ \<phi>mapToA_split_source, \<phi>reasoned 2,
+     \<phi>reason %\<phi>mapToA_split_source
+      for \<open>\<m>\<a>\<p> _ : _ \<^emph>[?var_C\<^sub>R] ?var_R \<mapsto> _ \<^emph>[?var_C\<^sub>R] ?var_R'
+           \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W'
+           \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]
 
 end
 

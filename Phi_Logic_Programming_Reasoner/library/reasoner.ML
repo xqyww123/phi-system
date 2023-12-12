@@ -1227,6 +1227,12 @@ val attr_del_rule = Scan.lift Args.del |--
 val _ = Theory.setup (
   Attrib.setup \<^binding>\<open>\<phi>reason\<close> (attr_del_rule || attr_add_rule)
     "Decalre or remove introduction rules in \<phi>-LPR."
+
+#> Attrib.setup \<^binding>\<open>\<phi>reasoned\<close> (Scan.lift Parse.nat >> (fn N =>
+    Thm.rule_attribute [] (fn ctxt => fn rule =>
+      reason1 (fn () => "\<phi>-LPR reasoning fails") NONE (SOME N) (Context.proof_of ctxt) rule)))
+  "Eliminate leading N antecedents by \<phi>-LPR reasoning"
+
 #> Method.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Scan Parse in
   Scan.lift (Scan.option Parse.nat) --|

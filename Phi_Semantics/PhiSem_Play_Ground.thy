@@ -69,7 +69,7 @@ proc test_ptr3:
   output \<open>addr \<tribullet>\<^sub>a a \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   $addr \<tribullet> a
-\<medium_right_bracket>
+\<medium_right_bracket> .
 
 proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
