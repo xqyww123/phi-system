@@ -373,6 +373,8 @@ subsection \<open>Conventions\<close>
       \<open>derived ToA mapper for module scalar associativity\<close>
   and \<phi>mapToA_unify = (5, [5,6]) in \<phi>mapToA_sysbot
       \<open>apply lambda unification\<close>
+  and \<phi>mapToA_fallbacks = (1,[1,4]) in \<phi>mapToA_sysbot and < \<phi>mapToA_unify
+      \<open>fallbacks\<close>
 
 
 declare [[
@@ -567,6 +569,11 @@ lemma [\<phi>reason add]:
   \<open> mapToA_assign_id f
 \<Longrightarrow> mapToA_assign_id g
 \<Longrightarrow> mapToA_assign_id (f o g) \<close>
+  unfolding mapToA_assign_id_def fun_eq_iff
+  by simp
+
+lemma [\<phi>reason for \<open>mapToA_assign_id (\<lambda>_::?'a. unspec)\<close>]:
+  \<open> mapToA_assign_id (\<lambda>_::unit. unspec) \<close>
   unfolding mapToA_assign_id_def fun_eq_iff
   by simp
 
@@ -897,8 +904,8 @@ lemma \<phi>mapToA_split_goal_Ty[
           for \<open>\<m>\<a>\<p> _ : (_ \<^emph> _) \<^emph>[_, _] (_, _) \<mapsto> (_ \<^emph> _) \<^emph>[_, _] (_, _)
                \<o>\<v>\<e>\<r> _ : _ \<^emph>[_, _] (_, _) \<mapsto> _ \<^emph>[_, _] (_, _)
                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
-      (*THEN ToA_mapper_intro_Ex, simplified,*)
-      where C\<^sub>E = False and E=\<open>\<top>\<^sub>\<phi>\<close>,
+      THEN ToA_mapper_intro_Ex, simplified,
+      (*where C\<^sub>E = False and E=\<open>\<top>\<^sub>\<phi>\<close>,*)
       \<phi>reason %\<phi>mapToA_split_goal
           for \<open>\<m>\<a>\<p> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>R] ?var_R \<mapsto> (_ \<^emph> _) \<^emph>[?var_C\<^sub>R] ?var_R'
                \<o>\<v>\<e>\<r> _ : _ \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> _ \<^emph>[?var_C\<^sub>W] ?var_W'
@@ -1001,7 +1008,7 @@ lemma \<phi>mapToA_split_source
       for \<open>\<m>\<a>\<p> _ : _ \<^emph>[_,_] (_,_) \<mapsto> _ \<^emph>[_,_] (_,_)
            \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[_,_] (_,_) \<mapsto> (_ \<^emph> _) \<^emph>[_,_] (_,_)
            \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
-   where C\<^sub>E = False and E=\<open>\<top>\<^sub>\<phi>\<close> and e=\<open>\<lambda>_. unspec\<close>,
+   THEN ToA_mapper_intro_Ex, simplified,
    \<phi>reason %\<phi>mapToA_split_source
       for \<open>\<m>\<a>\<p> _ : _ \<^emph>[?var_C\<^sub>R] ?var_R \<mapsto> _ \<^emph>[?var_C\<^sub>R] ?var_R'
            \<o>\<v>\<e>\<r> _ : (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W \<mapsto> (_ \<^emph> _) \<^emph>[?var_C\<^sub>W] ?var_W'
@@ -1185,6 +1192,18 @@ lemma [\<phi>reason %\<phi>mapToA_refl+1 for \<open>\<m>\<a>\<p> _ : ?T \<^emph>
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> id \<s>\<e>\<t>\<t>\<e>\<r> id \<i>\<n> D \<close>
   unfolding ToA_Mapper_def
   by clarsimp
+
+
+subsubsection \<open>Fallback\<close>
+
+lemma [\<phi>reason %\<phi>mapToA_fallbacks]:
+  \<open> \<m>\<a>\<p> f \<otimes>\<^sub>f g : U \<^emph>[True] T \<mapsto> U' \<^emph>[True] T'
+    \<o>\<v>\<e>\<r> g \<otimes>\<^sub>f f : T \<^emph>[True] U \<mapsto> T' \<^emph>[True] U'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> prod.swap \<s>\<e>\<t>\<t>\<e>\<r> prod.swap \<i>\<n> D \<close>
+  for T :: \<open>'b \<Rightarrow> 'e::sep_ab_semigroup set\<close>
+  unfolding ToA_Mapper_def Transformation_def
+  by (auto; insert sep_disj_commuteI sep_mult_commute; blast)
+
 
 
 end

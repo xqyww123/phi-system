@@ -501,12 +501,19 @@ lemma cond_mapper_simp[simp, \<phi>safe_simp]:
 
 paragraph \<open>mapToA_assign_id\<close>
 
-lemma [\<phi>reason add]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] C
+lemma [\<phi>reason %mapToA_assign_id+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] C
 \<Longrightarrow> mapToA_assign_id (m f)
 \<Longrightarrow> mapToA_assign_id (?\<^sub>M C m f) \<close>
-  unfolding mapToA_assign_id_def Premise_def
+  unfolding mapToA_assign_id_def Premise_def \<r>Guard_def
   by clarsimp
+
+lemma [\<phi>reason %mapToA_assign_id+20 for \<open>mapToA_assign_id (?\<^sub>M _ _ _ :: unit \<Rightarrow> unit)\<close>
+                                        \<open>mapToA_assign_id (?\<^sub>M[False] _ _ :: ?'a \<Rightarrow> ?'a)\<close>,
+       \<phi>reason %mapToA_assign_id    for \<open>mapToA_assign_id (?\<^sub>M _ _ _ :: ?'a \<Rightarrow> ?'a)\<close>]:
+  \<open>mapToA_assign_id (?\<^sub>M C m f :: unit \<Rightarrow> unit) \<close>
+  unfolding mapToA_assign_id_def
+  by (clarsimp simp: fun_eq_iff)
 
 
 subsubsection \<open>Objectize HOL Type-Class Judgement\<close>

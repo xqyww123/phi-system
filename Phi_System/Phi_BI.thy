@@ -3014,173 +3014,6 @@ lemma [\<phi>reason %ToA_success]:
   by (clarsimp simp add: \<phi>Some_\<phi>None_freeobj)
 
 
-paragraph \<open>Merging Conditioned \<phi>-Types\<close>
-
-consts \<A>merge :: action
-
-declare [[\<phi>reason_default_pattern
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close> \<Rightarrow>  (*objects: LHS determines RHS*)
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close>   (100) (*types:   LHS determines RHS*)
-  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>      (*objects: RHS determines LHS*)
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100) (*types:   LHS determines RHS*)
-
-  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) @action \<A>merge\<close> \<Rightarrow>
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) @action \<A>merge\<close>   (100)
-  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>
-      \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100)
-
-  and \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
-      \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
-  and \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ \<^emph> \<half_blkcirc>[?C\<^sub>C] _ @action \<A>merge\<close> \<Rightarrow>
-      \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ \<^emph> \<half_blkcirc>[?C\<^sub>C] _ @action \<A>merge\<close>    (100)
-
-  and \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
-      \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
-
-(*and \<open>_ = (if ?flag then _ else _) @action \<A>merge \<close> \<Rightarrow>
-      \<open>_ = (if ?flag then _ else _) @action \<A>merge \<close>   (100)*)
-(*  and \<open>?flag \<longrightarrow> _ @action \<A>merge\<close> \<Rightarrow>
-      \<open>?flag \<longrightarrow> _ @action \<A>merge\<close>   (100)*)
-  and \<open>?X @action \<A>merge\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed \<A>merge rule\<close> (?X @action \<A>merge))\<close> (0)
-]]
-
-\<phi>reasoner_group \<A>merge = (%cutting, [%cutting, %cutting+20]) for \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = _\<close>
-  \<open>Rules merging multiple conditioned \<phi>types into one conditioned \<phi>type,
-   always using the abstract object(s) given in the left hand side to assign the abstract object(s)
-   in the right.\<close>
-
-text \<open>Information is always given from left to right below.
-      They accept arguments from LHS and assign the result to RHS\<close>
-
-subparagraph \<open>Simplification Protects\<close>
-
-definition [simplification_protect]:
-  \<open>\<A>merge_SP P \<equiv> P @action \<A>merge\<close>
-
-lemma [cong]:
-  \<open>\<A>merge_SP P \<equiv> \<A>merge_SP P\<close> .
-
-subparagraph \<open>Implementation\<close>
-
-lemma [\<phi>reason %\<A>merge+20 for \<open>(fst (_,_) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
-  \<open> (x \<Ztypecolon> T) = Y @action \<A>merge
-\<Longrightarrow> (fst (x,y) \<Ztypecolon> T) = Y @action \<A>merge \<close>
-  by simp
-
-lemma [\<phi>reason %\<A>merge+20 for \<open>(snd (_,_) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
-  \<open> (y \<Ztypecolon> U) = Y @action \<A>merge
-\<Longrightarrow> (snd (x,y) \<Ztypecolon> U) = Y @action \<A>merge \<close>
-  by simp_all
-
-lemma [\<phi>reason %\<A>merge+20 for \<open>((_, snd _) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
-  \<open> ((x, z) \<Ztypecolon> U) = Y @action \<A>merge
-\<Longrightarrow> ((x, snd (y,z)) \<Ztypecolon> U) = Y @action \<A>merge \<close>
-  by simp_all
-
-lemma [\<phi>reason %\<A>merge+20 for \<open>((_, fst _) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
-  \<open> ((x, y) \<Ztypecolon> U) = Y @action \<A>merge
-\<Longrightarrow> ((x, fst (y,z)) \<Ztypecolon> U) = Y @action \<A>merge \<close>
-  by simp_all
-
-lemma [\<phi>reason %\<A>merge]: \<comment> \<open>contracts two sides respectively\<close>
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((fst x, snd x) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
-  \<open>(a \<Ztypecolon> \<half_blkcirc>[True] A) = ((a, unspec) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
-  \<open>(b \<Ztypecolon> \<half_blkcirc>[True] B) = ((unspec, b) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
-  \<open>(unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((unspec, unspec) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
-  unfolding Action_Tag_def BI_eq_iff
-  by (clarsimp; force)+
-
-lemma [\<phi>reason %\<A>merge]:
-  \<open> (x \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) = (x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) @action \<A>merge \<close>
-  \<open> (x \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) = (fst x \<Ztypecolon> \<half_blkcirc>[True] A) @action \<A>merge \<close>
-  \<open> (x \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) = (snd x \<Ztypecolon> \<half_blkcirc>[True] B) @action \<A>merge \<close>
-  \<open> (x \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) = (unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) @action \<A>merge \<close>
-  unfolding Action_Tag_def BI_eq_iff
-  by (clarsimp; force)+
-
-lemma [\<phi>reason %\<A>merge+10]:
-  \<open> ((x,y) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) = (x \<Ztypecolon> \<half_blkcirc>[True] A) @action \<A>merge \<close>
-  \<open> ((x,y) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) = (y \<Ztypecolon> \<half_blkcirc>[True] B) @action \<A>merge \<close>
-  unfolding Action_Tag_def BI_eq_iff
-  by (clarsimp; force)+
-
-lemma [\<phi>reason %\<A>merge]:
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) = (x \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) @action \<A>merge\<close>
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((fst x, fst (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((fst x, snd (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (fst x \<Ztypecolon> \<half_blkcirc>[True] T) @action \<A>merge\<close>
-
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) = ((fst (snd x), snd (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) @action \<A>merge\<close>
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (fst (snd x) \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (snd (snd x) \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
-  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) @action \<A>merge\<close>
-  unfolding Action_Tag_def
-  by (cases x, clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
-
-lemma [\<phi>reason %\<A>merge+5]:
-  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((x, fst y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
-  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((x, snd y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
-  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (x \<Ztypecolon> \<half_blkcirc>[True] T) @action \<A>merge\<close>
-
-  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) = (y \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) @action \<A>merge\<close>
-  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (fst y \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
-  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (snd y \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
-  unfolding Action_Tag_def
-  by (cases y, clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
-
-lemma [\<phi>reason %\<A>merge+10]:
-  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((x,y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
-  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((x,z) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
-  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (y \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
-  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (z \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
-  unfolding Action_Tag_def
-  by(clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
-
-lemma [\<phi>reason %\<A>merge]:
-  \<open>(x1 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) = ((fst x1, fst (snd x1), snd (snd x1)) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) @action \<A>merge\<close>
-  \<open>(x2 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) = ((fst x2, snd x2, unspec) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
-  \<open>(x3 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) = ((fst x3, unspec, snd x3) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
-  \<open>(x4 \<Ztypecolon> \<half_blkcirc>[True] T) = ((x4, unspec, unspec) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
-
-  \<open>(x5 \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) = ((unspec, fst x5, snd x5) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
-  \<open>(x6 \<Ztypecolon> \<half_blkcirc>[True] U) = ((unspec, x6, unspec) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
-  \<open>(x7 \<Ztypecolon> \<half_blkcirc>[True] R) = ((unspec, unspec, x7) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
-  \<open>(unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((unspec, unspec, unspec) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
-  unfolding Action_Tag_def
-  by (clarsimp simp add: \<phi>Some_\<phi>Prod[symmetric] \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>None_freeobj)+
-
-
-paragraph \<open>Merging Conditioned BI Assertion\<close>
-
-lemma [\<phi>reason %\<A>merge]:
-  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] (A * B) = (\<half_blkcirc>\<^sub>B\<^sub>I[True] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[True] B) @action \<A>merge \<close>
-  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] A = (\<half_blkcirc>\<^sub>B\<^sub>I[True] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[False] B) @action \<A>merge \<close>
-  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] B = (\<half_blkcirc>\<^sub>B\<^sub>I[False] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[True] B) @action \<A>merge \<close>
-  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[False] \<top> = (\<half_blkcirc>\<^sub>B\<^sub>I[False] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[False] B) @action \<A>merge \<close>
-  unfolding Action_Tag_def BI_eq_iff
-  by (clarsimp; force)+
-
-lemma [\<phi>reason %\<A>merge]:
-  \<open> \<half_blkcirc>[True] (A \<^emph> B) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (A \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> B) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[False] \<top>\<^sub>\<phi> = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
-  unfolding Action_Tag_def
-  by (rule \<phi>Type_eqI_BI; clarsimp simp add: BI_eq_iff; force)+
-
-lemma [\<phi>reason %\<A>merge]:
-  \<open> \<half_blkcirc>[True] (A \<^emph> B \<^emph> C) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (A \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (A \<^emph> B \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (A \<^emph> (\<top>\<^sub>\<phi> [False]\<^emph> C)) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> B \<^emph> C) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> (\<top>\<^sub>\<phi> [False]\<^emph> C)) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> (B \<^emph>[False] \<top>\<^sub>\<phi>)) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
-  \<open> \<half_blkcirc>[False] \<top>\<^sub>\<phi> = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
-  unfolding Action_Tag_def
-  by (rule \<phi>Type_eqI_BI; clarsimp simp add: BI_eq_iff; force)+
-
 
 subsubsection \<open>Conditional Item on Unital Algebra\<close>
 
@@ -3460,6 +3293,183 @@ term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^s
 term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U\<close>
  
 term \<open>(L\<^sub>4,L\<^sub>3,L\<^sub>2,L\<^sub>1) [D\<^sub>4,D\<^sub>3,D\<^sub>2,D\<^sub>1]\<^emph> U\<close>*)
+
+subsubsection \<open>Merging Conditioned \<phi>-Types \& Assertions\<close>
+
+consts \<A>merge :: action
+
+declare [[\<phi>reason_default_pattern
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close> \<Rightarrow>  (*objects: LHS determines RHS*)
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) @action \<A>merge\<close>   (100) (*types:   LHS determines RHS*)
+  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>      (*objects: RHS determines LHS*)
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100) (*types:   LHS determines RHS*)
+
+  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = ((_,_,_) \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) @action \<A>merge\<close> \<Rightarrow>
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) @action \<A>merge\<close>   (100)
+  and \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close> \<Rightarrow>
+      \<open>(_ \<Ztypecolon> \<half_blkcirc>[?Ca] _ \<^emph> \<half_blkcirc>[?Cb] _ \<^emph> \<half_blkcirc>[?Cc] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>   (100)
+
+  and \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
+      \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
+  and \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ \<^emph> \<half_blkcirc>[?C\<^sub>C] _ @action \<A>merge\<close> \<Rightarrow>
+      \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[?C\<^sub>A] _ \<^emph> \<half_blkcirc>[?C\<^sub>B] _ \<^emph> \<half_blkcirc>[?C\<^sub>C] _ @action \<A>merge\<close>    (100)
+
+  and \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close> \<Rightarrow>
+      \<open>\<half_blkcirc>\<^sub>B\<^sub>I[_] _ = \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>A] _ * \<half_blkcirc>\<^sub>B\<^sub>I[?C\<^sub>B] _ @action \<A>merge\<close>    (100)
+
+(*and \<open>_ = (if ?flag then _ else _) @action \<A>merge \<close> \<Rightarrow>
+      \<open>_ = (if ?flag then _ else _) @action \<A>merge \<close>   (100)*)
+(*  and \<open>?flag \<longrightarrow> _ @action \<A>merge\<close> \<Rightarrow>
+      \<open>?flag \<longrightarrow> _ @action \<A>merge\<close>   (100)*)
+  and \<open>?X @action \<A>merge\<close> \<Rightarrow>
+      \<open>ERROR TEXT(\<open>Malformed \<A>merge rule\<close> (?X @action \<A>merge))\<close> (0)
+]]
+
+\<phi>reasoner_group \<A>merge = (%cutting, [%cutting, %cutting+20]) for \<open>(_ \<Ztypecolon> \<half_blkcirc>[_] _) = _\<close>
+  \<open>Rules merging multiple conditioned \<phi>types into one conditioned \<phi>type,
+   always using the abstract object(s) given in the left hand side to assign the abstract object(s)
+   in the right.\<close>
+
+text \<open>Information is always given from left to right below.
+      They accept arguments from LHS and assign the result to RHS\<close>
+
+paragraph \<open>Simplification Protects\<close>
+
+definition [simplification_protect]:
+  \<open>\<A>merge_SP P \<equiv> P @action \<A>merge\<close>
+
+lemma [cong]:
+  \<open>\<A>merge_SP P \<equiv> \<A>merge_SP P\<close> .
+
+paragraph \<open>Implementation\<close>
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>(fst (_,_) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> (x \<Ztypecolon> T) = Y @action \<A>merge
+\<Longrightarrow> (fst (x,y) \<Ztypecolon> T) = Y @action \<A>merge \<close>
+  by simp
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>(snd (_,_) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> (y \<Ztypecolon> U) = Y @action \<A>merge
+\<Longrightarrow> (snd (x,y) \<Ztypecolon> U) = Y @action \<A>merge \<close>
+  by simp_all
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>((_, snd _) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> ((x, z) \<Ztypecolon> U) = Y @action \<A>merge
+\<Longrightarrow> ((x, snd (y,z)) \<Ztypecolon> U) = Y @action \<A>merge \<close>
+  by simp_all
+
+lemma [\<phi>reason %\<A>merge+20 for \<open>((_, fst _) \<Ztypecolon> _) = _ @action \<A>merge\<close>]:
+  \<open> ((x, y) \<Ztypecolon> U) = Y @action \<A>merge
+\<Longrightarrow> ((x, fst (y,z)) \<Ztypecolon> U) = Y @action \<A>merge \<close>
+  by simp_all
+
+lemma [\<phi>reason %\<A>merge]: \<comment> \<open>contracts two sides respectively\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((fst x, snd x) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
+  \<open>(a \<Ztypecolon> \<half_blkcirc>[True] A) = ((a, unspec) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
+  \<open>(b \<Ztypecolon> \<half_blkcirc>[True] B) = ((unspec, b) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
+  \<open>(unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((unspec, unspec) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
+  unfolding Action_Tag_def BI_eq_iff
+  by (clarsimp; force)+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open> (x \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) = (x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) @action \<A>merge \<close>
+  \<open> (x \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) = (fst x \<Ztypecolon> \<half_blkcirc>[True] A) @action \<A>merge \<close>
+  \<open> (x \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) = (snd x \<Ztypecolon> \<half_blkcirc>[True] B) @action \<A>merge \<close>
+  \<open> (x \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) = (unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) @action \<A>merge \<close>
+  unfolding Action_Tag_def BI_eq_iff
+  by (clarsimp; force)+
+
+lemma [\<phi>reason %\<A>merge+10]:
+  \<open> ((x,y) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) = (x \<Ztypecolon> \<half_blkcirc>[True] A) @action \<A>merge \<close>
+  \<open> ((x,y) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) = (y \<Ztypecolon> \<half_blkcirc>[True] B) @action \<A>merge \<close>
+  unfolding Action_Tag_def BI_eq_iff
+  by (clarsimp; force)+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) = (x \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((fst x, fst (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((fst x, snd (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (fst x \<Ztypecolon> \<half_blkcirc>[True] T) @action \<A>merge\<close>
+
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) = ((fst (snd x), snd (snd x)) \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (fst (snd x) \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (snd (snd x) \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(x \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by (cases x, clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
+
+lemma [\<phi>reason %\<A>merge+5]:
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((x, fst y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((x, snd y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) = (x \<Ztypecolon> \<half_blkcirc>[True] T) @action \<A>merge\<close>
+
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) = (y \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (fst y \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
+  \<open>((x,y) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (snd y \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by (cases y, clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
+
+lemma [\<phi>reason %\<A>merge+10]:
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((x,y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = ((x,z) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) @action \<A>merge\<close>
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = (y \<Ztypecolon> \<half_blkcirc>[True] U) @action \<A>merge\<close>
+  \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) = (z \<Ztypecolon> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by(clarsimp simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>Prod[symmetric])+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open>(x1 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) = ((fst x1, fst (snd x1), snd (snd x1)) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) @action \<A>merge\<close>
+  \<open>(x2 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) = ((fst x2, snd x2, unspec) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+  \<open>(x3 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> R)) = ((fst x3, unspec, snd x3) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(x4 \<Ztypecolon> \<half_blkcirc>[True] T) = ((x4, unspec, unspec) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+
+  \<open>(x5 \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) = ((unspec, fst x5, snd x5) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(x6 \<Ztypecolon> \<half_blkcirc>[True] U) = ((unspec, x6, unspec) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+  \<open>(x7 \<Ztypecolon> \<half_blkcirc>[True] R) = ((unspec, unspec, x7) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[True] R) @action \<A>merge\<close>
+  \<open>(unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((unspec, unspec, unspec) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[False] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
+  unfolding Action_Tag_def
+  by (clarsimp simp add: \<phi>Some_\<phi>Prod[symmetric] \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_\<phi>None_freeobj)+
+
+
+paragraph \<open>Merging Conditioned BI Assertion\<close>
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] (A * B) = (\<half_blkcirc>\<^sub>B\<^sub>I[True] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[True] B) @action \<A>merge \<close>
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] A = (\<half_blkcirc>\<^sub>B\<^sub>I[True] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[False] B) @action \<A>merge \<close>
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[True] B = (\<half_blkcirc>\<^sub>B\<^sub>I[False] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[True] B) @action \<A>merge \<close>
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[False] \<top> = (\<half_blkcirc>\<^sub>B\<^sub>I[False] A) * (\<half_blkcirc>\<^sub>B\<^sub>I[False] B) @action \<A>merge \<close>
+  unfolding Action_Tag_def BI_eq_iff
+  by (clarsimp; force)+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open> \<half_blkcirc>[True] (A \<^emph> B) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> B) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[False] \<top>\<^sub>\<phi> = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B @action \<A>merge \<close>
+  unfolding Action_Tag_def
+  by (rule \<phi>Type_eqI_BI; clarsimp simp add: BI_eq_iff; force)+
+
+lemma [\<phi>reason %\<A>merge]:
+  \<open> \<half_blkcirc>[True] (A \<^emph> B \<^emph> C) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph> B \<^emph>[False] \<top>\<^sub>\<phi>) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (A \<^emph> (\<top>\<^sub>\<phi> [False]\<^emph> C)) = \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> B \<^emph> C) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> (\<top>\<^sub>\<phi> [False]\<^emph> C)) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[True] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[True] (\<top>\<^sub>\<phi> [False]\<^emph> (B \<^emph>[False] \<top>\<^sub>\<phi>)) = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  \<open> \<half_blkcirc>[False] \<top>\<^sub>\<phi> = \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B \<^emph> \<half_blkcirc>[False] C @action \<A>merge \<close>
+  unfolding Action_Tag_def
+  by (rule \<phi>Type_eqI_BI; clarsimp simp add: BI_eq_iff; force)+
+
+paragraph \<open>Nested Merging\<close>
+
+lemma [\<phi>reason %\<A>merge for \<open>\<half_blkcirc>[_] _ = \<half_blkcirc>[_] _ \<^emph> \<half_blkcirc>[_ \<or> _] (_ [_]\<^emph>[_] _) @action \<A>merge\<close>]:
+  \<open> \<half_blkcirc>[C\<^sub>Y] Y = \<half_blkcirc>[C\<^sub>B] B \<^emph> \<half_blkcirc>[C\<^sub>C] C @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>X] X = \<half_blkcirc>[C\<^sub>A] A \<^emph> \<half_blkcirc>[C\<^sub>Y] Y @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>X] X = \<half_blkcirc>[C\<^sub>A] A \<^emph> \<half_blkcirc>[C\<^sub>B \<or> C\<^sub>C] (B [C\<^sub>B]\<^emph>[C\<^sub>C] C) @action \<A>merge \<close>
+  unfolding Action_Tag_def
+  by (clarsimp simp: BiCond_expn_BiCond; cases C\<^sub>A; cases C\<^sub>B; cases C\<^sub>C; simp)
+
 
 
 section \<open>Basic \<phi>-Type Properties\<close>
