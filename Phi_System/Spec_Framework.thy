@@ -305,7 +305,7 @@ subsection \<open>Zero Value\<close>
 definition Semantic_Zero_Val :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where "Semantic_Zero_Val ty T x \<longleftrightarrow> (\<exists>v. Zero ty = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))"
 
-declare [[\<phi>reason_default_pattern \<open>Semantic_Zero_Val ?TY ?T ?x\<close> \<Rightarrow> \<open>Semantic_Zero_Val ?TY ?T _\<close> (100) ]]
+declare [[\<phi>reason_default_pattern \<open>Semantic_Zero_Val _ ?T _\<close> \<Rightarrow> \<open>Semantic_Zero_Val _ ?T _\<close> (100) ]]
 
 \<phi>reasoner_group semantic_zero_val_all = (100, [0, 3000]) for \<open>Semantic_Zero_Val TY T x\<close>
     \<open>giving the semantic zero value on the abstraction side\<close>

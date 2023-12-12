@@ -3,7 +3,7 @@ chapter \<open>Theoretical Foundations\<close>
 section \<open>Preliminary\<close>
 
 theory Phi_Preliminary
-  imports Main "Phi_Algebras.Algebras"
+  imports Main "Phi_Algebras.Algebras" PhiTool_Symbol
           Phi_Logic_Programming_Reasoner.PLPR
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
   keywords "optional_translations" :: thy_decl
@@ -143,7 +143,7 @@ subsubsection \<open>Setup Safe Simpset\<close>
 
 lemmas [\<phi>safe_simp] =
     fmdom_fmupd fmdom_empty finsert_iff fempty_iff
-
+    mk_symbol_inject[OF UNIV_I UNIV_I]
 
 subsection \<open>Helper Attributes \& Tactics\<close>
 

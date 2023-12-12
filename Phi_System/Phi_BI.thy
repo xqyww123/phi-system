@@ -3301,7 +3301,7 @@ lemma [\<phi>reason %\<A>merge]: \<comment> \<open>contracts two sides respectiv
   \<open>(x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((fst x, snd x) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
   \<open>(a \<Ztypecolon> \<half_blkcirc>[True] A) = ((a, unspec) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
   \<open>(b \<Ztypecolon> \<half_blkcirc>[True] B) = ((unspec, b) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
-  \<open>(unspec \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((unspec, unspec) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
+  \<open>(any \<Ztypecolon> \<half_blkcirc>[False] \<top>\<^sub>\<phi>) = ((unspec, unspec) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
 

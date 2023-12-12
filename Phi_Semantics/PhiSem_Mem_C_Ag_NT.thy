@@ -63,7 +63,7 @@ term \<open>\<m>\<e>\<m>[addr] \<lbrace> a: T, b: (U \<^emph> D)\<rbrace>\<close
 
 subsection \<open>Reasoning\<close>
 
-subsubsection \<open>ToA Mapper\<close>
+subsubsection \<open>Mem Coerce\<close>
 
 text \<open>The following lemma cannot be automated because it is tightly related to the semantics\<close>
 
@@ -107,6 +107,23 @@ lemma Mem_Coerce_NTup_Comb:
     by (metis V_named_tup_mult V_named_tup_sep_disj inf.commute) .
 
 
+subsubsection \<open>ToA Mapper\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason %\<phi>mapToA_norm+10]:
+  \<open> \<m>\<a>\<p> g : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U) \<^emph>[C\<^sub>R] R
+          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U') \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] \<lbrace> SYMBOL_VAR(s): U \<rbrace> \<^emph>[C\<^sub>R] R
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] \<lbrace> SYMBOL_VAR(s): U' \<rbrace> \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
+  unfolding Mem_Coerce_NTup Guided_Mem_Coercion_def .
+
+
 lemma [\<phi>reason %\<phi>mapToA_norm]:
   \<open> Is_Named_Tuple U\<^sub>2  field\<^sub>2
 \<Longrightarrow> Is_Named_Tuple U\<^sub>2' field\<^sub>2
@@ -133,6 +150,195 @@ lemma [\<phi>reason %\<phi>mapToA_norm]:
           insert prems(4), this)
   qed .
 
-term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> a: A, b: B \<rbrace>)\<close>
+
+lemma [\<phi>reason %\<phi>mapToA_norm+10]:
+  \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<^emph>[C\<^sub>W] W
+          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T') \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph>[C\<^sub>W] W
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> SYMBOL_VAR(s): T' \<rbrace> \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
+  unfolding Mem_Coerce_NTup Guided_Mem_Coercion_def .
+
+lemma [\<phi>reason %\<phi>mapToA_norm+10]:
+  \<open> \<m>\<a>\<p> g : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U) \<^emph>[C\<^sub>R] R \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U') \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> SYMBOL_VAR(s): U \<rbrace> \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> SYMBOL_VAR(s): U' \<rbrace> \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
+  unfolding Mem_Coerce_NTup Guided_Mem_Coercion_def .
+
+
+lemma [\<phi>reason %\<phi>mapToA_norm]:
+  \<open> Is_Named_Tuple T\<^sub>2  field\<^sub>2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| field\<^sub>2
+
+\<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<^sub>1 \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<^sub>2) \<^emph>[C\<^sub>W] W
+          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<^sub>1' \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<^sub>2') \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
+
+\<Longrightarrow> \<^bold>d\<^bold>o Is_Named_Tuple T\<^sub>2' field\<^sub>2
+
+\<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<^emph>[C\<^sub>W] W
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (\<lbrace> SYMBOL_VAR(s): T\<^sub>1' \<rbrace> \<^emph> T\<^sub>2') \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
+
+  unfolding Guided_Mem_Coercion_def Transformation_def Premise_def Do_def
+  subgoal premises prems proof -
+    have t1: \<open>{|s|} |\<inter>| field\<^sub>2 = {||}\<close>
+      using prems(2) by blast
+    show ?thesis
+      by (unfold Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace>\<close> and U=\<open>T\<^sub>2\<close>, OF t1 Is_Named_Tuple_sing prems(1)]
+                 Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): T\<^sub>1' \<rbrace>\<close> and U=\<open>T\<^sub>2'\<close>, OF t1 Is_Named_Tuple_sing prems(4)]
+                 Mem_Coerce_NTup,
+          insert prems(3), this)
+  qed .
+
+
+lemma [\<phi>reason %\<phi>mapToA_norm]:
+  \<open> Is_Named_Tuple U\<^sub>2  field\<^sub>2
+\<Longrightarrow> Is_Named_Tuple U\<^sub>2' field\<^sub>2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| field\<^sub>2
+
+\<Longrightarrow> \<m>\<a>\<p> g : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U\<^sub>1 \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U\<^sub>2) \<^emph>[C\<^sub>R] R
+          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U\<^sub>1' \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U\<^sub>2') \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (\<lbrace> SYMBOL_VAR(s): U\<^sub>1 \<rbrace> \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R] R
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (\<lbrace> SYMBOL_VAR(s): U\<^sub>1' \<rbrace> \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W
+          \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
+
+  unfolding Guided_Mem_Coercion_def Transformation_def Premise_def
+  subgoal premises prems proof -
+    have t1: \<open>{|s|} |\<inter>| field\<^sub>2 = {||}\<close>
+      using prems(3) by blast
+    show ?thesis
+      by (unfold Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): U\<^sub>1 \<rbrace>\<close> and U=\<open>U\<^sub>2\<close>, OF t1 Is_Named_Tuple_sing prems(1)]
+                 Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): U\<^sub>1' \<rbrace>\<close> and U=\<open>U\<^sub>2'\<close>, OF t1 Is_Named_Tuple_sing prems(2)]
+                 Mem_Coerce_NTup,
+          insert prems(4), this)
+  qed .
+
+
+subsubsection \<open>Transformation\<close>
+
+
+lemma [\<phi>reason %ToA_mem_coerce+10,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce+10]:
+  \<open> x \<Ztypecolon> AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] (\<lbrace> SYMBOL_VAR(s): T \<rbrace>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Mem_Coerce_NTup Guided_Mem_Coercion_def .
+
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> Is_Named_Tuple T\<^sub>2 field\<^sub>2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| field\<^sub>2
+\<Longrightarrow> x \<Ztypecolon> AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T\<^sub>1 \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup tys] T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty tys)] (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def
+  subgoal premises prems proof -
+    have t1: \<open>{|s|} |\<inter>| field\<^sub>2 = {||}\<close>
+      using Premise_D prems(2) by blast
+
+    show ?thesis
+      by (unfold Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace>\<close> and U=\<open>T\<^sub>2\<close>, OF t1 Is_Named_Tuple_sing prems(1)]
+                 Mem_Coerce_NTup,
+          insert prems(3), blast)
+  qed .
+
+
+lemma [\<phi>reason %ToA_mem_coerce+10,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce+10]:
+  \<open> x \<Ztypecolon> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] (\<lbrace> SYMBOL_VAR(s): T \<rbrace>) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Mem_Coerce_NTup Guided_Mem_Coercion_def .
+
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> Is_Named_Tuple T\<^sub>2 field\<^sub>2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| field\<^sub>2
+\<Longrightarrow> x \<Ztypecolon> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T\<^sub>1 \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup tys] T\<^sub>2) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty tys)] (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def
+  subgoal premises prems proof -
+    have t1: \<open>{|s|} |\<inter>| field\<^sub>2 = {||}\<close>
+      using Premise_D prems(2) by blast
+
+    show ?thesis
+      by (unfold Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace>\<close> and U=\<open>T\<^sub>2\<close>, OF t1 Is_Named_Tuple_sing prems(1)]
+                 Mem_Coerce_NTup,
+          insert prems(3), blast)
+  qed .
+
+lemma [\<phi>reason %ToA_mem_coerce+10,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce+10]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] (\<lbrace> SYMBOL_VAR(s): T \<rbrace>) \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def Mem_Coerce_NTup .
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T\<^sub>1 \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup tys] T\<^sub>2 \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Is_Named_Tuple T\<^sub>2 field\<^sub>2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| field\<^sub>2
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty tys)] (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def
+  subgoal premises prems proof -
+    have t1: \<open>{|s|} |\<inter>| field\<^sub>2 = {||}\<close>
+      using Premise_D prems(3) by blast
+
+    show ?thesis
+      by (unfold Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace>\<close> and U=\<open>T\<^sub>2\<close>, OF t1 Is_Named_Tuple_sing prems(2)]
+                 Mem_Coerce_NTup,
+          insert prems(1), blast)
+  qed .
+
+lemma [\<phi>reason %ToA_mem_coerce+10,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce+10]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T) \<^emph>[C\<^sub>W] W \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] (\<lbrace> SYMBOL_VAR(s): T \<rbrace>) \<^emph>[C\<^sub>W] W \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def Mem_Coerce_NTup .
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T\<^sub>1 \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup tys] T\<^sub>2) \<^emph>[C\<^sub>W] W \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Is_Named_Tuple T\<^sub>2 field\<^sub>2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| field\<^sub>2
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty tys)] (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<^emph>[C\<^sub>W] W \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def
+  subgoal premises prems proof -
+    have t1: \<open>{|s|} |\<inter>| field\<^sub>2 = {||}\<close>
+      using Premise_D prems(3) by blast
+
+    show ?thesis
+      by (unfold Mem_Coerce_NTup_Comb[where T=\<open>\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace>\<close> and U=\<open>T\<^sub>2\<close>, OF t1 Is_Named_Tuple_sing prems(2)]
+                 Mem_Coerce_NTup,
+          insert prems(1), blast)
+  qed .
+
+
+
+
+(* term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> a: A, b: B \<rbrace>)\<close> *)
 
 end

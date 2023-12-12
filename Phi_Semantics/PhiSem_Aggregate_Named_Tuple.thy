@@ -223,11 +223,11 @@ lemma Empty_Tuple_reduce[simp]:
       metis V_named_tup_mult V_named_tup_sep_disj fmadd_empty(1) fmdom'_restrict_fset_precise fmdom_empty fmrestrict_fset_empty)
 
 lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
-  \<open> s |\<notin>| fmdom tys
-\<Longrightarrow> Semantic_Zero_Val ty T x
+  \<open> Semantic_Zero_Val ty T x
 \<Longrightarrow> Semantic_Zero_Val (semty_ntup tys) Ts xs
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| fmdom tys
 \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty tys)) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
-  unfolding Semantic_Zero_Val_def
+  unfolding Semantic_Zero_Val_def Premise_def
   apply (clarsimp; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>;
      auto simp add: inj_image_mem_iff fmmap_fmupd
      V_named_tup_mult_cons[where s=s and y=\<open>fmmap (the \<circ> Zero) tys\<close>, symmetric])

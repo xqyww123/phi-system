@@ -238,6 +238,13 @@ term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T\<close>
 
 section \<open>Instructions & Their Specifications\<close>
 
+subsection \<open>Auxiliary\<close>
+
+definition \<open>address_to_root addr \<equiv> memaddr.index addr = 0\<close>
+  \<comment> \<open>wraps and prevents the rewrite \<open>memaddr.index addr = 0\<close>,
+      as \<open>address_to_root addr\<close> should be handled as an atom\<close>
+
+subsection \<open>Main\<close>
 
 proc op_load_mem:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
@@ -310,11 +317,13 @@ text \<open>(depreciated! as we can have non-deterministic monad)
   over a subset of C semantics. The absence of non-initialized allocation does not affect the functionality
   but only little performance which we believe worthy against the simplification in reasoning. \<close>
 
-proc op_allocate_mem_1:
+proc calloc_1:
   input \<open>Void\<close>
-  requires \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
+  requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
+       and \<open>Semantic_Zero_Val TY T z\<close>
+  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. address_to_root addr\<close>
   including Semantic_Zero_Val_EIF_brute
+  unfolding address_to_root_def
 \<medium_left_bracket>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and v=\<open>the (Zero TY)\<close>]
@@ -331,13 +340,15 @@ proc op_allocate_mem_1:
   semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
     
 \<medium_right_bracket> .
+
  
-proc op_free_mem:
-  input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+proc mfree:
+  input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  premises \<open>memaddr.index addr = 0\<close>
+  premises \<open>address_to_root addr\<close>
   output \<open>Void\<close>
   including \<phi>sem_type_sat_EIF
+  unfolding address_to_root_def Guided_Mem_Coercion_def
 \<medium_left_bracket>
   to \<open>OPEN _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
@@ -414,9 +425,34 @@ section \<open>Reasoning Setup\<close>
   and mapToA_mem_coerce_end = (%mapToA_mem_coerce_all, [%mapToA_mem_coerce_all, %mapToA_mem_coerce_all+4])
         < mapToA_mem_coerce
     \<open>system end\<close>
+  and ToA_mem_coerce = (%ToA_cut+100, [%ToA_cut+100, %ToA_cut+300])
+    \<open>mem_coerce in transformation\<close>
+  and ToA_mem_coerce_end = (%ToA_cut+90, [%ToA_cut+90, %ToA_cut+99])
+      < ToA_mem_coerce
+    \<open>system end\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close> (1000)
+  and \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close> (1000)
+  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ \<close> (1000)
+  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> (1000)
+]]
+
+consts \<A>_mem_coerce :: mode
+
+lemma [\<phi>reason %cutting+10]:
+  \<open> Atomic_SemTyp ty
+\<Longrightarrow> Atomic_SemTyp ty @action \<A>_mem_coerce \<close>
+  unfolding Action_Tag_def .
+
+lemma [\<phi>reason %cutting]:
+  \<open> ERROR TEXT(\<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> rule for semantic type\<close> ty \<open>is not given\<close>)
+\<Longrightarrow> Atomic_SemTyp ty @action \<A>_mem_coerce \<close>
+  unfolding ERROR_def
+  by blast
 
 lemma [\<phi>reason %mapToA_mem_coerce_end]:
-  \<open> Atomic_SemTyp ty \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> rule for semantic type\<close> ty \<open>is not given\<close>)
+  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
 
 \<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
@@ -425,6 +461,30 @@ lemma [\<phi>reason %mapToA_mem_coerce_end]:
 \<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
+  unfolding Guided_Mem_Coercion_def .
+
+lemma [\<phi>reason %ToA_mem_coerce_end]:
+  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def .
+
+lemma [\<phi>reason %ToA_mem_coerce_end]:
+  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def .
+
+lemma [\<phi>reason %ToA_mem_coerce_end]:
+  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def .
+
+lemma [\<phi>reason %ToA_mem_coerce_end]:
+  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def .
 
 
