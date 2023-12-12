@@ -531,19 +531,6 @@ lemma [\<phi>reason %\<phi>programming_method]:
 
 subsection \<open>Reasoning Auxiliaries\<close>
 
-subsubsection \<open>Unspecified value closed in product\<close>
-
-consts unspec :: 'a
-axiomatization \<comment> \<open>this axiomatization is definitional, where it defines the \<open>unspec\<close> on product type\<close>
-  where unspec_prod: \<open>unspec = (unspec, unspec)\<close>
-
-lemma map_prod_unspec:
-  \<open> f \<otimes>\<^sub>f g = (\<lambda>_. unspec) \<longleftrightarrow> f = (\<lambda>_. unspec) \<and> g = (\<lambda>_. unspec) \<close>
-  unfolding fun_eq_iff
-  by (clarsimp simp: unspec_prod)
-
-
-
 subsubsection \<open>Assign Id\<close>
 
 definition mapToA_assign_id

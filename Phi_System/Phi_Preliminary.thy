@@ -189,6 +189,14 @@ attribute_setup ML_attribute = \<open>
 
 subsection \<open>Helper Objects\<close>
 
+subsubsection \<open>Unspecified value\<close>
+
+consts unspec :: 'a
+axiomatization \<comment> \<open>this axiomatization is definitional, where it defines the \<open>unspec\<close> on product type\<close>
+  where unspec_prod: \<open>unspec = (unspec, unspec)\<close>
+
+
+
 subsubsection \<open>Embedding Function into Relation\<close>
 
 definition embedded_func :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
@@ -318,6 +326,16 @@ lemma map_pairewise_eq[\<phi>safe_simp]:
   \<open> (f \<otimes>\<^sub>f g) = (f' \<otimes>\<^sub>f g') \<longleftrightarrow> f = f' \<and> g = g' \<close>
   unfolding fun_eq_iff
   by clarsimp
+
+lemma map_unspec[\<phi>safe_simp]:
+  \<open> (\<lambda>_. unspec) \<otimes>\<^sub>f (\<lambda>_. unspec) = (\<lambda>_. unspec) \<close>
+  unfolding fun_eq_iff
+  by (clarsimp simp: unspec_prod)
+
+lemma map_unspec_eq[\<phi>safe_simp]:
+  \<open> f \<otimes>\<^sub>f g = (\<lambda>_. unspec) \<longleftrightarrow> f = (\<lambda>_. unspec) \<and> g = (\<lambda>_. unspec) \<close>
+  unfolding fun_eq_iff
+  by (clarsimp simp: unspec_prod)
 
 lemma case_prod_map_prod[simp, \<phi>safe_simp]:
   \<open>(case (f \<otimes>\<^sub>f g) x of (a,b) \<Rightarrow> r a b) = (case x of (a,b) \<Rightarrow> let a' = f a ; b' = g b in r a' b')\<close>
