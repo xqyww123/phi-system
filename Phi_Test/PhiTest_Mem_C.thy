@@ -29,17 +29,22 @@ proc test_ptr3:
 \<medium_right_bracket> .
 
 
+schematic_goal \<open>(?r\<^sub>2 = ?f \<and> ?e = ?e33) \<and> ?f\<^sub>28 = ?f33 \<and> ?w4 = (\<lambda>_. undefined) \<otimes>\<^sub>f ?e33\<close>
+  apply simp
+
+
+
 declare [[\<phi>reasoning_step_limit = 40]]
 
 thm \<phi>MapAt_L.ToA_mapper
 
-
+thm ttt
   
 proc test_mem3:
   input \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
   output \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   \<medium_left_bracket> 
-    note [[\<phi>trace_reasoning = 2]]
+    note [[\<phi>trace_reasoning = 3]] 
     ;; $addr \<tribullet> c !
 
 

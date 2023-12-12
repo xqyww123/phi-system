@@ -310,11 +310,16 @@ notation map_prod (infixr "\<otimes>\<^sub>f" 56)
 (*if C\<^sub>R\<^sub>1 then *)
 setup \<open>Sign.mandatory_path "prod"\<close>
 
-lemma map_beta:
+lemma map_beta[\<phi>safe_simp]:
   \<open>(f \<otimes>\<^sub>f g) x = (f (fst x), g (snd x))\<close>
   by (cases x; simp)
 
-lemma case_prod_map_prod[simp]:
+lemma map_pairewise_eq[\<phi>safe_simp]:
+  \<open> (f \<otimes>\<^sub>f g) = (f' \<otimes>\<^sub>f g') \<longleftrightarrow> f = f' \<and> g = g' \<close>
+  unfolding fun_eq_iff
+  by clarsimp
+
+lemma case_prod_map_prod[simp, \<phi>safe_simp]:
   \<open>(case (f \<otimes>\<^sub>f g) x of (a,b) \<Rightarrow> r a b) = (case x of (a,b) \<Rightarrow> let a' = f a ; b' = g b in r a' b')\<close>
   unfolding Let_def
   using BNF_Fixpoint_Base.case_prod_map_prod .

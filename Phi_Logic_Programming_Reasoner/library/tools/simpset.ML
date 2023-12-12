@@ -111,7 +111,7 @@ end
 (***Predefined Simpsets***)
 
 structure Phi_Safe_Simps = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS
+  val initial_ss = Simpset_Configure.Minimal_SS
   val binding = SOME \<^binding>\<open>\<phi>safe_simp\<close>
   val comment = "Safe simpification rules for evaluation or simple goals"
   val attribute = NONE
