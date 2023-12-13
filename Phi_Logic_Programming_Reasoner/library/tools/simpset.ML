@@ -111,7 +111,7 @@ end
 (***Predefined Simpsets***)
 
 structure Phi_Safe_Simps = Simpset (
-  val initial_ss = Simpset_Configure.Give_SS (Simplifier.simpset_of (Proof_Context.init_global (Thy_Info.get_theory "HOL.Presburger")))
+  val initial_ss = Simpset_Configure.Give_SS (Simplifier.simpset_of (Proof_Context.init_global (Thy_Info.get_theory "HOL.List")))
   val binding = SOME \<^binding>\<open>\<phi>safe_simp\<close>
   val comment = "Safe simpification rules for evaluation or simple goals"
   val attribute = NONE
