@@ -126,6 +126,10 @@ lemma apfst_id'[simp]:
 
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 
+lemma nested_case_prod[\<phi>programming_simps, \<phi>safe_simp]:
+  \<open> case_prod f\<^sub>1 (case_prod f\<^sub>2 x) = case_prod (\<lambda>a b. case_prod f\<^sub>1 (f\<^sub>2 a b)) x\<close>
+  by (cases x; simp)
+
 
 subsubsection \<open>Simple Boolean Conversions\<close>
 

@@ -2988,6 +2988,39 @@ thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[s
 
 
 lemma [\<phi>reason for
+          \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c \<lbrakk>?j : 1\<rwpar> (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
+           (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+           (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) _ _ _ _ _ \<close>]:
+  \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<lbrakk>j : 1\<rwpar>
+        (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
+        (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+        (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
+        (\<lambda>x. length x = 1 + len_intvl.len c \<and> length_preserving_map f\<^sub>c)
+        f\<^sub>c f
+        ( list_upd_map 0 f o sublist_map_R 1 f\<^sub>c )
+        (\<lambda>l. (drop 1 l, hd l)) \<close>
+  unfolding module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R_def sublist_map_L_def list_upd_map_def sublist_map_R_def
+            length_preserving_map_def
+  by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop hd_conv_nth)
+
+lemma [\<phi>reason for
+          \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>?j : 1\<rwpar> ?d
+           (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
+           (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+           (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) _ _ _ _ _ \<close>]:
+  \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>j : 1\<rwpar> d
+    (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
+    (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+    (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
+    (\<lambda>x. length x = len_intvl.len d + 1 \<and> length_preserving_map f\<^sub>d)
+    f f\<^sub>d
+    ( sublist_map_L (len_intvl.len d) f\<^sub>d o list_upd_map (len_intvl.len d) f )
+    (\<lambda>l. (l ! (len_intvl.len d), take (len_intvl.len d) l)) \<close>
+  unfolding module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L_def sublist_map_L_def list_upd_map_def sublist_map_R_def
+            length_preserving_map_def
+  by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
+
+lemma [\<phi>reason for
           \<open>module_mapper\<^sub>3\<^sub>\<epsilon> ?c \<lbrakk>?j : 1\<rwpar> ?d
            (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
            (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
@@ -3005,6 +3038,7 @@ lemma [\<phi>reason for
   unfolding module_mapper\<^sub>3\<^sub>\<epsilon>_def sublist_map_L_def list_upd_map_def sublist_map_R_def
             length_preserving_map_def
   by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
+
 
 
 \<phi>reasoner_group \<phi>Mul_Quant_Tree_wrap_module

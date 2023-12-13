@@ -623,6 +623,12 @@ subsubsection \<open>Conditioned Map ToA\<close>
 
 definition \<open>mapToA_cond A B C D \<equiv> (A \<or> B \<or> C) \<and> D\<close>
 
+subsubsection \<open>Mapper Equation\<close>
+
+definition \<open>lookup_a_mapper g x y \<equiv> g x = y\<close>
+
+\<phi>reasoner_group lookup_a_mapper = (1000, [10, 3000]) for \<open>lookup_a_mapper g x y\<close>
+  \<open>look up a \<open>g\<close> such that \<open>g x = y\<close> for given \<open>x, y\<close>\<close>
 
 
 subsection \<open>Reasoning\<close>
@@ -681,10 +687,13 @@ paragraph \<open>Entry Point of \<open>ToA_Mapper\<close>\<close>
 
 lemma [\<phi>reason %\<phi>mapToA_init]:
   \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> {(x,w)}
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (h (x, w)) = (y', r')
-\<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y' \<Ztypecolon> U' \<f>\<o>\<r> fst (h (x, w)) \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] snd (h (x, w)) \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
-      \<t>\<o> fst (f (x, w)) \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> snd (f (x, w)) \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> r' \<Ztypecolon> R' \<close>
-  unfolding ToA_Mapper_def ToA_Subst_def Premise_def
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret : h (x, w)
+\<Longrightarrow> lookup_a_mapper g ret (y', r')
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f : f (x, w)
+\<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y' \<Ztypecolon> U' \<f>\<o>\<r> fst ret \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] snd ret \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
+      \<t>\<o> fst ret\<^sub>f \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> snd ret\<^sub>f \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> r' \<Ztypecolon> R' \<close>
+  unfolding ToA_Mapper_def ToA_Subst_def Premise_def Simplify_def
+            lookup_a_mapper_def
   by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
 
 lemma [\<phi>reason %\<phi>mapToA_init+10]:
@@ -1231,5 +1240,9 @@ lemma [\<phi>reason %\<phi>mapToA_fallbacks]:
   by (auto; insert sep_disj_commuteI sep_mult_commute; blast)
 
 
+
+subsubsection \<open>Finale\<close>
+
+hide_const mapToA_cond mapToA_unify_A lookup_a_mapper
 
 end
