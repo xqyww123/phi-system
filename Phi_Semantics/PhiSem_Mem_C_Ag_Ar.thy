@@ -30,7 +30,7 @@ term \<open>\<m>\<e>\<m>[addr] \<a>\<r>\<r>\<a>\<y>[n] T\<close>
 
 subsection \<open>Reasoning\<close>
 
-subsubsection \<open>ToA Mapper\<close>
+subsubsection \<open>Mem Coerce\<close>
 
 text \<open>The following lemma cannot be automated because it is tightly related to the semantics\<close>
 
@@ -83,19 +83,70 @@ lemma split_mem_coerce_array:
     certified by auto_sledgehammer
   \<medium_right_bracket>.
 
-lemma [\<phi>reason %\<phi>mapToA_norm]:
+subsubsection \<open>ToA Mapper\<close>
+
+lemma [\<phi>reason %\<phi>mapToA_norm,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %\<phi>mapToA_norm]:
   \<open> \<m>\<a>\<p> g : \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] U)  \<^emph>[C\<^sub>R] R
-          \<mapsto> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] U') \<^emph>[C\<^sub>R] R
+          \<mapsto> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] U') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
 \<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] U) \<^emph>[C\<^sub>R] R
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] U') \<^emph>[C\<^sub>R] R
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] U') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
+lemma [\<phi>reason %\<phi>mapToA_norm,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %\<phi>mapToA_norm]:
+  \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>W] W
+          \<mapsto> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T') \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
+
+\<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T') \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
+  unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
+
+
+subsubsection \<open>Transformation\<close>
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
+
+lemma [\<phi>reason %ToA_mem_coerce,
+       unfolded Guided_Mem_Coercion_def,
+       \<phi>reason %ToA_mem_coerce]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
+
+
 hide_fact split_mem_coerce_array'
+
 
 
 

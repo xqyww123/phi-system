@@ -2630,9 +2630,18 @@ setup \<open>Context.theory_map (
 \<phi>lang_parser enter_proof (%\<phi>parser_unique, %\<phi>lang_expr) ["certified"]
                          (\<open>Premise _ _ \<Longrightarrow> PROP _\<close> | \<open>Simplify _ _ _ \<Longrightarrow> PROP _\<close> | \<open>?Bool\<close>)
   \<open>fn stat => \<^keyword>\<open>certified\<close> |-- Phi_Opr_Stack.end_of_input >> (fn _ => fn cfg => stat
-   |> apsnd (
-        Phi_Reasoners.wrap'' (Phi_Reasoners.obligation_intro_Ex_conv ~1)
-     #> Phi_CP_IDE.proof_state_call (snd o Phi_Toplevel.prove_prem (cfg,false) I))
+   |> apsnd (fn s =>
+      let val _ = if Thm.no_prems (#2 s) orelse
+                     (case Thm.major_prem_of (#2 s)
+                        of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _)
+                             => false
+                         | _ => true)
+                  then error "No Subgoal!"
+                  else ()
+       in s
+       |> Phi_Reasoners.wrap'' (Phi_Reasoners.obligation_intro_Ex_conv ~1)
+       |> Phi_CP_IDE.proof_state_call (snd o Phi_Toplevel.prove_prem (cfg,false) I)
+      end)
    |> Phi_Opr_Stack.interrupt
  )\<close>
 

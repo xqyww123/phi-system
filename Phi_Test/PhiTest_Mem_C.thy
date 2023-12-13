@@ -2,6 +2,7 @@ theory PhiTest_Mem_C
   imports Phi_Semantics.PhiSem_Mem_C
           Phi_Semantics.PhiSem_Int_ArbiPrec
           Phi_Semantics.PhiSem_Mem_C_Ag_NT
+          Phi_Semantics.PhiSem_Mem_C_Ag_Ar
 begin
 
 declare [[\<phi>reasoning_step_limit = 50]]
@@ -118,10 +119,14 @@ proc test_mem12:
   $addr mfree
 \<medium_right_bracket> .
 
- 
+proc test_mem13:
+  input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] Array 3 \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (array 3 \<a>\<i>\<n>\<t>)\<close>
+  output \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<a>\<r>\<r>\<a>\<y>[3] \<nat>\<heavy_comma> xs ! Suc 0 \<Ztypecolon> \<v>\<a>\<l>[\<v>1] \<nat>\<close>
+\<medium_left_bracket>
+  $addr \<tribullet> 1 !
+\<medium_right_bracket> .
 
-
-
+  thm list.rel_eq
 
 
 

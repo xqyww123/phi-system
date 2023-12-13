@@ -3,7 +3,7 @@ chapter \<open>Reasoning Processes in IDE-CP - Part I\<close>
 (*Entirely depreciated!*)
 
 theory IDE_CP_Reasoning2
-  imports IDE_CP_Applications1
+  imports IDE_CP_Applications1 Phi_Domainoid
 begin
 
 subsection \<open>For Specific \<phi>-Types\<close>
@@ -364,13 +364,15 @@ subsection \<open>Conventions\<close>
 (*  and \<phi>mapToA_getter = (1000, [1000,1000]) in \<phi>mapToA_all \<open>\<close> *)
   and \<phi>mapToA_aux = (1000, [1000,1030]) in \<phi>mapToA_all \<open>system auxiliaries\<close>
   and \<phi>mapToA_sysbot = (10, [0,10]) in \<phi>mapToA_all \<open>sysme rule of the bottom priority\<close>
-  and \<phi>mapToA_derived = (50, [30,70]) in \<phi>mapToA_all > \<phi>mapToA_sysbot \<open>derived\<close>
+  and \<phi>mapToA_derived = (50, [25,70]) in \<phi>mapToA_all > \<phi>mapToA_sysbot \<open>derived\<close>
   and \<phi>mapToA_derived_TF = (65, [65,65]) in \<phi>mapToA_derived
       \<open>ToA mapper derived from Transformation Functor\<close>
   and \<phi>mapToA_derived_module_SDistri = (37, [37,38]) in \<phi>mapToA_derived and < \<phi>mapToA_derived_TF
       \<open>derived ToA mapper for module scalar distributivity\<close>
   and \<phi>mapToA_derived_module_assoc = (30, [30,30]) in \<phi>mapToA_derived and < \<phi>mapToA_derived_module_SDistri
       \<open>derived ToA mapper for module scalar associativity\<close>
+  and \<phi>mapToA_derived_module_wrapper = (27, [27,28]) in \<phi>mapToA_derived and < \<phi>mapToA_derived_module_assoc
+      \<open>derived ToA mapper for warpping by module one\<close>
   and \<phi>mapToA_unify = (5, [5,6]) in \<phi>mapToA_sysbot
       \<open>apply lambda unification\<close>
   and \<phi>mapToA_fallbacks = (1,[1,4]) in \<phi>mapToA_sysbot and < \<phi>mapToA_unify
@@ -576,6 +578,27 @@ lemma [\<phi>reason for \<open>mapToA_assign_id (\<lambda>_::?'a. unspec)\<close
   \<open> mapToA_assign_id (\<lambda>_::unit. unspec) \<close>
   unfolding mapToA_assign_id_def fun_eq_iff
   by simp
+
+
+lemma [\<phi>reason add]:
+  \<open> mapToA_assign_id f
+\<Longrightarrow> mapToA_assign_id (sublist_map_L len f) \<close>
+  unfolding mapToA_assign_id_def sublist_map_L_def fun_eq_iff
+  by clarsimp
+
+lemma [\<phi>reason add]:
+  \<open> mapToA_assign_id f
+\<Longrightarrow> mapToA_assign_id (sublist_map_R len f) \<close>
+  unfolding mapToA_assign_id_def sublist_map_R_def fun_eq_iff
+  by clarsimp
+
+lemma [\<phi>reason add]:
+  \<open> mapToA_assign_id f
+\<Longrightarrow> mapToA_assign_id (list_upd_map i f) \<close>
+  unfolding mapToA_assign_id_def list_upd_map_def fun_eq_iff
+  by clarsimp
+
+
 
 subsubsection \<open>Unify Assertion\<close>
 

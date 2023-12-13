@@ -3052,8 +3052,8 @@ lemma \<phi>Mul_Quant_Tree_wrap_module_tgt[\<phi>reason default %\<phi>Mul_Quant
           simplified cond_prod_transformation_rewr,
           unfolded \<phi>Prod_expn' \<phi>Prod_expn'' Cond_\<phi>Prod_expn_\<phi>Some
                    times_list_def append_Cons append_Nil append_Nil2] ;;  ;;
-    t1 certified by auto_sledgehammer ;;
-     A certified by auto_sledgehammer 
+    t1 certified by auto_sledgehammer ;;   
+     A 
   \<medium_right_bracket> .
 
 
