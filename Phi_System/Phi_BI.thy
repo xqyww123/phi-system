@@ -752,7 +752,7 @@ lemma Cond_\<phi>Prod_expn'[simp, \<phi>expns]:
   unfolding Cond_\<phi>Prod_def \<phi>Type_def
   by clarsimp
 
-lemma REMAINS_simp[simp]:
+lemma REMAINS_simp[simp, \<phi>safe_simp]:
   \<open>X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<equiv> R * X\<close>
   \<open>X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] R \<equiv> X\<close>
   unfolding REMAINS_def
@@ -1516,7 +1516,7 @@ subsubsection \<open>Simplifications\<close>
 lemma ExSet_pair: "ExSet T = (\<exists>*a b. T (a,b))"
   unfolding BI_eq_iff by clarsimp
 
-lemma ExSet_simps[simp, \<phi>programming_base_simps]:
+lemma ExSet_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>ExSet 0 = 0\<close>
   \<open>ExSet (\<lambda>_. T) = T\<close>
   \<open>(ExSet X \<s>\<u>\<b>\<j> PP) = (ExSet (\<lambda>c. X c \<s>\<u>\<b>\<j> PP))\<close>
@@ -1527,7 +1527,7 @@ lemma ExSet_simps[simp, \<phi>programming_base_simps]:
   unfolding BI_eq_iff embedded_func_def
   by simp_all
 
-lemma ExSet_simps_ex[simp, \<phi>programming_base_simps]:
+lemma ExSet_simps_ex[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
@@ -1542,11 +1542,11 @@ lemma Ex_transformation_expn:
 
 paragraph \<open>With Multiplicative Conjunction\<close>
 
-lemma ExSet_times_left [simp, \<phi>programming_base_simps]:
+lemma ExSet_times_left [simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   "(ExSet T * R) = (\<exists>* c. T c * R )"
   by (simp add: BI_eq_iff, blast)
 
-lemma ExSet_times_right[simp, \<phi>programming_base_simps]:
+lemma ExSet_times_right[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   "(L * ExSet T) = (\<exists>* c. L * T c)"
   by (simp add: BI_eq_iff, blast)
 
@@ -1748,20 +1748,20 @@ lemma Subjection_imp_simp[simp]:
   \<open> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q) \<longleftrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<and> Q) \<close>
   unfolding Transformation_def by simp
 
-lemma Subjection_True [simp, \<phi>programming_base_simps]:
+lemma Subjection_True [simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(T \<s>\<u>\<b>\<j> True) = T\<close>
   unfolding BI_eq_iff by simp
 
-lemma Subjection_Flase[simp, \<phi>programming_base_simps]:
+lemma Subjection_Flase[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(T \<s>\<u>\<b>\<j> False) = 0\<close>
   unfolding BI_eq_iff by simp
 
-lemma Subjection_Subjection[simp, \<phi>programming_base_simps]:
+lemma Subjection_Subjection[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(S \<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> Q) = (S \<s>\<u>\<b>\<j> P \<and> Q)\<close>
   unfolding BI_eq_iff
   by simp
 
-lemma Subjection_Zero[simp, \<phi>programming_base_simps]:
+lemma Subjection_Zero[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(0 \<s>\<u>\<b>\<j> P) = 0\<close>
   unfolding BI_eq_iff
   by simp
@@ -1780,7 +1780,7 @@ lemma (in \<phi>empty) [simp]: "(OBJ (S \<s>\<u>\<b>\<j> P)) = (OBJ S \<s>\<u>\<
 
 subparagraph \<open>With Additive Conjunction\<close>
 
-lemma Subjection_addconj[simp, \<phi>programming_base_simps]:
+lemma Subjection_addconj[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(A \<s>\<u>\<b>\<j> P) \<and>\<^sub>B\<^sub>I B \<equiv> (A \<and>\<^sub>B\<^sub>I B) \<s>\<u>\<b>\<j> P\<close>
   \<open>B \<and>\<^sub>B\<^sub>I (A \<s>\<u>\<b>\<j> P) \<equiv> (B \<and>\<^sub>B\<^sub>I A) \<s>\<u>\<b>\<j> P\<close>
   unfolding atomize_eq BI_eq_iff
@@ -1795,7 +1795,7 @@ lemma Subjection_plus_distrib:
 
 subparagraph \<open>With Multiplicative Conjunction\<close>
 
-lemma Subjection_times[simp, \<phi>programming_base_simps]:
+lemma Subjection_times[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(S \<s>\<u>\<b>\<j> P) * T = (S * T \<s>\<u>\<b>\<j> P)\<close>
   \<open>T * (S \<s>\<u>\<b>\<j> P) = (T * S \<s>\<u>\<b>\<j> P)\<close>
   unfolding BI_eq_iff
@@ -1943,12 +1943,12 @@ translations
 
 subsubsection \<open>Rewrites\<close>
 
-lemma sep_quant_sing[simp]:
+lemma sep_quant_sing[simp, \<phi>safe_simp]:
   \<open>\<big_ast> A {i} = A i\<close>
   unfolding Mul_Quant_def
   by simp
 
-lemma sep_quant_empty[simp]:
+lemma sep_quant_empty[simp, \<phi>safe_simp]:
   \<open>\<big_ast> A {} = 1\<close>
   unfolding Mul_Quant_def
   by simp
@@ -1977,12 +1977,12 @@ proof (clarify; rule; clarsimp)
     by blast
 qed 
 
-lemma sep_quant_subjection[\<phi>programming_base_simps, \<phi>programming_simps]:
+lemma sep_quant_subjection[\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
   \<open>(\<big_ast>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<big_ast>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
   unfolding BI_eq_iff
   by (clarify; rule; clarsimp simp add: Mul_Quant_def finite_prod_subjection)
 
-lemma sep_quant_ExSet[\<phi>programming_base_simps, \<phi>programming_simps]:
+lemma sep_quant_ExSet[\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
   \<open>(\<big_ast>i\<in>I. \<exists>*j. A i j) = (\<exists>*j. \<big_ast>i\<in>I. A i (j i))\<close>
 proof -
   have t1: \<open>\<And>u. finite I \<Longrightarrow> u \<Turnstile> (\<Prod>i\<in>I. ExSet (A i)) \<longleftrightarrow> (\<exists>x. u \<Turnstile> (\<Prod>i\<in>I. A i (x i)))\<close> (is \<open>\<And>u. _ \<Longrightarrow> ?goal u\<close>)
@@ -2422,7 +2422,7 @@ definition \<phi>Any :: \<open>('c, 'x) \<phi>\<close> ("\<top>\<^sub>\<phi>") w
 
 setup \<open>Sign.mandatory_path "\<phi>Any"\<close>
 
-lemma unfold [\<phi>programming_base_simps, \<phi>programming_simps]:
+lemma unfold [\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
   \<open>(x \<Ztypecolon> \<top>\<^sub>\<phi>) = UNIV\<close>
   unfolding \<phi>Any_def \<phi>Type_def ..
 
@@ -2488,7 +2488,7 @@ definition \<phi>Bot :: \<open>('c,'a) \<phi>\<close> ("\<bottom>\<^sub>\<phi>")
 
 setup \<open>Sign.mandatory_path "\<phi>Bot"\<close>
 
-lemma unfold[\<phi>programming_base_simps, \<phi>programming_simps]:
+lemma unfold[\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
   \<open>(x \<Ztypecolon> \<bottom>\<^sub>\<phi>) = 0\<close>
   unfolding \<phi>Bot_def \<phi>Type_def ..
 
@@ -2540,7 +2540,7 @@ lemma [\<phi>reason %ToA_top]:
 
 subsection \<open>Embedding of Separation Conjunction\<close>
 
-lemma \<phi>Prod_expn' [\<phi>programming_base_simps, \<phi>programming_simps]:
+lemma \<phi>Prod_expn' [\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
   \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
   unfolding BI_eq_iff by (simp add: set_mult_expn)
 
@@ -2641,7 +2641,7 @@ lemma Cond_\<phi>Prod_expn:
   unfolding Cond_\<phi>Prod_def \<phi>Type_def
   by clarsimp
 
-lemma Cond_\<phi>Prod_expn_const[simp, \<phi>programming_base_simps]:
+lemma Cond_\<phi>Prod_expn_const[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>T \<^emph>[True] U \<equiv> T \<^emph> U\<close>
   \<open>x \<Ztypecolon> T \<^emph>[False] U \<equiv> fst x \<Ztypecolon> T\<close>
   by (simp_all add: Cond_\<phi>Prod_def \<phi>Type_def)
@@ -2690,7 +2690,7 @@ lemma \<phi>None_inhabited[elim!]:
 
 subsubsection \<open>Rewrites\<close>
 
-lemma \<phi>None_itself_is_one[simp]:
+lemma \<phi>None_itself_is_one[simp, \<phi>safe_simp]:
   \<open>(any \<Ztypecolon> \<phi>None) = 1\<close>
   unfolding BI_eq_iff by simp
 
@@ -2807,7 +2807,7 @@ subsubsection \<open>Variant of Empty \<phi>-Type for Arbitrary Abstract Objects
 
 definition \<phi>None_freeobj :: \<open>('v::one, 'x) \<phi>\<close> ("\<circle>\<^sub>\<x>") where \<open>\<circle>\<^sub>\<x> = (\<lambda>x. 1)\<close>
 
-lemma \<phi>None_freeobj_expn[\<phi>expns, simp]:
+lemma \<phi>None_freeobj_expn[\<phi>expns, simp, \<phi>safe_simp]:
   \<open> (x \<Ztypecolon> \<circle>\<^sub>\<x>) = 1\<close>
   unfolding \<phi>Type_def \<phi>None_freeobj_def
   by simp
@@ -2830,7 +2830,7 @@ lemma LeftCond_\<phi>Prod_expn[\<phi>expns, simp]:
   unfolding LeftCond_\<phi>Prod_def \<phi>Type_def
   by (cases C\<^sub>T; clarsimp)
 
-lemma LeftCond_single_Cond_const_red[simp]:
+lemma LeftCond_single_Cond_const_red[simp, \<phi>safe_simp]:
   \<open> T [True]\<^emph> U = T \<^emph> U \<close>
   by (rule \<phi>Type_eqI, clarsimp)+
 
@@ -2865,13 +2865,13 @@ lemma \<phi>Cond_Unital_Ins_unfold:
   unfolding \<phi>Type_def \<phi>Cond_Unital_Ins_def
   by clarsimp
 
-lemma \<phi>Cond_Unital_Ins_unfold_simp[simp]:
+lemma \<phi>Cond_Unital_Ins_unfold_simp[simp, \<phi>safe_simp]:
   \<open> \<half_blkcirc>[True] T \<equiv> \<black_circle> T \<close>
   \<open> \<half_blkcirc>[False] T \<equiv> \<circle>\<^sub>\<x> \<close>
   unfolding \<phi>Cond_Unital_Ins_unfold
   by simp+
 
-lemma \<phi>Cond_Unital_Ins_BI_unfold_simp[simp]:
+lemma \<phi>Cond_Unital_Ins_BI_unfold_simp[simp, \<phi>safe_simp]:
   \<open> \<half_blkcirc>\<^sub>B\<^sub>I[False] A \<equiv> 1 \<close>
   unfolding Cond_Unital_Ins_BI_def
   by simp
@@ -3023,7 +3023,7 @@ abbreviation \<phi>Cond_Item :: \<open>bool \<Rightarrow> 'v BI \<Rightarrow> 'v
 
 paragraph \<open>Rewrites\<close>
 
-lemma \<phi>Cond_Item_simp[simp]:
+lemma \<phi>Cond_Item_simp[simp, \<phi>safe_simp]:
   \<open> \<half_blkcirc>\<^sub>\<one>[True] A \<equiv> A \<close>
   \<open> \<half_blkcirc>\<^sub>\<one>[False] A \<equiv> 1 \<close>
   by simp+
@@ -3048,7 +3048,7 @@ lemma BiCond_\<phi>Prod_expn[\<phi>expns, simp]:
   unfolding BiCond_\<phi>Prod_def \<phi>Type_def
   by (cases C\<^sub>T; cases C\<^sub>U; clarsimp)
 
-lemma BiCond_single_Cond_const_red[simp]:
+lemma BiCond_single_Cond_const_red[simp, \<phi>safe_simp]:
   \<open> (x \<Ztypecolon> T [False]\<^emph>[True] U) = (snd x \<Ztypecolon> U)\<close>
   \<open> T [True]\<^emph>[C] U = T \<^emph>[C] U \<close>
   \<open> T [False]\<^emph>[False] U = \<top>\<^sub>\<phi> \<close>
@@ -4636,7 +4636,6 @@ structure Assertion_SS_Target = Simpset (
 )
 \<close>
 
-
 lemmas [assertion_simps] =
   (*algebras*)
   mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
@@ -4677,7 +4676,7 @@ lemmas [assertion_simps_target] =
   sep_quant_sep[symmetric]
 
 
-lemmas [\<phi>programming_base_simps, \<phi>programming_simps] =
+lemmas [\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp] =
   add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
   zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
@@ -4726,10 +4725,11 @@ simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
         | _ => NONE\<close>
 *)
 
-setup \<open>Context.theory_map (Assertion_SS.map (fn ctxt =>
+setup \<open>Context.theory_map (
+  Assertion_SS.map (fn ctxt =>
+    ctxt addsimprocs [@{simproc defined_ExSet}]) #>
+  Phi_Safe_Simps.map (fn ctxt =>
     ctxt addsimprocs [@{simproc defined_ExSet}]))\<close>
-
-lemmas [\<phi>programming_simps] = plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
 
 
 subsubsection \<open>Reasoners\<close>

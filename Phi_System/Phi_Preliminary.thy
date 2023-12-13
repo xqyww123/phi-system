@@ -109,17 +109,17 @@ subsection \<open>Helper Lemmas\<close>
 
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
-lemma case_sum_collapse[simp]:
+lemma case_sum_collapse[simp, \<phi>safe_simp]:
   \<open>case_sum Inl Inr = (\<lambda>x. x)\<close>
   unfolding fun_eq_iff
   by (clarsimp simp add: split_sum_all)
 
-lemma snd_o_Pair_eq_id[simp]:
+lemma snd_o_Pair_eq_id[simp, \<phi>safe_simp]:
   \<open> snd \<circ> Pair c = (\<lambda>x. x) \<close>
   unfolding fun_eq_iff
   by simp
 
-lemma apfst_id'[simp]:
+lemma apfst_id'[simp, \<phi>safe_simp]:
   \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
   by (simp add: fun_eq_iff)
 
@@ -370,22 +370,20 @@ definition rotR :: \<open>('a \<times> 'b) \<times> 'c \<Rightarrow> 'a \<times>
 abbreviation rpair :: \<open>'a \<Rightarrow> 'b \<Rightarrow> 'b \<times> 'a\<close>
   where \<open>rpair x \<equiv> prod.swap o Pair x\<close>
 
-lemma rot[simp]:
+lemma rot[simp, \<phi>safe_simp]:
   \<open>prod.rotL (a,b,c) = ((a,b),c)\<close>
   \<open>prod.rotR ((a,b),c) = (a,b,c)\<close>
   unfolding prod.rotL_def prod.rotR_def
   by simp_all
 
-lemma rot_rot_comp[simp]:
+lemma rot_rot_comp[simp, \<phi>safe_simp]:
   \<open> prod.rotL o prod.rotR = id \<close>
   \<open> prod.rotR o prod.rotL = id \<close>
   unfolding fun_eq_iff
   by simp_all
 
-lemmas rot_rot_comp'[simp] = prod.rot_rot_comp[THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
-lemmas rot_rot[simp] = prod.rot_rot_comp[unfolded fun_eq_iff comp_def id_def, THEN spec]
-
-term zip
+lemmas rot_rot_comp'[simp, \<phi>safe_simp] = prod.rot_rot_comp[THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+lemmas rot_rot[simp, \<phi>safe_simp] = prod.rot_rot_comp[unfolded fun_eq_iff comp_def id_def, THEN spec]
 
 lemma
   \<open>fst (prod.rotL x) = (fst x, fst (snd x))\<close>
@@ -393,7 +391,7 @@ lemma
   by ((cases x; simp),
       (cases y; clarsimp))
 
-lemma rot_prj_comp[simp]:
+lemma rot_prj_comp[simp, \<phi>safe_simp]:
   \<open>fst o prod.rotL = apsnd fst\<close>
   \<open>snd o prod.rotL = snd o snd\<close>
   \<open>fst o prod.rotR = fst o fst\<close>
@@ -401,20 +399,20 @@ lemma rot_prj_comp[simp]:
   unfolding prod.rotL_def prod.rotR_def fun_eq_iff
   by simp_all
 
-lemmas rot_prj[simp] = prod.rot_prj_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
-lemmas rot_prj_comp'[simp] = prod.rot_prj_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+lemmas rot_prj[simp, \<phi>safe_simp] = prod.rot_prj_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
+lemmas rot_prj_comp'[simp, \<phi>safe_simp] = prod.rot_prj_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 
 
-lemma prj_Pair_comp[simp]:
+lemma prj_Pair_comp[simp, \<phi>safe_simp]:
   \<open>fst o Pair x = comb.K x\<close>
   \<open>snd o Pair x = id\<close>
   unfolding fun_eq_iff
   by simp_all
 
-lemmas prj_Pair_comp' [simp] = prod.prj_Pair_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+lemmas prj_Pair_comp' [simp, \<phi>safe_simp] = prod.prj_Pair_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 
 
-lemma ap_prj\<^sub>0_rot_comp[simp]:
+lemma ap_prj\<^sub>0_rot_comp[simp, \<phi>safe_simp]:
   \<open>(f \<otimes>\<^sub>f fst) o prod.rotR = apfst f o fst\<close>
   \<open>(f \<otimes>\<^sub>f snd) o prod.rotR = apfst (f o fst)\<close>
   \<open>(snd \<otimes>\<^sub>f g) o prod.rotL = apsnd g o snd\<close>
@@ -426,11 +424,11 @@ lemma ap_prj\<^sub>0_rot_comp[simp]:
   unfolding fun_eq_iff
   by simp_all
 
-lemmas ap_prj\<^sub>0_rot[simp] = prod.ap_prj\<^sub>0_rot_comp[unfolded fun_eq_iff comp_def id_def, THEN spec]
-lemmas ap_prj\<^sub>0_rot_comp'[simp] = prod.ap_prj\<^sub>0_rot_comp[THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+lemmas ap_prj\<^sub>0_rot[simp, \<phi>safe_simp] = prod.ap_prj\<^sub>0_rot_comp[unfolded fun_eq_iff comp_def id_def, THEN spec]
+lemmas ap_prj\<^sub>0_rot_comp'[simp, \<phi>safe_simp] = prod.ap_prj\<^sub>0_rot_comp[THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 
 
-lemma ap_prj_rot_comp[simp]:
+lemma ap_prj_rot_comp[simp, \<phi>safe_simp]:
   \<open>(f \<otimes>\<^sub>f (g o fst)) o prod.rotR = (f \<otimes>\<^sub>f g) o fst\<close>
   \<open>(f \<otimes>\<^sub>f (g o snd)) o prod.rotR = (f o fst) \<otimes>\<^sub>f g\<close>
   \<open>((f o snd) \<otimes>\<^sub>f g) o prod.rotL = (f \<otimes>\<^sub>f g) o snd\<close>
@@ -442,8 +440,8 @@ lemma ap_prj_rot_comp[simp]:
   unfolding fun_eq_iff
   by simp_all
 
-lemmas ap_prj_rot[simp] = prod.ap_prj_rot_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
-lemmas ap_prj_rot_comp'[simp] = prod.ap_prj_rot_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
+lemmas ap_prj_rot[simp, \<phi>safe_simp] = prod.ap_prj_rot_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
+lemmas ap_prj_rot_comp'[simp, \<phi>safe_simp] = prod.ap_prj_rot_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 
 
 lemma ap_rotate_comp[no_atp, prod_opr_norm]:
@@ -467,23 +465,23 @@ lemmas ap_rotate_comp'[no_atp, prod_opr_norm] = prod.ap_rotate_comp [THEN fun_co
 
 
 
-lemma rotate_eq_simp[simp]:
+lemma rotate_eq_simp[simp, \<phi>safe_simp]:
   \<open>((a,b),c) = prod.rotL x \<longleftrightarrow> (a,b,c) = x\<close>
   \<open>(a,b,c) = prod.rotR y \<longleftrightarrow> ((a,b),c) = y\<close>
   unfolding prod.rotL_def prod.rotR_def
   by (clarsimp; rule; clarsimp)+
 
-lemma rotate_eq_ap_simp[simp]:
+lemma rotate_eq_ap_simp[simp, \<phi>safe_simp]:
   \<open>(x, prod.rotL y) = apsnd prod.rotL z \<longleftrightarrow> (x, y) = z\<close>
   by (cases z; cases y; clarsimp)
 
-lemma swap_proj_comp[simp]:
+lemma swap_proj_comp[simp, \<phi>safe_simp]:
   \<open>fst o prod.swap = snd\<close>
   \<open>snd o prod.swap = fst\<close>
   unfolding fun_eq_iff
   by simp_all
 
-lemma swap_proj_comp'[simp]:
+lemma swap_proj_comp'[simp, \<phi>safe_simp]:
   \<open>x o fst o prod.swap = x o snd\<close>
   \<open>y o snd o prod.swap = y o fst\<close>
   unfolding fun_eq_iff
@@ -518,7 +516,7 @@ lemmas ap_ap[no_atp, prod_opr_norm] = prod.ap_ap_comp [simplified fun_eq_iff id_
 lemmas ap_ap_comp'[no_atp, prod_opr_norm] = prod.ap_ap_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 
 
-lemma prj_ap_comp'[simp]:
+lemma prj_ap_comp'[simp, \<phi>safe_simp]:
   \<open>x\<^sub>1 o fst o apfst f = x\<^sub>1 o f o fst\<close>
   \<open>x\<^sub>2 o snd o apfst f = x\<^sub>2 o snd\<close>
   \<open>x\<^sub>3 o snd o apsnd f = x\<^sub>3 o f o snd\<close>
@@ -618,7 +616,7 @@ lemma map_prod_comp'[no_atp, prod_opr_norm]:
   unfolding fun_eq_iff
   by clarsimp
 
-lemma map_prod_ap_simp_comp[simp]:
+lemma map_prod_ap_simp_comp[simp, \<phi>safe_simp]:
   \<open> (f \<otimes>\<^sub>f g) o apsnd h = (f \<otimes>\<^sub>f (g \<circ> h)) \<close>
   \<open> apsnd h' o (f \<otimes>\<^sub>f g) = f \<otimes>\<^sub>f (h' \<circ> g) \<close>
   \<open> (f \<otimes>\<^sub>f g) o apfst l = (f \<circ> l) \<otimes>\<^sub>f g \<close>
@@ -628,7 +626,7 @@ lemma map_prod_ap_simp_comp[simp]:
 lemmas map_prod_ap_simp[no_atp, prod_opr_norm] = map_prod_ap_simp_comp [simplified fun_eq_iff id_def comp_apply, THEN spec]
 lemmas map_prod_ap_simp_comp'[no_atp, prod_opr_norm] = map_prod_ap_simp_comp [THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 
-lemma swap_comp_swap'[simp]:
+lemma swap_comp_swap'[simp, \<phi>safe_simp]:
   \<open>x o prod.swap \<circ> prod.swap = x\<close>
   unfolding fun_eq_iff
   by simp
@@ -718,7 +716,7 @@ subsection \<open>The Friendly Character\<close>
 
 ML_file \<open>library/tools/the_friendly_character.ML\<close>
 
-definition Friendly_Help :: \<open>text \<Rightarrow> bool\<close> where [iff]: \<open>Friendly_Help _ \<longleftrightarrow> True\<close>
+definition Friendly_Help :: \<open>text \<Rightarrow> bool\<close> where [iff, \<phi>safe_simp]: \<open>Friendly_Help _ \<longleftrightarrow> True\<close>
 
 lemma Friendly_Help_I[intro!]: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_def ..
 lemma Friendly_Help_E[elim!]: \<open>Friendly_Help ANY \<Longrightarrow> C \<Longrightarrow> C\<close> .
