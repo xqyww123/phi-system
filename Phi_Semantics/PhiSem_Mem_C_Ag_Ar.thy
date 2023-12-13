@@ -66,7 +66,6 @@ lemma split_mem_coerce_array':
     by (smt (verit, ccfv_SIG) append_eq_conv_conj length_Suc_conv_rev less_antisym list_all2_conv_all_nth nth_append nth_append_length snoc_eq_iff_butlast)
   .
 
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma split_mem_coerce_array:
   \<open> (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] T) = \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<close>
@@ -78,7 +77,7 @@ lemma split_mem_coerce_array:
 
   \<medium_left_bracket> for n, l premises Tr
     split_mem_coerce_array'
-    unfold Tr
+    unfold Tr  
   \<medium_right_bracket> certified by auto_sledgehammer 
   \<medium_left_bracket> premises Tr 
     apply_rule split_mem_coerce_array'[symmetric, where n=n and l=x and T=T, unfolded Tr]
