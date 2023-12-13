@@ -4,30 +4,61 @@ begin
 
 section \<open>List\<close>
 
+subsection \<open>Combinators\<close>
+
+lemma fun_comp_intr_left[no_atp]:
+  \<open>f = g \<Longrightarrow> x o f = x o g\<close>
+  by simp
+
+setup \<open>Sign.mandatory_path "comb"\<close>
+
+definition \<open>K x = (\<lambda>_. x)\<close> \<comment> \<open>to improve the performance as any lambda expression \<open>\<lambda>_. x\<close> is not
+  cached within the internal system of Isabelle.\<close>
+
+lemma K_app[simp]:
+  \<open> comb.K x y = x \<close>
+  unfolding comb.K_def ..
+
+lemma K_comp[simp]:
+  \<open> comb.K x o f = comb.K x \<close>
+  unfolding fun_eq_iff comb.K_def
+  by simp
+
+lemmas K_comp'[simp] = comb.K_comp[THEN fun_comp_intr_left, folded comp_assoc]
+  
+
+setup \<open>Sign.parent_path\<close>
+
 subsection \<open>Length Preserving Map\<close>
 
-definition length_preserving_map :: \<open>('a list \<Rightarrow> 'a list) \<Rightarrow> bool\<close>
-  where \<open>length_preserving_map f \<longleftrightarrow> (\<forall>l. length (f l) = length l)\<close>
+definition length_preserving_map :: \<open>'a list set \<Rightarrow> ('a list \<Rightarrow> 'a list) \<Rightarrow> bool\<close>
+  where \<open>length_preserving_map D f \<longleftrightarrow> (\<forall>l \<in> D. length (f l) = length l)\<close>
 
 lemma length_preserving_map__map[simp, intro!]:
-  \<open> length_preserving_map (map f) \<close>
+  \<open> length_preserving_map D (map f) \<close>
   unfolding length_preserving_map_def
   by simp 
 
 lemma length_preserving_map__id[simp, intro!]:
-  \<open> length_preserving_map id \<close>
+  \<open> length_preserving_map D id \<close>
   unfolding length_preserving_map_def by simp
 
 lemma length_preserving_map__id'[simp, intro!]:
-  \<open> length_preserving_map (\<lambda>x. x) \<close>
+  \<open> length_preserving_map D (\<lambda>x. x) \<close>
   unfolding length_preserving_map_def by simp
 
 lemma length_preserving_map__funcomp[simp, intro!]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map g
-\<Longrightarrow> length_preserving_map (f o g) \<close>
+  \<open> length_preserving_map (g ` D) f
+\<Longrightarrow> length_preserving_map D g
+\<Longrightarrow> length_preserving_map D (f o g) \<close>
   unfolding length_preserving_map_def
   by clarsimp
+
+lemma length_preserving_map_comb_K[simp, intro!]:
+  \<open> length_preserving_map D (comb.K xs) = (\<forall>x\<in>D. length xs = length x) \<close> 
+  unfolding length_preserving_map_def
+  by clarsimp
+
 
 subsection \<open>Mapping at a single element\<close>
 
@@ -35,13 +66,28 @@ definition list_upd_map :: \<open>nat \<Rightarrow> ('a \<Rightarrow> 'a) \<Righ
   where \<open>list_upd_map i f l = l[i := f (l ! i)]\<close>
 
 lemma length_preserving_map__list_upd_map [simp, intro!]:
-  \<open> length_preserving_map (list_upd_map i f) \<close>
+  \<open> length_preserving_map D (list_upd_map i f) \<close>
   unfolding length_preserving_map_def list_upd_map_def
   by force
 
 lemma list_upd_map_const_f[simp]:
   \<open> list_upd_map i (\<lambda>x. v) xs = xs[i := v] \<close>
   unfolding list_upd_map_def ..
+
+lemma list_upd_map_0_eval[simp]:
+  \<open> list_upd_map 0 f (h # l) = (f h # l) \<close>
+  unfolding list_upd_map_def
+  by simp
+
+lemma list_upd_map_N_eval[simp]:
+  \<open> list_upd_map (numeral n) f (h # l) = (h # list_upd_map (numeral n - 1) f l) \<close>
+  unfolding list_upd_map_def
+  by simp
+
+lemma list_upd_map_Suc_eval[simp]:
+  \<open> list_upd_map (Suc n) f (h # l) = (h # list_upd_map n f l) \<close>
+  unfolding list_upd_map_def
+  by simp
 
 
 subsection \<open>Mapping Prefix / Suffix\<close>
@@ -55,14 +101,14 @@ definition sublist_map_R :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> 'a l
   where \<open>sublist_map_R N f l = take N l @ f (drop N l)\<close>
 
 lemma length_preserving_map__sublist_map_R [simp, intro!]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map (sublist_map_R N f) \<close>
+  \<open> length_preserving_map (drop N ` D) f
+\<Longrightarrow> length_preserving_map D (sublist_map_R N f) \<close>
   unfolding length_preserving_map_def sublist_map_R_def
   by (clarify, simp)
 
 lemma length_preserving_map__sublist_map_L [simp, intro!]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map (sublist_map_L N f) \<close>
+  \<open> length_preserving_map (take N ` D) f
+\<Longrightarrow> length_preserving_map D (sublist_map_L N f) \<close>
   unfolding length_preserving_map_def
   by (clarify, simp add: sublist_map_L_def)
 
@@ -93,8 +139,8 @@ lemma sublist_map_L_sublist_map_L[simp]:
   by (clarsimp, metis (no_types, opaque_lifting) append_take_drop_id diff_add drop_drop take_drop)
 
 lemma sublist_map_L_funcomp[simp]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map g
+  \<open> length_preserving_map UNIV f
+\<Longrightarrow> length_preserving_map UNIV g
 \<Longrightarrow> sublist_map_L N (f o g) = sublist_map_L N f o sublist_map_L N g \<close>
   unfolding sublist_map_L_def fun_eq_iff length_preserving_map_def
   by (clarsimp simp add: min_def)
@@ -105,8 +151,8 @@ lemma sublist_map_R_sublist_map_R[simp]:
   by (clarsimp, metis add.commute append_assoc take_add)
 
 lemma sublist_map_R_funcomp[simp]:
-  \<open> length_preserving_map f
-\<Longrightarrow> length_preserving_map g
+  \<open> length_preserving_map UNIV f
+\<Longrightarrow> length_preserving_map UNIV g
 \<Longrightarrow> sublist_map_R N (f o g) = sublist_map_R N f o sublist_map_R N g \<close>
   unfolding sublist_map_R_def length_preserving_map_def fun_eq_iff
   by (clarsimp, metis (no_types, opaque_lifting) append_Nil append_take_drop_id cancel_comm_monoid_add_class.diff_cancel diff_le_self drop_all list.size(3) min_def take0)

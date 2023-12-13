@@ -2995,7 +2995,7 @@ lemma [\<phi>reason for
         (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
         (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
         (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
-        (\<lambda>x. length x = 1 + len_intvl.len c \<and> length_preserving_map f\<^sub>c)
+        (\<lambda>x. length x = 1 + len_intvl.len c \<and> length_preserving_map {drop 1 x} f\<^sub>c)
         f\<^sub>c f
         ( list_upd_map 0 f o sublist_map_R 1 f\<^sub>c )
         (\<lambda>l. (drop 1 l, hd l)) \<close>
@@ -3012,7 +3012,7 @@ lemma [\<phi>reason for
     (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
     (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
     (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
-    (\<lambda>x. length x = len_intvl.len d + 1 \<and> length_preserving_map f\<^sub>d)
+    (\<lambda>x. length x = len_intvl.len d + 1 \<and> length_preserving_map {take (len_intvl.len d) x} f\<^sub>d)
     f f\<^sub>d
     ( sublist_map_L (len_intvl.len d) f\<^sub>d o list_upd_map (len_intvl.len d) f )
     (\<lambda>l. (l ! (len_intvl.len d), take (len_intvl.len d) l)) \<close>
@@ -3029,7 +3029,9 @@ lemma [\<phi>reason for
      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
      (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
      (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
-     (\<lambda>x. length x = len_intvl.len d + 1 + len_intvl.len c \<and> length_preserving_map f\<^sub>c \<and> length_preserving_map f\<^sub>d)
+     (\<lambda>x. length x = len_intvl.len d + 1 + len_intvl.len c \<and>
+          length_preserving_map {drop (len_intvl.len d + 1) x} f\<^sub>c \<and>
+          length_preserving_map {take (len_intvl.len d) x} f\<^sub>d)
      f\<^sub>c f f\<^sub>d
      ( sublist_map_L (len_intvl.len d) f\<^sub>d
      o list_upd_map (len_intvl.len d) f

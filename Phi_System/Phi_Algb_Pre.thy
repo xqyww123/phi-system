@@ -3,7 +3,6 @@ theory Phi_Algb_Pre
           Phi_Algebras.Map_of_Tree
           Phi_Algebras.LCRO_Interval
           Phi_Algebras.Len_Intvl
-          Phi_Aug
 begin 
 
 section \<open>Setup Reasoning Rules\<close>
@@ -12,12 +11,13 @@ subsection \<open>List\<close>
 
 subsubsection \<open>Length Preserving Maps\<close>
 
-\<phi>reasoner_group length_preserving_map__all = (100, [1, 2000]) for \<open>length_preserving_map f\<close> \<open>\<close>
+\<phi>reasoner_group length_preserving_map__all = (100, [1, 2000]) for \<open>length_preserving_map D f\<close> \<open>\<close>
   and length_preserving_map = (1000, [1000,1030]) in length_preserving_map__all \<open>\<close>
+  and length_preserving__default = (10, [10, 10]) in length_preserving_map__all \<open>\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>length_preserving_map ?f\<close> \<Rightarrow> \<open>length_preserving_map ?f\<close> (100),
-  \<phi>default_reasoner_group \<open>length_preserving_map ?f\<close> : %length_preserving_map (100)
+  \<phi>reason_default_pattern \<open>length_preserving_map _ ?f\<close> \<Rightarrow> \<open>length_preserving_map _ ?f\<close> (100),
+  \<phi>default_reasoner_group \<open>length_preserving_map _ ?f\<close> : %length_preserving_map (100)
 ]]
 
 declare length_preserving_map__map[\<phi>reason add]
@@ -29,6 +29,14 @@ declare length_preserving_map__map[\<phi>reason add]
 
         length_preserving_map__sublist_map_R [\<phi>reason add]
         length_preserving_map__sublist_map_L [\<phi>reason add]
+
+lemma [\<phi>reason default %length_preserving__default]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. length (f x) = length x)
+\<Longrightarrow> length_preserving_map D f \<close>
+  unfolding length_preserving_map_def Premise_def
+  by simp
+
+
 
 subsubsection \<open>Declarations\<close>
 

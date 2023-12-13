@@ -3,7 +3,7 @@ chapter \<open>Theoretical Foundations\<close>
 section \<open>Preliminary\<close>
 
 theory Phi_Preliminary
-  imports Main "Phi_Algebras.Algebras" PhiTool_Symbol
+  imports Main "Phi_Algebras.Algebras" PhiTool_Symbol Phi_Aug
           Phi_Logic_Programming_Reasoner.PLPR
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
   keywords "optional_translations" :: thy_decl
@@ -126,10 +126,29 @@ lemma apfst_id'[simp]:
 
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 
-lemma nested_case_prod[\<phi>programming_simps, \<phi>safe_simp]:
+lemma nested_case_prod[no_atp, \<phi>programming_simps, \<phi>safe_simp]:
   \<open> case_prod f\<^sub>1 (case_prod f\<^sub>2 x) = case_prod (\<lambda>a b. case_prod f\<^sub>1 (f\<^sub>2 a b)) x\<close>
-  by (cases x; simp)
+  using prod.case_distrib .
 
+lemmas [\<phi>programming_simps, \<phi>safe_simp] =
+  BNF_Fixpoint_Base.case_prod_app
+  prod.case_distrib[where h=fst and f=\<open>\<lambda>a b. (f\<^sub>1 a b, f\<^sub>2 a b)\<close> for f\<^sub>1 f\<^sub>2, simplified]
+  prod.case_distrib[where h=snd and f=\<open>\<lambda>a b. (f\<^sub>1 a b, f\<^sub>2 a b)\<close> for f\<^sub>1 f\<^sub>2, simplified]
+  prod.case_distrib[where h=\<open>map_prod g\<^sub>1 g\<^sub>2\<close> and f=\<open>\<lambda>a b. (f\<^sub>1 a b, f\<^sub>2 a b)\<close> for f\<^sub>1 f\<^sub>2 g\<^sub>1 g\<^sub>2, simplified]
+
+lemmas [\<phi>programming_simps] =
+  fst_def[symmetric] snd_def[symmetric]
+
+
+(*simproc_setup case_prod_app (\<open>(case_prod f x) y\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
+  let val (Const(\<^const_name>\<open>case_prod\<close>, _) $ f $ x $ y) = Thm.term_of ctm
+   in SOME (Conv.rewr_conv @{thm' BNF_Fixpoint_Base.case_prod_app} ctm)
+  end
+\<close>
+
+lemma
+  \<open> (case x of (a,b) \<Rightarrow> f a b) y = (case x of (a,b) \<Rightarrow> f a b y) \<close>
+*)
 
 subsubsection \<open>Simple Boolean Conversions\<close>
 
@@ -251,31 +270,6 @@ lemma [iff]:
   \<open> n < 16 \<Longrightarrow> Big n = n \<close>
   unfolding Big_def by simp+
 
-
-subsubsection \<open>Combinators\<close>
-
-lemma fun_comp_intr_left[no_atp]:
-  \<open>f = g \<Longrightarrow> x o f = x o g\<close>
-  by simp
-
-setup \<open>Sign.mandatory_path "comb"\<close>
-
-definition \<open>K x = (\<lambda>_. x)\<close> \<comment> \<open>to improve the performance as any lambda expression \<open>\<lambda>_. x\<close> is not
-  cached within the internal system of Isabelle.\<close>
-
-lemma K_app[simp]:
-  \<open> comb.K x y = x \<close>
-  unfolding comb.K_def ..
-
-lemma K_comp[simp]:
-  \<open> comb.K x o f = comb.K x \<close>
-  unfolding fun_eq_iff comb.K_def
-  by simp
-
-lemmas K_comp'[simp] = comb.K_comp[THEN fun_comp_intr_left, folded comp_assoc]
-  
-
-setup \<open>Sign.parent_path\<close>
 
 
 subsubsection \<open>Product\<close>

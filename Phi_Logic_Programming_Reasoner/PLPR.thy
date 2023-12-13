@@ -390,7 +390,7 @@ declare HOL.simp_thms[\<phi>safe_simp]
 
 lemmas [\<phi>safe_simp] =
   append.right_neutral append.left_neutral append_Cons
-  fst_conv snd_conv id_apply o_apply
+  fst_conv snd_conv prod.case id_apply o_apply
 
 
 subsubsection \<open>Isomorphic Atomize\<close>

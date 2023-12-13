@@ -627,8 +627,49 @@ subsubsection \<open>Mapper Equation\<close>
 
 definition \<open>lookup_a_mapper g x y \<equiv> g x = y\<close>
 
-\<phi>reasoner_group lookup_a_mapper = (1000, [10, 3000]) for \<open>lookup_a_mapper g x y\<close>
-  \<open>look up a \<open>g\<close> such that \<open>g x = y\<close> for given \<open>x, y\<close>\<close>
+\<phi>reasoner_group lookup_a_mapper_all = (1000, [10, 3000]) for \<open>lookup_a_mapper g x y\<close>
+      \<open>look up a \<open>g\<close> such that \<open>g x = y\<close> for given \<open>x, y\<close>\<close>
+  and lookup_a_mapper = (1000, [1000,1100]) in lookup_a_mapper_all
+      \<open>default group\<close>
+  and lookup_a_mapper_default = (10, [10, 30]) in lookup_a_mapper_all < lookup_a_mapper
+      \<open>default rules\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>lookup_a_mapper ?f ?x ?y\<close> \<Rightarrow> \<open>lookup_a_mapper ?f ?x ?y\<close> (100),
+  \<phi>default_reasoner_group \<open>lookup_a_mapper _ _ _\<close> : %lookup_a_mapper (100)
+]]
+
+paragraph \<open>Rules\<close>
+
+lemma [\<phi>reason %lookup_a_mapper+10]:
+  \<open> lookup_a_mapper f x\<^sub>1 y\<^sub>1
+\<Longrightarrow> lookup_a_mapper g x\<^sub>2 y\<^sub>2
+\<Longrightarrow> lookup_a_mapper (f \<otimes>\<^sub>f g) (x\<^sub>1, x\<^sub>2) (y\<^sub>1, y\<^sub>2) \<close>
+  unfolding lookup_a_mapper_def
+  by simp
+
+lemma [\<phi>reason %lookup_a_mapper]:
+  \<open> lookup_a_mapper f (fst x) (fst y)
+\<Longrightarrow> lookup_a_mapper g (snd x) (snd y)
+\<Longrightarrow> lookup_a_mapper (f \<otimes>\<^sub>f g) x y \<close>
+  unfolding lookup_a_mapper_def
+  by (cases x; cases y; simp)
+
+lemma [\<phi>reason %lookup_a_mapper for \<open>lookup_a_mapper (comb.K _) _ _\<close>,
+       \<phi>reason %lookup_a_mapper_default+10 for \<open>lookup_a_mapper ?var _ _\<close> ]:
+  \<open> lookup_a_mapper (comb.K y) x y \<close>
+  unfolding lookup_a_mapper_def comb.K_def ..
+
+lemma [\<phi>reason default %lookup_a_mapper_default+20 for \<open>lookup_a_mapper ?var _ _\<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] x = y
+\<Longrightarrow> lookup_a_mapper id x y \<close>
+  unfolding \<r>Guard_def Premise_def lookup_a_mapper_def
+  by simp
+
+lemma [\<phi>reason default %lookup_a_mapper_default]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
+\<Longrightarrow> lookup_a_mapper f x y \<close>
+  unfolding Premise_def lookup_a_mapper_def .
 
 
 subsection \<open>Reasoning\<close>
@@ -688,7 +729,7 @@ paragraph \<open>Entry Point of \<open>ToA_Mapper\<close>\<close>
 lemma [\<phi>reason %\<phi>mapToA_init]:
   \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> {(x,w)}
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret : h (x, w)
-\<Longrightarrow> lookup_a_mapper g ret (y', r')
+\<Longrightarrow> \<^bold>d\<^bold>o lookup_a_mapper g ret (y', r')
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f : f (x, w)
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y' \<Ztypecolon> U' \<f>\<o>\<r> fst ret \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] snd ret \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
       \<t>\<o> fst ret\<^sub>f \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> snd ret\<^sub>f \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> r' \<Ztypecolon> R' \<close>
@@ -1243,6 +1284,6 @@ lemma [\<phi>reason %\<phi>mapToA_fallbacks]:
 
 subsubsection \<open>Finale\<close>
 
-hide_const mapToA_cond mapToA_unify_A lookup_a_mapper
+hide_const(open) mapToA_cond mapToA_unify_A lookup_a_mapper
 
 end

@@ -5,6 +5,8 @@ theory PhiTest_Mem_C
           Phi_Semantics.PhiSem_Mem_C_Ag_Ar
 begin
 
+
+
 declare [[\<phi>reasoning_step_limit = 50]]
  
 proc test_mem1:
@@ -142,25 +144,30 @@ proc test_mem14:
   $addr \<tribullet> 1 := \<open>2 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
-declare case_prod_app[simp] prod.case_distrib[where h=fst, simp]
 
-
-lemma [\<phi>programming_simps]:
-  \<open> case_prod f\<^sub>1 (case_prod f\<^sub>2 x) = case_prod (\<lambda>a b. case_prod f\<^sub>1 (f\<^sub>2 a b)) x\<close>
-  by (cases x; simp)
-
-
-declare fst_def[symmetric, \<phi>programming_simps]
-        snd_def[symmetric, \<phi>programming_simps]
-
-thm fst_def[symmetric, \<phi>programming_simps]
 
 proc test_mem15:
   input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>})\<close>
-  output \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0, 3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> snd (xs ! 2) \<Ztypecolon> \<v>\<a>\<l>[\<v>1] \<nat>\<close>
+  output \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0, 3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> snd (xs ! 2) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
   $addr \<tribullet> 2 \<tribullet> c !
 \<medium_right_bracket> .
+
+
+proc test_mem16:
+  input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>})\<close>
+  output \<open>list_upd_map 2 (id \<otimes>\<^sub>f (\<lambda>x. 3)) xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0, 3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<close>
+\<medium_left_bracket>
+  $addr \<tribullet> 2 \<tribullet> c := \<open>3 \<Ztypecolon> \<nat>\<close>
+\<medium_right_bracket> .
+
+proc test_mem17:
+  input  \<open>[(1,2),(3,4),(5,6)] \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>})\<close>
+  output \<open>[(1,2),(3,4),(5,42)] \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<close>
+\<medium_left_bracket>
+  $addr \<tribullet> 2 \<tribullet> c := \<open>42 \<Ztypecolon> \<nat>\<close>
+\<medium_right_bracket> .
+
 
 (*FIXME!
 proc test_mem15:

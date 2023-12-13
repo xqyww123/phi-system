@@ -506,12 +506,39 @@ lemma [\<phi>reason %mapToA_assign_id+10]:
   unfolding mapToA_assign_id_def Premise_def \<r>Guard_def
   by clarsimp
 
-lemma [\<phi>reason %mapToA_assign_id+20 for \<open>mapToA_assign_id (?\<^sub>M _ _ _ :: unit \<Rightarrow> unit)\<close>
+lemma [\<phi>reason %mapToA_assign_id+20]:
+  \<open> mapToA_assign_id (m f)
+\<Longrightarrow> mapToA_assign_id (?\<^sub>M[True] m f) \<close>
+  unfolding mapToA_assign_id_def Premise_def \<r>Guard_def
+  by clarsimp
+
+lemma [\<phi>reason %mapToA_assign_id+30 for \<open>mapToA_assign_id (?\<^sub>M _ _ _ :: unit \<Rightarrow> unit)\<close>
                                         \<open>mapToA_assign_id (?\<^sub>M[False] _ _ :: ?'a \<Rightarrow> ?'a)\<close>,
        \<phi>reason %mapToA_assign_id    for \<open>mapToA_assign_id (?\<^sub>M _ _ _ :: ?'a \<Rightarrow> ?'a)\<close>]:
   \<open>mapToA_assign_id (?\<^sub>M C m f :: unit \<Rightarrow> unit) \<close>
   unfolding mapToA_assign_id_def
   by (clarsimp simp: fun_eq_iff)
+
+lemma [\<phi>reason %lookup_a_mapper]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] C
+\<Longrightarrow> IDE_CP_Reasoning2.lookup_a_mapper (m f) x y
+\<Longrightarrow> IDE_CP_Reasoning2.lookup_a_mapper (?\<^sub>M C m f) x y \<close>
+  unfolding IDE_CP_Reasoning2.lookup_a_mapper_def Premise_def \<r>Guard_def
+  by simp
+
+lemma [\<phi>reason %lookup_a_mapper+10]:
+  \<open> IDE_CP_Reasoning2.lookup_a_mapper (m f) x y
+\<Longrightarrow> IDE_CP_Reasoning2.lookup_a_mapper (?\<^sub>M[True] m f) x y \<close>
+  unfolding IDE_CP_Reasoning2.lookup_a_mapper_def
+  by simp
+
+lemma [\<phi>reason %lookup_a_mapper+10]:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y' : y
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y' = unspec
+\<Longrightarrow> IDE_CP_Reasoning2.lookup_a_mapper (?\<^sub>M[False] m f) x y \<close>
+  unfolding IDE_CP_Reasoning2.lookup_a_mapper_def Premise_def Simplify_def
+  by simp
+
 
 
 subsubsection \<open>Objectize HOL Type-Class Judgement\<close>
@@ -1007,13 +1034,13 @@ lemma [\<phi>reason default %module_mapper_default]:
 
 lemma [\<phi>reason default %module_mapper_default]:
   \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<epsilon> sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f' g
-\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C True False c \<epsilon> \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (c,\<epsilon>) \<Rightarrow> (c,\<epsilon>,unspec)) \<close>
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C True False c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (c,\<epsilon>) \<Rightarrow> (c,\<epsilon>,unspec)) \<close>
   unfolding module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R_def
   by clarsimp fastforce
 
 lemma [\<phi>reason default %module_mapper_default]:
   \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f f\<^sub>d f' g
-\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C False True c \<epsilon> (d+\<epsilon>) d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (\<epsilon>,d) \<Rightarrow> (unspec,\<epsilon>,d)) \<close>
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C False True c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f' (\<lambda>x. case g x of (\<epsilon>,d) \<Rightarrow> (unspec,\<epsilon>,d)) \<close>
   unfolding module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L_def
   by clarsimp
 
