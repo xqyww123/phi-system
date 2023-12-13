@@ -6,7 +6,7 @@ theory Phi_Algb_Pre
           Phi_Aug
 begin 
 
-section \<open>Setup Phi_Aug\<close>
+section \<open>Setup Reasoning Rules\<close>
 
 subsection \<open>List\<close>
 
@@ -29,6 +29,21 @@ declare length_preserving_map__map[\<phi>reason add]
 
         length_preserving_map__sublist_map_R [\<phi>reason add]
         length_preserving_map__sublist_map_L [\<phi>reason add]
+
+subsubsection \<open>Declarations\<close>
+
+lemmas [\<phi>safe_simp] =
+  sublist_map_L_id sublist_map_R_id sublist_map_L_id' sublist_map_R_id'
+  list_upd_map_const_f
+
+subsection \<open>Len Interval\<close>
+
+lemmas [\<phi>safe_simp] =
+  len_intvl.sel len_intvl.collapse len_intvl.pred_inject len_intvl.pred_True len_intvl.rel_eq
+  len_intvl.size len_intvl.simps
+  Len_Intvl.set_def plus_len_intvl dom_of_add_len_intvl plus_len_intvl_start plus_len_intvl_len
+
+  shift_by_nat_nat_def shift_by_nat_int_def
 
 
 section \<open>Arithmetic Evaluation\<close>
@@ -385,39 +400,41 @@ paragraph \<open>Len Intvl\<close>
 subparagraph \<open>Direct\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_specific for \<open>equation\<^sub>2\<^sub>1 ?var (_::_ len_intvl) (_::_ len_intvl)\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len c \<ge> len_intvl.len b \<and>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] len_intvl.len c \<ge> len_intvl.len b \<and>
                       len_intvl.start c + len_intvl.len c - len_intvl.len b = len_intvl.start b
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.len c - len_intvl.len b\<rwpar>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a : \<lbrakk>len_intvl.start c : len_intvl.len c - len_intvl.len b\<rwpar>
 \<Longrightarrow> equation\<^sub>2\<^sub>1 a b c\<close>
   unfolding equation\<^sub>2\<^sub>1_def Premise_def Simplify_def
   by (cases b; cases c; clarsimp)
 
 lemma [\<phi>reason %\<A>_partial_add_specific for \<open>equation\<^sub>2\<^sub>1 (_::_ len_intvl) ?var (_::_ len_intvl)\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len a \<le> len_intvl.len c \<and> len_intvl.start a = len_intvl.start c
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> b : \<lbrakk>len_intvl.start a + len_intvl.len a : len_intvl.len c - len_intvl.len a\<rwpar>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] len_intvl.len a \<le> len_intvl.len c \<and> len_intvl.start a = len_intvl.start c
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] b : \<lbrakk>len_intvl.start a + len_intvl.len a : len_intvl.len c - len_intvl.len a\<rwpar>
 \<Longrightarrow> equation\<^sub>2\<^sub>1 a b c \<close>
   unfolding equation\<^sub>2\<^sub>1_def Premise_def Simplify_def
   by (cases a; cases c; clarsimp)
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start c \<le> len_intvl.start b \<and>
-                      len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
-                      len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>]
+      len_intvl.start c \<le> len_intvl.start b \<and>
+      len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
+      len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
 \<Longrightarrow> dabc_equation a b c d\<close>
   unfolding dabc_equation_def Premise_def Simplify_def
   by (cases b; cases c; clarsimp;
       metis add_diff_cancel_left' le_add_diff_inverse len_intvl.sel(1) len_intvl.sel(2) ordered_cancel_comm_monoid_diff_class.add_diff_assoc2 plus_len_intvl_def)
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.start d \<le> len_intvl.start b \<and>
-                           len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> c : \<lbrakk>len_intvl.start b + len_intvl.len b : len_intvl.start d + len_intvl.len d - len_intvl.start b - len_intvl.len b\<rwpar>
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> ab : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d + len_intvl.len b\<rwpar>
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len a = 0 \<and>\<^sub>\<r> C\<^sub>a = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>a = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len c = 0 \<and>\<^sub>\<r> C\<^sub>c = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>c = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>]
+            len_intvl.start d \<le> len_intvl.start b \<and>
+            len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] c : \<lbrakk>len_intvl.start b + len_intvl.len b : len_intvl.start d + len_intvl.len d - len_intvl.start b - len_intvl.len b\<rwpar>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ab : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d + len_intvl.len b\<rwpar>
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] len_intvl.len a = 0 \<and>\<^sub>\<r> C\<^sub>a = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>a = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] len_intvl.len c = 0 \<and>\<^sub>\<r> C\<^sub>c = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>c = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond C\<^sub>a C\<^sub>c a b ab c d \<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def Premise_def Simplify_def \<r>Guard_def
             Orelse_shortcut_def Ant_Seq_def

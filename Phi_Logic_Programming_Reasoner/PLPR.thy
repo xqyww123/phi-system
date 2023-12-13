@@ -16,6 +16,8 @@ theory PLPR
   and "??" = "??"
   and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
   and "<safe>" = "\<s>\<a>\<f>\<e>"
+  and "<no>" = "\<n>\<o>"
+  and "<inst>" = "\<i>\<n>\<s>\<t>"
 begin
 
 subsection \<open>Preliminaries\<close>
@@ -177,6 +179,7 @@ consts default :: mode
        MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*depreciated!*)
        MODE_SAT :: mode
        MODE_SAFE :: mode ("\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
+       MODE_NO_INST_SAFE :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
 
 
 subsubsection \<open>Annotations for Proof Obligations\<close>
@@ -226,7 +229,7 @@ lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Lon
 lemma Premise_const_True[simp]:
   \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] True\<close>
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] True\<close>
   unfolding Premise_def by simp+
 
 lemma Premise_norm:
@@ -1643,6 +1646,9 @@ fun defer_premise ctxt =
 \<phi>reasoner_ML \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=true}) o snd\<close>
 
+\<phi>reasoner_ML \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] ?P\<close>)
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=false}) o snd\<close>
+
 \<phi>reasoner_ML \<open>Premise MODE_SAT\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (fn ctxt => fn sequent => Seq.make (fn () =>
       let val goal = Thm.dest_arg1 (Thm.cprop_of sequent)
@@ -1683,6 +1689,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P \<longrightarrow> P @action \<A>EIF \<close>
   \<open> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<longrightarrow> P @action \<A>EIF \<close>
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P \<longrightarrow> P @action \<A>EIF \<close>
   unfolding Action_Tag_def Premise_def
   by blast+
 
@@ -1693,6 +1700,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P @action \<A>ESC \<close>
   \<open> P \<longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
   \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P @action \<A>ESC \<close>
+  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P @action \<A>ESC \<close>
   unfolding Action_Tag_def Premise_def
   by blast+
 

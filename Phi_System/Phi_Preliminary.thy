@@ -141,9 +141,37 @@ lemma boolean_conversions:
 
 subsubsection \<open>Setup Safe Simpset\<close>
 
+method_setup \<phi>safe_simp = \<open>
+let val no_asmN = "no_asm";
+    val no_asm_useN = "no_asm_use";
+    val no_asm_simpN = "no_asm_simp";
+    val asm_lrN = "asm_lr";
+
+    fun conv_mode x =
+      ((Args.parens (Args.$$$ no_asmN) >> K simp_tac ||
+        Args.parens (Args.$$$ no_asm_simpN) >> K asm_simp_tac ||
+        Args.parens (Args.$$$ no_asm_useN) >> K full_simp_tac ||
+        Scan.succeed asm_full_simp_tac) |> Scan.lift) x;
+in conv_mode >> (fn simp => fn ctxt =>
+    Method.METHOD (fn ths => Method.insert_tac ctxt ths 1 THEN simp ctxt 1 ))
+end\<close>
+
+
 lemmas [\<phi>safe_simp] =
     fmdom_fmupd fmdom_empty finsert_iff fempty_iff
     mk_symbol_inject[OF UNIV_I UNIV_I]
+
+    (*arithmetic*)
+    le_numeral_simps less_numeral_simps
+
+    add_num_simps mult_num_simps le_num_simps less_num_simps numeral_code nat_of_num_code
+
+    order_refl less_irrefl bot.extremum bot.extremum_strict
+    max_min_same max_bot max_bot2 min_bot min_bot2 max_top max_top2 max_top2 min_top2
+
+    le_bool_def less_bool_def bot_bool_def top_bool_def bot_apply top_apply
+
+
 
 subsection \<open>Helper Attributes \& Tactics\<close>
 

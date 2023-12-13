@@ -3725,7 +3725,7 @@ lemma [\<phi>reason_template name F.scalar_one' [assertion_simps, simp]]:
 
 paragraph \<open>Protector Preventing Eliminating the just Introduced Scalar Identity\<close>
 
-definition [iff]: \<open>introduced X \<equiv> X\<close>
+definition [iff, \<phi>safe_simp]: \<open>introduced X \<equiv> X\<close>
 
 subparagraph \<open>arith_eval\<close>
 
@@ -5188,7 +5188,6 @@ lemma SE_Module_SDistr_dac_b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>Z F\<^sub>1 Ds Dx z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 F\<^sub>1 F\<^sub>3
 \<Longrightarrow> NO_MATCH (a'::'s'::partial_ab_semigroup_add) a @action \<A>_template_reason None
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (?\<^sub>+ True da) : ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True a
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (C\<^sub>d \<longrightarrow> Ds d \<and> Ds a) \<and> (C\<^sub>c \<longrightarrow> Ds da \<and> Ds c)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (C\<^sub>d \<longrightarrow> Dx a d (fst x, x\<^sub>d)) \<and>
            (C\<^sub>c \<longrightarrow> Dx c da (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (fst x, x\<^sub>d)))
@@ -5200,7 +5199,7 @@ lemma SE_Module_SDistr_dac_b
   unfolding Action_Tag_def \<r>Guard_def NO_SIMP_def
   apply (simp add: cond_prod_transformation_rewr;
          simp add: Cond_\<phi>Prod_expn_\<phi>Some \<phi>Prod_expn'')
-  \<medium_left_bracket> premises A[unfolded equation\<^sub>3\<^sub>1_cond_def, simp] and _ and _ and _ and _ and _ and _ and Tr and _
+  \<medium_left_bracket> premises A[unfolded equation\<^sub>3\<^sub>1_cond_def, simp] and _ and _ and _ and _ and _ and Tr and _
     note \<phi>Some_\<phi>Prod[symmetric, simp] ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_RCond_\<phi>Some[where s=d and t=a and F=F\<^sub>1 and r=da and x=\<open>(fst x, x\<^sub>d)\<close> and C=C\<^sub>d]
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_LCond_\<phi>Some[where s=da and t=c and F=F\<^sub>1 and x=\<open>(x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d  (z a d) (fst x, x\<^sub>d))\<close> and C=C\<^sub>c]

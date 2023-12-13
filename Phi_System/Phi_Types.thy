@@ -2987,7 +2987,11 @@ thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[simplified]
 
 
-lemma [\<phi>reason add]:
+lemma [\<phi>reason for
+          \<open>module_mapper\<^sub>3\<^sub>\<epsilon> ?c \<lbrakk>?j : 1\<rwpar> ?d
+           (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
+           (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+           (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) _ _ _ _ _ _\<close>]:
   \<open>module_mapper\<^sub>3\<^sub>\<epsilon> c \<lbrakk>j : 1\<rwpar> d
      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
      (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
@@ -3051,12 +3055,80 @@ lemma \<phi>Mul_Quant_Tree_wrap_module_tgt[\<phi>reason default %\<phi>Mul_Quant
           OF Tr', unfolded times_list_def append_Cons append_Nil append_Nil2,
           simplified cond_prod_transformation_rewr,
           unfolded \<phi>Prod_expn' \<phi>Prod_expn'' Cond_\<phi>Prod_expn_\<phi>Some
-                   times_list_def append_Cons append_Nil append_Nil2] ;;  ;;
+                   times_list_def append_Cons append_Nil append_Nil2] ;;
     t1 certified by auto_sledgehammer ;;   
      A 
   \<medium_right_bracket> .
 
+  thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c
 
+
+lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
+           for \<open>\<m>\<a>\<p> _ : (?fa ?j # _ # _) \<^bold>\<rightarrow>\<^sub>@ _ \<^emph>[_] _ \<mapsto> (?fa ?j # _ # _) \<^bold>\<rightarrow>\<^sub>@ _ \<^emph>[_] _
+                \<o>\<v>\<e>\<r> _ : \<big_ast>\<^sub>\<bbbT> ?fa ?a _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c d \<lbrakk>j : 1\<rwpar> d\<epsilon> c a
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<lbrakk>j : 1\<rwpar> d\<epsilon> d
+      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
+      (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+      (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) D\<^sub>G f\<^sub>c f f\<^sub>d f' getter
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : fa j \<^bold>\<rightarrow>\<^sub># ks \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># ks' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : fa j \<^bold>\<rightarrow>\<^sub># T \<^emph>[C\<^sub>W] W \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+      \<i>\<n> (\<lambda>(x, w). case getter x of (x\<^sub>c, x\<^sub>b, x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)) ` D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. D\<^sub>G (fst x))
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G \<^emph> \<half_blkcirc>[C\<^sub>d] \<big_ast>\<^sub>\<bbbT> fa d T \<^emph> \<half_blkcirc>[C\<^sub>c] \<big_ast>\<^sub>\<bbbT> fa c T @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G' \<^emph> \<half_blkcirc>[C\<^sub>d] \<big_ast>\<^sub>\<bbbT> fa d T' \<^emph> \<half_blkcirc>[C\<^sub>c] \<big_ast>\<^sub>\<bbbT> fa c T' @action \<A>merge
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f f\<^sub>d \<otimes>\<^sub>f f\<^sub>c : (fa j # ks) \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R] R \<mapsto> (fa j # ks') \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : \<big_ast>\<^sub>\<bbbT> fa a T \<^emph>[C\<^sub>W] W \<mapsto> \<big_ast>\<^sub>\<bbbT> fa a T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x, w). case getter x of (x\<^sub>c, x\<^sub>b, x\<^sub>d) \<Rightarrow> case h (x\<^sub>b, w) of (y, r) \<Rightarrow> (y, r, x\<^sub>d, x\<^sub>c))
+         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y, r, x\<^sub>d, x\<^sub>c). case s (y, r) of (x\<^sub>b, x) \<Rightarrow> (?\<^sub>j\<^sub>L C\<^sub>c (\<lambda>(y, x). x @ y) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (\<lambda>(y, x). x @ y) ([x\<^sub>b], x\<^sub>d)), x))
+    \<i>\<n> D\<close>
+  unfolding \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
+            \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
+            times_list_def[where a=ks] times_list_def[where a=ks']
+            append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil
+
+  using \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c
+        [where U=\<open>ks \<^bold>\<rightarrow>\<^sub>@ U\<close> and fa=fa and j=j and Ua=\<open>ks' \<^bold>\<rightarrow>\<^sub>@ U'\<close>,
+         unfolded \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
+                  \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
+                  times_list_def[where a=ks] times_list_def[where a=ks']
+                  append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil] .
+
+  
+lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
+           for \<open>\<m>\<a>\<p> _ : (?fa ?j # _ # _) \<^bold>\<rightarrow>\<^sub>@ _ \<^emph>[_] _ \<mapsto> (?fa ?j # _ # _) \<^bold>\<rightarrow>\<^sub>@ _ \<^emph>[_] _
+                \<o>\<v>\<e>\<r> _ : \<big_ast>\<^sub>\<bbbT> ?fa ?a _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> equation\<^sub>2\<^sub>1 d \<lbrakk>j : 1\<rwpar> a
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>j : Suc 0\<rwpar> d (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
+     (\<lambda>l. length l = Suc 0) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+     (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) D\<^sub>G f f\<^sub>d f' getter
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : fa j \<^bold>\<rightarrow>\<^sub># ks \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># ks' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : fa j \<^bold>\<rightarrow>\<^sub># T \<^emph>[C\<^sub>W] W \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+      \<i>\<n> (\<lambda>(x, w). case getter x of (x\<^sub>b, x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)) ` D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. D\<^sub>G (fst x))
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R  = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G  \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sub>\<bbbT> fa d T  @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G' \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sub>\<bbbT> fa d T' @action \<A>merge
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f f\<^sub>d : (fa j # ks) \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R] R \<mapsto> (fa j # ks') \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R] R'
+    \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : \<big_ast>\<^sub>\<bbbT> fa a T \<^emph>[C\<^sub>W] W \<mapsto> \<big_ast>\<^sub>\<bbbT> fa a T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x, w). case getter x of (x\<^sub>b, x\<^sub>d) \<Rightarrow> case h (x\<^sub>b, w) of (y, r) \<Rightarrow> (y, r, x\<^sub>d))
+         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y, r, x\<^sub>d). case s (y, r) of (x\<^sub>b, x) \<Rightarrow> (x\<^sub>d @ [x\<^sub>b], x))
+    \<i>\<n> D \<close>
+
+  unfolding \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
+            \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
+            times_list_def[where a=ks] times_list_def[where a=ks']
+            append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil
+
+  using \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>
+        [where U=\<open>ks \<^bold>\<rightarrow>\<^sub>@ U\<close> and fa=fa and j=j and Ua=\<open>ks' \<^bold>\<rightarrow>\<^sub>@ U'\<close>,
+         unfolded \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
+                  \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
+                  times_list_def[where a=ks] times_list_def[where a=ks']
+                  append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil] .
 
 
 section \<open>Semantics Related\<close> (*TODO: move*)

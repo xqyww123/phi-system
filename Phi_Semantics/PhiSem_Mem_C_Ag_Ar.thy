@@ -14,7 +14,7 @@ debt_axiomatization
 
 subsection \<open>Syntax\<close>
 
-term \<open>\<m>\<e>\<m>[addr] \<a>\<r>\<r>\<a>\<y>[n] T\<close>
+term \<open>\<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] T\<close>
 
 setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 110 (
@@ -26,7 +26,7 @@ setup \<open>Context.theory_map (
      | X => NONE)
 )\<close>
 
-term \<open>\<m>\<e>\<m>[addr] \<a>\<r>\<r>\<a>\<y>[n] T\<close>
+term \<open>\<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] T\<close>
 
 subsection \<open>Reasoning\<close>
 
@@ -36,7 +36,7 @@ text \<open>The following lemma cannot be automated because it is tightly relate
 
 lemma split_mem_coerce_array':
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length l = Suc n
-\<Longrightarrow> (l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<a>\<r>\<r>\<a>\<y>[Suc n] T) = (take n l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<a>\<r>\<r>\<a>\<y>[n] T) * (last l \<Ztypecolon> AG_IDX(n\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<close>
+\<Longrightarrow> (l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[Suc n] T) = (take n l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] T) * (last l \<Ztypecolon> AG_IDX(n\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<close>
   unfolding BI_eq_iff Premise_def
   apply (clarsimp; rule; clarsimp)
 
@@ -66,8 +66,10 @@ lemma split_mem_coerce_array':
     by (smt (verit, ccfv_SIG) append_eq_conv_conj length_Suc_conv_rev less_antisym list_all2_conv_all_nth nth_append nth_append_length snoc_eq_iff_butlast)
   .
 
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma split_mem_coerce_array:
-  \<open> (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<a>\<r>\<r>\<a>\<y>[n] T) = \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<close>
+  \<open> (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] T) = \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<close>
   apply (induct n,
       (rule \<phi>Type_eqI_BI; unfold BI_eq_iff; clarsimp; rule;
        clarsimp simp: Map_of_Val_arr fun_eq_iff atLeast0_lessThan_Suc list_all2_Cons2
@@ -93,8 +95,8 @@ lemma [\<phi>reason %\<phi>mapToA_norm,
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] U) \<^emph>[C\<^sub>R] R
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] U') \<^emph>[C\<^sub>R] R'
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] U) \<^emph>[C\<^sub>R] R
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] U') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
@@ -108,8 +110,8 @@ lemma [\<phi>reason %\<phi>mapToA_norm,
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
 \<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T') \<^emph>[C\<^sub>W] W'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T') \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
@@ -120,28 +122,28 @@ lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[array n sty] (\<a>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 

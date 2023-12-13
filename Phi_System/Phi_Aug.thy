@@ -39,6 +39,10 @@ lemma length_preserving_map__list_upd_map [simp, intro!]:
   unfolding length_preserving_map_def list_upd_map_def
   by force
 
+lemma list_upd_map_const_f[simp]:
+  \<open> list_upd_map i (\<lambda>x. v) xs = xs[i := v] \<close>
+  unfolding list_upd_map_def ..
+
 
 subsection \<open>Mapping Prefix / Suffix\<close>
 
@@ -67,8 +71,18 @@ lemma sublist_map_L_id[simp]:
   unfolding fun_eq_iff sublist_map_L_def
   by clarsimp
 
+lemma sublist_map_L_id'[simp]:
+  \<open> sublist_map_L N (\<lambda>x. x) = (\<lambda>x. x) \<close>
+  unfolding fun_eq_iff sublist_map_L_def
+  by clarsimp
+
 lemma sublist_map_R_id[simp]:
   \<open> sublist_map_R N id = id \<close>
+  unfolding sublist_map_R_def fun_eq_iff
+  by clarsimp
+
+lemma sublist_map_R_id'[simp]:
+  \<open> sublist_map_R N (\<lambda>x. x) = (\<lambda>x. x) \<close>
   unfolding sublist_map_R_def fun_eq_iff
   by clarsimp
 

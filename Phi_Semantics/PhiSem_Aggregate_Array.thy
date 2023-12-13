@@ -1,6 +1,7 @@
 theory PhiSem_Aggregate_Array
   imports PhiSem_Aggregate_Base
-  abbrevs "<array>" = "\<a>\<r>\<r>\<a>\<y>"
+  abbrevs "<Array>" = "\<Aa>\<r>\<r>\<a>\<y>"
+      and "<array>" = "\<a>\<r>\<r>\<a>\<y>"
 begin
 
 section \<open>Semantics\<close>
@@ -19,7 +20,8 @@ interpretation array_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<cl
 
 hide_fact array_ty_ax
 
-abbreviation \<open>array N T \<equiv> array.mk (T,N)\<close>
+abbreviation array_semty ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 911] 910)
+  where \<open>array_semty N T \<equiv> array.mk (T,N)\<close>
 
 
 
@@ -39,10 +41,10 @@ hide_fact array_val_ax
 subsection \<open>Semantics\<close>
 
 debt_axiomatization
-        WT_arr[simp]: \<open>Well_Type (array n t) = { V_array.mk vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
-  and   zero_arr[simp]: \<open>Zero (array N T)  = map_option (\<lambda>z. V_array.mk (replicate N z)) (Zero T)\<close>
-  and   idx_step_type_arr [eval_aggregate_path] : \<open>i < N \<Longrightarrow> idx_step_type (AgIdx_N i) (array N T) = T\<close>
-  and   valid_idx_step_arr[eval_aggregate_path] : \<open>valid_idx_step (array N T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
+        WT_arr[simp]: \<open>Well_Type (\<a>\<r>\<r>\<a>\<y>[n] t) = { V_array.mk vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
+  and   zero_arr[simp]: \<open>Zero (\<a>\<r>\<r>\<a>\<y>[N] T)  = map_option (\<lambda>z. V_array.mk (replicate N z)) (Zero T)\<close>
+  and   idx_step_type_arr [eval_aggregate_path] : \<open>i < N \<Longrightarrow> idx_step_type (AgIdx_N i) (\<a>\<r>\<r>\<a>\<y>[N] T) = T\<close>
+  and   valid_idx_step_arr[eval_aggregate_path] : \<open>valid_idx_step (\<a>\<r>\<r>\<a>\<y>[N] T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
   and   idx_step_value_arr[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (V_array.mk vs) = vs!i\<close>
   and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (V_array.mk vs) = V_array.mk (vs[i := f (vs!i)])\<close>
 
@@ -51,7 +53,7 @@ lemma list_all_replicate[simp]:
   by (induct n; simp; blast)
 
 (*lemma Valid_Type_\<tau>Array[simp]:
-  \<open>Valid_Type (array n T) \<longleftrightarrow> Valid_Type T\<close>
+  \<open>Valid_Type (\<a>\<r>\<r>\<a>\<y>[n] T) \<longleftrightarrow> Valid_Type T\<close>
   by (simp add: Inhabited_def;
       meson length_replicate list_all_replicat)*)
 
@@ -61,7 +63,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
-                    ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 911] 910)
+                    ("\<Aa>\<r>\<r>\<a>\<y>[_] _" [20, 911] 910)
   where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
         \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
@@ -77,8 +79,8 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all D l)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
        and \<open>Is_Aggregate (Array N T)\<close>
-       and \<open>\<forall>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
-       and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>
+       and \<open>\<forall>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
+       and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
 
@@ -87,7 +89,7 @@ section \<open>Reasoning\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < N
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (array N TY) TY \<close>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (\<a>\<r>\<r>\<a>\<y>[N] TY) TY \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_arr idx_step_type_arr)
 
