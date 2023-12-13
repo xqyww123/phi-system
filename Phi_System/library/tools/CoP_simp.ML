@@ -165,14 +165,9 @@ fun force_rule_pass rule ctxt =
         | get_pat (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = get_pat X
         | get_pat (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _) =
               if RULES.direction then get_pat X else get_pat Y
-        | get_pat (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =
-              if RULES.direction then T else
-              bad_rule "\nThe target of the backward-transformation should be in \<open>y : Y subj y. r y\<close> form."
+        | get_pat (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) = T
         | get_pat (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
-              Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _)) =
-              if RULES.direction
-              then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
-              else T
+              Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _)) = T
         | get_pat X = if Phi_Syntax.is_BI_connective X
                       then if RULES.direction
                            then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
