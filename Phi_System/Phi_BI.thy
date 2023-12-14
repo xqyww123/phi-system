@@ -1540,6 +1540,17 @@ lemma Ex_transformation_expn:
   unfolding Transformation_def ExSet_expn
   by blast
 
+lemma ExSet_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
+  \<open> (\<exists>*x. (case x of (a,b) \<Rightarrow> f a b)) = (\<exists>*a b. f a b) \<close>
+  unfolding BI_eq_iff
+  by clarsimp
+
+lemma ExSet_subj_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
+  \<open> (\<exists>* x. A x \<s>\<u>\<b>\<j> (case x of (a,b) \<Rightarrow> P a b)) = (\<exists>* a b. A (a,b) \<s>\<u>\<b>\<j> P a b) \<close>
+  unfolding BI_eq_iff
+  by clarsimp
+
+
 paragraph \<open>With Multiplicative Conjunction\<close>
 
 lemma ExSet_times_left [simp, \<phi>programming_base_simps, \<phi>safe_simp]:
@@ -4652,7 +4663,7 @@ lemmas [assertion_simps] =
   Subjection_Subjection Subjection_Zero Subjection_True Subjection_Flase
   Subjection_times Subjection_addconj
 
-  ExSet_simps
+  ExSet_simps ExSet_split_prod ExSet_subj_split_prod
 
   sep_quant_subjection sep_quant_ExSet
 

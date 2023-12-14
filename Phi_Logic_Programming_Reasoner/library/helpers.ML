@@ -8,6 +8,8 @@ val unprotect_conv : conv
 val LHS_conv : conv -> conv
 val RHS_conv : conv -> conv
 
+
+val wrap_opt_conv : (cterm -> thm option) -> conv
 (*
 type opt_conv = cterm -> thm option
 val sub_conv_opt : (Proof.context -> opt_conv) -> Proof.context -> opt_conv
@@ -89,6 +91,11 @@ fun RHS_conv cv ctm =
           Conv.arg_conv (Conv.arg_conv cv) ctm
      | _ => raise CTERM ("Not an equation", [ctm])
 
+
+fun wrap_opt_conv C ctm =
+  case C ctm
+    of SOME ret => ret
+     | NONE => raise CTERM ("No conversion required", [ctm])
 
 (*
 type opt_conv = cterm -> thm option

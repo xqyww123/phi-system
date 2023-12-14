@@ -1239,7 +1239,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                   val parameters = map (Option.map (Term_Subst.instantiate inst0)) parameters0
                   val H = Term_Subst.instantiate inst0 H01
 
-                  val inst = (Sign.typ_match thy (Term.fastype_of (#term phi0), typ_of_phi) Vartab.empty
+                  val inst = (Sign.typ_match thy (Term.fastype_of (Term.head_of (#term phi0)), typ_of_phi) Vartab.empty
                               handle Type.TYPE_MATCH => raise Automation_Fail (fn () =>
                                         let open Pretty in
                                           [str "Invalid Hint", Syntax.pretty_term ctxt H]

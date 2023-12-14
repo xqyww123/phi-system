@@ -43,6 +43,43 @@ term map2
 
 
 
+
+(* TODO!
+context
+  fixes T :: \<open>(fiction,'a) \<phi>\<close>
+begin
+
+\<phi>type_def List\<^sub>C  :: \<open>(fiction, 'a list) \<phi>\<close>
+  where \<open>([] \<Ztypecolon> List\<^sub>C) = Void\<close>
+      | \<open>(x # l \<Ztypecolon> List\<^sub>C) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>C)\<close>
+      deriving Sep_Functor_1
+           and Functionality
+           and \<open> homo_one \<delta>
+              \<Longrightarrow> closed_homo_sep \<delta>
+              \<Longrightarrow> Tyops_Commute List\<^sub>C List\<^sub>C \<DD>[\<delta>] \<DD>[\<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+           and \<open>homo_one \<delta>
+              \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] List\<^sub>C List\<^sub>C Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+
+
+end
+*)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 term \<open>unzip' (map f (zip' x))\<close>
 
 declare [[\<phi>trace_reasoning = 1]]

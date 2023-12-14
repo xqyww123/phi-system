@@ -402,9 +402,9 @@ fun mk_ind_dest_ToA ctxt phi gen_prop =
       val idx = Term.maxidx_of_term prop + 1
       val ind = Thm.incr_indexes idx (the (#ind phi))
       val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of ind))
-                        of Var v => v
+                        of Var (v,_) => v
                          | _ => error "Bad induction rule")
-   in Thm.instantiate (TVars.empty, Vars.make [(prop_var, Thm.cterm_of ctxt prop)]) ind
+   in Drule.infer_instantiate ctxt [(prop_var, Thm.cterm_of ctxt prop)] ind
         |> Phi_Help.beta_eta_contract
   end
 
@@ -831,7 +831,7 @@ fun identical_name (Const(N, _), Const(N', _)) = N = N'
   | identical_name (Bound i, Bound i') = i = i'
   | identical_name _ = false
 
-fun is_term_of_phi phi term = identical_name (#term phi, term)
+fun is_term_of_phi phi term = identical_name (Term.head_of (#term phi), term)
 
 fun assert_Type_Opr ty =
   if Phi_Syntax.is_Type_Opr ty then ()
@@ -987,8 +987,8 @@ fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
 fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
   let val ctxt = open_proof_ctxt bundles thy
 
-      fun match_head head (term as f $ _) = head aconv term orelse match_head head f
-        | match_head head term = head aconv term
+      fun match_head head (term as f $ _) = Term.aconv_untyped (head, term) orelse match_head head f
+        | match_head head term = Term.aconv_untyped (head, term)
 
       fun get_idx_in_def_eqs lhs =
             case find_index (fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) => match_head term (T $ x)
@@ -1055,7 +1055,6 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                          val params = List.drop (params, fixed_num)
                          fun chk (X as _ $ _) =
                               let val (head', params') = Term.strip_comb X
-                                  val params' = List.drop (params', fixed_num)
                                   fun chk_eq (param :: params) (param' :: params') (ret :: rets) = (
                                         if param = param' then () else ret := SOME true ;
                                         chk_eq params params' rets
@@ -1066,7 +1065,9 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                                         chk_eq params [] rets
                                       )
                                in if identical_name (head, head')
-                                  then (chk_eq params params' mutating_params ; List.app chk params')
+                                  then let val params' = List.drop (params', fixed_num)
+                                        in (chk_eq params params' mutating_params ; List.app chk params')
+                                       end
                                   else (List.app chk params')
                               end
                            | chk (Abs(_,_,X)) = chk X

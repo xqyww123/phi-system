@@ -29,7 +29,7 @@ type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share op
 
 fiction_space aggregate_mem =
   aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
-     (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout)
+     (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout Null)
   by (standard; simp)
 
 
@@ -113,7 +113,7 @@ subsection \<open>Memory Object\<close>
 declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
-  where \<open>MemBlk blk T \<equiv> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T)\<close>
+  where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
   deriving Sep_Functor_1
 
 

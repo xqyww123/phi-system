@@ -4,15 +4,23 @@ val _ = Theory.setup (Context.theory_map (
   PLPR_Template_Properties.add_template false (
       [SOME \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>], \<^here>,
        PLPR_Template_Properties.Free_Action (
-  fn (pos, (_, [SOME (_, prop)])) => fn ctxt00 =>
-    let val (F, oprs) =
+  fn (pos, (_, [SOME (_, prop0)])) => fn ctxt00 =>
+    let val ctxt0' = Context.proof_of ctxt00
+
+        val prop = prop0 RS' (ctxt0',
+              @{lemma' \<open>Transformation_Functor (F::('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi>) (F'::('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi>)
+                                               T U D R m
+                    \<Longrightarrow> Transformation_Functor F F' T U D R m\<close>
+                   by this})
+        val (F, F', oprs) =
            case Thm.concl_of prop
              of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ M )
                   => (Thm.cconcl_of prop |> Thm.dest_arg |> funpow 5 Thm.dest_fun |> Thm.dest_arg1,
+                      Thm.cconcl_of prop |> Thm.dest_arg |> funpow 4 Thm.dest_fun |> Thm.dest_arg1,
                       [D,R,M])
               | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
 
-        val ctxt0' = Context.proof_of ctxt00
+        
         val ctxt0 = ctxt0'
                  |> Context_Position.set_visible false
                  |> load_simpset oprs
@@ -24,7 +32,6 @@ val _ = Theory.setup (Context.theory_map (
           | incr_term_idx_only d (Abs (N, Ty, X)) = Abs (N, Ty, incr_term_idx_only d X)
           | incr_term_idx_only _ X = X
         val idx = Thm.maxidx_of_cterm F + 1
-        val F' = Thm.cterm_of ctxt0 (incr_term_idx_only idx (Thm.term_of F))
 
         val T_ty = Thm.dest_ctyp0 (Thm.ctyp_of_cterm F)
         val x_ty = Thm.dest_ctyp0 (Thm.dest_ctyp1 (Thm.ctyp_of_cterm F))

@@ -45,7 +45,11 @@ fun move_conj qvar =
 
       fun conv ctm =
         case Thm.term_of ctm
-          of Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Free x $ _ =>
+          of Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Free x $ Free y =>
+              if x = qvar then SOME (Conv.all_conv ctm)
+              else if y = qvar then SOME (Conv.rewr_conv @{thm' eq_commute[folded atomize_eq]} ctm)
+              else NONE
+           | Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Free x $ _ =>
               if x = qvar then SOME (Conv.all_conv ctm)
                           else NONE
            | Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Free x =>
@@ -73,11 +77,12 @@ fun defined_Ex_direct ctm =
 
 fun defined_Ex ctxt ctm =
   if quick_check \<^const_name>\<open>ExSet\<close> (Thm.term_of ctm)
-  then SOME (sink_quantifier @{thm' BI_Ex_comm[folded atomize_eq]} (fn ctxt =>
-          Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (qvar, _) =>
-              Conv.arg_conv (the o move_conj (dest_Free (Thm.term_of qvar)))
-            ) ctxt) then_conv
-          defined_Ex_direct)
+  then SOME (sink_quantifier @{thm' BI_Ex_comm[folded atomize_eq]} (fn ctxt => fn ctm => 
+          (Conv.try_conv (Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (qvar, _) =>
+              Conv.arg_conv (Phi_Conv.wrap_opt_conv (
+                move_conj (dest_Free (Thm.term_of qvar))))
+            ) ctxt)) then_conv
+          defined_Ex_direct) ctm)
           ctxt ctm)
   else NONE
 
