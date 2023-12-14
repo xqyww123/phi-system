@@ -397,7 +397,7 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>

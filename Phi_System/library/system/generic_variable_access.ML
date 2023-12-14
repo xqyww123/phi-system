@@ -33,6 +33,7 @@ val parse_generic_var1 : Proof.context -> term -> cterm
 
 val register_value_spec_thms : (Position.T * thm list) list -> Context.generic -> Context.generic
   (*note, this is not for updating or accessing local values*)
+val register_value_spec_thms_no_dup : (Position.T * thm list) list -> Context.generic -> Context.generic
 
 type process_of_arguments = context_state -> context_state
 
@@ -376,6 +377,13 @@ val number_of_values = values_number 0
 
 (** Predefined Processes **)
 
+fun get_val_of_spec_thm th =
+  case Thm.prop_of th
+    of _ $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
+             $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
+             $ _ ) => V
+     | _ => raise THM ("Not a specification theorem of a value!", 0, [th])
+
 fun register_value_spec_thms pos_rules =
   Phi_Reasoner.add_rules (maps (fn (pos, rules) => map (fn rule =>
     let
@@ -392,6 +400,28 @@ fun register_value_spec_thms pos_rules =
     in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
         [(pattern, NONE)], [], NONE) end
   ) rules) pos_rules)
+
+fun register_value_spec_thms_no_dup pos_rules =
+  let val pos_rules' = maps (fn (pos, rules) => map (pair pos) rules) pos_rules
+                    |> distinct (fn ((_, th1), (_, th2)) =>
+                          get_val_of_spec_thm th1 aconv get_val_of_spec_thm th2)
+   in Phi_Reasoner.add_rules (map (fn (pos, rule) =>
+        let
+          val i = maxidx_of_term (Thm.prop_of rule) + 1
+          val pattern =
+                (case Thm.prop_of rule
+                   of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
+                                      $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
+                                      $ TM )
+                    => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
+                                       $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
+                                       $ Var (("spec",i), fastype_of TM) )
+                | _ => raise THM ("Not a specification theorem of a value!", 0, [rule]))
+        in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
+            [(pattern, NONE)], [], NONE) end
+      ) pos_rules')
+  end
+
 
 fun gen_default_process' clean pos (ctxt,sequent) =
   let

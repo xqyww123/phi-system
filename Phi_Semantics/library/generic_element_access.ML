@@ -126,8 +126,10 @@ fun gen_constructor kind pos_and_first_args cfg stat =
                            | NONE => error ("Don't know how to construct " ^ kind' ^
                                               " using the given arguments."))
             val args = Thm.cterm_of ctxt (HOLogic.mk_list \<^typ>\<open>VAL \<phi>arg\<close> args')
+            val pos_rules = map (fn ((_, pos), rules) => (pos, rules)) args0
+                         
             val ctxt'' = Context.proof_map (
-                    Generic_Variable_Access.register_value_spec_thms (
+                    Generic_Variable_Access.register_value_spec_thms_no_dup (
                       map (fn ((_, pos), rules) => (pos, rules)) args0)
                   ) ctxt'
             val rule' =

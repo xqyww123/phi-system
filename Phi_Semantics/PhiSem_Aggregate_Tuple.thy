@@ -290,4 +290,26 @@ setup \<open>Context.theory_map (
     else NONE
 ))\<close>
 
+subsection \<open>Synthesis\<close>
+
+\<phi>reasoner_group \<phi>synthesis_ag_T = (%\<phi>synthesis_ag, [%\<phi>synthesis_ag, %\<phi>synthesis_ag]) in \<phi>synthesis_ag
+  \<open>for tuple\<close>
+
+declare synthesis_construct_aggregate_\<phi>app
+        [where T=\<open>\<lbrace> T \<rbrace> \<^emph> U\<close> for T U,
+         \<phi>reason %\<phi>synthesis_ag_T
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+
+        synthesis_construct_aggregate_\<phi>app
+        [where T=\<open>\<lbrace> T \<rbrace>\<close> for T,
+         \<phi>reason %\<phi>synthesis_ag_T
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+
+        synthesis_construct_aggregate_\<phi>app
+        [where T=\<open>\<lbrace> \<rbrace>\<close>,
+         \<phi>reason %\<phi>synthesis_ag_T
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. () \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+
+
+
 end
