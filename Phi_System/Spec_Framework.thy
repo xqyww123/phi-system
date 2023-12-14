@@ -9,6 +9,7 @@ theory Spec_Framework
   keywords "fiction_space"  :: thy_goal
   abbrevs "<shifts>" = "\<s>\<h>\<i>\<f>\<t>\<s>"
     and   "<val>" = "\<v>\<a>\<l>"
+    and   "<vals>" = "\<v>\<a>\<l>\<s>"
 begin
 
 subsubsection \<open>Configuration\<close>
@@ -110,12 +111,23 @@ subsubsection \<open>Value\<close>
 definition Val :: \<open>VAL \<phi>arg \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<v>\<a>\<l>[_] _" [22,22] 21)
   where \<open>Val val T = (\<lambda>x. 1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T))\<close>
 
+definition Vals :: \<open>VAL list \<phi>arg \<Rightarrow> (VAL list, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<v>\<a>\<l>\<s>[_] _" [22,22] 21)
+  where \<open>Vals vals T = (\<lambda>x. 1 \<s>\<u>\<b>\<j> \<phi>arg.dest vals \<Turnstile> (x \<Ztypecolon> T))\<close>
+
 lemma Val_expn [simp, \<phi>expns]:
   \<open>v \<Turnstile> (x \<Ztypecolon> Val val T) \<longleftrightarrow> v = 1 \<and> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
   unfolding Val_def \<phi>Type_def by simp
 
+lemma Vals_expn [simp, \<phi>expns]:
+  \<open>v \<Turnstile> (x \<Ztypecolon> Vals val T) \<longleftrightarrow> v = 1 \<and> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
+  unfolding Vals_def \<phi>Type_def by simp
+
 lemma Val_inh_rewr:
   \<open>Inhabited (x \<Ztypecolon> Val val T) \<equiv> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
+  unfolding Inhabited_def by clarsimp
+
+lemma Vals_inh_rewr:
+  \<open>Inhabited (x \<Ztypecolon> Vals val T) \<equiv> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
   unfolding Inhabited_def by clarsimp
 
 
@@ -123,11 +135,14 @@ paragraph \<open>Syntax\<close>
 
 consts anonymous :: 'a
 
-syntax val_syntax :: "logic \<Rightarrow> logic" ("\<v>\<a>\<l> _" [22] 21)
+syntax val_syntax  :: "logic \<Rightarrow> logic" ("\<v>\<a>\<l> _"  [22] 21)
+       vals_syntax :: "logic \<Rightarrow> logic" ("\<v>\<a>\<l>\<s> _" [22] 21)
 
 translations
   "\<v>\<a>\<l> x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Val (CONST anonymous) T"
   "\<v>\<a>\<l> T" => "CONST Val (CONST anonymous) T"
+  "\<v>\<a>\<l>\<s> x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Vals (CONST anonymous) T"
+  "\<v>\<a>\<l>\<s> T" => "CONST Vals (CONST anonymous) T"
 
 ML_file \<open>library/syntax/value.ML\<close>
 

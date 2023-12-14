@@ -149,7 +149,7 @@ lemma idx_step_mod_value_named_tupl_cons':
 primrec semantic_named_tuple_constructor
   where \<open>semantic_named_tuple_constructor syms [] = V_named_tup.mk fmempty\<close>
       | \<open>semantic_named_tuple_constructor syms (v#R) =
-            V_named_tup.mk (fmupd (hd syms) (\<phi>arg.dest v)
+            V_named_tup.mk (fmupd (hd syms) v
                 (V_named_tup.dest (semantic_named_tuple_constructor (tl syms) R)))\<close>
 
 
@@ -356,32 +356,41 @@ lemma [\<phi>reason %aggregate_access+1]:
   by (clarsimp simp add: \<r>Guard_def Premise_def, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) (() \<Ztypecolon> \<circle>) (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s])
+          (x \<Ztypecolon> List_Item T)
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (semty_ntup TyR) (r \<Ztypecolon> R)
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR))
+          ((x,xs) \<Ztypecolon> List_Item T \<^emph> L)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
-  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
-  apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
-  subgoal for vs
-    by (rule exI[where x=\<open>V_named_tup.mk vs\<close>], rule exI[where x=\<open>V_named_tup.mk (fmupd s (\<phi>arg.dest v) fmempty)\<close>],
-        simp add: V_named_tup_sep_disj , insert fmrel_fmdom_eq, blast)
-  using V_named_tup_mult by auto
-  
+  unfolding \<phi>Aggregate_Constructor_def \<phi>SemType_def
+  apply (clarsimp simp: V_named_tup_mult_cons[symmetric] times_list_def; rule)
+  subgoal premises prems for vs v
+    by (insert prems(1,3-) 
+               prems(2)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
+               V_named_tup_mult,
+        rule exI[where x=\<open>semantic_named_tuple_constructor sR vs\<close>],
+        rule exI[where x=\<open>V_named_tup.mk (fmupd s v fmempty)\<close>],
+        auto simp: V_named_tup_sep_disj fmrel_fmdom_eq)
+  subgoal premises prems for vs v
+    by (insert prems(1,3-) 
+               prems(2)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
+               V_named_tup_mult,
+        metis V_named_tup.dest_mk fmadd_empty(2) fmadd_fmupd fmrel_upd) .
+
+
 setup \<open>Context.theory_map (
   Generic_Element_Access.Agg_Constructors.add 0 (fn (kind, args, (ctxt,sequent)) =>
     if kind = "" andalso forall (fn ((SOME _, _),[_]) => true | _ => false) args
@@ -420,20 +429,24 @@ lemma Is_Named_Tuple_comp[\<phi>reason add]:
   unfolding Is_Named_Tuple_def
   by (clarsimp, metis NO_MATCH_def V_named_tup_mult_cons fmdom_fmupd)
 
+
+
 subsection \<open>Synthesis\<close>
 
-lemma
-  \<open> \<phi>Aggregate_Constructor constr args TY (x \<Ztypecolon> T)
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_construct_aggregate constr args TY \<lbrace> Void \<longmapsto> \<lambda>\<r>\<e>\<t>. (x\<^sub>1, x\<^sub>2) \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<rbrace> @action synthesis \<close>
-  unfolding Action_Tag_def
-  using op_construct_aggregate_\<phi>app .
+\<phi>reasoner_group \<phi>synthesis_ag_NT = (%\<phi>synthesis_ag, [%\<phi>synthesis_ag, %\<phi>synthesis_ag]) in \<phi>synthesis_ag
+  \<open>for named tuple\<close>
 
+declare op_construct_aggregate_\<phi>app
+        [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U,
+         \<phi>reason %\<phi>synthesis_ag_NT]
 
-proc (nodef)
-  requires \<open>\<p>\<r>\<o>\<c> C\<^sub>1 \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. x\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace>\<close>
-       and \<open>\<p>\<r>\<o>\<c> C\<^sub>2 \<lbrace> R\<^sub>1 \<longmapsto> \<lambda>ret. x\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[ret] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace>\<close>
-  input  \<open>R\<^sub>0\<close>
-  output \<open>(x\<^sub>1,x\<^sub>2) \<Ztypecolon> \<v>\<a>\<l> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R'\<close>
-  @action synthesis
+        op_construct_aggregate_\<phi>app
+        [where T=\<open>\<lbrace> \<rbrace>\<close>,
+         \<phi>reason %\<phi>synthesis_ag_NT]
+
+        op_construct_aggregate_\<phi>app
+        [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace>\<close> for s T,
+         \<phi>reason %\<phi>synthesis_ag_NT]
+
 
 end

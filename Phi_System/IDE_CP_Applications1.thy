@@ -4,8 +4,7 @@ chapter \<open>IDE-CP Functions \& Applications - Part I\<close>
 theory IDE_CP_Applications1
   imports IDE_CP_Core
   keywords "val" :: quasi_command
-  abbrevs "<vals>" = "\<v>\<a>\<l>s"
-      and "<orelse>" = "\<o>\<r>\<e>\<l>\<s>\<e>"
+  abbrevs "<orelse>" = "\<o>\<r>\<e>\<l>\<s>\<e>"
       and "<pattern>" = "\<p>\<a>\<t>\<t>\<e>\<r>\<n>"
       and "<traverse>" = "\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e>"
       and "<split>" = "\<s>\<p>\<l>\<i>\<t>"

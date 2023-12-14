@@ -105,6 +105,13 @@ setup \<open>Context.theory_map (
          \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
+setup \<open>Context.theory_map (
+  Phi_Type.add_type {no_auto=true}
+        (\<^binding>\<open>Vals\<close>, \<^pattern>\<open>Vals::VAL list \<phi>arg \<Rightarrow> (VAL list, ?'a) \<phi> \<Rightarrow> (?'x::one, ?'a) \<phi>\<close>,
+         Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Vals_def}),
+         \<^here>, Phi_Type.Derivings.empty, [])
+   #> snd )\<close>
+
 declare [[\<phi>trace_reasoning = 1]]
 
 let_\<phi>type Val

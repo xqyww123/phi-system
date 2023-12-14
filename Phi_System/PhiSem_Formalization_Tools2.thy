@@ -143,12 +143,20 @@ lemma semantic_local_value_\<phi>app:
   unfolding \<phi>M_assert_def Premise_def \<phi>SemType_def subset_iff \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
 
+lemma semantic_local_values_nochk_\<phi>app:
+  \<open> x \<Ztypecolon> \<v>\<a>\<l>\<s>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) \<close>
+  unfolding Transformation_def
+  by clarsimp
+
+
 lemma semantic_local_value_nochk_\<phi>app:
   \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) \<close>
   unfolding Transformation_def
   by clarsimp
 
-subsection \<open>Synthesis of Literal Value\<close>
+subsection \<open>Synthesis of Value\<close>
+
+subsubsection \<open>Literal Value\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
@@ -160,6 +168,47 @@ lemma "_synthesis_literal_":
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Transformation_def
   by (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set INTERP_SPEC, blast)
+
+subsubsection \<open>Value Sequence\<close>
+
+lemma semantic_cons_lval_\<phi>app:
+  \<open> \<p>\<r>\<o>\<c> Return (\<phi>V_cons v\<^sub>h v\<^sub>L) \<lbrace> x\<^sub>h \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>h] T\<heavy_comma> x\<^sub>L \<Ztypecolon> \<v>\<a>\<l>\<s>[v\<^sub>L] L \<longmapsto> \<lambda>ret. (x\<^sub>h, x\<^sub>L) \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] (List_Item T \<^emph> L) \<rbrace> \<close>
+  unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
+  by (cases v\<^sub>h; cases v\<^sub>L; clarsimp simp add: Val.unfold Vals.unfold times_list_def,
+      smt (verit, best) INTERP_SPEC_0(2) Subjection_Flase append_Cons append_self_conv2 empty_iff zero_set_def)
+
+lemma semantic_cons_lval\<^sub>1_\<phi>app:
+  \<open> \<p>\<r>\<o>\<c> Return (\<phi>V_cons v \<phi>V_nil) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] List_Item T \<rbrace> \<close>
+  unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
+  by (cases v; clarsimp simp add: Val.unfold Vals.unfold times_list_def)
+
+
+proc (nodef) [\<phi>reason %\<phi>synthesis_cut]:
+  requires C1: \<open>\<p>\<r>\<o>\<c> C\<^sub>1 \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. x\<^sub>h \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace> @action synthesis\<close>
+       and C2: \<open>\<p>\<r>\<o>\<c> C\<^sub>2 \<lbrace> R\<^sub>1 \<longmapsto> \<lambda>ret. x\<^sub>L \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] L \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>2 \<rbrace>  @action synthesis\<close>
+  input  \<open>R\<^sub>0\<close>
+  output \<open>\<lambda>ret. (x\<^sub>h, x\<^sub>L) \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] (List_Item T \<^emph> L) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>2\<close>
+  @action synthesis
+\<medium_left_bracket>
+  C1 C2 semantic_cons_lval
+\<medium_right_bracket> .
+
+proc (nodef) [\<phi>reason %\<phi>synthesis_cut]:
+  requires C: \<open>\<p>\<r>\<o>\<c> C \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. x\<^sub>h \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace> @action synthesis\<close>
+  input  \<open>R\<^sub>0\<close>
+  output \<open>\<lambda>ret. x\<^sub>h \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] List_Item T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1\<close>
+  @action synthesis
+\<medium_left_bracket>
+  C semantic_cons_lval\<^sub>1
+\<medium_right_bracket> .
+
+lemma [\<phi>reason %\<phi>synthesis_cut]:
+  \<open> \<p>\<r>\<o>\<c> Return \<phi>V_nil \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. () \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] \<circle> \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>0 \<rbrace> \<close>
+  unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: Val.unfold Vals.unfold times_list_def)
+
+
+
 
 
 subsection \<open>Drop & Duplicate Value\<close>

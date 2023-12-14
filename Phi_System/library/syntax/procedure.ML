@@ -82,6 +82,18 @@ fun translate_arg' cnt s ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>
                                        $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
                                        $ X2))
       = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
+
+  | translate_arg' cnt s ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_name>\<open>Vals\<close>, _))
+                                       $ Const (\<^const_name>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
+  | translate_arg' cnt s ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_syntax>\<open>Vals\<close>, _))
+                                       $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
+
   | translate_arg' cnt s (Const (\<^const_name>\<open>anonymous\<close>, _))
       = (cnt, Symbol.bump_string s, Free ("\<a>\<r>\<g>" ^ s, dummyT))
   | translate_arg' cnt s (Const (\<^const_syntax>\<open>anonymous\<close>, _))
@@ -169,8 +181,14 @@ fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous\<close>, _)) = v
       = v::Vs
   | collect_vals Vs (Const (\<^const_syntax>\<open>Val\<close>, _) $ (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)))
       = v::Vs
+  | collect_vals Vs (Const (\<^const_name>\<open>Vals\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous\<close>, _)))
+      = v::Vs
+  | collect_vals Vs (Const (\<^const_syntax>\<open>Vals\<close>, _) $ (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)))
+      = v::Vs
   | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
   | collect_vals Vs (Const (\<^const_syntax>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
+  | collect_vals Vs (Const (\<^const_name>\<open>Vals\<close>, _) $ v) = insert (op = ) v Vs
+  | collect_vals Vs (Const (\<^const_syntax>\<open>Vals\<close>, _) $ v) = insert (op = ) v Vs
   | collect_vals Vs (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = collect_vals Vs X
   | collect_vals Vs (Abs (_,_,X)) = collect_vals Vs X
   | collect_vals Vs (X $ Y) =
@@ -210,9 +228,17 @@ fun map_ret Tys i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
       = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
   | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
       = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
+      = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
   | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
       = (j, h $ mk_projection Tys VS i v)
   | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
+      = (j, h $ mk_projection Tys VS i v)
+  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ v)
+      = (j, h $ mk_projection Tys VS i v)
+  | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ v)
       = (j, h $ mk_projection Tys VS i v)
   | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>\<phi>Type\<close>, _)) $ A $ B)
       = (case map_ret Tys i VS (j, B) of (j',B') => (j', h $ A $ B'))
