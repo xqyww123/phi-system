@@ -153,6 +153,7 @@ declare_\<phi>lang_operator
   and synthesis_arith_cut = (1000, [1000,1020]) in \<phi>synthesis_cut
       \<open>cutting arithmetic operations\<close>
 
+
 lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>0\<close>]
 lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>1\<close>]
 lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>numeral x\<close> for x]

@@ -248,6 +248,38 @@ subsection \<open>Main\<close>
 
 proc op_load_mem:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+       and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  unfolding Guided_Mem_Coercion_def
+  including \<phi>sem_type_sat_EIF
+\<medium_left_bracket>
+  $addr semantic_local_value \<open>pointer\<close>
+
+  apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
+
+  (*have [useful]: \<open>0 < n\<close>
+    by (simp add: the_\<phi>(2))*) ;;
+
+  to \<open>OPEN _\<close>
+  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
+
+  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=1
+                and cblk=\<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+                and blk=\<open>memaddr.blk addr\<close>
+                and idx=\<open>memaddr.index addr\<close>]
+
+  \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
+
+  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
+
+  semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
+  semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+\<medium_right_bracket> .
+
+(*
+proc op_load_mem:
+  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
@@ -276,7 +308,7 @@ proc op_load_mem:
   semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
   semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
-
+*)
 
 proc op_store_mem:
   input  \<open>State\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
@@ -388,7 +420,7 @@ proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
        and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
        and L4[]: \<open>report_unprocessed_element_index reject\<close>
-  requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+  requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
@@ -396,6 +428,21 @@ proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
   apply_rule op_load_mem[OF Extr L01]
 \<medium_right_bracket> .
 
+(*
+proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
+  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<close>
+  requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx pidx reject\<close>
+       and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
+       and L4[]: \<open>report_unprocessed_element_index reject\<close>
+  requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+       and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+\<medium_left_bracket>
+  $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
+  apply_rule op_load_mem[OF Extr L01]
+\<medium_right_bracket> .
+*)
 
 proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
@@ -436,6 +483,14 @@ declare [[\<phi>reason_default_pattern
   and \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close> (1000)
   and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ \<close> (1000)
   and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> (1000)
+  and \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY'] _ \<^emph>[_] _
+       \<o>\<v>\<e>\<r> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
+      \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY'] _ \<^emph>[_] _
+       \<o>\<v>\<e>\<r> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
+  and \<open>\<m>\<a>\<p> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY'] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
+      \<open>\<m>\<a>\<p> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY'] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
 ]]
 
 consts \<A>_mem_coerce :: mode
@@ -452,9 +507,7 @@ lemma [\<phi>reason %cutting]:
   by blast
 
 lemma [\<phi>reason %mapToA_mem_coerce_end]:
-  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
-
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<^emph>[C\<^sub>R] R'
+  \<open> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 

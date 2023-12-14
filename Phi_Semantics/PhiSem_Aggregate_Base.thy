@@ -489,6 +489,9 @@ proc op_construct_aggregate:
     semantic_return \<open>constructor args \<Turnstile> (x \<Ztypecolon> T)\<close>
   \<medium_right_bracket> .
 
+  thm op_construct_aggregate_\<phi>app
+  thm op_construct_aggregate_def
+
 
 section \<open>Syntax Base\<close>
 

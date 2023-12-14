@@ -52,13 +52,13 @@ proc test_mem4:
     $addr \<tribullet> d \<tribullet> e !
   \<medium_right_bracket> .
 
-(* TODO!
-proc test_mem41:
+
+proc test_mem4a:
   input \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>}}\<close>
-  output \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  \<medium_left_bracket> note [[\<phi>trace_reasoning = 2]] ;;
+  output \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> (y, z) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> b: \<nat>, e: \<nat> \<rbrace>\<close>
+  \<medium_left_bracket>
     $addr \<tribullet> d !
-*)
+  \<medium_right_bracket> .
 
 
 proc test_mem5:
@@ -76,6 +76,26 @@ proc test_mem6:
     $addr \<tribullet> d \<tribullet> f \<tribullet> j !
   \<medium_right_bracket> .
 
+declare [[\<phi>reasoning_step_limit = 230]]
+
+proc test_mem6a:
+  input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
+         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<s>\<t>\<r>\<u>\<c>\<t> {g: \<a>\<i>\<n>\<t>, h: \<a>\<i>\<n>\<t>, i: \<a>\<i>\<n>\<t>, j: \<a>\<i>\<n>\<t>}}}\<close>
+  output \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace>\<rbrace> \<rbrace>\<heavy_comma>
+          (y, z, g, h, i, j) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace>\<close>
+  \<medium_left_bracket>
+    $addr \<tribullet> d !
+  \<medium_right_bracket> .
+
+proc test_mem6b:
+  input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
+         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<s>\<t>\<r>\<u>\<c>\<t> {g: \<a>\<i>\<n>\<t>, h: \<a>\<i>\<n>\<t>, i: \<a>\<i>\<n>\<t>, j: \<a>\<i>\<n>\<t>}}}\<close>
+  output \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace>\<rbrace> \<rbrace>\<heavy_comma>
+          (g, h, i, j) \<Ztypecolon> \<v>\<a>\<l>[\<v>1] \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace>\<close>
+  \<medium_left_bracket>
+    $addr \<tribullet> d \<tribullet> f !
+  \<medium_right_bracket> .
+
 declare [[\<phi>reasoning_step_limit = 80]]
 
 proc test_mem7:
@@ -91,6 +111,16 @@ proc test_mem8:
   \<medium_left_bracket>
     $addr \<tribullet> d \<tribullet> e := \<open>2 \<Ztypecolon> \<nat>\<close>
   \<medium_right_bracket> .
+
+proc test_mem8a:
+  input  \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>}}\<close>
+  output \<open>(x,(y,2)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<close>
+  \<medium_left_bracket> note [[\<phi>trace_reasoning = 2]] 
+    ;; \<open>2 \<Ztypecolon> \<nat>\<close>
+    
+    ;;
+    \<open>(2,3) \<Ztypecolon> \<lbrace> b: \<nat>, e: \<nat>\<rbrace>\<close>
+
 
 declare [[\<phi>reasoning_step_limit = 140]]
 

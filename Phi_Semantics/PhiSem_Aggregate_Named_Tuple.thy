@@ -242,10 +242,17 @@ lemma Tuple_Field_semty[\<phi>reason %\<phi>sem_type_cut]:
   unfolding \<phi>SemType_def subset_iff
   by clarsimp blast
 
-lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
+lemma [\<phi>reason %\<phi>sem_type_cut+10]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (semty_ntup TYs)
 \<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts)) (semty_ntup (fmupd s TY TYs))\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by (clarsimp; metis V_named_tup_mult fmadd_empty(2) fmadd_fmupd fmrel_upd)
+
+lemma [\<phi>reason %\<phi>sem_type_cut+10]:
+  \<open> \<phi>SemType (fst xs \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (snd xs \<Ztypecolon> Ts) (semty_ntup TYs)
+\<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts)) (semty_ntup (fmupd s TY TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
   by (clarsimp; metis V_named_tup_mult fmadd_empty(2) fmadd_fmupd fmrel_upd)
 
@@ -413,5 +420,20 @@ lemma Is_Named_Tuple_comp[\<phi>reason add]:
   unfolding Is_Named_Tuple_def
   by (clarsimp, metis NO_MATCH_def V_named_tup_mult_cons fmdom_fmupd)
 
+subsection \<open>Synthesis\<close>
+
+lemma
+  \<open> \<phi>Aggregate_Constructor constr args TY (x \<Ztypecolon> T)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_construct_aggregate constr args TY \<lbrace> Void \<longmapsto> \<lambda>\<r>\<e>\<t>. (x\<^sub>1, x\<^sub>2) \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<rbrace> @action synthesis \<close>
+  unfolding Action_Tag_def
+  using op_construct_aggregate_\<phi>app .
+
+
+proc (nodef)
+  requires \<open>\<p>\<r>\<o>\<c> C\<^sub>1 \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. x\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace>\<close>
+       and \<open>\<p>\<r>\<o>\<c> C\<^sub>2 \<lbrace> R\<^sub>1 \<longmapsto> \<lambda>ret. x\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[ret] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace>\<close>
+  input  \<open>R\<^sub>0\<close>
+  output \<open>(x\<^sub>1,x\<^sub>2) \<Ztypecolon> \<v>\<a>\<l> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R'\<close>
+  @action synthesis
 
 end

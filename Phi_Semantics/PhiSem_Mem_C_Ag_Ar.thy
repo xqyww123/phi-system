@@ -86,9 +86,9 @@ lemma split_mem_coerce_array:
 
 subsubsection \<open>ToA Mapper\<close>
 
-lemma [\<phi>reason %\<phi>mapToA_norm,
+lemma [\<phi>reason %mapToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %\<phi>mapToA_norm]:
+       \<phi>reason %mapToA_mem_coerce]:
   \<open> \<m>\<a>\<p> g : \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] U)  \<^emph>[C\<^sub>R] R
           \<mapsto> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] U') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
@@ -100,9 +100,9 @@ lemma [\<phi>reason %\<phi>mapToA_norm,
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
-lemma [\<phi>reason %\<phi>mapToA_norm,
+lemma [\<phi>reason %mapToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %\<phi>mapToA_norm]:
+       \<phi>reason %mapToA_mem_coerce]:
   \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>W] W
           \<mapsto> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T') \<^emph>[C\<^sub>W] W'
