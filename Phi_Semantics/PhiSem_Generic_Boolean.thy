@@ -120,6 +120,8 @@ lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
 
 subsection \<open>Equal\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 declare [[
     overloaded_operator_in_synthesis \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>,
     overloaded_operator_in_synthesis
@@ -138,7 +140,6 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
     apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
    apply (unfold \<phi>Equal_def Premise_def, simp)
   by (rule \<phi>M_Success', rule, simp)
-
 
 declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]
 declare op_equal_\<phi>app[where eq=\<open>(\<lambda>x y. x mod N = y mod N)\<close> for N, \<phi>synthesis 100]

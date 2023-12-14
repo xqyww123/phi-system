@@ -114,10 +114,16 @@ proc test_mem8:
 
 declare [[\<phi>reasoning_step_limit = 140]]
 
+lemmas ttt = synthesis_construct_aggregate_\<phi>app [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U]
+
+        synthesis_construct_aggregate_\<phi>app [where T=\<open>\<lbrace> \<rbrace>\<close>]
+
+        synthesis_construct_aggregate_\<phi>app [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace>\<close> for s T]
+
 proc test_mem8a:
   input  \<open>(x,y,z) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>}}\<close>
   output \<open>(x,2,3) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<close>
-  \<medium_left_bracket>
+  \<medium_left_bracket> note [[\<phi>trace_reasoning = 3]];; 
     $addr \<tribullet> d := \<open>(2,3) \<Ztypecolon> \<lbrace> b: \<nat>, e: \<nat>\<rbrace>\<close>
   \<medium_right_bracket> .
 

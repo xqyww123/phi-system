@@ -134,7 +134,7 @@ fun gen_constructor kind pos_and_first_args cfg stat =
                 @{thm' op_construct_aggregate_\<phi>app}
                   |> Thm.transfer' ctxt''
                   |> Thm.instantiate (TVars.empty, Vars.make [
-                        ((("constructor", 0), \<^typ>\<open>VAL \<phi>arg list \<Rightarrow> VAL\<close>), ctor),
+                        ((("constructor", 0), \<^typ>\<open>VAL list \<Rightarrow> VAL\<close>), ctor),
                         ((("args", 0), \<^typ>\<open>VAL \<phi>arg list\<close>), args)
                       ])
                   |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1) ctxt''

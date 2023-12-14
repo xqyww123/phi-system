@@ -241,7 +241,28 @@ lemma [\<phi>reason %aggregate_access]:
 
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor (() \<Ztypecolon> \<circle>) (semty_tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  \<open>\<phi>Aggregate_Constructor_Synth semantic_tuple_constructor (() \<Ztypecolon> \<circle>) (semty_tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  unfolding \<phi>Aggregate_Constructor_Synth_def
+  by clarsimp
+
+lemma [\<phi>reason %aggregate_access+20]:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor_Synth semantic_tuple_constructor (x \<Ztypecolon> List_Item T) (semty_tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
+  unfolding \<phi>Aggregate_Constructor_Synth_def \<phi>SemType_def
+  by (clarsimp; blast)
+
+lemma [\<phi>reason %aggregate_access]:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor_Synth semantic_tuple_constructor
+        (xs \<Ztypecolon> Ts) (semty_tup Tys) (r \<Ztypecolon> Tr)
+\<Longrightarrow> \<phi>Aggregate_Constructor_Synth semantic_tuple_constructor
+        ((x,xs) \<Ztypecolon> List_Item T \<^emph> Ts) (semty_tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
+  unfolding \<phi>Aggregate_Constructor_Synth_def \<phi>SemType_def
+  by (clarsimp simp: V_tup_mult_cons times_list_def,
+      metis NO_MATCH_def V_tup.dest_mk V_tup_mult_cons V_tup_sep_disj_L list.rel_intros(2))
+
+lemma [\<phi>reason %aggregate_access]:
+  \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor [] (semty_tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def
   by clarsimp
 
@@ -257,7 +278,7 @@ lemma [\<phi>reason %aggregate_access]:
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor vR (semty_tup Tys) (r \<Ztypecolon> Tr)
 \<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor (v # vR) (semty_tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
-  unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
+  unfolding \<phi>Aggregate_Constructor_def \<phi>SemType_def
   by (cases v; clarsimp; metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 
 setup \<open>Context.theory_map (

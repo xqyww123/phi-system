@@ -343,14 +343,22 @@ definition \<phi>Aggregate_Mapper :: \<open>aggregate_path \<Rightarrow> (VAL,'a
   where \<open>\<phi>Aggregate_Mapper idx T T' U U' f
     \<longleftrightarrow> (\<forall>g g'. \<phi>Type_Mapping U U' g' g \<longrightarrow> \<phi>Type_Mapping T T' (f g') (index_mod_value idx g)) \<close>
 
-definition \<phi>Aggregate_Constructor :: \<open>(VAL list \<Rightarrow> VAL) \<Rightarrow> VAL list set \<Rightarrow> TY \<Rightarrow> VAL set \<Rightarrow> bool\<close>
-  where \<open>\<phi>Aggregate_Constructor constructor Args TY Spec
+definition \<phi>Aggregate_Constructor_Synth :: \<open>(VAL list \<Rightarrow> VAL) \<Rightarrow> VAL list set \<Rightarrow> TY \<Rightarrow> VAL set \<Rightarrow> bool\<close>
+  where \<open>\<phi>Aggregate_Constructor_Synth constructor Args TY Spec
     \<longleftrightarrow> (\<forall>args. args \<Turnstile> Args \<longrightarrow> constructor args \<Turnstile> Spec \<and> constructor args \<in> Well_Type TY)\<close>
+
+definition \<phi>Aggregate_Constructor :: \<open>(VAL list \<Rightarrow> VAL) \<Rightarrow> VAL \<phi>arg list \<Rightarrow> TY \<Rightarrow> VAL set \<Rightarrow> bool\<close>
+  where \<open>\<phi>Aggregate_Constructor constructor args TY Spec
+    \<longleftrightarrow> constructor (map \<phi>arg.dest args) \<Turnstile> Spec \<and> constructor (map \<phi>arg.dest args) \<in> Well_Type TY\<close>
+
+
 
 declare [[\<phi>reason_default_pattern
     \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> (100)
 and \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> (100)
-and \<open>\<phi>Aggregate_Constructor _ _ _ ?T\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor _ _ _ ?T\<close> (100),
+and \<open>\<phi>Aggregate_Constructor_Synth _ _ _ ?T\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor_Synth _ _ _ ?T\<close> (100)
+and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> (100),
+
 
     \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Getter _ _ _ _\<close>,
     \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Mapper _ _ _ _ _ _\<close>,
@@ -480,8 +488,19 @@ lemma op_set_aggregate:
 hide_fact "_op_set_aggregate_"
 
 proc op_construct_aggregate:
+  input  \<open>Void\<close>
+  requires C[unfolded \<phi>Aggregate_Constructor_def, useful]:
+            \<open>\<phi>Aggregate_Constructor constructor args TY (x \<Ztypecolon> T)\<close>
+  output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  \<medium_left_bracket>
+    semantic_assert \<open>constructor (map \<phi>arg.dest args) \<in> Well_Type TY\<close>
+    semantic_return \<open>constructor (map \<phi>arg.dest args) \<Turnstile> (x \<Ztypecolon> T)\<close>
+  \<medium_right_bracket> .
+
+
+proc synthesis_construct_aggregate:
   requires [unfolded \<phi>Aggregate_Constructor_def, useful]:
-           \<open>\<phi>Aggregate_Constructor constructor (y \<Ztypecolon> U) TY (x \<Ztypecolon> T)\<close>
+           \<open>\<phi>Aggregate_Constructor_Synth constructor (y \<Ztypecolon> U) TY (x \<Ztypecolon> T)\<close>
        and C: \<open>\<p>\<r>\<o>\<c> C \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. y \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace> @action synthesis\<close>
   input  \<open>R\<^sub>0\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1\<close>
@@ -494,8 +513,6 @@ proc op_construct_aggregate:
 
 \<phi>reasoner_group \<phi>synthesis_ag = (%\<phi>synthesis_cut, [%\<phi>synthesis_cut, %\<phi>synthesis_cut+300])
   \<open>synthesis for aggregate structures\<close>
-
-  thm op_construct_aggregate_\<phi>app
 
 
 

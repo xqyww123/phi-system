@@ -356,26 +356,26 @@ lemma [\<phi>reason %aggregate_access+1]:
   by (clarsimp simp add: \<r>Guard_def Premise_def, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) (() \<Ztypecolon> \<circle>) (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
-  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
+  \<open>\<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor []) (() \<Ztypecolon> \<circle>) (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s])
+\<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor [s])
           (x \<Ztypecolon> List_Item T)
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
-  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def \<phi>SemType_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (semty_ntup TyR) (r \<Ztypecolon> R)
+\<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR))
+\<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor (s # sR))
           ((x,xs) \<Ztypecolon> List_Item T \<^emph> L)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
-  unfolding \<phi>Aggregate_Constructor_def \<phi>SemType_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def \<phi>SemType_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric] times_list_def; rule)
   subgoal premises prems for vs v
     by (insert prems(1,3-) 
@@ -389,6 +389,34 @@ lemma [\<phi>reason %aggregate_access]:
                prems(2)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
                V_named_tup_mult,
         metis V_named_tup.dest_mk fmadd_empty(2) fmadd_fmupd fmrel_upd) .
+
+
+lemma [\<phi>reason %aggregate_access]:
+  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
+  by clarsimp
+
+lemma [\<phi>reason %aggregate_access+20]:
+  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
+          (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
+  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
+  by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
+
+lemma [\<phi>reason %aggregate_access]:
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (semty_ntup TyR) (r \<Ztypecolon> R)
+\<Longrightarrow> s |\<notin>| fmdom TyR
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
+          (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
+  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
+  apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
+  subgoal for vs
+    by (rule exI[where x=\<open>V_named_tup.mk vs\<close>], rule exI[where x=\<open>V_named_tup.mk (fmupd s (\<phi>arg.dest v) fmempty)\<close>],
+        simp add: V_named_tup_sep_disj , insert fmrel_fmdom_eq, blast)
+  using V_named_tup_mult by auto
 
 
 setup \<open>Context.theory_map (
@@ -436,17 +464,22 @@ subsection \<open>Synthesis\<close>
 \<phi>reasoner_group \<phi>synthesis_ag_NT = (%\<phi>synthesis_ag, [%\<phi>synthesis_ag, %\<phi>synthesis_ag]) in \<phi>synthesis_ag
   \<open>for named tuple\<close>
 
-declare op_construct_aggregate_\<phi>app
+declare [[\<phi>trace_reasoning = 1]]
+
+declare synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U,
-         \<phi>reason %\<phi>synthesis_ag_NT]
+         \<phi>reason %\<phi>synthesis_ag_NT
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
 
-        op_construct_aggregate_\<phi>app
+        synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> \<rbrace>\<close>,
-         \<phi>reason %\<phi>synthesis_ag_NT]
+         \<phi>reason %\<phi>synthesis_ag_NT
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] Empty_Named_Tuple \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
 
-        op_construct_aggregate_\<phi>app
+        synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace>\<close> for s T,
-         \<phi>reason %\<phi>synthesis_ag_NT]
+         \<phi>reason %\<phi>synthesis_ag_NT
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
 
 
 end
