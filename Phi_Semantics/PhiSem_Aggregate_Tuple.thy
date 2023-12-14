@@ -108,7 +108,7 @@ lemma list_all_replicate:
 primrec semantic_tuple_constructor
   where \<open>semantic_tuple_constructor [] = V_tup.mk []\<close>
       | \<open>semantic_tuple_constructor (v#R) =
-            V_tup.mk (\<phi>arg.dest v # V_tup.dest (semantic_tuple_constructor R))\<close>
+            V_tup.mk (v # V_tup.dest (semantic_tuple_constructor R))\<close>
 
 (* lemma Valid_Type_\<tau>Tuple[simp]:
   \<open>Valid_Type (semty_tup Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
@@ -241,7 +241,7 @@ lemma [\<phi>reason %aggregate_access]:
 
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor [] (semty_tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor (() \<Ztypecolon> \<circle>) (semty_tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def
   by clarsimp
 
