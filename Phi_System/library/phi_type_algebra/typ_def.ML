@@ -1155,7 +1155,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                                 ) ctxt)) tagged_eqs
 
       val open_abstraction = if no_auto then [] else
-                gen_from_tagged_eq_in_type
+              gen_from_tagged_eq_in_type
                 (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                       Phi_Syntax.transformation_conv Conv.all_conv

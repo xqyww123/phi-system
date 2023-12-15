@@ -2614,7 +2614,6 @@ lemma \<phi>open_abstraction:
   unfolding Action_Tag_def Simplify_def
   by simp
 
-
 text \<open>No \<open>Object_Equiv\<close> is used but we use \<open>(=)\<close> directly because we are destructing or constructing
   a \<phi>-type abstraction by its definition where the definition covers every cases covered by the
   \<open>Object_Equiv\<close>, so there is no need to apply \<open>Object_Equiv\<close> any more.\<close>
@@ -7674,21 +7673,23 @@ subsubsection \<open>Abstract Domain\<close>
 context begin
 
 private lemma \<phi>TA_Inh_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_subgoal \<A>EIF)
+  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> OPEN T) \<longrightarrow> P x @action \<phi>TA_subgoal \<A>EIF)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain T P\<close>
-  unfolding Action_Tag_def Abstract_Domain_def
+  unfolding Action_Tag_def Abstract_Domain_def OPEN_def
   by simp
 
+term \<open>A \<i>\<m>\<p>\<l>\<i>\<e>\<s> X\<close>
+
 private lemma \<phi>TA_SuC_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<phi>TA_subgoal \<A>ESC)
+  \<open> (\<And>x. Ant \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal \<A>ESC)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain\<^sub>L T P\<close>
-  unfolding Action_Tag_def Abstract_Domain\<^sub>L_def
+  unfolding Action_Tag_def Abstract_Domain\<^sub>L_def MAKE_def
   by simp
 
 private lemma \<phi>TA_Inh_step:

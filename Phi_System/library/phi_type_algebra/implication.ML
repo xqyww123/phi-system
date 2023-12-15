@@ -337,7 +337,7 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
                     Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)),
               fn ctxt => fn _ =>
                  (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
-                  Phi_Reasoners.asm_rewrite true (Simplifier.clear_simpset ctxt addsimps (#equations phi0)) then_conv
+                  (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
 
       fun varify_subgoal _ (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =

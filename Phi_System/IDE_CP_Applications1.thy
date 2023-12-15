@@ -1191,6 +1191,13 @@ lemma \<comment>\<open>fallback\<close>
   unfolding FAIL_def
   by blast
 
+lemma \<comment>\<open>fallback\<close>
+  [\<phi>reason default %To_ToA_fallback for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close>]:
+  \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> T)
+\<Longrightarrow> x \<Ztypecolon> Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to (MAKE T) \<close>
+  unfolding FAIL_def
+  by blast
+
 paragraph \<open>Transformation\<close>
 
 \<phi>reasoner_group ToA_open_\<phi>type = (%ToA_splitting, [%ToA_splitting[bottom]+1, %ToA_splitting[top]])
@@ -1206,6 +1213,9 @@ paragraph \<open>Transformation\<close>
   and To_ToA_derived_OPEN = (%To_ToA_derived-10, [%To_ToA_derived-10, %To_ToA_derived-10])
                                 for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (OPEN T)\<close>
       \<open>Derived To-Transformation openning \<phi>-Type abstraction\<close>
+  and To_ToA_derived_MAKE = (%To_ToA_derived-10, [%To_ToA_derived-10, %To_ToA_derived-10])
+                                for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (MAKE T)\<close>
+      \<open>Derived To-Transformation constructing \<phi>-Type abstraction\<close>
 
 
 subparagraph \<open>Fallback\<close>
@@ -1256,10 +1266,18 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> OPEN T \<close>
   unfolding OPEN_def .
 
+(* XXX
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> Abstract_Domain (OPEN T) D \<close>
-  unfolding OPEN_def .
+  unfolding OPEN_def .*)
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. r x y @action to (OPEN T))
+\<Longrightarrow> Abstract_Domain U' D
+\<Longrightarrow> Abstract_Domain (OPEN T) (\<lambda>x. \<exists>y. r x y \<and> D y) \<close>
+  unfolding OPEN_def Abstract_Domain_def Action_Tag_def Transformation_def Inhabited_def
+  by clarsimp blast
 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L T D
@@ -1373,14 +1391,32 @@ lemma [\<phi>reason %extract_pure]:
   unfolding MAKE_def .
 
 lemma [\<phi>reason %abstract_domain]:
+  \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> PP)
+\<Longrightarrow> (\<And>x. D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X x)
+\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) D \<close>
+  unfolding MAKE_def Abstract_Domain\<^sub>L_def Transformation_def Action_Tag_def Inhabited_def
+  by clarsimp blast
+
+(*
+lemma [\<phi>reason %abstract_domain]:
+  \<open> (\<And>y. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. r x y @action to (MAKE T))
+\<Longrightarrow> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) (\<lambda>y. \<exists>x. r x y \<and> D y) \<close>
+  unfolding MAKE_def Abstract_Domain\<^sub>L_def Transformation_def Action_Tag_def
+  by clarsimp
+*)
+
+lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> Abstract_Domain (MAKE T) D \<close>
   unfolding MAKE_def .
 
+(*
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L T D
 \<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) D \<close>
   unfolding MAKE_def .
+*)
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>I T D P
