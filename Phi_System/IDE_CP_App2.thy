@@ -12,7 +12,7 @@ subsubsection \<open>Semantic Type\<close>
 context begin
 
 private lemma \<phi>TA_SemTy_rule:
-  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @action \<phi>TA_ind_target undefined
+  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @action \<phi>TA_subgoal undefined
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT

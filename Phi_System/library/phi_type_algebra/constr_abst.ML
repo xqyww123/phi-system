@@ -138,11 +138,11 @@ fun instantiate_the_var (vP, vf) ctxt sequent =
                                                (vf, Thm.cterm_of ctxt f)]) sequent
   end
 
-val rewr_CL = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> X @action \<phi>TA_ind_target \<A>)
+val rewr_CL = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> X @action \<phi>TA_subgoal \<A>)
                        \<equiv> (Ant \<Longrightarrow> P \<Longrightarrow> X @action \<A>)\<close>
                      by (unfold Action_Tag_def atomize_imp)}
 
-val rewr_IH = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_ind_target \<A>)
+val rewr_IH = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_subgoal \<A>)
                      \<equiv> (\<And>A. Ant \<Longrightarrow> P \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)\<close>
                    by (unfold Action_Tag_def atomize_imp Transformation_def, rule, blast, blast)}
 

@@ -234,20 +234,30 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                              | 2 => @{thm' \<phi>TA_biTF_rule}
                              | ~1 => @{thm' \<phi>TA_TF\<^sub>\<Lambda>_rule}
                              | _ => unsupport ()
+
       val TF_rewr = case arity of 1 => @{thm' \<phi>TA_TF_rewr_C}
                                 | 2 => @{thm' \<phi>TA_biTF_rewr_C}
                                 | ~1 => @{thm' \<phi>TA_TF\<^sub>\<Lambda>_rewr_C}
+
+      val TF_rewr_pre = case arity
+                          of 1 => @{thm' \<phi>TA_TF_rewr_pre}
+                           | 2 => @{thm' \<phi>TA_biTF_rewr_pre}
+                           | ~1 => @{thm' \<phi>TA_TF\<^sub>\<Lambda>_rewr_pre}
+
       fun abs arity = if arity < 0 then ~ arity else arity
       val ind_conv = default_ind_conv (
               fn ctxt => fn _ => fn ctm =>
                    (Conv.top_rewrs_conv @{thms' MAKE_def OPEN_def} ctxt then_conv
                     Conv.rewr_conv TF_rewr then_conv
-                    Conv.concl_conv arity (Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)) ctm,
-              fn ctxt => fn phi =>
-                  Conv.rewr_conv TF_rewr then_conv
-                  Conv.concl_conv (abs arity) (
-                      Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
-                      Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
+                    Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm,
+              fn ctxt => fn phi => fn ctm => (
+                  Conv.rewr_conv TF_rewr then_conv (fn ctm =>
+                 (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)) ctm)
+
+      val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
+           (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+            Conv.implies_concl_conv (Conv.rewr_conv TF_rewr_pre)) ctm) o snd)
 
       val simp = if is_some (#1 instruction) then K I
                  else simplifier_by_cong (case arity of 1 => @{thms' \<phi>TA_TF_deriver_cong}
@@ -261,7 +271,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                  else ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_TF, rule,
                                       [(K (SOME [0,~1]), ind_conv, TF_reasoning)],
-                                      K NONE, K I, simp)
+                                      K NONE, pre_simp, simp)
                                      phi0 instruction ctxt
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

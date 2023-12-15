@@ -141,6 +141,7 @@ type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
                        * (Phi_Type.phi_type -> reasoning)
 type solver = Phi_Type.phi_type * Proof.context * thm * Method.text option -> thm option
 type simplifier = Phi_Type.phi_type * Proof.context -> thm -> thm
+type pre_simplifier = Phi_Type.phi_type * Proof.context -> thm -> thm
 
 (*Main Entry Point*)
 val deriving_framework :
@@ -151,7 +152,7 @@ val deriving_framework :
     * thm (*rule*)
     * subgoal_configure list
     * solver
-    * simplifier (*simplifying the reasoning sequent before induction*)
+    * pre_simplifier (*simplifying the reasoning sequent before induction*)
     * simplifier (*final simplification*)
    -> Phi_Type.phi_type
    -> deriving_instruction
@@ -195,7 +196,7 @@ val default_ind_conv : (Proof.context -> Phi_Type.phi_type -> conv) (*converting
                        (Proof.context -> Phi_Type.phi_type -> conv) (*converting subgoals of the induction*)
                     -> ind_conv
 
-(*To use `default_ind_conv`, you must tag the leading antecedent of the `rule` by `\<phi>TA_ind_target`,
+(*To use `default_ind_conv`, you must tag the leading antecedent of the `rule` by `\<phi>TA_subgoal`,
   or else `default_ind_conv` cannot find which one is the induction hypothesis,
   see @{thm \<phi>TA_SH\<^sub>I_rule} as an example.*)
 
@@ -267,6 +268,8 @@ val default_simplifier' : ((Proof.context -> conv) -> Proof.context -> conv) -> 
 val simplifier_by_cong : thm list (*congruence rules*) -> simplifier
 val simplifier_by_LPR : (phi_type * thm list -> Proof.context -> Proof.context) -> thm -> simplifier
 val simplifier_by_LPR' : thm -> simplifier
+
+val default_pre_simplifier : (Phi_Type.phi_type * Proof.context -> conv) -> pre_simplifier
 
 (** A framework of deriver **)
 
@@ -1478,15 +1481,15 @@ type ind_conv = (Proof.context -> Phi_Type.phi_type -> thm -> thm)
 fun default_ind_conv (conv_IH, conv_CL) ctxt (phi:phi_type) =
   Conv.fconv_rule (Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
     case Logic.strip_assums_concl (Thm.term_of ctm)
-      of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _)) => (
-            Phi_Conv.hhf_conv (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
+      of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_subgoal\<close> $ _)) => (
+            Phi_Conv.hhf_conv (Phi_Conv.hhf_concl_conv (fn ctxt => fn ctm =>
               case Thm.term_of ctm
-                of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
+                of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_subgoal\<close> $ _))
                     => conv_IH ctxt phi ctm
                  | _ => Conv.all_conv ctm
             )) (fn ctxt => fn ctm =>
               case Thm.term_of ctm
-                of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
+                of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_subgoal\<close> $ _))
                     => conv_CL ctxt phi ctm
                  | _ => Conv.all_conv ctm)
             ctxt ctm)
@@ -2038,6 +2041,19 @@ val simplifier_by_LPR' = simplifier_by_LPR (fn (_, facts) => fn ctxt =>
         ctxt addsimps (@{thm' special_Ex_def} :: facts)
           |> Simplifier.add_cong @{thm' HOL.disj_cong}
           |> Simplifier.add_cong @{thm' HOL.conj_cong})
+
+(* Pre-Simplifier *)
+
+type pre_simplifier = Phi_Type.phi_type * Proof.context -> thm -> thm
+
+fun default_pre_simplifier conv (phi, ctxt) =
+  Conv.fconv_rule (Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
+    case Logic.strip_assums_concl (Thm.term_of ctm)
+      of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_subgoal\<close> $ _)) => (
+            conv (phi, ctxt) ctm)
+       | _ => Conv.all_conv ctm
+    ) (K Conv.all_conv) ctxt)
+
 
 (** Other Tools **)
 
