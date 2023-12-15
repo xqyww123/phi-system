@@ -140,14 +140,14 @@ text \<open>A domainoid extraction \<open>\<delta>\<close> is a closed homomorph
 \<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> closed_homo_sep \<delta> \<longrightarrow> P @action \<A>EIF
-\<Longrightarrow> domainoid TY \<delta> \<longrightarrow> P @action \<A>EIF \<close>
-  unfolding Action_Tag_def domainoid_def
+  \<open> \<r>EIF (closed_homo_sep \<delta>) P
+\<Longrightarrow> \<r>EIF (domainoid TY \<delta>) P \<close>
+  unfolding domainoid_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> closed_homo_sep \<delta> @action \<A>ESC
-\<Longrightarrow> P \<longrightarrow> domainoid TY \<delta> @action \<A>ESC \<close>
+  \<open> \<r>ESC P (closed_homo_sep \<delta>)
+\<Longrightarrow> \<r>ESC P (domainoid TY \<delta>) \<close>
   unfolding Action_Tag_def domainoid_def
   by blast
 
@@ -414,7 +414,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited B) \<Longrightarrow> B' \<le> \<Psi>[domainoid_tag \<delta>] B)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<Turnstile> A' \<and> b \<Turnstile> B' \<and> a ## b))
 \<Longrightarrow> Pa \<and> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A * B\<close>
-  unfolding Inhabited_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
+  unfolding Inhabited_def BI_sub_iff Premise_def \<r>EIF_def \<r>ESC_def domainoid_def domainoid_tag_def
   by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; blast)
 
 
@@ -557,49 +557,53 @@ lemma comm_domainoid_mapper_rev_gen:
 subsection \<open>Reasoning Configuration\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> closed_homo_sep \<delta>\<^sub>1 @action \<A>ESC
-\<Longrightarrow> closed_homo_sep \<delta>\<^sub>2 \<longrightarrow> Q @action \<A>EIF
-\<Longrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<longrightarrow> (P \<longrightarrow> Q) @action \<A>EIF \<close>
-  unfolding domainoid_mapper_def domainoid_def Action_Tag_def
+  \<open> \<r>ESC P (closed_homo_sep \<delta>\<^sub>1)
+\<Longrightarrow> \<r>EIF (closed_homo_sep \<delta>\<^sub>2) Q
+\<Longrightarrow> \<r>EIF (domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2) (P \<longrightarrow> Q) \<close>
+  unfolding domainoid_mapper_def domainoid_def \<r>EIF_def \<r>ESC_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> P @action \<A>ESC
-\<Longrightarrow> Q \<longrightarrow> closed_homo_sep \<delta>\<^sub>2 @action \<A>EIF
-\<Longrightarrow> (P \<longrightarrow> Q) \<longrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 @action \<A>ESC \<close>
-  unfolding domainoid_mapper_def domainoid_def Action_Tag_def
+  \<open> \<r>EIF (closed_homo_sep \<delta>\<^sub>1) P
+\<Longrightarrow> \<r>ESC Q (closed_homo_sep \<delta>\<^sub>2)
+\<Longrightarrow> \<r>ESC (P \<longrightarrow> Q) (domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2) \<close>
+  unfolding domainoid_mapper_def domainoid_def \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<longrightarrow> P @action \<A>EIF
-\<Longrightarrow> Q1 \<longrightarrow> closed_homo_sep \<delta>\<^sub>1 @action \<A>ESC
-\<Longrightarrow> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2 \<longrightarrow> Q2 @action \<A>EIF
-\<Longrightarrow> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longrightarrow> P \<and> (Q1 \<longrightarrow> Q2) @action \<A>EIF \<close>
-  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_def Action_Tag_def
+  \<open> \<r>EIF (domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2) P
+\<Longrightarrow> \<r>ESC Q1 (closed_homo_sep \<delta>\<^sub>1)
+\<Longrightarrow> \<r>EIF (fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2) Q2
+\<Longrightarrow> \<r>EIF (comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2) (P \<and> (Q1 \<longrightarrow> Q2)) \<close>
+  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_def
+            \<r>EIF_def \<r>ESC_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 @action \<A>ESC
-\<Longrightarrow> closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> Q1 @action \<A>EIF
-\<Longrightarrow> Q2 \<longrightarrow> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2 @action \<A>ESC
-\<Longrightarrow> P \<and> (Q1 \<longrightarrow> Q2) \<longrightarrow> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 @action \<A>ESC \<close>
-  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_def Action_Tag_def
+  \<open> \<r>ESC P (domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2)
+\<Longrightarrow> \<r>EIF (closed_homo_sep \<delta>\<^sub>1) Q1
+\<Longrightarrow> \<r>ESC Q2 (fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2)
+\<Longrightarrow> \<r>ESC (P \<and> (Q1 \<longrightarrow> Q2)) (comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2) \<close>
+  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_def
+            \<r>EIF_def \<r>ESC_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<longrightarrow> P @action \<A>EIF
-\<Longrightarrow> Q1 \<longrightarrow> closed_homo_sep \<delta>\<^sub>1 @action \<A>ESC
-\<Longrightarrow> fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2 \<longrightarrow> Q2 @action \<A>EIF
-\<Longrightarrow> comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longrightarrow> P \<and> (Q1 \<longrightarrow> Q2) @action \<A>EIF \<close>
-  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_rev_def Action_Tag_def
+  \<open> \<r>EIF (domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2) P
+\<Longrightarrow> \<r>ESC Q1 (closed_homo_sep \<delta>\<^sub>1)
+\<Longrightarrow> \<r>EIF (fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2) Q2
+\<Longrightarrow> \<r>EIF (comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2) (P \<and> (Q1 \<longrightarrow> Q2)) \<close>
+  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_rev_def
+            \<r>EIF_def \<r>ESC_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 @action \<A>ESC
-\<Longrightarrow> closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> Q1 @action \<A>EIF
-\<Longrightarrow> Q2 \<longrightarrow> fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2 @action \<A>ESC
-\<Longrightarrow> P \<and> (Q1 \<longrightarrow> Q2) \<longrightarrow> comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 @action \<A>ESC \<close>
-  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_rev_def Action_Tag_def
+  \<open> \<r>ESC P (domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2)
+\<Longrightarrow> \<r>EIF (closed_homo_sep \<delta>\<^sub>1) Q1
+\<Longrightarrow> \<r>ESC Q2 (fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2)
+\<Longrightarrow> \<r>ESC (P \<and> (Q1 \<longrightarrow> Q2)) (comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2) \<close>
+  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_rev_def
+            \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma [\<phi>reason_generator %algb_derived]:

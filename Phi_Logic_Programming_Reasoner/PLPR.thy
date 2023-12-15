@@ -1216,37 +1216,32 @@ text \<open>\<phi>-LPR reasoning rules are specially designed for execution of l
   For example, \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> A transforms B with Q\<close> implies \<open>P \<longrightarrow> Inhabited A \<longrightarrow> Inhabited B \<and> Q\<close>
 \<close>
 
-consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts entailed from the given proposition\<close>
-       \<A>ESC :: action \<comment> \<open>Extract Sufficient Condition to entail the given proposition\<close>
+definition \<open>\<r>EIF P Q \<longleftrightarrow> (P \<longrightarrow> Q)\<close>
+definition \<open>\<r>ESC Q P \<longleftrightarrow> (Q \<longrightarrow> P)\<close>
 
 definition \<A>EIF' :: \<open>prop \<Rightarrow> bool \<Rightarrow> prop\<close> where \<open>\<A>EIF' P Q \<equiv> (PROP P \<Longrightarrow> Q)\<close>
 definition \<A>ESC' :: \<open>bool \<Rightarrow> prop \<Rightarrow> prop\<close> where \<open>\<A>ESC' P Q \<equiv> (P \<Longrightarrow> PROP Q)\<close>
 
-\<phi>reasoner_group extract_pure_all = (%cutting, [2, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+\<phi>reasoner_group extract_pure_all = (%cutting, [2, 3000]) for (\<open>\<r>EIF _ _\<close>, \<open>\<r>ESC _ _\<close>)
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
-  and extract_pure = (%cutting, [%cutting, %cutting+30]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
-                                                          in extract_pure_all
+  and extract_pure = (%cutting, [%cutting, %cutting+30]) in extract_pure_all
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
-  and extract_pure_fallback = (1, [1,1]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
-                                           < extract_pure_all
+  and extract_pure_fallback = (1, [1,1]) < extract_pure_all
     \<open>Fallbacks of extracting pure facts, typically returning the unsimplified original term\<close>
-  and derived_\<A>EIF_from_premis_extraction = (50, [50,50]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
-                                                           in extract_pure_all
+  and derived_\<A>EIF_from_premis_extraction = (50, [50,50]) in extract_pure_all
     \<open>Rules derived from premise extraction\<close>
 
 
 declare [[
   \<phi>reason_default_pattern
-      \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
-  and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
-  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
-  and \<open>_ @action \<A>ESC\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
+      \<open>\<r>EIF ?X _\<close> \<Rightarrow> \<open>\<r>EIF ?X _\<close> (100)
+  and \<open>\<r>ESC _ ?X\<close> \<Rightarrow> \<open>\<r>ESC _ ?X\<close> (100)
   and \<open>PROP \<A>EIF' ?X _\<close> \<Rightarrow> \<open>PROP \<A>EIF' ?X _\<close> (100)
   and \<open>PROP \<A>ESC' _ ?X\<close> \<Rightarrow> \<open>PROP \<A>ESC' _ ?X\<close> (100),
 
   \<phi>default_reasoner_group
-      \<open>_ \<longrightarrow> _ @action \<A>EIF\<close> : %extract_pure  (10)
-  and \<open>_ \<longrightarrow> _ @action \<A>ESC\<close> : %extract_pure  (10)
+      \<open>\<r>EIF _ _\<close> : %extract_pure  (10)
+  and \<open>\<r>ESC _ _\<close> : %extract_pure  (10)
   and \<open>PROP \<A>EIF' _ _\<close> : %extract_pure  (10)
   and \<open>PROP \<A>ESC' _ _\<close> : %extract_pure  (10)
 ]]
@@ -1291,107 +1286,119 @@ attribute_setup \<phi>declare = \<open>Scan.succeed (Thm.declaration_attribute (
 subsubsection \<open>Extraction Rules\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> A = B \<longrightarrow> A = B @action \<A>EIF \<close>
-  unfolding Action_Tag_def
+  \<open> \<r>EIF (A = B) (A = B) \<close>
+  unfolding \<r>EIF_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> A = B \<longrightarrow> A = B @action \<A>ESC \<close>
-  unfolding Action_Tag_def
+  \<open> \<r>ESC (A = B) (A = B) \<close>
+  unfolding \<r>ESC_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> A \<longrightarrow> A' @action \<A>EIF
-\<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
-\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
-  unfolding Action_Tag_def by blast
+  \<open> \<r>EIF A A'
+\<Longrightarrow> \<r>EIF B B'
+\<Longrightarrow> \<r>EIF (A \<and> B) (A' \<and> B') \<close>
+  unfolding \<r>EIF_def by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> A \<longrightarrow> A' @action \<A>ESC
-\<Longrightarrow> B \<longrightarrow> B' @action \<A>ESC
-\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
-  unfolding Action_Tag_def by blast
+  \<open> \<r>ESC A A'
+\<Longrightarrow> \<r>ESC B B'
+\<Longrightarrow> \<r>ESC (A \<and> B) (A' \<and> B') \<close>
+  unfolding \<r>ESC_def by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> A \<longrightarrow> A' @action \<A>EIF
-\<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
-\<Longrightarrow> A \<and>\<^sub>\<r> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
-  unfolding Action_Tag_def Ant_Seq_def
+  \<open> \<r>EIF A A'
+\<Longrightarrow> \<r>EIF B B'
+\<Longrightarrow> \<r>EIF (A \<and>\<^sub>\<r> B) (A' \<and> B') \<close>
+  unfolding \<r>EIF_def Ant_Seq_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> A \<longrightarrow> A' @action \<A>ESC
-\<Longrightarrow> B \<longrightarrow> B' @action \<A>ESC
-\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and>\<^sub>\<r> B' @action \<A>ESC \<close>
-  unfolding Action_Tag_def Ant_Seq_def
+  \<open> \<r>ESC A A'
+\<Longrightarrow> \<r>ESC B B'
+\<Longrightarrow> \<r>ESC (A \<and> B) (A' \<and>\<^sub>\<r> B') \<close>
+  unfolding \<r>ESC_def Ant_Seq_def
   by blast
 
 lemma Extact_implied_facts_Iden[\<phi>reason default %extract_pure_fallback]:
-  \<open> A \<longrightarrow> True @action \<A>EIF \<close>
-  unfolding Action_Tag_def by blast
+  \<open> \<r>EIF A True \<close>
+  unfolding \<r>EIF_def by blast
 
 lemma Extact_sufficient_conditions_Iden[\<phi>reason default %extract_pure_fallback]:
-  \<open> False \<longrightarrow> A @action \<A>ESC \<close>
-  unfolding Action_Tag_def by blast
+  \<open> \<r>ESC False A \<close>
+  unfolding \<r>ESC_def by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (A' \<longrightarrow> A) @action \<A>ESC
-\<Longrightarrow> (B \<longrightarrow> B') @action \<A>EIF
-\<Longrightarrow> (A \<longrightarrow> B) \<longrightarrow> (A' \<longrightarrow> B') @action \<A>EIF \<close>
-  unfolding Action_Tag_def
+  \<open> \<r>ESC A' A
+\<Longrightarrow> \<r>EIF B B'
+\<Longrightarrow> \<r>EIF (A \<longrightarrow> B) (A' \<longrightarrow> B') \<close>
+  unfolding \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (A \<longrightarrow> A') @action \<A>EIF
-\<Longrightarrow> (B' \<longrightarrow> B) @action \<A>ESC
-\<Longrightarrow> (A' \<longrightarrow> B') \<longrightarrow> (A \<longrightarrow> B) @action \<A>ESC \<close>
-  unfolding Action_Tag_def
+  \<open> \<r>EIF A A'
+\<Longrightarrow> \<r>ESC B' B
+\<Longrightarrow> \<r>ESC (A' \<longrightarrow> B') (A \<longrightarrow> B) \<close>
+  unfolding \<r>ESC_def \<r>EIF_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. A x \<longrightarrow> A' x @action \<A>EIF)
-\<Longrightarrow> (\<forall>x. A x) \<longrightarrow> (\<forall>x. A' x) @action \<A>EIF \<close>
-  unfolding Action_Tag_def
+  \<open> \<r>EIF (P \<longrightarrow> Q) C
+\<Longrightarrow> \<r>EIF (\<r>EIF P Q) C \<close>
+  unfolding \<r>EIF_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. A' x \<longrightarrow> A x @action \<A>ESC)
-\<Longrightarrow> (\<forall>x. A' x) \<longrightarrow> (\<forall>x. A x) @action \<A>ESC \<close>
-  unfolding Action_Tag_def
+  \<open> \<r>ESC C (P \<longrightarrow> Q)
+\<Longrightarrow> \<r>ESC C (\<r>ESC P Q) \<close>
+  unfolding \<r>ESC_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. A x \<longrightarrow> A' x @action \<A>EIF)
-\<Longrightarrow> (\<exists>x. A x) \<longrightarrow> (\<exists>x. A' x) @action \<A>EIF \<close>
-  unfolding Action_Tag_def
+  \<open> (\<And>x. \<r>EIF (A x) (A' x))
+\<Longrightarrow> \<r>EIF (\<forall>x. A x) (\<forall>x. A' x) \<close>
+  unfolding \<r>EIF_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. A' x \<longrightarrow> A x @action \<A>ESC)
-\<Longrightarrow> (\<exists>x. A' x) \<longrightarrow> (\<exists>x. A x) @action \<A>ESC \<close>
-  unfolding Action_Tag_def
+  \<open> (\<And>x. \<r>ESC (A' x) (A x))
+\<Longrightarrow> \<r>ESC (\<forall>x. A' x) (\<forall>x. A x) \<close>
+  unfolding \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> Q @action \<A>EIF
-\<Longrightarrow> (\<g>\<u>\<a>\<r>\<d> P) \<longrightarrow> Q @action \<A>EIF \<close>
+  \<open> (\<And>x. \<r>EIF (A x) (A' x))
+\<Longrightarrow> \<r>EIF (\<exists>x. A x) (\<exists>x. A' x) \<close>
+  unfolding \<r>EIF_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. \<r>ESC (A' x) (A x))
+\<Longrightarrow> \<r>ESC (\<exists>x. A' x) (\<exists>x. A x) \<close>
+  unfolding \<r>ESC_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> \<r>EIF P Q
+\<Longrightarrow> \<r>EIF (\<g>\<u>\<a>\<r>\<d> P) Q \<close>
   unfolding \<r>Guard_def .
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> Q \<longrightarrow> P @action \<A>ESC
-\<Longrightarrow> Q \<longrightarrow> (\<g>\<u>\<a>\<r>\<d> P) @action \<A>ESC \<close>
+  \<open> \<r>ESC Q P
+\<Longrightarrow> \<r>ESC Q (\<g>\<u>\<a>\<r>\<d> P) \<close>
   unfolding \<r>Guard_def .
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> Q @action \<A>EIF
+  \<open> \<r>EIF P Q
 \<Longrightarrow> PROP \<A>EIF' (Trueprop P) Q \<close>
-  unfolding Action_Tag_def \<A>EIF'_def
+  unfolding \<r>EIF_def \<A>EIF'_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> Q @action \<A>ESC
+  \<open> \<r>ESC P Q
 \<Longrightarrow> PROP \<A>ESC' P (Trueprop Q) \<close>
-  unfolding Action_Tag_def \<A>ESC'_def
+  unfolding \<r>ESC_def \<A>ESC'_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
@@ -1429,13 +1436,13 @@ lemma [\<phi>reason %extract_pure]:
   by (simp add: norm_hhf_eq)
 
 lemma [\<phi>reason add]:
-  \<open> X \<longrightarrow> P @action \<A>EIF
-\<Longrightarrow> NO_SIMP X \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<r>EIF X P
+\<Longrightarrow> \<r>EIF (NO_SIMP X) P \<close>
   unfolding NO_SIMP_def .
 
 lemma [\<phi>reason add]:
-  \<open> P \<longrightarrow> X @action \<A>ESC
-\<Longrightarrow> P \<longrightarrow> NO_SIMP X @action \<A>ESC \<close>
+  \<open> \<r>ESC P X
+\<Longrightarrow> \<r>ESC P (NO_SIMP X) \<close>
   unfolding NO_SIMP_def .
 
 lemma [\<phi>reason add]:
@@ -1793,25 +1800,25 @@ hide_fact contract_drop_waste contract_obligations contract_premise_all
 paragraph \<open>Extracting Pure\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<longrightarrow> P @action \<A>EIF \<close>
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> P @action \<A>EIF \<close>
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P \<longrightarrow> P @action \<A>EIF \<close>
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P \<longrightarrow> P @action \<A>EIF \<close>
-  \<open> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<longrightarrow> P @action \<A>EIF \<close>
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P \<longrightarrow> P @action \<A>EIF \<close>
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P \<longrightarrow> P @action \<A>EIF \<close>
-  unfolding Action_Tag_def Premise_def
+  \<open> \<r>EIF (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) P \<close>
+  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) P \<close>
+  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P) P \<close>
+  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P) P  \<close>
+  \<open> \<r>EIF (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P) P \<close>
+  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P) P \<close>
+  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P) P \<close>
+  unfolding \<r>EIF_def Premise_def
   by blast+
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P @action \<A>ESC \<close>
-  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
-  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P @action \<A>ESC \<close>
-  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P @action \<A>ESC \<close>
-  \<open> P \<longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
-  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P @action \<A>ESC \<close>
-  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P @action \<A>ESC \<close>
-  unfolding Action_Tag_def Premise_def
+  \<open> \<r>ESC P (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<close>
+  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<close>
+  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P) \<close>
+  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P) \<close>
+  \<open> \<r>ESC P (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P) \<close>
+  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P) \<close>
+  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P) \<close>
+  unfolding \<r>ESC_def Premise_def
   by blast+
 
 
@@ -1875,14 +1882,13 @@ ML_file_debug \<open>library/simplifier.ML\<close>
 hide_fact End_Simplification' End_Simplification
 
 lemma [\<phi>reason %extract_pure]:
-  \<open>Simplify mode A A' \<longrightarrow> A = A' @action \<A>EIF\<close>
-  unfolding Simplify_def Action_Tag_def
+  \<open> \<r>EIF (Simplify mode A A') (A = A') \<close>
+  unfolding Simplify_def \<r>EIF_def
   ..
 
 lemma [\<phi>reason %extract_pure]:
-  \<open>A = A' \<longrightarrow> Simplify mode A A' @action \<A>ESC\<close>
-  unfolding Simplify_def Action_Tag_def
-  ..
+  \<open> \<r>ESC (A = A') (Simplify mode A A') \<close>
+  unfolding Simplify_def \<r>ESC_def  ..
 
 subsubsection \<open>Default Simplifier\<close>
 

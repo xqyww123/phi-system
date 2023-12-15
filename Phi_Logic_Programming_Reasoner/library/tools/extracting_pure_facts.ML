@@ -53,9 +53,9 @@ fun del_thm thm ctxt =
 
 val Do_Extract_Implied_Facts =
       @{lemma' \<open> P
-             \<Longrightarrow> P \<longrightarrow> C @action \<A>EIF
+             \<Longrightarrow> \<r>EIF P C
              \<Longrightarrow> C\<close>
-            by (unfold Action_Tag_def, blast)}
+            by (unfold \<r>EIF_def, blast)}
 
 (*wrap_all: wrap generated schematic variables by HOL.All*)
 fun extract_implied_fact {wrap_all} ctxt statement0 =
@@ -89,8 +89,7 @@ fun extract_implied_fact {wrap_all} ctxt statement0 =
   end
     | _ => NONE
 
-fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
-      \<^Const>\<open>Action_Tag\<close> $ (\<^Const>\<open>HOL.implies\<close> $ _ $ _) $ \<^Const>\<open>\<A>EIF\<close>))
+fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<r>EIF\<close> $ _ $ _))
     = true
 (*| is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
       \<^Const>\<open>HOL.implies\<close> $ (\<^Const>\<open>Inhabited _\<close> $ _) $ _))

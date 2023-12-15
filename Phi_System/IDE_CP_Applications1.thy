@@ -729,13 +729,13 @@ lemma [cong]:
 subsubsection \<open>Extracting Pure\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> A \<longrightarrow> P @action \<A>EIF
-\<Longrightarrow> (A @action to T) \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<r>EIF A P
+\<Longrightarrow> \<r>EIF (A @action to T) P \<close>
   unfolding Action_Tag_def .
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> A @action \<A>ESC
-\<Longrightarrow> P \<longrightarrow> (A @action to T) @action \<A>ESC \<close>
+  \<open> \<r>ESC P A
+\<Longrightarrow> \<r>ESC P (A @action to T) \<close>
   unfolding Action_Tag_def .
 
 subsubsection \<open>Entry Point\<close>
@@ -1276,7 +1276,7 @@ lemma [\<phi>reason %abstract_domain]:
   \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. r x y @action to (OPEN T))
 \<Longrightarrow> Abstract_Domain U' D
 \<Longrightarrow> Abstract_Domain (OPEN T) (\<lambda>x. \<exists>y. r x y \<and> D y) \<close>
-  unfolding OPEN_def Abstract_Domain_def Action_Tag_def Transformation_def Inhabited_def
+  unfolding OPEN_def Abstract_Domain_def Action_Tag_def \<r>EIF_def Transformation_def Inhabited_def
   by clarsimp blast
 
 lemma [\<phi>reason %abstract_domain]:
@@ -1394,7 +1394,7 @@ lemma [\<phi>reason %abstract_domain]:
   \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> PP)
 \<Longrightarrow> (\<And>x. D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X x)
 \<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) D \<close>
-  unfolding MAKE_def Abstract_Domain\<^sub>L_def Transformation_def Action_Tag_def Inhabited_def
+  unfolding MAKE_def Abstract_Domain\<^sub>L_def \<r>ESC_def Transformation_def Action_Tag_def Inhabited_def
   by clarsimp blast
 
 (*

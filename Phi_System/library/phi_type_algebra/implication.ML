@@ -333,15 +333,15 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
-              K (K (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
+              K (K (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
                     Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)),
               fn ctxt => fn _ =>
-                 (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
+                 (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
                   (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
 
-      fun varify_subgoal _ (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
-            SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
+      fun varify_subgoal _ (Trueprop $ (rEIF $ S $ P)) =
+            SOME ([P], fn [P'] => Trueprop $ (rEIF $ S $ P'))
         | varify_subgoal _ X = error ""
 
       fun Inh_reasoning phi ctxt =

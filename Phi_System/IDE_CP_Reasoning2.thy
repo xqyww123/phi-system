@@ -511,11 +511,11 @@ hide_fact ToA_Mapper_LPR_gen_cong
 subsubsection \<open>Extracting Implied Facts\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> D \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U)) \<longrightarrow> Q\<^sub>1 x @action \<A>EIF)
-\<Longrightarrow> (\<And>x. (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> g ` h ` D \<longrightarrow> (x \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T')) \<longrightarrow> Q\<^sub>2 x @action \<A>EIF)
-\<Longrightarrow> (\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D)
-      \<longrightarrow> (\<forall>x. Q\<^sub>1 x \<and> Q\<^sub>2 x) \<and> (\<forall>x \<in> D. f x = s (g (h x))) @action \<A>EIF \<close>
-  unfolding Action_Tag_def ToA_Mapper_def ToA_Subst_def Premise_def Ball_def
+  \<open> (\<And>x. \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> D \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U)) (Q\<^sub>1 x))
+\<Longrightarrow> (\<And>x. \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> g ` h ` D \<longrightarrow> (x \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T')) (Q\<^sub>2 x))
+\<Longrightarrow> \<r>EIF (\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D)
+         ((\<forall>x. Q\<^sub>1 x \<and> Q\<^sub>2 x) \<and> (\<forall>x \<in> D. f x = s (g (h x)))) \<close>
+  unfolding \<r>EIF_def ToA_Mapper_def ToA_Subst_def Premise_def Ball_def
   by (clarsimp simp add: \<phi>Prod_expn'')
 
 subsubsection \<open>Programming Method\<close>

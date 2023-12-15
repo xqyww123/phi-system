@@ -248,8 +248,8 @@ lemma \<phi>sem_type_by_sat:
   unfolding Premise_def \<phi>SemType_def \<r>Guard_def .
 
 lemma \<phi>sem_type_brute_EIF:
-  \<open> \<phi>SemType S TY \<longrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) @action \<A>EIF \<close>
-  unfolding Action_Tag_def \<phi>SemType_def
+  \<open> \<r>EIF (\<phi>SemType S TY) (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<close>
+  unfolding \<r>EIF_def \<phi>SemType_def
   by blast
 
 bundle \<phi>sem_type_sat_EIF = \<phi>sem_type_by_sat[\<phi>reason default %\<phi>sem_type_brute]
@@ -343,8 +343,8 @@ lemma [\<phi>reason default %semantic_zero_val_fail]:
 
 lemma [\<phi>reason %extract_pure]:
   \<open> Abstract_Domain T P
-\<Longrightarrow> Semantic_Zero_Val TY T x \<longrightarrow> P x @action \<A>EIF\<close>
-  unfolding Abstract_Domain_def Semantic_Zero_Val_def Action_Tag_def Inhabited_def
+\<Longrightarrow> \<r>EIF (Semantic_Zero_Val TY T x) (P x) \<close>
+  unfolding Abstract_Domain_def Semantic_Zero_Val_def \<r>EIF_def Inhabited_def
   by blast
 
 (*lemma Semantic_Zero_Val_brute:
@@ -355,8 +355,8 @@ lemma [\<phi>reason %extract_pure]:
 *)
 
 lemma Semantic_Zero_Val_EIF_sat:
-  \<open> Semantic_Zero_Val TY T x \<longrightarrow> (\<exists>v. Zero TY = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)) @action \<A>EIF \<close>
-  unfolding Action_Tag_def Semantic_Zero_Val_def
+  \<open> \<r>EIF (Semantic_Zero_Val TY T x) (\<exists>v. Zero TY = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)) \<close>
+  unfolding \<r>EIF_def Semantic_Zero_Val_def
   by blast
 
 bundle Semantic_Zero_Val_EIF_brute = (*Semantic_Zero_Val_brute[\<phi>reason default %semantic_zero_val_brute]*)
@@ -448,13 +448,13 @@ lemma Is_Functional_brute:
   by blast
 
 lemma Is_Functional_EIF_brute:
-  \<open> Is_Functional S \<longrightarrow> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) @action \<A>EIF \<close>
-  unfolding Action_Tag_def Is_Functional_def
+  \<open> \<r>EIF (Is_Functional S) (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) \<close>
+  unfolding \<r>EIF_def Is_Functional_def
   by blast
 
 lemma Functionality_EIF_brute:
-  \<open> Functionality T D \<longrightarrow> (\<forall>x u v. D x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v) @action \<A>EIF \<close>
-  unfolding Action_Tag_def Functionality_def
+  \<open> \<r>EIF (Functionality T D) (\<forall>x u v. D x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v) \<close>
+  unfolding \<r>EIF_def Functionality_def
   by blast
 
 bundle Is_Functional_brute = Is_Functional_brute[\<phi>reason default %\<phi>functionality_brute]
@@ -570,23 +570,23 @@ subsubsection \<open>Extracting Pure Facts\<close>
 context begin
 
 private lemma EIF_Within_Carrier_Set:
-  \<open> Within_Carrier_Set A \<longrightarrow> (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v) @action \<A>EIF \<close>
-  unfolding Within_Carrier_Set_def Action_Tag_def
+  \<open> \<r>EIF (Within_Carrier_Set A) (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v) \<close>
+  unfolding Within_Carrier_Set_def \<r>EIF_def
   by blast
 
 private lemma ESC_Within_Carrier_Set:
-  \<open> (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v) \<longrightarrow> Within_Carrier_Set A @action \<A>ESC \<close>
-  unfolding Within_Carrier_Set_def Action_Tag_def
+  \<open> \<r>ESC (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v) (Within_Carrier_Set A) \<close>
+  unfolding Within_Carrier_Set_def \<r>ESC_def
   by blast
 
 private lemma EIF_Carrier_Set:
-  \<open> Carrier_Set T D \<longrightarrow> (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) @action \<A>EIF \<close>
-  unfolding Carrier_Set_def Within_Carrier_Set_def Action_Tag_def
+  \<open> \<r>EIF (Carrier_Set T D) (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def \<r>EIF_def
   by blast
 
 private lemma ESC_Carrier_Set:
-  \<open> (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) \<longrightarrow> Carrier_Set T D @action \<A>ESC \<close>
-  unfolding Carrier_Set_def Within_Carrier_Set_def Action_Tag_def
+  \<open> \<r>ESC (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) (Carrier_Set T D) \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def \<r>ESC_def
   by blast
 
 bundle extracting_Carrier_Set_sat =

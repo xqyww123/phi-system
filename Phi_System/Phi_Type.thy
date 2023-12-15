@@ -1280,7 +1280,7 @@ lemma infer_FTF\<^sub>\<Lambda>_from_FT\<^sub>\<Lambda>:
 \<Longrightarrow> (\<forall>f P x y. P\<^sub>T x \<and> P\<^sub>U y \<and> mapper (\<lambda>p a b. b = f p a \<and> P p a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x)
 \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R pm fm \<close>
   unfolding Functional_Transformation_Functor\<^sub>\<Lambda>_def Transformation_Functor\<^sub>\<Lambda>_def
-            Object_Equiv_def Abstract_Domain_def Action_Tag_def Inhabited_def
+            Object_Equiv_def Abstract_Domain_def Action_Tag_def Inhabited_def \<r>EIF_def
   apply clarsimp
   subgoal premises prems for x f P
     by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>p a b. b = f p a \<and> P p a\<close>]]
@@ -2762,13 +2762,13 @@ consts under_\<phi>deriving :: mode
 \<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P \<longrightarrow> P @action \<A>EIF\<close>
-  unfolding Action_Tag_def Premise_def
+  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P) P \<close>
+  unfolding \<r>EIF_def Premise_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P @action \<A>ESC \<close>
-  unfolding Action_Tag_def Premise_def
+  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P) \<close>
+  unfolding \<r>ESC_def Premise_def
   by blast
 
 
@@ -7673,37 +7673,35 @@ subsubsection \<open>Abstract Domain\<close>
 context begin
 
 private lemma \<phi>TA_Inh_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> OPEN T) \<longrightarrow> P x @action \<phi>TA_subgoal \<A>EIF)
+  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> OPEN T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain T P\<close>
-  unfolding Action_Tag_def Abstract_Domain_def OPEN_def
+  unfolding Action_Tag_def Abstract_Domain_def OPEN_def \<r>EIF_def
   by simp
 
-term \<open>A \<i>\<m>\<p>\<l>\<i>\<e>\<s> X\<close>
-
 private lemma \<phi>TA_SuC_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal \<A>ESC)
+  \<open> (\<And>x. Ant \<longrightarrow> (P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain\<^sub>L T P\<close>
-  unfolding Action_Tag_def Abstract_Domain\<^sub>L_def MAKE_def
+  unfolding Action_Tag_def Abstract_Domain\<^sub>L_def MAKE_def \<r>ESC_def
   by simp
 
 private lemma \<phi>TA_Inh_step:
-  \<open> Inh \<longrightarrow> Any @action \<A>EIF
+  \<open> Inh \<i>\<m>\<p>\<l>\<i>\<e>\<s> Any
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any \<longrightarrow> P)
-\<Longrightarrow> Inh \<longrightarrow> P @action \<A>EIF\<close>
-  unfolding Action_Tag_def Premise_def
+\<Longrightarrow> Inh \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+  unfolding Action_Tag_def Premise_def \<r>EIF_def
   by blast
 
 private lemma \<phi>TA_Suc_step:
-  \<open> Any \<longrightarrow> Inh @action \<A>ESC
+  \<open> Any \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> Inh
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> Any)
-\<Longrightarrow> P \<longrightarrow> Inh @action \<A>ESC\<close>
-  unfolding Action_Tag_def Premise_def
+\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> Inh \<close>
+  unfolding Action_Tag_def Premise_def \<r>ESC_def
   by blast
 
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
@@ -7750,7 +7748,7 @@ private lemma \<phi>TA_Ident_I_rule_step:
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<Longrightarrow> Identity_Element\<^sub>I X Q)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (A \<longrightarrow> Q \<longrightarrow> P)
 \<Longrightarrow> Identity_Element\<^sub>I X P \<close>
-  unfolding Identity_Element\<^sub>I_def Premise_def Action_Tag_def Transformation_def Inhabited_def
+  unfolding Identity_Element\<^sub>I_def Premise_def Action_Tag_def Transformation_def Inhabited_def \<r>EIF_def
   by (clarsimp, blast)
 
 (* not enabled, DO NOT REMOVE, I am a bit of hesitate
@@ -7796,7 +7794,7 @@ subsubsection \<open>Object Equivalence\<close>
 context begin
 
 private lemma Object_Equiv_rule:
-  \<open> Ant \<longrightarrow> Ant' @action \<A>EIF
+  \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T)) @action \<phi>TA_subgoal undefined)
               \<comment> \<open>Induct over \<open>x \<Ztypecolon> T\<close>. When \<open>x\<close> is inductively split, the constraint of \<open>eq x y\<close>
@@ -7807,7 +7805,7 @@ private lemma Object_Equiv_rule:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Object_Equiv T eq \<close>
-  unfolding Object_Equiv_def Premise_def Action_Tag_def MAKE_def OPEN_def
+  unfolding Object_Equiv_def Premise_def Action_Tag_def MAKE_def OPEN_def \<r>EIF_def
   by blast
 
 private lemma \<phi>TA_OE_rewr_IH:
@@ -7856,7 +7854,7 @@ private lemma \<phi>TA_OE_simp:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((\<forall>x. eq x x) \<longrightarrow> (\<forall>x. eq' x x))
 \<Longrightarrow> Object_Equiv T eq' \<close>
   unfolding Object_Equiv_def Transformation_def Simplify_def Premise_def
-            Abstract_Domain_def Action_Tag_def Inhabited_def
+            Abstract_Domain_def Action_Tag_def Inhabited_def \<r>EIF_def
   by clarsimp blast
 
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
@@ -8049,7 +8047,7 @@ subsubsection \<open>Functional Transformation Functor\<close>
 paragraph \<open>Functor\<close>
 
 private lemma \<phi>TA_FTF_rule:
-  \<open> Ant \<longrightarrow> Ant' @action \<A>EIF
+  \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Object_Equiv (F2 U) eq)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P x y. mapper (\<lambda>a b. b = f a \<and> P a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x))
@@ -8057,7 +8055,7 @@ private lemma \<phi>TA_FTF_rule:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm\<close>
-  unfolding Premise_def fun_eq_iff Action_Tag_def
+  unfolding Premise_def fun_eq_iff Action_Tag_def \<r>EIF_def
   using infer_FTF_from_FT
   by blast
 
@@ -8074,7 +8072,7 @@ private lemma \<phi>TA_FTF_deriver_cong:
 paragraph \<open>Bi-Functor\<close>
 
 private lemma \<phi>TA_biFTF_rule:
-  \<open> Ant \<longrightarrow> Ant' @action \<A>EIF
+  \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Object_Equiv (F2 U\<^sub>1 U\<^sub>2) eq)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x y. mapper (\<lambda>a b. b = f\<^sub>1 a \<and> P\<^sub>1 a) (\<lambda>a b. b = f\<^sub>2 a \<and> P\<^sub>2 a) x y
@@ -8083,7 +8081,7 @@ private lemma \<phi>TA_biFTF_rule:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Functional_Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pm fm\<close>
-  unfolding Premise_def fun_eq_iff Action_Tag_def
+  unfolding Premise_def fun_eq_iff Action_Tag_def \<r>EIF_def
   using infer_biFTF_from_biFT
   by blast
 
@@ -8102,7 +8100,7 @@ private lemma \<phi>TA_biFTF_deriver_cong:
 paragraph \<open>Parameterization\<close>
 
 private lemma \<phi>TA_FTF\<^sub>\<Lambda>_rule:
-  \<open> Ant \<longrightarrow> Ant' @action \<A>EIF
+  \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R mapper)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain (F1 T) P\<^sub>T)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain (F2 U) P\<^sub>U)
@@ -8112,7 +8110,7 @@ private lemma \<phi>TA_FTF\<^sub>\<Lambda>_rule:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R pm fm \<close>
-  unfolding Premise_def Action_Tag_def
+  unfolding Premise_def Action_Tag_def \<r>EIF_def
   using infer_FTF\<^sub>\<Lambda>_from_FT\<^sub>\<Lambda> by blast
 
 private lemma \<phi>TA_FTF\<^sub>\<Lambda>_deriver_cong:
@@ -8889,7 +8887,7 @@ private lemma \<phi>TA_TrRA_simp:
  \<Longrightarrow> (\<And>x y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' x y : r x y )
  \<Longrightarrow> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r' x y @action to (Itself::('b,'b) \<phi>)) \<close>
   unfolding Transformation_def Action_Tag_def Inhabited_def Simplify_def
-            Abstract_Domain_def Premise_def
+            Abstract_Domain_def Premise_def \<r>EIF_def
   by (clarsimp, smt (verit, del_insts))
 
 ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>

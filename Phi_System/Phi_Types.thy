@@ -51,6 +51,8 @@ setup \<open>Context.theory_map (
        \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 let_\<phi>type \<phi>None
   deriving Basic
        and Functionality
@@ -1046,14 +1048,14 @@ lemma [\<phi>reason 1000]:
   \<open> Abstract_Domain U A
 \<Longrightarrow> Abstract_Domain T B
 \<Longrightarrow> Abstract_Domain (T \<Zcomp> U) (\<lambda>x. A x \<and> Ex B) \<close>
-  unfolding Inhabited_def Action_Tag_def Abstract_Domain_def
+  unfolding Inhabited_def Action_Tag_def Abstract_Domain_def \<r>EIF_def
   by simp blast
 
 lemma [\<phi>reason 1000]:
   \<open> Abstract_Domain\<^sub>L U A
 \<Longrightarrow> Abstract_Domain\<^sub>L T B
 \<Longrightarrow> Abstract_Domain\<^sub>L (T \<Zcomp> U) (\<lambda>x. A x \<and> All B) \<close>
-  unfolding Inhabited_def Action_Tag_def Abstract_Domain\<^sub>L_def
+  unfolding Inhabited_def Action_Tag_def Abstract_Domain\<^sub>L_def \<r>ESC_def
   by clarsimp blast
 
 text \<open>The space between the upper bound and the lower bound is inevitable as we lost the exact value
@@ -1944,7 +1946,7 @@ lemma [\<phi>reason %abstract_domain]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. D\<^sub>T x \<and> D\<^sub>U y \<longrightarrow> (\<exists>a b. a \<Turnstile> (f x \<Ztypecolon> T') \<and> b \<Turnstile> (g y \<Ztypecolon> U') \<and> b ## a))
 \<Longrightarrow> Abstract_Domain\<^sub>L (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y)\<close>
   unfolding Inhabited_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
-            Abstract_Domain\<^sub>L_def
+            Abstract_Domain\<^sub>L_def \<r>ESC_def
   by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; metis)
 
 
@@ -2243,7 +2245,7 @@ lemma [\<phi>inhabitance_rule 1000]:
 \<Longrightarrow> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ct x)
 \<Longrightarrow> (\<And>x. Ct x \<Longrightarrow> f x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Cu x )
 \<Longrightarrow> f \<Ztypecolon> T \<Rrightarrow> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>x. St x \<longrightarrow> Ct x \<and> Cu x) \<close>
-  unfolding Inhabited_def Action_Tag_def
+  unfolding Inhabited_def Action_Tag_def \<r>ESC_def \<r>EIF_def
   apply clarsimp
   apply blast .
 

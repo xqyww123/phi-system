@@ -62,7 +62,7 @@ definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>ar
 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Brk_Frame X \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
-  unfolding Action_Tag_def
+  unfolding \<r>EIF_def
   by simp
 
 lemma [\<phi>reason %abstract_domain]:

@@ -112,8 +112,6 @@ setup \<open>Context.theory_map (
          \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 let_\<phi>type Val
   deriving \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (\<v>\<a>\<l>[v] T) P\<close>

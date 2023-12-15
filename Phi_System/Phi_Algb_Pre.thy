@@ -165,7 +165,7 @@ There are pre-built reasoning rules for,
   and \<A>_partial_add_specific = (1300, [1300, 1700]) in \<A>_partial_add and > \<A>_partial_add_cut
       \<open>for speicifc structures\<close>
 
-\<phi>reasoner_group EIF_dabc = (%cutting, [10, 3000]) for \<open>dabc_equation d a b c \<longrightarrow> what @action \<A>EIF\<close>
+\<phi>reasoner_group EIF_dabc = (%cutting, [10, 3000]) for \<open>\<r>EIF (dabc_equation d a b c) what\<close>
                                                    in extract_pure_all
       \<open>extracting pure facts implied inside a dbac-equation of specific algberas\<close>
   and EIF_dabc_default = (5, [5,5]) in extract_pure_all and < EIF_dabc
@@ -186,34 +186,33 @@ declare [[
   and \<open>equation\<^sub>2\<^sub>1 ?c ?a ?b\<close> \<Rightarrow> \<open>ERROR TEXT((equation\<^sub>2\<^sub>1 ?c ?a ?b) \<open>must be indicated with explicit LPR pattern\<close>)\<close> (0),
 
   \<phi>default_reasoner_group
-      \<open>dabc_equation _ _ _ _ \<longrightarrow> _ @action \<A>EIF\<close> : %EIF_dabc            (100)
+      \<open>\<r>EIF (dabc_equation _ _ _ _) _ \<close> : %EIF_dabc            (100)
 ]]
 
 
 subsubsection \<open>Extract Implied Facts inside\<close>
 
 lemma [\<phi>reason default %EIF_dabc_default]:
-  \<open> dabc_equation d a b c \<longrightarrow> d + a = b + c \<and> d ##\<^sub>+ a \<and> b ##\<^sub>+ c @action \<A>EIF\<close>
-  unfolding Action_Tag_def dabc_equation_def
+  \<open> \<r>EIF (dabc_equation d a b c) (d + a = b + c \<and> d ##\<^sub>+ a \<and> b ##\<^sub>+ c)\<close>
+  unfolding \<r>EIF_def dabc_equation_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> equation\<^sub>2\<^sub>1 d a b \<longrightarrow> d + a = b \<and> d ##\<^sub>+ a @action \<A>EIF\<close>
-  unfolding Action_Tag_def equation\<^sub>2\<^sub>1_def
+  \<open> \<r>EIF (equation\<^sub>2\<^sub>1 d a b) (d + a = b \<and> d ##\<^sub>+ a) \<close>
+  unfolding \<r>EIF_def equation\<^sub>2\<^sub>1_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> equation\<^sub>3\<^sub>1 d b c a \<longrightarrow> d + b + c = a \<and> d ##\<^sub>+ b \<and> d + b ##\<^sub>+ c  @action \<A>EIF\<close>
-  unfolding Action_Tag_def equation\<^sub>3\<^sub>1_def
+  \<open> \<r>EIF (equation\<^sub>3\<^sub>1 d b c a) (d + b + c = a \<and> d ##\<^sub>+ b \<and> d + b ##\<^sub>+ c) \<close>
+  unfolding \<r>EIF_def equation\<^sub>3\<^sub>1_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c d b db c a \<longrightarrow>
-      ?\<^sub>+ True a = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c \<and>
+  \<open> \<r>EIF (equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c d b db c a)
+     (?\<^sub>+ True a = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b + ?\<^sub>+ C\<^sub>c c \<and>
       (?\<^sub>+ True db = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True b) \<and>
-      (C\<^sub>c \<longrightarrow> db ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> d ##\<^sub>+ b)
-    @action \<A>EIF\<close>
-  unfolding Action_Tag_def equation\<^sub>3\<^sub>1_cond_def
+      (C\<^sub>c \<longrightarrow> db ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> d ##\<^sub>+ b)) \<close>
+  unfolding \<r>EIF_def equation\<^sub>3\<^sub>1_cond_def
   by simp
 
 
@@ -512,15 +511,14 @@ lemma dabc_equation__len_intvl_D:
   by clarsimp
 
 lemma [\<phi>reason add]:
-  \<open>dabc_equation d a b c \<longrightarrow>
-    d + a = b + c \<and>
-    len_intvl.start b = len_intvl.start d \<and>
-    len_intvl.start a = len_intvl.start d + len_intvl.len d \<and>
-    len_intvl.start c = len_intvl.start d + len_intvl.len b \<and>
-    len_intvl.len d \<le> len_intvl.len b \<and>
-    len_intvl.len d + len_intvl.len a = len_intvl.len b + len_intvl.len c
-  @action \<A>EIF\<close>
-  unfolding Action_Tag_def dabc_equation_def
+  \<open>\<r>EIF (dabc_equation d a b c)
+       (d + a = b + c \<and>
+        len_intvl.start b = len_intvl.start d \<and>
+        len_intvl.start a = len_intvl.start d + len_intvl.len d \<and>
+        len_intvl.start c = len_intvl.start d + len_intvl.len b \<and>
+        len_intvl.len d \<le> len_intvl.len b \<and>
+        len_intvl.len d + len_intvl.len a = len_intvl.len b + len_intvl.len c) \<close>
+  unfolding \<r>EIF_def dabc_equation_def
   by clarsimp
 
 
@@ -904,13 +902,13 @@ definition local_inverse
   where \<open>local_inverse D f g \<longleftrightarrow> (\<forall>x \<in> D. g (f x) = x)\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> local_inverse D f g \<longrightarrow> (\<forall>x \<in> D. g (f x) = x) @action \<A>EIF \<close>
-  unfolding Action_Tag_def local_inverse_def
+  \<open> \<r>EIF (local_inverse D f g) (\<forall>x \<in> D. g (f x) = x) \<close>
+  unfolding \<r>EIF_def local_inverse_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<forall>x \<in> D. g (f x) = x) \<longrightarrow> local_inverse D f g @action \<A>ESC \<close>
-  unfolding Action_Tag_def local_inverse_def
+  \<open> \<r>ESC (\<forall>x \<in> D. g (f x) = x) (local_inverse D f g) \<close>
+  unfolding \<r>ESC_def local_inverse_def
   by blast
 
 
@@ -942,13 +940,13 @@ paragraph \<open>Setup Reasoning Rules\<close>
 declare (in homo_one) homo_one_axioms[\<phi>reason %algb_cut]
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> homo_one \<psi> \<longrightarrow> \<psi> 1 = 1 @action \<A>EIF \<close>
-  unfolding Action_Tag_def homo_one_def
+  \<open> \<r>EIF (homo_one \<psi>) (\<psi> 1 = 1) \<close>
+  unfolding \<r>EIF_def homo_one_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<psi> 1 = 1 \<longrightarrow> homo_one \<psi> @action \<A>ESC \<close>
-  unfolding Action_Tag_def homo_one_def
+  \<open> \<r>ESC (\<psi> 1 = 1) (homo_one \<psi>) \<close>
+  unfolding \<r>ESC_def homo_one_def
   by blast
 
 lemma [\<phi>reason default %algb_falling_lattice]:
@@ -966,13 +964,13 @@ subparagraph \<open>homo_mul_carrier\<close>
 declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason %algb_cut]
 
 lemma homo_mul_carrier_EIF:
-  \<open> homo_mul_carrier \<psi> \<longrightarrow> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) @action \<A>EIF \<close>
-  unfolding homo_mul_carrier_def Action_Tag_def
+  \<open> \<r>EIF (homo_mul_carrier \<psi>) (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<close>
+  unfolding homo_mul_carrier_def \<r>EIF_def
   by blast
 
 lemma homo_mul_carrier_ESC:
-  \<open> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<longrightarrow> homo_mul_carrier \<psi> @action \<A>EIF \<close>
-  unfolding homo_mul_carrier_def Action_Tag_def
+  \<open> \<r>ESC (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) (homo_mul_carrier \<psi>) \<close>
+  unfolding homo_mul_carrier_def \<r>ESC_def
   by blast
 
 bundle extract_mul_carrier = homo_mul_carrier_EIF [\<phi>reason %extract_pure]
@@ -1004,23 +1002,23 @@ lemma [\<phi>reason no explorative backtrack %fail]:
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open>closed_homo_sep \<psi> \<longrightarrow> closed_homo_sep \<psi> @action \<A>EIF\<close>
-  unfolding Action_Tag_def
+  \<open> \<r>EIF (closed_homo_sep \<psi>) (closed_homo_sep \<psi>) \<close>
+  unfolding \<r>EIF_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open>closed_homo_sep \<psi> \<longrightarrow> closed_homo_sep \<psi> @action \<A>ESC\<close>
-  unfolding Action_Tag_def
+  \<open> \<r>ESC (closed_homo_sep \<psi>) (closed_homo_sep \<psi>) \<close>
+  unfolding \<r>ESC_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open>homo_sep \<psi> \<longrightarrow> homo_sep \<psi> @action \<A>EIF\<close>
-  unfolding Action_Tag_def
+  \<open> \<r>EIF (homo_sep \<psi>) (homo_sep \<psi>) \<close>
+  unfolding \<r>EIF_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open>homo_sep \<psi> \<longrightarrow> homo_sep \<psi> @action \<A>ESC\<close>
-  unfolding Action_Tag_def
+  \<open> \<r>ESC (homo_sep \<psi>) (homo_sep \<psi>) \<close>
+  unfolding \<r>ESC_def
   by simp
 
 paragraph \<open>Reasoning Hierarchy\<close>
@@ -1067,13 +1065,13 @@ subsubsection \<open>Constant One\<close>
 definition \<open>constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1)\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> constant_1 \<psi> \<longrightarrow> (\<forall>x. \<psi> x = 1) @action \<A>EIF \<close>
-  unfolding Action_Tag_def constant_1_def
+  \<open> \<r>EIF (constant_1 \<psi>) (\<forall>x. \<psi> x = 1) \<close>
+  unfolding \<r>EIF_def constant_1_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<forall>x. \<psi> x = 1) \<longrightarrow> constant_1 \<psi> @action \<A>ESC \<close>
-  unfolding Action_Tag_def constant_1_def
+  \<open> \<r>ESC (\<forall>x. \<psi> x = 1) (constant_1 \<psi>) \<close>
+  unfolding \<r>ESC_def constant_1_def
   by blast
 
 lemma [\<phi>reason default %algb_falling_lattice]:
@@ -1092,13 +1090,13 @@ declare [[\<phi>reason_default_pattern \<open>constantly_inside_carrier ?\<psi>\
 paragraph \<open>Basic Properties\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> constantly_inside_carrier \<psi> \<longrightarrow> (\<forall>x. mul_carrier (\<psi> x)) @action \<A>EIF \<close>
-  unfolding Action_Tag_def constantly_inside_carrier_def
+  \<open> \<r>EIF (constantly_inside_carrier \<psi>) (\<forall>x. mul_carrier (\<psi> x)) \<close>
+  unfolding \<r>EIF_def constantly_inside_carrier_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<forall>x. mul_carrier (\<psi> x)) \<longrightarrow> constantly_inside_carrier \<psi> @action \<A>ESC \<close>
-  unfolding Action_Tag_def constantly_inside_carrier_def
+  \<open> \<r>ESC (\<forall>x. mul_carrier (\<psi> x)) (constantly_inside_carrier \<psi>) \<close>
+  unfolding \<r>ESC_def constantly_inside_carrier_def
   by blast
 
 paragraph \<open>Fallback\<close>
@@ -1401,13 +1399,13 @@ declare [[\<phi>reason_default_pattern
 subsubsection \<open>Reasoning Configure\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> fun_commute \<psi> \<phi> \<psi>' \<phi>' \<longrightarrow> (\<forall>x. \<psi> (\<phi> x) = \<phi>' (\<psi>' x)) @action \<A>EIF \<close>
-  unfolding Action_Tag_def fun_commute_def fun_eq_iff
+  \<open> \<r>EIF (fun_commute \<psi> \<phi> \<psi>' \<phi>') (\<forall>x. \<psi> (\<phi> x) = \<phi>' (\<psi>' x)) \<close>
+  unfolding \<r>EIF_def fun_commute_def fun_eq_iff
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<forall>x. \<psi> (\<phi> x) = \<phi>' (\<psi>' x)) \<longrightarrow> fun_commute \<psi> \<phi> \<psi>' \<phi>' @action \<A>ESC \<close>
-  unfolding Action_Tag_def fun_commute_def fun_eq_iff
+  \<open> \<r>ESC (\<forall>x. \<psi> (\<phi> x) = \<phi>' (\<psi>' x)) (fun_commute \<psi> \<phi> \<psi>' \<phi>') \<close>
+  unfolding \<r>ESC_def fun_commute_def fun_eq_iff
   by simp
   
 
