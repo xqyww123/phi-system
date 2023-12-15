@@ -101,7 +101,7 @@ fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrCstr_rule},
                                       [(K (SOME [0,~1]), ind_conv, reasoning)],
-                                      solver, K I)
+                                      solver, K I, K I)
                                      phi0 instruction ctxt0
    in case Seq.pull rules
    of SOME (rule, _) => thy

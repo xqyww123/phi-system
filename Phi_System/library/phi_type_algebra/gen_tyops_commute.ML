@@ -97,7 +97,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
 
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
                                      [(K (SOME (if is_intro then [0] else [0])), ind_conv, reasoning is_intro)],
-                                     K NONE, simp)
+                                     K NONE, K I, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

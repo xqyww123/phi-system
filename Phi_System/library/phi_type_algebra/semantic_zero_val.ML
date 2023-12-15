@@ -47,7 +47,7 @@ fun gen_semantic_zero_val (_, name) instruction ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, K [], guess_property,
                                       @{thm' \<phi>TA_Semantic_Zero_Val_rule},
                                       [(K NONE, K (K I), reasoning)],
-                                      solver, simp)
+                                      solver, K I, simp)
                                     phi0 instruction ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy

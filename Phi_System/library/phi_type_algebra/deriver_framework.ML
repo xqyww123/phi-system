@@ -151,6 +151,7 @@ val deriving_framework :
     * thm (*rule*)
     * subgoal_configure list
     * solver
+    * simplifier (*simplifying the reasoning sequent before induction*)
     * simplifier (*final simplification*)
    -> Phi_Type.phi_type
    -> deriving_instruction
@@ -1259,7 +1260,8 @@ fun oblg_solver' name (phi, ctxt, th, text) =
   quants[i] = i means interpret the variable as the i-th parameter of the \<phi>-type
   quants[i] = ~1 means interpret it as a fixed variable
   Note the quants is reversed against the quantified variables*)
-fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,subgoal_reasonings,solver,simp)
+fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,
+                        subgoal_reasonings,solver,simp_before_induct,simp)
                        (phi0 : phi_type) instruction ctxt0 =
   let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
       (*val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0*)
@@ -1353,6 +1355,8 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                    |> Phi_Help.subst_env
                    |> Phi_Help.certify_vars (Context.Proof ctxt)
       val rule' = Thm.instantiate inst_rule rule
+               |> simp_before_induct (phi,ctxt)
+               (*TODO: rename this variable to 'sequent'*)
       
 
       fun apply_conv ctxt ind_conv rule' =

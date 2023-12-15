@@ -250,7 +250,7 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property is_left, rule,
                                      [(K (SOME [0]), ind_conv, reasoning)],
-                                     id_ele_infer, simp)
+                                     id_ele_infer, K I, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

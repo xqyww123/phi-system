@@ -280,7 +280,7 @@ fun gen_trans_to_raw_abst (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrRA_rule},
                                       [(K (SOME [0]), ind_conv, reasoning)],
-                                      solver, simp)
+                                      solver, K I, simp)
                                     phi0 instruction ctxt0'
    in case Seq.pull rules
    of SOME (rule, _) => thy
