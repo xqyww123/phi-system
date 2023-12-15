@@ -244,13 +244,13 @@ declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rig
 
 \<phi>reasoner_group abstract_domain_all = (1000, [1, 2000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
     \<open>All reasoning rules giving \<open>Abstract_Domain\<close> or \<open>Abstract_Domain\<^sub>L\<close>\<close>
- and abstract_domain = (1000, [1000, 1000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
+  and abstract_domain = (1000, [1000, 1000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
                                              in abstract_domain_all
     \<open>Normal reasoning rules for \<open>Abstract_Domain\<close>, \<open>Abstract_Domain\<^sub>L\<close>\<close>
- and abstract_domain_fallback = (1, [1,1]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>) < abstract_domain
+  and abstract_domain_fallback = (1, [1,1]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>) < abstract_domain
                                             in abstract_domain_all
     \<open>Fallbacks reasoning rules for \<open>Abstract_Domain\<close>, \<open>Abstract_Domain\<^sub>L\<close> \<close>
- and derived_abstract_domain = (60, [50,70]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
+  and derived_abstract_domain = (60, [50,70]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
                                               in abstract_domain_all and < abstract_domain
     \<open>Automatically derived rules\<close>
 

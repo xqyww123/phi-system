@@ -346,10 +346,13 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
 
       val infer = if not (is_some (#1 instruction)) andalso not (#is_recursive phi0)
                   then predicate_infer false
-                          (fn _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var v) => v
+                          (fn _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var v) => SOME v
                             | _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $
                                     Abs (_, _, Abs (_, _,
-                                        Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 1 $ Bound 0) $ _))) => v)
+                                        Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 1 $ Bound 0) $ _))) => SOME v
+                            | _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ X) =>
+                                  if null (Term.add_vars X []) then NONE
+                                  else raise Match )
                           (oblg_solver' name)
                   else K NONE
 (*      fun infer (_, ctxt, rule) =

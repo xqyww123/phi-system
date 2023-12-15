@@ -225,8 +225,9 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
          in default_reasoning true default_reasoning_configure varify_subgoal reasoner phi
         end
 
-      fun parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ (Var v $ Bound 0))) = v
-        | parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ Var v)) = v
+      fun parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ (Var v $ Bound 0))) = SOME v
+        | parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ Var v)) = SOME v
+        | parse_abs X = if null (Term.add_vars X []) then NONE else raise Match
       val id_ele_infer =
             if mode_infer
             then if is_left

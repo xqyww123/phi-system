@@ -1266,13 +1266,12 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> OPEN T \<close>
   unfolding OPEN_def .
 
-(* XXX
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> Abstract_Domain (OPEN T) D \<close>
-  unfolding OPEN_def .*)
+  unfolding OPEN_def .
 
-lemma [\<phi>reason %abstract_domain]:
+lemma abstract_domain_OPEN:
   \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. r x y @action to (OPEN T))
 \<Longrightarrow> Abstract_Domain U' D
 \<Longrightarrow> Abstract_Domain (OPEN T) (\<lambda>x. \<exists>y. r x y \<and> D y) \<close>
@@ -1390,6 +1389,13 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T \<close>
   unfolding MAKE_def .
 
+lemma abstract_domain_MAKE:
+  \<open> (\<And>y. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. r x y @action to (MAKE T))
+\<Longrightarrow> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) (\<lambda>y. \<exists>x. r x y \<and> D y) \<close>
+  unfolding MAKE_def Abstract_Domain\<^sub>L_def \<r>ESC_def Transformation_def Action_Tag_def
+  by clarsimp
+
 lemma [\<phi>reason %abstract_domain]:
   \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> PP)
 \<Longrightarrow> (\<And>x. D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X x)
@@ -1397,14 +1403,17 @@ lemma [\<phi>reason %abstract_domain]:
   unfolding MAKE_def Abstract_Domain\<^sub>L_def \<r>ESC_def Transformation_def Action_Tag_def Inhabited_def
   by clarsimp blast
 
-(*
-lemma [\<phi>reason %abstract_domain]:
-  \<open> (\<And>y. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. r x y @action to (MAKE T))
-\<Longrightarrow> Abstract_Domain\<^sub>L T D
-\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) (\<lambda>y. \<exists>x. r x y \<and> D y) \<close>
-  unfolding MAKE_def Abstract_Domain\<^sub>L_def Transformation_def Action_Tag_def
-  by clarsimp
-*)
+\<phi>reasoner_group abstract_domain_OPEN_MAKE = (%abstract_domain+100, [%abstract_domain+100, %abstract_domain+100])
+                                             in abstract_domain_all and > abstract_domain \<open>\<close>
+
+bundle abstract_domain_OPEN_MAKE =
+  abstract_domain_MAKE[\<phi>adding_property = false,
+                       \<phi>reason %abstract_domain_OPEN_MAKE,
+                       \<phi>adding_property = true]
+  abstract_domain_OPEN[\<phi>adding_property = false,
+                       \<phi>reason %abstract_domain_OPEN_MAKE,
+                       \<phi>adding_property = true]
+
 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain T D

@@ -20,7 +20,7 @@ val guess_property_like_abst_domain :
   Lower mode: the unknown locates at the condition part of the obligation, and we infer an instantiation
               as strong as possible (but does not weaken the entire obligation)
 *)
-val predicate_infer : bool -> (term -> indexname * typ) -> solver -> solver
+val predicate_infer : bool -> (term -> (indexname * typ) option) -> solver -> solver
 val predicate_infer__contains_bad : bool -> term -> bool
 
 (*val guess_property_abst_dom : string -> guess_property
@@ -172,19 +172,8 @@ fun predicate_infer__contains_bad allows_Inhabited_and_Sat =
                        | Var _ => true
                        | _ => false)
 
-fun predicate_infer upper parse_var solver (phi,ctxt,sequent,text) =
-  let fun err () = raise Automation_Fail (fn () =>
-                        [Pretty.para "Obligation is obtained, but I fail to infer \
-                                     \the expression of the implied pure fact from it."])
-      val var = parse_var (Thm.concl_of sequent)
-                handle Match => err ()
-                (*of _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $ Var v) => v
-                   | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
-                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0))) => v
-                   | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
-                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var v $ _)) => v
-                   | _ => err ()*)
-      val arity = length (Term.binder_types (snd var))
+fun predicate_infer_var upper (SOME var) (phi,ctxt,sequent) =
+  let val arity = length (Term.binder_types (snd var))
 
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
         | binop _ (some_or_none, NONE) = some_or_none
@@ -294,8 +283,7 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent,text) =
 
       fun inst_Pr' context X = case inst_Pr context X of SOME ret => ret
                                   | NONE => \<^Const>\<open>True\<close>
-
-  in case Thm.prop_of sequent
+   in case Thm.prop_of sequent
        of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _)
             $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ X)) $ _
             => let val X' = (if upper then inst_Pr' else inst_Lw') ([],[]) X
@@ -304,9 +292,28 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent,text) =
                             then \<^Const>\<open>True\<close> (*the case of recursive, unsupported*)
                             else X'
                    val sequent' = Thm.instantiate (TVars.empty, Vars.make [(var, Thm.cterm_of ctxt X')]) sequent
-                in solver (phi, ctxt, sequent', text)
+                in sequent'
                end
         | _ => error "Internal bug"
+  end
+
+fun predicate_infer upper parse_var solver (phi,ctxt,sequent0,text) =
+  let fun err () = raise Automation_Fail (fn () =>
+                        [Pretty.para "Obligation is obtained, but I fail to infer \
+                                     \the expression of the implied pure fact from it."])
+      val sequent =
+         (case parse_var (Thm.concl_of sequent0)
+            of NONE => sequent0
+             | some_var => predicate_infer_var upper some_var (phi,ctxt,sequent0))
+          handle Match => err ()
+                (*of _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $ Var v) => v
+                   | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
+                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0))) => v
+                   | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
+                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var v $ _)) => v
+                   | _ => err ()*)
+      
+  in solver (phi, ctxt, sequent, text)
  end
 
 fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (phi0 : phi_type) thy =
@@ -357,18 +364,25 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
       val solver =
             if mode_infer
             then predicate_infer upper
-                    (fn _ (*Trueprop*) $ (_ $ Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0))) => v)
+                    (fn _ (*Trueprop*) $ (_ $ Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0)))
+                          => SOME v
+                      | _ (*Trueprop*) $ (_ $ X)
+                          => if null (Term.add_vars X []) then NONE
+                             else raise Match)
                     (oblg_solver' name)
             else K NONE
       val simp = if is_some (#1 instruction) then K I
                  else default_simplifier' (fn rewr =>
                    Phi_Conv.hhf_concl_conv (fn ctxt =>
                       HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)) ))
+
+      val ctxt = ctxt0
+              |> Bundle.includes ["IDE_CP_Applications1.abstract_domain_OPEN_MAKE"]
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(K (SOME [0]), ind_conv, Inh_reasoning)],
                                       solver, K I, simp)
-                                     phi0 instruction ctxt0
+                                     phi0 instruction ctxt
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy

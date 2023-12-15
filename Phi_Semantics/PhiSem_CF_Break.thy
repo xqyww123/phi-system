@@ -68,7 +68,7 @@ lemma [\<phi>reason %abstract_domain]:
 lemma [\<phi>reason %abstract_domain]:
   \<open> (\<And>v. S v \<i>\<m>\<p>\<l>\<i>\<e>\<s> P v)
 \<Longrightarrow> Brking_Frame label S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ex P \<close>
-  unfolding Action_Tag_def Inhabited_def Brking_Frame_def
+  unfolding Action_Tag_def Inhabited_def Brking_Frame_def \<r>EIF_def
   by clarsimp blast
 
 lemma Brk_Frame_eq_identity:

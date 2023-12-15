@@ -216,7 +216,17 @@ fun fast_inst can_inst th =
                 Seq.empty)
           handle Match => NONE)
      | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
-                    $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)
+                    $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _)
+                    $ _)) =>
+         (*it is unsafe to instantiate any functional unknown variable because you don't know how
+           the function would be and it may be even not unique. For example, \<open>?x a b = True\<close>, you
+           may think the instantiation would be \<open>\<lambda>_ _. True\<close> but it actually can also be \<open>\<lambda>a b. a = b\<close>
+           when \<open>a = b\<close>.*)
+         (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
+                     by (simp add: Premise_def)} RS th, Seq.empty)
+          handle THM _ => NONE)
+     | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
+                    $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _)
                     $ _)) =>
          (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
                      by (simp add: Premise_def)} RS th, Seq.empty)
@@ -225,22 +235,25 @@ fun fast_inst can_inst th =
          (SOME (Thm.instantiate (TVars.empty, mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th,
                 Seq.empty)
           handle Match => NONE)
-     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)) =>
+     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _)) =>
          (*solves the equation by unification once single resolution*)
          (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
          (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
           handle THM _ => NONE)
-     | (true, (_, V)) =>
-          if is_Var (Term.head_of V)
-          then SOME (@{thm' Premise_True} RS th, Seq.empty)
-          else NONE
+     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _)) =>
+         (*solves the equation by unification once single resolution*)
+         (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
+         (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
+          handle THM _ => NONE)
+     | (true, (_, Var _)) =>
+          SOME (@{thm' Premise_True} RS th, Seq.empty)
      | _ => NONE
 
 (*slow but powerfull and flexible*)
 fun LPR_inst ctxt th = (
   Phi_Reasoner.info_print ctxt 3 (fn () => "Phi_Reasoners.LPR_inst") ;
   Phi_Reasoner.reason NONE (SOME 1) ctxt
-                      (@{lemma' \<open> \<g>\<u>\<a>\<r>\<d> IEUV Any P P' \<and>\<^sub>\<r> Any
+                      (@{lemma' \<open> \<g>\<u>\<a>\<r>\<d> IEUV Any AnySV P P' \<and>\<^sub>\<r> Literal_Boolean Any
                               \<Longrightarrow> Premise mode P'
                               \<Longrightarrow> Premise mode P \<close>
                              by (simp add: IEUV_def \<r>Guard_def Ant_Seq_def)

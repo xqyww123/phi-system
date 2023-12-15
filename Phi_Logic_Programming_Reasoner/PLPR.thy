@@ -978,6 +978,28 @@ structure Useful_Thms = Named_Thms (
 setup \<open>Useful_Thms.setup\<close>
 
 
+subsubsection \<open>Literal Booleans\<close>
+
+definition \<open>Literal_Boolean P \<equiv> P\<close>
+
+ML \<open>val bool_ss = Simplifier.simpset_of (Proof_Context.init_global (Thy_Info.get_theory "HOL.HOL"))\<close>
+
+declare [[ML_debugger]]
+
+\<phi>reasoner_ML \<open>Literal_Boolean P\<close> %cutting (\<open>Literal_Boolean _\<close>) = \<open>fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+  let val sctxt = Simplifier.put_simpset bool_ss ctxt
+      val sequent'1 = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn sctxt =>
+                          HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite sctxt))) sctxt) 1 sequent
+   in case Thm.major_prem_of sequent'1
+        of _ (*Trueprop*) $ (_ (*Literal_Boolean*) $ Const(\<^const_name>\<open>True\<close>, _)) =>
+            SOME ((ctxt, @{lemma' \<open>Literal_Boolean True\<close> by (simp add: Literal_Boolean_def)}
+                         RS' (ctxt, sequent'1)), Seq.empty)
+         | _ => NONE
+  end)
+\<close>
+
+
+
 subsection \<open>General Rules\<close>
 
 text \<open>\<^bold>\<open>Schematic variables\<close> are able to be instantiated (assigned) by reasoners.
@@ -1640,97 +1662,176 @@ lemma LPR_ctrl_sum[simp]:
 
 subsubsection \<open>Instantiation Eliminating Unknown Variables\<close>
 
-definition \<open>IEUV succeeded IN OUT \<equiv> (IN \<longleftrightarrow> OUT)\<close>
+definition \<open>IEUV succeeded solved IN OUT \<equiv> (IN \<longleftrightarrow> OUT) \<and> (solved \<longrightarrow> OUT)\<close>
+  \<comment> \<open>succeeded: at least one unknown variable is instantiated, meaning
+      the \<open>IN\<close> and \<open>OUT\<close> are unequal.
+     solved: is totally solved \<close>
 
-\<phi>reasoner_group IEUV__all = (100, [10, 3000]) for \<open>IEUV succeeded IN OUT\<close>
+
+\<phi>reasoner_group IEUV__all = (100, [10, 3000]) for \<open>IEUV succeeded solved IN OUT\<close>
       \<open>instantiating unknown variables in \<open>IN\<close> and returns \<open>OUT\<close>\<close>
   and IEUV__default = (10, [10,10]) in IEUV__all \<open>system default\<close>
   and IEUV = (1000, [1000, 1030]) in IEUV__all and > IEUV__default \<open>default group\<close>
 
-  and IEUV_eq = (1000, [1000, 2000]) for \<open>IEUV succeed (x = y) OUT\<close>
+  and IEUV_eq = (1000, [1000, 2000]) for \<open>IEUV succeed solved (x = y) OUT\<close>
                 in IEUV__all and > IEUV__default \<open>\<close>
-
+  and IEUV_eq_refl = (2001, [2001, 2001]) in IEUV__all and > IEUV_eq \<open>\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>IEUV _ ?IN _\<close> \<Rightarrow> \<open>IEUV _ ?IN _\<close> (100),
-  \<phi>default_reasoner_group \<open>IEUV _ _ _\<close> : %IEUV           (100)
+  \<phi>reason_default_pattern \<open>IEUV _ _ ?IN _\<close> \<Rightarrow> \<open>IEUV _ _ ?IN _\<close> (100),
+  \<phi>default_reasoner_group \<open>IEUV _ _ _ _\<close> : %IEUV               (100)
 ]]
 
 
 paragraph \<open>Rules\<close>
 
 lemma [\<phi>reason %IEUV__default]:
-  \<open> IEUV False X X \<close>
-  unfolding IEUV_def ..
+  \<open> IEUV False False X X \<close>
+  unfolding IEUV_def by simp
 
 lemma [\<phi>reason add]:
-  \<open> IEUV S A A'
-\<Longrightarrow> IEUV S (\<not> A) (\<not> A') \<close>
+  \<open> IEUV S SV A A'
+\<Longrightarrow> IEUV S False (\<not> A) (\<not> A') \<close>
   unfolding IEUV_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> IEUV S\<^sub>1 A A'
-\<Longrightarrow> IEUV S\<^sub>2 B B'
-\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (A \<and> B) (A' \<and> B') \<close>
+  \<open> IEUV S\<^sub>1 SV\<^sub>1 A A'
+\<Longrightarrow> IEUV S\<^sub>2 SV\<^sub>2 B B'
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (SV\<^sub>1 \<and> SV\<^sub>2) (A \<and> B) (A' \<and> B') \<close>
   unfolding IEUV_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> IEUV S\<^sub>1 A A'
-\<Longrightarrow> IEUV S\<^sub>2 B B'
-\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (A \<or> B) (A' \<or> B') \<close>
+  \<open> IEUV S\<^sub>1 SV\<^sub>1 A A'
+\<Longrightarrow> IEUV S\<^sub>2 SV\<^sub>2 B B'
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (SV\<^sub>1 \<and> SV\<^sub>2) (A \<or> B) (A' \<or> B') \<close>
   unfolding IEUV_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> IEUV S\<^sub>1 A A'
-\<Longrightarrow> IEUV S\<^sub>2 B B'
-\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (A \<longrightarrow> B) (A' \<longrightarrow> B') \<close>
+  \<open> IEUV S\<^sub>1 SV\<^sub>1 A A'
+\<Longrightarrow> IEUV S\<^sub>2 SV\<^sub>2 B B'
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (SV\<^sub>1 \<and> SV\<^sub>2) (A \<longrightarrow> B) (A' \<longrightarrow> B') \<close>
   unfolding IEUV_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> (\<And>a. IEUV S (A a) (A' a))
-\<Longrightarrow> IEUV S (\<forall>a. A a) (\<forall>a. A' a) \<close>
+  \<open> (\<And>a. IEUV S SV (A a) (A' a))
+\<Longrightarrow> IEUV S SV (\<forall>a. A a) (\<forall>a. A' a) \<close>
   unfolding IEUV_def
   by blast
 
 lemma [\<phi>reason add]:
-  \<open> (\<And>a. IEUV S (A a) (A' a))
-\<Longrightarrow> IEUV S (\<exists>a. A a) (\<exists>a. A' a) \<close>
+  \<open> (\<And>a. IEUV S SV (A a) (A' a))
+\<Longrightarrow> IEUV S SV (\<exists>a. A a) (\<exists>a. A' a) \<close>
   unfolding IEUV_def
   by blast
 
-lemma [\<phi>reason %IEUV_eq for \<open>IEUV _ (?var = _) _\<close>
-                            \<open>IEUV _ (_ = ?var) _\<close>
-                            \<open>IEUV _ (?x = ?X) _\<close> ]:
-  \<open> IEUV True (x = x) True \<close>
+lemma [\<phi>reason for \<open>IEUV _ _ ?var _\<close> if \<open>fn (_, sequent) =>
+          case Thm.major_prem_of sequent
+            of _ (*Trueprop*) $ (_ (*IEUV*) $ _ $ _ $ Var _ $ _) => true
+             | _ => false\<close>]:
+  \<open> IEUV True True True True \<close>
   unfolding IEUV_def
   by simp
 
-lemma [\<phi>reason %IEUV_eq+30]:
-  \<open> IEUV S\<^sub>1 (x\<^sub>1 = y\<^sub>1) O\<^sub>1
-\<Longrightarrow> IEUV S\<^sub>2 (x\<^sub>2 = y\<^sub>2) O\<^sub>2
-\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) ((x\<^sub>1, x\<^sub>2) = (y\<^sub>1, y\<^sub>2)) (O\<^sub>1 \<and> O\<^sub>2) \<close>
+ML \<open>fun IEUV_eq_paramless_var chk (_, sequent) =
+  case Thm.major_prem_of sequent
+    of _ (*Trueprop*) $ (_ (*IEUV*) $ _ $ _ $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ L $ R) $ _) =>
+      (case (L,R) of (Var _, Var _) => chk (true, true)
+                   | (Var _, _) => chk (true, false)
+                   | (_, Var _) => chk (false, true)
+                   | _ => false)
+     | _ => false
+\<close>
+
+lemma IEUV_eq_refl
+      [\<phi>reason %IEUV_eq_refl
+          for \<open>IEUV _ _ (?var = _) _\<close>
+              \<open>IEUV _ _ (_ = ?var) _\<close>
+              \<open>IEUV _ _ (?x = ?x) _\<close>
+           if \<open>IEUV_eq_paramless_var (fn (x,y) => x orelse y)\<close>]:
+  \<open> IEUV True True (x = x) True \<close>
+  unfolding IEUV_def
+  by simp
+
+lemma [\<phi>reason %IEUV_eq+40]:
+  \<open> IEUV S\<^sub>1 SV\<^sub>1 (x\<^sub>1 = y\<^sub>1) O\<^sub>1
+\<Longrightarrow> IEUV S\<^sub>2 SV\<^sub>2 (x\<^sub>2 = y\<^sub>2) O\<^sub>2
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (SV\<^sub>1 \<and> SV\<^sub>2) ((x\<^sub>1, x\<^sub>2) = (y\<^sub>1, y\<^sub>2)) (O\<^sub>1 \<and> O\<^sub>2) \<close>
   unfolding IEUV_def
   by blast
 
+(*
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 (fst x = y\<^sub>1) O\<^sub>1 \<and>\<^sub>\<r>
-          IEUV S\<^sub>2 (snd x = y\<^sub>2) O\<^sub>2 \<and>\<^sub>\<r>
-          S\<^sub>1 \<or> S\<^sub>2
-\<Longrightarrow> IEUV True (x = (y\<^sub>1,y\<^sub>2)) (O\<^sub>1 \<and> O\<^sub>2) \<close>
-  unfolding IEUV_def \<r>Guard_def Ant_Seq_def
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 SV\<^sub>1 (fst x = y\<^sub>1) O\<^sub>1 \<and>\<^sub>\<r>
+          IEUV S\<^sub>2 SV\<^sub>2 (snd x = y\<^sub>2) O\<^sub>2 \<and>\<^sub>\<r>
+          Literal_Boolean (S\<^sub>1 \<or> S\<^sub>2)
+\<Longrightarrow> IEUV True (SV\<^sub>1 \<and> SV\<^sub>2) (x = (y\<^sub>1,y\<^sub>2)) (O\<^sub>1 \<and> O\<^sub>2) \<close>
+  unfolding IEUV_def \<r>Guard_def Ant_Seq_def Literal_Boolean_def
   by (cases x; simp)
 
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 (x\<^sub>1 = fst y) O\<^sub>1 \<and>\<^sub>\<r>
-          IEUV S\<^sub>2 (x\<^sub>2 = snd y) O\<^sub>2 \<and>\<^sub>\<r>
-          S\<^sub>1 \<or> S\<^sub>2
-\<Longrightarrow> IEUV True ((x\<^sub>1,x\<^sub>2) = y) (O\<^sub>1 \<and> O\<^sub>2) \<close>
-  unfolding IEUV_def \<r>Guard_def Ant_Seq_def
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 SV\<^sub>1 (x\<^sub>1 = fst y) O\<^sub>1 \<and>\<^sub>\<r>
+          IEUV S\<^sub>2 SV\<^sub>2 (x\<^sub>2 = snd y) O\<^sub>2 \<and>\<^sub>\<r>
+          Literal_Boolean (S\<^sub>1 \<or> S\<^sub>2)
+\<Longrightarrow> IEUV True (SV\<^sub>1 \<and> SV\<^sub>2) ((x\<^sub>1,x\<^sub>2) = y) (O\<^sub>1 \<and> O\<^sub>2) \<close>
+  unfolding IEUV_def \<r>Guard_def Ant_Seq_def Literal_Boolean_def
   by (cases y; simp)
+*)
+
+declare [[\<phi>trace_reasoning = 2]]
+
+lemma [\<phi>reason %IEUV_eq+20]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y SV\<^sub>y ((y\<^sub>1, y\<^sub>2) = y) Y\<^sub>y \<and>\<^sub>\<r>
+          Literal_Boolean SV\<^sub>y
+\<Longrightarrow> IEUV S SV (x = y\<^sub>1) Y
+\<Longrightarrow> IEUV True SV (x = fst y) Y \<close>
+  unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
+  by force
+
+lemma [\<phi>reason %IEUV_eq+20]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y SV\<^sub>y ((y\<^sub>1, y\<^sub>2) = y) Y\<^sub>y \<and>\<^sub>\<r>
+         Literal_Boolean SV\<^sub>y
+\<Longrightarrow> IEUV S SV (x = y\<^sub>2) Y
+\<Longrightarrow> IEUV True SV (x = snd y) Y \<close>
+  unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
+  by force
+
+lemma [\<phi>reason %IEUV_eq+20]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y SV\<^sub>y (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y \<and>\<^sub>\<r>
+         Literal_Boolean SV\<^sub>y
+\<Longrightarrow> IEUV S SV (y\<^sub>1 = x) Y
+\<Longrightarrow> IEUV True SV (fst y = x) Y \<close>
+  unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
+  by force
+
+lemma [\<phi>reason %IEUV_eq+20]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y SV\<^sub>y (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y \<and>\<^sub>\<r>
+         Literal_Boolean SV\<^sub>y
+\<Longrightarrow> IEUV S SV (y\<^sub>2 = x) Y
+\<Longrightarrow> IEUV True SV (snd y = x) Y \<close>
+  unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
+  by force
+
+(*
+lemma [\<phi>reason %IEUV_eq+30]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S SV (x = y) Y \<and>\<^sub>\<r>
+          Literal_Boolean SV
+\<Longrightarrow> IEUV S SV (fst x = fst y) Y \<close>
+  unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
+  by simp blast
+
+lemma [\<phi>reason add]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S SV (x = y) Y \<and>\<^sub>\<r>
+          Literal_Boolean SV
+\<Longrightarrow> IEUV S SV (snd x = snd y) Y \<close>
+  unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
+  by simp blast
+
+*)
+
 
 
 subsubsection \<open>Setup\<close>

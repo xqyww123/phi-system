@@ -4090,7 +4090,6 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module+1 name F.wrap_mod
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
 
-declare [[\<phi>trace_reasoning = 0]]
 
 lemma ToA_mapper_MOne_src
   [no_atp, \<phi>reason_template default %\<phi>mapToA_derived_module_wrapper name F.mapper_wrap_module_src]:
@@ -5997,7 +5996,8 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
 
   \<medium_left_bracket> premises dabc[THEN dabc_equation_D_main] and _ and _ and _ and _ and _ and _ and Tr and _ 
     note dabc[THEN conjunct1, symmetric, simp]
-         dabc[THEN conjunct2, simp] ;;
+         dabc[THEN conjunct2, simp]
+    note [[\<phi>trace_reasoning = 2]];;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=d and s=a and F=F\<^sub>1]
       certified by (clarsimp split: prod.split simp add: useful, insert useful(1,2), force) ;;
