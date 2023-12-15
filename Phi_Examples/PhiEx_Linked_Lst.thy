@@ -8,7 +8,7 @@ term \<open>\<Pp>\<t>\<r> T\<close>
 term \<open>0 :: logaddr\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-declare [[\<phi>reasoning_step_limit = 100]]
+declare [[\<phi>reasoning_step_limit = 200]]
 
 
   

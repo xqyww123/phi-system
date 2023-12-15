@@ -313,6 +313,7 @@ val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
 
 structure Expansion : SIMPSET (*The standard simpset for deriving*)
 (*convention: do not add transformation_refl any time! *)
+val equip_expansion_ss : phi_type -> Proof.context -> Proof.context
 
 (*
 val accept : (hint option -> Phi_Type.derive) -> hint list -> Phi_Type.derive
@@ -424,7 +425,7 @@ structure Simps = Simpset (
 )
 
 structure Expansion = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS
+  val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>\<phi>constraint_expansion\<close>
   val comment = "Rules unfolding constraints and conditions in property deriving of \<phi>-type algebra.\n\
                 \Basically, simplification rules for object operators including mappers, relators, \
@@ -464,6 +465,23 @@ structure Expansion = Simpset (
   val post_merging = I
 )
 
+val _ = Theory.setup (Context.theory_map (
+
+  Expansion.map (fn ctxt =>
+    (ctxt
+       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
+       |> Simplifier.add_cong @{thm HOL.conj_cong})
+          (*Because of this cong, the order of the conjunction is significant!*)
+)))
+
+fun equip_expansion_ss phity ctxt =
+  let val tagged_eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phity)
+                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phity)
+                     @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phity)
+                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phity)
+   in Expansion.enhance (Safe_Simps.equip ctxt) addsimps tagged_eqs
+  end
+
 (*
 local
   fun is_atom (Bound _) = true
@@ -481,17 +499,6 @@ in val eq_simproc = Simplifier.make_simproc \<^context> "Phi_Type.eq" {
          | _ => NONE
   }
 end *)
-
-val _ = Theory.setup (Context.theory_map (
-
-  Expansion.map (fn ctxt =>
-    (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
-                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
-                       \<^simproc>\<open>Funcomp_Lambda\<close>])
-      |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
-      |> Simplifier.add_cong @{thm HOL.conj_cong})
-          (*Because of this cong, the order of the conjunction is significant!*)
-))
 
 (** Guess Abstract Operators from BNF **)
 

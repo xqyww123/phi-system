@@ -239,12 +239,14 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                                 | ~1 => @{thm' \<phi>TA_TF\<^sub>\<Lambda>_rewr_C}
       fun abs arity = if arity < 0 then ~ arity else arity
       val ind_conv = default_ind_conv (
-              K (K (Conv.rewr_conv TF_rewr then_conv
-                    Conv.concl_conv arity (Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))),
+              fn ctxt => fn _ => fn ctm =>
+                   (Conv.top_rewrs_conv @{thms' MAKE_def OPEN_def} ctxt then_conv
+                    Conv.rewr_conv TF_rewr then_conv
+                    Conv.concl_conv arity (Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)) ctm,
               fn ctxt => fn phi =>
                   Conv.rewr_conv TF_rewr then_conv
                   Conv.concl_conv (abs arity) (
-                      Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
+                      Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
                       Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
 
       val simp = if is_some (#1 instruction) then K I

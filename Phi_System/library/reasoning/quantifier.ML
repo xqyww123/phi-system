@@ -4,16 +4,55 @@ end
 
 structure BI_Quantifiers : BI_QUANTIFIERS = struct
 
+fun bi_conv (rule_L, rule_R) C ctxt ctm =
+  (case (C ctxt (Thm.dest_arg1 ctm), C ctxt (Thm.dest_arg ctm))
+     of (SOME th1, SOME th2) =>
+          SOME ((Conv.combination_conv (Conv.arg_conv (K th1)) (K th2) then_conv
+                 Conv.rewr_conv rule_L then_conv
+                 Conv.arg_conv (Conv.abs_conv (fn _ =>
+                   Conv.rewr_conv rule_R) ctxt)) ctm)
+      | (SOME th1, _) =>
+          SOME ((Conv.arg1_conv (K th1) then_conv
+                 Conv.rewr_conv rule_L) ctm)
+      | (_, SOME th2) =>
+          SOME ((Conv.arg_conv (K th2) then_conv
+                 Conv.rewr_conv rule_R) ctm)
+      | _ => NONE)
+
+fun skolemize_conv ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>disj\<close>, _) $ _ $ _ =>
+        bi_conv (@{thm' ex_simps(3)[symmetric, folded atomize_eq]},
+                 @{thm' ex_simps(4)[symmetric, folded atomize_eq]})
+                skolemize_conv ctxt ctm
+     | Const(\<^const_name>\<open>conj\<close>, _) $ _ $ _ =>
+        bi_conv (@{thm' ex_simps(1)[symmetric, folded atomize_eq]},
+                 @{thm' ex_simps(2)[symmetric, folded atomize_eq]})
+                skolemize_conv ctxt ctm
+
+(*
+fun lift_Boolean_Ex_to_BI_Ex ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs _ =>
+        Conv.arg_conv (Conv.abs_conv (lift_Boolean_Ex_to_BI_Ex o snd) ctxt) ctm
+     | Const(\<^const_name>\<open>Subjection\<close>, _) $  *)
+
+
+
+
+
 fun quick_check quantifier =
   let fun qchkB lv (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound i $ _) = i = lv
         | qchkB lv (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound i) = i = lv
         | qchkB lv (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) = qchkB lv A orelse qchkB lv B
         | qchkB _ _ = false
+      fun qchkBE lv (Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ Abs (_, _, X)) = qchkBE (lv+1) X
+        | qchkBE lv X = qchkB lv X
 
       fun qchk lv (Const(N, _) $ Abs (_, _, X)) =
             if quantifier = N then qchk (lv+1) X else false
         | qchk lv (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ P) =
-            qchkB lv P andalso
+            qchkBE lv P andalso
             Phi_Syntax.forall_item_of_assertion (
                 fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => not (Term.loose_bvar1 (T, lv))
                  | X => not (Term.loose_bvar1 (X, lv))
@@ -23,9 +62,12 @@ fun quick_check quantifier =
    in qchk ~1
   end
 
-fun sink_quantifier rewr C =
+fun sink_Ex_quantifier C =
   let fun conv ctxt =
-        Conv.rewr_conv rewr then_conv Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt)
+          Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
+          Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt)
+        else_conv (Conv.rewr_conv @{thm' ExSet_boolean_Ex_lift[folded atomize_eq]} then_conv
+                   conv ctxt)
         else_conv C ctxt
    in conv
   end
@@ -64,6 +106,8 @@ fun move_conj qvar =
    in conv
   end
 
+(*fun lift_boolean*)
+
 fun defined_Ex_direct ctm =
   case Thm.term_of ctm
     of Const _ (*Ex*) $ Abs (_, _, Const _ (*Subj*) $ _ $ X) =>
@@ -76,15 +120,21 @@ fun defined_Ex_direct ctm =
      | _ => error "BI.defined_Ex"
 
 fun defined_Ex ctxt ctm =
-  if quick_check \<^const_name>\<open>ExSet\<close> (Thm.term_of ctm)
-  then SOME (sink_quantifier @{thm' BI_Ex_comm[folded atomize_eq]} (fn ctxt => fn ctm => 
-          (Conv.try_conv (Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (qvar, _) =>
-              Conv.arg_conv (Phi_Conv.wrap_opt_conv (
-                move_conj (dest_Free (Thm.term_of qvar))))
-            ) ctxt)) then_conv
-          defined_Ex_direct) ctm)
-          ctxt ctm)
-  else NONE
+  let exception NO_CONV
+   in if quick_check \<^const_name>\<open>ExSet\<close> (Thm.term_of ctm)
+      then SOME (sink_Ex_quantifier (fn ctxt => fn ctm => 
+              ((fn ctm =>
+                Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (qvar, _) =>
+                  Conv.arg_conv (fn ctm =>
+                    case move_conj (dest_Free (Thm.term_of qvar)) ctm
+                      of SOME ret => ret
+                       | NONE => raise NO_CONV)
+                ) ctxt) ctm
+                handle NO_CONV => Conv.all_conv ctm) then_conv
+              defined_Ex_direct) ctm)
+              ctxt ctm)
+      else NONE
+  end
 
 end
 

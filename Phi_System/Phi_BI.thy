@@ -1550,6 +1550,11 @@ lemma ExSet_subj_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
   unfolding BI_eq_iff
   by clarsimp
 
+lemma ExSet_boolean_Ex_lift:
+  \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y)) = (A x \<s>\<u>\<b>\<j> x y. P x y) \<close>
+  unfolding BI_eq_iff
+  by clarsimp
+
 
 paragraph \<open>With Multiplicative Conjunction\<close>
 
@@ -1771,6 +1776,8 @@ lemma Subjection_Subjection[simp, \<phi>programming_base_simps, \<phi>safe_simp]
   \<open>(S \<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> Q) = (S \<s>\<u>\<b>\<j> P \<and> Q)\<close>
   unfolding BI_eq_iff
   by simp
+
+
 
 lemma Subjection_Zero[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>(0 \<s>\<u>\<b>\<j> P) = 0\<close>
@@ -4738,9 +4745,9 @@ simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
 
 setup \<open>Context.theory_map (
   Assertion_SS.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExSet}]) #>
+    ctxt addsimprocs [@{simproc defined_ExSet}, @{simproc Funcomp_Lambda}]) #>
   Phi_Safe_Simps.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExSet}]))\<close>
+    ctxt addsimprocs [@{simproc defined_ExSet}, @{simproc Funcomp_Lambda}]))\<close>
 
 
 subsubsection \<open>Reasoners\<close>
