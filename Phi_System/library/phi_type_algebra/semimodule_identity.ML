@@ -26,7 +26,7 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
-                  Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps eqs) then_conv
+                  Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi ctxt addsimps eqs) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (conv_hol_imp_to_meta_if_has Conv.all_conv))
 

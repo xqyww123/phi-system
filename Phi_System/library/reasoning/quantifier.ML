@@ -63,12 +63,12 @@ fun quick_check quantifier =
   end
 
 fun sink_Ex_quantifier C =
-  let fun conv ctxt =
-          Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
+  let fun conv ctxt ctm =
+       (  Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
           Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt)
         else_conv (Conv.rewr_conv @{thm' ExSet_boolean_Ex_lift[folded atomize_eq]} then_conv
                    conv ctxt)
-        else_conv C ctxt
+        else_conv C ctxt) ctm
    in conv
   end
 

@@ -522,6 +522,23 @@ text \<open>
   (or the reasoners of) \<^prop>\<open>A11\<close> and \<^prop>\<open>A22\<close>.
   \<close>
 
+lemma [\<phi>reason %cutting]:
+  \<open> True \<or> True \<close>
+  by blast
+
+lemma [\<phi>reason %cutting]:
+  \<open> True \<or> False \<close>
+  by blast
+
+lemma [\<phi>reason %cutting]:
+  \<open> False \<or> True \<close>
+  by blast
+
+lemma [\<phi>reason %cutting]:
+  \<open> True \<and> True \<close>
+  by blast
+
+
 section \<open>The Engine \& The Concepts\<close>
 
 text \<open>
@@ -1614,9 +1631,102 @@ lemma LPR_ctrl_sum[simp]:
   unfolding LPR_ctrl_def
   by simp
 
+subsubsection \<open>Instantiation Eliminating Unknown Variables\<close>
+
+definition \<open>IEUV succeeded IN OUT \<equiv> (IN \<longleftrightarrow> OUT)\<close>
+
+\<phi>reasoner_group IEUV__all = (100, [10, 3000]) for \<open>IEUV succeeded IN OUT\<close>
+      \<open>instantiating unknown variables in \<open>IN\<close> and returns \<open>OUT\<close>\<close>
+  and IEUV__default = (10, [10,10]) in IEUV__all \<open>system default\<close>
+  and IEUV = (1000, [1000, 1030]) in IEUV__all and > IEUV__default \<open>default group\<close>
+
+  and IEUV_eq = (1000, [1000, 2000]) for \<open>IEUV succeed (x = y) OUT\<close>
+                in IEUV__all and > IEUV__default \<open>\<close>
 
 
-paragraph \<open>Setup\<close>
+declare [[
+  \<phi>reason_default_pattern \<open>IEUV _ ?IN _\<close> \<Rightarrow> \<open>IEUV _ ?IN _\<close> (100),
+  \<phi>default_reasoner_group \<open>IEUV _ _ _\<close> : %IEUV           (100)
+]]
+
+
+paragraph \<open>Rules\<close>
+
+lemma [\<phi>reason %IEUV__default]:
+  \<open> IEUV False X X \<close>
+  unfolding IEUV_def ..
+
+lemma [\<phi>reason add]:
+  \<open> IEUV S A A'
+\<Longrightarrow> IEUV S (\<not> A) (\<not> A') \<close>
+  unfolding IEUV_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> IEUV S\<^sub>1 A A'
+\<Longrightarrow> IEUV S\<^sub>2 B B'
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (A \<and> B) (A' \<and> B') \<close>
+  unfolding IEUV_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> IEUV S\<^sub>1 A A'
+\<Longrightarrow> IEUV S\<^sub>2 B B'
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (A \<or> B) (A' \<or> B') \<close>
+  unfolding IEUV_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> IEUV S\<^sub>1 A A'
+\<Longrightarrow> IEUV S\<^sub>2 B B'
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) (A \<longrightarrow> B) (A' \<longrightarrow> B') \<close>
+  unfolding IEUV_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> (\<And>a. IEUV S (A a) (A' a))
+\<Longrightarrow> IEUV S (\<forall>a. A a) (\<forall>a. A' a) \<close>
+  unfolding IEUV_def
+  by blast
+
+lemma [\<phi>reason add]:
+  \<open> (\<And>a. IEUV S (A a) (A' a))
+\<Longrightarrow> IEUV S (\<exists>a. A a) (\<exists>a. A' a) \<close>
+  unfolding IEUV_def
+  by blast
+
+lemma [\<phi>reason %IEUV_eq for \<open>IEUV _ (?var = _) _\<close>
+                            \<open>IEUV _ (_ = ?var) _\<close>
+                            \<open>IEUV _ (?x = ?X) _\<close> ]:
+  \<open> IEUV True (x = x) True \<close>
+  unfolding IEUV_def
+  by simp
+
+lemma [\<phi>reason %IEUV_eq+30]:
+  \<open> IEUV S\<^sub>1 (x\<^sub>1 = y\<^sub>1) O\<^sub>1
+\<Longrightarrow> IEUV S\<^sub>2 (x\<^sub>2 = y\<^sub>2) O\<^sub>2
+\<Longrightarrow> IEUV (S\<^sub>1 \<or> S\<^sub>2) ((x\<^sub>1, x\<^sub>2) = (y\<^sub>1, y\<^sub>2)) (O\<^sub>1 \<and> O\<^sub>2) \<close>
+  unfolding IEUV_def
+  by blast
+
+lemma [\<phi>reason %IEUV_eq+20]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 (fst x = y\<^sub>1) O\<^sub>1 \<and>\<^sub>\<r>
+          IEUV S\<^sub>2 (snd x = y\<^sub>2) O\<^sub>2 \<and>\<^sub>\<r>
+          S\<^sub>1 \<or> S\<^sub>2
+\<Longrightarrow> IEUV True (x = (y\<^sub>1,y\<^sub>2)) (O\<^sub>1 \<and> O\<^sub>2) \<close>
+  unfolding IEUV_def \<r>Guard_def Ant_Seq_def
+  by (cases x; simp)
+
+lemma [\<phi>reason %IEUV_eq+20]:
+  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 (x\<^sub>1 = fst y) O\<^sub>1 \<and>\<^sub>\<r>
+          IEUV S\<^sub>2 (x\<^sub>2 = snd y) O\<^sub>2 \<and>\<^sub>\<r>
+          S\<^sub>1 \<or> S\<^sub>2
+\<Longrightarrow> IEUV True ((x\<^sub>1,x\<^sub>2) = y) (O\<^sub>1 \<and> O\<^sub>2) \<close>
+  unfolding IEUV_def \<r>Guard_def Ant_Seq_def
+  by (cases y; simp)
+
+
+subsubsection \<open>Setup\<close>
 
 ML_file_debug "library/reasoners.ML"
 

@@ -319,10 +319,6 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
-      val tagged_eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
-                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
-                     @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
-                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
       val _ = conv_chk_unfolded
       val ind_conv =
             default_ind_conv (
@@ -335,7 +331,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                        Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
                        Phi_Conv.meta_all_conv (fn _ => Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctxt then_conv
                       (Phi_Reasoners.asm_full_rewrite true (
-                          Expansion.equip ctxt addsimps (@{thms' ex_pure_imp conj_imp_eq_imp_imp} @ tagged_eqs))))) then_conv
+                          equip_expansion_ss phi0 ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp})))) then_conv
                     Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                       (Phi_Conv.meta_alls_conv (
                                         Phi_Conv.hol_alls_to_meta_alls (fn _ =>

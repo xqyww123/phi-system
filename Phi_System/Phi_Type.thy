@@ -7518,8 +7518,8 @@ consts \<phi>deriver_expansion :: mode
 
 \<phi>reasoner_ML \<phi>deriver_expansion %cutting
   (\<open>Premise \<phi>deriver_expansion _\<close> | \<open>Simplify \<phi>deriver_expansion ?X' ?X\<close> )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty)
-        Phi_Type_Derivers.Expansion.get' {fix_vars=true}) o snd\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
+        Phi_Type_Derivers.equip_expansion_ss0 {fix_vars=true}) o snd\<close>
 
 
 subsubsection \<open>Extending Property Guessers\<close>
@@ -8731,7 +8731,7 @@ private lemma \<phi>TA_MS\<^sub>E_rule:
   by clarsimp
 
 ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
-
+                            
 end
 
 \<phi>property_deriver Semimodule_Scalar_Assoc\<^sub>I 130 for (\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>)
@@ -9335,16 +9335,6 @@ ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 section \<open>Deriving Configures for Specific Abstract Algebras\<close>
 
 subsubsection \<open>Common\<close>
-
-setup \<open>Context.theory_map (Phi_Type_Derivers.Expansion.map (fn ctxt => ctxt addsimps
-  @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
-          prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
-          ExSet_simps
-          \<phi>Prod_expn' \<phi>Prod_expn''
-          FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
-          list_all2_Cons1 list_all2_Nil
-          map_ident}))\<close>
-
 
 lemmas [\<phi>constraint_expansion global] =
   Nat.add_Suc_right Groups.monoid_add_class.add.right_neutral Nat.nat.inject

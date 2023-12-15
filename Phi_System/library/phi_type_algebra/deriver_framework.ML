@@ -313,7 +313,8 @@ val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
 
 structure Expansion : SIMPSET (*The standard simpset for deriving*)
 (*convention: do not add transformation_refl any time! *)
-val equip_expansion_ss : phi_type -> Proof.context -> Proof.context
+val equip_expansion_ss0 : Proof.context -> Proof.context
+val equip_expansion_ss  : phi_type -> Proof.context -> Proof.context
 
 (*
 val accept : (hint option -> Phi_Type.derive) -> hint list -> Phi_Type.derive
@@ -425,7 +426,7 @@ structure Simps = Simpset (
 )
 
 structure Expansion = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS
+  val initial_ss = Simpset_Configure.Minimal_SS
   val binding = SOME \<^binding>\<open>\<phi>constraint_expansion\<close>
   val comment = "Rules unfolding constraints and conditions in property deriving of \<phi>-type algebra.\n\
                 \Basically, simplification rules for object operators including mappers, relators, \
@@ -468,18 +469,49 @@ structure Expansion = Simpset (
 val _ = Theory.setup (Context.theory_map (
 
   Expansion.map (fn ctxt =>
-    (ctxt
-       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
-       |> Simplifier.add_cong @{thm HOL.conj_cong})
+    (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
+                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
+                       \<^simproc>\<open>Funcomp_Lambda\<close>, \<^simproc>\<open>defined_ExSet\<close>])
+          addsimps @{thms'
+              \<phi>Any.unfold \<phi>Bot.unfold \<phi>None_itself_is_one \<phi>None_freeobj_expn
+              HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
+              prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
+
+              ExSet_simps ExSet_simps_ex ExSet_split_prod ExSet_subj_split_prod
+              ExSet_times_left ExSet_times_right
+              Subjection_Subjection Subjection_True Subjection_Flase Subjection_Zero
+              Subjection_addconj Subjection_times
+
+              \<phi>Prod_expn' \<phi>Prod_expn'' REMAINS_simp LeftCond_single_Cond_const_red
+              \<phi>Cond_Unital_Ins_unfold_simp \<phi>Cond_Unital_Ins_BI_unfold_simp \<phi>Cond_Item_simp BiCond_single_Cond_const_red
+
+              sep_quant_sing sep_quant_empty sep_quant_subjection sep_quant_ExSet
+
+
+              add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
+              zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
+              plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
+              distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
+              mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
+
+              FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
+              list_all2_Cons1 list_all2_Nil
+              map_ident}
+      |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
+      |> Simplifier.add_cong @{thm HOL.conj_cong})
           (*Because of this cong, the order of the conjunction is significant!*)
-)))
+))
+
+fun equip_expansion_ss0 ctxt =
+  Expansion.enhance (Phi_Safe_Simps.equip ctxt)
+    delsimps @{thms' HOL.simp_thms(15) True_implies_equals}
 
 fun equip_expansion_ss phity ctxt =
   let val tagged_eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phity)
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phity)
                      @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phity)
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phity)
-   in Expansion.enhance (Safe_Simps.equip ctxt) addsimps tagged_eqs
+   in Expansion.equip ctxt addsimps tagged_eqs
   end
 
 (*

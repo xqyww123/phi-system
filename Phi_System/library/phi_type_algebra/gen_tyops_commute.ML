@@ -20,10 +20,6 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                | _ => [])
         | extract_oprs_from_hint _ = []
 
-      val simps = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
-                @ map_filter (Option.map  Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
-                @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
-                @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
       val ind_rewr_I = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
                              \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
                           by (unfold atomize_imp Action_Tag_def)}
@@ -38,7 +34,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                                         else if is_IH then ind_rewr_E_IH
                                                       else ind_rewr_E_CL) then_conv
             (if is_IH then Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def})
-                      else Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)) then_conv
+                      else Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
             (if not is_intro andalso is_IH then Phi_Conv.meta_all_conv o (fn C => C o snd)
                                            else I) (fn _ =>
             Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]})) Conv.all_conv

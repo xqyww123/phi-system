@@ -192,6 +192,11 @@ fun annot_of_fixing ret (Const(\<^const_name>\<open>LPR_ctrl\<close>, _) $ X) = 
   | annot_of_fixing ret (Abs (_,_,X)) = annot_of_fixing ret X
   | annot_of_fixing ret _ = ret
 
+(*Eliminating unknown variables as early as possible is essential for the performance of solving
+proof obligations. It seems that Isabelle is not very good at eliminating existentially quantified
+variables (to which unknown variables will be instantiate) and fails sometimes even for naive instantiation.
+Therefore, we use sophisticated instantiation strategy here involving different levels of
+computational complexity to instantiate them as early as possible.*)
 
 fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
   | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
@@ -230,6 +235,17 @@ fun fast_inst can_inst th =
           then SOME (@{thm' Premise_True} RS th, Seq.empty)
           else NONE
      | _ => NONE
+
+(*slow but powerfull and flexible*)
+fun LPR_inst ctxt th = (
+  Phi_Reasoner.info_print ctxt 3 (fn () => "Phi_Reasoners.LPR_inst") ;
+  Phi_Reasoner.reason NONE (SOME 1) ctxt
+                      (@{lemma' \<open> \<g>\<u>\<a>\<r>\<d> IEUV Any P P' \<and>\<^sub>\<r> Any
+                              \<Longrightarrow> Premise mode P'
+                              \<Longrightarrow> Premise mode P \<close>
+                             by (simp add: IEUV_def \<r>Guard_def Ant_Seq_def)
+                        } RS' (ctxt, th))
+)
 
 (*fix_level = 0 for no fix
             | 1 for fixing the conditions of the leading antecedent only but leaves variables
@@ -271,7 +287,10 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
                     
    in (case fast_inst can_inst th2
    of SOME ret => SOME ret
-    | NONE => f ctxt' th2)
+    | NONE => (
+      case LPR_inst ctxt' th2
+        of SOME ret => f ctxt' ret
+         | _ => f ctxt' th2))
    |> not (null fixing_targets) ? Option.map (fn (th, seq') =>
         let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
          in (f th, Seq.map f seq')

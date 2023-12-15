@@ -233,7 +233,7 @@ fun gen_trans_to_raw_abst (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                 Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
                 Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
                   Phi_Syntax.transformation_conv
-                    (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))
+                    (Simplifier.rewrite (equip_expansion_ss phi0 ctxt addsimps (#equations phi0)))
                     Conv.all_conv Conv.all_conv)))
 
       val simp = if is_some hint then K I else simplifier_by_LPR' @{thm' \<phi>TA_TrRA_simp}

@@ -91,7 +91,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
             fn ctxt => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
-                Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
+                Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt addsimps (#equations phi0)) then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv
           )
             
