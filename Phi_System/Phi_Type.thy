@@ -4126,6 +4126,7 @@ lemma ToA_mapper_MOne_src
 \<medium_right_bracket> apply(rule conjunctionI, rule)
 \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and S1I[] and S1E[] and _ and Tr[]
   apply_rule apply_ToA_Mapper_backward[OF Tr]
+    certified by (of_tac x, auto_sledgehammer) ;;
   apply_rule apply_Semimodule_One\<^sub>E[OF S1E, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
     certified by (insert ToA_Mapper_f_expn[OF Tr], auto_sledgehammer) ;;
 
@@ -6001,7 +6002,7 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
     note [[\<phi>trace_reasoning = 2]];;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=d and s=a and F=F\<^sub>1]
-      certified by (clarsimp split: prod.split simp add: useful, insert useful(1,2), force) ;;
+      certified by (of_tac \<open>(snd (snd x), fst x)\<close>, clarsimp split: prod.split simp add: useful, insert useful(1,2), force) ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=b and s=c and F=F\<^sub>1]
     apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> case uz b c (z d a (x\<^sub>d,x\<^sub>a)) of (x\<^sub>b,x\<^sub>c) \<Rightarrow> (x\<^sub>b,w)\<close>]
       certified by (clarsimp split: prod.split simp add: useful)

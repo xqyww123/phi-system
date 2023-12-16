@@ -7,7 +7,7 @@ typ fiction
 term \<open>\<Pp>\<t>\<r> T\<close>
 term \<open>0 :: logaddr\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 declare [[\<phi>reasoning_step_limit = 200]]
 
   
@@ -25,6 +25,7 @@ declare [[\<phi>reasoning_step_limit = 200]]
           \<Longrightarrow> Transformation_Functor (Linked_Lst' TY) (Linked_Lst' TY') T U (set o snd) (\<lambda>_. UNIV) (\<lambda>r (a\<^sub>1,l\<^sub>1) (a\<^sub>2,l\<^sub>2). a\<^sub>1 = a\<^sub>2 \<and> list_all2 r l\<^sub>1 l\<^sub>2) \<close> 
           (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ (_,x). x\<close>], rule exI[where x=\<open>\<lambda>(a,_) _. a\<close>],
                    rule, auto_sledgehammer, rule exI[where x=\<open>\<lambda>(_,x) _. x\<close>])
+       (* \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (Linked_Lst' TY T) (\<lambda>(a\<^sub>1,l\<^sub>1) (a\<^sub>2,l\<^sub>2). a\<^sub>1 = a\<^sub>2 \<and> list_all2 eq l\<^sub>1 l\<^sub>2) \<close>*)
       (*\<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (Linked_Lst' TY T) (\<lambda>(a\<^sub>1,l\<^sub>1) (a\<^sub>2,l\<^sub>2). a\<^sub>1 = a\<^sub>2 \<and> list_all2 eq l\<^sub>1 l\<^sub>2) \<close>*)
 
 
