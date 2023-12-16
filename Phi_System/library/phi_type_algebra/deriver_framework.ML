@@ -204,8 +204,9 @@ val default_ind_conv : (Proof.context -> Phi_Type.phi_type -> conv) (*converting
 (*`reasoning` specifies how to solve the reasoning goals in detail.*)
 
 type varifier = cterm Vars.table * Subgoal.focus -> term -> (term list * (term list -> term)) option
+type reasoning_configure_ret = thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
-                        -> thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
+                        -> reasoning_configure_ret
 val varify_all_vars : varifier
 
 type reasoner = Proof.context -> thm -> thm
@@ -242,6 +243,10 @@ val default_reasoning_configure : reasoning_configure
   instantiated (to potentially multiple versions, if containing any schematic variables) by
   collecting pure facts tagged by \<phi>TA_pure_facts.
 *)
+val pass_make_ToA :
+      (Reasoner_Group.group * thm) list -> reasoning_configure_ret -> reasoning_configure_ret
+
+val pass_make_ToA_default : reasoning_configure_ret -> reasoning_configure_ret
 
 (** Solver **)
 
@@ -316,10 +321,10 @@ exception Automation_Fail of (unit -> Pretty.T list)
 val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
 
 structure Expansion : SIMPSET (*The standard simpset for deriving*)
-structure Expansion_Post_Merging : HOOKS
 (*convention: do not add transformation_refl any time! *)
 val equip_expansion_ss0 : Proof.context -> Proof.context
 val equip_expansion_ss  : phi_type -> Proof.context -> Proof.context
+val case_split_simproc : thm -> string * string -> Proof.context -> simproc
 
 (*
 val accept : (hint option -> Phi_Type.derive) -> hint list -> Phi_Type.derive
@@ -471,17 +476,36 @@ structure Expansion = Simpset (
   val post_merging = I
 )
 
-structure Expansion_Post_Merging = Hooks (
-  type arg = unit
-  type state = Proof.context
-)
+
+(*rule: Qx P x \<longleftrightarrow> Qa b. P (a,b)*)
+fun case_split_simproc rule (simproc_name, name) ctxt0 =
+  Simplifier.make_simproc ctxt0 simproc_name {
+      lhss = [Thm.term_of (Thm.lhs_of rule)],
+      proc = fn _ => fn ctxt => fn ctm =>
+        case Thm.term_of ctm
+          of Const(_) $ Abs (_, _, X) =>
+              let fun is_case_split lv (Const(N,_) $ B $ Bound i) =
+                        lv = i andalso N = name orelse is_case_split lv B
+                    | is_case_split lv (A $ B) = is_case_split lv A orelse is_case_split lv B
+                    | is_case_split lv (Abs (_,_,X)) = is_case_split (lv+1) X
+                    | is_case_split lv _ = false
+               in if is_case_split 0 X
+                  then SOME (Thm.transfer' ctxt rule)
+                  else NONE
+              end
+           | _ => NONE
+           
+    }
 
 val _ = Theory.setup (Context.theory_map (
 
   Expansion.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
-                       \<^simproc>\<open>Funcomp_Lambda\<close>, \<^simproc>\<open>defined_ExSet\<close>])
+                       \<^simproc>\<open>Funcomp_Lambda\<close>, \<^simproc>\<open>defined_ExSet\<close>,
+                       case_split_simproc @{thm' split_paired_all[folded atomize_eq]} ("split_paired_all-case_split", \<^const_name>\<open>case_prod\<close>) ctxt,
+                       case_split_simproc @{thm' split_paired_All[folded atomize_eq]} ("split_paired_All-case_split", \<^const_name>\<open>case_prod\<close>) ctxt
+                      ])
           addsimps @{thms'
               \<phi>Any.unfold \<phi>Bot.unfold \<phi>None_itself_is_one \<phi>None_freeobj_expn
               HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
@@ -522,8 +546,8 @@ fun equip_expansion_ss phity ctxt =
                      @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phity)
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phity)
    in Expansion.equip ctxt addsimps tagged_eqs
-   |> Expansion_Post_Merging.invoke (Context.Proof ctxt) ()
   end
+
 
 (*
 local
@@ -1653,18 +1677,26 @@ type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
                         -> thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
+type reasoning_configure_ret = thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 
-fun pass_make_ToA ctxt (ToA, gp) =
-  let fun mk ToA' gp = map (fn rule => (ToA' RS' (ctxt, rule), SOME gp))
-      fun mk' ToA' = mk ToA' @{reasoner_group %deriving_local_rules} @{thms' mk_ToA_rule mk_ToA_rule'}
-                   @ mk ToA' @{reasoner_group %deriving_local_rules-10}
-                             @{thms' mk_ToA_rule_varified mk_ToA_rule'_varified}
+fun pass_make_ToA_i mk_rules ctxt (ToA, gp) =
+  let fun mk ToA' (gp, rule) = (ToA' RS' (ctxt, rule), SOME gp)
    in if can (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ToA_elim\<close>) (Thm.concl_of ToA)
-   then mk' (ToA RS' (ctxt, @{thm' Action_Tag_D}))
+   then map (mk (ToA RS' (ctxt, @{thm' Action_Tag_D}))) mk_rules
    else case try (Phi_Syntax.dest_transformation) (Thm.concl_of ToA)
-     of SOME (_, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>MAKE\<close>, _) $ _), _) => mk' ToA
+     of SOME (_, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>MAKE\<close>, _) $ _), _)
+          => map (mk ToA) mk_rules
       | _ => [(ToA, gp)]
   end
+
+fun pass_make_ToA mk_rules (rules_a, rules_b, LPR_rules, ctxt) =
+      (rules_a, rules_b, maps (pass_make_ToA_i mk_rules ctxt) LPR_rules, ctxt)
+
+val pass_make_ToA_default = pass_make_ToA
+      [(@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule}),
+       (@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule'}),
+       (@{reasoner_group %deriving_local_rules-10}, @{thm' mk_ToA_rule_varified}),
+       (@{reasoner_group %deriving_local_rules-10}, @{thm' mk_ToA_rule'_varified})]
 
 fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close> o Thm.concl_of
@@ -1689,7 +1721,6 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
       val rewrs = map_filter (extract_rewr ctxt) local_prems
       val ants = filter_out (Phi_Reasoners.is_syntactic_premise o Thm.concl_of) local_prems
               |> map (rpair NONE)
-              |> maps (pass_make_ToA ctxt)
    in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
 

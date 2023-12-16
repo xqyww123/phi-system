@@ -112,7 +112,7 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
 
 fun SH_reasoning is_intro phi ctxt =
   default_reasoning true
-      default_reasoning_configure
+      (pass_make_ToA_default oo default_reasoning_configure)
       (K (K NONE))
       (fn ctxt => fn sequent =>
          let val bads = [\<^const_name>\<open>MAKE\<close>, \<^const_name>\<open>OPEN\<close>]
@@ -164,7 +164,7 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}),
             fn ctxt => fn _ =>
              (Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1}) then_conv
-              Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+              (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
               Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u

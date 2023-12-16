@@ -8,9 +8,9 @@ term \<open>\<Pp>\<t>\<r> T\<close>
 term \<open>0 :: logaddr\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-declare [[\<phi>reasoning_step_limit = 200]]
+declare [[\<phi>reasoning_step_limit = 50]]
 
-   
+    
     
 \<phi>type_def Linked_Lst' :: \<open>TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, logaddr \<times> 'a list) \<phi>\<close>
   where \<open>((addr, []) \<Ztypecolon> Linked_Lst' TY T) = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
