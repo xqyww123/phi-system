@@ -244,6 +244,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                            | 2 => @{thm' \<phi>TA_biTF_rewr_pre}
                            | ~1 => @{thm' \<phi>TA_TF\<^sub>\<Lambda>_rewr_pre}
 
+      val equip_expansion = equip_expansion_ss phi0
       fun abs arity = if arity < 0 then ~ arity else arity
       val ind_conv = default_ind_conv (
               fn ctxt => fn _ => fn ctm =>
@@ -252,11 +253,11 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                     Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm,
               fn ctxt => fn phi => fn ctm => (
                   Conv.rewr_conv TF_rewr then_conv (fn ctm =>
-                 (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+                 (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)) ctm)
 
       val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
-           (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+           (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
             Conv.implies_concl_conv (Conv.rewr_conv TF_rewr_pre)) ctm) o snd)
 
       val simp = if is_some (#1 instruction) then K I

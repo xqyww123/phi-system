@@ -207,6 +207,7 @@ fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
                       $ _ )) = [Px, fx]
         | extract_oprs_from_hint _ = []
 
+      val equip_expansion = equip_expansion_ss phi
       val ind_conv = default_ind_conv (
             fn _ => fn _ =>
                 Conv.rewr_conv rewr_IH,
@@ -214,7 +215,7 @@ fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
                 Conv.rewr_conv rewr_CL then_conv
                 Conv.implies_conv
                   (Conv.top_rewrs_conv [rewr_ant] ctxt)
-                  (let val sctxt = equip_expansion_ss phi ctxt addsimps (#equations phi)
+                  (let val sctxt = equip_expansion ctxt addsimps (#equations phi)
                     in Phi_Reasoners.asm_rewrite false sctxt
                    end))
 

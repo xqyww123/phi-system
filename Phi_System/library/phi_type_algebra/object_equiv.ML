@@ -167,6 +167,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
         | extract_oprs_from_hint _ = []
 
       val _ = conv_chk_unfolded
+      val equip_expansion = equip_expansion_ss phi0
     (*val phitm = Thm.cterm_of ctxt0 (#term phi0)
       val OE_IND_I = Drule.infer_instantiate ctxt0 [(("T",0), phitm)]
                         \<^instantiate>\<open>'a=\<open>Thm.ctyp_of_cterm phitm\<close> and T=phitm in
@@ -180,7 +181,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                fn ctxt => fn _ =>
                     (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
                     (Phi_Reasoners.asm_full_rewrite true (
-                          equip_expansion_ss phi0 ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp}))
+                          equip_expansion ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp}))
                     (*(Conv.implies_concl_conv (
                        Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
                        Phi_Conv.meta_alls_conv (fn _ => Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctxt then_conv
@@ -204,6 +205,9 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                       (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
                           conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
                         ) ctxt)*))
+      val pre_simp = default_pre_simplifier (Phi_Conv.meta_all_conv (fn (_,ctxt) =>
+           (Phi_Conv.meta_all_conv (Phi_Reasoners.asm_rewrite true o equip_expansion o snd) ctxt) then_conv
+            Conv.rewr_conv @{thm' \<phi>TA_OE_rewr_pre}) o snd)
 
       val infer = if not (is_some (#1 instruction)) andalso not (#is_recursive phi0)
                   then predicate_infer false
@@ -238,7 +242,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
                                       [(K NONE, K (K I), K (pure_PLPR_reasoning 2)),
                                        (K (SOME [0]), ind_conv, OE_reasoning)],
-                                      infer, K I, simp)
+                                      infer, pre_simp, simp)
                                      phi0 instruction
                                      (Config.put search_CSTR_rules true ctxt)
    in Seq.pull rules

@@ -203,6 +203,7 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ _ $ D) = [D]
         | extract_oprs_from_hint _ = []
 
+      val equip_expansion = equip_expansion_ss phi0
       val ind_conv = default_ind_conv (
               fn ctxt => fn _ => fn ctm =>
                  (Conv.top_rewrs_conv @{thms' MAKE_def OPEN_def} ctxt then_conv
@@ -210,11 +211,11 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm,
               fn ctxt => fn _ => fn ctm =>
                  (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
-                  Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+                  Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)
 
       val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
-           (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+           (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
             Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_rev}) ctm) o snd)
 
       val mode_infer = not (is_some (#1 instruction)) andalso not (#is_recursive phi0)

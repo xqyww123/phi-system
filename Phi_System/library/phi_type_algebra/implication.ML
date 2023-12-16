@@ -339,6 +339,7 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
 
+      val equip_expansion = equip_expansion_ss phi0
       val ind_conv = default_ind_conv (
               fn ctxt => (K (
                   Conv.top_rewrs_conv @{thms' MAKE_def OPEN_def} ctxt then_conv
@@ -346,11 +347,11 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)),
               fn ctxt => fn _ =>
                  (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
-                  (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
+                  (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
 
       val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
-           (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+           (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
             Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_rev}) ctm) o snd)
 
       fun varify_subgoal _ (Trueprop $ (rEIF $ S $ P)) =

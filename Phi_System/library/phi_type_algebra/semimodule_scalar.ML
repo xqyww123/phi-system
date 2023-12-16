@@ -114,6 +114,7 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                           (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt
       val simp = K I
 
+      val equip_expansion = equip_expansion_ss phi0
       val eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
               @ map_filter (Option.map  Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
               @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
@@ -125,7 +126,7 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                                     (Conv.bottom_rewrs_conv @{thms' OPEN_def MAKE_def} ctxt),
              fn ctxt => fn _ =>
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
-                  Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt addsimps eqs) then_conv
+                  Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (conv_hol_imp_to_meta_if_has Conv.all_conv))
                                    

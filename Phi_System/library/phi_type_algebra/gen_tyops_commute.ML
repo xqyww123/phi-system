@@ -29,12 +29,13 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_subgoal undefined)
                                   \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action NToA)\<close>
                                 by (simp add: atomize_imp Action_Tag_def Bubbling_def atomize_all)}
+      val equip_expansion = equip_expansion_ss phi0
       fun gen_ind_conv is_IH ctxt _ ctm = (
             Conv.rewr_conv (if is_intro then ind_rewr_I
                                         else if is_IH then ind_rewr_E_IH
                                                       else ind_rewr_E_CL) then_conv
             (if is_IH then Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def})
-                      else Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
+                      else Phi_Reasoners.asm_rewrite true (equip_expansion ctxt)) then_conv
             (if not is_intro andalso is_IH then Phi_Conv.meta_all_conv o (fn C => C o snd)
                                            else I) (fn _ =>
             Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]})) Conv.all_conv

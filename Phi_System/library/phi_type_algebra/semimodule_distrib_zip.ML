@@ -31,6 +31,7 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                  else simplifier_by_cong (if is_zip then @{thms' \<phi>TA_MD\<^sub>Z_cong}
                                                     else @{thms' \<phi>TA_MD\<^sub>U_cong})
 
+      val equip_expansion = equip_expansion_ss phi
       val eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi)
               @ map_filter (Option.map  Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi)
               @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi)
@@ -42,7 +43,7 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                                     (Conv.bottom_rewrs_conv @{thms' OPEN_def MAKE_def} ctxt),
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
-                  (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi ctxt addsimps eqs)) then_conv
+                  (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (conv_hol_imp_to_meta_if_has Conv.all_conv))
 

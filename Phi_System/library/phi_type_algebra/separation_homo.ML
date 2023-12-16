@@ -148,12 +148,13 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                       | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) => true)
                | _ => false (*TODO: guessing the form of parameterized SH is not supported yet*)
 
+      val equip_expansion = equip_expansion_ss phi0
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_IH}),
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
-              Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+              Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
               Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                 (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
                   conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]})
@@ -164,7 +165,7 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}),
             fn ctxt => fn _ =>
              (Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1}) then_conv
-              (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
+              (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion ctxt)) then_conv
               Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u

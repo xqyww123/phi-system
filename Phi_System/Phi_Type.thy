@@ -7809,7 +7809,7 @@ definition \<open>OE_IND T = T\<close>
 private lemma Object_Equiv_rule:
   \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
-\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T)) @action \<phi>TA_subgoal undefined)
+\<Longrightarrow> (\<And>x y. Ant \<Longrightarrow> eq x y \<Longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
               \<comment> \<open>Induct over \<open>x \<Ztypecolon> T\<close>. When \<open>x\<close> is inductively split, the constraint of \<open>eq x y\<close>
                   should also split \<open>y\<close>, so that \<open>y \<Ztypecolon> T\<close> can reduce.
                   A deficiency is, when the relation \<open>eq\<close> is trivially true such as that when
@@ -7822,10 +7822,16 @@ private lemma Object_Equiv_rule:
   by blast
 
 private lemma \<phi>TA_OE_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T)) @action \<phi>TA_subgoal undefined)
-\<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> OE_IND T @action \<phi>TA_ToA_elim)\<close>
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> MAKE U)) @action \<phi>TA_subgoal undefined)
+\<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> OE_IND U @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
             OE_IND_def
+  by (rule; blast)
+
+private lemma \<phi>TA_OE_rewr_pre:
+  \<open> (\<And>y. Ant \<Longrightarrow> P y \<Longrightarrow> C y @action \<A>)
+ \<equiv> Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> C y) @action \<A>) \<close>
+  unfolding Action_Tag_def atomize_imp atomize_all
   by (rule; blast)
 
 private lemma \<phi>TA_OE_rewr_CL:

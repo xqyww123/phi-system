@@ -19,6 +19,7 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
                           (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt
       val simp = K I
 
+      val equip_expansion = equip_expansion_ss phi
       val eqs = #equations phi @ map_filter I (#type_equations phi)
       val ind_conv = default_ind_conv (
              fn _ => fn _ =>
@@ -26,7 +27,7 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
-                  Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi ctxt addsimps eqs) then_conv
+                  Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (conv_hol_imp_to_meta_if_has Conv.all_conv))
 

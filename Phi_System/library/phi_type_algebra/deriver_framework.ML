@@ -540,12 +540,12 @@ fun equip_expansion_ss0 ctxt =
   Expansion.enhance (Phi_Safe_Simps.equip ctxt)
     delsimps @{thms' HOL.simp_thms(15) True_implies_equals}
 
-fun equip_expansion_ss phity ctxt =
+fun equip_expansion_ss phity =
   let val tagged_eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phity)
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phity)
                      @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phity)
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phity)
-   in Expansion.equip ctxt addsimps tagged_eqs
+   in fn ctxt => Expansion.equip ctxt addsimps tagged_eqs
   end
 
 
