@@ -1371,8 +1371,9 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
       fun apply_induction NONE conv rule' = apply_conv ctxt conv rule'
         | apply_induction (SOME quants) ind_conv rule' =
             if is_some (#ind phi) then
-            let val _ = if null (Term.add_vars (fst (Logic.dest_implies (Thm.prop_of rule'))) []) then ()
-                        else warning "Induction contains schematic variables"
+            let val _ = if Term.is_schematic (fst (Logic.dest_implies (Thm.prop_of rule')))
+                        then warning "Induction contains schematic variables"
+                        else ()
                 (*val frees = map_filter (fn SOME (Free free) => SOME (Thm.cterm_of ctxt (Free free)) | _ => NONE) phi_typ_parameters
                 val idx = Thm.maxidx_of rule' + 1
                 val inst = Vars.build (fold (fn v as ((N,i),T) =>

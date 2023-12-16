@@ -4090,6 +4090,7 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module+1 name F.wrap_mod
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
 
+declare [[\<phi>trace_reasoning = 2]]
 
 lemma ToA_mapper_MOne_src
   [no_atp, \<phi>reason_template default %\<phi>mapToA_derived_module_wrapper name F.mapper_wrap_module_src]:

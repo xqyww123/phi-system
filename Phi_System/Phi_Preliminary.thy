@@ -104,6 +104,17 @@ method_setup subgoal' = \<open>
   end)
 \<close>
 
+method_setup prefer_tac = \<open>
+    Scan.lift Parse.nat -- Scan.lift Parse.nat
+  >> (fn (j,k) => fn ctxt => fn _ =>
+  Context_Tactic.CONTEXT_TACTIC (fn th =>
+    if Thm.nprems_of th = 0
+    then Seq.empty
+    else Seq.single (Thm.permute_prems j k th)))
+\<close>
+
+
+
 
 subsection \<open>Helper Lemmas\<close>
 

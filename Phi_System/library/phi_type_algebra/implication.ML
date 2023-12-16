@@ -367,8 +367,7 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
                     (fn _ (*Trueprop*) $ (_ $ Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0)))
                           => SOME v
                       | _ (*Trueprop*) $ (_ $ X)
-                          => if null (Term.add_vars X []) then NONE
-                             else raise Match)
+                          => if Term.is_schematic X then raise Match else NONE)
                     (oblg_solver' name)
             else K NONE
       val simp = if is_some (#1 instruction) then K I

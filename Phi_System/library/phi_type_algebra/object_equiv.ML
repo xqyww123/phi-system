@@ -351,8 +351,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                     Abs (_, _, Abs (_, _,
                                         Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 1 $ Bound 0) $ _))) => SOME v
                             | _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ X) =>
-                                  if null (Term.add_vars X []) then NONE
-                                  else raise Match )
+                                  if Term.is_schematic X then raise Match else NONE )
                           (oblg_solver' name)
                   else K NONE
 (*      fun infer (_, ctxt, rule) =

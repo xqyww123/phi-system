@@ -50,7 +50,7 @@ fun lookup_entry thy = Symtab.lookup (Entries.get thy)
 fun read_expr_term thy term0 =
       let val term = Syntax.read_term_global thy term0
        in if null (Term.add_frees term []) andalso null (Term.add_tfrees term [])
-             andalso null (Term.add_vars term []) andalso null (Term.add_tvars term [])
+             andalso not (Term.is_schematic term) andalso null (Term.add_tvars term [])
           then term
           else error (Pretty.string_of (Pretty.chunks [
                   Pretty.str "The term contains free (type) variables!",

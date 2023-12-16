@@ -566,7 +566,8 @@ fun get_reasoners' thy tactics bvs term =
     |> sort (fn ((c1,_,_,r1),(c2,_,_,r2)) =>
           case int_ord (c1,c2) of EQUAL => mode_ord (#mode r1, #mode r2)
              | ord => ord)
-    |> distinct_rev (fn (a,b) => #3 a = #3 b)
+    |> distinct_rev (fn (a,b) => pointer_eq (a, b))
+    (*TODO: remove the 3rd projection, hash*)
 
 fun get_reasoners thy tactics term =
       get_reasoners' thy tactics [] term |> map (fn (_,_,_,r) => r)
@@ -671,7 +672,7 @@ fun gen_reason (handlers, trace, limit, tactics) =
                             then tracing ("\<phi>reasoning("^string_of_int score^"):"^
                                           Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                             else ()
-                    val _ = if score = 39993 then () else ()
+                    val _ = if score = 12000 then () else ()
 
                     val Z = if Thm.nprems_of th <= N
                             then raise Success (ctxt, th)

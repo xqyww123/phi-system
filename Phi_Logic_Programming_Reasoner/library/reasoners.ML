@@ -251,13 +251,16 @@ fun fast_inst can_inst th =
 
 (*slow but powerfull and flexible*)
 fun LPR_inst ctxt th = (
-  Phi_Reasoner.info_print ctxt 3 (fn () => "Phi_Reasoners.LPR_inst") ;
-  Phi_Reasoner.reason NONE (SOME 1) ctxt
-                      (@{lemma' \<open> \<g>\<u>\<a>\<r>\<d> IEUV Any AnySV P P' \<and>\<^sub>\<r> Literal_Boolean Any
-                              \<Longrightarrow> Premise mode P'
-                              \<Longrightarrow> Premise mode P \<close>
-                             by (simp add: IEUV_def \<r>Guard_def Ant_Seq_def)
-                        } RS' (ctxt, th))
+  if Term.is_schematic (Thm.major_prem_of th)
+  then (
+    Phi_Reasoner.info_print ctxt 3 (fn () => "Phi_Reasoners.LPR_inst") ;
+    Phi_Reasoner.reason NONE (SOME 1) ctxt
+                        (@{lemma' \<open> \<g>\<u>\<a>\<r>\<d> IEUV Any False P P' \<and>\<^sub>\<r> Literal_Boolean Any
+                                \<Longrightarrow> Premise mode P'
+                                \<Longrightarrow> Premise mode P \<close>
+                               by (simp add: IEUV_def \<r>Guard_def Ant_Seq_def)
+                          } RS' (ctxt, th)) )
+  else NONE
 )
 
 (*fix_level = 0 for no fix

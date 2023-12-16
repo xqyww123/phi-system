@@ -106,7 +106,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
             then predicate_infer false
                     (fn _(*Trueprop*) $ (_ $ Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ (Var v $ Bound 0))) => SOME v
                       | _(*Trueprop*) $ (_ $ X) =>
-                             if null (Term.add_vars X []) then NONE else raise Match)
+                             if Term.is_schematic X then raise Match else NONE)
                     (oblg_solver' name)
             else K NONE
 

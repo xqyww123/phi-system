@@ -41,7 +41,7 @@ fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
             if mode_infer
             then predicate_infer false
                     (fn _ $ (_ $ Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ (Var v $ Bound 0))) => SOME v
-                      | _ $ (_ $ X) => if null (Term.add_vars X []) then NONE else raise Match)
+                      | _ $ (_ $ X) => if Term.is_schematic X then raise Match else NONE)
                     (oblg_solver' name)
             else K NONE
 
