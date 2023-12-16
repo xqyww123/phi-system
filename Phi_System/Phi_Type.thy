@@ -7466,6 +7466,10 @@ lemma \<phi>TA_common_rewr_imp1_noact:
   \<open> Trueprop (Ant \<longrightarrow> X @action \<phi>TA_subgoal A) \<equiv> (Ant \<Longrightarrow> X) \<close>
   unfolding Action_Tag_def atomize_imp .
 
+lemma \<phi>TA_common_rewr_imp1_rev:
+  \<open> (Ant \<Longrightarrow> X @action A) \<equiv> Trueprop (Ant \<longrightarrow> X @action A) \<close>
+  unfolding Action_Tag_def atomize_imp .
+
 lemma \<phi>TA_common_rewr_imp2:
   \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> X @action \<phi>TA_subgoal \<A>) \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> X @action \<A>) \<close>
   unfolding Action_Tag_def atomize_imp .
@@ -7473,6 +7477,10 @@ lemma \<phi>TA_common_rewr_imp2:
 lemma \<phi>TA_common_rewr_imp2':
   \<open> Trueprop (Ant \<longrightarrow> Q \<longrightarrow> P @action \<phi>TA_subgoal \<A>)
  \<equiv> (Ant \<Longrightarrow> Q \<longrightarrow> (P @action \<A>)) \<close>
+  unfolding Action_Tag_def atomize_imp .
+
+lemma \<phi>TA_common_rewr_imp2_rev:
+  \<open> (Ant \<Longrightarrow> C \<Longrightarrow> X @action \<A>) \<equiv> Trueprop (Ant \<longrightarrow> C \<longrightarrow> X @action \<A>) \<close>
   unfolding Action_Tag_def atomize_imp .
 
 lemma \<phi>TA_common_rewr_imp2_noact:
@@ -7675,7 +7683,7 @@ subsubsection \<open>Abstract Domain\<close>
 context begin
 
 private lemma \<phi>TA_Inh_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> OPEN T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> (x \<Ztypecolon> OPEN T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -7684,7 +7692,7 @@ private lemma \<phi>TA_Inh_rule:
   by simp
 
 private lemma \<phi>TA_SuC_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> (P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> (P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -7728,21 +7736,21 @@ subsubsection \<open>Identity Element Intro \& Elim\<close>
 context begin
 
 private lemma \<phi>TA_1L_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> OPEN T) (P x) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Identity_Elements\<^sub>I T D P \<close>
-  unfolding Action_Tag_def Identity_Elements\<^sub>I_def
+  unfolding Action_Tag_def Identity_Elements\<^sub>I_def OPEN_def
   by blast
 
 private lemma \<phi>TA_1R_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Identity_Elements\<^sub>E T D\<close>
-  unfolding Action_Tag_def Identity_Elements\<^sub>E_def
+  unfolding Action_Tag_def Identity_Elements\<^sub>E_def MAKE_def
   by blast
 
 private lemma \<phi>TA_Ident_I_rule_step:

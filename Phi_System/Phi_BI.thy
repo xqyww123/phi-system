@@ -3554,6 +3554,8 @@ declare [[ \<phi>reason_default_pattern
  and identity_element_cut = (1000, [1000,1029]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > derived_identity_element < identity_element_top
     \<open>Cutting rules for Identity_Element\<close>
+ and identity_element_OPEN_MAKE = (1100, [1100,1100]) in identity_element
+     and > identity_element_cut < identity_element_top \<open>\<close>
  and identity_element_red = (2500, [2500, 2530]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
      in identity_element > identity_element_cut
     \<open>Literal Reduction\<close>

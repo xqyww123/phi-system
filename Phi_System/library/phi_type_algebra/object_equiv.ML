@@ -183,7 +183,6 @@ fun OE_reasoning phi ctxt rule =
             Const("\<phi>TA.OE",TFree("",[])), \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
             fn _ => fn (rules, (_, priority), pats, guard, ctxt) =>
                        (rules, (Phi_Reasoner.NORMAL_LOCAL_CUT', priority), pats, guard, ctxt))) ctxt
-
    in default_reasoning true
           default_reasoning_configure
           (K (K NONE))
@@ -327,11 +326,12 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                     Phi_Conv.meta_all_conv (fn _ => Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctxt,
                fn ctxt => fn _ =>
                     (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
-                    (Conv.implies_concl_conv (
+                    (@{print} o Phi_Reasoners.asm_full_rewrite true (
+                          equip_expansion_ss phi0 ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp}))
+                    (*(Conv.implies_concl_conv (
                        Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
-                       Phi_Conv.meta_all_conv (fn _ => Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctxt then_conv
-                      (Phi_Reasoners.asm_full_rewrite true (
-                          equip_expansion_ss phi0 ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp})))) then_conv
+                       Phi_Conv.meta_alls_conv (fn _ => Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctxt then_conv
+                      ))*) then_conv
                     Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                       (Phi_Conv.meta_alls_conv (
                                         Phi_Conv.hol_alls_to_meta_alls (fn _ =>

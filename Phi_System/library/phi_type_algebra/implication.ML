@@ -340,12 +340,18 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
-              K (K (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
-                    Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)),
+              fn ctxt => (K (
+                  Conv.top_rewrs_conv @{thms' MAKE_def OPEN_def} ctxt then_conv
+                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)),
               fn ctxt => fn _ =>
                  (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
-                  (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
+                  (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
+
+      val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
+           (Phi_Reasoners.asm_rewrite true (equip_expansion_ss phi0 ctxt) then_conv
+            Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_rev}) ctm) o snd)
 
       fun varify_subgoal _ (Trueprop $ (rEIF $ S $ P)) =
             SOME ([P], fn [P'] => Trueprop $ (rEIF $ S $ P'))
@@ -380,7 +386,7 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(K (SOME [0]), ind_conv, Inh_reasoning)],
-                                      solver, K I, simp)
+                                      solver, pre_simp, simp)
                                      phi0 instruction ctxt
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])

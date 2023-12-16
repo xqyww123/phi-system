@@ -203,7 +203,7 @@ val default_ind_conv : (Proof.context -> Phi_Type.phi_type -> conv) (*converting
 (** Reasoning **)
 (*`reasoning` specifies how to solve the reasoning goals in detail.*)
 
-type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
+type varifier = cterm Vars.table * Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
                         -> thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 val varify_all_vars : varifier
@@ -316,6 +316,7 @@ exception Automation_Fail of (unit -> Pretty.T list)
 val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
 
 structure Expansion : SIMPSET (*The standard simpset for deriving*)
+structure Expansion_Post_Merging : HOOKS
 (*convention: do not add transformation_refl any time! *)
 val equip_expansion_ss0 : Proof.context -> Proof.context
 val equip_expansion_ss  : phi_type -> Proof.context -> Proof.context
@@ -470,6 +471,11 @@ structure Expansion = Simpset (
   val post_merging = I
 )
 
+structure Expansion_Post_Merging = Hooks (
+  type arg = unit
+  type state = Proof.context
+)
+
 val _ = Theory.setup (Context.theory_map (
 
   Expansion.map (fn ctxt =>
@@ -516,6 +522,7 @@ fun equip_expansion_ss phity ctxt =
                      @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phity)
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phity)
    in Expansion.equip ctxt addsimps tagged_eqs
+   |> Expansion_Post_Merging.invoke (Context.Proof ctxt) ()
   end
 
 (*
@@ -1598,7 +1605,7 @@ fun varify_subgoal mk ctxt focus sequent =
    in case mk focus LHS of SOME (LHSS, gen_RHSS) =>
       let val is_schm_LHSS = map (fn tm =>
                 Vars.exists (fn (_, ctm) => tm aconv Thm.term_of ctm)
-                            (snd (#schematics focus))) LHSS
+                            (fst focus)) LHSS
           val real_LHSS = map_filter (fn (b,c) => if b then SOME c else NONE) (is_schm_LHSS ~~ LHSS)
           val rvar_names = Name.invent (Variable.names_of ctxt) "schm" (length real_LHSS)
           val ctxt' = Variable.add_fixes_direct rvar_names ctxt
@@ -1628,9 +1635,8 @@ val varify_subgoal_finale0 = Goal.conclude
 fun varify_subgoal_finale sequent =
   Phi_Help.repeat (fn th => @{thm' Pure.reflexive} RS th) sequent
 
-fun varify_all_vars (focus : Subgoal.focus) tm =
-  let val frees = snd (#schematics focus)
-               |> Vars.dest
+fun varify_all_vars (vars, focus) tm =
+  let val frees = Vars.dest vars
                |> map (Thm.term_of o snd)
    in SOME (frees, fn frees' =>
               Term_Subst.instantiate_frees (TFrees.empty,
@@ -1642,7 +1648,7 @@ type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
                             int list (*quant_interps*) option) (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type.phi_type -> reasoning)
-type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
+type varifier = cterm Vars.table * Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
@@ -1850,13 +1856,16 @@ fun reasoning ctxt0 sequent0 =
        Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, erule)] 1 sequent0)
         |> reasoning ctxt0
     | _ => let
-      val sequent = sequent0
+    (*val _ = if Term.is_schematic (Phi_Help.leading_antecedent' sequent0)
+              then raise THM("Bad Reasoning: the leading antecedent of the sequent containing varaibles!", 1, [sequent0])
+              else ()*)
+      val (((_, unknown_vars), [sequent]), ctxt01) = Variable.import false [sequent0] ctxt0
                  (*|> (fn th => @{thm' impI} RS th
                               handle THM _ => Method.insert_tac ctxt0 [Thm.transfer' ctxt0 @{thm' TrueI}] 1 th
                                            |> Seq.hd)*)
-      val (focus, lsequent'0) = Subgoal.focus ctxt0 1 NONE sequent
+      val (focus, lsequent'0) = Subgoal.focus ctxt01 1 NONE sequent
       val ctxt = #context focus
-      val lsequent = varify_subgoal varify ctxt focus lsequent'0
+      val lsequent = varify_subgoal varify ctxt (unknown_vars, focus) lsequent'0
 
       val is_out_ant = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_ANT\<close> o Thm.concl_of
       val out_ants = filter is_out_ant (#prems focus)
@@ -1919,12 +1928,13 @@ fun reasoning ctxt0 sequent0 =
 
       (*val lsequent'' = fold PLPR_Syntax.provide_premise_condition prem_ants lsequent'*)
 
-   in Subgoal.retrofit ctxt'' ctxt0 (#params focus) (#asms focus) 1 lsequent' sequent
+   in Subgoal.retrofit ctxt'' ctxt01 (#params focus) (#asms focus) 1 lsequent' sequent
    |> Seq.hd
+   |> singleton (Variable.export ctxt01 ctxt0)
    |> Phi_Reasoners.defer_obligation_tac {can_inst=false, fix_level=0} (false, true, ~1) ctxt
    |> Seq.hd
    |> varify_subgoal_finale
-   |> reasoning ctxt
+   |> reasoning ctxt0
   end
 in fn ctxt => fn th => th
     |> Simplifier.norm_hhf ctxt

@@ -58,6 +58,7 @@ let_\<phi>type \<phi>None
        and Functionality
        and Identity_Elements
        and Abstraction_to_Raw
+       and \<open>1 \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?xa \<Ztypecolon> \<circle>\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>None.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L \<circle> (\<lambda>x. True) \<close>),
@@ -133,7 +134,7 @@ text \<open>We still derive properties of \<open>\<phi>Prod\<close> for consiste
       even though most of the derived rules are already covered by existing rules.\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+  
 let_\<phi>type \<phi>Prod
   deriving Basic
        and Functional_Transformation_Functor
@@ -164,6 +165,7 @@ declare [[\<phi>trace_reasoning = 1]]
        and Basic
        and Functionality
        and Abstraction_to_Raw
+       and \<open>?f ?xa \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?xa \<Ztypecolon> \<phi>Fun ?f\<close>
 
 
 (*The assertions are used to test the property derivers. As the deriviers are changed frequently
