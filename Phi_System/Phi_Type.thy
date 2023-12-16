@@ -7804,7 +7804,7 @@ subsubsection \<open>Object Equivalence\<close>
 
 context begin
 
-private definition \<open>OE_IND T = T\<close>
+definition \<open>OE_IND T = T\<close>
 
 private lemma Object_Equiv_rule:
   \<open> \<r>EIF Ant Ant'
@@ -7823,8 +7823,9 @@ private lemma Object_Equiv_rule:
 
 private lemma \<phi>TA_OE_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T)) @action \<phi>TA_subgoal undefined)
-\<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T @action \<phi>TA_ToA_elim)\<close>
+\<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> OE_IND T @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
+            OE_IND_def
   by (rule; blast)
 
 private lemma \<phi>TA_OE_rewr_CL:

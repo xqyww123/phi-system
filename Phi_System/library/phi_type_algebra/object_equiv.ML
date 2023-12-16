@@ -10,14 +10,14 @@ end
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
 
-fun conv_hol_imps_to_metas_if_has Cant ctm =
+fun conv_hol_imps_to_metas_if_has Cant Cconcl ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
           (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
-           Conv.implies_conv Cant (conv_hol_imps_to_metas_if_has Cant)) ctm
+           Conv.implies_conv Cant (conv_hol_imps_to_metas_if_has Cant Cconcl)) ctm
      | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-          (Conv.implies_conv Cant (conv_hol_imps_to_metas_if_has Cant)) ctm
-     | _ => Conv.all_conv ctm
+          (Conv.implies_conv Cant (conv_hol_imps_to_metas_if_has Cant Cconcl)) ctm
+     | _ => Cconcl ctm
 
 fun conv_hol_imp_to_meta_if_has Cant ctm =
   case Thm.term_of ctm
@@ -167,6 +167,11 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
         | extract_oprs_from_hint _ = []
 
       val _ = conv_chk_unfolded
+    (*val phitm = Thm.cterm_of ctxt0 (#term phi0)
+      val OE_IND_I = Drule.infer_instantiate ctxt0 [(("T",0), phitm)]
+                        \<^instantiate>\<open>'a=\<open>Thm.ctyp_of_cterm phitm\<close> and T=phitm in
+                            lemma \<open>OE_IND T \<equiv> T\<close> by (simp add: OE_IND_def)\<close>
+                  |> @{print}*)
       val ind_conv =
             default_ind_conv (
                fn ctxt => fn _ =>
@@ -174,7 +179,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                     Phi_Conv.meta_all_conv (fn _ => Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctxt,
                fn ctxt => fn _ =>
                     (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
-                    (@{print} o Phi_Reasoners.asm_full_rewrite true (
+                    (Phi_Reasoners.asm_full_rewrite true (
                           equip_expansion_ss phi0 ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp}))
                     (*(Conv.implies_concl_conv (
                        Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
@@ -182,9 +187,17 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                       ))*) then_conv
                     Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                       (Phi_Conv.meta_alls_conv (
-                                        Phi_Conv.hol_alls_to_meta_alls (fn _ =>
-                                        conv_hol_imps_to_metas_if_has (HOLogic.Trueprop_conv (
-                                            Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))
+                                        Phi_Conv.hol_alls_to_meta_alls (fn ctxt =>
+                                        conv_hol_imps_to_metas_if_has
+                                          (HOLogic.Trueprop_conv (
+                                              Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))
+                                          (Phi_Syntax.transformation_conv
+                                              Conv.all_conv
+                                              (Conv.top_sweep_conv (fn _ => fn ctm =>
+                                                  if is_term_of_phi phi0 (Term.head_of (Thm.term_of ctm))
+                                                  then Conv.rewr_conv @{thm' OE_IND_def[folded atomize_eq, symmetric]} ctm
+                                                  else Conv.no_conv ctm) ctxt)
+                                              Conv.all_conv)
                                         )) ctxt)
                   (*Conv.implies_conv
                       (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})

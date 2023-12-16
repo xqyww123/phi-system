@@ -52,7 +52,7 @@ setup \<open>Context.theory_map (
    #> snd )\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+  
 let_\<phi>type \<phi>None
   deriving Basic
        and Functionality
