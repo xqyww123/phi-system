@@ -180,7 +180,7 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                                                         else @{thm' \<phi>TA_SH\<^sub>I_rule}
                                                   else if parameterized then @{thm' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_rule}
                                                                         else @{thm' \<phi>TA_SH\<^sub>E_rule}),
-                                     [(K (SOME [0]), ind_conv, SH_reasoning is_intro)],
+                                     [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, SH_reasoning is_intro)],
                                      K NONE, K I, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules

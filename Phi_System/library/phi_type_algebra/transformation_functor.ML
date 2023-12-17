@@ -271,7 +271,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                       |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
                  else ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_TF, rule,
-                                      [(K (SOME [0,~1]), ind_conv, TF_reasoning)],
+                                      [(SOME (default_ind_inst (fn [_,x] => [SOME x])), ind_conv, TF_reasoning)],
                                       K NONE, pre_simp, simp)
                                      phi0 instruction ctxt
    in Seq.pull rules
@@ -448,7 +448,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
              ) ctxt) thm*)
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_FTF, rule,
-                                      [(K NONE, K (K I), reasoning)], K NONE, K I, simp)
+                                      [(NONE, K (K I), reasoning)], K NONE, K I, simp)
                                     phi0 instruction ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

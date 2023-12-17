@@ -7531,7 +7531,6 @@ consts \<phi>deriver_expansion :: mode
         Phi_Type_Derivers.equip_expansion_ss0 {fix_vars=true}) o snd\<close>
 
 
-
 subsubsection \<open>Extending Property Guessers\<close>
 
 text \<open>When derivers provide gussers of specific strategies typically based on the logic types of the

@@ -240,8 +240,8 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
-                                      [(K NONE, K (K I), K (pure_PLPR_reasoning 2)),
-                                       (K (SOME [0]), ind_conv, OE_reasoning)],
+                                      [(NONE, K (K I), K (pure_PLPR_reasoning 2)),
+                                       (SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, OE_reasoning)],
                                       infer, pre_simp, simp)
                                      phi0 instruction
                                      (Config.put search_CSTR_rules true ctxt)

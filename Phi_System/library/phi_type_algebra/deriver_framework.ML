@@ -135,8 +135,13 @@ val load_simpset : term list -> Proof.context -> Proof.context
 
 type ind_conv = (Proof.context -> Phi_Type.phi_type -> thm -> thm)
 type reasoning = Proof.context -> thm -> thm
-type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
-                            int list (*quant_interps*) option) (*If not given, no induction will be applied*)
+type ind_insts = (binding option * (term * bool)) option list list
+type ind_inst = Subgoal.focus
+              * term option list (*parameters of phi-type, if fixed*)
+              * thm (*local sequent*)
+              -> ind_insts
+
+type subgoal_configure = ind_inst option (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type.phi_type -> reasoning)
 type solver = Phi_Type.phi_type * Proof.context * thm * Method.text option -> thm option
@@ -191,6 +196,8 @@ val deriving_framework :
   The default_ind_conv parses the induction hypotheses and conclusions, and supports to apply different
     conversion on them.
 *)
+
+val default_ind_inst : (term list (*fixed bounded params*) -> term option list) -> ind_inst
 
 val default_ind_conv : (Proof.context -> Phi_Type.phi_type -> conv) (*converting induction hypotheses*) *
                        (Proof.context -> Phi_Type.phi_type -> conv) (*converting subgoals of the induction*)
@@ -1287,14 +1294,21 @@ fun oblg_solver' name (phi, ctxt, th, text) =
       SOME (oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name) text ctxt th)
 
 
+(* default_ind_inst *)
+
+fun default_ind_inst inst_by_bound_var (focus, params, _) =
+  let val (params_overwrite, x) =
+            Phi_Help.split_last (inst_by_bound_var (map (Thm.term_of o #2) (#params focus)))
+      fun overwrite [] R = R
+        | overwrite (NONE::L) (x::R) = x :: overwrite L R
+        | overwrite (some::L) (_::R) = some :: overwrite L R
+        | overwrite _ [] = error "BUG TAd2J2CtRa+oY2ZqyMN0ow"
+      val params' = rev (overwrite (rev params_overwrite) (tl params))
+   in [map (Option.map (fn x => (NONE, (x, false)))) (params' @ [x])]
+  end
+
 (* The Framework *)
 
-(*quants: an array telling how to interpret the quantified variables in the first antecedent of the rule.
-  It is used in generating the induction rule.
-  quants[i] = 0 means interpret the variable as the abstract object
-  quants[i] = i means interpret the variable as the i-th parameter of the \<phi>-type
-  quants[i] = ~1 means interpret it as a fixed variable
-  Note the quants is reversed against the quantified variables*)
 fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,
                         subgoal_reasonings,solver,simp_before_induct,simp)
                        (phi0 : phi_type) (instruction:deriving_instruction) ctxt0 =
@@ -1403,85 +1417,26 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
         end
 
       fun apply_induction NONE conv rule' = apply_conv ctxt conv rule'
-        | apply_induction (SOME quants) ind_conv rule' =
-            if is_some (#ind phi) then
-            let val rule' = if null aia then rule'
-                            else case Seq.pull (Induct.arbitrary_tac ctxt 0 (map Term.dest_Free aia) 1 rule')
-                                   of SOME (ret, _) =>
-                                        let val (vars, prems, _) = Phi_Help.leading_antecedent (Thm.prop_of rule')
-                                         in ret
-                                         |> Conv.gconv_rule (
-                                              funpow (length vars) (fn C => Phi_Conv.meta_all_conv (C o snd))
-                                                     (fn ctxt =>
-                                                       Conv.concl_conv (length prems)
-                                                        (funpow (length aia) (fn C => fn ctxt =>
-                                                            Phi_Conv.meta_all_conv (C o snd) ctxt then_conv
-                                                            Conv.rewr_conv @{thm' atomize_all})
-                                                            (K Conv.all_conv)
-                                                            ctxt))
-                                                     ctxt
-                                           ) 1
-                                        end
-                                    | NONE => error "BUG: P4imjbmrT7m2zglZdYp8Kg"
-                val _ = if Term.is_schematic (fst (Logic.dest_implies (Thm.prop_of rule')))
-                        then warning "Induction contains schematic variables"
-                        else ()
-                (*val frees = map_filter (fn SOME (Free free) => SOME (Thm.cterm_of ctxt (Free free)) | _ => NONE) phi_typ_parameters
-                val idx = Thm.maxidx_of rule' + 1
-                val inst = Vars.build (fold (fn v as ((N,i),T) =>
-                                                let val T' = rev_map Thm.typ_of_cterm [] frees ---> T
-                                                    val var = Thm.var ((N,i+idx), Thm.ctyp_of ctxt T')
-                                                           |> fold_rev (fn v => fn f => Thm.apply f v) frees
-                                                 in Vars.add (v, var)
-                                                end)
-                                            (Term.add_vars (Thm.prop_of rule'0) []))
-                val rule' = Thm.instantiate (TVars.empty, inst) rule'0*)
-            
-                val free_tabel = Symtab.build (fold_index (fn (i, SOME (Free (N,_))) => Symtab.update_new (N,i)
-                                                            | (_, SOME (Bound _)) => I
-                                                            | (_, NONE) => I
-                                                            | _ => I)
-                                                          phi_typ_parameters)
-                fun mk_ind_prop lev lambs (X $ Y) = mk_ind_prop lev lambs X $ mk_ind_prop lev lambs Y
-                  | mk_ind_prop lev lambs (Bound i) =
-                      if i < lev then Bound i else
-                     (case try List.nth (quants, i-lev)
-                        of NONE => error "The rule contains unspecified quantified variable"
-                         | SOME j => if j = ~1
-                                     then (case List.nth (lambs, i) of (N,T) => Var((N,1),T)) (*the ind rule is zero-indexed*)
-                                     else Bound (lev+j))
-                  | mk_ind_prop lev lambs (Abs (N,T,X)) =
-                        Abs (N,T, mk_ind_prop (lev+1) ((N,T)::lambs) X)
-                  | mk_ind_prop lev _ (Free (N,T)) =
-                     (case Symtab.lookup free_tabel N
-                        of SOME i => Bound (lev + i)
-                         | NONE => Free (N,T))
-                  | mk_ind_prop _ _ X = X
-          
-                val (lambs, _, rule_concl) = Phi_Help.strip_meta_hhf (Phi_Help.leading_antecedent' rule')
-                val ind_prop = mk_ind_prop 0 (rev lambs) (HOLogic.dest_Trueprop rule_concl)
-                val ind = Phi_Type.mk_ind_dest_ToA ctxt phi (K ind_prop)
-          
-                val ((inst,[rule't]), ctxt't) = Variable.import true [rule'] ctxt
-                val ind't = Thm.instantiate inst ind
-
-(*
-                val xxx = fold_aterms (fn Free v =>
-                                            if member (op =) (#3 instruction) (fst v)
-                                            then insert (op =) v
-                                            else I
-                                        | _ => I)
-                val xxx = #4 instruction*)
-(*Induct.arbitrary_tac ctxt 0 [("T", \<^typ>\<open>'b \<Rightarrow> (FIC_N \<Rightarrow> FIC) set\<close>)] 1 rule' |> Seq.pull*)
-             in (ind't RS Goal.protect 1 rule't)
-             |> ind_conv ctxt phi
-             |> Goal.conclude
-             |> singleton (Variable.export ctxt't ctxt) 
+        | apply_induction (SOME ind_inst) ind_conv rule' =
+            case #ind phi
+              of SOME ind_rule =>
+            let val (focus, sequent1) = Subgoal.focus ctxt 1 NONE rule'
+                val ctxt1 = #context focus
+                val sequent2 = Tactic.rule_by_tactic ctxt1
+                        (Induct.induct_tac ctxt1 true (*rethink this simplification flag*)
+                            (ind_inst (focus, phi_typ_parameters, sequent1))
+                            [map Term.dest_Free aia] []
+                            (SOME [ind_rule]) [] 1)
+                        sequent1
+                val sequent3 = sequent2
+                            |> ind_conv ctxt phi
+             in Subgoal.retrofit ctxt1 ctxt (#params focus) (#asms focus) 1 sequent3 rule'
+             |> Seq.hd
             end
-            else apply_conv ctxt ind_conv rule'
+             | NONE => apply_conv ctxt ind_conv rule'
 
-      val rule'3 = fold (fn (ind_config,conv,reasoning) => fn rule' =>
-              reasoning phi ctxt (apply_induction (ind_config (rule', phi_typ_parameters)) conv rule')
+      val rule'3 = fold (fn (ind_inst,conv,reasoning) => fn rule' =>
+              reasoning phi ctxt (apply_induction ind_inst conv rule')
             ) subgoal_reasonings rule'
 
       val rule'4 =(case solver (phi, ctxt, rule'3, #4 instruction)
@@ -1698,8 +1653,9 @@ fun varify_all_vars (vars, focus) tm =
   end
 
 type reasoning = Proof.context -> thm -> thm
-type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
-                            int list (*quant_interps*) option) (*If not given, no induction will be applied*)
+type ind_insts = (binding option * (term * bool)) option list list
+type ind_inst = Subgoal.focus * term option list * thm (*local sequent*) -> ind_insts
+type subgoal_configure = ind_inst option (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type.phi_type -> reasoning)
 type varifier = cterm Vars.table * Subgoal.focus -> term -> (term list * (term list -> term)) option

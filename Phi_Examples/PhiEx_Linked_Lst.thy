@@ -50,6 +50,8 @@ declare [[\<phi>reasoning_step_limit = 120]]
 
 
 
+
+
 (*\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
             (tactic: clarsimp, rule exI[where x=\<open>\<lambda>(_,b). b\<close>]) *)

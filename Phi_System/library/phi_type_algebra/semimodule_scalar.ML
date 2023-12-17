@@ -133,7 +133,10 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_Assoc is_intro,
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
-                                      [(K (SOME [0,2,~1,~1]), ind_conv, reasoning)],
+                                      [(SOME (if is_intro
+                                              then default_ind_inst (fn [_,_,_,r,x] => [SOME r, NONE, SOME x])
+                                              else default_ind_inst (fn [_,_,r,x] => [SOME r, NONE, SOME x])),
+                                        ind_conv, reasoning)],
                                       K NONE, K I, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules
