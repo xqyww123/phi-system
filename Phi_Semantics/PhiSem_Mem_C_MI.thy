@@ -17,7 +17,7 @@ proc op_allocate_mem_N:
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
 
-  \<open>replicate n z \<Ztypecolon> MAKE (\<m>\<e>\<m>[memaddr blk 0] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
+  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
 
   have t1: \<open>valid_logaddr (memaddr blk [])\<close>
     unfolding valid_logaddr_def Valid_MemBlk_def

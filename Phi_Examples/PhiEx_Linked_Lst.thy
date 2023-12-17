@@ -7,7 +7,7 @@ typ fiction
 term \<open>\<Pp>\<t>\<r> T\<close>
 term \<open>0 :: logaddr\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 declare [[\<phi>reasoning_step_limit = 120]]
 
     
@@ -32,7 +32,7 @@ declare [[\<phi>reasoning_step_limit = 120]]
 
 
 declare [[\<phi>reasoning_step_limit = 180]]
-     
+      
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) =
@@ -59,14 +59,17 @@ proc nth_llist:
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
   is [recursive l i addr]
   \<medium_left_bracket>
-    obtain l\<^sub>h l\<^sub>r where l_split[simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer \<comment> \<open>annotation 1\<close> ;; 
-    to \<open>OPEN _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
+    obtain l\<^sub>h l\<^sub>r where l_split[simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer  ;;
+        \<comment> \<open>annotation 1 due to deficiency of sledgehammer for instantiating existential quantification (unknown variables).
+            Readers may remove this line to see a correct proof obligation is still generated but
+            sledgehammer fails on it.\<close> 
+    to \<open>OPEN 1 _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data !
     \<medium_right_bracket> \<medium_left_bracket> 
         nth_llist ($addr \<tribullet> "next" !, $i - \<open>1 \<Ztypecolon> \<nat>('a)\<close>)
     \<medium_right_bracket>
-    \<open>l \<Ztypecolon> MAKE (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
+    \<open>l \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
   \<medium_right_bracket> .
 
 proc update_nth_llist:
@@ -77,25 +80,14 @@ proc update_nth_llist:
   is [recursive l i addr]
   \<medium_left_bracket>
     obtain l\<^sub>h l\<^sub>r where l_split[simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer \<comment> \<open>annotation 1\<close> ;; 
-    to \<open>OPEN _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
+    to \<open>OPEN 1 _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data := $y
     \<medium_right_bracket> \<medium_left_bracket>
         update_nth_llist ($addr \<tribullet> "next" !, $i - \<open>1 \<Ztypecolon> \<nat>('a)\<close>, $y)
-        \<medium_right_bracket> ;;
-    have t2[simp]: \<open>\<exists>a b. a # b = l[i := y]\<close> by auto_sledgehammer
-            note [[\<phi>trace_reasoning = 2]]  ;;  
-    \<open>l[i := y] \<Ztypecolon> MAKE (Linked_Lst addr TY T)\<close>
-
-      thm useful
-
-      have \<open>\<exists>a b. a # b = l[i := y]\<close>
-        apply auto
-
-  thm nth_llist
-
-
-
+    \<medium_right_bracket>
+    \<open>l[i := y] \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close>
+ \<medium_right_bracket> .
 
 (*\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 

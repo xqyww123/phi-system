@@ -23,7 +23,7 @@ lemma [\<phi>reason add]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> snd x \<noteq> 0
 \<Longrightarrow> x \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_int (fst x) / of_int (snd x) \<Ztypecolon> \<rat>\<close>
   \<medium_left_bracket> 
-    \<open>of_int (fst x) / of_int (snd x) \<Ztypecolon> MAKE \<rat>\<close>
+    \<open>of_int (fst x) / of_int (snd x) \<Ztypecolon> MAKE _ \<rat>\<close>
   \<medium_right_bracket> .
 
 declare One_nat_def [simp del]
@@ -34,8 +34,8 @@ proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _\<close>
-  val q2 \<leftarrow> $q2 to \<open>OPEN _\<close>
+  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close>
+  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close>
   val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1]
   val denominator \<leftarrow> $q1[1] * $q2[1] ;
   \<lbrace> $numerator, $denominator \<rbrace>

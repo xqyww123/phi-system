@@ -261,7 +261,7 @@ proc op_load_mem:
   (*have [useful]: \<open>0 < n\<close>
     by (simp add: the_\<phi>(2))*) ;;
 
-  to \<open>OPEN _\<close>
+  to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
   apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=1
@@ -269,7 +269,7 @@ proc op_load_mem:
                 and blk=\<open>memaddr.blk addr\<close>
                 and idx=\<open>memaddr.index addr\<close>]
 
-  \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
+  \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
 
   apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
 
@@ -323,7 +323,7 @@ proc op_store_mem:
 \<medium_left_bracket>
   apply_rule ToA_Subst_onward[OF Map, unfolded Remains_\<phi>Cond_Item]
 
-  to \<open>OPEN _\<close>
+  to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
   $addr semantic_local_value \<open>pointer\<close>
@@ -336,7 +336,7 @@ proc op_store_mem:
           and cblk = \<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
           and cidx = \<open>memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
 
-  \<open>y \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)))\<close>
+  \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)))\<close>
 
   apply_rule ToA_Subst_backward[OF Map, unfolded Remains_\<phi>Cond_Item]
 \<medium_right_bracket> .
@@ -360,7 +360,7 @@ proc calloc_1:
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and v=\<open>the (Zero TY)\<close>]
 
-  \<open>z \<Ztypecolon> MAKE (\<m>\<e>\<m>[memaddr blk 0] (MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
+  \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
 
   semantic_assumption \<open>type_storable_in_mem TY\<close>
 
@@ -382,7 +382,7 @@ proc mfree:
   including \<phi>sem_type_sat_EIF
   unfolding address_to_root_def Guided_Mem_Coercion_def
 \<medium_left_bracket>
-  to \<open>OPEN _\<close>
+  to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
   apply_rule FIC.aggregate_mem.deallocate_rule[where v=v and blk=\<open>memaddr.blk addr\<close>]

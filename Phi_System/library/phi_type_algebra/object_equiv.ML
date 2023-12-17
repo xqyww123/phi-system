@@ -244,7 +244,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                        (SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, OE_reasoning)],
                                       infer, pre_simp, simp)
                                      phi0 instruction
-                                     (Config.put search_CSTR_rules true ctxt)
+                                     ((*Config.put search_CSTR_rules true*) ctxt)
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy

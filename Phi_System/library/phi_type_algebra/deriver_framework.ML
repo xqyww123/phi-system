@@ -1689,7 +1689,7 @@ fun pass_make_ToA_i mk_rules ctxt (ToA, gp) =
    in if can (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ToA_elim\<close>) (Thm.concl_of ToA)
    then map (mk (ToA RS' (ctxt, @{thm' Action_Tag_D}))) mk_rules
    else case try (Phi_Syntax.dest_transformation) (Thm.concl_of ToA)
-     of SOME (_, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>MAKE\<close>, _) $ _), _)
+     of SOME (_, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>MAKE\<close>, _) $ _ $ _), _)
           => map (mk ToA) mk_rules
       | _ => [(ToA, gp)]
   end

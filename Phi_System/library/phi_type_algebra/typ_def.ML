@@ -191,7 +191,7 @@ val ML_sender : (quiet * Position.T -> deriving_instruction list -> derive) opti
 
 (** Controllers **)
 
-val search_CSTR_rules : bool Config.T
+(*val search_CSTR_rules : bool Config.T*)
   (*if to enable branched searching in the reasoning of MAKE and OPEN for different definition equantions
     used to construct or destruct \<phi>-types*)
 
@@ -980,7 +980,7 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
-val search_CSTR_rules = Config.declare_bool ("search_CSTR_rules", \<^here>) (K false)
+(*val search_CSTR_rules = Config.declare_bool ("search_CSTR_rules", \<^here>) (K false)*)
 
 (** Main **)
 
@@ -1000,7 +1000,7 @@ fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
 (*ctxt: the context used to derive properties*)
 (*term: the term of the phi type, can be parameterized by fixed free variables like those in locales *)
 fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
-  let val ctxt = open_proof_ctxt bundles thy
+  let val ctxt = open_proof_ctxt bundles thy delsimps @{thms' One_nat_def}
 
       fun match_head head (term as f $ _) = Term.aconv_untyped (head, term) orelse match_head head f
         | match_head head term = Term.aconv_untyped (head, term)
@@ -1132,17 +1132,21 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
       val cases_VS = SOME (mk_cases_rule eqs mk_cases_shift cases_origin term ctxt)
                      handle Unavailable => NONE*)
 
+      val idxes = List.tabulate (length tagged_eqs_in_type, fn i =>
+                      Thm.cterm_of ctxt (HOLogic.mk_number \<^Type>\<open>nat\<close> i))
+      val tagged_eqs_in_type_idx = map_index I tagged_eqs_in_type
       fun gen_from_eqs rule f eq =
             map (fn eq => (eq RS' (ctxt, rule))
                        |> f
                        |> normalize) eq
-      fun gen_from_tagged_eq_in_type f rule = map_filter (Option.mapPartial (
-                fn eq => (eq RS' (ctxt, rule))
-                            |> f
+
+      fun gen_from_tagged_eq_in_type g f rule = map_filter (fn (i,th) => Option.mapPartial (
+                fn eq => (eq RS' (ctxt, g i rule))
+                            |> f i
                             |> normalize
                             |> SOME
                          handle THM _ => NONE
-                )) tagged_eqs_in_type
+                ) th) tagged_eqs_in_type_idx
 
     (*fun LHS_obj_is_var thm =
         case Thm.concl_of thm
@@ -1161,7 +1165,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
             handle THM _ => [] (*in case of not a separation magma*)
       val elim_ToA = if no_auto then [] else gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
       val elim_reasoning = if no_auto then [] else gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
-      val elim'SE_ToA = if no_auto then [] else gen_from_tagged_eq_in_type I @{thm' \<phi>elim'SEi_transformation}
+      val elim'SE_ToA = if no_auto then [] else gen_from_tagged_eq_in_type (K I) (K I) @{thm' \<phi>elim'SEi_transformation}
                                              |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
                            (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
@@ -1169,43 +1173,57 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                                       Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
                                 ) ctxt)) tagged_eqs
 
-      val open_abstraction = if no_auto then [] else
-              gen_from_tagged_eq_in_type
-                (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+      fun mk_open_abstraction inst_i =
+            gen_from_tagged_eq_in_type
+                (if inst_i then (fn i => Drule.infer_instantiate ctxt [(("i",0), nth idxes i)])
+                           else K I)
+                (K (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                       Phi_Syntax.transformation_conv Conv.all_conv
                           (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
-                          Conv.all_conv))) ctxt))
-                @{thm' \<phi>open_abstraction}
+                          Conv.all_conv))) ctxt)))
+
+      val open_abstraction = if no_auto then [] else mk_open_abstraction false @{thm' \<phi>open_abstraction_infer}
+      val open_abstraction_sp = if no_auto then [] else mk_open_abstraction true @{thm' \<phi>open_abstraction_specified}
+
+      fun gen_from_eqs_set_idx rule f eq =
+            map_index (fn (i,eq) =>
+                (eq RS' (ctxt, Drule.infer_instantiate ctxt [(("i",0), nth idxes i)] rule))
+                   |> f
+                   |> normalize) eq
+      val gen_from_tagged_eq_in_type_set_idx =
+            gen_from_tagged_eq_in_type (fn i => Drule.infer_instantiate ctxt [(("i",0), nth idxes i)])
+                                       (K I)
 
       val open_abstraction_ToA = if no_auto then [] else
-                                  gen_from_eqs @{thm' \<phi>open_abstraction_ToA} I tagged_eqs
-                               @ (gen_from_eqs @{thm' \<phi>open_abstraction_ToA_R} I tagged_eqs
+                                  gen_from_eqs @{thm' \<phi>open_abstraction_ToA_infer} I tagged_eqs
+                               @ (gen_from_eqs @{thm' \<phi>open_abstraction_ToA_R_infer} I tagged_eqs
                                   handle THM _ => [])
-                               @ (gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_ToA_W}
+                               @ (gen_from_tagged_eq_in_type (K I) (K I) @{thm' \<phi>open_abstraction_ToA_W_infer}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
-      val open_abstraction_ToA_br = if no_auto then [] else
-                                  gen_from_eqs @{thm' \<phi>open_abstraction_ToA_br} I tagged_eqs
-                               @ (gen_from_eqs @{thm' \<phi>open_abstraction_ToA_R_br} I tagged_eqs
+
+      val open_abstraction_ToA_sp = if no_auto then [] else
+                                  gen_from_eqs_set_idx @{thm' \<phi>open_abstraction_ToA_specified} I tagged_eqs
+                               @ (gen_from_eqs_set_idx @{thm' \<phi>open_abstraction_ToA_R_specified} I tagged_eqs
                                   handle THM _ => [])
-                               @ (gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_ToA_W_br}
+                               @ (gen_from_tagged_eq_in_type_set_idx @{thm' \<phi>open_abstraction_ToA_W_specified}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
 
       val make_abstraction = if no_auto then [] else
-                              gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
-                           @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
+                              gen_from_eqs @{thm' \<phi>make_abstraction_infer} I tagged_eqs
+                           @ (gen_from_eqs @{thm' \<phi>make_abstraction'R_infer} I tagged_eqs
                               handle THM _ => [])
-                           @ (gen_from_tagged_eq_in_type I @{thm' \<phi>make_abstraction'Rt}
+                           @ (gen_from_tagged_eq_in_type (K I) (K I) @{thm' \<phi>make_abstraction'Rt_infer}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
-      val make_abstraction_br = if no_auto then [] else
-                                 gen_from_eqs @{thm' \<phi>make_abstraction_branching} I tagged_eqs
-                              @ (gen_from_eqs @{thm' \<phi>make_abstraction'R_branching} I tagged_eqs
+      val make_abstraction_sp = if no_auto then [] else
+                                 gen_from_eqs_set_idx @{thm' \<phi>make_abstraction_specified} I tagged_eqs
+                              @ (gen_from_eqs_set_idx @{thm' \<phi>make_abstraction'R_specified} I tagged_eqs
                                  handle THM _ => [])
-                              @ (gen_from_tagged_eq_in_type I @{thm' \<phi>make_abstraction'Rt_br}
+                              @ (gen_from_tagged_eq_in_type_set_idx @{thm' \<phi>make_abstraction'Rt_specified}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
-      val make_Identity_Element_E = if no_auto then [] else
+    (*val make_Identity_Element_E = if no_auto then [] else
                                     (gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
-                                     handle THM _ => [] (*the concrete algebra can be non-unital*))
+                                     handle THM _ => [] (*the concrete algebra can be non-unital*))*)
 
       val the_term = chk_zero_index_term term
 
@@ -1244,18 +1262,18 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                       ([Morphism.thm m rule], pos, mode, SOME priority, [], [], SOME G)) rules)
          in fn ctxt => ctxt
          |> not no_auto ? (fn ctxt => ctxt
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction
-             |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10}
-                            (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
-                            make_abstraction_br
-             |> not (null make_Identity_Element_E) ?
-                add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %derived_identity_element} make_Identity_Element_E
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10} make_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived}
+                            (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
+                            make_abstraction_sp
+           (*|> not (null make_Identity_Element_E) ?
+                add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %derived_identity_element} make_Identity_Element_E *)
              |> Config.put_generic phi_allow_source_object_to_be_not_variable true
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA
-             |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived-10}
-                            (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
-                            open_abstraction_ToA_br
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived-10} open_abstraction_ToA
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA_sp
+                              (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
              |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
        ) |> Phi_Expansions.add_simps expns
          |> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)

@@ -2612,130 +2612,140 @@ text \<open>No \<open>Object_Equiv\<close> is used and we use \<open>(=)\<close>
   a \<phi>-type abstraction by its definition where the definition covers every cases covered by the
   \<open>Object_Equiv\<close>, so there is no need to apply \<open>Object_Equiv\<close> any more.\<close>
 
-lemma \<phi>open_abstraction:
+lemma \<phi>open_abstraction_infer:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x' = x
-\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN T) \<close>
+\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
+  unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
+  by simp
+
+lemma \<phi>open_abstraction_specified:
+  \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x' = x
+\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
   by simp
 
 
+lemma \<phi>open_abstraction_ToA_infer:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_specified:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_R_infer:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
+\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> OPEN i T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_R_specified:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
+\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> OPEN i T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_W_infer:
+  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'
+\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN i T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def
+  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
+
+lemma \<phi>open_abstraction_ToA_W_specified:
+  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x = x'
+\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN i T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
 
 
-lemma \<phi>make_abstraction:
+
+
+
+lemma \<phi>make_abstraction_infer:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<comment> \<open>\<open>\<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r>\<close>\<close>
-    \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<or>\<^sub>c\<^sub>u\<^sub>t \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
   by clarsimp
 
-lemma \<phi>make_abstraction_branching:
+lemma \<phi>make_abstraction_specified:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
   by clarsimp
 
-lemma \<phi>make_abstraction'R:
+lemma \<phi>make_abstraction'R_infer:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<or>\<^sub>c\<^sub>u\<^sub>t \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
   by (cases C; clarsimp; blast)
 
-lemma \<phi>make_abstraction'R_branching:
+lemma \<phi>make_abstraction'R_specified:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
   by (cases C; clarsimp; blast)
 
-lemma \<phi>make_abstraction'Rt:
+lemma \<phi>make_abstraction'Rt_infer:
   \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x'
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'
     \<comment> \<open>Interesting, here \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x'\<close> is actually stronger than \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close>
         because the \<open>fst x\<close> can be a schematic variable so \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close> always returns even
         when the instantiating of \<open>fst x\<close> makes the entire sequent inconsistent but \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>\<close> just
         has no way to recognize this.\<close>
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, snd x) \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def MAKE_def
   by (cases C; clarsimp; blast)
 
-lemma \<phi>make_abstraction'Rt_br:
+lemma \<phi>make_abstraction'Rt_specified:
   \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x = x'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, snd x) \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
   by (cases C; clarsimp; blast)
 
-lemma \<phi>open_abstraction_ToA:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<or>\<^sub>c\<^sub>u\<^sub>t \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x'
-\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def
-  by simp
 
-lemma \<phi>open_abstraction_ToA_br:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
-\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def
-  by simp
-
-lemma \<phi>open_abstraction_ToA_R:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<or>\<^sub>c\<^sub>u\<^sub>t \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x'
-\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * (x \<Ztypecolon> OPEN T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def
-  by simp
-
-lemma \<phi>open_abstraction_ToA_R_br:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
-\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * (x \<Ztypecolon> OPEN T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def
-  by simp
-
-lemma \<phi>open_abstraction_ToA_W:
-  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x' \<or>\<^sub>c\<^sub>u\<^sub>t \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x'
-\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def
-  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
-
-lemma \<phi>open_abstraction_ToA_W_br:
-  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x = x'
-\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def
-  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
-
-
+(*
 lemma \<phi>make_Identity_Element\<^sub>E:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> Identity_Element\<^sub>E U
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> MAKE T) \<close>
   unfolding MAKE_def
   by simp
+*)
 
 lemma \<phi>gen_expansion:
   \<open> (x \<Ztypecolon> T) = U
@@ -7690,7 +7700,7 @@ subsubsection \<open>Abstract Domain\<close>
 context begin
 
 private lemma \<phi>TA_Inh_rule:
-  \<open> (\<And>x. Ant \<Longrightarrow> (x \<Ztypecolon> OPEN T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> (x \<Ztypecolon> OPEN undefined T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -7699,7 +7709,7 @@ private lemma \<phi>TA_Inh_rule:
   by simp
 
 private lemma \<phi>TA_SuC_rule:
-  \<open> (\<And>x. Ant \<Longrightarrow> (P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> (P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE undefined T) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -7743,7 +7753,7 @@ subsubsection \<open>Identity Element Intro \& Elim\<close>
 context begin
 
 private lemma \<phi>TA_1L_rule:
-  \<open> (\<And>x. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> OPEN T) (P x) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> OPEN undefined T) (P x) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -7752,7 +7762,7 @@ private lemma \<phi>TA_1L_rule:
   by blast
 
 private lemma \<phi>TA_1R_rule:
-  \<open> (\<And>x. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> MAKE undefined T) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -7815,7 +7825,7 @@ definition \<open>OE_IND T = T\<close>
 private lemma Object_Equiv_rule:
   \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
-\<Longrightarrow> (\<And>x y. Ant \<Longrightarrow> eq x y \<Longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T) @action \<phi>TA_subgoal undefined)
+\<Longrightarrow> (\<And>x y. Ant \<Longrightarrow> eq x y \<Longrightarrow> (x \<Ztypecolon> OPEN undefined T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined T) @action \<phi>TA_subgoal undefined)
               \<comment> \<open>Induct over \<open>x \<Ztypecolon> T\<close>. When \<open>x\<close> is inductively split, the constraint of \<open>eq x y\<close>
                   should also split \<open>y\<close>, so that \<open>y \<Ztypecolon> T\<close> can reduce.
                   A deficiency is, when the relation \<open>eq\<close> is trivially true such as that when
@@ -7828,7 +7838,7 @@ private lemma Object_Equiv_rule:
   by blast
 
 private lemma \<phi>TA_OE_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> MAKE U)) @action \<phi>TA_subgoal undefined)
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> (x \<Ztypecolon> OPEN undefined T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> MAKE undefined U)) @action \<phi>TA_subgoal undefined)
 \<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> OE_IND U @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
             OE_IND_def
@@ -7962,7 +7972,7 @@ private lemma \<phi>TA_TF_rule:
   \<open>(\<And>g x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x) \<Longrightarrow>
               Ant \<Longrightarrow>
               (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<Longrightarrow> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to U) \<Longrightarrow> \<comment> \<open>split D\<close>
-              (x \<Ztypecolon> OPEN (F1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (F2 U) \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_subgoal (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
+              (x \<Ztypecolon> OPEN undefined (F1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined (F2 U) \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_subgoal (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -8003,7 +8013,7 @@ private lemma \<phi>TA_biTF_rule:
               Ant \<Longrightarrow>
               (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>1 x \<Longrightarrow> a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action to U\<^sub>1) \<Longrightarrow> \<comment> \<open>split D\<close>
               (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>2 x \<Longrightarrow> a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action to U\<^sub>2) \<Longrightarrow> \<comment> \<open>split D\<close>
-              (x \<Ztypecolon> OPEN (F1 T\<^sub>1 T\<^sub>2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (F2 U\<^sub>1 U\<^sub>2) \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y)
+              (x \<Ztypecolon> OPEN undefined (F1 T\<^sub>1 T\<^sub>2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined (F2 U\<^sub>1 U\<^sub>2) \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y)
               @action \<phi>TA_subgoal (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T\<^sub>1 \<Rightarrow> U\<^sub>1 \<o>\<r>\<e>\<l>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T\<^sub>2 \<Rightarrow> U\<^sub>2)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -8040,7 +8050,7 @@ private lemma \<phi>TA_TF\<^sub>\<Lambda>_rule:
   \<open> (\<And>g x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>p a b. a \<in> D p x \<and> g p a b \<longrightarrow> b \<in> R p x) \<Longrightarrow>
               Ant \<Longrightarrow>
               (\<And>p a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D p x \<Longrightarrow> a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U p \<s>\<u>\<b>\<j> b. g p a b @action to (U p)) \<Longrightarrow> \<comment> \<open>split D\<close>
-              (x \<Ztypecolon> MAKE (F1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> OPEN (F2 U) \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_subgoal (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
+              (x \<Ztypecolon> MAKE undefined (F1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> OPEN undefined (F2 U) \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_subgoal (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -8181,7 +8191,8 @@ paragraph \<open>Normal\<close>
 private lemma \<phi>TA_SH\<^sub>I_rule:
   \<open> (\<And>z. Ant \<longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
-                \<longrightarrow> ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (T \<^emph> U)))) @action \<phi>TA_subgoal undefined)
+                \<longrightarrow> ((y \<Ztypecolon> OPEN undefined (Fb U)) * (x \<Ztypecolon> OPEN undefined (Fa T))
+                    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined (Fc (T \<^emph> U)))) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -8190,7 +8201,8 @@ private lemma \<phi>TA_SH\<^sub>I_rule:
   by simp
 
 private lemma \<phi>TA_SH\<^sub>E_rule:
-  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN (Fc (T \<^emph>\<^sub>\<A> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U)) @action \<phi>TA_subgoal \<A>simp)
+  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN undefined (Fc (T \<^emph>\<^sub>\<A> U))
+                  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE undefined (Ft T) \<^emph> MAKE undefined (Fu U)) @action \<phi>TA_subgoal \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -8199,7 +8211,8 @@ private lemma \<phi>TA_SH\<^sub>E_rule:
   by simp
 
 private lemma \<phi>TA_SH\<^sub>I_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> ((y \<Ztypecolon> OPEN Tb) * (x \<Ztypecolon> OPEN Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE Tc)) @action \<phi>TA_subgoal undefined)
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> ((y \<Ztypecolon> OPEN undefined Tb) * (x \<Ztypecolon> OPEN undefined Ta)
+                                      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined Tc)) @action \<phi>TA_subgoal undefined)
 \<equiv> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x y \<Longrightarrow> ((y \<Ztypecolon> Tb) * (x \<Ztypecolon> Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Tc) @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
   by (rule; blast)
@@ -8221,7 +8234,8 @@ text \<open>This conditioned template is necessary because, see,
 \<close>
 
 private lemma \<phi>TA_SH\<^sub>E_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> MAKE U1 \<^emph> MAKE U2) @action \<phi>TA_subgoal A)
+  \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> OPEN undefined T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> MAKE undefined U1 \<^emph> MAKE undefined U2)
+            @action \<phi>TA_subgoal A)
 \<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U1 \<^emph> U2 \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all OPEN_def MAKE_def
   by simp
@@ -8242,7 +8256,8 @@ paragraph \<open>With Parameterization\<close>
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_rule:
   \<open> (\<And>z. Ant \<longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
-                \<longrightarrow> ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (\<lambda>p. T p \<^emph> U p))))
+                \<longrightarrow> ((y \<Ztypecolon> OPEN undefined (Fb U)) * (x \<Ztypecolon> OPEN undefined (Fa T))
+                    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined (Fc (\<lambda>p. T p \<^emph> U p))))
             @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -8252,7 +8267,8 @@ private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_rule:
   by simp
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_rule:
-  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN (Fc (\<lambda>p. T p \<^emph>\<^sub>\<A> U p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U))
+  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN undefined (Fc (\<lambda>p. T p \<^emph>\<^sub>\<A> U p))
+                  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE undefined (Ft T) \<^emph> MAKE undefined (Fu U))
           @action \<phi>TA_subgoal \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -8751,7 +8767,8 @@ context begin
 private lemma \<phi>TA_MS\<^sub>I_rule:
   \<open> (\<And>t s x r y. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x \<and> r = smul s t \<and> f s t x = y
-         \<longrightarrow> (x \<Ztypecolon> OPEN (Fs s (OPEN (Ft t T))) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (Fc r T)) @action \<phi>TA_subgoal NToA)
+         \<longrightarrow> (x \<Ztypecolon> OPEN undefined (Fs s (OPEN undefined (Ft t T)))
+             \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined (Fc r T)) @action \<phi>TA_subgoal NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -8762,7 +8779,9 @@ private lemma \<phi>TA_MS\<^sub>I_rule:
 private lemma \<phi>TA_MS\<^sub>E_rule:
   \<open> (\<And>t s r x. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> r = smul s t \<and> Dx s t x
-         \<longrightarrow> (x \<Ztypecolon> OPEN (Fc r T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> MAKE (Fs s (MAKE (Ft t T)))) @action \<phi>TA_subgoal NToA)
+         \<longrightarrow> (x \<Ztypecolon> OPEN undefined (Fc r T)
+             \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> MAKE undefined (Fs s (MAKE undefined (Ft t T))))
+         @action \<phi>TA_subgoal NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -8798,7 +8817,9 @@ context begin
 private lemma \<phi>TA_MD\<^sub>Z_rule:
   \<open> (\<And>s t x r z. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> r = s + t \<and> Dx t s x \<and> zi t s x = z
-         \<longrightarrow> (x \<Ztypecolon> OPEN (F t) \<^emph> OPEN (F s) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (F r)) @action \<phi>TA_subgoal NToA)
+         \<longrightarrow> (x \<Ztypecolon> OPEN undefined (F t) \<^emph> OPEN undefined (F s)
+             \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined (F r))
+         @action \<phi>TA_subgoal NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -8809,7 +8830,9 @@ private lemma \<phi>TA_MD\<^sub>Z_rule:
 private lemma \<phi>TA_MD\<^sub>U_rule:
   \<open> (\<And>s t r x. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> r = s + t \<and> Dx t s x
-         \<longrightarrow> (x \<Ztypecolon> OPEN (F r) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> MAKE (F t) \<^emph> MAKE (F s)) @action \<phi>TA_subgoal NToA)
+         \<longrightarrow> (x \<Ztypecolon> OPEN undefined (F r)
+             \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> MAKE undefined (F t) \<^emph> MAKE undefined (F s))
+        @action \<phi>TA_subgoal NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -9264,7 +9287,9 @@ lemma \<phi>TA_TyComm\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> OPEN (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (MAKE (G' T)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_subgoal \<A>simp)
+          (x \<Ztypecolon> OPEN undefined (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T))
+          \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (MAKE undefined (G' T)) \<s>\<u>\<b>\<j> y. r x y)
+        @action \<phi>TA_subgoal \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
           \<comment>\<open>The \<open>OPEN\<close> tag restricts the deriver to only unfold what should be unfolded,
              especially when reasoning the commutativity between one \<phi>-type and itself.\<close>
@@ -9280,7 +9305,9 @@ lemma \<phi>TA_TyComm\<^sub>E_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-           (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_subgoal undefined)
+           (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN undefined (G T))
+            \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)) \<s>\<u>\<b>\<j> y. r x y)
+        @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -9295,7 +9322,9 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> OPEN (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (MAKE (G T U)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_subgoal \<A>simp)
+          (x \<Ztypecolon> OPEN undefined (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U))
+           \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (MAKE undefined (G T U)) \<s>\<u>\<b>\<j> y. r x y)
+        @action \<phi>TA_subgoal \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -9310,8 +9339,10 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
        \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-        (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_subgoal undefined)
-                                              \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
+        (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN undefined (G T U))
+         \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)) \<s>\<u>\<b>\<j> y. r x y)
+                      \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
+       @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -9324,8 +9355,10 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> OPEN (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (MAKE (G'\<^sub>T T)) (MAKE (G'\<^sub>U U)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_subgoal \<A>simp)
-          \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
+          (x \<Ztypecolon> OPEN undefined (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U))
+            \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
+           \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (MAKE undefined (G'\<^sub>T T)) (MAKE undefined (G'\<^sub>U U)) \<s>\<u>\<b>\<j> y. r x y)
+        @action \<phi>TA_subgoal \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -9338,8 +9371,10 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
        \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-        (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' (OPEN (G'\<^sub>T T)) (OPEN (G'\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_subgoal undefined)
-                                                        \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
+        (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' (OPEN undefined (G'\<^sub>T T)) (OPEN undefined (G'\<^sub>U U))
+         \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U)) \<s>\<u>\<b>\<j> y. r x y)
+                     \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
+       @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT

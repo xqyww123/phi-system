@@ -1165,29 +1165,36 @@ subsection \<open>Open \& Make Abstraction\<close>
 
 subsubsection \<open>Open Abstraction\<close>
 
-definition OPEN :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> where \<open>OPEN X \<equiv> X\<close>
+definition OPEN :: \<open>nat \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> where \<open>OPEN i X \<equiv> X\<close>
+  \<comment> \<open>When the definition of the \<phi>-type involves multiple equations, \<open>i\<close> hints which equation should be used.
+     \<open>i\<close> can be a unknown variable to let the reasoner infer the proper one but it can fail and when it
+     fails branches diverge for each equation.\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close> \<Rightarrow>
-                          \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close> (200)
+  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to (OPEN _ _)\<close> \<Rightarrow>
+                          \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _ _)\<close> (200)
+    and \<open>_ \<Ztypecolon> OPEN _ ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>_ \<Ztypecolon> OPEN _ ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> (700)
+    and \<open>_ * (_ \<Ztypecolon> OPEN _ ?T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>_ * (_ \<Ztypecolon> OPEN _ ?T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> (700)
+    and \<open>_ \<Ztypecolon> OPEN _ ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>_ \<Ztypecolon> OPEN _ ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> (700)
 ]]
 
 paragraph \<open>Application\<close>
 
+(* depreciated
 lemma open_abstraction_\<phi>app:
   \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
       \<open>Input a lambda abstraction e.g. \<open>\<lambda>x. List (Box x)\<close> as a pattern where the lambda variable is the \<phi>-type you want to destruct.\<close>
       \<open>I will match\<close> T \<open>with the pattern.\<close> \<newline>
       \<open>You can also use an underscore to denote the target \<phi>-type in this pattern so you don't need to write a lambda abstraction, e.g. \<open>List (Box _)\<close>\<close>)
 \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> target
-\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target (OPEN any))
+\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to (target (OPEN i any))
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
-  unfolding Do_def Action_Tag_def .
+  unfolding Do_def Action_Tag_def . *)
 
 lemma \<comment>\<open>fallback\<close>
-  [\<phi>reason default %To_ToA_fallback for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close>]:
+  [\<phi>reason default %To_ToA_fallback for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _ _)\<close>]:
   \<open> FAIL TEXT(\<open>Fail to destruct \<phi>-type\<close> T)
-\<Longrightarrow> x \<Ztypecolon> Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to (OPEN T) \<close>
+\<Longrightarrow> x \<Ztypecolon> Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to (OPEN i T) \<close>
   unfolding FAIL_def
   by blast
 
@@ -1195,37 +1202,72 @@ lemma \<comment>\<open>fallback\<close>
 paragraph \<open>Transformation\<close>
 
 \<phi>reasoner_group ToA_open_\<phi>type = (%ToA_splitting, [%ToA_splitting[bottom]+1, %ToA_splitting[top]])
-                                  for \<open>x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA
+                                  for \<open>x \<Ztypecolon> OPEN i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA
       \<open>Transformation rules that making the annotated \<phi>-type. The tag \<open>MAKE\<close> emphasizes the user's intention
        to apply the \<phi>-type construction rules which are normally not activated in the usual reasoning.\<close>
   and ToA_open_\<phi>type_fail = (%ToA_splitting[bottom], [%ToA_splitting[bottom], %ToA_splitting[bottom]])
-                             for \<open>x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA and < ToA_open_\<phi>type
+                             for \<open>x \<Ztypecolon> OPEN i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA and < ToA_open_\<phi>type
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
   and ToA_open_\<phi>type_derived = (%ToA_open_\<phi>type-30, [%ToA_open_\<phi>type-40, %ToA_open_\<phi>type-20])
-                                for \<open>x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA_open_\<phi>type
+                                in ToA_open_\<phi>type
       \<open>Derived ToA rules openning \<phi>-Type abstraction\<close>
-  and To_ToA_derived_OPEN = (%To_ToA_derived-10, [%To_ToA_derived-10, %To_ToA_derived-10])
-                                for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (OPEN T)\<close>
+  and To_ToA_derived_OPEN = (%To_ToA_derived-10, [%To_ToA_derived-10, %To_ToA_derived-5])
+                                for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (OPEN i T)\<close>
       \<open>Derived To-Transformation openning \<phi>-Type abstraction\<close>
+
+subparagraph \<open>Reductions\<close>
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> OPEN undefined _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> x \<Ztypecolon> OPEN some T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN undefined T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %ToA_red for \<open>_ * (_ \<Ztypecolon> OPEN undefined _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> R * (x \<Ztypecolon> OPEN some T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> OPEN undefined T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> OPEN undefined _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> x \<Ztypecolon> OPEN some T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN undefined T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def FAIL_def
+  by blast
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> OPEN (Suc 0) _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> x \<Ztypecolon> OPEN 1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN (Suc 0) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %ToA_red for \<open>_ * (_ \<Ztypecolon> OPEN (Suc 0) _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> R * (x \<Ztypecolon> OPEN 1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> OPEN (Suc 0) T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> OPEN (Suc 0) _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> x \<Ztypecolon> OPEN 1 T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN (Suc 0) T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def FAIL_def
+  by blast
+
 
 
 subparagraph \<open>Fallback\<close>
 
 lemma [\<phi>reason default ! %ToA_open_\<phi>type_fail]:
   \<open> FAIL TEXT(\<open>Don't know how to open \<phi>-type\<close> (x \<Ztypecolon> T))
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> OPEN i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding OPEN_def FAIL_def
   by blast
 
 lemma [\<phi>reason default ! %ToA_open_\<phi>type_fail]:
   \<open> FAIL TEXT(\<open>Don't know how to open \<phi>-type\<close> (x \<Ztypecolon> T))
-\<Longrightarrow> R * (x \<Ztypecolon> OPEN T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> R * (x \<Ztypecolon> OPEN i T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding OPEN_def FAIL_def
   by blast
 
 lemma [\<phi>reason default ! %ToA_open_\<phi>type_fail]:
   \<open> FAIL TEXT(\<open>Don't know how to open \<phi>-type\<close> (fst x \<Ztypecolon> T))
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> OPEN i T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding OPEN_def FAIL_def
   by blast
 
@@ -1249,72 +1291,77 @@ paragraph \<open>Rules of Various Reasoning\<close>
 
 lemma [\<phi>reason %extract_pure]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+\<Longrightarrow> x \<Ztypecolon> OPEN i T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
   unfolding OPEN_def .
 
 lemma [\<phi>reason %extract_pure]:
   \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
-\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> OPEN T \<close>
+\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> OPEN i T \<close>
   unfolding OPEN_def .
 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain T D
-\<Longrightarrow> Abstract_Domain (OPEN T) D \<close>
+\<Longrightarrow> Abstract_Domain (OPEN i T) D \<close>
   unfolding OPEN_def .
 
 lemma abstract_domain_OPEN:
-  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. r x y @action to (OPEN T))
+  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. r x y @action to (OPEN i T))
 \<Longrightarrow> Abstract_Domain U' D
-\<Longrightarrow> Abstract_Domain (OPEN T) (\<lambda>x. \<exists>y. r x y \<and> D y) \<close>
+\<Longrightarrow> Abstract_Domain (OPEN i T) (\<lambda>x. \<exists>y. r x y \<and> D y) \<close>
   unfolding OPEN_def Abstract_Domain_def Action_Tag_def \<r>EIF_def Transformation_def Inhabited_def
   by clarsimp blast
 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L T D
-\<Longrightarrow> Abstract_Domain\<^sub>L (OPEN T) D \<close>
+\<Longrightarrow> Abstract_Domain\<^sub>L (OPEN i T) D \<close>
   unfolding OPEN_def .
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>I T D P
-\<Longrightarrow> Identity_Elements\<^sub>I (OPEN T) D P \<close>
+\<Longrightarrow> Identity_Elements\<^sub>I (OPEN i T) D P \<close>
   unfolding OPEN_def .
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>E T D
-\<Longrightarrow> Identity_Elements\<^sub>E (OPEN T) D \<close>
+\<Longrightarrow> Identity_Elements\<^sub>E (OPEN i T) D \<close>
   unfolding OPEN_def .
 
 lemma Identity_Elements\<^sub>I_OPEN:
-  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action to (OPEN T))
+  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action to (OPEN i T))
 \<Longrightarrow> Identity_Elements\<^sub>I U D P
-\<Longrightarrow> Identity_Elements\<^sub>I (OPEN T) (\<lambda>x. \<forall>y. r x y \<and> D y) (\<lambda>x. \<exists>y. r x y \<and> P y) \<close>
+\<Longrightarrow> Identity_Elements\<^sub>I (OPEN i T) (\<lambda>x. \<forall>y. r x y \<and> D y) (\<lambda>x. \<exists>y. r x y \<and> P y) \<close>
   unfolding Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def Transformation_def Action_Tag_def OPEN_def
   by clarsimp blast
   
+
 
 subsubsection \<open>Make Abstraction\<close>
 
 text \<open>Applies one step of constructing\<close>
 
-definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close>
-  where [assertion_simps_source, \<phi>programming_simps]: \<open>MAKE X \<equiv> X\<close>
+definition MAKE :: \<open>nat \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close>
+  where [assertion_simps_source, \<phi>programming_simps]: \<open>MAKE i X \<equiv> X\<close>
+  \<comment> \<open>When the definition of the \<phi>-type involves multiple equations, \<open>i\<close> hints which equation should be used.
+     \<open>i\<close> can be a unknown variable to let the reasoner infer the proper one but it can fail and when it
+     fails branches diverge for each equation.\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to (MAKE _)\<close> \<Rightarrow>
+  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to (MAKE _ _)\<close> \<Rightarrow>
      \<open>ERROR TEXT(\<open>There is no need to declare a To-Transformation rule for MAKE. Just use the normal ToA and synthesis\<close>)\<close> (200)
+  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ ?T \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ ?T \<w>\<i>\<t>\<h> _ \<close> (700)
+  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> (700)
 ]]
 
 \<phi>reasoner_group ToA_make_\<phi>type = (100, [%ToA_splitting_source+2, %ToA_splitting_target-1])
-                                  for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
+                                  for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<^emph>[Cr] R\<close>)
                                    in ToA and > ToA_splitting_source and < ToA_splitting_target
       \<open>Transformation rules that making the annotated \<phi>-type. The tag \<open>MAKE\<close> emphasizes the user's intention
        to apply the \<phi>-type construction rules which are normally not activated in the usual reasoning.\<close>
   and ToA_make_\<phi>type_fail = (%ToA_splitting_source+1, [%ToA_splitting_source+1, %ToA_splitting_source+1])
-                             for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
+                             for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<^emph>[Cr] R\<close>)
                               in ToA and > ToA_splitting_source and < ToA_make_\<phi>type
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
-  and ToA_make_\<phi>type_derived = (80, [70, 80]) for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
-                                in ToA_make_\<phi>type
+  and ToA_make_\<phi>type_derived = (80, [70, 80]) in ToA_make_\<phi>type
       \<open>Derived rules\<close>
 
 ML_file \<open>library/syntax/make_and_open.ML\<close>
@@ -1325,15 +1372,40 @@ text \<open>\<open>MAKE\<close> tag in source is senseless\<close>
 
 lemma [\<phi>reason %ToA_red]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> MAKE T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> MAKE i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding MAKE_def
   by simp
 
 lemma [\<phi>reason %ToA_red]:
   \<open> x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> MAKE T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> MAKE i T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding MAKE_def
   by simp
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE undefined _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE some T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE undefined T \<w>\<i>\<t>\<h> P \<close>
+  unfolding MAKE_def
+  by simp
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE undefined _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE some T \<^emph>[C] W \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE undefined T \<^emph>[C] W \<w>\<i>\<t>\<h> P \<close>
+  unfolding MAKE_def
+  by simp
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE (Suc 0) _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE 1 T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (Suc 0) T \<w>\<i>\<t>\<h> P \<close>
+  unfolding MAKE_def
+  by simp
+
+lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE (Suc 0) _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE 1 T \<^emph>[C] W \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (Suc 0) T \<^emph>[C] W \<w>\<i>\<t>\<h> P \<close>
+  unfolding MAKE_def
+  by simp
+
 
 paragraph \<open>Fallback\<close>
 
@@ -1341,36 +1413,36 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason default ! %ToA_make_\<phi>type_fail]: \<comment> \<open>Exactly higher than the entry point of Structural Extract\<close>
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> (y \<Ztypecolon> U))
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<w>\<i>\<t>\<h> P\<close>
   unfolding FAIL_def
   by blast
 
 lemma [\<phi>reason default ! %ToA_make_\<phi>type_fail]:
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> (y \<Ztypecolon> U)) 
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding FAIL_def
   by blast
 
 lemma \<comment>\<open>fallback\<close>
-  [\<phi>reason default ! %ToA_make_\<phi>type_fail for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _ \<close>]:
+  [\<phi>reason default ! %ToA_make_\<phi>type_fail for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ _ \<w>\<i>\<t>\<h> _ \<close>]:
   \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> U)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<w>\<i>\<t>\<h> P \<close>
   unfolding FAIL_def
   by blast
 
 lemma \<comment>\<open>fallback\<close>
-  [\<phi>reason default ! %ToA_make_\<phi>type_fail for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ \<close>]:
+  [\<phi>reason default ! %ToA_make_\<phi>type_fail for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ \<close>]:
   \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> U)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding FAIL_def
   by blast
 
 setup \<open>
   Context.theory_map (
-      Phi_Reasoner.add_pass (\<^term>\<open>MAKE\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _\<close>,
+      Phi_Reasoner.add_pass (\<^term>\<open>MAKE\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ _ \<w>\<i>\<t>\<h> _\<close>,
         fn pos => Phi_Reasoners.pass_checks_priority "MAKE" 59 pos #>
                   Phi_Syntax.pass_ensures_intro_transformation pos)
-   #> Phi_Reasoner.add_pass (\<^term>\<open>MAKE R\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>,
+   #> Phi_Reasoner.add_pass (\<^term>\<open>MAKE R\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>,
         fn pos => Phi_Reasoners.pass_checks_priority "MAKE" 59 pos #>
                   Phi_Syntax.pass_ensures_intro_transformation pos))
 \<close>
@@ -1379,18 +1451,18 @@ paragraph \<open>Rules of Various Reasoning\<close>
 
 lemma [\<phi>reason %extract_pure]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
-\<Longrightarrow> x \<Ztypecolon> MAKE T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+\<Longrightarrow> x \<Ztypecolon> MAKE i T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
   unfolding MAKE_def .
 
 lemma [\<phi>reason %extract_pure]:
   \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
-\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T \<close>
+\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE i T \<close>
   unfolding MAKE_def .
 
 lemma abstract_domain_MAKE:
-  \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> PP)
+  \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<w>\<i>\<t>\<h> PP)
 \<Longrightarrow> (\<And>x. D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X x)
-\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) D \<close>
+\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE i T) D \<close>
   unfolding MAKE_def Abstract_Domain\<^sub>L_def \<r>ESC_def Transformation_def Action_Tag_def Inhabited_def
   by clarsimp blast
 
@@ -1408,7 +1480,7 @@ bundle abstract_domain_OPEN_MAKE =
 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain T D
-\<Longrightarrow> Abstract_Domain (MAKE T) D \<close>
+\<Longrightarrow> Abstract_Domain (MAKE i T) D \<close>
   unfolding MAKE_def .
 
 (*
@@ -1420,19 +1492,19 @@ lemma [\<phi>reason %abstract_domain]:
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>I T D P
-\<Longrightarrow> Identity_Elements\<^sub>I (MAKE T) D P \<close>
+\<Longrightarrow> Identity_Elements\<^sub>I (MAKE i T) D P \<close>
   unfolding MAKE_def .
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>E T D
-\<Longrightarrow> Identity_Elements\<^sub>E (MAKE T) D \<close>
+\<Longrightarrow> Identity_Elements\<^sub>E (MAKE i T) D \<close>
   unfolding MAKE_def .
 
 lemma Identity_Elements\<^sub>E_MAKE:
-  \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> PP)
+  \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<w>\<i>\<t>\<h> PP)
 \<Longrightarrow> (\<And>x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] (f x \<Ztypecolon> U) : X x)
 \<Longrightarrow> Identity_Elements\<^sub>E U D
-\<Longrightarrow> Identity_Elements\<^sub>E (MAKE T) (D o f) \<close>
+\<Longrightarrow> Identity_Elements\<^sub>E (MAKE i T) (D o f) \<close>
   unfolding Identity_Elements\<^sub>E_def Simplify_def Transformation_def Identity_Element\<^sub>E_def
   apply clarsimp
   by metis

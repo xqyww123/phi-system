@@ -120,7 +120,7 @@ lemma t1[\<phi>reason %ToA_num_conv_cut, \<phi>synthesis %\<phi>synthesis_transf
   " Threshold_Cost 4
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
 \<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat>"
-  \<medium_left_bracket> \<open>nat x \<Ztypecolon> MAKE \<nat>\<close> \<medium_right_bracket>.
+  \<medium_left_bracket> \<open>nat x \<Ztypecolon> MAKE _ \<nat>\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x

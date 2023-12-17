@@ -182,7 +182,7 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open> Threshold_Cost 9
 \<Longrightarrow> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> unat x \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   for x :: \<open>'b::len word\<close>
-  \<medium_left_bracket> \<open>unat x \<Ztypecolon> MAKE (\<nat>\<^sup>r('b))\<close> \<medium_right_bracket> .
+  \<medium_left_bracket> \<open>unat x \<Ztypecolon> MAKE _ (\<nat>\<^sup>r('b))\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> unat x \<Ztypecolon> \<nat>\<^sup>r('b) @action to \<nat>\<^sup>r('b)\<close>
@@ -234,7 +234,7 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open> x \<Ztypecolon> \<nat>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat>('b) \<s>\<u>\<b>\<j> y. y = x mod 2 ^ LENGTH('b) @action to \<nat>('b)\<close>
-  \<medium_left_bracket> \<open>x mod 2 ^ LENGTH('b) \<Ztypecolon> MAKE (\<nat>('b))\<close> \<medium_right_bracket>.
+  \<medium_left_bracket> \<open>x mod 2 ^ LENGTH('b) \<Ztypecolon> MAKE _ (\<nat>('b))\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open> Threshold_Cost 4
@@ -330,7 +330,7 @@ lemma [\<phi>reason %ToA_num_conv for \<open>?x \<Ztypecolon> Word(_) \<t>\<r>\<
   " Threshold_Cost 9
 \<Longrightarrow> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sint x \<Ztypecolon> \<int>('b)"
   for x :: \<open>'b::len word\<close>
-  \<medium_left_bracket> \<open>sint x \<Ztypecolon> MAKE (\<int>('b))\<close>
+  \<medium_left_bracket> \<open>sint x \<Ztypecolon> MAKE _ (\<int>('b))\<close>
     certified using sint_greater_eq sint_less by blast
   \<medium_right_bracket>.
 

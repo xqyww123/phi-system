@@ -424,7 +424,7 @@ proc op_var_scope:
   throws  E
   \<medium_left_bracket>
     apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. varname.type v = TY)\<close> and u=\<open>Some (discrete None)\<close>]
-    \<exists>v \<open>() \<Ztypecolon> MAKE (Var v \<circle>)\<close>
+    \<exists>v \<open>() \<Ztypecolon> MAKE _ (Var v \<circle>)\<close>
     try'' \<medium_left_bracket>
         apply_rule BLK[of \<open>\<phi>arg.dest \<v>0\<close>, unfolded atomize_eq, OF Premise_D[where mode=default], simplified]
         op_free_var \<open>\<phi>arg.dest \<v>0\<close>
