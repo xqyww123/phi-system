@@ -95,7 +95,7 @@ fun is_simp_needed ctxt =
           |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy (K true) bvs (pat,tm)
                       | Chk_ML (_, pat, f) => PLPR_Pattern.matches thy (K true) bvs (pat,tm)
                                       andalso f ctxt (bvs, tm))
-   in fn bvs => Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk bvs)
+   in Phi_Syntax.exists_item_of_assertion (pass_recursively apply_chk)
   end
 
 fun chk_pattern pat =

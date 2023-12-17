@@ -122,9 +122,20 @@ val fix_leading_antecedent_meta_quantifiers : Proof.context -> term
                              (*where quantified variables are fixed*)
 val strip_meta_hhf_c :
       cterm -> Proof.context -> cterm list (*quant vars*) * cterm list (*premises*) * cterm * Proof.context
+
+val mk_meta_hhf :
+      (string * typ) list (*quantified variables*)
+    * term list (*premises of the antecedent*)
+    * term (*conclusion containing loose bound*)
+    -> term
+
 val varified_leading_antecedent_meta_quantifiers : Proof.context -> term
                           -> term list (*premises*) * term (*conclusion*)
                              (*where quantified variables are varified (schematic variables)*)
+
+val aconv_bound_diff : int -> term * term -> bool
+val subst_with_loose_bounds : (term * term) list -> term -> term
+          (*supports loose bounds either in the redex or the residue*)
 
 end
 
@@ -532,6 +543,10 @@ fun strip_meta_hhf_bvs term =
       | strip V X = (V, X)
   in strip [] term end
 
+fun mk_meta_hhf (vars, prems, concl) =
+  fold_rev (fn P => fn X => \<^Const>\<open>Pure.imp\<close> $ P $ X) prems concl
+    |> fold_rev (fn (N,Ty) => fn X => \<^Const>\<open>Pure.all Ty\<close> $ Abs (N, Ty, X)) vars
+
 fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
   | leading_antecedent X = raise TERM ("has no antecedent", [X])
 
@@ -571,6 +586,22 @@ fun varified_leading_antecedent_meta_quantifiers ctxt sequent =
    in (prems',leading_ant')
   end
 
+fun aconv_bound_diff d (t1 $ u1, t2 $ u2) =
+      aconv_bound_diff d (t1,t2) andalso aconv_bound_diff d (u1,u2)
+  | aconv_bound_diff d (Abs (_, T1, t1), Abs (_, T2, t2)) =
+      aconv_bound_diff d (t1,t2) andalso T1 = T2
+  | aconv_bound_diff d (Bound i, Bound j) = i = j + d
+  | aconv_bound_diff _ (a1,a2) = a1 = a2
+
+fun subst_with_loose_bounds [] = I
+  | subst_with_loose_bounds pairs =
+      let fun substf i u =
+            case AList.lookup (aconv_bound_diff i) pairs u
+              of SOME u' => Term.incr_boundvars i u'
+               | NONE => (case u of Abs(a,T,t) => Abs(a, T, substf (i+1) t)
+                                  | t$u' => substf i t $ substf i u'
+                                  | _ => u)
+       in substf 0 end
 
 
 end

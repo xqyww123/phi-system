@@ -53,10 +53,10 @@ fun quick_check quantifier =
             if quantifier = N then qchk (lv+1) X else false
         | qchk lv (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ P) =
             qchkBE lv P andalso
-            Phi_Syntax.forall_item_of_assertion (
-                fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => not (Term.loose_bvar1 (T, lv))
+            Phi_Syntax.forall_item_of_assertion (fn _ =>
+                fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => true (*not (Term.loose_bvar1 (T, lv))*)
                  | X => not (Term.loose_bvar1 (X, lv))
-              ) X
+              ) [] X
         | qchk _ _ = false
 
    in qchk ~1

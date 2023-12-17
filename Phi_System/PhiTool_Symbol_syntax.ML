@@ -4,6 +4,7 @@ fun dest_synt_numeral (Const (\<^const_syntax>\<open>zero_class.zero\<close>, _)
   | dest_synt_numeral (Const (\<^const_syntax>\<open>num.Bit0\<close>, _) $ bs) = 2 * dest_synt_numeral bs
   | dest_synt_numeral (Const (\<^const_syntax>\<open>num.Bit1\<close>, _) $ bs) = 2 * dest_synt_numeral bs + 1
   | dest_synt_numeral (Const (\<^const_syntax>\<open>numeral_class.numeral\<close>, _) $ X) = dest_synt_numeral X
+  | dest_synt_numeral (Const (\<^const_syntax>\<open>Suc\<close>, _) $ X) = dest_synt_numeral X + 1
   | dest_synt_numeral t = raise TERM ("dest_num", [t])
 
 local

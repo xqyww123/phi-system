@@ -1882,8 +1882,19 @@ fun defer_premise ctxt =
 
 \<phi>reasoner_ML \<open>Premise MODE_SAT\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (fn ctxt => fn sequent => Seq.make (fn () =>
-      let val goal = Thm.dest_arg1 (Thm.cprop_of sequent)
-          val test = Thm.implies_intr goal (Thm.transfer' ctxt @{thm' TrueI})
+      let val (qvars, prems, concl) = Phi_Help.leading_antecedent (Thm.prop_of sequent)
+          val vars = subtract (op =) (fold Term.add_vars prems []) (Term.add_vars concl [])
+          val concl' = Term.incr_boundvars (length vars) concl
+                  |> Phi_Help.subst_with_loose_bounds (map_index (fn (i, x) => (Var x, Bound i)) vars)
+                  |> (fn Trueprop $ (Premise $ mode $ P) =>
+                        let val P' = fold (fn ((N,_),Ty) => fn X =>
+                                        \<^Const>\<open>HOL.Ex Ty\<close> $ Abs (N, Ty, X)
+                                     ) vars P
+                         in Trueprop $ (Premise $ mode $ P')
+                        end)
+          val goal' = Phi_Help.mk_meta_hhf (qvars, prems, concl')
+                  |> Thm.cterm_of ctxt
+          val test = Thm.implies_intr goal' (Thm.transfer' ctxt @{thm' TrueI})
                   |> Phi_Reasoners.weak_obligation_solver {can_inst=true} ctxt
                   |> Seq.pull
                   |> is_some

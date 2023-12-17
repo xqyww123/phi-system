@@ -120,7 +120,7 @@ fun guess_ssp_top ctxt sigma_ty T =
                   |> Thm.cprop_of
                   |> Thm.dest_arg
                   |> Thm.term_of
-            val P' = Abs ("\<sigma>", sigma_ty, Phi_Help.subst_free_with_loose_bounds [(sigma, Bound 0)] P)
+            val P' = Abs ("\<sigma>", sigma_ty, Phi_Help.subst_with_loose_bounds [(sigma, Bound 0)] P)
          in (P', S', M, ctxt)
         end)
   end

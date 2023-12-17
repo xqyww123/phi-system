@@ -62,7 +62,7 @@ fun infer_equiv ctxt sequent =
 
       fun infer lev (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (Var v' $ x $ y) $ Y) =
             if v' = var
-            then Phi_Help.subst_free_with_loose_bounds [(x, Bound (lev+1)), (y, Bound lev)] Y
+            then Phi_Help.subst_with_loose_bounds [(x, Bound (lev+1)), (y, Bound lev)] Y
               |> refine_term \<^Const>\<open>True\<close>
             else \<^Const>\<open>True\<close>
         | infer lev (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ X $ Y) =

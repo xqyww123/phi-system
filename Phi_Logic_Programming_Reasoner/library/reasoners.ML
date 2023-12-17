@@ -207,6 +207,19 @@ fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\
       = mk_boolean_inst X b ret
   | mk_boolean_inst _ _ _ = raise Match
 
+(*it is unsafe to instantiate any functional unknown variable because you don't know how
+  the function would be and it may be even not unique. For example, \<open>?x a b = True\<close>, you
+  may think the instantiation would be \<open>\<lambda>_ _. True\<close> but it actually can also be \<open>\<lambda>a b. a = b\<close>
+  when \<open>a = b\<close>.
+
+  However, even if it is unsafe, it works in most of cases and our simplifier tactics are already
+  unsafe. The unsafe instantiation is still acceptable once users can use tags to prevent aggressive
+  instantiation.
+
+  TODO: I don't know if we should re-enable IEUV but I believe the procedure of IEUV should be hard-coded
+    in the fast_inst below.
+*)
+
 fun fast_inst can_inst th =
   case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
     of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
@@ -216,37 +229,28 @@ fun fast_inst can_inst th =
                 Seq.empty)
           handle Match => NONE)
      | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
-                    $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _)
+                    $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y)
                     $ _)) =>
-         (*it is unsafe to instantiate any functional unknown variable because you don't know how
-           the function would be and it may be even not unique. For example, \<open>?x a b = True\<close>, you
-           may think the instantiation would be \<open>\<lambda>_ _. True\<close> but it actually can also be \<open>\<lambda>a b. a = b\<close>
-           when \<open>a = b\<close>.*)
-         (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
+         if is_Var (Term.head_of X) orelse is_Var (Term.head_of Y)
+         then (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
                      by (simp add: Premise_def)} RS th, Seq.empty)
-          handle THM _ => NONE)
-     | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
-                    $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _)
-                    $ _)) =>
-         (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
-                     by (simp add: Premise_def)} RS th, Seq.empty)
-          handle THM _ => NONE)
+               handle THM _ => NONE)
+         else NONE
      | (true, (_, X as Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
          (SOME (Thm.instantiate (TVars.empty, mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th,
                 Seq.empty)
           handle Match => NONE)
-     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _)) =>
+     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y)) =>
          (*solves the equation by unification once single resolution*)
          (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
-         (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
-          handle THM _ => NONE)
-     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _)) =>
-         (*solves the equation by unification once single resolution*)
-         (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
-         (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
-          handle THM _ => NONE)
-     | (true, (_, Var _)) =>
-          SOME (@{thm' Premise_True} RS th, Seq.empty)
+         if is_Var (Term.head_of X) orelse is_Var (Term.head_of Y)
+         then (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
+               handle THM _ => NONE)
+         else NONE
+     | (true, (_, X)) =>
+          if is_Var (Term.head_of X)
+          then SOME (@{thm' Premise_True} RS th, Seq.empty)
+          else NONE
      | _ => NONE
 
 (*slow but powerfull and flexible*)

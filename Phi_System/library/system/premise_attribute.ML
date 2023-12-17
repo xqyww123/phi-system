@@ -32,13 +32,15 @@ fun register_attribute_lthy (i,mandatory,pat,attr) =
     (fn m => register_attribute (i,mandatory, Morphism.term m pat, attr))
 
 fun attribute_of default term ctxt =
-  Net.match_term (Data.get ctxt) (Envir.beta_eta_contract term)
-    |> map_filter (fn (i,mandatory,pat, attr) =>
-          if (default orelse mandatory)
-          andalso Pattern.matches (Context.theory_of ctxt) (pat,term)
-          then SOME (i,attr) else NONE)
-    |> sort (int_ord o apply2 #1)
-    |> maps snd
+  let val concl = Logic.strip_assums_concl (Phi_Help.beta_eta_contract_term term)
+   in Net.match_term (Data.get ctxt) concl
+   |> map_filter (fn (i,mandatory,pat, attr) =>
+         if (default orelse mandatory)
+         andalso Pattern.matches (Context.theory_of ctxt) (pat,concl)
+         then SOME (i,attr) else NONE)
+   |> sort (int_ord o apply2 #1)
+   |> maps snd
+  end
 
 val prop_patterns = Scan.peek (fn generic =>
   let val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of generic)

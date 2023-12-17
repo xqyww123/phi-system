@@ -5115,7 +5115,7 @@ ML \<open>
 fun normalize_source_of_ToA (ctxt, sequent) =
   let val (bvs, ToA) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (X, _, _) = Phi_Syntax.dest_transformation ToA
-   in if Phi_Syntax.exists_item_of_assertion (Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) bvs) X
+   in if Phi_Syntax.exists_item_of_assertion (Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt)) bvs X
       then (
         Phi_Reasoner.info_print ctxt 2 (K "normalizing the source assertion of the transformation") ;
         case Phi_Reasoner.internal_reason NONE (SOME 1) (ctxt, @{thm' normalize_source} RS sequent)
@@ -5903,9 +5903,9 @@ ML \<open>fun ToA_ex_intro_reasoning (ctxt,sequent) =
         | parse X = parse (Envir.beta_eta_contract X)
       val (has_focus, _, X'1) = parse X''
       val X = case X'1 of Abs (_, _, X) => X | X => Term.incr_boundvars 1 X $ Bound 0
-      val ex_var_is_in_obj_only = Phi_Syntax.forall_item_of_assertion_blv (fn lv =>
+      val ex_var_is_in_obj_only = Phi_Syntax.forall_item_of_assertion_blv (fn (_,lv) =>
                                     (fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => not (Term.loose_bvar1 (T, lv))
-                                      | A => not (Term.loose_bvar1 (A, lv))))
+                                      | A => not (Term.loose_bvar1 (A, lv)))) []
       val rule0 = if has_focus
                   then if ex_var_is_in_obj_only X
                   then @{thm' ExSet_transformation_I_R[where x=\<open>id c\<close> for c]}
