@@ -138,8 +138,10 @@ type reasoning = Proof.context -> thm -> thm
 type ind_insts = (binding option * (term * bool)) option list list
 type ind_inst = Subgoal.focus
               * term option list (*parameters of phi-type, if fixed*)
+              * phi_type
               * thm (*local sequent*)
-              -> ind_insts
+              -> Proof.context
+              -> ind_insts * Proof.context
 
 type subgoal_configure = ind_inst option (*If not given, no induction will be applied*)
                        * ind_conv
@@ -1296,15 +1298,25 @@ fun oblg_solver' name (phi, ctxt, th, text) =
 
 (* default_ind_inst *)
 
-fun default_ind_inst inst_by_bound_var (focus, params, _) =
-  let val (params_overwrite, x) =
+fun default_ind_inst inst_by_bound_var (focus, params, phi, _) ctxt =
+  let val params = tl params
+      val param_infos = parameters_of phi
+      val _ = if length params = length param_infos then () else
+              error "BUG aSnZDU/wS5SF1qsu18+tkg"
+      val (param_names, ctxt') =
+              Variable.variant_fixes (map (the_default "A" o #name o #1) param_infos) ctxt
+
+      val (params_overwrite, x) =
             Phi_Help.split_last (inst_by_bound_var (map (Thm.term_of o #2) (#params focus)))
-      fun overwrite [] R = R
-        | overwrite (NONE::L) (x::R) = x :: overwrite L R
-        | overwrite (some::L) (_::R) = some :: overwrite L R
-        | overwrite _ [] = error "BUG TAd2J2CtRa+oY2ZqyMN0ow"
-      val params' = rev (overwrite (rev params_overwrite) (tl params))
-   in [map (Option.map (fn x => (NONE, (x, false)))) (params' @ [x])]
+      fun overwrite [] [] [] [] = []
+        | overwrite [] (SOME x::R) (_::Names) (_::Tys) = SOME x :: overwrite [] R Names Tys
+        | overwrite [] (NONE::R) (N::Names) (ty::Tys) = SOME (Free(N,ty)) :: overwrite [] R Names Tys
+        | overwrite (NONE::L) (SOME x::R) (_::Names) (_::Tys) = SOME x :: overwrite L R Names Tys
+        | overwrite (NONE::L) (NONE::R) (N::Names) (ty::Tys) = SOME (Free(N,ty)) :: overwrite L R Names Tys
+        | overwrite (some::L) (_::R) (_::Names) (_::Tys) = some :: overwrite L R Names Tys
+        | overwrite _ _ _ _  = error "BUG TAd2J2CtRa+oY2ZqyMN0ow"
+      val params' = rev (overwrite (rev params_overwrite) params (rev param_names) (rev (map snd param_infos)))
+   in ([map (Option.map (fn x => (NONE, (x, false)))) (params' @ [x])], ctxt')
   end
 
 (* The Framework *)
@@ -1421,17 +1433,19 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
             case #ind phi
               of SOME ind_rule =>
             let val (focus, sequent1) = Subgoal.focus ctxt 1 NONE rule'
-                val ctxt1 = #context focus
+                val ctxt01 = #context focus
+                val (insts, ctxt1) = ind_inst (focus, phi_typ_parameters, phi, sequent1) ctxt01
                 val sequent2 = Tactic.rule_by_tactic ctxt1
                         (Induct.induct_tac ctxt1 true (*rethink this simplification flag*)
-                            (ind_inst (focus, phi_typ_parameters, sequent1))
-                            [map Term.dest_Free aia] []
+                            insts [map Term.dest_Free aia] []
                             (SOME [ind_rule]) [] 1)
                         sequent1
                 val sequent3 = sequent2
                             |> ind_conv ctxt phi
-             in Subgoal.retrofit ctxt1 ctxt (#params focus) (#asms focus) 1 sequent3 rule'
+                            |> singleton (Variable.export ctxt1 ctxt01)
+             in Subgoal.retrofit ctxt01 ctxt (#params focus) (#asms focus) 1 sequent3 rule'
              |> Seq.hd
+             |> Phi_Help.beta_eta_contract
             end
              | NONE => apply_conv ctxt ind_conv rule'
 
@@ -1654,7 +1668,12 @@ fun varify_all_vars (vars, focus) tm =
 
 type reasoning = Proof.context -> thm -> thm
 type ind_insts = (binding option * (term * bool)) option list list
-type ind_inst = Subgoal.focus * term option list * thm (*local sequent*) -> ind_insts
+type ind_inst = Subgoal.focus
+              * term option list (*parameters of phi-type, if fixed*)
+              * phi_type
+              * thm (*local sequent*)
+              -> Proof.context
+              -> ind_insts * Proof.context
 type subgoal_configure = ind_inst option (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type.phi_type -> reasoning)

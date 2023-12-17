@@ -40,12 +40,12 @@ declare [[\<phi>reasoning_step_limit = 120]]
         ((next, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> next: \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {next: \<p>\<t>\<r>, data: TY}, data: T \<rbrace>\<heavy_comma>
          ls \<Ztypecolon> Linked_Lst next TY T
          \<s>\<u>\<b>\<j> next. next \<noteq> 0)\<close> 
-     deriving (*Basic
+     deriving Basic
           and \<open>Identity_Elements\<^sub>E (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
           and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<or> l = []) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and*) \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
+          and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY)
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
-            (arbitrary:  addr')
+           
             (tactic: clarsimp, rule exI[where x=\<open>\<lambda>(_,b). b\<close>])
 
 
