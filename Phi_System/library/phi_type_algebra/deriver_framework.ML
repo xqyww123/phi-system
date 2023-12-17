@@ -1407,7 +1407,21 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
             if is_some (#ind phi) then
             let val rule' = if null aia then rule'
                             else case Seq.pull (Induct.arbitrary_tac ctxt 0 (map Term.dest_Free aia) 1 rule')
-                                   of SOME (ret, _) => ret
+                                   of SOME (ret, _) =>
+                                        let val (vars, prems, _) = Phi_Help.leading_antecedent (Thm.prop_of rule')
+                                         in ret
+                                         |> Conv.gconv_rule (
+                                              funpow (length vars) (fn C => Phi_Conv.meta_all_conv (C o snd))
+                                                     (fn ctxt =>
+                                                       Conv.concl_conv (length prems)
+                                                        (funpow (length aia) (fn C => fn ctxt =>
+                                                            Phi_Conv.meta_all_conv (C o snd) ctxt then_conv
+                                                            Conv.rewr_conv @{thm' atomize_all})
+                                                            (K Conv.all_conv)
+                                                            ctxt))
+                                                     ctxt
+                                           ) 1
+                                        end
                                     | NONE => error "BUG: P4imjbmrT7m2zglZdYp8Kg"
                 val _ = if Term.is_schematic (fst (Logic.dest_implies (Thm.prop_of rule')))
                         then warning "Induction contains schematic variables"
