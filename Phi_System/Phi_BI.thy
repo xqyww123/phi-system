@@ -3494,6 +3494,13 @@ lemma [\<phi>reason 1201]:
   using Structural_Extract_\<phi>Prod_left_i .
 *)
 
+subsubsection \<open>General Tag\<close>
+
+definition \<phi>Tag :: \<open>mode \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
+  where \<open>\<phi>Tag mode T \<equiv> T\<close>
+
+\<phi>reasoner_group ToA_tag_default = (20, [20,20]) in ToA_weak \<open>\<close>
+
 
 
 section \<open>Basic \<phi>-Type Properties\<close>
