@@ -43,10 +43,10 @@ declare [[\<phi>reasoning_step_limit = 120]]
      deriving Basic
           and \<open>Identity_Elements\<^sub>E (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
           and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<or> l = []) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY)
+          and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
-           
-            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>(_,b). b\<close>])
+            (arbitrary:  addr')
+            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ x _. x\<close>], rule exI[where x=\<open>\<lambda>_ _ _ (_,b). b\<close>])
 
 
 
