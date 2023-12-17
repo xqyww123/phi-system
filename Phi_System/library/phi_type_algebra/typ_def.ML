@@ -74,7 +74,9 @@ type quiet = bool (*report nothing even when fail*)
 type deriving_ctxt = Proof.context (*the context used for deriving rules, which may be prepared
                                      specially with user configurations*)
 type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
-type deriving_instruction = hint option
+type arbi_ind_args = term list (*free variables that will be generalized before induction,
+                                           apply (induct arbitrary: <NAMES OF THOSE VARIABLES>) *)
+type deriving_instruction = (hint * arbi_ind_args) option
                           * Reasoner_Group.group option
                           * Position.T
                           * Method.text option
@@ -447,7 +449,8 @@ type priority = int
 type deriver_name = string
 type deriving_ctxt = Proof.context
 type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
-type deriving_instruction = hint option
+type arbi_ind_args = term list (*free variables that will be generalized before induction*)
+type deriving_instruction = (hint * arbi_ind_args) option
                           * (Phi_Reasoner.priority * Reasoner_Group.name option) option
                           * Position.T
                           * Method.text option
@@ -527,7 +530,7 @@ fun add_deriving (hints : deriving_instruction list, (derv_name, derv), pos) (de
   Derivings.map_default ((#priority derv, derv_name), ([], derv, false, pos))
                         (fn (hints', der', _, pos) => (hints @ hints', der', false, pos)) dervs
 
-fun add_deriving_from_hint ctxt (derv_instr as (SOME hint,_,pos,_,_,_)) (ders : derivings) =
+fun add_deriving_from_hint ctxt (derv_instr as (SOME (hint, _),_,pos,_,_,_)) (ders : derivings) =
   add_deriving ([derv_instr], match_deriver1 ctxt (Logic.strip_imp_concl hint), pos) ders
 
 fun add_deriver_dependences _ _ _ [] dervs = dervs
@@ -688,7 +691,7 @@ val _ = Theory.setup (
 (* Syntax *)
 
 datatype deriving_ast' = Derv_By_Name of xstring * Position.T
-                       | Derv_By_Term of (string * Position.T) * Reasoner_Group.priority_syntax option
+                       | Derv_By_Term of ((string * Position.T) * string list (*arbi_ind_args*)) * Reasoner_Group.priority_syntax option
 type deriving_ast = deriving_ast'
                   * (Facts.ref * Token.src list) list (*notes*)
                   * (xstring * Position.T) list (*bundles used only in the deriving*)
@@ -697,14 +700,23 @@ type deriving_ast = deriving_ast'
 val deriving_name = Parse.position (
         Parse.group (fn () => "name") (Parse.short_ident || Parse.long_ident))
 val one_deriving = deriving_name >> Derv_By_Name
-                || (Parse.position Parse.term -- Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) >> Derv_By_Term)
-val deriving_parser = Scan.repeat (
+                || (Parse.position Parse.term -- Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>)
+                      >> (fn (t,g) => Derv_By_Term ((t,[]),g)))
+
+fun set_ast_aia aia (Derv_By_Name x)
+      = if null aia then Derv_By_Name x
+                    else error "bad 'arbitrary' clause: no term annotation is given"
+  | set_ast_aia aia (Derv_By_Term ((tm,_), gp))
+      = Derv_By_Term ((tm,aia), gp)
+
+val deriving_parser : deriving_ast list parser = Scan.repeat (
         \<^keyword>\<open>deriving\<close> |-- Parse.and_list (
             one_deriving --
             Scan.optional (\<^keyword>\<open>notes\<close> |-- Parse.thms1) [] --
             Scan.optional (\<^keyword>\<open>opening\<close> |-- Scan.repeat1 Parse.name_position) [] --
+            Scan.optional (\<^keyword>\<open>(\<close> |-- Args.$$$ "arbitrary" |-- \<^keyword>\<open>:\<close> |-- Scan.repeat1 Parse.term --| \<^keyword>\<open>)\<close>) [] --
             Scan.option (\<^keyword>\<open>(\<close> |-- Args.$$$ "tactic" |-- \<^keyword>\<open>:\<close> |-- Method.parser 0 --| \<^keyword>\<open>)\<close>)
-        >> (fn (((a,b),c),d) => (a,b,c,d)))
+        >> (fn ((((a,b),c),d),e) => (set_ast_aia d a,b,c,e)))
       ) >> flat
 
 (*
@@ -758,15 +770,18 @@ fun check_deriving_ast ctxt (derv_ast : deriving_ast list) =
         fn (Derv_By_Name name, notes, bundle, text) =>
             add_deriving ([(NONE, NONE, snd name, Option.map chk_text text, chk_notes notes, chk_bundles bundle)],
                           check_deriver ctxt name, snd name)
-         | (Derv_By_Term ((term, pos), raw_group), notes, bundle, text) =>
+         | (Derv_By_Term (((term, pos), arbi_ind_args), raw_group), notes, bundle, text) =>
             let val term' = Syntax.parse_prop ctxt_parse term
                          |> Syntax.check_prop ctxt_parse
                          |> Envir.beta_eta_contract
                          |> Phi_Help.refine_sorts_of_tm thy
-                val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
-                val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
+                val ctxt'1 = Variable.add_fixes_implicit term' (Variable.set_body false ctxt_parse)
+                          |> Variable.declare_term term'
+                val aia'0 = map (Syntax.parse_term ctxt'1) arbi_ind_args
+                       |> Syntax.check_terms ctxt'1
+                val (term'1::aia'1) = Variable.export_terms ctxt'1 ctxt_parse (term'::aia'0)
                 val group = Option.map (Reasoner_Group.check_group true (Context.Proof ctxt'1)) raw_group
-             in add_deriving_from_hint ctxt (SOME term'1, group, pos, Option.map chk_text text,
+             in add_deriving_from_hint ctxt (SOME (term'1,aia'1), group, pos, Option.map chk_text text,
                                              chk_notes notes, chk_bundles bundle)
             end
        ) derv_ast

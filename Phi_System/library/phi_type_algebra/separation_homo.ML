@@ -140,7 +140,7 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
 
       val parameterized =
             case #1 instruction
-              of SOME H =>
+              of SOME (H, _) =>
                   (case Term.head_of (HOLogic.dest_Trueprop (Logic.strip_imp_concl H))
                      of Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) => false
                       | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) => false

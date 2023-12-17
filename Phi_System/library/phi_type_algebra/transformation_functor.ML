@@ -216,7 +216,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
             = [D1,D2,R1,R2,M]
         | extract_oprs_from_hint _ = []
 
-      val arity = case #1 instruction of SOME H =>
+      val arity = case #1 instruction of SOME (H, _) =>
                         (case Term.head_of (HOLogic.dest_Trueprop (Logic.strip_imp_concl H))
                            of Const(\<^const_name>\<open>Transformation_Functor\<close>, _) => 1
                             | Const(\<^const_name>\<open>Transformation_BiFunctor\<close>, _) => 2
@@ -419,7 +419,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<^sub>\<Lambda>\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ f $ p) = [D,R,f,p]
         | extract_oprs_from_hint _ = []
 
-     val arity = case #1 instruction of SOME H =>
+     val arity = case #1 instruction of SOME (H, _) =>
                         (case Term.head_of (HOLogic.dest_Trueprop (Logic.strip_imp_concl H))
                            of Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) => 1
                             | Const(\<^const_name>\<open>Functional_Transformation_BiFunctor\<close>, _) => 2

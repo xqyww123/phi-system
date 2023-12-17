@@ -12,7 +12,9 @@ open Phi_Type Phi_Type_Derivers
 fun meta_Synt_Deriver' (rule, default_group) (_, name) (H, group, pos, text, notes, bundles) ctxt phi thy =
   let fun err s = raise Automation_Fail (fn () => [Pretty.para s])
       val result =
-        case H of SOME H' => Thm.instantiate (Thm.match (Thm.cprop_of rule, Thm.cterm_of ctxt H')) rule
+        case H of SOME (H', aIa) => (
+                    if null aIa then () else err "arbitrary annotation here is meaningless." ;
+                    Thm.instantiate (Thm.match (Thm.cprop_of rule, Thm.cterm_of ctxt H')) rule )
                 | NONE => (case Term.add_vars (Thm.prop_of rule) []
                              of [] => rule
                               | [v] => Thm.instantiate (Thm.match (Thm.var (apsnd (Thm.ctyp_of ctxt) v), Thm.cterm_of ctxt (#term phi))) rule

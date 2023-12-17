@@ -1093,7 +1093,8 @@ type quiet = bool
 
 fun deriver_framework (hint_mode, multiple_call, name) deriver
                       (quiet, pos) (deriving_instructions0 : deriving_instruction list) ctxt_derv phi thy =
-  let val deriving_instructions'1 = filter_out (fn DI => not (is_some (#1 DI)) andalso not (is_some (#4 DI)))
+  let val deriving_instructions'1 = filter_out (fn DI => not (is_some (#1 DI)) andalso 
+                                                         not (is_some (#4 DI)))
                                                deriving_instructions0
 
       val ind = length (lookup_derived_properties thy phi name)
@@ -1130,14 +1131,14 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                if just_dep orelse null hint_terms then ()
                else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts no hint, but given") ::
-                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       hint_terms
                 )
              | ACCEPT_ONE_HINT =>
                if just_dep orelse length hint_terms <= 1 then ()
                else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts at most one hint, but more hints are given") ::
-                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       hint_terms
                 )
              | REQUIRE_EXACT_ONE_HINT =>
@@ -1148,7 +1149,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                 ])
                 else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
-                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       hint_terms
                 )
              | REQUIRE_HINTS =>
@@ -1296,23 +1297,24 @@ fun oblg_solver' name (phi, ctxt, th, text) =
   Note the quants is reversed against the quantified variables*)
 fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,
                         subgoal_reasonings,solver,simp_before_induct,simp)
-                       (phi0 : phi_type) instruction ctxt0 =
+                       (phi0 : phi_type) (instruction:deriving_instruction) ctxt0 =
   let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
       (*val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0*)
       (*val property_const = Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))*)
       (*lame! DO NOT REMOVE!
         val hint' = case hint of NONE => guess_entire_property ctxt0 phi0 property_const
                              | some => some*)
-   in (case #1 instruction of SOME H0 =>
+   in (case #1 instruction of SOME (H0, aia0) =>
               let (*val idx = Phi_Type.maxidx_of_phi phi0 ~1 + 1
                   val H = Logic.incr_indexes ([],[],idx) H0*)
                   val thy = Proof_Context.theory_of ctxt0
                   val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 phi0 H0
 
-                  val (inst0, ctxt) = Variable.import_inst true [H01] ctxt0
+                  val (inst0, ctxt) = Variable.import_inst true (H01::aia0) ctxt0
                   val typ_of_phi = Term_Subst.instantiateT (fst inst0) typ_of_phi0
                   val parameters = map (Option.map (Term_Subst.instantiate inst0)) parameters0
                   val H = Term_Subst.instantiate inst0 H01
+                  val aia = map (Term_Subst.instantiate inst0) aia0
 
                   val inst = (Sign.typ_match thy (Term.fastype_of (Term.head_of (#term phi0)), typ_of_phi) Vartab.empty
                               handle Type.TYPE_MATCH => raise Automation_Fail (fn () =>
@@ -1327,7 +1329,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                   val oprs = extract_oprs_from_hint (extract_hhf H)
                   val ctxt = load_simpset oprs ctxt
 
-               in Seq.single (Logic.strip_imp_prems H, Logic.strip_imp_concl H, parameters, phi, ctxt)
+               in Seq.single (aia, Logic.strip_imp_prems H, Logic.strip_imp_concl H, parameters, phi, ctxt)
               end
            | _ => guess_property phi0 ctxt0
                |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
@@ -1336,7 +1338,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                                     block [str "Antecedents: ", chunks (map (Syntax.pretty_term ctxt) ants)],
                                     block [str "Property: ", Syntax.pretty_term ctxt property]
                               ] end)
-                     in (ants, property, parameters, phi, ctxt)
+                     in ([], ants, property, parameters, phi, ctxt)
                     end)
             (* |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
                     let val (rev_params_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
@@ -1353,7 +1355,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                         val ants' = guess_conditions (*(Expansion.equip*) ctxt phi property_const assertion ants
                      in (ants', property, parameters, phi, ctxt)
                     end ) *) )
-   |> Seq.map (fn (ants01, property01, phi_typ_parameters01, phi01, ctxt01) => 
+   |> Seq.map (fn (aia, ants01, property01, phi_typ_parameters01, phi01, ctxt01) => 
   let val (ants, property, phi_typ_parameters', phi, ctxt) =
         if is_phi_type_fixed phi01
         then (ants01, property01, phi_typ_parameters01, phi01, ctxt01)
@@ -1399,10 +1401,15 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
          |> ind_conv ctxt phi
          |> singleton (Variable.export ctxt't ctxt) 
         end
+
       fun apply_induction NONE conv rule' = apply_conv ctxt conv rule'
         | apply_induction (SOME quants) ind_conv rule' =
             if is_some (#ind phi) then
-            let val _ = if Term.is_schematic (fst (Logic.dest_implies (Thm.prop_of rule')))
+            let val rule' = if null aia then rule'
+                            else case Seq.pull (Induct.arbitrary_tac ctxt 0 (map Term.dest_Free aia) 1 rule')
+                                   of SOME (ret, _) => ret
+                                    | NONE => error "BUG: P4imjbmrT7m2zglZdYp8Kg"
+                val _ = if Term.is_schematic (fst (Logic.dest_implies (Thm.prop_of rule')))
                         then warning "Induction contains schematic variables"
                         else ()
                 (*val frees = map_filter (fn SOME (Free free) => SOME (Thm.cterm_of ctxt (Free free)) | _ => NONE) phi_typ_parameters
@@ -1443,6 +1450,15 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
           
                 val ((inst,[rule't]), ctxt't) = Variable.import true [rule'] ctxt
                 val ind't = Thm.instantiate inst ind
+
+(*
+                val xxx = fold_aterms (fn Free v =>
+                                            if member (op =) (#3 instruction) (fst v)
+                                            then insert (op =) v
+                                            else I
+                                        | _ => I)
+                val xxx = #4 instruction*)
+(*Induct.arbitrary_tac ctxt 0 [("T", \<^typ>\<open>'b \<Rightarrow> (FIC_N \<Rightarrow> FIC) set\<close>)] 1 rule' |> Seq.pull*)
              in (ind't RS Goal.protect 1 rule't)
              |> ind_conv ctxt phi
              |> Goal.conclude

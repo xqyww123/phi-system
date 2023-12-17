@@ -180,8 +180,8 @@ fun chk_quantifier_place (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ 
       = \<^Const>\<open>Trueprop\<close> $ (H2 $ Abs (N, Ty, H $ X $ A))
   | chk_quantifier_place X = X
 
-fun gen_trans_to_raw_abst (_,name) instruction ctxt0 (phi0 : phi_type) thy =
-  let val hint = Option.map (fn a =>
+fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) ctxt0 (phi0 : phi_type) thy =
+  let val hint = Option.map (fn (a, aia) =>
            (chk_quantifier_place a
               |> chk_abstract_object_quantified (
                 let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
@@ -190,8 +190,8 @@ fun gen_trans_to_raw_abst (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                             then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
                             else SOME X
                  in target
-                end
-                ) ctxt0)
+                end ) ctxt0
+              |> rpair aia)
           ) (#1 instruction)
       val instruction = (hint, #2 instruction, #3 instruction, #4 instruction, #5 instruction, #6 instruction)
 
