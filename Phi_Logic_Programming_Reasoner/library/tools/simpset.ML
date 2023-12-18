@@ -2,7 +2,9 @@ signature SIMPSET_CONFIGURE = sig
 
 datatype initial_ss_configure = Empty_SS (*containing nothing*)
                               | Empty_SS_configure of (Proof.context -> Proof.context)
-                              | Minimal_SS (*containing necessary elements to enable minimal usage*)
+                              | Minimal_SS (*containing necessary elements to enable minimal usage.
+                                             Note, this configuration loads all congruence rules from the
+                                             present system simpset. *)
                               | Minimal_SS_configure of (Proof.context -> Proof.context)
                               | Give_SS of simpset
 
@@ -43,7 +45,13 @@ fun initial_ss_of Empty_SS =
   | initial_ss_of (Empty_SS_configure cfg) =
       Simplifier.simpset_map (Context.the_local_context ()) cfg Simplifier.empty_ss
   | initial_ss_of Minimal_SS =
-      Raw_Simplifier.simpset_of (Raw_Simplifier.clear_simpset (Context.the_local_context ()))
+      let val ctxt = Context.the_local_context ()
+          val origin_ss = Raw_Simplifier.simpset_of ctxt
+          val congs = #congs (Simplifier.dest_ss origin_ss)
+       in Raw_Simplifier.simpset_of (
+              Raw_Simplifier.clear_simpset ctxt
+                |> fold (Simplifier.add_cong o snd) congs)
+      end
   | initial_ss_of (Minimal_SS_configure cfg) =
       Simplifier.simpset_map (Context.the_local_context ()) cfg
           (Raw_Simplifier.simpset_of (Raw_Simplifier.clear_simpset (Context.the_local_context ())))

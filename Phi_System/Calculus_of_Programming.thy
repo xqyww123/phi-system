@@ -324,6 +324,10 @@ ML \<open>structure Proc_Monad_SS = Simpset(
   val post_merging = I
 )\<close>
 
+setup \<open>Context.theory_map (Proc_Monad_SS.map (
+  Simplifier.add_cong @{thm' mk_symbol_cong}
+))\<close>
+
 consts procedure_ss :: mode
 
 lemmas [procedure_simps] =

@@ -532,6 +532,7 @@ setup \<open>PLPR_Template_Properties.add_property_kinds [
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[br_join] _ : _\<close>)
   = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
                          (fn ctxt => ctxt addsimps Useful_Thms.get ctxt
+                                  |> Simplifier.del_cong @{thm' if_weak_cong}
                                   |> Simplifier.add_cong @{thm' if_cong}) {fix_vars=true})
     o @{print} o snd\<close>
 

@@ -150,6 +150,9 @@ lemmas [\<phi>programming_simps, \<phi>safe_simp] =
 lemmas [\<phi>programming_simps] =
   fst_def[symmetric] snd_def[symmetric]
 
+setup \<open>Context.theory_map (Phi_Safe_Simps.map (
+  Simplifier.add_cong @{thm' mk_symbol_cong}
+))\<close>
 
 (*simproc_setup case_prod_app (\<open>(case_prod f x) y\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
   let val (Const(\<^const_name>\<open>case_prod\<close>, _) $ f $ x $ y) = Thm.term_of ctm

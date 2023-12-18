@@ -4643,6 +4643,7 @@ val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
                          \<^simproc>\<open>case_prod_eta\<close>, \<^simproc>\<open>Collect_mem\<close>,
                          Phi_Conv.move_Ex_for_set_notation]
             addsimps @{thms' Sum_Type.sum.case HOL.simp_thms})
+        |> Simplifier.add_cong @{thm' mk_symbol_cong}
           (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
     )))
 

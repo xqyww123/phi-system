@@ -96,7 +96,8 @@ val _ = Theory.setup (Context.theory_map (
                       \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>Set.defined_Bex\<close>,
                       \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>, \<^simproc>\<open>case_prod_eta\<close>,
                       \<^simproc>\<open>Collect_mem\<close>, move_Ex_for_set_notation]
-         addsimps @{thms' HOL.simp_thms conj_assoc})
+         addsimps @{thms' HOL.simp_thms conj_assoc}
+     |> Simplifier.add_cong @{thm' mk_symbol_cong})
 ))
 
 

@@ -508,6 +508,8 @@ fun case_split_simproc rule (simproc_name, name) ctxt0 =
 
 val _ = Theory.setup (Context.theory_map (
 
+  Simps.map (Simplifier.add_cong @{thm' mk_symbol_cong})
+#>
   Expansion.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
@@ -541,7 +543,9 @@ val _ = Theory.setup (Context.theory_map (
               list_all2_Cons1 list_all2_Nil
               map_ident}
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
-      |> Simplifier.add_cong @{thm HOL.conj_cong})
+      |> Simplifier.add_cong @{thm HOL.conj_cong}
+      |> Simplifier.add_cong @{thm' mk_symbol_cong}
+)
           (*Because of this cong, the order of the conjunction is significant!*)
 ))
 

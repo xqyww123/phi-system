@@ -8189,7 +8189,7 @@ context begin
 paragraph \<open>Normal\<close>
 
 private lemma \<phi>TA_SH\<^sub>I_rule:
-  \<open> (\<And>z. Ant \<longrightarrow>
+  \<open> (\<And>z. Ant \<Longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
                 \<longrightarrow> ((y \<Ztypecolon> OPEN undefined (Fb U)) * (x \<Ztypecolon> OPEN undefined (Fa T))
                     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined (Fc (T \<^emph> U)))) @action \<phi>TA_subgoal undefined)
@@ -8201,13 +8201,13 @@ private lemma \<phi>TA_SH\<^sub>I_rule:
   by simp
 
 private lemma \<phi>TA_SH\<^sub>E_rule:
-  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN undefined (Fc (T \<^emph>\<^sub>\<A> U))
-                  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE undefined (Ft T) \<^emph> MAKE undefined (Fu U)) @action \<phi>TA_subgoal \<A>simp)
+  \<open> (\<And>z. Ant \<Longrightarrow> (z \<Ztypecolon> OPEN undefined (Fc (T \<^emph>\<^sub>\<A> U))
+                  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> NO_SIMP \<phi>Prod (MAKE undefined (Ft T)) (MAKE undefined (Fu U))) @action \<phi>TA_subgoal \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def
+  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def NO_SIMP_def
   by simp
 
 private lemma \<phi>TA_SH\<^sub>I_rewr_IH:
@@ -8254,7 +8254,7 @@ private lemma \<phi>TA_SH\<^sub>E_DV_cong:
 paragraph \<open>With Parameterization\<close>
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_rule:
-  \<open> (\<And>z. Ant \<longrightarrow>
+  \<open> (\<And>z. Ant \<Longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
                 \<longrightarrow> ((y \<Ztypecolon> OPEN undefined (Fb U)) * (x \<Ztypecolon> OPEN undefined (Fa T))
                     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined (Fc (\<lambda>p. T p \<^emph> U p))))
@@ -8267,14 +8267,15 @@ private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_rule:
   by simp
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_rule:
-  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN undefined (Fc (\<lambda>p. T p \<^emph>\<^sub>\<A> U p))
-                  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE undefined (Ft T) \<^emph> MAKE undefined (Fu U))
+  \<open> (\<And>z. Ant \<Longrightarrow> (z \<Ztypecolon> OPEN undefined (Fc (\<lambda>p. T p \<^emph>\<^sub>\<A> U p))
+                  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> NO_SIMP \<phi>Prod (MAKE undefined (Ft T)) (MAKE undefined (Fu U)))
           @action \<phi>TA_subgoal \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def
+            MAKE_def OPEN_def NO_SIMP_def
   by simp
 
 private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_DV_cong:
@@ -8287,6 +8288,11 @@ private lemma \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_DV_cong:
   \<open> u \<equiv> u'
 \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U u \<equiv> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U u' \<close>
   by simp
+
+private lemma \<phi>TA_SH\<^sub>E_rewr_pre:
+  \<open> (Ant \<Longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> NO_SIMP \<phi>Prod T U) @action \<A>)
+\<equiv> Trueprop (Ant \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> T \<^emph> U) @action \<A>) \<close>
+  unfolding atomize_imp Action_Tag_def NO_SIMP_def .
 
 
 ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>

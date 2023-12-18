@@ -318,6 +318,10 @@ structure Eval_Sem_Idx_SS = Simpset (
   val post_merging = I
 )\<close>
 
+setup \<open>Context.theory_map (Eval_Sem_Idx_SS.map (
+  Simplifier.add_cong @{thm' mk_symbol_cong}
+))\<close>
+
 \<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] ?X' : ?X\<close>
                                       | \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] ?P\<close> )
   = \<open>Phi_Reasoners.wrap (

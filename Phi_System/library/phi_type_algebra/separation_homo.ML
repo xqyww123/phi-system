@@ -169,6 +169,12 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
               Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u
+
+      val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
+            (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
+            Conv.rewr_conv (if is_intro then @{thm' \<phi>TA_common_rewr_imp1_rev}
+                                        else @{thm' \<phi>TA_SH\<^sub>E_rewr_pre})) ctm) o snd)
+
       val simp = if is_some (#1 instruction) then K I
                  else simplifier_by_cong (if is_intro then if parameterized then @{thms' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>I_DV_cong}
                                                                             else @{thms' \<phi>TA_SH\<^sub>I_DV_cong}
@@ -181,7 +187,7 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                                   else if parameterized then @{thm' \<phi>TA_SH\<^sub>\<Lambda>\<^sub>E_rule}
                                                                         else @{thm' \<phi>TA_SH\<^sub>E_rule}),
                                      [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, SH_reasoning is_intro)],
-                                     K NONE, K I, simp)
+                                     K NONE, pre_simp, simp)
                                     phi0 instruction ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

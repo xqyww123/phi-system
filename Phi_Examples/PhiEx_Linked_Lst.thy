@@ -66,7 +66,8 @@ proc nth_llist:
     to \<open>OPEN 1 _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data !
-    \<medium_right_bracket> \<medium_left_bracket> 
+    \<medium_right_bracket> \<medium_left_bracket> note [[\<phi>trace_reasoning = 2]] 
+        ;;
         nth_llist ($addr \<tribullet> "next" !, $i - \<open>1 \<Ztypecolon> \<nat>('a)\<close>)
     \<medium_right_bracket>
     \<open>l \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
