@@ -1876,7 +1876,7 @@ let fun elim_TA_ANT ctxt ctm =
                                                        (Conv.top_rewrs_conv eqs ctxt')) rule
                    |> Assumption.export ctxt' ctxt't
                    |> singleton (Variable.export ctxt't ctxt)
-       in rule'
+       in PLPR_Syntax.merge_guards {merge_cond=false} ctxt rule'
       end end
 
 
