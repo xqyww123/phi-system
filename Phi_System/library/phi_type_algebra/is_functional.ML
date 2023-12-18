@@ -125,7 +125,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val ctxt = ctxt0 (*Context.proof_map (Phi_Reasoners.add_premise_extraction_rules
                     @{thms' Is_Functional_premise_extraction Functionality_premise_extraction}) ctxt0*)
               |> Config.put Phi_Reasoner.ignore_dup_reasoner true
-              |> Bundle.includes ["Spec_Framework.Is_Functional_brute"]
+              |> Bundle.includes ["Spec_Framework.Is_Functional_brute", "IDE_CP_Applications1.Functionality_OPEN"]
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},

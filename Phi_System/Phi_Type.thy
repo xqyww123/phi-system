@@ -7954,20 +7954,25 @@ subsubsection \<open>Carrier Set\<close>
 context begin
 
 private lemma \<phi>TA_CarS_rule:
-  \<open> (\<And>x. Ant \<longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x \<longrightarrow>
-          Within_Carrier_Set (x \<Ztypecolon> T) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x \<Longrightarrow>
+          Within_Carrier_Set (x \<Ztypecolon> OPEN undefined T) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Carrier_Set T P \<close>
-  unfolding Carrier_Set_def Action_Tag_def Premise_def
+  unfolding Carrier_Set_def Action_Tag_def Premise_def OPEN_def
   by clarsimp
 
 private lemma \<phi>TA_CarS_cong:
   \<open> P \<equiv> P'
 \<Longrightarrow> Carrier_Set T P \<equiv> Carrier_Set T P' \<close>
   by simp
+
+private lemma \<phi>TA_CarS_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> Within_Carrier_Set (x \<Ztypecolon> OPEN undefined T) @action \<phi>TA_subgoal A)
+ \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> Within_Carrier_Set (x \<Ztypecolon> T)) \<close>
+  unfolding Action_Tag_def atomize_imp OPEN_def .
 
 ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
 

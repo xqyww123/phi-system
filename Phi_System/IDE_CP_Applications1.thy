@@ -1335,14 +1335,37 @@ lemma Identity_Elements\<^sub>I_OPEN:
   by clarsimp blast
 
 
-
 lemma [\<phi>reason %\<phi>functionality]:
+  \<open> Functionality T P
+\<Longrightarrow> Functionality (OPEN i T) P \<close>
+  unfolding Functionality_def OPEN_def
+  by clarsimp
+
+lemma Functionality_OPEN:
   \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action to (OPEN i T))
 \<Longrightarrow> Functionality U P
 \<Longrightarrow> Functionality (OPEN i T) (\<lambda>x. (\<forall>y. r x y \<longrightarrow> P y) \<and> (\<forall>y\<^sub>1 y\<^sub>2. r x y\<^sub>1 \<and> r x y\<^sub>2 \<longrightarrow> y\<^sub>1 = y\<^sub>2)) \<close>
   unfolding Functionality_def Action_Tag_def OPEN_def Transformation_def
   by clarsimp metis
 
+bundle Functionality_OPEN = Functionality_OPEN[\<phi>reason %\<phi>functionality+10]
+
+lemma [\<phi>reason %carrier_set_cut]:
+  \<open> Carrier_Set T D
+\<Longrightarrow> Carrier_Set (OPEN i T) D \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def Action_Tag_def OPEN_def
+  by clarsimp
+
+
+
+lemma Carrier_Set_OPEN[\<phi>reason %carrier_set_cut]:
+  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action to (OPEN i T))
+\<Longrightarrow> Carrier_Set U D
+\<Longrightarrow> Carrier_Set (OPEN i T) (\<lambda>x. \<forall>y. r x y \<longrightarrow> D y) \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def Action_Tag_def Transformation_def OPEN_def
+  by clarsimp blast
+
+bundle Carrier_Set_OPEN = Carrier_Set_OPEN[\<phi>reason %carrier_set_cut+10]
 
 
 
@@ -1527,6 +1550,20 @@ bundle Identity_Elements_OPEN_MAKE =
   Identity_Elements\<^sub>E_MAKE [\<phi>adding_property = false,
                            \<phi>reason %identity_element_OPEN_MAKE,
                            \<phi>adding_property = true]
+
+lemma [\<phi>reason %carrier_set_cut]:
+  \<open> Carrier_Set T D
+\<Longrightarrow> Carrier_Set (MAKE i T) D \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def Action_Tag_def MAKE_def
+  by clarsimp
+
+lemma [\<phi>reason %\<phi>functionality]:
+  \<open> Functionality T P
+\<Longrightarrow> Functionality (MAKE i T) P \<close>
+  unfolding Functionality_def MAKE_def
+  by clarsimp
+
+
 
 (*
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type by Definition\<close>
