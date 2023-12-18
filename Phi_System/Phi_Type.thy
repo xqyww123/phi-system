@@ -7731,6 +7731,17 @@ private lemma \<phi>TA_Suc_step:
   unfolding Action_Tag_def Premise_def \<r>ESC_def
   by blast
 
+private lemma \<phi>TA_Inh_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> (x \<Ztypecolon> OPEN undefined T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) @action \<phi>TA_subgoal A)
+ \<equiv> (Ant \<Longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P)) \<close>
+  unfolding Action_Tag_def atomize_imp OPEN_def .
+
+private lemma \<phi>TA_Suc_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE undefined T) @action \<phi>TA_subgoal A)
+ \<equiv> (Ant \<Longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE undefined T)) \<close>
+  unfolding Action_Tag_def atomize_imp OPEN_def .
+
+
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
 end
@@ -7910,20 +7921,25 @@ subsubsection \<open>Functionality\<close>
 context begin
 
 private lemma \<phi>TA_IsFunc_rule:
-  \<open> (\<And>x. Ant \<longrightarrow>
-         \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
-         Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow>
+         \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<Longrightarrow>
+         Is_Functional (x \<Ztypecolon> OPEN undefined T) @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Functionality T P \<close>
-  unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def
+  unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def OPEN_def
   by clarsimp
 
 private lemma \<phi>TA_IsFunc_cong:
   \<open> P \<equiv> P'
 \<Longrightarrow> Functionality T P \<equiv> Functionality T P' \<close>
   by simp
+
+private lemma \<phi>TA_IsFunc_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> Is_Functional (x \<Ztypecolon> OPEN undefined T) @action \<phi>TA_subgoal A)
+ \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<close>
+  unfolding Action_Tag_def atomize_imp OPEN_def .
 
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 

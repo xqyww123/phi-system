@@ -441,6 +441,7 @@ lemma [\<phi>reason default %\<phi>functional_to_functionality]:
   unfolding Premise_def Is_Functional_def Functionality_def
   by simp
 
+
 lemma Is_Functional_brute:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)
 \<Longrightarrow> Is_Functional S \<close>

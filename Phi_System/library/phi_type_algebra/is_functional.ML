@@ -88,13 +88,17 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val equip_expansion = equip_expansion_ss phi0
       val ind_conv = default_ind_conv (
             fn _ => fn _ =>
-                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
+                Conv.rewr_conv @{thm' \<phi>TA_IsFunc_rewr_IH} then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
             fn ctxt => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
-                Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps (#equations phi0)) then_conv
+                Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv
           )
+
+      val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt =>
+            Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
+            Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_rev}) o snd)
             
       fun reasoning phi ctxt =
             default_reasoning true default_reasoning_configure (K (K NONE))
@@ -126,7 +130,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
                                       [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
-                                       solver, K I, simp)
+                                       solver, pre_simp, simp)
                                     phi0 instruction ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy

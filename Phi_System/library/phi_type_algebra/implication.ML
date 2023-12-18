@@ -341,9 +341,9 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
 
       val equip_expansion = equip_expansion_ss phi0
       val ind_conv = default_ind_conv (
-              fn ctxt => (K (
-                  Conv.top_rewrs_conv @{thms' MAKE_def OPEN_def} ctxt then_conv
-                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+              fn _ => (K (
+                  Conv.rewr_conv (if upper then @{thm' \<phi>TA_Inh_rewr_IH}
+                                           else @{thm' \<phi>TA_Suc_rewr_IH}) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)),
               fn ctxt => fn _ =>
                  (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv

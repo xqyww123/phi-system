@@ -1333,7 +1333,17 @@ lemma Identity_Elements\<^sub>I_OPEN:
 \<Longrightarrow> Identity_Elements\<^sub>I (OPEN i T) (\<lambda>x. \<forall>y. r x y \<and> D y) (\<lambda>x. \<exists>y. r x y \<and> P y) \<close>
   unfolding Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def Transformation_def Action_Tag_def OPEN_def
   by clarsimp blast
-  
+
+
+
+lemma [\<phi>reason %\<phi>functionality]:
+  \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @action to (OPEN i T))
+\<Longrightarrow> Functionality U P
+\<Longrightarrow> Functionality (OPEN i T) (\<lambda>x. (\<forall>y. r x y \<longrightarrow> P y) \<and> (\<forall>y\<^sub>1 y\<^sub>2. r x y\<^sub>1 \<and> r x y\<^sub>2 \<longrightarrow> y\<^sub>1 = y\<^sub>2)) \<close>
+  unfolding Functionality_def Action_Tag_def OPEN_def Transformation_def
+  by clarsimp metis
+
+
 
 
 subsubsection \<open>Make Abstraction\<close>
