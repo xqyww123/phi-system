@@ -2615,15 +2615,17 @@ text \<open>No \<open>Object_Equiv\<close> is used and we use \<open>(=)\<close>
 lemma \<phi>open_abstraction_infer:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x' = x
-\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
+\<Longrightarrow> \<phi>To_Transformation_Simp_Protect (x' \<Ztypecolon> T) U' (\<lambda>y. y = y') (OPEN i T) \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
+            \<phi>To_Transformation_Simp_Protect_def
   by simp
 
 lemma \<phi>open_abstraction_specified:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x' = x
-\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
+\<Longrightarrow> \<phi>To_Transformation_Simp_Protect (x' \<Ztypecolon> T) U' (\<lambda>y. y = y') (OPEN i T) \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
+            \<phi>To_Transformation_Simp_Protect_def
   by simp
 
 
@@ -8710,24 +8712,37 @@ subsubsection \<open>Semimodule Scalar Zero\<close>
 context begin
 
 private lemma \<phi>TA_M0_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> F zero) True @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> OPEN undefined (F zero)) True
+                  @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_Zero F zero \<close>
-  unfolding Semimodule_Zero_def Action_Tag_def Premise_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
+  unfolding Semimodule_Zero_def Action_Tag_def Premise_def
+            Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def OPEN_def
   by (clarsimp simp add: BI_eq_iff Transformation_def; blast)
 
 private lemma \<phi>TA_M0c_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> F zero) @action \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> MAKE undefined (F zero))
+                  @action \<phi>TA_subgoal undefined)
 \<Longrightarrow> Semimodule_Zero F zero
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Closed_Semimodule_Zero F zero \<close>
   unfolding Semimodule_Zero_def Action_Tag_def Premise_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
-            Closed_Semimodule_Zero_def
+            Closed_Semimodule_Zero_def MAKE_def
   by (clarsimp simp add: BI_eq_iff Transformation_def; blast)
+
+private lemma \<phi>TA_M0_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> OPEN undefined T) True @action \<phi>TA_subgoal A)
+ \<equiv> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) True ) \<close>
+  unfolding Action_Tag_def atomize_imp OPEN_def .
+
+private lemma \<phi>TA_M0c_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> MAKE undefined T) @action \<phi>TA_subgoal A)
+ \<equiv> (Ant \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) ) \<close>
+  unfolding Action_Tag_def atomize_imp MAKE_def .
 
 ML_file \<open>library/phi_type_algebra/semimodule_zero.ML\<close>
 
@@ -8853,6 +8868,8 @@ private lemma \<phi>TA_MD\<^sub>Z_rule:
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F Ds Dx zi \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def OPEN_def MAKE_def
   by clarsimp blast
+
+term \<open>\<s>\<p>\<l>\<i>\<t>\<close>
 
 private lemma \<phi>TA_MD\<^sub>U_rule:
   \<open> (\<And>s t r x. Ant

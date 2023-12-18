@@ -719,7 +719,7 @@ subsubsection \<open>Simplification Protect\<close>
 definition [simplification_protect]:
   \<open>\<phi>To_Transformation_Simp_Protect X U r A \<equiv> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to A\<close>
 
-lemma [cong]:
+lemma \<phi>To_Transformation_Simp_Protect_cong[cong]:
   \<open> X \<equiv> X'
 \<Longrightarrow> U \<equiv> U'
 \<Longrightarrow> r \<equiv> r'

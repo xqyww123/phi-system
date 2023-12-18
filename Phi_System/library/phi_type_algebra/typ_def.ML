@@ -1262,8 +1262,8 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                       ([Morphism.thm m rule], pos, mode, SOME priority, [], [], SOME G)) rules)
          in fn ctxt => ctxt
          |> not no_auto ? (fn ctxt => ctxt
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction_sp
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10} make_abstraction
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived}
                             (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)

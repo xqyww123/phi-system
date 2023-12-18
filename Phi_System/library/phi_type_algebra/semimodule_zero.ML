@@ -20,20 +20,25 @@ fun gen_M0 closed (der_id, name) instruction ctxt0 (phi : phi_type) thy =
       val simp = K I
 
       val equip_expansion = equip_expansion_ss phi
-      val eqs = #equations phi @ map_filter I (#type_equations phi)
+      (*val eqs = #equations phi @ map_filter I (#type_equations phi) *)
       val ind_conv = default_ind_conv (
              fn _ => fn _ =>
-                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp1_noact} then_conv
+                  Conv.rewr_conv (if closed then @{thm' \<phi>TA_M0c_rewr_IH}
+                                            else @{thm' \<phi>TA_M0_rewr_IH} ) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp1_noact} then_conv
-                  Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs) then_conv
+                  Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
+
+      val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
+            (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
+            Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_rev}) ctm) o snd)
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, Guess_Scalar_Zero closed,
                                       (if closed then @{thm' \<phi>TA_M0c_rule} else @{thm' \<phi>TA_M0_rule}),
                                       [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
-                                      K NONE, K I, simp)
+                                      K NONE, pre_simp, simp)
                                     phi instruction ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
