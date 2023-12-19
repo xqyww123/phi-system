@@ -20,6 +20,8 @@
 \<rwpar>           code: 0x002986   font: PhiSymbols   group: punctuation  abbrev: \))
 
 \<rev_quest>       code: 0x00061f   font: PhiSymbols   group: punctuation
+\<BRarrow>         code: 0x0027A4   font: PhiSymbols   group: arrow
+
 
 
 

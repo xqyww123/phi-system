@@ -1432,7 +1432,7 @@ definition Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>E :: \<open> ('s\<^sub>
       \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (\<lambda>p\<^sub>s. Ft t (\<lambda>p\<^sub>t. T (p\<^sub>s, p\<^sub>t)))))\<close>
 
 
-definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi>)
+definition Semimodule_SDistr_Homo\<^sub>Z :: \<open> ('s \<Rightarrow> ('c::sep_magma,'a) \<phi>)
                                     \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                     \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                     \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)

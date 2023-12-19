@@ -553,6 +553,12 @@ need some ML
 \<close>
 *)
 
+paragraph \<open>Arrow\<close>
+
+
+
+
+
 subsection \<open>Existence of Solutions of Addition Equation\<close>
 
 definition partial_add_overlaps :: \<open>'a::plus \<Rightarrow> 'a \<Rightarrow> bool\<close>
