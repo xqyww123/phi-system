@@ -1177,11 +1177,12 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
             gen_from_tagged_eq_in_type
                 (if inst_i then (fn i => Drule.infer_instantiate ctxt [(("i",0), nth idxes i)])
                            else K I)
-                (K (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                (K I)
+                (*(K (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                       Phi_Syntax.transformation_conv Conv.all_conv
                           (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
-                          Conv.all_conv))) ctxt)))
+                          Conv.all_conv))) ctxt)))*)
 
       val open_abstraction = if no_auto then [] else mk_open_abstraction false @{thm' \<phi>open_abstraction_infer}
       val open_abstraction_sp = if no_auto then [] else mk_open_abstraction true @{thm' \<phi>open_abstraction_specified}

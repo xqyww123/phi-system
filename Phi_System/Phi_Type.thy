@@ -2615,17 +2615,15 @@ text \<open>No \<open>Object_Equiv\<close> is used and we use \<open>(=)\<close>
 lemma \<phi>open_abstraction_infer:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x' = x
-\<Longrightarrow> \<phi>To_Transformation_Simp_Protect (x' \<Ztypecolon> T) U' (\<lambda>y. y = y') (OPEN i T) \<close>
+\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
-            \<phi>To_Transformation_Simp_Protect_def
   by simp
 
 lemma \<phi>open_abstraction_specified:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x' = x
-\<Longrightarrow> \<phi>To_Transformation_Simp_Protect (x' \<Ztypecolon> T) U' (\<lambda>y. y = y') (OPEN i T) \<close>
+\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
-            \<phi>To_Transformation_Simp_Protect_def
   by simp
 
 

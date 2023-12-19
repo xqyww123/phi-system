@@ -21,13 +21,30 @@ declare [[\<phi>trace_reasoning = 1]]
            (arbitrary: addr\<^sub>2)
        and Functional_Transformation_Functor
 
-
-lemma
+ 
+lemma split_Dbl_LLst:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> l = l\<^sub>L @ l\<^sub>R
 \<Longrightarrow> l \<Ztypecolon> Dbl_LLst a\<^sub>s a\<^sub>t TY T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> l\<^sub>L \<Ztypecolon> Dbl_LLst a\<^sub>s a\<^sub>m TY T\<heavy_comma> l\<^sub>R \<Ztypecolon> Dbl_LLst a\<^sub>m a\<^sub>t TY T \<s>\<u>\<b>\<j> a\<^sub>m. \<top> \<close>
-  apply (induct l arbitrary: l\<^sub>L)
+  apply (induct l arbitrary: l\<^sub>L a\<^sub>s)
   \<medium_left_bracket>
     to \<open>OPEN 0 _\<close>
+    \<open>[] \<Ztypecolon> MAKE 0 (Dbl_LLst a\<^sub>s a\<^sub>t TY T)\<heavy_comma> [] \<Ztypecolon> MAKE 0 (Dbl_LLst a\<^sub>t a\<^sub>t TY T)\<close>
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises IH
+    case_analysis \<open> l\<^sub>L = [] \<close> \<medium_left_bracket>
+      \<open>l\<^sub>L \<Ztypecolon> MAKE 0 (Dbl_LLst a\<^sub>s a\<^sub>s TY T)\<heavy_comma> _ \<Ztypecolon> Dbl_LLst a\<^sub>s a\<^sub>t TY T\<close> 
+    \<medium_right_bracket> for \<open>(l\<^sub>L \<Ztypecolon> Dbl_LLst a\<^sub>s a\<^sub>m TY T\<heavy_comma> l\<^sub>R \<Ztypecolon> Dbl_LLst a\<^sub>m a\<^sub>t TY T \<s>\<u>\<b>\<j> a\<^sub>m. \<top>)\<close>
+    \<medium_left_bracket>
+      obtain l\<^sub>L' where t1[useful]: \<open>l\<^sub>L = a # l\<^sub>L'\<close> by auto_sledgehammer ;;
+      to \<open>OPEN 1 _\<close>
+      IH
+      \<open>_ \<Ztypecolon> MAKE 1 (Dbl_LLst a\<^sub>s c TY T)\<close>
+    \<medium_right_bracket>
+  \<medium_right_bracket> .
+
+
+      term \<open>?\<phi>target\<close>
+    thm IH
     thm useful
   thm list_induct3
 

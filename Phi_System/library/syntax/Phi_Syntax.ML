@@ -26,6 +26,8 @@ include PHI_SYNTAX
 
   val dest_satisfaction : term -> term * term
 
+  val dest_target_assertion : term -> term
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
@@ -97,5 +99,14 @@ val dest_ToA_Construction_c =
 val dest_satisfaction =
       PLPR_Syntax.dest_tags #> dest_binop \<^const_name>\<open>Satisfaction\<close>
 
+fun dest_target_assertion' (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ X $ _) = X
+  | dest_target_assertion' (Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ X $ _ ) = X
+  | dest_target_assertion' (Const(\<^const_name>\<open>View_Shift\<close>, _) $ _ $ X $ _ ) = X
+  | dest_target_assertion' (Const(\<^const_name>\<open>ToA_Construction\<close>, _) $ _ $ X ) = X
+  | dest_target_assertion' (Const(\<^const_name>\<open>PendingConstruction\<close>, _) $ _ $ _ $ _ $ X $ _) = X
+  | dest_target_assertion' (Const(\<^const_name>\<open>CurrentConstruction\<close>, _) $ _ $ _ $ _ $ X ) = X
+  | dest_target_assertion' X = raise TERM ("dest_target_assertion", [X])
+
+val dest_target_assertion = dest_target_assertion' o PLPR_Syntax.dest_tags o Logic.strip_assums_concl
 
 end

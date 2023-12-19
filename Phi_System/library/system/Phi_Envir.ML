@@ -199,15 +199,25 @@ fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
                                       | TERM _ => raise TERM (msg, [prop_of th])
 
 structure Thesis = Proof_Data (
-  type T = cterm option
-  val init = K NONE
+  type T = cterm list
+  val init = K []
 )
 
-fun put_thesis thesis = Thesis.put (SOME thesis)
+fun put_thesis thesis ctxt =
+  let val prevs = Thesis.get ctxt
+      fun bind_term i tm =
+            Variable.maybe_bind_term (("\<phi>thesis", i), SOME tm)
+         #> Variable.maybe_bind_term (("\<phi>target", i), try Phi_Syntax.dest_target_assertion tm)
+   in ctxt
+      |> Thesis.map (fn L => thesis :: L)
+      |> bind_term 0 (Thm.term_of thesis)
+      |> fold_index (fn (i, tm) => bind_term (i+1) (Thm.term_of tm)) prevs
+  end
+
 fun get_thesis ctxt =
       case Thesis.get ctxt
-        of SOME x => x
-         | NONE => err_bad_env ()
+        of x :: _ => x
+         | [] => err_bad_env ()
 
 fun process_lemmata rules ctxt thm =
        Simplifier.asm_full_simplify (ctxt addsimps rules ctxt) thm
