@@ -324,7 +324,7 @@ val deriver_framework_no_hints : multiple_call * string (*name*)
                      -> quiet * Position.T
                      -> Phi_Type.derive
 
-(** Misc Tools **)
+(** Misc Tools / Unsorted **)
 
 exception Automation_Fail of (unit -> Pretty.T list)
 val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
@@ -352,6 +352,8 @@ val chk_abstract_object_quantified : (term -> term option) (*get the abstract ob
                                   -> Proof.context -> term -> term
 
 val lift_types_sort : theory -> (typ * sort) list -> typ TVars.table
+
+val wrap_ind_target : phi_type -> Proof.context -> conv
 
 end
 
@@ -2185,5 +2187,15 @@ val _ = Theory.setup (
 #> Phi_Type.add_automation_on_def 120 (gen_SH true)
 #> Phi_Type.add_automation_on_def 121 (gen_SH false)
 )) *)
+
+fun wrap_ind_target phi =
+  Phi_Conv.hhf_concl_conv (fn ctxt =>
+    Phi_Syntax.transformation_conv
+      Conv.all_conv
+      (Conv.top_sweep_conv (fn _ => fn ctm =>
+          if is_term_of_phi phi (Term.head_of (Thm.term_of ctm))
+          then Conv.rewr_conv @{thm' \<phi>TA_IND_TARGET_def[folded atomize_eq, symmetric]} ctm
+          else Conv.no_conv ctm) ctxt)
+      Conv.all_conv)
 
 end

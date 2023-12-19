@@ -192,13 +192,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                         conv_hol_imps_to_metas_if_has
                                           (HOLogic.Trueprop_conv (
                                               Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))
-                                          (Phi_Syntax.transformation_conv
-                                              Conv.all_conv
-                                              (Conv.top_sweep_conv (fn _ => fn ctm =>
-                                                  if is_term_of_phi phi0 (Term.head_of (Thm.term_of ctm))
-                                                  then Conv.rewr_conv @{thm' OE_IND_def[folded atomize_eq, symmetric]} ctm
-                                                  else Conv.no_conv ctm) ctxt)
-                                              Conv.all_conv)
+                                          (wrap_ind_target phi0 ctxt)
                                         )) ctxt)
                   (*Conv.implies_conv
                       (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})

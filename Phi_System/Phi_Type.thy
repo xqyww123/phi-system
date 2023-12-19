@@ -7431,6 +7431,8 @@ consts \<phi>TA_subgoal :: \<open>action \<Rightarrow> action\<close>
                                     ML function \<open>default_reasoning_configure\<close>\<close>
        \<phi>TA_ToA_elim :: action
 
+definition \<open>\<phi>TA_IND_TARGET T = T\<close>
+
 lemmas intro_\<phi>TA_ANT = Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric, THEN Meson.TruepropI]
 
 lemma mk_ToA_rule:
@@ -7831,8 +7833,6 @@ subsubsection \<open>Object Equivalence\<close>
 
 context begin
 
-definition \<open>OE_IND T = T\<close>
-
 private lemma Object_Equiv_rule:
   \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
@@ -7850,9 +7850,9 @@ private lemma Object_Equiv_rule:
 
 private lemma \<phi>TA_OE_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> (x \<Ztypecolon> OPEN undefined T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> MAKE undefined U)) @action \<phi>TA_subgoal undefined)
-\<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> OE_IND U @action \<phi>TA_ToA_elim)\<close>
+\<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> \<phi>TA_IND_TARGET U @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
-            OE_IND_def
+            \<phi>TA_IND_TARGET_def
   by (rule; blast)
 
 private lemma \<phi>TA_OE_rewr_pre:
@@ -8828,6 +8828,12 @@ private lemma \<phi>TA_MS\<^sub>E_rule:
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Action_Tag_def Premise_def MAKE_def OPEN_def
   by clarsimp
+
+private lemma \<phi>TA_MS\<^sub>I_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> OPEN undefined U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined T \<w>\<i>\<t>\<h> P) @action A)
+ \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi>TA_IND_TARGET T \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Action_Tag_def atomize_imp \<phi>TA_IND_TARGET_def OPEN_def MAKE_def .
+
 
 ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
                             
