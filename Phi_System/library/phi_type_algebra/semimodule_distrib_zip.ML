@@ -24,7 +24,10 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
 
       fun reasoning phi ctxt =
         default_reasoning false default_reasoning_configure (K (K NONE))
-                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt
+            (if is_zip
+             then exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))
+             else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA}
+                      (K (chk_unfolded [] ctxt phi))) phi ctxt
       val mode_infer = not (is_some (#1 instruction))
 
       val simp = if is_some (#1 instruction) then K I
@@ -32,20 +35,20 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                                                     else @{thms' \<phi>TA_MD\<^sub>U_cong})
 
       val equip_expansion = equip_expansion_ss phi
-      val eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi)
-              @ map_filter (Option.map  Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi)
-              @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi)
-              @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi)
       val ind_conv = default_ind_conv (
              fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2_noact} then_conv
-                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
-                                    (Conv.bottom_rewrs_conv @{thms' OPEN_def MAKE_def} ctxt),
+                  Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_IH}
+                                            else @{thm' \<phi>TA_MD\<^sub>U_rewr_IH}),
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
-                  (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs)) then_conv
+                  Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (conv_hol_imp_to_meta_if_has Conv.all_conv))
+
+      val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
+            (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
+            Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_pre}
+                                      else @{thm' \<phi>TA_MD\<^sub>U_rewr_pre})) ctm) o snd)
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
@@ -53,7 +56,7 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                                               then default_ind_inst (fn [_,_,_,r,z] => [SOME r, NONE, SOME z])
                                               else default_ind_inst (fn [_,_,r,z] => [SOME r, NONE, SOME z])),
                                         ind_conv, reasoning)],
-                                      K NONE, K I, simp)
+                                      K NONE, pre_simp, simp)
                                     phi instruction ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

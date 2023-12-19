@@ -12,6 +12,8 @@ theory IDE_CP_Applications1
       and "<then>" = "\<t>\<h>\<e>\<n>"
       and "<commute>" = "\<c>\<o>\<m>\<m>\<u>\<t>\<e>"
       and "<bubbling>" = "\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>"
+      and "<assoc>" = "\<a>\<s>\<s>\<o>\<c>"
+      and "<scalar>" = "\<s>\<c>\<a>\<l>\<a>\<r>"
 begin
 
 text \<open> 
@@ -1651,8 +1653,18 @@ declare prod.case[\<phi>defs]
 
 subsection \<open>Split\<close>
 
-consts \<A>split :: \<open>('a,'b) \<phi>\<close> ("\<s>\<p>\<l>\<i>\<t>")
-       (*TODO: remove me? \<A>\<T>split_step :: \<open>action\<close> *)
+consts \<A>assoc :: \<open>'a \<Rightarrow> 'b \<Rightarrow> mode\<close>
+       \<A>scalar :: \<open>'a \<Rightarrow> 'b \<Rightarrow> mode\<close>
+       \<A>split :: \<open>mode \<Rightarrow> ('a,'b) \<phi>\<close> ("\<s>\<p>\<l>\<i>\<t>[_]" [100] 1000)
+
+abbreviation \<A>split_default ("\<s>\<p>\<l>\<i>\<t>")
+  where \<open>\<A>split_default \<equiv> \<A>split default\<close>
+
+abbreviation \<A>split_assoc ("\<s>\<p>\<l>\<i>\<t>-\<a>\<s>\<s>\<o>\<c>")
+  where \<open>\<A>split_assoc a b \<equiv> \<A>split (\<A>assoc a b)\<close>
+
+abbreviation \<A>split_scalar ("\<s>\<p>\<l>\<i>\<t>-\<s>\<c>\<a>\<l>\<a>\<r>")
+  where \<open>\<A>split_scalar a b \<equiv> \<A>split (\<A>scalar a b)\<close>
 
 text \<open>Syntax:
 

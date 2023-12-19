@@ -1873,15 +1873,17 @@ let fun elim_TA_ANT ctxt ctm =
                                  in (\<^Const>\<open>HOL.eq T\<close> $ tm $ Free (N',T))
                                 end) fixes frees))
                        |> Thm.cterm_of ctxt't
-          val ([eq0], ctxt') = Assumption.add_assms Assumption.presume_export [eq0_term] ctxt't
+          val ((inst,[rule1]), ctxt't1) = Variable.import false [rule] ctxt't
+          val eq0_term1 = Thm.instantiate_cterm inst eq0_term
+          val ([eq0], ctxt') = Assumption.add_assms Assumption.presume_export [eq0_term1] ctxt't1
           val eqs = map (Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Premise_def}) then_conv
                                           Conv.rewr_conv @{thm' atomize_eq[symmetric]}))
                         (PLPR_Syntax.elim_ant_sequence
                             (Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' \<r>Guard_def})) eq0))
-          val rule' = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of rule)
-                                                       (Conv.top_rewrs_conv eqs ctxt')) rule
-                   |> Assumption.export ctxt' ctxt't
-                   |> singleton (Variable.export ctxt't ctxt)
+          val rule' = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of rule1)
+                                                       (Conv.top_rewrs_conv eqs ctxt')) rule1
+                   |> Assumption.export ctxt' ctxt't1
+                   |> singleton (Variable.export ctxt't1 ctxt)
        in PLPR_Syntax.merge_guards {merge_cond=false} ctxt rule'
       end end
 

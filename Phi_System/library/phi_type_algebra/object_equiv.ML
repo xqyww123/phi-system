@@ -2,6 +2,7 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val conv_hol_imp_to_meta_if_has : conv -> conv
+val conv_hol_imps_to_metas_if_has : conv -> conv -> conv
 val object_equiv : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 (*val object_equiv_singular : quiet -> deriving_instruction list -> Phi_Type.derive*)
 

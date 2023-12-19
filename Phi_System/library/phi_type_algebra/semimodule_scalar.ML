@@ -121,14 +121,17 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
               @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
       val ind_conv = default_ind_conv (
              fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2_noact} then_conv
+                  Conv.rewr_conv (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rewr_IH}
+                                              else @{thm' \<phi>TA_common_rewr_imp2_noact}) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (Conv.bottom_rewrs_conv @{thms' OPEN_def MAKE_def} ctxt),
              fn ctxt => fn _ =>
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
                   Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
-                                    (conv_hol_imp_to_meta_if_has Conv.all_conv))
+                                    (Phi_Conv.meta_alls_conv (fn ctxt =>
+                                        conv_hol_imps_to_metas_if_has Conv.all_conv Conv.all_conv
+                                     ) ctxt))
                                    
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_Assoc is_intro,

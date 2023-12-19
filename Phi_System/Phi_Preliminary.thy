@@ -6,6 +6,7 @@ theory Phi_Preliminary
   imports Main "Phi_Algebras.Algebras" PhiTool_Symbol Phi_Aug
           Phi_Logic_Programming_Reasoner.PLPR
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
+          Phi_Algebras.Arrow_st
   keywords "optional_translations" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
   abbrevs "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
