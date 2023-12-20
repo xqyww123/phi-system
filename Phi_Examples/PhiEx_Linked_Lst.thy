@@ -59,7 +59,7 @@ proc nth_llist:
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
   is [recursive l i addr]
   \<medium_left_bracket>
-    obtain l\<^sub>h l\<^sub>r where l_split[simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer  ;;
+    obtain l\<^sub>h l\<^sub>r where [simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer  ;;
         \<comment> \<open>annotation 1 due to deficiency of sledgehammer for instantiating existential quantification (unknown variables).
             Readers may remove this line to see a correct proof obligation is still generated but
             sledgehammer fails on it.\<close> 
@@ -79,7 +79,7 @@ proc update_nth_llist:
   output \<open>l[i := y] \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [recursive l i addr]
   \<medium_left_bracket>
-    obtain l\<^sub>h l\<^sub>r where l_split[simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer \<comment> \<open>annotation 1\<close> ;; 
+    obtain l\<^sub>h l\<^sub>r where [simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer \<comment> \<open>annotation 1\<close> ;; 
     to \<open>OPEN 1 _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data := $y

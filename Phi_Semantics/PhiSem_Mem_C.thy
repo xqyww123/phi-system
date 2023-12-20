@@ -349,6 +349,7 @@ text \<open>(depreciated! as we can have non-deterministic monad)
   over a subset of C semantics. The absence of non-initialized allocation does not affect the functionality
   but only little performance which we believe worthy against the simplification in reasoning. \<close>
 
+
 proc calloc_1:
   input \<open>Void\<close>
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>

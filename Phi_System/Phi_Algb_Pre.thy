@@ -53,6 +53,10 @@ lemmas [\<phi>safe_simp] =
 
   shift_by_nat_nat_def shift_by_nat_int_def
 
+lemma atLeastLessThan_singleton_alt[\<phi>safe_simp]:
+  \<open> {i..<i + 1} = {i} \<close>
+  for i :: nat
+  by simp
 
 section \<open>Arithmetic Evaluation\<close>
 
@@ -871,6 +875,57 @@ lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator
 \<Longrightarrow> common_multiplicator_2 (@) a b ((h # L) @ c) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
+
+
+subsection \<open>Checking if a given element is an identity element\<close>
+
+definition is_id_element :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>is_id_element template_one x \<longleftrightarrow> template_one = x\<close>
+
+\<phi>reasoner_group is_id_element__all = (100, [10, 3000]) for \<open>is_id_element template_one x\<close>
+      \<open>Checking if the given element \<open>x\<close> is an identity element unifying \<open>template_one\<close>\<close>
+  and is_id_element = (1000, [1000,1030]) in is_id_element__all \<open>\<close>
+  and is_id_element_direct = (2500, [2500, 2500]) in is_id_element__all and > is_id_element \<open>direct success\<close>
+
+declare [[\<phi>reason_default_pattern \<open>is_id_element ?template ?one\<close> \<Rightarrow>
+              \<open>ERROR TEXT(\<open>reasoner pattern has to be given for\<close> (is_id_element ?template ?one))\<close> (0),
+          \<phi>default_reasoner_group \<open>is_id_element _ _\<close> : %is_id_element (100) ]]
+
+subsubsection \<open>system\<close>
+
+lemma [\<phi>reason %is_id_element_direct for \<open>is_id_element ?x ?x\<close>]:
+  \<open> is_id_element x x \<close>
+  unfolding is_id_element_def ..
+
+subsubsection \<open>Set\<close>
+
+lemma [\<phi>reason for \<open>is_id_element {_} {_}\<close>]:
+  \<open> is_id_element {x} {x} \<close>
+  unfolding is_id_element_def
+  by simp
+
+subsubsection \<open>List\<close>
+
+lemma [\<phi>reason for \<open>is_id_element [] 0\<close>]:
+  \<open> is_id_element [] 0 \<close>
+  unfolding is_id_element_def
+  by simp
+
+subsubsection \<open>Len Intvl\<close>
+
+lemma [\<phi>reason for \<open>is_id_element \<lbrakk>_ : Suc 0\<rwpar> \<lbrakk>_ : _\<rwpar> \<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] len = 1
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] i = j
+\<Longrightarrow> is_id_element \<lbrakk>i : Suc 0\<rwpar> \<lbrakk>j : len\<rwpar> \<close>
+  unfolding is_id_element_def Premise_def
+  by simp
+
+lemma [\<phi>reason for \<open>is_id_element \<lbrakk>_ : 1\<rwpar> \<lbrakk>_ : _\<rwpar> \<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] len = 1
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] i = j
+\<Longrightarrow> is_id_element \<lbrakk>i : 1\<rwpar> \<lbrakk>j : len\<rwpar> \<close>
+  unfolding is_id_element_def Premise_def
+  by simp
 
 
 subsection \<open>Auxiliary Annotations\<close>
