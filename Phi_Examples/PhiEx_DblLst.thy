@@ -28,10 +28,7 @@ declare [[\<phi>trace_reasoning = 3]]
            (arbitrary: addr')
        and Functional_Transformation_Functor
        and*) and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>addr. Dbl_LLst TY addr T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ (x,y). y @ x) \<close>
-          (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ _ ls _ _ (a,b). take (length b - 1) ls\<close>],
-                             rule exI[where x=\<open>\<lambda>_ _ _ ls _ _ (a,b) _. drop (length b - Suc 0) ls\<close>],
-                             rule exI[where x=\<open>\<lambda>_ _ _ _ _ _ (a,b). hd a\<close>],
-                             rule exI[where x=\<open>\<lambda>_ _ _ _ _ _ (a,b). tl a\<close>],
+          (tactic: clarsimp, 
 tactic \<open>all_tac o @{print}\<close>)
 
 term \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>addr. Dbl_LLst TY addr T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ (x,y). y @ x) \<close>

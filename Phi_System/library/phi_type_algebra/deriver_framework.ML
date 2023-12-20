@@ -217,7 +217,7 @@ val default_ind_conv : (Proof.context -> Phi_Type.phi_type -> conv) (*converting
 
 type varifier = cterm Vars.table * Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoning_configure_ret = thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
-type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
+type reasoning_configure = phi_type * Subgoal.focus * thm -> thm list * Proof.context
                         -> reasoning_configure_ret
 val varify_all_vars : varifier
 
@@ -1695,7 +1695,7 @@ type subgoal_configure = (ind_inst * arbitrary_args) option (*If not given, no i
 type varifier = cterm Vars.table * Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
-type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
+type reasoning_configure = phi_type * Subgoal.focus * thm -> thm list * Proof.context
                         -> thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 type reasoning_configure_ret = thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 
@@ -1722,17 +1722,17 @@ val pass_make_ToA_default = pass_make_ToA
 (* Loosen transformation relfexivity relaxing mutating parameters *)
 
 fun mk_loosen_ToA_refl phi ctxt =
-  let val (rev_params, x_ty, c_ty) = parameters_and_typs_of phi
-      val i = maxidx_of_term (#term phi) + 1
-      val 
-   in ()
+  let val meq = mk_mutating_param_eq ctxt \<^Const>\<open>MODE_GUARD\<close> phi
+   in map (fn th => (meq RS' (Config.put Pattern.unify_trace_failure true ctxt, th), SOME @{reasoner_group %ToA_unified_refl+1}))
+          @{thms' ToA_refls_by_T_eq}
   end
+  
    
 
 
 (* the default reasoning configuration - extract implied pure facts from every LPR rule *)
 
-fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
+fun default_reasoning_configure (phi, focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close> o Thm.concl_of
       val is_ToA_template = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_conditioned_ToA_template\<close> o Thm.concl_of
       val pure_facts = filter is_pure_fact local_prems
@@ -1755,7 +1755,11 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
       val rewrs = map_filter (extract_rewr ctxt) local_prems
       val ants = filter_out (Phi_Reasoners.is_syntactic_premise o Thm.concl_of) local_prems
               |> map (rpair NONE)
-   in (prem_ants, rewrs, ToAs @ ants, ctxt)
+
+      val loosen_ToA_refls = if may_has_mutating_params phi
+                             then mk_loosen_ToA_refl phi ctxt
+                             else []
+   in (prem_ants, rewrs, loosen_ToA_refls @ ToAs @ ants, ctxt)
   end
 
 (** The major reasoning procedure **)
@@ -1971,11 +1975,11 @@ fun reasoning ctxt0 sequent0 =
                           #> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
                           #> PLPR_Syntax.elim_leading_All ctxt)
 
-      val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (focus, lsequent) (local_prems, ctxt)
+      val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (phi, focus, lsequent) (local_prems, ctxt)
       val reasoner_ants = reasoner_ants'
             |> map (apfst (Simplifier.rewrite_rule ctxt rewrs
                         #> Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess (~1, []) ctxt
-                        #> may_mutating_params phi ? varify_phi_type_parameter ctxt))
+                        #> has_mutating_params phi ? varify_phi_type_parameter ctxt))
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (

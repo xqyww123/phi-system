@@ -575,7 +575,7 @@ lemma RawPointer_eqcmp[\<phi>reason 1200]:
 subsubsection \<open>Logical Pointer\<close>
 
 \<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<Pp>\<t>\<r> _" [999] 998)
-  where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> logaddr_type x = TY\<close>
+  where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY)\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>
        and Functionality
@@ -584,17 +584,20 @@ subsubsection \<open>Logical Pointer\<close>
 lemma Ptr_eqcmp[\<phi>reason 1000]:
     "\<phi>Equal (Ptr TY) (\<lambda>x y. memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
   unfolding \<phi>Equal_def
-  by simp (metis logaddr_to_raw_inj)
+  by simp (metis memaddr_blk_zero rawaddr_to_log valid_logaddr_def) 
 
 
 section \<open>Primitive Instructions\<close>
- 
+
+subsection \<open>GEP\<close>
+
 proc op_get_element_pointer[\<phi>overload \<tribullet>]:
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx pidx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  premises \<open>addr \<noteq> 0\<close>
   output \<open>addr_geps addr pidx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
@@ -602,6 +605,26 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
     V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
       \<Turnstile> (addr_geps addr pidx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
+
+subsection \<open>Pointer Equality\<close>
+
+lemma
+  \<open>  \<close>
+
+
+
+subsection \<open>Literal\<close>
+
+term \<open>V_pointer.mk 0\<close>
+
+lemma
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_pointer.mk 0)] \<Pp>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+  for X :: assn
+  \<medium_left_bracket>
+    semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<Pp>\<t>\<r> void)\<close>
+    certified by auto_sledgehammer
+
+
 
 section \<open>Reasoning Configuration\<close>
 

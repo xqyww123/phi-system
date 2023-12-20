@@ -51,7 +51,8 @@ type phi_type = {
 
 val map_phi_type : (binding -> binding) * (term -> term) * (thm list -> thm list) -> phi_type -> phi_type
 val fold_phi_type : (term -> 'a -> 'a) * (thm -> 'a -> 'a) -> phi_type -> 'a -> 'a
-val may_mutating_params : phi_type -> bool
+val has_mutating_params : phi_type -> bool
+val may_has_mutating_params : phi_type -> bool
 val parameters_of : phi_type -> (parameter_info * typ) list
 val parameters_and_typs_of : phi_type -> (parameter_info * typ) list (*reversed!*) * typ (*abstract typ*) * typ (*concrete typ*)
 
@@ -185,6 +186,15 @@ val fix_phi_term_params : phi_type -> Proof.context -> (term * term) * Proof.con
 
 val open_proof_ctxt : Bundle.name list -> Context.generic -> Proof.context
 
+(*for mutating params {p\<^sub>i}
+ \<open>  condition p\<^sub>1 = p\<^sub>1'
+\<Longrightarrow> condition p\<^sub>2 = p\<^sub>2'
+\<Longrightarrow> \<dots>
+\<Longrightarrow> condition p\<^sub>n = p\<^sub>n'
+\<Longrightarrow> T p\<^sub>1 p\<^sub>2 \<dots> p\<^sub>n = T p\<^sub>1' p\<^sub>2' \<dots> p\<^sub>n' \<close>
+*)
+val mk_mutating_param_eq : Proof.context -> term (*mode of condition equation*) -> phi_type -> thm
+
 (* Internal Technical stuffs *)
 
 val ML_sender : (quiet * Position.T -> deriving_instruction list -> derive) option Unsynchronized.ref
@@ -249,8 +259,11 @@ type phi_type = {
   is_impredicative: bool (*to be supported*)
 }
 
-fun may_mutating_params phi =
+fun has_mutating_params phi =
   exists ((fn SOME true => true | _ => false) o #mutating) (#params phi)
+
+fun may_has_mutating_params phi =
+  exists ((fn SOME false => false | _ => true) o #mutating) (#params phi)
 
 fun map_phi_type (mb,mtm,mth) (phi : phi_type) =
   {
@@ -981,21 +994,9 @@ fun normalize th = th
   |> Drule.zero_var_indexes
 
 
-(*for mutating params {p\<^sub>i}
- \<open>  condition p\<^sub>1 = p\<^sub>1'
-\<Longrightarrow> condition p\<^sub>2 = p\<^sub>2'
-\<Longrightarrow> \<dots>
-\<Longrightarrow> condition p\<^sub>n = p\<^sub>n'
-\<Longrightarrow> T p\<^sub>1 p\<^sub>2 \<dots> p\<^sub>n = T p\<^sub>1' p\<^sub>2' \<dots> p\<^sub>n' \<close>
-*)
-(*
-fun mk_mutating_param_eq phi ctxt =
-  let val (rev_params, x_ty, c_ty) = parameters_and_typs_of phi
-      val i = maxidx_of_term (#term phi) + 1
-      val 
-   in ()
-  end*)
+
    
+
 
 
 
@@ -1016,6 +1017,47 @@ fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
   | LHS_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = LHS_of X
   | LHS_of (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = LHS_of X
   | LHS_of X = raise TERM ("Not an equation", [X])
+
+(*for mutating params {p\<^sub>i}
+ \<open>  condition p\<^sub>1 = p\<^sub>1'
+\<Longrightarrow> condition p\<^sub>2 = p\<^sub>2'
+\<Longrightarrow> \<dots>
+\<Longrightarrow> condition p\<^sub>n = p\<^sub>n'
+\<Longrightarrow> T p\<^sub>1 p\<^sub>2 \<dots> p\<^sub>n = T p\<^sub>1' p\<^sub>2' \<dots> p\<^sub>n' \<close>
+*)
+fun mk_mutating_param_eq ctxt mode phi =
+  let val params = #params phi
+      val (rev_param_tys, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      val param_tys = rev rev_param_tys
+      val i = maxidx_of_term (#term phi) + 1
+      val pp's = map_index (fn (d, param) =>
+                  let val name = the_default "A" (#name (#1 param))
+                      val can_be_mutating = case #mutating (#1 param)
+                                              of SOME false => false
+                                               | _ => true
+                   in (Var((name, i+d+d), #2 param),
+                       if can_be_mutating then SOME (Var((name, i+d+d+1), #2 param)) else NONE)
+                  end) (params ~~ param_tys)
+
+      val T = list_comb (#term phi, map #1 pp's)
+      val T'= list_comb (#term phi, map (fn (_, SOME x) => x | (x, _) => x) pp's)
+      val base_eq = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>HOL.eq \<open>mk_phi_type_ty (m_ty, x_ty)\<close>\<close> $ T $ T')
+      val prem_eqs = map_filter (fn (_, NONE) => NONE
+                        | (p, SOME p') => SOME (\<^Const>\<open>Trueprop\<close> $ (
+                              \<^Const>\<open>Premise\<close> $ mode $ (
+                                \<^Const>\<open>HOL.eq \<open>Term.fastype_of p\<close>\<close> $ p $ p')))) pp's
+      val goal = fold_rev (fn P => fn X => \<^Const>\<open>Pure.imp\<close> $ P $ X) prem_eqs base_eq
+              |> Thm.cterm_of ctxt
+              |> Goal.init
+      val ((_, [goal']), ctxt') = Variable.import false [goal] ctxt
+   in case Seq.pull (Simplifier.safe_asm_lr_simp_tac (
+                        Simplifier.clear_simpset ctxt addsimps @{thms' Premise_def}) 1 goal')
+   of SOME (ret, _) =>
+          if Thm.no_prems ret
+          then singleton (Variable.export ctxt' ctxt) (Goal.conclude ret)
+          else error "BUG OOcP1KyCRTmJj4WTzbQWrA"
+    | NONE => error "BUG OOcP1KyCRTmJj4WTzbQWrA"
+  end
 
 (*ctxt: the context used to derive properties*)
 (*term: the term of the phi type, can be parameterized by fixed free variables like those in locales *)
@@ -1046,6 +1088,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                                        filter_relevant_eqs term (#psimps info))))
               |> map (conv_def_to_equation ctxt
                    #> normalize)
+      val _ = if null eqs then error "At least one definitional equation has to be given" else ()
       val tagged_eqs = map (Conv.fconv_rule (add_premise_tag ctxt)) eqs
 
       val typeqs = map (fn eq => SOME (eq RS refine_typeq) handle THM _ => NONE) eqs
@@ -1058,6 +1101,10 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                                       (List.drop (snd (strip_comb T), fixed_num))
                              | _ => error "BUG") eqs
                      |> foldl1 (uncurry (map2 (curry merge_options)))
+      val (x_ty, m_ty) = case LHS_of (Thm.concl_of (hd eqs))
+                           of Const(\<^const_name>\<open>\<phi>Type\<close>, \<^Type>\<open>fun x_ty \<^Type>\<open>fun _ \<^Type>\<open>set m_ty\<close>\<close>\<close>) $ _ $ _
+                                => (x_ty, m_ty)
+                            | _ => error "BUG"
 
       val tagged_eqs_in_type =
             if no_auto then [] else

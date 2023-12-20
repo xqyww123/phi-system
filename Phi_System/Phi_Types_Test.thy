@@ -85,7 +85,7 @@ end
 term \<open>unzip' (map f (zip' x))\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
- 
+     
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>(l \<Ztypecolon> List\<^sub>S 0 T) = (Void \<s>\<u>\<b>\<j> l = [])\<close>
       | \<open>(l \<Ztypecolon> List\<^sub>S (Suc n) T) = (h \<Ztypecolon> T\<heavy_comma> l' \<Ztypecolon> List\<^sub>S n T \<s>\<u>\<b>\<j> h l'. l = h # l')\<close>

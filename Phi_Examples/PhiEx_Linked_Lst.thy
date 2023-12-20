@@ -89,6 +89,14 @@ proc update_nth_llist:
     \<open>l[i := y] \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
  \<medium_right_bracket> .
 
+proc length_of:
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {next: \<p>\<t>\<r>, data: TY}\<close>
+  output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>('bits::len)\<close>
+  is [recursive l addr]
+\<medium_left_bracket> note [[\<phi>trace_reasoning = 2]] ;;
+  \<open>0 \<Ztypecolon> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {next: \<p>\<t>\<r>, data: TY}\<close>
+
+
 (*\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
             (tactic: clarsimp, rule exI[where x=\<open>\<lambda>(_,b). b\<close>]) *)
