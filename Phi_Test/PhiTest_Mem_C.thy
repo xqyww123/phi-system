@@ -25,6 +25,7 @@ proc test_mem2:
 
 proc test_ptr3:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
+  premises \<open>addr \<noteq> 0\<close>
   output \<open>addr \<tribullet>\<^sub>a c \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   $addr \<tribullet> c

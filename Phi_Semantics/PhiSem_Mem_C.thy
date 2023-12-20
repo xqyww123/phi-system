@@ -422,6 +422,7 @@ proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
        and L4[]: \<open>report_unprocessed_element_index reject\<close>
   requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  premises \<open>addr \<noteq> 0\<close>
   output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
   $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
@@ -455,6 +456,7 @@ proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
                    \<f>\<r>\<o>\<m> state \<t>\<o> state' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
        and L02[]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  premises \<open>addr \<noteq> 0\<close>
   output \<open>\<lambda>_::unit \<phi>arg. state'\<close>
 \<medium_left_bracket>
   $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]

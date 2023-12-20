@@ -582,9 +582,9 @@ subsubsection \<open>Logical Pointer\<close>
        and \<open>\<phi>SemType (x \<Ztypecolon> Ptr TY) pointer\<close>
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
-    "\<phi>Equal (Ptr TY) (\<lambda>x y. memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
+    "\<phi>Equal (Ptr TY) (\<lambda>x y. x = 0 \<or> y = 0 \<or> memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
   unfolding \<phi>Equal_def
-  by simp (metis memaddr_blk_zero rawaddr_to_log valid_logaddr_def) 
+  by simp (metis logaddr_to_raw_0 logaddr_to_raw_MemBlk logaddr_to_raw_inj memaddr.expand memaddr_blk_zero valid_logaddr_def zero_list_def zero_memaddr_def)  
 
 
 section \<open>Primitive Instructions\<close>
@@ -606,24 +606,14 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
       \<Turnstile> (addr_geps addr pidx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 
-subsection \<open>Pointer Equality\<close>
 
-lemma
-  \<open>  \<close>
-
-
-
-subsection \<open>Literal\<close>
-
-term \<open>V_pointer.mk 0\<close>
-
-lemma
+lemma [\<phi>reason %\<phi>synthesis_literal]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_pointer.mk 0)] \<Pp>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
   \<medium_left_bracket>
-    semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<Pp>\<t>\<r> void)\<close>
+    semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<Pp>\<t>\<r> TY)\<close>
     certified by auto_sledgehammer
-
+  \<medium_right_bracket> .
 
 
 section \<open>Reasoning Configuration\<close>
