@@ -259,7 +259,7 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property is_left, rule,
-                                     [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
+                                     [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                      id_ele_infer, pre_simp, simp)
                                     phi0 instruction ctxt
    in case Seq.pull rules

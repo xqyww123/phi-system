@@ -271,7 +271,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                       |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
                  else ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_TF, rule,
-                                      [(SOME (default_ind_inst (fn [_,x] => [SOME x])), ind_conv, TF_reasoning)],
+                                      [(SOME (default_ind_inst (fn [_,x] => [SOME x]), K I), ind_conv, TF_reasoning)],
                                       K NONE, pre_simp, simp)
                                      phi0 instruction ctxt
    in Seq.pull rules

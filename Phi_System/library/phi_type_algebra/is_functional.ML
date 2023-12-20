@@ -129,7 +129,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
-                                      [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
+                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                        solver, pre_simp, simp)
                                     phi0 instruction ctxt
    in case Seq.pull rules

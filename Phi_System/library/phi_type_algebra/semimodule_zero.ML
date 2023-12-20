@@ -37,7 +37,7 @@ fun gen_M0 closed (der_id, name) instruction ctxt0 (phi : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, Guess_Scalar_Zero closed,
                                       (if closed then @{thm' \<phi>TA_M0c_rule} else @{thm' \<phi>TA_M0_rule}),
-                                      [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
+                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       K NONE, pre_simp, simp)
                                     phi instruction ctxt0
    in case Seq.pull rules

@@ -71,7 +71,11 @@ fun simplification {simp_conj_items, fix_vars} fallback F ctxt sequent = Seq.mak
       ) ctxt) 1
    |> (fn th => case Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
                   of SOME ret => SOME (ret, Seq.empty)
-                   | NONE => Seq.pull (fallback th))
+                   | NONE => 
+                (case Phi_Reasoner.reason NONE (SOME 1) ctxt
+                        (@{thm End_Simplification''} RS' (ctxt, th))
+                   of SOME ret => SOME (ret, Seq.empty)
+                    | NONE => Seq.pull (fallback th)))
   end
 )
 (*    |> Tactical.HEADGOAL (Phi_Reasoners.simp_tac (F ctxt))

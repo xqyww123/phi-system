@@ -138,7 +138,8 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
                                       [(SOME (if is_intro
                                               then default_ind_inst (fn [_,_,_,r,x] => [SOME r, NONE, SOME x])
-                                              else default_ind_inst (fn [_,_,r,x] => [SOME r, NONE, SOME x])),
+                                              else default_ind_inst (fn [_,_,r,x] => [SOME r, NONE, SOME x]),
+                                              K I),
                                         ind_conv, reasoning)],
                                       K NONE, K I, simp)
                                     phi0 instruction ctxt0

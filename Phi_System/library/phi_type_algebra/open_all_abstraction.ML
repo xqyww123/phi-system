@@ -280,7 +280,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) ctxt0 (p
                    else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrRA_rule},
-                                      [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
+                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       solver, K I, simp)
                                     phi0 instruction ctxt0'
    in case Seq.pull rules

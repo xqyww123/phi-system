@@ -2725,7 +2725,7 @@ lemma \<phi>make_abstraction'R_specified:
 
 lemma \<phi>make_abstraction'Rt_infer:
   \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'
     \<comment> \<open>Interesting, here \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x'\<close> is actually stronger than \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close>
         because the \<open>fst x\<close> can be a schematic variable so \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close> always returns even
         when the instantiating of \<open>fst x\<close> makes the entire sequent inconsistent but \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>\<close> just
@@ -7529,6 +7529,11 @@ lemma \<phi>TA_common_rewr_imp2_noact:
   \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> X @action \<phi>TA_subgoal A) \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> X) \<close>
   unfolding Action_Tag_def atomize_imp .
 
+lemma \<phi>TA_common_rewr_imp23':
+  \<open> Trueprop (Ant \<longrightarrow> Q1 \<longrightarrow> Q2 \<longrightarrow> P @action \<phi>TA_subgoal \<A>)
+ \<equiv> (Ant \<Longrightarrow> Q1 \<Longrightarrow> Q2 \<longrightarrow> (P @action \<A>)) \<close>
+  unfolding Action_Tag_def atomize_imp .
+
 lemma \<phi>TA_reason_rule__NToA:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action NToA
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action A\<close>
@@ -8883,9 +8888,15 @@ subsubsection \<open>Semimodule Scalar Distributivity - Zip\<close>
 
 context begin
 
+bundle \<phi>TA_MD =
+  [[\<phi>reason_default_pattern \<open>equation\<^sub>2\<^sub>1 ?c ?a ?b\<close> \<Rightarrow> \<open>equation\<^sub>2\<^sub>1 _ _ _\<close> (1000)]]
+
+\<phi>reasoner_group \<A>_partial_add_local = (3850, [3850, 3850]) in \<A>_partial_add__top \<open>\<close>
+
 private lemma \<phi>TA_MD\<^sub>Z_rule:
   \<open> (\<And>s t x r z. Ant
-         \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> r = s + t \<and> Dx t s x \<and> zi t s x = z
+         \<Longrightarrow> equation\<^sub>2\<^sub>1 s t r
+         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> Dx t s x \<and> zi t s x = z
          \<Longrightarrow> (x \<Ztypecolon> NO_SIMP \<phi>Prod (OPEN undefined (F t)) (OPEN undefined (F s))
              \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined (F r))
          @action \<phi>TA_subgoal NToA)
@@ -8894,12 +8905,13 @@ private lemma \<phi>TA_MD\<^sub>Z_rule:
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F Ds Dx zi \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def
-            OPEN_def MAKE_def NO_SIMP_def
+            OPEN_def MAKE_def NO_SIMP_def equation\<^sub>2\<^sub>1_def
   by clarsimp
 
 private lemma \<phi>TA_MD\<^sub>U_rule:
   \<open> (\<And>s t r x. Ant
-         \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> r = s + t \<and> Dx t s x
+         \<Longrightarrow> equation\<^sub>2\<^sub>1 s t r
+         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> Dx t s x
          \<Longrightarrow> (x \<Ztypecolon> OPEN undefined (F r)
              \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> NO_SIMP \<phi>Prod (MAKE undefined (F t)) (MAKE undefined (F s)))
         @action \<phi>TA_subgoal (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> F r \<Rightarrow> \<s>\<p>\<l>\<i>\<t>-\<s>\<c>\<a>\<l>\<a>\<r> s t)))
@@ -8908,7 +8920,7 @@ private lemma \<phi>TA_MD\<^sub>U_rule:
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S F Ds Dx uz \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>S_def Action_Tag_def Premise_def Transformation_def
-            OPEN_def MAKE_def NO_SIMP_def
+            OPEN_def MAKE_def NO_SIMP_def equation\<^sub>2\<^sub>1_def
   by clarsimp
 
 private lemma \<phi>TA_MD\<^sub>U_cong:
@@ -8928,25 +8940,25 @@ private lemma \<phi>TA_MD\<^sub>Z_cong:
   by (auto; metis)
 
 private lemma \<phi>TA_MD\<^sub>Z_rewr_IH:
-  \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> OPEN undefined U\<^sub>1 \<^emph> OPEN undefined U\<^sub>2
+  \<open> Trueprop (Ant \<longrightarrow> C2 \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> OPEN undefined U\<^sub>1 \<^emph> OPEN undefined U\<^sub>2
                              \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined T \<w>\<i>\<t>\<h> P) @action A)
- \<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi>TA_IND_TARGET T \<w>\<i>\<t>\<h> P) \<close>
-  unfolding Action_Tag_def atomize_imp \<phi>TA_IND_TARGET_def OPEN_def MAKE_def .
+ \<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> C2 \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi>TA_IND_TARGET T \<w>\<i>\<t>\<h> P @action \<phi>TA_ToA_elim) \<close>
+  unfolding Action_Tag_def atomize_imp \<phi>TA_IND_TARGET_def OPEN_def MAKE_def equation\<^sub>2\<^sub>1_def .
 
 private lemma \<phi>TA_MD\<^sub>U_rewr_IH:
-  \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> OPEN undefined T
+  \<open> Trueprop (Ant \<longrightarrow> C2 \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> OPEN undefined T
                              \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined U\<^sub>1 \<^emph> MAKE undefined U\<^sub>2 \<w>\<i>\<t>\<h> P) @action \<phi>TA_subgoal (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> AA \<Rightarrow> A)))
- \<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<w>\<i>\<t>\<h> P @action (to A)) \<close>
+ \<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> C2 \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<w>\<i>\<t>\<h> P @action (to A)) \<close>
   unfolding Action_Tag_def atomize_imp \<phi>TA_IND_TARGET_def OPEN_def MAKE_def .
 
 private lemma \<phi>TA_MD\<^sub>Z_rewr_pre:
-  \<open> (Ant \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> NO_SIMP \<phi>Prod T U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>)
-  \<equiv> Trueprop (Ant \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action \<A>) \<close>
+  \<open> (Ant \<Longrightarrow> C2 \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> NO_SIMP \<phi>Prod T U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>)
+  \<equiv> Trueprop (Ant \<longrightarrow> C2 \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action \<A>) \<close>
   unfolding atomize_imp Action_Tag_def NO_SIMP_def .
 
 private lemma \<phi>TA_MD\<^sub>U_rewr_pre:
-  \<open> (Ant \<Longrightarrow> C \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> NO_SIMP \<phi>Prod T U \<w>\<i>\<t>\<h> P @action \<A>)
-  \<equiv> Trueprop (Ant \<longrightarrow> C \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph> U \<w>\<i>\<t>\<h> P) @action \<A>) \<close>
+  \<open> (Ant \<Longrightarrow> C2 \<Longrightarrow> C \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> NO_SIMP \<phi>Prod T U \<w>\<i>\<t>\<h> P @action \<A>)
+  \<equiv> Trueprop (Ant \<longrightarrow> C2 \<longrightarrow> C \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph> U \<w>\<i>\<t>\<h> P) @action \<A>) \<close>
   unfolding atomize_imp Action_Tag_def NO_SIMP_def .
 
 ML_file \<open>library/phi_type_algebra/semimodule_distrib_zip.ML\<close>

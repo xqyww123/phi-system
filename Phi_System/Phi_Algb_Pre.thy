@@ -154,11 +154,10 @@ There are pre-built reasoning rules for,
   and \<A>_partial_add_default = (10, [10,20]) in \<A>_partial_add \<open>\<close>
   and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @action \<A>arith_eq\<close> in \<A>_partial_add
       \<open>Rules leading to success directly\<close>
-  and \<A>_partial_add_normalizing = (3000, [2801, 3399]) for \<open>_ = _ @action \<A>arith_eq\<close>
-                                                       in \<A>_partial_add and < \<A>_partial_add_success
+  and \<A>_partial_add__top = (3800, [3800, 3899]) in \<A>_partial_add and < \<A>_partial_add_success \<open>\<close>
+  and \<A>_partial_add_normalizing = (3000, [2801, 3399]) in \<A>_partial_add and < \<A>_partial_add__top
       \<open>Rules normalizing the reasoning\<close>
-  and \<A>_partial_add_splitting = (2500, [2500, 2599]) for \<open>_ = _ @action \<A>arith_eq\<close>
-                                                     in \<A>_partial_add and < \<A>_partial_add_normalizing
+  and \<A>_partial_add_splitting = (2500, [2500, 2599]) in \<A>_partial_add and < \<A>_partial_add_normalizing
       \<open>Spliting a complicated equation like \<open>a + b + c = d\<close> into several minimal equations \<open>a + b = c\<close>\<close>
   and \<A>_partial_add_cut = (1000, [1000, 1100]) in \<A>_partial_add and < \<A>_partial_add_splitting
       \<open>Cutting rules\<close>
@@ -198,12 +197,12 @@ lemma [\<phi>reason default %EIF_dabc_default]:
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<r>EIF (equation\<^sub>2\<^sub>1 d a b) (d + a = b \<and> d ##\<^sub>+ a) \<close>
+  \<open> \<r>EIF (equation\<^sub>2\<^sub>1 d a b) (b = d + a \<and> d ##\<^sub>+ a) \<close>
   unfolding \<r>EIF_def equation\<^sub>2\<^sub>1_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<r>EIF (equation\<^sub>3\<^sub>1 d b c a) (d + b + c = a \<and> d ##\<^sub>+ b \<and> d + b ##\<^sub>+ c) \<close>
+  \<open> \<r>EIF (equation\<^sub>3\<^sub>1 d b c a) (a = d + b + c \<and> d ##\<^sub>+ b \<and> d + b ##\<^sub>+ c) \<close>
   unfolding \<r>EIF_def equation\<^sub>3\<^sub>1_def
   by simp
 
@@ -555,7 +554,12 @@ need some ML
 
 paragraph \<open>Arrow\<close>
 
-
+lemma [\<phi>reason %\<A>_partial_add_specific for \<open>equation\<^sub>2\<^sub>1 _ _ (_ \<BRarrow> _)\<close>
+                                            \<open>equation\<^sub>2\<^sub>1 _ (_ \<BRarrow> _) _\<close>
+                                            \<open>equation\<^sub>2\<^sub>1 (_ \<BRarrow> _) _ _\<close>]:
+  \<open> equation\<^sub>2\<^sub>1 (s \<BRarrow> t) (t \<BRarrow> u) (s \<BRarrow> u) \<close>
+  unfolding equation\<^sub>2\<^sub>1_def
+  by simp
 
 
 

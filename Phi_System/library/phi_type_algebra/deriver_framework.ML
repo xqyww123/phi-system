@@ -142,8 +142,11 @@ type ind_inst = Subgoal.focus
               * thm (*local sequent*)
               -> Proof.context
               -> ind_insts * Proof.context
+type arbitrary_args = Subgoal.focus
+                   -> (string * typ) list (*user hints*)
+                   -> (string * typ) list (*user hints*)
 
-type subgoal_configure = ind_inst option (*If not given, no induction will be applied*)
+type subgoal_configure = (ind_inst * arbitrary_args) option (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type.phi_type -> reasoning)
 type solver = Phi_Type.phi_type * Proof.context * thm * Method.text option -> thm option
@@ -1259,7 +1262,7 @@ fun chk_no_hints prop_name (hints, thy) =
 
 end
 
-(** Automation Framework **)
+(*** Reasoning Framework ***)
 
 (* Default Obligation Solver *)
 
@@ -1435,7 +1438,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
         end
 
       fun apply_induction NONE conv rule' = apply_conv ctxt conv rule'
-        | apply_induction (SOME ind_inst) ind_conv rule' =
+        | apply_induction (SOME (ind_inst, aia_config)) ind_conv rule' =
             case #ind phi
               of SOME ind_rule =>
             let val (focus, sequent1) = Subgoal.focus ctxt 1 NONE rule'
@@ -1443,7 +1446,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                 val (insts, ctxt1) = ind_inst (focus, phi_typ_parameters, phi, sequent1) ctxt01
                 val sequent2 = Tactic.rule_by_tactic ctxt1
                         (Induct.induct_tac ctxt1 true (*rethink this simplification flag*)
-                            insts [map Term.dest_Free aia] []
+                            insts [aia_config focus (map Term.dest_Free aia)] []
                             (SOME [ind_rule]) [] 1)
                         sequent1
                 val sequent3 = sequent2
@@ -1672,6 +1675,8 @@ fun varify_all_vars (vars, focus) tm =
                                             Frees.make (map2 (fn Free a => fn b => (a,b)) frees frees')) tm)
   end
 
+(** Reasoning Configuration - setup local LPR rules, local premises, and rewrites **)
+
 type reasoning = Proof.context -> thm -> thm
 type ind_insts = (binding option * (term * bool)) option list list
 type ind_inst = Subgoal.focus
@@ -1680,7 +1685,11 @@ type ind_inst = Subgoal.focus
               * thm (*local sequent*)
               -> Proof.context
               -> ind_insts * Proof.context
-type subgoal_configure = ind_inst option (*If not given, no induction will be applied*)
+type arbitrary_args = Subgoal.focus
+                   -> (string * typ) list (*user hints*)
+                   -> (string * typ) list (*user hints*)
+
+type subgoal_configure = (ind_inst * arbitrary_args) option (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type.phi_type -> reasoning)
 type varifier = cterm Vars.table * Subgoal.focus -> term -> (term list * (term list -> term)) option
@@ -1690,6 +1699,7 @@ type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
                         -> thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 type reasoning_configure_ret = thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 
+(* pass make ToA *)
 fun pass_make_ToA_i mk_rules ctxt (ToA, gp) =
   let fun mk ToA' (gp, rule) = (ToA' RS' (ctxt, rule), SOME gp)
    in if can (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ToA_elim\<close>) (Thm.concl_of ToA)
@@ -1708,6 +1718,19 @@ val pass_make_ToA_default = pass_make_ToA
        (@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule'}),
        (@{reasoner_group %deriving_local_rules-10}, @{thm' mk_ToA_rule_varified}),
        (@{reasoner_group %deriving_local_rules-10}, @{thm' mk_ToA_rule'_varified})]
+
+(* Loosen transformation relfexivity relaxing mutating parameters *)
+
+fun mk_loosen_ToA_refl phi ctxt =
+  let val (rev_params, x_ty, c_ty) = parameters_and_typs_of phi
+      val i = maxidx_of_term (#term phi) + 1
+      val 
+   in ()
+  end
+   
+
+
+(* the default reasoning configuration - extract implied pure facts from every LPR rule *)
 
 fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close> o Thm.concl_of
@@ -1734,6 +1757,8 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
               |> map (rpair NONE)
    in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
+
+(** The major reasoning procedure **)
 
 fun default_reasoning always_diverge_disj configure varify reasoner (phi:phi_type) =
 let fun elim_TA_ANT ctxt ctm =
@@ -2110,7 +2135,7 @@ fun default_pre_simplifier conv (phi, ctxt) =
     ) (K Conv.all_conv) ctxt)
 
 
-(** Other Tools **)
+(*** Other Tools ***)
 
 fun make_forall_quantified_property mk phi =
   let val (rev_args_ty, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of phi)

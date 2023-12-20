@@ -386,7 +386,7 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
               |> Bundle.includes ["IDE_CP_Applications1.abstract_domain_OPEN_MAKE"]
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
-                                      [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, Inh_reasoning)],
+                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, Inh_reasoning)],
                                       solver, pre_simp, simp)
                                      phi0 instruction ctxt
    in case Seq.pull rules

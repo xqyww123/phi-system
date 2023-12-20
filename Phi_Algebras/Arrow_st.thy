@@ -39,13 +39,23 @@ lemma plus_arrow[iff]:
   by simp
 
 lemma dom_of_add_arrow_st[iff]:
-  \<open> (ss \<BRarrow> tt) ##\<^sub>+ (uu \<BRarrow> vv) \<longleftrightarrow> tt = uu \<close>
+  \<open> a ##\<^sub>+ b \<longleftrightarrow> t a = s b \<close>
   unfolding dom_of_add_arrow_st_def
   by simp
 
 instance by (standard, clarsimp simp: split_arrow_all)
 
 end
+
+lemma plus_arrow_st_s[iff]:
+  \<open> s (a + b) = s a \<close>
+  unfolding plus_arrow_st_def
+  by simp
+
+lemma plus_arrow_st_t[iff]:
+  \<open> t (a + b) = t b \<close>
+  unfolding plus_arrow_st_def
+  by simp
 
 instance arrow_st :: (type) partial_cancel_semigroup_add
   by (standard; clarsimp simp add: split_arrow_all)

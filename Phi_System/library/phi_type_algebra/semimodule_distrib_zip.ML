@@ -23,7 +23,19 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
         | extract_oprs_from_hint _ = []
 
       fun reasoning phi ctxt =
-        default_reasoning false default_reasoning_configure (K (K NONE))
+        default_reasoning false
+            ((fn (ths1,ths2,rules,ctxt) =>
+                let fun set_group (th, gp) =
+                      case Thm.concl_of th
+                        of _ $ (Const(\<^const_name>\<open>equation\<^sub>2\<^sub>1\<close>, _) $ _ $ _ $ _)
+                             => (th, SOME @{reasoner_group %\<A>_partial_add_local})
+                         | _ => (th, gp)
+                 in (ths1,ths2,map set_group rules,ctxt)
+                end)
+             o pass_make_ToA [(@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule}),
+                            (@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule'})]
+             oo default_reasoning_configure)
+            (K (K NONE))
             (if is_zip
              then exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))
              else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA}
@@ -40,24 +52,32 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                   Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_IH}
                                             else @{thm' \<phi>TA_MD\<^sub>U_rewr_IH}),
              fn ctxt => fn phi =>
-                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
+                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp23'} then_conv
                   Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
-                                    (conv_hol_imp_to_meta_if_has Conv.all_conv))
+                                    (Phi_Conv.meta_alls_conv (Phi_Conv.hol_alls_to_meta_alls (fn ctxt =>
+                                        conv_hol_imps_to_metas_if_has Conv.all_conv
+                                            (wrap_ind_target phi ctxt)))
+                                     ctxt))
 
       val pre_simp = default_pre_simplifier (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
             (Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
-            Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_pre}
-                                      else @{thm' \<phi>TA_MD\<^sub>U_rewr_pre})) ctm) o snd)
+            (@{print} o Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_pre}
+                                      else @{thm' \<phi>TA_MD\<^sub>U_rewr_pre}))) ctm) o snd)
 
+      val ctxt = Bundle.includes ["Phi_Type.\<phi>TA_MD"] ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
                                       [(SOME (if is_zip
                                               then default_ind_inst (fn [_,_,_,r,z] => [SOME r, NONE, SOME z])
-                                              else default_ind_inst (fn [_,_,r,z] => [SOME r, NONE, SOME z])),
+                                              else default_ind_inst (fn [_,_,r,z] => [SOME r, NONE, SOME z]),
+                                              fn focus => fn aia =>
+                                                let fun get i = Term.dest_Free (Thm.term_of (snd (nth (#params focus) i)))
+                                                 in get 0 :: get 1 :: get 2 :: aia
+                                                end),
                                         ind_conv, reasoning)],
                                       K NONE, pre_simp, simp)
-                                    phi instruction ctxt0
+                                    phi instruction ctxt
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy

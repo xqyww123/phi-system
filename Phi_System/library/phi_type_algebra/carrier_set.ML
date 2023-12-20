@@ -56,7 +56,7 @@ fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
 
       val ctxt = ctxt0
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_CarS_rule},
-                                      [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
+                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                         solver, pre_simp, simp)
                                     phi0 instruction ctxt
    in case Seq.pull rules

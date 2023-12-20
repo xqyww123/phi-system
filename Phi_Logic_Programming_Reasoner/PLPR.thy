@@ -1018,11 +1018,13 @@ For example,
 
 subsubsection \<open>Basic Reasoning Rules\<close>
 
-\<phi>reasoner_group lambda_unify_all = (1000, [1000, 3000]) for \<open>LHS = RHS\<close>
+\<phi>reasoner_group lambda_unify_all = (1000, [10, 3000]) for \<open>LHS = RHS\<close>
       \<open>lambda unification\<close>
-  and lambda_unify__default = (1000, [1000, 1000]) in lambda_unify_all \<open>system default\<close>
-  and lambda_unify = (1100, [1100, 3000]) in lambda_unify_all and > lambda_unify__default
-      \<open>user rules\<close>
+  and lambda_unify__default = (2000, [2000, 2000]) in lambda_unify_all \<open>system default\<close>
+  and lambda_unify_high = (2100, [2100, 3000]) in lambda_unify_all and > lambda_unify__default
+      \<open>user rules of higher priority than the normal unification, used to override the default behavior\<close>
+  and lambda_unify_low = (1000, [100, 1900]) in lambda_unify_all and < lambda_unify__default
+      \<open>user rules of lower priority than the normal unification, used when the normal unification fails.\<close>
 
 declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
@@ -1067,6 +1069,36 @@ lemma [\<phi>reason 1000]:
   \<open>(\<And>x. P x) \<Longrightarrow> \<forall>\<^sub>\<r>x. P x\<close>
   unfolding Compact_Forall_def ..
 *)
+
+subsubsection \<open>Unification\<close>
+
+lemma [\<phi>reason %lambda_unify_low for \<open>?var = (_, _)\<close>
+                                      \<open>(_,_) = (_,_)\<close>
+                                      \<open>(_,_) = ?var\<close>]:
+  \<open> x = a
+\<Longrightarrow> y = b
+\<Longrightarrow> (x,y) = (a,b) \<close>
+  by simp
+
+lemma [\<phi>reason %lambda_unify_low]:
+  \<open> x = a
+\<Longrightarrow> fst (x,y) = a \<close>
+  by simp
+
+lemma [\<phi>reason %lambda_unify_low]:
+  \<open> y = a
+\<Longrightarrow> snd (x,y) = a \<close>
+  by simp
+
+lemma [\<phi>reason %lambda_unify_low]:
+  \<open> a = x
+\<Longrightarrow> a = fst (x,y) \<close>
+  by simp
+
+lemma [\<phi>reason %lambda_unify_low]:
+  \<open> a = y
+\<Longrightarrow> a = snd (x,y) \<close>
+  by simp
 
 
 subsubsection \<open>Matches\<close>
@@ -2001,10 +2033,12 @@ lemma Simplify_to_Premise: \<open>Premise default (A = B) \<Longrightarrow> Simp
 lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_def ..
 lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
   unfolding Simplify_def Premise_def atomize_eq .
+lemma End_Simplification'': \<open>A = B \<Longrightarrow> Simplify mode A B\<close> 
+  unfolding Simplify_def atomize_eq .
 
 ML_file_debug \<open>library/simplifier.ML\<close>
 
-hide_fact End_Simplification' End_Simplification
+hide_fact End_Simplification' End_Simplification'' End_Simplification
 
 lemma [\<phi>reason %extract_pure]:
   \<open> \<r>EIF (Simplify mode A A') (A = A') \<close>

@@ -34,7 +34,7 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_One is_intro,
                                       (if is_intro then @{thm' \<phi>TA_MI\<^sub>I_rule} else @{thm' \<phi>TA_MI\<^sub>E_rule}),
-                                      [(SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, reasoning)],
+                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       K NONE, K I, simp)
                                     phi instruction ctxt0
    in case Seq.pull rules

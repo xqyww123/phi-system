@@ -153,7 +153,7 @@ fun OE_reasoning phi ctxt rule =
       
    in default_reasoning true
           (pass_make_ToA [(@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule}),
-                                 (@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule'})]
+                          (@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule'})]
            oo default_reasoning_configure)
           (K (K NONE))
           (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]}
@@ -236,7 +236,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
                                       [(NONE, K (K I), K (pure_PLPR_reasoning 2)),
-                                       (SOME (default_ind_inst (fn [x] => [SOME x])), ind_conv, OE_reasoning)],
+                                       (SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, OE_reasoning)],
                                       infer, pre_simp, simp)
                                      phi0 instruction
                                      ((*Config.put search_CSTR_rules true*) ctxt)

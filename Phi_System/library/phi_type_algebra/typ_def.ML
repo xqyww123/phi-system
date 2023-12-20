@@ -980,6 +980,26 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
+
+(*for mutating params {p\<^sub>i}
+ \<open>  condition p\<^sub>1 = p\<^sub>1'
+\<Longrightarrow> condition p\<^sub>2 = p\<^sub>2'
+\<Longrightarrow> \<dots>
+\<Longrightarrow> condition p\<^sub>n = p\<^sub>n'
+\<Longrightarrow> T p\<^sub>1 p\<^sub>2 \<dots> p\<^sub>n = T p\<^sub>1' p\<^sub>2' \<dots> p\<^sub>n' \<close>
+*)
+(*
+fun mk_mutating_param_eq phi ctxt =
+  let val (rev_params, x_ty, c_ty) = parameters_and_typs_of phi
+      val i = maxidx_of_term (#term phi) + 1
+      val 
+   in ()
+  end*)
+   
+
+
+
+
 (*val search_CSTR_rules = Config.declare_bool ("search_CSTR_rules", \<^here>) (K false)*)
 
 (** Main **)
@@ -1263,17 +1283,17 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                       ([Morphism.thm m rule], pos, mode, SOME priority, [], [], SOME G)) rules)
          in fn ctxt => ctxt
          |> not no_auto ? (fn ctxt => ctxt
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction_sp
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10} make_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived}
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10}
                             (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
                             make_abstraction_sp
            (*|> not (null make_Identity_Element_E) ?
                 add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %derived_identity_element} make_Identity_Element_E *)
              |> Config.put_generic phi_allow_source_object_to_be_not_variable true
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived-10} open_abstraction_ToA
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived-10} open_abstraction_ToA_sp
                               (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
              |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
        ) |> Phi_Expansions.add_simps expns
