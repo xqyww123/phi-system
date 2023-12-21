@@ -524,9 +524,6 @@ definition \<phi>Tag :: \<open>mode \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> (
 definition \<phi>TagA :: \<open>mode \<Rightarrow> 'c BI \<Rightarrow> 'c BI\<close>
   where \<open>\<phi>TagA mode T \<equiv> T\<close>
 
-\<phi>reasoner_group ToA_tag_default = (20, [20,20]) in ToA_weak \<open>\<close>
-
-
 
 subsection \<open>Transformation of Abstraction\<close>
 
@@ -1911,6 +1908,12 @@ lemma [\<phi>reason %ToA_subj+20]:
 \<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P"
   unfolding Transformation_def Premise_def by simp blast
 
+lemma [\<phi>reason %ToA_subj+20]:
+  "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<s>\<u>\<b>\<j> Q) \<w>\<i>\<t>\<h> P"
+  unfolding Transformation_def Premise_def \<phi>TagA_def
+  by simp blast
+
 lemma [\<phi>reason %ToA_subj+10]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (W * T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P )
 \<Longrightarrow> W * (T \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<close>
@@ -1920,6 +1923,12 @@ lemma [\<phi>reason %ToA_subj+20]:
   "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (W * T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> W * (T \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P"
   unfolding Transformation_def Premise_def by simp blast
+
+lemma [\<phi>reason %ToA_subj+20]:
+  "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (W * T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> W * (T \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<s>\<u>\<b>\<j> Q) \<w>\<i>\<t>\<h> P"
+  unfolding Transformation_def Premise_def \<phi>TagA_def
+  by simp blast
 
 
 
@@ -5697,24 +5706,34 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
               |> Config.put under_NToA_ctxt true
       val deep = case deep of \<^Const>\<open>True\<close> => true | _ => false
 
-      fun insert_tag ctxt ctm =
+      val rule = if deep then @{thm' \<phi>TagA_def[where mode=\<open>NToA' True\<close>, symmetric]}
+                         else @{thm' \<phi>TagA_def[where mode=\<open>NToA' False\<close>, symmetric]}
+      val insert_tag_tgt = Phi_Syntax.conv_items_of_assertion (fn ctxt => fn ctm =>
+            let val term = Thm.term_of ctm
+             in if is_Var (Term.head_of term)
+                then Conv.all_conv ctm
+                else case term
+                       of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => Conv.rewr_conv rule ctm
+                        | _ => Conv.all_conv ctm
+            end)
+
+      fun insert_tag_src ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
-              Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag ctxt) ctxt) ctm
+              Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag_src ctxt) ctxt) ctm
            | Const(\<^const_name>\<open>AllSet\<close>, _) $ _ =>
-              Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag ctxt) ctxt) ctm
+              Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag_src ctxt) ctxt) ctm
            | Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
-              Conv.arg1_conv (insert_tag ctxt) ctm
+              Conv.arg1_conv (insert_tag_src ctxt) ctm
            | Const(\<^const_name>\<open>plus\<close>, _) $ _ $ _ =>
-              Conv.combination_conv (Conv.arg_conv (insert_tag ctxt)) (insert_tag ctxt) ctm
+              Conv.combination_conv (Conv.arg_conv (insert_tag_src ctxt)) (insert_tag_src ctxt) ctm
            | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
-              Conv.combination_conv (Conv.arg_conv (insert_tag ctxt)) (insert_tag ctxt) ctm
-           | _ => Conv.rewr_conv (if deep then @{thm' \<phi>TagA_def[where mode=\<open>NToA' True\<close>, symmetric]}
-                                          else @{thm' \<phi>TagA_def[where mode=\<open>NToA' False\<close>, symmetric]}) ctm
+              Conv.combination_conv (Conv.arg_conv (insert_tag_src ctxt)) (insert_tag_src ctxt) ctm
+           | _ => Conv.rewr_conv rule ctm
 
       val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
             conv_transformation_by_assertion_ss ctxt then_conv
-            Phi_Syntax.transformation_conv (insert_tag ctxt) (insert_tag ctxt) Conv.all_conv
+            Phi_Syntax.transformation_conv (insert_tag_src ctxt) (insert_tag_tgt ctxt) Conv.all_conv
           ) ctxt) 1 sequent
 
       val sequent = @{thm "_NToA_init_"} RS sequent

@@ -141,7 +141,7 @@ let_\<phi>type \<phi>Prod
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Prod.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain ?U ?Pa \<Longrightarrow> Abstract_Domain (?T \<^emph> ?U) (\<lambda>x. ?Pa (snd x) \<and> ?P (fst x)) \<close>),
-  (@{thm' \<phi>Prod.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er \<Longrightarrow> Object_Equiv ?U ?eq \<Longrightarrow> Object_Equiv (?T \<^emph> ?U) (\<lambda>x y. ?er (fst x) (fst y) \<and> ?eq (snd x) (snd y)) \<close>),
+  (@{thm' \<phi>Prod.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er \<Longrightarrow> Object_Equiv ?U ?eq \<Longrightarrow> Object_Equiv (?T \<^emph> ?U) (\<lambda>x y. ?eq (snd x) (snd y) \<and> ?er (fst x) (fst y)) \<close>),
   (@{thm' \<phi>Prod.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality ?U ?Pa \<Longrightarrow> Functionality (?T \<^emph> ?U) (\<lambda>x. ?P (fst x) \<and> ?Pa (snd x)) \<close>),
   (@{thm' \<phi>Prod.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set ?U ?Pa \<Longrightarrow> Carrier_Set (?T \<^emph> ?U) (\<lambda>x. ?P (fst x) \<and> ?Pa (snd x)) \<close>),
   (@{thm' \<phi>Prod.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_BiFunctor (\<^emph>) (\<^emph>) ?T ?U ?Ta ?Ua Basic_BNFs.fsts Basic_BNFs.snds (\<lambda>x. UNIV) (\<lambda>x. UNIV) rel_prod  \<close>),
@@ -712,7 +712,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
        and \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself)
         \<Longrightarrow> \<forall>s. (s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>x. r x y \<and> x \<in> s) @action to Itself)\<close>
-       and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x. x \<in> Sx \<longrightarrow> (\<exists>y. y \<in> Sy \<and> eq x y))\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' Set_Abst.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa) \<close>),

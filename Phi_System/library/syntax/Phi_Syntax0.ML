@@ -62,6 +62,7 @@ fun fold_items_of_assertion f =
         | fold bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) x = fold bvs Y (fold bvs X x)
         | fold bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) x = fold bvs X x
+        | fold bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) x = fold bvs Y (fold bvs X x)
         | fold bvs X x = f bvs X x
    in fold
   end
@@ -82,6 +83,7 @@ fun exists_item_of_assertion P =
         | exists bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = exists bvs X orelse exists bvs Y
         | exists bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = exists bvs X
         | exists bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = exists bvs X
+        | exists bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = exists bvs X orelse exists bvs Y
         | exists bvs X = P bvs X
    in exists
   end
@@ -102,6 +104,7 @@ fun forall_item_of_assertion P =
         | forall bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = forall bvs X andalso forall bvs Y
         | forall bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall bvs X
         | forall bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = forall bvs X
+        | forall bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = forall bvs X andalso forall bvs Y
         | forall bvs X = P bvs X
    in forall
   end
@@ -124,6 +127,7 @@ fun forall_item_of_assertion_blv P =
         | forall lv bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = forall lv bvs X andalso forall lv bvs Y
         | forall lv bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall lv bvs X
         | forall lv bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = forall lv bvs X
+        | forall lv bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = forall lv bvs X andalso forall lv bvs Y
         | forall lv bvs X = P (bvs,lv) X
    in forall 0
   end
@@ -151,6 +155,7 @@ fun conv_items_of_assertion C ctxt ctm =
      | Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
      | Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
      | Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ _ => Conv.arg_conv (C ctxt) ctm
+     | Const(\<^const_name>\<open>If\<close>, _) $ _ $ _ $ _ => (Conv.arg_conv (C ctxt) then_conv Conv.arg1_conv (C ctxt)) ctm
      | _ => C ctxt ctm
 
 
