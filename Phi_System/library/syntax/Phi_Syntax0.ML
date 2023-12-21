@@ -132,32 +132,34 @@ fun forall_item_of_assertion_blv P =
    in forall 0
   end
 
-fun conv_items_of_assertion C ctxt ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ _ $ _ =>
-          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
-     | Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
-          Conv.arg1_conv (C ctxt) ctm
-     | Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
-          Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt) ctm
-     | Const(\<^const_name>\<open>AllSet\<close>, _) $ _ =>
-          Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt) ctm
-     | Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ _ =>
-          Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt) ctm
-     | Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ _ $ _ =>
-          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
-     | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
-          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
-     | Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ =>
-          Conv.combination_conv (Conv.arg_conv (C ctxt)) (C ctxt) ctm
-     | Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
-     | Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
-     | Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
-     | Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
-     | Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ _ => Conv.arg_conv (C ctxt) ctm
-     | Const(\<^const_name>\<open>If\<close>, _) $ _ $ _ $ _ => (Conv.arg_conv (C ctxt) then_conv Conv.arg1_conv (C ctxt)) ctm
-     | _ => C ctxt ctm
-
+fun conv_items_of_assertion C =
+  let fun conv ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ _ $ _ =>
+                Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
+           | Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
+                Conv.arg1_conv (conv ctxt) ctm
+           | Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+                Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt) ctm
+           | Const(\<^const_name>\<open>AllSet\<close>, _) $ _ =>
+                Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt) ctm
+           | Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ _ =>
+                Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt) ctm
+           | Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ _ $ _ =>
+                Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
+           | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
+                Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
+           | Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ =>
+                Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
+           | Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+           | Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+           | Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+           | Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
+           | Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ _ => Conv.arg_conv (conv ctxt) ctm
+           | Const(\<^const_name>\<open>If\<close>, _) $ _ $ _ $ _ => (Conv.arg_conv (conv ctxt) then_conv Conv.arg1_conv (conv ctxt)) ctm
+           | _ => C ctxt ctm
+   in conv
+  end
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T

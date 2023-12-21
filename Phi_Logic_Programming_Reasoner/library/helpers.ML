@@ -113,7 +113,7 @@ fun sub_conv_opt C ctxt ctm =
 
 
 
-val inverse_eta = Thm.eta_conversion \<^schematic_cterm>\<open>\<lambda>x. (?f::'a::{} \<Rightarrow> 'b::{}) x\<close>
+val inverse_eta = Thm.eta_conversion \<^schematic_cterm>\<open>\<lambda>x. (?f::?'a::{} \<Rightarrow> ?'b::{}) x\<close>
                |> Thm.symmetric
                |> Thm.trim_context
 fun inverse_eta_conv ctm =

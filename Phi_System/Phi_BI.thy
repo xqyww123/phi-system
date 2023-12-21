@@ -4685,7 +4685,7 @@ val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
                          \<^simproc>\<open>case_prod_eta\<close>, \<^simproc>\<open>Collect_mem\<close>,
                          Phi_Conv.move_Ex_for_set_notation]
             addsimps @{thms' Sum_Type.sum.case HOL.simp_thms})
-        |> Simplifier.add_cong @{thm' mk_symbol_cong}
+        |> Simplifier.del_cong @{thm' Subjection_cong}
           (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
     )))
 
@@ -4801,8 +4801,10 @@ simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
 *)
 
 setup \<open>Context.theory_map (
+  Assertion_SS_Source.map (fn ctxt =>
+    ctxt addsimprocs [@{simproc defined_ExSet}] ) #>
   Assertion_SS.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExSet}, @{simproc Funcomp_Lambda}]) #>
+    ctxt addsimprocs [@{simproc Funcomp_Lambda}]) #>
   Phi_Safe_Simps.map (fn ctxt =>
     ctxt addsimprocs [@{simproc defined_ExSet}, @{simproc Funcomp_Lambda}]))\<close>
 

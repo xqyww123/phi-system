@@ -518,7 +518,7 @@ val _ = Theory.setup (Context.theory_map (
   Expansion.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
-                       \<^simproc>\<open>Funcomp_Lambda\<close>, \<^simproc>\<open>defined_ExSet\<close>,
+                       \<^simproc>\<open>Funcomp_Lambda\<close>, (*\<^simproc>\<open>defined_ExSet\<close>,*)
                        case_split_simproc @{thm' split_paired_all[folded atomize_eq]} ("split_paired_all-case_split", \<^const_name>\<open>case_prod\<close>) ctxt,
                        case_split_simproc @{thm' split_paired_All[folded atomize_eq]} ("split_paired_All-case_split", \<^const_name>\<open>case_prod\<close>) ctxt
                       ])
@@ -527,7 +527,7 @@ val _ = Theory.setup (Context.theory_map (
               HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
               prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
 
-              ExSet_simps ExSet_simps_ex ExSet_split_prod ExSet_subj_split_prod
+              ExSet_simps ExSet_split_prod ExSet_subj_split_prod
               ExSet_times_left ExSet_times_right
               Subjection_Subjection Subjection_True Subjection_Flase Subjection_Zero
               Subjection_addconj Subjection_times
