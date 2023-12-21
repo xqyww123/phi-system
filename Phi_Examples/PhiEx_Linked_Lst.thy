@@ -24,7 +24,7 @@ declare [[\<phi>reasoning_step_limit = 120]]
 *)
 
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 declare [[\<phi>reasoning_step_limit = 180]]
       
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
@@ -32,12 +32,12 @@ declare [[\<phi>reasoning_step_limit = 180]]
      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) =
         ((nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}, data: T \<rbrace>\<heavy_comma>
          ls \<Ztypecolon> Linked_Lst nxt TY T
-         \<s>\<u>\<b>\<j> nxt. nxt \<noteq> 0)\<close> 
+         \<s>\<u>\<b>\<j> nxt. \<top>)\<close> 
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr TY T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
           and \<open>Identity_Elements\<^sub>E (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
           and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. l = []) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
+          and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr' TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
             (arbitrary: addr')
           and Functional_Transformation_Functor
@@ -115,6 +115,27 @@ proc length_of':
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+proc reverse':
+  input  \<open>l' \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma>
+          l  \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
+          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
+          addr  \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
+  output \<open>rev l @ l' \<Ztypecolon> Linked_Lst addr'' TY T\<heavy_comma>
+          addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}
+          \<s>\<u>\<b>\<j> addr''. \<top>\<close>
+  is [recursive l l' addr addr']
+  \<medium_left_bracket>
+    if \<open>$addr = 0\<close> \<medium_left_bracket>
+      to \<open>OPEN 0 _\<close>
+      $addr'
+    \<medium_right_bracket> \<medium_left_bracket>
+      obtain l\<^sub>h l\<^sub>r where [useful]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer ;;  ;;
+      to \<open>OPEN 1 _\<close>
+      $addr \<tribullet> nxt := $addr'
+            
+        ;;      \<open>Linked_Lst addr' TY T\<close> 
+          note [[\<phi>trace_reasoning = 2]]
+          ;; \<open>l\<^sub>h # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close>
 
 (*\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 

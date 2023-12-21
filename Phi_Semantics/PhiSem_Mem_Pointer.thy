@@ -46,7 +46,7 @@ setup \<open>Sign.parent_path\<close>
 datatype 'index memaddr = memaddr (blk: memblk) (index: 'index)
 declare [[typedef_overloaded = false]]
 
-declare memaddr.sel[iff]
+declare memaddr.sel[iff, \<phi>safe_simp]
 hide_const (open) blk index
 
 lemma split_memaddr_all: \<open>All P \<longleftrightarrow> (\<forall>blk ofs. P (memaddr blk ofs))\<close> by (metis memaddr.exhaust) 

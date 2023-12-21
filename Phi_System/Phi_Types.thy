@@ -202,7 +202,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding of Subjection\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Sep_Functor_1

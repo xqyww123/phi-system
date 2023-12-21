@@ -1783,7 +1783,7 @@ lemma Subjection_imp_I:
 
 subsubsection \<open>Simplification\<close>
 
-lemma Subjection_cong[cong]:
+lemma Subjection_cong:
   \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<s>\<u>\<b>\<j> P) \<equiv> (S' \<s>\<u>\<b>\<j> P')\<close>
   unfolding atomize_eq BI_eq_iff by (simp, blast)
 
@@ -4685,7 +4685,6 @@ val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
                          \<^simproc>\<open>case_prod_eta\<close>, \<^simproc>\<open>Collect_mem\<close>,
                          Phi_Conv.move_Ex_for_set_notation]
             addsimps @{thms' Sum_Type.sum.case HOL.simp_thms})
-        |> Simplifier.del_cong @{thm' Subjection_cong}
           (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
     )))
 
@@ -4699,7 +4698,7 @@ structure Assertion_SS_Source = Simpset (
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS_Source.map (fn ctxt =>
       ctxt addsimps @{thms' ExSet_simps_ex}
-        (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
+        |> Simplifier.add_cong @{thm' Subjection_cong}
     )))
 
 structure Assertion_SS_Target = Simpset (

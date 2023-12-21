@@ -19,8 +19,9 @@ val _ = Theory.setup (Context.theory_map (
                       Thm.cconcl_of prop |> Thm.dest_arg |> funpow 4 Thm.dest_fun |> Thm.dest_arg1,
                       [D,R,M])
               | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
+        val base_name = Term.term_name (Term.head_of (Thm.term_of F))
 
-        
+
         val ctxt0 = ctxt0'
                  |> Context_Position.set_visible false
                  |> load_simpset oprs
@@ -57,13 +58,11 @@ val _ = Theory.setup (Context.theory_map (
                        (("U",0), Ti') , (("x",0), xi), (("y" ,0), xi')]
         val rule = rulexx OF [prop, prop]
         val rule = rule
-                |> Phi_Reasoner.reason NONE NONE (Config.put Phi_Reasoner_solve_obligation_and_no_defer 3 ctxt)
+                |> Phi_Reasoner.reason NONE NONE ctxt
                 |> (fn SOME ret => ret
+                          |> oblg_solver (base_name ^ "/function-congruence") NONE ctxt 
                      | NONE => raise Automation_Fail (fn () => let open Pretty in
-                                 [para "Fail to derive the congruence rule for Isabelle function package. \
-                                  \A proof obligation fails to be solved. \
-                                  \The domain of the Transformation Functor seems not to be the subset of its domain \
-                                  \nor the relation mapper is not equality preserved (\<open>mapper (=) = (=)\<close>).",
+                                 [para "Fail to derive the congruence rule for Isabelle function package.",
                                   Thm.pretty_thm ctxt rule]
                                end))
                 |> Conv.gconv_rule (Simplifier.rewrite (ctxt addsimps @{thms' sing_times_sing sing_if})) 3
@@ -76,7 +75,6 @@ val _ = Theory.setup (Context.theory_map (
                 end)
      in ctxt00
      |> Function_Context_Tree.add_function_cong rule
-     |> local_note_properties' (Term.term_name (Term.head_of (Thm.term_of F)))
-                               [(Binding.make ("fundef_cong", pos), [rule])]
+     |> local_note_properties' base_name [(Binding.make ("fundef_cong", pos), [rule])]
     end))))
 end

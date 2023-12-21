@@ -8419,6 +8419,7 @@ lemma function_congruence_template:
               D x \<subseteq> R x \<and> (\<forall>x y. M (=) x y \<longrightarrow> eq' y x) \<and> (\<forall>x. D x = D' x) \<and>
               D' y \<subseteq> R' y \<and> (\<forall>x y. M' (=) y x \<longrightarrow> eq x y))
 \<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> eqs
 \<Longrightarrow> x = y
 \<Longrightarrow> (\<And>a. a \<in> D y \<Longrightarrow> T a = U a)

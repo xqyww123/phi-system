@@ -231,13 +231,12 @@ proc (nodef) refine_while
                         metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply) ;;
 
     have [\<phi>reason add]:
-        \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (f ^^ i) x = While_Combinator.while cond f x
-      \<Longrightarrow> X ((f ^^ i) x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X (While_Combinator.while cond f x)\<close>
+        \<open>\<And>y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (f ^^ y) x = While_Combinator.while cond f x
+      \<Longrightarrow> X ((f ^^ y) x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X (While_Combinator.while cond f x)\<close>
       by (simp add: Premise_def)
 
-  \<medium_right_bracket> certified using \<phi> by (auto simp add: While_Combinator.while_def while_option_def,
-                meson Least_le,
-                metis (mono_tags, lifting) LeastI_ex Least_le le_eq_less_or_eq) .
+ \<medium_right_bracket> certified
+   using \<phi> by (auto simp add: While_Combinator.while_def while_option_def, auto_sledgehammer) .
 
 
 subsection \<open>Recursion\<close>

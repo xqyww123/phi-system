@@ -171,4 +171,32 @@ lemma sublist_map_R_at_i[simp]:
 
 
 
+section \<open>Option\<close>
+
+definition zip_option :: \<open>'a option \<times> 'b option \<Rightarrow> ('a \<times> 'b) option\<close>
+  where \<open>zip_option xy = (case xy of (Some x, Some y) \<Rightarrow> Some (x,y)
+                                   | _ \<Rightarrow> None)\<close>
+
+lemma zip_option_simps[iff]:
+  \<open> zip_option (Some a, Some b) = Some (a,b) \<close>
+  \<open> zip_option (x, None) = None \<close>
+  \<open> zip_option (None, y) = None \<close>
+  unfolding zip_option_def
+  by (simp_all, cases x, simp+)
+
+
+section \<open>Partial Map\<close>
+
+definition zip_partial_map :: \<open>('a \<rightharpoonup> 'b) \<times> ('a \<rightharpoonup> 'c) \<Rightarrow> ('a \<rightharpoonup> 'b \<times> 'c)\<close>
+  where \<open>zip_partial_map x = (case x of (f,g) \<Rightarrow> (\<lambda>k. zip_option (f k, g k)))\<close>
+
+definition unzip_partial_map :: \<open>('a \<rightharpoonup> 'b \<times> 'c) \<Rightarrow> ('a \<rightharpoonup> 'b) \<times> ('a \<rightharpoonup> 'c)\<close>
+  where \<open>unzip_partial_map x = (map_option fst o x, map_option snd o x)\<close>
+
+lemma unzip_zip_partial_map[iff]:
+  \<open> dom (fst x) = dom (snd x)
+\<Longrightarrow> unzip_partial_map (zip_partial_map x) = x \<close>
+  unfolding unzip_partial_map_def zip_partial_map_def
+  by (cases x; clarsimp simp: fun_eq_iff zip_option_def split: option.split; metis domIff)
+
 end

@@ -181,7 +181,7 @@ fun dirty_hack ret stat s =
                       |> filter Token.is_proper)
         val _ = Synchronized.change ret (fn prfs => prf :: prfs)
         val _ = tracing s
-        in if preplay_succeeded andalso can (eval_prf_str_stat 2 NONE prf) stat
+        in if preplay_succeeded andalso can (eval_prf_str_stat 5 NONE prf) stat
            then raise SH_Short_Cut prf
            else ()
        end
