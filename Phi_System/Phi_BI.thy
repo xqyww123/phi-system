@@ -516,6 +516,17 @@ lemma Membership_E_Inhabitance:
   unfolding Inhabited_def by blast
 *)
 
+subsection \<open>Auxiliary Tag\<close>
+
+definition \<phi>Tag :: \<open>mode \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
+  where \<open>\<phi>Tag mode T \<equiv> T\<close>
+
+definition \<phi>TagA :: \<open>mode \<Rightarrow> 'c BI \<Rightarrow> 'c BI\<close>
+  where \<open>\<phi>TagA mode T \<equiv> T\<close>
+
+\<phi>reasoner_group ToA_tag_default = (20, [20,20]) in ToA_weak \<open>\<close>
+
+
 
 subsection \<open>Transformation of Abstraction\<close>
 
@@ -768,8 +779,10 @@ text \<open>In reasoning, the \<open>P,R,W\<close> in any goal are always OUT-ar
 declare [[
   \<phi>reason_default_pattern
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> (11)
+  and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA ?mode (?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _) \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA ?mode (?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _) \<w>\<i>\<t>\<h> _\<close> (11)
 
   and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> (20)
+  and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA ?mode (_ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _) \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA ?mode (?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _) \<w>\<i>\<t>\<h> _\<close> (20)
   and \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[?C] ?R \<w>\<i>\<t>\<h> ?P\<close> \<Rightarrow>
           \<open>WARNING TEXT(\<open>Transformations between single \<phi>-types with remainders should use\<close>
                         (x \<Ztypecolon> ?T \<^emph>[False] Top \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (?y, some_r) \<Ztypecolon> ?U \<^emph>[?C] some_R \<w>\<i>\<t>\<h> ?P)
@@ -814,6 +827,8 @@ subsubsection \<open>Allocation of Priorities\<close>
   ToA_cut         = (1000, [1000, 1399]) in ToA
                     \<open>Deterministic transformation rules without backtracking, meaning the reasoning
                      on the specified cases is definite and no branching.\<close>
+  NToA_tgt        = (1430, [1400, 1499]) > ToA_cut in ToA
+                    \<open>\<close>
   ToA_splitting_target = (1500, [1500,1501]) > ToA_cut in ToA
                     \<open>split the separation sequent in the target part and reason the tranformation for
                      each separated item one by one.\<close>
@@ -821,18 +836,18 @@ subsubsection \<open>Allocation of Priorities\<close>
                     \<open>Transformation rules splitting the reasoning goal into more subgoals\<close>
   ToA_assertion_cut = (1700, [1700,1899]) > ToA_splitting in ToA
                     \<open>Deterministic transformation rules between unsplitted assertions.\<close>
-  ToA_normalizing = (2000, [1950, 2399]) > ToA_assertion_cut in ToA
+  ToA_normalizing = (2000, [1950, 2299]) > ToA_assertion_cut in ToA
                     \<open>Rules normalizing the transformation problem. A normalization rule should neither
                      branch nor yield new subgoal, i.e., always from onetransformation to another
                      transformaiton. If it branches, see %ToA_branches; if yields new assertions,
                      see %ToA_assertion_cut\<close>
-  ToA_fixes_quant = (2400, [2400, 2409]) > ToA_normalizing in ToA
+  ToA_fixes_quant = (2500, [2500, 2590]) > NToA_tgt in ToA
                     \<open>Transformation rules fixing quantified variables.\<close>
-  ToA_red         = (2500, [2500, 2549]) > ToA_fixes_quant in ToA
+  ToA_red         = (2600, [2600, 2649]) > ToA_fixes_quant in ToA
                     \<open>Transformation rules reducing literal or trivial cases.\<close>
   ToA_success     = (3000, [2960, 3499])
                     \<open>Transformation rules that are shortcuts leading to success on special cases\<close>
-  ToA_systop      = (4990, [4990, 4999]) in ToA
+  ToA_systop      = (4900, [4900, 4999]) in ToA
                     \<open>System rules of the highest priority\<close>
   ToA_assigning_var = (4100, [4100, 4110]) in ToA and < ToA_systop
                     \<open>Tranformation rules assigning variable targets or sources, of the highest priority
@@ -1021,6 +1036,7 @@ lemma [\<phi>reason 1000]:
   by blast
 
 declare [[\<phi>trace_reasoning = 1]]
+
 
 
 subsection \<open>Top\<close>
@@ -1622,6 +1638,12 @@ lemma [\<phi>reason %ToA_fixes_quant+5]:
 \<Longrightarrow> ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def REMAINS_def by (cases C; simp; blast)
 
+lemma aaax[\<phi>reason %ToA_fixes_quant+5]:
+  "(\<And>x.  T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x) \<w>\<i>\<t>\<h> P x)
+\<Longrightarrow> ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R) \<w>\<i>\<t>\<h> Ex P"
+  unfolding Transformation_def REMAINS_def \<phi>TagA_def
+  by (cases C; simp; blast)
+
 lemma [\<phi>reason %ToA_fixes_quant]:
   "(\<And>x.  W * T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P x)
 \<Longrightarrow> W * ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> Ex P"
@@ -1631,6 +1653,12 @@ lemma [\<phi>reason %ToA_fixes_quant+5]:
   "(\<And>x.  W * T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x \<w>\<i>\<t>\<h> P x)
 \<Longrightarrow> W * ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def by (cases C; simp; fastforce)
+
+lemma [\<phi>reason %ToA_fixes_quant+5]:
+  "(\<And>x.  W * T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x) \<w>\<i>\<t>\<h> P x)
+\<Longrightarrow> W * ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R) \<w>\<i>\<t>\<h> Ex P"
+  unfolding Transformation_def \<phi>TagA_def
+  by (cases C; simp; fastforce)
 
 text \<open>Continued in \ref{supp-ex-conj}\<close>
 
@@ -3496,14 +3524,6 @@ lemma [\<phi>reason 1201]:
   using Structural_Extract_\<phi>Prod_left_i .
 *)
 
-subsubsection \<open>General Tag\<close>
-
-definition \<phi>Tag :: \<open>mode \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
-  where \<open>\<phi>Tag mode T \<equiv> T\<close>
-
-\<phi>reasoner_group ToA_tag_default = (20, [20,20]) in ToA_weak \<open>\<close>
-
-
 
 section \<open>Basic \<phi>-Type Properties\<close>
 
@@ -3740,6 +3760,17 @@ lemma [\<phi>reason %identity_element_red for \<open>Identity_Element\<^sub>I _ 
 \<Longrightarrow> Identity_Element\<^sub>I X True \<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by simp
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Element\<^sub>I X P
+\<Longrightarrow> Identity_Element\<^sub>I (\<phi>TagA mode X) P \<close>
+  unfolding \<phi>TagA_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Element\<^sub>E X
+\<Longrightarrow> Identity_Element\<^sub>E (\<phi>TagA mode X) \<close>
+  unfolding \<phi>TagA_def .
+
 
 paragraph \<open>Conditioned Branch\<close>
 
@@ -5106,6 +5137,8 @@ lemma normalize_target_R:
   unfolding Action_Tag_def Transformation_def Premise_def Object_Equiv_def Simplify_def
   by (cases C; clarsimp; metis)
 
+
+
 lemma normalize_source:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' @action \<A>_map_each_item (\<A>transitive_simp_if_need True False)
 \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
@@ -5128,20 +5161,30 @@ fun normalize_source_of_ToA (ctxt, sequent) =
       else (ctxt, sequent)
   end
 
-fun normalize_target_of_ToA (ctxt, sequent) =
+fun normalize_target_of_ToA parse (ctxt, sequent) =
   let val (bvs, ToA) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
-      val (Y, has_R) = case Phi_Syntax.dest_transformation ToA
-                         of (_, Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ _ $ _, _) => (Y, true)
-                          | (_, Y, _) => (Y, false)
+      val (Y, rule) = parse (Phi_Syntax.dest_transformation ToA)
+                      (* of (_, Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ _ $ _, _) => (Y, true)
+                          | (_, Y, _) => (Y, false) *)
    in if Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) bvs Y
       then (
         Phi_Reasoner.info_print ctxt 2 (K "normalizing the target assertion of the transformation") ;
-        case Phi_Reasoner.internal_reason NONE (SOME 1)
-                (ctxt, (if has_R then @{thm' normalize_target_R}
-                                 else @{thm' normalize_target}) RS sequent)
+        case Phi_Reasoner.internal_reason NONE (SOME 1) (ctxt, rule RS sequent)
           of NONE => (ctxt, sequent)
            | SOME ret => ret)
       else (ctxt, sequent)
+  end
+
+fun chk_target_of_ToA_requires_normalization parse_term (ctxt, sequent) =
+  let val (bvs, ToA) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
+      val target = parse_term (#2 (Phi_Syntax.dest_transformation ToA))
+   in Phi_CoP_Backward_Simp.is_simp_needed (Context.Proof ctxt) bvs target orelse
+      (case target
+         of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T =>
+              let val head = Term.head_of x
+               in not (is_Var head) orelse exists_subterm (fn y => y aconv head) T
+              end
+          | _ => false)
   end
 \<close>
 
@@ -5612,7 +5655,11 @@ subparagraph \<open>ML\<close>
 
 consts ToA_flag_deep :: bool
 
-definition \<open>NToA'' X \<equiv> X\<close> 
+abbreviation \<open>NToA'' X \<equiv> \<phi>TagA (NToA' X) \<close>
+
+\<phi>reasoner_group NToA_src = (%ToA_systop+30, [%ToA_systop, %ToA_systop+60])
+                           for (\<open>NToA'' _ X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>)
+                            in ToA_systop \<open>\<close>
 
 lemma "_NToA_init_":
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
@@ -5638,6 +5685,8 @@ structure ToA_Hooks = Hooks (
 )
 \<close>
 
+thm \<phi>TagA_def
+
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
   let val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ _ $ (Const(\<^const_name>\<open>NToA'\<close>, _) $ deep))
@@ -5660,11 +5709,12 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
               Conv.combination_conv (Conv.arg_conv (insert_tag ctxt)) (insert_tag ctxt) ctm
            | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
               Conv.combination_conv (Conv.arg_conv (insert_tag ctxt)) (insert_tag ctxt) ctm
-           | _ => Conv.rewr_conv @{thm' NToA''_def[symmetric]} ctm
+           | _ => Conv.rewr_conv (if deep then @{thm' \<phi>TagA_def[where mode=\<open>NToA' True\<close>, symmetric]}
+                                          else @{thm' \<phi>TagA_def[where mode=\<open>NToA' False\<close>, symmetric]}) ctm
 
       val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
             conv_transformation_by_assertion_ss ctxt then_conv
-            Phi_Syntax.transformation_conv (insert_tag ctxt) Conv.all_conv Conv.all_conv
+            Phi_Syntax.transformation_conv (insert_tag ctxt) (insert_tag ctxt) Conv.all_conv
           ) ctxt) 1 sequent
 
       val sequent = @{thm "_NToA_init_"} RS sequent
@@ -5675,10 +5725,10 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
   end)
 \<close>
 
-\<phi>reasoner_ML NToA_init\<^sub>2 %ToA_systop (\<open>NToA'' _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>
+\<phi>reasoner_ML NToA_init\<^sub>S %NToA_src (\<open>NToA'' _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>
 fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn _ =>
-            Phi_Syntax.transformation_conv (Conv.rewr_conv @{thm' NToA''_def}) Conv.all_conv Conv.all_conv
+            Phi_Syntax.transformation_conv (Conv.rewr_conv @{thm' \<phi>TagA_def}) Conv.all_conv Conv.all_conv
           ) ctxt) 1 sequent
 
       val deep = case PLPR_Env.get \<^const_name>\<open>ToA_flag_deep\<close> (Context.Proof ctxt)
@@ -5695,7 +5745,69 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   end
 )\<close>
 
+lemma [\<phi>reason ! %NToA_tgt]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d (Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<w>\<i>\<t>\<h> Q\<close>
+  unfolding \<phi>TagA_def .
+
+lemma [\<phi>reason ! %NToA_tgt]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d (A * B * C) \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d (A * (B * C)) \<w>\<i>\<t>\<h> Q \<close>
+  for X :: \<open>'a::sep_semigroup set\<close>
+  by (simp add: mult.assoc)
+
+lemma [\<phi>reason ! %NToA_tgt if \<open>chk_target_of_ToA_requires_normalization (fn _ $ (_ $ _ $ X) => X)\<close>]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>transitive_simp_if_need False False
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] P : (\<forall>y'. r y' \<longrightarrow> eq y' y)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d R * (x \<Ztypecolon> T) \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d (R * (y \<Ztypecolon> U)) \<w>\<i>\<t>\<h> Q\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Object_Equiv_def Simplify_def
+            \<phi>TagA_def
+  by (clarsimp, meson)
+
+lemma [\<phi>reason ! %NToA_tgt-1]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d R * Y \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d (R * Y) \<w>\<i>\<t>\<h> Q\<close>
+  unfolding \<phi>TagA_def .
+
+lemma [\<phi>reason ! %NToA_tgt if \<open>chk_target_of_ToA_requires_normalization (fn _ $ (_ $ X) $ _ $ _ => X)\<close>]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>transitive_simp_if_need False False
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] P : (\<forall>y'. r y' \<longrightarrow> eq y' y)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d (y \<Ztypecolon> U) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Object_Equiv_def Simplify_def
+            \<phi>TagA_def
+  by (cases C; clarsimp; meson)
+
+lemma [\<phi>reason ! %NToA_tgt-1]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q\<close>
+  unfolding \<phi>TagA_def .
+
+lemma [\<phi>reason ! %NToA_tgt if \<open>chk_target_of_ToA_requires_normalization (fn _ $ X => X)\<close>]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action \<A>transitive_simp_if_need False False
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] P : (\<forall>y'. r y' \<longrightarrow> eq y' y)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> Q\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Object_Equiv_def Simplify_def
+            \<phi>TagA_def
+  by (clarsimp; metis)
+
+lemma [\<phi>reason ! %NToA_tgt[bottom]]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> NToA'' d Y \<w>\<i>\<t>\<h> Q\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def Object_Equiv_def Simplify_def
+            \<phi>TagA_def
+  by clarsimp
+
 hide_fact "_NToA_init_"
+
 
 subsection \<open>Entry Point of Separation Extraction\<close>
 
@@ -5834,7 +5946,10 @@ fun SE_entry_point rules thy sequent =
       val rules = (if Sign.of_sort thy (ty, \<^sort>\<open>sep_magma_1\<close>) then #1 else #2) rules
       fun obj_is_var (Const(\<^const_name>\<open>times\<close>, _) $ _ $ X) = obj_is_var X
         | obj_is_var (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ _) = obj_is_var X
-        | obj_is_var (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) = is_Var (Term.head_of x)
+        | obj_is_var (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) =
+            let val var = Term.head_of x
+             in is_Var var andalso not (exists_subterm (fn y => x aconv y) T)
+            end
       val rule = (if obj_is_var Y then fst else snd) rules
     (*TODO: val has_auto_hint =
         case P of Const(\<^const_name>\<open>conj\<close>, _) $ (Const(\<^const_name>\<open>Auto_Transform_Hint\<close>, _) $ _ $ _) $ _ => true
@@ -5858,7 +5973,7 @@ val SE_entry_point_b = SE_entry_point (
 = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
     let val thy = Proof_Context.theory_of ctxt
-        val (ctxt, sequent) = normalize_target_of_ToA (ctxt, sequent)
+        (*val (ctxt, sequent) = normalize_target_of_ToA (ctxt, sequent) *)
      in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
         then SOME ((ctxt, SE_entry_point_normal thy sequent), Seq.empty)
         else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
@@ -5884,7 +5999,7 @@ lemma ToA_splitting_source_has_remainder_first[no_atp]:
 \<phi>reasoner_ML \<A>SEb_Entry default %ToA_splitting_source (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
     let val thy = Proof_Context.theory_of ctxt
-        val (ctxt, sequent) = normalize_target_of_ToA (ctxt, sequent)
+        (*val (ctxt, sequent) = normalize_target_of_ToA (ctxt, sequent)*)
      in if Sign.of_sort thy (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
         then SOME ((ctxt, SE_entry_point_b thy sequent), Seq.empty)
         else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;

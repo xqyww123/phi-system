@@ -3095,19 +3095,22 @@ lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.to_trave
 
 lemma [\<phi>reason_template name Fa.\<A>simp [\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D x. (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
-  using transformation[unfolded Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
+  using transformation[unfolded atomize_Ball Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
 
 lemma [\<phi>reason_template name Fa.\<A>backward_simp [\<phi>transformation_based_backward_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>backward_simp)
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D x. (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>backward_simp))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_backward_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
-  using transformation[unfolded Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
+  using transformation[unfolded atomize_Ball Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
+
+  thm meta_Ball_def
+  thm ballE
 
 
 (*
@@ -3216,21 +3219,21 @@ lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.to_bitra
 
 lemma [\<phi>reason_template name Fa.\<A>simp_bi [\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
-\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action \<A>simp)
-\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action \<A>simp)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>1 x. (a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action \<A>simp))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>2 x. (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action \<A>simp))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @action \<A>_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
-  using bitransformation[unfolded \<r>Guard_def Premise_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
+  using bitransformation[unfolded atomize_Ball \<r>Guard_def Premise_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
 
 lemma [\<phi>reason_template name Fa.\<A>backward_simp_bi [\<phi>transformation_based_backward_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
-\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action \<A>backward_simp)
-\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action \<A>backward_simp)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>1 x. (a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action \<A>backward_simp))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>2 x. (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action \<A>backward_simp))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @action \<A>_backward_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
-  using bitransformation[unfolded \<r>Guard_def Premise_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
+  using bitransformation[unfolded atomize_Ball \<r>Guard_def Premise_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
 
 
 lemma [no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name Fa.functional_transformation]:
@@ -3283,19 +3286,19 @@ lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.to_trave
 
 lemma [\<phi>reason_template name Fa.\<A>simp [\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor\<^sub>\<Lambda> Fa Fb T U D R mapper
-\<Longrightarrow> (\<And>p. \<And>a \<in> D p x. a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U p \<s>\<u>\<b>\<j> b. g p a b @action \<A>simp)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>p. \<forall>a \<in> D p x. (a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U p \<s>\<u>\<b>\<j> b. g p a b @action \<A>simp))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>p a b. a \<in> D p x \<and> g p a b \<longrightarrow> b \<in> R p x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
-  using transformation\<^sub>\<Lambda>[unfolded Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
+  using transformation\<^sub>\<Lambda>[unfolded atomize_Ball atomize_all Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
 
 lemma [\<phi>reason_template name Fa.\<A>backward_simp [\<phi>transformation_based_backward_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor\<^sub>\<Lambda> Fa Fb T U D R mapper
-\<Longrightarrow> (\<And>p. \<And>a \<in> D p x. a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U p \<s>\<u>\<b>\<j> b. g p a b @action \<A>backward_simp)
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>p. \<forall>a \<in> D p x. (a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U p \<s>\<u>\<b>\<j> b. g p a b @action \<A>backward_simp))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>p a b. a \<in> D p x \<and> g p a b \<longrightarrow> b \<in> R p x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_backward_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
-  using transformation\<^sub>\<Lambda>[unfolded Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
+  using transformation\<^sub>\<Lambda>[unfolded atomize_Ball atomize_all Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
 
 lemma [no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name Fa.functional_transformation]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor\<^sub>\<Lambda> Fa Fb T U D R pred_mapper func_mapper
@@ -3322,9 +3325,9 @@ lemma Object_Sep_Homo\<^sub>I_subdom[
   by blast
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
-  \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
+  \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
-  unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def
+  unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def \<r>Guard_def
   by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
 
 (*Object_Sep_Homo\<^sub>I is necessary at least for composition \<phi>-type
@@ -3497,9 +3500,9 @@ lemma [\<phi>reason_template default 80]:
 subsubsection \<open>With Parameterization\<close>
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
-  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
+  \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>\<Lambda>\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (\<lambda>p. U\<^sub>L p \<^emph>\<^sub>\<A> U\<^sub>R p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
-  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Bubbling_def
+  unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Bubbling_def \<r>Guard_def
   by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
 
 lemma [\<phi>reason_template name Fc.\<phi>Prod_ty []]:
@@ -3875,7 +3878,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>E F T\<^sub>1 one D g P\<^sub>E
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] one'' : one'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one one''
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one (NO_SIMP one'')
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (apfst g x \<Ztypecolon> T\<^sub>1 \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> x \<Ztypecolon> F one' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> P\<^sub>E (fst x)
@@ -3889,7 +3892,7 @@ lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] one'' : one'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one one''
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one (NO_SIMP one'')
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one' \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
@@ -3902,7 +3905,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] one'' : one'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one one''
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one (NO_SIMP one'')
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F one' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I x
@@ -3937,7 +3940,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_One\<^sub>I F T\<^sub>1 one D f P\<^sub>I
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] one'' : one'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one one''
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> is_id_element one (NO_SIMP one'')
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst x)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<^sub>1 \<^emph>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> F one' \<^emph>[C] R \<w>\<i>\<t>\<h> P \<and> P\<^sub>I (fst x)
@@ -4409,6 +4412,23 @@ lemma [\<phi>reason_template %To_ToA_derived_SAssoc]:
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def \<r>Guard_def Action_Tag_def
   by simp
   
+
+paragraph \<open>ToA-based Simplification\<close>
+
+lemma [\<phi>reason_template [\<phi>transformation_based_backward_simp default %To_ToA_derived_SAssoc no trigger]]:
+  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fs s (Ft t T) \<s>\<u>\<b>\<j> y. y = f s t x @action \<A>backward_simp \<close>
+  unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def \<r>Guard_def Action_Tag_def
+  by simp
+
+lemma [\<phi>reason_template [\<phi>transformation_based_simp default %To_ToA_derived_SAssoc no trigger]]:
+  \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fc (smul s t) T \<s>\<u>\<b>\<j> y. y = f s t x @action \<A>simp \<close>
+  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Premise_def \<r>Guard_def Action_Tag_def
+  by simp
+
 
 (*
 paragraph \<open>Associative\<close>
@@ -7249,57 +7269,57 @@ paragraph \<open>Swapping Normalization\<close>
 subparagraph \<open>1-to-1\<close>
 
 lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute F F' G G' T D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action \<A>_transitive_simp \<close>
   unfolding Transformation_def Action_Tag_def Tyops_Commute_def Premise_def
-            Simplify_def Action_Tag_def
+            Simplify_def Action_Tag_def \<r>Guard_def
   by clarsimp
 
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute F F' G G' T D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action \<A>_backward_transitive_simp \<close>
   unfolding Transformation_def Action_Tag_def Tyops_Commute_def Premise_def
-            Simplify_def Action_Tag_def
+            Simplify_def Action_Tag_def \<r>Guard_def
   by clarsimp
 
 paragraph \<open>1-to-2\<close>
 
 lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_transitive_simp \<close>
-  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
+  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def \<r>Guard_def
   by clarsimp
 
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_backward_transitive_simp \<close>
-  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def \<r>Guard_def
   by clarsimp
 
 paragraph \<open>2-to-1\<close>
 
 lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_transitive_simp \<close>
-  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def \<r>Guard_def
   by clarsimp
 
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' y : r x y @action \<A>_template_reason undefined)
 \<Longrightarrow> x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r' y @action \<A>_backward_transitive_simp \<close>
-  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def
+  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Action_Tag_def Tyops_Commute_def Premise_def Simplify_def \<r>Guard_def
   by clarsimp
 
 paragraph \<open>\<open>\<Lambda>\<close>\<close>
@@ -7312,24 +7332,24 @@ lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]
   by clarsimp
 
 lemma [\<phi>reason_template name F.G.norm_src [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>_transitive_simp \<close>
-  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Tyops_Commute_def Premise_def
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Tyops_Commute_def Premise_def \<r>Guard_def
   by clarsimp
 
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (\<lambda>p. F' (T p)) \<s>\<u>\<b>\<j> y. r x y @action \<A>_backward_transitive_simp \<close>
-  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Action_Tag_def Tyops_Commute_def Premise_def
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Action_Tag_def Tyops_Commute_def Premise_def \<r>Guard_def
   by clarsimp
 
 lemma [\<phi>reason_template name F.G.norm_tgt [\<phi>ToA_SA_norm_simp default]]:
-  \<open> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> x \<Ztypecolon> F (\<lambda>p. G (T p)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action \<A>_backward_transitive_simp \<close>
-  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Tyops_Commute_def Premise_def
+  unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Tyops_Commute_def Premise_def \<r>Guard_def
   by clarsimp
 
 
@@ -7891,6 +7911,7 @@ private lemma \<phi>TA_OE_rewr_IH:
             \<phi>TA_IND_TARGET_def
   by (rule; blast)
 
+
 private lemma \<phi>TA_OE_rewr_pre:
   \<open> (\<And>y. Ant \<Longrightarrow> P y \<Longrightarrow> C y @action \<A>)
  \<equiv> Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> C y) @action \<A>) \<close>
@@ -7899,7 +7920,7 @@ private lemma \<phi>TA_OE_rewr_pre:
 
 private lemma \<phi>TA_OE_rewr_CL:
   \<open> Trueprop (Ant \<longrightarrow> (\<forall>y. C y \<longrightarrow> X y) @action \<A>)
- \<equiv> (Ant \<Longrightarrow> (\<And>y. C y \<Longrightarrow> X y)) \<close>
+ \<equiv> (\<And>y. Ant \<Longrightarrow> C y \<Longrightarrow> X y) \<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
   by (rule; blast)
 

@@ -2220,13 +2220,13 @@ val _ = Theory.setup (
 )) *)
 
 fun wrap_ind_target phi =
-  Phi_Conv.hhf_concl_conv (fn ctxt =>
-    Phi_Syntax.transformation_conv
+  Phi_Conv.hhf_concl_conv (fn ctxt => fn ctm =>
+   (Phi_Syntax.transformation_conv
       Conv.all_conv
       (Conv.top_sweep_conv (fn _ => fn ctm =>
           if is_term_of_phi phi (Term.head_of (Thm.term_of ctm))
           then Conv.rewr_conv @{thm' \<phi>TA_IND_TARGET_def[folded atomize_eq, symmetric]} ctm
           else Conv.no_conv ctm) ctxt)
-      Conv.all_conv)
+      Conv.all_conv) ctm)
 
 end

@@ -831,7 +831,7 @@ context
         ToA_splitting_source_has_remainder_first[\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]*)
 begin
 
-
+declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ [False]\<^emph> _) \<^emph>[_] _ \<mapsto> (_ [False]\<^emph> _) \<^emph>[_] _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
@@ -968,6 +968,8 @@ lemma [\<phi>reason %\<phi>mapToA_norm
           \<mapsto> (T\<^sub>1' [True]\<^emph> T\<^sub>2') \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   by simp
+
+declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason %\<phi>mapToA_norm
         for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _

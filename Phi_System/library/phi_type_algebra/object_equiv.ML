@@ -180,21 +180,21 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                     Conv.rewr_conv @{thm' \<phi>TA_OE_rewr_IH} then_conv
                     Phi_Conv.meta_all_conv (fn _ => Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctxt,
                fn ctxt => fn _ =>
-                    (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
-                    (Phi_Reasoners.asm_full_rewrite true (
-                          equip_expansion ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp}))
+                    (Conv.rewr_conv @{thm' \<phi>TA_OE_rewr_CL}) then_conv
+                     Phi_Conv.meta_all_conv (fn (_, ctxt) =>
+                       Phi_Reasoners.asm_full_rewrite true (
+                          equip_expansion ctxt addsimps @{thms' ex_pure_imp conj_imp_eq_imp_imp Pure.norm_hhf_eq}) then_conv
+                       Phi_Conv.meta_alls_conv (fn ctxt =>
+                          Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                              (conv_hol_imps_to_metas_if_has
+                                  (HOLogic.Trueprop_conv (
+                                      Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))
+                                  (wrap_ind_target phi0 ctxt))) ctxt
+                     ) ctxt
                     (*(Conv.implies_concl_conv (
                        Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
                        Phi_Conv.meta_alls_conv (fn _ => Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctxt then_conv
-                      ))*) then_conv
-                    Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
-                                      (Phi_Conv.meta_alls_conv (
-                                        Phi_Conv.hol_alls_to_meta_alls (fn ctxt =>
-                                        conv_hol_imps_to_metas_if_has
-                                          (HOLogic.Trueprop_conv (
-                                              Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))
-                                          (wrap_ind_target phi0 ctxt)
-                                        )) ctxt)
+                      ))*)
                   (*Conv.implies_conv
                       (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                       (Phi_Conv.hol_alls_to_meta_alls (fn _ =>

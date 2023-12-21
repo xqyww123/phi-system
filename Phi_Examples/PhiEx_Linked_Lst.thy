@@ -2,12 +2,6 @@ theory PhiEx_Linked_Lst
   imports Phi_Semantics.PhiSem_C
 begin
 
-typ fiction
-
-term \<open>\<Pp>\<t>\<r> T\<close>
-term \<open>0 :: logaddr\<close>
-
-
 declare [[\<phi>reasoning_step_limit = 120]]
 
     
@@ -30,7 +24,7 @@ declare [[\<phi>reasoning_step_limit = 120]]
 *)
 
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 declare [[\<phi>reasoning_step_limit = 180]]
       
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
