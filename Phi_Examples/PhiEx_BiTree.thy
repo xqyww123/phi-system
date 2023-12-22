@@ -4,6 +4,7 @@ theory PhiEx_BiTree
 begin
 
 abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: TY, right: \<p>\<t>\<r>} \<close>
+abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}) \<close>
 
 thm \<phi>constraint_expansion
 
@@ -45,7 +46,7 @@ declare [[\<phi>trace_reasoning = 0]]
       | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BiTree addr TY T) =
           ((addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> left: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY, data: T, right: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<rbrace>\<heavy_comma>
             L \<Ztypecolon> BiTree addr\<^sub>L TY T\<heavy_comma>
-            R \<Ztypecolon> BiTree addr\<^sub>L TY T
+            R \<Ztypecolon> BiTree addr\<^sub>R TY T
             \<s>\<u>\<b>\<j> addr\<^sub>L addr\<^sub>R. \<top> )\<close>
    deriving Basic
        and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (BiTree addr TY T) (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0)) \<close>
@@ -56,9 +57,6 @@ declare [[\<phi>trace_reasoning = 0]]
            (arbitrary: addr')
        and Functional_Transformation_Functor
 
-
-term Map.empty
-term \<open>()\<close>
 
 primrec lookup_tree :: \<open>('k \<times> 'v) tree \<Rightarrow> 'k \<rightharpoonup> 'v\<close>
   where \<open>lookup_tree \<langle>\<rangle> = Map.empty\<close>
@@ -142,16 +140,6 @@ lemma dom_lookup_tree_map[iff]:
   by (induct tree; auto_sledgehammer)*)
 
 
-
-
-lemma
-  \<open> P (if C then x else y) \<longleftrightarrow> (C \<longrightarrow> P x) \<and> (\<not> C \<longrightarrow> P y)\<close>
-  
-
-
-
-
-
 lemma Object_Equive_of_Bin_Search_Tree:
   \<open> fst ` Tree.tree.set_tree xa = dom y \<Longrightarrow>
      tree_domain_distinct xa \<Longrightarrow>
@@ -218,32 +206,88 @@ lemma sorted1_inorder_map_tree[iff]:
 
 
 
-
-
-
-
   
-\<phi>type_def Bin_Search_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
-  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY K V \<equiv> tree \<Ztypecolon> BiTree addr TY \<lbrace> k: K, v: V \<rbrace>
+\<phi>type_def Bin_Search_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
+  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BiTree addr (\<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}) \<lbrace> k: K, v: V \<rbrace>
                                        \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted1(inorder tree)\<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
-         \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr TY K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
+         \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
             (tactic: clarsimp, subgoal' for tree x y \<open>induct tree arbitrary: x\<close>)
-       and \<open>Identity_Elements\<^sub>E (Bin_Search_Tree addr TY K V) (\<lambda>l. addr = 0 \<and> l = Map.empty)\<close> 
-       and \<open>Identity_Elements\<^sub>I (Bin_Search_Tree addr TY K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0)\<close>
+       and \<open> Identity_Elements\<^sub>E (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. addr = 0 \<and> l = Map.empty) \<close>
+       and \<open> Identity_Elements\<^sub>I (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0) \<close>
        and \<open> Object_Equiv V eq
-         \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr TY K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
+         \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
             (tactic: clarsimp, 
                      rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,_). (k, the (g k))) x\<close>],
                      auto simp: Object_Equive_of_Bin_Search_Tree)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
-         \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr TY K) (Bin_Search_Tree addr' TY' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
+         \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
             (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>])
-       and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY K) (Bin_Search_Tree addr TY K) T U ran (\<lambda>_. UNIV)
+       and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
+
+
+
+
+lemma lookup_left_children:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> lookup_tree (left tree) = lookup_tree tree |` {x. x < fst (value tree)} \<close>
+  \<comment> \<open>this value is the value of the root node\<close>
+  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+
+lemma lookup_right_children:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close>
+  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+
+
+context
+  fixes K :: \<open>(VAL, 'k::linorder) \<phi>\<close>
+    and V :: \<open>(VAL, 'v) \<phi>\<close>
+    and TY\<^sub>K TY\<^sub>V :: TY
+    and CMP Eq :: \<open>VAL \<phi>arg \<Rightarrow> VAL \<phi>arg \<Rightarrow> VAL proc\<close>
+  assumes cmp: \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> CMP u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 < k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
+      and eq : \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> Eq u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 = k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>  
+      and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> K) TY\<^sub>K)\<close>
+      and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> V) TY\<^sub>V)\<close>
+begin
+
+
+
+proc lookup_bst:
+  input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  premises \<open>k \<in> dom f\<close>
+  output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  is [recursive f addr]
+\<medium_left_bracket>
+    to \<open>OPEN _ _\<close> \<exists>tree ;;
+    to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>a\<^sub>L, a\<^sub>R
+    val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
+    if (eq ($k', $k)) \<medium_left_bracket>
+        $addr \<tribullet> data \<tribullet> v !
+        \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V)\<close>
+    \<medium_right_bracket> \<medium_left_bracket>
+        if (cmp ($k, $k')) \<medium_left_bracket>  
+          \<open>f |` {x. x < fst (value tree)} \<Ztypecolon> MAKE _ (Bin_Search_Tree a\<^sub>L _ _ _ _)\<close> certified by (rule exI[where x=\<open>left tree\<close>], auto_sledgehammer) ;;
+          lookup_bst ($addr \<tribullet> left !, $k)
+          \<open>Bin_Search_Tree a\<^sub>L _ _ _ _\<close> to \<open>OPEN _ _\<close>
+          \<open>BiTree a\<^sub>R _ _\<close> \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V)\<close>
+        \<medium_right_bracket> \<medium_left_bracket>
+          \<open>f |` {x. fst (value tree) < x} \<Ztypecolon> MAKE _ (Bin_Search_Tree a\<^sub>R _ _ _ _)\<close> certified by (rule exI[where x=\<open>right tree\<close>], auto_sledgehammer) ;;
+          lookup_bst ($addr \<tribullet> right !, $k)
+          \<open>Bin_Search_Tree a\<^sub>R _ _ _ _\<close> to \<open>OPEN _ _\<close> \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V)\<close> certified sorry
+        \<medium_right_bracket>
+    \<medium_right_bracket>
+\<medium_right_bracket> .
+   
+
+
+
+thm useful
+      thm eq
 
 
 

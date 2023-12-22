@@ -60,7 +60,7 @@ proc nth_llist:
     \<medium_right_bracket> \<medium_left_bracket>
         nth_llist ($addr \<tribullet> nxt !, $i - 1)
     \<medium_right_bracket>
-    \<open>l \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
+    \<open>_ \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
   \<medium_right_bracket> .
 
 proc update_nth_llist:
@@ -77,7 +77,7 @@ proc update_nth_llist:
     \<medium_right_bracket> \<medium_left_bracket>
         update_nth_llist ($addr \<tribullet> "nxt" !, $i - 1, $y)
     \<medium_right_bracket>
-    \<open>l[i := y] \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
+    \<open>_ \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
  \<medium_right_bracket> .
 
 proc length_of:
@@ -91,7 +91,7 @@ proc length_of:
   \<medium_right_bracket> \<medium_left_bracket>                           \<comment> \<open>TODO: create a syntax for this existential instantiation\<close>
     to \<open>OPEN 1 _\<close> certified by (of_tac \<open>hd l\<close>, of_tac \<open>tl l\<close>, auto_sledgehammer) ;;
     length_of ($addr \<tribullet> nxt !) + 1
-    \<open>l \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close>
+    \<open>_ \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
