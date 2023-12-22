@@ -1330,17 +1330,17 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                       ([Morphism.thm m rule], pos, mode, SOME priority, [], [], SOME G)) rules)
          in fn ctxt => ctxt
          |> not no_auto ? (fn ctxt => ctxt
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction_sp
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10}
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10} make_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived}
                             (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
                             make_abstraction_sp
            (*|> not (null make_Identity_Element_E) ?
                 add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %derived_identity_element} make_Identity_Element_E *)
              |> Config.put_generic phi_allow_source_object_to_be_not_variable true
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived-10} open_abstraction_ToA_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived-10} open_abstraction_ToA
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA_sp
                               (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
              |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
        ) |> Phi_Expansions.add_simps expns

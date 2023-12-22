@@ -803,12 +803,26 @@ lemma [embed_into_\<phi>type]:
   by clarsimp
 
 lemma [embed_into_\<phi>type]:
-  \<open> f x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T \<close>
+  \<open> NO_MATCH (\<lambda>_. T') T
+\<Longrightarrow> NO_MATCH (U \<s>\<u>\<b>\<j> P) T
+\<Longrightarrow> f x \<Ztypecolon> T x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. True } \<Ztypecolon> \<S> (\<Sigma> T)\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+lemma [embed_into_\<phi>type]:
+  \<open> (\<And>x. NO_MATCH (x \<in> s) (P x))
+\<Longrightarrow> f x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T \<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
 lemma [embed_into_\<phi>type]:
   \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> x \<in> s \<s>\<u>\<b>\<j> x. \<top> \<equiv> s \<Ztypecolon> \<S> T \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+lemma [embed_into_\<phi>type]:
+  \<open> NO_MATCH (U \<s>\<u>\<b>\<j> P) T
+\<Longrightarrow> f x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. True } \<Ztypecolon> \<S> T \<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
@@ -3635,6 +3649,8 @@ definition \<phi>F_simulation
     \<comment> \<open>Forward Simulation\<close>
   where \<open>(T \<Rrightarrow>\<^sub>r U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>u y. (v,u) \<in> g \<and> (x,y) \<in> f \<and> u \<in> (y \<Ztypecolon> U)) })\<close>
  
+
+
 
 
 end

@@ -109,7 +109,7 @@ proc length_of':
     0 is \<open>length l\<close>
   \<medium_right_bracket> \<medium_left_bracket>
     obtain l\<^sub>h l\<^sub>r where [useful]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer  ;;
-    to \<open>OPEN _ _\<close>
+    to \<open>OPEN 1 _\<close>
     (length_of ($addr \<tribullet> nxt !) + 1) is \<open>length l\<close>
     \<open>l \<Ztypecolon> MAKE _ (Linked_Lst addr TY T)\<close>
   \<medium_right_bracket>
@@ -129,13 +129,28 @@ proc reverse':
       to \<open>OPEN 0 _\<close>
       $addr'
     \<medium_right_bracket> \<medium_left_bracket>
-      obtain l\<^sub>h l\<^sub>r where [useful]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer ;;  ;;
-      to \<open>OPEN 1 _\<close>
-      $addr \<tribullet> nxt := $addr'
-            
-        ;;      \<open>Linked_Lst addr' TY T\<close> 
-          note [[\<phi>trace_reasoning = 2]]
-          ;; \<open>l\<^sub>h # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close>
+      to \<open>OPEN 1 _\<close> certified by (of_tac \<open>hd l\<close>, of_tac \<open>tl l\<close>, auto_sledgehammer) ;;
+      $addr \<tribullet> nxt ! \<rightarrow> val aa ;;
+      $addr \<tribullet> nxt := $addr' ;;
+      \<open>Linked_Lst addr' TY T\<close> \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;
+      reverse' ($addr, $aa) 
+    \<medium_right_bracket>
+  \<medium_right_bracket> .
+
+proc reverse:
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
+  output \<open>rev l \<Ztypecolon> Linked_Lst addr'' TY T\<heavy_comma>
+          addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}
+          \<s>\<u>\<b>\<j> addr''. \<top>\<close>
+  \<medium_left_bracket>
+    \<open>[] \<Ztypecolon> MAKE 0 (Linked_Lst 0 TY T)\<close>
+    reverse'( \<open>0 \<Ztypecolon> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>, $addr )
+  \<medium_right_bracket> .
+
+
+
+(* for \<open>rev l @ l' \<Ztypecolon> Linked_Lst addr'' TY T\<heavy_comma> addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY} \<s>\<u>\<b>\<j> addr''. \<top>\<close> *)
 
 (*\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY' = TY) \<and> (addr' = addr)
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 

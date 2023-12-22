@@ -494,19 +494,74 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
 
 subsubsection \<open>Join Two \<phi>-Types\<close>
 
-\<phi>reasoner_group br_join_\<phi>ty = (20, [19,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action br_join\<close> 
-                               in \<phi>br_join_all and > \<phi>br_join_fail
-                              \<open>Fallbacks of joining two \<phi>-types, using ToA\<close>
+\<phi>reasoner_group br_join_fallback = (20, [11,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action br_join\<close> 
+                                                  in \<phi>br_join_all and > \<phi>br_join_fail
+      \<open>Fallbacks of joining two \<phi>-types, using ToA\<close>
 
 paragraph \<open>Fallback by ToA\<close>
 
-lemma [\<phi>reason default %br_join_\<phi>ty]:
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason default %br_join_fallback]:
   \<open> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T @action NToA
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y' \<Ztypecolon> T @action br_join \<close>
   unfolding Action_Tag_def Transformation_def \<r>Guard_def
   by clarsimp
 
-lemma [\<phi>reason default %br_join_\<phi>ty-1]:
+\<phi>reasoner_ML br_join_fallback %br_join_fallback-4 (\<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+    let exception NOT_AVAILABLE
+        fun conv ctm =
+          let val (A,B) = case Thm.term_of ctm of Const(\<^const_name>\<open>If\<close>, _) $ _ $ A $ B => (A,B)
+           in if A aconv B
+              then Conv.rewr_conv @{thm' if_cancel} ctm
+              else case (A,B)
+                of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x' $ T') =>
+                    if Term.head_of T aconv Term.head_of T'
+                    then (Conv.rewr_conv @{lemma' \<open>If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<equiv> (If P x y) \<Ztypecolon> (If P T U)\<close>
+                                              by (unfold atomize_eq, cases P, simp, simp)}
+                          then_conv Conv.arg_conv conv) ctm
+                    else raise NOT_AVAILABLE
+                 | (F $ x, G $ y) =>
+                    let val Pc = Thm.dest_arg (Thm.dest_fun2 ctm)
+                        val (Ac, Bc) = (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
+                        val (Fc, xc) = (Thm.dest_fun Ac, Thm.dest_arg Ac)
+                        val (Gc, yc) = (Thm.dest_fun Bc, Thm.dest_arg Bc)
+                     in if x aconv y
+                        then (Conv.rewr_conv (@{print} \<^instantiate>\<open>
+                                      C=Pc and fa=Fc and fb=Gc and a=xc and
+                                      'b=\<open>Thm.ctyp_of_cterm xc\<close> and 'a=\<open>Thm.dest_ctyp1 (Thm.ctyp_of_cterm Fc)\<close>
+                                   in lemma \<open>if C then fa a else fb a \<equiv> (if C then fa else fb) a\<close>
+                                         by (simp add: if_distribR)\<close>)
+                              then_conv Conv.fun_conv conv) ctm
+                        else if F aconv G
+                        then Conv.rewr_conv \<^instantiate>\<open>
+                                      c=Pc and f=Fc and x=xc and y=yc and
+                                      'b=\<open>Thm.ctyp_of_cterm xc\<close> and 'a=\<open>Thm.dest_ctyp1 (Thm.ctyp_of_cterm Fc)\<close>
+                                   in lemma \<open>(if c then f x else f y) \<equiv> f (if c then x else y)\<close>
+                                         by (unfold atomize_eq, cases c, simp, simp)\<close> ctm
+                        else (Conv.rewr_conv \<^instantiate>\<open>
+                                      C=Pc and fa=Fc and fb=Gc and va=xc and vb=yc and
+                                      'b=\<open>Thm.ctyp_of_cterm xc\<close> and 'a=\<open>Thm.dest_ctyp1 (Thm.ctyp_of_cterm Fc)\<close>
+                                   in lemma \<open>if C then fa va else fb vb \<equiv> (if C then fa else fb) (if C then va else vb)\<close>
+                                         by (simp add: If_distrib_fx)\<close>
+                              then_conv Conv.fun_conv conv) ctm
+                    end
+          end
+     in let
+        val sequent'1 = Conv.gconv_rule (
+              Phi_Conv.hhf_concl_conv (fn ctxt =>
+                Phi_Syntax.transformation_conv conv Conv.all_conv Conv.all_conv
+              ) ctxt ) 1 sequent
+        val sequent'2 = @{thm' transformation_refl} RS (@{thm' Action_Tag_I} RS sequent'1)
+         in SOME ((ctxt, sequent'2), Seq.empty)
+        end
+     handle NOT_AVAILABLE => NONE
+          | E => error "!!!"
+    end)
+\<close>
+
+lemma [\<phi>reason default %br_join_fallback-8]:
   \<open> WARNING TEXT(\<open>Fail to join \<phi>type\<close> T \<open>and\<close> U)
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y \<Ztypecolon> If P T U @action br_join \<close>
   unfolding Action_Tag_def Transformation_def
