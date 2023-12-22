@@ -101,6 +101,18 @@ lemma rel_tree_domain_distinct:
 \<Longrightarrow> tree_domain_distinct x \<longleftrightarrow> tree_domain_distinct y \<close>
   by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1; auto_sledgehammer)
 
+lemma rel_tree_implies_list_all2:
+  \<open> rel_tree r x y \<Longrightarrow> list_all2 r (inorder x) (inorder y) \<close>
+  by (induct x arbitrary: y; auto;
+      smt (verit, del_insts) Tree.tree.distinct(2) Tree.tree.inject Tree.tree.rel_cases append_Cons append_Nil inorder.simps(2) list.rel_intros(2) list_all2_appendI)
+
+
+lemma rel_tree__map_fst_eq:
+  \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
+\<Longrightarrow> map fst (inorder x) = map fst (inorder y) \<close>
+  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1; auto_sledgehammer)
+
+
 lemma rel_map_lookup_by_rel_tree:
   \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd a) (snd b)) x y
 \<Longrightarrow> tree_domain_distinct x
@@ -140,7 +152,7 @@ lemma
 
 
 
-lemma Object_Equive_of_Lookup_Tree:
+lemma Object_Equive_of_Bin_Search_Tree:
   \<open> fst ` Tree.tree.set_tree xa = dom y \<Longrightarrow>
      tree_domain_distinct xa \<Longrightarrow>
     y = lookup_tree (Tree.tree.map_tree (\<lambda>(k, _). (k, the (y k))) xa) \<close>
@@ -188,6 +200,22 @@ declare rel_fun_eq[iff]
 
 
 
+lemma tree_sorted1_inorder_implies_domain_distinct:
+  \<open>sorted1(inorder tree) \<Longrightarrow> tree_domain_distinct tree\<close>
+  by (induct tree; auto_sledgehammer)
+
+lemma sorted1_inorder_map_tree[iff]:
+  \<open>sorted1 (inorder (map_tree (\<lambda>(k, v). (k, f k v)) tree)) \<longleftrightarrow> sorted1 (inorder tree)\<close>
+  by auto_sledgehammer
+
+
+
+
+
+
+
+
+
 
 
 
@@ -195,78 +223,28 @@ declare rel_fun_eq[iff]
 
 
   
-\<phi>type_def Lookup_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
-  where \<open>f \<Ztypecolon> Lookup_Tree addr TY K V \<equiv> tree \<Ztypecolon> BiTree addr TY \<lbrace> k: K, v: V \<rbrace>
-                                       \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> tree_domain_distinct tree\<close>
+\<phi>type_def Bin_Search_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
+  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY K V \<equiv> tree \<Ztypecolon> BiTree addr TY \<lbrace> k: K, v: V \<rbrace>
+                                       \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted1(inorder tree)\<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
-         \<Longrightarrow> Abstract_Domain (Lookup_Tree addr TY K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
+         \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr TY K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
             (tactic: clarsimp, subgoal' for tree x y \<open>induct tree arbitrary: x\<close>)
-       and \<open>Identity_Elements\<^sub>E (Lookup_Tree addr TY K V) (\<lambda>l. addr = 0 \<and> l = Map.empty)\<close> 
-       and \<open>Identity_Elements\<^sub>I (Lookup_Tree addr TY K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0)\<close>
+       and \<open>Identity_Elements\<^sub>E (Bin_Search_Tree addr TY K V) (\<lambda>l. addr = 0 \<and> l = Map.empty)\<close> 
+       and \<open>Identity_Elements\<^sub>I (Bin_Search_Tree addr TY K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0)\<close>
        and \<open> Object_Equiv V eq
-         \<Longrightarrow> Object_Equiv (Lookup_Tree addr TY K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
+         \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr TY K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
             (tactic: clarsimp, 
                      rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,_). (k, the (g k))) x\<close>],
-                     auto simp: Object_Equive_of_Lookup_Tree)
+                     auto simp: Object_Equive_of_Bin_Search_Tree)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
-         \<Longrightarrow> Transformation_Functor (Lookup_Tree addr TY K) (Lookup_Tree addr' TY' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
+         \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr TY K) (Bin_Search_Tree addr' TY' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
             (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>])
-       and \<open>Functional_Transformation_Functor (Lookup_Tree addr TY K) (Lookup_Tree addr TY K) T U ran (\<lambda>_. UNIV)
+       and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY K) (Bin_Search_Tree addr TY K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
 
 
-
-
-term \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
-              \<Longrightarrow> Transformation_Functor (Lookup_Tree addr TY K) (Lookup_Tree addr' TY' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-
-term \<open> Object_Equiv V eq
-         \<Longrightarrow> Object_Equiv (Lookup_Tree addr TY K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>
-
-
-term \<open>Identity_Elements\<^sub>I (Lookup_Tree addr TY K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0)\<close>
-
-term \<open>Identity_Elements\<^sub>E (Lookup_Tree addr TY K V) (\<lambda>l. addr = 0 \<and> l = Map.empty)\<close>
-
-(* tactic \<open>Simplifier.asm_full_simp_tac (Config.put Simplifier.simp_trace true
-        (Config.put Simplifier.simp_trace_depth_limit 5 \<^context>)) 1 o @{print}\<close> *)
-term \<open> Abstract_Domain\<^sub>L K P\<^sub>K
-         \<Longrightarrow> Abstract_Domain V P\<^sub>V
-         \<Longrightarrow> Abstract_Domain (Lookup_Tree addr TY K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
-
-
-
-
-
-term set_tree
-term \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
-              \<Longrightarrow>Transformation_Functor (BiTree addr TY) (BiTree addr' TY') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
-
-
-term \<open>Identity_Elements\<^sub>I (BiTree addr TY T) (\<lambda>l. l = Leaf) (\<lambda>l. addr = 0)\<close>
-term \<open>Identity_Elements\<^sub>E (BiTree addr TY T) (\<lambda>l. addr = 0 \<and> l = Leaf)\<close>
-term rel_tree
-term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (BiTree addr TY T) (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0)) \<close>
-
-
-\<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
-  where \<open>([] \<Ztypecolon> Linked_Lst addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
-     | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) =
-        ((nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}, data: T \<rbrace>\<heavy_comma>
-         ls \<Ztypecolon> Linked_Lst nxt TY T
-         \<s>\<u>\<b>\<j> nxt. \<top>)\<close> 
-     deriving Basic
-          and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr TY T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
-          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. l = []) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
-              \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr' TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
-            (arbitrary: addr')
-          and Functional_Transformation_Functor
-
- 
 
 end
