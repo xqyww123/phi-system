@@ -2019,6 +2019,10 @@ definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bo
 (* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
   where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)
 
+lemma Simplify_rev_def[no_atp]:
+  \<open> Simplify setting result origin \<longleftrightarrow> origin = result \<close>
+  unfolding Simplify_def by blast
+
 lemma Simplify_cong[cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
 
 lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .

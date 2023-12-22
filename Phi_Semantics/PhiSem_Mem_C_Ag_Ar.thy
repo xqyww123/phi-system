@@ -7,10 +7,14 @@ section \<open>Array in Memory\<close>
 subsection \<open>Semantics\<close>
 
 debt_axiomatization
-    Map_of_Val_arr: \<open>Map_of_Val (V_array.mk vs) =
-      (\<lambda>path. case path of AgIdx_N i # path' \<Rightarrow>
-                                if i < length vs then Map_of_Val (vs ! i) path' else 1
-                         | _ \<Rightarrow> 1)\<close>
+      Map_of_Val_arr: \<open>Map_of_Val (V_array.mk vs) =
+        (\<lambda>path. case path of AgIdx_N i # path' \<Rightarrow>
+                                  if i < length vs then Map_of_Val (vs ! i) path' else 1
+                           | _ \<Rightarrow> 1)\<close>
+  and idx_step_offset_arr: \<open> idx_step_offset (\<a>\<r>\<r>\<a>\<y>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
+  and MemObj_Size_arr: \<open>MemObj_Size (\<a>\<r>\<r>\<a>\<y>[N] ty) = N * MemObj_Size ty\<close>
+
+
 
 subsection \<open>Syntax\<close>
 
@@ -149,6 +153,56 @@ lemma [\<phi>reason %ToA_mem_coerce,
 hide_fact split_mem_coerce_array'
 
 
+subsubsection \<open>Address Offset\<close>
+
+term logaddr_type
+
+lemma [\<phi>reason add]:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (\<a>\<r>\<r>\<a>\<y>[N] TY) : logaddr_type addr
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] i+n < N
+\<Longrightarrow> abstract_address_offset (addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet>\<^sub>a (i+n)\<^sup>\<t>\<^sup>\<h>) \<close>
+  unfolding abstract_address_offset_def Simplify_rev_def Premise_def
+            logaddr_to_raw_def addr_gep_def 
+  by (cases addr; clarsimp, rule,
+      simp add: valid_logaddr_def valid_idx_step_arr,
+      simp add: idx_step_offset_arr,
+      metis add.commute distrib_right idx_step_type_arr mult.commute)
+
+lemma [\<phi>reason add]:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (\<a>\<r>\<r>\<a>\<y>[N] \<a>\<r>\<r>\<a>\<y>[M] TY) : logaddr_type addr
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] i*M+j+n < M * N
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (i', j') : (i + (j + n) div M, (j + n) mod M)
+\<Longrightarrow> abstract_address_offset (addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet>\<^sub>a i'\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a j'\<^sup>\<t>\<^sup>\<h>) \<close>
+  unfolding abstract_address_offset_def Simplify_rev_def Premise_def
+            logaddr_to_raw_def addr_gep_def 
+  apply (cases addr; clarsimp, rule;
+        clarsimp simp: valid_logaddr_def valid_idx_step_arr idx_step_type_arr
+                       valid_index_tail[where idx=\<open>idx@[j]\<close> for idx j, simplified]
+                       idx_step_offset_arr index_offset_tail[where idx=\<open>idx@[j]\<close> for idx j, simplified])
+  subgoal premises for blk idx proof -
+    have [simp]: \<open>i + (j + n) div M < N\<close>
+      by (metis \<open>i * M + j + n < M * N\<close> add.assoc add.commute add_lessD1 div_mult_self1 less_mult_imp_div_less mult.commute mult_0_right verit_comp_simplify1(1))
+    show ?thesis
+      by (simp add: idx_step_type_arr valid_idx_step_arr, insert \<open>j < M\<close>, fastforce)
+  qed
+  subgoal premises prems for blk idx proof -
+    have [simp]: \<open>i + (j + n) div M < N\<close>
+      by (metis \<open>i * M + j + n < M * N\<close> add.assoc add.commute add_lessD1 div_mult_self1 less_mult_imp_div_less mult.commute mult_0_right verit_comp_simplify1(1))
+    have t1: \<open>(i + n div M) * M = i * M + (n div M * M)\<close>
+      using add_mult_distrib by presburger
+
+    show ?thesis
+    proof (simp add: idx_step_offset_arr idx_step_type_arr MemObj_Size_arr
+                     Abs_fnat_homs
+                del: of_nat_mult of_nat_add)
+      have "\<forall>n na nb. (na::nat) + (n + nb) = n + (nb + na)"
+        by force
+      then show \<open>to_size_t (MemObj_Size TY * n + (i * (M * MemObj_Size TY) + j * MemObj_Size TY)) =
+                to_size_t ((i + (j + n) div M) * (M * MemObj_Size TY) + (j + n) mod M * MemObj_Size TY) \<and>
+                idx_step_type AG_IDX(((j + n) mod M)\<^sup>\<t>\<^sup>\<h>) (\<a>\<r>\<r>\<a>\<y>[M] TY) = TY\<close>
+        by (smt (verit, ccfv_threshold) Euclidean_Rings.div_eq_0_iff add.commute add_mult_distrib idx_step_type_arr less_nat_zero_code mod_div_mult_eq mod_div_trivial mult.assoc mult.commute prems(10))
+    qed
+  qed .
 
 
 end

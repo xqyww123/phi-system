@@ -604,6 +604,34 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
   by simp (metis logaddr_to_raw_0 logaddr_to_raw_MemBlk logaddr_to_raw_inj memaddr.expand memaddr_blk_zero valid_logaddr_def zero_list_def zero_memaddr_def)  
 
 
+lemma Ptr_to_Raw_Pointer[\<phi>reason %ToA_cut]:
+  \<open> Threshold_Cost 9
+\<Longrightarrow> x \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> logaddr_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) \<close>
+  \<medium_left_bracket>
+     to \<open>OPEN _ _\<close>
+     \<open>logaddr_to_raw x \<Ztypecolon> MAKE _ RawPointer\<close> certified by auto_sledgehammer
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason %cutting ]:
+  \<open>x \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = logaddr_to_raw x \<and> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) @action to RawPointer\<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma Raw_Pointer_to_Ptr[\<phi>reason %ToA_cut]:
+  \<open> Threshold_Cost 9
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Pp>\<t>\<r> TY \<close>
+  \<medium_left_bracket>
+    to \<open>OPEN _ _\<close>
+    \<open>y \<Ztypecolon> MAKE _ (\<Pp>\<t>\<r> TY)\<close>
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason %cutting ]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<Pp>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @action to (\<Pp>\<t>\<r> TY)\<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+
+
 section \<open>Primitive Instructions\<close>
 
 subsection \<open>GEP\<close>
@@ -633,6 +661,7 @@ lemma [\<phi>reason %\<phi>synthesis_literal]:
   \<medium_right_bracket> .
 
 
+
 section \<open>Reasoning Configuration\<close>
 
 subsection \<open>common_multiplicator of path\<close>
@@ -655,6 +684,16 @@ lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplica
   \<open> common_multiplicator_2 (@) (memaddr.index a) [] (memaddr.index a) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
+
+subsection \<open>Abstracting Raw Address Offset\<close>
+
+definition abstract_address_offset :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> nat \<Rightarrow> logaddr \<Rightarrow> bool\<close>
+  where \<open>abstract_address_offset addr TY TY' n addr' \<longleftrightarrow>
+    valid_logaddr addr \<and> logaddr_type addr = TY \<longrightarrow>
+   (valid_logaddr addr' \<and>
+    logaddr_to_raw addr ||+ of_nat (MemObj_Size TY * n) = logaddr_to_raw addr' \<and>
+    logaddr_type addr' = TY') \<close>
+
 
 
 end

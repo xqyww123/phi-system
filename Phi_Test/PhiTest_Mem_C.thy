@@ -203,6 +203,10 @@ proc test_mem17:
   $addr \<tribullet> 2 \<tribullet> c := \<open>42 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
+proc test_mem18:
+  input  \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<close>
+  output \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<close>
+
 
 (*FIXME!
 proc test_mem15:

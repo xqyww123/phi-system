@@ -20,7 +20,7 @@ interpretation array_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<cl
 
 hide_fact array_ty_ax
 
-abbreviation array_semty ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 911] 910)
+abbreviation array_semty ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
   where \<open>array_semty N T \<equiv> array.mk (T,N)\<close>
 
 

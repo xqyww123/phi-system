@@ -29,5 +29,26 @@ proc op_allocate_mem_N:
 \<medium_right_bracket> .
 
 
+proc op_shift_pointer [\<phi>overload +]:
+  requires \<open>\<p>\<a>\<r>\<a>\<m> TY\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> RawPointer\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>('b::len)\<close>
+  output \<open>addr ||+ of_nat (MemObj_Size TY * n) \<Ztypecolon> \<v>\<a>\<l> RawPointer\<close>
+\<medium_left_bracket>
+  $addr semantic_local_value pointer
+  semantic_return \<open>
+    V_pointer.mk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1) ||+ of_nat (MemObj_Size TY * n))
+      \<Turnstile> (addr ||+ of_nat (MemObj_Size TY * n) \<Ztypecolon> RawPointer)\<close>
+\<medium_right_bracket> .
+
+proc abst_shift_pointer [\<phi>overload +]:
+  requires [unfolded abstract_address_offset_def, useful]: \<open>abstract_address_offset addr TY TY' n addr'\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> TY\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>('b::len)\<close>
+  premises \<open>addr \<noteq> 0\<close>
+  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> TY'\<close>
+\<medium_left_bracket>
+  op_shift_pointer ($addr to RawPointer, $n) \<open>TY\<close>
+\<medium_right_bracket> .
+  
+
 
 end
