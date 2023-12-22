@@ -1548,6 +1548,8 @@ lemma ExSet_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   by simp_all
 
 lemma ExSet_simps_ex[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
+  \<comment> \<open>only safe for source side but unsafe for target side, because it could instantiate variables
+      of types parameters which could be instantiated arbitrarily?... I am not pretty sure... It is subtle here\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>

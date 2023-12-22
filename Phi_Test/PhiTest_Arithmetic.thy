@@ -79,7 +79,7 @@ proc test_prime':
             then show False by auto_sledgehammer
           qed
         then show \<open>prime x\<close>
-          by blast
+          by auto_sledgehammer
       qed
   \<medium_right_bracket> \<comment> \<open>Close the top branch\<close>
 \<medium_right_bracket> \<comment> \<open>Close the function body\<close> .

@@ -13,22 +13,10 @@ lemma rel_map_map_of__list_all2:
   by (induct x arbitrary: y; auto_sledgehammer)
 
 
-
-
-
-lemma t1:
-  \<open> fst ` set x = fst ` set y \<and> distinct (map fst x) \<and> distinct (map fst y)
-\<Longrightarrow> (length x = length y) \<longleftrightarrow> True \<close>
-  by (clarsimp simp: dom_map_of_conv_image_fst; metis distinct_card length_map set_map)
-
-
-
-
-
 declare list.pred_True[simp]
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+  
 \<phi>type_def Lookup_Array :: \<open> logaddr \<Rightarrow> (VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi> \<close>
   where \<open> f \<Ztypecolon> Lookup_Array addr K V \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] \<lbrace> k: K, v: V \<rbrace> \<s>\<u>\<b>\<j> l n. f = map_of l \<and> n = length l \<and> distinct (map fst l)\<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
@@ -38,8 +26,8 @@ declare [[\<phi>trace_reasoning = 0]]
          \<Longrightarrow> Object_Equiv (Lookup_Array addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>
             (tactic: clarsimp,
                      rule exI[where x=\<open>\<lambda>_ g x. map (\<lambda>(k,_). (k, the (g k))) x\<close>],
-                     auto simp: list_all2_conv_all_nth image_iff,
-                     subgoal' for y x \<open>rule ext, induct x arbitrary: y\<close>)
+                     auto simp: list_all2_conv_all_nth,
+                     subgoal' for y x \<open>rule ext, induct x arbitrary: y\<close>, auto simp: Ball_def)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr \<and> K' = K
         \<Longrightarrow> Transformation_Functor (Lookup_Array addr K) (Lookup_Array addr' K') T U ran (\<lambda>_. UNIV) rel_map \<close>
             (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], auto simp: list_all2_conv_all_nth)

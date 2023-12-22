@@ -138,9 +138,26 @@ lemma memblk_infinite_TY:
   using inj_def by fastforce
 
 lemma Mem_freshness:
-  \<open>finite (dom f) \<Longrightarrow> \<exists>k. f k = None \<and> memblk.layout k = TY\<close>
+  \<open>finite (dom f) \<Longrightarrow> \<exists>k. f k = None \<and> memblk.layout k = TY \<and> k \<noteq> Null\<close>
   unfolding dom_def
-  by (smt (verit, del_insts) Collect_mono finite_Collect_disjI finite_subset memblk_infinite_TY)
+proof (clarsimp)
+  assume a1: "finite {a. \<exists>y. f a = Some y}"
+  obtain bb :: "(memblk \<Rightarrow> nat) \<Rightarrow> (memblk \<Rightarrow> bool) \<Rightarrow> nat \<Rightarrow> bool" where
+    f2: "\<forall>X28 X31 X30. bb X30 X31 X28 = (\<exists>X32. X28 = X30 X32 \<and> X31 X32)"
+    by moura
+  then have f3: "\<forall>f p. Collect (bb f p) = f ` Collect p"
+    by auto
+  obtain nn :: "memblk \<Rightarrow> nat" where
+    f4: "\<forall>t n. nn (MemBlk n t) = n"
+    by (metis (no_types) memblk.distinct(1) memblk.exhaust memblk.inject)
+  obtain bba :: "memblk \<Rightarrow> bool" where
+    f5: "\<forall>X39. bba X39 = (\<exists>X40. f X39 = Some X40)"
+    by moura
+  then have "finite (Collect bba)"
+    using a1 by presburger
+  then show ?thesis
+    using f5 f4 f3 f2 by (metis (no_types) UNIV_eq_I finite_imageI infinite_UNIV_nat mem_Collect_eq memblk.distinct(1) memblk.layout(2) option.exhaust)
+qed
 
 
 subsubsection \<open>Semantic Types that can be stored in Memory\<close>
