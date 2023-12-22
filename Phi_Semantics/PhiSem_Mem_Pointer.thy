@@ -608,7 +608,7 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
 
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_pointer.mk 0)] \<Pp>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_pointer.mk 0)] \<Pp>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
   \<medium_left_bracket>
     semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<Pp>\<t>\<r> TY)\<close>

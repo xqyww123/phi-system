@@ -10,7 +10,7 @@ named_theorems discharging_semantic_debt
 
 subsection \<open>Elementary Constructions for Formalizing Instructions\<close>
 
-definition \<open>\<phi>literal = \<phi>arg\<close>
+definition \<open>semantic_literal = \<phi>arg\<close>
 
 definition \<phi>M_assert :: \<open>bool \<Rightarrow> unit proc\<close>
   where \<open>\<phi>M_assert P = (\<lambda>s. if P then Return \<phi>V_none s else {Invalid})\<close>
@@ -132,8 +132,8 @@ lemma semantic_return_\<phi>app:
 lemma semantic_literal_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<Turnstile> (y \<Ztypecolon> T))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (y \<Ztypecolon> T)
-\<Longrightarrow> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Val (\<phi>literal v) T \<close>
-  unfolding Premise_def Transformation_def \<phi>literal_def
+\<Longrightarrow> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Val (semantic_literal v) T \<close>
+  unfolding Premise_def Transformation_def semantic_literal_def
   by clarsimp
 
 lemma semantic_local_value_\<phi>app:
@@ -159,14 +159,14 @@ subsection \<open>Synthesis of Value\<close>
 subsubsection \<open>Literal Value\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _]  _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (500) ]]
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _]  _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (500) ]]
 
 lemma "_synthesis_literal_":
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> @action synthesis\<close>
-  unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Transformation_def
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> const \<Ztypecolon> \<v>\<a>\<l>[semantic_literal v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (semantic_literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> @action synthesis\<close>
+  unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def semantic_literal_def Transformation_def
   by (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set INTERP_SPEC, blast)
 
 subsubsection \<open>Value Sequence\<close>

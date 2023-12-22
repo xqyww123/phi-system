@@ -243,7 +243,7 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_const_aint_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_aint.mk x)] \<int> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_aint.mk x)] \<int> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x \<Turnstile> (x \<Ztypecolon> \<int>)\<close>
@@ -251,7 +251,7 @@ lemma op_const_aint_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 
 lemma op_const_anat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] x' : of_nat x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (semantic_literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x' \<Turnstile> (x \<Ztypecolon> \<nat>)\<close>

@@ -393,7 +393,7 @@ proc mfree:
 
 section \<open>IDE-CP Interfaces\<close>
 
-declare_\<phi>lang_operator postfix %\<phi>lang_deref "!"
+declare_\<phi>lang_operator postfix %\<phi>lang_deref "!" \<comment> \<open>dereference operator\<close>
 
 declare op_load_mem_\<phi>app[\<phi>overload "!"]
         op_store_mem_\<phi>app[\<phi>overload ":="]

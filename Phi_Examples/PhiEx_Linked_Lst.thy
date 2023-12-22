@@ -42,9 +42,6 @@ declare [[\<phi>reasoning_step_limit = 180]]
             (arbitrary: addr')
           and Functional_Transformation_Functor
 
-term True
-
-declare [[\<phi>trace_reasoning = 1]] 
  
 proc nth_llist:
   requires [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
@@ -99,7 +96,7 @@ proc length_of:
 \<medium_right_bracket> .
 
 proc length_of':
-  \<comment> \<open>personally, I prefer this version which is more readable though requires more annotations\<close>
+  \<comment> \<open>personally, I prefer this version which is more readable though costs more annotations\<close>
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
   premises \<open>length l < 2 ^ LENGTH(32)\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
@@ -132,7 +129,7 @@ proc reverse':
       to \<open>OPEN 1 _\<close> certified by (of_tac \<open>hd l\<close>, of_tac \<open>tl l\<close>, auto_sledgehammer) ;;
       $addr \<tribullet> nxt ! \<rightarrow> val aa ;;
       $addr \<tribullet> nxt := $addr' ;;
-      \<open>Linked_Lst addr' TY T\<close> \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;
+      (*select*) \<open>Linked_Lst addr' TY T\<close> (*to apply 1st constructor*) \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;
       reverse' ($addr, $aa) 
     \<medium_right_bracket>
   \<medium_right_bracket> .

@@ -131,7 +131,7 @@ subsubsection \<open>Constant\<close>
 
 lemma op_const_areal_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (semantic_literal (V_areal.mk x)) \<real> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_areal.mk x \<Turnstile> (x \<Ztypecolon> \<real>)\<close>

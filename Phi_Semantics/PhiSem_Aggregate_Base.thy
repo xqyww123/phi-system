@@ -273,7 +273,7 @@ lemma [\<phi>reason %parse_eleidx_literal_symbol]:
   \<open> \<g>\<u>\<a>\<r>\<d> is_valid_step_idx_of (AgIdx_S s) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx pidx reject
 \<Longrightarrow> parse_eleidx_input TY
-      ((\<phi>arg.dest (\<phi>literal (\<phi>embed_semantic_symbol s)), S) # input)
+      ((\<phi>arg.dest (semantic_literal (\<phi>embed_semantic_symbol s)), S) # input)
       (AgIdx_S s # sem_idx) (AgIdx_S s # spec_idx) (AgIdx_S s # pidx) reject \<close>
   unfolding parse_eleidx_input_def is_valid_step_idx_of_def \<r>Guard_def Ant_Seq_def
   by clarsimp
@@ -292,13 +292,13 @@ lemma [\<phi>reason %parse_eleidx_number]:
   by (cases v; clarsimp; metis option.sel)
 
 lemma [\<phi>reason %parse_eleidx_literal_number]:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest (\<phi>literal v) \<Turnstile> S @action \<A>parse_eleidx) \<and>\<^sub>\<r>
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest (semantic_literal v) \<Turnstile> S @action \<A>parse_eleidx) \<and>\<^sub>\<r>
           get_logical_nat_from_semantic_int (v \<Ztypecolon> Itself) n' \<and>\<^sub>\<r>
           \<r>nat_to_suc_nat n' n \<and>\<^sub>\<r>
           is_valid_step_idx_of (AgIdx_N n) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx pidx reject
 \<Longrightarrow> parse_eleidx_input TY
-      ((\<phi>arg.dest (\<phi>literal v), S) # input) (AgIdx_N n' # sem_idx) (AgIdx_N n # spec_idx) (AgIdx_N n' # pidx) reject \<close>
+      ((\<phi>arg.dest (semantic_literal v), S) # input) (AgIdx_N n' # sem_idx) (AgIdx_N n # spec_idx) (AgIdx_N n' # pidx) reject \<close>
   unfolding parse_eleidx_input_def Action_Tag_def
             get_logical_nat_from_semantic_int_def AgIdx_VN_def is_valid_step_idx_of_def
             \<r>nat_to_suc_nat_def \<r>Guard_def Ant_Seq_def
