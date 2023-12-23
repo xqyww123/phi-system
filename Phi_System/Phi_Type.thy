@@ -4155,10 +4155,10 @@ lemma ToA_mapper_MOne_src
 \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and S1I[] and S1E[] and _ and Tr[]
 
   apply_rule apply_Semimodule_One\<^sub>I[OF S1I, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
-  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
+  apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
 \<medium_right_bracket> apply(rule conjunctionI, rule)
 \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and S1I[] and S1E[] and _ and Tr[]
-  apply_rule apply_ToA_Mapper_backward[OF Tr]
+  apply_rule ToA_Mapper_backward[OF Tr]
     certified by (of_tac x, auto_sledgehammer) ;;
   apply_rule apply_Semimodule_One\<^sub>E[OF S1E, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
     certified by (insert ToA_Mapper_f_expn[OF Tr], auto_sledgehammer) ;;
@@ -4192,10 +4192,10 @@ lemma ToA_mapper_MOne_src
 \<medium_left_bracket> premises _ and _ and _ and  S1I[] and _ and Tr[]
 
   apply_rule apply_Semimodule_One\<^sub>I[OF S1I, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
-  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
+  apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
 \<medium_right_bracket> apply(rule conjunctionI, rule)
 \<medium_left_bracket> premises _ and _ and _ and S1I[] and _ and Tr[]
-  apply_rule apply_ToA_Mapper_backward[OF Tr]
+  apply_rule ToA_Mapper_backward[OF Tr]
 \<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp)
 *)
 
@@ -4230,13 +4230,13 @@ lemma ToA_mapper_MOne_tgt
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
                    Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
 \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and S1I[] and S1E[] and _ and Tr[]
-  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
+  apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
   apply_rule apply_Semimodule_One\<^sub>E[OF S1E, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
 \<medium_right_bracket> apply(rule conjunctionI, rule)
 \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and S1I[] and S1E[] and _ and Tr[]
   apply_rule apply_Semimodule_One\<^sub>I[OF S1I, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
   certified by auto_sledgehammer ;;
-  apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apfst E\<^sub>1 x\<close>]
+  apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apfst E\<^sub>1 x\<close>]
   certified by (insert ToA_Mapper_f_expn[OF Tr] useful, auto_sledgehammer) ;;
 \<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp simp: Premise_def prod.map_beta)
 
@@ -4265,10 +4265,10 @@ lemma ToA_mapper_MOne_tgt
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
                    Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
 \<medium_left_bracket> premises _ and _ and _ and  S1E[] and _ and Tr[]
-  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
+  apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
 \<medium_right_bracket> apply(rule conjunctionI, rule)
 \<medium_left_bracket> premises _ and _ and _ and S1E[] and _ and Tr[]
-  apply_rule apply_ToA_Mapper_backward[OF Tr]
+  apply_rule ToA_Mapper_backward[OF Tr]
 
   apply_rule apply_Semimodule_One\<^sub>E[OF S1E, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
   certified by (insert ToA_Mapper_f_expn[OF Tr] useful, auto_sledgehammer) ;;
@@ -4301,13 +4301,13 @@ lemma ToA_mapper_MOne_tgt'
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric]
                    Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
 \<medium_left_bracket> premises _ and _ and _ and S1I[] and _ and Tr[]
-  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
+  apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>x\<close>]
 \<medium_right_bracket> apply(rule conjunctionI, rule)
 \<medium_left_bracket> premises _ and _ and _ and S1I[] and _ and Tr[]
 
   apply_rule apply_Semimodule_One\<^sub>I[OF S1I, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
   certified by auto_sledgehammer ;;
-  apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
+  apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apfst I\<^sub>1 x\<close>]
   certified by auto_sledgehammer
 
 \<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp simp: apfst_def prod.map_comp)
@@ -4820,7 +4820,7 @@ lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF
          and [] and _ and [simp] and [simp]
     apply_rule apply_Separation_Homo\<^sub>I_Cond[where Fu=F\<^sub>4 and Ft=F\<^sub>1, OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where U=\<open>U \<^emph>[C\<^sub>R] R\<close> and f=\<open>h\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
-    \<medium_left_bracket> apply_rule apply_ToA_Mapper_onward[OF Tr] \<medium_right_bracket>
+    \<medium_left_bracket> apply_rule ToA_Mapper_onward[OF Tr] \<medium_right_bracket>
     apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E] certified by (metis the_\<phi>(3) the_\<phi>(4))
   \<medium_right_bracket> apply (rule conjunctionI, rule, simp add: image_image del: split_paired_All)
   \<medium_left_bracket> premises FTF[] and [] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[]
@@ -4831,7 +4831,7 @@ lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF
   
     apply_rule apply_Functional_Transformation_Functor[where f=s and P=\<open>\<lambda>_. True\<close>, OF FTF']
     \<medium_left_bracket> for a
-      apply_rule apply_ToA_Mapper_backward[OF Tr]
+      apply_rule ToA_Mapper_backward[OF Tr]
       certified proof (insert \<open>a \<in> Dom' (z' x)\<close> \<open>x \<in> (\<lambda>x. (m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r) (uz (func_mapper h (\<lambda>_. True) (z x)))) ` D\<close>,
                       simp add: image_iff, elim bexE)
                   fix xa :: "'o \<times> 'p"
@@ -5079,7 +5079,7 @@ lemma SE_Module_scalar_assoc_mapper_tgt_template
                    Cond_\<phi>Prod_expn_\<phi>Some LCond_\<phi>Prod_expn_\<phi>Some)
 
 \<medium_left_bracket> premises A and _ and SA\<^sub>I[] and [] and [] and [] and SA\<^sub>E[] and _ and Tr[]
-  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=x]
+  apply_rule ToA_Mapper_onward[OF Tr, where x=x]
   apply_rule apply_Semimodule_SAssoc\<^sub>I[where s=a and t=c, OF SA\<^sub>I,
                 THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans], unfolded A]
 \<medium_right_bracket> apply (rule conjunctionI, rule)
@@ -5087,7 +5087,7 @@ lemma SE_Module_scalar_assoc_mapper_tgt_template
   apply_rule apply_Semimodule_SAssoc\<^sub>E[where s=a and t=c, OF SA\<^sub>E,
                 THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans], unfolded A]
     certified by auto_sledgehammer ;;
-  apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apfst (g\<^sub>E a c) x\<close>]
+  apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apfst (g\<^sub>E a c) x\<close>]
     certified by (insert ToA_Mapper_f_expn[OF Tr], auto_sledgehammer)
 \<medium_right_bracket> by (rule conjunctionI, rule, drule ToA_Mapper_f_expn, clarsimp simp: prod.map_beta)
 
@@ -5122,10 +5122,10 @@ lemma SE_Module_scalar_assoc_mapper_src_template
 \<medium_left_bracket> premises A and _ and SA\<^sub>E[] and [] and [] and [] and SA\<^sub>I[] and _ and Tr[]
   apply_rule apply_Semimodule_SAssoc\<^sub>E[where s=a and t=c, OF SA\<^sub>E,
                 THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans], unfolded A]
-  apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>apfst (g\<^sub>E a c) x\<close>]
+  apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>apfst (g\<^sub>E a c) x\<close>]
 \<medium_right_bracket> apply (rule conjunctionI, rule)
 \<medium_left_bracket> premises A and _ and SA\<^sub>E[] and [] and [] and [] and SA\<^sub>I[] and _ and Tr[] 
-  apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>x\<close>]
+  apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>x\<close>]
   apply_rule apply_Semimodule_SAssoc\<^sub>I[where s=a and t=c, OF SA\<^sub>I,
                 THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans], unfolded A]
   certified by (insert ToA_Mapper_f_expn[OF Tr], auto_sledgehammer)
@@ -5977,14 +5977,14 @@ lemma SE_Module_SDistr_da_bc_ToA_mapper
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=c and s=b and F=F\<^sub>1]
     certified by (insert useful(1) useful(2)[THEN bspec[OF _ \<open>x \<in> D\<close>]],
                   clarsimp split: prod.split simp add: useful(3-)) ;;
-    apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> case uz c b (z a d (x\<^sub>a,x\<^sub>d)) of (x\<^sub>c,x\<^sub>b) \<Rightarrow> (x\<^sub>b,w)\<close>]
+    apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> case uz c b (z a d (x\<^sub>a,x\<^sub>d)) of (x\<^sub>c,x\<^sub>b) \<Rightarrow> (x\<^sub>b,w)\<close>]
       certified by (clarsimp split: prod.split simp add: \<phi> image_iff, insert \<phi>(4), force)
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply(rule conjunctionI, rule)
   \<medium_left_bracket> premises A[THEN dabc_equation_D_main] and _ and _ and _ and _ and _ and _ and Tr
     note A[THEN conjunct1, symmetric, simp]
          A[THEN conjunct2, simp] ;;
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> (y,r)\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> (y,r)\<close>]
       certified by (insert useful(1), clarsimp split: prod.split simp add: \<phi> image_iff,
                     case_tac \<open>uz c b (z a d (aa, ba))\<close>, clarsimp,
                     case_tac \<open>h (bb, aaa)\<close>, clarsimp, force) ;;
@@ -6072,13 +6072,13 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=d and s=a and F=F\<^sub>1]
       certified by (of_tac \<open>(snd (snd x), fst x)\<close>, clarsimp split: prod.split simp add: useful, insert useful(1,2), force) ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[where t=b and s=c and F=F\<^sub>1]
-    apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> case uz b c (z d a (x\<^sub>d,x\<^sub>a)) of (x\<^sub>b,x\<^sub>c) \<Rightarrow> (x\<^sub>b,w)\<close>]
+    apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,w,x\<^sub>d) \<Rightarrow> case uz b c (z d a (x\<^sub>d,x\<^sub>a)) of (x\<^sub>b,x\<^sub>c) \<Rightarrow> (x\<^sub>b,w)\<close>]
       certified by (clarsimp split: prod.split simp add: useful)
   \<medium_right_bracket> certified by (clarsimp split: prod.split simp add: useful)
     apply(rule conjunctionI, rule)
   \<medium_left_bracket> premises dabc[THEN dabc_equation_D_main, simp] and _ and _ and _ and _ and _ and _ and Tr
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> (y,r)\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>case x of (y,r,x\<^sub>c) \<Rightarrow> (y,r)\<close>]
     certified apply (clarsimp simp add: image_iff useful split: prod.split,
                      insert useful(1), clarsimp simp add: image_iff split: prod.split)
               subgoal premises prems for x1 aa ba ab ac bb
@@ -6168,7 +6168,7 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_LCond_\<phi>Some[OF SS, where s=\<open>db\<close> and t=c and C=C\<^sub>c]
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_RCond_\<phi>Some[OF SS, where s=\<open>d\<close> and t=b and C=C\<^sub>d]
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr,
+    apply_rule ToA_Mapper_onward[OF Tr,
         where x=\<open>case x of (x,w) \<Rightarrow> case ?\<^sub>s\<^sub>L C\<^sub>c (uz c db) x of (x\<^sub>c, x\<^sub>d\<^sub>b) \<Rightarrow> case ?\<^sub>s\<^sub>R C\<^sub>d (uz b d) x\<^sub>d\<^sub>b of (x\<^sub>b, x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)\<close>]
       certified by (insert t1, clarsimp split: prod.split simp: image_iff, metis Dom fst_conv snd_conv)
       
@@ -6184,7 +6184,7 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
     note D\<^sub>G' = D\<^sub>G[THEN bspec[OF _ Dom]]
     note t1[useful] = MG[THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
     certified by (insert t1 Dom, clarsimp simp add: image_iff split: prod.split, force) ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_RCond_\<phi>Some[OF SZ, where s=\<open>d\<close> and t=b and r=db and C=C\<^sub>d
@@ -6252,7 +6252,7 @@ lemma SE_Module_SDistr_a_db_ToA_mapper
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[OF SS, where s=\<open>d\<close> and t=b, unfolded EC[THEN conjunct1]]
     apply_rule swap_\<phi>Cond_Ins_by_raw_class[OF IF, THEN eq_right_frame] ;;
-    apply_rule apply_ToA_Mapper_onward[OF Tr,
+    apply_rule ToA_Mapper_onward[OF Tr,
         where x=\<open>case x of (x,w) \<Rightarrow> case uz b d x of (x\<^sub>b,x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)\<close>]
       certified by (insert t1 Dom, clarsimp split: prod.split simp: image_iff, force)
   \<medium_right_bracket> certified by (clarsimp simp add: image_iff split: prod.split)
@@ -6268,7 +6268,7 @@ lemma SE_Module_SDistr_a_db_ToA_mapper
     note D\<^sub>G' = D\<^sub>G[THEN bspec[OF _ Dom]]
     note t1[useful] = MG[THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
     certified by (insert t1 Dom, clarsimp split: prod.split simp: image_iff, force) ;;
 
     apply_rule swap_\<phi>Cond_Ins_by_raw_class[OF IF, symmetric, THEN eq_right_frame]
@@ -6346,7 +6346,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_ToA_mapper
 
     apply_rule apply_Semimodule_One\<^sub>E_\<phi>Some[OF S1\<^sub>E] ;;
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr,
+    apply_rule ToA_Mapper_onward[OF Tr,
         where x=\<open>case x of (x,w) \<Rightarrow> case getter x of (x\<^sub>c, x\<^sub>b, x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)\<close>]
       certified by (insert t1 Dom, clarsimp split: prod.split simp: image_iff Let_def, auto_sledgehammer)
 
@@ -6363,7 +6363,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_ToA_mapper
     from EC have db: \<open>?\<^sub>+ True d\<epsilon> = ?\<^sub>+ C\<^sub>d d + ?\<^sub>+ True \<epsilon> \<and> (C\<^sub>c \<longrightarrow> d\<epsilon> ##\<^sub>+ c) \<and> (C\<^sub>d \<longrightarrow> d ##\<^sub>+ \<epsilon>)\<close> by blast
     note t1[useful] = MG[THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF db] ;;
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
     certified by (insert t1 Dom, clarsimp simp add: image_iff split: prod.split, force) ;;
 
     apply_rule apply_Semimodule_One\<^sub>I_\<phi>Some[OF S1\<^sub>I]
@@ -6449,7 +6449,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_ToA_mapper
                          A[THEN spec[where x=\<open>fst x\<close>]],
                     clarsimp split: prod.split simp: useful(3-) Let_def) ;;
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr,
+    apply_rule ToA_Mapper_onward[OF Tr,
         where x=\<open>case x of (x,w) \<Rightarrow> case getter x of (x\<^sub>c, x\<^sub>b, x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)\<close>]
       certified by (insert A[THEN spec[where x=\<open>fst x\<close>]]
                            useful(2) useful(3)[THEN bspec[OF _ useful(2)]],
@@ -6461,7 +6461,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>c_ToA_mapper
     apply (rule conjunctionI, rule)
   \<medium_left_bracket> premises _ and SS[] and SZ[] and S1\<^sub>E[] and S1\<^sub>I[] and _ and A and Tr[] and _ and [] and []
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
     certified apply (insert useful(1), clarsimp simp add: image_iff split: prod.split)
     subgoal premises prems for a b
       by (insert useful(2)[THEN bspec[OF _ \<open>_ \<in> D\<close>]]
@@ -6557,7 +6557,7 @@ lemma SE_Module_SDistr_a_\<epsilon>c_ToA_mapper
                          A[THEN spec[where x=\<open>fst x\<close>]],
                     clarsimp split: prod.split simp: useful(3-) Let_def) ;;
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr,
+    apply_rule ToA_Mapper_onward[OF Tr,
         where x=\<open>case x of (x,w) \<Rightarrow> case getter x of (x\<^sub>c, x\<^sub>b) \<Rightarrow> (x\<^sub>b, w)\<close>]
       certified by (insert A[THEN spec[where x=\<open>fst x\<close>]]
                            useful(2) useful(3)[THEN bspec[OF _ useful(2)]]
@@ -6570,7 +6570,7 @@ lemma SE_Module_SDistr_a_\<epsilon>c_ToA_mapper
     apply (rule conjunctionI, rule)
   \<medium_left_bracket> premises _ and SS[] and SZ[] and S1\<^sub>E[] and S1\<^sub>I[] and _ and A and Tr[] and _ and [] and []
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
     certified apply (insert useful(1), clarsimp simp add: image_iff split: prod.split)
     subgoal premises prems for a b
       by (insert useful(2)[THEN bspec[OF _ \<open>_ \<in> D\<close>]]
@@ -6658,7 +6658,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>_ToA_mapper
 
     apply_rule apply_Semimodule_One\<^sub>E_\<phi>Some[OF S1\<^sub>E]
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr,
+    apply_rule ToA_Mapper_onward[OF Tr,
         where x=\<open>case x of (x,w) \<Rightarrow> case getter x of (x\<^sub>b, x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)\<close>]
       certified by (insert t1, clarsimp split: prod.split simp: image_iff Let_def, auto_sledgehammer)
 
@@ -6675,7 +6675,7 @@ lemma SE_Module_SDistr_a_d\<epsilon>_ToA_mapper
     note D\<^sub>G' = D\<^sub>G[THEN bspec[OF _ Dom]]
     note t1[useful] = MG[THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apsnd fst x\<close>]
     certified by (insert t1 Dom, clarsimp simp add: image_iff split: prod.split, force) ;;
 
     apply_rule apply_Semimodule_One\<^sub>I_\<phi>Some[OF S1\<^sub>I]
@@ -6750,7 +6750,7 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper
                                                                   and x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d))\<close>]
     certified by (insert t1 Dom, clarsimp split: prod.split) ;;
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (?\<^sub>j\<^sub>L C\<^sub>c (z c da) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d)), w)\<close>]
+    apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (?\<^sub>j\<^sub>L C\<^sub>c (z c da) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d)), w)\<close>]
     certified by (insert t1 Dom, clarsimp split: prod.split simp: image_iff, auto_sledgehammer)
   \<medium_right_bracket> certified by (insert t1 Dom, clarsimp split: prod.split simp: image_iff)
     apply (rule conjunctionI, rule)
@@ -6766,7 +6766,7 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper
     have D\<^sub>G': \<open>D\<^sub>G (case y of (x\<^sub>a, x\<^sub>d, x\<^sub>c, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d, x\<^sub>c))\<close> by (cases x; clarsimp)
     note t1[useful] = MG[unfolded module_mapper\<^sub>1\<^sub>3\<^sub>C_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=x]
     certified by (insert t1 Dom, clarsimp split: prod.split simp: image_iff, force) ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_LCond_\<phi>Some[OF SS, where x=\<open>(fst o s) x\<close> and s=da and t=c and r=b and C=C\<^sub>c]
@@ -6851,11 +6851,11 @@ lemma SE_Module_SDistr_d\<epsilon>c_b_ToA_mapper_cond
                                                                   and x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (x\<^sub>a, x\<^sub>d)\<close>]
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_LCond_\<phi>Some[OF SZ, where s=da and t=c and r=b and C=C\<^sub>c
                                                                   and x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d))\<close>]
-    apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (?\<^sub>j\<^sub>L C\<^sub>c (z c da) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d)), w)\<close>]
+    apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (?\<^sub>j\<^sub>L C\<^sub>c (z c da) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (z a d) (x\<^sub>a, x\<^sub>d)), w)\<close>]
   \<medium_right_bracket> apply (rule conjunctionI, rule)
   \<medium_left_bracket> premises [symmetric, simp] and SZ[] and SS[] and [simp] and _ and Tr[] and []
          and _ and [] and [] and _
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=x]
       certified by (insert useful(1), simp add: image_image image_iff, elim bexE, simp add: prod.case_distrib, force) ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_LCond_\<phi>Some[OF SS, where x=\<open>(fst o s) x\<close> and s=da and t=c and r=b and C=C\<^sub>c]
     certified apply (insert useful(1), simp add: image_image image_iff, elim bexE)
@@ -6947,12 +6947,12 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper
                                                             and x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (x\<^sub>c, z a d (x\<^sub>a, x\<^sub>d))\<close>]
     certified by (insert useful(2)[THEN bspec[OF _ useful(1)]], clarsimp simp: useful(1,3-) Let_def split: prod.split) ;;
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (z c (d+a) (x\<^sub>c, z a d (x\<^sub>a, x\<^sub>d)), w)\<close>]
+    apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,x\<^sub>c,w) \<Rightarrow> (z c (d+a) (x\<^sub>c, z a d (x\<^sub>a, x\<^sub>d)), w)\<close>]
     certified by (insert useful(2)[THEN bspec[OF _ useful(1)]], clarsimp simp: useful(1,3-) Let_def split: prod.split)
   \<medium_right_bracket> apply (rule conjunctionI, rule)
   \<medium_left_bracket> premises A and SZ[] and SS[] and _ and Tr[] and []
          and _ and [] and [] and _
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=x]
     certified by (insert useful(1), clarsimp split: prod.split simp: image_iff, force) ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[OF SS, where x=\<open>(fst o s) x\<close> and s=\<open>d+a\<close> and t=c, unfolded A]
     certified apply (insert useful(1), simp add: image_image image_iff, elim bexE)
@@ -7031,10 +7031,10 @@ lemma SE_Module_SDistr_ac_b_ToA_mapper
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[OF SZ, where s=a and t=c
                                                             and x=\<open>case x of (x\<^sub>a,x\<^sub>c,w) \<Rightarrow> (x\<^sub>c,x\<^sub>a)\<close>] ;;
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>c,w) \<Rightarrow> (z c a (x\<^sub>c, x\<^sub>a), w)\<close>]
+    apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>c,w) \<Rightarrow> (z c a (x\<^sub>c, x\<^sub>a), w)\<close>]
   \<medium_right_bracket> apply (rule conjunctionI, rule)
   \<medium_left_bracket> premises A[] and SZ[] and SS[] and [simp] and Tr[] and [] and _ and [] and []
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=x]
       certified by (insert useful(1), simp add: image_image image_iff, elim bexE, simp add: prod.case_distrib, force) ;;
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[OF SS, where x=\<open>(fst o s) x\<close> and s=a and t=c, unfolded A]
     certified apply (insert useful(1), simp add: image_image image_iff, elim bexE)
@@ -7102,7 +7102,7 @@ lemma SE_Module_SDistr_da_b_ToA_mapper
                                                             and x=\<open>case x of (x\<^sub>a,x\<^sub>d,w) \<Rightarrow> (x\<^sub>a, x\<^sub>d)\<close>]
     certified by (insert t1, clarsimp split: prod.split simp: Let_def)  ;;
 
-    apply_rule apply_ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,w) \<Rightarrow> (z a d (x\<^sub>a, x\<^sub>d), w)\<close>]
+    apply_rule ToA_Mapper_onward[OF Tr, where x=\<open>case x of (x\<^sub>a,x\<^sub>d,w) \<Rightarrow> (z a d (x\<^sub>a, x\<^sub>d), w)\<close>]
     certified by (insert \<open>x \<in> D\<close>, clarsimp split: prod.split simp: image_iff, force)
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply (rule conjunctionI, rule)
@@ -7118,7 +7118,7 @@ lemma SE_Module_SDistr_da_b_ToA_mapper
     have D\<^sub>G': \<open>D\<^sub>G (case y of (x\<^sub>a, x\<^sub>d, w) \<Rightarrow> (x\<^sub>a, x\<^sub>d))\<close> by (cases x; clarsimp)
     note t1[useful] = MG[unfolded module_mapper\<^sub>1\<^sub>2\<^sub>L_def, THEN spec, THEN mp, OF D\<^sub>G', THEN mp, OF EC[THEN conjunct2]] ;;
 
-    apply_rule apply_ToA_Mapper_backward[OF Tr, where x=x]
+    apply_rule ToA_Mapper_backward[OF Tr, where x=x]
     certified by (insert t1 Dom, clarsimp split: prod.split simp: Let_def image_iff, force) ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[OF SS, where x=\<open>case s x of (x\<^sub>b,w) \<Rightarrow> x\<^sub>b\<close> and s=d and t=a, unfolded EC[THEN conjunct1]]

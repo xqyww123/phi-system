@@ -58,10 +58,10 @@ and \<open>get_logical_int_from_semantic_int ?S _\<close> \<Rightarrow> \<open>g
 
 
 definition \<r>nat_to_suc_nat :: \<open>nat \<Rightarrow> nat \<Rightarrow> bool\<close>
-  where [simp]: \<open>\<r>nat_to_suc_nat n sn \<longleftrightarrow> n = sn\<close>
+  where [simp, \<phi>safe_simp]: \<open>\<r>nat_to_suc_nat n sn \<longleftrightarrow> n = sn\<close>
 
 definition \<r>int_to_suc_nat :: \<open>int \<Rightarrow> nat \<Rightarrow> bool\<close>
-  where [simp]: \<open>\<r>int_to_suc_nat z n \<longleftrightarrow> z = of_nat n\<close>
+  where [simp, \<phi>safe_simp]: \<open>\<r>int_to_suc_nat z n \<longleftrightarrow> z = of_nat n\<close>
 
 \<phi>reasoner_ML \<r>nat_to_suc_nat 1000 (\<open>\<r>nat_to_suc_nat _ _\<close> | \<open>\<r>int_to_suc_nat _ _\<close>) =
 \<open>fn (_, (ctxt,sequent0)) => let
@@ -75,7 +75,7 @@ definition \<r>int_to_suc_nat :: \<open>int \<Rightarrow> nat \<Rightarrow> bool
  val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   Conv.arg_conv (Conv.arg1_conv (Simplifier.rewrite ctxt))) ctxt) 1 sequent0
 in case Thm.major_prem_of sequent
-     of (_ (*Trueprop*) $ ( _ (*\<r>nat_to_suc_nat*) $ Z $ Var v))
+     of (_ (*Trueprop*) $ (Const(N, _) (*\<r>nat_to_suc_nat*) $ Z $ Var v))
         => Seq.make (fn () =>
           let val z = dest_number Z
            in if z < 0 then NONE
@@ -83,7 +83,7 @@ in case Thm.major_prem_of sequent
                 val v' = funpow z (fn x => \<^const>\<open>Suc\<close> $ x) \<^term>\<open>0::nat\<close>
                 in case Seq.pull (
                     Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt v')]) sequent
-                        |> SOLVED' (Simplifier.simp_tac ctxt) 1
+                        |> SOLVED' (Simplifier.simp_tac (Phi_Safe_Simps.equip ctxt)) 1
                         |> Seq.map (pair ctxt)
                     ) of NONE => (
                           warning (Pretty.string_of (Pretty.block [
@@ -94,7 +94,11 @@ in case Thm.major_prem_of sequent
                        | some => some
                end
           end
-        handle Not_A_Number => NONE
+        handle Not_A_Number =>
+            let val rule = (case N of \<^const_name>\<open>\<r>nat_to_suc_nat\<close> =>
+                                        @{lemma' \<open>\<r>nat_to_suc_nat x x\<close> by (simp add: \<r>nat_to_suc_nat_def)})
+             in SOME ((ctxt, rule RS sequent), Seq.empty)
+            end
          )
      | _ => Seq.empty
 end

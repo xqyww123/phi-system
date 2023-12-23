@@ -1,4 +1,4 @@
-theory PhiSem_Formalization_Tools
+theory PhiSem_Formalization_To
   imports IDE_CP
 begin
 

@@ -203,9 +203,16 @@ proc test_mem17:
   $addr \<tribullet> 2 \<tribullet> c := \<open>42 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
+term \<open>\<a>\<r>\<r>\<a>\<y>[2] A\<close>
+term \<open>\<Pp>\<t>\<r> A\<close>
 proc test_mem18:
-  input  \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<close>
-  output \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<close>
+  input  \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<s>\<l>\<i>\<c>\<e>[j,m] \<nat>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<a>\<r>\<r>\<a>\<y>[M] \<a>\<i>\<n>\<t>\<heavy_comma>
+          i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<s>\<l>\<i>\<c>\<e>[j,m] \<nat>\<close>
+  \<medium_left_bracket>
+    note [[\<phi>trace_reasoning = 2]] ;;
+  $addr \<tribullet> $i
 
 
 (*FIXME!

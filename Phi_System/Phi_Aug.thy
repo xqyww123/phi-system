@@ -89,6 +89,36 @@ lemma list_upd_map_Suc_eval[simp]:
   unfolding list_upd_map_def
   by simp
 
+lemma length_list_upd_map[iff]:
+  \<open> length (list_upd_map i f l) = length l \<close>
+  unfolding list_upd_map_def
+  by clarsimp
+
+lemma take_list_upd_map_le[simp]:
+  \<open> i \<le> j
+\<Longrightarrow> take j (list_upd_map i f l) = list_upd_map i f (take j l) \<close>
+  unfolding list_upd_map_def
+  by (metis nth_take order_le_imp_less_or_eq take_update_cancel take_update_swap)
+
+lemma take_list_upd_map_gt[simp]:
+  \<open> j < i
+\<Longrightarrow> take j (list_upd_map i f l) = take j l \<close>
+  unfolding list_upd_map_def
+  by simp
+
+lemma drop_list_upd_map_lt[simp]:
+  \<open> i < j
+\<Longrightarrow> drop j (list_upd_map i f l) = drop j l \<close>
+  unfolding list_upd_map_def
+  by simp
+
+lemma drop_list_upd_map_ge[simp]:
+  \<open> j \<le> i
+\<Longrightarrow> drop j (list_upd_map i f l) = list_upd_map (i-j) f (drop j l) \<close>
+  unfolding list_upd_map_def
+  by (metis Nat.add_diff_assoc add_diff_cancel_left' drop_all drop_update_swap length_list_update less_imp_le_nat linorder_not_le nth_drop)
+  
+
 
 subsection \<open>Mapping Prefix / Suffix\<close>
 

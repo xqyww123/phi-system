@@ -444,8 +444,6 @@ ML_file \<open>syntax/index_param.ML\<close>
 
 section \<open>First-level Abstraction of Instructions\<close>
 
-term \<open>Is_Aggregate\<close>
-
 lemma op_get_aggregate:
   \<open> Is_Aggregate T
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY

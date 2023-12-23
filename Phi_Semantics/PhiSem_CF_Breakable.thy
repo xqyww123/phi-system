@@ -2,13 +2,11 @@ theory PhiSem_CF_Breakable
   imports PhiSem_CF_Break PhiSem_CF_Basic
 begin
 
-declare [[\<phi>hide_techinicals=false]]
+declare [[\<phi>hide_techinicals=true]]
 
 text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<open>continue\<close> now, the termination condition of a loop is not
   necessarily the negative of the loop guard. Therefore here we need 3 assertions, invariance,
   guard, and termination condition.\<close>
-
-declare [[\<phi>trace_reasoning = 2]]
 
 proc while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> End: termination x)\<close>
