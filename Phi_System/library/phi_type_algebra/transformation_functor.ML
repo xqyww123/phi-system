@@ -61,7 +61,7 @@ fun mk_TF's_two_instantiations ctxt (FT_term, phi) =
       val params' = map (Term_Subst.instantiate inst) params'
 
       val ants = map2 (fn p => fn p' =>
-                      \<^Const>\<open>\<r>Guard\<close> $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $
+                      \<^Const>\<open>\<r>Guard\<close> $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SAFE\<close> $
                           (\<^Const>\<open>HOL.eq \<open>Term.fastype_of p\<close>\<close> $ p $ p'))
                  ) params params'
 

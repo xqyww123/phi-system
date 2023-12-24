@@ -373,8 +373,9 @@ fun case_split_by_annotations term =
        | parse_split _ splits = splits
    in case parse_split term []
    of [] => K (K all_tac)
-    | L => fn ctxt => foldl1 (op THEN_ALL_NEW)
-                             (map (fn tm => Induct.cases_tac ctxt true [[SOME tm]] NONE []) L)
+    | L => fn ctxt => fn goal => fn st =>
+                  foldl1 (op THEN_ALL_NEW)
+                         (map (fn tm => DETERM o Induct.cases_tac ctxt true [[SOME tm]] NONE []) L) goal st
   end
 
 fun case_split_by_annotations_leading_subgoal ctxt goal th =
@@ -741,12 +742,12 @@ fun weak_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
                             else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW *)
                 Classical.clarify_tac (addSss ctxt)
-       in apply_tac ctxt (fn (ctxt,pre,aux,_) =>
+       in apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
                  THEN HEADGOAL (
                               case_split_by_annotations_leading_subgoal ctxt 
                  THEN_ALL_NEW Method.insert_tac ctxt aux
-                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x))
+                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x)) )
                ) Safe_Solver th'
        |> Seq.pull
       end)

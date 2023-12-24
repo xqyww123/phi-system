@@ -222,6 +222,7 @@ text \<open>Arguments and Returns are wrapped by \<phi>arg type.
 datatype 'a \<phi>arg = \<phi>arg (dest: 'a)
 hide_const (open) dest
 
+
 definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 
 lemma \<phi>arg_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)

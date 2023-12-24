@@ -16,6 +16,8 @@ subsubsection \<open>Configuration\<close>
 
 declare [[\<phi>reason_default_pattern \<open>Valid_Proc ?F\<close> \<Rightarrow> \<open>Valid_Proc ?F\<close> (100)]]
 declare Valid_Proc_bind[\<phi>reason 1200]
+declare \<phi>arg.simps[\<phi>safe_simp] \<phi>arg.sel[\<phi>safe_simp]
+
 
 section \<open>Fiction\<close>
 
