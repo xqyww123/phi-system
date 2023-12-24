@@ -5,7 +5,7 @@ val dest_premise_tag : term -> term * term
 val dest_premise_tag_opt : term -> (term * term) option
 val dest_premise_tag_c : cterm -> cterm * cterm
 val add_premise_tag_conv : cterm (*mode*) -> conv
-val premise_tag_conv : conv -> conv
+val premise_tag_conv : (term -> bool) -> conv -> conv
 
 val provide_premise_condition : thm -> thm -> thm
 
@@ -50,11 +50,12 @@ fun add_premise_tag_conv mode =
    in Conv.rewr_conv rule
   end
 
-fun premise_tag_conv C ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (premise_tag_conv C) ctm
-     | Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _ => Conv.arg_conv C ctm
-     | _ => raise CTERM ("premise_tag_conv",[ctm])
+fun premise_tag_conv P C =
+  Phi_Conv.tag_conv (fn ctm =>
+    case Thm.term_of ctm
+      of Const(\<^const_name>\<open>Premise\<close>, _) $ mode $ _ =>
+              if P mode then Conv.arg_conv C ctm else raise CTERM ("premise_tag_conv",[ctm])
+       | _ => raise CTERM ("premise_tag_conv",[ctm]))
 
 fun provide_premise_condition C th =
   case Thm.prop_of C

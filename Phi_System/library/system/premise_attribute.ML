@@ -10,7 +10,7 @@ val register_attribute_lthy : serial * bool * term * attribute list -> local_the
 
 (* If multiple attributes match the given term, returns the concatenation of the
   attributes in the order of declaration. *)
-val attribute_of : bool (*involve-default?*) -> term -> Context.generic -> attribute list
+val attribute_of : Context.generic -> bool (*involve-default?*) -> term -> attribute list
 
 end
 
@@ -31,16 +31,18 @@ fun register_attribute_lthy (i,mandatory,pat,attr) =
   Local_Theory.declaration {syntax=false, pervasive=false, pos=Position.none}
     (fn m => register_attribute (i,mandatory, Morphism.term m pat, attr))
 
-fun attribute_of default term ctxt =
+fun attribute_of ctxt =
+  let val data = Data.get ctxt
+   in fn default => fn term =>
   let val concl = Logic.strip_assums_concl (Phi_Help.beta_eta_contract_term term)
-   in Net.match_term (Data.get ctxt) concl
+   in Net.match_term data concl
    |> map_filter (fn (i,mandatory,pat, attr) =>
          if (default orelse mandatory)
          andalso Pattern.matches (Context.theory_of ctxt) (pat,concl)
          then SOME (i,attr) else NONE)
    |> sort (int_ord o apply2 #1)
    |> maps snd
-  end
+  end end
 
 val prop_patterns = Scan.peek (fn generic =>
   let val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of generic)

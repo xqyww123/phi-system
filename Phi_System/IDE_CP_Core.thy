@@ -2560,22 +2560,29 @@ setup \<open>Context.theory_map (
    (*simplification*)
 #> let val rewr_objects = Phi_Syntax.conv_all_typings (Conv.arg1_conv o Simplifier.rewrite)
     in Phi_CP_IDE.Post_App.add 300 (K (fn (ctxt, sequent) =>
-    let fun conv_head C ctxt =
-              Conv.gconv_rule (Phi_Conv.hhf_concl_conv (Phi_Conv.tag_conv o C) ctxt) 1
+    let fun conv_conds ctxt ctm = Phi_Conv.hhf_conv conv_conds
+              (Phi_Conv.hhf_concl_conv (fn ctxt => Conv.try_conv (
+               PLPR_Syntax.premise_tag_conv (fn Const(\<^const_name>\<open>default\<close>, _) => true
+                                              | Const(\<^const_name>\<open>MODE_GUARD\<close>, _) => true
+                                              | _ => false) (Simplifier.rewrite ctxt))))
+              ctxt ctm
+        fun conv_sequent C ctxt =
+              Conv.gconv_rule (Phi_Conv.hhf_conv conv_conds
+                  (Phi_Conv.tag_conv o C) ctxt) 1
         val simplifier =
               case Thm.prop_of sequent
                 of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => SOME (Simplifier.full_simplify)
                  | _ => (
               case Term.head_of (PLPR_Syntax.dest_tags (Thm.major_prem_of sequent))
                 of Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) =>
-                      SOME (conv_head (fn ctxt =>
+                      SOME (conv_sequent (fn ctxt =>
                         Phi_Syntax.procedure_conv Conv.all_conv
                           (rewr_objects ctxt) (rewr_objects ctxt) (rewr_objects ctxt)))
                  | Const(\<^const_name>\<open>View_Shift\<close>, _) =>
-                      SOME (conv_head (fn ctxt =>
+                      SOME (conv_sequent (fn ctxt =>
                         Phi_Syntax.view_shift_conv (rewr_objects ctxt) (rewr_objects ctxt) Conv.all_conv))
                  | Const(\<^const_name>\<open>Transformation\<close>, _) =>
-                      SOME (conv_head (fn ctxt =>
+                      SOME (conv_sequent (fn ctxt =>
                         Phi_Syntax.view_shift_conv (rewr_objects ctxt) (rewr_objects ctxt) Conv.all_conv))
                  | _ => NONE)
     in case simplifier

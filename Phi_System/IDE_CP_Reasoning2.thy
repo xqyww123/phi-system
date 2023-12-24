@@ -751,12 +751,14 @@ subsubsection \<open>Normalization\<close>
 
 lemma [\<phi>reason %\<phi>mapToA_norm
           for \<open>\<m>\<a>\<p> id : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>
+              \<open>\<m>\<a>\<p> id : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
 \<Longrightarrow> mapToA_assign_id g
 \<Longrightarrow> mapToA_assign_id r
-\<Longrightarrow> \<m>\<a>\<p> id : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+\<Longrightarrow> \<m>\<a>\<p> id : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)

@@ -194,7 +194,7 @@ fun gen_SgTH (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SgH_rewr_C}) then_conv
                 Conv.implies_concl_conv (Conv.implies_conv
-                  (PLPR_Syntax.premise_tag_conv (
+                  (PLPR_Syntax.premise_tag_conv (K true) (
                     Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0))))
                   (Phi_Conv.action_tag_conv (
                     Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt

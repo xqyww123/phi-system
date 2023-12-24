@@ -597,7 +597,7 @@ fun obligation_intro_Ex_conv' conv_schematic ctxt thm0 =
                 Conv.rewr_conv contract_Ex_rule then_conv (
                 if mode
                 then Phi_Conv.leading_antecedent_conv (
-                    PLPR_Syntax.premise_tag_conv (
+                    PLPR_Syntax.premise_tag_conv (K true) (
                       (Phi_Conv.move_sp_Ex_inside (K (
                                     Conv.fun_conv (Conv.rewr_conv @{thm' special_Ex_def}))) ctxt)
                       (*mv_Ex_All (fn _ => mv_Ex_Disj Conv.all_conv) ctxt*) )

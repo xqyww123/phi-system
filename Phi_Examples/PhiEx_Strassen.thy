@@ -23,6 +23,16 @@ lemma
   by auto
 
 
+schematic_goal \<open> P ((?\<^sub>U\<^sub>Z[True] (\<lambda>x. x) (\<lambda>f. f) \<circ> (apfst (\<lambda>x. x) \<circ> (?\<^sub>U\<^sub>Z[True] (\<lambda>x. x) (\<lambda>f. f) \<circ> prod.swap \<circ> ?\<^sub>Z[True] (\<lambda>x. x) (\<lambda>f. f))) \<circ>
+                 ?\<^sub>Z[True] (\<lambda>x. x) (\<lambda>f. f))
+                 (l, ?\<epsilon>15 i))\<close>
+  apply simp
+
+
+
+
+
+
 proc add_mat:
   input  \<open>x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
           y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<heavy_comma>
@@ -33,9 +43,10 @@ proc add_mat:
   premises \<open>i\<^sub>x + m \<le> M \<and> i\<^sub>y + m \<le> M \<and> j\<^sub>x + n \<le> N \<and> j\<^sub>y + n \<le> N\<close>
   output \<open>x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close>
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close> 
+  \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close>
   note [[\<phi>trace_reasoning = 2]]
+  thm useful
   ;;
 
   map_2list_loop ($m) \<open>(\<lambda>k. \<m>\<e>\<m>[a\<^sub>x \<tribullet>\<^sub>a (i\<^sub>x+k)\<^sup>\<t>\<^sup>\<h>] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<nat>, \<lambda>k. \<m>\<e>\<m>[a\<^sub>y \<tribullet>\<^sub>a (i\<^sub>y+k)\<^sup>\<t>\<^sup>\<h>] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<nat>)\<close>
