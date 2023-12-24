@@ -24,7 +24,13 @@ fun may_action_tag_conv C ctm =
      | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (may_action_tag_conv C) ctm
      | _ => C ctm
 
-fun tag_conv cv = may_Trueprop_conv (may_action_tag_conv cv)
+fun tag_conv C ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (tag_conv C) ctm
+     | Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ _ => Conv.arg1_conv (tag_conv C) ctm
+     | Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ _ $ _ => Conv.arg1_conv (tag_conv C) ctm
+     | Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ => Conv.arg_conv (tag_conv C) ctm
+     | _ => C ctm
 
 fun pure_imp_antecedents_conv C ctm =
   case Thm.term_of ctm of Const ("Pure.imp", _) $ _ $ _ => 

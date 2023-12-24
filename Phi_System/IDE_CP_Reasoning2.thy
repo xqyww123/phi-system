@@ -400,7 +400,15 @@ declare [[
        \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>
    \<Rightarrow> \<open>\<m>\<a>\<p> _ : ?U \<^emph>[_] _ \<mapsto> ?U' \<^emph>[_] _
        \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
-       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>    (100)
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>    (110)
+  and \<open>\<m>\<a>\<p> _ : ?U \<^emph> _ \<mapsto> ?U' \<^emph> _ \<o>\<v>\<e>\<r> _ : ?T \<mapsto> _
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>
+   \<Rightarrow> \<open>\<m>\<a>\<p> _ : ?U \<^emph> _ \<mapsto> ?U' \<^emph> _ \<o>\<v>\<e>\<r> _ : ?T \<mapsto> _
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>    (90)
+  and \<open>\<m>\<a>\<p> _ : ?U \<mapsto> ?U' \<o>\<v>\<e>\<r> _ : ?T \<mapsto> _
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>
+   \<Rightarrow> \<open>\<m>\<a>\<p> _ : ?U \<mapsto> ?U' \<o>\<v>\<e>\<r> _ : ?T \<mapsto> _
+       \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>    (80)
 (*  and \<open>\<g>\<e>\<t>\<t>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<i>\<n> ?D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> _\<close> \<Rightarrow>
       \<open>\<g>\<e>\<t>\<t>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<i>\<n> ?D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> _\<close>   (200) *)
 

@@ -637,18 +637,18 @@ section \<open>Primitive Instructions\<close>
 subsection \<open>GEP\<close>
 
 proc op_get_element_pointer[\<phi>overload \<tribullet>]:
-  requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx pidx reject\<close>
+  requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr_geps addr pidx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr_geps addr spec_idx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
     V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
-      \<Turnstile> (addr_geps addr pidx \<Ztypecolon> Ptr TY')\<close>
+      \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 
 

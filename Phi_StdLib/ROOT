@@ -1,0 +1,3 @@
+session "PhiStd" = "Phi_Semantics" +
+  theories
+    PhiStd_Loop

@@ -2558,21 +2558,41 @@ setup \<open>Context.theory_map (
 #> Phi_CP_IDE.Post_App.add 200 (K Phi_Sys.move_lemmata)
 
    (*simplification*)
-#> Phi_CP_IDE.Post_App.add 300 (K (fn (ctxt, sequent) =>
-    case Thm.prop_of sequent
-      of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-    let val lev = Config.get ctxt Phi_Reasoner.auto_level
-        val sctxt =
-          if lev >= 2
-          then Phi_Programming_Simp_SS.enhance ctxt
-          else if lev >= 1
-          then Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
-          else raise Phi_CP_IDE.Post_App.Return (ctxt, sequent)
-        val sequent' = Simplifier.full_simplify sctxt sequent
-                    |> Phi_Help.beta_eta_contract
-    in (ctxt, sequent')
-    end
-      | _ => (ctxt, sequent)))
+#> let val rewr_objects = Phi_Syntax.conv_all_typings (Conv.arg1_conv o Simplifier.rewrite)
+    in Phi_CP_IDE.Post_App.add 300 (K (fn (ctxt, sequent) =>
+    let fun conv_head C ctxt =
+              Conv.gconv_rule (Phi_Conv.hhf_concl_conv (Phi_Conv.tag_conv o C) ctxt) 1
+        val simplifier =
+              case Thm.prop_of sequent
+                of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => SOME (Simplifier.full_simplify)
+                 | _ => (
+              case Term.head_of (PLPR_Syntax.dest_tags (Thm.major_prem_of sequent))
+                of Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) =>
+                      SOME (conv_head (fn ctxt =>
+                        Phi_Syntax.procedure_conv Conv.all_conv
+                          (rewr_objects ctxt) (rewr_objects ctxt) (rewr_objects ctxt)))
+                 | Const(\<^const_name>\<open>View_Shift\<close>, _) =>
+                      SOME (conv_head (fn ctxt =>
+                        Phi_Syntax.view_shift_conv (rewr_objects ctxt) (rewr_objects ctxt) Conv.all_conv))
+                 | Const(\<^const_name>\<open>Transformation\<close>, _) =>
+                      SOME (conv_head (fn ctxt =>
+                        Phi_Syntax.view_shift_conv (rewr_objects ctxt) (rewr_objects ctxt) Conv.all_conv))
+                 | _ => NONE)
+    in case simplifier
+    of NONE => (ctxt, sequent)
+     | SOME rewr =>
+        let val lev = Config.get ctxt Phi_Reasoner.auto_level
+            val sctxt =
+              if lev >= 2
+              then Phi_Programming_Simp_SS.enhance ctxt
+              else if lev >= 1
+              then Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
+              else raise Phi_CP_IDE.Post_App.Return (ctxt, sequent)
+            val sequent' = rewr sctxt sequent
+                        |> Phi_Help.beta_eta_contract
+        in (ctxt, sequent')
+        end
+end)) end
 
 #> Phi_CP_IDE.Post_App.add 320 (fn arg => fn (ctxt, sequent) =>
     case Thm.prop_of sequent

@@ -190,6 +190,22 @@ lemma [\<phi>reason %chk_sem_ele_idx]:
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
+lemma [\<phi>reason %chk_sem_ele_idx - 5 except \<open>is_valid_step_idx_of (AgIdx_N 0) (semty_tup _) _\<close>
+                                           \<open>is_valid_step_idx_of (AgIdx_N (Suc _)) (semty_tup _) _\<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat n n'
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N n') (semty_tup Tys) Ty
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) (semty_tup Tys) Ty \<close>
+  unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
+  by simp
+
+
+lemma [\<phi>reason %chk_sem_ele_idx - 10 except \<open>is_valid_step_idx_of (AgIdx_N 0) (semty_tup _) _\<close>
+                                            \<open>is_valid_step_idx_of (AgIdx_N (Suc _)) (semty_tup _) _\<close>]:
+  \<open> FAIL TEXT(\<open>Element index of tuple must be literal numbers but given\<close> n)
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) (semty_tup Tys) Ty \<close>
+  unfolding FAIL_def
+  by blast
+
 
 subsection \<open>Aggregate Access\<close>
 
@@ -200,6 +216,69 @@ lemma idx_step_value_V_tup_suc:
 lemma idx_step_mod_value_V_tup_suc:
   \<open>idx_step_mod_value (AgIdx_N (Suc i)) g (V_tup.mk (va # vs)) = idx_step_mod_value (AgIdx_N i) g (V_tup.mk vs) * V_tup.mk [va]\<close>
   by (metis NO_MATCH_I V_tup_mult_cons idx_step_mod_value_tup list_update_code(3) nth_Cons_Suc)
+
+lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Getter (AgIdx_N 0 # _) _ _ _\<close>
+                                          \<open>\<phi>Aggregate_Getter (AgIdx_N (Suc _) # _) _ _ _\<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i' # idx) \<lbrace> T \<rbrace> Y f
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) \<lbrace> T \<rbrace> Y f\<close>
+  unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
+  by simp
+
+lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Getter (AgIdx_N 0 # _) _ _ _\<close>
+                                          \<open>\<phi>Aggregate_Getter (AgIdx_N (Suc _) # _) _ _ _\<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i' # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y f
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y f\<close>
+  unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
+  by simp
+
+lemma [\<phi>reason %aggregate_access-10 except \<open>\<phi>Aggregate_Getter (AgIdx_N 0 # _) _ _ _\<close>
+                                           \<open>\<phi>Aggregate_Getter (AgIdx_N (Suc _) # _) _ _ _\<close>]:
+  \<open> FAIL TEXT(\<open>Element index of tuple must be literal numbers but given\<close> i)
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) \<lbrace> T \<rbrace> Y f\<close>
+  unfolding FAIL_def
+  by blast
+
+lemma [\<phi>reason %aggregate_access-10 except \<open>\<phi>Aggregate_Getter (AgIdx_N 0 # _) _ _ _\<close>
+                                           \<open>\<phi>Aggregate_Getter (AgIdx_N (Suc _) # _) _ _ _\<close>]:
+  \<open> FAIL TEXT(\<open>Element index of tuple must be literal numbers but given\<close> i)
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y f\<close>
+  unfolding FAIL_def
+  by blast
+
+lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Mapper (AgIdx_N 0 # _) _ _ _ _ _\<close>
+                                          \<open>\<phi>Aggregate_Mapper (AgIdx_N (Suc _) # _) _ _ _ _ _\<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i' # idx) (\<lbrace> T \<rbrace> \<^emph> X) X' Y Y' f
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i  # idx) (\<lbrace> T \<rbrace> \<^emph> X) X' Y Y' f \<close>
+  unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
+  by simp
+
+lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Mapper (AgIdx_N 0 # _) _ _ _ _ _\<close>
+                                          \<open>\<phi>Aggregate_Mapper (AgIdx_N (Suc _) # _) _ _ _ _ _\<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i' # idx) \<lbrace> T \<rbrace> X' Y Y' f
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i  # idx) \<lbrace> T \<rbrace> X' Y Y' f \<close>
+  unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
+  by simp
+
+lemma [\<phi>reason %aggregate_access-10 except \<open>\<phi>Aggregate_Mapper (AgIdx_N 0 # _) _ _ _ _ _\<close>
+                                           \<open>\<phi>Aggregate_Mapper (AgIdx_N (Suc _) # _) _ _ _ _ _\<close>]:
+  \<open> FAIL TEXT(\<open>Element index of tuple must be literal numbers but given\<close> i)
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i # idx) \<lbrace> T \<rbrace> X' Y Y' f\<close>
+  unfolding FAIL_def
+  by blast
+
+lemma [\<phi>reason %aggregate_access-10 except \<open>\<phi>Aggregate_Mapper (AgIdx_N 0 # _) _ _ _ _ _\<close>
+                                           \<open>\<phi>Aggregate_Mapper (AgIdx_N (Suc _) # _) _ _ _ _ _\<close>]:
+  \<open> FAIL TEXT(\<open>Element index of tuple must be literal numbers but given\<close> i)
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i # idx) (\<lbrace> T \<rbrace> \<^emph> X) X' Y Y' f\<close>
+  unfolding FAIL_def
+  by blast
+
+
+
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Getter (AgIdx_N i # idx) X Y f

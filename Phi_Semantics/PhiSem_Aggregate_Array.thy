@@ -88,7 +88,7 @@ declare [[\<phi>trace_reasoning = 0]]
 section \<open>Reasoning\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < N
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (\<a>\<r>\<r>\<a>\<y>[N] TY) TY \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_arr idx_step_type_arr)

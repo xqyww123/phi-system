@@ -8,11 +8,13 @@ declare [[\<phi>trace_reasoning = 0]]
 
 proc map_list_loop:
   requires \<open>\<p>\<a>\<r>\<a>\<m> U\<close>
-       and map: \<open>\<And>i l. \<m>\<a>\<p> g \<otimes>\<^sub>f id : U i \<^emph> R i \<mapsto> U i \<^emph> R i
+       and map: \<open>\<And>i l. \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < length l
+                   \<Longrightarrow> \<m>\<a>\<p> g i \<otimes>\<^sub>f id : U i \<^emph> R i \<mapsto> U i \<^emph> R i
                        \<o>\<v>\<e>\<r> list_upd_map i (f i) : T \<mapsto> T
                        \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h i \<s>\<e>\<t>\<t>\<e>\<r> s i \<i>\<n> {l}\<close>
-       and body: \<open>\<And>i v. \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> fst (h i l) \<Ztypecolon> U i\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>
-                                  \<longmapsto> X\<heavy_comma> g (fst (h i l)) \<Ztypecolon> U i \<rbrace>\<close>
+       and body: \<open>\<And>i v. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < length l
+                     \<Longrightarrow> \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> fst (h i l) \<Ztypecolon> U i\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>
+                                  \<longmapsto> X\<heavy_comma> g i (fst (h i l)) \<Ztypecolon> U i \<rbrace>\<close>
   premises P1[]: \<open>\<forall>i l l'. length l = length l' \<and> l!i = l'!i \<longrightarrow> fst (h i l) = fst (h i l')\<close>
        and [simp]: \<open>len = length l\<close>
 
@@ -35,20 +37,52 @@ proc map_list_loop:
 \<medium_right_bracket> .
 
 
+lemma map_index_map2:
+  \<open> length la = length lb
+\<Longrightarrow> map_index (\<lambda>i. f (la ! i)) lb = map2 f la lb\<close>
+  unfolding map_index
+  by (smt (verit) length_map map2_map_map map_eq_conv map_fst_zip map_nth map_snd_zip map_zip_map old.prod.case)
+
+lemma map_index_2_map_index_zip:
+  \<open> length la = length lb
+\<Longrightarrow> map_index (\<lambda>i. f i (la ! i)) lb = map_index (\<lambda>i. case_prod (f i)) (zip la lb) \<close>
+  unfolding list_eq_iff_nth_eq
+  by clarsimp
+
+
+
 proc map_2list_loop:
-  requires map\<^sub>a: \<open>\<And>i l. \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>a i : T\<^sub>a \<mapsto> U\<^sub>a i \<^emph> R\<^sub>a i \<i>\<n> {l} \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>a i\<close>
-       and map\<^sub>b[\<phi>reason]: \<open>\<And>x i l. \<m>\<a>\<p> g\<^sub>b x \<otimes>\<^sub>f id : U\<^sub>b i \<^emph> R\<^sub>b i \<mapsto> U\<^sub>b i \<^emph> R\<^sub>b i
-                       \<o>\<v>\<e>\<r> list_upd_map i (f x i) : T\<^sub>b \<mapsto> T\<^sub>b
+  requires \<open>\<p>\<a>\<r>\<a>\<m> (U\<^sub>a, U\<^sub>b)\<close>
+       and map\<^sub>a: \<open>\<And>i l. \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < length l
+                    \<Longrightarrow> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>a' i : T\<^sub>a \<mapsto> U\<^sub>a i \<^emph> R\<^sub>a i \<i>\<n> {l} \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>a i\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>l i. h\<^sub>a' i l = h\<^sub>a i (l ! i))\<close>
+       and map\<^sub>b[\<phi>reason 9999]: \<open>\<And>x i l. \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < length l \<Longrightarrow>
+                       \<m>\<a>\<p> g\<^sub>b x \<otimes>\<^sub>f id : U\<^sub>b i \<^emph> R\<^sub>b i \<mapsto> U\<^sub>b i \<^emph> R\<^sub>b i
+                       \<o>\<v>\<e>\<r> list_upd_map i (f i x) : T\<^sub>b \<mapsto> T\<^sub>b
                        \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>b i \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>b i \<i>\<n> {l}\<close>
-       and body: \<open>\<And>i v. \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> fst (h\<^sub>a i l\<^sub>a) \<Ztypecolon> U\<^sub>a i\<heavy_comma> fst (h\<^sub>b i l\<^sub>b) \<Ztypecolon> U\<^sub>b i\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>
-                                  \<longmapsto> X\<heavy_comma> g\<^sub>b (fst (h\<^sub>a i l\<^sub>a)) (fst (h\<^sub>b i l\<^sub>b)) \<Ztypecolon> U i \<rbrace>\<close>
-  premises P1[]: \<open>\<forall>i l l'. length l = length l' \<and> l!i = l'!i \<longrightarrow> fst (h i l) = fst (h i l')\<close>
-       and [simp]: \<open>len = length l\<^sub>b \<and> length l\<^sub>a = length\<^sub>b\<close>
+       and body: \<open>\<And>i v. \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> fst (h\<^sub>a i (l\<^sub>a ! i)) \<Ztypecolon> U\<^sub>a i\<heavy_comma> fst (h\<^sub>b i l\<^sub>b) \<Ztypecolon> U\<^sub>b i\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>
+                                  \<longmapsto> X\<heavy_comma> fst (h\<^sub>a i (l\<^sub>a ! i)) \<Ztypecolon> U\<^sub>a i\<heavy_comma> g\<^sub>b (fst (h\<^sub>a i (l\<^sub>a ! i))) (fst (h\<^sub>b i l\<^sub>b)) \<Ztypecolon> U\<^sub>b i \<rbrace>\<close>
+
+  premises P1[]: \<open>\<forall>i l l'. length l = length l' \<and> l!i = l'!i \<longrightarrow> fst (h\<^sub>b i l) = fst (h\<^sub>b i l')\<close>
+       and [simp]: \<open>len = length l\<^sub>b \<and> length l\<^sub>a = length l\<^sub>b\<close>
 
   input  \<open>X\<heavy_comma> l\<^sub>a \<Ztypecolon> T\<^sub>a\<heavy_comma> l\<^sub>b \<Ztypecolon> T\<^sub>b\<heavy_comma> len \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  output \<open>X\<heavy_comma> l\<^sub>a \<Ztypecolon> T\<^sub>a\<heavy_comma> map_index (\<lambda>i. case_prod (f i)) (zip l\<^sub>a l\<^sub>b) \<Ztypecolon> T\<^sub>b\<close>
+  output \<open>X\<heavy_comma> l\<^sub>a \<Ztypecolon> T\<^sub>a\<heavy_comma> map_index (\<lambda>i (a,b). f i (fst (h\<^sub>a i a)) b) (zip l\<^sub>a l\<^sub>b) \<Ztypecolon> T\<^sub>b\<close>
 \<medium_left_bracket>
-  map_list_loop
+  map_list_loop ($len) U\<^sub>b \<medium_left_bracket>
+    apply_rule ToA_Mapper_onward[OF map\<^sub>a[where i1=i]]
+    body
+    apply_rule ToA_Mapper_backward[OF map\<^sub>a[where i1=i]] is l\<^sub>a
+            certified using ToA_Mapper_f_expn[OF map\<^sub>a[where i1=i]] by auto_sledgehammer
+  \<medium_right_bracket> ;;
+\<medium_right_bracket> .
+
+
+
+
+
+
+
 
 
 end

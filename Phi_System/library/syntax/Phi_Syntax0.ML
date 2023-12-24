@@ -8,6 +8,7 @@ include PHI_SYNTAX
   val forall_item_of_assertion_blv : (PLPR_Pattern.bvs * int (*level of lambda abstractions*) -> term -> bool)
                                   -> PLPR_Pattern.bvs -> term -> bool
   val conv_items_of_assertion : (Proof.context -> conv) -> Proof.context -> conv
+  val conv_all_typings : (Proof.context -> conv) -> Proof.context -> conv
 
   val strip_separations : term -> term list
   val mk_separations : typ -> term list -> term
@@ -157,9 +158,15 @@ fun conv_items_of_assertion C =
            | Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
            | Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ _ => Conv.arg_conv (conv ctxt) ctm
            | Const(\<^const_name>\<open>If\<close>, _) $ _ $ _ $ _ => (Conv.arg_conv (conv ctxt) then_conv Conv.arg1_conv (conv ctxt)) ctm
+           | Abs _ => Conv.abs_conv (conv o snd) ctxt ctm
            | _ => C ctxt ctm
    in conv
   end
+
+fun conv_all_typings C = conv_items_of_assertion (fn ctxt => fn ctm =>
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => C ctxt ctm
+     | _ => Conv.all_conv ctm)
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T

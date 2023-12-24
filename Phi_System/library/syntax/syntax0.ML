@@ -11,6 +11,9 @@ include PHI_SYNTAX
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
 
+  val procedure_conv : conv -> conv -> conv -> conv -> conv
+  val view_shift_conv : conv -> conv -> conv -> conv
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
@@ -40,6 +43,18 @@ val dest_view_shift_c  =
 
 val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>\<phi>arg\<close>
 fun mk_sem_value_T T = Type(\<^type_name>\<open>\<phi>arg\<close>, [T])
+
+fun procedure_conv C1 C2 C3 C4 ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _ =>
+        Conv.combination_conv (Conv.combination_conv (Conv.combination_conv (Conv.arg_conv C1) C2) C3) C4 ctm
+     | _ => raise CTERM("procedure_conv", [ctm])
+
+fun view_shift_conv C1 C2 C3 ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>View_Shift\<close>, _) $ _ $ _ $ _ =>
+        Conv.combination_conv (Conv.combination_conv (Conv.arg_conv C1) C2) C3 ctm
+     | _ => raise CTERM("view_shift_conv", [ctm])
 
 end
 

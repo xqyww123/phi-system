@@ -94,11 +94,7 @@ in case Thm.major_prem_of sequent
                        | some => some
                end
           end
-        handle Not_A_Number =>
-            let val rule = (case N of \<^const_name>\<open>\<r>nat_to_suc_nat\<close> =>
-                                        @{lemma' \<open>\<r>nat_to_suc_nat x x\<close> by (simp add: \<r>nat_to_suc_nat_def)})
-             in SOME ((ctxt, rule RS sequent), Seq.empty)
-            end
+        handle Not_A_Number => NONE
          )
      | _ => Seq.empty
 end
