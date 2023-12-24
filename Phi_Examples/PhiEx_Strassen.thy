@@ -1,5 +1,6 @@
 theory PhiEx_Strassen
-  imports Phi_Semantics.PhiSem_C Jordan_Normal_Form.Matrix
+  imports Phi_Semantics.PhiSem_C
+          Jordan_Normal_Form.Strassen_Algorithm
           Phi_Semantics.PhiSem_Int_ArbiPrec
           PhiStd.PhiStd_Loop
 begin
@@ -85,8 +86,20 @@ proc sub_mat:
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<close> \<open>_ \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
+(*
+proc strassen_mut:
+  input  \<open>x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
+          y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
+*)
+
+lemma
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
+\<Longrightarrow> x \<Ztypecolon> MatSlice a i j m n \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x\<^sub>1\<^sub>1 \<Ztypecolon> MatSlice a i j s t\<heavy_comma> x\<^sub>1\<^sub>2 \<Ztypecolon> MatSlice a i (j+t) s (n-t)\<heavy_comma>
+                                    x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>1\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t) \<close>
+  unfolding MatSlice.unfold
+  \<medium_left_bracket>note [[\<phi>trace_reasoning = 2]] 
 
 
-
+  term split_block
 
 end

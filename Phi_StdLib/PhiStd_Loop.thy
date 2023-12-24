@@ -39,6 +39,8 @@ proc map_list_loop:
 \<medium_right_bracket> .
 
 
+
+
 lemma map_index_map2:
   \<open> length la = length lb
 \<Longrightarrow> map_index (\<lambda>i. f (la ! i)) lb = map2 f la lb\<close>
