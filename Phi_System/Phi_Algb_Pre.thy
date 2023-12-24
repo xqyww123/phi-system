@@ -870,9 +870,33 @@ lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator
   unfolding common_multiplicator_2_def
   by clarsimp
 
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ ((_ # _) @ _) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (h # L @ b) c
+\<Longrightarrow> common_multiplicator_2 (@) a ((h # L) @ b) c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
 lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ _ ((_ # _) @ _)\<close>]:
   \<open> common_multiplicator_2 (@) a b (h # L @ c)
 \<Longrightarrow> common_multiplicator_2 (@) a b ((h # L) @ c) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) ([] @ _) _ _\<close>]:
+  \<open> common_multiplicator_2 (@) a b c
+\<Longrightarrow> common_multiplicator_2 (@) ([] @ a) b c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ ([] @ _) _\<close>]:
+  \<open> common_multiplicator_2 (@) a b c
+\<Longrightarrow> common_multiplicator_2 (@) a ([] @ b) c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ _ ([] @ _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b c
+\<Longrightarrow> common_multiplicator_2 (@) a b ([] @ c) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 

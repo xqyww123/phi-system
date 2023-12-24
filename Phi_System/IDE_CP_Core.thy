@@ -2282,10 +2282,11 @@ Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
 \<close>
 
 attribute_setup elim_Simplify_tag = \<open>
-Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
-  case Thm.concl_of th
-    of _ $ (Const(\<^const_name>\<open>Simplify\<close>, _) $ _ $ _ $ _) => th RS @{thm Simplify_D}
-     | _ => th))
+Scan.succeed (Thm.rule_attribute [] (fn ctxt' =>
+  let val ctxt = Context.proof_of ctxt'
+   in Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => fn ctm =>
+        Phi_Conv.tag_conv (Conv.rewr_conv @{thm' Simplify_def}) ctm) ctxt)
+  end))
 \<close>
 
 declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>,

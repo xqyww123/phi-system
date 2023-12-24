@@ -77,7 +77,7 @@ proc test_mem6:
     $addr \<tribullet> d \<tribullet> f \<tribullet> j !
   \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 230]]
+declare [[\<phi>reasoning_step_limit = 260]]
 
 proc test_mem6a:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>

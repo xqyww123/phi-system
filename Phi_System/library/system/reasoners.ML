@@ -99,3 +99,5 @@ fun is_proof_obligation (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = 
   | is_proof_obligation _ = false
 
 end
+
+

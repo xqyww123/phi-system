@@ -2014,7 +2014,7 @@ text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\
   \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
 definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
-  where "Simplify setting result origin \<longleftrightarrow> result = origin"
+  where "Simplify setting result origin \<equiv> result = origin"
 
 (* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
   where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)

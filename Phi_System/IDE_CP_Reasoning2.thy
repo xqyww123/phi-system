@@ -354,6 +354,8 @@ subsection \<open>Conventions\<close>
       \<open>reflexive\<close>
   and \<phi>mapToA_norm = (2600, [2600,2899]) in \<phi>mapToA_all
       \<open>normalizations like removing empty slots\<close>
+  and \<phi>mapToA_varify_maps = (2650, [2650,2699]) in \<phi>mapToA_all
+      \<open>varify the mapping functions\<close>
   and \<phi>mapToA_split_goal = (2520, [2520, 2520]) in \<phi>mapToA_all
       \<open>splitting the goal of the extraction\<close>
   and \<phi>mapToA_split_source = (2500, [2500, 2500]) in \<phi>mapToA_all and < \<phi>mapToA_split_goal
@@ -547,6 +549,7 @@ subsubsection \<open>Assign Id\<close>
 
 definition mapToA_assign_id
   where \<open>mapToA_assign_id f \<longleftrightarrow> f = id\<close>
+  \<comment> \<open>I am thinking if we should replace this to be just a normal obligation\<close>
 
 \<phi>reasoner_group mapToA_assign_id = (1000, [1000, 3000]) for \<open>mapToA_assign_id f\<close>
       \<open>assign \<open>id\<close> to separated mappings \<open>?f \<otimes>\<^sub>f ?g\<close>\<close>
@@ -749,7 +752,7 @@ lemma [\<phi>reason %\<phi>mapToA_init+10]:
 
 subsubsection \<open>Normalization\<close>
 
-lemma [\<phi>reason %\<phi>mapToA_norm
+lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
           for \<open>\<m>\<a>\<p> id : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>
               \<open>\<m>\<a>\<p> id : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
@@ -763,17 +766,89 @@ lemma [\<phi>reason %\<phi>mapToA_norm
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)
 
-lemma [\<phi>reason %\<phi>mapToA_norm
-          for \<open>\<m>\<a>\<p> id \<otimes>\<^sub>f id : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
+          for \<open>\<m>\<a>\<p> id \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
 \<Longrightarrow> mapToA_assign_id g
-\<Longrightarrow> mapToA_assign_id r
-\<Longrightarrow> \<m>\<a>\<p> id \<otimes>\<^sub>f id : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+\<Longrightarrow> \<m>\<a>\<p> id \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)
+
+lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
+          for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f id : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> mapToA_assign_id r
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f id : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  unfolding mapToA_assign_id_def
+  by (simp add: map_prod.id)
+
+
+lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
+          for \<open>\<m>\<a>\<p> id \<otimes>\<^sub>f _ : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> mapToA_assign_id g
+\<Longrightarrow> \<m>\<a>\<p> id \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  unfolding mapToA_assign_id_def
+  by (simp add: map_prod.id)
+
+lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
+          for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f id : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> mapToA_assign_id r
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f id : U \<^emph> R \<mapsto> U' \<^emph> R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  unfolding mapToA_assign_id_def
+  by (simp add: map_prod.id)
+
+(*
+lemma [\<phi>reason %\<phi>mapToA_varify_maps
+          for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>
+          except \<open>\<m>\<a>\<p> ?var \<otimes>\<^sub>f _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>]:
+  \<open> \<m>\<a>\<p> g' \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g' = g
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  unfolding Premise_def
+  by simp
+
+lemma [\<phi>reason %\<phi>mapToA_varify_maps
+          for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>
+          except \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> ?var \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>]:
+  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f' = f
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  unfolding Premise_def
+  by simp
+*)
+
+lemma [\<phi>reason %\<phi>mapToA_varify_maps
+          for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> id \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+               \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close> ]:
+  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> mapToA_assign_id f'
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> id \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  unfolding mapToA_assign_id_def
+  by simp
 
 
 subsubsection \<open>Internal System\<close>

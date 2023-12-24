@@ -666,24 +666,114 @@ section \<open>Reasoning Configuration\<close>
 
 subsection \<open>common_multiplicator of path\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
 
-lemma [\<phi>reason for \<open>common_multiplicator_2 (@) (memaddr.index (memaddr _ _)) _ (memaddr.index (memaddr _ _))\<close>
-                   \<open>common_multiplicator_2 (@) _ (memaddr.index (memaddr _ _)) (memaddr.index (memaddr _ _))\<close>]:
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) (memaddr.index (memaddr _ _)) _ _\<close>]:
   \<open> common_multiplicator_2 (@) pa pb pc
-\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (memaddr a pa)) (memaddr.index (memaddr b pb)) (memaddr.index (memaddr c pc)) \<close>
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (memaddr a pa)) pb pc \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
-lemma [\<phi>reason %common_multiplicator_2_list+5 for \<open>common_multiplicator_2 (@) (memaddr.index _) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)))\<close>]:
-  \<open> common_multiplicator_2 (@) (memaddr.index a) b (memaddr.index c)
-\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index a) (b @ [i]) (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i))) \<close>
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ (memaddr.index (memaddr _ _)) _\<close>]:
+  \<open> common_multiplicator_2 (@) pa pb pc
+\<Longrightarrow> common_multiplicator_2 (@) pa (memaddr.index (memaddr a pb)) pc \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
-lemma [\<phi>reason %common_multiplicator_2_list+10 for \<open>common_multiplicator_2 (@) (memaddr.index ?a) _ (memaddr.index ?a)\<close>]:
-  \<open> common_multiplicator_2 (@) (memaddr.index a) [] (memaddr.index a) \<close>
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (memaddr _ _))\<close>]:
+  \<open> common_multiplicator_2 (@) pa pb pc
+\<Longrightarrow> common_multiplicator_2 (@) pa pb (memaddr.index (memaddr a pc)) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)))\<close>]:
+  \<open> common_multiplicator_2 (@) a b (memaddr.index c @ [i])
+\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i))) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)) @ _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b (memaddr.index c @ [i] @ cr)
+\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i)) @ cr) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_))) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (memaddr.index b @ [i]) c
+\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (b \<tribullet>\<^sub>a LOGIC_IDX(i))) c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)) @ _) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (memaddr.index b @ [i] @ br) c
+\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (b \<tribullet>\<^sub>a LOGIC_IDX(i)) @ br) c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_))) _ _\<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a @ [i]) b c
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (a \<tribullet>\<^sub>a LOGIC_IDX(i))) b c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)) @ _) _ _ \<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a @ [i] @ ar) b c
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (a \<tribullet>\<^sub>a LOGIC_IDX(i)) @ ar) b c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (addr_geps _ _))\<close>]:
+  \<open> common_multiplicator_2 (@) a b (memaddr.index c @ i)
+\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (addr_geps c i)) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (addr_geps _ _) @ _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b (memaddr.index c @ i @ cr)
+\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (addr_geps c i) @ cr) \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ (memaddr.index (addr_geps _ _)) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (memaddr.index b @ i) c
+\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (addr_geps b i)) c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) _ (memaddr.index (addr_geps _ _) @ _) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (memaddr.index b @ i @ br) c
+\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (addr_geps b i) @ br) c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) (memaddr.index (addr_geps _ _)) _ _\<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a @ i) b c
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (addr_geps a i)) b c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+lemma [\<phi>reason %common_multiplicator_2_list
+           for \<open>common_multiplicator_2 (@) (memaddr.index (addr_geps _ _) @ _) _ _ \<close>]:
+  \<open> common_multiplicator_2 (@) (memaddr.index a @ i @ ar) b c
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (addr_geps a i) @ ar) b c \<close>
+  unfolding common_multiplicator_2_def
+  by clarsimp
+
+
+
 
 subsection \<open>Abstracting Raw Address Offset\<close>
 

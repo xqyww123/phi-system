@@ -239,8 +239,12 @@ definition Abstract_Domain\<^sub>L :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<
   where \<open>Abstract_Domain\<^sub>L T d \<longleftrightarrow> (\<forall>x. d x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T)\<close>
   \<comment> \<open>Lower Bound\<close>
 
-declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)
-                              and \<open>Abstract_Domain\<^sub>L ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>L ?T _\<close> (100) ]]
+declare [[
+  \<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)
+                      and \<open>Abstract_Domain\<^sub>L ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>L ?T _\<close> (100),
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain  _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain\<^sub>L _ _\<close>
+]]
 
 \<phi>reasoner_group abstract_domain_all = (1000, [1, 2000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
     \<open>All reasoning rules giving \<open>Abstract_Domain\<close> or \<open>Abstract_Domain\<^sub>L\<close>\<close>
@@ -2863,6 +2867,14 @@ lemma [\<phi>reason %ToA_cut]:
   \<open> x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph>[Cw] \<black_circle> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph>[Cr] \<black_circle> R \<w>\<i>\<t>\<h> P\<close>
   by (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip)
+
+subsubsection \<open>Properties\<close> \<comment> \<open>Some properties have to be given early before derivers ready\<close>
+
+lemma Abstract_Domain_\<phi>Some[\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain T D
+\<Longrightarrow> Abstract_Domain (\<black_circle> T) D \<close>
+  unfolding Abstract_Domain_def \<r>EIF_def Inhabited_def
+  by clarsimp
 
 
 subsection \<open>Technical \<phi>-Types required in Reasoning Transformation\<close>

@@ -33,12 +33,13 @@ fun register_attribute_lthy (i,mandatory,pat,attr) =
 
 fun attribute_of ctxt =
   let val data = Data.get ctxt
+      val matches = PLPR_Pattern.matches (Context.theory_of ctxt) (K true)
    in fn default => fn term =>
-  let val concl = Logic.strip_assums_concl (Phi_Help.beta_eta_contract_term term)
+  let val (bvs, concl) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.beta_eta_contract_term term)
    in Net.match_term data concl
    |> map_filter (fn (i,mandatory,pat, attr) =>
          if (default orelse mandatory)
-         andalso Pattern.matches (Context.theory_of ctxt) (pat,concl)
+         andalso matches bvs (pat,concl)
          then SOME (i,attr) else NONE)
    |> sort (int_ord o apply2 #1)
    |> maps snd
