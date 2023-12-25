@@ -40,6 +40,7 @@ open PLPR_Syntax
 
 fun cond_can_merge \<^const_name>\<open>MODE_GUARD\<close> = true
   | cond_can_merge \<^const_name>\<open>default\<close> = true
+  | cond_can_merge \<^const_name>\<open>MODE_SAFE\<close> = true
   | cond_can_merge _ = false
 
 val merge_conditions =
