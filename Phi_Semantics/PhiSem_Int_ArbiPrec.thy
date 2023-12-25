@@ -409,16 +409,27 @@ lemma op_lshr_aint_pre_\<phi>app:
       rule \<phi>M_assert, simp, rule, simp)
   using drop_bit_int_def by presburger
 
-lemma op_lshr_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+lemma op_push_bit_right_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. drop_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
   \<medium_left_bracket> op_lshr_aint_pre \<medium_right_bracket>.
 
-lemma op_lshr_anat_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
-                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>ret. drop_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+lemma op_lshr_aint_\<phi>app[\<phi>overload >>]:
+  \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> x div 2 ^ y \<Ztypecolon> \<int> \<rbrace>\<close>
+  \<medium_left_bracket> op_lshr_aint_pre \<medium_right_bracket>
+      certified using drop_bit_int_def by blast .
+
+lemma op_push_bit_right_anat_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+                                      and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>ret. drop_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
+  \<medium_left_bracket> op_push_bit_right_aint \<medium_right_bracket>
+      certified by (simp add: drop_bit_of_nat)  .
+
+lemma op_lshr_anat_\<phi>app[\<phi>overload >>]:
+  \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> x div 2 ^ y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_lshr_aint \<medium_right_bracket>
-    certified by (simp add: drop_bit_of_nat)  .
+      certified by (metis nat_int of_nat_0_le_iff of_nat_numeral of_nat_power zdiv_int) . 
+
 
 paragraph \<open>Left Shift\<close>
 
@@ -429,16 +440,25 @@ lemma op_lshl_aint_pre_\<phi>app:
   by (cases raw1; cases raw2; simp; rule, rule, simp add: Premise_def, rule, simp add: Premise_def, rule,
       rule \<phi>M_assert, simp, rule, simp add: push_bit_int_def)
 
-lemma op_lshl_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+lemma op_push_bit_left_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
   \<medium_left_bracket> op_lshl_aint_pre \<medium_right_bracket>.
 
-lemma op_lshl_anat_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+lemma op_lshl_aint_\<phi>app[\<phi>overload <<]:
+  \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> x * 2 ^ y \<Ztypecolon> \<int> \<rbrace>\<close>
+  \<medium_left_bracket> op_lshl_aint_pre \<medium_right_bracket> certified by (simp add: push_bit_eq_mult) .
+
+lemma op_push_bit_left_anat_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> op_lshl_aint \<medium_right_bracket>
+  \<medium_left_bracket> op_push_bit_left_aint \<medium_right_bracket>
       certified by (simp add: push_bit_of_nat) .
+
+lemma op_lshl_anat_\<phi>app[\<phi>overload <<]:
+  \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> x * 2 ^ y \<Ztypecolon> \<nat> \<rbrace>\<close>
+  \<medium_left_bracket> op_lshl_aint \<medium_right_bracket>
+      certified by (simp add: nat_mult_distrib) .
 
 
 paragraph \<open>Less Than\<close>

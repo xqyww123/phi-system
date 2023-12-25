@@ -190,9 +190,8 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
 
 lemma [\<phi>reason 1000]:
   "\<phi>Equal (\<nat>\<^sup>r('b::len)) (\<lambda>x y. True) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))"
-  \<medium_left_bracket> to \<open>Word('b)\<close>
-    \<medium_right_bracket>
-      certified by (simp add: unat_of_nat word_unat_eq_iff) .
+  \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
+      certified by (metis the_\<phi>lemmata unat_eq_of_nat unat_lt2p unat_of_nat)  .
 
 
 subsubsection \<open>Natural Number\<close>

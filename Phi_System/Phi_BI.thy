@@ -1561,7 +1561,7 @@ lemma ExSet_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   unfolding BI_eq_iff embedded_func_def
   by simp_all
 
-lemma ExSet_simps_ex[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
+lemma ExSet_defined:
   \<comment> \<open>only safe for source side but unsafe for target side, because it could instantiate variables
       of types parameters which could be instantiated arbitrarily?... I am not pretty sure... It is subtle here\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
@@ -4723,7 +4723,7 @@ structure Assertion_SS_Source = Simpset (
 )
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS_Source.map (fn ctxt =>
-      ctxt addsimps @{thms' ExSet_simps_ex}
+      ctxt addsimps @{thms' ExSet_defined}
         |> Simplifier.add_cong @{thm' Subjection_cong}
     )))
 
@@ -4798,6 +4798,17 @@ ML_file \<open>library/reasoning/quantifier.ML\<close>
 
 simproc_setup defined_ExSet ( \<open>ExSet A\<close> ) = \<open>K BI_Quantifiers.defined_Ex\<close>
 
+setup \<open>Context.theory_map (Simplifier.map_ss(fn ctxt =>
+    ctxt delsimprocs [@{simproc defined_ExSet}]))\<close>
+
+attribute_setup simproc_defined_ExSet = \<open>
+  Scan.lift (Args.$$$ "true" >> K true || Args.$$$ "false" >> K false || Scan.succeed true)
+>> (fn flag =>
+    Thm.declaration_attribute (fn _ => Simplifier.map_ss(fn ctxt =>
+      if flag then ctxt addsimprocs [@{simproc defined_ExSet}]
+              else ctxt delsimprocs [@{simproc defined_ExSet}])))
+\<close>
+
 (*
 simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
   = \<open>fn _ => fn ctxt => fn ctm =>
@@ -4810,13 +4821,13 @@ simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
                 )
           val rule = case P
                        of Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _ =>
-                            SOME @{thm' ExSet_simps_ex(1)}
+                            SOME @{thm' ExSet_defined(1)}
                         | Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0 =>
-                            SOME @{thm' ExSet_simps_ex(2)}
+                            SOME @{thm' ExSet_defined(2)}
                         | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _ =>
-                            SOME @{thm' ExSet_simps_ex(3)}
+                            SOME @{thm' ExSet_defined(3)}
                         | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0) $ _ =>
-                            SOME @{thm' ExSet_simps_ex(4)}
+                            SOME @{thm' ExSet_defined(4)}
                         | _ => NONE
        in if chk_bound_only_objs assn
        then Option.mapPartial (fn rule' => try (Conv.rewr_conv rule') ctm) rule
@@ -5021,7 +5032,7 @@ private lemma \<A>simp_chk_no_need:
 private lemma \<A>simp_chk_no_need':
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp_if_need direction Any\<close>
   unfolding Action_Tag_def
-  by simp
+  by (simp add: ExSet_defined)
 
 private lemma \<A>simp_chk_go:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>simp' direction M
@@ -5070,7 +5081,7 @@ private lemma \<A>simp_chk_no_need_transitive:
 private lemma \<A>simp_chk_no_need'_transitive:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>transitive_simp_if_need direction Any\<close>
   unfolding Action_Tag_def
-  by simp
+  by (simp add: ExSet_defined)
 
 \<phi>reasoner_ML \<A>simp_if_need %cutting (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp_if_need _ _\<close>) = \<open>
 fn (_, (ctxt,sequent)) => Seq.make (fn () =>
@@ -5130,12 +5141,14 @@ end
 lemma [\<phi>reason default ! %\<phi>simp_system_fallback+1
                for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _ @action \<A>simp' _ False\<close>]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp' direction False\<close>
-  unfolding Action_Tag_def by simp
+  unfolding Action_Tag_def
+  by (simp add: ExSet_defined)
 
 lemma [\<phi>reason default ! %\<phi>simp_system_fallback
                for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp' _ False\<close>]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>simp' direction False\<close>
-  unfolding Action_Tag_def by simp
+  unfolding Action_Tag_def
+  by simp
 
 
 (*declare [[\<phi>simp_rule_pass]] \<comment> \<open>Must be enabled until all the internal rules are registered as

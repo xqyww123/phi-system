@@ -255,6 +255,7 @@ context
       and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> V) TY\<^sub>V)\<close>
 begin
 
+end
 (*
 
 proc lookup_bst:

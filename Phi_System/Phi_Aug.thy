@@ -118,6 +118,17 @@ lemma drop_list_upd_map_ge[simp]:
   unfolding list_upd_map_def
   by (metis Nat.add_diff_assoc add_diff_cancel_left' drop_all drop_update_swap length_list_update less_imp_le_nat linorder_not_le nth_drop)
   
+lemma list_upd_map_i[iff]:
+  \<open> i < length l
+\<Longrightarrow> list_upd_map i f l ! i = f (l ! i) \<close>
+  unfolding list_upd_map_def
+  by clarsimp
+
+lemma list_upd_map_j[iff]:
+  \<open> j \<noteq> i \<and> j \<le> length l
+\<Longrightarrow> list_upd_map i f l ! j = l ! j \<close>
+  unfolding list_upd_map_def
+  by clarsimp
 
 
 subsection \<open>Mapping Prefix / Suffix\<close>

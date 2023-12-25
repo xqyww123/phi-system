@@ -681,7 +681,7 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[no_atp]]:
                               (\<lambda>x. pm (c x) snd (\<lambda>_. True) x) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' \<Sigma> \<Sigma> T D' r' \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Functional_Transformation_Functor_def Simplify_def Action_Tag_def
-  by clarsimp force
+  by (clarsimp simp add: ExSet_defined) force
 
 
 
@@ -1451,7 +1451,7 @@ lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>E[no_atp]]:
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U D r \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
             Action_Tag_def Simplify_def
-  by (clarify; case_tac x; clarsimp)
+  by (clarify; case_tac x; clarsimp simp add: ExSet_defined)
 
 lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>I[no_atp]]:
   \<open> Functional_Transformation_Functor F F'\<^sub>T (T +\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
@@ -1758,7 +1758,7 @@ lemma \<phi>Fun'_comm[\<phi>reason %\<phi>TA_commutativity]:
 \<Longrightarrow> Tyops_Commute (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>') (\<phi>Fun' \<phi>) (\<phi>Fun' \<phi>') T
                   (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
   unfolding Tyops_Commute_def fun_commute_def
-  by (simp add: \<phi>Fun'_scalar_assoc)
+  by (simp add: \<phi>Fun'_scalar_assoc ExSet_defined)
 
 
 subsubsection \<open>Guessing Property\<close>
@@ -2855,7 +2855,7 @@ context begin
 private lemma [simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
- 
+
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -2887,8 +2887,8 @@ private lemma [simp]:
                                                 (\<forall>i < len_intvl.len iv. T\<^sub>D (len_intvl.start iv + i) (x ! i))) \<close>
        and \<open>(\<And>i. Functionality (T i) (P i))
         \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.len iv. P (len_intvl.start iv + i) (x ! i))\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U {(x, y). length x = length y} zip'\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U unzip'\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U {(x, y). length x = length y} (case_prod zip)\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U list.unzip\<close>
        and \<open> Semimodule_Zero (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) \<lbrakk>i : 0\<rwpar> \<close>
        and \<open> Semimodule_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>
        and \<open> Semimodule_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True) \<close>
@@ -3013,46 +3013,49 @@ thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>d\<^sub>a\<^sub>_\<^sub>b\<^sub>c[s
 
 
 lemma [\<phi>reason for
-          \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c \<lbrakk>?j : 1\<rwpar> (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
-           (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+          \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c \<lbrakk>?j : _\<rwpar> (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
+           (\<lambda>l. length l = _) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
            (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) _ _ _ _ _ \<close>]:
-  \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<lbrakk>j : 1\<rwpar>
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one = 1 \<and> one' = 1
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R c \<lbrakk>j : one\<rwpar>
         (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
-        (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+        (\<lambda>x. [x]) (\<lambda>l. length l = one') (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
         (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
         (\<lambda>x. length x = 1 + len_intvl.len c \<and> length_preserving_map {drop 1 x} f\<^sub>c)
         f\<^sub>c f
         ( list_upd_map 0 f o sublist_map_R 1 f\<^sub>c )
         (\<lambda>l. (drop 1 l, hd l)) \<close>
   unfolding module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R_def sublist_map_L_def list_upd_map_def sublist_map_R_def
-            length_preserving_map_def
+            length_preserving_map_def \<r>Guard_def Premise_def
   by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop hd_conv_nth)
 
 lemma [\<phi>reason for
-          \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>?j : 1\<rwpar> ?d
+          \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>?j : _\<rwpar> ?d
            (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
-           (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+           (\<lambda>l. length l = _) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
            (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) _ _ _ _ _ \<close>]:
-  \<open> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>j : 1\<rwpar> d
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one = 1 \<and> one' = 1
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>j : one\<rwpar> d
     (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
-    (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+    (\<lambda>x. [x]) (\<lambda>l. length l = one') (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
     (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
     (\<lambda>x. length x = len_intvl.len d + 1 \<and> length_preserving_map {take (len_intvl.len d) x} f\<^sub>d)
     f f\<^sub>d
     ( sublist_map_L (len_intvl.len d) f\<^sub>d o list_upd_map (len_intvl.len d) f )
     (\<lambda>l. (l ! (len_intvl.len d), take (len_intvl.len d) l)) \<close>
   unfolding module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L_def sublist_map_L_def list_upd_map_def sublist_map_R_def
-            length_preserving_map_def
+            length_preserving_map_def Premise_def \<r>Guard_def
   by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
 
 lemma [\<phi>reason for
-          \<open>module_mapper\<^sub>3\<^sub>\<epsilon> ?c \<lbrakk>?j : 1\<rwpar> ?d
+          \<open>module_mapper\<^sub>3\<^sub>\<epsilon> ?c \<lbrakk>?j : _\<rwpar> ?d
            (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
-           (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+           (\<lambda>l. length l = _) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
            (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) _ _ _ _ _ _\<close>]:
-  \<open>module_mapper\<^sub>3\<^sub>\<epsilon> c \<lbrakk>j : 1\<rwpar> d
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one = 1 \<and> one' = 1
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon> c \<lbrakk>j : one\<rwpar> d
      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
-     (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
+     (\<lambda>x. [x]) (\<lambda>l. length l = one') (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
      (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t)
      (\<lambda>x. length x = len_intvl.len d + 1 + len_intvl.len c \<and>
           length_preserving_map {drop (len_intvl.len d + 1) x} f\<^sub>c \<and>
@@ -3063,7 +3066,7 @@ lemma [\<phi>reason for
      o sublist_map_R (len_intvl.len d+1) f\<^sub>c )
      (\<lambda>l. (drop (len_intvl.len d + 1) l, l ! (len_intvl.len d), take (len_intvl.len d) l))\<close>
   unfolding module_mapper\<^sub>3\<^sub>\<epsilon>_def sublist_map_L_def list_upd_map_def sublist_map_R_def
-            length_preserving_map_def
+            length_preserving_map_def Premise_def \<r>Guard_def
   by (auto simp add: hd_drop_conv_nth nth_append upd_conv_take_nth_drop)
 
 

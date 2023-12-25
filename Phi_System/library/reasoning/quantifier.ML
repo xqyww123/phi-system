@@ -113,9 +113,9 @@ fun defined_Ex_direct ctm =
     of Const _ (*Ex*) $ Abs (_, _, Const _ (*Subj*) $ _ $ X) =>
         (case X
            of Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _ =>
-                Conv.rewr_conv @{thm' ExSet_simps_ex(1)[folded atomize_eq]} ctm
+                Conv.rewr_conv @{thm' ExSet_defined(1)[folded atomize_eq]} ctm
             | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) $ _ =>
-                Conv.rewr_conv @{thm' ExSet_simps_ex(3)[folded atomize_eq]} ctm
+                Conv.rewr_conv @{thm' ExSet_defined(3)[folded atomize_eq]} ctm
             | _ => error "BI.defined_Ex")
      | _ => error "BI.defined_Ex"
 

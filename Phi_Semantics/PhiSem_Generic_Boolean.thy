@@ -76,7 +76,12 @@ lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
 
 section \<open>Abstractions of Boolean Arithmetic\<close>
 
-\<phi>overloads "=" and "\<not>" and "\<and>" and "\<or>"
+declare_\<phi>lang_operator
+  infix 50 "="
+  infix 35 "\<and>"
+  infix 30 "\<or>"
+  prefix 40 "\<not>"
+
 
 subsection \<open>Constant\<close>
 

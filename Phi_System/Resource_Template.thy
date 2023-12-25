@@ -237,7 +237,7 @@ lemma "__setter_rule__":
   by (rule from_fictional_refinement
                   [where Rel=\<open>\<lambda>ret. {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
       assumption,
-      clarsimp simp add: set_eq_iff Id_on_iff \<phi>arg_All fun_eq_iff \<phi>V_none_def,
+      clarsimp simp add: set_eq_iff Id_on_iff \<phi>arg_All fun_eq_iff \<phi>V_none_def ExSet_defined,
       simp add: Id_on_iff zero_set_def zero_fun_def,
       assumption,
       simp add: Valid_Transition_def zero_set_def,
@@ -252,7 +252,7 @@ lemma "__allocator_rule__":
         [where Rel=\<open>\<lambda>ret. {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
            and x=\<open>1\<close> and D=\<open>{1}\<close>, unfolded \<phi>_unit],
       assumption,
-      clarsimp simp add: set_eq_iff Subjection_expn_set Id_on_iff \<phi>arg_All fun_eq_iff \<phi>V_none_def,
+      clarsimp simp add: set_eq_iff Subjection_expn_set Id_on_iff \<phi>arg_All fun_eq_iff \<phi>V_none_def ExSet_defined,
       simp add: Id_on_iff zero_set_def zero_fun_def,
       assumption,
       simp add: Valid_Transition_def zero_set_def,
@@ -479,8 +479,8 @@ lemma allocator_refinement:
     have [simp]: \<open>r ## 1(k := init)\<close>
       using prems(5) prems(7) sep_disj_multD2 by blast
     show ?thesis
-      apply (simp add: mk_homo_mult)
-      using prems(4) prems(5) prems(7) sep_disj_multI2 sep_mult_assoc by blast
+      apply (simp add: mk_homo_mult ExSet_defined)
+      using mk_homo_mult prems(4) prems(5) prems(7) prems(8) sep_disj_multI2 sep_mult_assoc by fastforce
   qed .
 
 lemma allocator_valid:
@@ -584,7 +584,7 @@ lemma getter_refinement:
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: set_mult_expn Id_on_iff
                               Subjection_expn_set prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
-                              inj.sep_orthogonal[simplified] in_invariant)
+                              inj.sep_orthogonal[simplified] in_invariant ExSet_defined)
   by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_discrete(2) times_fun)
  
 
@@ -732,7 +732,7 @@ end
 
 
 subsection \<open>Pointwise Fiction\<close>
-                           
+
 locale pointwise_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res P
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
@@ -751,6 +751,7 @@ lemma setter_rule:
   unfolding Premise_def
 subgoal premises prems
 proof -
+  note ExSet_defined[simp]
   have [simp]: \<open>(\<lambda>_. u) \<circ> the = (\<lambda>_. u)\<close> for u by auto
   show ?thesis
     by (unfold prems(1),
@@ -763,16 +764,24 @@ proof -
         rule prems)
 qed .
 
+
+
+context notes ExSet_defined[simp]
+              [[simproc_defined_ExSet]]
+begin
+
 lemma getter_rule:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace>
               1(k' \<mapsto> u) \<Ztypecolon> \<phi> Itself \<longmapsto>
         \<lambda>ret. 1(k' \<mapsto> u) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> ret = \<phi>arg u \<and> u \<in> P k'
       \<rbrace> \<close>
+  thm "_getter_rule_2_"[where S=\<open>{u}\<close>, simplified singleton_iff, simplified]
   by (rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified singleton_iff, simplified],
       assumption,
       rule \<F>_it_refinement_projection,
       simp)
+end
 
 lemmas allocate_rule = "__allocate_rule_2__"
                             [OF \<F>_pointwise_refinement[where I=\<open>\<lambda>_. \<F>_it\<close>, OF \<F>_it_refinement, where u2=1, simplified]
@@ -795,9 +804,10 @@ begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambda>_. \<F>_functional to_share UNIV\<close> Fic P ..
 
-context begin
-
-declare mul_carrier_option_def[simp] option.pred_True[simp]
+context notes ExSet_defined[simp]
+              [[simproc_defined_ExSet]]
+              mul_carrier_option_def[simp] option.pred_True[simp]
+begin
 
 lemma setter_rule:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k

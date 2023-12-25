@@ -82,7 +82,6 @@ end
 
 
 
-term \<open>unzip' (map f (zip' x))\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
      

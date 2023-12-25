@@ -142,6 +142,10 @@ declare_\<phi>lang_operator
   infix  50 \<le>
   infix  50 >
   infix  50 \<ge>
+  infixl 40 "<<"
+  infixl 40 ">>"
+
+
 
 \<phi>reasoner_group \<phi>synthesis_literal_number = (%\<phi>synthesis_literal, [%\<phi>synthesis_literal, %\<phi>synthesis_literal+10])
                                              in \<phi>synthesis_literal

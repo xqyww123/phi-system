@@ -2625,14 +2625,14 @@ lemma \<phi>open_abstraction_infer:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x' = x
 \<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
-  by simp
+  by (simp add: ExSet_defined)
 
 lemma \<phi>open_abstraction_specified:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x' = x
 \<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN i T) \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
-  by simp
+  by (simp add: ExSet_defined)
 
 
 lemma \<phi>open_abstraction_ToA_infer:
@@ -3328,7 +3328,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<
   \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def \<r>Guard_def
-  by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
+  by (clarsimp simp: ExSet_defined Subjection_transformation_rewr Ex_transformation_expn)
 
 (*Object_Sep_Homo\<^sub>I is necessary at least for composition \<phi>-type
 Object_Sep_Homo\<^sub>I B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
@@ -3353,7 +3353,7 @@ lemma Separation_Homo_functor[\<phi>reason_template default %Object_Sep_Homo_fun
   subgoal premises prems for x y
   proof -
     have t1: \<open>\<forall>a\<in>D (zz (y, x)). a \<Ztypecolon> T \<^emph> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T \<s>\<u>\<b>\<j> b. (case a of (b, a) \<Rightarrow> \<lambda>c. c = a * b \<and> a ## b \<and> (b, a) \<in> D (zz (y, x))) b\<close>
-      by (clarsimp, insert prems(3,6), blast)
+      by (clarsimp simp: ExSet_defined, insert prems(3,6), blast)
     from prems(2)[THEN spec[where x=\<open>zz (y,x)\<close>],
                   THEN spec[where x=\<open>\<lambda>(b,a) c. c = a * b \<and> a ## b \<and> (b,a) \<in> D (zz (y,x))\<close>],
                   THEN mp, OF t1]
@@ -3503,7 +3503,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<
   \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>\<Lambda>\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (\<lambda>p. U\<^sub>L p \<^emph>\<^sub>\<A> U\<^sub>R p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Bubbling_def \<r>Guard_def
-  by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
+  by (clarsimp simp: ExSet_defined Subjection_transformation_rewr Ex_transformation_expn)
 
 lemma [\<phi>reason_template name Fc.\<phi>Prod_ty []]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu Fc T U UNIV (\<lambda>x. x)
@@ -4413,7 +4413,7 @@ lemma [\<phi>reason_template %To_ToA_derived_SAssoc]:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
 \<Longrightarrow> x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fs s (Ft t T) \<s>\<u>\<b>\<j> y. y = f s t x @action to (\<s>\<p>\<l>\<i>\<t>-\<a>\<s>\<s>\<o>\<c> s t) \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def \<r>Guard_def Action_Tag_def
-  by simp
+  by (simp add: ExSet_defined)
   
 
 paragraph \<open>ToA-based Simplification\<close>
@@ -4423,14 +4423,14 @@ lemma [\<phi>reason_template [\<phi>transformation_based_backward_simp default %
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
 \<Longrightarrow> x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fs s (Ft t T) \<s>\<u>\<b>\<j> y. y = f s t x @action \<A>backward_simp \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def \<r>Guard_def Action_Tag_def
-  by simp
+  by (simp add: ExSet_defined)
 
 lemma [\<phi>reason_template [\<phi>transformation_based_simp default %To_ToA_derived_SAssoc no trigger]]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
 \<Longrightarrow> x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fc (smul s t) T \<s>\<u>\<b>\<j> y. y = f s t x @action \<A>simp \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>I_def Premise_def \<r>Guard_def Action_Tag_def
-  by simp
+  by (simp add: ExSet_defined)
 
 
 (*
@@ -4556,7 +4556,7 @@ lemma [\<phi>reason_template %To_ToA_derived_SDistri]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx t s x
 \<Longrightarrow> x \<Ztypecolon> F (s + t) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F t \<^emph> F s \<s>\<u>\<b>\<j> y. y = uz t s x @action to (\<s>\<p>\<l>\<i>\<t>-\<s>\<c>\<a>\<l>\<a>\<r> s t) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>S_def Premise_def Action_Tag_def
-  by simp
+  by (simp add: ExSet_defined)
 
 
 subsection \<open>Separation Extraction\<close>
@@ -7229,7 +7229,7 @@ lemma [\<phi>reason_template name F.G.comm[no_atp]]:
     @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute_def Orelse_shortcut_def
-  by (elim disjE; simp)
+  by (elim disjE; simp add: ExSet_defined)
 
 subparagraph \<open>1-to-1\<lambda>\<close>
 
@@ -7261,7 +7261,7 @@ lemma Comm_Tyops\<^sub>1\<^sub>_\<^sub>2_ToA_temlpate[\<phi>reason_template name
     RE = (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Orelse_shortcut_def
-  by (elim disjE; simp)
+  by (elim disjE; simp add: ExSet_defined)
 
 lemma Comm_Tyops\<^sub>2\<^sub>_\<^sub>1_ToA_temlpate[\<phi>reason_template name F.G.comm[no_atp]]:
   \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
@@ -7270,7 +7270,7 @@ lemma Comm_Tyops\<^sub>2\<^sub>_\<^sub>1_ToA_temlpate[\<phi>reason_template name
     RE = (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<A>_template_reason undefined
 \<Longrightarrow> RE \<close>
   unfolding Premise_def Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Orelse_shortcut_def
-  by (elim disjE; simp)
+  by (elim disjE; simp add: ExSet_defined)
 
 
 paragraph \<open>Swapping Normalization\<close>
@@ -8325,7 +8325,7 @@ private lemma \<phi>TA_SH\<^sub>E_rewr_IH:
             @action \<phi>TA_subgoal A)
 \<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U1 \<^emph> U2 \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all OPEN_def MAKE_def
-  by simp
+  by (simp add: ExSet_defined)
 
 private lemma \<phi>TA_SH\<^sub>I_DV_cong:
   \<open> D \<equiv> D'
