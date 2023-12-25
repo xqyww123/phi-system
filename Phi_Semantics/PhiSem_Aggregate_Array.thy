@@ -63,7 +63,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
-                    ("\<Aa>\<r>\<r>\<a>\<y>[_] _" [20, 911] 910)
+                    ("\<Aa>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
   where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
         \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>

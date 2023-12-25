@@ -3,6 +3,7 @@ theory PhiEx_Strassen
           Jordan_Normal_Form.Strassen_Algorithm
           Phi_Semantics.PhiSem_Int_ArbiPrec
           PhiStd.PhiStd_Loop
+          Phi_Semantics.PhiSem_Mem_C_AI
 begin
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -38,6 +39,25 @@ proc zero_mat:
     certified unfolding mat_to_list_def list_eq_iff_nth_eq by auto_sledgehammer
 \<medium_right_bracket> .
 
+proc new_mat:
+  input  \<open>m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>0\<^sub>m m n \<Ztypecolon> MatSlice a 0 0 m n\<heavy_comma>
+          a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> m n
+          \<s>\<u>\<b>\<j> a. \<top>\<close> \<comment> \<open>TODO: why is there a syntax warning?\<close>
+\<medium_left_bracket>
+  calloc_aN2 ($m, $n) \<open>\<int>\<close> \<exists>a
+  \<open>0\<^sub>m m n \<Ztypecolon> MAKE _ (MatSlice a 0 0 m n)\<close>
+    certified unfolding mat_to_list_def list_eq_iff_nth_eq by auto_sledgehammer
+\<medium_right_bracket> .
+
+proc del_mat:
+  input  \<open>x \<Ztypecolon> MatSlice a i j m n\<heavy_comma> a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M N\<close>
+  premises \<open>m = M \<and> n = N \<and> i = 0 \<and> j = 0 \<and> address_to_base a\<close>
+  output \<open>Void\<close>
+\<medium_left_bracket>
+  to \<open>OPEN _ _\<close>
+  mfree ($a)
+\<medium_right_bracket> .
 
 
 proc add_mat:
@@ -115,7 +135,21 @@ lemma merge_4mat:
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
   \<medium_left_bracket> \<medium_right_bracket> certified 
       by (auto simp: four_block_mat_def Let_def mat_to_list_def list_eq_iff_nth_eq
-                        \<phi>[unfolded carrier_mat_def, simplified] nth_append; auto_sledgehammer)
+                        \<phi>[unfolded carrier_mat_def, simplified] nth_append; auto_sledgehammer) .
+
+
+proc strassen:
+  input  \<open>A \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n)\<heavy_comma>
+          B \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y (2^n) (2^n)\<heavy_comma>
+          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
+          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
+          n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>A * B \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n)\<heavy_comma>
+          B \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y (2^n) (2^n)\<close>
+\<medium_left_bracket>
+  
+
+
 
 
 end

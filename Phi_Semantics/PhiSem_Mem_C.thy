@@ -240,9 +240,10 @@ section \<open>Instructions & Their Specifications\<close>
 
 subsection \<open>Auxiliary\<close>
 
-definition \<open>address_to_root addr \<equiv> memaddr.index addr = 0\<close>
+definition \<open>address_to_base addr \<equiv> memaddr.index addr = 0\<close>
+  \<comment> \<open>\<open>addr\<close> points to the base of an allocation block\<close>
   \<comment> \<open>wraps and prevents the rewrite \<open>memaddr.index addr = 0\<close>,
-      as \<open>address_to_root addr\<close> should be handled as an atom\<close>
+      as \<open>address_to_base addr\<close> should be handled as an atom\<close>
 
 subsection \<open>Main\<close>
 
@@ -354,9 +355,9 @@ proc calloc_1:
   input \<open>Void\<close>
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
        and \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. address_to_root addr\<close>
+  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
   including Semantic_Zero_Val_EIF_brute
-  unfolding address_to_root_def
+  unfolding address_to_base_def
 \<medium_left_bracket>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and v=\<open>the (Zero TY)\<close>]
@@ -378,10 +379,10 @@ proc calloc_1:
 proc mfree:
   input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  premises \<open>address_to_root addr\<close>
+  premises \<open>address_to_base addr\<close>
   output \<open>Void\<close>
   including \<phi>sem_type_sat_EIF
-  unfolding address_to_root_def Guided_Mem_Coercion_def
+  unfolding address_to_base_def Guided_Mem_Coercion_def
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
