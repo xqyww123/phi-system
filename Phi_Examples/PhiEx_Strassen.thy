@@ -95,32 +95,27 @@ proc strassen_mut:
           y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 *)
 
-declare list.pred_True[simp]
 
-lemma
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
+lemma split_4mat:
+  \<open> \<p>\<a>\<r>\<a>\<m> (s, t)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
 \<Longrightarrow> x \<Ztypecolon> MatSlice a i j m n \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x\<^sub>1\<^sub>1 \<Ztypecolon> MatSlice a i j s t\<heavy_comma> x\<^sub>1\<^sub>2 \<Ztypecolon> MatSlice a i (j+t) s (n-t)\<heavy_comma>
                                     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
                                     \<s>\<u>\<b>\<j> x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2. (x\<^sub>1\<^sub>1, x\<^sub>1\<^sub>2, x\<^sub>2\<^sub>1, x\<^sub>2\<^sub>2) = split_block x s t\<close>
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
-  \<medium_left_bracket>  \<medium_right_bracket>
-      certified by (auto simp: Let_def image_iff split_block_def mat_to_list_def list_eq_iff_nth_eq; auto_sledgehammer) .
+  \<medium_left_bracket>  \<medium_right_bracket> certified
+       by (auto simp: Let_def image_iff split_block_def mat_to_list_def list_eq_iff_nth_eq; auto_sledgehammer) .
 
-
-lemma
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
+lemma merge_4mat:
+  \<open> \<p>\<a>\<r>\<a>\<m> (s, t)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
 \<Longrightarrow> x\<^sub>1\<^sub>1 \<Ztypecolon> MatSlice a i j s t\<heavy_comma> x\<^sub>1\<^sub>2 \<Ztypecolon> MatSlice a i (j+t) s (n-t)\<heavy_comma>
     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> four_block_mat x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a i j m n \<close>
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
-  \<medium_left_bracket>  \<medium_right_bracket> certified 
-      thm \<phi>[unfolded carrier_mat_def, simplified]
-      
-      apply (insert \<phi>, clarsimp simp: zip'_def carrier_mat_def Let_def image_iff mat_to_list_def four_block_mat_def list_eq_iff_nth_eq list_all_length
-      thm useful
-      .
-      thm useful
+  \<medium_left_bracket> \<medium_right_bracket> certified 
+      by (auto simp: four_block_mat_def Let_def mat_to_list_def list_eq_iff_nth_eq
+                        \<phi>[unfolded carrier_mat_def, simplified] nth_append; auto_sledgehammer)
 
-  term split_block
 
 end

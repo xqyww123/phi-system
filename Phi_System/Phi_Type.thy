@@ -4347,6 +4347,8 @@ lemma template_scalar_partial_functor[\<phi>reason_template name Fc.scalar_parti
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond (Fs s) F\<^sub>W F\<^sub>s\<^sub>W C\<^sub>W (Ft t T) W Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond (Fs' s') F\<^sub>R F\<^sub>s\<^sub>R C\<^sub>R (Ft' t' U) R Du uz
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>s\<^sub>W F\<^sub>s\<^sub>R (Ft t T \<^emph>[C\<^sub>W] W) (Ft' t' U \<^emph>[C\<^sub>R] R) D Rng pm fm
+\<Longrightarrow> (\<And>a \<in> D (z (apfst (f s t) x)).
+           a \<Ztypecolon> Ft t T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g a \<Ztypecolon> Ft' t' U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P a )
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (prem, ff, PP) : (
       Dx' s' t' (fst (uz (fm g P (z (apfst (f s t) x))))) \<and> apfst (f s t) x \<in> Dz \<and>
         (\<forall> a \<in> D (z (apfst (f s t) x)). g a \<in> Rng (z (apfst (f s t) x))) \<and>
@@ -4354,13 +4356,11 @@ lemma template_scalar_partial_functor[\<phi>reason_template name Fc.scalar_parti
       apfst (f' s' t') (uz (fm g P (z (apfst (f s t) x)))),
       pm g P (z (apfst (f s t) x)))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Dt t \<and> Ds' s' \<and> Dt' t' \<and> Dx s t (fst x) \<and> prem
-\<Longrightarrow> (\<And>a \<in> D (z (apfst (f s t) x)).
-           a \<Ztypecolon> Ft t T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g a \<Ztypecolon> Ft' t' U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P a )
 \<Longrightarrow> x \<Ztypecolon> Fc (smul s t) T \<^emph>[C\<^sub>W] F\<^sub>W W
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ff \<Ztypecolon> Fc' (smul' s' t') U \<^emph>[C\<^sub>R] F\<^sub>R R
     \<w>\<i>\<t>\<h> PP \<close>
   unfolding Action_Tag_def
-  \<medium_left_bracket> premises SA\<^sub>I[] and SA\<^sub>E[] and SH\<^sub>I[] and SH\<^sub>E[] and FTF[] and _ and _ and Tr[]
+  \<medium_left_bracket> premises SA\<^sub>I[] and SA\<^sub>E[] and SH\<^sub>I[] and SH\<^sub>E[] and FTF[] and Tr[] and _ and _
     apply_rule transformation_right_frame_conditioned_ty[OF apply_Semimodule_SAssoc\<^sub>E[OF SA\<^sub>E]]
     apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[OF FTF, where P=P]
@@ -4635,16 +4635,16 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %deriv
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[Cw] W) (U \<^emph>[Cr] R) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 Cw T W Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 Cr U R Du uz
+\<Longrightarrow> (\<And>a \<in> Dom (z x). \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y = uz (func_mapper f P (z x)) \<Longrightarrow> a \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P a )
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (y, prem, PP) :
         (uz (func_mapper f P (z x)),
          (y = uz (func_mapper f P (z x)) \<longrightarrow>
               x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x)) \<and> func_mapper f P (z x) \<in> Du),
          pred_mapper f P (z x))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> prem
-\<Longrightarrow> (\<And>a \<in> Dom (z x). \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y = uz (func_mapper f P (z x)) \<Longrightarrow> a \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P a )
 \<Longrightarrow> x \<Ztypecolon> F\<^sub>1 T \<^emph>[Cw] F\<^sub>4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>3 U \<^emph>[Cr] F\<^sub>2 R \<w>\<i>\<t>\<h> PP \<close>
   unfolding \<r>Guard_def
-  \<medium_left_bracket> premises FTF[] and SH\<^sub>I[] and SH\<^sub>E[] and _ and _ and Tr
+  \<medium_left_bracket> premises FTF[] and SH\<^sub>I[] and SH\<^sub>E[] and Tr and _ and _
     apply_rule apply_Separation_Homo\<^sub>I_Cond[where Fu=F\<^sub>4 and Ft=F\<^sub>1, OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where U=\<open>U \<^emph>[Cr] R\<close> and f=\<open>f\<close> and P=\<open>P\<close>, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
@@ -4757,14 +4757,17 @@ lemma "_Structural_Extract\<^sub>\<Lambda>_general_rule_i_"[\<phi>reason_templat
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor\<^sub>\<Lambda> F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (\<lambda>p. T p \<^emph>[Cw] W p) (\<lambda>p. U p \<^emph>[Cr] R p) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 Cw T W Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 Cr U R Du uz
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y = uz (func_mapper f P (z x))  \<longrightarrow>
-        x \<in> Dz \<and> (\<forall>p a. a \<in> Dom p (z x) \<longrightarrow> f p a \<in> Rng p (z x)) \<and> func_mapper f P (z x) \<in> Du)
 \<Longrightarrow> (\<And>p. \<And>a \<in> Dom p (z x). \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y = uz (func_mapper f P (z x)) \<Longrightarrow>
           a \<Ztypecolon> T p \<^emph>[Cw] W p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f p a \<Ztypecolon> U p \<^emph>[Cr] R p \<w>\<i>\<t>\<h> P p a )
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> y : uz (func_mapper f P (z x)) 
-\<Longrightarrow> x \<Ztypecolon> F\<^sub>1 T \<^emph>[Cw] F\<^sub>4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>3 U \<^emph>[Cr] F\<^sub>2 R \<w>\<i>\<t>\<h> pred_mapper f P (z x) \<close>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (y, prem, PP) :
+      (uz (func_mapper f P (z x)),
+       (y = uz (func_mapper f P (z x)) \<longrightarrow>
+        x \<in> Dz \<and> (\<forall>p a. a \<in> Dom p (z x) \<longrightarrow> f p a \<in> Rng p (z x)) \<and> func_mapper f P (z x) \<in> Du),
+       pred_mapper f P (z x))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> prem
+\<Longrightarrow> x \<Ztypecolon> F\<^sub>1 T \<^emph>[Cw] F\<^sub>4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F\<^sub>3 U \<^emph>[Cr] F\<^sub>2 R \<w>\<i>\<t>\<h> PP \<close>
   unfolding \<r>Guard_def
-  \<medium_left_bracket> premises FTF[] and SH\<^sub>I[] and SH\<^sub>E[] and _ and Tr and _
+  \<medium_left_bracket> premises FTF[] and SH\<^sub>I[] and SH\<^sub>E[] and Tr and _ and _
     apply_rule apply_Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond[where Fu=F\<^sub>4 and Ft=F\<^sub>1, OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor\<^sub>\<Lambda>[where U=\<open>\<lambda>p. U p \<^emph>[Cr] R p\<close> and f=\<open>f\<close> and P=\<open>P\<close>, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
@@ -9563,58 +9566,44 @@ subsubsection \<open>List\<close>
 
 declare list.rel_eq[iff] list.pred_True[iff]
 
-definition \<open>zip' = case_prod zip\<close>
-definition \<open>unzip' l = (map fst l, map snd l)\<close>
+(*definition \<open>zip' = case_prod zip\<close>*)
+setup \<open>Sign.mandatory_path "list"\<close>
+abbreviation \<open>unzip l \<equiv> (map fst l, map snd l)\<close>
 
-lemma case_unzip'[simp]:
-  \<open>(case unzip' x of (a,b) \<Rightarrow> f a b) = (let a = map fst x; b = map snd x in f a b)\<close>
-  unfolding unzip'_def
+lemma case_unzip[simp]:
+  \<open>(case list.unzip x of (a,b) \<Rightarrow> f a b) = (let a = map fst x; b = map snd x in f a b)\<close>
   by simp
 
+(*depreciated
 lemma zip'_inj[iff]:
   \<open>length (fst l) = length (snd l) \<Longrightarrow> map fst (zip' l) = fst l\<close>
   \<open>length (fst l) = length (snd l) \<Longrightarrow> map snd (zip' l) = snd l\<close>
   unfolding zip'_def
-  by (cases l; simp)+
+  by (cases l; simp)+*)
 
-lemma zip'_eq_Cons_ex:
-  \<open>zip' x = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. fst x = ah # al \<and> snd x = bh # bl \<and> (ah,bh) = h \<and> zip' (al,bl) = l)\<close>
-  unfolding zip'_def
-  by (cases x; simp; induct_tac b; case_tac a; simp)
+lemma zip_unzip[iff]:
+  \<open> case_prod zip (list.unzip l) = l \<close>
+  by (simp add: zip_map_fst_snd)
 
-lemma zip'_eq_Nil_eq_len:
-  \<open>length (fst l) = length (snd l) \<Longrightarrow> (zip' l = []) \<longleftrightarrow> l = ([], [])\<close>
-  unfolding zip'_def
-  apply (cases l; simp)
-  subgoal for a b
-    by (induct b; cases a; simp) .
-
-lemma zip'_eq_Nil_with_rel:
-  \<open>list_all2 P a b \<and> zip' (a,b) = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
-  unfolding zip'_def
-  by (induct b; cases a; simp)
-
-lemma length_zip':
-  \<open>length a = length b \<Longrightarrow> length (zip' (a,b)) = length b\<close>
-  unfolding zip'_def
+lemma unzip_zip[iff]:
+  \<open> length x = length y
+\<Longrightarrow> list.unzip (zip x y) = (x,y) \<close>
   by simp
 
-lemma zip'_map:
-  \<open>zip' (map f xs, ys) = map (\<lambda>(x,y). (f x, y)) (zip' (xs, ys))\<close>
-  \<open>zip' (xs, map g ys) = map (\<lambda>(x,y). (x, g y)) (zip' (xs, ys))\<close>
-  unfolding zip'_def
-  by (simp add: zip_map1 zip_map2)+
+lemma zip_eq_Cons_ex:
+  \<open>zip x y = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. x = ah # al \<and> y = bh # bl \<and> (ah,bh) = h \<and> zip al bl = l)\<close>
+  by (simp, induct_tac y; case_tac x; simp)
 
-lemma unzip'_inj[simp]:
-  \<open>unzip' [] = ([], [])\<close>
-  unfolding unzip'_def
-  by simp_all
+lemma zip_eq_Nil_eq_len:
+  \<open>length x = length y \<Longrightarrow> (zip x y = []) \<longleftrightarrow> x = [] \<and> y = []\<close>
+  by (simp; induct x; cases y; simp)
 
-lemma unzip'_prj[simp]:
-  \<open>fst (unzip' L) = map fst L\<close>
-  \<open>snd (unzip' L) = map snd L\<close>
-  unfolding unzip'_def
-  by simp_all
+lemma zip_eq_Nil_with_rel:
+  \<open>list_all2 P a b \<and> zip a b = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
+  by (induct b; cases a; simp)
+
+setup \<open>Sign.parent_path\<close>
+
 
 lemma map_prod_case_analysis:
   \<open>map (\<lambda>x. (f x, g x)) la = lb \<equiv> map f la = map fst lb \<and> map g la = map snd lb \<close>
@@ -9626,6 +9615,7 @@ lemma list_all2__const_True[simp]:
   subgoal for x y
   by (induct x arbitrary: y; simp; case_tac y; simp) .
 
+(*
 setup \<open> Context.theory_map(
   BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
       deads = [],
@@ -9636,6 +9626,23 @@ setup \<open> Context.theory_map(
       zip_simps = @{thms' zip'_inj zip'_eq_Cons_ex zip'_eq_Cons_ex zip'_eq_Nil_eq_len
                           length_map length_zip' zip'_map
                           unzip'_inj unzip'_prj map_prod_case_analysis}
+  }))
+\<close>
+*)
+
+term \<open>list.unzip :: ('a \<times> 'b) list \<Rightarrow> 'a list \<times> 'b list\<close>
+
+setup \<open> Context.theory_map(
+  BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
+      deads = [],
+      lives = [\<^typ>\<open>'a\<close>],
+      lives'= [\<^typ>\<open>'b\<close>],
+      zip = \<^term>\<open>case_prod zip :: 'a list \<times> 'b list \<Rightarrow> ('a \<times> 'b) list\<close>,
+      unzip = \<^term>\<open>list.unzip :: ('a \<times> 'b) list \<Rightarrow> 'a list \<times> 'b list\<close>,
+      zip_simps = @{thms' list.zip_unzip list.unzip_zip list.zip_eq_Cons_ex list.zip_eq_Nil_eq_len
+                          length_map length_zip zip_map1 zip_map2 zip_map_fst_snd
+                          List.zip_map_fst_snd map_zip_map map_zip_map2
+                          map_prod_case_analysis}
   }))
 \<close>
 
@@ -9655,13 +9662,13 @@ lemma [\<phi>reason add]:
   by clarsimp
 
 lemma [\<phi>reason add]:
-  \<open>separatable_unzip zip' unzip' UNIV map map map f g\<close>
-  unfolding separatable_unzip_def unzip'_def zip'_def
+  \<open>separatable_unzip (case_prod zip) list.unzip UNIV map map map f g\<close>
+  unfolding separatable_unzip_def
   by (clarsimp simp add: zip_eq_conv)
 
 lemma [\<phi>reason add]:
-  \<open>separatable_zip unzip' zip' {(la,lb). length la = length lb} map map map f g\<close>
-  unfolding separatable_zip_def unzip'_def zip'_def
+  \<open>separatable_zip list.unzip (case_prod zip) {(la,lb). length la = length lb} map map map f g\<close>
+  unfolding separatable_zip_def
   by (clarsimp simp add: zip_eq_conv, metis map_fst_zip map_map map_snd_zip)
 
 lemma [\<phi>reason add]:

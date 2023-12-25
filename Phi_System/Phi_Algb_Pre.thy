@@ -101,6 +101,7 @@ definition dabc_equation
       (d + a = b + c) \<and>
       (\<exists>x. x + c = a \<and> d + x = b \<and> x ##\<^sub>+ c \<and> d ##\<^sub>+ x) \<and>
       d ##\<^sub>+ a \<and> b ##\<^sub>+ c \<close>
+  \<comment> \<open>in principle, \<open>d, c \<noteq> 0\<close>\<close>
 
 definition equation\<^sub>3\<^sub>1
   where \<open>equation\<^sub>3\<^sub>1 d a c b \<longleftrightarrow> (d + a + c = b) \<and> d + a ##\<^sub>+ c \<and> d ##\<^sub>+ a\<close>
@@ -373,10 +374,10 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>equation\<^sub>2\<^sub>1 [?
   by simp
 
 lemma [\<phi>reason %\<A>_partial_add_cut]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> d \<and> b \<le> c \<and> a \<le> c \<and> c \<le> d
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> d \<and> b < c \<and> a \<le> c \<and> c \<le> d
 \<Longrightarrow> dabc_equation [a,b) [b,d) [a,c) [c,d) \<close>
   unfolding dabc_equation_def Premise_def
-  by (clarsimp, metis add_lcro_intvl lower_interval upper_interval)
+  by (clarsimp, metis add_lcro_intvl lower_interval order_less_imp_le upper_interval)
 
 lemma [\<phi>reason %\<A>_partial_add_cut for \<open>equation\<^sub>3\<^sub>1 [?a,?b) [?b,?c) [?c,?d) [?a,?d)\<close>
                                        \<open>equation\<^sub>3\<^sub>1 ?var_c [?b,?c) ?var_d [?a,?d)\<close> ]:
@@ -426,18 +427,19 @@ lemma [\<phi>reason %\<A>_partial_add_specific for \<open>equation\<^sub>2\<^sub
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>]
-      len_intvl.start c \<le> len_intvl.start b \<and>
+      len_intvl.start c < len_intvl.start b \<and>
       len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
       len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
 \<Longrightarrow> dabc_equation a b c d\<close>
   unfolding dabc_equation_def Premise_def Simplify_def
-  by (cases b; cases c; clarsimp;
-      metis add_diff_cancel_left' le_add_diff_inverse len_intvl.sel(1) len_intvl.sel(2) ordered_cancel_comm_monoid_diff_class.add_diff_assoc2 plus_len_intvl_def)
+  by (cases b; cases c; clarsimp simp: len_intvl_ex;
+      smt (verit, del_insts) add.assoc add.commute add_diff_cancel_left' le_iff_add)
+      
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>]
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>]
             len_intvl.start d \<le> len_intvl.start b \<and>
             len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>

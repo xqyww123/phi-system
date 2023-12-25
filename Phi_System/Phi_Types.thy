@@ -2855,7 +2855,7 @@ context begin
 private lemma [simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
-  
+ 
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -3089,7 +3089,7 @@ lemma \<phi>Mul_Quant_Tree_wrap_module_src[\<phi>reason default %\<phi>Mul_Quant
     note Tr' = Tr[folded \<phi>Prod_expn' Cond_\<phi>Prod_expn_\<phi>Some,
                   unfolded \<phi>Some_transformation_strip prod.collapse]
     note t1 = \<phi>MapAt_L.scalar_partial_functor[where t'=\<open>[]\<close> and s=\<open>[f i]\<close>, simplified,
-          OF _ _ Tr'[THEN mp], unfolded times_list_def append_Cons append_Nil,
+          OF _ Tr'[THEN mp], unfolded times_list_def append_Cons append_Nil,
           simplified cond_prod_transformation_rewr,
           unfolded \<phi>Prod_expn' \<phi>Prod_expn'' Cond_\<phi>Prod_expn_\<phi>Some
                    times_list_def append_Cons append_Nil append_Nil2] ;;
@@ -3113,7 +3113,7 @@ lemma \<phi>Mul_Quant_Tree_wrap_module_tgt[\<phi>reason default %\<phi>Mul_Quant
     note Tr' = Tr[folded \<phi>Prod_expn' Cond_\<phi>Prod_expn_\<phi>Some,
                   unfolded \<phi>Some_transformation_strip prod.collapse]
     note t1 = \<phi>MapAt_L.scalar_partial_functor[where t=\<open>[]\<close> and s=\<open>[f i]\<close> and s'=\<open>[f i]\<close>, simplified,
-          OF _ Tr', unfolded times_list_def append_Cons append_Nil append_Nil2,
+          OF Tr', unfolded times_list_def append_Cons append_Nil append_Nil2,
           simplified cond_prod_transformation_rewr,
           unfolded \<phi>Prod_expn' \<phi>Prod_expn'' Cond_\<phi>Prod_expn_\<phi>Some
                    times_list_def append_Cons append_Nil append_Nil2] ;;

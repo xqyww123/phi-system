@@ -28,14 +28,14 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (List ?T) (list_all2 ?eq) \<close>),
   (@{thm' List.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor List List ?T ?U set (\<lambda>_. UNIV) list_all2  \<close>),
   (@{thm' List.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor List List ?T ?U set (\<lambda>_. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f) \<close>),
-  (@{thm' List.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I List List List ?Ta ?U {(x, y). length x = length y} zip' \<close>),
-  (@{thm' List.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List List List ?Ta ?U unzip' \<close>)
+  (@{thm' List.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I List List List ?Ta ?U {(x, y). length x = length y} (case_prod zip) \<close>),
+  (@{thm' List.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List List List ?Ta ?U list.unzip \<close>)
 ]\<close>
 
-lemma [simp]:
-  \<open>zip' (apfst (map g) (unzip' x)) = map (apfst g) x\<close>
+(*lemma [simp]:
+  \<open>list.zip (apfst (map g) (unzip' x)) = map (apfst g) x\<close>
   unfolding zip'_def unzip'_def
-  by (simp add: zip_eq_conv)
+  by (simp add: zip_eq_conv)*)
 
 thm List.ToA_mapper
 
@@ -167,8 +167,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List3.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (List3 ?T) (list_all2 (list_all2 ?eq)) \<close>),
   (@{thm' List3.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor List3 List3 ?T ?U (\<lambda>a. Set.bind (set a) set) (\<lambda>_. UNIV) (\<lambda>a. list_all2 (list_all2 a)) \<close>),
   (@{thm' List3.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor List3 List3 ?T ?U (\<lambda>a. Set.bind (set a) set) (\<lambda>_. UNIV) (\<lambda>f a. list_all (list_all a)) (\<lambda>f P. map (map f)) \<close>),
-  (@{thm' List3.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I List3 List3 List3 ?Ta ?U {(x, y). list_all2 (\<lambda>x y. length x = length y) x y} (\<lambda>x. map zip' (zip' x)) \<close>),
-  (@{thm' List3.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List3 List3 List3 ?Ta ?U (\<lambda>x. unzip' (map unzip' x)) \<close>)
+  (@{thm' List3.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I List3 List3 List3 ?Ta ?U {(x, y). list_all2 (\<lambda>x y. length x = length y) x y} (\<lambda>x. map (case_prod zip) (case_prod zip x)) \<close>),
+  (@{thm' List3.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List3 List3 List3 ?Ta ?U (\<lambda>x. (map (map fst) x, map (map snd) x)) \<close>)
 ]\<close>
 
 (* BOSS:

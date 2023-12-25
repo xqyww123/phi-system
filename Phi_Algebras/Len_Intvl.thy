@@ -10,6 +10,25 @@ datatype 'a len_intvl = Len_Intvl (start: 'a) (len: nat)
 
 notation Len_Intvl ("\<lbrakk>_ : _\<rwpar>")
 
+lemma len_intvl_all: \<open>All P \<longleftrightarrow> (\<forall>s t. P \<lbrakk>s:t\<rwpar>)\<close>
+  by (metis len_intvl.collapse)
+
+lemma len_intvl_ex: \<open>Ex P \<longleftrightarrow> (\<exists>s t. P \<lbrakk>s : t\<rwpar>)\<close>
+  by (metis len_intvl.collapse)
+
+lemma \<open>Pure.all P \<equiv> (\<And>s t. PROP P \<lbrakk>s : t\<rwpar>)\<close>
+proof
+  fix s t
+  assume \<open>\<And>x. PROP P x\<close>
+  then show \<open>PROP P \<lbrakk>s : t\<rwpar>\<close> .
+next
+  fix x
+  assume \<open>\<And>s t. PROP P \<lbrakk>s : t\<rwpar>\<close>
+  from \<open>PROP P \<lbrakk>start x : len x\<rwpar>\<close>
+  show \<open>PROP P x\<close> by simp
+qed
+
+
 subsubsection \<open>Helper\<close>
 
 class shift_by_nat =

@@ -140,9 +140,19 @@ For convenience, when the context is unambiguous, we also call the entire \<open
 but as \<^emph>\<open>\<phi>-type assertion\<close> to be precise.
 \<close>
 
+subsubsection \<open>Basic \& Auxiliary Rules\<close>
+
 lemma \<phi>Type_eqI:
   \<open>(\<forall>x p. p \<Turnstile> (x \<Ztypecolon> a) \<longleftrightarrow> p \<Turnstile> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
   unfolding \<phi>Type_def Satisfaction_def by blast
+
+lemma \<phi>Type_protect_type_cong:
+  \<open> x \<equiv> x'
+\<Longrightarrow> x \<Ztypecolon> T \<equiv> x' \<Ztypecolon> T\<close>
+  by simp
+
+setup \<open>Context.theory_map (PLPR_Rule_Gen.Template_Inst_SS.map (
+  Simplifier.add_cong @{thm' \<phi>Type_protect_type_cong}))\<close>
 
 ML_file \<open>library/tools/simp_congruence.ML\<close>
 
