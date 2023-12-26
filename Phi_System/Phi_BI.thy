@@ -5889,32 +5889,32 @@ definition \<open>SE_tail Cw Cr A P1 r R
                 else if Cr then A * (r \<Ztypecolon> R) else A) \<and>
           P = (P2 \<and> P1)) \<close>
 
-definition \<open>SE_tail\<^sub>2 Cr Crr RR r R A   R3
+definition \<open>SE_tail\<^sub>2 Cr Crr RR r R   R3
       \<longleftrightarrow> R3 = (if Crr then if Cr then RR * (r \<Ztypecolon> R) else RR
                        else if Cr then (r \<Ztypecolon> R) else \<top>)\<close>
 
 \<phi>reasoner_group SE_internal = (1000, [1000, 2000]) for (\<open>SE_tail Cw Cr A P1 r R w W C R3 P\<close>,
-                                                        \<open>SE_tail\<^sub>2 Cr Crr RR r R A R3\<close>) \<open>internal\<close>
+                                                        \<open>SE_tail\<^sub>2 Cr Crr RR r R R3\<close>) \<open>internal\<close>
 
 declare [[
   \<phi>reason_default_pattern \<open>SE_tail ?Cw ?Cr ?A ?P1 ?r ?R _ _ _ _ _\<close>
                        \<Rightarrow> \<open>SE_tail ?Cw ?Cr ?A ?P1 ?r ?R _ _ _ _ _\<close>   (100)
-      and                 \<open>SE_tail\<^sub>2 ?Cr ?Crr ?RR ?r ?R ?A _\<close>
-                       \<Rightarrow> \<open>SE_tail\<^sub>2 ?Cr ?Crr ?RR ?r ?R ?A _\<close>               (100)
+      and                 \<open>SE_tail\<^sub>2 ?Cr ?Crr ?RR ?r ?R _\<close>
+                       \<Rightarrow> \<open>SE_tail\<^sub>2 ?Cr ?Crr ?RR ?r ?R _\<close>               (100)
 ]]
 
 
 
 lemma [\<phi>reason %SE_internal]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2
-\<Longrightarrow> SE_tail\<^sub>2 True Crr RR r R A   R3
+\<Longrightarrow> SE_tail\<^sub>2 True Crr RR r R   R3
 \<Longrightarrow> SE_tail True True A P1 r R   w W True R3 (P2 \<and> P1) \<close>
   unfolding SE_tail_def SE_tail\<^sub>2_def
   by (rule exI[where x=P2]; rule exI[where x=RR]; rule exI[where x=Crr]; cases Crr; clarsimp)
 
 lemma [\<phi>reason %SE_internal]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2
-\<Longrightarrow> SE_tail\<^sub>2 False Crr RR r R A   R3
+\<Longrightarrow> SE_tail\<^sub>2 False Crr RR r R   R3
 \<Longrightarrow> SE_tail True False A P1 r R   w W Crr R3 (P2 \<and> P1) \<close>
   unfolding SE_tail_def SE_tail\<^sub>2_def
   by (rule exI[where x=P2]; rule exI[where x=RR]; rule exI[where x=Crr]; cases Crr; clarsimp)
@@ -5930,22 +5930,22 @@ lemma [\<phi>reason %SE_internal]:
   by (rule exI[where x=True]; rule; rule exI[where x=False]; clarsimp)
 
 lemma [\<phi>reason %SE_internal]:
-  \<open> SE_tail\<^sub>2 True True RR r R A   (RR * (r \<Ztypecolon> R)) \<close>
+  \<open> SE_tail\<^sub>2 True True RR r R   (RR * (r \<Ztypecolon> R)) \<close>
   unfolding SE_tail\<^sub>2_def
   by simp
 
 lemma [\<phi>reason %SE_internal]:
-  \<open> SE_tail\<^sub>2 True False RR r R A   (r \<Ztypecolon> R) \<close>
+  \<open> SE_tail\<^sub>2 True False RR r R   (r \<Ztypecolon> R) \<close>
   unfolding SE_tail\<^sub>2_def
   by simp
 
 lemma [\<phi>reason %SE_internal]:
-  \<open> SE_tail\<^sub>2 False True RR r R A   RR \<close>
+  \<open> SE_tail\<^sub>2 False True RR r R   RR \<close>
   unfolding SE_tail\<^sub>2_def
   by simp
 
 lemma [\<phi>reason %SE_internal]:
-  \<open> SE_tail\<^sub>2 False False RR r R A   \<top> \<close>
+  \<open> SE_tail\<^sub>2 False False RR r R   \<top> \<close>
   unfolding SE_tail\<^sub>2_def
   by simp
 
