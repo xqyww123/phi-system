@@ -5884,6 +5884,18 @@ subsection \<open>Entry Point of Separation Extraction\<close>
 
 text \<open>From \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> to \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R\<close>\<close>
 
+subsubsection \<open>Unital\<close>
+
+lemma enter_SE:
+  \<open> (x,w) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P1
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y' : y
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (y\<^sub>1, y\<^sub>2) : (fst y', snd y')
+\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>1 \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h> P\<close>
+
+
+
+subsubsection \<open>Non-Unital\<close>
+
 definition \<open>SE_tail Cw Cr A P1 r R
                     w W C R3 P
   \<longleftrightarrow> (\<exists>P2 RR Crr.
@@ -5934,31 +5946,33 @@ lemma [\<phi>reason %SE_internal]:
 
 lemma enter_SEi:
   \<open> (x,w) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P1
-\<Longrightarrow> SE_tail Cw Cr A P1 (snd y) R   w W C R3 P
-\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y' : y
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (y\<^sub>1, y\<^sub>2) : (fst y', snd y')
+\<Longrightarrow> SE_tail Cw Cr A P1 y\<^sub>2 R   w W C R3 P
+\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>1 \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h> P\<close>
   for A :: \<open>'a::sep_semigroup BI\<close>
-  unfolding Action_Tag_def REMAINS_def Simplify_def Try_def SE_tail_def
+  unfolding Action_Tag_def REMAINS_def Simplify_def Try_def SE_tail_def Simplify_def
   apply clarify
   apply (cases Cw; cases Cr; case_tac Crr; cases y;
          simp add: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<phi>Prod_expn')
 
   subgoal premises prems for P2 RR Crr a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    by (insert prems(5)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
                prems(1)[THEN transformation_left_frame, where R=RR],
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for P2 Crr a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    by (insert prems(5)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
                prems(1),
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for P2 RR Crr a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    by (insert prems(5)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
                prems(1)[THEN transformation_left_frame, where R=RR],
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for P2 Crr a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    by (insert prems(5)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
                prems(1),
         simp add: mult.assoc transformation_trans)
 
@@ -5970,7 +5984,7 @@ lemma enter_SEi:
     by (insert prems(1)[THEN transformation_left_frame, where R=A],
         simp add: mult.assoc transformation_trans) .
 
-hide_const (open) SE_tail SE_tail\<^sub>2
+hide_const (open) SE_tail
 
 (* if Cw then (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2) else (P2, Crr) = (True, False)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps unspec]

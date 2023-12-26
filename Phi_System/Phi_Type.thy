@@ -6780,13 +6780,14 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_LCond_\<phi>Some[OF SS, where x=\<open>(fst o s) x\<close> and s=da and t=c and r=b and C=C\<^sub>c]
     certified by (insert t1 Dom ToA_Mapper_f_expn_rev[OF Tr, simplified Ball_image_comp, THEN bspec[OF _ Dom]],
-                 clarsimp split: prod.split simp: image_iff) ;;
+                 clarsimp split: prod.split simp: image_iff,
+                 metis cond_unionL_def fst_eqD prod.map_beta) ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_RCond_\<phi>Some[OF SS, where s=d and t=a and r=da and C=C\<^sub>d and x=\<open>(snd o ?\<^sub>s\<^sub>L C\<^sub>c (uz c da) o fst o s) x\<close>]
     certified by (insert t1 Dom ToA_Mapper_f_expn_rev[OF Tr, simplified Ball_image_comp, THEN bspec[OF _ Dom]],
                  clarsimp split: prod.split simp: image_iff)
 
-  \<medium_right_bracket> certified by (clarsimp split: prod.split)
+  \<medium_right_bracket> certified by (clarsimp split: prod.split simp: prod.map_beta)
     apply (rule conjunctionI, rule, rule, unfold Premise_def conj_imp_eq_imp_imp module_mapper\<^sub>1\<^sub>3\<^sub>C_def)
   subgoal premises prems for x proof -
     from \<open>\<forall>(x\<^sub>a, x\<^sub>d, x\<^sub>c, w)\<in>D. D\<^sub>G (x\<^sub>a, x\<^sub>d, x\<^sub>c)\<close>[THEN bspec[OF _ \<open>x \<in> D\<close>]]
@@ -7132,7 +7133,7 @@ lemma SE_Module_SDistr_da_b_ToA_mapper
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>S_\<phi>Some[OF SS, where x=\<open>case s x of (x\<^sub>b,w) \<Rightarrow> x\<^sub>b\<close> and s=d and t=a, unfolded EC[THEN conjunct1]]
     certified by (insert t1 Dom ToA_Mapper_f_expn_rev[OF Tr, simplified Ball_image_comp, THEN bspec[OF _ Dom]],
-                  clarsimp split: prod.split simp: Let_def image_iff) ;;
+                  clarsimp split: prod.split simp: Let_def image_iff prod.map_beta) ;;
 
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply (rule conjunctionI, rule, rule, unfold Premise_def conj_imp_eq_imp_imp)
