@@ -2590,12 +2590,9 @@ setup \<open>Context.theory_map (
     of NONE => (ctxt, sequent)
      | SOME rewr =>
         let val lev = Config.get ctxt Phi_Reasoner.auto_level
-            val sctxt =
-              if lev >= 2
-              then Phi_Programming_Simp_SS.enhance ctxt
-              else if lev >= 1
-              then Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
-              else raise Phi_CP_IDE.Post_App.Return (ctxt, sequent)
+            val sctxt = if lev <= 0
+                        then raise Phi_CP_IDE.Post_App.Return (ctxt, sequent)
+                        else equip_Phi_Programming_Simp lev ctxt
             val sequent' = rewr sctxt sequent
                         |> Phi_Help.beta_eta_contract
         in (ctxt, sequent')

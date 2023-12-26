@@ -456,12 +456,8 @@ lemma \<phi>Dependent_Sum_TF[\<phi>type_property \<phi>Dependent_Sum Transformat
  
 context begin
 
-private lemma [simp]:
-  \<open> NO_MATCH (ya, yb) y
-\<Longrightarrow> (a,b) = y \<longleftrightarrow> a = fst y \<and> b = snd y \<close>
-  by (cases y; simp)
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 lemma \<phi>Dependent_Sum_SH\<^sub>I[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>I]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I \<Sigma> \<Sigma> \<Sigma> T U {x. fst (fst x) = fst (snd x)} (\<lambda>x. (fst (fst x), (snd (fst x), snd (snd x)))) \<close>
@@ -477,7 +473,7 @@ let_\<phi>type \<phi>Dependent_Sum
   deriving \<open>Functional_Transformation_Functor\<^sub>\<Lambda> \<Sigma> \<Sigma> T U (\<lambda>p x. if fst x = p then {snd x} else {}) (\<lambda>_ _. UNIV)
                                                         (\<lambda>f P. case_prod P)
                                                         (\<lambda>f P x. apsnd (f (fst x)) x)\<close>
-       
+
 end
 
 thm \<phi>Dependent_Sum.\<phi>Prod
@@ -681,7 +677,7 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[no_atp]]:
                               (\<lambda>x. pm (c x) snd (\<lambda>_. True) x) @action \<A>_template_reason undefined
 \<Longrightarrow> Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' \<Sigma> \<Sigma> T D' r' \<close>
   unfolding Tyops_Commute\<^sub>\<Lambda>\<^sub>I_def Functional_Transformation_Functor_def Simplify_def Action_Tag_def
-  by (clarsimp simp add: ExSet_defined) force
+  by clarsimp force
 
 
 
@@ -1451,7 +1447,7 @@ lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>E[no_atp]]:
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U D r \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
             Action_Tag_def Simplify_def
-  by (clarify; case_tac x; clarsimp simp add: ExSet_defined)
+  by (clarify; case_tac x; clarsimp)
 
 lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>I[no_atp]]:
   \<open> Functional_Transformation_Functor F F'\<^sub>T (T +\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
@@ -1758,7 +1754,7 @@ lemma \<phi>Fun'_comm[\<phi>reason %\<phi>TA_commutativity]:
 \<Longrightarrow> Tyops_Commute (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>') (\<phi>Fun' \<phi>) (\<phi>Fun' \<phi>') T
                   (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
   unfolding Tyops_Commute_def fun_commute_def
-  by (simp add: \<phi>Fun'_scalar_assoc ExSet_defined)
+  by (simp add: \<phi>Fun'_scalar_assoc)
 
 
 subsubsection \<open>Guessing Property\<close>

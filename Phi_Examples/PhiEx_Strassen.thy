@@ -183,7 +183,7 @@ proc strassen:
     \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n))\<close> certified  unfolding mat_to_list_def list_eq_iff_nth_eq sorry
   \<medium_right_bracket>
   \<medium_left_bracket>
-    \<open>MatSlice a\<^sub>x _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>A\<^sub>1\<^sub>1, A\<^sub>1\<^sub>2, A\<^sub>2\<^sub>1, A\<^sub>2\<^sub>2
+    \<open>MatSlice a\<^sub>x _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>A\<^sub>1\<^sub>1, A\<^sub>1\<^sub>2, A\<^sub>2\<^sub>1, A\<^sub>2\<^sub>2 ;;
     \<open>MatSlice a\<^sub>y _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>B\<^sub>1\<^sub>1, B\<^sub>1\<^sub>2, B\<^sub>2\<^sub>1, B\<^sub>2\<^sub>2 ;;
 
     have [simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close>
@@ -282,12 +282,12 @@ proc strassen:
     del_mat ($M\<^sub>5) ;;
     del_mat ($M\<^sub>6) ;;
     del_mat ($M\<^sub>7) ;;
-;; 0 ;;
+thm useful ;;
     apply_rule merge_4mat[where a=a\<^sub>x and i=i\<^sub>x and s=\<open>2 ^ (n - 1)\<close> and j=j\<^sub>x and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified] \<open>(i\<^sub>x, 2 ^ (n - 1), j\<^sub>x, 2 ^ (n - 1))\<close>
       is \<open>A * B\<close> certified apply (simp add: add_mult_distrib_mat minus_mult_distrib_mat add_carrier_mat uminus_carrier_iff_mat
                                             mult_add_distrib_mat mult_minus_distrib_mat assoc_add_mat comm_add_mat)
-                                                                                                                            thm useful
-                                                                                                                             
+
+thm useful
 ;;
 
 

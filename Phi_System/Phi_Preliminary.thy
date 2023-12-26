@@ -45,6 +45,18 @@ structure Phi_Programming_Base_Simp_SS = Simpset (
   val attribute = NONE
   val post_merging = I
 )
+
+structure Phi_Programming_Simp_Hook = Hooks (
+  type arg = unit
+  type state = Proof.context
+)
+
+fun equip_Phi_Programming_Simp lev ctxt =
+  if lev >= 2
+  then Phi_Programming_Simp_SS.enhance ctxt
+    |> Phi_Programming_Simp_Hook.invoke (Context.Proof ctxt) ()
+  else Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
+    |> Phi_Programming_Simp_Hook.invoke (Context.Proof ctxt) ()
 \<close>
 
 

@@ -1561,7 +1561,7 @@ lemma ExSet_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   unfolding BI_eq_iff embedded_func_def
   by simp_all
 
-lemma ExSet_defined:
+lemma ExSet_defined[\<phi>programming_base_simps, simp, \<phi>safe_simp]:
   \<comment> \<open>only safe for source side but unsafe for target side, because it could instantiate variables
       of types parameters which could be instantiated arbitrarily?... I am not pretty sure... It is subtle here\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
@@ -4803,6 +4803,12 @@ ML_file \<open>library/reasoning/quantifier.ML\<close>
 
 simproc_setup defined_ExSet ( \<open>ExSet A\<close> ) = \<open>K BI_Quantifiers.defined_Ex\<close>
 
+setup \<open>Context.theory_map (Phi_Programming_Simp_Hook.add 100 (fn () => fn ctxt =>
+    ctxt delsimprocs [@{simproc defined_ExSet}]
+         delsimps @{thms' ExSet_defined}))
+\<close>
+
+(*
 setup \<open>Context.theory_map (Simplifier.map_ss(fn ctxt =>
     ctxt delsimprocs [@{simproc defined_ExSet}]))\<close>
 
@@ -4813,6 +4819,7 @@ attribute_setup simproc_defined_ExSet = \<open>
       if flag then ctxt addsimprocs [@{simproc defined_ExSet}]
               else ctxt delsimprocs [@{simproc defined_ExSet}])))
 \<close>
+*)
 
 (*
 simproc_setup defined_ExSet ( \<open>ExSet A\<close> )

@@ -570,9 +570,6 @@ lemma setter_rule:
       assumption,
       simp add: split_discrete_meta_all inj_image_mem_iff index_mod_value_welltyp)
 
-context notes ExSet_defined[simp]
-              [[simproc_defined_ExSet]]
-begin
 
 lemma deallocate_rule:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (typ_of_blk blk)
@@ -608,8 +605,6 @@ proof -
           simplified],
         rule prems)
 qed .
-
-end
 
 end
 

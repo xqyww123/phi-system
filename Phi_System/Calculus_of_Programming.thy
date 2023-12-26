@@ -91,11 +91,7 @@ subsubsection \<open>Simplification\<close>
      in if lev <= 0
      then SOME ((ctxt, @{thm' Simplify_I} RS sequent), Seq.empty)
      else sequent
-        |> PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
-            if lev >= 2
-            then Phi_Programming_Simp_SS.enhance ctxt
-            else Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
-          ) {fix_vars=false} ctxt
+        |> PLPR_Simplifier.simplifier (K Seq.empty) (equip_Phi_Programming_Simp lev) {fix_vars=false} ctxt
         |> Seq.map (pair ctxt)
         |> Seq.pull
     end)\<close>
