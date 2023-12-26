@@ -219,9 +219,7 @@ proc strassen:
     sub_mat  ($M\<^sub>3, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y', $N, $N) ;;
     strassen ($M\<^sub>3, 0, 0, $a\<^sub>x, $i\<^sub>x, $j\<^sub>x, $n-1) ;;
 
-    copy_mat ($M\<^sub>4, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y, $N,;;
- note [[\<phi>trace_reasoning = 2, \<phi>reasoning_step_limit = 80]] ;; 
-                                                        $N)
+    copy_mat ($M\<^sub>4, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y, $N, $N)
                                                       
                                                       
                                                       
