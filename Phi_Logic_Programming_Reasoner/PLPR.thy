@@ -2147,7 +2147,7 @@ definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Li
 \<phi>reasoner_group is_literal = (%cutting, [%cutting, %cutting+99]) for \<open>Is_Literal _\<close>
                               \<open>Cutting rules reasoning \<^const>\<open>Is_Literal\<close>\<close>
 
-paragraph \<open>Presets\<close>
+subsubsection \<open>Presets\<close>
 
 lemma [\<phi>reason %fail]:
   \<open> FAIL TEXT(\<open>Fail to evaluate\<close> x \<open>to a literal\<close>)
@@ -2177,20 +2177,209 @@ lemma [\<phi>reason %is_literal]:
 \<Longrightarrow> Is_Literal (- x)\<close>
   unfolding Is_Literal_def ..
 
-paragraph \<open>Evaluation to Literal\<close>
+subsection \<open>Literal Evaluation\<close>
 
-consts \<phi>mode_literal :: mode
+consts mode_literal :: mode
 
 lemma [\<phi>reason 1000]:
   \<open> Simplify default A B
 \<Longrightarrow> Is_Literal A
-\<Longrightarrow> Simplify \<phi>mode_literal A B\<close>
+\<Longrightarrow> Simplify mode_literal A B\<close>
   unfolding Simplify_def atomize_eq .
 
 lemma simplify_literal_implies_literal:
-  \<open>Simplify \<phi>mode_literal A B \<Longrightarrow> Is_Literal A\<close>
+  \<open>Simplify mode_literal A B \<Longrightarrow> Is_Literal A\<close>
   unfolding Is_Literal_def ..
 
+subsubsection \<open>Single Step Literal Evaluation\<close>
+
+\<phi>reasoner_group single_step_literal_evaluation = (1000, [20,3000]) for \<open>RET = EXPR @action mode_literal\<close> \<open>\<close>
+            and single_step_literal_evaluation_fail = (10, [10,10]) < single_step_literal_evaluation \<open>\<close>
+
+declare [[\<phi>reason_default_pattern \<open>_ = ?RHS @action mode_literal\<close> \<Rightarrow> \<open>_ = ?RHS @action mode_literal\<close> (100),
+          \<phi>default_reasoner_group \<open>_ = _ @action mode_literal\<close> : %single_step_literal_evaluation     (100)]]
+
+lemma [\<phi>reason default %single_step_literal_evaluation_fail]:
+  \<open> FAIL TEXT(\<open>fail to evaluate\<close> EXPR \<open>to literal\<close>)
+\<Longrightarrow> RET = EXPR @action mode_literal \<close>
+  unfolding FAIL_def
+  by blast
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<and> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> True \<and> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<and> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<and> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<and> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> True \<and> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<and> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<and> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<and> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> False \<and> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<and> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<and> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<and> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> False \<and> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<and> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<and> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> False \<or> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<or> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> False \<or> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<or> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<or> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> True \<or> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<or> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<or> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<or> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> True \<or> \<not> False @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<or> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<or> \<not> True @action mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
 
 
 
@@ -2453,7 +2642,7 @@ lemma Orelse_shortcut_I2:
 hide_fact Orelse_shortcut_I1 Orelse_shortcut_I2
 
 
-subsubsection \<open>Runtimely-Deterministic Branch\<close>
+subsubsection \<open>Runtime-Deterministic Branch\<close>
 
 text \<open>The condition \<open>C\<close> in \<open>If C P Q\<close> must be a constant boolean (after evaluation) in the reasoning
       time. The reasoning is always runtimely-deterministic that only goes to one branch in the

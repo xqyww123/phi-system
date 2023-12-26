@@ -830,7 +830,7 @@ declare [[
             ([(Thm.concl_of rule, NONE)], []) NONE [rule] ctxt
     end
     handle MATCH => ctxt
-  )\<close> for \<open>Simplify \<phi>mode_literal _ _\<close>
+  )\<close> for \<open>Simplify mode_literal _ _\<close>
 ]]
 
 

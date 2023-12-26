@@ -250,7 +250,7 @@ lemma op_const_aint_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 \<medium_right_bracket> .
 
 lemma op_const_anat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] x' : of_nat x
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] x' : of_nat x
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (semantic_literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
   for X :: assn
 \<medium_left_bracket>

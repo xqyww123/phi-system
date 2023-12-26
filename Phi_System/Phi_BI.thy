@@ -5275,10 +5275,12 @@ subsubsection \<open>Falling Lattice of Transformations\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
+(*
 lemma [\<phi>reason default %ToA_falling_latice-1]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P\<close>
   unfolding Premise_def by blast
+*)
 
 lemma [\<phi>reason default %ToA_falling_latice+3]:
   \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
@@ -5877,47 +5879,128 @@ subsection \<open>Entry Point of Separation Extraction\<close>
 
 text \<open>From \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> to \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R\<close>\<close>
 
+definition \<open>SE_tail Cw Cr A P1 r R
+                    w W C R3 P
+  \<longleftrightarrow> (\<exists>P2 RR Crr.
+          (if Cw then (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2) else (P2, Crr) = (True, False)) \<and>
+          C = (Cr \<or> Crr \<or> \<not> Cw) \<and>
+          R3 = (if Crr then if Cr then RR * (r \<Ztypecolon> R) else RR
+                else if Cw then if Cr then (r \<Ztypecolon> R) else \<top>
+                else if Cr then A * (r \<Ztypecolon> R) else A) \<and>
+          P = (P2 \<and> P1)) \<close>
+
+definition \<open>SE_tail\<^sub>2 Cr Crr RR r R A   R3
+      \<longleftrightarrow> R3 = (if Crr then if Cr then RR * (r \<Ztypecolon> R) else RR
+                       else if Cr then (r \<Ztypecolon> R) else \<top>)\<close>
+
+\<phi>reasoner_group SE_internal = (1000, [1000, 2000]) for (\<open>SE_tail Cw Cr A P1 r R w W C R3 P\<close>,
+                                                        \<open>SE_tail\<^sub>2 Cr Crr RR r R A R3\<close>) \<open>internal\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>SE_tail ?Cw ?Cr ?A ?P1 ?r ?R _ _ _ _ _\<close>
+                       \<Rightarrow> \<open>SE_tail ?Cw ?Cr ?A ?P1 ?r ?R _ _ _ _ _\<close>   (100)
+      and                 \<open>SE_tail\<^sub>2 ?Cr ?Crr ?RR ?r ?R ?A _\<close>
+                       \<Rightarrow> \<open>SE_tail\<^sub>2 ?Cr ?Crr ?RR ?r ?R ?A _\<close>               (100)
+]]
+
+
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> SE_tail\<^sub>2 True Crr RR r R A   R3
+\<Longrightarrow> SE_tail True True A P1 r R   w W True R3 (P2 \<and> P1) \<close>
+  unfolding SE_tail_def SE_tail\<^sub>2_def
+  by (rule exI[where x=P2]; rule exI[where x=RR]; rule exI[where x=Crr]; cases Crr; clarsimp)
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> SE_tail\<^sub>2 False Crr RR r R A   R3
+\<Longrightarrow> SE_tail True False A P1 r R   w W Crr R3 (P2 \<and> P1) \<close>
+  unfolding SE_tail_def SE_tail\<^sub>2_def
+  by (rule exI[where x=P2]; rule exI[where x=RR]; rule exI[where x=Crr]; cases Crr; clarsimp)
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> SE_tail False True A P1 r R   w W True (A * (r \<Ztypecolon> R)) P1 \<close>
+  unfolding SE_tail_def SE_tail\<^sub>2_def
+  by (rule exI[where x=True]; rule; rule exI[where x=False]; clarsimp)
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> SE_tail False False A P1 r R   w W True A P1 \<close>
+  unfolding SE_tail_def SE_tail\<^sub>2_def
+  by (rule exI[where x=True]; rule; rule exI[where x=False]; clarsimp)
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> SE_tail\<^sub>2 True True RR r R A   (RR * (r \<Ztypecolon> R)) \<close>
+  unfolding SE_tail\<^sub>2_def
+  by simp
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> SE_tail\<^sub>2 True False RR r R A   (r \<Ztypecolon> R) \<close>
+  unfolding SE_tail\<^sub>2_def
+  by simp
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> SE_tail\<^sub>2 False True RR r R A   RR \<close>
+  unfolding SE_tail\<^sub>2_def
+  by simp
+
+lemma [\<phi>reason %SE_internal]:
+  \<open> SE_tail\<^sub>2 False False RR r R A   \<top> \<close>
+  unfolding SE_tail\<^sub>2_def
+  by simp
+
+
+
+
+
+
+
 lemma enter_SEi:
   \<open> (x,w) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P1
-\<Longrightarrow> if Cw then (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2) else (P2, Crr) = (True, False)
+\<Longrightarrow> SE_tail Cw Cr A P1 (snd y) R   w W C R3 P
+\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h> P\<close>
+  for A :: \<open>'a::sep_semigroup BI\<close>
+  unfolding Action_Tag_def REMAINS_def Simplify_def Try_def SE_tail_def
+  apply clarify
+  apply (cases Cw; cases Cr; case_tac Crr; cases y;
+         simp add: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<phi>Prod_expn')
+
+  subgoal premises prems for P2 RR Crr a b
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+               prems(1)[THEN transformation_left_frame, where R=RR],
+        simp add: mult.assoc transformation_trans)
+
+  subgoal premises prems for P2 Crr a b
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+               prems(1),
+        simp add: mult.assoc transformation_trans)
+
+  subgoal premises prems for P2 RR Crr a b
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+               prems(1)[THEN transformation_left_frame, where R=RR],
+        simp add: mult.assoc transformation_trans)
+
+  subgoal premises prems for P2 Crr a b
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+               prems(1),
+        simp add: mult.assoc transformation_trans)
+
+  subgoal premises prems for P2 Crr a b
+    by (insert prems(1)[THEN transformation_left_frame, where R=A],
+        simp add: mult.assoc transformation_trans)
+
+  subgoal premises prems for P2 Crr a b
+    by (insert prems(1)[THEN transformation_left_frame, where R=A],
+        simp add: mult.assoc transformation_trans) .
+
+hide_const (open) SE_tail SE_tail\<^sub>2
+
+(* if Cw then (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2) else (P2, Crr) = (True, False)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps unspec]
         (C, R3) : (Cr \<or> Crr \<or> \<not> Cw,
                    if Crr then if Cr then RR * (snd y \<Ztypecolon> R) else RR
                    else if Cw then if Cr then (snd y \<Ztypecolon> R) else \<top>
-                   else if Cr then A * (snd y \<Ztypecolon> R) else A)
-\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h> P2 \<and> P1\<close>
-  for A :: \<open>'a::sep_semigroup BI\<close>
-  unfolding Action_Tag_def REMAINS_def Simplify_def Try_def
-  apply (cases Cw; cases Cr; cases Crr; cases y;
-         simp add: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<phi>Prod_expn')
-
-  subgoal premises prems for a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
-               prems(1)[THEN transformation_left_frame, where R=RR],
-        simp add: mult.assoc transformation_trans)
-
-  subgoal premises prems for a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
-               prems(1),
-        simp add: mult.assoc transformation_trans)
-
-  subgoal premises prems for a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
-               prems(1)[THEN transformation_left_frame, where R=RR],
-        simp add: mult.assoc transformation_trans)
-
-  subgoal premises prems for a b
-    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
-               prems(1),
-        simp add: mult.assoc transformation_trans)
-
-  subgoal premises prems for a b
-    by (insert prems(1)[THEN transformation_left_frame, where R=A],
-        simp add: mult.assoc transformation_trans)
-
-  subgoal premises prems for a b
-    by (insert prems(1)[THEN transformation_left_frame, where R=A],
-        simp add: mult.assoc transformation_trans) .
+                   else if Cr then A * (snd y \<Ztypecolon> R) else A) *)
 
 (* TODO: DO NOT REMOVE
 lemma enter_SEi_TH:
