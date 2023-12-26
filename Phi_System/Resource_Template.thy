@@ -152,7 +152,7 @@ subsubsection \<open>Fictional Refinement\<close>
 
 context begin
 
-private lemma [simp]: \<open>u \<Turnstile> {v} \<longleftrightarrow> u = v\<close>
+private lemma sat_sing_eq[simp]: \<open>u \<Turnstile> {v} \<longleftrightarrow> u = v\<close>
           unfolding Satisfaction_def by simp
 
 private lemma from_fictional_refinement':
@@ -213,6 +213,8 @@ lemma from_fictional_refinement:
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE\<close>
   using from_fictional_refinement' by blast
+
+declare sat_sing_eq[simp del]
 
 end
 

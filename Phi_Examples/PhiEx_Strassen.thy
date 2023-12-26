@@ -1,6 +1,6 @@
 theory PhiEx_Strassen
   imports Phi_Semantics.PhiSem_C
-          Jordan_Normal_Form.Strassen_Algorithm
+          Jordan_Normal_Form.Matrix
           Phi_Semantics.PhiSem_Int_ArbiPrec
           PhiStd.PhiStd_Loop
           Phi_Semantics.PhiSem_Mem_C_AI
@@ -17,7 +17,7 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
 \<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>)
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
-  deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>_. addr \<noteq> 0)\<close>
+  deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
 
 
 
@@ -151,8 +151,7 @@ lemma split_4mat:
        by (auto simp: Let_def image_iff split_block_def mat_to_list_def list_eq_iff_nth_eq; auto_sledgehammer) .
 
 lemma merge_4mat:
-  \<open> \<p>\<a>\<r>\<a>\<m> (i, s, j, t)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
 \<Longrightarrow> x\<^sub>1\<^sub>1 \<Ztypecolon> MatSlice a i j s t\<heavy_comma> x\<^sub>1\<^sub>2 \<Ztypecolon> MatSlice a i (j+t) s (n-t)\<heavy_comma>
     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> four_block_mat x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a i j m n \<close>
@@ -183,11 +182,11 @@ proc strassen:
     \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n))\<close> certified  unfolding mat_to_list_def list_eq_iff_nth_eq sorry
   \<medium_right_bracket>
   \<medium_left_bracket>
+    have [simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close>
+      by (simp add: \<open>n \<noteq> 0\<close> mult_2 power_eq_if) ;;
+
     \<open>MatSlice a\<^sub>x _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>A\<^sub>1\<^sub>1, A\<^sub>1\<^sub>2, A\<^sub>2\<^sub>1, A\<^sub>2\<^sub>2 ;;
     \<open>MatSlice a\<^sub>y _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>B\<^sub>1\<^sub>1, B\<^sub>1\<^sub>2, B\<^sub>2\<^sub>1, B\<^sub>2\<^sub>2 ;;
-
-    have [simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close>
-      by (simp add: \<open>n \<noteq> 0\<close> mult_2 power_eq_if);;
 
     1 << ($n-1) \<rightarrow> val N ;;
     $i\<^sub>x + $N \<rightarrow> val i\<^sub>x' ;;
@@ -203,8 +202,20 @@ proc strassen:
     new_mat ($N, $N) \<exists>M\<^sub>5 \<rightarrow> val M\<^sub>5 ;;
     new_mat ($N, $N) \<exists>M\<^sub>6 \<rightarrow> val M\<^sub>6 ;;
     new_mat ($N, $N) \<exists>M\<^sub>7 \<rightarrow> val M\<^sub>7 ;;
-    new_mat ($N, $N) \<exists>t \<rightarrow> val t ;;
+    new_mat ($N, $N) \<exists>t \<rightarrow> val t
 
+
+    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> ;;
+
+                                
+                                 
     copy_mat ($M\<^sub>1, 0, 0, $a\<^sub>x, $i\<^sub>x, $j\<^sub>x, $N, $N) ;;
     add_mat  ($M\<^sub>1, 0, 0, $a\<^sub>x, $i\<^sub>x', $j\<^sub>x', $N, $N) ;;
     copy_mat ($t, 0, 0, $a\<^sub>y, $i\<^sub>y, $j\<^sub>y, $N, $N) ;;
@@ -215,31 +226,15 @@ proc strassen:
     add_mat  ($M\<^sub>2, 0, 0, $a\<^sub>x, $i\<^sub>x', $j\<^sub>x', $N, $N) ;;
     strassen ($M\<^sub>2, 0, 0, $a\<^sub>y, $i\<^sub>y, $j\<^sub>y, $n-1) ;;
 
-    copy_mat ($M\<^sub>3, 0, 0, $a\<^sub>y, $i\<^sub>y, $j\<^sub>y', $N, $N) ;;
-    sub_mat  ($M\<^sub>3, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y', $N, $N) ;;
-    strassen ($M\<^sub>3, 0, 0, $a\<^sub>x, $i\<^sub>x, $j\<^sub>x, $n-1) ;;
+    copy_mat ($t, 0, 0, $a\<^sub>y, $i\<^sub>y, $j\<^sub>y', $N, $N) ;;
+    sub_mat  ($t, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y', $N, $N) ;;
+    copy_mat ($M\<^sub>3, 0, 0, $a\<^sub>x, $i\<^sub>x, $j\<^sub>x, $N, $N) ;;
+    strassen ($M\<^sub>3, 0, 0, $t, 0, 0, $n-1) ;;
 
-    copy_mat ($M\<^sub>4, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y, $N, $N)
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      ;;
-    sub_mat  ($M\<^sub>4, 0, 0, $a\<^sub>y, $i\<^sub>y, $j\<^sub>y, $N, $N) ;;
-    strassen ($M\<^sub>4, 0, 0, $a\<^sub>x, $i\<^sub>x', $j\<^sub>x', $n-1) ;;
+    copy_mat ($t, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y, $N, $N) ;;
+    sub_mat  ($t, 0, 0, $a\<^sub>y, $i\<^sub>y, $j\<^sub>y, $N, $N) ;;
+    copy_mat ($M\<^sub>4, 0, 0, $a\<^sub>x, $i\<^sub>x', $j\<^sub>x', $N, $N) ;;
+    strassen ($M\<^sub>4, 0, 0, $t, 0, 0, $n-1) ;;
 
     copy_mat ($M\<^sub>5, 0, 0, $a\<^sub>x, $i\<^sub>x, $j\<^sub>x, $N, $N) ;;
     add_mat  ($M\<^sub>5, 0, 0, $a\<^sub>x, $i\<^sub>x, $j\<^sub>x', $N, $N) ;;
@@ -257,7 +252,7 @@ proc strassen:
     add_mat  ($t, 0, 0, $a\<^sub>y, $i\<^sub>y', $j\<^sub>y', $N, $N) ;;
     strassen ($M\<^sub>7, 0, 0, $t, 0, 0, $n-1) ;;
 
-    del_mat ($t)
+    del_mat ($t) ;;
 
     add_mat  ($M\<^sub>7, 0, 0, $M\<^sub>1, 0, 0, $N, $N) ;;
     add_mat  ($M\<^sub>7, 0, 0, $M\<^sub>4, 0, 0, $N, $N) ;;
@@ -265,7 +260,7 @@ proc strassen:
     copy_mat ($a\<^sub>x, $i\<^sub>x, $j\<^sub>x, $M\<^sub>7, 0, 0, $N, $N) ;;
 
     add_mat  ($M\<^sub>5, 0, 0, $M\<^sub>3, 0, 0, $N, $N) ;;
-    copy_mat ($a\<^sub>x, $i\<^sub>x, $j\<^sub>x', $M\<^sub>7, 0, 0, $N, $N) ;;
+    copy_mat ($a\<^sub>x, $i\<^sub>x, $j\<^sub>x', $M\<^sub>5, 0, 0, $N, $N) ;;
 
     add_mat  ($M\<^sub>4, 0, 0, $M\<^sub>2, 0, 0, $N, $N) ;;
     copy_mat ($a\<^sub>x, $i\<^sub>x', $j\<^sub>x, $M\<^sub>4, 0, 0, $N, $N) ;;
@@ -282,18 +277,34 @@ proc strassen:
     del_mat ($M\<^sub>5) ;;
     del_mat ($M\<^sub>6) ;;
     del_mat ($M\<^sub>7) ;;
-thm useful ;;
-    apply_rule merge_4mat[where a=a\<^sub>x and i=i\<^sub>x and s=\<open>2 ^ (n - 1)\<close> and j=j\<^sub>x and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified] \<open>(i\<^sub>x, 2 ^ (n - 1), j\<^sub>x, 2 ^ (n - 1))\<close>
-      is \<open>A * B\<close> certified apply (simp add: add_mult_distrib_mat minus_mult_distrib_mat add_carrier_mat uminus_carrier_iff_mat
-                                            mult_add_distrib_mat mult_minus_distrib_mat assoc_add_mat comm_add_mat)
 
-thm useful
-;;
+    have split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>
+                    \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close>
+      by (auto_sledgehammer, auto_sledgehammer)
+         (*stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 175, 182, lemma strassen_mat_mult*) ;;
+
+    apply_rule merge_4mat[where a=a\<^sub>x and i=i\<^sub>x and s=\<open>?N\<close> and j=j\<^sub>x and t=\<open>?N\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified]
+      is \<open>A * B\<close> certified by (
+         simp add: carriers split_A_B mult_four_block_mat[OF carriers],
+         rule cong_four_block_mat,
+         insert carriers,
+         auto simp add:  mult_carrier_mat[where n=\<open>?N\<close>]
+                         add_mult_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         minus_mult_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         mult_add_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         mult_minus_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         add_carrier_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         uminus_carrier_iff_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         assoc_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         comm_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
+                         minus_add_minus_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>])
+          (*stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 227-239, lemma strassen_mat_mult*) ;;
 
 
-apply_rule merge_4mat[where a=a\<^sub>y and i=i\<^sub>y and s=\<open>2 ^ (n - 1)\<close> and j=j\<^sub>y and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified]
-                        \<open>(i\<^sub>y, 2 ^ (n - 1), j\<^sub>y, 2 ^ (n - 1))\<close> ;;
+    apply_rule merge_4mat[where a=a\<^sub>y and i=i\<^sub>y and s=\<open>?N\<close> and j=j\<^sub>y and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified]
+            is B
 
+  \<medium_right_bracket>
     
 
 

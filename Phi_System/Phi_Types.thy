@@ -2711,6 +2711,12 @@ section \<open>Derivatives\<close>
 
 subsection \<open>Parameterized FMQ\<close>
 
+lemma expand_prod_eq[simp]:
+  \<open> NO_MATCH (ya, yb) y
+\<Longrightarrow> (a,b) = y \<longleftrightarrow> a = fst y \<and> b = snd y \<close>
+  by (cases y; simp)
+
+
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
   deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
@@ -2742,6 +2748,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U UNIV zip_fun \<close>),
   (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U unzip_fun \<close>)
 ]\<close>
+
+declare expand_prod_eq[simp del]
 
 subsubsection \<open>Syntax\<close>
 
@@ -2848,7 +2856,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 context begin
 
-private lemma [simp]:
+private lemma list_all2_single_length_1[simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
 
@@ -2893,6 +2901,8 @@ private lemma [simp]:
                                      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) \<close>
        and \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
                                      (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>
+
+declare list_all2_single_length_1[simp del]
 
 end
 
