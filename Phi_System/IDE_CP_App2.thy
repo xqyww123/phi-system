@@ -119,8 +119,9 @@ let_\<phi>type Val
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (\<v>\<a>\<l>[v] T) eq\<close>
        and Basic
-       and \<open>Identity_Elements\<^sub>I (\<v>\<a>\<l> T) (\<lambda>x. True) (\<lambda>x. True)\<close>
-       and Identity_Elements
+       and \<open>Identity_Elements\<^sub>I (\<v>\<a>\<l>[v] T) (\<lambda>x. True) (\<lambda>x. True)\<close>
+       and \<open> ERROR TEXT(\<open>Insuffieicnt arguments or local values\<close>)
+         \<Longrightarrow> Identity_Elements\<^sub>E (\<v>\<a>\<l>[v] T) (\<lambda>x. False)\<close>
        and Functional_Transformation_Functor
 
 
@@ -189,6 +190,19 @@ text \<open>We can assume the name bindings of values are lambda-equivalent. \<c
 
 \<phi>reasoner_group Val_ToA = (1100, [1100, 1120]) in ToA_cut
   \<open>Short-cut transformations about values\<close>
+
+lemma [\<phi>reason %Val_ToA+20 for \<open>_ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  "x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] Void"
+  unfolding REMAINS_def Transformation_def by simp
+
+lemma [\<phi>reason %Val_ToA+10 for \<open>_ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                    if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o Context.Proof o fst\<close>]:
+  " y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> y \<Ztypecolon> \<v>\<a>\<l>[v] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] Void \<w>\<i>\<t>\<h> P"
+  unfolding Transformation_def
+  by (simp add: times_list_def)
+
+
 
 lemma [\<phi>reason %Val_ToA+20 for \<open>_ \<heavy_comma> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   "R \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R"

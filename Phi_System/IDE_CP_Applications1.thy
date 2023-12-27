@@ -658,6 +658,8 @@ consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
     \<open>Cutting To-Transformation rules\<close>
  and To_ToA_success = (4000, [4000,4000]) in To_ToA > To_ToA_cut
     \<open>Immediate success\<close>
+ and To_ToA_user    = (100, [80, 120]) in To_ToA and < To_ToA_cut and > To_ToA_system_fallback
+    \<open>default group for user rules\<close>
 
 (* abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close> *)
 
@@ -688,7 +690,9 @@ declare [[
 
   \<phi>reason_default_pattern
     \<open>?X @action to ?A\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed To-Transformation: \<close> (?X @action to ?A) \<newline>
-                                      \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action to _\<close>\<close>)\<close> (1)
+                                      \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action to _\<close>\<close>)\<close> (1),
+
+  \<phi>default_reasoner_group \<open>_ @action to _\<close> : %To_ToA_user (100)
 ]]
 
 (*

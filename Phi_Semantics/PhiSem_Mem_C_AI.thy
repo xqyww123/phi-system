@@ -2,6 +2,19 @@ theory PhiSem_Mem_C_AI \<comment> \<open>AI: Integer of Arbitrary precision\<clo
   imports PhiSem_Mem_C PhiSem_Int_ArbiPrec PhiSem_Aggregate_Array
 begin
 
+
+debt_axiomatization
+      MemObj_Size_aint: \<open>0 < MemObj_Size \<a>\<i>\<n>\<t>\<close>
+
+lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
+  \<open> \<not> phantom_mem_semantic_type \<a>\<i>\<n>\<t> \<close>
+  unfolding phantom_mem_semantic_type_def
+  using MemObj_Size_aint by blast
+
+
+
+
+
 proc calloc_aN:
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>

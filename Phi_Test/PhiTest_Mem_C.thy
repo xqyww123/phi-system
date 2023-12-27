@@ -3,6 +3,7 @@ theory PhiTest_Mem_C
           Phi_Semantics.PhiSem_Int_ArbiPrec
           Phi_Semantics.PhiSem_Mem_C_Ag_NT
           Phi_Semantics.PhiSem_Mem_C_Ag_Ar
+          Phi_Semantics.PhiSem_Mem_C_Ar_AI
 begin
 
 declare One_nat_def[simp del]
@@ -213,6 +214,31 @@ proc test_mem18:
 \<medium_left_bracket>
   $addr \<tribullet> ($i + 1) \<tribullet> $j !
 \<medium_right_bracket> .
+
+proc test_mem19:
+  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<heavy_comma>
+          j \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:i:n] \<a>\<i>\<n>\<t>\<close>
+  premises \<open>j < n\<close>
+  output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<heavy_comma> x ! j \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+\<medium_left_bracket>
+  $j !
+\<medium_right_bracket> .
+
+proc test_mem20:
+  input  \<open>j \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:i:n] \<a>\<i>\<n>\<t>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  premises \<open>j + k \<le> n\<close>
+  output \<open>j+k \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:i:n] \<a>\<i>\<n>\<t>\<close>
+\<medium_left_bracket>
+  $j + $k
+\<medium_right_bracket> .
+
+proc test_mem21:
+  input  \<open>j \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:i:n] \<a>\<i>\<n>\<t>\<close>
+  output \<open>0 \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:i+j:n-j] \<a>\<i>\<n>\<t>\<close>
+\<medium_left_bracket>
+  $j
+\<medium_right_bracket> .
+
 
 
 (*FIXME!

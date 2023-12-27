@@ -589,7 +589,10 @@ lemma RawPointer_eqcmp[\<phi>reason 1200]:
   unfolding \<phi>Equal_def by (simp add: zero_memaddr_def; blast)
 
 
-subsubsection \<open>Logical Pointer\<close>
+subsection \<open>Standard Logical Pointer\<close>
+  \<comment> \<open>which always points to the beginning address of a component of a valid memory object.
+      cannot point to the end of an allocation block, which is its limitation.
+      only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
 
 \<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<Pp>\<t>\<r> _" [900] 899)
   where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY)\<close>
@@ -629,6 +632,7 @@ lemma [\<phi>reason %cutting ]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
 \<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<Pp>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @action to (\<Pp>\<t>\<r> TY)\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
+
 
 
 

@@ -2,6 +2,18 @@ theory PhiSem_Mem_C_MI \<comment> \<open>MI: Machine Integer\<close>
   imports PhiSem_Mem_C PhiSem_Machine_Integer PhiSem_Aggregate_Array
 begin
 
+
+debt_axiomatization
+      MemObj_Size_int: \<open>MemObj_Size (T_int.mk n) = 0 \<longleftrightarrow> n = 0\<close>
+
+lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
+  \<open> phantom_mem_semantic_type (T_int.mk n) \<longleftrightarrow> n = 0 \<close>
+  unfolding phantom_mem_semantic_type_def
+  using MemObj_Size_int by clarsimp
+
+
+
+
 proc op_allocate_mem_N:
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>

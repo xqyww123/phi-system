@@ -1,10 +1,9 @@
 theory PhiSem_Mem_C_Ag_Ar
   imports PhiSem_Mem_C PhiSem_Aggregate_Array
+  abbrevs "<SPtr>" = "\<Ss>\<Pp>\<t>\<r>"
 begin
 
-section \<open>Array in Memory\<close>
-
-subsection \<open>Semantics\<close>
+section \<open>Semantics\<close>
 
 debt_axiomatization
       Map_of_Val_arr: \<open>Map_of_Val (V_array.mk vs) =
@@ -14,7 +13,113 @@ debt_axiomatization
   and idx_step_offset_arr: \<open> idx_step_offset (\<a>\<r>\<r>\<a>\<y>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
   and MemObj_Size_arr: \<open>MemObj_Size (\<a>\<r>\<r>\<a>\<y>[N] ty) = N * MemObj_Size ty\<close>
 
+  and array_TY_neq_void: \<open>void \<noteq> \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
 
+lemma logaddr_to_raw_array_GEP:
+  \<open> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
+  unfolding logaddr_to_raw_def addr_gep_def
+  by (cases addr; clarsimp simp: idx_step_offset_arr)
+
+lemma logaddr_to_raw_inj_array:
+  \<open> valid_logaddr addr
+\<Longrightarrow> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
+\<Longrightarrow> i \<le> N \<and> j \<le> N
+\<Longrightarrow> \<not> phantom_mem_semantic_type TY
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw (addr \<tribullet>\<^sub>a (j)\<^sup>\<t>\<^sup>\<h>) \<longleftrightarrow> i = j \<close>
+  unfolding logaddr_to_raw_array_GEP valid_logaddr_def Valid_MemBlk_def
+  apply (clarsimp; cases addr; clarsimp)
+  subgoal for blk idx
+    apply (cases \<open>blk\<close>; clarsimp simp: array_TY_neq_void)
+    subgoal premises prems for _ BTY proof -
+      have \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
+        using index_type_type_storable_in_mem prems(1) prems(3) prems(6) by fastforce
+      then have t1: \<open>N * MemObj_Size TY < 2^addrspace_bits\<close>
+        using MemObj_Size_arr by force
+      show ?thesis
+        by (metis Abs_fnat_hom_mult dual_order.strict_trans2 mult_cancel2 mult_le_cancel2 phantom_mem_semantic_type_def prems(2) prems(4) prems(5) t1 unat_to_size_t)
+    qed . .
+
+
+section \<open>Slice Pointers\<close>
+
+subsection \<open>Slice Pointer\<close>
+  \<comment> \<open>points to the beginning address of a component or the end of an allocation block.
+      has GEP and shift arithmetic.
+      only points to elements in an array.\<close>
+
+definition \<open>valid_logaddr_range TY addr base len \<longleftrightarrow>
+    valid_logaddr addr \<and>
+    (\<exists>N. logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> base + len \<le> N) \<and>
+    (\<forall>i < len. valid_logaddr (addr \<tribullet>\<^sub>a (base + i)\<^sup>\<t>\<^sup>\<h>) \<and>
+    logaddr_type (addr \<tribullet>\<^sub>a (base + i)\<^sup>\<t>\<^sup>\<h>) = TY)\<close>
+
+lemma valid_logaddr_range_sub:
+  \<open> base \<le> base' \<and> base'+len' \<le> base+len
+\<Longrightarrow> valid_logaddr_range TY addr base  len
+\<Longrightarrow> valid_logaddr_range TY addr base' len'\<close>
+  unfolding valid_logaddr_range_def
+  by (clarsimp, smt (verit, ccfv_threshold) add.assoc add_lessD1 le_eq_less_or_eq le_iff_add nat_add_left_cancel_less)
+
+
+\<phi>type_def SlicePtr :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
+  where \<open>i \<Ztypecolon> SlicePtr addr base len TY \<equiv> logaddr_to_raw (addr \<tribullet>\<^sub>a (base+i)\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
+                \<s>\<u>\<b>\<j> i \<le> len \<and> valid_logaddr_range TY addr base len\<close>
+  deriving Basic
+       and \<open>Object_Equiv (SlicePtr addr base len TY) (=)\<close>
+       and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> SlicePtr addr base len TY) pointer\<close>
+
+
+notation SlicePtr ("\<Ss>\<Pp>\<t>\<r>[_:_:_] _" [20,20,20,900] 899)
+
+
+lemma Ptr_eqcmp[\<phi>reason 1000]:
+  \<open>\<phi>Equal (\<Ss>\<Pp>\<t>\<r>[addr:base:len] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
+  unfolding \<phi>Equal_def
+  by (clarsimp simp: valid_logaddr_range_def logaddr_to_raw_inj_array)
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason add]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> base \<le> base' \<and> base' + len' \<le> base + len \<and>
+           base' \<le> base + i \<and> base + i \<le> base' + len'
+\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> base+i-base' \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY \<close>
+  \<medium_left_bracket>
+    to \<open>OPEN _ _\<close>
+    \<open>i+base-base' \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY)\<close>
+    certified by auto_sledgehammer
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason add]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> base \<le> base' \<and> base' + len' \<le> base + len \<and>
+           base' \<le> base + i \<and> base + i \<le> base' + len'
+\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY \<s>\<u>\<b>\<j> y. y = base+i-base'
+    @action to (\<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY) \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma [\<phi>reason add]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
+\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet>\<^sub>a (base+i)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY' \<close>
+  \<medium_left_bracket>
+    to \<open>OPEN _ _\<close>
+    to \<open>\<Pp>\<t>\<r> TY'\<close> certified by auto_sledgehammer
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason add]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> base \<le> i \<and> i < len \<and> (\<exists>N. logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> base + len \<le> N)
+\<Longrightarrow> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (i-base) \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY' \<close>
+  \<medium_left_bracket>
+    to RawPointer
+    \<open>(i-base) \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:base:len] TY')\<close>
+    certified unfolding valid_logaddr_range_def by auto_sledgehammer
+  \<medium_right_bracket> .
+
+
+
+section \<open>Array in Memory\<close>
 
 subsection \<open>Syntax\<close>
 

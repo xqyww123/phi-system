@@ -877,7 +877,12 @@ subsubsection \<open>Allocation of Priorities\<close>
                     \<open>Automatically derived transformation reductions.\<close>
   ToA_weak_red    = (120, [120,129]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_derived_red in ToA
                     \<open>Weak reduction rules giving some reasoning support temporarily and expecting to be orverride\<close>
+  ToA_user        = (100, [80,119]) in ToA and < ToA_weak_red and > ToA_derived
+                    \<open>default group for user rules\<close>
 
+declare [[
+  \<phi>default_reasoner_group \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> : %ToA_user (100)
+]]
 
 paragraph \<open>Bottom Groups\<close>
 
