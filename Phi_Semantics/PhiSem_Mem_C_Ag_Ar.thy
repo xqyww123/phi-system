@@ -82,19 +82,21 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason add]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> base \<le> base' \<and> base' + len' \<le> base + len \<and>
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr = addr' \<and> TY' = TY \<and>
+           base \<le> base' \<and> base' + len' \<le> base + len \<and>
            base' \<le> base + i \<and> base + i \<le> base' + len'
-\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> base+i-base' \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY \<close>
+\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> base+i-base' \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr':base':len'] TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
-    \<open>i+base-base' \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY)\<close>
+    \<open>i+base-base' \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr':base':len'] TY')\<close>
     certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 lemma [\<phi>reason add]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> base \<le> base' \<and> base' + len' \<le> base + len \<and>
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr = addr' \<and> TY' = TY \<and>
+           base \<le> base' \<and> base' + len' \<le> base + len \<and>
            base' \<le> base + i \<and> base + i \<le> base' + len'
-\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY \<s>\<u>\<b>\<j> y. y = base+i-base'
+\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr':base':len'] TY' \<s>\<u>\<b>\<j> y. y = base+i-base'
     @action to (\<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
