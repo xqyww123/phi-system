@@ -293,6 +293,12 @@ lemma [\<phi>reason %\<phi>synthesis_parse_number+20
   unfolding Synthesis_def Action_Tag_def
   using op_const_size_t[THEN \<phi>frame, simplified] . *)
 
+lemma int_literal_2_literal_int[simp]:
+  \<open>int (literal x) = literal (int x)\<close>
+  unfolding literal_def
+  by simp
+
+
 
 subsubsection \<open>Integer Arithmetic\<close>
 

@@ -328,15 +328,21 @@ proc strassen:
 
 
 proc strassen_mul:
-  input  \<open>A \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n)\<heavy_comma>
-          B \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y (2^n) (2^n)\<heavy_comma>
-          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  premises \<open>i\<^sub>x + 2^n \<le> N \<and> j\<^sub>x + 2^n \<le> N \<and>
-            i\<^sub>y + 2^n \<le> N \<and> j\<^sub>y + 2^n \<le> N \<close>
-  output \<open>A * B \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n)\<heavy_comma>
-          B \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y (2^n) (2^n) \<close>
-
+  input  \<open>A \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
+          B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n)\<heavy_comma>
+          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<heavy_comma>
+          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<close>
+  output \<open>A * B \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
+          B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n) \<close>
+\<medium_left_bracket>
+  \<open>literal n \<Ztypecolon> \<nat>\<close> \<rightarrow> val n ;;
+  1 << $n \<rightarrow> val N ;;
+  new_mat ($N, $N) \<rightarrow> val a\<^sub>C ;;
+  new_mat ($N, $N) \<rightarrow> val a\<^sub>D ;;
+  strassen ($a\<^sub>x, 0, 0, $a\<^sub>y, 0, 0, $a\<^sub>C, 0, 0, $a\<^sub>D, 0, 0, $n) ;;
+  del_mat ($a\<^sub>C) ;;
+  del_mat ($a\<^sub>D)
+\<medium_right_bracket> .
 
 
 

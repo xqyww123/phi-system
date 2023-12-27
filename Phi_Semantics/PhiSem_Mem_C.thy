@@ -386,8 +386,10 @@ proc mfree:
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
+  $addr semantic_local_value \<open>pointer\<close>
 
-  apply_rule FIC.aggregate_mem.deallocate_rule[where v=v and blk=\<open>memaddr.blk addr\<close>]
+  apply_rule FIC.aggregate_mem.deallocate_rule
+             [where v=v and blk=\<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>]
 
 \<medium_right_bracket> .
 

@@ -158,6 +158,8 @@ subsection \<open>Synthesis of Value\<close>
 
 subsubsection \<open>Literal Value\<close>
 
+definition [\<phi>programming_simps]: \<open>literal x \<equiv> x\<close> \<comment> \<open>tagging to synthesis a literal\<close>
+
 declare [[\<phi>reason_default_pattern
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>
@@ -168,6 +170,14 @@ lemma "_synthesis_literal_":
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (semantic_literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def semantic_literal_def Transformation_def
   by (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set INTERP_SPEC, blast)
+
+lemmas [\<phi>reason %\<phi>synthesis_literal] = "_synthesis_literal_"[where const=\<open>literal x\<close> for x]
+
+lemma [\<phi>reason %is_literal]:
+  \<open> Is_Literal (literal x) \<close>
+  unfolding Is_Literal_def ..
+
+
 
 subsubsection \<open>Value Sequence\<close>
 
