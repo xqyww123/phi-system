@@ -1,4 +1,4 @@
-theory PhiSem_Mem_C_Ar_AI
+theory PhiSem_Mem_C_Ar_AI \<comment> \<open>AI stands for \<open>arbitrary-precision integer\<close>\<close>
   imports PhiSem_Mem_C_Ag_Ar PhiSem_Int_ArbiPrec
 begin
 
@@ -25,6 +25,16 @@ proc op_add_ptr_a[\<phi>overload +]:
   certified by (clarsimp simp: logaddr_to_raw_array_GEP[OF t2] useful distrib_right)
 
 \<medium_right_bracket> .
+
+proc (nodef) op_add_ptr_aN[\<phi>overload +]:
+  input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  premises \<open>i + j \<le> len\<close>
+  output \<open>i + j \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY\<close>
+\<medium_left_bracket>
+  $i + $j
+\<medium_right_bracket> .
+
+
 
 declare nat_int_add[iff]
 

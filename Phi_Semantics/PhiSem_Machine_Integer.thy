@@ -279,11 +279,14 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
 
 subsection \<open>Integer\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Int :: "'b::len itself \<Rightarrow> (VAL, int) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>Int _ \<equiv> ((of_int x :: 'b word) \<Ztypecolon> Word('b)
                               \<s>\<u>\<b>\<j> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)})\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>Int uu) (=)\<close>
+       and Semantic_Type
 
 syntax \<phi>Int_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<int>'(_')")
 
@@ -293,6 +296,9 @@ parse_ast_translation \<open>
   let open Ast
    in [(\<^syntax_const>\<open>\<phi>Int_syntax\<close>, (fn _ => fn [V] =>
           Appl [Constant \<^const_syntax>\<open>\<phi>Int\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
+
+let_\<phi>type \<phi>Int
+  deriving \<open>Semantic_Zero_Val int('b) \<int>('b) 0\<close>
 
 declare \<phi>Int.expansion[simp del, \<phi>expns del]
 

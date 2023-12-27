@@ -2,7 +2,7 @@ theory PhiEx_Strassen
   imports Phi_Semantics.PhiSem_C
           Jordan_Normal_Form.Matrix
           Phi_Semantics.PhiSem_Int_ArbiPrec
-          PhiStd.PhiStd_Loop
+          PhiStd.PhiStd_Loop_a
           Phi_Semantics.PhiSem_Mem_C_AI
 begin
 

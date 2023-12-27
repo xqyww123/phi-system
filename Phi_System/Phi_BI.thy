@@ -1600,11 +1600,11 @@ lemma ExSet_boolean_Ex_lift:
 paragraph \<open>With Multiplicative Conjunction\<close>
 
 lemma ExSet_times_left [simp, \<phi>programming_base_simps, \<phi>safe_simp]:
-  "(ExSet T * R) = (\<exists>* c. T c * R )"
+  "((\<exists>* c. T c) * R) = (\<exists>* c. T c * R )"
   by (simp add: BI_eq_iff, blast)
 
 lemma ExSet_times_right[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
-  "(L * ExSet T) = (\<exists>* c. L * T c)"
+  "(L * (\<exists>*c. T c)) = (\<exists>* c. L * T c)"
   by (simp add: BI_eq_iff, blast)
 
 

@@ -48,4 +48,6 @@ proc while:
 
 hide_const (open) PhiSem_CF_Basic.while
 
+lemmas while'_\<phi>app = PhiSem_CF_Basic.while_\<phi>app \<comment> \<open>Non-breaking while loop\<close>
+
 end
