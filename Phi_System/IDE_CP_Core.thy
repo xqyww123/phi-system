@@ -148,6 +148,8 @@ subsubsection \<open>Technical Tag\<close>
 text \<open>A general syntactic tag used for hiding internal things.\<close>
 
 definition Technical :: \<open>'a::{} \<Rightarrow> 'a\<close> ("TECHNICAL _" [17] 16) where \<open>Technical x \<equiv> x\<close>
+  \<comment> \<open>TODO: Unify all tags\<close>
+
 
 lemma Technical_I : \<open>P \<Longrightarrow> Technical P\<close> unfolding Technical_def .
 lemma Technical_I': \<open>PROP P \<Longrightarrow> PROP Technical P\<close> unfolding Technical_def .

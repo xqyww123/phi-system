@@ -1427,6 +1427,21 @@ lemma [\<phi>reason %\<phi>mapToA_fallbacks]:
   unfolding ToA_Mapper_def Transformation_def
   by (auto; insert sep_disj_commuteI sep_mult_commute; blast)
 
+lemma [\<phi>reason %\<phi>mapToA_fallbacks
+           for \<open>\<g>\<e>\<t> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _\<close>]:
+  \<open> \<g>\<e>\<t> X \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[True] S \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[True] X \<close>
+  for X :: \<open>'c::sep_ab_semigroup BI\<close>
+  unfolding ToA_Extract_def
+  by (clarsimp simp: mult.commute)
+
+lemma [\<phi>reason %\<phi>mapToA_fallbacks
+           for \<open>\<s>\<u>\<b>\<s>\<t> _ \<f>\<o>\<r> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _ \<t>\<o> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> _\<close>]:
+  \<open> \<s>\<u>\<b>\<s>\<t> X \<f>\<o>\<r> Y \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[True] S \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[True] Y \<t>\<o> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> X \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> S \<close>
+  for X :: \<open>'c::sep_ab_semigroup BI\<close>
+  unfolding ToA_Subst_def
+  by (clarsimp simp: mult.commute)
+
+
 
 subsection \<open>Entry Points\<close>
 

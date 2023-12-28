@@ -1432,7 +1432,7 @@ lemma [\<phi>reason %cutting]:
   by (simp; blast)
 
 lemma ExSet_Inhabited[simp]:
-  \<open> Inhabited (ExSet S) \<longleftrightarrow> (\<exists>x. Inhabited (S x)) \<close>
+  \<open> Inhabited (\<exists>*x. S x) \<longleftrightarrow> (\<exists>x. Inhabited (S x)) \<close>
   unfolding Inhabited_def
   by clarsimp blast
 
@@ -1558,7 +1558,7 @@ lemma ExSet_pair: "ExSet T = (\<exists>*a b. T (a,b))"
 lemma ExSet_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   \<open>ExSet 0 = 0\<close>
   \<open>ExSet (\<lambda>_. T) = T\<close>
-  \<open>(ExSet X \<s>\<u>\<b>\<j> PP) = (ExSet (\<lambda>c. X c \<s>\<u>\<b>\<j> PP))\<close>
+  \<open>((\<exists>*c. X c) \<s>\<u>\<b>\<j> PP) = (\<exists>*c. X c \<s>\<u>\<b>\<j> PP)\<close>
   \<open>(F' y \<s>\<u>\<b>\<j> y. embedded_func f' P' x' y) = (F' (f' x') \<s>\<u>\<b>\<j> P' x')\<close>
 (*  \<open>(\<exists>* x. x = t \<and> P x) = P t\<close>
 "\<And>P. (\<exists>x. x = t \<and> P x) = P t"
@@ -1637,8 +1637,7 @@ lemma ExSet_transformation_I_R:
 
 
 lemma ExSet_additive_disj:
-  \<open>(\<exists>*x. A x + B x) = ExSet A + ExSet B\<close>
-  \<open>ExSet (A + B) = ExSet A + ExSet B\<close>
+  \<open>(\<exists>*x. A x + B x) = (\<exists>*x. A x) + (\<exists>*x. B x)\<close>
   unfolding BI_eq_iff by (simp_all add: plus_fun) blast+
 
 ML_file \<open>library/tools/simproc_ExSet_expand_quantifier.ML\<close>
@@ -2414,7 +2413,7 @@ lemma \<Psi>_Additive_Disj:
   by (clarsimp; metis)
 
 lemma \<Psi>_ExSet:
-  \<open>\<Psi>[d] (ExSet S) = (\<exists>*c. \<Psi>[d] (S c))\<close>
+  \<open>\<Psi>[d] (\<exists>*c. S c) = (\<exists>*c. \<Psi>[d] (S c))\<close>
   unfolding BI_eq_iff
   by (clarsimp; metis)
 

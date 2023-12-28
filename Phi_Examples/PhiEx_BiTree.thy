@@ -204,11 +204,9 @@ lemma sorted1_inorder_map_tree[iff]:
 
 
 
-
-
    
 \<phi>type_def Bin_Search_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
-  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BiTree addr (\<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}) \<lbrace> k: K, v: V \<rbrace>
+  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BiTree addr (\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>
                                        \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted1(inorder tree)\<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
@@ -242,6 +240,36 @@ lemma lookup_right_children:
   \<open> sorted1 (inorder tree)
 \<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close>
   by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+
+
+
+
+
+
+proc lookup_bintree:
+  input  \<open>tree \<Ztypecolon> BiTree addr (\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  premises \<open>k \<in> dom (lookup_tree tree)\<close>
+  output \<open>tree \<Ztypecolon> BiTree addr (\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  is [recursive tree addr]
+\<medium_left_bracket> note [[simp_trace]] ;;
+  to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>a\<^sub>L, a\<^sub>R
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 context

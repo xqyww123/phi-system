@@ -371,12 +371,12 @@ lemma [\<phi>programming_simps]:
 paragraph \<open>Fixing Existentially Quantified Variable\<close>
 
 lemma \<phi>ExTyp_strip:
-  "(CurrentConstruction mode p H (ExSet T)) \<equiv> (\<exists>c. CurrentConstruction mode p H (T c))"
+  "(CurrentConstruction mode p H (\<exists>*c. T c)) \<equiv> (\<exists>c. CurrentConstruction mode p H (T c))"
   unfolding CurrentConstruction_def atomize_eq
   by (simp_all add: INTERP_SPEC_ex split_paired_all Subjection_expn_set ExSet_expn_set)
 
 lemma \<phi>ExTyp_strip_imp:
-  \<open>ToA_Construction s (ExSet T) \<equiv> (\<exists>c. ToA_Construction s (T c))\<close>
+  \<open>ToA_Construction s (\<exists>*c. T c) \<equiv> (\<exists>c. ToA_Construction s (T c))\<close>
   unfolding ToA_Construction_def by simp
 
 paragraph \<open>Introducing Existential Quantification\<close>

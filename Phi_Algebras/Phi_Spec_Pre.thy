@@ -21,14 +21,14 @@ definition ExSet :: " ('x \<Rightarrow> 'c set) \<Rightarrow> 'c set" (binder "\
   where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
 notation ExSet (binder "\<exists>\<^sup>s" 14)
 
-lemma ExSet_expn_set: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
+lemma ExSet_expn_set: "p \<in> (\<exists>*c. S c) \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
 
 lemma ExSet_Id_on:
-  \<open>Id_on (ExSet S) = ExSet (\<lambda>x. Id_on (S x))\<close>
+  \<open>Id_on (\<exists>*x. S x) = (\<exists>*x. Id_on (S x))\<close>
   by (auto simp add: ExSet_expn_set; blast)
 
 lemma ExSet_image:
-  \<open>f ` (ExSet S) = (ExSet (\<lambda>c. f ` S c))\<close>
+  \<open>f ` (\<exists>*c. S c) = (\<exists>*c. f ` S c)\<close>
   by (auto simp add: ExSet_expn_set image_iff Bex_def; blast)
 
 (* definition Pure_When :: \<open>'a set \<Rightarrow> bool \<Rightarrow> 'a set\<close> (infixl "\<w>\<h>\<e>\<n>" 15)

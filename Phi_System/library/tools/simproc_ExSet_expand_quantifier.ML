@@ -18,14 +18,16 @@ fun mk_exp' thy has_R arity =
       val RHS = if has_R
                 then fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) y_tys R
                 else \<^Const>\<open>True\<close>
+
+      val y_ty_names = map_index (apfst Name.bound) y_tys
       val goal =
             \<^Const>\<open>Pure.eq \<^Type>\<open>set model_ty\<close>\<close>
               $ (\<^Const>\<open>ExSet x_ty model_ty\<close> $ Abs("x", x_ty,
                     \<^Const>\<open>Subjection model_ty\<close>
                         $ (X $ Bound 0)
-                        $ (fold_rev (fn T => fn B => \<^Const>\<open>HOL.Ex T\<close> $ Abs ("y", T, B)) y_tys LHS)
+                        $ (fold_rev (fn (N,T) => fn B => \<^Const>\<open>HOL.Ex T\<close> $ Abs (N, T, B)) y_ty_names LHS)
                      ))
-              $ (fold_rev (fn T => fn B => \<^Const>\<open>ExSet T model_ty\<close> $ Abs("y", T, B)) y_tys
+              $ (fold_rev (fn (N,T) => fn B => \<^Const>\<open>ExSet T model_ty\<close> $ Abs(N, T, B)) y_ty_names
                   (\<^Const>\<open>Subjection model_ty\<close>
                       $ (X $ (fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) y_tys f))
                       $ RHS))
