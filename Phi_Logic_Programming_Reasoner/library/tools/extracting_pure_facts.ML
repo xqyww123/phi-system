@@ -73,16 +73,17 @@ fun extract_implied_fact {wrap_all} ctxt statement0 =
    |> Option.map (fn th =>
         let val ths = PLPR_Syntax.elim_ant_sequence_or_HOL_conj th
             val simp = Simplifier.full_simplify (Inhabitance_SS.enhance ctxt addsimps Useful_Thms.get ctxt)
+                    #> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
             fun holall_intr_vars th =
               let val vars = Cterms.build (Cterms.add_vars th)
                in fold_rev (Conv.fconv_rule (Conv.rewr_conv @{thm' atomize_all}) oo Thm.forall_intr)
                            (Cterms.list_set vars) th
               end
          in if wrap_all
-            then map ( holall_intr_vars
-                    #> simp ) ths
+            then maps ( holall_intr_vars
+                     #> simp ) ths
             else let val ((_, ths'), ctxt') = Variable.import false ths ctxt
-                  in map simp ths'
+                  in maps simp ths'
                   |> Variable.export ctxt' ctxt
                  end
         end)

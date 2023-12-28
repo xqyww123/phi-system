@@ -22,7 +22,7 @@ thm \<phi>Rational.intro_reasoning
 lemma [\<phi>reason add]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> snd x \<noteq> 0
 \<Longrightarrow> x \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_int (fst x) / of_int (snd x) \<Ztypecolon> \<rat>\<close>
-  \<medium_left_bracket> 
+  \<medium_left_bracket>
     \<open>of_int (fst x) / of_int (snd x) \<Ztypecolon> MAKE _ \<rat>\<close>
   \<medium_right_bracket> .
 
@@ -152,11 +152,12 @@ thm fib.induct
 thm fib.simps
 thm fib.elims
 
+  
 proc FIB:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<close>
   is [recursive n]
-  is [routine]
+  is [routine] 
 \<medium_left_bracket>
   if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket> \<medium_left_bracket>
     FIB (\<open>$n - 1\<close>) + FIB (\<open>$n - 2\<close>)
