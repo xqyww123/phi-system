@@ -253,10 +253,13 @@ proc lookup_bintree:
   output \<open>tree \<Ztypecolon> BiTree addr (\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
   is [recursive tree addr]
-\<medium_left_bracket> note [[simp_trace]] ;;
-  to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>a\<^sub>L, a\<^sub>R
+\<medium_left_bracket>
+  to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>a\<^sub>L, a\<^sub>R 
   
-
+  note [[\<phi>trace_reasoning = 2]]
+  ;;
+  $addr \<tribullet> data \<tribullet> k \<rightarrow> val tt ;;
+      $tt !
 
 
 

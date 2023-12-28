@@ -2950,7 +2950,12 @@ definition Cond_Unital_Ins_BI :: \<open>bool \<Rightarrow> 'c BI \<Rightarrow> '
 
 paragraph \<open>Rewrites\<close>
 
-lemma \<phi>Cond_Unital_Ins_unfold:
+lemma Cond_Unital_Ins_BI_\<phi>Type[no_atp]:
+  \<open> \<half_blkcirc>\<^sub>B\<^sub>I[C] (x \<Ztypecolon> T) \<equiv> x \<Ztypecolon> \<half_blkcirc>[C] T \<close>
+  unfolding \<phi>Cond_Unital_Ins_def Cond_Unital_Ins_BI_def atomize_eq BI_eq_iff
+  by clarsimp
+
+lemma \<phi>Cond_Unital_Ins_unfold[no_atp]:
   \<open> \<half_blkcirc>[C] T = (if C then \<black_circle> T else \<circle>\<^sub>\<x>) \<close>
   unfolding \<phi>Type_def \<phi>Cond_Unital_Ins_def
   by clarsimp
