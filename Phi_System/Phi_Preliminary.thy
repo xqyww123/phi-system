@@ -826,22 +826,22 @@ text \<open>Registry of default attributes of antecedents in the deductive progr
 ML_file \<open>library/system/premise_attribute.ML\<close>
 
 \<phi>reasoner_group \<phi>attr_all = (100, [0,9999]) \<open>collecting all \<phi>attribute groups\<close>
-                \<phi>attr_normalize = (3000, [3000, 3600]) in \<phi>attr_all \<open>\<close>
+                \<phi>attr_normalize = (3000, [3000, 3300]) in \<phi>attr_all \<open>\<close>
                 \<phi>attr_EIF = (2500, [2500, 2500]) in \<phi>attr_all and < \<phi>attr_normalize
                       \<open>extract facts implied inside\<close>
-                \<phi>attr     = (1000, [1000, 1030]) in \<phi>attr_all and < \<phi>attr_EIF
+                \<phi>attr_late_normalize = (2000, [2000,2300]) in \<phi>attr_all and < \<phi>attr_EIF \<open>\<close>
+                \<phi>attr     = (1000, [1000, 1030]) in \<phi>attr_all and < \<phi>attr_late_normalize
                       \<open>default group for specific forms of premises\<close>
 
 paragraph \<open>Configuring Existing Antecedents\<close>
 
-attribute_setup forall_elim_vars =
+(*attribute_setup forall_elim_vars =
   \<open>Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
       Thm.forall_elim_vars (Thm.maxidx_of th + 1) th))\<close>
-  "quantified schematic vars"
-
+  "quantified schematic vars"*)
+(*
 named_theorems \<phi>attr_elim_tag_rules
   \<open>Introduction rules that will be applied to eliminate tags for every premises\<close>
-
 attribute_setup \<phi>attr_elim_tags = \<open>
   Scan.succeed (Thm.rule_attribute [] (fn ctxt => fn th =>
     let val rules = Named_Theorems.get (Context.proof_of ctxt) \<^named_theorems>\<open>\<phi>attr_elim_tag_rules\<close>
@@ -849,17 +849,19 @@ attribute_setup \<phi>attr_elim_tags = \<open>
           case get_first (fn rule => SOME (rule RS th) handle THM _ => NONE) rules
             of SOME ret => apply ret
              | NONE => th
-     in apply th
+        fun elim_vars th = Thm.forall_elim_vars (Thm.maxidx_of th + 1) th
+     in th
+     |> elim_vars
+     |> apply
+     |> elim_vars
     end))
 \<close>
 
-\<phi>reasoner_group \<phi>attr_forall_elim_vars = (3550, [3550, 3550]) in \<phi>attr_normalize \<open>\<close>
-                \<phi>attr_elim_tags = (3500, [3500, 3500]) in \<phi>attr_normalize and < \<phi>attr_forall_elim_vars \<open>\<close>
+\<phi>reasoner_group forall_elim_vars = (3550, [3550, 3550]) in \<phi>attr_normalize \<open>\<close> *)
 
 declare [[
-  \<phi>premise_attribute  [forall_elim_vars] for \<open>PROP _\<close>       (%\<phi>attr_forall_elim_vars),
-  \<phi>premise_attribute? [\<phi>declare]        for \<open>PROP _\<close>        (%\<phi>attr_EIF),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Is_Literal _\<close>  (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>declare]        for \<open>PROP _\<close>        (%\<phi>attr_EIF),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Is_Literal _\<close>  (%\<phi>attr),
 
   \<phi>premise_attribute_ML \<open>fn _ => Thm.declaration_attribute (fn thm => fn ctxt =>
     let val term_A = case Thm.prop_of thm

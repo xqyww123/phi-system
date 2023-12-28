@@ -1687,7 +1687,7 @@ subsubsection \<open>Guess Algebraic Operators\<close>
 subsubsection \<open>Configurations\<close>
 
 \<phi>reasoner_group Semimodule_No_SDistr = (1000, [1000,1000]) for \<open>Semimodule_No_SDistr F\<close> \<open>\<close>
-  
+
 declare [[
   \<phi>default_reasoner_group
       \<open>Tyops_Commute   F F' G G' T D R\<close>        : %\<phi>TA_commutativity_default (100)
@@ -1696,33 +1696,33 @@ declare [[
       \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I F F' G G' T D r\<close>        : %\<phi>TA_commutativity_default (100)
       \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E F F' G G' T D r\<close>        : %\<phi>TA_commutativity_default (100) ,
 
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Transformation_Functor\<^sub>\<Lambda> _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Functional_Transformation_Functor\<^sub>\<Lambda> _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Object_Sep_Homo\<^sub>I _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Object_Sep_Homo\<^sub>E _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_Zero _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Closed_Semimodule_Zero _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_One\<^sub>I _ _ _ _ _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_One\<^sub>E _ _ _ _ _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _ \<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>Z_rev _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>S _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>S_rev _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Transformation_Functor _ _ _ _ _ _ _\<close>               (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>  (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Transformation_Functor\<^sub>\<Lambda> _ _ _ _ _ _ _\<close>              (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Functional_Transformation_Functor\<^sub>\<Lambda> _ _ _ _ _ _ _ _\<close> (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _\<close>     (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close> (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Object_Sep_Homo\<^sub>I _ _ \<close>                   (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Object_Sep_Homo\<^sub>E _ \<close>                     (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>          (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>            (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>   (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>   (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_Zero _ _ \<close>                    (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Closed_Semimodule_Zero _ _ \<close>             (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_One\<^sub>I _ _ _ _ _ _ \<close>            (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_One\<^sub>E _ _ _ _ _ _ \<close>            (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _ \<close> (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _ \<close> (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _\<close>             (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>Z_rev _ _ _ _ _ _\<close>     (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>S _ _ _ _\<close>             (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semimodule_SDistr_Homo\<^sub>S_rev _ _ _ _ _ _\<close>     (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Tyops_Commute _ _ _ _ _ _ _\<close>                 (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>I _ _ _ _ _ _ _\<close>      (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>\<Lambda>\<^sub>E _ _ _ _ _ _ _\<close>      (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>  (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>  (%\<phi>attr),
 
   \<phi>reason_default_pattern
       \<open>Transformation_Functor ?Fa ?Fb _ _ _ _ _\<close> \<Rightarrow>

@@ -192,8 +192,8 @@ definition \<open>is_valid_index_of idx T U \<longleftrightarrow> valid_index T 
 declare [[
   \<phi>reason_default_pattern \<open>is_valid_index_of ?idx ?T _\<close> \<Rightarrow> \<open>is_valid_index_of ?idx ?T _\<close> (100)
                       and \<open>is_valid_step_idx_of ?idx ?T _ \<close> \<Rightarrow> \<open>is_valid_step_idx_of ?idx ?T _ \<close> (100),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>is_valid_index_of _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>is_valid_step_idx_of _ _ _\<close>
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>is_valid_index_of _ _ _\<close>     (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>is_valid_step_idx_of _ _ _\<close>  (%\<phi>attr)
 ]]
 
 lemma is_valid_index_of_Nil:
@@ -232,8 +232,8 @@ declare [[
       \<open>parse_eleidx_input ?TY ?input _ _ _ \<close> \<Rightarrow> \<open>parse_eleidx_input ?TY ?input _ _ _ \<close> (100)
   and \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ \<close> \<Rightarrow> \<open>parse_eleidx_input_least1 ?TY ?input _ _ _ \<close> (100),
 
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>parse_eleidx_input _ _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>parse_eleidx_input_least1 _ _ _ _ _\<close>
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>parse_eleidx_input _ _ _ _ _\<close>         (%\<phi>attr),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>parse_eleidx_input_least1 _ _ _ _ _\<close>  (%\<phi>attr)
 ]]
 
 \<phi>reasoner_group \<A>parse_eleidx = (1000, [1000,1000]) for \<open>\<phi>arg.dest v \<Turnstile> S @action \<A>parse_eleidx\<close>
@@ -329,8 +329,8 @@ setup \<open>Context.theory_map (Eval_Sem_Idx_SS.map (
 lemmas [eval_aggregate_path] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms
 
 declare [[
-  \<phi>premise_attribute  [elim_premise_tag] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>,
-  \<phi>premise_attribute? [useful]           for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>
+  \<phi>premise_attribute       [THEN Premise_D] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>  (%\<phi>attr_late_normalize),
+  \<phi>premise_attribute once? [useful]         for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>  (%\<phi>attr) (*TODO: use EIF instead of this?*)
 ]]
 
 
@@ -362,9 +362,9 @@ and \<open>\<phi>Aggregate_Constructor_Synth _ _ _ ?T\<close> \<Rightarrow> \<op
 and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> (100),
 
 
-    \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Getter _ _ _ _\<close>,
-    \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Mapper _ _ _ _ _ _\<close>,
-    \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Constructor _ _ _ _\<close>
+    \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Getter _ _ _ _\<close>       (%\<phi>attr),
+    \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Mapper _ _ _ _ _ _\<close>   (%\<phi>attr),
+    \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>\<phi>Aggregate_Constructor _ _ _ _\<close>  (%\<phi>attr)
 ]]
 
 \<phi>reasoner_group aggregate_access_all = (100, [1, 2000]) for (\<open>\<phi>Aggregate_Getter idx T U g\<close>,

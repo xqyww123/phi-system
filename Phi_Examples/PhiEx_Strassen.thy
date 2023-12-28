@@ -180,7 +180,7 @@ proc strassen:
           buf\<^sub>2 \<Ztypecolon> MatSlice a\<^sub>D i\<^sub>D j\<^sub>D (2^n) (2^n)
           \<s>\<u>\<b>\<j> buf\<^sub>1 buf\<^sub>2. \<top>\<close>
   is [recursive A B n a\<^sub>x i\<^sub>x j\<^sub>x a\<^sub>y i\<^sub>y j\<^sub>y a\<^sub>C i\<^sub>C j\<^sub>C a\<^sub>D i\<^sub>D j\<^sub>D buf\<^sub>1 buf\<^sub>2]
-\<medium_left_bracket>
+\<medium_left_bracket> thm useful ;;
   if ($n = \<open>0 \<Ztypecolon> \<nat>\<close>)
   \<medium_left_bracket>
     \<open>MatSlice a\<^sub>x _ _ _ _\<close> to \<open>OPEN _ _\<close>
@@ -227,7 +227,7 @@ proc strassen:
                       \<open>M\<^sub>7 \<in> carrier_mat _ _\<close>
                       \<open>M\<^sub>t \<in> carrier_mat _ _\<close> ;;
 
-                                
+               
                                  
     copy_mat ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>x, $i\<^sub>x , $j\<^sub>x , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
     add_mat  ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>x, $i\<^sub>x', $j\<^sub>x', (*A\<^sub>2\<^sub>2*) $N, $N) ;;

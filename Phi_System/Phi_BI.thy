@@ -252,8 +252,8 @@ definition Abstract_Domain\<^sub>L :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<
 declare [[
   \<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)
                       and \<open>Abstract_Domain\<^sub>L ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>L ?T _\<close> (100),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain  _ _\<close>  (%\<phi>attr) ,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain\<^sub>L _ _\<close>  (%\<phi>attr)
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Abstract_Domain  _ _\<close>  (%\<phi>attr) ,
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Abstract_Domain\<^sub>L _ _\<close>  (%\<phi>attr)
 ]]
 
 \<phi>reasoner_group abstract_domain_all = (1000, [1, 2000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
@@ -4308,7 +4308,7 @@ text \<open>\<phi>-Deriver usually derives the object reachability relation of \
 
 declare [[
   \<phi>reason_default_pattern \<open>Object_Equiv ?T _\<close> \<Rightarrow> \<open>Object_Equiv ?T _\<close> (100),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Object_Equiv _ _\<close>       (%\<phi>attr)
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Object_Equiv _ _\<close>       (%\<phi>attr)
 ]]
 
 \<phi>reasoner_group object_equiv = (100, [1, 3999]) for \<open>Object_Equiv T eq\<close>

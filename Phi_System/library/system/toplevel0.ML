@@ -216,12 +216,10 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
          else Phi_Envir.map_state_sequent gen_sequent stat
       end
 
-    val attrib_of = Premises_Attribute.attribute_of (Context.Proof (Proof.context_of stat))
+    val default_attrib = Premises_Attribute.apply_attribute (Context.Proof (Proof.context_of stat))
     val bindings = prem_bindings
-          |> map2 (fn P => fn ((b,attrs),pats) =>
-              let val attrs' = attrib_of (null attrs) P
-              in ((b, attrs' @ map (Attrib.attribute (Proof.context_of stat)) attrs), pats)
-              end) prems
+          |> map (fn ((b,attrs),pats) =>
+                ((b, default_attrib (null attrs) :: map (Attrib.attribute (Proof.context_of stat)) attrs), pats))
   in
     stat
       |> Proof.map_context (Config.put phi_allow_source_object_to_be_not_variable true)

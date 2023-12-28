@@ -192,10 +192,10 @@ consts partial_add_split :: action
        non_trivial_partial_add_split :: action
 
 declare [[
-    \<phi>premise_attribute [unfolded Action_Tag_def] for \<open>_ @action partial_add_split\<close>,
-    \<phi>premise_attribute? [useful] for \<open>_ @action partial_add_split\<close>,
-    \<phi>premise_attribute [unfolded Action_Tag_def] for \<open>_ @action non_trivial_partial_add_split\<close>,
-    \<phi>premise_attribute? [useful] for \<open>_ @action non_trivial_partial_add_split\<close>
+    \<phi>premise_attribute       [unfolded Action_Tag_def] for \<open>_ @action partial_add_split\<close> (%\<phi>attr_late_normalize),
+    \<phi>premise_attribute once? [useful] for \<open>_ @action partial_add_split\<close>                  (%\<phi>attr),
+    \<phi>premise_attribute       [unfolded Action_Tag_def] for \<open>_ @action non_trivial_partial_add_split\<close> (%\<phi>attr_late_normalize),
+    \<phi>premise_attribute once? [useful] for \<open>_ @action non_trivial_partial_add_split\<close>      (%\<phi>attr)
 ]]
 
 lemma fst_snt_lambda_pair[simp]:

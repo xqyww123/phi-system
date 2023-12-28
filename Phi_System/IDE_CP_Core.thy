@@ -166,8 +166,9 @@ optional_translations (\<phi>hide_techinicals)
   "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: XCONST Void" <= "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: TECHNICAL X"
   \<open>show hidden internal techinical constructs\<close>
 
-declare Technical_D[\<phi>attr_elim_tag_rules]
-        [[\<phi>hide_techinicals]]
+declare [[\<phi>hide_techinicals,
+          \<phi>premise_attribute [THEN Technical_D ] for \<open>Technical ?P\<close>       (%\<phi>attr_normalize),
+          \<phi>premise_attribute [THEN Technical_D'] for \<open>PROP Technical ?P\<close>  (%\<phi>attr_normalize) ]]
 
 definition Technical_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Technical_embed X \<equiv> X\<close>
 
@@ -2056,7 +2057,7 @@ definition report_unprocessed_element_index :: \<open>element_index_input \<Righ
 
 declare [[
   \<phi>reason_default_pattern \<open>report_unprocessed_element_index ?path\<close> \<Rightarrow> \<open>report_unprocessed_element_index ?path\<close> (100),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>report_unprocessed_element_index _\<close>  (%\<phi>attr)
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>report_unprocessed_element_index _\<close>  (%\<phi>attr)
 ]]
 
 lemma report_unprocessed_element_index_I:
@@ -2268,7 +2269,7 @@ ML \<open>Theory.setup (Global_Theory.add_thms_dynamic (@{binding "\<phi>instr"}
 attribute_setup \<phi>instr = \<open>Scan.succeed (Thm.declaration_attribute NuInstructions.add) \<close>
   \<open>Instructions of \<phi>-system\<close>
 
-attribute_setup elim_premise_tag = \<open>
+(*attribute_setup elim_premise_tag = \<open>
 Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
       if can PLPR_Syntax.dest_premise_tag (Thm.concl_of th) then th RS @{thm Premise_D} else th))
 \<close>
@@ -2287,16 +2288,15 @@ Scan.succeed (Thm.rule_attribute [] (fn ctxt' =>
         Phi_Conv.tag_conv (Conv.rewr_conv @{thm' Simplify_def}) ctm) ctxt)
   end))
 \<close>
+*)
 
-\<phi>reasoner_group \<phi>attr_Techinical = (3500, [3500, 3500]) in \<phi>attr_normalize and < \<phi>attr_forall_elim_vars \<open>\<close>
-
-declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>          (%\<phi>attr),
-          \<phi>premise_attribute  [elim_premise_tag] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>,
-          \<phi>premise_attribute  [elim_premise_tag] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] ?x\<close>,
-          \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>,
-          \<phi>premise_attribute  [elim_Simplify_tag] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>,
-          \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Is_Functional ?S\<close>,
-          \<phi>premise_attribute? [\<phi>reason? %local] for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+declare [[\<phi>premise_attribute  [THEN Do_D] for \<open>\<^bold>d\<^bold>o PROP _\<close>          (%\<phi>attr_normalize),
+          \<phi>premise_attribute  [THEN Premise_D] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>     (%\<phi>attr_late_normalize),
+          \<phi>premise_attribute  [THEN Premise_D] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] ?x\<close> (%\<phi>attr_late_normalize),
+          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close> (%\<phi>attr),
+          \<phi>premise_attribute  [THEN Simplify_D] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>   (%\<phi>attr_late_normalize),
+          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Is_Functional ?S\<close>     (%\<phi>attr),
+          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>  (%\<phi>attr)
 ]]
 
 

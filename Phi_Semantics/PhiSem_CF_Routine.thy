@@ -26,9 +26,9 @@ attribute_setup RETURN_FRAME = \<open>Scan.succeed (Thm.rule_attribute [] (fn _ 
                     @{thm' RETURN_FRAME_unit} RS th
     handle THM _ => @{thm' RETURN_FRAME_normal} RS th ) )\<close>
 
-
-
-
+declare [[
+  \<phi>premise_attribute [RETURN_FRAME] for \<open>RETURN_FRAME _ _\<close>  (%\<phi>attr)
+]]
 
 
 proc op_routine:
