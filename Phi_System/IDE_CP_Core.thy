@@ -166,9 +166,8 @@ optional_translations (\<phi>hide_techinicals)
   "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: XCONST Void" <= "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: TECHNICAL X"
   \<open>show hidden internal techinical constructs\<close>
 
-declare [[\<phi>hide_techinicals,
-          \<phi>premise_attribute [THEN Technical_D ] for \<open>Technical ?P\<close>,
-          \<phi>premise_attribute [THEN Technical_D'] for \<open>PROP Technical ?P\<close>]]
+declare Technical_D[\<phi>attr_elim_tag_rules]
+        [[\<phi>hide_techinicals]]
 
 definition Technical_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Technical_embed X \<equiv> X\<close>
 
@@ -2057,7 +2056,7 @@ definition report_unprocessed_element_index :: \<open>element_index_input \<Righ
 
 declare [[
   \<phi>reason_default_pattern \<open>report_unprocessed_element_index ?path\<close> \<Rightarrow> \<open>report_unprocessed_element_index ?path\<close> (100),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>report_unprocessed_element_index _\<close>
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>report_unprocessed_element_index _\<close>  (%\<phi>attr)
 ]]
 
 lemma report_unprocessed_element_index_I:
@@ -2289,7 +2288,9 @@ Scan.succeed (Thm.rule_attribute [] (fn ctxt' =>
   end))
 \<close>
 
-declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>,
+\<phi>reasoner_group \<phi>attr_Techinical = (3500, [3500, 3500]) in \<phi>attr_normalize and < \<phi>attr_forall_elim_vars \<open>\<close>
+
+declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>          (%\<phi>attr),
           \<phi>premise_attribute  [elim_premise_tag] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>,
           \<phi>premise_attribute  [elim_premise_tag] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] ?x\<close>,
           \<phi>premise_attribute? [\<phi>reason? %local] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>,

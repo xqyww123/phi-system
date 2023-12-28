@@ -307,6 +307,8 @@ lemma "__op_try__"[intro!]:
      apply (smt (z3) INTERP_SPEC LooseState_expn(2) LooseState_expn(3) sep_conj_expn)
     by blast .
 
+
+
 definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (\<forall>v. (Z::'v \<Rightarrow> 'a set) v = X v + Y v)"
 
 lemma Union_the_Same_Or_Arbitrary_when_Var__the_Same:

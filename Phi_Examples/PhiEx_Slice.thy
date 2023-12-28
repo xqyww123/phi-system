@@ -15,17 +15,19 @@ declare [[\<phi>trace_reasoning = 0]]
 
 
 proc qsort:
-  input  \<open>l  \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32)\<heavy_comma>
-          ptr  \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:i:len] \<i>\<n>\<t>(32)\<heavy_comma>
+  input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32)\<heavy_comma>
+          i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:LEN] \<i>\<n>\<t>(32)\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
+                                            the range of the pointer arithmetic.\<close>
           len \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
-  premises [simp]: \<open>ptr = 0\<close>
+  premises \<open>i + len \<le> LEN\<close>
   output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32) \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
   is [recursive l addr i len]
 \<medium_left_bracket>
+  note \<open>length l = len\<close>[useful] ;;
   if ($len \<le> 1)
   \<medium_left_bracket> \<medium_right_bracket>
-  \<medium_left_bracket>
-    val pivot \<leftarrow> ($ptr + ($len - 1)) ! ;;
+  \<medium_left_bracket> 
+    val pivot \<leftarrow> ($i + ($len - 1)) ! ;;
     var d \<leftarrow> 0 ;;
     replicate (0,$len) \<open>\<lambda>n. l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32)\<heavy_comma>
                             d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(32)
@@ -34,19 +36,31 @@ proc qsort:
                             (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
                             (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
     \<medium_left_bracket> for n \<rightarrow> val n ;;
-      ($ptr + $n)! \<rightarrow> val x ;;
+      ($i + $n)! \<rightarrow> val x ;;
       if ($x \<le> $pivot)
       \<medium_left_bracket>
-        ($ptr + $n) := ($ptr + $d)! ;;
-        ($ptr + $d) := $x ;;
+        ($i + $n) := ($i + $d)! ;;
+        ($i + $d) := $x ;;
         $d \<leftarrow> $d + 1
       \<medium_right_bracket>
       \<medium_left_bracket> \<medium_right_bracket> ;;
     \<medium_right_bracket> ;;
+
     (*readers may inspect \<open>thm useful\<close> to look the contextual facts*)
     (* thm useful *)
-    qsort ($ptr + $d, $len - $d
-          thm qsort[]
+    qsort ($i, $d) ;;
+    qsort ($i + $d, $len - $d)
+          
+    pure_fact t1: \<open>\<forall>x\<in>set (drop d l'). l ! (len - 1) < x\<close>
+    pure_fact t2: \<open>\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1)\<close> ;;
+
+    \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32) \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
+
+  \<medium_right_bracket> for \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32) \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close> ;;
+
+
+
+                      thm qsort[]
     thm useful
     thm qsort
 

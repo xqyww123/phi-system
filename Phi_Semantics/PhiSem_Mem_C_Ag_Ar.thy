@@ -48,11 +48,9 @@ subsection \<open>Slice Pointer\<close>
       has GEP and shift arithmetic.
       only points to elements in an array.\<close>
 
-definition \<open>valid_logaddr_range TY addr base len \<longleftrightarrow>
-    valid_logaddr addr \<and>
-    (\<exists>N. logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> base + len \<le> N) \<and>
-    (\<forall>i < len. valid_logaddr (addr \<tribullet>\<^sub>a (base + i)\<^sup>\<t>\<^sup>\<h>) \<and>
-    logaddr_type (addr \<tribullet>\<^sub>a (base + i)\<^sup>\<t>\<^sup>\<h>) = TY)\<close>
+(*
+definition \<open>valid_logaddr_range TY addr N \<longleftrightarrow>
+    valid_logaddr addr \<and> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
 
 lemma valid_logaddr_range_sub:
   \<open> base \<le> base' \<and> base'+len' \<le> base+len
@@ -60,50 +58,37 @@ lemma valid_logaddr_range_sub:
 \<Longrightarrow> valid_logaddr_range TY addr base' len'\<close>
   unfolding valid_logaddr_range_def
   by (clarsimp, smt (verit, ccfv_threshold) add.assoc add_lessD1 le_eq_less_or_eq le_iff_add nat_add_left_cancel_less)
+*)
 
-
-\<phi>type_def SlicePtr :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
-  where \<open>i \<Ztypecolon> SlicePtr addr base len TY \<equiv> logaddr_to_raw (addr \<tribullet>\<^sub>a (base+i)\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
-                \<s>\<u>\<b>\<j> i \<le> len \<and> valid_logaddr_range TY addr base len\<close>
+\<phi>type_def SlicePtr :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
+  where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> logaddr_to_raw (addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
+                \<s>\<u>\<b>\<j> i \<le> N \<and> valid_logaddr addr \<and> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
   deriving Basic
-       and \<open>Object_Equiv (SlicePtr addr base len TY) (=)\<close>
+       and \<open>Object_Equiv (SlicePtr addr N TY) (=)\<close>
        and Functionality
-       and \<open>\<phi>SemType (x \<Ztypecolon> SlicePtr addr base len TY) pointer\<close>
+       and \<open>\<phi>SemType (x \<Ztypecolon> SlicePtr addr N TY) pointer\<close>
 
 
-notation SlicePtr ("\<Ss>\<Pp>\<t>\<r>[_:_:_] _" [20,20,20,900] 899)
+notation SlicePtr ("\<Ss>\<Pp>\<t>\<r>[_:_] _" [20,20,900] 899)
 
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
-  \<open>\<phi>Equal (\<Ss>\<Pp>\<t>\<r>[addr:base:len] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
+  \<open>\<phi>Equal (\<Ss>\<Pp>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
   unfolding \<phi>Equal_def
-  by (clarsimp simp: valid_logaddr_range_def logaddr_to_raw_inj_array)
+  by (clarsimp simp: logaddr_to_raw_inj_array)
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma [\<phi>reason add]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr = addr' \<and> TY' = TY \<and>
-           base \<le> base' \<and> base' + len' \<le> base + len \<and>
-           base' \<le> base + i \<and> base + i \<le> base' + len'
-\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> base+i-base' \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr':base':len'] TY' \<close>
-  \<medium_left_bracket>
-    to \<open>OPEN _ _\<close>
-    \<open>i+base-base' \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr':base':len'] TY')\<close>
-    certified by auto_sledgehammer
-  \<medium_right_bracket> .
-
-lemma [\<phi>reason add]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr = addr' \<and> TY' = TY \<and>
-           base \<le> base' \<and> base' + len' \<le> base + len \<and>
-           base' \<le> base + i \<and> base + i \<le> base' + len'
-\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr':base':len'] TY' \<s>\<u>\<b>\<j> y. y = base+i-base'
-    @action to (\<Ss>\<Pp>\<t>\<r>[addr:base':len'] TY) \<close>
-  \<medium_left_bracket> \<medium_right_bracket> .
+lemma [\<phi>reason add]: \<comment> \<open>TODO: automatically generate this rule!\<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr \<and> len' = len \<and> TY' = TY
+\<Longrightarrow> x \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr':len'] TY' \<close>
+  unfolding Premise_def
+  by simp
 
 lemma [\<phi>reason add]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
-\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet>\<^sub>a (base+i)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY' \<close>
+\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
     to \<open>\<Pp>\<t>\<r> TY'\<close> certified by auto_sledgehammer
@@ -111,12 +96,12 @@ lemma [\<phi>reason add]:
 
 lemma [\<phi>reason add]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> base \<le> i \<and> i < len \<and> (\<exists>N. logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> base + len \<le> N)
-\<Longrightarrow> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (i-base) \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:base:len] TY' \<close>
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
+\<Longrightarrow> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY' \<close>
   \<medium_left_bracket>
     to RawPointer
-    \<open>(i-base) \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:base:len] TY')\<close>
-    certified unfolding valid_logaddr_range_def by auto_sledgehammer
+    \<open>i \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:len] TY')\<close>
+    certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 

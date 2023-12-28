@@ -252,8 +252,8 @@ definition Abstract_Domain\<^sub>L :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<
 declare [[
   \<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)
                       and \<open>Abstract_Domain\<^sub>L ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>L ?T _\<close> (100),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain  _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain\<^sub>L _ _\<close>
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain  _ _\<close>  (%\<phi>attr) ,
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Abstract_Domain\<^sub>L _ _\<close>  (%\<phi>attr)
 ]]
 
 \<phi>reasoner_group abstract_domain_all = (1000, [1, 2000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
@@ -4308,7 +4308,7 @@ text \<open>\<phi>-Deriver usually derives the object reachability relation of \
 
 declare [[
   \<phi>reason_default_pattern \<open>Object_Equiv ?T _\<close> \<Rightarrow> \<open>Object_Equiv ?T _\<close> (100),
-  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Object_Equiv _ _\<close>
+  \<phi>premise_attribute? [\<phi>reason? %local] for \<open>Object_Equiv _ _\<close>       (%\<phi>attr)
 ]]
 
 \<phi>reasoner_group object_equiv = (100, [1, 3999]) for \<open>Object_Equiv T eq\<close>
@@ -5522,11 +5522,11 @@ fun apply_refl_by_unifying (refl, exintro', Gx, Gy) ctxt thm =
                 else Term.dummy (*not occur*)
             end)
       val Y'1 = subst_bounds (insts', X)
-      val Y'2 = fold (fn j => fn TM =>
+      val Y'2 = fold_rev (fn j => fn TM =>
                   let val (name,T) = List.nth (vs, N-1-j)
                    in \<^Const>\<open>ExSet \<open>T\<close> \<open>TY\<close>\<close> $ Abs (name, T, TM)
                   end) bads Y'1
-      val Y'3 = fold (fn (_, Bound j) => (fn TM =>
+      val Y'3 = fold_rev (fn (_, Bound j) => (fn TM =>
                             let val (name,T) = List.nth (vs, N-1-j)
                              in Abs (name, T, TM)
                             end)
