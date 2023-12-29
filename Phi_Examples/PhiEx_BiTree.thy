@@ -298,9 +298,34 @@ proc (nodef) lookup_bst:
 \<medium_right_bracket> .
 
 
+proc has_key_bintree:
+  input  \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  premises \<open>sorted1(inorder tree)\<close>
+  output \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          k \<in> dom (lookup_tree tree) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  is [recursive tree addr]
+  is [routine]
+\<medium_left_bracket>
+  if \<open>$addr = 0\<close> \<medium_left_bracket>
+    return (False)
+  \<medium_right_bracket>
+  \<medium_left_bracket>
+    to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R, N\<^sub>k, N\<^sub>v
 
+    val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
+    if (eq ($k', $k)) \<medium_left_bracket>
+      True
+    \<medium_right_bracket> \<medium_left_bracket>
+      if (cmp ($k, $k'))
+      \<medium_left_bracket> has_key_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
+      \<medium_left_bracket> has_key_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket>
+    \<medium_right_bracket>  \<rightarrow> val ret ;;
 
-
+    \<open>BiTree a\<^sub>R _ _\<close> \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+    return ($ret)
+  \<medium_right_bracket> ;;
+\<medium_right_bracket>
 
 
 end
