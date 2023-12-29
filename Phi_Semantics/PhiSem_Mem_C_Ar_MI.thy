@@ -24,7 +24,7 @@ proc op_add_ptr[\<phi>overload +]:
 \<medium_right_bracket> .
 
 
-proc op_add_ptr_N[\<phi>overload +]:
+proc op_add_ptr_unsigned[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close>
   premises \<open>i + j \<le> len\<close>
   output \<open>i + j \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:len] TY\<close>

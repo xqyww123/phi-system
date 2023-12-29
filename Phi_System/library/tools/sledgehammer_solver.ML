@@ -16,8 +16,8 @@ val sledgehammer_params = Attrib.setup_config_string \<^binding>\<open>auto_sled
 
 fun get_sledgehammer_params ctxt =
   Config.get ctxt sledgehammer_params
-    |> String.fields (fn #"," => true | _ => false)
-    |> map (fn s => case String.fields (fn #"=" => true | _ => false) s
+    |> String.tokens (fn #"," => true | _ => false)
+    |> map (fn s => case String.tokens (fn #"=" => true | _ => false) s
                       of [k,v] => (Symbol.trim_blanks k, Symbol.trim_blanks v)
                        | _ => error ("Invalid auto_sledgehammer_params : " ^ s))
 

@@ -254,11 +254,16 @@ context
     and V :: \<open>(VAL, 'v) \<phi>\<close>
     and TY\<^sub>K TY\<^sub>V :: TY
     and CMP Eq :: \<open>VAL \<phi>arg \<Rightarrow> VAL \<phi>arg \<Rightarrow> VAL proc\<close>
+    and zero\<^sub>K :: 'k
+    and zero\<^sub>V :: 'v
   assumes cmp: \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> CMP u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 < k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
       and eq : \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> Eq u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 = k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>  
       and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> K) TY\<^sub>K)\<close>
       and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> V) TY\<^sub>V)\<close>
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>K K zero\<^sub>K\<close> \<comment> \<open>TODO: remove this once our semantics has non-deterministic \<open>malloc\<close>\<close>
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>V V zero\<^sub>V\<close> \<comment> \<open>TODO: remove this once our semantics has non-deterministic \<open>malloc\<close>\<close>
 begin
+
 
 proc lookup_bintree:
   input  \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
@@ -302,7 +307,8 @@ proc (nodef) lookup_bst:
 
 proc has_key_bintree:
   input  \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
+          k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>sorted1(inorder tree)\<close>
   output \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           k \<in> dom (lookup_tree tree) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
@@ -322,7 +328,7 @@ proc has_key_bintree:
       if (cmp ($k, $k'))
       \<medium_left_bracket> has_key_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
       \<medium_left_bracket> has_key_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket>
-    \<medium_right_bracket>  \<rightarrow> val ret ;;
+    \<medium_right_bracket> \<rightarrow> val ret ;;
 
     \<open>BiTree a\<^sub>R _ _\<close> \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;; 
     return ($ret)
@@ -340,6 +346,120 @@ proc has_key_bst:
   $ret
 \<medium_right_bracket> .
 
+
+
+
+primrec insert_tree :: \<open>'k::linorder \<Rightarrow> 'v \<Rightarrow> ('k \<times> 'v) tree \<Rightarrow> ('k \<times> 'v) tree\<close>
+  where \<open>insert_tree k v \<langle>\<rangle> = \<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle>\<close>
+      | \<open>insert_tree k v \<langle>L, x, R\<rangle> = (if k < fst x then \<langle>insert_tree k v L, x, R\<rangle>
+                                     else if k = fst x then \<langle>L, (k,v), R\<rangle>
+                                     else \<langle>L, x, insert_tree k v R\<rangle> ) \<close>
+
+
+abbreviation \<open>Bst_Node \<equiv> \<lbrace>
+                            left: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V),
+                            data: \<lbrace> k: K, v: V \<rbrace>,
+                            right: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V)
+                          \<rbrace> \<close>
+
+
+
+
+
+proc insert_bintree:
+  input  \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
+          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
+          v \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  output \<open>insert_tree k v tree \<Ztypecolon> BiTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
+          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  is [routine]
+\<medium_left_bracket>
+  if \<open>$addr = 0\<close> \<medium_left_bracket>
+    calloc_1 \<open>Bst_Node\<close> \<rightarrow> val ret;;
+      note [[\<phi>trace_reasoning = 2]] ;;
+return ($ret)
+
+    thm return_\<phi>app
+
+
+
+
+
+
+
+
+
+
+
+
+definition \<open>right_rotate tree = (case tree of \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> \<Rightarrow> \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle> )\<close>
+definition \<open>can_right_rotate tree = (case tree of \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> \<Rightarrow> True | _ \<Rightarrow> False)\<close>
+definition \<open>left_rotate tree = (case tree of \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle> \<Rightarrow> \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> )\<close>
+definition \<open>can_left_rotate tree = (case tree of \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle> \<Rightarrow> True | _ \<Rightarrow> False)\<close>
+
+lemma right_rotate_simp[simp]:
+  \<open> right_rotate \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> = \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle> \<close>
+  unfolding right_rotate_def by simp
+
+lemma left_rotate_simp[simp]:
+  \<open> left_rotate \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle> = \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> \<close>
+  unfolding left_rotate_def by simp
+
+
+
+
+
+
+
+
+
+
+
+
+term left
+
+proc right_Rotate:
+  input \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<close>
+  premises \<open>can_right_rotate tree\<close>
+  output \<open>right_rotate tree \<Ztypecolon> BiTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace> \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+\<medium_left_bracket>
+  from \<open>can_right_rotate tree\<close>[unfolded can_right_rotate_def]
+  obtain A B C D E where open_tree: \<open>tree = \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle>\<close> by auto_sledgehammer ;;
+  
+  unfold open_tree to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
+  \<open>BiTree a\<^sub>L _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L\<^sub>L, a\<^sub>L\<^sub>R ;;
+
+  $addr \<tribullet> left ! \<rightarrow> val B ;;
+  $addr \<tribullet> left := $B \<tribullet> right ! ;;
+  $B \<tribullet> right := $addr ;;
+
+  \<open>BiTree a\<^sub>R _ _\<close> \<open>_ \<Ztypecolon> MAKE 1 (BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
+  \<open>_ \<Ztypecolon> MAKE 1 (BiTree a\<^sub>L (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close>
+\<medium_right_bracket> .
+
+
+proc left_Rotate:
+  input \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<close>
+  premises \<open>can_left_rotate tree\<close>
+  output \<open>left_rotate tree \<Ztypecolon> BiTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace> \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+\<medium_left_bracket>
+  from \<open>can_left_rotate tree\<close>[unfolded can_right_rotate_def]
+  obtain A B C D E where open_tree: \<open>tree = \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle>\<close> by auto_sledgehammer ;;
+
+  unfold open_tree to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
+  \<open>BiTree a\<^sub>R _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>R\<^sub>L, a\<^sub>R\<^sub>R ;;
+
+  $addr \<tribullet> right ! \<rightarrow> val D ;;
+  $addr \<tribullet> right := $D \<tribullet> left ! ;;
+  $D \<tribullet> left := $addr ;;
+
+  \<open>BiTree a\<^sub>L _ _\<close> \<open>BiTree a\<^sub>R\<^sub>L _ _\<close> \<open>_ \<Ztypecolon> MAKE 1 (BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
+  \<open>BiTree a\<^sub>R\<^sub>R _ _\<close> \<open>_ \<Ztypecolon> MAKE 1 (BiTree a\<^sub>R (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close>
+\<medium_right_bracket> .
 
 
 

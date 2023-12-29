@@ -593,13 +593,17 @@ subsection \<open>Standard Logical Pointer\<close>
   \<comment> \<open>which always points to the beginning address of a component of a valid memory object.
       cannot point to the end of an allocation block, which is its limitation.
       only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
-
+  
 \<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<Pp>\<t>\<r> _" [900] 899)
   where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY)\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>
        and Functionality
        and \<open>\<phi>SemType (x \<Ztypecolon> Ptr TY) pointer\<close>
+       and \<open>Semantic_Zero_Val pointer (Ptr TY) 0\<close>
+
+
+
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
     "\<phi>Equal (Ptr TY) (\<lambda>x y. x = 0 \<or> y = 0 \<or> memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"

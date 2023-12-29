@@ -69,6 +69,7 @@ lemma valid_logaddr_range_sub:
        and \<open>\<phi>SemType (x \<Ztypecolon> SlicePtr addr N TY) pointer\<close>
 
 
+
 notation SlicePtr ("\<Ss>\<Pp>\<t>\<r>[_:_] _" [20,20,900] 899)
 
 
