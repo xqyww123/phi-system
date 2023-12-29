@@ -377,9 +377,16 @@ proc insert_bintree:
   is [routine]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
-    calloc_1 \<open>Bst_Node\<close> \<rightarrow> val ret;;
+    to \<open>OPEN 0 _\<close> ;;
+    val ret \<leftarrow> calloc_1 \<open>Bst_Node\<close> ;;
+    $ret \<tribullet> data \<tribullet> k := $k ;;
+    $ret \<tribullet> data \<tribullet> v := $v ;;
+note [[\<phi>trace_reasoning = 2]]
+            ;;
+    \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BiTree addra _ _)\<close>
+
       note [[\<phi>trace_reasoning = 2]] ;;
-return ($ret)
+return ($ret
 
     thm return_\<phi>app
 

@@ -221,7 +221,13 @@ lemma [\<phi>reason %Val_ToA]:
   unfolding REMAINS_def split_paired_All
   by (simp; metis transformation_left_frame mult.assoc mult.commute)
 
-lemma [\<phi>reason %Val_ToA except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?V \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason %Val_ToA except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?V \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+    if \<open>fn (_, sequent) =>
+          case #2 (Phi_Syntax.dest_transformation (
+                  Logic.strip_assums_concl (Phi_Help.leading_antecedent' sequent)))
+            of Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ _ =>
+                  not (Phi_Syntax.is_BI_connective X)
+       \<close> ]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] V \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] V \<w>\<i>\<t>\<h> P"
   unfolding REMAINS_def

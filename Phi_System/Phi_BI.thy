@@ -5629,6 +5629,41 @@ lemma [\<phi>reason %ToA_normalizing]:
 
 paragraph \<open>Splitting Separation Assertion in Target\<close>
 
+definition \<open>SP_TGT C X Y C\<^sub>R R P \<longleftrightarrow>
+   (if C then (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P)
+         else Identity_Element\<^sub>E Y \<and> (P,C\<^sub>R,R) = (True, False, \<top>)) \<close>
+
+\<phi>reasoner_group SP_TGT = (1010, [1000, 1030]) \<open>\<close>
+
+lemma [\<phi>reason %SP_TGT for \<open>SP_TGT True _ _ _ _ _\<close>
+                           \<open>SP_TGT ?var _ _ _ _ _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> SP_TGT True X Y C\<^sub>R R P \<close>
+  unfolding SP_TGT_def
+  by simp
+
+lemma [\<phi>reason %SP_TGT+10 for \<open>SP_TGT True _ _ False \<top> _\<close>
+                              \<open>SP_TGT ?var _ _ False \<top> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> SP_TGT True X Y False \<top> P \<close>
+  unfolding SP_TGT_def
+  by simp
+
+lemma [\<phi>reason %SP_TGT for \<open>SP_TGT False _ _ _ _ _\<close> ]:
+  \<open> Identity_Element\<^sub>E Y
+\<Longrightarrow> SP_TGT False X Y False \<top> True \<close>
+  unfolding SP_TGT_def
+  by simp
+
+lemma [\<phi>reason %SP_TGT-10 for \<open>SP_TGT _ _ _ _ _ _\<close>]:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] C' : C
+\<Longrightarrow> SP_TGT C' X Y C\<^sub>R R P
+\<Longrightarrow> SP_TGT C  X Y C\<^sub>R R P \<close>
+  unfolding SP_TGT_def Simplify_def
+  by simp
+
+
+
 lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R
@@ -5639,6 +5674,16 @@ lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_magma_1 B
 
 lemma [\<phi>reason %ToA_splitting_target]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P1
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (SP_TGT C\<^sub>R R Y False \<top> P2)
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y * X \<w>\<i>\<t>\<h> P1 \<and> P2"
+  for A :: \<open>'a::sep_magma_1 BI\<close>
+  unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
+            Identity_Element\<^sub>E_def Ant_Seq_def SP_TGT_def
+  by (cases C\<^sub>R; clarsimp; force)
+
+(*
+lemma [\<phi>reason %ToA_splitting_target]:
+  " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (if C\<^sub>R then (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P2)
                            else Identity_Element\<^sub>E Y \<and>\<^sub>\<r> P2 = True)
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y * X \<w>\<i>\<t>\<h> P1 \<and> P2"
@@ -5646,6 +5691,8 @@ lemma [\<phi>reason %ToA_splitting_target]:
   unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
             Identity_Element\<^sub>E_def Ant_Seq_def
   by (cases C\<^sub>R; clarsimp; force)
+*)
+
 
 lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R1 \<w>\<i>\<t>\<h> P1
@@ -5656,6 +5703,20 @@ lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_magma_1 B
   unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
   by (cases C; clarsimp; metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc')
 
+
+lemma [\<phi>reason %ToA_splitting_target]:
+  " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R1 \<w>\<i>\<t>\<h> P1
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> SP_TGT C\<^sub>R R1 Y C R' P2
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y * X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P1 \<and> P2"
+  for A :: \<open>'a::{sep_semigroup, sep_magma_1} BI\<close>
+  unfolding REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
+            Identity_Element\<^sub>E_def Ant_Seq_def SP_TGT_def
+  by ((cases C; cases C\<^sub>R; clarsimp),
+      smt (verit, best) sep_disj_multD2 sep_disj_multI2 sep_mult_assoc,
+      blast,
+      metis mult_1_class.mult_1_left sep_magma_1_right)
+
+(*
 lemma [\<phi>reason %ToA_splitting_target]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R1 \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> if C\<^sub>R then (R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P2)
@@ -5668,6 +5729,7 @@ lemma [\<phi>reason %ToA_splitting_target]:
       smt (verit, best) sep_disj_multD2 sep_disj_multI2 sep_mult_assoc,
       blast,
       metis mult_1_class.mult_1_left sep_magma_1_right)
+*)
 
 lemma [\<phi>reason %ToA_splitting_target+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   " A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<w>\<i>\<t>\<h> P1

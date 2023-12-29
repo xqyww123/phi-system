@@ -4,7 +4,7 @@ theory PhiStd_Loop_a \<comment> \<open>suffix a stands for \<open>arbitrary prec
           Phi_Semantics.PhiSem_Variable
 begin
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 2]]
 
 proc replicate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>

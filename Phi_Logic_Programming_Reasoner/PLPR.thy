@@ -2070,6 +2070,8 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 subsubsection \<open>Augmenting Refined Local Conditions\<close>
 
+(*TODO: shortcut when \<open>P = False\<close>*)
+
 \<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %\<phi>LPR_imp+10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
     let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
