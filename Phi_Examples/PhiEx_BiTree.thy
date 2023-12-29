@@ -243,6 +243,10 @@ lemma lookup_right_children:
   by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
 
 
+declare [[auto_sledgehammer_params = "try0 = false"]]
+  \<comment> \<open>For some reason I don't know, sledgehammer fails silently (with throwing an Interrupt exception)
+      when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.\<close>
+
 
 
 context
@@ -283,8 +287,6 @@ proc lookup_bintree:
 \<medium_right_bracket> .
 
 
-
-
 proc (nodef) lookup_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>k \<in> dom f\<close>
@@ -316,16 +318,38 @@ proc has_key_bintree:
     val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
     if (eq ($k', $k)) \<medium_left_bracket>
       True
-    \<medium_right_bracket> \<medium_left_bracket>
+    \<medium_right_bracket> \<medium_left_bracket> 
       if (cmp ($k, $k'))
       \<medium_left_bracket> has_key_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
       \<medium_left_bracket> has_key_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket>
     \<medium_right_bracket>  \<rightarrow> val ret ;;
 
-    \<open>BiTree a\<^sub>R _ _\<close> \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+    \<open>BiTree a\<^sub>R _ _\<close> \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;; 
     return ($ret)
   \<medium_right_bracket> ;;
-\<medium_right_bracket>
+\<medium_right_bracket> .
 
+
+proc has_key_bst:
+  input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+\<medium_left_bracket>
+  to \<open>OPEN _ _\<close> ;;
+  has_key_bintree ($addr, $k) \<rightarrow> val ret ;;
+  \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr _ _ _ _)\<close>
+  $ret
+\<medium_right_bracket> .
+
+
+
+
+
+
+
+
+
+
+
+end
 
 end

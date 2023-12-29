@@ -4,12 +4,22 @@ val auto : Phi_Cache_DB.proof_id option -> Proof.context -> thm -> thm
 
 val assync_proof : bool Config.T
 
+val sledgehammer_params : string Config.T
+
 end
 
 structure Phi_Sledgehammer_Solver : PHI_SLEDGEHAMMER_SOLVER = struct
 
+val sledgehammer_params_fixed = [("isar_proofs", "false")]
 
+val sledgehammer_params = Attrib.setup_config_string \<^binding>\<open>auto_sledgehammer_params\<close> (K "")
 
+fun get_sledgehammer_params ctxt =
+  Config.get ctxt sledgehammer_params
+    |> String.fields (fn #"," => true | _ => false)
+    |> map (fn s => case String.fields (fn #"=" => true | _ => false) s
+                      of [k,v] => (Symbol.trim_blanks k, Symbol.trim_blanks v)
+                       | _ => error ("Invalid auto_sledgehammer_params : " ^ s))
 
 
 (*** Adapter of Sledgehammer ***)
@@ -80,7 +90,9 @@ end
 val silence_state =
       Proof.map_contexts (Try0.silence_methods false #> Config.put SMT_Config.verbose false)
 
-val sledgehammer_params = [(*("preplay_timeout","0")*)]
+val debug_state =
+      Proof.map_contexts (Try0.silence_methods false #> Config.put SMT_Config.verbose true
+          #> Config.put SMT_Config.trace true #> Config.put SMT_Config.statistics true )
 
 fun time_ord (t1 : Time.time, t2) =
   if t1 = t2 then EQUAL else if t1 < t2 then LESS else GREATER
@@ -187,10 +199,29 @@ fun dirty_hack ret stat s =
        end
   end
 
+fun debug_param {debug=debug, verbose=verbose, overlord=overlord, spy=spy, provers=provers,
+                 abduce=abduce, falsify=falsify, type_enc=type_enc, strict=strict, lam_trans=lam_trans,
+                 uncurried_aliases=uncurried_aliases, learn=learn, fact_filter=fact_filter,
+                 induction_rules=induction_rules, max_facts=max_facts, fact_thresholds=fact_thresholds,
+                 max_mono_iters=max_mono_iters, max_new_mono_instances=max_new_mono_instances,
+                 max_proofs=max_proofs, isar_proofs=isar_proofs, compress=compress, try0=try0,
+                 smt_proofs=smt_proofs, minimize=minimize, slices=slices, timeout=timeout,
+                 preplay_timeout=preplay_timeout, expect=expect} =
+      {debug=true, verbose=true, overlord=overlord, spy=spy, provers=provers,
+       abduce=abduce, falsify=falsify, type_enc=type_enc, strict=strict, lam_trans=lam_trans,
+       uncurried_aliases=uncurried_aliases, learn=learn, fact_filter=fact_filter,
+       induction_rules=induction_rules, max_facts=max_facts, fact_thresholds=fact_thresholds,
+       max_mono_iters=max_mono_iters, max_new_mono_instances=max_new_mono_instances,
+       max_proofs=max_proofs, isar_proofs=isar_proofs, compress=compress, try0=try0,
+       smt_proofs=smt_proofs, minimize=minimize, slices=slices, timeout=timeout,
+       preplay_timeout=preplay_timeout, expect=expect}
+
+
 fun raw_sledgehammer stat =
   let val N = #goal (Proof.goal stat) |> Thm.nprems_of
       val _ = if N = 0 then error "No subgoal!" else ()
       val ret : string list Synchronized.var = Synchronized.var "\<phi>System.raw_sledgehammer" []
+      val sledgehammer_params = sledgehammer_params_fixed @ get_sledgehammer_params (Proof.context_of stat)
    in (Sledgehammer.run_sledgehammer
               (Sledgehammer_Commands.default_params (Proof.theory_of stat) sledgehammer_params)
               Sledgehammer_Prover.Normal (SOME (dirty_hack ret stat)) 1 Sledgehammer_Fact.no_fact_override
@@ -216,6 +247,8 @@ fun raw_sledgehammer stat =
             end
          | _ => raise Phi_Reasoners.Automation_Fail NONE)*)
     handle SH_Short_Cut ret => [ret]
+         | err as Exn.Interrupt => (warning "Interrupted"; Exn.reraise err)
+         | E => raise E
   end
 
 (*** Proof search using Sledgehammer ***)
