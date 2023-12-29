@@ -1292,39 +1292,70 @@ end
 paragraph \<open>Assertion Level\<close>
 
 
-definition \<open>subst_sp C\<^sub>R\<^sub>1 U\<^sub>2 T\<^sub>2 R\<^sub>1 R\<^sub>1' direction \<comment> \<open>True for splitting target\<close>
-                     C\<^sub>R R R' C\<^sub>W\<^sub>2 W\<^sub>2 W\<^sub>2'
-  \<longleftrightarrow>  (if C\<^sub>R\<^sub>1
-        then \<s>\<u>\<b>\<s>\<t> U\<^sub>2 \<f>\<o>\<r> T\<^sub>2 \<f>\<r>\<o>\<m> R\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] W\<^sub>2 \<t>\<o> R\<^sub>1' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> W\<^sub>2' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R'
+definition \<open>subst_sp C U T S S' direction \<comment> \<open>True for splitting target\<close>
+                     C\<^sub>R R R' C\<^sub>W W W'
+  \<longleftrightarrow>  (if C
+        then \<s>\<u>\<b>\<s>\<t> U \<f>\<o>\<r> T \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W \<t>\<o> S' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R'
         else if direction
-        then (C\<^sub>R, R, R', C\<^sub>W\<^sub>2, W\<^sub>2, W\<^sub>2') = (False, \<top>, \<top>, True, T\<^sub>2, U\<^sub>2)
-        else (C\<^sub>R, R, R', R, C\<^sub>W\<^sub>2, W\<^sub>2, W\<^sub>2') = (True, R\<^sub>1, R\<^sub>1', R\<^sub>1', False, \<top>, \<top>))\<close>
+        then (C\<^sub>R, R, R', C\<^sub>W, W, W') = (False, \<top>, \<top>, True, T, U)
+        else (C\<^sub>R, R, R', R, C\<^sub>W, W, W') = (True, S, S', S', False, \<top>, \<top>))\<close>
+
+definition \<open>getter_sp C T M C\<^sub>R R C\<^sub>W W direction
+  \<longleftrightarrow> (if C
+       then \<g>\<e>\<t> T \<f>\<r>\<o>\<m> M \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W
+       else if direction
+       then (W, C\<^sub>W, C\<^sub>R, R) = (T, True, False, \<top>)
+       else (W, C\<^sub>W, C\<^sub>R, R) = (\<top>, False, True, M)) \<close>
 
 \<phi>reasoner_group subst_sp = (1000, [1000,1030]) \<open>\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>subst_sp ?C\<^sub>R\<^sub>1 _ _ _ _ ?direction  _ _ _  _ _ _ \<close> \<Rightarrow>
-                          \<open>subst_sp ?C\<^sub>R\<^sub>1 _ _ _ _ ?direction  _ _ _  _ _ _ \<close>    (100)
+  \<phi>reason_default_pattern \<open>subst_sp ?C _ _ _ _ ?direction  _ _ _  _ _ _ \<close> \<Rightarrow>
+                          \<open>subst_sp ?C _ _ _ _ ?direction  _ _ _  _ _ _ \<close>    (100)
+                      and \<open>getter_sp ?C _ _ _ _ _ _ ?direction\<close> \<Rightarrow>
+                          \<open>getter_sp ?C _ _ _ _ _ _ ?direction\<close>              (100)
 ]]
 
 lemma [\<phi>reason %subst_sp]:
-  \<open> \<s>\<u>\<b>\<s>\<t> U\<^sub>2 \<f>\<o>\<r> T\<^sub>2 \<f>\<r>\<o>\<m> R\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] W\<^sub>2 \<t>\<o> R\<^sub>1' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> W\<^sub>2' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R'
-\<Longrightarrow> subst_sp True U\<^sub>2 T\<^sub>2 R\<^sub>1 R\<^sub>1' Any
-              C\<^sub>R R R' C\<^sub>W\<^sub>2 W\<^sub>2 W\<^sub>2' \<close>
+  \<open> \<s>\<u>\<b>\<s>\<t> U \<f>\<o>\<r> T \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W \<t>\<o> S' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R'
+\<Longrightarrow> subst_sp True U T S S' Any
+              C\<^sub>R R R' C\<^sub>W W W' \<close>
   unfolding subst_sp_def Action_Tag_def
   by (clarsimp simp: Cond_Unital_Ins_BI_\<phi>Type \<phi>Prod_expn')
 
 lemma [\<phi>reason %subst_sp]:
-  \<open> subst_sp False (y \<Ztypecolon> U\<^sub>2) (x \<Ztypecolon> T\<^sub>2) R\<^sub>1 R\<^sub>1' True
-             False \<top> \<top> True (x \<Ztypecolon> T\<^sub>2) (y \<Ztypecolon> U\<^sub>2) \<close>
+  \<open> subst_sp False (y \<Ztypecolon> U) (x \<Ztypecolon> T) S S' True
+             False \<top> \<top> True (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<close>
   unfolding subst_sp_def Action_Tag_def
   by (clarsimp simp: Cond_Unital_Ins_BI_\<phi>Type \<phi>Prod_expn')
 
 lemma [\<phi>reason %subst_sp]:
-  \<open> subst_sp False (y \<Ztypecolon> U\<^sub>2) (x \<Ztypecolon> T\<^sub>2) R\<^sub>1 R\<^sub>1 False
-             True R\<^sub>1 R\<^sub>1 False (unspec \<Ztypecolon> \<top>\<^sub>\<phi>) (unspec \<Ztypecolon> \<top>\<^sub>\<phi>) \<close>
+  \<open> subst_sp False (y \<Ztypecolon> U) (x \<Ztypecolon> T) S S False
+             True S S False (unspec \<Ztypecolon> \<top>\<^sub>\<phi>) (unspec \<Ztypecolon> \<top>\<^sub>\<phi>) \<close>
   unfolding subst_sp_def Action_Tag_def
   by (clarsimp simp: Cond_Unital_Ins_BI_\<phi>Type \<phi>Prod_expn' \<phi>Any.unfold)
+
+lemma [\<phi>reason %subst_sp]:
+  \<open> \<g>\<e>\<t> T \<f>\<r>\<o>\<m> M \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] W
+\<Longrightarrow> getter_sp True T M C\<^sub>R R C\<^sub>W W direction \<close>
+  unfolding getter_sp_def
+  by (clarsimp simp: Cond_Unital_Ins_BI_\<phi>Type \<phi>Prod_expn')
+
+lemma [\<phi>reason %subst_sp]:
+  \<open> getter_sp False T M False \<top> True T True \<close>
+  unfolding getter_sp_def
+  by simp
+
+lemma [\<phi>reason %subst_sp]:
+  \<open> getter_sp False T M True M False (unspec \<Ztypecolon> \<top>\<^sub>\<phi>) False \<close>
+  unfolding getter_sp_def \<phi>Any.unfold
+  by simp
+
+
+
+
+
+
 
 
 
@@ -1361,37 +1392,16 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal+5]:
       mult.assoc)
 
 
-
-(*
-lemma [\<phi>reason %\<phi>mapToA_split_goal]:
-  \<open> \<s>\<u>\<b>\<s>\<t> fst y \<Ztypecolon> U\<^sub>1 \<f>\<o>\<r> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1 \<t>\<o> Y \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>1' \<Ztypecolon> W\<^sub>1' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>1'
-\<Longrightarrow> if C\<^sub>R\<^sub>1 then \<s>\<u>\<b>\<s>\<t> snd y \<Ztypecolon> U\<^sub>2 \<f>\<o>\<r> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<f>\<r>\<o>\<m> R\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<t>\<o> R\<^sub>1' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>2' \<Ztypecolon> W\<^sub>2' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R'
-          else (w\<^sub>2, W\<^sub>2, C\<^sub>W\<^sub>2, w\<^sub>2', W\<^sub>2', C\<^sub>R, R, R') = (x\<^sub>2, T\<^sub>2, True, snd y, U\<^sub>2, False, \<top>, \<top>)
-\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1, w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
-\<Longrightarrow> (w' \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W') = ((w\<^sub>1', w\<^sub>2') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2') @action \<A>merge
-\<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<f>\<o>\<r> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Y \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R' \<close>
-  for S :: \<open>'c::sep_semigroup BI\<close>
-  unfolding ToA_Subst_def Action_Tag_def
-  by (cases C\<^sub>R\<^sub>1; cases C\<^sub>R; cases C\<^sub>W\<^sub>1; cases C\<^sub>W\<^sub>2; cases C\<^sub>W;
-      clarsimp simp add: \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Some_mult_contract \<phi>Some_eq_term_strip \<phi>Some_not_1;
-      smt (verit, ccfv_threshold)
-        transformation_trans[where P=True and Q=True, simplified]
-        transformation_left_frame transformation_right_frame
-        mult.assoc)
-*)
-
 lemma [\<phi>reason %\<phi>mapToA_split_goal]:
   \<open> \<g>\<e>\<t> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] M \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1
-\<Longrightarrow> if C\<^sub>R\<^sub>1 then \<g>\<e>\<t> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<f>\<r>\<o>\<m> M \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
-          else (w\<^sub>2, W\<^sub>2, C\<^sub>W\<^sub>2, C\<^sub>R\<^sub>2, R) = (x\<^sub>2, T\<^sub>2, True, False, \<top>)
+\<Longrightarrow> getter_sp C\<^sub>R\<^sub>1 (x\<^sub>2 \<Ztypecolon> T\<^sub>2) M C\<^sub>R\<^sub>2 R C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) True
 \<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
 \<Longrightarrow> \<g>\<e>\<t> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   for S :: \<open>'c::sep_semigroup BI\<close>
-  unfolding ToA_Extract_def Premise_def Action_Tag_def
+  unfolding ToA_Extract_def Premise_def Action_Tag_def getter_sp_def
   by (cases C\<^sub>R\<^sub>1; cases C\<^sub>R\<^sub>2; cases C\<^sub>W\<^sub>1; cases C\<^sub>W\<^sub>2; cases C\<^sub>W;
       clarsimp simp add: \<phi>Prod_expn' \<phi>Some_mult_contract \<phi>Some_eq_term_strip \<phi>Some_not_1;
       metis mult.assoc)
-
 
 
 lemma [\<phi>reason %\<phi>mapToA_split_source]:
@@ -1410,37 +1420,16 @@ lemma [\<phi>reason %\<phi>mapToA_split_source]:
         transformation_left_frame transformation_right_frame
         mult.assoc)
 
-
-(*
-lemma [\<phi>reason %\<phi>mapToA_split_source]:
-  \<open> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<t>\<o> Y\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>2' \<Ztypecolon> W\<^sub>2' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>2'
-\<Longrightarrow> if C\<^sub>W\<^sub>2 then \<s>\<u>\<b>\<s>\<t> w\<^sub>2' \<Ztypecolon> W\<^sub>2' \<f>\<o>\<r> w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<f>\<r>\<o>\<m> S\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Y\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>1'
-           else (C\<^sub>R\<^sub>1, R\<^sub>1, C\<^sub>W, w, W, w', W', R\<^sub>1, R\<^sub>1') = (True, S\<^sub>1, False, unspec, \<top>\<^sub>\<phi>, unspec, \<top>\<^sub>\<phi>, Y\<^sub>1, Y\<^sub>1)
-\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R  = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1  * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2  @action \<A>merge
-\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R' = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1' * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2' @action \<A>merge
-\<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Y\<^sub>1 * Y\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R' \<close>
-  for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
-  unfolding ToA_Subst_def Action_Tag_def
-  by (cases C\<^sub>R; cases C\<^sub>R\<^sub>1; cases C\<^sub>R\<^sub>2; cases C\<^sub>W; cases C\<^sub>W\<^sub>2;
-      clarsimp simp add: \<phi>Cond_Unital_BI_eq_strip Cond_Unital_Ins_BI_contract Cond_Unital_Ins_BI_eq_1;
-      smt (verit, ccfv_threshold)
-        transformation_trans[where P=True and Q=True, simplified]
-        transformation_left_frame transformation_right_frame
-        mult.assoc)
-*)
-
 lemma [\<phi>reason %\<phi>mapToA_split_source]:
   \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
-\<Longrightarrow> if C\<^sub>W\<^sub>2 then \<g>\<e>\<t> w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<f>\<r>\<o>\<m> S\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
-          else (C\<^sub>R\<^sub>1, R\<^sub>1, C\<^sub>W, w, W) = (True, S\<^sub>1, False, unspec, \<top>\<^sub>\<phi>)
+\<Longrightarrow> getter_sp C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) S\<^sub>1 C\<^sub>R\<^sub>1 R\<^sub>1 C\<^sub>W (w \<Ztypecolon> W) False
 \<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1 * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2 @action \<A>merge
 \<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
-  unfolding ToA_Extract_def Action_Tag_def
+  unfolding ToA_Extract_def Action_Tag_def getter_sp_def
   by (cases C\<^sub>R; cases C\<^sub>R\<^sub>1; cases C\<^sub>R\<^sub>2; cases C\<^sub>W; cases C\<^sub>W\<^sub>2;
       clarsimp simp add: \<phi>Cond_Unital_BI_eq_strip Cond_Unital_Ins_BI_contract Cond_Unital_Ins_BI_eq_1;
       metis mult.assoc)
-
 
 
 (*
@@ -1475,23 +1464,6 @@ lemma
 
 *)
 
-
-(*
-lemma
-  \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> w\<^sub>2 \<Ztypecolon> W\<^sub>2
-\<Longrightarrow> \<g>\<e>\<t> w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<f>\<r>\<o>\<m> S\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> w \<Ztypecolon> W
-\<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<^sub>1 * R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> w \<Ztypecolon> W \<close>
-  for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
-  unfolding ToA_Extract'_def
-  by (clarsimp, metis mult.assoc)
-
-
-
-lemma
-  \<open> ToA_Extract' S\<^sub>2 W\<^sub>1 w\<^sub>1 R\<^sub>2 T x
-\<Longrightarrow> ToA_Extract' S\<^sub>1 W w R\<^sub>1 T x
-\<Longrightarrow> ToA_Extract' (S\<^sub>1 * S\<^sub>2) W w (R\<^sub>1 * R\<^sub>2) T x \<close>
-*)
 
 subsubsection \<open>Reflexive\<close>
 
@@ -1541,6 +1513,8 @@ subsection \<open>Entry Points\<close>
 
 paragraph \<open>From \<open>\<s>\<u>\<b>\<s>\<t>\<close> or \<open>\<g>\<e>\<t>\<close>\<close>
 
+definition \<open>ToA_get_IE w W D \<longleftrightarrow> Identity_Elements W D \<and> D w\<close>
+
 lemma [\<phi>reason %\<phi>mapToA_init except \<open>\<g>\<e>\<t> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _\<close>]:
   \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<or>\<^sub>c\<^sub>u\<^sub>t
@@ -1552,8 +1526,8 @@ lemma [\<phi>reason %\<phi>mapToA_init except \<open>\<g>\<e>\<t> _ \<f>\<r>\<o>
 
 lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<g>\<e>\<t> _ \<f>\<r>\<o>\<m> _ \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[_] _ \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[_] _\<close>]:
   \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
-\<Longrightarrow> if C\<^sub>W then (Identity_Elements W D \<or>\<^sub>c\<^sub>u\<^sub>t
-                ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>due to the absence of\<close> (w \<Ztypecolon> W)))
+\<Longrightarrow> if C\<^sub>W then Identity_Elements W D
+                \<comment> \<open>ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>due to the absence of\<close> (w \<Ztypecolon> W))\<close>
             \<and>\<^sub>\<r> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D w
           else True
 \<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<close>
@@ -1577,7 +1551,7 @@ lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<s>\<u>\<b>\<s>\<t> _ \
 \<Longrightarrow> mapToA_unify_A (x \<Ztypecolon> T) Src R R'
 \<Longrightarrow> if C\<^sub>W then (Identity_Element\<^sub>E (w \<Ztypecolon> W)
              \<and>\<^sub>\<r> Identity_Element\<^sub>I (w' \<Ztypecolon> W') Any)
-             \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>due to the absence of\<close> (w \<Ztypecolon> W))
+            \<comment> \<open>\<open>\<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>Fail to extract\<close> (x \<Ztypecolon> T) \<open>from\<close> Src \<open>due to the absence of\<close> (w \<Ztypecolon> W)\<close>\<close>
           else True
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> Src \<t>\<o> Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<close>
   for Src :: \<open>'c::sep_magma_1 BI\<close>
@@ -1592,14 +1566,14 @@ lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<s>\<u>\<b>\<s>\<t> _ \
 
 lemma [\<phi>reason %\<phi>mapToA_init]:
   \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> {(x,w)}
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret : h (x, w)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (ret, ret\<^sub>f) : (h (x, w), f (x, w))
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (ret\<^sub>1, ret\<^sub>2, ret\<^sub>f\<^sub>1, ret\<^sub>f\<^sub>2) : (fst ret, snd ret, fst ret\<^sub>f, snd ret\<^sub>f)
 \<Longrightarrow> \<^bold>d\<^bold>o lookup_a_mapper g ret (y', r')
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f : f (x, w)
-\<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y' \<Ztypecolon> U' \<f>\<o>\<r> fst ret \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] snd ret \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
-      \<t>\<o> fst ret\<^sub>f \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> snd ret\<^sub>f \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> r' \<Ztypecolon> R' \<close>
+\<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y' \<Ztypecolon> U' \<f>\<o>\<r> ret\<^sub>1 \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] ret\<^sub>2 \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
+      \<t>\<o> ret\<^sub>f\<^sub>1 \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> ret\<^sub>f\<^sub>2 \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> r' \<Ztypecolon> R' \<close>
   unfolding ToA_Mapper_def ToA_Subst_def Premise_def Simplify_def
-            lookup_a_mapper_def
-  by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
+            lookup_a_mapper_def Simplify_def
+  by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn'; metis fst_eqD snd_conv)
 
 lemma [\<phi>reason %\<phi>mapToA_init+10]:
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>f : U \<^emph>[C\<^sub>R] R \<mapsto> U \<^emph>[C\<^sub>R] R
@@ -1609,10 +1583,13 @@ lemma [\<phi>reason %\<phi>mapToA_init+10]:
 \<Longrightarrow> mapToA_assign_id f
 \<Longrightarrow> if C\<^sub>R then mapToA_assign_id r\<^sub>f else True
 \<Longrightarrow> if C\<^sub>W then mapToA_assign_id w\<^sub>f else True
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst (h (x, w)) = y
-\<Longrightarrow> \<g>\<e>\<t> y \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] snd (h (x, w)) \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret : h (x, w)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (ret\<^sub>1, ret\<^sub>2) : (fst ret, snd ret)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ret\<^sub>1 = y
+\<Longrightarrow> \<g>\<e>\<t> y \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] ret\<^sub>2 \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   unfolding ToA_Extract_def ToA_Mapper_def BI_eq_ToA Premise_def mapToA_assign_id_def
-  by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn'; metis fst_eqD)
+            Simplify_rev_def
+  by (cases C\<^sub>R; cases C\<^sub>W; clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn'; metis fst_eqD snd_conv)
 
 
 paragraph \<open>Direct use of ToA_Mapper\<close>

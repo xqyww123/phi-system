@@ -263,7 +263,7 @@ and \<open>Identifier_of ?T _ _\<close> \<Rightarrow> \<open>Identifier_of ?T _ 
     \<open>All rules of \<phi>-type branch convergence\<close>
   and \<phi>br_join_fail = (1,[1,10]) for \<open>If C A B @action br_join\<close> in \<phi>br_join_all
                      \<open>Fallbacks\<close>
-  and \<phi>br_join_search_counterpart = (30, [29,30]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_search_counterpart = (30, [28,30]) for \<open>If C A B @action br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_fail
                      \<open>Looks from the false-branch for the counterpart of the heading \<phi>-type in the true-branch,
                       and enters the sub-reasoning for joining the two \<phi>-types.\<close>
@@ -457,9 +457,8 @@ lemma [\<phi>reason default %cutting]:
 
 lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
-\<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' @action NToA) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action NToA) \<or>\<^sub>c\<^sub>u\<^sub>t
     br_join_counter_part_fail (x \<Ztypecolon> T) (y \<Ztypecolon> T')
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
 \<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
 \<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Z @action br_join\<close>
@@ -490,6 +489,25 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
   unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
             Orelse_shortcut_def
   by (cases P; clarsimp; blast)
+
+
+lemma Br_join_atom_assertion[no_atp]:
+      \<comment> \<open>For assertion \<open>A\<close> that is not a \<phi>-type\<close>
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action NToA
+\<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
+\<Longrightarrow> If P (L * A) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * A @action br_join \<close>
+  unfolding Action_Tag_def
+  by ((cases P; simp),
+      insert transformation_right_frame, blast,
+      insert mk_elim_transformation transformation_right_frame, blast)
+
+lemma Br_join_atom_assertion'[no_atp]:
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @action NToA
+\<Longrightarrow> If P A R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @action br_join \<close>
+  unfolding Action_Tag_def
+  by (cases P; simp)
+  
+
 
 
 subsubsection \<open>Join Two \<phi>-Types\<close>

@@ -258,9 +258,6 @@ lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
   unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_additive_disj by clarify
 
-declare [[\<phi>trace_reasoning = 2]]
-
-
 
 lemma [\<phi>reason %sift_brking_frame]:
   \<open> X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y1 E1
@@ -322,7 +319,6 @@ hide_fact Brking_Frame_plus
 
 subsection \<open>NToA through Brking_Frame\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason 2200]:
   (*The priority must override Void Padding*)
@@ -341,6 +337,18 @@ lemma [\<phi>reason 2201]:
   \<medium_left_bracket> premises X
     apply_rule X[THEN transformation_right_frame]
   \<medium_right_bracket>.
+
+
+subsection \<open>Other Reasoning - Br Join\<close>
+
+\<phi>reasoner_group \<phi>br_join_brk = (1000, [1000, 1030]) in \<phi>br_join_cut \<open>\<close>
+
+declare Br_join_atom_assertion [where A=\<open>TECHNICAL Brk_Frame l\<close> for l,
+                                \<phi>reason %\<phi>br_join_brk]
+        Br_join_atom_assertion'[where A=\<open>TECHNICAL Brk_Frame l\<close> for l,
+                                \<phi>reason %\<phi>br_join_brk]
+
+
 
 
 subsection \<open>Syntax hiding technical separation items\<close>

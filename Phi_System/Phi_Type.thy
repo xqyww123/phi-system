@@ -4854,11 +4854,11 @@ lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF
                     have "\<forall>P p f. \<exists>pa. ((p::'l \<times> 'm) \<notin> f ` P \<or> (pa::'a \<times> 'b) \<in> P) \<and> (p \<notin> f ` P \<or> f pa = p)"
                       by blast
                     then show "\<exists>p\<in>Dom (z xa). a = (g \<otimes>\<^sub>f r) (h p)"
-                      by (smt (z3) DM a1 a2 a3 subset_iff the_\<phi>(11) the_\<phi>(12) the_\<phi>(5) the_\<phi>(7))
+                      by (smt (z3) DM a1 a2 a3 subset_iff the_\<phi>(10) the_\<phi>(11) the_\<phi>(5) the_\<phi>(7))
                   qed
                 qed 
-    \<medium_right_bracket> ;; certified by (insert useful(1), simp add: image_iff, elim bexE,
-                       metis the_\<phi>(10) the_\<phi>(3) the_\<phi>(5) the_\<phi>(9)) ;;
+     \<medium_right_bracket> ;; certified by (insert useful(1), simp add: image_iff, elim bexE,
+                        metis the_\<phi>(3) the_\<phi>(5) the_\<phi>(8) the_\<phi>(9)) ;;
     apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E']
     certified proof -
         obtain y where t1: \<open>y \<in> D\<close> and t2: \<open>x = (m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r) (uz (func_mapper h (\<lambda>_. True) (z y)))\<close>
@@ -4870,7 +4870,8 @@ lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF
               metis (mono_tags, opaque_lifting) DiM comp_apply t1 the_\<phi>(4))
         show ?thesis
           by (insert \<open>\<forall>x\<in>D. _\<close>[THEN bspec[OF _ t1]], simp add: t2 t4[symmetric],
-              metis the_\<phi>(10) the_\<phi>(11) the_\<phi>(6) the_\<phi>(9))
+              metis the_\<phi>(10) the_\<phi>(6) the_\<phi>(8) the_\<phi>(9))
+              
       qed
   \<medium_right_bracket> apply (rule conjunctionI, simp, drule ToA_Mapper_f_expn,
         simp add: Premise_def Simplify_def subset_iff del: split_paired_All,

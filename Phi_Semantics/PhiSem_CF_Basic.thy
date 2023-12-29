@@ -128,8 +128,6 @@ lemma branch_\<phi>app:
   apply (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool)
   using \<phi>CONSEQ view_shift_by_implication view_shift_refl by blast+
 
-declare [[\<phi>trace_reasoning = 2]]
-
 proc "if":
   requires C: \<open>\<p>\<r>\<o>\<c> cond \<lbrace> X \<longmapsto> X1\<heavy_comma> \<v>\<a>\<l> C \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
       and brT: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T \<close>

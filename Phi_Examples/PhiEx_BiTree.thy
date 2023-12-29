@@ -4,7 +4,8 @@ theory PhiEx_BiTree
 begin
 
 abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: TY, right: \<p>\<t>\<r>} \<close>
-abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}) \<close>
+abbreviation \<open>\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
+abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
 thm \<phi>constraint_expansion
 
@@ -206,7 +207,7 @@ lemma sorted1_inorder_map_tree[iff]:
 
    
 \<phi>type_def Bin_Search_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
-  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BiTree addr (\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>
+  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>
                                        \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted1(inorder tree)\<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
@@ -244,37 +245,6 @@ lemma lookup_right_children:
 
 
 
-
-
-proc lookup_bintree:
-  input  \<open>tree \<Ztypecolon> BiTree addr (\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
-  premises \<open>k \<in> dom (lookup_tree tree)\<close>
-  output \<open>tree \<Ztypecolon> BiTree addr (\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
-  is [recursive tree addr]
-\<medium_left_bracket>
-  to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>a\<^sub>L, a\<^sub>R 
-  
-  note [[\<phi>trace_reasoning = 2]]
-  ;;
-  $addr \<tribullet> data \<tribullet> k \<rightarrow> val tt ;;
-      $tt !
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 context
   fixes K :: \<open>(VAL, 'k::linorder) \<phi>\<close>
     and V :: \<open>(VAL, 'v) \<phi>\<close>
@@ -286,42 +256,51 @@ context
       and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> V) TY\<^sub>V)\<close>
 begin
 
-end
-(*
+proc lookup_bintree:
+  input  \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  premises \<open>k \<in> dom (lookup_tree tree) \<and> sorted1(inorder tree)\<close>
+  output \<open>tree \<Ztypecolon> BiTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  is [recursive tree addr]
+  is [routine]
+\<medium_left_bracket>
+  to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R, N\<^sub>k, N\<^sub>v  \<comment> \<open>TODO: fix quantifier names\<close>
+  
+  val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
+  if (eq ($k', $k)) \<medium_left_bracket>
+    val ret \<leftarrow> $addr \<tribullet> data \<tribullet> v ! ;;
+    \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+    return ($ret)
+  \<medium_right_bracket>
+  \<medium_left_bracket>
+    if (cmp ($k, $k'))
+    \<medium_left_bracket> lookup_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
+    \<medium_left_bracket> lookup_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket> \<rightarrow> val ret ;;
+    \<open>BiTree a\<^sub>R _ _\<close> \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+    return ($ret)
+  \<medium_right_bracket>
+\<medium_right_bracket> .
 
-proc lookup_bst:
+
+
+
+proc (nodef) lookup_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>k \<in> dom f\<close>
   output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
   is [recursive f addr]
 \<medium_left_bracket>
-    to \<open>OPEN _ _\<close> \<exists>tree ;;
-    to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>a\<^sub>L, a\<^sub>R
-    val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
-    if (eq ($k', $k)) \<medium_left_bracket>
-        $addr \<tribullet> data \<tribullet> v !
-        \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V)\<close>
-    \<medium_right_bracket> \<medium_left_bracket>
-        if (cmp ($k, $k')) \<medium_left_bracket>  
-          \<open>f |` {x. x < fst (value tree)} \<Ztypecolon> MAKE _ (Bin_Search_Tree a\<^sub>L _ _ _ _)\<close> certified by (rule exI[where x=\<open>left tree\<close>], auto_sledgehammer) ;;
-          lookup_bst ($addr \<tribullet> left !, $k)
-          \<open>Bin_Search_Tree a\<^sub>L _ _ _ _\<close> to \<open>OPEN _ _\<close>
-          \<open>BiTree a\<^sub>R _ _\<close> \<open> _ \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V)\<close>
-        \<medium_right_bracket> \<medium_left_bracket>
-          \<open>f |` {x. fst (value tree) < x} \<Ztypecolon> MAKE _ (Bin_Search_Tree a\<^sub>R _ _ _ _)\<close> certified by (rule exI[where x=\<open>right tree\<close>], auto_sledgehammer) ;;
-          lookup_bst ($addr \<tribullet> right !, $k)
-          \<open>Bin_Search_Tree a\<^sub>R _ _ _ _\<close> to \<open>OPEN _ _\<close> \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V)\<close> certified sorry
-        \<medium_right_bracket>
-    \<medium_right_bracket>
+  to \<open>OPEN _ _\<close> ;;
+  lookup_bintree ($addr, $k) \<rightarrow> val ret ;;
+  \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr _ _ _ _)\<close> ;;
+  $ret
 \<medium_right_bracket> .
-   
 
 
 
-thm useful
-      thm eq
 
-*)
+
 
 
 end
