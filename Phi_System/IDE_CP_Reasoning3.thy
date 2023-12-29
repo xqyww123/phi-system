@@ -742,8 +742,6 @@ section \<open>Implementation of Synthesis Mechanism\<close>
 
 subsubsection \<open>Multi-Target\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
- 
 lemma [\<phi>reason %\<phi>synthesis_split+20]:
   \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
@@ -751,7 +749,7 @@ lemma [\<phi>reason %\<phi>synthesis_split+20]:
          \<lbrace> R1 \<longmapsto> \<lambda>ret. A (\<phi>V_snd ret)\<heavy_comma> B (\<phi>V_fst ret) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @action synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
-    F1 F2 
+    F1 F2
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %\<phi>synthesis_split]:

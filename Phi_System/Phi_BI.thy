@@ -5360,15 +5360,7 @@ declare [[\<phi>reason default %ToA_falling_latice + 1
           ToA_falling_lattice_SE_1 ToA_falling_lattice_SE_2
           for \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]]*)
 
-
-lemma [\<phi>reason default %ToA_falling_latice except \<open>(_ :: ?'a::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> (x, w) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Premise_def Try_def
-  by (cases C; clarsimp simp add: \<phi>Some_transformation_strip \<phi>Prod_expn'')
-
-lemma [\<phi>reason default %ToA_falling_latice+1]:
+lemma [\<phi>reason default %ToA_falling_latice+3]:
   \<open> (x, w) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> if C\<^sub>W then Identity_Element\<^sub>E (w \<Ztypecolon> W) else True
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<w>\<i>\<t>\<h> P \<close>
@@ -5376,6 +5368,32 @@ lemma [\<phi>reason default %ToA_falling_latice+1]:
   unfolding Premise_def Identity_Element\<^sub>E_def Try_def
   by (cases C; cases C\<^sub>W; clarsimp simp add: \<phi>Some_transformation_strip \<phi>Prod_expn'' \<phi>Prod_expn';
       metis mk_elim_transformation mult_1_class.mult_1_left transformation_right_frame)
+
+lemma [\<phi>reason default %ToA_falling_latice+2 except \<open>(_ :: ?'a::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> (x, w) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Premise_def Try_def
+  by (cases C; clarsimp simp add: \<phi>Some_transformation_strip \<phi>Prod_expn'')
+
+lemma [\<phi>reason default %ToA_falling_latice+1]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[True] R'' = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R' * \<half_blkcirc>\<^sub>B\<^sub>I[True] X @action \<A>merge
+\<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'' \<w>\<i>\<t>\<h> P \<close>
+  for Y :: \<open>'c::sep_ab_semigroup BI\<close>
+  unfolding Action_Tag_def
+  by ((cases C\<^sub>R; clarsimp),
+      smt (verit) \<phi>Cond_Unital_BI_Prod \<phi>Cond_Unital_BI_eq_strip mult.assoc mult.commute transformation_right_frame,
+      metis \<phi>Cond_Unital_BI_eq_strip mult.commute transformation_right_frame)
+
+lemma [\<phi>reason default %ToA_falling_latice]:
+  \<open> Identity_Element\<^sub>E (var_y \<Ztypecolon> U)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var_y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> X \<close>
+  for X :: \<open>'c::sep_magma_1 BI\<close>
+  unfolding Transformation_def Identity_Element\<^sub>E_def
+  by (clarsimp, force)
+
+
 
 lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
                          except \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
@@ -6311,15 +6329,6 @@ lemma ToA_splitting_source_has_remainder_first[no_atp]:
         else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
               NONE)
     end)\<close>
-
-lemma [\<phi>reason default %ToA_falling_latice]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> if C\<^sub>R then R'' = (R' * X) else R'' = X
-\<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'' \<w>\<i>\<t>\<h> P \<close>
-  for Y :: \<open>'c::sep_ab_semigroup BI\<close>
-  by ((cases C\<^sub>R; clarsimp),
-      smt (verit, best) mult.commute mult.left_commute transformation_right_frame,
-      metis mult.commute transformation_left_frame)
 
 (* TODO:
 hide_fact enter_SEb enter_SEb_TH*)

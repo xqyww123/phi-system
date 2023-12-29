@@ -530,7 +530,7 @@ proc (nodef) "__set_var_rule_":
   throws E
 \<medium_left_bracket>
   apply_rule op_set_var_\<phi>app[OF T1 T2 T3 T4 T5 T6 T7 T8]
-  G
+  ;;  G
 \<medium_right_bracket> .
 
 proc (nodef) "__set_var_rule_0_":
