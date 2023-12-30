@@ -299,6 +299,27 @@ lemma sorted1_inorder_map_tree[iff]:
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
+primrec height_invar
+  where \<open>height_invar \<langle>\<rangle> \<longleftrightarrow> True\<close>
+      | \<open>height_invar \<langle>L, x, R\<rangle> \<longleftrightarrow> (fst (snd x) = height \<langle>L, x, R\<rangle>) \<and> height_invar L \<and> height_invar R\<close>
+
+lemma height_invar_map:
+  \<open> height_invar tree
+\<Longrightarrow> height_invar (map_tree (\<lambda>(k, (h,v)). (k, (h, the (f k)))) tree) \<close>
+  by (induct tree arbitrary: f; auto_sledgehammer)
+
+lemma rel_tree_height:
+  \<open> rel_tree R x y
+\<Longrightarrow> height x = height y \<close>
+  by (induct x arbitrary: y; auto simp: rel_tree_Node1)
+
+lemma rel_tree__height_invar:
+  \<open> rel_tree (\<lambda>a b. fst (snd a) = fst (snd b)) x y
+\<Longrightarrow> height_invar x \<longleftrightarrow> height_invar y \<close>
+  by (induct x arbitrary: y; auto simp: rel_tree_Node1; auto_sledgehammer)
+
+
+
 
 primrec AVL_tree_invar
   where \<open>AVL_tree_invar \<langle>\<rangle> \<longleftrightarrow> True\<close>
@@ -309,11 +330,6 @@ lemma Object_Equive_of_AVL_tree_invar:
   \<open> AVL_tree_invar xa
 \<Longrightarrow> AVL_tree_invar (Tree.tree.map_tree (\<lambda>(k, (h,v)). (k, (h, the (y k)))) xa)  \<close>
   by (induct xa arbitrary: y; auto_sledgehammer)
-
-lemma rel_tree_height:
-  \<open> rel_tree R x y
-\<Longrightarrow> height x = height y \<close>
-  by (induct x arbitrary: y; auto simp: rel_tree_Node1)
 
 lemma rel_tree__AVL_tree_invar:
   \<open> rel_tree (\<lambda>a b. fst (snd a) = fst (snd b)) x y
@@ -366,7 +382,7 @@ lemma
 \<phi>type_def AVL_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
   where \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BiTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(32), v: V \<rbrace> \<rbrace>
                                      \<s>\<u>\<b>\<j> tree. f = map_option snd o lookup_tree tree
-                                             \<and> sorted1(inorder tree) \<and> AVL_tree_invar tree \<close>
+                                             \<and> sorted1(inorder tree) \<and> AVL_tree_invar tree \<and> height_invar tree \<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
          \<Longrightarrow> Abstract_Domain (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
@@ -673,6 +689,48 @@ proc left_Rotate:
   \<open>BiTree a\<^sub>R\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree a\<^sub>R (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close>
 \<medium_right_bracket> .
 
+(*
+proc right_Rotate':
+  input \<open>tree \<Ztypecolon> BiTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(32), v: V \<rbrace> \<rbrace>\<heavy_comma>
+         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<close>
+  premises \<open>can_right_rotate tree\<close>
+  output \<open>right_rotate tree \<Ztypecolon> BiTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(32), v: V \<rbrace> \<rbrace> \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+
+*)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+proc height_of:
+  input  \<open>tree \<Ztypecolon> BiTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(32), v: V \<rbrace> \<rbrace>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<close>
+  premises \<open>AVL_tree_invar tree\<close>
+  output \<open>tree \<Ztypecolon> BiTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(32), v: V \<rbrace> \<rbrace>\<heavy_comma>
+          height tree \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
+\<medium_left_bracket>
+  if \<open>$addr = 0\<close> \<medium_left_bracket>
+      0
+  \<medium_right_bracket> \<medium_left_bracket>
+      to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;;
+      $addr \<tribullet> data \<tribullet> v \<tribullet> height ! \<rightarrow> val ret ;;
+      \<open>tree \<Ztypecolon> MAKE 1 (BiTree addr _ _)\<close> ;;
+      $ret is \<open>height tree\<close>
+  \<medium_right_bracket>
+\<medium_right_bracket> .
+
+
 
 
 
@@ -680,37 +738,37 @@ proc maintain_i:
   input  \<open>\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<Ztypecolon> BiTree a\<^sub>D (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(32), v: V \<rbrace> \<rbrace>\<heavy_comma>
           a\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<close>
   premises \<open>sorted1(inorder (\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle>)) \<and>
-            AVL_tree_invar B \<and> AVL_tree_invar E\<close>
+            AVL_tree_invar B \<and> AVL_tree_invar E \<and>
+            height E < 2^32 - 2 \<and> height B < 2^32 - 2\<close>
   output \<open>tree \<Ztypecolon> BiTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(32), v: V \<rbrace> \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
-          \<s>\<u>\<b>\<j> addr tree. map_option snd o lookup_tree tree = map_option snd o lookup_tree \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle>\<close>
+          \<s>\<u>\<b>\<j> addr tree. map_option snd o lookup_tree tree = map_option snd o lookup_tree \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<and>
+                         AVL_tree_invar tree \<and>
+                        (height tree = height \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<or> height tree = height \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> - 1)\<close>
   is [routine]
 \<medium_left_bracket>
-  to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
+  to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>B, a\<^sub>E ;;
   
-  val h\<^sub>D \<leftarrow> $a\<^sub>D \<tribullet> data \<tribullet> v \<tribullet> height ! ;;
-  if ($h\<^sub>D \<le> 1) \<medium_left_bracket>
-    \<open>MAKE 1 (BiTree a\<^sub>D _ _)\<close> certified by (of_tac \<open>(k\<^sub>D, h\<^sub>D, v\<^sub>D)\<close>, auto_sledgehammer)
-      note [[\<phi>trace_reasoning = 2]]
-      ;;
-    return ($a\<^sub>D)
-
-        ML_val \<open>@{term \<open>\<i>\<n>\<t>(32)\<close>}\<close>
-
-
-
-
-    
-    ;;
-
-
-
-
-
-
+  (*val h\<^sub>D \<leftarrow> $a\<^sub>D \<tribullet> data \<tribullet> v \<tribullet> height ! ;; *)
   val B \<leftarrow> $a\<^sub>D \<tribullet> left ! ;;
   val E \<leftarrow> $a\<^sub>D \<tribullet> right ! ;;
-        $B
+  val H\<^sub>B \<leftarrow> height_of ($B) ;;
+  val H\<^sub>E \<leftarrow> height_of ($E) ;;
+  if ($H\<^sub>E + 2 < $H\<^sub>B) \<medium_left_bracket>
+      obtain A k\<^sub>B h\<^sub>B v\<^sub>B C where B: \<open>B = \<langle>A, (k\<^sub>B, h\<^sub>B, v\<^sub>B), C\<rangle>\<close> by auto_sledgehammer ;;
+      unfold B \<open>BiTree a\<^sub>B _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>A, a\<^sub>C ;;
+
+      val A \<leftarrow> $B \<tribullet> left ! ;;
+      val C \<leftarrow> $B \<tribullet> right ! ;;
+      val H\<^sub>A \<leftarrow> height_of ($A) ;;
+      val H\<^sub>C \<leftarrow> height_of ($C) ;;
+
+      
+
+                  ;;
+      if ($H\<^sub>C \<le> $H\<^sub>A) \<medium_left_bracket>
+          right_Rotate (
+
 
 
 

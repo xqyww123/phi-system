@@ -30,7 +30,10 @@ hide_fact \<phi>machine_int_ty_ax \<phi>machine_int_ty_axioms \<phi>machine_int_
 syntax "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("int'(_')")
        "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<i>\<n>\<t>'(_')")
 
-translations "int('b)" <= "CONST T_int.mk LENGTH('b)"
+
+definition \<open>mk_int_T = T_int.mk o len0_class.len_of\<close>
+
+(*translations "int('b)" => "CONST mk_int_T (CONST Pure.type :: 'b itself)" *)
 
 ML \<open>local open Ast in
   fun need_add_sort (Appl [Constant \<^syntax_const>\<open>_ofsort\<close>, Variable _, _]) = true
@@ -45,7 +48,22 @@ end\<close>
 parse_ast_translation \<open>
   let open Ast
    in [(\<^syntax_const>\<open>_int_semty_\<close>, (fn _ => fn [V] =>
-          Appl [Constant \<^const_syntax>\<open>T_int.mk\<close>, Appl [Constant \<^syntax_const>\<open>_type_length\<close>, add_sort V]]))] end\<close>
+          Appl [Constant \<^const_syntax>\<open>mk_int_T\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
+
+print_translation \<open>
+  let
+    fun len_of_itself_tr' ctxt [Const (\<^const_syntax>\<open>Pure.type\<close>, Type (_, [T]))] =
+      Syntax.const \<^syntax_const>\<open>_int_semty_\<close> $ Syntax_Phases.term_of_typ ctxt T
+  in [(\<^const_syntax>\<open>mk_int_T\<close>, len_of_itself_tr')] end
+\<close>
+
+(* term \<open>int(32)\<close> *)
+
+(*
+
+
+
+*)
 
 subsubsection \<open>Value\<close>
 
