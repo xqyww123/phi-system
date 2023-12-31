@@ -97,6 +97,10 @@ lemma index_type_measure:
   apply (induct idx arbitrary: T; simp)
   by (metis dual_order.strict_trans fold_simps(1) idx_step_type_measure)
 
+lemma index_type_neq:
+  \<open> valid_index T idx \<Longrightarrow> idx \<noteq> [] \<Longrightarrow> index_type idx T \<noteq> T \<close>
+  using index_type_measure by fastforce
+
 lemma index_mod_value_welltyp:
    \<open>valid_index T idx
 \<Longrightarrow> v \<in> Well_Type T

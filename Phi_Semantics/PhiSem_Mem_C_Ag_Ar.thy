@@ -41,6 +41,92 @@ lemma logaddr_to_raw_inj_array:
     qed . .
 
 
+lemma logaddr_to_raw_array_0th:
+  \<open> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr \<close>
+  unfolding logaddr_to_raw_def addr_gep_def
+  by (auto simp: idx_step_offset_arr split: memaddr.split)
+
+lemma logaddr_to_raw_array_ith:
+  \<open> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
+\<Longrightarrow> phantom_mem_semantic_type TY
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr \<close>
+  unfolding logaddr_to_raw_def addr_gep_def
+  by (auto simp: idx_step_offset_arr phantom_mem_semantic_type_def split: memaddr.split)
+
+
+lemma logaddr_to_raw_inj_arr:
+    \<open>valid_logaddr addr1 \<Longrightarrow>
+     valid_logaddr addr2 \<Longrightarrow>
+     logaddr_type addr1 = \<a>\<r>\<r>\<a>\<y>[N] TY \<Longrightarrow>
+     logaddr_type addr2 = \<a>\<r>\<r>\<a>\<y>[M] TY \<Longrightarrow>
+     \<not> phantom_mem_semantic_type TY \<Longrightarrow>
+     0 < N \<Longrightarrow> 0 < M \<Longrightarrow>
+     logaddr_to_raw addr1 = logaddr_to_raw addr2 \<Longrightarrow>
+     addr1 = addr2 \<close>
+  subgoal premises prems proof -
+    have t1: \<open>logaddr_to_raw (addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw (addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>)\<close>
+      by (simp add: logaddr_to_raw_array_0th prems(3) prems(4) prems(8))
+    have t2: \<open>valid_logaddr (addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) \<close>
+      using prems(1) prems(3) prems(6) valid_idx_step_arr by fastforce
+    have t3: \<open>valid_logaddr (addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) \<close>
+      by (simp add: prems(2) prems(4) prems(7) valid_idx_step_arr)
+    have t4: \<open>logaddr_type (addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_type (addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>)\<close>
+      by (simp add: idx_step_type_arr prems(3) prems(4) prems(6) prems(7))
+    have t5: \<open>addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h> = addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>\<close>
+      using idx_step_type_arr logaddr_to_raw_inj logaddr_type_gep prems(4) prems(5) prems(7) t1 t2 t3 t4 by presburger
+    show ?thesis
+      using t5 by blast
+  qed .
+
+definition \<open>rawaddr_to_log_arr T raddr = (@laddr. logaddr_to_raw laddr = raddr \<and> (\<exists>N. 0 < N \<and> logaddr_type laddr = \<a>\<r>\<r>\<a>\<y>[N] T) \<and> valid_logaddr laddr)\<close>
+
+
+
+lemma rawaddr_arr_to_log[simp]:
+  \<open> valid_logaddr addr
+\<Longrightarrow> \<not> phantom_mem_semantic_type (logaddr_type addr)
+\<Longrightarrow> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
+\<Longrightarrow> rawaddr_to_log_arr TY (logaddr_to_raw addr) = addr\<close>
+  unfolding rawaddr_to_log_arr_def
+  by (rule some_equality, auto simp: MemObj_Size_arr phantom_mem_semantic_type_def logaddr_to_raw_inj_arr)
+
+
+lemma logaddr_to_raw_arr[iff]:
+  \<open> (\<exists>laddr. logaddr_to_raw laddr = addr \<and> (\<exists>N. 0 < N \<and> logaddr_type laddr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<and> valid_logaddr laddr)
+\<Longrightarrow> logaddr_to_raw (rawaddr_to_log_arr TY addr) = addr \<and>
+    (\<exists>N. 0 < N \<and> logaddr_type (rawaddr_to_log_arr TY addr) = \<a>\<r>\<r>\<a>\<y>[N] TY) \<and>
+    valid_logaddr (rawaddr_to_log_arr TY addr)\<close>
+  unfolding rawaddr_to_log_arr_def
+  by (elim exE; rule someI; blast)
+
+
+lemma logaddr_to_raw_phantom_mem_type_gep_N__arr:
+  \<open> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
+\<Longrightarrow> phantom_mem_semantic_type TY
+\<Longrightarrow> valid_index TY path
+\<Longrightarrow> logaddr_to_raw (addr_geps addr (AgIdx_N i # path)) = logaddr_to_raw addr\<close>
+  by (auto simp: logaddr_to_raw_array_ith idx_step_type_arr logaddr_to_raw_phantom_mem_type_gep_N)
+
+
+
+proc op_get_element_pointer_arr[\<phi>overload \<tribullet>]:
+  requires \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
+       and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
+       and \<open>report_unprocessed_element_index reject\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr (\<a>\<r>\<r>\<a>\<y>[any] TY)\<close>
+  premises \<open>addr \<noteq> 0\<close>
+  output \<open>addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+\<medium_left_bracket>
+  $addr semantic_local_value pointer
+  pure_fact t1: \<open>0 < any\<close>
+  pure_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N ;;
+  semantic_return \<open>
+    V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log_arr TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
+      \<Turnstile> (addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> Ptr TY')\<close>
+\<medium_right_bracket> .
+
+
 section \<open>Slice Pointers\<close>
 
 subsection \<open>Slice Pointer\<close>

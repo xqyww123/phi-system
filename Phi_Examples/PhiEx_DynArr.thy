@@ -37,6 +37,8 @@ proc get_dynarr:
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> ;;
   $addr \<tribullet> data ! \<tribullet> $i !
+  \<open>MAKE _ (DynArr addr _ _)\<close>
+\<medium_right_bracket> .
 
     thm useful
 
