@@ -43,7 +43,7 @@ thm tree.rel_sel
 
 
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def BiTree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
   where \<open> (Leaf \<Ztypecolon> BiTree addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
@@ -336,19 +336,19 @@ proc lookup_bintree:
   is [recursive tree addr]
   is [routine]
 \<medium_left_bracket>
-  to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R, N\<^sub>k, N\<^sub>v  \<comment> \<open>TODO: fix quantifier names\<close>
-  
+  to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R  \<comment> \<open>TODO: fix quantifier names\<close>
+
   val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
   if (eq ($k', $k)) \<medium_left_bracket>
     val ret \<leftarrow> $addr \<tribullet> data \<tribullet> v ! ;;
-    \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+    \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>value tree\<close>, auto_sledgehammer) ;;
     return ($ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
     if (cmp ($k, $k'))
     \<medium_left_bracket> lookup_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
     \<medium_left_bracket> lookup_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket> \<rightarrow> val ret ;;
-    \<open>BiTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+    \<open>BiTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>value tree\<close>, auto_sledgehammer) ;;
     return ($ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -380,7 +380,7 @@ proc has_key_bintree:
     return (False)
   \<medium_right_bracket>
   \<medium_left_bracket>
-    to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R, N\<^sub>k, N\<^sub>v
+    to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R
 
     val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
     if (eq ($k', $k)) \<medium_left_bracket>
@@ -391,7 +391,7 @@ proc has_key_bintree:
       \<medium_left_bracket> has_key_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket>
     \<medium_right_bracket> \<rightarrow> val ret ;;
 
-    \<open>BiTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;; 
+    \<open>BiTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>value tree\<close>, auto_sledgehammer) ;; 
     return ($ret)
   \<medium_right_bracket> ;;
 \<medium_right_bracket> .
@@ -460,7 +460,7 @@ proc insert_bintree:
       \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BiTree addrb (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
       return ($ret)
   \<medium_right_bracket> \<medium_left_bracket>
-      to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R, N\<^sub>k, N\<^sub>v
+      to \<open>OPEN 1 _\<close> certified by (of_tac \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
       if (eq ($k', $k)) \<medium_left_bracket>
@@ -471,12 +471,12 @@ proc insert_bintree:
           if (cmp ($k, $k')) \<medium_left_bracket>
               insert_bintree ($addr \<tribullet> left !, $k, $v) \<rightarrow> val a\<^sub>L' ;;
               $addr \<tribullet> left := $a\<^sub>L' ;;
-              \<open>BiTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+              \<open>BiTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>value tree\<close>, auto_sledgehammer) ;;
               return ($addr)
           \<medium_right_bracket> \<medium_left_bracket>
               insert_bintree ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' ;;
               $addr \<tribullet> right := $a\<^sub>R' ;;
-              \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,N\<^sub>v)\<close>, auto_sledgehammer) ;;
+              \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>value tree\<close>, auto_sledgehammer) ;;
               return ($addr)
           \<medium_right_bracket>
       \<medium_right_bracket>
@@ -496,7 +496,7 @@ proc (nodef) insert_bst:
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> ;;
   insert_bintree ($addr, $k, $v)
-  \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close> certified by (rule exI[where x=\<open>insert_tree k v y\<close>], auto_sledgehammer)
+  \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close> certified by (rule exI[where x=\<open>insert_tree k v z\<close>], auto_sledgehammer)
 \<medium_right_bracket> .
 
 

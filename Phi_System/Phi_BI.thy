@@ -5999,13 +5999,14 @@ declare [[
 lemma enter_SE:
   \<open> (x,w) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y' : y
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (y\<^sub>1, r) : (fst y', snd y')
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y\<^sub>1 : fst y'
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] r  : snd y'
 \<Longrightarrow> SE_tail1 Cw Cr A P1 r R     w W R3 P
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>1 \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<w>\<i>\<t>\<h> P\<close>
   for A :: \<open>'a::sep_monoid BI\<close>
   unfolding SE_tail1_def Action_Tag_def Simplify_def
   by ((cases Cw; cases Cr;
-       clarsimp simp: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<phi>Prod_expn'),
+       clarsimp simp: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<phi>Prod_expn' \<phi>Prod_expn''),
       metis (no_types, opaque_lifting) mult.assoc transformation_left_frame transformation_right_frame transformation_trans,
       metis (no_types, opaque_lifting) mult.assoc transformation_left_frame transformation_right_frame transformation_trans,
       simp add: mult.assoc transformation_left_frame,
@@ -6100,7 +6101,8 @@ lemma [\<phi>reason %SE_internal_err]:
 lemma enter_SEi:
   \<open> (x,w) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y' : y
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (y\<^sub>1, y\<^sub>2) : (fst y', snd y')
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y\<^sub>1 : fst y'
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] y\<^sub>2 : snd y'
 \<Longrightarrow> SE_tail Cw Cr A P1 y\<^sub>2 R   w W C R3 P
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>1 \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h> P\<close>
   for A :: \<open>'a::sep_semigroup BI\<close>

@@ -1566,8 +1566,12 @@ lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<s>\<u>\<b>\<s>\<t> _ \
 
 lemma [\<phi>reason %\<phi>mapToA_init]:
   \<open> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> {(x,w)}
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (ret, ret\<^sub>f) : (h (x, w), f (x, w))
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (ret\<^sub>1, ret\<^sub>2, ret\<^sub>f\<^sub>1, ret\<^sub>f\<^sub>2) : (fst ret, snd ret, fst ret\<^sub>f, snd ret\<^sub>f)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret : h (x, w)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f : f (x, w)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>1 : fst ret
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>2 : snd ret
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f\<^sub>1 : fst ret\<^sub>f
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f\<^sub>2 : snd ret\<^sub>f
 \<Longrightarrow> \<^bold>d\<^bold>o lookup_a_mapper g ret (y', r')
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y' \<Ztypecolon> U' \<f>\<o>\<r> ret\<^sub>1 \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] ret\<^sub>2 \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
       \<t>\<o> ret\<^sub>f\<^sub>1 \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> ret\<^sub>f\<^sub>2 \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> r' \<Ztypecolon> R' \<close>
@@ -1584,7 +1588,8 @@ lemma [\<phi>reason %\<phi>mapToA_init+10]:
 \<Longrightarrow> if C\<^sub>R then mapToA_assign_id r\<^sub>f else True
 \<Longrightarrow> if C\<^sub>W then mapToA_assign_id w\<^sub>f else True
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret : h (x, w)
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (ret\<^sub>1, ret\<^sub>2) : (fst ret, snd ret)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>1 : fst ret
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>2 : snd ret
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ret\<^sub>1 = y
 \<Longrightarrow> \<g>\<e>\<t> y \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] ret\<^sub>2 \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   unfolding ToA_Extract_def ToA_Mapper_def BI_eq_ToA Premise_def mapToA_assign_id_def

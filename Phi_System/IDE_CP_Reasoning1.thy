@@ -490,6 +490,24 @@ lemmas [embed_into_\<phi>type] =
 
 ML \<open>Embed_into_Phi_Type.print \<^context> true\<close>
 
+paragraph \<open>Debug Usage\<close>
+
+method_setup embed_into_\<phi>type = \<open>
+let val no_asmN = "no_asm";
+    val no_asm_useN = "no_asm_use";
+    val no_asm_simpN = "no_asm_simp";
+    val asm_lrN = "asm_lr";
+
+    fun conv_mode x =
+      ((Args.parens (Args.$$$ no_asmN) >> K simp_tac ||
+        Args.parens (Args.$$$ no_asm_simpN) >> K asm_simp_tac ||
+        Args.parens (Args.$$$ no_asm_useN) >> K full_simp_tac ||
+        Scan.succeed asm_full_simp_tac) |> Scan.lift) x;
+in conv_mode >> (fn simp => fn ctxt =>
+      Method.METHOD (fn ths => Method.insert_tac ctxt ths 1 THEN simp
+          (Phi_Conv.Embed_into_Phi_Type.equip ctxt) 1 ))
+end\<close>
+
 subsection \<open>Semantic Type of Multiple Values\<close>
 
 lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?R vs\<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T) _\<close>]:

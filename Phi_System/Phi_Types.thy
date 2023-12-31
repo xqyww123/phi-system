@@ -793,45 +793,94 @@ lemma \<phi>\<s>\<u>\<b>\<j>_over_\<S>[\<phi>programming_simps]:
   by (rule \<phi>Type_eqI, simp, blast)
 
 lemma [embed_into_\<phi>type]:
-  \<open> NO_MATCH (\<lambda>_. T') T
-\<Longrightarrow> f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> (\<Sigma> T)\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
+  \<open> (\<Sigma> c. T c) \<phi>\<s>\<u>\<b>\<j> P \<equiv> (\<Sigma> c. T c \<phi>\<s>\<u>\<b>\<j> P) \<close>
+  unfolding atomize_eq
+  by (rule \<phi>Type_eqI; clarsimp)
 
-lemma [embed_into_\<phi>type]:
-  \<open> NO_MATCH (\<lambda>_. T') T
-\<Longrightarrow> NO_MATCH (U \<s>\<u>\<b>\<j> P) T
-\<Longrightarrow> f x \<Ztypecolon> T x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. True } \<Ztypecolon> \<S> (\<Sigma> T)\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
+ML \<open>
+val BI_Ex_embed_P = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
+  lhss = [\<^pattern>\<open>Collect _ \<Ztypecolon> \<S> _ \<phi>\<s>\<u>\<b>\<j> _\<close>],
+  proc = fn _ => fn ctxt => fn ctm =>
+    SOME ((Conv.rewr_conv @{lemma' \<open> {x. f x} \<Ztypecolon> \<S> T \<phi>\<s>\<u>\<b>\<j> P \<equiv> {x. f x \<and> P} \<Ztypecolon> \<S> T \<close>
+                               by (clarsimp simp: atomize_eq BI_eq_iff, blast)}
+           then_conv Conv.arg1_conv (Conv.arg_conv (Conv.abs_conv (fn (_, ctxt) =>
+        let fun conv ctxt =
+                        Conv.rewr_conv @{lemma' \<open>(\<exists>x. Q x) \<and> P \<equiv> \<exists>x. Q x \<and> P\<close>
+                                            by (unfold atomize_eq, blast)}
+              then_conv Conv.arg_conv (Conv.abs_conv (conv o snd) ctxt)
+              else_conv Conv.rewr_conv @{lemma' \<open>(Q \<and> R) \<and> P \<equiv> Q \<and> R \<and> P\<close>
+                                            by (unfold atomize_eq, blast)}
+              then_conv Conv.arg_conv (conv ctxt)
+              else_conv Conv.all_conv
+         in conv ctxt
+        end) ctxt))) ctm)
+}
 
-lemma [embed_into_\<phi>type]:
-  \<open> (\<And>x. NO_MATCH (x \<in> s) (P x))
-\<Longrightarrow> f x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T \<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
+val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
+  lhss = [\<^pattern>\<open>_ \<Ztypecolon> _ \<s>\<u>\<b>\<j> x. \<top>\<close>],
+  proc = fn _ => fn ctxt => fn ctm =>
+    case Thm.term_of ctm
+      of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => (
+          case T
+            of Const(\<^const_name>\<open>SubjectionTY\<close>, _) $ T $ P => (
+                  case P
+                    of Const(\<^const_name>\<open>Set.member\<close>, _) $ Bound 0 $ _ =>
+                        SOME (Conv.rewr_conv
+                           (@{print} @{lemma' \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> x \<in> s \<s>\<u>\<b>\<j> x. \<top> \<equiv> s \<Ztypecolon> \<S> T\<close> for T s
+                                by (clarsimp simp: atomize_eq BI_eq_iff) }) ctm)
+                     | _ =>
+                        if Term.is_dependent T
+                        then SOME (Conv.rewr_conv
+                                @{lemma' \<open>f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> (\<Sigma> x. T x)\<close> for f T P
+                                     by (clarsimp simp: atomize_eq BI_eq_iff) } ctm)
+                        else SOME (Conv.rewr_conv
+                                @{lemma' \<open>f x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T\<close> for f T P
+                                     by (clarsimp simp: atomize_eq BI_eq_iff) } ctm))
+             | Const(\<^const_name>\<open>Set_Abst\<close>, _) $ T => (
+                  if Term.is_dependent T
+                  then let fun conv ctxt ctmx =
+                                  ( Conv.rewr_conv @{lemma' \<open> (\<exists>y. EQ y \<and> (\<exists>x. P x y)) \<equiv> \<exists>x y. EQ y \<and> P x y \<close> for EQ P
+                                                        by (clarsimp simp: atomize_eq, blast)}
+                          then_conv Conv.arg_conv (Conv.abs_conv (conv o snd) ctxt)
+                          else_conv Conv.rewr_conv @{lemma' \<open> (\<exists>y. x = (c, y) \<and> y = y' \<and> P y) \<equiv> x = (c, y') \<and> P y' \<close> for x c P y'
+                                                        by (clarsimp simp: atomize_eq)}
+                          else_conv Conv.rewr_conv @{lemma' \<open> (\<exists>y. x = (c, y) \<and> y = y') \<equiv> x = (c, y') \<close> for x c y'
+                                                        by (clarsimp simp: atomize_eq)} ) ctmx
+                    in SOME ((
+                          Conv.rewr_conv @{lemma' \<open> {x. P c x} \<Ztypecolon> \<S> (T c) \<s>\<u>\<b>\<j> c. \<top> \<equiv> {(c, y) |c y. P c y} \<Ztypecolon> \<S> (\<Sigma> T) \<close> for P T
+                                              by (clarsimp simp: atomize_eq BI_eq_iff) }
+                          then_conv Conv.arg1_conv (Conv.arg_conv (Conv.abs_conv (fn (_, ctxt) =>
+                                        Conv.arg_conv (Conv.abs_conv (conv o snd) ctxt)) ctxt))
+                          ) ctm)
+                   end
+                  else SOME (Conv.rewr_conv
+                          @{lemma' \<open> {x. P c x} \<Ztypecolon> \<S> T \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c. P c x} \<Ztypecolon> \<S> T \<close> for P T
+                               by (clarsimp simp: atomize_eq BI_eq_iff) } ctm))
+             | _ => if Term.is_dependent T
+                    then SOME (Conv.rewr_conv @{lemma' \<open>f x \<Ztypecolon> T x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. True } \<Ztypecolon> \<S> (\<Sigma> x. T x)\<close> for f T
+                                                   by (clarsimp simp: atomize_eq BI_eq_iff)} ctm)
+                    else SOME (Conv.rewr_conv @{lemma' \<open>f x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. True } \<Ztypecolon> \<S> T\<close> for f T
+                                                   by (clarsimp simp: atomize_eq BI_eq_iff)} ctm) 
+           )
+       | _ => NONE
+}
+\<close>
 
-lemma [embed_into_\<phi>type]:
-  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> x \<in> s \<s>\<u>\<b>\<j> x. \<top> \<equiv> s \<Ztypecolon> \<S> T \<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
+setup \<open>Context.theory_map (Phi_Conv.Embed_into_Phi_Type.map (fn ctxt =>
+  ctxt addsimprocs [BI_Ex_embed_P, BI_Ex_embed_proc])
+)\<close>
 
-lemma [embed_into_\<phi>type]:
-  \<open> NO_MATCH (U \<s>\<u>\<b>\<j> P) T
-\<Longrightarrow> f x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. True } \<Ztypecolon> \<S> T \<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
 
-lemma [embed_into_\<phi>type]:
-  \<open> NO_MATCH (\<lambda>_. T') T
-\<Longrightarrow> {x. P c x} \<Ztypecolon> \<S> (T c) \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c y. x = (c, y) \<and> P c y} \<Ztypecolon> \<S> (\<Sigma> T)\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
+(*
+declare [[simp_trace]]
+ 
+lemma
+  \<open>TERM (f a b c \<Ztypecolon> T a b c \<s>\<u>\<b>\<j> a b c. P a b c)\<close>
+  apply (embed_into_\<phi>type)
+*)
 
-lemma [embed_into_\<phi>type]:
-  \<open> {x. P c x} \<Ztypecolon> \<S> T \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c. P c x} \<Ztypecolon> \<S> T\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
+
+
 
 paragraph \<open>Conversion Setup\<close>
 
