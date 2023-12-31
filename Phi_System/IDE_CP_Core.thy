@@ -2575,7 +2575,10 @@ setup \<open>Context.theory_map (
                   (Phi_Conv.tag_conv o C) ctxt) 1
         val simplifier =
               case Thm.prop_of sequent
-                of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => SOME (Simplifier.full_simplify)
+                of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                      let val mode = Phi_Working_Mode.mode1 ctxt
+                       in #IDECP_simp mode (ctxt, sequent)
+                      end
                  | _ => (
               case Term.head_of (PLPR_Syntax.dest_tags (Thm.major_prem_of sequent))
                 of Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) =>

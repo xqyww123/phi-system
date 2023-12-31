@@ -320,7 +320,7 @@ fun sledgehammer (ctxt,sequent0) =
           val N = Thm.nprems_of (@{print} (#goal (Proof.raw_goal stat0)))
           val Ns = string_of_int N
 
-          val _ = if N > 20 then (tracing ("The prompt generates too many subgoals (" ^
+          val _ = if N > 30 then (tracing ("The prompt generates too many subgoals (" ^
                                     string_of_int N ^ "). give up...");
                                   raise Auto_Fail Too_Many_Subgoals)
                             else ()

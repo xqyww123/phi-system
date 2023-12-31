@@ -15,7 +15,10 @@ type working_mode = {
   vcg_before_assembling: cterm (*goal*) -> Proof.context * thm -> Proof.context * thm,
   introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
   introduce_existence_in_assembling:
-      (string * typ) list -> Proof.context * thm -> Proof.context * thm
+      (string * typ) list -> Proof.context * thm -> Proof.context * thm,
+
+  IDECP_simp : Proof.context * thm -> (Proof.context -> thm -> thm) option
+      (*Simplification applied after every function application during the programming*)
 }
 (*
 cast operation: transform to the desired assertion.
@@ -63,7 +66,9 @@ type working_mode = {
   vcg_before_assembling: cterm (*goal*) -> Proof.context * thm -> Proof.context * thm,
   introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
   introduce_existence_in_assembling:
-      (string * typ) list -> Proof.context * thm -> Proof.context * thm
+      (string * typ) list -> Proof.context * thm -> Proof.context * thm,
+
+  IDECP_simp : Proof.context * thm -> (Proof.context -> thm -> thm) option
 }
 
 structure Data = Generic_Data(
@@ -344,7 +349,13 @@ val programming : working_mode =
     cast_exception = cast_exception,
     vcg_before_assembling = vcg_before_assembling,
     introduce_existence = introduce_existence_cc I @{thm introduce_Ex},
-    introduce_existence_in_assembling = introduce_existence_cc I @{thm introduce_Ex}
+    introduce_existence_in_assembling = introduce_existence_cc I @{thm introduce_Ex},
+
+    IDECP_simp = fn (_, sequent) =>
+        case Term.head_of (PLPR_Syntax.dest_tags (Thm.prop_of sequent))
+          of Const(\<^const_name>\<open>CurrentConstruction\<close>, _) =>
+                SOME (Simplifier.simplify)
+           | _ => NONE
 }
 end
 
@@ -420,7 +431,13 @@ in
     introduce_existence_in_assembling =
       introduce_existence_cc (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
                                | _ => error ("bad form of the finalizing sequent"))
-                             @{thm introduce_Ex_subj}
+                             @{thm introduce_Ex_subj},
+
+    IDECP_simp = fn (_, sequent) =>
+        case Term.head_of (PLPR_Syntax.dest_tags (Thm.prop_of sequent))
+          of Const(\<^const_name>\<open>CurrentConstruction\<close>, _) =>
+                SOME (Simplifier.simplify)
+           | _ => NONE
 }
 end
 
@@ -495,7 +512,13 @@ val implication : working_mode = {
                          @{thm introduce_Ex_ToA_subj} vs
      #> introduce_ex_ToA (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) => X
                            | _ => error ("bad form of the finalizing sequent"))
-                         @{thm introduce_Ex_ToA_subj_P} vs)
+                         @{thm introduce_Ex_ToA_subj_P} vs),
+
+    IDECP_simp = fn (_, sequent) =>
+        case Term.head_of (PLPR_Syntax.dest_tags (Thm.prop_of sequent))
+          of Const(\<^const_name>\<open>ToA_Construction\<close>, _) =>
+                SOME (Simplifier.simplify)
+           | _ => NONE
 }
 end
 

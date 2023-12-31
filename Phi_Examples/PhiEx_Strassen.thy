@@ -337,11 +337,11 @@ proc strassen_mul:
 \<medium_left_bracket>
   \<open>literal n \<Ztypecolon> \<nat>\<close> \<rightarrow> val n ;;
   1 << $n \<rightarrow> val N ;;
-  new_mat ($N, $N) \<rightarrow> val a\<^sub>C ;;
-  new_mat ($N, $N) \<rightarrow> val a\<^sub>D ;;
-  strassen ($a\<^sub>x, 0, 0, $a\<^sub>y, 0, 0, $a\<^sub>C, 0, 0, $a\<^sub>D, 0, 0, $n) ;;
-  del_mat ($a\<^sub>C) ;;
-  del_mat ($a\<^sub>D)
+  new_mat ($N, $N) \<rightarrow> val C ;;
+  new_mat ($N, $N) \<rightarrow> val D ;;
+  strassen ($a\<^sub>x, 0, 0, $a\<^sub>y, 0, 0, $C, 0, 0, $D, 0, 0, $n) ;;
+  del_mat ($C) ;;
+  del_mat ($D)
 \<medium_right_bracket> .
 
 

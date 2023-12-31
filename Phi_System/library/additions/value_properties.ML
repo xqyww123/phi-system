@@ -40,7 +40,8 @@ val zero_value : Phi_Working_Mode.working_mode = {
   cast_exception = #cast_exception Phi_Working_Mode.implication,
   vcg_before_assembling = K I,
   introduce_existence = #introduce_existence Phi_Working_Mode.implication,
-  introduce_existence_in_assembling = #introduce_existence_in_assembling Phi_Working_Mode.implication
+  introduce_existence_in_assembling = #introduce_existence_in_assembling Phi_Working_Mode.implication,
+  IDECP_simp = #IDECP_simp Phi_Working_Mode.implication
 }
 
 
