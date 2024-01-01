@@ -2614,6 +2614,51 @@ lemma \<phi>elim'SEi_transformation:
   by (cases C; cases x; simp add: \<phi>Prod_expn')
 
 
+lemma \<phi>intro_ToA_Mapper_template:
+  \<open> (\<And>x. (x \<Ztypecolon> T ) = (\<psi>  x \<Ztypecolon> S ))
+\<Longrightarrow> (\<And>x. (x \<Ztypecolon> T') = (\<psi>' x \<Ztypecolon> S'))
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x\<in>(f o \<psi>) `D. \<psi>' (\<phi>' x) = x)
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : S \<mapsto> S' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> \<psi> ` D
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> \<phi>' o f o \<psi> : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h o \<psi> \<s>\<e>\<t>\<t>\<e>\<r> \<phi>' o s \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def Premise_def
+  by clarsimp
+
+lemma \<phi>intro_ToA_Mapper_template_SE:
+  \<open> (\<And>x. (x \<Ztypecolon> T ) = (\<psi>  x \<Ztypecolon> S ))
+\<Longrightarrow> (\<And>x. (x \<Ztypecolon> T') = (\<psi>' x \<Ztypecolon> S'))
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x\<in>(f o \<psi> o fst) `D. \<psi>' (\<phi>' x) = x)
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : S \<^emph>[C\<^sub>W] W \<mapsto> S' \<^emph>[C\<^sub>W] W' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> apfst \<psi> ` D
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> (\<phi>' o f o \<psi>) \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h o apfst \<psi> \<s>\<e>\<t>\<t>\<e>\<r> apfst \<phi>' o s \<i>\<n> D \<close>
+  unfolding ToA_Mapper_rev_def Premise_def
+  apply (clarsimp simp: \<phi>Prod_expn' \<phi>Prod_expn'' ball_conj_distrib[symmetric])
+  subgoal premises prems for a b
+    by (insert prems(1,2,5) prems(3,4)[THEN bspec[where x=\<open>(a,b)\<close>], OF \<open>(a, b) \<in> D\<close>],
+        cases C\<^sub>W, auto simp: \<phi>Prod_expn' \<phi>Prod_expn'') .
+
+lemma \<phi>elim_ToA_Mapper_template:
+  \<open> (\<And>x. (x \<Ztypecolon> U ) = (\<psi>  x \<Ztypecolon> S ))
+\<Longrightarrow> (\<And>x. (x \<Ztypecolon> U') = (\<psi>' x \<Ztypecolon> S'))
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x\<in>h `D. \<psi> (\<phi> x) = x)
+\<Longrightarrow> \<m>\<a>\<p> \<psi>' o g o \<phi> : S \<mapsto> S' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> \<phi> o h \<s>\<e>\<t>\<t>\<e>\<r> s o \<psi>' \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def Premise_def
+  by clarsimp
+
+lemma \<phi>elim_ToA_Mapper_template_SE:
+  \<open> (\<And>x. (x \<Ztypecolon> U ) = (\<psi>  x \<Ztypecolon> S ))
+\<Longrightarrow> (\<And>x. (x \<Ztypecolon> U') = (\<psi>' x \<Ztypecolon> S'))
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x\<in>fst ` h `D. \<psi> (\<phi> x) = x)
+\<Longrightarrow> \<m>\<a>\<p> (\<psi>' o g o \<phi>) \<otimes>\<^sub>f r : S \<^emph>[C\<^sub>R] R \<mapsto> S' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> apfst \<phi> o h \<s>\<e>\<t>\<t>\<e>\<r> s o apfst \<psi>' \<i>\<n> D \<close>
+  unfolding ToA_Mapper_rev_def Premise_def
+  apply (clarsimp simp: \<phi>Prod_expn' \<phi>Prod_expn'' ball_conj_distrib[symmetric])
+  subgoal premises prems for x
+    by (insert prems(1,2,5) prems(3,4)[THEN bspec[where x=\<open>x\<close>], OF \<open>x \<in> D\<close>],
+        cases C\<^sub>R, auto simp: \<phi>Prod_expn' \<phi>Prod_expn'' prod.map_beta) .
+
+
+
+
 subparagraph \<open>OPEN and MAKE\<close>
 
 text \<open>No \<open>Object_Equiv\<close> is used and we use \<open>(=)\<close> directly because we are destructing or constructing
@@ -2792,6 +2837,11 @@ lemma [\<phi>reason %extract_pure]:
   \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P) \<close>
   unfolding \<r>ESC_def Premise_def
   by blast
+
+
+hide_fact \<phi>intro_transformation \<phi>intro_reasoning_transformation \<phi>intro'_reasoning_transformation
+          \<phi>intro'_reasoning_transformation_ty \<phi>elim_transformation \<phi>elim_reasoning_transformation
+          \<phi>elim'SEi_transformation \<phi>intro_ToA_Mapper_template 
 
 
 subsection \<open>Instances for Predefined Basic \<phi>-Types\<close>

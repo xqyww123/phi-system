@@ -103,7 +103,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> note_properties_s phi0 [(name, [rule'])]
+        |> note_properties_s false phi0 [(name, [rule'])]
         |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
              Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
                                    (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}

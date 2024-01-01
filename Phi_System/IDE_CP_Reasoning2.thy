@@ -338,6 +338,13 @@ definition ToA_Mapper :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_mag
             (\<forall>y \<in> g ` h ` domain. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s y \<Ztypecolon> T') \<and>
             (\<forall>x \<in> domain. f x = s (g (h x)))\<close>
 
+lemma ToA_Mapper_rev_def[no_atp]:
+  \<open>(\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> domain) \<longleftrightarrow>
+      (\<forall>x \<in> domain. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U) \<and>
+      (\<forall>y \<in> g ` h ` domain. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s y \<Ztypecolon> T') \<and>
+      (\<forall>x \<in> domain. s (g (h x)) = f x)\<close>
+  unfolding ToA_Mapper_def by clarsimp fastforce
+
 abbreviation ToA_Getter :: \<open>('x \<Rightarrow> 'a) \<Rightarrow> ('c::sep_magma, 'x) \<phi> \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 'x set \<Rightarrow> ('a \<Rightarrow> 'x) \<Rightarrow> bool\<close>
                            ("\<g>\<e>\<t>\<t>\<e>\<r> _ : _ \<mapsto> _ \<i>\<n> _ \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> _" [21,21,21,21,21] 18)
   where \<open>\<g>\<e>\<t>\<t>\<e>\<r> h : T \<mapsto> U \<i>\<n> domain \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s \<equiv>

@@ -192,7 +192,7 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
-             |> note_properties_s phi0 [(name, [rule'])]
+             |> note_properties_s false phi0 [(name, [rule'])]
              |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}

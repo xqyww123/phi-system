@@ -9,7 +9,7 @@ begin
 declare One_nat_def[simp del]
 
 declare [[\<phi>reasoning_step_limit = 50]]
- 
+
 proc test_mem1:
   input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
@@ -203,7 +203,6 @@ proc test_mem17:
 \<medium_left_bracket>
   $addr \<tribullet> 2 \<tribullet> c := \<open>42 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
-
 
 proc test_mem18:
   input  \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<s>\<l>\<i>\<c>\<e>[j,m] \<nat>\<heavy_comma>

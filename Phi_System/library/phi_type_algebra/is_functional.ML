@@ -134,7 +134,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                     phi0 instruction ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy
-        |> note_properties_s phi0 [(name, [rule])]
+        |> note_properties_s false phi0 [(name, [rule])]
         |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_\<phi>functionality}

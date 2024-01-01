@@ -18,7 +18,8 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
 
-
+declare mat_to_list_def [\<phi>sledgehammer_simps]
+        list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
 
 proc zero_mat:
   input  \<open>x \<Ztypecolon> MatSlice a i j m n\<heavy_comma>
@@ -36,7 +37,6 @@ proc zero_mat:
   \<medium_right_bracket> ;;
 
   \<open>0\<^sub>m m n \<Ztypecolon> MAKE _ (MatSlice a i j m n)\<close>
-    certified unfolding mat_to_list_def list_eq_iff_nth_eq by auto_sledgehammer
 \<medium_right_bracket> .
 
 proc new_mat:
@@ -47,7 +47,6 @@ proc new_mat:
 \<medium_left_bracket>
   calloc_aN2 ($m, $n) \<open>\<int>\<close> \<exists>a
   \<open>0\<^sub>m m n \<Ztypecolon> MAKE _ (MatSlice a 0 0 m n)\<close>
-    certified unfolding mat_to_list_def list_eq_iff_nth_eq by auto_sledgehammer
 \<medium_right_bracket> .
 
 proc del_mat:
@@ -71,14 +70,13 @@ proc copy_mat:
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
   \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
 
-  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;; ;;
-    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h
-        ;; $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
+      $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
     \<medium_right_bracket> ;;
   \<medium_right_bracket> ;;
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close>
-    certified unfolding mat_to_list_def list_eq_iff_nth_eq by auto_sledgehammer ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<close> \<open>MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
@@ -95,14 +93,13 @@ proc add_mat:
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
   \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
 
-  map_2list_loop ($m) \<open>(\<lambda>k. \<m>\<e>\<m>[a\<^sub>x \<tribullet>\<^sub>a (i\<^sub>x+k)\<^sup>\<t>\<^sup>\<h>] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>, \<lambda>k. \<m>\<e>\<m>[a\<^sub>y \<tribullet>\<^sub>a (i\<^sub>y+k)\<^sup>\<t>\<^sup>\<h>] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>)\<close> \<medium_left_bracket> for k \<rightarrow> val k
-    map_2list_loop ($n) \<open>(\<lambda>h. \<m>\<e>\<m>[a\<^sub>x \<tribullet>\<^sub>a (i\<^sub>x+k)\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a (j\<^sub>x+h)\<^sup>\<t>\<^sup>\<h>] \<int>, \<lambda>h. \<m>\<e>\<m>[a\<^sub>y \<tribullet>\<^sub>a (i\<^sub>y+k)\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a (j\<^sub>y+h)\<^sup>\<t>\<^sup>\<h>] \<int>)\<close> \<medium_left_bracket> for h \<rightarrow> val h
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h
         $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) ! + $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
     \<medium_right_bracket> ;;
   \<medium_right_bracket> ;;
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>x + y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close>
-    certified unfolding mat_to_list_def list_eq_iff_nth_eq by auto_sledgehammer ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>x + y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<close> \<open>MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
@@ -121,14 +118,13 @@ proc sub_mat:
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
   \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
 
-  map_2list_loop ($m) \<open>(\<lambda>k. \<m>\<e>\<m>[a\<^sub>x \<tribullet>\<^sub>a (i\<^sub>x+k)\<^sup>\<t>\<^sup>\<h>] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>, \<lambda>k. \<m>\<e>\<m>[a\<^sub>y \<tribullet>\<^sub>a (i\<^sub>y+k)\<^sup>\<t>\<^sup>\<h>] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>)\<close> \<medium_left_bracket> for k \<rightarrow> val k
-    map_2list_loop ($n) \<open>(\<lambda>h. \<m>\<e>\<m>[a\<^sub>x \<tribullet>\<^sub>a (i\<^sub>x+k)\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a (j\<^sub>x+h)\<^sup>\<t>\<^sup>\<h>] \<int>, \<lambda>h. \<m>\<e>\<m>[a\<^sub>y \<tribullet>\<^sub>a (i\<^sub>y+k)\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a (j\<^sub>y+h)\<^sup>\<t>\<^sup>\<h>] \<int>)\<close> \<medium_left_bracket> for h \<rightarrow> val h
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h
         $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) ! - $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
     \<medium_right_bracket> ;;
   \<medium_right_bracket> ;;
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>x - y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close>
-    certified unfolding mat_to_list_def list_eq_iff_nth_eq by auto_sledgehammer ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>x - y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<close> \<open>MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
@@ -159,6 +155,8 @@ lemma merge_4mat:
       by (clarsimp simp: four_block_mat_def Let_def mat_to_list_def list_eq_iff_nth_eq
                         \<phi>[unfolded carrier_mat_def, simplified] nth_append; auto_sledgehammer) .
 
+
+
 proc strassen:
   input  \<open>A \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n)\<heavy_comma>
           B \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y (2^n) (2^n)\<heavy_comma>
@@ -186,8 +184,11 @@ proc strassen:
     \<open>MatSlice a\<^sub>y _ _ _ _\<close> to \<open>OPEN _ _\<close> ;;
 
     $a\<^sub>x \<tribullet> $i\<^sub>x \<tribullet> $j\<^sub>x := $a\<^sub>x \<tribullet> $i\<^sub>x \<tribullet> $j\<^sub>x ! * $a\<^sub>y \<tribullet> $i\<^sub>y \<tribullet> $j\<^sub>y ! ;;
+      
+    pure_fact [simp]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close>
+    note scalar_prod_def [\<phi>sledgehammer_simps];;
 
-    \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n))\<close> certified  unfolding mat_to_list_def list_eq_iff_nth_eq sorry ;;
+    \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n))\<close> ;;
     \<open>B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y (2^n) (2^n))\<close>
   \<medium_right_bracket>
   \<medium_left_bracket>
@@ -342,13 +343,6 @@ proc strassen_mul:
   del_mat ($C) ;;
   del_mat ($D)
 \<medium_right_bracket> .
-
-
-
-
-    text \<open>TODO: paper: we cannot determine the type of literals\<close>
-
-
 
 
 

@@ -126,9 +126,9 @@ val lookup_derived_properties : Context.generic -> phi_type -> string (*name*) -
 val register_derived_properties : phi_type -> string * int * Position.T -> thm list -> generic_theory -> generic_theory
       (*It will also bind in Isabelle the properties to names <phi_type_name.property_names\<^sub>i>
         for the i-th property each.*)
-val note_properties' : string -> (binding * thm list) list -> generic_theory -> generic_theory
-val note_properties  : phi_type -> (binding * thm list) list -> generic_theory -> generic_theory
-val note_properties_s: phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
+val note_properties' : bool (*true for no_atp*) -> string -> (binding * thm list) list -> generic_theory -> generic_theory
+val note_properties  : bool (*true for no_atp*) -> phi_type -> (binding * thm list) list -> generic_theory -> generic_theory
+val note_properties_s: bool (*true for no_atp*) -> phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
 
 val local_note_properties' : string -> (binding * thm list) list -> Context.generic -> Context.generic
 val local_note_properties  : phi_type -> (binding * thm list) list -> Context.generic -> Context.generic
@@ -229,8 +229,10 @@ fun open_proof_ctxt bundles = open_proof_ctxt' bundles o Context.proof_of
 val introN = "intro"
 val intro_reasoningN = "intro_reasoning" (*rules for reasoning*)
 val intro_reasoning_R_N = "intro_reasoning\<^sub>R"
+val intro_mapN = "intro_map"
 val elimN = "elim"
 val elim_reasoningN = "elim_reasoning"
+val elim_mapN = "elim_map"
 val unfoldN = "unfold"
 val expansionN = "expansion"
 (* val open_abstractionN = "open_abstraction" *)
@@ -625,10 +627,13 @@ fun short_name_of_tyop (Abs (_,_,X)) = short_name_of_tyop X
   | short_name_of_tyop (Free (N, _)) = N
   | short_name_of_tyop X = raise TERM ("Not a \<phi>-type term", [X])
 
-fun note_properties' prefix notes =
+val no_atp_attrs = map (Attrib.attribute_global \<^theory>) @{attributes [no_atp]}
+fun note_properties' no_atp prefix notes =
   let val qualify = Binding.qualify true prefix
-   in Context.mapping (fold (fn (b,Th) => snd o Global_Theory.note_thms "" ((qualify b, []), [(Th,[])])) notes)
-                      (fold (fn (b,Th) => snd o Local_Theory.note ((qualify b, []), Th)) notes)
+   in Context.mapping (fold (fn (b,Th) =>
+                          snd o Global_Theory.note_thms "" ((qualify b, if no_atp then no_atp_attrs else []), [(Th,[])])) notes)
+                      (fold (fn (b,Th) =>
+                          snd o Local_Theory.note ((qualify b, if no_atp then @{attributes [no_atp]} else []), Th)) notes)
   end
 
 fun local_note_properties' prefix notes ctxt =
@@ -648,9 +653,9 @@ fun local_note_properties' prefix notes ctxt =
                       (fold (snd oo Proof_Context.note_thms "") notes') ctxt
   end
 
-fun note_properties (phi : phi_type) = note_properties' (Binding.name_of (#name phi))
-fun note_properties_s phi notes =
-      note_properties phi (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
+fun note_properties no_atp (phi : phi_type) = note_properties' no_atp (Binding.name_of (#name phi))
+fun note_properties_s no_atp phi notes =
+      note_properties no_atp phi (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
 
 fun local_note_properties (phi : phi_type) = local_note_properties' (Binding.name_of (#name phi))
 fun local_note_properties_s phi notes =
@@ -1215,6 +1220,14 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                          handle THM _ => NONE
                 ) th) tagged_eqs_in_type_idx
 
+      fun gen_from_tagged_2eq_in_type g f rule = map_filter (fn (i,th) => Option.mapPartial (
+                fn eq => (eq RS' (ctxt, eq RS' (ctxt, g i rule)))
+                            |> f i
+                            |> normalize
+                            |> SOME
+                         handle THM _ => NONE
+                ) th) tagged_eqs_in_type_idx
+
     (*fun LHS_obj_is_var thm =
         case Thm.concl_of thm
           of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) $ _) => is_Var x
@@ -1230,10 +1243,16 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                          | NONE      =>   eq RS' (ctxt, @{thm' \<phi>intro'_reasoning_transformation}))
             )) tagged_eqs tagged_eqs_in_type
             handle THM _ => [] (*in case of not a separation magma*)
+      val intro_map = if no_auto then [] else gen_from_tagged_2eq_in_type (K I) (K I) @{thm' \<phi>intro_ToA_Mapper_template_SE}
+                                           |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
+
       val elim_ToA = if no_auto then [] else gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
       val elim_reasoning = if no_auto then [] else gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
       val elim'SE_ToA = if no_auto then [] else gen_from_tagged_eq_in_type (K I) (K I) @{thm' \<phi>elim'SEi_transformation}
                                              |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
+      val elim_map = if no_auto then [] else gen_from_tagged_2eq_in_type (K I) (K I) @{thm' \<phi>elim_ToA_Mapper_template_SE}
+                                          |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
+
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
                            (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                   Conv.arg_conv (Simplifier.rewrite (
@@ -1346,12 +1365,14 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
        ) |> Phi_Expansions.add_simps expns
          |> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
-   |> note_properties_s phi_type (
+   |> note_properties_s false phi_type (
         (* (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @ *)
-        [(unfoldN, eqs), (expansionN, expansions)] @
-       (if no_auto then [] else
-        [(introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
-         (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA)]))
+        [(unfoldN, eqs), (expansionN, expansions)])
+   |> (if no_auto then I
+       else note_properties_s true phi_type 
+            [(introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
+             (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA),
+             (intro_mapN, intro_map), (elim_mapN, elim_map)])
    |> not no_auto ? (fn thy' =>
       let val phi' = phi_type (*case thy'
                        of Context.Proof lthy => morphism_phi_type (Local_Theory.target_morphism lthy) phi_type

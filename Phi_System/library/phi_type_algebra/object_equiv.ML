@@ -248,7 +248,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                         (SOME (the_default @{reasoner_group %derived_object_equiv}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
-            |> note_properties_s phi0 [(name, [rule'])]
+            |> note_properties_s false phi0 [(name, [rule'])]
             |> pair [rule'])
   end
 

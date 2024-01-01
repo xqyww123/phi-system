@@ -31,7 +31,8 @@ proc calloc_aN:
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
 
-  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
+  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
+  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (Array n T))\<close>
 
   have t1: \<open>valid_logaddr (memaddr blk [])\<close>
     unfolding valid_logaddr_def Valid_MemBlk_def
@@ -64,7 +65,9 @@ proc calloc_aN2:
                                  (V_array.mk (replicate (nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>2))) (the (Zero TY)))))\<close>]
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1))] \<a>\<r>\<r>\<a>\<y>[nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>2))] TY)\<close>
-  \<open>replicate n (replicate m z) \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n (Array m T)))))\<close>
+
+  \<open>replicate n (replicate m z) \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n (Array m T)))))\<close>
+  \<open>replicate n (replicate m z) \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (Array n (Array m T)))\<close>
 
   have t1: \<open>valid_logaddr (memaddr blk [])\<close>
     unfolding valid_logaddr_def Valid_MemBlk_def

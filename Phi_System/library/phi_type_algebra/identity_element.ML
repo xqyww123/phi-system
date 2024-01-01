@@ -270,7 +270,7 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                         (SOME (the_default @{reasoner_group %derived_identity_element}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
-            |> note_properties_s phi0 [(name, [rule'])]
+            |> note_properties_s false phi0 [(name, [rule'])]
             |> pair [rule']
   end
 

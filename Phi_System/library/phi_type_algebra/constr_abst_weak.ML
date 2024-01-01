@@ -111,7 +111,7 @@ fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                         (SOME (the_default @{reasoner_group %derived_abstract_from_raw}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule])
-        |> note_properties_s phi0 [(name, [rule])]
+        |> note_properties_s false phi0 [(name, [rule])]
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end

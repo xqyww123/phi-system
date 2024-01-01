@@ -86,7 +86,7 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                                     (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                        (#2 instruction)))
                                     ([],[]) NONE [Morphism.thm m rule'])
-        |> note_properties_s phi [(name, [rule'])]
+        |> note_properties_s false phi [(name, [rule'])]
         |> pair [rule']
   end
 

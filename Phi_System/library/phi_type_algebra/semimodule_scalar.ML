@@ -151,7 +151,7 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                                     (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                        (#2 instruction)))
                                     ([],[]) NONE [Morphism.thm m rule'])
-        |> note_properties_s phi0 [(name, [rule'])]
+        |> note_properties_s false phi0 [(name, [rule'])]
         |> pair [rule']
   end
 

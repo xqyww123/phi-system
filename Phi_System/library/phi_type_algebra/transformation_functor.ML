@@ -304,7 +304,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                       |> Proof.global_done_proof
                 end*)
            in generic
-           |> note_properties_s phi0 [(name, [rule'])]
+           |> note_properties_s false phi0 [(name, [rule'])]
            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
@@ -476,7 +476,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
                             |> Proof.global_done_proof
                 end*)
            in thy
-           |> note_properties_s phi0 [(name, [rule])]
+           |> note_properties_s false phi0 [(name, [rule])]
            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}

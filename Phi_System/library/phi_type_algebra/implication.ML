@@ -397,7 +397,7 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
                                         (SOME (the_default @{reasoner_group %derived_abstract_domain}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule'])
-            |> note_properties_s phi0 [(name, [rule'])]
+            |> note_properties_s false phi0 [(name, [rule'])]
             |> pair [rule']
   end
 

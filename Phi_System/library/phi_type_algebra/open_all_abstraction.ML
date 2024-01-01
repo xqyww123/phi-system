@@ -290,7 +290,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) ctxt0 (p
                                         (SOME (the_default @{reasoner_group %To_ToA_derived_to_raw}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule])
-        |> note_properties_s phi0 [(name, [rule])]
+        |> note_properties_s false phi0 [(name, [rule])]
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end

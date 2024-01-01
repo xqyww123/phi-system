@@ -125,10 +125,16 @@ lemma list_upd_map_i[iff]:
   by clarsimp
 
 lemma list_upd_map_j[iff]:
-  \<open> j \<noteq> i \<and> j \<le> length l
+  \<open> j \<noteq> i
 \<Longrightarrow> list_upd_map i f l ! j = l ! j \<close>
   unfolding list_upd_map_def
   by clarsimp
+
+lemma list_upd_map_ij:
+  \<open> j < length l
+\<Longrightarrow> list_upd_map i f l ! j = (if j = i then f (l ! i) else l ! j) \<close>
+  unfolding list_upd_map_def
+  by auto
 
 
 subsection \<open>Mapping Prefix / Suffix\<close>
