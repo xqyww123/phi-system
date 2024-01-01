@@ -102,13 +102,10 @@ lemma False_\<phi>app:
 
 subsection \<open>Not\<close>
 
-thm "\<not>_\<phi>app"
- 
 lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
   \<open>\<p>\<r>\<o>\<c> op_not raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<bool> \<longmapsto> \<v>\<a>\<l> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
   by (cases raw, simp, rule, simp, rule, simp)
-
 
 subsection \<open>And\<close>
 

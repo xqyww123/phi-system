@@ -131,9 +131,6 @@ thm "\<tribullet>_\<phi>app"
 
 
 
-setup \<open>Phi_App_Rules.add_ovld_resolver (\<^named_theorems>\<open>\<tribullet>_\<phi>app\<close>, 1000, fn (_,sequent) =>
-    Phi_Working_Mode.spec_of ) \<close>
-
 
 section \<open>Slice Pointers\<close>
 
@@ -370,7 +367,7 @@ lemma [\<phi>reason add]:
     have [simp]: \<open>i + (j + n) div M < N\<close>
       by (metis \<open>i * M + j + n < M * N\<close> add.assoc add.commute add_lessD1 div_mult_self1 less_mult_imp_div_less mult.commute mult_0_right verit_comp_simplify1(1))
     show ?thesis
-      by (simp add: idx_step_type_arr valid_idx_step_arr, insert \<open>j < M\<close>, fastforce)
+      using \<open>i + (j + n) div M < N\<close> by blast
   qed
   subgoal premises prems for blk idx proof -
     have [simp]: \<open>i + (j + n) div M < N\<close>
@@ -379,16 +376,11 @@ lemma [\<phi>reason add]:
       using add_mult_distrib by presburger
 
     show ?thesis
-    proof (simp add: idx_step_offset_arr idx_step_type_arr MemObj_Size_arr
-                     Abs_fnat_homs
-                del: of_nat_mult of_nat_add)
-      have "\<forall>n na nb. (na::nat) + (n + nb) = n + (nb + na)"
-        by force
-      then show \<open>to_size_t (MemObj_Size TY * n + (i * (M * MemObj_Size TY) + j * MemObj_Size TY)) =
-                to_size_t ((i + (j + n) div M) * (M * MemObj_Size TY) + (j + n) mod M * MemObj_Size TY) \<and>
-                idx_step_type AG_IDX(((j + n) mod M)\<^sup>\<t>\<^sup>\<h>) (\<a>\<r>\<r>\<a>\<y>[M] TY) = TY\<close>
-        by (smt (verit, ccfv_threshold) Euclidean_Rings.div_eq_0_iff add.commute add_mult_distrib idx_step_type_arr less_nat_zero_code mod_div_mult_eq mod_div_trivial mult.assoc mult.commute prems(10))
-    qed
+      by (simp add: idx_step_offset_arr idx_step_type_arr MemObj_Size_arr
+                    Abs_fnat_homs
+               del: of_nat_mult of_nat_add,
+          smt (verit) add.commute left_add_mult_distrib mod_div_mult_eq mult.assoc mult.commute)
+
   qed .
 
 

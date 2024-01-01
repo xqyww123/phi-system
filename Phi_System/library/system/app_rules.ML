@@ -11,7 +11,9 @@ signature PHI_APP_RULES = sig
 
   val get_overloadings : Proof.context -> string -> thm list
   val clear_overloadings : string -> Context.generic -> Context.generic
+  val check_overloading : Context.generic -> xstring * Position.T -> string
   val declare_overloading : binding -> local_theory -> string * local_theory
+  val declare_overloading_global : binding -> theory -> string * theory
   val overload : priority * thm -> (string * Position.T) -> Context.generic -> Context.generic
   val del_overloading : string -> thm -> Context.generic -> Context.generic
 
@@ -68,28 +70,39 @@ fun add_ovld_resolver (name, prio, resolver) =
 fun ovld_equiv thy = eq_pair (op =) (Thm.equiv_thm thy)
 
 structure Overloadings = Generic_Data (
-  type T = (priority * thm) iNet.net Symtab.table
-  val empty = Symtab.empty
-  val merge = Symtab.join (K (iNet.merge (eq_pair (op =) pointer_eq)))
+  type T = (priority * thm) iNet.net Name_Space.table
+  val empty = Name_Space.empty_table "overloaded operation"
+  val merge = Name_Space.join_tables (K (iNet.merge (eq_pair (op =) pointer_eq)))
 )
 
-fun new_entry name =
+val ovld_ops = {
+  get_data = Overloadings.get,
+  put_data = Overloadings.put
+}
+
+fun new_entry_local bind =
+  Entity.define ovld_ops bind iNet.empty
+
+fun new_entry_global bind = 
+  Entity.define_global ovld_ops bind iNet.empty
+
+(*fun new_entry name =
   Overloadings.map (fn data =>
     if Symtab.defined data name
     then error ("Duplicate declaration of overloaded operation: " ^ quote name)
-    else Symtab.update (name, iNet.empty) data);
+    else Symtab.update (name, iNet.empty) data);*)
 
 fun undeclared name = "Undeclared overloaded operation " ^ quote name;
 
-val defined_entry = Symtab.defined o Overloadings.get;
+val defined_entry = Name_Space.defined o Overloadings.get;
 
 fun the_entry context name =
-  (case Symtab.lookup (Overloadings.get context) name of
+  (case Name_Space.lookup (Overloadings.get context) name of
     NONE => error (undeclared name)
   | SOME entry => entry);
 
 fun map_entry name f context =
-  (the_entry context name; Overloadings.map (Symtab.map_entry name f) context);
+  (the_entry context name; Overloadings.map (Name_Space.map_table_entry name f) context);
 
 
 (* maintain content *)
@@ -122,35 +135,32 @@ fun del_overloading name thm ctxt =
 
 fun declare_overloading binding lthy =
   let val binding' = Binding.suffix_name "_\<phi>app" binding
-      val name = Local_Theory.full_name lthy binding;
-    (*val description =
-        "declaration of overloaded operation " ^ Binding.name_of binding ^
-        (if "" = descr then "" else "\n" ^ descr)*)
+      val name = Local_Theory.full_name lthy binding
       val lthy' = lthy
-        |> Local_Theory.background_theory (Context.theory_map (new_entry name))
-        |> Local_Theory.map_contexts (K (Context.proof_map (new_entry name)))
+        |> new_entry_local binding |> snd
         |> Local_Theory.add_thms_dynamic (binding', fn context => content context name)
-        (*|> Attrib.local_setup binding (attr name) description*)
    in (name, lthy')
   end
 
-fun check ctxt (xname, pos) =
-  let val fact_ref = Facts.Named ((xname, Position.none), NONE);
-      fun err () =
-        let
-          val space = Facts.space_of (Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt);
-          val completion = Name_Space.completion ctxt space (defined_entry ctxt) (xname, pos);
-        in error (undeclared xname ^ Position.here pos ^ Completion.markup_report [completion]) end;
-  in (case try (Proof_Context.get_fact_generic ctxt) fact_ref of
-        SOME (SOME name, _) => if defined_entry ctxt name then name else err ()
-      | _ => err ())
+fun declare_overloading_global binding gthy =
+  let val binding' = Binding.suffix_name "_\<phi>app" binding
+      val name = Sign.full_name gthy binding
+      val gthy' = gthy
+        |> new_entry_global binding |> snd
+        |> Global_Theory.add_thms_dynamic (binding', fn context => content context name)
+   in (name, gthy')
+  end
+
+fun check_overloading ctxt =
+  let val overloadings = Overloadings.get ctxt
+   in fst o Name_Space.check ctxt overloadings 
   end
 
 fun overload th (name,pos) ctxt = (
   if Context_Position.reports_enabled_generic ctxt
   then Context_Position.reports_generic ctxt [(pos, Markup.dynamic_fact name)]
   else ();
-  add_overloading (check ctxt (name, pos)) th ctxt
+  add_overloading (check_overloading ctxt (name, pos)) th ctxt
 )
 
 
@@ -217,10 +227,16 @@ fun attr name =
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>overload\<close> (
   Scan.lift (name_and_symbol_position) :|-- (fn name_pos => Scan.peek (fn ctxt =>
-    let val iname = check ctxt name_pos
+    let val iname = check_overloading ctxt name_pos
      in attr iname
     end))
 ) "overload onto the given symbol")
+
+val _ = Theory.setup
+  (ML_Antiquotation.inline_embedded \<^binding>\<open>\<phi>overloading\<close>
+    (Args.context -- Scan.lift Parse.embedded_position >>
+      (fn (ctxt, name) => ML_Syntax.print_string (check_overloading (Context.Proof ctxt) name))));
+
 
 end
 

@@ -558,7 +558,7 @@ ML_file \<open>library/generic_element_access.ML\<close>
 
 \<phi>lang_parser aggregate_getter_setter (%\<phi>parser_lbrack, %\<phi>lang_app) ["["] (\<open>PROP _\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>[\<close> >> (fn (_, pos) => fn cfg =>
-    Generic_Element_Access.gen_access (\<^named_theorems>\<open>[]_\<phi>app\<close>, \<^named_theorems>\<open>[]:=_\<phi>app\<close>)
+    Generic_Element_Access.gen_access (@{\<phi>overloading "[]"}, @{\<phi>overloading "[]:="})
                                       (("[",pos), (NONE, pos))
                                       cfg s) \<close>
 

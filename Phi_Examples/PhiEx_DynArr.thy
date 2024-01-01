@@ -40,8 +40,6 @@ proc get_dynarr:
   \<open>MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
-    thm useful
-
 
 
 

@@ -87,7 +87,7 @@ fun mk_element_index_input_internal args0 ctxt =
 fun gen_access named_thm_of_rules pos_and_first_args cfg stat =
   let fun invoke (args, rules_name) (oprs, (ctxt,sequent)) =
         let val (idx_input, ctxt') = mk_element_index_input_internal args ctxt
-            val rules = Named_Theorems.get ctxt' rules_name
+            val rules = Phi_App_Rules.get_overloadings ctxt' rules_name
                       |> map (Drule.infer_instantiate ctxt' [(("input_index", 0), Thm.cterm_of ctxt' idx_input)])
          in (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (ctxt', sequent))
         end
@@ -203,7 +203,7 @@ val dot_triangle_opr =
                    end
              | _ => (idx_input, ctxt'3, sequent'3, stack')
   
-        val rules = Named_Theorems.get ctxt'4 \<^named_theorems>\<open>\<tribullet>_\<phi>app\<close>
+        val rules = Phi_App_Rules.get_overloadings ctxt'4 @{\<phi>overloading "\<tribullet>"}
         fun process_index idx s =
           if is_empty (Thm.term_of idx)
           then s |> apfst Generic_Element_Access.stop_reporting_unprocessed_element_index
