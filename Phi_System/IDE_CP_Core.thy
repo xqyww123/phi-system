@@ -526,10 +526,7 @@ subsection \<open>Ad-hoc Overload\<close>
 
 ML_file \<open>library/system/app_rules.ML\<close>
 
-attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_and_symbol_position) >>
-  (fn names => Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) names))\<close>
-
-\<phi>overloads cast \<open>Transform the content of a container\<close>
+\<phi>overloads cast
 
 text \<open>
 Convention of Overloading Distance:

@@ -277,8 +277,8 @@ val _ =
                    sym, arity) thy) decls
          #> Named_Target.theory_map (
               fold (fn ((_,sym),_) =>
-                Named_Theorems.declare (Binding.suffix_name "_\<phi>app" (Binding.make sym))
-                    ("overloads \<phi>-programming operator " ^ fst sym)
+                Phi_App_Rules.declare_overloading (Binding.make sym)
+                    (*("overloads \<phi>-programming operator " ^ fst sym)*)
                 #> snd)
               decls)
        ))
