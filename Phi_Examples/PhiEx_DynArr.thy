@@ -1,6 +1,7 @@
 theory PhiEx_DynArr
   imports Phi_Semantics.PhiSem_C
           Phi_Semantics.PhiSem_Int_ArbiPrec
+          Phi_Semantics.PhiSem_Mem_C_AI
 begin
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -26,7 +27,9 @@ abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {
 context
   fixes TY :: TY
     and T :: \<open>(VAL, 'x) \<phi>\<close>
+    and zero :: 'x
   assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>
 begin
 
 
@@ -40,6 +43,33 @@ proc get_dynarr:
   \<open>MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
+proc set_dynarr:
+  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  premises \<open>i < length l\<close>
+  output \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
+\<medium_left_bracket>
+  to \<open>OPEN _ _\<close> ;;
+  $addr \<tribullet> data ! \<tribullet> $i := $v ;;
+ \<open>l[i := v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
+\<medium_right_bracket> .
+
+proc push_dynarr:
+  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  output \<open>l @ [v] \<Ztypecolon> DynArr addr TY T\<close>
+  is [routine]
+\<medium_left_bracket>
+  to \<open>OPEN _ _\<close> ;;
+  val len \<leftarrow> $addr \<tribullet> len ! ;;
+  val cap \<leftarrow> $addr \<tribullet> cap ! ;;
+  if ($len < $cap) \<medium_left_bracket>
+      $addr \<tribullet> data ! \<tribullet> $len := $v ;;
+      $addr \<tribullet> len := $len + 1 ;;
+      \<open>l@[v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close> ;;
+      return
+  \<medium_right_bracket> \<medium_left_bracket>
+      calloc_aN ($cap * 2) \<open>T\<close>
+
+
 
 
 
@@ -47,15 +77,5 @@ end
 
 
 
-
-
-
-term \<open>Transformation_Functor (DynArr addr TY) (DynArr addr TY) T U set (\<lambda>_. UNIV) list_all2\<close>
-
-
-
-term \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr TY T) (list_all2 eq)\<close>
-
-term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr TY T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
 
 end
