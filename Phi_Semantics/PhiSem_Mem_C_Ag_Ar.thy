@@ -214,7 +214,7 @@ setup \<open>Context.theory_map (
      | X => NONE)
 )\<close>
 
-term \<open>\<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] T\<close>
+term \<open>\<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] (T::(VAL,'x) \<phi>)\<close>
 
 subsection \<open>Reasoning\<close>
 

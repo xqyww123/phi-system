@@ -3,6 +3,7 @@ theory PhiSem_Mem_C
   abbrevs "<mem>" = "\<m>\<e>\<m>"
       and "<mem-blk>" = "\<m>\<e>\<m>-\<b>\<l>\<k>"
       and "<slice>" = "\<s>\<l>\<i>\<c>\<e>"
+      and "<ref>" = "\<r>\<e>\<f>"
 begin
 
 section \<open>Semantics\<close>
@@ -103,11 +104,6 @@ definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Righ
 
 
 
-  
-
-(* \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 Mem_Coercion Mem_Coercion Mem_Coercion (\<^emph>) (\<^emph>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close> *)
-
-
 subsection \<open>Memory Object\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -122,6 +118,12 @@ subsubsection \<open>Syntax\<close>
 paragraph \<open>Memory Object\<close>
 
 consts Mem_synt :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
+       may_mem_coerce :: \<open>('c, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close>
+
+\<phi>adhoc_overloading may_mem_coerce \<open>\<lambda>x. x\<close> Mem_Coercion
+
+abbreviation ("input") no_mem_coerce :: \<open>(mem_fic, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close> ("\<r>\<e>\<f> _" [910] 910)
+  where \<open>no_mem_coerce \<equiv> (\<lambda>x. x)\<close>
 
 ML \<open>
 structure Phi_Mem_Parser = Handlers (
@@ -160,7 +162,7 @@ parse_translation \<open>[
                                             | (\<^const_syntax>\<open>Guided_Mem_Coercion\<close>, _) => true
                                             | _ => false) term
                      then term
-                     else Const(\<^const_syntax>\<open>Mem_Coercion\<close>, dummyT) $ term
+                     else Const(\<^const_syntax>\<open>may_mem_coerce\<close>, dummyT) $ term
   in Const(\<^const_name>\<open>MemBlk\<close>, dummyT)
       $ (Const(\<^const_name>\<open>memaddr.blk\<close>, dummyT) $ addr)
       $ (
@@ -545,6 +547,59 @@ lemma [\<phi>reason %ToA_mem_coerce_end]:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def .
+
+
+subsection \<open>Auxiliary Simplification\<close>
+
+subsubsection \<open>Converting \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk a] ((memaddr.index a @ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
+                          \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk a] (memaddr.index a \<^bold>\<rightarrow>\<^sub>@ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
+                      to \<open>\<m>\<e>\<m>[a \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h>] \<dots>\<close>\<close>
+
+lemma MemBlk_\<phi>MapAt_L_assoc[no_atp, \<phi>programming_simps, \<phi>programming_base_simps]:
+  \<open> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (a \<^bold>\<rightarrow>\<^sub>@ b \<^bold>\<rightarrow>\<^sub>@ T) = \<m>\<e>\<m>-\<b>\<l>\<k>[blk] ((a @ b) \<^bold>\<rightarrow>\<^sub>@ T) \<close>
+  by (simp add: \<phi>MapAt_L.scalar_assoc[simplified times_list_def])
+
+simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (idx \<^bold>\<rightarrow>\<^sub>@ T)\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>MemBlk\<close>, _) $ (Const(\<^const_name>\<open>memaddr.blk\<close>, _) $ a0)
+                                    $ (Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, _) $ idx $ _) =>
+        let fun quick_chk (Const(\<^const_name>\<open>List.append\<close>, _) $ L $ R) = quick_chk L @ quick_chk R
+              | quick_chk (Const(\<^const_name>\<open>list.Cons\<close>, _) $ x $ L) = x :: quick_chk L
+              | quick_chk (Const(\<^const_name>\<open>list.Nil\<close>, _)) = []
+              | quick_chk (Const(\<^const_name>\<open>memaddr.index\<close>, _) $ a1) =
+                   if a0 aconv a1 then [] else raise Match
+         in if (null (quick_chk idx) handle Match => true) then NONE else
+        let fun parse_idx ctmx (Const(\<^const_name>\<open>List.append\<close>, _) $ L $ R)
+                  = parse_idx (Thm.dest_arg1 ctmx) L @ parse_idx (Thm.dest_arg ctmx) R
+              | parse_idx ctmx (Const(\<^const_name>\<open>list.Cons\<close>, _) $ _ $ L)
+                  = Thm.dest_arg1 ctmx :: parse_idx (Thm.dest_arg ctmx) L
+              | parse_idx _ (Const(\<^const_name>\<open>list.Nil\<close>, _)) = []
+              | parse_idx ctmx (Const(\<^const_name>\<open>memaddr.index\<close>, _) $ a1) =
+                    if a0 aconv a1 then [] else raise Match
+            val cidx = Thm.dest_arg1 (Thm.dest_arg ctm)
+            val cT = Thm.dest_arg (Thm.dest_arg ctm)
+            val idxs = parse_idx cidx idx
+            val cblk = Thm.dest_arg1 ctm
+            val caddr'= fold (fn i => fn a => Thm.apply (Thm.apply \<^cterm>\<open>addr_gep\<close> a) i) idxs
+                             (Thm.dest_arg cblk)
+            val rule = \<^instantiate>\<open>blk=cblk and idx=cidx and addr=caddr' and T=cT and 'a=\<open>Thm.dest_ctyp0 (Thm.ctyp_of_cterm cT)\<close>
+                                in lemma \<open>memaddr.blk addr = blk
+                                      \<Longrightarrow> memaddr.index addr = idx
+                                      \<Longrightarrow> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (idx \<^bold>\<rightarrow>\<^sub>@ T) \<equiv> \<m>\<e>\<m>[addr] T\<close>
+                                      by simp\<close>
+         in SOME rule
+        end end \<close>
+
+declare [[simp_trace]]
+
+lemma
+  \<open>P (\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk a] ((memaddr.index a @ [b,c]) \<^bold>\<rightarrow>\<^sub>@ T))\<close>
+   apply simp
+
+thm \<phi>MapAt_L.scalar_assoc[simplified times_list_def]
+thm times_list_def
+
+thm addr_gep_def
 
 
 end

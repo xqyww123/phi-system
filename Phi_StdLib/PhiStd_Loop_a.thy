@@ -93,13 +93,13 @@ proc map_2list_loop:
        and [symmetric, simp]: \<open>(\<And>l i. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (h\<^sub>b i (l ! i)) : fst (h\<^sub>b' i l))\<close> \<comment> \<open>TODO: error print\<close>
        and map\<^sub>a[\<phi>reason 9999]: \<open>\<And>x i l.
                        \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len \<and> D\<^sub>a l
-                   \<Longrightarrow> \<m>\<a>\<p> g\<^sub>a x \<otimes>\<^sub>f id : U\<^sub>a i \<^emph> R\<^sub>a i \<mapsto> U\<^sub>a i \<^emph> R\<^sub>a i
+                   \<Longrightarrow> \<m>\<a>\<p> g\<^sub>a i x \<otimes>\<^sub>f id : U\<^sub>a i \<^emph> R\<^sub>a i \<mapsto> U\<^sub>a i \<^emph> R\<^sub>a i
                        \<o>\<v>\<e>\<r> ff i x : T\<^sub>a \<mapsto> T\<^sub>a
                        \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>a i \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>a i \<i>\<n> {l} \<close>
        and P2[symmetric, simp, \<phi>safe_simp]: \<open>(\<And>i x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (list_upd_map i (f i x)) : ff i x)\<close> \<comment> \<open>TODO: error print, defualt premise attribute!\<close>
        and body: \<open>\<And>i v. \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
                     \<Longrightarrow> \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> fst (h\<^sub>a i l\<^sub>a) \<Ztypecolon> U\<^sub>a i\<heavy_comma> h\<^sub>b i (l\<^sub>b ! i) \<Ztypecolon> U\<^sub>b i\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>
-                                  \<longmapsto> X\<heavy_comma> g\<^sub>a (h\<^sub>b i (l\<^sub>b ! i)) (fst (h\<^sub>a i l\<^sub>a)) \<Ztypecolon> U\<^sub>a i\<heavy_comma> h\<^sub>b i (l\<^sub>b ! i) \<Ztypecolon> U\<^sub>b i \<rbrace>\<close>
+                                  \<longmapsto> X\<heavy_comma> g\<^sub>a i (h\<^sub>b i (l\<^sub>b ! i)) (fst (h\<^sub>a i l\<^sub>a)) \<Ztypecolon> U\<^sub>a i\<heavy_comma> h\<^sub>b i (l\<^sub>b ! i) \<Ztypecolon> U\<^sub>b i \<rbrace>\<close>
 
   premises P1[]: \<open>\<forall>i l l'. length l = length l' \<and> l!i = l'!i \<longrightarrow> fst (h\<^sub>a i l) = fst (h\<^sub>a i l')\<close>
        and [simp]: \<open>length l\<^sub>b = len \<and> length l\<^sub>a = len\<close>
