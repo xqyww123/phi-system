@@ -579,8 +579,8 @@ lemma [\<phi>reason %mapToA_mem_coerce_end]:
   unfolding Guided_Mem_Coercion_def .
 
 lemma [\<phi>reason %ToA_mem_coerce_end]:
-  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+  \<open> \<comment> \<open>Atomic_SemTyp ty @action \<A>_mem_coerce\<close>
+    x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def .
 
@@ -597,8 +597,8 @@ lemma [\<phi>reason %ToA_mem_coerce_end]:
   unfolding Guided_Mem_Coercion_def .
 
 lemma [\<phi>reason %ToA_mem_coerce_end]:
-  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
+  \<open> \<comment> \<open>Atomic_SemTyp ty @action \<A>_mem_coerce\<close>
+    X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def .
 

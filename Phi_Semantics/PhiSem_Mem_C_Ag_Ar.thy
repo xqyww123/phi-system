@@ -171,13 +171,15 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma [\<phi>reason add]: \<comment> \<open>TODO: automatically generate this rule!\<close>
+\<phi>reasoner_group slice_ptr_ToA = (%ToA_cut, [%ToA_cut, %ToA_cut+30]) in ToA_cut \<open>\<close>
+
+lemma [\<phi>reason %slice_ptr_ToA]: \<comment> \<open>TODO: automatically generate this rule!\<close>
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr \<and> len' = len \<and> TY' = TY
 \<Longrightarrow> x \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr':len'] TY' \<close>
   unfolding Premise_def
   by simp
 
-lemma [\<phi>reason add]:
+lemma [\<phi>reason %slice_ptr_ToA]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
 \<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY' \<close>
@@ -186,14 +188,22 @@ lemma [\<phi>reason add]:
     to \<open>\<Pp>\<t>\<r> TY'\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
-lemma [\<phi>reason add]:
+lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet>\<^sub>a (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
 \<Longrightarrow> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY' \<close>
   \<medium_left_bracket>
     to RawPointer
-    \<open>i \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:len] TY')\<close>
-    certified by auto_sledgehammer
+    \<open>i \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr \<noteq> 0
+\<Longrightarrow> addr \<Ztypecolon> \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[LEN] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:LEN] TY \<close>
+  \<medium_left_bracket>
+    to RawPointer ;;
+    \<open>0 \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 

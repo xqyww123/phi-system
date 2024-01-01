@@ -1,6 +1,6 @@
 theory PhiStd_Slice_a \<comment> \<open>'a' for arbitary precision interger\<close>
   imports PhiStd_Loop_a
-          Phi_Semantics.PhiSem_Mem_C_Ag_Ar
+          Phi_Semantics.PhiSem_Mem_C_Ar_AI
 begin
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -41,9 +41,18 @@ proc map_2slice:
 \<medium_right_bracket> .
 
 
-
-
-
+proc memcpy:
+  requires \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
+  input  \<open>l\<^sub>a \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>a] \<s>\<l>\<i>\<c>\<e>[i\<^sub>a,len] T\<heavy_comma> l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>b] \<s>\<l>\<i>\<c>\<e>[i\<^sub>b,len] T\<heavy_comma>
+          i\<^sub>a \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr\<^sub>a:LEN\<^sub>a] TY\<heavy_comma> i\<^sub>b \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr\<^sub>b:LEN\<^sub>b] TY\<heavy_comma> len \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  premises \<open>i\<^sub>a + len \<le> LEN\<^sub>a \<and> i\<^sub>b + len \<le> LEN\<^sub>b\<close>
+  output \<open>l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>a] \<s>\<l>\<i>\<c>\<e>[i\<^sub>a,len] T\<heavy_comma> l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>b] \<s>\<l>\<i>\<c>\<e>[i\<^sub>b,len] T\<close>
+  for T :: \<open>(VAL, 'x) \<phi>\<close>
+\<medium_left_bracket>
+  map_2slice ($len) \<medium_left_bracket> \<rightarrow> val k ;;
+      $i\<^sub>a + $k := ($i\<^sub>b + $k) !
+  \<medium_right_bracket>
+\<medium_right_bracket> .
 
 
 end
