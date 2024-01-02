@@ -204,7 +204,7 @@ val _ = Theory.setup (
                    else read_instantiate_closed ctxt args' stat))
             end))
     "named instantiation of the goal"
-#> Method.setup \<^binding>\<open>of_tac\<close>
+#> Method.setup \<^binding>\<open>instantiate\<close>
     (Scan.lift
         (Args.mode "unchecked" --
           (Scan.repeat (Scan.unless concl inst) --

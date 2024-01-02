@@ -18,19 +18,24 @@ begin
             (arbitrary: addr')
           and Functional_Transformation_Functor
 
- 
+context
+  fixes T :: \<open>(VAL, 'a) \<phi>\<close>
+    and TY :: TY \<comment> \<open>semantic type\<close>
+  assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
+begin
+
+declare [[auto_sledgehammer_params = "try0 = false"]]
+  \<comment> \<open>For some reason I don't know, sledgehammer fails silently (with throwing an Interrupt exception)
+      when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.\<close>
+
+
 proc nth_llist:
-  requires [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
   premises \<open>i < length l\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
   is [recursive l i addr]
   \<medium_left_bracket>
-    obtain l\<^sub>h l\<^sub>r where [simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer  ;;
-        \<comment> \<open>annotation 1 due to deficiency of sledgehammer for instantiating existential quantification (unknown variables).
-            Readers may remove this line to see a correct proof obligation is still generated but
-            sledgehammer fails on it.\<close> 
-    to \<open>OPEN 1 _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
+    to \<open>OPEN 1 _\<close> certified by (instantiate \<open>hd l\<close> \<open>tl l\<close>, auto_sledgehammer) ;; \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data !
     \<medium_right_bracket> \<medium_left_bracket>
@@ -40,21 +45,21 @@ proc nth_llist:
   \<medium_right_bracket> .
 
 proc update_nth_llist:
-  requires [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output \<open>l[i := y] \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [recursive l i addr]
   \<medium_left_bracket>
-    obtain l\<^sub>h l\<^sub>r where [simp]: \<open>l = l\<^sub>h # l\<^sub>r\<close> by auto_sledgehammer \<comment> \<open>annotation 1\<close> ;; 
-    to \<open>OPEN 1 _\<close> \<comment> \<open>annotation 2: open abstraction\<close>
+    to \<open>OPEN 1 _\<close> certified by (instantiate \<open>hd l\<close> \<open>tl l\<close>, auto_sledgehammer) ;; \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data := $y
     \<medium_right_bracket> \<medium_left_bracket>
         update_nth_llist ($addr \<tribullet> "nxt" !, $i - 1, $y)
     \<medium_right_bracket>
-    \<open>MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
+    \<open>MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 2: close abstraction\<close>
  \<medium_right_bracket> .
+
+end
 
 proc length_of:
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
@@ -65,7 +70,7 @@ proc length_of:
   if \<open>$addr = 0\<close> \<medium_left_bracket>
     0
   \<medium_right_bracket> \<medium_left_bracket>                           \<comment> \<open>TODO: create a syntax for this existential instantiation\<close>
-    to \<open>OPEN 1 _\<close> certified by (of_tac \<open>hd l\<close>, of_tac \<open>tl l\<close>, auto_sledgehammer) ;;
+    to \<open>OPEN 1 _\<close> certified by (instantiate \<open>hd l\<close> \<open>tl l\<close>, auto_sledgehammer) ;;
     length_of ($addr \<tribullet> nxt !) + 1
     \<open>MAKE 1 (Linked_Lst addr TY T)\<close>
   \<medium_right_bracket>
@@ -102,7 +107,7 @@ proc reverse':
       to \<open>OPEN 0 _\<close>
       $addr'
     \<medium_right_bracket> \<medium_left_bracket>
-      to \<open>OPEN 1 _\<close> certified by (of_tac \<open>hd l\<close>, of_tac \<open>tl l\<close>, auto_sledgehammer) ;;
+      to \<open>OPEN 1 _\<close> certified by (instantiate \<open>hd l\<close> \<open>tl l\<close>, auto_sledgehammer) ;;
       $addr \<tribullet> nxt ! \<rightarrow> val aa ;;
       $addr \<tribullet> nxt := $addr' ;;
       (*select*) \<open>Linked_Lst addr' TY T\<close> (*to apply 1st constructor*) \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;

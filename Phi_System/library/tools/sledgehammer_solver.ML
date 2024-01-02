@@ -247,7 +247,12 @@ fun raw_sledgehammer stat =
             end
          | _ => raise Phi_Reasoners.Automation_Fail NONE)*)
     handle SH_Short_Cut ret => [ret]
-         | err as Exn.Interrupt => (warning "Interrupted"; Exn.reraise err)
+         | err as Exn.Interrupt => (warning "Interrupted\n\
+              \If this interruption is unexpected for you, it can be caused by the \<open>try0\<close> based\n\
+              \proof reconstruction of Sledgehammer.\n\
+              \You may \<open>declare [[auto_sledgehammer_params = \"try0 = false\"]]\<close> to disable \<open>try0\<close>,\n\
+              \and hopefully the problem can be addressed.";
+              Exn.reraise err)
          | E => raise E
   end
 

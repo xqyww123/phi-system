@@ -1191,7 +1191,7 @@ locale share_fiction_for_partial_mapping_resource2 =
 begin
 
 sublocale permission_fiction Res \<open>R.share_orthogonal_homo\<close> Fic
-  apply (standard, of_tac UNIV; simp add: pointwise_set_UNIV kernel_is_1_def)
+  apply (standard, instantiate UNIV; simp add: pointwise_set_UNIV kernel_is_1_def)
   using comp_eq_dest_lhs by fastforce
 
 lemma [simp]:
