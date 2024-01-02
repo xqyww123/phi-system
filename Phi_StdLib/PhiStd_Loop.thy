@@ -4,8 +4,6 @@ theory PhiStd_Loop
           Phi_Semantics.PhiSem_Variable
 begin
 
-declare [[\<phi>trace_reasoning = 0]]
-
 proc replicate:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @action NToA\<close>

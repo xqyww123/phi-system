@@ -7,8 +7,6 @@ theory PhiTest_Arithmetic
     "HOL-Computational_Algebra.Primes"
 begin
 
-declare [[\<phi>trace_reasoning = 2]]
-
 proc test_prime:
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close> \<comment> \<open>\<^term>\<open>prime :: nat => bool\<close> is a predicate checking primes\<close>
@@ -116,7 +114,7 @@ proc binary_search:
   output \<open>(LEAST i. lower \<le> i \<and> i \<le> upper \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
   is [routine]
 \<medium_left_bracket> 
-  pure_fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
+  holds_fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
 
   if ( F($lower) ) \<medium_left_bracket>
      return ($lower)

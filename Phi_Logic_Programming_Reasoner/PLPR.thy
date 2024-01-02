@@ -1725,9 +1725,7 @@ declare [[
 
 paragraph \<open>Rules\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
-lemma ttt[\<phi>reason default %IEUV__default,
+lemma [\<phi>reason default %IEUV__default,
        \<phi>reason %IEUV__top if \<open>fn (_, sequent) =>
           case Thm.major_prem_of sequent
             of _ (*Trueprop*) $ (_ (*IEUV*) $ _ $ _ $ X $ _) =>
@@ -1829,8 +1827,6 @@ lemma [\<phi>reason %IEUV_eq+20]:
   unfolding IEUV_def \<r>Guard_def Ant_Seq_def Literal_Boolean_def
   by (cases y; simp)
 *)
-
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason %IEUV_eq+20]:
   \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y

@@ -264,13 +264,6 @@ definition Domainoid_Homo\<^sub>L :: \<open>('c::sep_magma,'d::sep_magma) domain
 
 subsection \<open>Approximately Evaluating Domainoid of BI Assertions\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
-
-
-
-
-
 
 (*Do we need to consider relation in commutativity?*)
 

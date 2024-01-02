@@ -58,8 +58,6 @@ section \<open>\<phi>-Types\<close>
 
 subsection \<open>Variable\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 \<phi>type_def Var :: \<open>varname \<Rightarrow> (VAL option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Var vname T \<equiv> (FIC.Var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close>
   deriving Basic
@@ -317,7 +315,6 @@ lemma parse_eleidx_input_least1_opt_NIL:
 
 subsection \<open>Variable Operations\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
 declare [[\<phi>display_value_internal_name=true]]
 
 proc op_get_var:

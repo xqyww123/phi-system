@@ -377,8 +377,6 @@ and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<o
   and aggregate_access = (1010, [1000,1030]) in aggregate_access_all
       \<open>cutting rules\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 (*
 lemma [\<phi>reason 1]:
   \<open>\<phi>Aggregate_Getter [] T T id\<close>

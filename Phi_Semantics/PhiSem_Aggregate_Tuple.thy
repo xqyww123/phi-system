@@ -119,8 +119,6 @@ section \<open>\<phi>Type\<close>
 
 subsection \<open>Empty Tuple\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def Empty_Tuple :: \<open>(VAL, unit) \<phi>\<close>
   where \<open>x \<Ztypecolon> Empty_Tuple \<equiv> V_tup.mk [] \<Ztypecolon> Itself\<close>
   deriving Basic
@@ -132,8 +130,6 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>adhoc_overloading \<phi>_Empty_Tuple_sugar Empty_Tuple
 
 subsection \<open>Field\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def Tuple_Field :: "(VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
   where \<open>Tuple_Field T \<equiv> (\<lambda>v. V_tup.mk [v]) \<Zcomp>\<^sub>f T\<close>
@@ -164,8 +160,6 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
 \<Longrightarrow> Semantic_Zero_Val (semty_tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding Semantic_Zero_Val_def
   by (clarsimp simp add: V_tup_mult_cons image_iff, insert V_tup_sep_disj_L, blast)
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<phi>SemType (fst x_xs \<Ztypecolon> T) TY

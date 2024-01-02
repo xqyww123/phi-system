@@ -574,8 +574,6 @@ section \<open>\<phi>-Types for Pointer\<close>
 
 subsection \<open>Physical Pointer\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def RawPointer :: "(VAL, rawaddr) \<phi>"
   where \<open>x \<Ztypecolon> RawPointer \<equiv> (V_pointer.mk x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_rawaddr x)\<close>
   deriving Basic
@@ -673,8 +671,6 @@ lemma [\<phi>reason %\<phi>synthesis_literal]:
 section \<open>Reasoning Configuration\<close>
 
 subsection \<open>common_multiplicator of path\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) (memaddr.index (memaddr _ _)) _ _\<close>]:
   \<open> common_multiplicator_2 (@) pa pb pc

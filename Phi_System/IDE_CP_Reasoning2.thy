@@ -1007,8 +1007,6 @@ lemma [\<phi>reason %\<phi>mapToA_norm
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   by simp
 
-declare [[\<phi>trace_reasoning = 2]]
-
 lemma [\<phi>reason %\<phi>mapToA_norm
         for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
              \<o>\<v>\<e>\<r> _ : (_ [False]\<^emph> _ ) \<^emph>[_] _ \<mapsto> (_ [False]\<^emph> _) \<^emph>[_] _

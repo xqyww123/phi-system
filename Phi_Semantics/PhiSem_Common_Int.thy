@@ -6,9 +6,10 @@ section \<open>Common Integer Base\<close>
 
 subsection \<open>Logic Syntax and Isabelle Syntax Hijack\<close>
 
+(*
 ML \<open>structure PhiSem_Common_Int_Notation_Patch = Theory_Data (
   type T = string; val empty = ""; val merge = K ""
-)\<close>
+)\<close>*)
 
 setup \<open>
 let val remove_synt = Sign.notation false Syntax.mode_default [
@@ -19,12 +20,9 @@ let val remove_synt = Sign.notation false Syntax.mode_default [
     (Const (\<^const_name>\<open>Rats\<close>, dummyT), Mixfix (Input.string "\<rat>", [], 1000, Position.no_range)),
     (Const ("Real_Vector_Spaces.Reals", dummyT), Mixfix (Input.string "\<real>", [], 1000, Position.no_range))
   ]
-in remove_synt
-#> Theory.at_begin (fn thy =>
-      if PhiSem_Common_Int_Notation_Patch.get thy = Context.theory_long_name thy
-      then NONE
-      else SOME (thy |> PhiSem_Common_Int_Notation_Patch.put (Context.theory_long_name thy)
-                     |> remove_synt))
+in fn thy => thy
+|> remove_synt
+|> Context.theory_map (Phi_Hacks.Thy_At_Begin.add' (66, thy) (K remove_synt))
 end\<close>
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]

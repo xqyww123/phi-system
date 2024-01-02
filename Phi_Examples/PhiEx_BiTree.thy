@@ -43,8 +43,6 @@ thm tree.rel_sel
 
 
 
-declare [[\<phi>trace_reasoning = 1]]
-
 \<phi>type_def BiTree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
   where \<open> (Leaf \<Ztypecolon> BiTree addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
       | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BiTree addr TY T) =
@@ -783,8 +781,8 @@ proc insert_avl_i:
             $addr \<tribullet> left := $a\<^sub>L' ;;
             \<open>BiTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)  ;; 
 
-            pure_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree L))\<close> for k' h v ;;
-            pure_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree R)\<close> ;;
+            holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree L))\<close> for k' h v ;;
+            holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree R)\<close> ;;
   
             return (maintain_i ($addr))
                     thm return_\<phi>app
@@ -795,8 +793,8 @@ proc insert_avl_i:
             $addr \<tribullet> right := $a\<^sub>R' ;;
             \<open>MAKE 1 (BiTree addr _ _)\<close> certified by (of_tac \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)  ;; 
 
-            pure_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree R))\<close> for k' h v ;;
-            pure_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree L)\<close> ;;
+            holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree R))\<close> for k' h v ;;
+            holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree L)\<close> ;;
 
             return (maintain_i ($addr))
         \<medium_right_bracket>

@@ -1051,9 +1051,6 @@ lemma [\<phi>reason 1000]:
   unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def \<r>EIF_def
   by blast
 
-declare [[\<phi>trace_reasoning = 1]]
-
-
 
 subsection \<open>Top\<close>
 
@@ -1067,8 +1064,6 @@ lemma Top_Inhabited[simp]:
   by clarsimp
 
 subsubsection \<open>Transformation Rules\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>reasoner_group ToA_top = (%ToA_success, [%ToA_success-1, %ToA_success+1]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<top> \<w>\<i>\<t>\<h> _\<close>
                           \<open>Transformation rules handling \<top>\<close>
@@ -5293,9 +5288,6 @@ lemma [\<phi>reason %extract_pure]:
 subsection \<open>Essential Reasoning Procedures\<close>
 
 subsubsection \<open>Falling Lattice of Transformations\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
-
 (*
 lemma [\<phi>reason default %ToA_falling_latice-1]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
@@ -5413,8 +5405,6 @@ text \<open>Applying reflexive transformation on alpha-equivalent couples of sou
 so be applied of high priority.
 In contrast, unification by reflexive transformation is aggressive. Therefore, they are applied
 only when no other rules are applicable.\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 (*TODO: Auto_Transform_Hint*)
 

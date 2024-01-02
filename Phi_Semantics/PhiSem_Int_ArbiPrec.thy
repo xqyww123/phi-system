@@ -74,8 +74,6 @@ section \<open>\<phi>-Types\<close>
 
 subsection \<open>Integer in the normal sense\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
   where \<open>x \<Ztypecolon> \<phi>AInt \<equiv> V_aint.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
@@ -105,11 +103,6 @@ subsection \<open>Natural Nmber\<close>
   deriving Basic
        and Semantic_Type
        and Semantic_Zero_Val
-
-thm \<phi>ANat.elim
-thm \<phi>ANat.intro
-
-declare [[\<phi>trace_reasoning = 1]]
  
 declare [[
     overloaded_operator_in_synthesis \<open>Int.int\<close>,
@@ -238,8 +231,6 @@ section \<open>Abstraction of Instructions\<close>
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_const_aint_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> Is_Literal x

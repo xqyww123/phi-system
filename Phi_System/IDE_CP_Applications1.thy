@@ -1453,8 +1453,6 @@ lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<
 
 paragraph \<open>Fallback\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma [\<phi>reason default ! %ToA_make_\<phi>type_fail]: \<comment> \<open>Exactly higher than the entry point of Structural Extract\<close>
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> (y \<Ztypecolon> U))
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<w>\<i>\<t>\<h> P\<close>

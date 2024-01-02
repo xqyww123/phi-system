@@ -127,8 +127,6 @@ There is no direct transformation between \<open>\<nat>\<^sup>r\<close> and \<op
 
 subsection \<open>Words\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def Word :: \<open>'b itself \<Rightarrow> (VAL, 'b::len word) \<phi>\<close>
   where \<open>x \<Ztypecolon> Word _ \<equiv> V_int.mk (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
   deriving Basic
@@ -160,8 +158,6 @@ subsection \<open>Natural Numbers\<close>
 
 subsubsection \<open>Rounded Natural Number\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def \<phi>RoundedNat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>RoundedNat _ \<equiv> ((of_nat x :: 'b word) \<Ztypecolon> Word('b))\<close>
   deriving Basic
@@ -190,8 +186,6 @@ declare [[\<phi>reason_default_pattern
 declare \<phi>RoundedNat.elim[condition \<open>Threshold_Cost 7\<close>,
                          \<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Word(_) \<w>\<i>\<t>\<h> _\<close>]
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open>x \<Ztypecolon> \<nat>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Word('b) \<s>\<u>\<b>\<j> y. y = (of_nat x :: 'b::len word) @action to Word('b)\<close>
   \<medium_left_bracket>  \<medium_right_bracket>.
@@ -213,8 +207,6 @@ lemma [\<phi>reason 1000]:
 
 
 subsubsection \<open>Natural Number\<close>
-
-declare [[\<phi>trace_reasoning = 3]]
 
 \<phi>type_def \<phi>Nat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>Nat _ \<equiv> (x \<Ztypecolon> \<nat>\<^sup>r('b) \<s>\<u>\<b>\<j> x \<in> {0..< 2 ^ LENGTH('b)})\<close>
@@ -297,8 +289,6 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
 
 subsection \<open>Integer\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def \<phi>Int :: "'b::len itself \<Rightarrow> (VAL, int) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>Int _ \<equiv> ((of_int x :: 'b word) \<Ztypecolon> Word('b)
                               \<s>\<u>\<b>\<j> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)})\<close>
@@ -346,8 +336,6 @@ lemma [
   \<open>x \<Ztypecolon> \<int>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (of_int x :: 'b::len word) \<Ztypecolon> Word('b) \<w>\<i>\<t>\<h> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)}
    @action to Word('b)\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
-
-declare [[\<phi>trace_reasoning = 0]]
 
 lemma [\<phi>reason %ToA_num_conv for \<open>?x \<Ztypecolon> Word(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<int>(_) \<w>\<i>\<t>\<h> _\<close>]:
   " Threshold_Cost 9
@@ -548,8 +536,6 @@ section \<open>Abstraction of Instructions\<close>
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_const_word_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n : unat n'

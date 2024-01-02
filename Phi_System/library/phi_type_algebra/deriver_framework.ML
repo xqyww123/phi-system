@@ -1739,9 +1739,9 @@ fun default_reasoning_configure (phi, focus:Subgoal.focus, lsequent) (local_prem
                     |> map (fn th => th RS' (ctxt, @{thm' Action_Tag_D}))
       val ToAs = filter is_ToA_template local_prems
               |> maps (instantiate_ToA (Thm.transfer' ctxt (Phi_Help.conj_intros ctxt pure_facts), ctxt))
-      val pure_fact' = map (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=MODE_GUARD]})) pure_facts
+      val holds_fact' = map (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=MODE_GUARD]})) pure_facts
 
-      val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
+      val local_prems = holds_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
       val prem_ants = map_filter (Phi_Reasoners.extract_implied_fact {wrap_all=true} ctxt) local_prems
                    |> flat

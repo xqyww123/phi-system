@@ -6,11 +6,7 @@ theory PhiEx_Strassen
           Phi_Semantics.PhiSem_Mem_C_AI
 begin
 
-declare One_nat_def[simp del]
-declare [[\<phi>trace_reasoning = 0]]
-
 abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<a>\<i>\<n>\<t>\<close>
-
 
 
 \<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
@@ -185,7 +181,7 @@ proc strassen:
 
     $a\<^sub>x \<tribullet> $i\<^sub>x \<tribullet> $j\<^sub>x := $a\<^sub>x \<tribullet> $i\<^sub>x \<tribullet> $j\<^sub>x ! * $a\<^sub>y \<tribullet> $i\<^sub>y \<tribullet> $j\<^sub>y ! ;;
       
-    pure_fact [simp]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close>
+    holds_fact [simp]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close>
     note scalar_prod_def [\<phi>sledgehammer_simps];;
 
     \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x (2^n) (2^n))\<close> ;;

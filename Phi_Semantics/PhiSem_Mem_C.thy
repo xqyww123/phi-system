@@ -24,8 +24,6 @@ lemma Valid_Mem_1[simp]: \<open>1 \<in> Valid_Mem\<close>
 
 subsection \<open>Fiction\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share option\<close> \<comment> \<open>fiction of a single memory object\<close>
 
 fiction_space aggregate_mem =
@@ -91,8 +89,6 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 
 subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [81] 80)
   where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option discrete) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -105,8 +101,6 @@ definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Righ
 
 
 subsection \<open>Memory Object\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
   where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>

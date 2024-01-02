@@ -109,8 +109,6 @@ lemma Mem_Coerce_NTup_Comb:
 
 subsubsection \<open>ToA Mapper\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma [\<phi>reason %mapToA_mem_coerce+10]:
   \<open> \<m>\<a>\<p> g : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U) \<^emph>[C\<^sub>R] R
           \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U') \<^emph>[C\<^sub>R] R'

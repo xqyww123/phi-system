@@ -3446,8 +3446,7 @@ lemma apply_conditioned_Separation_Functor_unzip:
   unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
   apply (cases C; simp) 
   \<medium_left_bracket> premises FTF[] and [useful] and []
-    note [[\<phi>trace_reasoning = 2]] 
-    ;; apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
+    apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
     \<medium_left_bracket> \<medium_right_bracket>
   \<medium_right_bracket> .
 
@@ -3579,8 +3578,6 @@ lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>I_Cond_def Separation_Homo\<^sub>\<Lambda>\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 *)
-
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma apply_conditioned_Separation_Functor\<^sub>\<Lambda>_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>\<Lambda>\<^sub>E Ft Fu Fc T U un)
@@ -4173,8 +4170,6 @@ lemma [\<phi>reason_template default %derived_SE_inj_to_module+1 name F.wrap_mod
             Action_Tag_def NO_SIMP_def Except_Pattern_def
   by (cases C; cases C\<^sub>W; clarsimp; blast)
 
-declare [[\<phi>trace_reasoning = 2]]
-
 lemma ToA_mapper_MOne_src
   [no_atp, \<phi>reason_template default %\<phi>mapToA_derived_module_wrapper name F.mapper_wrap_module_src]:
   \<open> \<g>\<u>\<a>\<r>\<d> partial_add_overlaps a one
@@ -4614,7 +4609,6 @@ subsection \<open>Separation Extraction\<close>
 subsubsection \<open>Transformation Functor\<close>
 
 (* preserved for documenting
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma "_Structural_Extract_general_rule_":
   \<open> \<g>\<u>\<a>\<r>\<d> Prem
@@ -4828,8 +4822,6 @@ lemma "_Structural_Extract\<^sub>\<Lambda>_general_rule_i_"[\<phi>reason_templat
 subsubsection \<open>Transformation Mapper\<close>
 
 
-declare [[\<phi>trace_reasoning = 1]]
-
 context 
   notes BiCond_assoc[simp] BiCond_assoc'[simp] \<phi>Prod_expn''[simp, \<phi>programming_simps]
         prod_opr_norm[simp] boolean_conversions[simp]
@@ -4972,8 +4964,6 @@ text \<open>The proof search is inefficient for semimodule \<phi>-type that sati
 text \<open>According to the discussion above, the rule below should be used only for non-distributive scalars.\<close>
 
 (*preserved for documenting
-
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have usable test case*)
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b) \<and>\<^sub>\<r> Prem
@@ -6126,8 +6116,7 @@ lemma SE_Module_SDistr_ad_cb_ToA_mapper
 
   \<medium_left_bracket> premises dabc[THEN dabc_equation_D_main] and _ and _ and _ and _ and _ and _ and Tr and _ 
     note dabc[THEN conjunct1, symmetric, simp]
-         dabc[THEN conjunct2, simp]
-    note [[\<phi>trace_reasoning = 2]];;
+         dabc[THEN conjunct2, simp] ;;
 
     apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z_\<phi>Some[where t=d and s=a and F=F\<^sub>1]
       certified by (of_tac \<open>(snd (snd x), fst x)\<close>, clarsimp split: prod.split simp add: useful, insert useful(1,2), force) ;;

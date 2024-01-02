@@ -66,8 +66,6 @@ end
 
 subsection \<open>\<open>\<phi>App_Conv\<close>\<close> \<comment> \<open>used only when the given ToA is not in the target space\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma [\<phi>reason_template default %\<phi>app_conv_derived+10]:
   \<open> Functional_Transformation_Functor Fa Fb T U (\<lambda>x. {D x}) R pm fm
 \<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('c\<^sub>a \<times> 'x\<^sub>a) TYPE('c \<times> 'x) @action \<A>_template_reason None
@@ -95,8 +93,6 @@ lemma [\<phi>reason_template default %\<phi>app_conv_derived]:
 section \<open>Value \& Reasoning over it\<close>
 
 subsection \<open>\<phi>-Type Abstraction\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
 
 setup \<open>Context.theory_map (
   Phi_Type.add_type {no_auto=true}

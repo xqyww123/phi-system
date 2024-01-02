@@ -3,8 +3,6 @@ theory Phi_Types_Test
 begin
 
 subsection \<open>Testing \<phi>-Types\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
         
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -79,11 +77,6 @@ end
 
 
 
-
-
-
-
-declare [[\<phi>trace_reasoning = 1]]
      
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>(l \<Ztypecolon> List\<^sub>S 0 T) = (Void \<s>\<u>\<b>\<j> l = [])\<close>
@@ -176,8 +169,6 @@ ML \<open>assert_derived_properties \<^theory> [
       | \<open>(x # l \<Ztypecolon> List2 T) = (prod (\<lambda>x. x \<Ztypecolon> T) (set x)\<heavy_comma> l \<Ztypecolon> List2 T)\<close>
 *)
  
-
-declare [[\<phi>trace_reasoning = 0]]
        
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Itself)\<close>

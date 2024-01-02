@@ -204,7 +204,6 @@ proc (nodef) [\<phi>reason %\<phi>synthesis_cut
   C1 C2 semantic_cons_lval
 \<medium_right_bracket> .
 
-declare [[\<phi>trace_reasoning = 2]]
 
 proc (nodef) [\<phi>reason %\<phi>synthesis_cut
                   for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. _ \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] (List_Item _) \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> @action synthesis\<close>]:

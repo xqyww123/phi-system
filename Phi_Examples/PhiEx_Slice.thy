@@ -3,8 +3,6 @@ theory PhiEx_Slice
           "HOL-Combinatorics.List_Permutation"
           PhiStd.PhiStd_Loop
 begin
-
-declare One_nat_def[simp del]
  
 proc qsort:
   input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32)\<heavy_comma>
@@ -43,8 +41,8 @@ proc qsort:
     qsort ($i, $d) ;;
     qsort ($i + $d, $len - $d) ;;
           
-    pure_fact t1: \<open>\<forall>x\<in>set (drop d l'). l ! (len - 1) < x\<close> ;;
-    pure_fact t2: \<open>\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1)\<close> ;;
+    holds_fact aux: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x) \<and>
+                    (\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close> ;;
 
     return
 

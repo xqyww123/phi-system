@@ -119,8 +119,8 @@ proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 100]:
   output \<open>addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
-  pure_fact t1: \<open>0 < any\<close>
-  pure_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N ;;
+  holds_fact t1: \<open>0 < any\<close>
+  holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N ;;
   semantic_return \<open>
     V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log_arr TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
       \<Turnstile> (addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> Ptr TY')\<close>
@@ -168,8 +168,6 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
   \<open>\<phi>Equal (\<Ss>\<Pp>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
   unfolding \<phi>Equal_def
   by (clarsimp simp: logaddr_to_raw_inj_array)
-
-declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>reasoner_group slice_ptr_ToA = (%ToA_cut, [%ToA_cut, %ToA_cut+30]) in ToA_cut \<open>\<close>
 

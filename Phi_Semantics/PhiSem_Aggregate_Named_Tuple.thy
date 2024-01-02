@@ -157,8 +157,6 @@ section \<open>\<phi>Type\<close>
 
 subsection \<open>Empty Tuple\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def Empty_Named_Tuple :: \<open>(VAL, unit) \<phi>\<close>
   where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> V_named_tup.mk fmempty \<Ztypecolon> Itself\<close>
   deriving Basic
@@ -463,8 +461,6 @@ subsection \<open>Synthesis\<close>
 
 \<phi>reasoner_group \<phi>synthesis_ag_NT = (%\<phi>synthesis_ag, [%\<phi>synthesis_ag, %\<phi>synthesis_ag]) in \<phi>synthesis_ag
   \<open>for named tuple\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 declare synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U,

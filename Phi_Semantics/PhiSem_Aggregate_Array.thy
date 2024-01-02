@@ -60,8 +60,6 @@ lemma list_all_replicate[simp]:
 
 section \<open>\<phi>Type\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
                     ("\<Aa>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)

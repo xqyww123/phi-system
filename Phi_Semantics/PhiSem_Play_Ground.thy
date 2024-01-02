@@ -10,8 +10,6 @@ theory PhiSem_Play_Ground
     PhiSem_Mem_Pointer
 begin
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
   where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
   deriving Basic
@@ -110,7 +108,6 @@ proc
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
 
-declare [[\<phi>trace_reasoning = 2]]
  
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -140,8 +137,6 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 (* declare [[\<phi>hide_techinicals=false]] *)
 
 declare [[\<phi>hide_techinicals=false]]
-
-declare [[\<phi>trace_reasoning = 1]]
 
 (* declare [[\<phi>hide_brk_frame=false, \<phi>easoning]] *)
 
@@ -200,7 +195,6 @@ proc
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>.
 
-declare [[\<phi>trace_reasoning = 2]]
 declare [[\<phi>hide_techinicals=false]]
 
 
@@ -214,15 +208,15 @@ proc
   $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
   while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
   \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket> (*guard*)
-  \<medium_left_bracket> ;; $v \<rightarrow> $v ;; \<open>$v = 10\<close> note [[\<phi>trace_reasoning = 2]] ;;
-        if ( \<open>$v = 10\<close> )
-        \<medium_left_bracket> 
-          ;; break  
-          \<medium_right_bracket> 
-            \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v ;; continue \<medium_right_bracket>
+  \<medium_left_bracket> $v \<rightarrow> $v ;;
+    \<open>$v = 10\<close> ;;
+    if ( \<open>$v = 10\<close> ) \<medium_left_bracket> 
+       break  
+    \<medium_right_bracket> 
+    \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v ;; continue \<medium_right_bracket>
     assert \<open>\<bottom>\<^sub>B\<^sub>I\<close>  
-  \<medium_right_bracket> (*loop body*)
-    ;; $v
+  \<medium_right_bracket> ;; (*loop body*)
+  $v
 \<medium_right_bracket>.
 
 proc

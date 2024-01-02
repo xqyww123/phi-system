@@ -3,8 +3,6 @@ theory PhiStd_Slice_a \<comment> \<open>'a' for arbitary precision interger\<clo
           Phi_Semantics.PhiSem_Mem_C_Ar_AI
 begin
 
-declare [[\<phi>trace_reasoning = 0]]
-
 proc map_slice:
   requires body: \<open>\<And>k v. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k < length l
                      \<Longrightarrow> \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> l ! k \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a (i+k)\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>

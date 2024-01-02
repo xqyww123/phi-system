@@ -5,7 +5,7 @@ theory IDE_CP_Core
   keywords
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
-    "var" "val" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure_fact"
+    "var" "val" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "holds_fact"
     "input" "certified" "apply_rule" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
@@ -2674,13 +2674,13 @@ end)) end
  )\<close>
 
 
-\<phi>lang_parser "pure_fact" (%\<phi>parser_unique, %\<phi>lang_expr) ["pure_fact"] (\<open>PROP ?P\<close>) \<open>
+\<phi>lang_parser "holds_fact" (%\<phi>parser_unique, %\<phi>lang_expr) ["holds_fact"] (\<open>PROP ?P\<close>) \<open>
 let
   val for_fixes = Scan.optional (Parse.$$$ "for" |-- Parse.!!! Parse.params) [];
   val statement = Parse.and_list1 (
           Parse_Spec.opt_thm_name ":" -- Scan.repeat1 Parse.prop -- for_fixes);
 in
-  fn (oprs, (ctxt, sequent)) => Parse.position \<^keyword>\<open>pure_fact\<close> -- statement >> (
+  fn (oprs, (ctxt, sequent)) => Parse.position \<^keyword>\<open>holds_fact\<close> -- statement >> (
   fn ((_,pos), raw_statements) => fn _ =>
   let val id = Phi_ID.get ctxt
 

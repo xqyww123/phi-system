@@ -58,8 +58,6 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
 
 
 section \<open>\<phi>-Type\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
   where \<open>x \<Ztypecolon> \<bool> \<equiv> V_bool.mk x \<Ztypecolon> Itself\<close>
@@ -123,8 +121,6 @@ lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
 
 
 subsection \<open>Equal\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 declare [[
     overloaded_operator_in_synthesis \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>,

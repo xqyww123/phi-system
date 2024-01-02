@@ -22,6 +22,7 @@ val remove': priority * theory (*the theory belonging the hook*)
          -> Context.generic -> Context.generic
 val invoke : Context.generic -> arg -> state -> state
 val clean : Context.generic -> Context.generic
+val is_empty : Context.generic -> bool
 
 exception Success of state
 exception ReEntry of arg * state
@@ -80,6 +81,8 @@ fun add'' (priority, thy_id) f ctxt =
 fun add' (priority, thy) f ctxt = add'' (priority, Context.theory_long_name thy) f ctxt
 
 fun add priority f ctxt = add' (priority, Context.theory_of ctxt) f ctxt
+
+val is_empty = PriorityTab.is_empty o Data.get
 
 fun remove' (priority,thy) =
   Data.map (PriorityTab.delete_safe (priority, Context.theory_long_name thy))

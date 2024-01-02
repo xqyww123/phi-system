@@ -26,8 +26,6 @@ subsection \<open>Itself\<close> \<comment> \<open>together with the vertical co
 
 lemma Itself_is_primitive: \<open>x \<Ztypecolon> Itself \<equiv> x \<Ztypecolon> Itself\<close> .
 
-declare [[\<phi>trace_reasoning = 1]]
-
 ML \<open>(Thm.transfer \<^theory> @{thm' Itself_is_primitive})\<close>
 
 setup \<open>Context.theory_map (
@@ -79,8 +77,6 @@ setup \<open>Context.theory_map (
        \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 let_\<phi>type \<phi>Any deriving Basic
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -130,8 +126,6 @@ setup \<open>Context.theory_map (
 
 text \<open>We still derive properties of \<open>\<phi>Prod\<close> for consistency of the internal reasoning system,
       even though most of the derived rules are already covered by existing rules.\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
   
 let_\<phi>type \<phi>Prod
   deriving Basic
@@ -153,8 +147,6 @@ ML \<open>assert_derived_properties \<^theory> [
 
 
 subsection \<open>Func\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
  
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
@@ -200,8 +192,6 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding of Subjection\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
@@ -286,8 +276,6 @@ lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name Fa.\<phi>subj [asse
                prems(3-),
         clarsimp) .
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma \<phi>\<s>\<u>\<b>\<j>_Homo_ty[\<phi>reason_template name Fa.\<phi>subj_ty [assertion_simps]]:
   \<open> Functional_Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R pm fm
 \<Longrightarrow> Functional_Transformation_Functor Fa Fa T (T \<phi>\<s>\<u>\<b>\<j> P) D R pm fm
@@ -349,8 +337,6 @@ lemma [\<phi>reason default %\<phi>TA_guesser]:
                             Ds (\<lambda>s t (x,y). P s x \<and> P t y \<longrightarrow> Dx s t (x,y)) zi ants conds \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma [\<phi>reason default %\<phi>TA_guesser]:
   \<open> Guess_Unzip_of_Semimodule TS TC TA F (\<lambda>s x. f s x \<Ztypecolon> T' s x) Ds Dx zi ants conds
 \<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA F (\<lambda>s x. f s x \<Ztypecolon> T' s x \<phi>\<s>\<u>\<b>\<j> P s x)
@@ -409,8 +395,6 @@ lemma [\<phi>reason %guess_tyop_commute+10]:
 
 subsection \<open>Dependent Sum Type\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
   deriving Basic
@@ -456,8 +440,6 @@ lemma \<phi>Dependent_Sum_TF[\<phi>type_property \<phi>Dependent_Sum Transformat
  
 context begin
 
-
-declare [[\<phi>trace_reasoning = 0]]
 
 lemma \<phi>Dependent_Sum_SH\<^sub>I[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>I]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I \<Sigma> \<Sigma> \<Sigma> T U {x. fst (fst x) = fst (snd x)} (\<lambda>x. (fst (fst x), (snd (fst x), snd (snd x)))) \<close>
@@ -692,8 +674,6 @@ text \<open>Transformation functor requires inner elements to be transformed int
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
 declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abst\<close>\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
    
 \<phi>type_def Set_Abst :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
@@ -899,12 +879,6 @@ ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified
 
 paragraph \<open>ToA Reasoning\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
-thm Set_Abst.intro_reasoning\<^sub>R
-thm Set_Abst.intro_reasoning
-thm Set_Abst.elim_reasoning
-
 text \<open>Type-level \<open>Set_Abst.intro_reasoning\<close> is not activated as the reasoning uses
   transformation functor.
 
@@ -1076,8 +1050,6 @@ lemma [\<phi>reason 1000]:
  
 subsection \<open>Vertical Composition\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving \<open>Carrier_Set T P \<Longrightarrow> Carrier_Set (T \<Zcomp> U) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> U) \<longrightarrow> P v)\<close>
@@ -1123,8 +1095,6 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Functionality (T \<Zcomp> U) (\<lambda>x. P\<^sub>U x \<and> (\<forall>m. m \<Turnstile> (x \<Ztypecolon> U) \<longrightarrow> P\<^sub>T m)) \<close>
   unfolding Functionality_def Premise_def
   by clarsimp blast
-
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason 1000]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B'
@@ -1203,8 +1173,6 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
     by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
                prems(1,3-5),
         auto simp add: Satisfaction_def) .
-
-declare [[\<phi>trace_reasoning = 1]]
   
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
@@ -1237,8 +1205,6 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 
 
 subsection \<open>Finite Multiplicative Quantification\<close>
-
-declare [[\<phi>trace_reasoning = 0 ]]
   
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
@@ -1395,8 +1361,6 @@ thm Tr2
 
 subsection \<open>Sum Type\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 (*TODO: move me*)
 lemma [simp]:
   \<open>pred_sum = case_sum\<close>
@@ -1404,8 +1368,6 @@ lemma [simp]:
 
 
 (*TODO: finish me!*)
-
-declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def \<phi>Sum :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
@@ -1483,8 +1445,6 @@ lemma [\<phi>reason %ToA_splitting_\<phi>Sum]:
 
 
 subsubsection \<open>Rule\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason_template name F.\<phi>Sum\<^sub>E[no_atp]]:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
@@ -1589,8 +1549,6 @@ let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\
 
 subsection \<open>Embedding Additive Conjunction\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 declare False_def[symmetric, simp]
  
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
@@ -1687,8 +1645,6 @@ subsection \<open>Vertical Composition of Function\<close>
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> on which automation rules (particularly the Sep_Homo)
   can be given more generally.\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>reasoner_group
       identity_elements_of_\<phi>Fun = (100, [100, 140]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
                                                      in identity_element and > derived_identity_element \<open>\<close>
@@ -1697,9 +1653,6 @@ declare [[\<phi>trace_reasoning = 0]]
 
                              in carrier_set and > derived_carrier_set and < carrier_set_cut \<open>\<close>
 
-
-
-declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
@@ -1769,7 +1722,6 @@ subsubsection \<open>Reasoning Rules\<close>
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi>
@@ -1840,8 +1792,6 @@ subsection \<open>Injection into Unital Algebra\<close>
 lemma \<phi>Some_def': \<open> \<black_circle> T = (Some \<Zcomp>\<^sub>f T) \<close>
   by (rule \<phi>Type_eqI_BI; simp add: BI_eq_iff)
 
-declare [[\<phi>trace_reasoning = 0]]
-
 setup \<open>Context.theory_map (
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Some\<close>, \<^pattern>\<open>\<phi>Some\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
@@ -1882,8 +1832,6 @@ declare \<phi>Some.expansion[\<phi>expns del] \<comment> \<open>removing duplica
 
 
 subsection \<open>Domainoid\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def Domainoid ("\<DD>[_]" [4] 1000)
     where \<open>\<DD>[\<delta>] T \<equiv> \<delta> \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> closed_homo_sep \<delta>\<close>
@@ -2015,8 +1963,6 @@ lemma [\<phi>reason %abstract_domain]:
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 1 ]]
-
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
@@ -2093,8 +2039,6 @@ declare [[\<phi>ToA_assoc_normalization \<open>\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \
 
 subsubsection \<open>Reasoning Rules\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma Semimodule_One\<^sub>I_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
 \<Longrightarrow> Semimodule_One\<^sub>I (\<lambda>s. \<phi>ScalarMul \<psi> s T) T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>
@@ -2120,8 +2064,6 @@ lemma Semimodule_Scalar_Assoc\<^sub>E_by_function[\<phi>reason 1000]:
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc\<^sub>E_def scalar_mult_def Transformation_def
   by clarsimp metis
-
-declare [[\<phi>trace_reasoning = 0]]
 
 lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
@@ -2231,8 +2173,6 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -2270,8 +2210,6 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
 
 
 subsubsection \<open>Empty List\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
      
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
@@ -2294,8 +2232,6 @@ ML \<open>assert_derived_properties \<^theory> [
 
 subsection \<open>Mapping\<close> (*TODO!*)
 
-declare [[\<phi>trace_reasoning = 1]]
-
 \<phi>type_def \<phi>Mapping :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> ('av \<Rightarrow> 'bv, 'a \<Rightarrow> 'b) \<phi>\<close> (infixr "\<Rrightarrow>" 25)
     \<comment> \<open>Forward Simulation\<close>
   where \<open>f \<Ztypecolon> T \<Rrightarrow> U \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>v x. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> g v \<Turnstile> (f x \<Ztypecolon> U))\<close>
@@ -2316,8 +2252,6 @@ lemma [\<phi>inhabitance_rule 1000]:
 subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
@@ -2473,7 +2407,6 @@ thm \<phi>MapAt_L.ToR_scala_assoc_right
 thm \<phi>MapAt_L.ToR_scala_assoc_left
 
 
-declare [[\<phi>trace_reasoning = 1]]
 
 declare \<phi>MapAt_L.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
 declare \<phi>MapAt_L.\<Sigma>\<^sub>E[\<phi>reason add]
@@ -2489,8 +2422,6 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 
 subsection \<open>Permission Sharing\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
   
@@ -2566,7 +2497,6 @@ ML \<open>assert_derived_properties \<^theory> [
         \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'a \<Rightarrow> (?'b list \<Rightarrow> ?'c::share_one) set) (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
 ]\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
 
 declare \<phi>Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
         \<phi>Share.\<Sigma>\<^sub>E[\<phi>reason add]
@@ -2699,8 +2629,6 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Injection from partial map to permissioned partial map\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def To_Share
   where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
@@ -2728,8 +2656,6 @@ abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
 
 
 subsection \<open>Injection into Discrete Algebra\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def Nosep :: \<open>('c, 'a) \<phi> \<Rightarrow> ('c discrete, 'a) \<phi>\<close>
   where \<open>Nosep T = (discrete \<Zcomp>\<^sub>f T)\<close>
@@ -2901,8 +2827,6 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 context begin
 
 private lemma list_all2_single_length_1[simp]:
@@ -3030,10 +2954,6 @@ lemma [\<phi>reason add]:
 
 
 
-
-
-
-declare [[\<phi>trace_reasoning = 0]]
    
 \<phi>type_def \<phi>Mul_Quant_Tree :: \<open>(nat \<Rightarrow> 'k) \<Rightarrow> nat len_intvl \<Rightarrow> ('k list \<Rightarrow> 'c, 'a) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'c::sep_algebra, 'a list) \<phi> \<close> ("\<big_ast>\<^sub>\<bbbT>")
   where \<open>l \<Ztypecolon> \<phi>Mul_Quant_Tree f iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>i. f i \<^bold>\<rightarrow>\<^sub># T)\<close>
@@ -3348,8 +3268,6 @@ lemma [\<phi>inhabitance_rule 1000]:
 (* not need any more
 subsection \<open>Morphism of Separation Homomorphism\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
 \<phi>type_def \<phi>sep_homo :: \<open>('a::sep_magma \<Rightarrow> 'c::sep_magma) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
   where \<open>\<phi>sep_homo \<psi> T = (\<phi>Fun \<psi> \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
   deriving Implication
@@ -3413,8 +3331,6 @@ subsubsection \<open>Insertion Functor\<close>
 
 declare share_orthogonal_homo_pointwise[\<phi>reason 1200]
         share_orthogonal_homo_to_share[\<phi>reason 1200]
-
-declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>insertion :: \<open>('a::sep_monoid \<Rightarrow> 'b::sep_monoid) \<Rightarrow> 'a set \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
   where \<open>\<phi>insertion \<psi> D T = (\<lambda>x. x \<Ztypecolon> \<phi>Fun \<psi> \<Zcomp> T \<s>\<u>\<b>\<j> sep_orthogonal_monoid \<psi> D)\<close>

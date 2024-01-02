@@ -14,8 +14,6 @@ lemma rel_map_map_of__list_all2:
 
 
 declare list.pred_True[simp]
-
-declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def Lookup_Array :: \<open> logaddr \<Rightarrow> (VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi> \<close>
   where \<open> f \<Ztypecolon> Lookup_Array addr K V \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] \<lbrace> k: K, v: V \<rbrace> \<s>\<u>\<b>\<j> l n. f = map_of l \<and> n = length l \<and> distinct (map fst l)\<close>

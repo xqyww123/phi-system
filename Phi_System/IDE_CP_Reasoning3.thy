@@ -69,8 +69,6 @@ section \<open>Small Processes - I\<close>
 
 subsection \<open>Unification of \<lambda>-Abstraction\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
 \<phi>type_def Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
   where \<open>(T <func-over> x) = (\<lambda>f. f x \<Ztypecolon> T)\<close>
   deriving Basic
@@ -210,11 +208,6 @@ lemma apfst_apsnd_lambda_x_x[simp]:
 (*\<Longrightarrow> Dx' T (fst x, fst (snd x))
 \<Longrightarrow> Dx T (fst x) 
 and [\<phi>reason add]*)
-
-
-
-declare [[\<phi>trace_reasoning = 0]]
-
 
 
 
@@ -517,8 +510,6 @@ subsubsection \<open>Join Two \<phi>-Types\<close>
       \<open>Fallbacks of joining two \<phi>-types, using ToA\<close>
 
 paragraph \<open>Fallback by ToA\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason default %br_join_fallback]:
   \<open> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T @action NToA

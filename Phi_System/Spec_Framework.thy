@@ -210,7 +210,6 @@ lemma SemTyp_Of_I[intro!, simp]:
   using \<phi>SemType_unique by blast *)
 
 (*
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason 100]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
