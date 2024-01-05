@@ -18,9 +18,9 @@ We release the current development as a preview and look for cooperators and con
 
 ## Install \& Configuration
 
-The current version works on Isabelle-2022. Please download it from [here](https://isabelle.in.tum.de/).
+The current version works on Isabelle-2023. Please download it from [here](https://isabelle.in.tum.de/).
 
-1. Some additional symbols are required. Please copy lines in file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols) into your Isabelle symbol file `$HOME/.isabelle/Isabelle2022/etc/symbols`.
+1. Some additional symbols are required. Please copy lines in file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols) into your Isabelle symbol file `$HOME/.isabelle/Isabelle2023/etc/symbols`.
 
 2. You maybe need to install a specific font [PhiSymbols](https://github.com/xqyww123/phi-system/tree/master/fonts/PhiSymbols.otf) given in the font directory which defines glyphs of symbols we used in Isabelle.
 

@@ -581,7 +581,7 @@ proc height_of:
   if \<open>$addr = 0\<close> \<medium_left_bracket>
       0
   \<medium_right_bracket> \<medium_left_bracket>
-      to \<open>OPEN 1 _\<close> certified by (instantiate \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;;
+      to \<open>OPEN 1 _\<close> certified by (instantiate \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer)  ;;
       $addr \<tribullet> data \<tribullet> v \<tribullet> height ! is \<open>height tree\<close>
       \<open>tree \<Ztypecolon> MAKE 1 (BinTree addr _ _)\<close>
   \<medium_right_bracket>
@@ -788,7 +788,7 @@ proc insert_avl_i:
         \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' ;;
             $addr \<tribullet> right := $a\<^sub>R' ;;
-            \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)  ;; 
+            \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)   ;; 
 
             holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree R))\<close> for k' h v ;;
             holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree L)\<close> ;;
