@@ -67,8 +67,7 @@ section \<open>\<phi>Type\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
         \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
           (tactic: clarsimp ; subgoal' for x \<open>induct x arbitrary: N\<close>)
-       and \<open>Abstract_Domain T P
-        \<Longrightarrow> Abstract_Domain (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
+       and Abstract_Domain
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
        and Transformation_Functor

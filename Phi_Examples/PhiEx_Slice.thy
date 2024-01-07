@@ -25,7 +25,8 @@ proc qsort:
                             d \<le> n \<and> l <~~> l' \<and>
                             (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
                             (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
-    \<medium_left_bracket> for n \<rightarrow> val n ;;
+    \<medium_left_bracket> 
+      for n \<rightarrow> val n ;;
       ($i + $n)! \<rightarrow> val x ;;
       if ($x \<le> $pivot)
       \<medium_left_bracket>

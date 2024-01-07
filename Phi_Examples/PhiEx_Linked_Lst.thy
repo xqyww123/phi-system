@@ -12,7 +12,7 @@ begin
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr TY T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
           and \<open>Identity_Elements\<^sub>E (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. l = []) (\<lambda>l. addr = 0 \<and> l = [])\<close>
+          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
           and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
               \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr' TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
             (arbitrary: addr')
@@ -41,7 +41,7 @@ proc nth_llist:
     \<medium_right_bracket> \<medium_left_bracket>
         nth_llist ($addr \<tribullet> nxt !, $i - 1)
     \<medium_right_bracket>
-    \<open>MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 3: close abstraction\<close>
+    \<open>MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 2: close abstraction\<close>
   \<medium_right_bracket> .
 
 proc update_nth_llist:

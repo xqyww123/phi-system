@@ -14,7 +14,7 @@ lemma rel_map_map_of__list_all2:
 
 
 declare list.pred_True[simp]
-  
+ 
 \<phi>type_def Lookup_Array :: \<open> logaddr \<Rightarrow> (VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi> \<close>
   where \<open> f \<Ztypecolon> Lookup_Array addr K V \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] \<lbrace> k: K, v: V \<rbrace> \<s>\<u>\<b>\<j> l n. f = map_of l \<and> n = length l \<and> distinct (map fst l)\<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
@@ -24,14 +24,17 @@ declare list.pred_True[simp]
          \<Longrightarrow> Object_Equiv (Lookup_Array addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>
             (tactic: clarsimp,
                      rule exI[where x=\<open>\<lambda>_ g x. map (\<lambda>(k,_). (k, the (g k))) x\<close>],
-                     auto simp: list_all2_conv_all_nth,
-                     subgoal' for y x \<open>rule ext, induct x arbitrary: y\<close>, auto simp: Ball_def)
+                     auto simp: list_all2_conv_all_nth Ball_def,
+                     subgoal' for y x \<open>rule ext, induct x arbitrary: y\<close>)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr \<and> K' = K
         \<Longrightarrow> Transformation_Functor (Lookup_Array addr K) (Lookup_Array addr' K') T U ran (\<lambda>_. UNIV) rel_map \<close>
             (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], auto simp: list_all2_conv_all_nth)
       and \<open>Functional_Transformation_Functor (Lookup_Array addr K) (Lookup_Array addr K) T U ran (\<lambda>_. UNIV)
                                              (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
+      and Identity_Elements
 
+term \<open>Identity_Elements\<^sub>I (Lookup_Array addr K V)
+                         (\<lambda>f. f = Map.empty) \<close>
 
 
 

@@ -14,6 +14,15 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
 
+(*
+\<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x mat) \<phi>\<close>
+  where \<open>x \<Ztypecolon> MatSlice addr i j m n T \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] T)
+                                        \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
+  deriving \<open>Abstract_Domain (MatSlice addr i j m n T) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
+       and \<open>Identity_Elements\<^sub>I (MatSlice addr i j m n T) (\<lambda>_. m = 0 \<and> n = 0) (\<lambda>_. True)\<close>
+       and \<open>Identity_Elements\<^sub>E (MatSlice addr i j m n T) (\<lambda>x. m = 0 \<and> n = 0 \<and> x \<in> carrier_mat 0 0 \<and> memaddr.blk addr \<noteq> Null)\<close>
+*)
+
 declare mat_to_list_def [\<phi>sledgehammer_simps]
         list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
 

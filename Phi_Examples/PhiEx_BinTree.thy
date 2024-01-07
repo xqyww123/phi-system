@@ -776,19 +776,21 @@ proc insert_avl_i:
         if (cmp ($k, $k')) \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> left !, $k, $v) \<rightarrow> val a\<^sub>L' ;;
             $addr \<tribullet> left := $a\<^sub>L' ;;
-            \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)  ;; 
+            \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer) 
+              
+            note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree L)(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;;
 
             holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree L))\<close> for k' h v ;;
             holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree R)\<close> ;;
   
             return (maintain_i ($addr))
-                    thm return_\<phi>app
-                    thm useful
         \<medium_right_bracket>
         \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' ;;
             $addr \<tribullet> right := $a\<^sub>R' ;;
-            \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)   ;; 
+            \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)
+
+            note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree R)(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;; 
 
             holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree R))\<close> for k' h v ;;
             holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree L)\<close> ;;
