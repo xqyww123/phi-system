@@ -328,7 +328,7 @@ proc lookup_bintree:
   premises \<open>k \<in> dom (lookup_tree tree) \<and> sorted1(inorder tree)\<close>
   output \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
-  is [recursive tree addr]
+  is [recursive]
   is [routine]
 \<medium_left_bracket>
   to \<open>OPEN 1 _\<close> certified by (instantiate \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R  \<comment> \<open>TODO: fix quantifier names\<close>
@@ -353,7 +353,7 @@ proc (nodef) lookup_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>k \<in> dom f\<close>
   output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
-  is [recursive f addr]
+  is [recursive]
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> ;;
   lookup_bintree ($addr, $k)
@@ -368,7 +368,7 @@ proc has_key_bintree:
   premises \<open>sorted1(inorder tree)\<close>
   output \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           k \<in> dom (lookup_tree tree) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
-  is [recursive tree addr]
+  is [recursive]
   is [routine]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
@@ -445,7 +445,7 @@ proc insert_bintree:
   output \<open>insert_tree k v tree \<Ztypecolon> BinTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
-  is [recursive tree addr]
+  is [recursive]
   is [routine]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
@@ -750,7 +750,7 @@ proc insert_avl_i:
           map_option snd o lookup_tree tree' = (map_option snd o lookup_tree tree)(k \<mapsto> v) \<and>
           sorted1(inorder tree') \<and> AVL_invar tree' \<and>
           (height tree' = height tree \<or> height tree' = height tree + 1) \<close>
-  is [recursive tree addr]
+  is [recursive]
   is [routine]
 \<medium_left_bracket>
   note sorted_mid_iff'[simp] sorted_snoc_iff[simp] ;;

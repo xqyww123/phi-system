@@ -287,11 +287,13 @@ attribute_setup recursive = \<open>Scan.repeat (Scan.lift Parse.term) >> (fn var
       case Phi_Toplevel.name_of_the_building_procedure ctxt
         of NONE => error "Name binding of the recursive procedure is mandatory."
          | SOME b => (
-            if Binding.is_empty b
-            then error "Name binding of the recursive procedure is mandatory."
+            let
+             in if Binding.is_empty b
+            then error "A recursive procedure cannot be anonymous."
             else if null vars then tracing "You may want to use syntax \<open>recursive vars\<close> to indicate \
                  \which variables are varied between the recursive callings." else ();
             PhiSem_Control_Flow.basic_recursive_mod Syntax.read_terms b vars (ctxt,sequent)
+            end
            )
   ))\<close>
 

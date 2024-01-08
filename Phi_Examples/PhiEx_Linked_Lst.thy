@@ -18,6 +18,7 @@ begin
             (arbitrary: addr')
           and Functional_Transformation_Functor
 
+
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>
     and TY :: TY \<comment> \<open>semantic type\<close>
@@ -27,13 +28,13 @@ begin
 declare [[auto_sledgehammer_params = "try0 = false"]]
   \<comment> \<open>For some reason I don't know, sledgehammer fails silently (with throwing an Interrupt exception)
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.\<close>
-
+ 
 
 proc nth_llist:
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
   premises \<open>i < length l\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  is [recursive l i addr]
+  is [recursive]
   \<medium_left_bracket>
     to \<open>OPEN 1 _\<close> certified by (instantiate \<open>hd l\<close> \<open>tl l\<close>, auto_sledgehammer) ;; \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
@@ -48,7 +49,7 @@ proc update_nth_llist:
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output \<open>l[i := y] \<Ztypecolon> Linked_Lst addr TY T\<close>
-  is [recursive l i addr]
+  is [recursive]
   \<medium_left_bracket>
     to \<open>OPEN 1 _\<close> certified by (instantiate \<open>hd l\<close> \<open>tl l\<close>, auto_sledgehammer) ;; \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
@@ -65,7 +66,7 @@ proc length_of:
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
   premises \<open>length l < 2 ^ LENGTH(32)\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
-  is [recursive l addr]
+  is [recursive]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
     0
@@ -81,7 +82,7 @@ proc length_of':
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
   premises \<open>length l < 2 ^ LENGTH(32)\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
-  is [recursive l addr]
+  is [recursive]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
     0 is \<open>length l\<close>
@@ -92,8 +93,8 @@ proc length_of':
     \<open>l \<Ztypecolon> MAKE _ (Linked_Lst addr TY T)\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
-
-proc reverse':
+ 
+proc reverse_aux:
   input  \<open>l' \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma>
           l  \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
@@ -101,7 +102,7 @@ proc reverse':
   output \<open>rev l @ l' \<Ztypecolon> Linked_Lst addr'' TY T\<heavy_comma>
           addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}
           \<s>\<u>\<b>\<j> addr''. \<top>\<close>
-  is [recursive l l' addr addr']
+  is [recursive]
   \<medium_left_bracket>
     if \<open>$addr = 0\<close> \<medium_left_bracket>
       to \<open>OPEN 0 _\<close>
@@ -111,7 +112,7 @@ proc reverse':
       $addr \<tribullet> nxt ! \<rightarrow> val aa ;;
       $addr \<tribullet> nxt := $addr' ;;
       (*select*) \<open>Linked_Lst addr' TY T\<close> (*to apply 1st constructor*) \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;
-      reverse' ($addr, $aa) 
+      reverse_aux ($addr, $aa) 
     \<medium_right_bracket>
   \<medium_right_bracket> .
 
@@ -123,7 +124,7 @@ proc reverse:
           \<s>\<u>\<b>\<j> addr''. \<top>\<close>
   \<medium_left_bracket>
     \<open>MAKE 0 (Linked_Lst 0 TY T)\<close>
-    reverse'( \<open>0 \<Ztypecolon> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>, $addr )
+    reverse_aux( \<open>0 \<Ztypecolon> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>, $addr )
   \<medium_right_bracket> .
 
 

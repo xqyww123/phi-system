@@ -11,7 +11,7 @@ proc qsort:
           len \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
   premises \<open>i + len \<le> LEN\<close>
   output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32) \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
-  is [recursive l addr i len]
+  is [recursive]
   is [routine]
 \<medium_left_bracket>
   if ($len \<le> 1)

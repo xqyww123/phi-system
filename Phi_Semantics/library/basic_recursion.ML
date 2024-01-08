@@ -78,6 +78,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
     (* pack concrete arguments *)
     val (v,X'0) = Procedure_Syntax.package_values "" true NONE X
     val v' = Thm.cterm_of ctxt v
+    val arg_vars = Term.add_frees v []
     val sem_args  = Procedure_Syntax.dest_arg_tuple v
     val names = map (Variable.revert_fixed ctxt o Term.term_name) sem_args
     val names_ty  = Thm.ctyp_of ctxt (Phi_Syntax.mk_name_tylabels names)
@@ -96,7 +97,15 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
 
 
     (* pack abstract recursive variables *)
-    val vars = prep_vars ctxt raw_vars
+    val vars = case raw_vars
+                 of [] => (*infer the variables*)
+                      map Free (Term.add_frees (Thm.prop_of sequent) []
+                                  |> subtract (op =) arg_vars
+                                  |> subtract (op =) (fold (Term.add_frees o Thm.term_of)
+                                                           (Assumption.all_assms_of ctxt) [])
+                                  |> filter (fn (_, \<^Type>\<open>TY\<close>) => false
+                                              | _ => true))
+                  | _  => prep_vars ctxt raw_vars
     val var_names_ty = Phi_Syntax.mk_name_tylabels
                           (map (Variable.revert_fixed ctxt o Term.term_name) vars)
     val var_tup = Phi_Syntax.mk_named_tag (HOLogic.mk_tuple vars) var_names_ty
