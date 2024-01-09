@@ -2522,7 +2522,7 @@ setup \<open>Context.theory_map (
                  val sequent' = Phi_Reasoners.obligation_intro_Ex_conv ~1 ctxt sequent
               in raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent'))
               handle Phi_Reasoners.Automation_Fail err =>
-                  error (Phi_Reasoners.error_message err)
+                  error (Pretty.string_of (Pretty.chunks (err ())))
              end
         else (ctxt, sequent))
        | _ => (ctxt, sequent)

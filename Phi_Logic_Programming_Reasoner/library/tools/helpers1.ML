@@ -1,5 +1,7 @@
 signature PHI_REASONERS = sig
 
+exception Automation_Fail of unit -> Pretty.T list
+
 val pass_checks_priority : string (*name of the kind of the rules*)
                         -> int (*priority lower bound*)
                         -> Phi_Reasoner.rule_pass
@@ -7,6 +9,8 @@ val pass_checks_priority : string (*name of the kind of the rules*)
 end
 
 structure Phi_Reasoners : PHI_REASONERS = struct
+
+exception Automation_Fail of unit -> Pretty.T list
 
 fun pass_checks_priority name prio = (fn pos => fn data =>
   case #2 (#2 data)

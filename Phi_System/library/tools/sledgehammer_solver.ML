@@ -21,6 +21,13 @@ fun get_sledgehammer_params ctxt =
                       of [k,v] => (Symbol.trim_blanks k, Symbol.trim_blanks v)
                        | _ => error ("Invalid auto_sledgehammer_params : " ^ s))
 
+fun error_message ctxt sequent =
+  Pretty.string_of (Pretty.chunks (
+    Pretty.para "Fail to solve the proof obligation automatically" ::
+    (case Thm.prems_of sequent
+       of (x::_)
+            => [Syntax.pretty_term ctxt x]
+        | _ => [])))
 
 (*** Adapter of Sledgehammer ***)
 
@@ -281,12 +288,12 @@ fun assync_prove f (ctxt,sequent) =
                   handle
                      Phi_Reasoners.Automation_Fail _ => (
                        Future.error_message pos
-                          ((serial (), Phi_Reasoners.error_message (SOME (ctxt,sequent))), NONE);
-                       raise Fail (Phi_Reasoners.error_message (SOME (ctxt,sequent))))
+                          ((serial (), error_message ctxt sequent), NONE);
+                       raise Fail (error_message ctxt sequent))
                    | Auto_Fail _ => (
                        Future.error_message pos
-                          ((serial (), Phi_Reasoners.error_message (SOME (ctxt,sequent))), NONE);
-                       raise Fail (Phi_Reasoners.error_message (SOME (ctxt,sequent)))))
+                          ((serial (), error_message ctxt sequent), NONE);
+                       raise Fail (error_message ctxt sequent)))
                val _ = Phi_Cache_DB.register_async_task (Future.task_of future) (Proof_Context.theory_of ctxt)
             in Thm.implies_elim sequent (
                   Goal.future_result ctxt future (Thm.term_of goal_term') (*TODO: optimize this!*)
@@ -443,8 +450,8 @@ if no_cache
 fun auto id ctxt sequent =
   wrapper (case id of SOME id' => auto'i id'
                     | NONE => Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1 #> snd) (ctxt,sequent)
-  handle Auto_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
-       | Phi_Reasoners.Automation_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
+  handle Auto_Fail _ => error (error_message ctxt sequent)
+       | Phi_Reasoners.Automation_Fail _ => error (error_message ctxt sequent)
 
 fun insert_tac _ [] _ = all_tac
   | insert_tac ctxt facts i =
@@ -454,7 +461,7 @@ val _ = Theory.setup (Method.setup \<^binding>\<open>auto_sledgehammer\<close> (
   Method.CONTEXT_METHOD (fn uses => fn (ctxt0,sequent) => Seq.make (fn () =>
     let val ctxt = Config.put assync_proof false ctxt0
         val id = Hasher.goal (ctxt,sequent)
-        fun err () = Phi_Reasoners.error_message (SOME (ctxt,sequent))
+        fun err () = error_message ctxt sequent
         val sequent' =
               case Seq.pull (Method.insert_tac ctxt uses 1 sequent)
                 of SOME (ret, _) => ret

@@ -1878,10 +1878,11 @@ lemma [\<phi>reason add]:
 
 subsubsection \<open>Setup\<close>
 
-ML_file_debug "library/datatype_info.ML"
+ML_file_debug "library/type_info_DB.ML"
+ML_file_debug "library/type_info.ML"
 ML_file_debug "library/guess_instantiate.ML"
 ML_file_debug "library/reasoners.ML"
-
+ 
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)

@@ -94,6 +94,7 @@ exception Internal_Match_Fail of string
 
 in
 
+
 fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
   let
     val stat = Proof.map_context Phi_ID.next stat
@@ -220,10 +221,11 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     val bindings = prem_bindings
           |> map (fn ((b,attrs),pats) =>
                 ((b, default_attrib (null attrs) :: map (Attrib.attribute (Proof.context_of stat)) attrs), pats))
+
   in
     stat
       |> Proof.map_context (Config.put phi_allow_source_object_to_be_not_variable true)
-      |> Proof.internal_goal (print_results int) Proof_Context.mode_schematic true
+      |> Proof.internal_goal (print_results int) Proof_Context.mode_pattern true
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)
           [(Binding.empty_atts, [(goal',[])])] |> #2

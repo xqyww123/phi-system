@@ -2,9 +2,6 @@ signature PHI_REASONERS = sig
 
   include PHI_REASONERS
 
-  exception Automation_Fail of (Proof.context * thm) option
-  val error_message : (Proof.context * thm) option -> string
-
   type schm_by_ex = int
   (*whether to replace schematic variables by existential quantified variables if feasible.
       0: do not generate existence in obligations, leaving them schematic variables, so this feature
@@ -96,18 +93,6 @@ open Thm Term Phi_Reasoners
 
 (** Preliminary **)
 
-exception Automation_Fail of (Proof.context * thm) option
-
-fun error_message err =
-      Pretty.string_of (Pretty.chunks (
-        Pretty.str "Fail to solve the proof obligation automatically" ::
-        (case err of SOME (ctxt, sequent) =>
-            (case Thm.prems_of sequent
-               of (x::_)
-                    => [Syntax.pretty_term ctxt x]
-                | _ => [])
-                   | NONE => [])
-      ))
 
 
 
@@ -719,7 +704,12 @@ fun auto_obligation_solver1 ctxt sequent =  (
             Pretty.block (Pretty.here \<^here>)
         ]);
         auto_obligation_solver' (fn _ =>
-          raise Automation_Fail (SOME (ctxt,sequent))
+          raise Automation_Fail (fn () =>
+                  Pretty.para "Fail to solve the proof obligation automatically" ::
+                  (case Thm.prems_of sequent
+                     of (x::_)
+                          => [Syntax.pretty_term ctxt x]
+                      | _ => []))
           (*error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",
               Syntax.pretty_term ctxt Goal

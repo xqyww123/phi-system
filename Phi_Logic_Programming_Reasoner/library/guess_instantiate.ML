@@ -39,27 +39,28 @@ fun guess_inst_eq ctxt bans =
           | (_, Var v) => inst bans tab (v, RARGS) LHS
           | _ =>
             let fun root_ctr term = case Thm.typ_of_cterm term
-                                      of Type(name, _) => Ctr_Sugar.ctr_sugar_of ctxt name
+                                      of Type(name, _) =>
+                                            Type_Info.get_info {load_bnf = false,
+                                                                load_bnf_fp = false,
+                                                                load_ctr = true}
+                                                               (Context.Proof ctxt) name
                                        | _ => NONE
                 fun eq_const (Const (A, _)) (Const (B, _)) = A = B
                   | eq_const _ _ = false
                 fun dest_ctr (term, H, ARGS) = Option.mapPartial
-                      (fn ctr => let val h = Thm.term_of H
-                                     val ci = find_index (eq_const h) (#ctrs ctr)
-                                     val targs = Thm.dest_ctyp (Thm.ctyp_of_cterm term)
-                                     val instt = case #T ctr
-                                                   of Type(_, Ts) =>
-                                                        if length targs = length Ts
-                                                        then TVars.build (fold2 (fn TVar v => (fn A => TVars.add (v, A))
-                                                                                  | _ => error "BUG srPbRKmbQnmW/7hNjYzuqA") Ts targs)
-                                                        else error "BUG srPbRKmbQnmW/7hNjYzuqA"
-                                                    | _ => error "BUG srPbRKmbQnmW/7hNjYzuqA"
-                                     val instt = Thm.instantiate_cterm (instt, Vars.empty) o Thm.cterm_of ctxt
-                                  in if ci <> ~1 andalso ci < length (#selss ctr)
-                                                 andalso length (nth (#selss ctr) ci) = length ARGS
-                                     then SOME (nth (#ctrs ctr) ci, ARGS, map instt (nth (#selss ctr) ci))
-                                     else NONE
-                                 end)
+                      (fn tyinfo =>
+                           let open Type_Info
+                               val h = Thm.term_of H
+                               val ci = find_index (eq_const h) (ctrs_of tyinfo)
+                               val targs = Thm.dest_ctyp (Thm.ctyp_of_cterm term)
+                               val selss = mk_sels tyinfo (map Thm.typ_of targs)
+                            in if ci <> ~1 andalso ci < length selss
+                                           andalso length (nth selss ci) = length ARGS
+                               then SOME (nth (ctrs_of tyinfo) ci,
+                                          ARGS,
+                                          map (Thm.cterm_of ctxt) (nth selss ci))
+                               else NONE
+                           end)
                       (root_ctr term)
       
              in case (dest_ctr (LHS, LH, LARGS), dest_ctr (RHS, RH, RARGS))
