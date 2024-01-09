@@ -58,6 +58,7 @@ proc op_routine:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>op_routine\<close>, 0))\<close>
 
 abbreviation
   \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.

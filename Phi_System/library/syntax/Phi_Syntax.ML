@@ -2,6 +2,7 @@ signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
   val assn_fictionT : typ
+  val is_procT  : typ -> bool
   val mk_procT  : typ -> typ
   val mk_proc'T : typ -> typ -> typ
 
@@ -28,11 +29,20 @@ include PHI_SYNTAX
 
   val dest_target_assertion : term -> term
 
+
+  (*for statistics*)
+  val semantic_oprs : int Symtab.table Synchronized.var
+  val semantic_operations : term -> (string * int) list (*may not be accurate*)
+  val count_semantic_operations : term -> int
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Thm Term HOLogic Phi_Help Phi_Syntax
 
+fun is_procT (\<^Type>\<open>fun \<^Type>\<open>fun \<^Type>\<open>RES_N\<close> \<^Type>\<open>RES\<close>\<close> \<^Type>\<open>set \<^Type>\<open>comp \<open>_\<close>\<close>\<close>\<close>) = true
+  | is_procT (\<^Type>\<open>fun _ T\<close>) = is_procT T
+  | is_procT _ = false
 fun mk_procT T = \<^typ>\<open>resource\<close> --> \<^Type>\<open>set \<open>\<^Type>\<open>comp T\<close>\<close>\<close>
 fun mk_proc'T T U = \<^Type>\<open>\<phi>arg T\<close> --> mk_procT U
 val assn_fictionT = \<^typ>\<open>assn\<close>
@@ -108,5 +118,28 @@ fun dest_target_assertion' (Const(\<^const_name>\<open>Transformation\<close>, _
   | dest_target_assertion' X = raise TERM ("dest_target_assertion", [X])
 
 val dest_target_assertion = dest_target_assertion' o PLPR_Syntax.dest_tags o Logic.strip_assums_concl
+
+val semantic_oprs = Synchronized.var "semantic_oprs" Symtab.empty
+fun semantic_operations (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = semantic_operations X
+  | semantic_operations (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ X) = semantic_operations X
+  | semantic_operations (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ X) = semantic_operations X
+  | semantic_operations term =
+      let val soprs = Synchronized.value semantic_oprs
+       in Phi_Help.fold_aterms
+            (fn bvs => (fn Const(\<^const_name>\<open>bind\<close>, _) => I
+                         | Const(\<^const_name>\<open>Return\<close>, _) => I
+                         | Const(\<^const_name>\<open>Nondet\<close>, _) => I
+                         | Const(\<^const_name>\<open>\<phi>V_case_prod\<close>, _) => I
+                         | Const(N, T) => (fn L =>
+                              case Symtab.lookup soprs N
+                                of SOME w => if 0 < w then (N,w) :: L else L
+                                 | _ => if is_procT T then (N,1) :: L else L)
+                         | Free (N, T) => (fn L => if is_procT T then (N,1) :: L else L)
+                         | Bound i => (fn L => case nth bvs i of (N,T) => if is_procT T then (N,1) :: L else L)
+                         | _ => I)) [] term []
+      end
+
+fun count_semantic_operations term =
+      Integer.sum (map #2 (semantic_operations term)) + 1
 
 end

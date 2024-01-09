@@ -366,7 +366,6 @@ fun conj_elims th =
 fun conj_intros _ [] = @{thm' TrueI}
   | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L
 
-
 (* Substitution \& Instantiation *)
 
 fun subst_tyenv tyenv

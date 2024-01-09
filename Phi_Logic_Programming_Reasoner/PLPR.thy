@@ -1856,6 +1856,7 @@ lemma [\<phi>reason %IEUV_eq+20]:
   unfolding IEUV_def Literal_Boolean_def \<r>Guard_def
   by force
 
+
 (*
 lemma [\<phi>reason %IEUV_eq+30]:
   \<open> \<g>\<u>\<a>\<r>\<d> IEUV S SV (x = y) Y \<and>\<^sub>\<r>
@@ -1877,6 +1878,8 @@ lemma [\<phi>reason add]:
 
 subsubsection \<open>Setup\<close>
 
+ML_file_debug "library/datatype_info.ML"
+ML_file_debug "library/guess_instantiate.ML"
 ML_file_debug "library/reasoners.ML"
 
 ML \<open>

@@ -3,7 +3,7 @@ theory PhiStd_Slice_a \<comment> \<open>'a' for arbitary precision interger\<clo
           Phi_Semantics.PhiSem_Mem_C_Ar_AI
 begin
 
-proc map_slice:
+proc (nodef) map_slice:
   requires body: \<open>\<And>k v. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k < length l
                      \<Longrightarrow> \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> l ! k \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a (i+k)\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>
                                   \<longmapsto> X\<heavy_comma> f k (l ! k) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a (i+k)\<^sup>\<t>\<^sup>\<h>] T \<rbrace>\<close>
@@ -19,7 +19,7 @@ proc map_slice:
 \<medium_right_bracket> .
 
 
-proc map_2slice:
+proc (nodef) map_2slice:
   requires body: \<open>\<And>k v. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k < len
                      \<Longrightarrow> \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> l\<^sub>a ! k \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>a \<tribullet>\<^sub>a (i\<^sub>a+k)\<^sup>\<t>\<^sup>\<h>] T\<^sub>a\<heavy_comma>
                                          l\<^sub>b ! k \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>b \<tribullet>\<^sub>a (i\<^sub>b+k)\<^sup>\<t>\<^sup>\<h>] T\<^sub>b\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>

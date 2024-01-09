@@ -80,6 +80,11 @@ proc push_dynarr:
 \<medium_right_bracket> .
 
 
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' get_dynarr_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' set_dynarr_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' Max_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' push_dynarr_def})))\<close>
+
 end
 
 

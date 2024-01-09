@@ -4,7 +4,7 @@ theory PhiStd_Loop_a \<comment> \<open>suffix a stands for \<open>arbitrary prec
           Phi_Semantics.PhiSem_Variable
 begin
 
-proc replicate_a:
+proc (nodef) replicate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
        and ITER: \<open>\<And>i v. \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> i \<and> i < t \<Longrightarrow>
@@ -33,7 +33,7 @@ proc replicate_a:
 
 
 
-proc map_list_loop:
+proc (nodef) map_list_loop:
   requires \<open>\<p>\<a>\<r>\<a>\<m> U\<close>
        and \<open>Abstract_Domain T D\<close>
        and map: \<open>\<And>i l. \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len \<and> D l
@@ -82,7 +82,7 @@ lemma map_index_2_map_index_zip:
 
 
  
-proc map_2list_loop:
+proc (nodef) map_2list_loop:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (U\<^sub>a, U\<^sub>b)\<close>
        and \<open>Abstract_Domain T\<^sub>a D\<^sub>a\<close>
        and \<open>Abstract_Domain T\<^sub>b D\<^sub>b\<close>

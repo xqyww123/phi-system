@@ -334,7 +334,7 @@ val def_const_flag =
   Scan.optional ((\<^keyword>\<open>(\<close> |-- Phi_Parse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
 
 val modifier  = (Parse.attribs >> Mod_by_Attr) || (Parse.thm >> Mod_by_Rule)
-val modifiers = repeat (\<^keyword>\<open>is\<close> |-- modifier)
+val modifiers = repeat (\<^keyword>\<open>is\<close> |-- and_list modifier) >> flat
 
 (*
 fun phi_proof step_in prf tr =

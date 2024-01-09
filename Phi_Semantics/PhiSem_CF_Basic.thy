@@ -72,6 +72,7 @@ definition op_fix_point :: "(('a,'b) proc' \<Rightarrow> ('a,'b) proc')
                          \<Rightarrow> ('a,'b) proc'"
   where "op_fix_point F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else {})"
 
+ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>op_fix_point\<close>, 0))\<close>
 
 
 subsubsection \<open>Simple Properties\<close>
@@ -138,6 +139,7 @@ proc "if":
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
   \<medium_left_bracket> C branch brT brF BC \<medium_right_bracket> .
 
+ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>if\<close>, 3))\<close>
 
 subsection \<open>Loops\<close>
  
@@ -176,6 +178,8 @@ proc (nodef) do_while:
     \<medium_left_bracket> B \<medium_right_bracket> !!
   \<medium_right_bracket> .
 
+ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>op_do_while\<close>, 2))\<close>
+
 (*
 We fail to infer the abstraction of the loop guard automatically but
 require users to give by an annotation.
@@ -205,6 +209,8 @@ proc while:
     \<medium_right_bracket>
     \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ;;
   \<medium_right_bracket> .
+
+ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>while\<close>, 3))\<close>
 
 proc (nodef) refine_while
   [unfolded \<phi>Type_def[where T=\<open>X::'a \<Rightarrow> (FIC_N \<Rightarrow> FIC) set\<close>]]:

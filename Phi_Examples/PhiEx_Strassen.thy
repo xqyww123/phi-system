@@ -213,26 +213,8 @@ proc strassen:
     $i\<^sub>C + $N \<rightarrow> val i\<^sub>C' ;;
     $j\<^sub>C + $N \<rightarrow> val j\<^sub>C' ;;
     $i\<^sub>D + $N \<rightarrow> val i\<^sub>D' ;;
-    $j\<^sub>D + $N \<rightarrow> val j\<^sub>D'
+    $j\<^sub>D + $N \<rightarrow> val j\<^sub>D' ;;
 
-    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
-                    \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
-                    \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> 
-    note M_carriers = \<open>M\<^sub>1 \<in> carrier_mat _ _\<close>
-                      \<open>M\<^sub>2 \<in> carrier_mat _ _\<close>
-                      \<open>M\<^sub>3 \<in> carrier_mat _ _\<close>
-                      \<open>M\<^sub>4 \<in> carrier_mat _ _\<close>
-                      \<open>M\<^sub>5 \<in> carrier_mat _ _\<close>
-                      \<open>M\<^sub>6 \<in> carrier_mat _ _\<close>
-                      \<open>M\<^sub>7 \<in> carrier_mat _ _\<close>
-                      \<open>M\<^sub>t \<in> carrier_mat _ _\<close> ;;
-
-               
                                  
     copy_mat ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>x, $i\<^sub>x , $j\<^sub>x , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
     add_mat  ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>x, $i\<^sub>x', $j\<^sub>x', (*A\<^sub>2\<^sub>2*) $N, $N) ;;
@@ -299,10 +281,19 @@ proc strassen:
     add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C, (*M\<^sub>3*) $N, $N) ;;
     copy_mat ($a\<^sub>x, $i\<^sub>x', $j\<^sub>x', (*A\<^sub>2\<^sub>2*)$a\<^sub>D, $i\<^sub>D , $j\<^sub>D',(*M\<^sub>6*) $N, $N)
 
-    have split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>
-                    \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close>
-      by (auto_sledgehammer, auto_sledgehammer)
-         (*stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 175, 182, lemma strassen_mat_mult*) ;;
+    (*Below, the proof is stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 175-182, 227-239, lemma strassen_mat_mult*)
+
+    holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>
+                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> ;;
+
+    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> ;;
 
     apply_rule merge_4mat[where a=a\<^sub>x and i=i\<^sub>x and s=\<open>?N\<close> and j=j\<^sub>x and t=\<open>?N\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified]
       is \<open>A * B\<close> certified by (
@@ -319,7 +310,7 @@ proc strassen:
                          assoc_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
                          comm_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
                          minus_add_minus_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>])
-          (*stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 227-239, lemma strassen_mat_mult*) ;;
+    (*end of stolen proof*) ;;
 
 
     apply_rule merge_4mat[where a=a\<^sub>y and i=i\<^sub>y and s=\<open>?N\<close> and j=j\<^sub>y and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified]
@@ -350,5 +341,15 @@ proc strassen_mul:
 \<medium_right_bracket> .
 
 
+thm sub_mat_def
+
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_mul_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' sub_mat_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' add_mat_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' copy_mat_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' del_mat_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' new_mat_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' zero_mat_def})))\<close>
 
 end

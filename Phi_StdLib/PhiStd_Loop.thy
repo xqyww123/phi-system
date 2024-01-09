@@ -4,7 +4,7 @@ theory PhiStd_Loop
           Phi_Semantics.PhiSem_Variable
 begin
 
-proc replicate:
+proc (nodef) replicate:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @action NToA\<close>
        and ITER: \<open>\<And>i v. \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> i \<and> i < t \<Longrightarrow>

@@ -42,8 +42,8 @@ proc qsort:
     qsort ($i, $d) ;;
     qsort ($i + $d, $len - $d) ;;
           
-    holds_fact aux: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x) \<and>
-                    (\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close> ;;
+    holds_fact take_and_drop: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x) \<and>
+                               (\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close> ;;
 
     return
 
@@ -52,6 +52,9 @@ proc qsort:
 
 thm qsort_def   \<comment> \<open>semantic representation of \<open>qsort\<close>\<close>
 thm qsort_\<phi>app \<comment> \<open>specification theorem\<close>
+
+ML \<open> Phi_Syntax.count_semantic_operations (Thm.prop_of @{thm' qsort_def}) \<close> \<comment> \<open>semantic operations\<close>
+
 
 
 end

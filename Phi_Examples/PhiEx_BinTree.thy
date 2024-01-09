@@ -12,6 +12,7 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
 
 thm \<phi>constraint_expansion
 
+
 lemma rel_tree_Leaf[\<phi>constraint_expansion, iff]:
   \<open> rel_tree R \<langle>\<rangle> tree \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
   \<open> rel_tree R tree' \<langle>\<rangle> \<longleftrightarrow> tree' = \<langle>\<rangle> \<close>
@@ -27,10 +28,10 @@ lemma rel_tree__pred_tree:
   \<open>rel_tree R x y \<Longrightarrow> pred_tree (\<lambda>x. \<exists>y. R x y) x\<close>
   by (induct x arbitrary: y; auto_sledgehammer)
 
+(*
 setup \<open>Context.theory_map (Phi_Type_Derivers.Expansion.map (fn ctxt =>
-          ctxt addsimps @{thms' rel_tree_Leaf rel_tree_Node1}))\<close>
-
-
+          ctxt addsimps @{thms' rel_tree_Node1}))\<close>
+*)
 
 
 
@@ -331,19 +332,19 @@ proc lookup_bintree:
   is [recursive]
   is [routine]
 \<medium_left_bracket>
-  to \<open>OPEN 1 _\<close> certified by (instantiate \<open>left tree\<close> \<open>value tree\<close> \<open>right tree\<close>, auto_sledgehammer) ;; \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R  \<comment> \<open>TODO: fix quantifier names\<close>
+  to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;   \<comment> \<open>TODO: fix quantifier names\<close>
 
   val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
   if (eq ($k', $k)) \<medium_left_bracket>
     val ret \<leftarrow> $addr \<tribullet> data \<tribullet> v ! ;;
-    \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>value tree\<close>, auto_sledgehammer) ;;
+    \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
     return ($ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
     if (cmp ($k, $k'))
     \<medium_left_bracket> lookup_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
     \<medium_left_bracket> lookup_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket> \<rightarrow> val ret ;;
-    \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>value tree\<close>, auto_sledgehammer) ;;
+    \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
     return ($ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .

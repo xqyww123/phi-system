@@ -9596,7 +9596,7 @@ section \<open>Deriving Configures for Specific Abstract Algebras\<close>
 
 subsubsection \<open>Common\<close>
 
-lemmas [\<phi>constraint_expansion global] =
+lemmas [\<phi>constraint_expansion] =
   Nat.add_Suc_right Groups.monoid_add_class.add.right_neutral Nat.nat.inject
 
 lemmas [\<phi>constraint_expansion] =
@@ -9779,11 +9779,11 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
 )\<close>
 
 
-lemmas [\<phi>constraint_expansion for set] =
+lemmas [\<phi>constraint_expansion] =
   Set.ball_Un Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image
   Set.nonempty_bind_const Finite_Set.finite_bind
 
-lemma Set_bind_insert[simp, \<phi>constraint_expansion for set]:
+lemma Set_bind_insert[simp, \<phi>constraint_expansion]:
   \<open>Set.bind (insert x S) f = f x \<union> Set.bind S f\<close>
   unfolding Set.bind_def
   by auto

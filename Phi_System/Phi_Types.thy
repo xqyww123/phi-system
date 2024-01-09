@@ -48,7 +48,7 @@ setup \<open>Context.theory_map (
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
-  
+ 
 let_\<phi>type \<phi>None
   deriving Basic
        and Functionality

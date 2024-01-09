@@ -401,6 +401,7 @@ fun parse_inst_params_from_phi_term phity =
 
 (** Simplification Rules unfolding the constrains and conditions **)
 
+(*
 structure Type_specific_Simps = Generic_Data (
   type T = thm Net.net
   val empty = Net.empty
@@ -440,6 +441,7 @@ fun del_type_specific_simp (Tname, rules) ctxt =
 
 fun get_type_specific_simp ctxt Tname =
   Net.unify_term (Type_specific_Simps.get ctxt) (Const(Tname, Term.dummyT) $ Var (("",0),TVar(("",0),[])))
+*)
 
 structure Simps = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
@@ -455,7 +457,7 @@ structure Expansion = Simpset (
   val comment = "Rules unfolding constraints and conditions in property deriving of \<phi>-type algebra.\n\
                 \Basically, simplification rules for object operators including mappers, relators, \
                 \predicators of the abstract algebra of \<phi>-types"
-  val attribute = SOME (fn add => fn del =>
+  val attribute = NONE (*SOME (fn add => fn del =>
     let fun gen (opr1, opr2) =
           (fn SOME "" => opr1
             | NONE => Thm.declaration_attribute (fn th => let open Pretty in
@@ -486,7 +488,7 @@ structure Expansion = Simpset (
              || Scan.lift \<^keyword>\<open>for\<close> |-- Args.type_name {proper=true, strict=true} >> SOME
              || Scan.succeed NONE)
      >> (fn (attr, target) => attr target)
-    end)
+    end)*)
   val post_merging = I
 )
 
@@ -665,7 +667,6 @@ fun load_ss (set,pred,rel,map,zip) bnf ctxt =
                        @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
                        @ (if map then eBNF_Info.simps_of_map_safe bnf else [])
                        @ (if zip then eBNF_Info.simps_of_zip_safe bnf else [])
-                       @ get_type_specific_simp (Context.Proof ctxt) (eBNF_Info.Tname_of bnf)
                        @ additional)
    |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
                        @ (if rel then eBNF_Info.global_simps_of_rel_safe (Context.Proof ctxt) bnf else [])

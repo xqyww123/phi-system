@@ -81,6 +81,8 @@ include PHI_HELP
   val reason_tracing_tyinst : Proof.context -> (thm -> thm option)
                            -> term -> (ctyp TVars.table * thm) option
 
+  val fold_aterms : (PLPR_Pattern.bvs -> term -> 'a -> 'a) -> PLPR_Pattern.bvs -> term -> 'a -> 'a
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -346,6 +348,11 @@ fun reason_tracing_tyinst ctxt reason goal_term =
          in (TVars.make (tvars ~~ ty_insts), th)
         end)
   end
+
+
+fun fold_aterms F bvs (f $ x) = fold_aterms F bvs f #> fold_aterms F bvs x
+  | fold_aterms F bvs (Abs (N, Ty, X)) = fold_aterms F ((N,Ty)::bvs) X
+  | fold_aterms F bvs x = F bvs x
 
 
 

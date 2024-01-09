@@ -431,6 +431,12 @@ proc op_var_scope:
     \<medium_right_bracket>
 \<medium_right_bracket> .
 
+ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (
+      Symtab.update (\<^const_name>\<open>op_var_scope\<close>, 0)
+   #> Symtab.update (\<^const_name>\<open>op_set_var\<close>, 0)
+   #> Symtab.update (\<^const_name>\<open>op_get_var\<close>, 0)
+)\<close>
+
 
 subsection \<open>Rules of Variable Operations\<close>
 
