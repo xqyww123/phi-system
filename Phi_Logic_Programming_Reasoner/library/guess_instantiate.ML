@@ -42,49 +42,41 @@ fun inst bans tab (v, args) cterm0 =
       else tab
   end
 
+exception Automation_Fail = Phi_Reasoners.Automation_Fail
+
 (*only instantiate LHS*)
 fun guess_inst_eq ctxt bans =
   let fun guess (LHS,RHS) tab =
         let val (LH, LARGS) = Drule.strip_comb LHS
-            val (RH, RARGS) = Drule.strip_comb RHS
-         in case (Thm.term_of LH, Thm.term_of RH)
-         of (Var v, _) => inst bans tab (v, LARGS) RHS
-          | (_, Var v) => inst bans tab (v, RARGS) LHS
+         in case Thm.term_of LH
+         of Var v => inst bans tab (v, LARGS) RHS
           | _ =>
-            let fun root_ctr term = case Thm.typ_of_cterm term
-                                      of Type(name, _) =>
-                                            Type_Info.get_info {load_bnf = false,
-                                                                load_bnf_fp = false,
-                                                                load_ctr = true}
-                                                               (Context.Proof ctxt) name
-                                       | _ => NONE
+            let open Type_Info
                 fun eq_const (Const (A, _)) (Const (B, _)) = A = B
                   | eq_const _ _ = false
-                fun dest_ctr (term, H, ARGS) = Option.mapPartial
-                      (fn tyinfo =>
-                           let open Type_Info
-                               val h = Thm.term_of H
-                               val ci = find_index (eq_const h) (ctrs_of tyinfo)
-                               val targs = Thm.dest_ctyp (Thm.ctyp_of_cterm term)
-                               val selss = mk_sels tyinfo (map Thm.typ_of targs)
-                            in if ci <> ~1 andalso ci < length selss
-                                           andalso length (nth selss ci) = length ARGS
-                               then SOME (nth (ctrs_of tyinfo) ci,
-                                          ARGS,
-                                          map (Thm.cterm_of ctxt) (nth selss ci))
-                               else NONE
-                           end)
-                      (root_ctr term)
+
+                val tyinfo = case Thm.typ_of_cterm LHS
+                               of Type(name, _) =>
+                                    get_info1 {load_bnf = false,
+                                               load_bnf_fp = false,
+                                               load_ctr = true}
+                                              (Context.Proof ctxt) name
+                                | _ => raise Automation_Fail (K [])
+                val ctrs = ctrs_of tyinfo
+                val selss = sel_of tyinfo
+                val h = Thm.term_of LH
+                val ci = find_index (eq_const h) ctrs
+                val targs = Thm.dest_ctyp (Thm.ctyp_of_cterm LHS)
+
       
-             in case (dest_ctr (LHS, LH, LARGS), dest_ctr (RHS, RH, RARGS))
-                  of (NONE, NONE) => tab
-                   | (SOME (_, LHSS, SS), NONE) => fold2 (fn L => fn S => guess (L, Thm.apply S RHS)) LHSS SS tab
-                   | (NONE, SOME (_, RHSS, SS)) => fold2 (fn R => fn S => guess (Thm.apply S LHS, R)) RHSS SS tab
-                   | (SOME (CL, LHSS, _), SOME (CR, RHSS, _)) =>
-                        if CL = CR
-                        then fold2 (fn L => fn R => guess (L, R)) LHSS RHSS tab
-                        else raise Guess_Conflicts
-            end
+             in if ci <> ~1 andalso ci < length selss
+                   andalso length (nth selss ci) = length LARGS
+                then let val SS = map (Thm.cterm_of ctxt o inst_sel (map Thm.typ_of targs))
+                                      (nth selss ci)
+                      in fold2 (fn L => fn S => guess (L, Thm.apply S RHS)) LARGS SS tab
+                     end
+                else tab
+            end handle Automation_Fail _ => tab
         end
    in guess
   end

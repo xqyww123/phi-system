@@ -30,6 +30,7 @@ val case_of_safe : type_info -> term option
 val sel_of  : type_info -> term list list
 val sel_of_safe : type_info -> term list list option
 val mk_sels : type_info -> typ list -> term list list
+val inst_sel : typ list -> term -> term
 val sets_of_bnf : type_info -> term list
 val sets_of_bnf_safe : type_info -> term list option
 val rel_of_bnf : type_info -> term
@@ -216,12 +217,12 @@ val case_of_safe = safe_try case_of
 
 val sel_of = g_ctr ["selectors"] (get_termss "selectors") #selss
 val sel_of_safe = safe_try sel_of
+fun inst_sel tys tm =
+  case Term.fastype_of tm
+    of \<^Type>\<open>fun \<open>Type(_, tys')\<close> _\<close> => Term.subst_atomic_types (tys' ~~ tys) tm
+     | _ => raise TERM ("Not a selector", [tm])
 fun mk_sels tyinfo =
   let val selss = sel_of tyinfo
-      fun inst_sel tys tm =
-        case Term.fastype_of tm
-          of \<^Type>\<open>fun \<open>Type(_, tys')\<close> _\<close> => Term.subst_atomic_types (tys' ~~ tys) tm
-           | _ => raise TERM ("Not a selector", [tm])
    in fn tys => map (map (inst_sel tys)) selss
   end
 
