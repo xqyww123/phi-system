@@ -412,7 +412,7 @@ lemma rot_rot_comp[simp, \<phi>safe_simp]:
 
 lemmas rot_rot_comp'[simp, \<phi>safe_simp] = prod.rot_rot_comp[THEN fun_comp_intr_left, unfolded o_id, folded comp_assoc]
 lemmas rot_rot[simp, \<phi>safe_simp] = prod.rot_rot_comp[unfolded fun_eq_iff comp_def id_def, THEN spec]
-
+ 
 lemma
   \<open>fst (prod.rotL x) = (fst x, fst (snd x))\<close>
   \<open>snd (prod.rotR y) = (snd (fst y), snd y)\<close>

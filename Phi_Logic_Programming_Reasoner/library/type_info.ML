@@ -24,6 +24,7 @@ val burrow_bnf_dead_live : type_info -> typ list * typ list -> typ list (*the in
 val Tname_of : type_info -> string
 val T_of_bnf : type_info -> typ
 val ctrs_of : type_info -> term list
+val ctrs_of_safe : type_info -> term list option
 val case_of : type_info -> term
 val case_of_safe : type_info -> term option
 val sel_of  : type_info -> term list list
@@ -41,6 +42,11 @@ val mk_sets_of_bnf: type_info -> typ list list -> typ list list -> term list
 val mk_rel_of_bnf : type_info -> typ list -> typ list -> typ list -> term
 val mk_pred_of_bnf : type_info -> typ list -> typ list -> term
 val mk_map_of_bnf : type_info -> typ list -> typ list -> typ list -> term
+
+(*Tools*)
+
+val is_constructor : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
+val is_selector    : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
 
 end
 
@@ -203,6 +209,7 @@ val map_of_bnf_safe = safe_try map_of_bnf
 val mk_map_of_bnf = g_bnf_dl3 ["map"] (get_term "map") BNF_Def.mk_map_of_bnf
 
 val ctrs_of = g_ctr ["constructors"] (get_terms "constructors") #ctrs
+val ctrs_of_safe = safe_try ctrs_of
 
 val case_of = g_ctr ["case"] (get_term "case") #casex
 val case_of_safe = safe_try case_of
@@ -226,5 +233,28 @@ val _ = add_property_kinds [
 
 
 end
+
+
+(** Tools **)
+
+
+fun is_constructor ctxt bvtys term =
+  case Term.body_type (Term.fastype_of1 (bvtys, term))
+    of Type (Tname, _) =>
+         (case get_info {load_bnf=false, load_bnf_fp=false, load_ctr=true} ctxt Tname
+            of SOME tyinfo => exists (fn ctr => Term.aconv_untyped (term, ctr))
+                                     (these (ctrs_of_safe tyinfo))
+             | NONE => false)
+     | _ => false
+
+fun is_selector ctxt bvtys term =
+  case Term.fastype_of1 (bvtys, term)
+    of \<^Type>\<open>fun \<open>Type (Tname, _)\<close> _\<close> =>
+         (case get_info {load_bnf=false, load_bnf_fp=false, load_ctr=true} ctxt Tname
+            of SOME tyinfo => exists (exists (fn sel => Term.aconv_untyped (term, sel)))
+                                     (these (sel_of_safe tyinfo))
+             | NONE => false)
+     | _ => false
+
 
 end

@@ -1874,6 +1874,12 @@ lemma [\<phi>reason add]:
 
 *)
 
+ML \<open>Nitpick_HOL.is_nonfree_constr \<^context> (\<^const_name>\<open>Nil\<close>, \<^typ>\<open>'a list\<close>)\<close>
+ML \<open>Nitpick_HOL.is_sel \<^const_name>\<open>hd\<close>\<close>
+ML \<open>Nitpick_HOL.is_data_type \<^context> \<^typ>\<open>'a list\<close>\<close>
+
+
+
 
 
 subsubsection \<open>Setup\<close>
