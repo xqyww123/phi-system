@@ -611,12 +611,11 @@ simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memadd
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>MemBlk\<close>, _) $ (Const(\<^const_name>\<open>memaddr.blk\<close>, _) $ a0)
                                     $ (Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, _) $ idx $ _) =>
-        let fun quick_chk (Const(\<^const_name>\<open>List.append\<close>, _) $ L $ R) = quick_chk L @ quick_chk R
-              | quick_chk (Const(\<^const_name>\<open>list.Cons\<close>, _) $ x $ L) = x :: quick_chk L
-              | quick_chk (Const(\<^const_name>\<open>list.Nil\<close>, _)) = []
-              | quick_chk (Const(\<^const_name>\<open>memaddr.index\<close>, _) $ a1) =
-                   if a0 aconv a1 then [] else raise Match
-         in if (null (quick_chk idx) handle Match => true) then NONE else
+        let fun quick_chk (Const(\<^const_name>\<open>List.append\<close>, _) $ L $ _) = quick_chk L
+              | quick_chk (Const(\<^const_name>\<open>list.Cons\<close>, _) $ _ $ L) = quick_chk L
+              | quick_chk (Const(\<^const_name>\<open>list.Nil\<close>, _)) = true
+              | quick_chk (Const(\<^const_name>\<open>memaddr.index\<close>, _) $ a1) = a0 aconv a1
+         in if quick_chk idx then
         let fun parse_idx ctmx (Const(\<^const_name>\<open>List.append\<close>, _) $ L $ R)
                   = parse_idx (Thm.dest_arg1 ctmx) L @ parse_idx (Thm.dest_arg ctmx) R
               | parse_idx ctmx (Const(\<^const_name>\<open>list.Cons\<close>, _) $ _ $ L)
@@ -636,7 +635,7 @@ simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memadd
                                       \<Longrightarrow> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (idx \<^bold>\<rightarrow>\<^sub>@ T) \<equiv> \<m>\<e>\<m>[addr] T\<close>
                                       by (simp add: Mem_def)\<close>
          in SOME rule
-        end end \<close>
+        end else NONE end \<close>
 
 
 end
