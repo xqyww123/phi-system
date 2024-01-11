@@ -16,6 +16,7 @@ signature PHI_ENVIR = sig
   val enter_programming_environ' : context_state -> context_state
   val enter_programming_environ  : thm -> Proof.state -> Proof.state
 
+  val the_time : Proof.context -> int
   val the_construction : Proof.context -> thm
   val the_programming_sequent' : Proof.context -> thm
   val the_state_sequent : Proof.state -> thm
@@ -38,6 +39,7 @@ signature PHI_ENVIR = sig
   val freeze_dynamic_lemmas : Proof.context -> Proof.context
 
   structure Enter_Programming_Environ : HOOKS
+  structure On_Updating_State_Sequent : HOOKS
 
 end
 
@@ -49,21 +51,34 @@ structure Programming_Sequent = Proof_Data (
   type T = (thm (*sequent*)
           * thm (*the latest construction*)
           * thm list lazy (*implication*)
+          * int (*time*)
           ) list;
   val init = (K [])
 )
 
+structure On_Updating_State_Sequent = Hooks (
+  type arg = { mode: Phi_Working_Mode.working_mode,
+               is_ready_construction: bool,
+               latest_ready_construction: thm option,
+               time : int }
+  type state = context_state
+)
+
 fun err_bad_env () = error ("Not in the \<phi> programming environment")
 
+fun the_time ctxt =
+  case Programming_Sequent.get ctxt of (_, _, _, time)::_ => time
+                                     | [] => 0
+
 fun the_construction ctxt =
-  case Programming_Sequent.get ctxt of (_,thm, _)::_ => thm
+  case Programming_Sequent.get ctxt of (_,thm, _, _)::_ => thm
                                      | [] => Drule.dummy_thm
 
 val under_programming_environ = not o null o Programming_Sequent.get
 val exit_programming_environ = Programming_Sequent.map (fn L => tl L)
 
 fun the_programming_sequent' ctxt =
-  case Programming_Sequent.get ctxt of (thm, _, _)::L => thm
+  case Programming_Sequent.get ctxt of (thm, _, _, _)::L => thm
                                      | [] => Drule.dummy_thm
 
 val the_state_sequent = the_programming_sequent' o Proof.context_of
@@ -89,15 +104,34 @@ fun reason_programming_implication ctxt =
 
 fun gen_update_programming_sequent' put sequent ctxt =
   let val mode = Phi_Working_Mode.mode1 ctxt
-   in if #constr_is_ready mode (Thm.prop_of sequent)
-      then put ctxt (K (sequent, sequent, Lazy.lazy (fn () =>
-                                       reason_programming_implication' mode ctxt sequent)))
-      else put ctxt (fn (_, construction, implication)::_ => (sequent, construction, implication)
-                      | [] => (sequent, Drule.dummy_thm, Lazy.value []))
+      val is_read = #constr_is_ready mode (Thm.prop_of sequent)
+      val old_data = Programming_Sequent.get ctxt
+      val time = case old_data of [] => 1 | (_,_,_,time)::_ => time+1
+      fun invoke_hook ready_constr =
+            On_Updating_State_Sequent.invoke (Context.Proof ctxt) {
+                mode = mode,
+                is_ready_construction = is_read,
+                latest_ready_construction = ready_constr,
+                time = time
+              }
+   in if is_read
+      then invoke_hook (SOME sequent) (ctxt, sequent)
+        |> (fn (ctxt', sequent') =>
+           put ctxt' (sequent', sequent', Lazy.lazy (fn () =>
+                          reason_programming_implication' mode ctxt' sequent'), time))
+      else (case old_data
+        of [] => invoke_hook NONE (ctxt, sequent)
+              |> (fn (ctxt', sequent') =>
+                    put ctxt' (sequent', Drule.dummy_thm, Lazy.value [], time))
+         | (_, construction, implication, _)::_ =>
+                 invoke_hook (SOME construction) (ctxt, sequent)
+              |> (fn (ctxt', sequent') =>
+                    put ctxt' (sequent', construction, implication, time))
+      )
   end
 
 val update_programming_sequent' = gen_update_programming_sequent'
-        (fn ctxt => fn data => Programming_Sequent.map (fn L => data L :: tl L) ctxt)
+        (fn ctxt => fn data => Programming_Sequent.map (fn L => data :: tl L) ctxt)
 
 
 structure Enter_Programming_Environ =
@@ -109,7 +143,7 @@ fun enter_programming_environ' stat =
     val level = length (Programming_Sequent.get (fst stat))
     val (ctxt',sequent') = Enter_Programming_Environ.invoke (Context.Proof (fst stat)) level stat
   in gen_update_programming_sequent'
-          (fn ctxt => fn data => Programming_Sequent.map (fn L => data L :: L) ctxt)
+          (fn ctxt => fn data => Programming_Sequent.map (fn L => data :: L) ctxt)
           sequent' ctxt'
   |> rpair sequent'
   end

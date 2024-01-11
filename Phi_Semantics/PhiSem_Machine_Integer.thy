@@ -564,7 +564,7 @@ lemma op_const_natR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   certified by (simp add: the_\<phi>(2) unat_of_nat) 
 \<medium_right_bracket> certified by (simp add: unat_of_nat) .
 
-lemma [\<phi>reason 50
+lemma [\<phi>reason %\<phi>synthesis_parse_number
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>

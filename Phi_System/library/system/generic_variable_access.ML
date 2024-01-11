@@ -7,6 +7,7 @@
 
 (*** Signature ***)
 signature GENERIC_VARIABLE_ACCESS = sig
+include GENERIC_VARIABLE_ACCESS
 
 type evaluation = context_state -> (cterm (*abstract object*) * cterm (*phi type*)) option
 
@@ -23,8 +24,8 @@ val mode_synthesis : bool Config.T
 
 (** Parser for Access **)
 
-val parse_generic_var  : Proof.context -> term -> cterm option
-val parse_generic_var1 : Proof.context -> term -> cterm
+val dereference_generic_var  : Proof.context -> term -> cterm option
+val dereference_generic_var1 : Proof.context -> term -> cterm
 
 (** Process of Initial Arguments **)
 
@@ -57,6 +58,7 @@ val number_of_values : term -> int
 end
 
 structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
+open Generic_Variable_Access
 
 (*** Value Context ***)
 
@@ -158,16 +160,16 @@ fun trans_error ctxt (V as Free _)
                Syntax.pretty_term ctxt X
              ]))
 
-fun parse_generic_var ctxt (Free (s, _)) =
+fun dereference_generic_var ctxt (Free (s, _)) =
       if can Value.parse_int s
       then SOME (index_val ctxt (Value.parse_int s))
       else Option.map fst (Symtab.lookup (#2 (value_context_of ctxt)) s)
-  | parse_generic_var ctxt (Const ("_constrain", _) $ X $ _)
-      = parse_generic_var ctxt X
-  | parse_generic_var _ _ = NONE
+  | dereference_generic_var ctxt (Const ("_constrain", _) $ X $ _)
+      = dereference_generic_var ctxt X
+  | dereference_generic_var _ _ = NONE
 
 
-(*fun parse_generic_var ctxt X =
+(*fun dereference_generic_var ctxt X =
   let
     val tab = Value_Parsers.get (Context.Proof ctxt)
   in
@@ -177,14 +179,14 @@ fun parse_generic_var ctxt (Free (s, _)) =
        | some => some
   end*)
 
-fun parse_generic_var1 ctxt X =
-  case parse_generic_var ctxt X
+fun dereference_generic_var1 ctxt X =
+  case dereference_generic_var ctxt X
     of SOME y => y
      | NONE => trans_error ctxt X
 (*
-fun parse_generic_var0 ctxt v =
+fun dereference_generic_var0 ctxt v =
   if under_context ctxt
-  then the_default v (parse_generic_var ctxt v)
+  then the_default v (dereference_generic_var ctxt v)
   else v *)
 
 val mode_synthesis = Config.declare_bool ("\<phi>-System.GVA.mode_synthesis", \<^here>) (K false)
@@ -239,9 +241,9 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
 end
 
 fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_)) =
-      Thm.term_of (parse_generic_var1 ctxt (Free (N, dummyT)))
+      Thm.term_of (dereference_generic_var1 ctxt (Free (N, dummyT)))
   | check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ X) =
-      Thm.term_of (parse_generic_var1 ctxt X)
+      Thm.term_of (dereference_generic_var1 ctxt X)
   | check_term ctxt ((H1 as Const (\<^const_name>\<open>Value_of\<close>, _))
                         $ (H2 as Const (\<^const_name>\<open>Pure.dummy_pattern\<close>, _))
                         $ (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_))
@@ -253,7 +255,7 @@ fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ 
                          of (SOME (x, _), Const (\<^const_name>\<open>Nil\<close>, _)) =>
                                  Type.constraint (fastype_of (Thm.term_of x)) H2
                           | _ => H2)
-                    $ Thm.term_of (parse_generic_var1 ctxt (Free (N, dummyT)))
+                    $ Thm.term_of (dereference_generic_var1 ctxt (Free (N, dummyT)))
                     $ element_index
             else (case v of SOME (x,T) =>
                               (case element_index
@@ -507,7 +509,6 @@ Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
   then the_default store_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
   else (ctxt,sequent)
 )))
-
 
 
 end

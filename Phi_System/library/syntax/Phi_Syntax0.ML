@@ -3,6 +3,7 @@ include PHI_SYNTAX
 
   val is_BI_connective : term -> bool
   val fold_items_of_assertion : (PLPR_Pattern.bvs -> term -> 'a -> 'a) -> PLPR_Pattern.bvs -> term -> 'a -> 'a
+  val fold_items_of_assertion': (PLPR_Pattern.bv_typs -> term -> 'a -> 'a) -> PLPR_Pattern.bv_typs -> term -> 'a -> 'a
   val exists_item_of_assertion : (PLPR_Pattern.bvs -> term -> bool) -> PLPR_Pattern.bvs -> term -> bool
   val forall_item_of_assertion : (PLPR_Pattern.bvs -> term -> bool) -> PLPR_Pattern.bvs -> term -> bool
   val forall_item_of_assertion_blv : (PLPR_Pattern.bvs * int (*level of lambda abstractions*) -> term -> bool)
@@ -18,7 +19,7 @@ include PHI_SYNTAX
   val dest_phi_type_assertion : term -> term (*x*) * term (*T*)
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
-  val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ (*concrete*)
+  val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*abstract*) * typ (*concrete*)
   val is_Type_Opr : typ -> bool
   val is_non_parameterized_phityp : typ -> bool
 
@@ -52,6 +53,27 @@ fun fold_items_of_assertion f =
         | fold bvs (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) x = fold bvs X x
         | fold bvs (Abs (N, ty, X)) x = fold ((N,ty)::bvs) X x
+        | fold bvs (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) x = f bvs X x
+        | fold bvs (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold bvs A (fold bvs B x)
+        | fold _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold _ (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold bvs (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold bvs (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold bvs (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) x = fold bvs X x
+        | fold bvs (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) x = fold bvs A (fold bvs B x)
+        | fold bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) x = fold bvs Y (fold bvs X x)
+        | fold bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) x = fold bvs X x
+        | fold bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) x = fold bvs X x
+        | fold bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) x = fold bvs Y (fold bvs X x)
+        | fold bvs X x = f bvs X x
+   in fold
+  end
+
+fun fold_items_of_assertion' f =
+  let fun fold bvs (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold bvs A (fold bvs B x)
+        | fold bvs (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) x = fold bvs X x
+        | fold bvs (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) x = fold bvs X x
+        | fold bvs (Abs (N, ty, X)) x = fold (ty::bvs) X x
         | fold bvs (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) x = f bvs X x
         | fold bvs (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold bvs A (fold bvs B x)
         | fold _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) x = x

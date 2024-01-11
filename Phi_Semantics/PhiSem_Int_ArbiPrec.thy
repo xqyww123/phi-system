@@ -248,7 +248,7 @@ lemma op_const_anat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   semantic_literal \<open>V_aint.mk x' \<Turnstile> (x \<Ztypecolon> \<nat>)\<close>
 \<medium_right_bracket> .
 
-lemma [\<phi>reason %\<phi>synthesis_parse_number+20
+lemma [\<phi>reason %\<phi>synthesis_parse_number+10
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
@@ -258,7 +258,7 @@ lemma [\<phi>reason %\<phi>synthesis_parse_number+20
   for X :: \<open>'ret \<Rightarrow> assn\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason %\<phi>synthesis_parse_number+20
+lemma [\<phi>reason %\<phi>synthesis_parse_number
     for \<open>Synthesis_Parse (numeral ?n::int) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::int) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::int) (?X :: ?'ret \<Rightarrow> assn)\<close>

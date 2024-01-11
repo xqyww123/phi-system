@@ -161,6 +161,7 @@ lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[wh
 lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>numeral x\<close> for x]
 lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[where const=\<open>- numeral x\<close> for x]
 
+
 (*
 lemmas [\<phi>reason 2000 for \<open>PROP Gen_Synthesis_Rule (
           Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<v>\<a>\<l>[ret] ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) _ _ \<close>]

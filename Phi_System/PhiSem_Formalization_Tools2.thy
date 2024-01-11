@@ -167,6 +167,28 @@ declare [[\<phi>reason_default_pattern
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _]  _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (500) ]]
 
+setup \<open>Context.theory_map (
+  Phi_Reasoner.add_pass
+      (Const("Phi_Type_of_Literal.synthesisable_literals", dummyT),
+       \<^pattern_prop>\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[semantic_literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>,
+       fn pos => fn (rules, prio, patterns, guard, ctxt) =>
+          let val T_names =
+                     fold ((fn Const(\<^const_name>\<open>REMAINS\<close>, _) $ (
+                                  Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _
+                                    $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ T)) $ _ $ _ =>
+                                 (case Term.head_of T
+                                    of Const(N, _) => insert (op =) N
+                                     | _ => I)
+                             | _ => I)
+                           o #2 o Phi_Syntax.dest_transformation o Thm.concl_of) rules []
+           in if null T_names then ()
+                 else Synchronized.change Phi_Type_of_Literal.synthesisable_literals
+                                          (fold Symtab.insert_set T_names);
+              (rules, prio, patterns, guard, ctxt)
+          end
+       )
+)\<close>
+
 lemma "_synthesis_literal_":
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> const \<Ztypecolon> \<v>\<a>\<l>[semantic_literal v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (semantic_literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> @action synthesis\<close>

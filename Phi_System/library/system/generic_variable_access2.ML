@@ -38,7 +38,7 @@ open Generic_Variable_Access
 (*** Get Value ***)
 
 fun get_value name element_index ctxt sequent =
-  let val vname = parse_generic_var1 ctxt (Free (name, dummyT))
+  let val vname = dereference_generic_var1 ctxt (Free (name, dummyT))
       val idx = Int.max (Thm.maxidx_of_cterm vname, Thm.maxidx_of_cterm element_index) + 1
       val Ty = TVar(("'x",idx), \<^sort>\<open>type\<close>)
       (*val Ty = lookup_bindings ctxt name

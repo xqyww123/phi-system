@@ -137,7 +137,7 @@ lemma op_const_areal_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   semantic_literal \<open>V_areal.mk x \<Turnstile> (x \<Ztypecolon> \<real>)\<close>
 \<medium_right_bracket> .
 
-lemma [\<phi>reason %\<phi>synthesis_parse_number+20
+lemma [\<phi>reason %\<phi>synthesis_parse_number
     for \<open>Synthesis_Parse (numeral ?n::real) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::real) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::real) (?X :: ?'ret \<Rightarrow> assn)\<close>

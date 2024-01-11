@@ -720,6 +720,8 @@ declare [[\<phi>reason_default_pattern
   and \<phi>synthesis_parse_number = (40, [30, 70]) in \<phi>synthesis_parse_all
                                                and < \<phi>synthesis_parse and > \<phi>synthesis_parse_default
       \<open>parsing numbers\<close>
+  and \<phi>synthesis_parse_guess_literal_type = (60, [60, 60]) in \<phi>synthesis_parse_number
+      \<open>see Guess_Literal_Type_Synthesis_Parse\<close>
 
 
 subsubsection \<open>Parse the Term to be Synthesised\<close>
@@ -754,6 +756,7 @@ lemma [\<phi>reason default %\<phi>synthesis_parse_default]:
   \<open>Synthesis_Parse T (x \<Ztypecolon> T)\<close>
   unfolding Synthesis_Parse_def ..
 
+
 lemma [\<phi>reason default %\<phi>synthesis_parse_default+10
   for \<open>Synthesis_Parse (numeral ?n::?'bb::numeral) ?X\<close>
       \<open>Synthesis_Parse (0::?'cc::zero) ?X\<close>
@@ -767,6 +770,7 @@ lemma [\<phi>reason default %\<phi>synthesis_parse_default+10
   unfolding Synthesis_Parse_def
   ..
 
+
 lemma [\<phi>reason default %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: ?'ret2 \<Rightarrow> (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
   \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T ret :: assn) \<close>
   unfolding Synthesis_Parse_def ..
@@ -774,6 +778,35 @@ lemma [\<phi>reason default %\<phi>synthesis_parse_default+10 for \<open>Synthes
 lemma [\<phi>reason default %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
   \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T :: assn) \<close>
   unfolding Synthesis_Parse_def ..
+
+
+subsubsection \<open>Guess the \<open>\<phi>\<close>-Type of Literals\<close>
+
+ML_file \<open>library/tools/guess_literal_number_type.ML\<close>
+
+\<phi>reasoner_ML Guess_Literal_Type_Synthesis_Parse %\<phi>synthesis_parse_guess_literal_type
+                                                (\<open>Synthesis_Parse _ (?X :: ?'ret \<Rightarrow> assn)\<close>)
+  = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+      let val (bvtys, _ (*Trueprop*) $ (Const(\<^const_name>\<open>Synthesis_Parse\<close>, _) $ literal $ X))
+                = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+          val time = Phi_Envir.the_time ctxt
+       in if Phi_Type_of_Literal.is_literal literal
+          then Phi_Type_of_Literal.guess ctxt bvtys time literal
+       |> Option.map (fn phi_type =>
+            ((ctxt,
+              \<^instantiate>\<open> T=phi_type
+                       and n=\<open>Thm.var (("n", Thm.maxidx_of_cterm phi_type + 1),
+                                       Thm.dest_ctyp0 (Thm.ctyp_of_cterm phi_type))\<close>
+                       and X=\<open>Thm.cterm_of ctxt X\<close>
+                       and 'c=\<open>Thm.dest_ctyp0 (Thm.dest_ctyp1 (Thm.ctyp_of_cterm phi_type))\<close>
+                       and 'x=\<open>Thm.dest_ctyp0 (Thm.ctyp_of_cterm phi_type)\<close>
+                       and 'any=\<open>Thm.ctyp_of ctxt (Term.fastype_of1 (bvtys, X))\<close>
+                        in lemma \<open> Synthesis_Parse (n \<Ztypecolon> T) X
+                               \<Longrightarrow> Synthesis_Parse n X \<close>
+                              for T :: \<open>('c,'x) \<phi>\<close> and X :: \<open>'any\<close>
+                              by (simp add: Synthesis_Parse_def) \<close> RS sequent), Seq.empty))
+          else NONE
+      end )\<close>
 
 
 subsubsection \<open>Tagging the target of a synthesis rule\<close>

@@ -65,12 +65,12 @@ proc push_dynarr:
   val len \<leftarrow> $addr \<tribullet> len ! ;;
   val cap \<leftarrow> $addr \<tribullet> cap ! ;;
   if ($cap = $len) \<medium_left_bracket>
-      val cap' \<leftarrow> Max($cap * \<open>2 \<Ztypecolon> \<nat>(size_t)\<close>, \<open>1 \<Ztypecolon> \<nat>(size_t)\<close>) ;;
+      val cap' \<leftarrow> Max($cap * 2, 1) ;;
       val data' \<leftarrow> calloc_N ($cap') \<open>T\<close> ;;
       memcpy ($data', $addr \<tribullet> data !, $len) ;;
       mfree ($addr \<tribullet> data !) ;;
       $addr \<tribullet> data := $data' ;;
-      $addr \<tribullet> len := $addr \<tribullet> len ! + \<open>1 \<Ztypecolon> \<nat>(size_t)\<close> ;;
+      $addr \<tribullet> len := $addr \<tribullet> len ! + 1 ;;
       $addr \<tribullet> cap := $cap' ;;
       $data' \<tribullet> $len := $v ;;
       \<open>l@[v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
