@@ -5,7 +5,9 @@ include PHI_SYNTAX
   val fold_items_of_assertion : (PLPR_Pattern.bvs -> term -> 'a -> 'a) -> PLPR_Pattern.bvs -> term -> 'a -> 'a
   val fold_items_of_assertion': (PLPR_Pattern.bv_typs -> term -> 'a -> 'a) -> PLPR_Pattern.bv_typs -> term -> 'a -> 'a
   val exists_item_of_assertion : (PLPR_Pattern.bvs -> term -> bool) -> PLPR_Pattern.bvs -> term -> bool
+  val exists_item_of_assertion': (PLPR_Pattern.bv_typs -> term -> bool) -> PLPR_Pattern.bv_typs -> term -> bool
   val forall_item_of_assertion : (PLPR_Pattern.bvs -> term -> bool) -> PLPR_Pattern.bvs -> term -> bool
+  val forall_item_of_assertion': (PLPR_Pattern.bv_typs -> term -> bool) -> PLPR_Pattern.bv_typs -> term -> bool
   val forall_item_of_assertion_blv : (PLPR_Pattern.bvs * int (*level of lambda abstractions*) -> term -> bool)
                                   -> PLPR_Pattern.bvs -> term -> bool
   val conv_items_of_assertion : (Proof.context -> conv) -> Proof.context -> conv
@@ -57,8 +59,8 @@ fun fold_items_of_assertion f =
         | fold bvs (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold bvs A (fold bvs B x)
         | fold _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold _ (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) x = x
-        | fold bvs (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) x = x
-        | fold bvs (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold _ (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold _ (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold bvs (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) x = fold bvs A (fold bvs B x)
         | fold bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) x = fold bvs Y (fold bvs X x)
@@ -73,13 +75,13 @@ fun fold_items_of_assertion' f =
   let fun fold bvs (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold bvs A (fold bvs B x)
         | fold bvs (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) x = fold bvs X x
-        | fold bvs (Abs (N, ty, X)) x = fold (ty::bvs) X x
+        | fold bvs (Abs (_, ty, X)) x = fold (ty::bvs) X x
         | fold bvs (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) x = f bvs X x
         | fold bvs (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold bvs A (fold bvs B x)
         | fold _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold _ (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) x = x
-        | fold bvs (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) x = x
-        | fold bvs (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold _ (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) x = x
+        | fold _ (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold bvs (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) x = fold bvs A (fold bvs B x)
         | fold bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) x = fold bvs Y (fold bvs X x)
@@ -111,11 +113,54 @@ fun exists_item_of_assertion P =
    in exists
   end
 
+fun exists_item_of_assertion' P =
+  let fun exists bvs (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) = exists bvs B orelse exists bvs A
+        | exists bvs (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = exists bvs X
+        | exists bvs (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = exists bvs X
+        | exists bvs (Abs (_, ty, X)) = exists (ty::bvs) X
+        | exists bvs (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) = P bvs X
+        | exists bvs (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) = exists bvs B orelse exists bvs A
+        | exists _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = false
+        | exists _ (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = false
+        | exists _ (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = false
+        | exists _ (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) = false
+        | exists bvs (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) = exists bvs X
+        | exists bvs (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) = exists bvs B orelse exists bvs A
+        | exists bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = exists bvs X orelse exists bvs Y
+        | exists bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = exists bvs X
+        | exists bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = exists bvs X
+        | exists bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = exists bvs X orelse exists bvs Y
+        | exists bvs X = P bvs X
+   in exists
+  end
+
+
 fun forall_item_of_assertion P =
   let fun forall bvs (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) = forall bvs B andalso forall bvs A
         | forall bvs (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = forall bvs X
         | forall bvs (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = forall bvs X
         | forall bvs (Abs (N, ty, X)) = forall ((N,ty)::bvs) X
+        | forall bvs (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) = P bvs X
+        | forall bvs (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) = forall bvs B andalso forall bvs A
+        | forall _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall _ (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall _ (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall _ (Const(\<^const_name>\<open>one_class.one\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall bvs (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) = forall bvs X
+        | forall bvs (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) = forall bvs B andalso forall bvs A
+        | forall bvs (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = forall bvs X andalso forall bvs Y
+        | forall bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall bvs X
+        | forall bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = forall bvs X
+        | forall bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = forall bvs X andalso forall bvs Y
+        | forall bvs X = P bvs X
+   in forall
+  end
+
+fun forall_item_of_assertion' P =
+  let fun forall bvs (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) = forall bvs B andalso forall bvs A
+        | forall bvs (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = forall bvs X
+        | forall bvs (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = forall bvs X
+        | forall bvs (Abs (_, ty, X)) = forall (ty::bvs) X
         | forall bvs (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) = P bvs X
         | forall bvs (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) = forall bvs B andalso forall bvs A
         | forall _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = true

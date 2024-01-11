@@ -80,9 +80,31 @@ fun scan ctxt time0 =
             | _ => I )
      | _ => I)
 
+fun quick_check ctxt =
+  Phi_Syntax.exists_item_of_assertion' (fn bvs =>
+    fn Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T =>
+        (case Term.head_of (Phi_Help.beta_eta_contract_term T)
+           of Const(N, _) => (
+             (case Symtab.lookup (!Generic_Variable_Access.parse_phi_type_of_generic_var) N
+                of SOME parser => (
+                    case parser T
+                      of SOME T' =>
+                         (case Term.head_of T'
+                            of Const(NT', _) =>
+                                Symtab.defined (Synchronized.value synthesisable_literals) NT'
+                             | _ => false)
+                       | _ => false)
+                 | _ => false)
+               handle Match => false)
+            | _ => false )
+     | _ => false)
+
 fun collect_statistics mode time construction_sequent ctxt =
-  Recent_Types_of_Literal.map (
-      scan ctxt time [] (#spec_of mode (Thm.prop_of construction_sequent))) ctxt
+  let val spec = #spec_of mode (Thm.prop_of construction_sequent)
+   in if quick_check ctxt [] spec
+      then Recent_Types_of_Literal.map (scan ctxt time [] spec) ctxt
+      else ctxt
+  end
 
 fun guess ctxt bvtys time literal =
   let val records = Recent_Types_of_Literal.get ctxt

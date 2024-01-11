@@ -8,7 +8,7 @@ begin
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
                                 (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>
                                 \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
-                                                     len \<le> cap \<and> cap \<le> 2 * len \<and>
+                                                     len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
                                                      take len data = l \<and> address_to_base a\<^sub>D \<close>
   deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr TY T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
        and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr TY T) (list_all2 eq)\<close>
@@ -18,7 +18,6 @@ begin
        and Functional_Transformation_Functor
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
-
 
 context
   fixes TY :: TY
@@ -76,16 +75,37 @@ proc push_dynarr:
       \<open>l@[v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
   \<medium_right_bracket> \<medium_left_bracket>
       $addr \<tribullet> data ! \<tribullet> $len := $v ;;
-      $addr \<tribullet> len := $len + \<open>1 \<Ztypecolon> \<nat>(size_t)\<close> ;;
+      $addr \<tribullet> len := $len + 1 ;;
       \<open>l@[v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+proc pop_dynarr:
+  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
+  output \<open>butlast l \<Ztypecolon> DynArr addr TY T\<close>
+\<medium_left_bracket>
+  to \<open>OPEN _ _\<close> ;;
+  val len \<leftarrow> $addr \<tribullet> len ! - 1 ;;
+  val cap \<leftarrow> ($addr \<tribullet> cap !) / 2 ;;
+  $addr \<tribullet> len := $len ;;
+  if ($len \<le> $cap) \<medium_left_bracket>
+  (* ^ if we use ($len * 2 \<le> $cap) instead, it can cause fatal overflow when addrspace_bits is small *)
+    val data' \<leftarrow> calloc_N ($cap) \<open>T\<close> ;;
+    memcpy ($data', $addr \<tribullet> data !, $len) ;;
+    mfree ($addr \<tribullet> data !) ;;
+    $addr \<tribullet> data := $data' ;;
+    $addr \<tribullet> cap := $cap ;;
+    \<open>MAKE _ (DynArr addr _ _)\<close>
+  \<medium_right_bracket>
+  \<medium_left_bracket> \<open>MAKE _ (DynArr addr _ _)\<close> \<medium_right_bracket>
+\<medium_right_bracket> .
 
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' get_dynarr_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' set_dynarr_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' Max_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' push_dynarr_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' pop_dynarr_def})))\<close>
 
 end
 
