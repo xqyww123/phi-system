@@ -83,23 +83,39 @@ proc push_dynarr:
 proc pop_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
-  output \<open>butlast l \<Ztypecolon> DynArr addr TY T\<close>
+  output \<open>butlast l \<Ztypecolon> DynArr addr TY T\<heavy_comma> last l \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> ;;
   val len \<leftarrow> $addr \<tribullet> len ! - 1 ;;
-  val cap \<leftarrow> ($addr \<tribullet> cap !) / 2 ;;
+  val half_cap \<leftarrow> ($addr \<tribullet> cap !) / 2 ;;
+  val ret \<leftarrow> $addr \<tribullet> data ! \<tribullet> $len ! ;;
   $addr \<tribullet> len := $len ;;
-  if ($len \<le> $cap) \<medium_left_bracket>
+  if ($len \<le> $half_cap) \<medium_left_bracket>
   (* ^ if we use ($len * 2 \<le> $cap) instead, it can cause fatal overflow when addrspace_bits is small *)
-    val data' \<leftarrow> calloc_N ($cap) \<open>T\<close> ;;
+    val data' \<leftarrow> calloc_N ($half_cap) \<open>T\<close> ;;
     memcpy ($data', $addr \<tribullet> data !, $len) ;;
     mfree ($addr \<tribullet> data !) ;;
     $addr \<tribullet> data := $data' ;;
-    $addr \<tribullet> cap := $cap ;;
+    $addr \<tribullet> cap := $half_cap ;;
     \<open>MAKE _ (DynArr addr _ _)\<close>
   \<medium_right_bracket>
   \<medium_left_bracket> \<open>MAKE _ (DynArr addr _ _)\<close> \<medium_right_bracket>
+  $ret
 \<medium_right_bracket> .
+
+proc new_dynarr:
+  input  \<open>Void\<close>
+  output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
+\<medium_left_bracket>
+  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>\<close> ;;
+  $ret \<tribullet> data := (calloc_N (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>) \<open>T\<close>) ;;
+  \<open>MAKE _ (DynArr addr _ _)\<close> ;;
+  $ret
+\<medium_right_bracket> .
+
+proc del_dynarr:
+  
+
 
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' get_dynarr_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' set_dynarr_def})))\<close>

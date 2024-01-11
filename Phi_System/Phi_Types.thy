@@ -2914,7 +2914,8 @@ lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
   \<medium_left_bracket> premises Tr and _ and _  and xx[THEN eq_right_frame, simp]
     note hd_drop_conv_nth[simp] \<phi>Some_\<phi>Prod[symmetric, simp] \<phi>Prod_expn'[simp]
-    ;; Tr 
+    ;; Tr
+       unfold One_nat_def \<comment> \<open>????? TODO\<close>
   \<medium_right_bracket> .
 
 declare \<phi>Mul_Quant_LenIv.wrap_module_src[\<phi>reason del]
