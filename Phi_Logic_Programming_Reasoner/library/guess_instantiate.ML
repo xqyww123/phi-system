@@ -46,37 +46,70 @@ exception Automation_Fail = Phi_Reasoners.Automation_Fail
 
 (*only instantiate LHS*)
 fun guess_inst_eq ctxt bans =
-  let fun guess (LHS,RHS) tab =
+  let fun guess (LHS,RHS) (maxidx, tab) =
         let val (LH, LARGS) = Drule.strip_comb LHS
          in case Thm.term_of LH
-         of Var v => inst bans tab (v, LARGS) RHS
+         of Var v => (maxidx, inst bans tab (v, LARGS) RHS)
           | _ =>
             let open Type_Info
-                fun eq_const (Const (A, _)) (Const (B, _)) = A = B
-                  | eq_const _ _ = false
-
-                val tyinfo = case Thm.typ_of_cterm LHS
-                               of Type(name, _) =>
-                                    get_info1 {load_bnf = false,
-                                               load_bnf_fp = false,
-                                               load_ctr = true}
-                                              (Context.Proof ctxt) name
-                                | _ => raise Automation_Fail (K [])
-                val ctrs = ctrs_of tyinfo
-                val selss = sel_of tyinfo
                 val h = Thm.term_of LH
-                val ci = find_index (eq_const h) ctrs
-                val targs = Thm.dest_ctyp (Thm.ctyp_of_cterm LHS)
+                fun split_ctr continue =
+                  let val tyinfo = case Thm.typ_of_cterm LHS
+                                     of Type(name, _) =>
+                                          get_info1 {load_bnf = false,
+                                                     load_bnf_fp = false,
+                                                     load_ctr = true}
+                                                    (Context.Proof ctxt) name
+                                      | _ => raise Automation_Fail (K [])
+                      val ctrs = ctrs_of tyinfo
+                      val selss = sel_of tyinfo
+                      val ci = find_index (curry Term.aconv_untyped h) ctrs
+                   in if ci <> ~1 andalso ci < length selss
+                         andalso length (nth selss ci) = length LARGS
+                      then let val targs = Thm.dest_ctyp (Thm.ctyp_of_cterm LHS)
+                               val SS = map (Thm.cterm_of ctxt o inst_sel (map Thm.typ_of targs))
+                                            (nth selss ci)
+                            in fold2 (fn L => fn S => guess (L, Thm.apply S RHS)) LARGS SS (maxidx, tab)
+                           end
+                      else continue ()
+                  end
+
+                fun step_selector continue =
+                  case LARGS
+                    of [LARG] =>
+                        let val tyinfo = case Thm.typ_of_cterm LARG
+                                           of Type(name, _) =>
+                                                get_info1 {load_bnf = false,
+                                                           load_bnf_fp = false,
+                                                           load_ctr = true}
+                                                          (Context.Proof ctxt) name
+                                            | _ => raise Automation_Fail (K [])
+                            val ctrs = ctrs_of tyinfo
+                            val selss = sel_of tyinfo
+                         in case (get_index (get_index (fn j =>
+                                        if Term.aconv_untyped (h,j) then SOME j else NONE
+                                     )) selss)
+                              of SOME (i, (j, _)) =>
+                                    let val targs = Thm.dest_ctyp (Thm.ctyp_of_cterm LARG)
+                                        val ctr = nth ctrs i |> inst_ctr (map Thm.typ_of targs)
+                                        val cargs = Term.binder_types (Term.fastype_of ctr)
+                                                 |> map_index (fn (k, ty) =>
+                                                      if k = j
+                                                      then RHS
+                                                      else Thm.var (("\<a>", maxidx+1+k), Thm.ctyp_of ctxt ty) )
+                                        val RHS' = Thm.cterm_of ctxt ctr
+                                                |> fold (fn a => fn f => Thm.apply f a) cargs
+                                     in guess (LARG, RHS')
+                                              (maxidx + length cargs, tab)
+                                    end
+                               | NONE => continue ()
+                        end
+                     | _ => continue ()
 
       
-             in if ci <> ~1 andalso ci < length selss
-                   andalso length (nth selss ci) = length LARGS
-                then let val SS = map (Thm.cterm_of ctxt o inst_sel (map Thm.typ_of targs))
-                                      (nth selss ci)
-                      in fold2 (fn L => fn S => guess (L, Thm.apply S RHS)) LARGS SS tab
-                     end
-                else tab
-            end handle Automation_Fail _ => tab
+             in split_ctr (fn () =>
+                step_selector (K (maxidx, tab)))
+            end handle Automation_Fail _ => (maxidx, tab)
         end
    in guess
   end
@@ -127,7 +160,7 @@ fun quick_check ctxt =
 
 
 fun guess_inst ctxt bans cterm =
-  let val ret = guess_inst' ctxt bans cterm Vars.empty
+  let val (_, ret) = guess_inst' ctxt bans cterm (Thm.maxidx_of_cterm cterm, Vars.empty)
    in if Vars.is_empty ret
       then NONE
       else SOME ret

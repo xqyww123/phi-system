@@ -5,10 +5,14 @@ val auto : Phi_Cache_DB.proof_id option -> Proof.context -> thm -> thm
 val assync_proof : bool Config.T
 
 val sledgehammer_params : string Config.T
+val classical_prover_timeout : int Config.T
 
 end
 
 structure Phi_Sledgehammer_Solver : PHI_SLEDGEHAMMER_SOLVER = struct
+
+val classical_prover_timeout =
+        Attrib.setup_config_int \<^binding>\<open>classical_prover_timeout\<close> (K 3)
 
 val sledgehammer_params_fixed = [("isar_proofs", "false")]
 
@@ -200,7 +204,7 @@ fun dirty_hack ret stat s =
                       |> filter Token.is_proper)
         val _ = Synchronized.change ret (fn prfs => prf :: prfs)
         val _ = tracing s
-        in if preplay_succeeded andalso can (eval_prf_str_stat 5 NONE prf) stat
+        in if preplay_succeeded andalso can (eval_prf_str_stat 60 NONE prf) stat
            then raise SH_Short_Cut prf
            else ()
        end
@@ -397,8 +401,9 @@ fun auto'i id (ctxt,sequent') =
                 handle Auto_Fail _ => fallback false
             end)
 
+    val classical_timeout = Config.get ctxt classical_prover_timeout
     fun find_proof () =
-     (case Timeout.apply (Time.fromSeconds 3) (Timing.timing Seq.pull)
+     (case Timeout.apply (Time.fromSeconds classical_timeout) (Timing.timing Seq.pull)
                             (Phi_Reasoners.auto_obligation_solver ctxt sequent)
         of ({elapsed=time,...}, SOME (sequent', _)) =>
             ((time,""), (ctxt, sequent'))

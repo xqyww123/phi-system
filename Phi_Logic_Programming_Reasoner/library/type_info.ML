@@ -25,6 +25,7 @@ val Tname_of : type_info -> string
 val T_of_bnf : type_info -> typ
 val ctrs_of : type_info -> term list
 val ctrs_of_safe : type_info -> term list option
+val inst_ctr : typ list -> term -> term
 val case_of : type_info -> term
 val case_of_safe : type_info -> term option
 val sel_of  : type_info -> term list list
@@ -214,6 +215,11 @@ val ctrs_of_safe = safe_try ctrs_of
 
 val case_of = g_ctr ["case"] (get_term "case") #casex
 val case_of_safe = safe_try case_of
+
+fun inst_ctr tys tm =
+  case Term.body_type (Term.fastype_of tm)
+    of Type(_, tys') => Term.subst_atomic_types (tys' ~~ tys) tm
+     | _ => raise TERM ("Not a constructor", [tm])
 
 val sel_of = g_ctr ["selectors"] (get_termss "selectors") #selss
 val sel_of_safe = safe_try sel_of

@@ -3997,6 +3997,7 @@ lemma [\<phi>reason_template default %derived_SE_red_scalar_one]:
             With_Pattern_def Except_Pattern_def Simplify_def is_id_element_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn'; metis)
 
+(*TODO: provide the version for ToA mapper*)
 
 
 paragraph \<open>Reasoning when having SDistr\<close>

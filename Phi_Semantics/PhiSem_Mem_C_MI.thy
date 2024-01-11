@@ -14,7 +14,8 @@ lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
 
 
 
-proc op_allocate_mem_N:
+proc calloc_N:
+  requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
   output \<open>replicate n z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr (\<a>\<r>\<r>\<a>\<y>[n] TY) \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>

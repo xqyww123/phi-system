@@ -33,7 +33,7 @@ proc (nodef) replicate_a:
 
 
 
-proc (nodef) map_list_loop:
+proc (nodef) map_list_loop_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> U\<close>
        and \<open>Abstract_Domain T D\<close>
        and map: \<open>\<And>i l. \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len \<and> D l
@@ -82,7 +82,7 @@ lemma map_index_2_map_index_zip:
 
 
  
-proc (nodef) map_2list_loop:
+proc (nodef) map_2list_loop_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (U\<^sub>a, U\<^sub>b)\<close>
        and \<open>Abstract_Domain T\<^sub>a D\<^sub>a\<close>
        and \<open>Abstract_Domain T\<^sub>b D\<^sub>b\<close>
@@ -105,7 +105,7 @@ proc (nodef) map_2list_loop:
   input  \<open>X\<heavy_comma> l\<^sub>a \<Ztypecolon> T\<^sub>a\<heavy_comma> l\<^sub>b \<Ztypecolon> T\<^sub>b\<heavy_comma> len \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>X\<heavy_comma> map_index (\<lambda>i (a,b). f i (h\<^sub>b i b) a) (zip l\<^sub>a l\<^sub>b) \<Ztypecolon> T\<^sub>a\<heavy_comma> l\<^sub>b \<Ztypecolon> T\<^sub>b\<close>
 \<medium_left_bracket>
-  \<open>T\<^sub>a\<close> map_list_loop ($len) U\<^sub>a \<medium_left_bracket>
+  \<open>T\<^sub>a\<close> map_list_loop_a ($len) U\<^sub>a \<medium_left_bracket>
     apply_rule ToA_Mapper_onward[OF map\<^sub>b[where i1=i]]
     body
     apply_rule ToA_Mapper_backward[OF map\<^sub>b[where i1=i]] is l\<^sub>b

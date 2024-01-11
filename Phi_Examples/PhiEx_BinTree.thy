@@ -599,13 +599,16 @@ proc height_of:
 \<medium_right_bracket> .
 
 
-
 lemma [simp]:
   \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
-  by (meson prod.expand)
-  
+  by auto_sledgehammer
 
 
+lemma map_option_snd_lookup_tree_split:
+  \<open> B \<noteq> Leaf
+\<Longrightarrow> ((map_option snd \<circ> (lookup_tree (left B) ++ lookup_tree (right B)))(fst (value B) \<mapsto> snd (snd (value B))))
+  = (map_option snd \<circ> lookup_tree B) \<close>
+  by (cases B; auto simp add: fun_eq_iff map_add_def split: option.split)
 
 
 proc maintain_i:
@@ -624,6 +627,7 @@ proc maintain_i:
   is [routine]
 \<medium_left_bracket>
   note sorted_mid_iff'[simp] sorted_snoc_iff[simp] ;;
+
   to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>B, a\<^sub>E ;;
 
   val B \<leftarrow> $a\<^sub>D \<tribullet> left ! ;;
@@ -645,14 +649,13 @@ proc maintain_i:
           val H\<^sub>D' \<leftarrow> Max($H\<^sub>C, $H\<^sub>E) + 1 ;;
           $a\<^sub>D \<tribullet> data \<tribullet> v \<tribullet> height := $H\<^sub>D' ;;
           $B \<tribullet> right := $a\<^sub>D ;;
-          $B \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>A, $H\<^sub>D') + 1 ;;
+          $B \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>A, $H\<^sub>D') + 1 ;; 
 
-          \<open>BinTree a\<^sub>C _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> certified by (instantiate \<open>(k\<^sub>D, max (height C) (height E) + 1, v\<^sub>D)\<close>, auto_sledgehammer) ;;
-          \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> certified by (instantiate \<open>(k\<^sub>B, max (height A) (max (height C) (height E) + 1) + 1, v\<^sub>B)\<close>, auto_sledgehammer) ;;
 
-          return ($B) certified by (clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
-                                insert useful, auto)
-
+          \<open>BinTree a\<^sub>C _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
+          \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> ;;
+  
+          return ($B) certified by (auto, auto simp add: max_def; auto_sledgehammer)
       \<medium_right_bracket>
       \<medium_left_bracket>
           \<open>BinTree a\<^sub>C _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>3, a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R ;;
@@ -669,19 +672,19 @@ proc maintain_i:
           $C \<tribullet> right := $a\<^sub>D ;;
           $C \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>B', $H\<^sub>D') + 1 ;;
 
-          \<open>BinTree a\<^sub>A _ _\<close> \<open>BinTree a\<^sub>C\<^sub>L _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> certified by (instantiate \<open>(k\<^sub>B, Suc (max (height A) (height C\<^sub>L)), v\<^sub>B)\<close>, auto_sledgehammer) ;;
-          \<open>BinTree a\<^sub>C\<^sub>R _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> certified by (instantiate \<open>(k\<^sub>D, Suc (max (height E) (height C\<^sub>R)), v\<^sub>D)\<close>, auto_sledgehammer) ;;
-          \<open>MAKE 1 (BinTree a\<^sub>C _ _)\<close> certified by (instantiate \<open>(k\<^sub>C, Suc (max (Suc (max (height A) (height C\<^sub>L))) (Suc (max (height E) (height C\<^sub>R)))), v\<^sub>C)\<close>, auto_sledgehammer) ;;
+          \<open>BinTree a\<^sub>A _ _\<close> \<open>BinTree a\<^sub>C\<^sub>L _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> ;;
+          \<open>BinTree a\<^sub>C\<^sub>R _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
+          \<open>MAKE 1 (BinTree a\<^sub>C _ _)\<close> ;;
 
-          return ($C) certified by (clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
-                                insert useful, auto)
-
+          return ($C) certified by (cases B, (auto_sledgehammer)[1], case_tac x23, (auto_sledgehammer)[1],
+                                    clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
+                                    insert useful, auto)
+                                        
     \<medium_right_bracket> 
   \<medium_right_bracket>
   \<medium_left_bracket>
     if ($H\<^sub>E = $H\<^sub>B + 2) \<medium_left_bracket>
 
-      obtain F k\<^sub>E h\<^sub>E v\<^sub>E G where E[simp]: \<open>E = \<langle>F, (k\<^sub>E, h\<^sub>E, v\<^sub>E), G\<rangle>\<close> by auto_sledgehammer ;;
       \<open>BinTree a\<^sub>E _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>F, a\<^sub>G ;;
   
       val F \<leftarrow> $E \<tribullet> left ! ;;
@@ -697,16 +700,16 @@ proc maintain_i:
           $E \<tribullet> left := $a\<^sub>D ;;
           $E \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>D', $H\<^sub>G) + 1 ;;
 
-          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> certified by (instantiate \<open>(k\<^sub>D, Suc (max (height B) (height F)), v\<^sub>D)\<close>, auto_sledgehammer) ;; ;;
-          \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> certified by (instantiate \<open>(k\<^sub>E, Suc (max (Suc (max (height B) (height F))) (height G)), v\<^sub>E)\<close>, auto_sledgehammer) ;;
+          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
+          \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> ;;
 
-          return ($E) certified by (clarsimp, rule,
-                                    (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
-                                    insert useful, auto)
+          holds_fact  t1[simp]: \<open> (lookup_tree B ++ lookup_tree (left E))(k\<^sub>D \<mapsto> xxx) ++ lookup_tree (right E)
+                               = ((lookup_tree B ++ lookup_tree (left E)) ++ lookup_tree (right E))(k\<^sub>D \<mapsto> xxx)\<close> for xxx ;;
+
+          return ($E)
 
       \<medium_right_bracket>
       \<medium_left_bracket>
-          obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by auto_sledgehammer ;;
           \<open>BinTree a\<^sub>F _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>4, a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R ;;
 
           val F\<^sub>L \<leftarrow> $F \<tribullet> left ! ;;
@@ -721,17 +724,18 @@ proc maintain_i:
           $F \<tribullet> right := $E ;;
           $F \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>D', $H\<^sub>E') + 1;;
 
-          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F\<^sub>L _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> certified by (instantiate \<open>(k\<^sub>D, Suc (max (height B) (height F\<^sub>L)), v\<^sub>D)\<close>, auto_sledgehammer) ;;
-          \<open>BinTree a\<^sub>F\<^sub>R _ _\<close> \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> certified by (instantiate \<open>(k\<^sub>E, Suc (max (height F\<^sub>R) (height G)), v\<^sub>E)\<close>, auto_sledgehammer) ;;
-          \<open>MAKE 1 (BinTree a\<^sub>F _ _)\<close> certified by (instantiate \<open>(k\<^sub>F, Suc (max (Suc (max (height B) (height F\<^sub>L))) (Suc (max (height F\<^sub>R) (height G)))), v\<^sub>F)\<close>, auto_sledgehammer) ;;
+          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F\<^sub>L _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
+          \<open>BinTree a\<^sub>F\<^sub>R _ _\<close> \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> ;;
+          \<open>MAKE 1 (BinTree a\<^sub>F _ _)\<close> ;;
 
-          return ($F) certified by (clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
+          return ($F) certified by (cases E, (auto_sledgehammer)[1], case_tac x21, (auto_sledgehammer)[1],
+                                    clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
                                     insert useful, auto)
       \<medium_right_bracket>
     \<medium_right_bracket>
     \<medium_left_bracket>
       $a\<^sub>D \<tribullet> data \<tribullet> v \<tribullet> height := Max (height_of ($a\<^sub>D \<tribullet> left !), height_of ($a\<^sub>D \<tribullet> right !)) + 1  ;;
-      \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> certified by (instantiate \<open>(k\<^sub>D, Suc (max (height B) (height E)), v\<^sub>D)\<close>, auto_sledgehammer) ;;
+      \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
       return ($a\<^sub>D)
     \<medium_right_bracket>
   \<medium_right_bracket>
@@ -773,36 +777,35 @@ proc insert_avl_i:
       return ($ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
-      obtain L N\<^sub>k h N\<^sub>v R where tree[simp]: \<open>tree = \<langle>L, (N\<^sub>k, h, N\<^sub>v), R\<rangle>\<close> by auto_sledgehammer ;;
       to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
       if (eq ($k', $k)) \<medium_left_bracket>
         $addr \<tribullet> data \<tribullet> v \<tribullet> v := $v ;;
-        \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,v)\<close>, auto_sledgehammer) ;;
+        \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
         return ($addr)
       \<medium_right_bracket> \<medium_left_bracket>
         if (cmp ($k, $k')) \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> left !, $k, $v) \<rightarrow> val a\<^sub>L' ;;
             $addr \<tribullet> left := $a\<^sub>L' ;;
-            \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer) 
-              
-            note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree L)(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;;
+            \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> 
 
-            holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree L))\<close> for k' h v ;;
-            holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree R)\<close> ;;
+            note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree (left tree))(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;;
+
+            holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree (left tree)))\<close> for k' h v ;;
+            holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree (right tree))\<close> ;;
   
             return (maintain_i ($addr))
         \<medium_right_bracket>
         \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' ;;
             $addr \<tribullet> right := $a\<^sub>R' ;;
-            \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(N\<^sub>k,h,N\<^sub>v)\<close>, auto_sledgehammer)
+            \<open>MAKE 1 (BinTree addr _ _)\<close>
 
-            note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree R)(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;; 
+            note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree (right tree))(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;; 
 
-            holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree R))\<close> for k' h v ;;
-            holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree L)\<close> ;;
+            holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree (right tree)))\<close> for k' h v ;;
+            holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree (left tree))\<close> ;;
 
             return (maintain_i ($addr))
         \<medium_right_bracket>
