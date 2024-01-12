@@ -64,14 +64,12 @@ subsection \<open>Variable\<close>
        and Functional_Transformation_Functor
        and \<open>Gen_Br_Join (Var v) (Var v) (Var v) P True \<close>
 
-(* abbreviation Var :: \<open>varname \<Rightarrow> (VAL option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
-  where \<open>Var vname T \<equiv> (FIC.Var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close> *)
-
 abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Inited_Var vname T \<equiv> Var vname (\<black_circle> T)\<close>
 
 abbreviation Uninited_Var :: \<open>varname \<Rightarrow> assn\<close> ("\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[_]" [22] 21)
   where \<open>Uninited_Var vname \<equiv> () \<Ztypecolon> Var vname \<circle>\<close>
+
 
 subsubsection \<open>Syntax\<close>
 
@@ -115,6 +113,8 @@ in [(\<^const_syntax>\<open>Inited_Var\<close>, (fn ctxt => fn [a,b] =>
 end
 \<close>
 
+text \<open>The rules below sets-up the IDE-CP synthesis engine, which is irrelevant with our \<phi>-type theory\<close>
+
 lemma [\<phi>reason %\<phi>synthesis_parse for
   \<open>Synthesis_Parse (?v::varname) (?Y::?'ret \<Rightarrow> assn)\<close>
 ]:
@@ -141,61 +141,13 @@ lemma [\<phi>reason %\<phi>synthesis_parse for
 
 
 
-subsubsection \<open>Properties\<close>
-
-(*
-lemma Var_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: )
-
-lemma Var_transformation:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Var v T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> Var v T' \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def by (simp add: \<phi>expns, blast)
-
-lemma Var_cast_\<phi>app[\<phi>overload cast]:
-  \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<v>\<a>\<r>[v] T' \<w>\<i>\<t>\<h> P\<close>
-  unfolding Argument_def
-  unfolding Transformation_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns, metis)
-*)
-
-lemma Raw_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> Var v Itself) = (1(v \<mapsto> discrete raw) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
-  unfolding BI_eq_iff
-  by simp
-
-lemma UnInited_Var_identity_eq:
-  \<open>(\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[v]) = (discrete None \<Ztypecolon> FIC.Var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
-  unfolding BI_eq_iff
-  by simp
-
-lemma Inited_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> \<v>\<a>\<r>[v] Itself) = (1(v \<mapsto> discrete (Some raw)) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
-  unfolding BI_eq_iff
-  by simp
-
-(* lemma Var_ExTyp[simp]:
-  \<open>(x \<Ztypecolon> Var vname (ExTyp T)) = (\<exists>*a. x a \<Ztypecolon> Var vname (T a))\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-lemma Var_SubjTyp[simp]:
-  \<open>(x \<Ztypecolon> Var vname (T \<phi>\<s>\<u>\<b>\<j> P)) = (x \<Ztypecolon> Var vname T \<s>\<u>\<b>\<j> P)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns) *)
-
-(*lemma [\<phi>reason 1200 for \<open>EqualAddress (?xa \<Ztypecolon> Var ?va ?Ta) (?xb \<Ztypecolon> Var ?vb ?Tb)\<close>]:
-  \<open>EqualAddress (xa \<Ztypecolon> Var vari Ta) (xb \<Ztypecolon> Var vari Tb)\<close>
-  unfolding EqualAddress_def .. *)
-
-
-subsubsection \<open>Setup\<close>
+subsubsection \<open>Setup IDE-CP\<close>
 
 ML \<open>Generic_Variable_Access.parse_phi_type_of_generic_var :=
       Symtab.update (\<^const_name>\<open>Var\<close>, fn _ $ _ $ (_ $ T) => SOME T)
                     (!Generic_Variable_Access.parse_phi_type_of_generic_var)\<close>
 
-(* TODO
+(* TODO - Shortcut reasoning rules
 lemma [\<phi>reason 1305 for \<open>_\<heavy_comma> _ \<Ztypecolon> Var _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _\<heavy_comma> \<blangle> _ \<Ztypecolon> Var _ _ \<brangle> \<w>\<i>\<t>\<h> _\<close>]:
   " R\<heavy_comma> x \<Ztypecolon> Var vari T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> x \<Ztypecolon> Var vari T \<brangle> "
   unfolding Action_Tag_def FOCUS_TAG_def
@@ -330,11 +282,11 @@ proc op_get_var:
   output \<open>x \<Ztypecolon> \<v>\<a>\<r>[v] T\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
 \<medium_left_bracket>
   to Itself
-  unfold Inited_Var_identity_eq
+  unfold Var.unfold
   FIC.Var.getter_rule
   semantic_assert \<open>discrete.dest (\<phi>arg.dest \<v>0) \<Turnstile> Some ` Well_Type TY\<close>
   semantic_return \<open>the (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
-  fold Inited_Var_identity_eq
+  \<open>MAKE _ (\<v>\<a>\<r>[v] Itself)\<close>
   apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx
                                 and reject=reject, unfolded Is_Aggregate_def]
  \<medium_right_bracket> .
@@ -362,7 +314,7 @@ proc op_set_var:
 \<medium_left_bracket>
   $y semantic_local_value UY
   \<open>v\<close> to Itself
-  unfold Raw_Var_identity_eq
+  unfold Var.unfold
   FIC.Var.getter_rule
  
   semantic_assert \<open>
@@ -377,7 +329,7 @@ proc op_set_var:
   apply_rule FIC.Var.setter_rule[
     where u=\<open>Some (discrete (Some (index_mode_value_opt sem_idx (\<lambda>_. \<phi>arg.dest \<a>\<r>\<g>1)
                                 (discrete.dest (\<phi>arg.dest \<v>1)))))\<close>]
-  fold Inited_Var_identity_eq
+  \<open>MAKE _ (\<v>\<a>\<r>[v] Itself)\<close>
 
   \<medium_right_bracket> certified
     by (insert \<phi> AMO; cases TY;
@@ -410,7 +362,7 @@ proc op_free_var:
   output \<open>Void\<close>
 \<medium_left_bracket>
   to Itself
-  unfold Raw_Var_identity_eq
+  unfold Var.unfold
   apply_rule FIC.Var.setter_rule[where u=\<open>None\<close> and k=\<open>vari\<close>]
 \<medium_right_bracket> .
 

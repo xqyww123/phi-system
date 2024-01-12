@@ -4,6 +4,176 @@ theory PhiEx_BinTree
           PhiEx_BinTree_AbstModel
 begin
 
+section \<open>Abstract Model\<close>
+
+subsection \<open>Common Operations\<close>
+
+declare tree.rel_eq[simp]
+
+declare [[ type_property tree
+    selectors = [[], [left, "value", right]]
+]]
+
+lemma rel_tree_Leaf[\<phi>deriver_simps, iff]:
+  \<open> rel_tree R \<langle>\<rangle> tree \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
+  \<open> rel_tree R tree' \<langle>\<rangle> \<longleftrightarrow> tree' = \<langle>\<rangle> \<close>
+  by (auto_sledgehammer, auto_sledgehammer)
+
+lemma rel_tree_Node1[\<phi>deriver_simps]:
+  \<open> NO_MATCH \<langle>L', y, R'\<rangle> tree
+\<Longrightarrow> rel_tree r \<langle>L, x, R\<rangle> tree \<longleftrightarrow> (\<exists>L' y R'. tree = \<langle>L', y, R'\<rangle> \<and> rel_tree r L L' \<and> r x y \<and> rel_tree r R R') \<close>
+  by auto_sledgehammer
+
+lemma rel_tree__pred_tree:
+  \<open>rel_tree R x y \<Longrightarrow> pred_tree (\<lambda>x. \<exists>y. R x y) x\<close>
+  by (induct x arbitrary: y; auto_sledgehammer)
+
+lemma rel_tree_domain_eq:
+  \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
+\<Longrightarrow> fst ` set_tree x = fst ` set_tree y \<close>
+  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1; auto_sledgehammer)
+
+lemma rel_tree_self_map:
+  \<open> \<forall>a \<in> set_tree x. R a (f a)
+\<Longrightarrow> rel_tree R x (map_tree f x) \<close>
+  by (induct x; auto_sledgehammer)
+
+lemma rel_tree_height:
+  \<open> rel_tree R x y
+\<Longrightarrow> height x = height y \<close>
+  by (induct x arbitrary: y; auto simp: rel_tree_Node1)
+
+lemma AList_Upd_map_of_is_Map_map_of[iff]:
+  \<open>map_of l = Map.map_of l\<close>
+  by (induct l; auto)
+
+subsection \<open>inorder\<close>
+
+lemma rel_tree_implies_list_all2:
+  \<open> rel_tree r x y \<Longrightarrow> list_all2 r (inorder x) (inorder y) \<close>
+  by (induct x arbitrary: y; auto_sledgehammer)
+
+lemma rel_tree__map_fst_eq:
+  \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
+\<Longrightarrow> map fst (inorder x) = map fst (inorder y) \<close>
+  by (induct x arbitrary: y;  auto_sledgehammer)
+
+lemma sorted1_inorder_map_tree[iff]:
+  \<open>sorted1 (inorder (map_tree (\<lambda>(k, v). (k, f k v)) tree)) \<longleftrightarrow> sorted1 (inorder tree)\<close>
+  by auto_sledgehammer
+
+
+subsection \<open>tree_domain_distinct\<close>
+
+primrec tree_domain_distinct :: \<open>('k \<times> 'v) tree \<Rightarrow> bool\<close>
+  where \<open>tree_domain_distinct \<langle>\<rangle> = True \<close>
+      | \<open>tree_domain_distinct \<langle>L, x, R\<rangle> = (fst ` set_tree L \<inter> fst ` set_tree R = {} \<and>
+                                           fst x \<notin> fst ` set_tree L \<and> fst x \<notin> fst ` set_tree R \<and>
+                                           tree_domain_distinct L \<and> tree_domain_distinct R)\<close>
+
+lemma tree_domain_distinct_map[iff]:
+  \<open>tree_domain_distinct (Tree.tree.map_tree (\<lambda>(k, v). (k, f k v)) tree) \<longleftrightarrow> tree_domain_distinct tree\<close>
+  by (induct tree; auto_sledgehammer)
+
+lemma tree_domain_distinct__set_tree_inj:
+  \<open> tree_domain_distinct tree
+\<Longrightarrow> (k, v\<^sub>1) \<in> tree.set_tree tree
+\<Longrightarrow> (k, v\<^sub>2) \<in> tree.set_tree tree
+\<Longrightarrow> v\<^sub>1 = v\<^sub>2 \<close>
+  by (induct tree; auto_sledgehammer)
+
+lemma rel_tree_domain_distinct:
+  \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
+\<Longrightarrow> tree_domain_distinct x \<longleftrightarrow> tree_domain_distinct y \<close>
+  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1; auto_sledgehammer)
+
+subsection \<open>sorted\<close>
+
+lemma tree_sorted1_inorder_implies_domain_distinct[simp]:
+  \<open>sorted1(inorder tree) \<Longrightarrow> tree_domain_distinct tree\<close>
+  by (induct tree; auto_sledgehammer)
+
+lemma sorted1_left_tree_lt_node_value:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> (k,v) \<in> set_tree (left tree)
+\<Longrightarrow> k < fst (value tree) \<close>
+  by (cases tree; auto_sledgehammer)
+
+lemma sorted1_right_tree_gt_node_value:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> (k,v) \<in> set_tree (right tree)
+\<Longrightarrow> fst (value tree) < k \<close>
+  by (cases tree; auto_sledgehammer)
+
+
+
+subsection \<open>Lookup\<close>
+
+primrec lookup_tree :: \<open>('k \<times> 'v) tree \<Rightarrow> 'k \<rightharpoonup> 'v\<close>
+  where \<open>lookup_tree \<langle>\<rangle> = Map.empty\<close>
+      | \<open>lookup_tree \<langle>L, x, R\<rangle> = (lookup_tree L ++ lookup_tree R)(fst x \<mapsto> snd x) \<close>
+
+lemma dom_lookup_tree[iff]:
+  \<open> dom (lookup_tree tree) = fst ` set_tree tree \<close>
+  by (induct tree; auto_sledgehammer)
+
+lemma lookup_tree_eq_empty:
+  \<open> lookup_tree tree = Map.empty \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
+  by (induct tree; auto_sledgehammer)
+
+lemma lookup_tree_by_set_distinct[simp]:
+  \<open> tree_domain_distinct tree
+\<Longrightarrow> lookup_tree tree k = Some v \<longleftrightarrow> (k, v) \<in> tree.set_tree tree\<close>
+  by (induct tree; auto_sledgehammer)
+
+lemma rel_map_lookup_by_rel_tree:
+  \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd a) (snd b)) x y
+\<Longrightarrow> tree_domain_distinct x
+\<Longrightarrow> rel_map r (lookup_tree x) (lookup_tree y) \<close>
+  by (induct x arbitrary: y; auto simp: set_eq_iff rel_fun_def rel_tree_Node1 split: option.split; auto_sledgehammer)
+
+lemma rel_map_lookup_by_rel_tree2:
+  \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd (snd a)) (snd (snd b))) x y
+\<Longrightarrow> tree_domain_distinct x
+\<Longrightarrow> rel_map r (map_option snd o lookup_tree x) (map_option snd o lookup_tree y) \<close>
+  by (induct x arbitrary: y; auto simp: set_eq_iff rel_fun_def rel_tree_Node1 split: option.split; auto_sledgehammer)
+
+lemma lookup_tree_map_tree[simp]:
+  \<open> tree_domain_distinct tree
+\<Longrightarrow> lookup_tree (map_tree (\<lambda>(k, v). (k, f k v)) tree) = (\<lambda>k. map_option (f k) (lookup_tree tree k)) \<close>
+  unfolding fun_eq_iff
+  by (induct tree; auto_sledgehammer)
+
+lemma lookup_tree_map_tree2[simp]:
+  \<open> tree_domain_distinct tree
+\<Longrightarrow> lookup_tree (map_tree (\<lambda>(k, h, v). (k, f k h v)) tree) = (\<lambda>k. map_option (case_prod (f k)) (lookup_tree tree k)) \<close>
+  using lookup_tree_map_tree[where f=\<open>case_prod o f\<close>, simplified]
+  by (simp add: case_prod_beta')
+
+lemma lookup_left_children:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> lookup_tree (left tree) = lookup_tree tree |` {x. x < fst (value tree)} \<close>
+  \<comment> \<open>this value is the value of the root node\<close>
+  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+
+lemma lookup_right_children:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close>
+  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+
+
+
+
+
+
+
+
+
+
+
+
+section \<open>Verifying the Concrete Programs\<close>
+
 
 abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: TY, right: \<p>\<t>\<r>} \<close>
 abbreviation \<open>\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
@@ -69,12 +239,10 @@ lemma rel_tree__AVL_tree_invar:
   by (induct x arbitrary: y; auto simp: rel_tree_Node1; auto_sledgehammer)
 
 
-
 abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
 abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
 
- 
 
 \<phi>type_def AVL_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
   where \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>
@@ -98,28 +266,9 @@ abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
-
-
-
-
-
-
-lemma lookup_left_children:
-  \<open> sorted1 (inorder tree)
-\<Longrightarrow> lookup_tree (left tree) = lookup_tree tree |` {x. x < fst (value tree)} \<close>
-  \<comment> \<open>this value is the value of the root node\<close>
-  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
-
-lemma lookup_right_children:
-  \<open> sorted1 (inorder tree)
-\<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close>
-  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
-
-
 declare [[auto_sledgehammer_params = "try0 = false"]]
   \<comment> \<open>For some reason I don't know, sledgehammer fails silently (with throwing an Interrupt exception)
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.\<close>
-
 
 
 context
@@ -133,8 +282,8 @@ context
       and eq : \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> Eq u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 = k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>  
       and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> K) TY\<^sub>K)\<close>
       and [\<phi>reason add]: \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> V) TY\<^sub>V)\<close>
-      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>K K zero\<^sub>K\<close> \<comment> \<open>TODO: remove this once our semantics has non-deterministic \<open>malloc\<close>\<close>
-      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>V V zero\<^sub>V\<close> \<comment> \<open>TODO: remove this once our semantics has non-deterministic \<open>malloc\<close>\<close>
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>K K zero\<^sub>K\<close>
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>V V zero\<^sub>V\<close>
 begin
 
 
@@ -156,14 +305,17 @@ proc lookup_bintree:
     return ($ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
-    if (cmp ($k, $k'))
-    \<medium_left_bracket> lookup_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
-    \<medium_left_bracket> lookup_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket> \<rightarrow> val ret ;;
-    \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
-    return ($ret)
+    if (cmp ($k, $k')) \<medium_left_bracket>
+      val ret \<leftarrow> lookup_bintree ($addr \<tribullet> left  !, $k) ;;
+      \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+      return ($ret)
+    \<medium_right_bracket> \<medium_left_bracket> 
+      val ret \<leftarrow> lookup_bintree ($addr \<tribullet> right !, $k) ;;
+      \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+      return ($ret)
+    \<medium_right_bracket> ;;
   \<medium_right_bracket>
 \<medium_right_bracket> .
-
 
 proc (nodef) lookup_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
@@ -176,11 +328,9 @@ proc (nodef) lookup_bst:
   \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr _ _ _ _)\<close>
 \<medium_right_bracket> .
 
-
-proc has_key_bintree:
+proc defined_bintree:
   input  \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>sorted1(inorder tree)\<close>
   output \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           k \<in> dom (lookup_tree tree) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
@@ -188,32 +338,37 @@ proc has_key_bintree:
   is [routine]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
-    return (False)
-  \<medium_right_bracket>
-  \<medium_left_bracket>
+    return (False) 
+  \<medium_right_bracket> \<medium_left_bracket>
+
     to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
 
     val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
     if (eq ($k', $k)) \<medium_left_bracket>
-      True
-    \<medium_right_bracket> \<medium_left_bracket> 
-      if (cmp ($k, $k'))
-      \<medium_left_bracket> has_key_bintree ($addr \<tribullet> left  !, $k) \<medium_right_bracket>
-      \<medium_left_bracket> has_key_bintree ($addr \<tribullet> right !, $k) \<medium_right_bracket>
-    \<medium_right_bracket> \<rightarrow> val ret ;;
-
-    \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;; 
-    return ($ret)
-  \<medium_right_bracket> ;;
+      \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+      return (True)
+    \<medium_right_bracket>
+    \<medium_left_bracket>
+      if (cmp ($k, $k')) \<medium_left_bracket>
+        val ret \<leftarrow> defined_bintree ($addr \<tribullet> left  !, $k) ;;
+        \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+        return ($ret)
+      \<medium_right_bracket> \<medium_left_bracket> 
+        val ret \<leftarrow> defined_bintree ($addr \<tribullet> right !, $k) ;;
+        \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+        return ($ret)
+      \<medium_right_bracket> ;;
+    \<medium_right_bracket>
+  \<medium_right_bracket>
 \<medium_right_bracket> .
 
-
-proc has_key_bst:
+proc (nodef) defined_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  is [recursive]
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> ;;
-  has_key_bintree ($addr, $k)
+  defined_bintree ($addr, $k)
   \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr _ _ _ _)\<close>
 \<medium_right_bracket> .
 
@@ -256,8 +411,7 @@ abbreviation \<open>Bst_Node \<equiv> \<lbrace>
 proc insert_bintree:
   input  \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
-          v \<Ztypecolon> \<v>\<a>\<l> V\<close>
+          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
   output \<open>insert_tree k v tree \<Ztypecolon> BinTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
@@ -634,8 +788,6 @@ proc (nodef) insert_avl:
   insert_avl_i ($addr, $k, $v)
   \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close>
 \<medium_right_bracket> .
-
-
 
 
 

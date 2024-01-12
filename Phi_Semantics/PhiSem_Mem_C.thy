@@ -8,20 +8,6 @@ begin
 
 section \<open>Semantics\<close>
 
-subsection \<open>Models\<close>
-
-(* For technical reasons, the memory resource is installed in \<^file>\<open>PhiSem_Mem_Pointer.thy\<close> *)
-
-(*
-definition Valid_Mem :: "('TY,'VAL) R_mem set"
-  where "Valid_Mem = { Fine h |h. finite (dom h)
-                                \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` Well_Type (segidx.layout seg))}"
-
-lemma Valid_Mem_1[simp]: \<open>1 \<in> Valid_Mem\<close>
-  unfolding Valid_Mem_def one_fun_def one_fine_def by simp
-*)
-
-
 subsection \<open>Fiction\<close>
 
 type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share option\<close> \<comment> \<open>fiction of a single memory object\<close>
@@ -35,58 +21,6 @@ fiction_space aggregate_mem =
 section \<open>Basic \<phi>Types for Semantic Models\<close>
 
 
-(* subsubsection \<open>Slice Pointer\<close>
-
-text \<open>A limitation of TypPtr is that it cannot point to the end of an array,
-  because there is no object exists at the end. To address this, we provide slice pointer which
-  can range over a piece of the array including the end.\<close>
-
-definition SlicePtr :: "TY \<Rightarrow> (VAL, logaddr \<times> nat \<times> nat) \<phi>"
-  where "SlicePtr TY = (\<lambda>(base,i,len).
-    if valid_logaddr base \<and> base \<noteq> 0 \<and> (\<exists>N. logaddr_type base = array N TY \<and> len \<le> N)
-        \<and> 0 < MemObj_Size TY \<and> i \<le> len
-    then { V_pointer.mk (logaddr_to_raw base ||+ of_nat (i * MemObj_Size TY)) }
-    else {})"
-
-lemma SlicePtr_expn[\<phi>expns]:
-  \<open>v \<in> ((base, i, len) \<Ztypecolon> SlicePtr TY) \<longleftrightarrow>
-      valid_logaddr base \<and> base \<noteq> 0
-      \<and> (\<exists>N. logaddr_type base = \<tau>Array N TY \<and> len \<le> N)
-      \<and> 0 < MemObj_Size TY \<and> i \<le> len
-      \<and> v = V_pointer.mk (logaddr_to_raw base ||+ of_nat (i * MemObj_Size TY))\<close>
-  unfolding SlicePtr_def \<phi>Type_def by simp blast
-
-lemma SlicePtr_inhabited[\<phi>reason_elim!,elim!]:
-  \<open>Inhabited ((base, i, len) \<Ztypecolon> SlicePtr TY)
-\<Longrightarrow> (\<And>N. valid_logaddr base \<Longrightarrow> base \<noteq> 0 \<Longrightarrow> logaddr_type base = \<tau>Array N TY \<Longrightarrow> len \<le> N
-          \<Longrightarrow> 0 < MemObj_Size TY \<Longrightarrow> i \<le> len \<Longrightarrow> C)
-\<Longrightarrow> C\<close>
-  unfolding Inhabited_def SlicePtr_expn by simp blast
-
-lemma SlicePtr_eqcmp[\<phi>reason on \<open>\<phi>Equal (SlicePtr ?TY) ?c ?eq\<close>]:
-    "\<phi>Equal (SlicePtr TY) (\<lambda>x y. fst x = fst y) (\<lambda>(_,i1,_) (_,i2,_). i1 = i2)"
-  unfolding \<phi>Equal_def
-  apply (clarsimp simp add: \<phi>expns word_of_nat_eq_iff take_bit_nat_def simp del: of_nat_mult)
-  subgoal premises for addr i1 n1 i2 N n2 proof -
-    note logaddr_storable_in_mem[OF \<open>valid_logaddr addr\<close> \<open>addr \<noteq> 0\<close>,
-            unfolded \<open>logaddr_type addr = \<tau>Array N TY\<close>, unfolded memobj_size_arr]
-    then have \<open>i1 * MemObj_Size TY < 2 ^ addrspace_bits\<close>
-          and \<open>i2 * MemObj_Size TY < 2 ^ addrspace_bits\<close>
-      by (meson \<open>i1 \<le> n1\<close> \<open>n1 \<le> N\<close> \<open>i2 \<le> n2\<close> \<open>n2 \<le> N\<close> dual_order.strict_trans2 mult_le_mono1)+
-    then show ?thesis
-      using \<open>0 < MemObj_Size TY\<close> by fastforce 
-  qed
-  done
-
-lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> SlicePtr ?TY) ?ty\<close>]:
-  \<open>\<phi>SemType (x \<Ztypecolon> SlicePtr TY) \<tau>Pointer\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (cases x, simp add: \<phi>expns valid_logaddr_def)
-
-*)
-
-
-
 subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
 \<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [81] 80)
@@ -95,7 +29,7 @@ subsection \<open>Coercion from Value Spec to Mem Spec\<close>
        and Functional_Transformation_Functor
        and Commutativity_Deriver
 
-definition Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,81] 80)
+\<phi>type_def Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,81] 80)
   where \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<equiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<close>
 
 
@@ -114,14 +48,6 @@ declare Mem.intro_reasoning[\<phi>reason %ToA_cut]
         Mem.elim_reasoning [\<phi>reason %ToA_cut]
         Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
         Mem.elim_map [where \<phi> =\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
-
-thm Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified]
-thm Mem.elim_map [where \<phi>=\<open>\<lambda>x. x\<close>, simplified]
-
-thm Mem.intro
-thm Mem.intro_reasoning
-thm Mem.elim_reasoning
-thm Mem.intro_reasoning\<^sub>R
 
 
 subsubsection \<open>Fast Reasoning\<close>
@@ -306,9 +232,6 @@ proc op_load_mem:
 
   apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
-  (*have [useful]: \<open>0 < n\<close>
-    by (simp add: the_\<phi>(2))*) ;;
-
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
@@ -325,39 +248,6 @@ proc op_load_mem:
   semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
   semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
-
-(*
-proc op_load_mem:
-  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
-       and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  unfolding Guided_Mem_Coercion_def
-  including \<phi>sem_type_sat_EIF
-\<medium_left_bracket>
-  $addr semantic_local_value \<open>pointer\<close>
-
-  apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
-
-  have [useful]: \<open>0 < n\<close>
-    by (simp add: the_\<phi>(2)) ;;
-
-  to \<open>OPEN _\<close>
-  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
-
-  apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=n
-                and cblk=\<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
-                and blk=\<open>memaddr.blk addr\<close>
-                and idx=\<open>memaddr.index addr\<close>]
-
-  \<open>x \<Ztypecolon> MAKE (\<m>\<e>\<m>[addr] (n \<odiv> MAKE (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
-
-  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
-
-  semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
-  semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
-\<medium_right_bracket> .
-*)
 
 proc op_store_mem:
   input  \<open>State\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
@@ -451,8 +341,6 @@ declare_\<phi>lang_operator postfix %\<phi>lang_deref "!" \<comment> \<open>dere
 declare op_load_mem_\<phi>app[\<phi>overload "!"]
         op_store_mem_\<phi>app[\<phi>overload ":="]
 
-thm "!_\<phi>app"
-
 text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
   \<open>\<leftarrow>\<close> is used to update the value of a local variable.
   \<open>:=\<close> is used to change the value of a memory object.
@@ -461,12 +349,6 @@ text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
   to updating the variable or writing to the memory object.
 \<close>
 
-
-(*
-setup \<open>fn thy => thy
-|> Phi_Opr_Stack.decl_postfix (@{priority %\<phi>lang_deref}, "!", SOME 0) |> snd
-\<close>
-*)
 
 proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<close>
@@ -482,22 +364,6 @@ proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
   $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
   apply_rule op_load_mem[OF Extr L01]
 \<medium_right_bracket> .
-
-(*
-proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
-  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<close>
-  requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx reject\<close>
-       and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
-       and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
-       and L4[]: \<open>report_unprocessed_element_index reject\<close>
-  requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr pidx] (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
-       and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
-\<medium_left_bracket>
-  $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
-  apply_rule op_load_mem[OF Extr L01]
-\<medium_right_bracket> .
-*)
 
 proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
   input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
@@ -551,51 +417,10 @@ declare [[\<phi>reason_default_pattern
 
 consts \<A>_mem_coerce :: mode
 
-lemma [\<phi>reason %cutting+10]:
-  \<open> Atomic_SemTyp ty
-\<Longrightarrow> Atomic_SemTyp ty @action \<A>_mem_coerce \<close>
-  unfolding Action_Tag_def .
-
-lemma [\<phi>reason %cutting]:
-  \<open> ERROR TEXT(\<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> rule for semantic type\<close> ty \<open>is not given\<close>)
-\<Longrightarrow> Atomic_SemTyp ty @action \<A>_mem_coerce \<close>
-  unfolding ERROR_def
-  by blast
-
-lemma [\<phi>reason %mapToA_mem_coerce_end]:
-  \<open> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
-
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U' \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
-  unfolding Guided_Mem_Coercion_def .
-
-lemma [\<phi>reason %ToA_mem_coerce_end]:
-  \<open> \<comment> \<open>Atomic_SemTyp ty @action \<A>_mem_coerce\<close>
-    x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding Guided_Mem_Coercion_def .
-
-lemma [\<phi>reason %ToA_mem_coerce_end]:
-  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding Guided_Mem_Coercion_def .
-
-lemma [\<phi>reason %ToA_mem_coerce_end]:
-  \<open> Atomic_SemTyp ty @action \<A>_mem_coerce
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<w>\<i>\<t>\<h> P \<close>
-  unfolding Guided_Mem_Coercion_def .
-
-lemma [\<phi>reason %ToA_mem_coerce_end]:
-  \<open> \<comment> \<open>Atomic_SemTyp ty @action \<A>_mem_coerce\<close>
-    X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Guided_Mem_Coercion_def .
-
+declare Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %mapToA_mem_coerce_end]
+        Guided_Mem_Coercion.elim_reasoning(1)[\<phi>reason %ToA_mem_coerce_end]
+        Guided_Mem_Coercion.intro_reasoning(2)[where x=\<open>fst x\<close> and r=\<open>snd x\<close> for x, simplified,
+                                               \<phi>reason %ToA_mem_coerce_end]
 
 subsection \<open>Auxiliary Simplification\<close>
 
