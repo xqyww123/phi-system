@@ -204,7 +204,7 @@ fun dirty_hack ret stat s =
                       |> filter Token.is_proper)
         val _ = Synchronized.change ret (fn prfs => prf :: prfs)
         val _ = tracing s
-        in if preplay_succeeded andalso can (eval_prf_str_stat 60 NONE prf) stat
+        in if preplay_succeeded andalso can (eval_prf_str_stat 20 NONE prf) stat
            then raise SH_Short_Cut prf
            else ()
        end
@@ -320,7 +320,7 @@ fun funpow' (0: int) _ x = x
   | funpow' n f x = funpow' (n - 1) f (f n x)
 
 fun sledgehammer (ctxt,sequent0) =
-  let val ctxt = Phi_Envir.freeze_dynamic_lemmas ctxt
+  let (* val ctxt = Phi_Envir.freeze_dynamic_lemmas ctxt *)
       val sequent = @{thm Premise_I} RS sequent0 handle THM _ => sequent0
       val (goal_term,_) = Logic.dest_implies (Thm.prop_of sequent)
       val stat = Proof.theorem NONE (K I) [[(goal_term, [])]] ctxt
@@ -393,7 +393,7 @@ fun auto'i id (ctxt,sequent') =
         of NONE => fallback true
          | SOME (time,prf) =>
             let val nprem = Thm.nprems_of sequent
-                val ctxt' = if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt
+                val ctxt' = ctxt (*if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt*)
              in (case eval_prf_str (Time.scale 1.5 time + time_delt) prf (ctxt', sequent)
                    of (_, (_, sequent')) =>
                       if Thm.nprems_of sequent' < nprem then sequent'
@@ -429,7 +429,7 @@ fun auto'i id (ctxt,sequent') =
           val (no_cache, prf_result') =
                 case Phi_Cache_DB.access_hash_cache hash
                   of SOME (t, prf) =>
-                      let val ctxt' = if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt
+                      let val ctxt' = ctxt (*if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt*)
                        in ((false, SOME (eval_prf_str (folerant_time t) prf (ctxt',sequent)))
                            handle Auto_Fail _ => (false, NONE))
                       end

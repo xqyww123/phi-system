@@ -381,7 +381,8 @@ fun led_future_proof s =
   else let val s = Proof.map_context Phi_ID.next s
            val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
            val meth = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (fn sequent =>
-                Phi_Sledgehammer_Solver.auto id ctxt (@{thm Premise_D[where mode=default]} RS sequent))))
+                Phi_Sledgehammer_Solver.auto id (Phi_Envir.freeze_dynamic_lemmas ctxt)
+                                                (@{thm Premise_D[where mode=default]} RS sequent))))
         in Proof.local_future_terminal_proof ((meth, Position.no_range), NONE) s
        end
 

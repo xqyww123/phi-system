@@ -1569,6 +1569,7 @@ end
 end
 
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
+include PHI_TYPE_ALGEBRA_DERIVERS
 
 type deriving_instruction = Phi_Type.deriving_instruction
 
@@ -1588,6 +1589,7 @@ val simplified_exists_qualify : Proof.context -> typ -> term -> term
 end
 
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+open Phi_Type_Algebra_Derivers
 
 type deriving_instruction = Phi_Type.deriving_instruction
 

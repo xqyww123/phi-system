@@ -2,7 +2,7 @@ theory PhiEx_DblLst
   imports Phi_Semantics.PhiSem_C
 begin
 
-lemma ttt [simp, \<phi>constraint_expansion for list]:
+lemma ttt [simp, \<phi>deriver_simps for list]:
   \<open>(case x of (x, y) \<Rightarrow> y @ x) = [] \<longleftrightarrow> x = ([], [])\<close>
   \<open>(case x of (x, y) \<Rightarrow> x @ y) = [] \<longleftrightarrow> x = ([], [])\<close>
   by (cases x; auto)+

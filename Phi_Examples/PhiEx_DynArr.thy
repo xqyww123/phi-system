@@ -9,7 +9,7 @@ begin
                                 (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>
                                 \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                      len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
-                                                     take len data = l \<and> address_to_base a\<^sub>D \<close>
+                                                     take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr\<close>
   deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr TY T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
        and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr TY T) (list_all2 eq)\<close>
             (tactic: auto, subgoal' for x xa xb xc \<open>rule exI[where x=\<open>xa @ drop (length xa) xc\<close>]\<close>)
@@ -114,7 +114,13 @@ proc new_dynarr:
 \<medium_right_bracket> .
 
 proc del_dynarr:
-  
+  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
+  output \<open>Void\<close>
+\<medium_left_bracket>
+  to \<open>OPEN _ _\<close> ;;
+  mfree ($addr \<tribullet> data !) ;;
+  mfree ($addr)
+\<medium_right_bracket> .
 
 
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' get_dynarr_def})))\<close>
@@ -122,6 +128,8 @@ ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' set_dy
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' Max_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' push_dynarr_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' pop_dynarr_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' new_dynarr_def})))\<close>
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' del_dynarr_def})))\<close>
 
 end
 

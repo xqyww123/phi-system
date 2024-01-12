@@ -17,7 +17,7 @@ signature PLPR_RULE_GEN = sig
 
 exception Generation_Fail of Phi_Reasoner.info_level * (unit -> Pretty.T list)
 
-structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
+structure Rule_Gen_SS : SIMPSET (*simpset for generating reasoning rules*)
 structure Template_Inst_SS_Post_Merging : HOOKS
 
 datatype instantiation_action =
@@ -97,9 +97,9 @@ structure Template_Inst_SS_Post_Merging = Hooks (
 
 type TT = Phi_Reasoner.pattern
 
-structure Template_Inst_SS = Simpset (
+structure Rule_Gen_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = SOME \<^binding>\<open>simp_for_\<phi>LPR_rule_generation\<close>
+  val binding = SOME \<^binding>\<open>\<phi>generation_simp\<close>
   val comment = "Rules simplifying the reasoning rules instantiated from templates."
   val attribute = NONE
   fun post_merging ctxt = ctxt
@@ -390,7 +390,7 @@ fun pass_generated_rule {simp, masks, rule_pos} ctxt rule =
                              then rule
                              else rule RS' (ctxt, @{thm' NO_SIMP'_I})*)
       val rule'1 = rule
-      val ctxt's = Template_Inst_SS.enhance ctxt
+      val ctxt's = Rule_Gen_SS.enhance ctxt
 
       fun trim_tag (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X) = SOME (the_default X (trim_tag X))
         | trim_tag (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X) = SOME (the_default X (trim_tag X))

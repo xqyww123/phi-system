@@ -53,3 +53,14 @@ T pop_dynarr (struct DynArr *addr) {
   return ret;
 }
 
+struct DynArr* new_dynarr () {
+  struct DynArr* ret = calloc(sizeof(DynArr), 1);
+  ret -> data = calloc(sizeof(T), 0);
+  return ret;
+}
+
+void del_dynarr(struct DynArr* addr) {
+  free (addr -> data);
+  free (addr);
+}
+

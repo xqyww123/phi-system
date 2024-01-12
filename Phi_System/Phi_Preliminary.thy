@@ -57,6 +57,23 @@ fun equip_Phi_Programming_Simp lev ctxt =
     |> Phi_Programming_Simp_Hook.invoke (Context.Proof ctxt) ()
   else Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
     |> Phi_Programming_Simp_Hook.invoke (Context.Proof ctxt) ()
+
+signature PHI_TYPE_ALGEBRA_DERIVERS = sig
+structure Expansion : SIMPSET (*The standard simpset for deriving*)
+end
+
+structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+structure Expansion = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = SOME \<^binding>\<open>\<phi>deriver_simps\<close>
+  val comment = "Rules unfolding constraints and conditions in property deriving of \<phi>-type algebra.\n\
+                \Basically, simplification rules for object operators including mappers, relators, \
+                \predicators of the abstract algebra of \<phi>-types"
+  val attribute = NONE
+  val post_merging = I
+)
+end
+
 \<close>
 
 setup \<open>Context.theory_map (
@@ -128,7 +145,6 @@ method_setup prefer_tac = \<open>
     then Seq.empty
     else Seq.single (Thm.permute_prems j k th)))
 \<close>
-
 
 
 
@@ -215,7 +231,7 @@ lemmas [\<phi>safe_simp] =
     mk_symbol_inject[OF UNIV_I UNIV_I]
 
 declare One_nat_def[\<phi>safe_simp del]
-
+        rel_fun_eq[iff]
 
 
 subsection \<open>Helper Attributes \& Tactics\<close>

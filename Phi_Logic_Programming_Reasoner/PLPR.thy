@@ -2133,12 +2133,12 @@ consts \<phi>instantiation :: mode
 
 \<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] _ : _\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
-        (PLPR_Rule_Gen.Template_Inst_SS.enhance) {fix_vars=true}) o snd\<close>
+        (PLPR_Rule_Gen.Rule_Gen_SS.enhance) {fix_vars=true}) o snd\<close>
 
-lemmas [simp_for_\<phi>LPR_rule_generation] =
+lemmas [\<phi>generation_simp] =
   conj_imp_eq_imp_imp sing_times_sing sing_if
 
-setup \<open>Context.theory_map (PLPR_Rule_Gen.Template_Inst_SS.map (
+setup \<open>Context.theory_map (PLPR_Rule_Gen.Rule_Gen_SS.map (
   Simplifier.add_cong @{thm' HOL.conj_cong[folded atomize_eq]}
 ))\<close>
 

@@ -9597,10 +9597,10 @@ section \<open>Deriving Configures for Specific Abstract Algebras\<close>
 
 subsubsection \<open>Common\<close>
 
-lemmas [\<phi>constraint_expansion] =
+lemmas [\<phi>deriver_simps] =
   Nat.add_Suc_right Groups.monoid_add_class.add.right_neutral Nat.nat.inject
 
-lemmas [\<phi>constraint_expansion] =
+lemmas [\<phi>deriver_simps] =
   Basic_BNFs.prod_set_defs
 
 
@@ -9693,7 +9693,7 @@ lemma list_all2_reduct_rel[simp]:
   apply (clarsimp simp add: fun_eq_iff)
   subgoal for x y by (induct x arbitrary: y; simp; case_tac y; simp; blast) .
 
-lemmas [\<phi>constraint_expansion] =
+lemmas [\<phi>deriver_simps] =
   list.size map_eq_Cons_conv list_all2_lengthD[THEN HOL.Eq_TrueI]
 
 paragraph \<open>Separatable Mappers\<close>
@@ -9726,7 +9726,7 @@ lemma [\<phi>reason add]:
 
 subsubsection \<open>Sum\<close>
 
-lemma pred_sum_eq_case_sum[\<phi>constraint_expansion]:
+lemma pred_sum_eq_case_sum[\<phi>deriver_simps]:
   \<open>pred_sum P Q x \<longleftrightarrow> case_sum P Q x\<close>
   by (cases x; simp)
 
@@ -9780,11 +9780,11 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
 )\<close>
 
 
-lemmas [\<phi>constraint_expansion] =
+lemmas [\<phi>deriver_simps] =
   Set.ball_Un Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image
   Set.nonempty_bind_const Finite_Set.finite_bind
 
-lemma Set_bind_insert[simp, \<phi>constraint_expansion]:
+lemma Set_bind_insert[simp, \<phi>deriver_simps]:
   \<open>Set.bind (insert x S) f = f x \<union> Set.bind S f\<close>
   unfolding Set.bind_def
   by auto
@@ -9840,12 +9840,12 @@ lemma rel_fun__const_True[simp]:
 
 subsubsection \<open>Production\<close>
 
-lemma [\<phi>constraint_expansion, simp]:
+lemma [\<phi>deriver_simps, simp]:
   \<open>pred_prod (\<lambda>a. True) P x \<longleftrightarrow> P (snd x)\<close>
   \<open>pred_prod Q (\<lambda>a. True) x \<longleftrightarrow> Q (fst x)\<close>
   by (cases x; simp)+
 
-declare Lifting.pred_prod_beta[\<phi>deriver_simp]
+declare Lifting.pred_prod_beta[\<phi>generation_simp]
 
 section \<open>Clean-up\<close>
 

@@ -519,7 +519,7 @@ lemma ToA_Mapper_LPR_gen_cong:
   unfolding ToA_Mapper_def atomize_eq
   by (clarsimp simp add: image_iff Bex_def; rule; clarsimp; metis)
 
-setup \<open>Context.theory_map (PLPR_Rule_Gen.Template_Inst_SS.map (
+setup \<open>Context.theory_map (PLPR_Rule_Gen.Rule_Gen_SS.map (
   Simplifier.add_cong @{thm' ToA_Mapper_LPR_gen_cong}))\<close>
 
 hide_fact ToA_Mapper_LPR_gen_cong

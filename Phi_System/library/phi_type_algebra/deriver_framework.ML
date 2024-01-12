@@ -332,7 +332,6 @@ val deriver_framework_no_hints : multiple_call * string (*name*)
 exception Automation_Fail of (unit -> Pretty.T list)
 val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
 
-structure Expansion : SIMPSET (*The standard simpset for deriving*)
 (*convention: do not add transformation_refl any time! *)
 val equip_expansion_ss0 : Proof.context -> Proof.context
 val equip_expansion_ss  : phi_type -> Proof.context -> Proof.context
@@ -443,17 +442,10 @@ fun get_type_specific_simp ctxt Tname =
   Net.unify_term (Type_specific_Simps.get ctxt) (Const(Tname, Term.dummyT) $ Var (("",0),TVar(("",0),[])))
 *)
 
-structure Simps = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS
-  val binding = SOME \<^binding>\<open>\<phi>deriver_simp\<close>
-  val comment = "Simplification rules that derivers use to simplify the guessed or infered properties."
-  val attribute = NONE
-  val post_merging = I
-)
-
+(*
 structure Expansion = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = SOME \<^binding>\<open>\<phi>constraint_expansion\<close>
+  val binding = SOME \<^binding>\<open>\<phi>deriver_simps\<close>
   val comment = "Rules unfolding constraints and conditions in property deriving of \<phi>-type algebra.\n\
                 \Basically, simplification rules for object operators including mappers, relators, \
                 \predicators of the abstract algebra of \<phi>-types"
@@ -466,18 +458,18 @@ structure Expansion = Simpset (
                                   para "You are declaring a simp rule applying locally only on\
                                        \ certain specific type. The type is not given and I \
                                        \failed to parse it from the given rule. Please \
-                                       \indicate it explicitly by [\<phi>constraint_expansion for <the type>].\
+                                       \indicate it explicitly by [\<phi>deriver_simps for <the type>].\
                                        \ Otherwise, maybe you want the rule to be applied everywhere \
-                                       \globally. If so, declare [\<phi>constraint_expansion global]."))
+                                       \globally. If so, declare [\<phi>deriver_simps global]."))
                              | Parse_Fail L => error (string_of (chunks (
                                   para "You are declaring a simp rule applying locally only on\
                                        \ certain specific type. The type is not given and I \
                                        \tried to parse it from the given rule but I cannot \
                                        \determine which type you prefer from the candidates below." ::
                                   map (fn N => item [str N]) L @
-                                 [para "Please indicate it explicitly by [\<phi>constraint_expansion for <the type>].\
+                                 [para "Please indicate it explicitly by [\<phi>deriver_simps for <the type>].\
                                        \ Otherwise, maybe you want the rule to be applied everywhere \
-                                       \globally. If so, declare [\<phi>constraint_expansion global]."]
+                                       \globally. If so, declare [\<phi>deriver_simps global]."]
                                   )))
                         end)
             | SOME Tname => Thm.declaration_attribute (fn th => opr2 (Tname, [th])))
@@ -491,6 +483,7 @@ structure Expansion = Simpset (
     end)*)
   val post_merging = I
 )
+*)
 
 
 (*rule: Qx P x \<longleftrightarrow> Qa b. P (a,b)*)
@@ -515,8 +508,6 @@ fun case_split_simproc rule (simproc_name, name) ctxt0 =
 
 val _ = Theory.setup (Context.theory_map (
 
-  Simps.map (Simplifier.add_cong @{thm' mk_symbol_cong})
-#>
   Expansion.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
@@ -1273,8 +1264,8 @@ fun oblg_solver proof_id text ctxt sequent =
   (*case Thm.major_prem_of sequent
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
-   let val ctxt = Phi_Envir.freeze_dynamic_lemmas ctxt
-               |> Variable.declare_term (Thm.prop_of sequent)
+   let val ctxt = Variable.declare_term (Thm.prop_of sequent) ctxt
+               |> Phi_Envir.freeze_dynamic_lemmas
        val ctxt'' = Expansion.equip ctxt
                  |> Simplifier.del_cong @{thm HOL.conj_cong}
        val nprems = Thm.nprems_of sequent
@@ -1468,7 +1459,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                       | NONE => oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name)
                                             (#4 instruction) ctxt rule'3)
                 |> Simplifier.rewrite_rule ctxt @{thms' Action_Tag_def[where A=\<phi>TA_ANT]}
-                |> simp (phi, Simps.enhance ctxt)
+                |> simp (phi, PLPR_Rule_Gen.Rule_Gen_SS.enhance ctxt)
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
                 |> PLPR_Syntax.merge_conditions
                 |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
@@ -1613,7 +1604,7 @@ fun instantiate_ToA (pure_info,ctxt) ToA =
                                            para "from the contextual condition",
                                            indent 2 (Thm.pretty_thm ctxt pure_info),
                                            para "Perhaps, the propositions are not sufficiently simplified. You may\
-                                                \ need to add necessary rules by declaring [\<phi>constraint_expansion], or \
+                                                \ need to add necessary rules by declaring [\<phi>deriver_simps], or \
                                                 \even configure the BNF settings by ML \<open>BNF_FP_Sugar_More.add_fp_more\<close> "]
                        ] end)
                   else if length insts > 20
