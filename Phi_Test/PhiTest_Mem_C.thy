@@ -98,7 +98,7 @@ proc test_mem6b:
     $addr \<tribullet> d \<tribullet> f !
   \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 80]]
+declare [[\<phi>reasoning_step_limit = 140]]
 
 proc test_mem7:
   input  \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
@@ -186,7 +186,9 @@ proc test_mem15:
   input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>})\<close>
   output \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0, 3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> snd (xs ! 2) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> 2 \<tribullet> c !
+  $addr \<tribullet> 2 \<tribullet> c \<rightarrow> val t
+  note [[\<phi>trace_reasoning = 2]] ;;
+  $t !
 \<medium_right_bracket> .
 
 

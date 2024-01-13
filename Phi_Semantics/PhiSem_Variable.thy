@@ -141,12 +141,6 @@ lemma [\<phi>reason %\<phi>synthesis_parse for
 
 
 
-subsubsection \<open>Setup IDE-CP\<close>
-
-ML \<open>Generic_Variable_Access.parse_phi_type_of_generic_var :=
-      Symtab.update (\<^const_name>\<open>Var\<close>, fn _ $ _ $ (_ $ T) => SOME T)
-                    (!Generic_Variable_Access.parse_phi_type_of_generic_var)\<close>
-
 (* TODO - Shortcut reasoning rules
 lemma [\<phi>reason 1305 for \<open>_\<heavy_comma> _ \<Ztypecolon> Var _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _\<heavy_comma> \<blangle> _ \<Ztypecolon> Var _ _ \<brangle> \<w>\<i>\<t>\<h> _\<close>]:
   " R\<heavy_comma> x \<Ztypecolon> Var vari T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> x \<Ztypecolon> Var vari T \<brangle> "
@@ -173,7 +167,7 @@ lemma [\<phi>reason 1280]:
 *)
 
 
-section \<open>Instructions\<close>
+section \<open>Semantic Operations\<close>
 
 subsection \<open>Preliminary - Reasoning Process\<close>
 
@@ -470,6 +464,11 @@ proc (nodef) [\<phi>reason 1210]:
 
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>
+
+ML \<open>Generic_Variable_Access.parse_phi_type_of_generic_var :=
+      Symtab.update (\<^const_name>\<open>Var\<close>, fn _ $ _ $ (_ $ T) => SOME T)
+                    (!Generic_Variable_Access.parse_phi_type_of_generic_var)\<close>
+
 
 \<phi>reasoner_group local_var = (1000, [1000,1000]) for (\<open>varname.type vari \<equiv> TY\<close>)
   \<open>storing semantic types of local variables\<close>

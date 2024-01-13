@@ -37,8 +37,8 @@ proc zero_mat:
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close>
 
-  map_slice_a ($m) \<medium_left_bracket> for k \<rightarrow> val k
-    map_slice_a ($n) \<medium_left_bracket> for h \<rightarrow> val h
+  map_slice_a ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
+    map_slice_a ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
       $a \<tribullet> ($i + $k) \<tribullet> ($j + $h) := \<open>0 \<Ztypecolon> \<int>\<close>
     \<medium_right_bracket>
   \<medium_right_bracket> ;;

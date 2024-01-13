@@ -230,8 +230,7 @@ lemmas [\<phi>safe_simp] =
     fmdom_fmupd fmdom_empty finsert_iff fempty_iff
     mk_symbol_inject[OF UNIV_I UNIV_I]
 
-declare One_nat_def[\<phi>safe_simp del]
-        rel_fun_eq[iff]
+declare rel_fun_eq[iff]
 
 
 subsection \<open>Helper Attributes \& Tactics\<close>

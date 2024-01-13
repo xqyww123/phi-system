@@ -869,9 +869,11 @@ subsubsection \<open>Allocation of Priorities\<close>
   ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
                     \<open>split the separation sequent in the source part and reason the tranformation for
                      each separated item one by one.\<close>
-  ToA_weak        = (20, [20,24]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default
+  ToA_elim_intro  = (19, [19,19]) in ToA < default
+                    \<open>Elimination and introduction rules that unfold \<phi>-types\<close>
+  ToA_weak        = (20, [20,24]) in ToA < default and > ToA_elim_intro
                     \<open>Weak transformation rules giving some reasoning support temporarily and expecting to be orverride\<close>
-  ToA_derived     = (50, [25,79]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default and > ToA_weak
+  ToA_derived     = (50, [25,79]) in ToA < default and > ToA_weak
                     \<open>Automatically derived transformations. Many substructures are contained in this large range.\<close>
   ToA_derived_red = (150, [130,170]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_derived > default in ToA
                     \<open>Automatically derived transformation reductions.\<close>
@@ -881,7 +883,9 @@ subsubsection \<open>Allocation of Priorities\<close>
                     \<open>default group for user rules\<close>
 
 declare [[
-  \<phi>default_reasoner_group \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> : %ToA_user (100)
+  \<phi>default_reasoner_group \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> : %ToA_user (10)
+                      and \<open>?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close> : %ToA_elim_intro (100)
+                      and \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<w>\<i>\<t>\<h> _\<close> : %ToA_elim_intro (100)
 ]]
 
 paragraph \<open>Bottom Groups\<close>

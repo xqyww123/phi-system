@@ -48,7 +48,7 @@ proc memcpy_a:
   for T :: \<open>(VAL, 'x) \<phi>\<close>
 \<medium_left_bracket>
   map_2slice_a ($len) \<medium_left_bracket> \<rightarrow> val k ;;
-      $i\<^sub>a + $k := ($i\<^sub>b + $k) !
+    $i\<^sub>a + $k := ($i\<^sub>b + $k) !
   \<medium_right_bracket>
 \<medium_right_bracket> .
 

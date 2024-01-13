@@ -727,7 +727,7 @@ fun weak_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
           val th' = @{thm' Premise_I} RS th'1*)
           val th' = th
           fun clarsimp_tac ctxt =
-                Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
+                Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
              (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
                             else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW *)

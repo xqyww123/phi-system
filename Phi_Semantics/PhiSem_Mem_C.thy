@@ -42,53 +42,14 @@ subsection \<open>Memory Object\<close>
 
 \<phi>type_def Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
   where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
+  (*parametric [variable, not variable]*)
   deriving Sep_Functor_1
 
-declare Mem.intro_reasoning[\<phi>reason %ToA_cut]
-        Mem.elim_reasoning [\<phi>reason %ToA_cut]
+
+declare Mem.intro_reasoning[\<phi>reason default]
+        Mem.elim_reasoning [\<phi>reason default]
         Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
         Mem.elim_map [where \<phi> =\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
-
-
-subsubsection \<open>Fast Reasoning\<close>
-
-lemma [\<phi>reason %\<phi>mapToA_norm
-           for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
-                \<o>\<v>\<e>\<r> _ : Mem _ _ \<^emph>[_] _ \<mapsto> ?var \<^emph>[_] _
-                \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U'
-    \<o>\<v>\<e>\<r> f : Mem a T \<^emph>[C\<^sub>W] W \<mapsto> Mem a T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
-    \<o>\<v>\<e>\<r> f : Mem a T \<^emph>[C\<^sub>W] W \<mapsto> Mem a T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
-  by simp
-
-lemma [\<phi>reason %ToA_normalizing for \<open>_\<heavy_comma> _ \<Ztypecolon> Mem _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Mem ?var _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:(*TODO: derive it from annotation!*)
-  \<open> W\<heavy_comma> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> W\<heavy_comma> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
-  by simp
-
-lemma [\<phi>reason %ToA_normalizing for \<open>_ \<Ztypecolon> Mem _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Mem ?var _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:(*TODO: derive it from annotation!*)
-  \<open> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
-  by simp
-
-lemma [\<phi>reason %ToA_normalizing for \<open>_\<heavy_comma> _ \<Ztypecolon> Mem _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Mem ?var _ \<w>\<i>\<t>\<h> _\<close>]:(*TODO: derive it from annotation!*)
-  \<open> W\<heavy_comma> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> W\<heavy_comma> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<w>\<i>\<t>\<h> P \<close>
-  by simp
-
-lemma [\<phi>reason %ToA_normalizing for \<open>_ \<Ztypecolon> Mem _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Mem ?var _ \<w>\<i>\<t>\<h> _\<close>]:(*TODO: derive it from annotation!*)
-  \<open> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Mem addr U \<w>\<i>\<t>\<h> P \<close>
-  by simp
-
-(* TODO
-lemma
-  \<open> R\<heavy_comma> Mem addr T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Mem addr' U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C]  \<close>
-*)
-
 
 
 subsubsection \<open>Syntax\<close>
@@ -216,7 +177,7 @@ subsection \<open>Auxiliary\<close>
 definition \<open>address_to_base addr \<equiv> memaddr.index addr = 0\<close>
   \<comment> \<open>\<open>addr\<close> points to the base of an allocation block\<close>
   \<comment> \<open>wraps and prevents the rewrite \<open>memaddr.index addr = 0\<close>,
-      as \<open>address_to_base addr\<close> should be handled as an atom\<close>
+      as \<open>address_to_base addr\<close> should be treated as an atom\<close>
 
 subsection \<open>Main\<close>
 
@@ -306,10 +267,7 @@ proc calloc_1:
 
   semantic_assumption \<open>type_storable_in_mem TY\<close>
 
-  have t1: \<open>valid_logaddr (memaddr blk [])\<close>
-    unfolding valid_logaddr_def Valid_MemBlk_def
-    using \<open>memblk.layout blk = TY\<close>
-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem TY\<close>) ;;
+  holds_fact t1: \<open>valid_logaddr (memaddr blk [])\<close> ;;
 
   semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
     

@@ -4,8 +4,9 @@ val guess_inst : Proof.context -> (string * typ) list (*frees that cannot be bou
               -> cterm -> cterm Vars.table option
 
 val guess_inst_tac : Proof.context -> int -> tactic
-val guess_inst_solver : solver
+val guess_inst_solver : Proof.context -> solver
 
+val add_guess_inst_solver : Proof.context -> Proof.context
 val add_guess_inst_looper : Proof.context -> Proof.context
 
 end
@@ -182,9 +183,33 @@ fun guess_inst_tac ctxt n st = Seq.make (fn () =>
       else NONE
   end)
 
-val guess_inst_solver = Simplifier.mk_solver "inst_var_by_Ctr_sels" guess_inst_tac
+(*val present_solvers = #1 (Raw_Simplifier.solvers \<^context>)*)
+fun solve_all_tac solvers ctxt =
+  let
+    val subgoal_tac = Raw_Simplifier.subgoal_tac (Raw_Simplifier.set_solvers solvers ctxt);
+    val solve_tac = subgoal_tac THEN_ALL_NEW (K no_tac);
+  in DEPTH_SOLVE o solve_tac end;
+
+fun guess_inst_solver ctxt0 =
+  Simplifier.mk_solver "inst_var_by_Ctr_sels" (fn ctxt => fn n => fn st =>
+   (((fn st =>
+      case Thm.major_prem_of st
+        of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ A $ B =>
+            if is_Var (Term.head_of A) orelse is_Var (Term.head_of B)
+            then Seq.empty
+            else guess_inst_tac ctxt n st
+         | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B) =>
+            if is_Var (Term.head_of A) orelse is_Var (Term.head_of B)
+            then Seq.empty
+            else guess_inst_tac ctxt n st
+         | _ => guess_inst_tac ctxt n st)
+     THEN Simplifier.asm_full_simp_tac ctxt n)
+    ORELSE
+    FIRST' (map (Raw_Simplifier.solver ctxt)
+      (rev (#1 (Raw_Simplifier.solvers ctxt0)))) n) st)
 
 fun add_guess_inst_looper ctxt = ctxt addloop ("inst_var_by_Ctr_sels", guess_inst_tac)
+fun add_guess_inst_solver ctxt = Raw_Simplifier.set_solvers [guess_inst_solver ctxt] ctxt
 
 val _ = Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)
 

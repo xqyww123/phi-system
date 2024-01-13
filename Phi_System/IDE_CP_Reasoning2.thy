@@ -624,7 +624,7 @@ definition mapToA_unify_A :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a B
   where \<open>mapToA_unify_A Tgt Src A B \<longleftrightarrow> A = B\<close>
 
 lemma [\<phi>reason %cutting+10]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] A = B
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = B
 \<Longrightarrow> mapToA_unify_A Tgt Src A B \<close>
   unfolding Premise_def mapToA_unify_A_def \<r>Guard_def
   by simp
