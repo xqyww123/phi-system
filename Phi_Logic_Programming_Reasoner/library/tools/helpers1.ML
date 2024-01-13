@@ -6,11 +6,19 @@ val pass_checks_priority : string (*name of the kind of the rules*)
                         -> int (*priority lower bound*)
                         -> Phi_Reasoner.rule_pass
 
+val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
+val wrap': (Proof.context -> thm -> thm option) -> (context_state -> context_state option)
+val wrap'': (Proof.context -> thm -> thm) -> (context_state -> context_state)
+
 end
 
 structure Phi_Reasoners : PHI_REASONERS = struct
 
 exception Automation_Fail of unit -> Pretty.T list
+
+fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
+fun wrap' tac (ctxt,thm) = tac ctxt thm |> Option.map (pair ctxt)
+fun wrap'' tac (ctxt,thm) = tac ctxt thm |> pair ctxt
 
 fun pass_checks_priority name prio = (fn pos => fn data =>
   case #2 (#2 data)

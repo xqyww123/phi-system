@@ -18,6 +18,9 @@ theory PLPR
   and "<safe>" = "\<s>\<a>\<f>\<e>"
   and "<no>" = "\<n>\<o>"
   and "<inst>" = "\<i>\<n>\<s>\<t>"
+  and "<user>" = "\<u>\<s>\<e>\<r>"
+  and "<do>" = "\<d>\<o>"
+  and "<param>" = "\<p>\<a>\<r>\<a>\<m>"
 begin
 
 subsection \<open>Preliminaries\<close>
@@ -64,6 +67,7 @@ ML_file_debug \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/reasoner_decl.ML\<close>
 ML_file \<open>library/priority_group.ML\<close>
 ML_file \<open>library/tools/where_tac.ML\<close>
+ML_file \<open>library/tools/helpers00.ML\<close>
 
 attribute_setup condition = \<open>
   Scan.peek (fn ctxt_g => Args.internal_term ||
@@ -242,6 +246,64 @@ lemma Premise_norm:
 lemma contract_obligations:
   "(Premise mode' P \<Longrightarrow> Premise mode Q \<Longrightarrow> PROP C) \<equiv> (Premise mode (P \<and> Q) \<Longrightarrow> PROP C)"
   unfolding Premise_def by rule simp+
+
+
+subsubsection \<open>User Input of Terms\<close>
+
+definition ParamTag :: " 'a::{} \<Rightarrow> bool" ("\<p>\<a>\<r>\<a>\<m> _" [1000] 26) where "\<p>\<a>\<r>\<a>\<m> x \<equiv> True"
+
+text \<open>Antecedent \<^prop>\<open>\<p>\<a>\<r>\<a>\<m> x\<close> asks users to input some term that matches pattern \<^term>\<open>x\<close>.
+  \<phi>-Processor `set_param` processes this antecedent.\<close>
+
+lemma ParamTag: "\<p>\<a>\<r>\<a>\<m> x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
+lemma [cong]: "\<p>\<a>\<r>\<a>\<m> x \<longleftrightarrow> \<p>\<a>\<r>\<a>\<m> x" \<comment> \<open>Disable simplification on parameters\<close> ..
+
+ML_file \<open>library/syntax/param.ML\<close>
+
+subsubsection \<open>User Input of Facts or Rules\<close>
+
+definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<u>\<s>\<e>\<r> _" [11] 10) where "Argument x \<equiv> x"
+
+lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
+
+text \<open>Antecedent \<^prop>\<open>\<u>\<s>\<e>\<r> P\<close> represents the wrapped antecedent \<^prop>\<open>P\<close>
+  is intended to be given or solved by users. Different with \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close> where
+  boolean \<^prop>\<open>Q\<close> is a pure assertion being a verification condition,
+  the wrapped \<^prop>\<open>P\<close> is a judgement in the programming, such as a transformation of abstraction
+  or a view shift or any others representing specific properties.
+
+  In addition, \<^prop>\<open>\<u>\<s>\<e>\<r> P\<close> suppresses any attempts from the automatic reasoner. \<^prop>\<open>P\<close>
+  will be protected as intact.
+\<close>
+
+
+subsubsection \<open>Pended Goals\<close>
+
+definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<d>\<o> _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
+
+text \<open>In a rule, \<^prop>\<open>\<d>\<o> A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
+obtained from the reasoning, instead of a prerequisite condition of applying the rule.
+During the reasoning process,
+
+\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<d>\<o>\<close>, \<^prop>\<open>A\<close> is evaluated immediately
+  and once it fails the search branch backtracks;
+
+\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<d>\<o> A\<close> wrapped by \<open>\<d>\<o>\<close>, it means an obtained
+  reasoning obligation as an outcome of the reasoning,
+  just like \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> meaning an extracted verification condition.
+  So conforming to \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>, no immediate reasoning work is invoked and the antecedent
+  is returned and is given before the \<^schematic_prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots>\<close> in order,
+  as an outcome of the reasoning,.
+
+  For example, if during a reasoning process, two \<^prop>\<open>\<d>\<o> A1\<close> and \<^prop>\<open>\<d>\<o> A2\<close> are encountered in
+  order, and if the reasoning succeeds, the final outcome would be
+  \[ \<^schematic_prop>\<open>\<d>\<o> A1 \<Longrightarrow> \<d>\<o> A2 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots> \<Longrightarrow> Conclusion\<close> \]
+\<close>
+
+lemma Do_I: \<open>PROP P \<Longrightarrow> \<d>\<o> PROP P\<close> unfolding Do_def .
+lemma Do_D: \<open>\<d>\<o> PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
+
+ML_file \<open>library/syntax/pended_goals.ML\<close>
 
 subsubsection \<open>NO_SIMP\<close>
 
@@ -853,6 +915,29 @@ lemma Conv_Action_Tag_I:
   unfolding Action_Tag_def ..
 
 ML_file \<open>library/action_tag.ML\<close>
+
+
+subsubsection \<open>Pended Goals (continued)\<close>
+
+ML_file \<open>library/pended_goals.ML\<close>
+
+definition Do_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Do_embed X \<equiv> X\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
+  unfolding Do_def Do_embed_def .
+
+\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Reasoners.defer_param_antecedent) o snd
+\<close>
+
+\<phi>reasoner_ML Argument 1000 (\<open>\<u>\<s>\<e>\<r> ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Reasoners.defer_antecedent) o snd
+\<close>
+
+\<phi>reasoner_ML Do 1200 (\<open>\<d>\<o> (PROP ?P)\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Reasoners.defer_antecedent) o snd
+\<close>
 
 
 (*TODO: change terminology of \<open>Reasoning Goal\<close> to \<open>Reasoning App\<close>, which is more figurative*)
@@ -1509,7 +1594,6 @@ lemma [\<phi>reason add]:
   \<open> PROP \<A>ESC' P X
 \<Longrightarrow> PROP \<A>ESC' P (NO_SIMP' X) \<close>
   unfolding NO_SIMP'_def .
-
 
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>

@@ -181,7 +181,7 @@ lemma [\<phi>reason %mapToA_mem_coerce]:
           \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<^sub>1' \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<^sub>2') \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
-\<Longrightarrow> \<^bold>d\<^bold>o Is_Named_Tuple T\<^sub>2' field\<^sub>2
+\<Longrightarrow> \<d>\<o> Is_Named_Tuple T\<^sub>2' field\<^sub>2
 
 \<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (\<lbrace> SYMBOL_VAR(s): T\<^sub>1 \<rbrace> \<^emph> T\<^sub>2) \<^emph>[C\<^sub>W] W

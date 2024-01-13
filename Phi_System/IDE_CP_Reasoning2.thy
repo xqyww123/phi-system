@@ -1577,7 +1577,7 @@ lemma [\<phi>reason %\<phi>mapToA_init]:
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>2 : snd ret
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f\<^sub>1 : fst ret\<^sub>f
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ret\<^sub>f\<^sub>2 : snd ret\<^sub>f
-\<Longrightarrow> \<^bold>d\<^bold>o lookup_a_mapper g ret (y', r')
+\<Longrightarrow> \<d>\<o> lookup_a_mapper g ret (y', r')
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y' \<Ztypecolon> U' \<f>\<o>\<r> ret\<^sub>1 \<Ztypecolon> U \<f>\<r>\<o>\<m> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] ret\<^sub>2 \<Ztypecolon> R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W
       \<t>\<o> ret\<^sub>f\<^sub>1 \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> ret\<^sub>f\<^sub>2 \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> r' \<Ztypecolon> R' \<close>
   unfolding ToA_Mapper_def ToA_Subst_def Premise_def Simplify_def

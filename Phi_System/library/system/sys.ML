@@ -210,14 +210,14 @@ fun accept_proc (ctxt,sequent0) =
 
 (*Param & Label*)
 fun param_type sequent =
-  Phi_Syntax.param_type sequent
+  PLPR_Syntax.param_type sequent
     |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
   (* TODO: how to parse (check) the term of a desired type pattern
   * (schematic type variable)? *)
 
 fun set_param' ctxt term sequent =
     (term |> Thm.cterm_of ctxt
-          |> Phi_Syntax.intro_param)
+          |> PLPR_Syntax.intro_param)
       RS sequent
 
 fun set_param raw_term (ctxt,sequent) =

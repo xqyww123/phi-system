@@ -1907,7 +1907,7 @@ lemma apply_Transformation_Functor:
 
 lemma apply_Functional_Transformation_Functor:
   \<open> Functional_Transformation_Functor Fa Fb T U D R pred_mapper func_mapper
-\<Longrightarrow> (\<And>a \<in> D x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> (\<And>a \<in> D x. \<u>\<s>\<e>\<r> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper f P x\<close>
   unfolding meta_Ball_def Argument_def Premise_def
@@ -1951,8 +1951,8 @@ lemma apply_Transformation_BiFunctor:
 
 lemma apply_Functional_Transformation_BiFunctor:
   \<open> Functional_Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper
-\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> U\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
-\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
+\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. \<u>\<s>\<e>\<r> a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> U\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
+\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. \<u>\<s>\<e>\<r> a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D\<^sub>1 x \<longrightarrow> f\<^sub>1 a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x\<close>
   unfolding meta_Ball_def Argument_def Premise_def
@@ -1993,7 +1993,7 @@ lemma apply_Transformation_Functor\<^sub>\<Lambda>:
 
 lemma apply_Functional_Transformation_Functor\<^sub>\<Lambda>:
   \<open> Functional_Transformation_Functor\<^sub>\<Lambda> Fa Fb T U D R pred_mapper func_mapper
-\<Longrightarrow> (\<And>p. \<And>a \<in> D p x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f p a \<Ztypecolon> U p \<w>\<i>\<t>\<h> P p a)
+\<Longrightarrow> (\<And>p. \<And>a \<in> D p x. \<u>\<s>\<e>\<r> a \<Ztypecolon> T p \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f p a \<Ztypecolon> U p \<w>\<i>\<t>\<h> P p a)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>p a. a \<in> D p x \<longrightarrow> f p a \<in> R p x) 
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper f P x\<close>
   unfolding meta_Ball_def Argument_def Premise_def Functional_Transformation_Functor\<^sub>\<Lambda>_def
@@ -2301,7 +2301,7 @@ lemma apply_Semimodule_SDistr_Homo\<^sub>S_rev_RCond_\<phi>Some:
 (*
 lemma apply_Transformation_Functor:
   \<open> Transformation_Functor Fa Fb fa fb
-\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t fa x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fb y \<Ztypecolon> U \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> \<u>\<s>\<e>\<r> fa x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fb y \<Ztypecolon> U \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> Q)\<close>
   unfolding Transformation_Functor_def Argument_def
   by blast

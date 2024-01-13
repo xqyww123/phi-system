@@ -475,7 +475,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                       (LPR, Option.map (Drule.mk_term o Thm.cconcl_of o Thm.transfer'' ctxt) prop, thm) )
                               | parse_position (\<^Const>\<open>Pure.term \<^Type>\<open>bool\<close>\<close> $ X) data
                                  = (case parse_position X data of (LPR, prop, thm) =>
-                                      (LPR, Option.map (Drule.mk_term o PLPR_Syntax.dest_Trueprop_c o Thm.cconcl_of o Thm.transfer'' ctxt) prop, thm) )
+                                      (LPR, Option.map (Drule.mk_term o Phi_Help.dest_Trueprop_c o Thm.cconcl_of o Thm.transfer'' ctxt) prop, thm) )
                               | parse_position _ data = data
 
                             val (is_reasoning_goal, prop', thm'1) =

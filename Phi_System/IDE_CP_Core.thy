@@ -14,11 +14,7 @@ theory IDE_CP_Core
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>lang_operator" :: thy_decl
 abbrevs
   "!!" = "!!"
-  and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"
-  and "<do>" = "\<^bold>d\<^bold>o"
-  and "<param>" = "\<p>\<a>\<r>\<a>\<m>"
   and "<label>" = "\<l>\<a>\<b>\<e>\<l>"
-  and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
   and "<by>" = "\<^bold>b\<^bold>y"
   and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
   and "<obligation>" = "\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n>"
@@ -49,39 +45,6 @@ ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
 ML_file \<open>library/syntax/procedure2.ML\<close>
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
-
-subsection \<open>Parameter From User\<close>
-
-definition ParamTag :: " 'a::{} \<Rightarrow> bool" ("\<p>\<a>\<r>\<a>\<m> _" [1000] 26) where "\<p>\<a>\<r>\<a>\<m> x \<equiv> True"
-
-text \<open>Antecedent \<^prop>\<open>\<p>\<a>\<r>\<a>\<m> x\<close> asks users to input some term that matches pattern \<^term>\<open>x\<close>.
-  \<phi>-Processor `set_param` processes this antecedent.\<close>
-
-lemma ParamTag: "\<p>\<a>\<r>\<a>\<m> x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
-lemma [cong]: "\<p>\<a>\<r>\<a>\<m> x \<longleftrightarrow> \<p>\<a>\<r>\<a>\<m> x" \<comment> \<open>Disable simplification on parameters\<close> ..
-
-ML_file \<open>library/syntax/param.ML\<close>
-
-subsection \<open>Proof Obligation\<close>
-
-text \<open>See \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> given in \<open>\<phi>\<close>-Logic Programming Reasoner.\<close>
-
-subsection \<open>Tag of User Input\<close>
-
-definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x \<equiv> x"
-
-lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
-
-text \<open>Antecedent \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P\<close> represents the wrapped antecedent \<^prop>\<open>P\<close>
-  is intended to be given or solved by users. Different with \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close> where
-  boolean \<^prop>\<open>Q\<close> is a pure assertion being a verification condition,
-  the wrapped \<^prop>\<open>P\<close> is a judgement in the programming, such as a transformation of abstraction
-  or a view shift or any others representing specific properties.
-
-  In addition, \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P\<close> suppresses any attempts from the automatic reasoner. \<^prop>\<open>P\<close>
-  will be protected as intact.
-\<close>
-
 
 subsection \<open>Text Label\<close>
 
@@ -201,51 +164,8 @@ lemma [\<phi>reason 1200]:
   unfolding Technical_def .
 
 
-subsection \<open>Pended Reasoning\<close>
-
-definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
-
-text \<open>In a rule, \<^prop>\<open>\<^bold>d\<^bold>o A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
-obtained from the reasoning, instead of a prerequisite condition of applying the rule.
-During the reasoning process,
-
-\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<^bold>d\<^bold>o\<close>, \<^prop>\<open>A\<close> is evaluated immediately
-  and once it fails the search branch backtracks;
-
-\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<^bold>d\<^bold>o A\<close> wrapped by \<open>\<^bold>d\<^bold>o\<close>, it means an obtained
-  reasoning obligation as an outcome of the reasoning,
-  just like \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> meaning an extracted verification condition.
-  So conforming to \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>, no immediate reasoning work is invoked and the antecedent
-  is returned and is given before the \<^schematic_prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots>\<close> in order,
-  as an outcome of the reasoning,.
-
-  For example, if during a reasoning process, two \<^prop>\<open>\<^bold>d\<^bold>o A1\<close> and \<^prop>\<open>\<^bold>d\<^bold>o A2\<close> are encountered in
-  order, and if the reasoning succeeds, the final outcome would be
-  \[ \<^schematic_prop>\<open>\<^bold>d\<^bold>o A1 \<Longrightarrow> \<^bold>d\<^bold>o A2 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots> \<Longrightarrow> Conclusion\<close> \]
-\<close>
-
-lemma Do_I: \<open>PROP P \<Longrightarrow> \<^bold>d\<^bold>o PROP P\<close> unfolding Do_def .
-lemma Do_D: \<open>\<^bold>d\<^bold>o PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
 
 ML_file \<open>library/system/reasoners.ML\<close>
-
-definition Do_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Do_embed X \<equiv> X\<close>
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
-  unfolding Do_def Do_embed_def .
-
-\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent) o snd
-\<close>
-
-\<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent) o snd
-\<close>
-
-\<phi>reasoner_ML Do 1200 (\<open>\<^bold>d\<^bold>o (PROP ?P)\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent) o snd
-\<close>
 
 
 subsection \<open>Annotations on \<phi>-Types\<close>
@@ -1020,7 +940,7 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis_red]:
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis_red]:
   \<open> PROP Synthesis_by X (Trueprop P)
-\<Longrightarrow> PROP Synthesis_by X (Trueprop (\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P))\<close>
+\<Longrightarrow> PROP Synthesis_by X (Trueprop (\<u>\<s>\<e>\<r> P))\<close>
   unfolding Argument_def .
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis_red]:
@@ -1052,16 +972,16 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<A
 \<Longrightarrow> PROP Synthesis_by X (\<And>a. A a \<s>\<h>\<i>\<f>\<t>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
   unfolding Synthesis_by_def Simplify_def by meson
 
-lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> ?P)\<close>]:
+lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. \<u>\<s>\<e>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> ?P)\<close>]:
   \<open> (\<And>a. A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X a \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
-\<Longrightarrow> PROP Synthesis_by X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
+\<Longrightarrow> PROP Synthesis_by X (\<And>a. \<u>\<s>\<e>\<r> A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
   unfolding Synthesis_by_def Argument_def Simplify_def by meson
 
-lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?A a \<s>\<h>\<i>\<f>\<t>\<s> ?B a \<w>\<i>\<t>\<h> ?P)\<close>]:
+lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. \<u>\<s>\<e>\<r> ?A a \<s>\<h>\<i>\<f>\<t>\<s> ?B a \<w>\<i>\<t>\<h> ?P)\<close>]:
   \<open> (\<And>a. A a \<s>\<h>\<i>\<f>\<t>\<s> X a \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
-\<Longrightarrow> PROP Synthesis_by X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A a \<s>\<h>\<i>\<f>\<t>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
+\<Longrightarrow> PROP Synthesis_by X (\<And>a. \<u>\<s>\<e>\<r> A a \<s>\<h>\<i>\<f>\<t>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
   unfolding Synthesis_by_def Argument_def Simplify_def by meson
 
 
@@ -2321,11 +2241,11 @@ Scan.succeed (Thm.rule_attribute [] (fn ctxt' =>
 \<close>
 *)
 
-declare [[\<phi>premise_attribute  [THEN Do_D] for \<open>\<^bold>d\<^bold>o PROP _\<close>          (%\<phi>attr_normalize),
+declare [[\<phi>premise_attribute  [THEN Do_D] for \<open>\<d>\<o> PROP _\<close>          (%\<phi>attr_normalize),
           \<phi>premise_attribute  [THEN Premise_D] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>     (%\<phi>attr_late_normalize),
           \<phi>premise_attribute  [THEN Premise_D] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] ?x\<close> (%\<phi>attr_late_normalize),
-          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close> (%\<phi>attr),
-          \<phi>premise_attribute  [THEN Simplify_D] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>   (%\<phi>attr_late_normalize),
+          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>\<phi>SemType _ _\<close> \<open>\<d>\<o> \<phi>SemType _ _\<close> (%\<phi>attr),
+          \<phi>premise_attribute  [THEN Simplify_D] for \<open>Simplify _ _ _\<close> \<open>\<d>\<o> Simplify _ _ _\<close>   (%\<phi>attr_late_normalize),
           \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Is_Functional ?S\<close>     (%\<phi>attr),
           \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>  (%\<phi>attr)
 ]]
@@ -2363,7 +2283,7 @@ subsubsection \<open>Constructive\<close>
 
 lemma \<phi>cast_exception_UI:
   " PendingConstruction f blk H T E
-\<Longrightarrow> (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t E a \<s>\<h>\<i>\<f>\<t>\<s> E' a)
+\<Longrightarrow> (\<And>a. \<u>\<s>\<e>\<r> E a \<s>\<h>\<i>\<f>\<t>\<s> E' a)
 \<Longrightarrow> PendingConstruction f blk H T E'"
   unfolding Argument_def
   using \<phi>apply_view_shift_pending_E .

@@ -21,10 +21,6 @@ signature PHI_REASONERS = sig
                                  -> int (*number of new conditions introduced*) * thm
   val obligation_intro_Ex_conv : schm_by_ex -> Proof.context -> thm -> thm
 
-  val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
-  val wrap': (Proof.context -> thm -> thm option) -> (context_state -> context_state option)
-  val wrap'': (Proof.context -> thm -> thm) -> (context_state -> context_state)
-
   val auto_obligation_solver : Proof.context -> thm -> thm Seq.seq
   val auto_obligation_solver' : (Proof.context -> thm -> thm) (*failure callback*)
                               -> Proof.context -> thm -> thm
@@ -46,7 +42,7 @@ signature PHI_REASONERS = sig
 
 
   (*defer the leading antecedent to the nearest obligation and call the contract*)
-  val defer_antecedent : {can_inst:bool, fix_level:int}
+  val defer_obligation : {can_inst:bool, fix_level:int}
                       -> (Proof.context -> thm -> thm) (*contract*)
                       -> Proof.context -> thm -> thm Seq.seq
   val defer_obligation_tac : {can_inst:bool, fix_level:int}
@@ -93,12 +89,6 @@ open Thm Term Phi_Reasoners
 
 (** Preliminary **)
 
-
-
-
-fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
-fun wrap' tac (ctxt,thm) = tac ctxt thm |> Option.map (pair ctxt)
-fun wrap'' tac (ctxt,thm) = tac ctxt thm |> pair ctxt
 
 (*fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME (th, Seq.empty))) *)
@@ -658,7 +648,7 @@ fun find_obligations_tag thm = tl (Thm.prems_of thm)
                      | _ => false)
 fun has_obligations_tag thm = find_obligations_tag thm <> ~1
 
-fun defer_antecedent cfg contract = oblg_template cfg (fn ctxt => fn thm =>
+fun defer_obligation cfg contract = oblg_template cfg (fn ctxt => fn thm =>
   let val idx = find_obligations_tag thm
   in if idx = ~1
      then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
@@ -669,7 +659,7 @@ fun defer_antecedent cfg contract = oblg_template cfg (fn ctxt => fn thm =>
   end)
 
 fun defer_obligation_tac cfg contr_mode =
-      defer_antecedent cfg (contract_obligations contr_mode)
+      defer_obligation cfg (contract_obligations contr_mode)
 
 (*** Premise tac ***)
 
