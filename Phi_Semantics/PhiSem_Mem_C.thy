@@ -36,13 +36,22 @@ subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
 subsection \<open>Memory Object\<close>
 
+\<phi>reasoner_group MemBlk = (100,[0,9999]) \<open>derived reasoning rules of MemBlk\<close>
+
+declare [[collect_reasoner MemBlk start]]
+ 
 \<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
   where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
   deriving Sep_Functor_1
 
+declare [[collect_reasoner MemBlk stop]]
+
+
+
+
+
 \<phi>type_def Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
   where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
-  (*parametric [variable, not variable]*)
   deriving Sep_Functor_1
 
 

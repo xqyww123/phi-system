@@ -470,6 +470,7 @@ text \<open>Below we provide a set of predefined reasoner groups serving for def
 
 section \<open>Introduction\<close>
 
+ML_file_debug \<open>library/tools/statistics.ML\<close>
 ML_file_debug \<open>library/reasoner.ML\<close>
 ML_file_debug \<open>library/tools/helpers1.ML\<close>
 
@@ -1873,12 +1874,6 @@ lemma [\<phi>reason add]:
   by simp blast
 
 *)
-
-ML \<open>Nitpick_HOL.is_nonfree_constr \<^context> (\<^const_name>\<open>Nil\<close>, \<^typ>\<open>'a list\<close>)\<close>
-ML \<open>Nitpick_HOL.is_sel \<^const_name>\<open>hd\<close>\<close>
-ML \<open>Nitpick_HOL.is_data_type \<^context> \<^typ>\<open>'a list\<close>\<close>
-
-
 
 
 

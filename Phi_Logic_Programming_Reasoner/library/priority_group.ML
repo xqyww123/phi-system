@@ -5,7 +5,7 @@ signature REASONER_GROUP = sig
 type name = string
 type offset = int
 type priority = int
-type group = priority * name option
+type group = priority * name option (*TODO: rename to priority_group*)
 
 type T = {
   base: int,

@@ -46,7 +46,7 @@ signature NU_REASONER = sig
 
   type reasoner = {name: term,
                    pos: Position.T,
-                   group: Reasoner_Group.name option,
+                   group: Reasoner_Group.name list,
                    mode: mode,
                    pattern: (term * int) list,
                    blacklist: term list,
@@ -157,6 +157,7 @@ signature NU_REASONER = sig
   val get_passes : Context.generic -> term list -> (pass_id * term * rule_pass) list
   val run_passes : Position.T -> pass_data -> pass_data
   val add_pass : pass_id * pattern * rule_pass -> Context.generic -> Context.generic
+  val del_pass : pass_id * pattern -> Context.generic -> Context.generic
 
   (*
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
@@ -201,6 +202,14 @@ signature NU_REASONER = sig
      -> attribute context_parser
 
   val attr_rule_syntax : (thm list * Context.generic -> thm list * Context.generic) ->  attribute context_parser
+
+  (* Statistics *)
+
+  val start_collecting_reasoners : Reasoner_Group.name -> Context.generic -> Context.generic
+  val stop_collecting_reasoners  : Reasoner_Group.name -> Context.generic -> Context.generic
+
+  val utilization_of_group : theory -> (Reasoner_Group.name list -> bool) -> (thm * int) list
+  val reasoners_of_group : Context.generic -> (Reasoner_Group.name list -> bool) -> reasoner list
 
 end
 
@@ -261,7 +270,7 @@ datatype tactic = Tac_ML of backtracking * context_state -> context_state Seq.se
 
 type reasoner = {name: term,
                  pos: Position.T,
-                 group: Reasoner_Group.name option,
+                 group: Reasoner_Group.name list,
                  mode: mode,
                  pattern: (term * int) list,
                  blacklist: term list,
@@ -350,6 +359,48 @@ val default_handlers = (default_success_handler, default_global_cut_handler)
   if opewn_newctxt then enter_sub_envir ctxt else ctxt
 fun exit_sub_envir' opewn_newctxt ctxt =
   if opewn_newctxt then exit_sub_envir ctxt else ctxt*)
+
+(* Statistics *)
+
+type statistic_group = string
+
+(*
+structure Rule_Collection = Generic_Data (
+  type T = reasoner Net.net Symtab.table
+  val empty = Symtab.empty
+  val merge = Symtab.join (K (Net.merge (op aconv o apply2 #name)))
+)
+*)
+
+structure Under_Collecting = Generic_Data (
+  type T = Symtab.set
+  val empty = Symtab.empty
+  val merge = Symtab.merge (K true)
+)
+
+val start_collecting_reasoners = Under_Collecting.map o Symtab.insert_set
+val stop_collecting_reasoners  = Under_Collecting.map o Symtab.remove_set
+
+fun add_to_groups_under_collection ctxt =
+  let val open_groups = Under_Collecting.get ctxt |> Symtab.keys
+   in fn ({name,pos,mode,group,pattern,blacklist,tactic}:reasoner) =>
+          {name=name, pos=pos, mode=mode, group=union (op =) group open_groups,
+           pattern=pattern, blacklist=blacklist, tactic=tactic}
+  end
+
+
+
+val _ = Theory.setup (Attrib.setup \<^binding>\<open>collect_reasoner\<close> (
+    Scan.lift (Parse.name_position
+            -- ( Args.$$$ "start" >> K true
+              || Args.$$$ "stop"  >> K false )) >> (fn (xname, start) =>
+    Thm.declaration_attribute (fn _ => fn ctxt =>
+        let val (name, _) = Reasoner_Group.check ctxt xname
+         in if start then start_collecting_reasoners name ctxt
+                     else stop_collecting_reasoners  name ctxt
+        end))
+) "start or stop collecting LPR rule of the indicated group.")
+
 
 (*** Reasoner Registry ***)
 
@@ -447,6 +498,7 @@ fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
 
 fun add reasoner0 ctxt =
   let val reasoner = normalize_reasoner I reasoner0
+                  |> add_to_groups_under_collection ctxt
       val _ = info_pretty_generic ctxt 1 (fn () =>
                 Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
                                pretty ctxt reasoner])
@@ -455,17 +507,43 @@ fun add reasoner0 ctxt =
 
 fun adds reasoners ctxt = Reasoners.map (
       fold (fn reasoner0 =>
-        let val reasoner = normalize_reasoner I reasoner0
-            val _ = info_pretty_generic ctxt 1 (fn () =>
-                Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
-                               pretty ctxt reasoner])
-         in fold (insert_net ctxt reasoner) (#pattern reasoner)
-        end) reasoners) ctxt
+          let val reasoner = normalize_reasoner I reasoner0
+              val _ = info_pretty_generic ctxt 1 (fn () =>
+                  Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
+                                 pretty ctxt reasoner])
+           in fold (insert_net ctxt reasoner) (#pattern reasoner)
+          end)
+        (map (add_to_groups_under_collection ctxt) reasoners)) ctxt
 
 fun add_lthy reasoner =
   Local_Theory.declaration {syntax=false, pervasive=false, pos= #pos reasoner} (fn phi =>
     add (transform_reasoner phi reasoner)
   )
+
+fun reasoners_of_group ctxt P =
+  iNet.content (Reasoners.get ctxt)
+    |> map_filter (fn r =>
+          if P (#group (#4 r))
+          then SOME (#4 r)
+          else NONE )
+
+fun utilization_of_group thy P =
+  let val all_utilization = PLPR_Statistics.utilization thy
+   in reasoners_of_group (Context.Theory thy) P
+   |> maps (fn {tactic = Tac_Rule rules, ...} =>
+          map (fn (_, rule) =>
+             let val prop = Phi_Help.beta_eta_contract_term (Thm.prop_of rule)
+              in case find_first (fn (prop', _) => prop' aconv prop)
+                                 (Net.match_term all_utilization prop)
+              of SOME (_, cnt) => (rule, !cnt)
+               | NONE => (rule, 0)
+             end
+           ) rules
+        | _ => []
+      )
+  end
+
+
 
 (*** Implementing Functions ***)
 
@@ -553,8 +631,11 @@ fun apply_reasoning_rules _ [] = K Seq.empty
             Seq.map_filter (fn rule => guarded_RS chk_guard rule ctxt sequent) seqs
       end
 
-fun apply_tactic _ bmode (Tac_ML tac) = (fn s => tac (bmode, s))
-  | apply_tactic chk_guard _ (Tac_Rule rules) = apply_reasoning_rules chk_guard rules
+fun apply_tactic _ _ bmode (Tac_ML tac) s = tac (bmode, s)
+  | apply_tactic count chk_guard _ (Tac_Rule rules) s = (
+      List.app (fn (_, rule) => count (Thm.prop_of rule)) rules ;
+      apply_reasoning_rules chk_guard rules s
+    )
 
 fun get_reasoners' thy tactics bvs term =
   iNet.match_term tactics term
@@ -637,8 +718,11 @@ fun disabled_due_to_backtrack ALLOW_BACKTRACK _ = false
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK EXPLORATIVE_BACKTRACKING = true
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK _ = false
 
-fun gen_reason (handlers, trace, limit, tactics) =
-  let fun loop (_, _, _, []) = NONE
+fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
+  let val count = if Config.get ctxt00 PLPR_Statistics.enable_collection
+                  then PLPR_Statistics.count (Proof_Context.theory_of ctxt00)
+                  else K ()
+      fun loop (_, _, _, []) = NONE
         | loop (N, iter, backtracking, []::L) =
             (if 2 <= trace then tracing ("Backtracking...") else () ;
              loop (N, iter, (if backtracking = EXPLORATIVE_BACKTRACKING
@@ -689,7 +773,7 @@ fun gen_reason (handlers, trace, limit, tactics) =
                                     |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
                                     |> map (fn (priority, _, _, r : reasoner) =>
                                           (priority + score, #pos r, #mode r,
-                                           apply_tactic (chk_guard (#pos r)) backtracking (#tactic r) (ctxt,th')))
+                                           apply_tactic count (chk_guard (#pos r)) backtracking (#tactic r) (ctxt,th')))
                              end
         
                     val Z = case cut_mode
@@ -738,12 +822,15 @@ fun gen_reason (handlers, trace, limit, tactics) =
             end
    in loop
   end
+
 (*Entry point*)
 fun gen_reason' handlers ctxt N states =
   Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
-     (gen_reason (the_default default_handlers handlers,
+     (gen_reason ctxt
+                 (the_default default_handlers handlers,
                   Config.get ctxt trace, Config.get ctxt step_limit, Reasoners.get (Context.Proof ctxt))
-                 (N, 0, NO_BACKTRACKING, map (map (fn seq => (0, Position.none, NORMAL_MODE, seq))) states)
+                 (N, 0, NO_BACKTRACKING, map (map (fn seq => (0, Position.none, NORMAL_MODE, seq)))
+                 states)
       handle Success ret => SOME ret)
   )
 
@@ -817,7 +904,7 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] "\<phi>-LPR" method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (_, (ctxt,thm)) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
-  in add_lthy {name=name', pos=Binding.pos_of name, group=group, mode = check_mode priority mode,
+  in add_lthy {name=name', pos=Binding.pos_of name, group=the_list group, mode = check_mode priority mode,
                pattern=pos_pats, blacklist=neg_pats, tactic= Tac_ML method'''} lthy'
   end
 
@@ -842,7 +929,7 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
          ML_Lex.read (print_term name) @ ML_Lex.read ("), pos=(") @
          ML_Lex.read (print_position pos) @ ML_Lex.read "), mode=(" @
          ML_Lex.read (print_mode_ML (check_mode priority mode)) @ ML_Lex.read "), group=("@
-         ML_Lex.read (print_option Reasoner_Group.print_ML group) @ ML_Lex.read "), pattern=(" @
+         ML_Lex.read (print_list Reasoner_Group.print_ML (the_list group)) @ ML_Lex.read "), pattern=(" @
          ML_Lex.read (print_list (print_pair print_term print_int) pos_pats) @
          ML_Lex.read "), blacklist=(" @ ML_Lex.read (print_list print_term neg_pats) @
          ML_Lex.read "), tactic= Phi_Reasoner.Tac_ML ((let in " @
@@ -1002,7 +1089,11 @@ fun run_passes pos (data as (rules, _, _, _, ctxt)) =
   fold (fn (_,_,f) => f pos) (get_passes ctxt (map Thm.concl_of rules)) data
 
 fun add_pass rule_pass =
-  Rule_Pass.map (iNet.insert_term rule_pass_eq (#2 rule_pass, rule_pass))
+  Rule_Pass.map (iNet.insert_term_safe rule_pass_eq (#2 rule_pass, rule_pass))
+
+fun del_pass (id, pattern) =
+  Rule_Pass.map (iNet.delete_term_safe (op aconv o apply2 #1) (pattern, (id, Term.dummy, K I)))
+
 
 (*structure Rule_Pass *)
 
@@ -1071,7 +1162,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0_group0 pats0 guard0 rules0 =
       
        in {name = name_of_intro_reasoner rules,
            pos = pos,
-           group = group,
+           group = the_list group,
            mode = mode,
            pattern = pats,
            blacklist = blacklist,

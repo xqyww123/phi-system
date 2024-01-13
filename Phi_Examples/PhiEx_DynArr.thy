@@ -19,6 +19,9 @@ begin
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
 
+declare [[\<phi>LPR_collect_statistics]]
+ML \<open>PLPR_Statistics.reset \<^theory>\<close>
+
 context
   fixes TY :: TY
     and T :: \<open>(VAL, 'x) \<phi>\<close>
@@ -102,7 +105,7 @@ proc pop_dynarr:
   \<medium_left_bracket> \<open>MAKE _ (DynArr addr _ _)\<close> \<medium_right_bracket>
   $ret
 \<medium_right_bracket> .
-
+ 
 proc new_dynarr:
   input  \<open>Void\<close>
   output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
@@ -122,7 +125,6 @@ proc del_dynarr:
   mfree ($addr)
 \<medium_right_bracket> .
 
-
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' get_dynarr_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' set_dynarr_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' Max_def})))\<close>
@@ -133,5 +135,20 @@ ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' del_dy
 
 end
 
+
+
+ML \<open>PLPR_Statistics.utilization \<^theory> |> Net.content |> map (apfst (Thm.cterm_of \<^context>))
+      |> length \<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %MemBlk})))
+      |> filter (fn (_, i) => i > 0)
+      |> length \<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt})))
+      |> filter (fn (_, i) => i > 0)\<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt_L})))
+      |> filter (fn (_, i) => i > 0)
+      |> length \<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>Mul_Quant_Tree})))
+      |> filter (fn (_, i) => i > 0)
+      |> length \<close>
 
 end

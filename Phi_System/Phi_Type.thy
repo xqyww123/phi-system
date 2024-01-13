@@ -2805,6 +2805,7 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
+
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
 (*TODO: move*)

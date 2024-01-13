@@ -3,7 +3,10 @@ theory PhiEx_Slice
           "HOL-Combinatorics.List_Permutation"
           PhiStd.PhiStd_Loop
 begin
- 
+
+declare [[\<phi>LPR_collect_statistics]]
+ML \<open>PLPR_Statistics.reset \<^theory>\<close>
+
 proc qsort:
   input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32)\<heavy_comma>
           i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:LEN] \<i>\<n>\<t>(32)\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
@@ -55,6 +58,18 @@ thm qsort_\<phi>app \<comment> \<open>specification theorem\<close>
 
 ML \<open> Phi_Syntax.count_semantic_operations (Thm.prop_of @{thm' qsort_def}) \<close> \<comment> \<open>semantic operations\<close>
 
-
+ML \<open>PLPR_Statistics.utilization \<^theory> |> Net.content |> map (apfst (Thm.cterm_of \<^context>))
+      |> length \<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %MemBlk})))
+      |> filter (fn (_, i) => i > 0)
+      |> length \<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt})))
+      |> filter (fn (_, i) => i > 0)\<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt_L})))
+      |> filter (fn (_, i) => i > 0)
+      |> length \<close>
+ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>Mul_Quant_Tree})))
+      |> filter (fn (_, i) => i > 0)
+      |> length \<close>
 
 end
