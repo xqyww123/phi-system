@@ -758,13 +758,13 @@ fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
                             else ()
                     val _ = if score = 2000 then () else ()
 
-                    val Z = if Thm.nprems_of th <= N
+                    val Z = if PLPR_Syntax.non_deferable_subgoals' th <= N
                             then raise Success (ctxt, th)
                             else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
                                                then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
                                                else th
                                      fun chk_guard pos M (ctxt, th) =
-                                           loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
+                                           loop (PLPR_Syntax.non_deferable_subgoals' th - M, iter, NO_BACKTRACKING,
                                                  [[(score, pos, NORMAL_MODE, Seq.single (ctxt, th))]])
                                             handle Success s => SOME s
                                      val (bvs, concl) = Phi_Help.strip_meta_hhf_bvs
@@ -840,11 +840,11 @@ fun gen_reason' handlers ctxt N states =
 
 fun num_of_protected_prems  _  NONE = 0
   | num_of_protected_prems thm (SOME N) =
-      if N >= 0 then Thm.nprems_of thm - N else ~N
+      if N >= 0 then PLPR_Syntax.non_deferable_subgoals' thm - N else ~N
 
 fun internal_reason _ (SOME 0) S = SOME S
   | internal_reason handlers N (ctxt,sequent) =
-      if Thm.nprems_of sequent = 0 then SOME (ctxt, sequent)
+      if PLPR_Syntax.non_deferable_subgoals' sequent = 0 then SOME (ctxt, sequent)
       else gen_reason' handlers ctxt (num_of_protected_prems sequent N)
                        [[ (Seq.single (ctxt, sequent))]]
 
