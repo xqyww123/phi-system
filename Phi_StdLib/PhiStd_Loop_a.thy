@@ -4,6 +4,8 @@ theory PhiStd_Loop_a \<comment> \<open>suffix a stands for \<open>arbitrary prec
           Phi_Semantics.PhiSem_Variable
 begin
 
+declare [[\<phi>LPR_collect_statistics program start]]
+
 proc (nodef) replicate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
@@ -24,10 +26,6 @@ proc (nodef) replicate_a:
   \<medium_right_bracket> ;;
   have[simp]: \<open>i = t\<close> by auto_sledgehammer \<comment> \<open>TODO: optimize this annotation\<close> ;;
 \<medium_right_bracket> .
-
-
-
-
 
 
 
@@ -115,7 +113,7 @@ proc (nodef) map_2list_loop_a:
 
 
 
-
+declare [[\<phi>LPR_collect_statistics program stop]]
 
 
 

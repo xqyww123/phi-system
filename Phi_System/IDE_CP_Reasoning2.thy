@@ -350,6 +350,7 @@ abbreviation ToA_Getter :: \<open>('x \<Rightarrow> 'a) \<Rightarrow> ('c::sep_m
   where \<open>\<g>\<e>\<t>\<t>\<e>\<r> h : T \<mapsto> U \<i>\<n> domain \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s \<equiv>
           \<m>\<a>\<p> id : U \<mapsto> U \<o>\<v>\<e>\<r> id : T \<mapsto> T \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> domain\<close>
 
+ML_file \<open>library/syntax/ToA_mapper.ML\<close>
 
 subsection \<open>Conventions\<close>
 
@@ -1690,5 +1691,42 @@ subsection \<open>Finale\<close>
 
 hide_const(open) mapToA_cond mapToA_unify_A lookup_a_mapper split_map
                  ToAmap_assign_empty_src ToAmap_assign_empty
+
+ML \<open>
+fun transformation_counter' bvtys concl =
+  case try Phi_Syntax.dest_transformation concl
+    of SOME (S,T,_) => SOME (Phi_Syntax.number_of_typ_operators_in_assertion bvtys S +
+                             Phi_Syntax.number_of_typ_operators_in_assertion bvtys T )
+     | _ => (
+  case try Phi_Syntax.dest_ToA_Extract concl
+    of SOME (S, T) => SOME (Phi_Syntax.number_of_typ_operators_in_assertion bvtys S +
+                            Phi_Syntax.number_of_typ_operators_in_assertion bvtys T )
+     | _ => (
+  case try Phi_Syntax.dest_ToA_Subst concl
+    of SOME (A,B,C,D) => SOME ( Phi_Syntax.number_of_typ_operators_in_assertion bvtys A +
+                                Phi_Syntax.number_of_typ_operators_in_assertion bvtys B +
+                                Phi_Syntax.number_of_typ_operators_in_assertion bvtys C +
+                                Phi_Syntax.number_of_typ_operators_in_assertion bvtys D )
+     | _ => (
+  case try Phi_Syntax.dest_ToA_Mapper concl
+    of SOME (_,U,U',_,T,T',_,_,_) =>
+          SOME (Phi_Syntax.number_of_typ_operators bvtys U +
+                Phi_Syntax.number_of_typ_operators bvtys T )
+     | _ => NONE
+  )))
+
+fun transformation_counter thm =
+  let val (bvtys, concl) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' thm)
+   in transformation_counter' bvtys concl
+  end
+
+val _ = (
+  PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>, transformation_counter) ;
+  PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>\<g>\<e>\<t> _ \<f>\<r>\<o>\<m> _\<close>, transformation_counter) ;
+  PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>\<s>\<u>\<b>\<s>\<t> _ \<f>\<o>\<r> _ \<f>\<r>\<o>\<m> _ \<t>\<o> _\<close>, transformation_counter) ;
+  PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>, transformation_counter)
+)
+
+\<close>
 
 end

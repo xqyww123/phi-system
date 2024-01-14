@@ -867,7 +867,7 @@ fun identical_name (Const(N, _), Const(N', _)) = N = N'
 fun is_term_of_phi phi term = identical_name (Term.head_of (#term phi), term)
 
 fun assert_Type_Opr ty =
-  if Phi_Syntax.is_Type_Opr ty then ()
+  if Phi_Syntax.is_nonnull_Type_Opr ty then ()
   else raise Automation_Fail (fn () => [Pretty.str "Not a \<phi>-type operator!"])
 
 fun is_first_parameter_a_type ty =

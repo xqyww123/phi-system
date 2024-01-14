@@ -58,11 +58,21 @@ section \<open>\<phi>-Types\<close>
 
 subsection \<open>Variable\<close>
 
+\<phi>reasoner_group Var = (100,[0,9999]) \<open>derived reasoning rules of Var\<close>
+
+declare [[collect_reasoner_statistics Var start,
+          \<phi>LPR_collect_statistics derivation start]]
+
 \<phi>type_def Var :: \<open>varname \<Rightarrow> (VAL option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Var vname T \<equiv> (FIC.Var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close>
   deriving Basic
        and Functional_Transformation_Functor
        and \<open>Gen_Br_Join (Var v) (Var v) (Var v) P True \<close>
+
+declare [[collect_reasoner_statistics Var stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Var})) "derivation"\<close>
 
 abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Inited_Var vname T \<equiv> Var vname (\<black_circle> T)\<close>

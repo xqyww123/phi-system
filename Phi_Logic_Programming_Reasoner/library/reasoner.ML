@@ -208,7 +208,11 @@ signature NU_REASONER = sig
   val start_collecting_reasoners : Reasoner_Group.name -> Context.generic -> Context.generic
   val stop_collecting_reasoners  : Reasoner_Group.name -> Context.generic -> Context.generic
 
-  val utilization_of_group : theory -> (Reasoner_Group.name list -> bool) -> (thm * int) list
+  val clear_utilization_of_group_P : theory -> (Reasoner_Group.name list -> bool) -> PLPR_Statistics.group_name -> unit
+  val clear_utilization_of_group : theory -> Reasoner_Group.name -> PLPR_Statistics.group_name -> unit
+
+  val utilization_of_group_P : theory -> (Reasoner_Group.name list -> bool) -> PLPR_Statistics.group_name -> (thm * int) list
+  val utilization_of_group_in_all_theories : Context.generic -> Reasoner_Group.name -> PLPR_Statistics.group_name -> (thm * int) list
   val reasoners_of_group : Context.generic -> (Reasoner_Group.name list -> bool) -> reasoner list
 
 end
@@ -390,7 +394,7 @@ fun add_to_groups_under_collection ctxt =
 
 
 
-val _ = Theory.setup (Attrib.setup \<^binding>\<open>collect_reasoner\<close> (
+val _ = Theory.setup (Attrib.setup \<^binding>\<open>collect_reasoner_statistics\<close> (
     Scan.lift (Parse.name_position
             -- ( Args.$$$ "start" >> K true
               || Args.$$$ "stop"  >> K false )) >> (fn (xname, start) =>
@@ -527,8 +531,27 @@ fun reasoners_of_group ctxt P =
           then SOME (#4 r)
           else NONE )
 
-fun utilization_of_group thy P =
-  let val all_utilization = PLPR_Statistics.utilization thy
+fun clear_utilization_of_group_P thy P statistics_group =
+  let val all_utilization = PLPR_Statistics.utilization thy statistics_group
+   in reasoners_of_group (Context.Theory thy) P
+   |> List.app (fn {tactic = Tac_Rule rules, ...} =>
+          List.app (fn (_, rule) =>
+             let val prop = Phi_Help.beta_eta_contract_term (Thm.prop_of rule)
+              in case find_first (fn (prop', _) => prop' aconv prop)
+                                 (Net.match_term all_utilization prop)
+              of SOME (_, cnt) => (cnt := 0)
+               | NONE => ()
+             end
+           ) rules
+        | _ => ()
+      )
+  end
+
+fun clear_utilization_of_group thy reasoner_group =
+      clear_utilization_of_group_P thy (fn L => member (op =) L reasoner_group)
+
+fun utilization_of_group_P thy P statistics_group =
+  let val all_utilization = PLPR_Statistics.utilization thy statistics_group
    in reasoners_of_group (Context.Theory thy) P
    |> maps (fn {tactic = Tac_Rule rules, ...} =>
           map (fn (_, rule) =>
@@ -543,6 +566,21 @@ fun utilization_of_group thy P =
       )
   end
 
+fun utilization_of_group_in_all_theories ctxt reasoner_group statistics_group =
+  let val all_utilization = PLPR_Statistics.utilization_in_all_theories statistics_group
+   in reasoners_of_group ctxt (fn L => member (op =) L reasoner_group)
+   |> maps (fn {tactic = Tac_Rule rules, ...} =>
+          map (fn (_, rule) =>
+             let val prop = Phi_Help.beta_eta_contract_term (Thm.prop_of rule)
+              in case find_first (fn (prop', _) => prop' aconv prop)
+                                 (Net.match_term all_utilization prop)
+              of SOME (_, cnt) => (rule, !cnt)
+               | NONE => (rule, 0)
+             end
+           ) rules
+        | _ => []
+      )
+  end
 
 
 (*** Implementing Functions ***)
@@ -719,16 +757,18 @@ fun disabled_due_to_backtrack ALLOW_BACKTRACK _ = false
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK _ = false
 
 fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
-  let val count = if Config.get ctxt00 PLPR_Statistics.enable_collection
-                  then PLPR_Statistics.count (Proof_Context.theory_of ctxt00)
-                  else K ()
-      fun loop (_, _, _, []) = NONE
-        | loop (N, iter, backtracking, []::L) =
+  let val count = PLPR_Statistics.count (Context.Proof ctxt00)
+      val count_subgoal = PLPR_Statistics.count_subgoal (Context.Proof ctxt00)
+
+      fun loop (_, _, _, [], _) = NONE
+        | loop (N, iter, backtracking, []::L, subgoal_statistics) =
             (if 2 <= trace then tracing ("Backtracking...") else () ;
              loop (N, iter, (if backtracking = EXPLORATIVE_BACKTRACKING
                           then EXPLORATIVE_BACKTRACKING
-                          else BACKTRACKING), L))
-        | loop (N, iter, backtracking, ((score,pos,(mode as (cut_mode,backtrack_mode)),seq)::L')::L) =
+                          else BACKTRACKING), L, subgoal_statistics))
+        | loop (N, iter, backtracking,
+                ((score,pos,(mode as (cut_mode,backtrack_mode)),seq)::L')::L,
+                subgoal_statistics) =
             let val _ = if backtrack_mode = NO_EXPLORATIVE_BACKTRACK then () else ()
                 val _ = if iter > limit
                         then error "The reasoning reaches the limit of the number of reasoning steps.\n\
@@ -748,7 +788,7 @@ fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
                                            | Global_Cut s => GO_GLOBAL_CUT s)
                        | Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING
             in if disabled_due_to_backtrack backtrack_mode backtracking
-            then loop (N, iter, backtracking, L'::L)
+            then loop (N, iter, backtracking, L'::L, subgoal_statistics)
             else case pull seq
               of NORMAL (SOME ((ctxt,th), seq')) =>
                   (let
@@ -756,16 +796,39 @@ fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
                             then tracing ("\<phi>reasoning("^string_of_int score^"):"^
                                           Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                             else ()
+
+                    val ngoals = PLPR_Syntax.non_deferable_subgoals' th
+                    fun get_time () = let val now = Posix.ProcEnv.times ()
+                                       in #utime now +  #stime now
+                                      end
+                    fun chk_if_subgoal_solved NONE = NONE
+                      | chk_if_subgoal_solved (L0 as SOME (ngoals_end, iter', timer, reporter)) =
+                            if ngoals <= ngoals_end
+                            then let val {nongc= {usr,sys}, ...} = Timer.checkCPUTimes timer
+                                  in reporter (iter - iter', usr + sys) ; NONE
+                                 end
+                            else L0
+
+                    val subgoal_statistics' = chk_if_subgoal_solved subgoal_statistics
+                    val subgoal_statistics' =
+                          case subgoal_statistics'
+                            of NONE =>
+                             (case count_subgoal th
+                                of NONE => NONE
+                                 | SOME reporter => SOME (ngoals-1, iter, Timer.startCPUTimer (), reporter))
+                             | some => some
+
                     val _ = if score = 2000 then () else ()
 
-                    val Z = if PLPR_Syntax.non_deferable_subgoals' th <= N
+                    val Z = if ngoals <= N
                             then raise Success (ctxt, th)
                             else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
                                                then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
                                                else th
                                      fun chk_guard pos M (ctxt, th) =
                                            loop (PLPR_Syntax.non_deferable_subgoals' th - M, iter, NO_BACKTRACKING,
-                                                 [[(score, pos, NORMAL_MODE, Seq.single (ctxt, th))]])
+                                                 [[(score, pos, NORMAL_MODE, Seq.single (ctxt, th))]],
+                                                 subgoal_statistics')
                                             handle Success s => SOME s
                                      val (bvs, concl) = Phi_Help.strip_meta_hhf_bvs
                                                               (fst (Logic.dest_implies (Thm.prop_of th')))
@@ -808,16 +871,16 @@ fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
                                        in if null t then L else toggle_bmode' t ::L
                                       end)
                   in
-                    loop (N, iter+1, NO_BACKTRACKING, Z)
+                    loop (N, iter+1, NO_BACKTRACKING, Z, subgoal_statistics')
                   end)
-               | NORMAL NONE => loop (N, iter, backtracking, L'::L)
-               | GO_EXPLORATIVE_BACKTRACKING => loop (N, iter, EXPLORATIVE_BACKTRACKING, L'::L)
+               | NORMAL NONE => loop (N, iter, backtracking, L'::L, subgoal_statistics)
+               | GO_EXPLORATIVE_BACKTRACKING => loop (N, iter, EXPLORATIVE_BACKTRACKING, L'::L, subgoal_statistics)
                | GO_GLOBAL_CUT s =>
                   let val _ = if 2 <= trace
                               then tracing ("\<phi>reasoning("^string_of_int score^"):"^
                                             Position.here pos ^"\n" ^ "Global cut.")
                               else ()
-                   in loop (N, iter+1, NO_BACKTRACKING, [[(score, pos, NORMAL_MODE, Seq.single s)]])
+                   in loop (N, iter+1, NO_BACKTRACKING, [[(score, pos, NORMAL_MODE, Seq.single s)]], subgoal_statistics)
                   end
             end
    in loop
@@ -829,8 +892,7 @@ fun gen_reason' handlers ctxt N states =
      (gen_reason ctxt
                  (the_default default_handlers handlers,
                   Config.get ctxt trace, Config.get ctxt step_limit, Reasoners.get (Context.Proof ctxt))
-                 (N, 0, NO_BACKTRACKING, map (map (fn seq => (0, Position.none, NORMAL_MODE, seq)))
-                 states)
+                 (N, 0, NO_BACKTRACKING, map (map (fn seq => (0, Position.none, NORMAL_MODE, seq))) states, NONE)
       handle Success ret => SOME ret)
   )
 

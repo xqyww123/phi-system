@@ -11,11 +11,18 @@ begin
 
 abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<a>\<i>\<n>\<t>\<close>
 
+\<phi>reasoner_group MatSlice = (100,[0,9999]) \<open>derived reasoning rules of MatSlice\<close>
+
+declare [[collect_reasoner_statistics MatSlice start,
+         \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>)
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
+
+declare [[collect_reasoner_statistics MatSlice stop,
+         \<phi>LPR_collect_statistics derivation stop]]
 
 (*
 \<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x mat) \<phi>\<close>
@@ -25,6 +32,9 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
        and \<open>Identity_Elements\<^sub>I (MatSlice addr i j m n T) (\<lambda>_. m = 0 \<and> n = 0) (\<lambda>_. True)\<close>
        and \<open>Identity_Elements\<^sub>E (MatSlice addr i j m n T) (\<lambda>x. m = 0 \<and> n = 0 \<and> x \<in> carrier_mat 0 0 \<and> memaddr.blk addr \<noteq> Null)\<close>
 *)
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics]]
 
 declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
 
@@ -340,7 +350,8 @@ proc strassen_mul:
   del_mat ($D)
 \<medium_right_bracket> .
 
-
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics=false]]
 
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_mul_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_def})))\<close>

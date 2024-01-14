@@ -7807,7 +7807,7 @@ lemma
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
 \<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn (quiet, _) => fn [] => fn _ => fn phi => fn thy => (
-  if Phi_Syntax.is_Type_Opr (Term.fastype_of (#term phi)) andalso
+  if Phi_Syntax.is_nonnull_Type_Opr (Term.fastype_of (#term phi)) andalso
      Phi_Type.def_contains_satisfaction phi andalso
      not quiet
   then warning ("The \<phi>-type definition contains satisfaction operator (\<Turnstile>).\n\

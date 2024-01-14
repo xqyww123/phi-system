@@ -3,6 +3,8 @@ theory PhiStd_Slice \<comment> \<open>'a' for arbitary precision interger\<close
           Phi_Semantics.PhiSem_Mem_C_Ar_MI
 begin
 
+declare [[\<phi>LPR_collect_statistics program start]]
+
 proc (nodef) map_slice:
   requires body: \<open>\<And>k v. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k < length l
                      \<Longrightarrow> \<p>\<r>\<o>\<c> Body v \<lbrace> X\<heavy_comma> l ! k \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a (i+k)\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>('b)
@@ -38,6 +40,7 @@ proc (nodef) map_2slice:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+declare [[\<phi>LPR_collect_statistics program stop]]
 
 proc memcpy:
   requires \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>

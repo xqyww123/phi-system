@@ -4,6 +4,11 @@ theory PhiEx_DynArr
           PhiStd.PhiStd_Slice
 begin
 
+\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
+
+declare [[collect_reasoner_statistics DynArr start,
+         \<phi>LPR_collect_statistics derivation start]]
+
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
                                 (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>
@@ -17,10 +22,15 @@ begin
          \<Longrightarrow> Transformation_Functor (DynArr addr TY) (DynArr addr' TY') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
        and Functional_Transformation_Functor
 
+declare [[collect_reasoner_statistics DynArr stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
+
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
 
-declare [[\<phi>LPR_collect_statistics]]
-ML \<open>PLPR_Statistics.reset \<^theory>\<close>
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics]]
 
 context
   fixes TY :: TY
@@ -41,6 +51,7 @@ proc get_dynarr:
   \<open>MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
+
 proc set_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
@@ -57,6 +68,13 @@ proc Max:
 \<medium_left_bracket>
   if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
 \<medium_right_bracket> .
+
+
+
+
+
+
+
 
 proc push_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
@@ -82,6 +100,8 @@ proc push_dynarr:
       \<open>l@[v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
+
+
 
 proc pop_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
@@ -135,20 +155,15 @@ ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' del_dy
 
 end
 
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics = false]]
 
+ML \<open>Phi_Reasoner.utilization_of_group_in_all_theories
+        (Context.Theory \<^theory>)
+        (the (snd @{reasoner_group %MemBlk}))
+        "program"
+      |> filter (fn (_, i) => i > 0)
+      |> length\<close>
 
-ML \<open>PLPR_Statistics.utilization \<^theory> |> Net.content |> map (apfst (Thm.cterm_of \<^context>))
-      |> length \<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %MemBlk})))
-      |> filter (fn (_, i) => i > 0)
-      |> length \<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt})))
-      |> filter (fn (_, i) => i > 0)\<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt_L})))
-      |> filter (fn (_, i) => i > 0)
-      |> length \<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>Mul_Quant_Tree})))
-      |> filter (fn (_, i) => i > 0)
-      |> length \<close>
 
 end

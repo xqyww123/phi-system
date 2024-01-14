@@ -22,8 +22,10 @@ include PHI_SYNTAX
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
   val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*abstract*) * typ (*concrete*)
-  val is_Type_Opr : typ -> bool
+  val is_nonnull_Type_Opr : typ -> bool
   val is_non_parameterized_phityp : typ -> bool
+  val number_of_typ_operators : PLPR_Pattern.bv_typs -> term -> int
+  val number_of_typ_operators_in_assertion : PLPR_Pattern.bv_typs -> term -> int
 
   val ExSet_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
   val Subjection_conv : conv -> conv -> conv
@@ -265,7 +267,7 @@ fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>s
 
 val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
 
-fun is_Type_Opr ty =
+fun is_nonnull_Type_Opr ty =
   case dest_parameterized_phi_ty ty
     of ([],_,_) => false
      | (args,_,_) => exists (can dest_parameterized_phi_ty) args
@@ -282,6 +284,21 @@ fun Subjection_conv CX CP ctm =
        (Conv.arg1_conv CX then_conv
         Conv.arg_conv CP) ctm
      | _ => raise CTERM ("Subjection_conv", [ctm])
+
+fun number_of_typ_operators bvtys tm =
+  if can dest_phi_type_ty (Term.fastype_of1 (bvtys, tm))
+  then let val (_, args) = Term.strip_comb tm
+        in fold (fn arg => fn ret => ret + number_of_typ_operators bvtys arg) args 1
+       end
+  else case tm
+    of Abs (_, ty, X) => number_of_typ_operators (ty::bvtys) X
+     | _ => 0
+
+fun number_of_typ_operators_in_assertion bvtys term =
+      fold_items_of_assertion' (fn bvtys =>
+        fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
+            (fn S => S + number_of_typ_operators bvtys T)
+          | _ => I) bvtys term 0
 
 end
 

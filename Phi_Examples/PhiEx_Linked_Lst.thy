@@ -4,8 +4,9 @@ begin
 
 \<phi>reasoner_group Linked_Lst = (100,[0,9999]) \<open>derived reasoning rules of Linked_Lst\<close>
 
-declare [[collect_reasoner Linked_Lst start]]
-      
+declare [[collect_reasoner_statistics Linked_Lst start,
+         \<phi>LPR_collect_statistics derivation start]]
+
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) =
@@ -21,9 +22,13 @@ declare [[collect_reasoner Linked_Lst start]]
             (arbitrary: addr')
           and Functional_Transformation_Functor
 
-declare [[collect_reasoner Linked_Lst stop]]
+declare [[collect_reasoner_statistics Linked_Lst stop,
+          \<phi>LPR_collect_statistics derivation stop]]
 
-declare [[\<phi>LPR_collect_statistics]]
+ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Linked_Lst})) "derivation"\<close>
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics]]
 
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>
@@ -135,19 +140,9 @@ proc reverse:
                     0 denotes the NULL pointer. \<close>
   \<medium_right_bracket> .
 
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics=false]]
 
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %MemBlk})))
-      |> filter (fn (_, i) => i > 0)\<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt})))
-      |> filter (fn (_, i) => i > 0)\<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt_L})))
-      |> filter (fn (_, i) => i > 0)\<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>Mul_Quant_Tree})))
-      |> filter (fn (_, i) => i > 0)
-      |> length \<close>
-ML \<open>Phi_Reasoner.utilization_of_group \<^theory> (fn L => member (op =) L (the (snd @{reasoner_group %Linked_Lst})))
-      |> filter (fn (_, i) => i > 0)
-      |> length \<close>
 
 
 end
