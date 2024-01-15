@@ -30,7 +30,11 @@ ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasone
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
 
 declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics]]
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>assync_proof = false]]
+
+
 
 context
   fixes TY :: TY
@@ -39,7 +43,6 @@ context
   assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>
 begin
-
 
 proc get_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
@@ -125,7 +128,7 @@ proc pop_dynarr:
   \<medium_left_bracket> \<open>MAKE _ (DynArr addr _ _)\<close> \<medium_right_bracket>
   $ret
 \<medium_right_bracket> .
- 
+  
 proc new_dynarr:
   input  \<open>Void\<close>
   output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
@@ -156,7 +159,9 @@ ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' del_dy
 end
 
 declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics = false]]
+          collecting_subgoal_statistics = false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>assync_proof = true]]
 
 ML \<open>Phi_Reasoner.utilization_of_group_in_all_theories
         (Context.Theory \<^theory>)
@@ -164,6 +169,8 @@ ML \<open>Phi_Reasoner.utilization_of_group_in_all_theories
         "program"
       |> filter (fn (_, i) => i > 0)
       |> length\<close>
+
+ML \<open>PLPR_Statistics.timing_of_semantic_operations () \<close>
 
 
 end

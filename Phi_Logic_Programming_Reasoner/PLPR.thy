@@ -63,8 +63,8 @@ end\<close>
 
 ML_file \<open>library/imporved_net.ML\<close>
 ML_file \<open>library/tools/ml_thms.ML\<close>
-ML_file_debug \<open>library/pattern.ML\<close>
-ML_file_debug \<open>library/reasoner_decl.ML\<close>
+ML_file \<open>library/pattern.ML\<close>
+ML_file \<open>library/reasoner_decl.ML\<close>
 ML_file \<open>library/priority_group.ML\<close>
 ML_file \<open>library/tools/where_tac.ML\<close>
 ML_file \<open>library/tools/helpers00.ML\<close>
@@ -162,7 +162,7 @@ lemma Action_Tag_E:
   unfolding Action_Tag_def
   by simp
 
-ML_file_debug \<open>library/syntax/action_tag.ML\<close>
+ML_file \<open>library/syntax/action_tag.ML\<close>
 
 subsubsection \<open>General Mode\<close>
 
@@ -370,7 +370,7 @@ lemma Except_Pattern_I:
 
 
 ML_file \<open>library/syntax/embedded_pattern.ML\<close>
-ML_file_debug \<open>library/helpers0.ML\<close>
+ML_file \<open>library/helpers0.ML\<close>
 
 
 subsubsection \<open>Meta Ball\<close>
@@ -440,11 +440,11 @@ lemma meta_case_prod_simp[iff]:
 
 subsubsection \<open>ML Libraries - II\<close>
 
-ML_file_debug \<open>library/helpers.ML\<close>
+ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
-ML_file_debug \<open>library/tools/simpset.ML\<close>
+ML_file \<open>library/tools/simpset.ML\<close>
 
 paragraph \<open>Setup Simpset\<close>
 
@@ -502,7 +502,7 @@ subsubsection \<open>ML Library - III\<close>
 
 thm contract_obligations
 
-ML_file_debug \<open>library/PLPR_Syntax0.ML\<close>
+ML_file \<open>library/PLPR_Syntax0.ML\<close>
 
 subsubsection \<open>Predefined Reasoner Groups\<close>
 
@@ -532,9 +532,9 @@ text \<open>Below we provide a set of predefined reasoner groups serving for def
 
 section \<open>Introduction\<close>
 
-ML_file_debug \<open>library/tools/statistics.ML\<close>
-ML_file_debug \<open>library/reasoner.ML\<close>
-ML_file_debug \<open>library/tools/helpers1.ML\<close>
+ML_file \<open>library/tools/statistics.ML\<close>
+ML_file \<open>library/reasoner.ML\<close>
+ML_file \<open>library/tools/helpers1.ML\<close>
 
 declare \<r>Guard_I [\<phi>reason %cutting]
         Ant_Seq_I [\<phi>reason %cutting]
@@ -1023,7 +1023,7 @@ lemma [\<phi>reason %meta_ball]:
 
 
 
-(*ML_file_debug \<open>library/tools/case_prod_conv.ML\<close> *)
+(*ML_file \<open>library/tools/case_prod_conv.ML\<close> *)
 
 \<phi>reasoner_ML meta_case_prod_in_meta_Ball ! %meta_ball_fallback (\<open>PROP meta_Ball _ _\<close> | \<open>Ball _ _\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
@@ -1069,8 +1069,6 @@ subsubsection \<open>Literal Booleans\<close>
 definition \<open>Literal_Boolean P \<equiv> P\<close>
 
 ML \<open>val bool_ss = Simplifier.simpset_of (Proof_Context.init_global (Thy_Info.get_theory "HOL.HOL"))\<close>
-
-declare [[ML_debugger]]
 
 \<phi>reasoner_ML \<open>Literal_Boolean P\<close> %cutting (\<open>Literal_Boolean _\<close>) = \<open>fn (_, (ctxt, sequent)) => Seq.make (fn () =>
   let val sctxt = Simplifier.put_simpset bool_ss ctxt
@@ -1414,7 +1412,7 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>ML Implementation\<close>
 
-ML_file_debug \<open>library/tools/extracting_pure_facts.ML\<close>
+ML_file \<open>library/tools/extracting_pure_facts.ML\<close>
 
 attribute_setup \<phi>declare = \<open>Scan.succeed (Thm.declaration_attribute (fn th => fn ctxt =>
   let val ctxt' = Context.proof_of ctxt
@@ -1649,7 +1647,7 @@ lemma provide_premise_condition_p:
   unfolding Premise_def
   by blast
 
-ML_file_debug \<open>library/PLPR_Syntax.ML\<close>
+ML_file \<open>library/PLPR_Syntax.ML\<close>
 
 
 paragraph \<open>Contract Premises for Reporting Obligation\<close>
@@ -1716,7 +1714,7 @@ lemma sp_ex_ex_comm:
   unfolding atomize_eq
   by simp blast
 
-ML_file_debug "library/tools/patch_for_Ex.ML"
+ML_file "library/tools/patch_for_Ex.ML"
 
 
 simproc_setup move_sp_Ex_inside (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Rf. P f\<close>) = \<open>
@@ -1963,10 +1961,10 @@ lemma [\<phi>reason add]:
 
 subsubsection \<open>Setup\<close>
 
-ML_file_debug "library/type_info_DB.ML"
-ML_file_debug "library/type_info.ML"
-ML_file_debug "library/guess_instantiate.ML"
-ML_file_debug "library/reasoners.ML"
+ML_file "library/type_info_DB.ML"
+ML_file "library/type_info.ML"
+ML_file "library/guess_instantiate.ML"
+ML_file "library/reasoners.ML"
  
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =
@@ -2125,7 +2123,7 @@ lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longright
 lemma End_Simplification'': \<open>A = B \<Longrightarrow> Simplify mode A B\<close> 
   unfolding Simplify_def atomize_eq .
 
-ML_file_debug \<open>library/simplifier.ML\<close>
+ML_file \<open>library/simplifier.ML\<close>
 
 hide_fact End_Simplification' End_Simplification'' End_Simplification
 
@@ -2205,7 +2203,7 @@ definition [iff]: \<open>SIMP X \<equiv> X\<close>
   \<comment> \<open>By default, the conclusion of a template will not be simplified. However, user may annotate
       terms by \<open>SIMP\<close> to re-enable the simplification over the wrapped terms.\<close>
 
-ML_file_debug \<open>library/rule_generation.ML\<close>
+ML_file \<open>library/rule_generation.ML\<close>
 ML_file \<open>library/properties.ML\<close>
 
 consts \<phi>instantiation :: mode
@@ -2483,7 +2481,7 @@ lemma merge_oblg_divergence:
 \<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<or> Pb \<Longrightarrow> C)\<close>
   unfolding Pure.prop_def Premise_def by blast
 
-ML_file_debug \<open>library/exhaustive.ML\<close>
+ML_file \<open>library/exhaustive.ML\<close>
 
 hide_fact merge_oblg_divergence
 
@@ -2908,7 +2906,7 @@ lemma Do_Optimum_Solution:
 \<Longrightarrow> PROP Optimum_Solution X\<close>
   unfolding Optimum_Solution_def .
                                     
-ML_file_debug \<open>library/optimum_solution.ML\<close>
+ML_file \<open>library/optimum_solution.ML\<close>
 
 \<phi>reasoner_ML Incremental_Cost %cutting (\<open>Incremental_Cost _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent

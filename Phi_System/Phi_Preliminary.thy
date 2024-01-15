@@ -13,7 +13,7 @@ theory Phi_Preliminary
       and "<suffices>" = "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>"
 begin
 
-declare [[ML_debugger, ML_exception_debugger, ML_print_depth=100]]
+(* declare [[ML_debugger, ML_exception_debugger, ML_print_depth=100]] *)
 
 subsection \<open>Named Theorems\<close>
 
@@ -749,12 +749,12 @@ simproc_setup Funcomp_Lambda (\<open>f o g\<close>) = \<open>fn _ => fn ctxt => 
 
 subsection \<open>Helper Isar Commands\<close>
 
-declare [[ML_debugger=false, ML_exception_debugger=false]]
+(* declare [[ML_debugger=false, ML_exception_debugger=false]] *)
 
 ML_file \<open>library/tools/optional_translation.ML\<close>
 ML_file \<open>library/tools/adhoc_overloading.ML\<close>
 
-declare [[ML_debugger, ML_exception_debugger]]
+(* declare [[ML_debugger, ML_exception_debugger]] *)
 
 
 subsection \<open>The Friendly Character\<close>

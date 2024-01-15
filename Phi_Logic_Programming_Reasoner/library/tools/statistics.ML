@@ -23,6 +23,30 @@ val count_subgoal : Context.generic -> thm -> (int * Time.time -> unit) option
 val reset_subgoal_statistics : unit -> unit
 val get_subgoal_statistics : unit -> (subgoal_counter * (int * int * Time.time) list) list
 val add_subgoal_counter : term * subgoal_counter -> unit
+val clear_subgoal_counter : unit -> unit
+
+
+(* time statistics in the scale of semantic operations *)
+
+type SO_times = {
+  reasoning : Time.time,
+  proof_evaluation : Time.time,
+  proof_search : Time.time
+}
+
+val recording_timing_of_semantic_operation : bool Config.T
+val setup_semantic_operation_recording : Proof.context -> Proof.context
+val start_recording_a_semantic_operation : Proof.context -> unit
+val stop_recording_a_semantic_operation : Proof.context -> unit
+
+val report_time_of_proof_evaluation : Time.time -> Proof.context -> unit
+val measure_time_of_proof_evaluation : Proof.context -> ('a -> 'b) -> 'a -> 'b
+val measure_time_of_proof_evaluation': bool -> Proof.context -> ('a -> 'b) -> 'a -> 'b
+val report_time_of_proof_search : Time.time -> Proof.context -> unit
+val measure_time_of_proof_search : Proof.context -> ('a -> 'b) -> 'a -> 'b
+
+val timing_of_semantic_operations : unit -> SO_times list
+val reset_timing_of_semantic_operations : unit -> unit
 
 (* Common *)
 val reset_all : unit -> unit
@@ -160,10 +184,138 @@ fun add_subgoal_counter (pattern, subgoal_counter) =
     Net.insert_term (pointer_eq o apply2 fst)
                     (pattern, (subgoal_counter, Synchronized.var "\<phi>.subgoal_statistic" [])) )
 
+fun clear_subgoal_counter () =
+  Synchronized.change subgoal_statistics (K Net.empty)
+
+
+(* time statistics in the scale of semantic operations *)
+
+val recording_timing_of_semantic_operation =
+      Attrib.setup_config_bool \<^binding>\<open>recording_timing_of_semantic_operation\<close> (K false)
+
+type SO_times = {
+  reasoning : Time.time,
+  proof_evaluation : Time.time,
+  proof_search : Time.time
+}
+
+structure Semantic_Operation = Proof_Data (
+  type T = ( Timer.cpu_timer
+           * Time.time Unsynchronized.ref (*proof_evaluation*)
+           * Time.time Unsynchronized.ref (*proof_search*)
+           * Thread.thread ) option Unsynchronized.ref option
+  val init = K NONE
+)
+
+val SO_timing = Synchronized.var "SO_timing" []
+
+fun setup_semantic_operation_recording ctxt =
+  if Config.get ctxt recording_timing_of_semantic_operation
+  then Semantic_Operation.map (fn _ => SOME (Unsynchronized.ref NONE)) ctxt
+  else ctxt
+
+fun start_recording_a_semantic_operation ctxt =
+  case Semantic_Operation.get ctxt
+    of NONE => ()
+     | SOME timing =>
+        timing := SOME ( Timer.startCPUTimer (),
+                         Unsynchronized.ref Time.zeroTime,
+                         Unsynchronized.ref Time.zeroTime,
+                         Thread.self () )
+
+fun stop_recording_a_semantic_operation ctxt =
+  case Semantic_Operation.get ctxt
+    of NONE => ()
+     | SOME timing => (
+        case !timing
+          of SOME (timer, proof_evaluation, proof_search, thrd) =>
+               if Thread.equal (thrd, Thread.self ())
+               then let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+                 in Synchronized.change SO_timing (fn L =>
+                     { reasoning = usr+sys-(!proof_evaluation)-(!proof_search),
+                       proof_evaluation = !proof_evaluation,
+                       proof_search = !proof_search } :: L) ;
+                    timing := NONE
+                end
+               else ()
+           | _ => () )
+
+fun report_time_of_proof_evaluation time ctxt =
+  case Semantic_Operation.get ctxt
+    |> Option.mapPartial (fn x => !x)
+    of NONE => ()
+     | SOME (_, pe, _, thrd) =>
+          if Thread.equal (thrd, Thread.self ())
+          then pe := (!pe) + time
+          else ()
+
+fun report_time_of_proof_search time ctxt =
+  case Semantic_Operation.get ctxt
+    |> Option.mapPartial (fn x => !x)
+    of NONE => ()
+     | SOME (_, _, ps, thrd) =>
+          if Thread.equal (thrd, Thread.self ())
+          then ps := (!ps) + time
+          else ()
+
+fun measure_time_of_proof_evaluation ctxt f x =
+  let val timer = Timer.startCPUTimer ()
+      val timing = Semantic_Operation.get ctxt
+                |> Option.mapPartial (fn x => !x)
+                |> Option.map (fn x => (#2 x, ! (#2 x)))
+   in let val ret = f x
+          val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+          val _ = (case timing
+                     of SOME (var, old) => var := old + usr + sys
+                      | _ => ())
+       in ret
+      end handle E =>
+        let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+            val _ = (case timing
+                     of SOME (var, old) => var := old + usr + sys
+                      | _ => ())
+         in Exn.reraise E
+        end
+  end
+
+fun measure_time_of_proof_evaluation' enable ctxt f x =
+  if enable then measure_time_of_proof_evaluation ctxt f x
+            else f x
+
+fun measure_time_of_proof_search ctxt f x =
+  let val timer = Timer.startCPUTimer ()
+      val timing = Semantic_Operation.get ctxt
+                |> Option.mapPartial (fn x => !x)
+                |> Option.map (fn x => (#3 x, ! (#3 x)))
+   in let val ret = f x
+          val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+          val _ = (case timing
+                     of SOME (var, old) => var := old + usr + sys
+                      | _ => ())
+       in ret
+      end handle E =>
+        let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+            val _ = (case timing
+                     of SOME (var, old) => var := old + usr + sys
+                      | _ => ())
+         in Exn.reraise E
+        end
+  end
+
+
+fun reset_timing_of_semantic_operations () =
+      Synchronized.change SO_timing (K [])
+
+fun timing_of_semantic_operations () = Synchronized.value SO_timing
+
+
+(* Common *)
+
 val _ = Theory.at_begin (fn thy => (reset_utilization_statistics thy; NONE))
 
 fun reset_all () = (reset_utilization_statistics_all () ;
-                    reset_subgoal_statistics ())
+                    reset_subgoal_statistics () ;
+                    reset_timing_of_semantic_operations ())
 
 
 end

@@ -30,10 +30,37 @@ include PHI_SYNTAX
   val ExSet_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
   val Subjection_conv : conv -> conv -> conv
 
+
+  (* System Control *)
+
+  val register_connective : string * int -> unit
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Phi_Syntax
+
+val arities_of_connective_locker = Synchronized.var "Phi_Syntax.arities_of_connective" ()
+val arities_of_connective = Unsynchronized.ref Symtab.empty
+
+fun register_connective iname_airty =
+  Synchronized.change arities_of_connective_locker (fn () => (
+      arities_of_connective := Symtab.update_new iname_airty (!arities_of_connective);
+      ()))
+
+fun N_arg_rev ret 0 _ = ret
+  | N_arg_rev ret N (X $ a) = N_arg_rev (a::ret) (N-1) X
+
+fun arity_of term =
+  case Term.head_of term
+    of Const (N, _) => Symtab.lookup (!arities_of_connective) N
+     | _ => NONE
+
+fun dest_connective_args term = arity_of term
+      |> Option.map (fn arity => N_arg_rev [] arity term)
+
+fun conv_N_args 0 C ctm = Conv.all_conv ctm
+  | conv_N_args N C ctm = Conv.combination_conv (conv_N_args (N-1) C) C ctm
 
 fun is_BI_connective (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>)) = true
   | is_BI_connective (Const(\<^const_name>\<open>Subjection\<close>, _)) = true
@@ -49,6 +76,7 @@ fun is_BI_connective (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>f
   | is_BI_connective (Const(\<^const_name>\<open>Mul_Quant\<close>, _)) = true
   | is_BI_connective (Const(\<^const_name>\<open>AllSet\<close>, _)) = true
   | is_BI_connective (A $ _) = is_BI_connective A
+  | is_BI_connective (Const (N, _)) = Symtab.defined (!arities_of_connective) N
   | is_BI_connective _ = false
 
 (*including all \<phi>-type terms and atomic predicates*)
@@ -69,7 +97,9 @@ fun fold_items_of_assertion f =
         | fold bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) x = fold bvs Y (fold bvs X x)
-        | fold bvs X x = f bvs X x
+        | fold bvs X x = (case dest_connective_args X
+                            of SOME args => Basics.fold (fold bvs) args x
+                             | _ => f bvs X x)
    in fold
   end
 
@@ -90,7 +120,9 @@ fun fold_items_of_assertion' f =
         | fold bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) x = fold bvs X x
         | fold bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) x = fold bvs Y (fold bvs X x)
-        | fold bvs X x = f bvs X x
+        | fold bvs X x = (case dest_connective_args X
+                            of SOME args => Basics.fold (fold bvs) args x
+                             | _ => f bvs X x)
    in fold
   end
 
@@ -111,7 +143,9 @@ fun exists_item_of_assertion P =
         | exists bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = exists bvs X
         | exists bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = exists bvs X
         | exists bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = exists bvs X orelse exists bvs Y
-        | exists bvs X = P bvs X
+        | exists bvs X = (case dest_connective_args X
+                            of SOME args => Library.exists (exists bvs) args
+                             | _ => P bvs X)
    in exists
   end
 
@@ -132,7 +166,9 @@ fun exists_item_of_assertion' P =
         | exists bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = exists bvs X
         | exists bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = exists bvs X
         | exists bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = exists bvs X orelse exists bvs Y
-        | exists bvs X = P bvs X
+        | exists bvs X = (case dest_connective_args X
+                            of SOME args => Library.exists (exists bvs) args
+                             | _ => P bvs X)
    in exists
   end
 
@@ -154,7 +190,9 @@ fun forall_item_of_assertion P =
         | forall bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall bvs X
         | forall bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = forall bvs X
         | forall bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = forall bvs X andalso forall bvs Y
-        | forall bvs X = P bvs X
+        | forall bvs X = (case dest_connective_args X
+                            of SOME args => Library.forall (forall bvs) args
+                             | _ => P bvs X)
    in forall
   end
 
@@ -175,7 +213,9 @@ fun forall_item_of_assertion' P =
         | forall bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall bvs X
         | forall bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = forall bvs X
         | forall bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = forall bvs X andalso forall bvs Y
-        | forall bvs X = P bvs X
+        | forall bvs X = (case dest_connective_args X
+                            of SOME args => Library.forall (forall bvs) args
+                             | _ => P bvs X)
    in forall
   end
 
@@ -198,7 +238,9 @@ fun forall_item_of_assertion_blv P =
         | forall lv bvs (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall lv bvs X
         | forall lv bvs (Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ X) = forall lv bvs X
         | forall lv bvs (Const(\<^const_name>\<open>If\<close>, _) $ _ $ X $ Y) = forall lv bvs X andalso forall lv bvs Y
-        | forall lv bvs X = P (bvs,lv) X
+        | forall lv bvs X = (case dest_connective_args X
+                               of SOME args => Library.forall (forall lv bvs) args
+                                | _ => P (bvs,lv) X)
    in forall 0
   end
 
@@ -228,7 +270,9 @@ fun conv_items_of_assertion C =
            | Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ _ => Conv.arg_conv (conv ctxt) ctm
            | Const(\<^const_name>\<open>If\<close>, _) $ _ $ _ $ _ => (Conv.arg_conv (conv ctxt) then_conv Conv.arg1_conv (conv ctxt)) ctm
            | Abs _ => Conv.abs_conv (conv o snd) ctxt ctm
-           | _ => C ctxt ctm
+           | X => (case arity_of X
+                     of SOME arity => conv_N_args arity (conv ctxt) ctm
+                      | _ => C ctxt ctm)
    in conv
   end
 

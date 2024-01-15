@@ -34,7 +34,9 @@ declare [[collect_reasoner_statistics MatSlice stop,
 *)
 
 declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics]]
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>assync_proof = false]]
 
 declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
 
@@ -351,7 +353,9 @@ proc strassen_mul:
 \<medium_right_bracket> .
 
 declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics=false]]
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>assync_proof = true]]
 
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_mul_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_def})))\<close>

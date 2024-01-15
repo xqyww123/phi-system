@@ -157,7 +157,7 @@ end
 
 interpretation RES: "resource_space" RES.DOMAIN .
 
-ML_file_debug \<open>resource_space_more.ML\<close>
+ML_file \<open>resource_space_more.ML\<close>
  
 ML \<open>Resource_Space.define_command \<^command_keyword>\<open>resource_space\<close> "extend resource semantics"\<close>
 

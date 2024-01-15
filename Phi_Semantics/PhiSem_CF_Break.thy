@@ -60,6 +60,8 @@ definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>ar
   where \<open>Brking_Frame label S =
      (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Itself))))\<close>
 
+ML \<open>Phi_Syntax.register_connective (\<^const_name>\<open>Brking_Frame\<close>, 1)\<close>
+
 lemma [\<phi>reason %abstract_domain]:
   \<open> Brk_Frame X \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
   unfolding \<r>EIF_def

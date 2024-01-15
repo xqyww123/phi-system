@@ -322,6 +322,9 @@ fun funpow' (0: int) _ x = x
 fun sledgehammer (ctxt,sequent0) =
   let (* val ctxt = Phi_Envir.freeze_dynamic_lemmas ctxt *)
       val sequent = @{thm Premise_I} RS sequent0 handle THM _ => sequent0
+
+      val prf = PLPR_Statistics.measure_time_of_proof_search ctxt (fn () => let
+
       val (goal_term,_) = Logic.dest_implies (Thm.prop_of sequent)
       val stat = Proof.theorem NONE (K I) [[(goal_term, [])]] ctxt
 
@@ -374,7 +377,11 @@ fun sledgehammer (ctxt,sequent0) =
                     else (tracing "Still fails... Unfolding local definitions with aggresive tactics..." ;
                           search_prf "insert \<phi>, auto simp add: local_defs \<phi>sledgehammer_simps"))
         ]
-   in eval_prf_str Time.zeroTime prf (ctxt,sequent)
+
+      in prf end) ()
+
+   in PLPR_Statistics.measure_time_of_proof_evaluation ctxt
+        (eval_prf_str Time.zeroTime prf) (ctxt,sequent)
   end
 
 
@@ -394,12 +401,13 @@ fun auto'i id (ctxt,sequent') =
          | SOME (time,prf) =>
             let val nprem = Thm.nprems_of sequent
                 val ctxt' = ctxt (*if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt*)
-             in (case eval_prf_str (Time.scale 1.5 time + time_delt) prf (ctxt', sequent)
+             in (case PLPR_Statistics.measure_time_of_proof_evaluation ctxt'
+                        (eval_prf_str (Time.scale 1.5 time + time_delt) prf) (ctxt', sequent)
                    of (_, (_, sequent')) =>
                       if Thm.nprems_of sequent' < nprem then sequent'
-                      else raise Auto_Fail Subgoal_unsolved)
+                      else raise Auto_Fail Subgoal_unsolved )
                 handle Auto_Fail _ => fallback false
-            end)
+            end )
 
     val classical_timeout = Config.get ctxt classical_prover_timeout
     fun find_proof () =
@@ -425,15 +433,20 @@ fun auto'i id (ctxt,sequent') =
 
 
     in try_cached_proof (fn no_cache' => (let
-          val hash = Hasher.goal (ctxt,sequent)
-          val (no_cache, prf_result') =
-                case Phi_Cache_DB.access_hash_cache hash
-                  of SOME (t, prf) =>
-                      let val ctxt' = ctxt (*if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt*)
-                       in ((false, SOME (eval_prf_str (folerant_time t) prf (ctxt',sequent)))
-                           handle Auto_Fail _ => (false, NONE))
-                      end
-                   | NONE => (no_cache', NONE)
+          val (no_cache, prf_result', hash) = PLPR_Statistics.measure_time_of_proof_evaluation ctxt (fn () => let
+            val hash = Hasher.goal (ctxt,sequent)
+            val (no_cache, prf_result') =
+                  case Phi_Cache_DB.access_hash_cache hash
+                    of SOME (t, prf) =>
+                        let val ctxt' = ctxt (*if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt*)
+                         in ((false, SOME (
+                                PLPR_Statistics.measure_time_of_proof_evaluation ctxt'
+                                    (eval_prf_str (folerant_time t) prf) (ctxt',sequent)))
+                             handle Auto_Fail _ => (false, NONE))
+                        end
+                     | NONE => (no_cache', NONE)
+             in (no_cache, prf_result', hash)
+            end ) ()
           val prf_result =
                 case prf_result' of SOME ret => ret
                    | NONE => (if no_cache

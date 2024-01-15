@@ -5,7 +5,9 @@ begin
 \<phi>reasoner_group Linked_Lst = (100,[0,9999]) \<open>derived reasoning rules of Linked_Lst\<close>
 
 declare [[collect_reasoner_statistics Linked_Lst start,
-         \<phi>LPR_collect_statistics derivation start]]
+         \<phi>LPR_collect_statistics derivation start,
+         recording_timing_of_semantic_operation = true,
+         \<phi>assync_proof = false]]
 
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
@@ -141,7 +143,9 @@ proc reverse:
   \<medium_right_bracket> .
 
 declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics=false]]
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>assync_proof = true]]
 
 
 

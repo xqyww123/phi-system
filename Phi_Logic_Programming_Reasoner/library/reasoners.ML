@@ -246,7 +246,8 @@ fun LPR_inst ctxt th = ( (*TODO: strengthen fast_inst*)
             | 1 for fixing the conditions of the leading antecedent only but leaves variables
                     in the conclusion of the leading antecedent free
             | 2 for fixing variables in the entire leading antecedent*)
-fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
+fun oblg_template report_time {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
+  PLPR_Statistics.measure_time_of_proof_evaluation' report_time ctxt (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
@@ -290,7 +291,7 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
         let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
          in (f th, Seq.map f seq')
         end)
-  end end end)
+  end end end) ())
 
 
 (*** Auxiliaries ***)
@@ -648,7 +649,7 @@ fun find_obligations_tag thm = tl (Thm.prems_of thm)
                      | _ => false)
 fun has_obligations_tag thm = find_obligations_tag thm <> ~1
 
-fun defer_obligation cfg contract = oblg_template cfg (fn ctxt => fn thm =>
+fun defer_obligation cfg contract = oblg_template false cfg (fn ctxt => fn thm =>
   let val idx = find_obligations_tag thm
   in if idx = ~1
      then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
@@ -675,7 +676,7 @@ fun defer_obligation_tac cfg contr_mode =
 
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
-val auto_obligation_solver = oblg_template {can_inst=true, fix_level=0} (fn ctxt => fn th =>
+val auto_obligation_solver = oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
       let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
        in th'
@@ -710,7 +711,7 @@ fun auto_obligation_solver1 ctxt sequent =  (
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun weak_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
+fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
                                                         fix_level= if can_inst then 1 else 2 }
   (fn ctxt => fn th =>
       let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th

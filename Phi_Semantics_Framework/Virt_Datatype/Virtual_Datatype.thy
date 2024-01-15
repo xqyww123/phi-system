@@ -81,7 +81,7 @@ lemma in_domain_mk_dest[simp]: "v \<in> domain \<Longrightarrow> mk (dest v) = v
 
 end
 
-ML_file_debug \<open>Virtual_Datatype.ML\<close>
+ML_file \<open>Virtual_Datatype.ML\<close>
 
 hide_type  (open) Field
 hide_const (open) Field

@@ -209,6 +209,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
               ctxt |> Phi_ID.set_construct (Binding.name_of (fst binding))
                    |> Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)
                    |> Procedure_Building_Envir.put (SOME (fst binding))
+                   |> PLPR_Statistics.setup_semantic_operation_recording
             )
          |> Proof.refine (Method.Basic (K (K (fn s => s
               |> Named_Premises.bind_sequent_assms (map (apsnd snd) preconds) 1

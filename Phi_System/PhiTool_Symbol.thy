@@ -28,8 +28,6 @@ syntax "_ID_SYMBOL_" :: \<open>id \<Rightarrow> \<phi>_symbol_\<close> ("_")
        "_LOG_EXPR_SYMBOL_" :: \<open>logic \<Rightarrow> \<phi>_symbol_\<close> ("SYMBOL'_VAR'(_')")
        "_MK_SYMBOL_" :: \<open>\<phi>_symbol_ \<Rightarrow> symbol\<close> ("SYMBOL'(_')")
 
-declare [[ML_debugger]]
-
 ML \<open>
 structure Phi_Tool_Symbol = struct
 open Phi_Tool_Symbol
@@ -45,8 +43,6 @@ fun print tm =
 
 end
 \<close>
-
-declare [[ML_debugger]]
 
 parse_translation \<open>[
   (\<^syntax_const>\<open>_ID_SYMBOL_\<close>, (fn ctxt => fn [x] => Phi_Tool_Symbol.parse x)),

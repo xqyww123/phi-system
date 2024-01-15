@@ -1718,6 +1718,7 @@ fun transformation_counter' bvtys concl =
 fun transformation_counter thm =
   let val (bvtys, concl) = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' thm)
    in transformation_counter' bvtys concl
+   |> Option.map (fn n => (if n = 0 then () else (); n))
   end
 
 val _ = (

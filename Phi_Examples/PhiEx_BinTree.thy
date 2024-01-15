@@ -291,7 +291,9 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.\<close>
 
 declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics]]
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>assync_proof = false]]
 
 context
   fixes K :: \<open>(VAL, 'k::linorder) \<phi>\<close>
@@ -308,7 +310,7 @@ context
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>V V zero\<^sub>V\<close>
 begin
 
-
+ 
 proc lookup_bintree:
   input  \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
@@ -507,59 +509,12 @@ lemma left_rotate_simp[simp]:
 
 
 
-
-(*
-proc right_Rotate:
-  input \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<close>
-  premises \<open>can_right_rotate tree\<close>
-  output \<open>right_rotate tree \<Ztypecolon> BinTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace> \<s>\<u>\<b>\<j> addr'. \<top>\<close>
-\<medium_left_bracket>
-  from \<open>can_right_rotate tree\<close>[unfolded can_right_rotate_def]
-  obtain A B C D E where open_tree: \<open>tree = \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle>\<close> by auto_sledgehammer ;;
-  
-  unfold open_tree to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
-  \<open>BinTree a\<^sub>L _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L\<^sub>L, a\<^sub>L\<^sub>R ;;
-
-  $addr \<tribullet> left ! \<rightarrow> val B ;;
-  $addr \<tribullet> left := $B \<tribullet> right ! ;;
-  $B \<tribullet> right := $addr ;;
-
-  \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
-  \<open>MAKE 1 (BinTree a\<^sub>L (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close>
-\<medium_right_bracket> .
-
-
-proc left_Rotate:
-  input \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<close>
-  premises \<open>can_left_rotate tree\<close>
-  output \<open>left_rotate tree \<Ztypecolon> BinTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace> \<s>\<u>\<b>\<j> addr'. \<top>\<close>
-\<medium_left_bracket>
-  from \<open>can_left_rotate tree\<close>[unfolded can_right_rotate_def]
-  obtain A B C D E where open_tree: \<open>tree = \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle>\<close> by auto_sledgehammer ;;
-
-  unfold open_tree to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
-  \<open>BinTree a\<^sub>R _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>R\<^sub>L, a\<^sub>R\<^sub>R ;;
-
-  $addr \<tribullet> right ! \<rightarrow> val D ;;
-  $addr \<tribullet> right := $D \<tribullet> left ! ;;
-  $D \<tribullet> left := $addr ;;
-
-  \<open>BinTree a\<^sub>L _ _\<close> \<open>BinTree a\<^sub>R\<^sub>L _ _\<close> \<open>MAKE 1 (BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
-  \<open>BinTree a\<^sub>R\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>R (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close>
-\<medium_right_bracket> .
-*)
-
 proc Max:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
   if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
 \<medium_right_bracket> .
-
-
-
 
 
 
@@ -819,7 +774,9 @@ end
 
 
 declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics=false]]
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>assync_proof = true]]
 
 
 

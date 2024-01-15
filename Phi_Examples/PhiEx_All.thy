@@ -46,6 +46,20 @@ ML \<open>fun report_utilization statistic_groups reasoner_groups =
       )
       (Path.make ["Phi_Examples", "transformation-opr-step.csv"])
 
+  fun report_timing () =
+    File_Stream.open_output (fn out =>
+        let val timing = PLPR_Statistics.timing_of_semantic_operations ()
+         in List.app (fn {reasoning, proof_evaluation, proof_search} =>
+                          let open File_Stream
+                           in output out (string_of_int (Time.toMicroseconds reasoning)) ;
+                              output out ", " ;
+                              output out (string_of_int (Time.toMicroseconds proof_evaluation)) ;
+                              output out ", " ;
+                              output out (string_of_int (Time.toMilliseconds proof_search)) ;
+                              output out "\n"
+                          end ) timing
+        end
+      ) (Path.make ["Phi_Examples", "timing.csv"])
 \<close>
 
 ML \<open>report_utilization ["program", "derivation"]
@@ -58,5 +72,8 @@ ML \<open>report_utilization ["program", "derivation"]
         @{reasoner_group %BinTree}, @{reasoner_group %Bin_Search_Tree}, @{reasoner_group %AVL_Tree}*) ] \<close>
 
 ML \<open>report_transformation_performance ()\<close>
+ML \<open>report_timing ()\<close>
+
+ML \<open>PLPR_Statistics.timing_of_semantic_operations ()\<close>
 
 end

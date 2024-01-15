@@ -97,6 +97,7 @@ in
 
 fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
   let
+    val _ = PLPR_Statistics.start_recording_a_semantic_operation (Proof.context_of stat)
     val stat = Proof.map_context Phi_ID.next stat
     val is_top = not (Phi_Envir.under_programming_environ (Proof.context_of stat))
                  orelse is_backward_mode stat
@@ -350,6 +351,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                   ]))
                 val result = Phi_Apply.apply [sequent'] ctxt' goal'
                           |> Phi_Reasoners.weak_obligation_solver1 {can_inst=true} ctxt'
+                val _ = PLPR_Statistics.stop_recording_a_semantic_operation ctxt'
               in result end
               handle E => raise (@{print} E)
             ))

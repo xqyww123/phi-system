@@ -8,7 +8,7 @@ theory StateSpaceLocale imports StateFun
   keywords "statespace" :: thy_defn
 begin
 
-ML_file_debug \<open>state_space.ML\<close>
+ML_file \<open>state_space.ML\<close>
 ML_file \<open>state_fun.ML\<close>
 
 text \<open>For every type that is to be stored in a state space, an
