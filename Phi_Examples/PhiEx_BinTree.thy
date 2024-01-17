@@ -1,6 +1,5 @@
 theory PhiEx_BinTree
   imports Phi_Semantics.PhiSem_C
-          Phi_Semantics.PhiSem_Int_ArbiPrec
           PhiEx_BinTree_AbstModel
 begin
 
@@ -269,14 +268,14 @@ lemma rel_tree__AVL_tree_invar:
   by (induct x arbitrary: y; auto simp: rel_tree_Node1; auto_sledgehammer)
 
 
-abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
+abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<i>\<n>\<t>, v: TY\<^sub>V})\<close>
 abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
 declare [[collect_reasoner_statistics AVL_Tree start,
          \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def AVL_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
-  where \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>
+  where \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>
                                      \<s>\<u>\<b>\<j> tree. f = map_option snd o lookup_tree tree
                                              \<and> sorted1(inorder tree) \<and> AVL_invar tree \<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
@@ -548,8 +547,8 @@ lemma left_rotate_simp[simp]:
 
 
 proc Max:
-  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
+  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
 \<medium_left_bracket>
   if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -557,11 +556,11 @@ proc Max:
 
 
 proc height_of:
-  input  \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
+  input  \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<close>
   premises \<open>AVL_invar tree\<close>
-  output \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
-          height tree \<Ztypecolon> \<v>\<a>\<l> \<nat> \<close>
+  output \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>\<heavy_comma>
+          height tree \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>) \<close>
   is [routine]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
@@ -574,7 +573,6 @@ proc height_of:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' height_of_def})))\<close>
 
 lemma [simp]:
   \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
@@ -587,15 +585,18 @@ lemma map_option_snd_lookup_tree_split:
   = (map_option snd \<circ> lookup_tree B) \<close>
   by (cases B; auto simp add: fun_eq_iff map_add_def split: option.split)
 
+context
+  notes sorted_mid_iff'[simp] sorted_snoc_iff[simp]
+begin
 
 proc maintain_i:
-  input  \<open>\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<Ztypecolon> BinTree a\<^sub>D (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
+  input  \<open>\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<Ztypecolon> BinTree a\<^sub>D (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>\<heavy_comma>
           a\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<close>
   premises \<open>sorted1(inorder (\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle>)) \<and>
             AVL_invar B \<and> AVL_invar E \<and>
-            height E \<le> height B + 2 \<and> height B \<le> height E + 2
-            \<comment> \<open>\<and> height E < 2^32 - 2 \<and> height B < 2^32 - 2\<close>\<close>
-  output \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
+            height E \<le> height B + 2 \<and> height B \<le> height E + 2 \<and>
+            height B + 2 < 2^LENGTH(\<i>\<n>\<t>) \<and> height E + 2 < 2^LENGTH(\<i>\<n>\<t>) \<close>
+  output \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr tree. map_option snd o lookup_tree tree = map_option snd o lookup_tree \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<and>
                          AVL_invar tree \<and> sorted1(inorder tree) \<and>
@@ -603,7 +604,6 @@ proc maintain_i:
                         (height E \<le> height B + 1 \<and> height B \<le> height E + 1 \<longrightarrow> height tree = height \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle>)\<close>
   is [routine]
 \<medium_left_bracket>
-  note sorted_mid_iff'[simp] sorted_snoc_iff[simp] ;;
 
   to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>B, a\<^sub>E ;;
 
@@ -626,13 +626,15 @@ proc maintain_i:
           val H\<^sub>D' \<leftarrow> Max($H\<^sub>C, $H\<^sub>E) + 1 ;;
           $a\<^sub>D \<tribullet> data \<tribullet> v \<tribullet> height := $H\<^sub>D' ;;
           $B \<tribullet> right := $a\<^sub>D ;;
-          $B \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>A, $H\<^sub>D') + 1 ;; 
-
+          $B \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>A, $H\<^sub>D') + 1 ;;
 
           \<open>BinTree a\<^sub>C _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
           \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> ;;
-  
-          return ($B) certified by (auto, auto simp add: max_def; auto_sledgehammer)
+
+          holds_fact t2: \<open>fst (value B) \<notin> dom (lookup_tree E)\<close>
+                 and t3: \<open>k\<^sub>D \<noteq> fst (value B)\<close>  ;;
+
+          return ($B)
       \<medium_right_bracket>
       \<medium_left_bracket>
           \<open>BinTree a\<^sub>C _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>3, a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R ;;

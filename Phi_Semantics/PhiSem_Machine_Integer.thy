@@ -657,7 +657,7 @@ lemma [\<phi>reason %\<phi>synthesis_parse_number
        \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
 ]:
-  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>(32)) X
+  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>(\<i>\<n>\<t>)) X
 \<Longrightarrow> Synthesis_Parse n X\<close>
   for X :: \<open>'ret \<Rightarrow> assn\<close>
   unfolding Synthesis_Parse_def ..

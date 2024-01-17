@@ -10,12 +10,12 @@ declare [[\<phi>LPR_collect_statistics program start,
           \<phi>assync_proof = false]]
 
 proc qsort:
-  input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32)\<heavy_comma>
-          i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:LEN] \<i>\<n>\<t>(32)\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
+  input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+          i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
                                             the range of the pointer arithmetic.\<close>
-          len \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
+          len \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   premises \<open>i + len \<le> LEN\<close>
-  output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32) \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
+  output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>) \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
   is [recursive]
   is [routine]
 \<medium_left_bracket>
@@ -24,8 +24,8 @@ proc qsort:
   \<medium_left_bracket>
     val pivot \<leftarrow> ($i + ($len - 1)) ! ;;
     var d \<leftarrow> 0 ;;
-    replicate (0,$len) \<open>\<lambda>n. l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(32)\<heavy_comma>
-                            d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(32)
+    replicate (0,$len) \<open>\<lambda>n. l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+                            d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)
                          \<s>\<u>\<b>\<j> l' d.
                             d \<le> n \<and> l <~~> l' \<and>
                             (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
