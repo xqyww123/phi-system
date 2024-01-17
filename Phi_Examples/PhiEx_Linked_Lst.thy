@@ -57,6 +57,7 @@ proc nth_llist:
     \<open>MAKE 1 (Linked_Lst addr TY T)\<close> \<comment> \<open>annotation 2: close abstraction\<close>
   \<medium_right_bracket> .
 
+
 proc update_nth_llist:
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
@@ -104,7 +105,8 @@ proc length_of':
     \<open>MAKE 1 (Linked_Lst addr TY T)\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
- 
+
+
 proc reverse_aux:
   input  \<open>l' \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma>
           l  \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>

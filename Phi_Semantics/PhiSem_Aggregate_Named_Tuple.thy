@@ -114,7 +114,7 @@ debt_axiomatization
             \<open>V_named_tup.mk f1 ## vf2 \<Longrightarrow> (\<exists>f2. vf2 = V_named_tup.mk f2)\<close>
   and   V_named_tup_sep_disj_L:
             \<open>vf1 ## V_named_tup.mk f2 \<Longrightarrow> (\<exists>f1. vf1 = V_named_tup.mk f1)\<close>
-  and   V_named_tup_sep_disj:
+  and   V_named_tup_sep_disj[simp]:
             \<open>V_named_tup.mk f1 ## V_named_tup.mk f2 \<longleftrightarrow> (fmdom f1 |\<inter>| fmdom f2 = {||})\<close>
   and   V_named_tup_mult:
             \<open>V_named_tup.mk f1 * V_named_tup.mk f2 = V_named_tup.mk (f1 ++\<^sub>f f2)\<close>
@@ -354,7 +354,7 @@ lemma [\<phi>reason %aggregate_access+1]:
     obtain c'f where c'f: \<open>c' = V_named_tup.mk c'f\<close> using V_named_tup_sep_disj_L[OF \<open>c' ## _\<close>] by blast
     show ?thesis
       by (insert prems, simp add: c'f V_named_tup_mult_cons idx_step_mod_value_named_tupl_cons' \<r>Guard_def Premise_def,
-          metis V_named_tup_sep_disj fmdom_fmupd fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
+          metis V_named_tup_sep_disj c'f fmdom_fmupd fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel prems(5))
   qed .
 
 lemma [\<phi>reason %aggregate_access+1]:

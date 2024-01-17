@@ -888,13 +888,14 @@ fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
 
 (*Entry point*)
 fun gen_reason' handlers ctxt N states =
-  Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
+  Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (
+    PLPR_Statistics.measure_time_of_reasoning ctxt (fn () =>
      (gen_reason ctxt
                  (the_default default_handlers handlers,
                   Config.get ctxt trace, Config.get ctxt step_limit, Reasoners.get (Context.Proof ctxt))
                  (N, 0, NO_BACKTRACKING, map (map (fn seq => (0, Position.none, NORMAL_MODE, seq))) states, NONE)
       handle Success ret => SOME ret)
-  )
+  ))
 
 
 

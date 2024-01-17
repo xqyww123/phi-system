@@ -167,6 +167,12 @@ lemma [\<phi>reason %\<phi>synthesis_parse for
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason %\<phi>synthesis_parse for
+  \<open>Synthesis_Parse (MAKE _ (?T::?'a \<Rightarrow> VAL set)) (?X::?'ret \<Rightarrow> assn)\<close>
+]:
+  \<open>Synthesis_Parse (MAKE n T) (\<lambda>v. x \<Ztypecolon> MAKE n (Val v T))\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason %\<phi>synthesis_parse for
   \<open>Synthesis_Parse (?raw::?'a \<phi>arg) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
@@ -349,6 +355,16 @@ abbreviation Vals :: \<open>(VAL, 'a) \<phi> \<Rightarrow> (VAL list, 'a) \<phi>
 
 translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph> U)"*)
 
+subsection \<open>MAKE Abstraction for Values\<close>
+
+lemma [\<phi>reason %\<phi>synthesis_cut for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?y \<Ztypecolon> MAKE ?n (\<v>\<a>\<l>[ret] ?U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE n U \<w>\<i>\<t>\<h> any
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return v \<lbrace> X \<longmapsto> \<lambda>ret. y \<Ztypecolon> MAKE n (\<v>\<a>\<l>[ret] U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @action synthesis\<close>
+  unfolding MAKE_def
+  \<medium_left_bracket> premises X[] and T[]
+    X T
+  \<medium_right_bracket> .
 
 subsection \<open>Programming Methods for Showing Properties of Values\<close>
 

@@ -4,12 +4,12 @@ theory PhiEx_Strassen
                                         but only the common library for matrix.
                                         Instead we manually copy the proof code of the Strassen Multiplication
                                         here, to ensure our statistics precise.\<close>
-          Phi_Semantics.PhiSem_Int_ArbiPrec
-          PhiStd.PhiStd_Slice_a
-          Phi_Semantics.PhiSem_Mem_C_AI
+          (*Phi_Semantics.PhiSem_Int_ArbiPrec*)
+          PhiStd.PhiStd_Slice
+          Phi_Semantics.PhiSem_Mem_C_MI
 begin
 
-abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<a>\<i>\<n>\<t>\<close>
+abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<i>\<n>\<t>\<close>
 
 \<phi>reasoner_group MatSlice = (100,[0,9999]) \<open>derived reasoning rules of MatSlice\<close>
 
@@ -17,7 +17,7 @@ declare [[collect_reasoner_statistics MatSlice start,
          \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
-  where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>)
+  where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
 
@@ -39,19 +39,20 @@ declare [[\<phi>LPR_collect_statistics program start,
           \<phi>assync_proof = false]]
 
 declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
+        list_all2_conv_all_nth[\<phi>sledgehammer_simps] zero_mat_def[\<phi>sledgehammer_simps]
 
 proc zero_mat:
   input  \<open>x \<Ztypecolon> MatSlice a i j m n\<heavy_comma>
-          a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M N\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  premises \<open>i + m \<le> M \<and> j + n \<le> N\<close>
+          a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M N\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          m \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  premises \<open>i + m \<le> M \<and> j + n \<le> N \<and> M < 2 ^ addrspace_bits \<and> N < 2 ^ addrspace_bits\<close>
   output \<open>0\<^sub>m m n \<Ztypecolon> MatSlice a i j m n\<close>
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close>
 
-  map_slice_a ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
-    map_slice_a ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
-      $a \<tribullet> ($i + $k) \<tribullet> ($j + $h) := \<open>0 \<Ztypecolon> \<int>\<close>
+  map_slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
+    map_slice ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
+      $a \<tribullet> ($i + $k) \<tribullet> ($j + $h) := \<open>0 \<Ztypecolon> \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
     \<medium_right_bracket>
   \<medium_right_bracket> ;;
 
@@ -59,13 +60,15 @@ proc zero_mat:
 \<medium_right_bracket> .
 
 proc new_mat:
-  input  \<open>m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  output \<open>0\<^sub>m m n \<Ztypecolon> MatSlice a 0 0 m n\<heavy_comma>
-          a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> m n
+  requires \<open>\<p>\<a>\<r>\<a>\<m> M\<close>
+  requires \<open>\<p>\<a>\<r>\<a>\<m> N\<close>
+  input  \<open>Void\<close>
+  output \<open>0\<^sub>m M N \<Ztypecolon> MatSlice a 0 0 M N\<heavy_comma>
+          a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M N
           \<s>\<u>\<b>\<j> a. address_to_base a\<close> \<comment> \<open>TODO: why is there a syntax warning?\<close>
 \<medium_left_bracket>
-  calloc_aN2 ($m, $n) \<open>\<int>\<close> \<exists>a
-  \<open>0\<^sub>m m n \<Ztypecolon> MAKE _ (MatSlice a 0 0 m n)\<close>
+  calloc_1 \<open>\<Aa>\<r>\<r>\<a>\<y>[M] \<Aa>\<r>\<r>\<a>\<y>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> 
+  \<open>0\<^sub>m M N \<Ztypecolon> MAKE _ (MatSlice addr 0 0 M N)\<close>
 \<medium_right_bracket> .
 
 
@@ -82,46 +85,50 @@ proc del_mat:
 proc copy_mat:
   input  \<open>x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
           y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<heavy_comma>
-          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  premises \<open>i\<^sub>x + m \<le> M\<^sub>x \<and> i\<^sub>y + m \<le> M\<^sub>y \<and> j\<^sub>x + n \<le> N\<^sub>x \<and> j\<^sub>y + n \<le> N\<^sub>y\<close>
+          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          m \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  premises \<open>i\<^sub>x + m \<le> M\<^sub>x \<and> i\<^sub>y + m \<le> M\<^sub>y \<and> j\<^sub>x + n \<le> N\<^sub>x \<and> j\<^sub>y + n \<le> N\<^sub>y \<and>
+            M\<^sub>x < 2 ^ addrspace_bits \<and> N\<^sub>x < 2 ^ addrspace_bits \<and>
+            M\<^sub>y < 2 ^ addrspace_bits \<and> N\<^sub>y < 2 ^ addrspace_bits\<close>
   output \<open>y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 \<medium_left_bracket>
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
   \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
 
-  map_2slice_a ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
-    map_2slice_a ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
       $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
     \<medium_right_bracket> ;;
   \<medium_right_bracket> ;;
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
-  \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<close> \<open>MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
 
 proc add_mat:
   input  \<open>x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
           y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<heavy_comma>
-          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  premises \<open>i\<^sub>x + m \<le> M\<^sub>x \<and> i\<^sub>y + m \<le> M\<^sub>y \<and> j\<^sub>x + n \<le> N\<^sub>x \<and> j\<^sub>y + n \<le> N\<^sub>y\<close>
+          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          m \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  premises \<open>i\<^sub>x + m \<le> M\<^sub>x \<and> i\<^sub>y + m \<le> M\<^sub>y \<and> j\<^sub>x + n \<le> N\<^sub>x \<and> j\<^sub>y + n \<le> N\<^sub>y \<and>
+            M\<^sub>x < 2 ^ addrspace_bits \<and> N\<^sub>x < 2 ^ addrspace_bits \<and>
+            M\<^sub>y < 2 ^ addrspace_bits \<and> N\<^sub>y < 2 ^ addrspace_bits\<close>
   output \<open>x + y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 \<medium_left_bracket>
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
   \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
 
-  map_2slice_a ($m) \<medium_left_bracket> for k \<rightarrow> val k
-    map_2slice_a ($n) \<medium_left_bracket> for h \<rightarrow> val h
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h
         $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) ! + $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
     \<medium_right_bracket> ;;
   \<medium_right_bracket> ;;
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>x + y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
-  \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<close> \<open>MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>x + y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
 
@@ -129,23 +136,25 @@ proc add_mat:
 proc sub_mat:
   input  \<open>x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
           y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<heavy_comma>
-          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  premises \<open>i\<^sub>x + m \<le> M\<^sub>x \<and> i\<^sub>y + m \<le> M\<^sub>y \<and> j\<^sub>x + n \<le> N\<^sub>x \<and> j\<^sub>y + n \<le> N\<^sub>y \<close>
+          a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          m \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  premises \<open>i\<^sub>x + m \<le> M\<^sub>x \<and> i\<^sub>y + m \<le> M\<^sub>y \<and> j\<^sub>x + n \<le> N\<^sub>x \<and> j\<^sub>y + n \<le> N\<^sub>y \<and>
+            M\<^sub>x < 2 ^ addrspace_bits \<and> N\<^sub>x < 2 ^ addrspace_bits \<and>
+            M\<^sub>y < 2 ^ addrspace_bits \<and> N\<^sub>y < 2 ^ addrspace_bits \<close>
   output \<open>x - y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 \<medium_left_bracket>
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
   \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
 
-  map_2slice_a ($m) \<medium_left_bracket> for k \<rightarrow> val k
-    map_2slice_a ($n) \<medium_left_bracket> for h \<rightarrow> val h
-        $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) ! - $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
+      $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) ! - $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) ! 
     \<medium_right_bracket> ;;
   \<medium_right_bracket> ;;
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<close> \<open>x - y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
-  \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<close> \<open>MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>x - y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
 context
@@ -178,15 +187,16 @@ proc strassen:
           B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<heavy_comma>
           buf\<^sub>1 \<Ztypecolon> MatSlice a\<^sub>C i\<^sub>C j\<^sub>C (2^n) (2^n)\<heavy_comma> \<comment> \<open>buffers used to store intermediate values\<close>
           buf\<^sub>2 \<Ztypecolon> MatSlice a\<^sub>D i\<^sub>D j\<^sub>D (2^n) (2^n)\<heavy_comma>
-          a\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          a\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          a\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          a\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> j\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
-          n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+          a\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          a\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          a\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          a\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> j\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma>
+          n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
   premises \<open>i\<^sub>A + 2^n \<le> N \<and> j\<^sub>A + 2^n \<le> N \<and>
             i\<^sub>B + 2^n \<le> N \<and> j\<^sub>B + 2^n \<le> N \<and>
             i\<^sub>C + 2^n \<le> N \<and> j\<^sub>C + 2^n \<le> N \<and>
-            i\<^sub>D + 2^n \<le> N \<and> j\<^sub>D + 2^n \<le> N\<close>
+            i\<^sub>D + 2^n \<le> N \<and> j\<^sub>D + 2^n \<le> N \<and>
+            M < 2 ^ addrspace_bits \<and> N < 2 ^ addrspace_bits\<close>
   output \<open>A * B \<Ztypecolon> MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n)\<heavy_comma>
           B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<heavy_comma>
           buf\<^sub>1 \<Ztypecolon> MatSlice a\<^sub>C i\<^sub>C j\<^sub>C (2^n) (2^n)\<heavy_comma> \<comment> \<open>buffers used to store intermediate values\<close>
@@ -217,6 +227,8 @@ proc strassen:
     \<open>MatSlice a\<^sub>C _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>1, M\<^sub>2, M\<^sub>3, M\<^sub>4 ;;
     \<open>MatSlice a\<^sub>D _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>5, M\<^sub>6, M\<^sub>7, M\<^sub>t ;;
 
+    holds_fact t2: \<open>n < addrspace_bits\<close>;;
+
     1 << ($n-1) \<rightarrow> val N ;;
     $i\<^sub>A + $N \<rightarrow> val i\<^sub>A' ;;
     $j\<^sub>A + $N \<rightarrow> val j\<^sub>A' ;;
@@ -227,7 +239,6 @@ proc strassen:
     $i\<^sub>D + $N \<rightarrow> val i\<^sub>D' ;;
     $j\<^sub>D + $N \<rightarrow> val j\<^sub>D' ;;
 
-                                 
     copy_mat ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
     add_mat  ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) ;;
     copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*) $N, $N) ;;
@@ -247,8 +258,6 @@ proc strassen:
     copy_mat ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
     strassen ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*)
               $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $n-1) ;;
-
-
 
 
     copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B , (*B\<^sub>2\<^sub>1*) $N, $N) ;;
@@ -340,13 +349,14 @@ proc strassen_mul:
           B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n)\<heavy_comma>
           a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<heavy_comma>
           a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<close>
+  premises \<open>n < addrspace_bits\<close>
   output \<open>A * B \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
           B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n) \<close>
 \<medium_left_bracket>
-  \<open>literal n \<Ztypecolon> \<nat>\<close> \<rightarrow> val n ;;
+  \<open>literal n \<Ztypecolon> \<nat>(size_t)\<close> \<rightarrow> val n ;;
   1 << $n \<rightarrow> val N ;;
-  new_mat ($N, $N) \<rightarrow> val C ;;
-  new_mat ($N, $N) \<rightarrow> val D ;;
+  new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val C ;;
+  new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val D ;;
   strassen ($a\<^sub>x, 0, 0, $a\<^sub>y, 0, 0, $C, 0, 0, $D, 0, 0, $n) ;;
   del_mat ($C) ;;
   del_mat ($D)

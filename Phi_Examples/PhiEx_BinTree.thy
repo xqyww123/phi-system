@@ -163,12 +163,27 @@ lemma lookup_right_children:
 
 
 
+subsection \<open>Insert Tree\<close>
 
+primrec insert_tree :: \<open>'k::linorder \<Rightarrow> 'v \<Rightarrow> ('k \<times> 'v) tree \<Rightarrow> ('k \<times> 'v) tree\<close>
+  where \<open>insert_tree k v \<langle>\<rangle> = \<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle>\<close>
+      | \<open>insert_tree k v \<langle>L, x, R\<rangle> = (if k < fst x then \<langle>insert_tree k v L, x, R\<rangle>
+                                     else if k = fst x then \<langle>L, (k,v), R\<rangle>
+                                     else \<langle>L, x, insert_tree k v R\<rangle> ) \<close>
 
+lemma lookup_tree_insert_tree[simp]:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> lookup_tree (insert_tree k v tree) = (lookup_tree tree)(k \<mapsto> v)\<close>
+  by (induct tree; auto simp: fun_eq_iff map_add_def; auto_sledgehammer)
 
+lemma set_tree_insert_tree:
+  \<open>set_tree (insert_tree k v tree) \<subseteq> Set.insert (k,v) (set_tree tree) \<close>
+  by (induct tree; auto)
 
-
-
+lemma insert_tree_sorted[simp]:
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> sorted1 (inorder (insert_tree k v tree)) \<close>
+  by (induct tree; auto simp: sorted_mid_iff' sorted_snoc_iff not_less; insert set_tree_insert_tree; fastforce)
 
 
 
@@ -352,6 +367,7 @@ proc (nodef) lookup_bst:
   \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr _ _ _ _)\<close>
 \<medium_right_bracket> .
 
+
 proc defined_bintree:
   input  \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
@@ -386,6 +402,7 @@ proc defined_bintree:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+
 proc (nodef) defined_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
@@ -399,36 +416,12 @@ proc (nodef) defined_bst:
 
 
 
-primrec insert_tree :: \<open>'k::linorder \<Rightarrow> 'v \<Rightarrow> ('k \<times> 'v) tree \<Rightarrow> ('k \<times> 'v) tree\<close>
-  where \<open>insert_tree k v \<langle>\<rangle> = \<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle>\<close>
-      | \<open>insert_tree k v \<langle>L, x, R\<rangle> = (if k < fst x then \<langle>insert_tree k v L, x, R\<rangle>
-                                     else if k = fst x then \<langle>L, (k,v), R\<rangle>
-                                     else \<langle>L, x, insert_tree k v R\<rangle> ) \<close>
-
-lemma lookup_tree_insert_tree[simp]:
-  \<open> sorted1 (inorder tree)
-\<Longrightarrow> lookup_tree (local.insert_tree k v tree) = (lookup_tree tree)(k \<mapsto> v)\<close>
-  by (induct tree; auto simp: fun_eq_iff map_add_def; auto_sledgehammer)
-
-lemma set_tree_insert_tree:
-  \<open>set_tree (insert_tree k v tree) \<subseteq> Set.insert (k,v) (set_tree tree) \<close>
-  by (induct tree; auto)
-
-lemma insert_tree_sorted[simp]:
-  \<open> sorted1 (inorder tree)
-\<Longrightarrow> sorted1 (inorder (insert_tree k v tree)) \<close>
-  by (induct tree; auto simp: sorted_mid_iff' sorted_snoc_iff not_less; insert set_tree_insert_tree; fastforce)
-
-
-
 
 abbreviation \<open>Bst_Node \<equiv> \<lbrace>
                             left: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V),
                             data: \<lbrace> k: K, v: V \<rbrace>,
                             right: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V)
                           \<rbrace> \<close>
-
-
 
 
 
@@ -473,7 +466,6 @@ proc insert_bintree:
 \<medium_right_bracket> .
 
 
-
 proc (nodef) insert_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
@@ -487,6 +479,52 @@ proc (nodef) insert_bst:
   insert_bintree ($addr, $k, $v)
   \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close>
 \<medium_right_bracket> .
+
+
+
+
+
+
+proc delete_bintree:
+  input  \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
+          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  output \<open>insert_tree k v tree \<Ztypecolon> BinTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
+          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  is [recursive]
+  is [routine]
+\<medium_left_bracket>
+  if \<open>$addr = 0\<close> \<medium_left_bracket>
+      val ret \<leftarrow> calloc_1 \<open>Bst_Node\<close> ;;
+      $ret \<tribullet> data \<tribullet> k := $k ;;
+      $ret \<tribullet> data \<tribullet> v := $v ;;
+      \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BinTree addrb (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
+      return ($ret)
+  \<medium_right_bracket> \<medium_left_bracket>
+      to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
+
+      val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
+      if (eq ($k', $k)) \<medium_left_bracket>
+          $addr \<tribullet> data \<tribullet> v := $v ;;
+          \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(k,v)\<close>, auto_sledgehammer) ;;
+          return ($addr)
+      \<medium_right_bracket> \<medium_left_bracket>
+          if (cmp ($k, $k')) \<medium_left_bracket>
+              insert_bintree ($addr \<tribullet> left !, $k, $v) \<rightarrow> val a\<^sub>L' ;;
+              $addr \<tribullet> left := $a\<^sub>L' ;;
+              \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+              return ($addr)
+          \<medium_right_bracket> \<medium_left_bracket>
+              insert_bintree ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' ;;
+              $addr \<tribullet> right := $a\<^sub>R' ;;
+              \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+              return ($addr)
+          \<medium_right_bracket>
+      \<medium_right_bracket>
+  \<medium_right_bracket>
+\<medium_right_bracket> .
+
 
 
 
@@ -536,6 +574,7 @@ proc height_of:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' height_of_def})))\<close>
 
 lemma [simp]:
   \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
@@ -679,8 +718,6 @@ proc maintain_i:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
-
-
 abbreviation \<open>Avl_Node \<equiv> \<lbrace>
                             left: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V),
                             data: \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>,
@@ -751,7 +788,6 @@ proc insert_avl_i:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
-
 proc (nodef) insert_avl:
   input  \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
@@ -765,7 +801,6 @@ proc (nodef) insert_avl:
   insert_avl_i ($addr, $k, $v)
   \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close>
 \<medium_right_bracket> .
-
 
 
 

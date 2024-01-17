@@ -2,6 +2,7 @@ theory PhiEx_All
   imports PhiEx_DynArr
           PhiEx_Linked_Lst
           PhiEx_Slice
+          PhiEx_Rational
           PhiEx_BinTree
           PhiEx_Strassen
 begin
@@ -49,13 +50,15 @@ ML \<open>fun report_utilization statistic_groups reasoner_groups =
   fun report_timing () =
     File_Stream.open_output (fn out =>
         let val timing = PLPR_Statistics.timing_of_semantic_operations ()
-         in List.app (fn {reasoning, proof_evaluation, proof_search} =>
+         in List.app (fn {total, reasoning, proof_evaluation, proof_search} =>
                           let open File_Stream
                            in output out (string_of_int (Time.toMicroseconds reasoning)) ;
                               output out ", " ;
                               output out (string_of_int (Time.toMicroseconds proof_evaluation)) ;
                               output out ", " ;
                               output out (string_of_int (Time.toMilliseconds proof_search)) ;
+                              output out ", " ;
+                              output out (string_of_int (Time.toMilliseconds total)) ;
                               output out "\n"
                           end ) timing
         end
@@ -68,8 +71,8 @@ ML \<open>report_utilization ["program", "derivation"]
         @{reasoner_group %Mem_Coercion}, @{reasoner_group %\<phi>Share},
         @{reasoner_group %Var}, @{reasoner_group %MemBlk}, 
         @{reasoner_group %\<phi>Mul_Quant_Tree},
-        @{reasoner_group %Linked_Lst}, @{reasoner_group %DynArr} (*,
-        @{reasoner_group %BinTree}, @{reasoner_group %Bin_Search_Tree}, @{reasoner_group %AVL_Tree}*) ] \<close>
+        @{reasoner_group %Linked_Lst}, @{reasoner_group %DynArr},
+        @{reasoner_group %BinTree}, @{reasoner_group %Bin_Search_Tree}, @{reasoner_group %AVL_Tree} ] \<close>
 
 ML \<open>report_transformation_performance ()\<close>
 ML \<open>report_timing ()\<close>

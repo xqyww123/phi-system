@@ -29,6 +29,7 @@ val clear_subgoal_counter : unit -> unit
 (* time statistics in the scale of semantic operations *)
 
 type SO_times = {
+  total : Time.time (*including parsing and miscellaneous parts of the IDE-CP*),
   reasoning : Time.time,
   proof_evaluation : Time.time,
   proof_search : Time.time
@@ -39,6 +40,8 @@ val setup_semantic_operation_recording : Proof.context -> Proof.context
 val start_recording_a_semantic_operation : Proof.context -> unit
 val stop_recording_a_semantic_operation : Proof.context -> unit
 
+val report_time_of_reasoning : Time.time -> Proof.context -> unit
+val measure_time_of_reasoning : Proof.context -> ('a -> 'b) -> 'a -> 'b
 val report_time_of_proof_evaluation : Time.time -> Proof.context -> unit
 val measure_time_of_proof_evaluation : Proof.context -> ('a -> 'b) -> 'a -> 'b
 val measure_time_of_proof_evaluation': bool -> Proof.context -> ('a -> 'b) -> 'a -> 'b
@@ -194,13 +197,15 @@ val recording_timing_of_semantic_operation =
       Attrib.setup_config_bool \<^binding>\<open>recording_timing_of_semantic_operation\<close> (K false)
 
 type SO_times = {
+  total : Time.time,
   reasoning : Time.time,
   proof_evaluation : Time.time,
   proof_search : Time.time
 }
 
 structure Semantic_Operation = Proof_Data (
-  type T = ( Timer.cpu_timer
+  type T = ( Timer.cpu_timer (*total time including parsing and miscellaneous parts of the IDE-CP*)
+           * Time.time Unsynchronized.ref (*reasoning*)
            * Time.time Unsynchronized.ref (*proof_evaluation*)
            * Time.time Unsynchronized.ref (*proof_search*)
            * Thread.thread ) option Unsynchronized.ref option
@@ -221,6 +226,7 @@ fun start_recording_a_semantic_operation ctxt =
         timing := SOME ( Timer.startCPUTimer (),
                          Unsynchronized.ref Time.zeroTime,
                          Unsynchronized.ref Time.zeroTime,
+                         Unsynchronized.ref Time.zeroTime,
                          Thread.self () )
 
 fun stop_recording_a_semantic_operation ctxt =
@@ -228,11 +234,12 @@ fun stop_recording_a_semantic_operation ctxt =
     of NONE => ()
      | SOME timing => (
         case !timing
-          of SOME (timer, proof_evaluation, proof_search, thrd) =>
+          of SOME (timer, reasoning, proof_evaluation, proof_search, thrd) =>
                if Thread.equal (thrd, Thread.self ())
                then let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
                  in Synchronized.change SO_timing (fn L =>
-                     { reasoning = usr+sys-(!proof_evaluation)-(!proof_search),
+                     { total = usr+sys,
+                       reasoning = !reasoning,
                        proof_evaluation = !proof_evaluation,
                        proof_search = !proof_search } :: L) ;
                     timing := NONE
@@ -240,11 +247,20 @@ fun stop_recording_a_semantic_operation ctxt =
                else ()
            | _ => () )
 
+fun report_time_of_reasoning time ctxt =
+  case Semantic_Operation.get ctxt
+    |> Option.mapPartial (fn x => !x)
+    of NONE => ()
+     | SOME (_, r, _, _, thrd) =>
+          if Thread.equal (thrd, Thread.self ())
+          then r := (!r) + time
+          else ()
+
 fun report_time_of_proof_evaluation time ctxt =
   case Semantic_Operation.get ctxt
     |> Option.mapPartial (fn x => !x)
     of NONE => ()
-     | SOME (_, pe, _, thrd) =>
+     | SOME (_, _, pe, _, thrd) =>
           if Thread.equal (thrd, Thread.self ())
           then pe := (!pe) + time
           else ()
@@ -253,16 +269,37 @@ fun report_time_of_proof_search time ctxt =
   case Semantic_Operation.get ctxt
     |> Option.mapPartial (fn x => !x)
     of NONE => ()
-     | SOME (_, _, ps, thrd) =>
+     | SOME (_, _, _, ps, thrd) =>
           if Thread.equal (thrd, Thread.self ())
           then ps := (!ps) + time
           else ()
+
+fun measure_time_of_reasoning ctxt f x =
+  let val timer = Timer.startCPUTimer ()
+      val timing = Semantic_Operation.get ctxt
+                |> Option.mapPartial (fn x => !x)
+                |> Option.map (fn x => (#2 x, #3 x, #4 x, ! (#2 x), ! (#3 x), ! (#4 x)))
+      fun update () =
+        let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+         in case timing
+         of SOME (var_r, var_pe, var_ps, old_r, old_pe, old_ps) =>
+                  var_r := old_r + usr + sys - ((!var_pe) - old_pe) - ((!var_ps) - old_ps)
+          | _ => ()
+        end
+   in let val ret = f x
+          val _ = update ()
+       in ret
+      end handle E =>
+        let val _ = update ()
+         in Exn.reraise E
+        end
+  end
 
 fun measure_time_of_proof_evaluation ctxt f x =
   let val timer = Timer.startCPUTimer ()
       val timing = Semantic_Operation.get ctxt
                 |> Option.mapPartial (fn x => !x)
-                |> Option.map (fn x => (#2 x, ! (#2 x)))
+                |> Option.map (fn x => (#3 x, ! (#3 x)))
    in let val ret = f x
           val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
           val _ = (case timing
@@ -286,7 +323,7 @@ fun measure_time_of_proof_search ctxt f x =
   let val timer = Timer.startCPUTimer ()
       val timing = Semantic_Operation.get ctxt
                 |> Option.mapPartial (fn x => !x)
-                |> Option.map (fn x => (#3 x, ! (#3 x)))
+                |> Option.map (fn x => (#4 x, ! (#4 x)))
    in let val ret = f x
           val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
           val _ = (case timing

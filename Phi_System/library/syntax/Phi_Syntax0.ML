@@ -45,7 +45,7 @@ val arities_of_connective = Unsynchronized.ref Symtab.empty
 
 fun register_connective iname_airty =
   Synchronized.change arities_of_connective_locker (fn () => (
-      arities_of_connective := Symtab.update_new iname_airty (!arities_of_connective);
+      arities_of_connective := Symtab.update iname_airty (!arities_of_connective);
       ()))
 
 fun N_arg_rev ret 0 _ = ret
