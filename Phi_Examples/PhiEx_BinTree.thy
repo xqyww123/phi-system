@@ -64,6 +64,11 @@ lemma sorted1_inorder_map_tree[iff]:
 
 subsection \<open>tree_domain_distinct\<close>
 
+primrec lookup_tree :: \<open>('k \<times> 'v) tree \<Rightarrow> 'k \<rightharpoonup> 'v\<close>
+  where \<open>lookup_tree \<langle>\<rangle> = Map.empty\<close>
+      | \<open>lookup_tree \<langle>L, x, R\<rangle> = (lookup_tree L ++ lookup_tree R)(fst x \<mapsto> snd x) \<close>
+
+
 primrec tree_domain_distinct :: \<open>('k \<times> 'v) tree \<Rightarrow> bool\<close>
   where \<open>tree_domain_distinct \<langle>\<rangle> = True \<close>
       | \<open>tree_domain_distinct \<langle>L, x, R\<rangle> = (fst ` set_tree L \<inter> fst ` set_tree R = {} \<and>
@@ -92,10 +97,18 @@ lemma tree_sorted1_inorder_implies_domain_distinct[simp]:
   \<open>sorted1(inorder tree) \<Longrightarrow> tree_domain_distinct tree\<close>
   by (induct tree; auto_sledgehammer)
 
+(*
 lemma sorted1_left_tree_lt_node_value:
   \<open> sorted1 (inorder tree)
 \<Longrightarrow> (k,v) \<in> set_tree (left tree)
 \<Longrightarrow> k < fst (value tree) \<close>
+  by (cases tree; auto_sledgehammer)
+
+lemma sorted1_left_tree_lt_node_value':
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> k < fst (value tree)
+\<Longrightarrow> k \<in> fst ` set_tree tree
+\<Longrightarrow> k \<in> fst ` set_tree (left tree) \<close>
   by (cases tree; auto_sledgehammer)
 
 lemma sorted1_right_tree_gt_node_value:
@@ -104,26 +117,29 @@ lemma sorted1_right_tree_gt_node_value:
 \<Longrightarrow> fst (value tree) < k \<close>
   by (cases tree; auto_sledgehammer)
 
+lemma sorted1_left_tree_gt_node_value':
+  \<open> sorted1 (inorder tree)
+\<Longrightarrow> fst (value tree) < k
+\<Longrightarrow> k \<in> fst ` set_tree tree
+\<Longrightarrow> k \<in> fst ` set_tree (right tree) \<close>
+  by (cases tree; auto_sledgehammer)
+*)
 
 
-subsection \<open>Lookup\<close>
-
-primrec lookup_tree :: \<open>('k \<times> 'v) tree \<Rightarrow> 'k \<rightharpoonup> 'v\<close>
-  where \<open>lookup_tree \<langle>\<rangle> = Map.empty\<close>
-      | \<open>lookup_tree \<langle>L, x, R\<rangle> = (lookup_tree L ++ lookup_tree R)(fst x \<mapsto> snd x) \<close>
-
-lemma dom_lookup_tree[iff]:
+(*lemma dom_lookup_tree:
   \<open> dom (lookup_tree tree) = fst ` set_tree tree \<close>
   by (induct tree; auto_sledgehammer)
-
+*)
 lemma lookup_tree_eq_empty:
   \<open> lookup_tree tree = Map.empty \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
   by (induct tree; auto_sledgehammer)
 
-lemma lookup_tree_by_set_distinct[simp]:
+(*
+lemma lookup_tree_by_set_distinct:
   \<open> tree_domain_distinct tree
 \<Longrightarrow> lookup_tree tree k = Some v \<longleftrightarrow> (k, v) \<in> tree.set_tree tree\<close>
   by (induct tree; auto_sledgehammer)
+*)
 
 lemma rel_map_lookup_by_rel_tree:
   \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd a) (snd b)) x y
@@ -153,12 +169,12 @@ lemma lookup_left_children:
   \<open> sorted1 (inorder tree)
 \<Longrightarrow> lookup_tree (left tree) = lookup_tree tree |` {x. x < fst (value tree)} \<close>
   \<comment> \<open>this value is the value of the root node\<close>
-  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+  by (induct tree; auto simp: fun_eq_iff restrict_map_def sorted_mid_iff' sorted_snoc_iff; auto_sledgehammer)
 
 lemma lookup_right_children:
   \<open> sorted1 (inorder tree)
 \<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close>
-  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+  by (induct tree; auto simp: fun_eq_iff restrict_map_def sorted_mid_iff' sorted_snoc_iff; auto_sledgehammer)
 
 
 
@@ -173,7 +189,7 @@ primrec insert_tree :: \<open>'k::linorder \<Rightarrow> 'v \<Rightarrow> ('k \<
 lemma lookup_tree_insert_tree[simp]:
   \<open> sorted1 (inorder tree)
 \<Longrightarrow> lookup_tree (insert_tree k v tree) = (lookup_tree tree)(k \<mapsto> v)\<close>
-  by (induct tree; auto simp: fun_eq_iff map_add_def; auto_sledgehammer)
+  by (induct tree; auto simp: fun_eq_iff map_add_def split option.split; auto_sledgehammer)
 
 lemma set_tree_insert_tree:
   \<open>set_tree (insert_tree k v tree) \<subseteq> Set.insert (k,v) (set_tree tree) \<close>
@@ -184,6 +200,9 @@ lemma insert_tree_sorted[simp]:
 \<Longrightarrow> sorted1 (inorder (insert_tree k v tree)) \<close>
   by (induct tree; auto simp: sorted_mid_iff' sorted_snoc_iff not_less; insert set_tree_insert_tree; fastforce)
 
+lemma insert_tree_not_Leaf[simp]:
+  \<open>insert_tree k v tree \<noteq> \<langle>\<rangle>\<close>
+  by (induct tree; auto_sledgehammer)
 
 
 section \<open>Verifying the Concrete Programs\<close>
@@ -226,6 +245,14 @@ declare [[collect_reasoner_statistics Bin_Search_Tree start,
          \<phi>LPR_collect_statistics derivation start]]
 
 
+lemma rel_tree_conj_split:
+  \<open> rel_tree (\<lambda>a b. R1 a b \<and> R2 a b) x y \<longleftrightarrow> rel_tree R1 x y \<and> rel_tree R2 x y \<close>
+  by (induct x arbitrary: y; auto_sledgehammer)
+
+lemma rel_tree_eq_norm:
+  \<open> rel_tree (\<lambda>a b. f b = g a) x y \<longleftrightarrow> rel_tree (\<lambda>a b. g a = f b) x y \<close>
+  by auto_sledgehammer
+
 \<phi>type_def Bin_Search_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
   where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>
                                        \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted1(inorder tree)\<close>
@@ -242,9 +269,10 @@ declare [[collect_reasoner_statistics Bin_Search_Tree start,
                      auto intro!: rel_tree_self_map simp: fun_eq_iff)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
          \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>])
+            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], clarsimp simp: rel_tree_eq_norm rel_tree_conj_split)
        and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
+
 
 declare [[collect_reasoner_statistics Bin_Search_Tree stop,
          \<phi>LPR_collect_statistics derivation stop]]
@@ -274,6 +302,7 @@ abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
 declare [[collect_reasoner_statistics AVL_Tree start,
          \<phi>LPR_collect_statistics derivation start]]
 
+
 \<phi>type_def AVL_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
   where \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>
                                      \<s>\<u>\<b>\<j> tree. f = map_option snd o lookup_tree tree
@@ -281,7 +310,9 @@ declare [[collect_reasoner_statistics AVL_Tree start,
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
          \<Longrightarrow> Abstract_Domain (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
-            (tactic: clarsimp, subgoal' for tree x h y \<open>induct tree arbitrary: x\<close>)
+            (tactic: clarsimp, subgoal' for tree x h y \<open>
+              induct tree arbitrary: x;
+              auto simp: sorted_mid_iff' sorted_snoc_iff\<close>)
        and \<open> Identity_Elements\<^sub>E (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. addr = 0 \<and> l = Map.empty) \<close>
        and \<open> Identity_Elements\<^sub>I (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0) \<close>
        and \<open> Object_Equiv V eq
@@ -291,9 +322,11 @@ declare [[collect_reasoner_statistics AVL_Tree start,
                      auto simp: fun_eq_iff intro!: rel_tree_self_map)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
          \<Longrightarrow> Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>])
+            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], clarsimp simp: rel_tree_conj_split rel_tree_eq_norm)
        and \<open>Functional_Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
+
+
 
 declare [[collect_reasoner_statistics AVL_Tree stop,
          \<phi>LPR_collect_statistics derivation stop]]
@@ -334,6 +367,7 @@ proc lookup_bintree:
   is [recursive]
   is [routine]
 \<medium_left_bracket>
+  obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer ;;
   to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;   \<comment> \<open>TODO: fix quantifier names\<close>
 
   val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
@@ -344,11 +378,11 @@ proc lookup_bintree:
   \<medium_right_bracket>
   \<medium_left_bracket>
     if (cmp ($k, $k')) \<medium_left_bracket>
-      val ret \<leftarrow> lookup_bintree ($addr \<tribullet> left  !, $k) ;;
+      lookup_bintree ($addr \<tribullet> left  !, $k) \<rightarrow> val ret ;;
       \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
       return ($ret)
     \<medium_right_bracket> \<medium_left_bracket> 
-      val ret \<leftarrow> lookup_bintree ($addr \<tribullet> right !, $k) ;;
+      lookup_bintree ($addr \<tribullet> right !, $k) \<rightarrow> val ret ;;
       \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
       return ($ret)
     \<medium_right_bracket> ;;
@@ -379,7 +413,7 @@ proc defined_bintree:
   if \<open>$addr = 0\<close> \<medium_left_bracket>
     return (False) 
   \<medium_right_bracket> \<medium_left_bracket>
-
+    obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer ;;
     to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
 
     val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
@@ -441,6 +475,7 @@ proc insert_bintree:
       \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BinTree addrb (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
       return ($ret)
   \<medium_right_bracket> \<medium_left_bracket>
+      obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer ;;
       to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
@@ -482,55 +517,6 @@ proc (nodef) insert_bst:
 
 
 
-
-
-proc delete_bintree:
-  input  \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
-  output \<open>insert_tree k v tree \<Ztypecolon> BinTree addr' (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
-          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
-  is [recursive]
-  is [routine]
-\<medium_left_bracket>
-  if \<open>$addr = 0\<close> \<medium_left_bracket>
-      val ret \<leftarrow> calloc_1 \<open>Bst_Node\<close> ;;
-      $ret \<tribullet> data \<tribullet> k := $k ;;
-      $ret \<tribullet> data \<tribullet> v := $v ;;
-      \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BinTree addrb (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> ;;
-      return ($ret)
-  \<medium_right_bracket> \<medium_left_bracket>
-      to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
-
-      val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
-      if (eq ($k', $k)) \<medium_left_bracket>
-          $addr \<tribullet> data \<tribullet> v := $v ;;
-          \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(k,v)\<close>, auto_sledgehammer) ;;
-          return ($addr)
-      \<medium_right_bracket> \<medium_left_bracket>
-          if (cmp ($k, $k')) \<medium_left_bracket>
-              insert_bintree ($addr \<tribullet> left !, $k, $v) \<rightarrow> val a\<^sub>L' ;;
-              $addr \<tribullet> left := $a\<^sub>L' ;;
-              \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
-              return ($addr)
-          \<medium_right_bracket> \<medium_left_bracket>
-              insert_bintree ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' ;;
-              $addr \<tribullet> right := $a\<^sub>R' ;;
-              \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
-              return ($addr)
-          \<medium_right_bracket>
-      \<medium_right_bracket>
-  \<medium_right_bracket>
-\<medium_right_bracket> .
-
-
-
-
-
-
-
-
 definition \<open>right_rotate tree = (case tree of \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> \<Rightarrow> \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle> )\<close>
 definition \<open>can_right_rotate tree = (case tree of \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> \<Rightarrow> True | _ \<Rightarrow> False)\<close>
 definition \<open>left_rotate tree = (case tree of \<langle>A, B, \<langle>C, D, E\<rangle>\<rangle> \<Rightarrow> \<langle>\<langle>A, B, C\<rangle>, D, E\<rangle> )\<close>
@@ -566,6 +552,7 @@ proc height_of:
   if \<open>$addr = 0\<close> \<medium_left_bracket>
       return (0)
   \<medium_right_bracket> \<medium_left_bracket>
+      obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer ;;
       to \<open>OPEN 1 _\<close> ;;
       $addr \<tribullet> data \<tribullet> v \<tribullet> height ! \<rightarrow> val ret ;;
       \<open>tree \<Ztypecolon> MAKE 1 (BinTree addr _ _)\<close> ;;
@@ -574,17 +561,17 @@ proc height_of:
 \<medium_right_bracket> .
 
 
-lemma [simp]:
+lemma stupid[simp]:
   \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
   by auto_sledgehammer
 
-
+(*
 lemma map_option_snd_lookup_tree_split:
   \<open> B \<noteq> Leaf
 \<Longrightarrow> ((map_option snd \<circ> (lookup_tree (left B) ++ lookup_tree (right B)))(fst (value B) \<mapsto> snd (snd (value B))))
   = (map_option snd \<circ> lookup_tree B) \<close>
   by (cases B; auto simp add: fun_eq_iff map_add_def split: option.split)
-
+*)
 context
   notes sorted_mid_iff'[simp] sorted_snoc_iff[simp]
 begin
@@ -613,6 +600,7 @@ proc maintain_i:
   val H\<^sub>E \<leftarrow> height_of ($E) ;;
 
   if ($H\<^sub>B = $H\<^sub>E + 2) \<medium_left_bracket>
+      obtain A k\<^sub>B h\<^sub>B v\<^sub>B C where B[simp]: \<open>B = \<langle>A, (k\<^sub>B, h\<^sub>B, v\<^sub>B), C\<rangle>\<close> by auto_sledgehammer ;;
       \<open>BinTree a\<^sub>B _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>A, a\<^sub>C ;;
 
       val A \<leftarrow> $B \<tribullet> left ! ;;
@@ -631,12 +619,17 @@ proc maintain_i:
           \<open>BinTree a\<^sub>C _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
           \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> ;;
 
-          holds_fact t2: \<open>fst (value B) \<notin> dom (lookup_tree E)\<close>
-                 and t3: \<open>k\<^sub>D \<noteq> fst (value B)\<close>  ;;
-
-          return ($B)
+          (*holds_fact t2: \<open>k\<^sub>B \<notin> dom (lookup_tree E)\<close>
+                 and t3: \<open>k\<^sub>D \<noteq> k\<^sub>B\<close> *)
+        (*have t4: \<open>\<And>a aa b. (a, aa, b) \<in> Tree.tree.set_tree (left B) \<Longrightarrow> a < fst (value B)\<close>
+             by (cases B; auto_sledgehammer)
+          have t5: \<open>\<And>a aa b. (a, aa, b) \<in> Tree.tree.set_tree (right B) \<Longrightarrow> fst (value B) < a\<close>
+             by (cases B; auto_sledgehammer) *) ;;
+ 
+          return ($B) certified by (auto simp add: fun_eq_iff map_add_def split: option.split; auto_sledgehammer)
       \<medium_right_bracket>
       \<medium_left_bracket>
+          obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by auto_sledgehammer ;;
           \<open>BinTree a\<^sub>C _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>3, a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R ;;
 
           val C\<^sub>L \<leftarrow> $C \<tribullet> left ! ;;
@@ -655,16 +648,14 @@ proc maintain_i:
           \<open>BinTree a\<^sub>C\<^sub>R _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
           \<open>MAKE 1 (BinTree a\<^sub>C _ _)\<close> ;;
 
-          return ($C) certified sorry
-(*by (cases B, (auto_sledgehammer)[1], case_tac x23, (auto_sledgehammer)[1],
-                                    clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
-                                    insert useful, auto) *)
+          return ($C) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)
                                         
-    \<medium_right_bracket> 
+    \<medium_right_bracket>
   \<medium_right_bracket>
   \<medium_left_bracket>
     if ($H\<^sub>E = $H\<^sub>B + 2) \<medium_left_bracket>
 
+      obtain F k\<^sub>E h\<^sub>E v\<^sub>E G where E[simp]: \<open>E = \<langle>F, (k\<^sub>E, h\<^sub>E, v\<^sub>E), G\<rangle>\<close> by auto_sledgehammer ;;
       \<open>BinTree a\<^sub>E _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>F, a\<^sub>G ;;
   
       val F \<leftarrow> $E \<tribullet> left ! ;;
@@ -683,17 +674,16 @@ proc maintain_i:
           \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;
           \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> ;;
 
-
+(*
           holds_fact t2: \<open>k\<^sub>D \<notin> dom (lookup_tree (right E))\<close>
-;;
-
-          (*holds_fact t1[simp]: \<open> (lookup_tree B ++ lookup_tree (left E))(k\<^sub>D \<mapsto> xxx) ++ lookup_tree (right E)
-                               = (lookup_tree B ++ lookup_tree (left E) ++ lookup_tree (right E))(k\<^sub>D \<mapsto> xxx)\<close> for xxx ;; *)
-
-          return ($E)
+          have t3: \<open>\<And>a aa b. (a, aa, b) \<in> Tree.tree.set_tree (left E) \<Longrightarrow> a < fst (value E)\<close> by (cases E; auto_sledgehammer)
+          have t4: \<open>\<And>a aa b. (a, aa, b) \<in> Tree.tree.set_tree (right E) \<Longrightarrow> fst (value E) < a\<close> by (cases E; auto_sledgehammer) ;;
+*)
+          return ($E) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)
 
       \<medium_right_bracket>
       \<medium_left_bracket>
+          obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by auto_sledgehammer ;;
           \<open>BinTree a\<^sub>F _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>4, a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R ;;
 
           val F\<^sub>L \<leftarrow> $F \<tribullet> left ! ;;
@@ -712,9 +702,10 @@ proc maintain_i:
           \<open>BinTree a\<^sub>F\<^sub>R _ _\<close> \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> ;;
           \<open>MAKE 1 (BinTree a\<^sub>F _ _)\<close> ;;
 
-          return ($F) certified by (cases E, (auto_sledgehammer)[1], case_tac x21, (auto_sledgehammer)[1],
+          return ($F) certified by ((clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split)[1]); auto_sledgehammer)
+(*certified by (cases E, (auto_sledgehammer)[1], case_tac x21, (auto_sledgehammer)[1],
                                     clarsimp, rule, (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer),
-                                    insert useful, auto)
+                                    insert useful, auto)*)
       \<medium_right_bracket>
     \<medium_right_bracket>
     \<medium_left_bracket>
@@ -727,19 +718,21 @@ proc maintain_i:
 
 abbreviation \<open>Avl_Node \<equiv> \<lbrace>
                             left: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V),
-                            data: \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>,
+                            data: \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>,
                             right: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V)
                           \<rbrace> \<close>
 
+term \<open>case_tree\<close>
 
+declare prod.split[split]
 
 proc insert_avl_i:
-  input  \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
+  input  \<open>tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
           k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
           v \<Ztypecolon> \<v>\<a>\<l> V\<close>
   premises \<open>sorted1(inorder tree) \<and> AVL_invar tree\<close>
-  output \<open>tree' \<Ztypecolon> BinTree addr' (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
+  output \<open>tree' \<Ztypecolon> BinTree addr' (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>\<heavy_comma>
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr' tree'.
           map_option snd o lookup_tree tree' = (map_option snd o lookup_tree tree)(k \<mapsto> v) \<and>
@@ -748,23 +741,25 @@ proc insert_avl_i:
   is [recursive]
   is [routine]
 \<medium_left_bracket>
-  note sorted_mid_iff'[simp] sorted_snoc_iff[simp] ;;
 
   if \<open>$addr = 0\<close> \<medium_left_bracket>
       val ret \<leftarrow> calloc_1 \<open>Avl_Node\<close> ;;
       $ret \<tribullet> data \<tribullet> k := $k ;;
       $ret \<tribullet> data \<tribullet> v \<tribullet> v := $v ;;
       $ret \<tribullet> data \<tribullet> v \<tribullet> height := 1 ;;
-      \<open>\<langle>\<langle>\<rangle>, (k,1,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BinTree addrb (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>)\<close> ;;
+      \<open>\<langle>\<langle>\<rangle>, (k,1,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BinTree addrb (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>(\<i>\<n>\<t>), v: V \<rbrace> \<rbrace>)\<close> ;;
       return ($ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
+      obtain L k' h' v' R where tree_def[simp]: \<open>tree = \<langle>L, (k', h', v'), R\<rangle>\<close> by auto_sledgehammer ;;
       to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
       if (eq ($k', $k)) \<medium_left_bracket>
         $addr \<tribullet> data \<tribullet> v \<tribullet> v := $v ;;
-        \<open>MAKE 1 (BinTree addr _ _)\<close> ;;
+        \<open>MAKE 1 (BinTree addr _ _)\<close> 
+      (*have t1: \<open>\<And>a aa b. (a, aa, b) \<in> Tree.tree.set_tree (left tree) \<Longrightarrow> a < fst (value tree)\<close> by (cases tree; auto_sledgehammer)
+        have t2: \<open>\<And>a aa b. (a, aa, b) \<in> Tree.tree.set_tree (right tree) \<Longrightarrow> fst (value tree) < a\<close> by (cases tree; auto_sledgehammer) *) ;;
         return ($addr)
       \<medium_right_bracket> \<medium_left_bracket>
         if (cmp ($k, $k')) \<medium_left_bracket>
@@ -772,12 +767,32 @@ proc insert_avl_i:
             $addr \<tribullet> left := $a\<^sub>L' ;;
             \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> 
 
-            note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree (left tree))(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;;
+thm useful
 
-            holds_fact t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree (left tree)))\<close> for k' h v ;;
-            holds_fact t3: \<open>k \<notin> dom (map_option snd \<circ> lookup_tree (right tree))\<close> ;;
+thm lookup_tree_by_set_distinct
+
+  (*          
+            have t2: \<open>(k', h, v) \<in> set_tree tree' \<Longrightarrow> (k' = k \<or> (\<exists>h v. (k',h,v) \<in> set_tree L))\<close> for k' h v
+              using dom_lookup_tree by (auto_sledgehammer)
+*)
+(*note lookup_tree_by_set_distinct[symmetric, simp] *)
+
+              
+;; maintain_i ($addr) certified 
+
+
+;;          
+
+
+            (*note t1 = \<open>map_option snd \<circ> lookup_tree tree' = (map_option snd \<circ> lookup_tree (left tree))(k \<mapsto> v)\<close>[unfolded fun_eq_iff, simplified] ;;
+
+*)
+thm useful
+note fun_eq_iff[\<phi>sledgehammer_simps] ;;
+            have t3: \<open>k \<notin> dom (lookup_tree (right tree))\<close> by (cases tree; auto_sledgehammer)
+ ;;
   
-            return (maintain_i ($addr))
+            
         \<medium_right_bracket>
         \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' ;;
@@ -809,7 +824,7 @@ proc (nodef) insert_avl:
   \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close>
 \<medium_right_bracket> .
 
-
+end
 
 end
 

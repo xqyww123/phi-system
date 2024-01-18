@@ -118,8 +118,11 @@ proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 100]:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
-  $addr semantic_local_value pointer
-  holds_fact t1: \<open>0 < any\<close>
+  $addr semantic_local_value pointer ;;
+  have t1: \<open>0 < any\<close>
+    by (insert \<open>logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
+               \<open>valid_logaddr addr\<close> parse_eleidx_input_def that(1) valid_idx_step_arr,
+        cases addr, auto) ;;
   holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N ;;
   semantic_return \<open>
     V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log_arr TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
@@ -183,7 +186,7 @@ lemma [\<phi>reason %slice_ptr_ToA]:
 \<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
-    to \<open>\<Pp>\<t>\<r> TY'\<close> certified by auto_sledgehammer
+    to \<open>\<Pp>\<t>\<r> TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr, auto_sledgehammer)
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet>\<^sub>a (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _\<close>]:
@@ -192,6 +195,7 @@ lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet>\<^sub>a (_)\<^su
 \<Longrightarrow> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY' \<close>
   \<medium_left_bracket>
     to RawPointer
+    note idx_step_type_arr[simp] ;;
     \<open>i \<Ztypecolon> MAKE _ (\<Ss>\<Pp>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 

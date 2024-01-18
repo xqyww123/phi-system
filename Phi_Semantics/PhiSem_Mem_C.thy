@@ -289,7 +289,8 @@ proc calloc_1:
 
   semantic_assumption \<open>type_storable_in_mem TY\<close>
 
-  holds_fact t1: \<open>valid_logaddr (memaddr blk [])\<close> ;;
+  have t1: \<open>valid_logaddr (memaddr blk [])\<close>
+    by (insert \<phi>; auto simp add: Valid_MemBlk_def split: memblk.split) ;;
 
   semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
     

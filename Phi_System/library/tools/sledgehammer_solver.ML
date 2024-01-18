@@ -121,6 +121,7 @@ fun preplay_ord ((_, Sledgehammer_Proof_Methods.Played t1, _),
       = EQUAL
 
 datatype fail_reason = Too_Many_Subgoals | Timeout | Application_Fails | Subgoal_unsolved | Unknown
+                     | Prompt_Timeout
 exception Auto_Fail of fail_reason
 
 fun eval_prf_str timeout "" (ctxt,sequent) =
@@ -335,7 +336,8 @@ fun sledgehammer (ctxt,sequent0) =
 
       fun search_prf prompt =
         let
-          val (prf0,stat0) = eval_prf_str_stat 5 (SOME (fn () => ("",stat))) prompt stat
+          val (prf0,stat0) = eval_prf_str_stat 8 (SOME (fn () => ("",stat))) prompt stat
+                             handle Auto_Fail Timeout => raise Auto_Fail Prompt_Timeout
           val N = Thm.nprems_of (@{print} (#goal (Proof.raw_goal stat0)))
           val Ns = string_of_int N
 
@@ -360,9 +362,7 @@ fun sledgehammer (ctxt,sequent0) =
       fun rep_tries [] = raise Auto_Fail Application_Fails
         | rep_tries (f::L) = f () handle Auto_Fail _ => rep_tries L
       val prf = rep_tries [
-          (fn () => search_prf "auto simp add: \<phi> \<phi>sledgehammer_simps"
-                    handle Auto_Fail Too_Many_Subgoals =>
-                    search_prf "(clarsimp simp add: \<phi> \<phi>sledgehammer_simps)?, ((rule conjI)+)?"),
+          (fn () => search_prf "insert \<phi>, auto simp add: \<phi>sledgehammer_simps"),
           (fn () => if null local_defs
                     then raise Auto_Fail Unknown
                     else (tracing "Unfolding local definitions..." ;
@@ -370,8 +370,16 @@ fun sledgehammer (ctxt,sequent0) =
                           handle Auto_Fail Too_Many_Subgoals =>
                           search_prf "(clarsimp simp add: \<phi> \<phi>sledgehammer_simps local_defs)?, ((rule conjI)+)?"
                           )),
-          (fn () => (tracing "Still fails... Try more aggresive tactics..." ;
-                     search_prf "insert \<phi>, auto simp add: \<phi>sledgehammer_simps")),
+          (fn () => (tracing "Prompt times out... Try instead a weaker prompt..." ;
+                       search_prf "auto simp add: \<phi> \<phi>sledgehammer_simps"
+                        handle Auto_Fail Too_Many_Subgoals => (
+                          tracing "The prompt generates too many subgoals. Try instead a weaker weaker prompt..." ;
+                          search_prf "(clarsimp simp add: \<phi> \<phi>sledgehammer_simps)?, ((rule conjI)+)?")
+                            | Auto_Fail Prompt_Timeout => (
+                          tracing "The prompt times out again. Try instead a weaker weaker prompt..." ;
+                          search_prf "(clarsimp simp add: \<phi> \<phi>sledgehammer_simps)?, ((rule conjI)+)?"))),
+          (fn () => (tracing "Fails... Try instead a stronger or maybe weaker prompt..." ;
+                     search_prf "insert \<phi>, clarsimp simp add: \<phi>sledgehammer_simps")),
           (fn () => if null local_defs
                     then raise Auto_Fail Unknown
                     else (tracing "Still fails... Unfolding local definitions with aggresive tactics..." ;

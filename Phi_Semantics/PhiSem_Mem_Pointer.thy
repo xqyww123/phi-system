@@ -184,6 +184,11 @@ definition valid_logaddr :: "logaddr \<Rightarrow> bool"
     (memaddr.blk addr = Null \<longrightarrow> memaddr.index addr = []) \<and>
     valid_index (memblk.layout (memaddr.blk addr)) (memaddr.index addr)"
 
+lemma valid_rawaddr_nil[simp]:
+  \<open>valid_logaddr (memaddr blk []) = Valid_MemBlk blk\<close>
+  unfolding valid_logaddr_def
+  by auto
+
 lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr 0\<close>
   by (simp add: zero_prod_def Valid_MemBlk_def zero_memaddr_def)
 
@@ -225,9 +230,13 @@ definition logaddr_to_raw :: \<open>logaddr \<Rightarrow> rawaddr\<close>
   where \<open>logaddr_to_raw addr =
     (case addr of memaddr seg idx \<Rightarrow> memaddr seg (to_size_t (index_offset (memblk.layout seg) idx)))\<close>
 
-lemma logaddr_to_raw_0[simp]:
+lemma logaddr_to_raw_nil[simp]:
   \<open>logaddr_to_raw (memaddr blk []) = (memaddr blk 0)\<close>
   unfolding logaddr_to_raw_def by simp
+
+lemma logaddr_to_raw_0[simp]:
+  \<open>logaddr_to_raw 0 = 0\<close>
+  unfolding logaddr_to_raw_def zero_memaddr_def by simp
 
 lemma logaddr_to_raw_MemBlk[simp]:
   \<open>memaddr.blk (logaddr_to_raw addr) = memaddr.blk addr\<close>

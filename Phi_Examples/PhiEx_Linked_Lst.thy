@@ -43,7 +43,7 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.\<close>
 
 proc nth_llist:
-  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   premises \<open>i < length l\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
   is [recursive]
@@ -59,7 +59,7 @@ proc nth_llist:
 
 
 proc update_nth_llist:
-  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output \<open>l[i := y] \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [recursive]
@@ -77,8 +77,8 @@ end
 
 proc length_of:
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
-  premises \<open>length l < 2 ^ LENGTH(32)\<close>
-  output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
+  premises \<open>length l < 2 ^ LENGTH(\<i>\<n>\<t>)\<close>
+  output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   is [recursive]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
@@ -93,8 +93,8 @@ proc length_of:
 proc length_of':
   \<comment> \<open>personally, I prefer this version which is more readable though costs more annotations\<close>
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
-  premises \<open>length l < 2 ^ LENGTH(32)\<close>
-  output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(32)\<close>
+  premises \<open>length l < 2 ^ LENGTH(\<i>\<n>\<t>)\<close>
+  output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   is [recursive]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>

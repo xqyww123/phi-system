@@ -40,15 +40,17 @@ proc qsort:
         $d \<leftarrow> $d + 1
       \<medium_right_bracket>
       \<medium_left_bracket> \<medium_right_bracket> ;;
+thm useful 
     \<medium_right_bracket> ;;
 
     (*readers may inspect \<open>thm useful\<close> to look the contextual facts*)
     (* thm useful *)
     qsort ($i, $d) ;;
     qsort ($i + $d, $len - $d) ;;
-          
-    holds_fact take_and_drop: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x) \<and>
-                               (\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close> ;;
+         
+    holds_fact take_and_drop[useful]: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x) \<and>
+                                       (\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close> 
+    note sorted_append[simp] ;;
 
     return
 

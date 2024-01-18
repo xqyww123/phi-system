@@ -4284,7 +4284,8 @@ lemma ToA_mapper_MOne_tgt
   apply_rule apply_Semimodule_One\<^sub>I[OF S1I, THEN \<phi>Some_transformation_strip[THEN verit_Pure_trans]]
   certified by auto_sledgehammer ;;
   apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apfst E\<^sub>1 x\<close>]
-  certified by (insert ToA_Mapper_f_expn[OF Tr] useful, auto_sledgehammer) ;;
+  certified by (insert ToA_Mapper_f_expn[OF Tr] useful; auto simp add: fun_eq_iff map_prod_def image_iff;
+                smt (verit, best) Pair_inject apfst_convE case_prod_conv)  ;;
 \<medium_right_bracket> by(rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, clarsimp simp: Premise_def prod.map_beta)
 
 
