@@ -383,7 +383,9 @@ fun sledgehammer (ctxt,sequent0) =
           (fn () => if null local_defs
                     then raise Auto_Fail Unknown
                     else (tracing "Still fails... Unfolding local definitions with aggresive tactics..." ;
-                          search_prf "insert \<phi>, auto simp add: local_defs \<phi>sledgehammer_simps"))
+                          search_prf "insert \<phi>, auto simp add: local_defs \<phi>sledgehammer_simps")),
+          (fn () => (tracing "Fails... Try instead the weakest prompt..." ;
+                     search_prf "-"))
         ]
 
       in prf end) ()
