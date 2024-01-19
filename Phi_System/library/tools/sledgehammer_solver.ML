@@ -125,8 +125,9 @@ datatype fail_reason = Too_Many_Subgoals | Timeout | Application_Fails | Subgoal
 exception Auto_Fail of fail_reason
 
 fun eval_prf_str timeout "" (ctxt,sequent) =
-     (Timeout.apply timeout (Timing.timing (Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1))
-                                  (ctxt,sequent) |> apfst (fn {elapsed=time,...} => (time,""))
+     (Timeout.apply timeout (Timing.timing (
+            Position.setmp_thread_data Position.none (Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1))
+         ) (ctxt,sequent) |> apfst (fn {elapsed=time,...} => (time,""))
               handle Phi_Reasoners.Automation_Fail _ => raise Auto_Fail Application_Fails
                   |  Timeout.TIMEOUT _               => raise Auto_Fail Timeout
                   |  err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
@@ -139,7 +140,8 @@ fun eval_prf_str timeout "" (ctxt,sequent) =
                 |> fst
                 |> Method.check_text ctxt
               ) ctxt [] (ctxt, sequent)
-        in case Timeout.apply timeout (Timing.timing Seq.pull) seq
+        in case Timeout.apply timeout (Timing.timing (
+                    Position.setmp_thread_data Position.none Seq.pull)) seq
              of ({elapsed=time,...}, SOME (Seq.Result ret, _)) => ((time,prf), ret)
               | _ => raise Auto_Fail Application_Fails
       end handle Timeout.TIMEOUT _ => raise Auto_Fail Timeout
@@ -147,11 +149,12 @@ fun eval_prf_str timeout "" (ctxt,sequent) =
                | err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
                           raise Auto_Fail Unknown)
 
+
 fun eval_prf_str_stat timeout F_None prf stat =
     let val ctxt = Proof.context_of stat
         val keywords = Thy_Header.get_keywords (Proof_Context.theory_of ctxt)
     in (case Timeout.apply (Time.fromSeconds timeout)
-                Seq.pull
+                (Position.setmp_thread_data Position.none Seq.pull)
                 (Proof.apply (Parse.read_embedded ctxt keywords Method.parse
                                                   (Input.string ("(" ^ prf ^ ")"))) stat)
           of (SOME (Seq.Result stat', _)) => (prf, stat')
@@ -312,7 +315,7 @@ fun wrapper f (ctxt,sequent) =
     of Const (\<^const_name>\<open>Trueprop\<close>, _) $ \<^const>\<open>True\<close> => @{thm TrueI} RS sequent
      | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ Const(\<^const_name>\<open>True\<close>,_))
          => @{thm Premise_True} RS sequent
-     | _ => assync_prove (Position.setmp_thread_data Position.none f) (ctxt,sequent)
+     | _ => assync_prove f (ctxt,sequent)
 
 val time_delt = Time.fromMilliseconds 1000
 fun folerant_time t = Time.scale 1.3 t + time_delt

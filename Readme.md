@@ -18,11 +18,11 @@ We release the current development as a preview and look for cooperators and con
 
 ## Install \& Configuration
 
-The current version works on Isabelle-2023. Please download it from [here](https://isabelle.in.tum.de/).
+1. The system is built over [Isabelle-2023](https://isabelle.in.tum.de/).
 
-1. Some additional symbols are required. Please copy lines in file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols) into your Isabelle symbol file `$HOME/.isabelle/Isabelle2023/etc/symbols`.
-
-2. You maybe need to install a specific font [PhiSymbols](https://github.com/xqyww123/phi-system/tree/master/fonts/PhiSymbols.otf) given in the font directory which defines glyphs of symbols we used in Isabelle.
+2. We customize fonts and symbols used in the system.
+    Please merge `./symbols` into your Isabelle symbol file `$HOME/.isabelle/Isabelle2023/etc/symbols`.
+    You also need to install PhiSymbols font `./fonts/PhiSymbols.ttf`.
 
 3. Goto the root directory of φ-System. Execute,
 ```
