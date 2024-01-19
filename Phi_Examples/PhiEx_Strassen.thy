@@ -182,6 +182,7 @@ lemma merge_4mat:
 end
 
 
+
 proc strassen:
   input  \<open>A \<Ztypecolon> MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n)\<heavy_comma>
           B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<heavy_comma>
@@ -212,22 +213,23 @@ proc strassen:
     $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A := $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A ! * $a\<^sub>B \<tribullet> $i\<^sub>B \<tribullet> $j\<^sub>B ! ;;
       
     holds_fact [simp]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close>
-    note scalar_prod_def [\<phi>sledgehammer_simps] \<comment> \<open>The proof below requires this annotation.
-                                                   Therefore, the proof below is not considered fully automatic
-                                                   that requires no user intervention\<close>;;
+    note scalar_prod_def [\<phi>sledgehammer_simps] ;;
 
     \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n))\<close> ;;
     \<open>B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n))\<close>
   \<medium_right_bracket>
   \<medium_left_bracket>
-    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close> ;;
+    holds_fact t0: \<open>(2::nat) ^ n = 2 ^ (n - 1) + 2 ^ (n - 1)\<close>
+    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close>  ;;
+        \<comment> \<open>Even when ML-aided ATP \<open>Sledgehammer\<close> is so powerful now, it cannot solve some simple
+            primary-school problems without the \<open>t0\<close> hint ...\<close>
 
     \<open>MatSlice a\<^sub>A _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>A\<^sub>1\<^sub>1, A\<^sub>1\<^sub>2, A\<^sub>2\<^sub>1, A\<^sub>2\<^sub>2 ;;
     \<open>MatSlice a\<^sub>B _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>B\<^sub>1\<^sub>1, B\<^sub>1\<^sub>2, B\<^sub>2\<^sub>1, B\<^sub>2\<^sub>2 ;;
     \<open>MatSlice a\<^sub>C _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>1, M\<^sub>2, M\<^sub>3, M\<^sub>4 ;;
     \<open>MatSlice a\<^sub>D _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>5, M\<^sub>6, M\<^sub>7, M\<^sub>t ;;
 
-    holds_fact t2: \<open>n < addrspace_bits\<close>;;
+    holds_fact t2: \<open>n < addrspace_bits\<close> ;;
 
     1 << ($n-1) \<rightarrow> val N ;;
     $i\<^sub>A + $N \<rightarrow> val i\<^sub>A' ;;

@@ -312,7 +312,7 @@ fun wrapper f (ctxt,sequent) =
     of Const (\<^const_name>\<open>Trueprop\<close>, _) $ \<^const>\<open>True\<close> => @{thm TrueI} RS sequent
      | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ Const(\<^const_name>\<open>True\<close>,_))
          => @{thm Premise_True} RS sequent
-     | _ => assync_prove f (ctxt,sequent)
+     | _ => assync_prove (Position.setmp_thread_data Position.none f) (ctxt,sequent)
 
 val time_delt = Time.fromMilliseconds 1000
 fun folerant_time t = Time.scale 1.3 t + time_delt

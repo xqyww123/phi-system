@@ -40,30 +40,20 @@ proc qsort:
         $d \<leftarrow> $d + 1
       \<medium_right_bracket>
       \<medium_left_bracket> \<medium_right_bracket> ;;
-
     \<medium_right_bracket> ;;
 
     (*readers may inspect \<open>thm useful\<close> to look the contextual facts*)
     (* thm useful *)
     qsort ($i, $d) ;;
-    qsort ($i + $d, $len - $d) thm useful  ;;
+    qsort ($i + $d, $len - $d) ;;
         
     holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x)\<close>
            and t2: \<open>(\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close>
            and t4[simp]: \<open>set l'b = set (drop d l')\<close>
     from \<open>mset (take d l') = mset l'a\<close> have t3[simp]: \<open>set l'a = set (take d l')\<close> by auto_sledgehammer
-;; (* 
-    holds_fact t1: \<open>set (drop (length l'a) l') = set l'b\<close>
-           and t2: \<open>set (take (length l'a) l') = set l'a\<close>
-           and t3: \<open>\<forall>j < length l'a. \<exists>k<length l'a. l'a ! j = l' ! k\<close>
-thm useful
- ;; *)
     note [\<phi>sledgehammer_simps] = sorted_append  ;;
 
-    return (*certified apply auto
-apply (auto_sledgehammer)[1]
-apply (auto_sledgehammer)[1]*)
-
+    return
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
