@@ -2287,22 +2287,17 @@ end
 end
 
 context includes fmap.lifting begin
-lemma times_fmlookup:
+lemma times_fmlookup[simp]:
   \<open>fmlookup (f * g) x = fmlookup f x * fmlookup g x\<close> by (transfer; simp)
 end
 
-instantiation "fmap" :: (type,one) one begin
-context includes fmap.lifting begin
-lift_definition one_fmap :: \<open>('a, 'b) fmap\<close> is "(\<lambda>(x::'a). (1::'b option))" by simp
+instantiation "fmap" :: (type,type) one begin
+definition one_fmap :: \<open>('a, 'b) fmap\<close>
+  where [iff]: \<open>one_fmap = fmempty\<close>
 instance ..
-end
 end
 
 lemma one_fmap[simp]: "fmlookup 1 x = 1" including fmap.lifting by (transfer; simp)
-
-instance "fmap" :: (type,mult_1) mult_1
-  including fmap.lifting
-  by (standard; transfer; simp)
 
 instantiation fmap :: (type,sep_disj) sep_disj begin
 context includes fmap.lifting begin
@@ -2311,6 +2306,25 @@ lift_definition sep_disj_fmap :: \<open>('a, 'b) fmap \<Rightarrow> ('a, 'b) fma
 instance ..
 end
 end
+
+context includes fmap.lifting begin
+
+lemma fmap_times_fempty[simp]:
+  \<open>f * fmempty = f\<close>
+  \<open>fmempty * f = f\<close>
+  by (transfer, auto, transfer, auto)
+
+lemma fmap_sepdisj_fmempty[simp]:
+  \<open>f ## fmempty\<close>
+  \<open>fmempty ## f\<close>
+  by (transfer, auto, transfer, auto)
+
+end
+
+instance "fmap" :: (type,times) mult_1
+  including fmap.lifting
+  by (standard; transfer; simp)
+
 
 instance "fmap" :: (type,sep_magma) sep_magma ..
 
@@ -2326,10 +2340,68 @@ end
 
 end
 
-instance "fmap" :: (type,sep_magma_1) sep_magma_1
+instance "fmap" :: (type,sep_magma) sep_magma_1
   including fmap.lifting
   by (standard; transfer; simp)
   
+context includes fmap.lifting fset.lifting begin
+
+lemma fmap_times_single[simp]:
+  \<open>s |\<notin>| fmdom y \<Longrightarrow> y * fmupd s x fmempty = fmupd s x y\<close>
+proof (transfer, auto)
+  fix sa :: 'a and ya :: "'a \<Rightarrow> 'b option" and xa :: 'b
+  assume a1: "(\<lambda>x. ya x * map_upd sa xa (\<lambda>x. None) x) \<noteq> map_upd sa xa ya"
+  obtain zz :: "'a \<Rightarrow> 'b option" where
+    f2: "\<forall>X23. zz X23 = None"
+    by moura
+  obtain aa :: 'a and zza :: "'a \<Rightarrow> 'b option" where
+    "ya aa * map_upd sa xa zza aa \<noteq> map_upd sa xa ya aa"
+    using a1 by blast
+  then show "\<exists>b. ya sa = Some b"
+  proof -
+    obtain aaa :: 'a where
+      f1: "ya aaa * map_upd sa xa (\<lambda>a. None) aaa \<noteq> map_upd sa xa ya aaa"
+      using a1 by blast
+    obtain zzb :: "'a \<Rightarrow> 'b option" where
+      f2: "\<forall>X1. zzb X1 = None"
+      by moura
+    then have "ya aaa * map_upd sa xa zzb aaa \<noteq> map_upd sa xa ya aaa"
+      using f1 by presburger
+    then show ?thesis
+      using f2 by (metis fun_upd_other fun_upd_same map_upd_def option.exhaust_sel times_option(2) times_option(3))
+  qed
+qed
+
+
+lemma fmdom_times[simp]:
+  \<open>fmdom (fm1 * fm2) = fmdom fm1 |\<union>| fmdom fm2\<close>
+  by (transfer, auto simp add: domD domIff)
+
+lemma fmupd_times_right:
+  \<open> k |\<notin>| fmdom y
+\<Longrightarrow> fmupd k v (x * y) = fmupd k v x * y\<close>
+  by (transfer, auto simp: map_upd_def fun_eq_iff, insert domIff, fastforce)
+
+lemma fmupd_times_left:
+  \<open> k |\<notin>| fmdom x
+\<Longrightarrow> fmupd k v (x * y) = x * fmupd k v y\<close>
+  by (transfer, auto simp: map_upd_def fun_eq_iff, insert domIff, fastforce)
+
+lemma sep_disj_fmupd_right[simp]:
+  \<open> k |\<notin>| fmdom f
+\<Longrightarrow> k |\<notin>| fmdom g
+\<Longrightarrow> f ## g
+\<Longrightarrow> f ## fmupd k v g \<close>
+  by (transfer, auto simp add: map_upd_def)
+
+lemma sep_disj_fmupd_left[simp]:
+  \<open> k |\<notin>| fmdom f
+\<Longrightarrow> k |\<notin>| fmdom g
+\<Longrightarrow> g ## f
+\<Longrightarrow> fmupd k v g ## f \<close>
+  by (transfer, auto simp add: map_upd_def)
+
+end
 
 
 subsection \<open>Unit\<close>
