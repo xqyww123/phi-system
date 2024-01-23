@@ -124,7 +124,7 @@ proc reverse_aux:
       to \<open>OPEN 1 _\<close> ;;
       $addr \<tribullet> nxt ! \<rightarrow> val aa ;;
       $addr \<tribullet> nxt := $addr' ;;
-      (*select*) \<open>Linked_Lst addr' TY T\<close> (*to apply 1st constructor*) \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;
+      (*select*) \<open>Linked_Lst addr' TY T\<close> (*to apply*) \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;
       reverse_aux ($addr, $aa) 
     \<medium_right_bracket>
   \<medium_right_bracket> .
