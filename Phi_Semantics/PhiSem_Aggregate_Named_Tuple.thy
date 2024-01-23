@@ -207,7 +207,7 @@ subsection \<open>Empty Tuple\<close>
 
 subsection \<open>Field\<close>
 
-\<phi>reasoner_group Field = (100,[0,9999]) \<open>derived reasoning rules of Field\<close>
+\<phi>reasoner_group Field = (100,[0,9999]) \<open>storing derived reasoning rules of Field\<close>
 
 declare [[collect_reasoner_statistics Field start,
           \<phi>LPR_collect_statistics derivation start]]
@@ -223,7 +223,7 @@ declare [[collect_reasoner_statistics Field start,
 declare [[collect_reasoner_statistics Field stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Field})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Field})) "derivation"\<close>
 
 
 subsubsection \<open>Syntax\<close>
@@ -258,7 +258,8 @@ let_\<phi>type Named_Tuple_Field
        and \<open> Semantic_Zero_Val ty T x
          \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
 
-
+text \<open>All the reasoning rules below are for semantic properties.
+      All reasoning rules for transformations and SL are derived automatically by the above \<open>\<phi>type_def\<close> command\<close>
 
 lemma Empty_Tuple_reduce[simp]:
   \<open>(((),a) \<Ztypecolon> Empty_Named_Tuple \<^emph> \<lbrace> SYMBOL_VAR(s): T \<rbrace>) = (a \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
@@ -303,6 +304,9 @@ lemma [\<phi>reason %\<phi>sem_type_cut+10]:
 
 
 section \<open>Reasoning\<close>
+
+text \<open>All the reasoning rules below are for semantic properties.
+      All reasoning rules for transformations and SL are derived automatically by the above \<open>\<phi>type_def\<close> command\<close>
 
 subsubsection \<open>Is_Named_Tuple\<close>
 
@@ -517,9 +521,6 @@ setup \<open>Context.theory_map (
          end
     else NONE
 ))\<close>
-
-subsection \<open>Auxiliary\<close>
-
 
 
 subsection \<open>Synthesis\<close>

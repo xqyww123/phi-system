@@ -85,6 +85,8 @@ end
 
 subsection \<open>Fiction Base\<close>
 
+\<phi>reasoner_group Resource_Space = (100, [0,9999]) \<open>derived reasoning rules for Resource_Space\<close>
+
 locale basic_fiction =
    R: resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
@@ -96,15 +98,9 @@ begin
 
 subsubsection \<open>\<phi>-Type\<close>
 
-(*TODO:
+declare [[collect_reasoner_statistics Resource_Space start,
+          \<phi>LPR_collect_statistics derivation start]]
 
-\<phi>type_def \<phi> :: \<open>('U,'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close> where [\<phi>expns]: \<open>\<phi> T = (\<phi>Fun mk \<Zcomp> T)\<close>
-
-lemma [\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-*)
- 
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
   deriving Sep_Functor_1
@@ -119,6 +115,10 @@ declare \<phi>.\<S>\<^sub>E[where g=\<open>\<lambda>x. x\<close> and f=\<open>\<
 
 declare \<phi>.\<phi>Sum.rewr[assertion_simps]
 
+declare [[collect_reasoner_statistics Resource_Space stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Resource_Space})) "derivation"\<close>
 
 lemma \<phi>_unit:
   \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>

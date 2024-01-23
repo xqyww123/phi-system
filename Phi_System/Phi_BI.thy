@@ -2854,7 +2854,7 @@ definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<
 declare [[collect_reasoner_statistics \<phi>Some stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Some})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Some})) "derivation"\<close>
 
 lemma \<phi>Some_expn[simp, \<phi>expns]:
   \<open>p \<Turnstile> (x \<Ztypecolon> \<black_circle> T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))\<close>

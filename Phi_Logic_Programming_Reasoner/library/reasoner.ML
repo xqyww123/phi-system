@@ -208,8 +208,8 @@ signature NU_REASONER = sig
   val start_collecting_reasoners : Reasoner_Group.name -> Context.generic -> Context.generic
   val stop_collecting_reasoners  : Reasoner_Group.name -> Context.generic -> Context.generic
 
-  val clear_utilization_of_group_P : theory -> (Reasoner_Group.name list -> bool) -> PLPR_Statistics.group_name -> unit
-  val clear_utilization_of_group : theory -> Reasoner_Group.name -> PLPR_Statistics.group_name -> unit
+  val clear_utilization_statistics_of_group_P : theory -> (Reasoner_Group.name list -> bool) -> PLPR_Statistics.group_name -> unit
+  val clear_utilization_statistics_of_group : theory -> Reasoner_Group.name -> PLPR_Statistics.group_name -> unit
 
   val utilization_of_group_P : theory -> (Reasoner_Group.name list -> bool) -> PLPR_Statistics.group_name -> (thm * int) list
   val utilization_of_group_in_all_theories : Context.generic -> Reasoner_Group.name -> PLPR_Statistics.group_name -> (thm * int) list
@@ -531,7 +531,7 @@ fun reasoners_of_group ctxt P =
           then SOME (#4 r)
           else NONE )
 
-fun clear_utilization_of_group_P thy P statistics_group =
+fun clear_utilization_statistics_of_group_P thy P statistics_group =
   let val all_utilization = PLPR_Statistics.utilization thy statistics_group
    in reasoners_of_group (Context.Theory thy) P
    |> List.app (fn {tactic = Tac_Rule rules, ...} =>
@@ -547,8 +547,8 @@ fun clear_utilization_of_group_P thy P statistics_group =
       )
   end
 
-fun clear_utilization_of_group thy reasoner_group =
-      clear_utilization_of_group_P thy (fn L => member (op =) L reasoner_group)
+fun clear_utilization_statistics_of_group thy reasoner_group =
+      clear_utilization_statistics_of_group_P thy (fn L => member (op =) L reasoner_group)
 
 fun utilization_of_group_P thy P statistics_group =
   let val all_utilization = PLPR_Statistics.utilization thy statistics_group

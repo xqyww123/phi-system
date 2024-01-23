@@ -69,7 +69,8 @@ ML \<open>report_utilization ["program", "derivation"]
        [@{reasoner_group %Field}, @{reasoner_group %Array},
         @{reasoner_group %\<phi>MapAt}, @{reasoner_group %\<phi>MapAt_L}, @{reasoner_group %\<phi>Some},
         @{reasoner_group %Mem_Coercion}, @{reasoner_group %\<phi>Share},
-        @{reasoner_group %Var}, @{reasoner_group %MemBlk}, 
+        @{reasoner_group %Resource_Space},
+        @{reasoner_group %Var}, @{reasoner_group %MemBlk},
         @{reasoner_group %\<phi>Mul_Quant_Tree},
         @{reasoner_group %Linked_Lst}, @{reasoner_group %DynArr},
         @{reasoner_group %BinTree}, @{reasoner_group %Bin_Search_Tree}, @{reasoner_group %AVL_Tree} ] \<close>

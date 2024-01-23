@@ -1816,7 +1816,7 @@ let_\<phi>type \<phi>Some
 declare [[collect_reasoner_statistics \<phi>Some stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Some})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Some})) "derivation"\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Some.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<black_circle> ?T) ?P  \<close>),
@@ -2277,7 +2277,7 @@ declare [[collect_reasoner_statistics \<phi>MapAt start,
         \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) \<DD>[\<delta>] \<DD>[(\<circ>) \<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_one \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[(\<circ>) \<delta>] \<DD>[\<delta>] ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-       (*TODO: and Abstraction_to_Raw *)
+       (*TODO: fixe guess Abstraction_to_Raw *)
        and \<open>?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T \<Longrightarrow> 1(?k := ?c) \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T\<close>
        and \<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c::one,?'c) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'c,?'c) \<phi>))
          \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = 1(?k := x) \<and> ?r x' x) @action to (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>)\<close>
@@ -2285,7 +2285,7 @@ declare [[collect_reasoner_statistics \<phi>MapAt start,
 declare [[collect_reasoner_statistics \<phi>MapAt stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %\<phi>MapAt})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>MapAt})) "derivation"\<close>
 
 ML \<open>Phi_Reasoner.reasoners_of_group (Context.Proof \<^context>) (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt}))) |> length\<close>
 
@@ -2322,20 +2322,12 @@ ML \<open>assert_derived_properties \<^theory> [
                                                       \<Longrightarrow> ?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = 1(?k := x) \<and> ?r ?x x) @action to (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>) \<close>)
 ]\<close>
 
+(*
 declare \<phi>MapAt.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified, \<phi>reason add]
         \<phi>MapAt.\<Sigma>\<^sub>E[\<phi>reason add]
-
-thm \<phi>MapAt.ToA_mapper
-
-(*
-lemma [\<phi>reason add]:
-  \<open> \<g>\<e>\<t>\<t>\<e>\<r> h : T \<^emph>[C\<^sub>W] W \<mapsto> U \<^emph>[C\<^sub>R] R \<i>\<n> D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s
-\<Longrightarrow> \<g>\<e>\<t>\<t>\<e>\<r> h : k \<^bold>\<rightarrow> T \<^emph>[C\<^sub>W] k \<^bold>\<rightarrow> W \<mapsto> k \<^bold>\<rightarrow> U \<^emph>[C\<^sub>R] k \<^bold>\<rightarrow> R \<i>\<n> D \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> s \<close>
-  for h :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> and T :: \<open>('c::sep_magma_1, 'a) \<phi>\<close>
-  by (rule \<phi>MapAt.ToA_mapper[where f=id and f'=id and g=\<open>id\<close> and g'=\<open>id\<close>, simplified]; simp)
 *)
+thm \<phi>MapAt.\<Sigma>\<^sub>I[where c=\<open>fst\<close>, simplified]
 
-setup \<open>Config.put_global PLPR_Rule_Gen.simp_timeout ~1\<close>
 
 
 subsubsection \<open>By List of Keys\<close>
@@ -2365,7 +2357,7 @@ declare [[collect_reasoner_statistics \<phi>MapAt_L start,
 declare [[collect_reasoner_statistics \<phi>MapAt_L stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %\<phi>MapAt_L})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>MapAt_L})) "derivation"\<close>
 
 (*TODO: and Abstraction_to_Raw*)
 
@@ -2383,8 +2375,8 @@ lemma
 *)
 thm \<phi>MapAt_L.scalar_partial_functor
 
-  thm \<phi>MapAt_L.scalar_functor
-  thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I
+thm \<phi>MapAt_L.scalar_functor
+thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I
 thm \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E
 thm \<phi>MapAt_L.Functional_Transformation_Functor
 thm \<phi>MapAt_L.Separation_Homo\<^sub>E_Cond
@@ -2478,7 +2470,7 @@ declare [[collect_reasoner_statistics \<phi>Share start,
 declare [[collect_reasoner_statistics \<phi>Share stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Share})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Share})) "derivation"\<close>
 
 declare [[\<phi>ToA_assoc_normalization \<open>?n \<odiv> ?m \<odiv> ?T\<close> (100)]]
 
@@ -3013,7 +3005,7 @@ declare [[collect_reasoner_statistics \<phi>Mul_Quant_Tree start,
 declare [[collect_reasoner_statistics \<phi>Mul_Quant_Tree stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Mul_Quant_Tree})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Mul_Quant_Tree})) "derivation"\<close>
 
 thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>I_Cond
 thm \<phi>Mul_Quant_Tree.Separation_Homo\<^sub>E_Cond

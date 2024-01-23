@@ -188,6 +188,9 @@ definition op_set_aggregate :: "TY \<Rightarrow> TY \<Rightarrow> aggregate_path
 
 section \<open>Reasoning\<close>
 
+text \<open>All the reasoning rules below are for semantic properties.
+      All reasoning rules for transformations and SL are derived automatically\<close>
+
 subsection \<open>Index Validation\<close>
 
 definition \<open>is_valid_step_idx_of idx T U \<longleftrightarrow> valid_idx_step T idx \<and> U = idx_step_type idx T\<close>

@@ -49,6 +49,16 @@ debt_axiomatization
   and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (V_array.mk vs) = V_array.mk (vs[i := f (vs!i)])\<close>
   and   type_measure_arr : \<open>type_measure (\<a>\<r>\<r>\<a>\<y>[N] T) = Suc (type_measure T)\<close>
 
+  and   V_arr_sep_disj[simp]:
+            \<open>V_array.mk vs1 ## V_array.mk vs2 \<longleftrightarrow> list_all2 (##) vs1 vs2\<close>
+  and   V_arr_mult[simp]:
+            \<open>V_array.mk vs1 * V_array.mk vs2 = V_array.mk (map2 (*) vs1 vs2)\<close>
+  and   V_arr_sep_disj_R:
+            \<open>V_array.mk vs1 ## vs2' \<Longrightarrow> (\<exists>vs. vs2' = V_array.mk vs)\<close>
+  and   V_named_tup_sep_disj_L:
+            \<open>vs1' ## V_array.mk vs2 \<Longrightarrow> (\<exists>vs. vs1' = V_array.mk vs)\<close>
+
+
 lemma list_all_replicate[simp]:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
   by (induct n; simp; blast)
@@ -85,13 +95,34 @@ declare [[collect_reasoner_statistics Array start,
        and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
+
 declare [[collect_reasoner_statistics Array stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Array})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Array})) "derivation"\<close>
+
+lemma Separation_Homo\<^sub>I_Array[\<phi>reason add]:
+  \<open>Separation_Homo\<^sub>I (Array n) (Array n) (Array n) T U {(x,y). length x = length y} (\<lambda>(x,y). zip x y)\<close>
+  unfolding Separation_Homo\<^sub>I_def Transformation_def
+  by (auto simp: list_all2_conv_all_nth; blast)
+
+lemma Separation_Homo\<^sub>E_Array[\<phi>reason add]:
+  \<open>Separation_Homo\<^sub>E (Array n) (Array n) (Array n) T U list.unzip \<close>
+  unfolding Separation_Homo\<^sub>E_def Transformation_def
+  apply (auto simp: list_all2_conv_all_nth choice_iff
+                    ex_simps(6)[where P=\<open>i < j\<close> for i j, symmetric]
+              simp del: ex_simps)
+  subgoal for z vs f1 f2
+    by(rule exI[where x=\<open>V_array.mk (map f1 [0..<length z])\<close>],
+       rule exI[where x=\<open>V_array.mk (map f2 [0..<length z])\<close>],
+       auto_sledgehammer) .
+
 
 
 section \<open>Reasoning\<close>
+
+text \<open>All the reasoning rules below are for semantic properties.
+      All reasoning rules for transformations and SL are derived automatically by the above \<open>\<phi>type_def\<close> command\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N

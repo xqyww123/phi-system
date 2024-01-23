@@ -40,7 +40,7 @@ declare [[collect_reasoner_statistics Mem_Coercion start,
 declare [[collect_reasoner_statistics Mem_Coercion stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Mem_Coercion})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Mem_Coercion})) "derivation"\<close>
 
 
 subsection \<open>Memory Object\<close>
@@ -57,7 +57,7 @@ declare [[collect_reasoner_statistics MemBlk start,
 declare [[collect_reasoner_statistics MemBlk stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %MemBlk})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %MemBlk})) "derivation"\<close>
 
 
 

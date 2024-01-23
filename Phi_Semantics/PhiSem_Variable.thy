@@ -72,7 +72,7 @@ declare [[collect_reasoner_statistics Var start,
 declare [[collect_reasoner_statistics Var stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Var})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Var})) "derivation"\<close>
 
 abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Inited_Var vname T \<equiv> Var vname (\<black_circle> T)\<close>

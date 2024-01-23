@@ -171,6 +171,9 @@ lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
 
 section \<open>Reasoning\<close>
 
+text \<open>All the reasoning rules below are for semantic properties.
+      All reasoning rules for transformations and SL are derived automatically\<close>
+
 subsection \<open>Show validity of an index for a type\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:

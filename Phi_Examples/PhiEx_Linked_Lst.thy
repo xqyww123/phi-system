@@ -27,7 +27,7 @@ declare [[collect_reasoner_statistics Linked_Lst start,
 declare [[collect_reasoner_statistics Linked_Lst stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Linked_Lst})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Linked_Lst})) "derivation"\<close>
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics]]

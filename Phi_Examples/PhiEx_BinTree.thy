@@ -272,7 +272,7 @@ declare [[collect_reasoner_statistics BinTree start,
 declare [[collect_reasoner_statistics BinTree stop,
          \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %BinTree})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %BinTree})) "derivation"\<close>
 
 declare [[collect_reasoner_statistics Bin_Search_Tree start,
          \<phi>LPR_collect_statistics derivation start]]
@@ -310,7 +310,7 @@ lemma rel_tree_eq_norm:
 declare [[collect_reasoner_statistics Bin_Search_Tree stop,
          \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %Bin_Search_Tree})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Bin_Search_Tree})) "derivation"\<close>
 
 primrec AVL_invar
   where \<open>AVL_invar \<langle>\<rangle> \<longleftrightarrow> True\<close>
@@ -363,7 +363,7 @@ declare [[collect_reasoner_statistics AVL_Tree start,
 declare [[collect_reasoner_statistics AVL_Tree stop,
          \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_of_group \<^theory> (the (snd @{reasoner_group %AVL_Tree})) "derivation"\<close>
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %AVL_Tree})) "derivation"\<close>
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
   \<comment> \<open>For some reason I don't know, sledgehammer fails silently (with throwing an Interrupt exception)
