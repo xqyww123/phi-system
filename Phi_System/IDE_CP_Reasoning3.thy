@@ -639,7 +639,7 @@ let_\<phi>type \<phi>Some    deriving \<open>Gen_Br_Join \<phi>Some \<phi>Some \
 let_\<phi>type \<phi>MapAt   deriving \<open>Gen_Br_Join ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k') ((\<^bold>\<rightarrow>) k) P (k' = k)\<close>
 let_\<phi>type \<phi>MapAt_L deriving \<open>Gen_Br_Join ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') ((\<^bold>\<rightarrow>\<^sub>@) k) P (k' = k)\<close>
 let_\<phi>type \<phi>Share   deriving \<open>Gen_Br_Join ((\<odiv>) n) ((\<odiv>) m) ((\<odiv>) (If P n m)) P True\<close>
-let_\<phi>type Nosep    deriving \<open>Gen_Br_Join Nosep Nosep Nosep P True\<close>
+let_\<phi>type Discrete    deriving \<open>Gen_Br_Join Discrete Discrete Discrete P True\<close>
 let_\<phi>type Val      deriving \<open>Gen_Br_Join (Val v) (Val v) (Val v) P True\<close>
 
 

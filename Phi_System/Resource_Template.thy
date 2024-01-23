@@ -358,7 +358,7 @@ lemma contract:
 
 paragraph \<open>\<phi>-Type\<close>
 
-abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nosep T))\<close>
+abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Discrete T))\<close>
 
 (*
 declare NToA_by_structural_extraction

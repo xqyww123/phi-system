@@ -64,7 +64,7 @@ declare [[collect_reasoner_statistics Var start,
           \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def Var :: \<open>varname \<Rightarrow> (VAL option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
-  where \<open>Var vname T \<equiv> (FIC.Var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close>
+  where \<open>Var vname T \<equiv> (FIC.Var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Discrete T)))\<close>
   deriving Basic
        and Functional_Transformation_Functor
        and \<open>Gen_Br_Join (Var v) (Var v) (Var v) P True \<close>

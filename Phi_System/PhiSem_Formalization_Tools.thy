@@ -666,7 +666,7 @@ declare NToA_by_structural_extraction__reverse_transformation
 end
 
 
-subsection \<open>Nosep Monolithic Resource\<close>
+subsection \<open>Discrete Monolithic Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::discrete_semigroup option\<close>\<close>
 
 (* locale discrete_mono_resource =
@@ -733,7 +733,7 @@ lemma contract:
 
 paragraph \<open>\<phi>-Type\<close>
 
-abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nosep T))\<close>
+abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Discrete T))\<close>
 
 (*declare NToA_by_structural_extraction
     [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
@@ -979,7 +979,7 @@ and Fic :: "('key \<Rightarrow> 'val discrete share option) fiction_entry"
 begin
 
 lemma \<phi>discrete_normalize:
-  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nosep Itself)))))
+  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Discrete Itself)))))
  = (discrete x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Itself))))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
