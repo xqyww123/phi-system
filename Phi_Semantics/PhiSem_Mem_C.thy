@@ -141,14 +141,6 @@ setup \<open>Context.theory_map (
      | _ => NONE)
 )\<close>
 
-(* examples
-term \<open>n \<odiv> T\<close>
-term \<open>\<m>\<e>\<m>[addr] T\<close>
-term \<open>MAKE\<close>
-ML \<open>\<^const_name>\<open>MAKE\<close>\<close>
-ML \<open>@{term \<open>MAKE (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<close>}\<close>
-ML \<open>@{term \<open>\<m>\<e>\<m>[addr] (MAKE (n \<odiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))\<close>}\<close>
-*)
 
 paragraph \<open>Slice\<close>
 
@@ -188,9 +180,6 @@ setup \<open>Context.theory_map (
      | _ => NONE)
 )\<close>
 
-(* example
-term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] T\<close>
-*)
 
 section \<open>Instructions & Their Specifications\<close>
 

@@ -273,7 +273,7 @@ fun raw_sledgehammer stat =
 
 (*** Proof search using Sledgehammer ***)
 
-val assync_proof = Attrib.setup_config_bool \<^binding>\<open>\<phi>assync_proof\<close> (K true)
+val assync_proof = Attrib.setup_config_bool \<^binding>\<open>\<phi>async_proof\<close> (K true)
 
 fun assync_prove f (ctxt,sequent) =
   let val (goal_term,_) = Thm.cprop_of sequent |> Thm.dest_implies

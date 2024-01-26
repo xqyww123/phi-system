@@ -1,0 +1,8 @@
+session "Phi_Examples" = "Phi_Semantics" +
+  theories
+    PhiEx_BinTree
+    PhiEx_DynArr
+    PhiEx_Linked_Lst
+    PhiEx_Rational
+    PhiEx_Slice
+    PhiEx_Strassen

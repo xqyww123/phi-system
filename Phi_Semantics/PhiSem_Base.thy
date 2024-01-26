@@ -1,5 +1,5 @@
 theory PhiSem_Base
-  imports Phi_System.PhiSem_Formalization_Tools2
+  imports Phi_System.PhiSem_Formalization_Tools
 begin
 
 section \<open>Semantics Base\<close>

@@ -6,17 +6,16 @@ begin
 declare [[recording_timing_of_semantic_operation = true,
          \<phi>LPR_collect_statistics derivation start]]
 
-
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
   where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
-  deriving Basic
-       and \<open>Object_Equiv \<rat> (=)\<close>
+  deriving Abstract_Domain\<^sub>L (*Basic
+       and \<open>Object_Equiv \<rat> (=)\<close>*)
 
 
 declare [[\<phi>LPR_collect_statistics derivation stop,
           \<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
-          \<phi>assync_proof = false]]
+          \<phi>async_proof = true]]
 
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
@@ -67,7 +66,7 @@ ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' rat_di
 
 declare [[\<phi>LPR_collect_statistics program stop,
           collecting_subgoal_statistics = false,
-          \<phi>assync_proof,
+          \<phi>async_proof,
           recording_timing_of_semantic_operation = false]]
 
 end

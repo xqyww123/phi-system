@@ -20,6 +20,8 @@ declare [[collect_reasoner_statistics MatSlice start,
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
+       and \<open>Object_Equiv (MatSlice addr i j m n) (=)\<close>
+       and Basic
 
 declare [[collect_reasoner_statistics MatSlice stop,
          \<phi>LPR_collect_statistics derivation stop]]
@@ -36,7 +38,7 @@ declare [[collect_reasoner_statistics MatSlice stop,
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
-          \<phi>assync_proof = false]]
+          \<phi>async_proof = true]]
 
 declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
         list_all2_conv_all_nth[\<phi>sledgehammer_simps] zero_mat_def[\<phi>sledgehammer_simps]
@@ -212,24 +214,24 @@ proc strassen:
 
     $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A := $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A ! * $a\<^sub>B \<tribullet> $i\<^sub>B \<tribullet> $j\<^sub>B ! ;;
       
-    holds_fact [simp]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close>
-    note scalar_prod_def [\<phi>sledgehammer_simps] ;;
+    holds_fact [simp]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof, Tac-s*)
+    note scalar_prod_def [\<phi>sledgehammer_simps] ;;                                       (*for proof, Tac-m*)
 
     \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n))\<close> ;;
     \<open>B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n))\<close>
   \<medium_right_bracket>
   \<medium_left_bracket>
-    holds_fact t0: \<open>(2::nat) ^ n = 2 ^ (n - 1) + 2 ^ (n - 1)\<close>
-    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close>  ;;
+    holds_fact t0: \<open>(2::nat) ^ n = 2 ^ (n - 1) + 2 ^ (n - 1)\<close>                          (*for proof, Tac-s*)
+    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close> ;;                 (*for reasoning, A*)
         \<comment> \<open>Even when ML-aided ATP \<open>Sledgehammer\<close> is so powerful now, it cannot solve some simple
-            primary-school problems without the \<open>t0\<close> hint ...\<close>
+            high-school problems without the \<open>t0\<close> hint ...\<close>
 
     \<open>MatSlice a\<^sub>A _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>A\<^sub>1\<^sub>1, A\<^sub>1\<^sub>2, A\<^sub>2\<^sub>1, A\<^sub>2\<^sub>2 ;;
     \<open>MatSlice a\<^sub>B _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>B\<^sub>1\<^sub>1, B\<^sub>1\<^sub>2, B\<^sub>2\<^sub>1, B\<^sub>2\<^sub>2 ;;
     \<open>MatSlice a\<^sub>C _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>1, M\<^sub>2, M\<^sub>3, M\<^sub>4 ;;
     \<open>MatSlice a\<^sub>D _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>5, M\<^sub>6, M\<^sub>7, M\<^sub>t ;;
  
-    holds_fact t2: \<open>n < addrspace_bits\<close> ;;
+    holds_fact t2: \<open>n < addrspace_bits\<close> ;;                                              (*for proof, Tac-s*)
 
     1 << ($n-1) \<rightarrow> val N ;;
     $i\<^sub>A + $N \<rightarrow> val i\<^sub>A' ;;
@@ -247,13 +249,11 @@ proc strassen:
     add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) ;;
     strassen ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C , (*M\<^sub>1*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t *)
               $a\<^sub>C, $i\<^sub>C , $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3 *) $n-1) ;;
-    (*here we use M\<^sub>2, M\<^sub>3 as the buffer of the multiplication between M\<^sub>1 and M\<^sub>t*)
 
     copy_mat ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A , (*A\<^sub>2\<^sub>1*) $N, $N) ;;
     add_mat  ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) ;;
     strassen ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*)
               $a\<^sub>C, $i\<^sub>C', $j\<^sub>C, (*M\<^sub>3*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $n-1) ;;
-    (*here we use M\<^sub>3, M\<^sub>4 as the buffer of the multiplication between M\<^sub>2 and B\<^sub>1\<^sub>1*)
 
     copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B', (*B\<^sub>1\<^sub>2*) $N, $N) ;;
     sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) ;;
@@ -306,10 +306,10 @@ proc strassen:
 
     (*Below, the proof is stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 175-182, 227-239, lemma strassen_mat_mult*)
 
-    holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>
-                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> ;;
+    holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>                      (*for proof, Tac-s*)
+                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> ;;                   (*for proof, Tac-s*)
 
-    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
+    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>                                       (*for proof, each line is counted as one Tac-m*)
                     \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
                     \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
                     \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
@@ -367,7 +367,7 @@ proc strassen_mul:
 declare [[\<phi>LPR_collect_statistics program stop,
           collecting_subgoal_statistics=false,
           recording_timing_of_semantic_operation = false,
-          \<phi>assync_proof = true]]
+          \<phi>async_proof = true]]
 
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_mul_def})))\<close>
 ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_def})))\<close>

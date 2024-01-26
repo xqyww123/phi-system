@@ -468,14 +468,13 @@ subsection \<open>Synthesis\<close>
 
 text \<open>The synthesis involves not only making a program but also finding a view shift or a ToA.
 
-On a ready state of a construction like \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S\<close> or \<open>(\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S)\<close>,
-the synthesis mechanism makes some program or find some ToA to bring or to make the given
-specification come true. Example: given the specification \<open>X\<close>, the synthesis mechanism is expected
-to deduce \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S'\<heavy_comma> X\<close> or \<open>(\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S'\<heavy_comma> X)\<close>. The state \<open>S\<close> may be
-changed to \<open>S'\<close>, but the change is minimal and only necessary for synthesising the \<open>X\<close>.
+Given a target assertion \<open>X\<close> intended to be synthesized,
+on a ready state of a construction like \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S\<close> or \<open>(\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S)\<close>,
+the mechanism synthesizes programs or deduces ToA to deduce the state sequent into
+ \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S'\<heavy_comma> X\<close> or \<open>(\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S'\<heavy_comma> X)\<close>.
 
-On a state sequent having some antecedent like \<open>P \<Longrightarrow> Q\<close>, the synthesis mechanism is expected
-to solve the antecedent \<open>P\<close> according to the given specification from user.
+On a state sequent having antecedents, e.g. \<open>P \<Longrightarrow> Q\<close>, the synthesis mechanism solve the antecedent
+\<open>P\<close> according to the given specification from user.
 For example, the \<open>P\<close> can be the specification of a procedure to be programmed, like the guard
 \<open>P \<equiv> \<p>\<r>\<o>\<c> ?f \<lbrace> X \<longmapsto> ?cond \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close> of the branch statement. In this case
 the mechanism is to synthesis that guard according to the user-given specification, like \<open>$x > 2\<close>

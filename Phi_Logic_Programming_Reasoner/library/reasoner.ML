@@ -212,7 +212,8 @@ signature NU_REASONER = sig
   val clear_utilization_statistics_of_group : theory -> Reasoner_Group.name -> PLPR_Statistics.group_name -> unit
 
   val utilization_of_group_P : theory -> (Reasoner_Group.name list -> bool) -> PLPR_Statistics.group_name -> (thm * int) list
-  val utilization_of_group_in_all_theories : Context.generic -> Reasoner_Group.name -> PLPR_Statistics.group_name -> (thm * int) list
+  val utilization_of_group_in_all_theories  : Context.generic -> Reasoner_Group.name -> PLPR_Statistics.group_name list -> (thm * int) list
+  val utilization_of_groups_in_all_theories : Context.generic -> Reasoner_Group.name list -> PLPR_Statistics.group_name list -> (thm * int) list
   val reasoners_of_group : Context.generic -> (Reasoner_Group.name list -> bool) -> reasoner list
 
 end
@@ -566,9 +567,25 @@ fun utilization_of_group_P thy P statistics_group =
       )
   end
 
-fun utilization_of_group_in_all_theories ctxt reasoner_group statistics_group =
-  let val all_utilization = PLPR_Statistics.utilization_in_all_theories statistics_group
+fun utilization_of_group_in_all_theories ctxt reasoner_group statistics_groups =
+  let val all_utilization = PLPR_Statistics.utilization_in_all_theories statistics_groups
    in reasoners_of_group ctxt (fn L => member (op =) L reasoner_group)
+   |> maps (fn {tactic = Tac_Rule rules, ...} =>
+          map (fn (_, rule) =>
+             let val prop = Phi_Help.beta_eta_contract_term (Thm.prop_of rule)
+              in case find_first (fn (prop', _) => prop' aconv prop)
+                                 (Net.match_term all_utilization prop)
+              of SOME (_, cnt) => (rule, !cnt)
+               | NONE => (rule, 0)
+             end
+           ) rules
+        | _ => []
+      )
+  end
+
+fun utilization_of_groups_in_all_theories ctxt reasoner_groups statistics_groups =
+  let val all_utilization = PLPR_Statistics.utilization_in_all_theories statistics_groups
+   in reasoners_of_group ctxt (fn L => exists (member (op =) L) reasoner_groups)
    |> maps (fn {tactic = Tac_Rule rules, ...} =>
           map (fn (_, rule) =>
              let val prop = Phi_Help.beta_eta_contract_term (Thm.prop_of rule)

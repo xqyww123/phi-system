@@ -32,7 +32,7 @@ abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
-          \<phi>assync_proof = false]]
+          \<phi>async_proof = true]]
 
 
 
@@ -161,14 +161,7 @@ end
 declare [[\<phi>LPR_collect_statistics program stop,
           collecting_subgoal_statistics = false,
           recording_timing_of_semantic_operation = false,
-          \<phi>assync_proof = true]]
-
-ML \<open>Phi_Reasoner.utilization_of_group_in_all_theories
-        (Context.Theory \<^theory>)
-        (the (snd @{reasoner_group %MemBlk}))
-        "program"
-      |> filter (fn (_, i) => i > 0)
-      |> length\<close>
+          \<phi>async_proof = true]]
 
 ML \<open>PLPR_Statistics.timing_of_semantic_operations () \<close>
 

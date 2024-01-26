@@ -7,7 +7,7 @@ begin
 declare [[collect_reasoner_statistics Linked_Lst start,
          \<phi>LPR_collect_statistics derivation start,
          recording_timing_of_semantic_operation = true,
-         \<phi>assync_proof = false]]
+         \<phi>async_proof = true]]
 
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
@@ -31,6 +31,8 @@ ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (sn
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics]]
+
+ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close>
 
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>
@@ -147,7 +149,7 @@ proc reverse:
 declare [[\<phi>LPR_collect_statistics program stop,
           collecting_subgoal_statistics=false,
           recording_timing_of_semantic_operation = false,
-          \<phi>assync_proof = true]]
+          \<phi>async_proof = true]]
 
 
 

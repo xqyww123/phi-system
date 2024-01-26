@@ -8,7 +8,7 @@ type group_name = string
 
 val count : Context.generic -> term -> unit
 val utilization : theory -> group_name -> (term * int Unsynchronized.ref) Net.net
-val utilization_in_all_theories : group_name -> (term * int Unsynchronized.ref) Net.net
+val utilization_in_all_theories : group_name list -> (term * int Unsynchronized.ref) Net.net
 val reset_utilization_statistics : theory -> unit
 val reset_utilization_statistics_all : unit -> unit
 
@@ -93,8 +93,9 @@ fun utilization_in_all_theories group =
               (Synchronized.value rule_usage)
               Termtab.empty*)
 
-fun utilization_in_all_theories group =
-  Symtab.fold (fn (_, statistics) => fn ret =>
+fun utilization_in_all_theories groups=
+  Symtab.fold (fn (_, statistics) =>
+                fold (fn group => fn ret =>
                   case Symtab.lookup (Synchronized.value statistics) group
                     of SOME net => fold (fn (key, num) => fn net =>
                                             case Net.match_term net key
@@ -104,7 +105,7 @@ fun utilization_in_all_theories group =
                                                | L => (List.app (fn (_, n) => n := !n + !num) L; net))
                                         (Net.content net)
                                         ret
-                     | NONE => ret)
+                     | NONE => ret) groups)
               (Synchronized.value rule_usage)
               Net.empty
 

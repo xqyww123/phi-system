@@ -1596,6 +1596,17 @@ lemma [\<phi>reason_template %BI_approx_derived]:
   by clarsimp blast
 
 
+(*
+lemma [\<phi>reason_template %BI_approx_derived]:
+  \<open> Tyops_Commute G' G \<DD>[\<delta>'] \<DD>[\<delta>] T D (embedded_func f P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y \<and> D x
+\<Longrightarrow> A' \<le> (x \<Ztypecolon> G' (\<DD>[\<delta>'] T))
+\<Longrightarrow> A' \<le> (y \<Ztypecolon> \<DD>[\<delta>] (G T)) \<close>
+  unfolding Premise_def Tyops_Commute_def BI_sub_transformation Transformation_def
+  by clarsimp blast*)
+
+
+
 paragraph \<open>Guess the Forms\<close>
 
 lemma [\<phi>reason %guess_tyop_commute for \<open>Guess_Tyops_Commute False \<DD>[_] ?var _ ?var_F' _ _ _ _ _ _ _ _ _\<close> ]:
@@ -1627,6 +1638,7 @@ lemma [\<phi>reason %abstract_domain]:
   unfolding Inhabited_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
             Abstract_Domain\<^sub>L_def \<r>ESC_def
   by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; metis)
+
 
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
@@ -1741,7 +1753,6 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
  
 lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Carrier_Set T D\<^sub>C
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
                             (\<lambda>s t x. Dx x \<and> D\<^sub>C x)

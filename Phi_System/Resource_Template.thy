@@ -1,5 +1,5 @@
 theory Resource_Template
-  imports PhiSem_Formalization_Tools2 Phi_Semantics_Framework.Phi_SemFrame_ex
+  imports PhiSem_Formalization_Tools Phi_Semantics_Framework.Phi_SemFrame_ex
 begin
 
 
@@ -106,21 +106,12 @@ declare [[collect_reasoner_statistics Resource_Space start,
   deriving Sep_Functor_1
        and \<open>Gen_Br_Join \<phi> \<phi> \<phi> P True\<close>
 
-declare \<phi>.\<S>\<^sub>E[where g=\<open>\<lambda>x. x\<close> and f=\<open>\<lambda>s _ _. s\<close>, unfolded Ball_def, simplified, \<phi>reason add]
-        \<phi>.\<S>\<^sub>I[\<phi>reason add]
-        \<phi>.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
-        \<phi>.\<Sigma>\<^sub>E[\<phi>reason add]
-        \<phi>.\<phi>Sum\<^sub>E[\<phi>reason add]
-        \<phi>.\<phi>Sum\<^sub>I[\<phi>reason add]
-
-declare \<phi>.\<phi>Sum.rewr[assertion_simps]
-
 declare [[collect_reasoner_statistics Resource_Space stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
 ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Resource_Space})) "derivation"\<close>
 
-lemma \<phi>_unit:
+lemma \<phi>_unit: \<comment> \<open>this lemma is not used for SL reasoning, but building of fictional disjointness\<close>
   \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>
   by (clarsimp simp add: BI_eq_iff)
 
@@ -128,12 +119,6 @@ paragraph \<open>Short-cut of ToA\<close>
 
 \<phi>reasoner_group \<phi>_ToA = (1100, [1100, 1120]) in ToA_cut
   \<open>Short-cut transformations for fiction injector\<close>
-                        (*v TODO*)
-lemma NToA_skip [\<phi>reason 1100 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> \<phi> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> ]:
-  " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R \<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'\<heavy_comma> X \<w>\<i>\<t>\<h> P"
-  unfolding Action_Tag_def split_paired_All Action_Tag_def
-  by (simp, metis ab_semigroup_mult_class.mult_ac(1) transformation_left_frame mult.commute)
 
 paragraph \<open>Synthesis\<close>
 

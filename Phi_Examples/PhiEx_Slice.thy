@@ -7,7 +7,7 @@ begin
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
-          \<phi>assync_proof = false]]
+          \<phi>async_proof = true]]
 
 proc qsort:
   input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
@@ -66,6 +66,6 @@ ML \<open> Phi_Syntax.count_semantic_operations (Thm.prop_of @{thm' qsort_def}) 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics=false,
           recording_timing_of_semantic_operation = true,
-          \<phi>assync_proof = true]]
+          \<phi>async_proof = true]]
 
 end

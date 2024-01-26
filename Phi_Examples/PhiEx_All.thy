@@ -23,7 +23,7 @@ ML \<open>fun report_utilization statistic_groups reasoner_groups =
                     block [str (the (snd rgroup)), str ": ",
                            str (string_of_int (
                         Phi_Reasoner.utilization_of_group_in_all_theories
-                            (Context.Theory \<^theory>) (the (snd rgroup)) sgroup
+                            (Context.Theory \<^theory>) (the (snd rgroup)) [sgroup]
                           |> filter (fn (_, i) => i > 0)
                           |> length
                       ))]) reasoner_groups)) ]

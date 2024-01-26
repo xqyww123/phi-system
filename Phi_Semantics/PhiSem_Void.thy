@@ -1,5 +1,5 @@
 theory PhiSem_Void
-  imports Phi_System.PhiSem_Formalization_Tools2
+  imports Phi_System.PhiSem_Formalization_Tools
 begin
 
 section \<open>Semantics\<close>

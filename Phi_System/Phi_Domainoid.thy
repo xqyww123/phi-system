@@ -189,6 +189,8 @@ consts \<A>_approx :: action
     \<open>Terminating Rules\<close>
   and BI_approx_derived = (60, [40,80]) for (\<open>A \<le> B\<close>) in BI_approx and < BI_approx_cut
     \<open>Derived rules\<close>
+  and BI_approx_TF = (30, [30,35]) in BI_approx and < BI_approx_derived \<open>\<close>
+  and BI_approx_default = (20, [20, 25]) in BI_approx and < BI_approx_TF \<open>\<close>
 
 declare [[
   \<phi>reason_default_pattern \<open>\<Psi>[?d] ?S \<le> ?S'\<close> \<Rightarrow> (*\<open>\<Psi>[?d] ?S \<le> ?S'\<close>*) \<open>\<Psi>[?d] ?S \<le> ?var_S'\<close> (200)

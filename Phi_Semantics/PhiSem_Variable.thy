@@ -45,12 +45,20 @@ hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields
 
 subsubsection \<open>Fiction\<close>
 
+declare [[collect_reasoner_statistics Resource_Space start,
+          \<phi>LPR_collect_statistics derivation start]]
+
 fiction_space \<phi>var =
   Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
             (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
   by (standard; simp add: set_eq_iff)
 
+declare [[collect_reasoner_statistics Resource_Space stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+
 hide_fact FIC.\<phi>var_fic_ax FIC.\<phi>var_fic_axioms
+
 
 
 
@@ -148,33 +156,6 @@ lemma [\<phi>reason %\<phi>synthesis_parse for
 ]:
   \<open>Synthesis_Parse (Uninited_Var v) (\<lambda>_. Uninited_Var v :: assn)\<close>
   unfolding Synthesis_Parse_def ..
-
-
-
-(* TODO - Shortcut reasoning rules
-lemma [\<phi>reason 1305 for \<open>_\<heavy_comma> _ \<Ztypecolon> Var _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _\<heavy_comma> \<blangle> _ \<Ztypecolon> Var _ _ \<brangle> \<w>\<i>\<t>\<h> _\<close>]:
-  " R\<heavy_comma> x \<Ztypecolon> Var vari T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> x \<Ztypecolon> Var vari T \<brangle> "
-  unfolding Action_Tag_def FOCUS_TAG_def
-  using transformation_refl by blast
-
-lemma [\<phi>reason 1300 for \<open>_\<heavy_comma> _ \<Ztypecolon> Var _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _\<heavy_comma> \<blangle> _ \<Ztypecolon> Var _ _ \<brangle> \<w>\<i>\<t>\<h> _\<close>
-                     if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]:
-  " x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R\<heavy_comma> x \<Ztypecolon> Var vari T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> x' \<Ztypecolon> Var vari T' \<brangle> \<w>\<i>\<t>\<h> P "
-  unfolding Action_Tag_def FOCUS_TAG_def
-  by (simp add: Var_transformation transformation_left_frame)
-
-lemma [\<phi>reason 1310]:
-    \<comment> \<open>attempts the immediate cell\<close>
-  " FAIL TEXT(\<open>Variable\<close> vari \<open>has not been initialized.\<close>)
-\<Longrightarrow> R \<heavy_comma> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari] \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<heavy_comma> \<blangle> x' \<Ztypecolon> \<v>\<a>\<r>[vari] T' \<brangle> \<w>\<i>\<t>\<h> P"
-  unfolding Action_Tag_def by blast
-
-lemma [\<phi>reason 1280]:
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<heavy_comma> \<blangle> x \<Ztypecolon> Var vari T \<brangle> \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R \<heavy_comma> H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<heavy_comma> H \<heavy_comma> \<blangle> x \<Ztypecolon> Var vari T \<brangle> \<w>\<i>\<t>\<h> P\<close>
-  using NToA_skip .
-*)
 
 
 section \<open>Semantic Operations\<close>
