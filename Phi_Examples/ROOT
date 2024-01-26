@@ -1,4 +1,7 @@
-session "Phi_Examples" = "Phi_Semantics" +
+session "Phi_Examples" = "PhiStd" +
+  sessions
+    "HOL-Data_Structures"
+    "Jordan_Normal_Form"
   theories
     PhiEx_BinTree
     PhiEx_DynArr

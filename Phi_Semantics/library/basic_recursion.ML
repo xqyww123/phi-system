@@ -97,12 +97,14 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
 
 
     (* pack abstract recursive variables *)
+    val free_outside = the_default Name.context (Phi_Toplevel.free_fixed_outside ctxt)
     val vars = case raw_vars
                  of [] => (*infer the variables*)
                       map Free (Term.add_frees (Thm.prop_of sequent) []
                                   |> subtract (op =) arg_vars
                                   |> subtract (op =) (fold (Term.add_frees o Thm.term_of)
                                                            (Assumption.all_assms_of ctxt) [])
+                                  |> filter_out (Name.is_declared free_outside o fst)
                                   |> filter (fn (_, \<^Type>\<open>TY\<close>) => false
                                               | _ => true))
                   | _  => prep_vars ctxt raw_vars

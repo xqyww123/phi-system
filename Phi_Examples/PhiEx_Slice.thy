@@ -42,15 +42,13 @@ proc qsort:
       \<medium_left_bracket> \<medium_right_bracket> ;;
     \<medium_right_bracket> ;;
 
-    (*readers may inspect \<open>thm useful\<close> to look the contextual facts*)
-    (* thm useful *)
     qsort ($i, $d) ;;
     qsort ($i + $d, $len - $d) ;;
         
     holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x)\<close>
            and t2: \<open>(\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close>
-           and t4[simp]: \<open>set l'b = set (drop d l')\<close>
-    from \<open>mset (take d l') = mset l'a\<close> have t3[simp]: \<open>set l'a = set (take d l')\<close> by auto_sledgehammer
+           and t4[\<phi>sledgehammer_simps]: \<open>set l'b = set (drop d l')\<close>
+    from \<open>mset (take d l') = mset l'a\<close> have t3[\<phi>sledgehammer_simps]: \<open>set l'a = set (take d l')\<close> by auto_sledgehammer
     note [\<phi>sledgehammer_simps] = sorted_append  ;;
 
     return
@@ -59,9 +57,6 @@ proc qsort:
 
 thm qsort_def   \<comment> \<open>semantic representation of \<open>qsort\<close>\<close>
 thm qsort_\<phi>app \<comment> \<open>specification theorem\<close>
-
-ML \<open> Phi_Syntax.count_semantic_operations (Thm.prop_of @{thm' qsort_def}) \<close> \<comment> \<open>semantic operations\<close>
-
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics=false,

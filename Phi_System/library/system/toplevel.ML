@@ -18,6 +18,8 @@ signature PHI_TOPLEVEL = sig
   exception Schematic*)
 
   val name_of_the_building_procedure : Proof.context -> binding option
+  val free_fixed_outside : Proof.context -> Name.context option
+
   val begin_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding (*name*)
         -> xstring (*input*)
@@ -135,18 +137,21 @@ structure Finishing_Modifier_Hooks = Hooks (type arg = unit
 structure Finishing_Construction_Hooks = Hooks (type arg = unit
                                                 type state = context_state)
 
-structure Procedure_Building_Envir = Proof_Data (
-  type T = binding option
+structure Procedure_Envir = Proof_Data (
+  type T = { binding: binding,
+             free_fixed_outside: Name.context } option
   val init = (K NONE)
 )
 
-val name_of_the_building_procedure = Procedure_Building_Envir.get
-
+val name_of_the_building_procedure = Option.map #binding o Procedure_Envir.get
+val free_fixed_outside = Option.map #free_fixed_outside o Procedure_Envir.get
 
 fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
       binding arg ret throws rawfixes includes raw_defines raw_preconds action raw_modifiers
       int lthy =
   let
+    val free_fixed_outside = Variable.names_of lthy
+
     val includes = includes |> map (Bundle.check lthy)
     val ((fixes,var_names), ctxt_parse) = lthy
                                        |> not (null includes) ? Bundle.includes includes
@@ -208,7 +213,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
          |> Proof.map_context (fn ctxt =>
               ctxt |> Phi_ID.set_construct (Binding.name_of (fst binding))
                    |> Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)
-                   |> Procedure_Building_Envir.put (SOME (fst binding))
+                   |> Procedure_Envir.put (SOME {binding=fst binding, free_fixed_outside=free_fixed_outside})
                    |> PLPR_Statistics.setup_semantic_operation_recording
             )
          |> Proof.refine (Method.Basic (K (K (fn s => s

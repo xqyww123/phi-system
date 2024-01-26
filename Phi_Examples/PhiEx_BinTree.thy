@@ -562,7 +562,7 @@ proc maintain_i:
           \<open>BinTree a\<^sub>C _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;                 (*for reasoning, \<Omega>*)
           \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> ;;                                                  (*for reasoning, \<Omega>*)
  
-          return ($B) certified by (auto simp add: fun_eq_iff map_add_def split: option.split; auto_sledgehammer)
+          return ($B) certified by (auto simp add: fun_eq_iff map_add_def split: option.split; auto_sledgehammer) (*Tac-1n-2m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by auto_sledgehammer ;;  (*this line and the next*)
@@ -586,7 +586,7 @@ proc maintain_i:
 
           holds_fact t1[useful]: \<open>k\<^sub>B < k\<^sub>D\<close>  ;;                                    (*for proof, Tac-s*)
 
-          return ($C) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)  (*Tac-n*)
+          return ($C) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)  (*Tac-1n-3m*)
                                         
     \<medium_right_bracket>
   \<medium_right_bracket>
@@ -612,7 +612,7 @@ proc maintain_i:
           \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> ;;                 (*for reasoning, \<Omega>*)
           \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> ;;                                  (*for reasoning, \<Omega>*)
 
-          return ($E) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)
+          return ($E) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)  (*Tac-1n-3m*)
 
       \<medium_right_bracket>
       \<medium_left_bracket>
@@ -637,7 +637,7 @@ proc maintain_i:
 
           return ($F) certified by (clarsimp, rule,
                                     ((auto simp: map_add_def fun_eq_iff split: option.split)[1]; auto_sledgehammer),
-                                    auto; auto_sledgehammer)
+                                    auto; auto_sledgehammer)                          (*Tac-4n-3m*)
       \<medium_right_bracket>
     \<medium_right_bracket>
     \<medium_left_bracket>

@@ -26,14 +26,6 @@ declare [[collect_reasoner_statistics MatSlice start,
 declare [[collect_reasoner_statistics MatSlice stop,
          \<phi>LPR_collect_statistics derivation stop]]
 
-(*
-\<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x mat) \<phi>\<close>
-  where \<open>x \<Ztypecolon> MatSlice addr i j m n T \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] T)
-                                        \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
-  deriving \<open>Abstract_Domain (MatSlice addr i j m n T) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
-       and \<open>Identity_Elements\<^sub>I (MatSlice addr i j m n T) (\<lambda>_. m = 0 \<and> n = 0) (\<lambda>_. True)\<close>
-       and \<open>Identity_Elements\<^sub>E (MatSlice addr i j m n T) (\<lambda>x. m = 0 \<and> n = 0 \<and> x \<in> carrier_mat 0 0 \<and> memaddr.blk addr \<noteq> Null)\<close>
-*)
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
@@ -184,7 +176,10 @@ lemma merge_4mat:
 end
 
 
-
+context
+  fixes N :: nat
+begin
+ 
 proc strassen:
   input  \<open>A \<Ztypecolon> MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n)\<heavy_comma>
           B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<heavy_comma>
@@ -205,7 +200,7 @@ proc strassen:
           buf\<^sub>1 \<Ztypecolon> MatSlice a\<^sub>C i\<^sub>C j\<^sub>C (2^n) (2^n)\<heavy_comma> \<comment> \<open>buffers used to store intermediate values\<close>
           buf\<^sub>2 \<Ztypecolon> MatSlice a\<^sub>D i\<^sub>D j\<^sub>D (2^n) (2^n)
           \<s>\<u>\<b>\<j> buf\<^sub>1 buf\<^sub>2. \<top>\<close>
-  is [recursive A B n a\<^sub>A i\<^sub>A j\<^sub>A a\<^sub>B i\<^sub>B j\<^sub>B a\<^sub>C i\<^sub>C j\<^sub>C a\<^sub>D i\<^sub>D j\<^sub>D buf\<^sub>1 buf\<^sub>2]
+  is [recursive]
 \<medium_left_bracket>
   if ($n = 0)
   \<medium_left_bracket>
@@ -214,7 +209,7 @@ proc strassen:
 
     $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A := $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A ! * $a\<^sub>B \<tribullet> $i\<^sub>B \<tribullet> $j\<^sub>B ! ;;
       
-    holds_fact [simp]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof, Tac-s*)
+    holds_fact [\<phi>sledgehammer_simps]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof, Tac-s*)
     note scalar_prod_def [\<phi>sledgehammer_simps] ;;                                       (*for proof, Tac-m*)
 
     \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n))\<close> ;;
@@ -309,17 +304,13 @@ proc strassen:
     holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>                      (*for proof, Tac-s*)
                           \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> ;;                   (*for proof, Tac-s*)
 
-    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>                                       (*for proof, each line is counted as one Tac-m*)
-                    \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
-                    \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> ;;
+    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>                (*for proof, each line is counted as one Tac-m*)
+                    \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
+                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> ;;
 
     apply_rule merge_4mat[where a=a\<^sub>A and i=i\<^sub>A and s=\<open>?N\<close> and j=j\<^sub>A and t=\<open>?N\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
-      is \<open>A * B\<close> certified by (
+      is \<open>A * B\<close> certified by (                                                    (*is \<open>A * B\<close> is an annotation, A*)
          simp add: carriers split_A_B mult_four_block_mat[OF carriers],
          rule cong_four_block_mat,
          insert carriers,
@@ -337,7 +328,7 @@ proc strassen:
 
 
     apply_rule merge_4mat[where a=a\<^sub>B and i=i\<^sub>B and s=\<open>?N\<close> and j=j\<^sub>B and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
-            is B ;;
+            is B ;;                                                                (*is \<open>B\<close> is an annotation, A*)
 
     apply_rule merge_4mat[where a=a\<^sub>C and i=i\<^sub>C and s=\<open>?N\<close> and j=j\<^sub>C and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
     apply_rule merge_4mat[where a=a\<^sub>D and i=i\<^sub>D and s=\<open>?N\<close> and j=j\<^sub>D and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
@@ -345,6 +336,7 @@ proc strassen:
   \<medium_right_bracket> ;;
 \<medium_right_bracket> .
 
+end
 
 proc strassen_mul:
   input  \<open>A \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
