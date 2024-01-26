@@ -4,11 +4,6 @@ theory PhiEx_DynArr
           PhiStd.PhiStd_Slice
 begin
 
-\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
-
-declare [[collect_reasoner_statistics DynArr start,
-         \<phi>LPR_collect_statistics derivation start]]
-
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
                                 (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>
@@ -22,26 +17,16 @@ declare [[collect_reasoner_statistics DynArr start,
          \<Longrightarrow> Transformation_Functor (DynArr addr TY) (DynArr addr' TY') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
        and Functional_Transformation_Functor
 
-declare [[collect_reasoner_statistics DynArr stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
-
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = true]]
-
 
 
 context
   fixes TY :: TY
-    and T :: \<open>(VAL, 'x) \<phi>\<close>
+    and T :: \<open>(VAL, 'x) \<phi>\<close>                              \<comment> \<open>we provide a generic verification\<close>
     and zero :: 'x
-  assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
-      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>
+  assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>      \<comment> \<open>specify the semantic type of T\<close>
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>  \<comment> \<open>specify the semantic zero value of T\<close>
 begin
 
 proc get_dynarr:
@@ -65,18 +50,13 @@ proc set_dynarr:
  \<open>l[i := v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
+
 proc Max:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
   output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
 \<medium_left_bracket>
   if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
 \<medium_right_bracket> .
-
-
-
-
-
-
 
 
 proc push_dynarr:
@@ -105,7 +85,6 @@ proc push_dynarr:
 \<medium_right_bracket> .
 
 
-
 proc pop_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
@@ -117,7 +96,6 @@ proc pop_dynarr:
   val ret \<leftarrow> $addr \<tribullet> data ! \<tribullet> $len ! ;;
   $addr \<tribullet> len := $len ;;
   if ($len \<le> $half_cap) \<medium_left_bracket>
-  (* ^ if we use ($len * 2 \<le> $cap) instead, it can cause fatal overflow when addrspace_bits is small *)
     val data' \<leftarrow> calloc_N ($half_cap) \<open>T\<close> ;;
     memcpy ($data', $addr \<tribullet> data !, $len) ;;
     mfree ($addr \<tribullet> data !) ;;
@@ -128,7 +106,8 @@ proc pop_dynarr:
   \<medium_left_bracket> \<open>MAKE _ (DynArr addr _ _)\<close> \<medium_right_bracket>
   $ret
 \<medium_right_bracket> .
-  
+
+
 proc new_dynarr:
   input  \<open>Void\<close>
   output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
@@ -139,6 +118,7 @@ proc new_dynarr:
   $ret
 \<medium_right_bracket> .
 
+
 proc del_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
   output \<open>Void\<close>
@@ -148,22 +128,6 @@ proc del_dynarr:
   mfree ($addr)
 \<medium_right_bracket> .
 
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' get_dynarr_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' set_dynarr_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' Max_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' push_dynarr_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' pop_dynarr_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' new_dynarr_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' del_dynarr_def})))\<close>
-
 end
-
-declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics = false,
-          recording_timing_of_semantic_operation = false,
-          \<phi>async_proof = true]]
-
-ML \<open>PLPR_Statistics.timing_of_semantic_operations () \<close>
-
 
 end

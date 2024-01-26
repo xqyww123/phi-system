@@ -35,9 +35,9 @@ declare [[\<phi>LPR_collect_statistics program start,
 ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close>
 
 context
-  fixes T :: \<open>(VAL, 'a) \<phi>\<close>
-    and TY :: TY \<comment> \<open>semantic type\<close>
-  assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
+    and TY :: TY                                      \<comment> \<open>semantic type\<close>
+  assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>    \<comment> \<open>specify the semantic type of T\<close>
 begin
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
