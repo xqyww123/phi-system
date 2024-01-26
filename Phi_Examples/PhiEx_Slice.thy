@@ -7,7 +7,7 @@ begin
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
-          \<phi>async_proof = true]]
+          \<phi>async_proof = false]]
 
 proc qsort:
   input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<heavy_comma>

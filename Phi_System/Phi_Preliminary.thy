@@ -186,6 +186,12 @@ setup \<open>Context.theory_map (Phi_Safe_Simps.map (
   Simplifier.add_cong @{thm' mk_symbol_cong}
 ))\<close>
 
+
+lemma stupid[simp]:
+  \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
+  by (meson prod.expand)
+  
+
 (*simproc_setup case_prod_app (\<open>(case_prod f x) y\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
   let val (Const(\<^const_name>\<open>case_prod\<close>, _) $ f $ x $ y) = Thm.term_of ctm
    in SOME (Conv.rewr_conv @{thm' BNF_Fixpoint_Base.case_prod_app} ctm)

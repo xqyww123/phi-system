@@ -30,7 +30,7 @@ declare [[collect_reasoner_statistics MatSlice stop,
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
-          \<phi>async_proof = true]]
+          \<phi>async_proof = false]]
 
 declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
         list_all2_conv_all_nth[\<phi>sledgehammer_simps] zero_mat_def[\<phi>sledgehammer_simps]

@@ -20,27 +20,7 @@ declare [[collect_reasoner_statistics \<phi>Rational stop,
           \<phi>LPR_collect_statistics derivation stop,
           \<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
-          \<phi>async_proof = true]]
-
-ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close>
-
-
-ML \<open>fun report_utilization statistic_groups reasoner_groups =
-  let open Pretty
-      val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
-          (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
-        |> filter (fn (_, i) => i > 0)
-   in (length statistics, Integer.sum (map snd statistics))
-  end
-\<close>
-
-ML \<open>report_utilization ["program"] [@{reasoner_group %Field}, @{reasoner_group %Array},
-        @{reasoner_group %\<phi>MapAt}, @{reasoner_group %\<phi>MapAt_L}, @{reasoner_group %\<phi>Some},
-        @{reasoner_group %Mem_Coercion}, @{reasoner_group %\<phi>Share},
-        @{reasoner_group %Resource_Space},
-        @{reasoner_group %Var}, @{reasoner_group %MemBlk},
-        @{reasoner_group %\<phi>Mul_Quant_Tree},
-        @{reasoner_group %\<phi>Rational} ] \<close>
+          \<phi>async_proof = false]]
 
 
 proc rat_add:
@@ -96,6 +76,10 @@ declare [[\<phi>LPR_collect_statistics program stop,
           recording_timing_of_semantic_operation = false]]
 
 
+
+(*
+ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close>
+
 ML \<open>fun report_utilization statistic_groups reasoner_groups =
   let open Pretty
       val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
@@ -112,6 +96,6 @@ ML \<open>report_utilization ["program"] [@{reasoner_group %Field}, @{reasoner_g
         @{reasoner_group %Var}, @{reasoner_group %MemBlk},
         @{reasoner_group %\<phi>Mul_Quant_Tree},
         @{reasoner_group %\<phi>Rational} ] \<close>
-
+*)
 
 end

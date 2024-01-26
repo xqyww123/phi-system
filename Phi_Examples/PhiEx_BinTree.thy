@@ -10,10 +10,6 @@ subsection \<open>Common Operations\<close>
 
 declare tree.rel_eq[simp]
 
-declare [[ type_property tree
-    selectors = [[], [left, "value", right]]
-]]
-
 lemma rel_tree_Leaf[\<phi>deriver_simps, iff]:
   \<open> rel_tree R \<langle>\<rangle> tree \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
   \<open> rel_tree R tree' \<langle>\<rangle> \<longleftrightarrow> tree' = \<langle>\<rangle> \<close>
@@ -237,7 +233,7 @@ declare [[collect_reasoner_statistics Bin_Search_Tree start,
                      auto intro!: rel_tree_self_map simp: fun_eq_iff)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
          \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], clarsimp simp: rel_tree_eq_norm rel_tree_conj_split)
+            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>])
        and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
@@ -288,7 +284,6 @@ declare [[collect_reasoner_statistics AVL_Tree start,
                      auto simp: fun_eq_iff intro!: rel_tree_self_map)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
          \<Longrightarrow> Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], clarsimp simp: rel_tree_conj_split rel_tree_eq_norm)
        and \<open>Functional_Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
@@ -308,7 +303,7 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
-          \<phi>async_proof = true]]
+          \<phi>async_proof = false]]
 
 context
   fixes K :: \<open>(VAL, 'k::linorder) \<phi>\<close>
@@ -513,11 +508,6 @@ proc height_of:
       return ($ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .
-
-
-lemma stupid[simp]:
-  \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
-  by auto_sledgehammer
 
 
 proc maintain_i:
