@@ -166,6 +166,10 @@ lemma apfst_id'[simp, \<phi>safe_simp]:
   \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
   by (simp add: fun_eq_iff)
 
+lemma stupid_pair_eq_prj3[simp]:
+  \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
+  by (meson prod.expand)
+
 
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 

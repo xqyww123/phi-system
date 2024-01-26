@@ -10,10 +10,6 @@ subsection \<open>Common Operations\<close>
 
 declare tree.rel_eq[simp]
 
-declare [[ type_property tree
-    selectors = [[], [left, "value", right]]
-]]
-
 lemma rel_tree_Leaf[\<phi>deriver_simps, iff]:
   \<open> rel_tree R \<langle>\<rangle> tree \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
   \<open> rel_tree R tree' \<langle>\<rangle> \<longleftrightarrow> tree' = \<langle>\<rangle> \<close>
@@ -187,13 +183,6 @@ abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<
 abbreviation \<open>\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
 abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
-\<phi>reasoner_group BinTree = (100,[0,9999]) \<open>derived reasoning rules of BinTree\<close>
-            and Bin_Search_Tree = (100,[0,9999]) \<open>derived reasoning rules of Bin_Search_Tree\<close>
-            and AVL_Tree = (100,[0,9999]) \<open>derived reasoning rules of AVL_Tree\<close>
-
-declare [[collect_reasoner_statistics BinTree start,
-         \<phi>LPR_collect_statistics derivation start]]
- 
 
 \<phi>type_def BinTree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
   where \<open> (Leaf \<Ztypecolon> BinTree addr TY T) = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
@@ -210,14 +199,6 @@ declare [[collect_reasoner_statistics BinTree start,
          \<Longrightarrow> Transformation_Functor (BinTree addr TY) (BinTree addr' TY') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
            (arbitrary: addr')
        and Functional_Transformation_Functor
-
-declare [[collect_reasoner_statistics BinTree stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %BinTree})) "derivation"\<close>
-
-declare [[collect_reasoner_statistics Bin_Search_Tree start,
-         \<phi>LPR_collect_statistics derivation start]]
 
 
 
@@ -242,10 +223,6 @@ declare [[collect_reasoner_statistics Bin_Search_Tree start,
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
-declare [[collect_reasoner_statistics Bin_Search_Tree stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Bin_Search_Tree})) "derivation"\<close>
 
 primrec AVL_invar
   where \<open>AVL_invar \<langle>\<rangle> \<longleftrightarrow> True\<close>
@@ -266,8 +243,15 @@ lemma rel_tree__AVL_tree_invar:
 abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
 abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
-declare [[collect_reasoner_statistics AVL_Tree start,
-         \<phi>LPR_collect_statistics derivation start]]
+
+declare [[ML_print_depth = 1000]]
+
+
+
+
+
+
+
 
 
 \<phi>type_def AVL_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
@@ -288,27 +272,18 @@ declare [[collect_reasoner_statistics AVL_Tree start,
                      auto simp: fun_eq_iff intro!: rel_tree_self_map)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
          \<Longrightarrow> Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], clarsimp simp: rel_tree_conj_split rel_tree_eq_norm)
+            (*(tactic: clarsimp, tactic \<open>all_tac o @{print}\<close>, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], clarsimp simp: rel_tree_conj_split rel_tree_eq_norm)*)
        and \<open>Functional_Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
 
-declare [[collect_reasoner_statistics AVL_Tree stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %AVL_Tree})) "derivation"\<close>
-
 declare [[auto_sledgehammer_params = "try0 = false"]]
   \<comment> \<open>For some reason I don't know, Sledgehammer fails silently (with throwing an Interrupt exception)
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.
       Anyway, it is an engineering problem due to some bug in our system or Sledgehammer, so we don't
-      count it into our statistics.\<close>
+      count this line into our statistics in the paper.\<close>
 
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = true]]
 
 context
   fixes K :: \<open>(VAL, 'k::linorder) \<phi>\<close>                  \<comment> \<open>we provide a generic verification\<close>
@@ -336,7 +311,7 @@ proc lookup_bintree:
   is [routine]
 \<medium_left_bracket>
   obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer ;;
-  to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;   \<comment> \<open>TODO: fix quantifier names\<close>
+  to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R ;;
 
   val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! ;;
   if (eq ($k', $k)) \<medium_left_bracket>
@@ -416,15 +391,11 @@ proc (nodef) defined_bst:
 
 
 
-
-
 abbreviation \<open>Bst_Node \<equiv> \<lbrace>
                             left: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V),
                             data: \<lbrace> k: K, v: V \<rbrace>,
                             right: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V)
                           \<rbrace> \<close>
-
-
 
 proc insert_bintree:
   input  \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
@@ -483,16 +454,12 @@ proc (nodef) insert_bst:
 \<medium_right_bracket> .
 
 
-
-
-
 proc Max:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
   if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
 \<medium_right_bracket> .
-
 
 
 proc height_of:
@@ -513,11 +480,6 @@ proc height_of:
       return ($ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .
-
-
-lemma stupid[simp]:
-  \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
-  by auto_sledgehammer
 
 
 proc maintain_i:
@@ -587,7 +549,6 @@ proc maintain_i:
           holds_fact t1[useful]: \<open>k\<^sub>B < k\<^sub>D\<close>  ;;                                    (*for proof, Tac-s*)
 
           return ($C) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)  (*Tac-1n-3m*)
-                                        
     \<medium_right_bracket>
   \<medium_right_bracket>
   \<medium_left_bracket>
@@ -648,6 +609,8 @@ proc maintain_i:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+
+
 abbreviation \<open>Avl_Node \<equiv> \<lbrace>
                             left: \<Pp>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V),
                             data: \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>,
@@ -705,6 +668,7 @@ proc insert_avl_i:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+
 proc (nodef) insert_avl:
   input  \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma>
@@ -720,15 +684,6 @@ proc (nodef) insert_avl:
 \<medium_right_bracket> .
 
 end
-
-
-declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics=false,
-          recording_timing_of_semantic_operation = false,
-          \<phi>async_proof = true]]
-
-
-
 
 
 end

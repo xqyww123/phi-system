@@ -11,11 +11,6 @@ begin
 
 abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<i>\<n>\<t>\<close>
 
-\<phi>reasoner_group MatSlice = (100,[0,9999]) \<open>derived reasoning rules of MatSlice\<close>
-
-declare [[collect_reasoner_statistics MatSlice start,
-         \<phi>LPR_collect_statistics derivation start]]
-
 \<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
@@ -23,17 +18,9 @@ declare [[collect_reasoner_statistics MatSlice start,
        and \<open>Object_Equiv (MatSlice addr i j m n) (=)\<close>
        and Basic
 
-declare [[collect_reasoner_statistics MatSlice stop,
-         \<phi>LPR_collect_statistics derivation stop]]
 
-
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = true]]
-
-declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]
-        list_all2_conv_all_nth[\<phi>sledgehammer_simps] zero_mat_def[\<phi>sledgehammer_simps]
+declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]   (*counted in Tac-4m,*)
+        list_all2_conv_all_nth[\<phi>sledgehammer_simps] zero_mat_def[\<phi>sledgehammer_simps]    (*as 2 proof lines*)
 
 proc zero_mat:
   input  \<open>x \<Ztypecolon> MatSlice a i j m n\<heavy_comma>
@@ -52,6 +39,7 @@ proc zero_mat:
 
   \<open>0\<^sub>m m n \<Ztypecolon> MAKE _ (MatSlice a i j m n)\<close>
 \<medium_right_bracket> .
+
 
 proc new_mat:
   requires \<open>\<p>\<a>\<r>\<a>\<m> M\<close>
@@ -126,7 +114,6 @@ proc add_mat:
 \<medium_right_bracket> .
 
 
-
 proc sub_mat:
   input  \<open>x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
           y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<heavy_comma>
@@ -151,9 +138,10 @@ proc sub_mat:
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
+
 context
   notes [\<phi>sledgehammer_simps] = Let_def image_iff split_block_def four_block_mat_def mat_to_list_def
-                                list_eq_iff_nth_eq nth_append
+                                list_eq_iff_nth_eq nth_append         (*counted as Tac-7m, 2 proof lines*)
 begin
 
 lemma split_4mat:
@@ -356,17 +344,5 @@ proc strassen_mul:
   del_mat ($D)
 \<medium_right_bracket> .
 
-declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics=false,
-          recording_timing_of_semantic_operation = false,
-          \<phi>async_proof = true]]
-
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_mul_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' strassen_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' sub_mat_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' add_mat_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' copy_mat_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' del_mat_def})))\<close>
-ML \<open>length (rev (Phi_Syntax.semantic_operations (Thm.prop_of @{thm' zero_mat_def})))\<close>
 
 end
