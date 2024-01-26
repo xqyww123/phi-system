@@ -38,13 +38,6 @@ lemma AList_Upd_map_of_is_Map_map_of[iff]:
   \<open>map_of l = Map.map_of l\<close>
   by (induct l; auto)
 
-lemma rel_tree_conj_split:
-  \<open> rel_tree (\<lambda>a b. R1 a b \<and> R2 a b) x y \<longleftrightarrow> rel_tree R1 x y \<and> rel_tree R2 x y \<close>
-  by (induct x arbitrary: y; auto_sledgehammer)
-
-lemma rel_tree_eq_norm:
-  \<open> rel_tree (\<lambda>a b. f b = g a) x y \<longleftrightarrow> rel_tree (\<lambda>a b. g a = f b) x y \<close>
-  by auto_sledgehammer
 
 subsection \<open>tree_domain_distinct\<close>
 
@@ -218,7 +211,7 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
                      auto intro!: rel_tree_self_map simp: fun_eq_iff)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
          \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>], clarsimp simp: rel_tree_eq_norm rel_tree_conj_split)
+            (tactic: clarsimp, rule exI[where x=\<open>\<lambda>_ _ y. y\<close>])
        and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
