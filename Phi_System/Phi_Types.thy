@@ -59,11 +59,6 @@ setup \<open>Context.theory_map (
 
 let_\<phi>type \<phi>Any deriving Basic
 
-ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Any.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L \<top>\<^sub>\<phi> (\<lambda>x. True) \<close>),
-  (@{thm' \<phi>Any.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain \<top>\<^sub>\<phi> (\<lambda>x. True) \<close>),
-  (@{thm' \<phi>Any.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv \<top>\<^sub>\<phi> (\<lambda>_ _. True) \<close>)
-]\<close>
 
 subsection \<open>Embedding of \<open>\<bottom>\<close>\<close>
 
@@ -82,15 +77,6 @@ let_\<phi>type \<phi>Bot
        and Functionality
        and Carrier_Set
 
-ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Bot.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L \<bottom>\<^sub>\<phi> (\<lambda>x. False) \<close>),
-  (@{thm' \<phi>Bot.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain \<bottom>\<^sub>\<phi> (\<lambda>x. False) \<close>),
-  (@{thm' \<phi>Bot.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv \<bottom>\<^sub>\<phi> (\<lambda>_ _. True) \<close>),
-  (@{thm' \<phi>Bot.Functionality}, \<^pattern_prop>\<open> Functionality \<bottom>\<^sub>\<phi> (\<lambda>x. True) \<close>),
-  (@{thm' \<phi>Bot.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set \<bottom>\<^sub>\<phi> (\<lambda>x. True)  \<close>)
-]\<close>
-
-(*TODO: bi-functors of \<phi>Prod?*)
 
 subsection \<open>\<phi>Prod\<close>
 
@@ -104,14 +90,10 @@ setup \<open>Context.theory_map (
          \<^here>, Phi_Type.Derivings.empty, [])
    #> snd )\<close>
 
-text \<open>We still derive properties of \<open>\<phi>Prod\<close> for consistency of the internal reasoning system,
-      even though most of the derived rules are already covered by existing rules.\<close>
-  
 let_\<phi>type \<phi>Prod
   deriving Basic
        and Functional_Transformation_Functor
        and Functionality
-       (* and Separation_Homo, bi commutativity is not supported yet *)
 
 
 subsection \<open>Func\<close>
@@ -353,9 +335,6 @@ subsection \<open>Dependent Sum Type\<close>
 
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
-text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation functor not a separation homomoprhism
-  as the element \<phi>-type \<open>T\<close> is parameterized,
-  there can be properties very akin to them, see the section \<open>Pseudo properties of \<Sigma>\<close> below.\<close>
 
 subsubsection \<open>Properties Failed to be Derived\<close>
 
@@ -366,7 +345,6 @@ lemma \<phi>Dependent_Sum_TF[\<phi>type_property \<phi>Dependent_Sum Transformat
   by clarsimp
  
 context begin
-
 
 lemma \<phi>Dependent_Sum_SH\<^sub>I[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>I]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I \<Sigma> \<Sigma> \<Sigma> T U {x. fst (fst x) = fst (snd x)} (\<lambda>x. (fst (fst x), (snd (fst x), snd (snd x)))) \<close>
@@ -423,16 +401,6 @@ declare \<phi>Dependent_Sum.intro_reasoning(1)
         [where x=\<open>(a,b)\<close> for a b, simplified apfst_conv apsnd_conv fst_conv snd_conv,
          \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>
                           \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>]
-
-        (* \<phi>Dependent_Sum.intro_reasoning(2)
-        [where x=\<open>(a,fst y)\<close> and r=\<open>snd y\<close> for a b y, simplified apfst_conv apsnd_conv fst_conv snd_conv prod.collapse,
-         \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((_, _), _) \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
-                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>, carried by \<open>\<phi>Dependent_Sum_intro_reasoning_2\<close> instead] *)
-       \<comment> \<open>The ToA reasoning inside the elements of \<open>\<Sigma>\<close> may result in a remainder \<open>R\<close> parameterized
-           by the parameter \<open>a\<close> of \<open>\<Sigma>\<close>. A problem is, objects may be parameterized with contextual
-           bound vars that however do not parameterize the type. When \<open>a\<close> is parameterized by those
-           bound vars who only parameterize the object, the instantiation of \<open>R\<close> can fail but \<open>\<Sigma> R\<close>
-           works. Therefore, use rule \<open>\<phi>Dependent_Sum_intro_reasoning_2\<close>.\<close>
 
         \<phi>Dependent_Sum.intro_reasoning\<^sub>R
         [where x=\<open>(a,b)\<close> for a b, simplified fst_conv snd_conv,
@@ -590,7 +558,7 @@ subsection \<open>Nondeterministic Abstraction\<close>
 
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
   independently with the element. It seems to be a limitation. For example, we want to transform
-  a list of unknown bit-length numbers \<open>l \<Ztypecolon> List \<nat>\<^sub>f\<^sub>r\<^sub>e\<^sub>e\<close> where \<open>x \<Ztypecolon> \<nat>\<^sub>f\<^sub>r\<^sub>e\<^sub>e \<equiv> (x \<Ztypecolon> \<nat>[b] \<s>\<u>\<b>\<j> b. x < 2^b)\<close>
+  a list of numbers whose bit-length is unknown \<open>l \<Ztypecolon> List \<nat>\<^sub>f\<^sub>r\<^sub>e\<^sub>e\<close> where \<open>x \<Ztypecolon> \<nat>\<^sub>f\<^sub>r\<^sub>e\<^sub>e \<equiv> (x \<Ztypecolon> \<nat>[b] \<s>\<u>\<b>\<j> b. x < 2^b)\<close>
   into a set of all lists of such numbers \<open>{l | ? } \<Ztypecolon> List \<nat>[?]\<close> where the question marks denote
   the terms cannot be expressed yet now.
 
@@ -778,18 +746,6 @@ ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified
 
 paragraph \<open>ToA Reasoning\<close>
 
-text \<open>Type-level \<open>Set_Abst.intro_reasoning\<close> is not activated as the reasoning uses
-  transformation functor.
-
-  see Set_Abst.intro_reasoning
-
-NG! TODO!\<close>
-
-thm Set_Abst.intro_reasoning(1)  [\<phi>reason 60]
-        Set_Abst.elim_reasoning(1)[\<phi>reason 1000]
-
-(*TODO!!!*)
-
 lemma [\<phi>reason 2800]:
   \<open> (\<And>a \<in> fst x. (a, snd x) \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P )
 \<Longrightarrow> x \<Ztypecolon> (\<S> T) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
@@ -948,13 +904,6 @@ lemma \<Psi>_comp:
   unfolding BI_eq_iff
   by clarsimp
 
-(* TODO?
-lemma [\<phi>reason 1200]:
-  \<open> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> y \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (T \<Zcomp> U) \<w>\<i>\<t>\<h> P\<close>
-  \<medium_left_bracket> premises Y[unfolded Transformation_def Itself_expn, simplified, useful]
-    construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
-*)
 
 lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>I B UNIV
@@ -1046,7 +995,7 @@ setup \<open>Context.theory_map (
 
 subsubsection \<open>Algebraic Properties\<close>
 
-text \<open>Instead of deriving the Scalar Distributivity automatically, we give them manually, as the scalar
+text \<open>We cannot derive the Scalar Distributivity automatically, because the scalar
   distribution of the assertion-level \<open>\<big_ast>\<close> is not activated in the reasoning system by default
   (it is too aggressive to enable it, I believe).\<close>
 
@@ -1099,13 +1048,10 @@ lemma [\<phi>reason %ToA_derived_red-10]:
 
 subsection \<open>Sum Type\<close>
 
-(*TODO: move me*)
-lemma [simp]:
+lemma pred_sum_is_case_sum[simp]:
   \<open>pred_sum = case_sum\<close>
   using pred_sum_eq_case_sum by blast
 
-
-(*TODO: finish me!*)
   
 \<phi>type_def \<phi>Sum :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
@@ -1126,11 +1072,7 @@ lemma [simp]:
         \<Longrightarrow> Identity_Elements\<^sub>I U U\<^sub>D U\<^sub>P 
         \<Longrightarrow> Identity_Elements\<^sub>I (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D) (case_sum T\<^sub>P U\<^sub>P) \<close> (*The inference works*)
        and Functional_Transformation_Functor
-       (*and Commutativity_Deriver\<^sub>E_rev*)
 
-ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Sum.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain ?U ?Pa \<Longrightarrow> Abstract_Domain (?T +\<^sub>\<phi> ?U) (case_sum ?P ?Pa) \<close>)
-]\<close>
 
 
 subsubsection \<open>Rewrites\<close>
@@ -1141,17 +1083,6 @@ lemma \<phi>Sum_red[simp]:
   unfolding \<phi>Sum.unfold
   by simp_all
 
-(* TODO: if so, we can totally replace \<open>\<or>\<^sub>\<phi>\<close> by \<open>+\<^sub>\<phi>\<close>
-(*TODO: reduce \<open>(x \<Ztypecolon> T) + (y \<Ztypecolon> U) + (z \<Ztypecolon> Z) \<equiv> {Inl ({Inl x} + {Inr y})} + {Inr z} \<Ztypecolon> \<S> (\<S> (T +\<^sub>\<phi> U) +\<^sub>\<phi> Z)
-                                           \<equiv> {Inl (Inl x)} + {Inl (Inr y)} + {Inr z} \<Ztypecolon> \<S> T +\<^sub>\<phi> \<S> U +\<^sub>\<phi> \<S> Z\<close>*)
-lemma [embed_into_\<phi>type]:
-  \<open> ((x \<Ztypecolon> T) + (y \<Ztypecolon> U)) = ({Inl x} + {Inr y} \<Ztypecolon> \<S> (T +\<^sub>\<phi> U)) \<close>
-  unfolding BI_eq_iff
-  by (clarsimp simp add: split_sum_ex)
-
-term \<open>{Inl ({Inl x} + {Inr y})} + {Inr z} \<Ztypecolon> \<S> (\<S> (T +\<^sub>\<phi> U) +\<^sub>\<phi> Z)\<close>
-
-*)
 
 subsubsection \<open>Transformations\<close>
 
@@ -1386,7 +1317,6 @@ subsubsection \<open>Reasoning Rules\<close>
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
-
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi>
 \<Longrightarrow> closed_homo_sep \<psi> \<and>\<^sub>\<r> Dx = UNIV \<or>\<^sub>c\<^sub>u\<^sub>t
@@ -1596,17 +1526,6 @@ lemma [\<phi>reason_template %BI_approx_derived]:
   by clarsimp blast
 
 
-(*
-lemma [\<phi>reason_template %BI_approx_derived]:
-  \<open> Tyops_Commute G' G \<DD>[\<delta>'] \<DD>[\<delta>] T D (embedded_func f P)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y \<and> D x
-\<Longrightarrow> A' \<le> (x \<Ztypecolon> G' (\<DD>[\<delta>'] T))
-\<Longrightarrow> A' \<le> (y \<Ztypecolon> \<DD>[\<delta>] (G T)) \<close>
-  unfolding Premise_def Tyops_Commute_def BI_sub_transformation Transformation_def
-  by clarsimp blast*)
-
-
-
 paragraph \<open>Guess the Forms\<close>
 
 lemma [\<phi>reason %guess_tyop_commute for \<open>Guess_Tyops_Commute False \<DD>[_] ?var _ ?var_F' _ _ _ _ _ _ _ _ _\<close> ]:
@@ -1685,12 +1604,13 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
        and \<open> comm_domainoid_mapper_rev TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>' (scalar_mult f s) (scalar_mult f' s')
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>'] (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-       (*TODO: and Abstraction_to_Raw*)
+
        and \<open> ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T \<Longrightarrow> scalar_mult ?f ?s ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T \<close>
        and \<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c2,?'c2) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'c2,?'c2) \<phi>))
          \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = ?f ?s x \<and> ?r x' x) @action to (Itself::(?'c,?'c) \<phi>) \<close>
 
 declare [[\<phi>ToA_assoc_normalization \<open>\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?t \<Zcomp> ?T\<close> (100)]]
+
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -1835,7 +1755,6 @@ subsubsection \<open>List Item\<close>
        and Carrier_Set
        and \<phi>Inter.Comm\<^sub>E
 
-text \<open>The domainoid of \<open>List_Item\<close> is derived directly from \<open>%BI_approx_success\<close>\<close>
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
   \<open> v1 \<Turnstile> (x1 \<Ztypecolon> T1)
@@ -1856,25 +1775,6 @@ subsubsection \<open>Empty List\<close>
        and Identity_Elements
        and Abstraction_to_Raw
 
-
-
-subsection \<open>Mapping\<close> (*TODO!*)
-
-\<phi>type_def \<phi>Mapping :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> ('av \<Rightarrow> 'bv, 'a \<Rightarrow> 'b) \<phi>\<close> (infixr "\<Rrightarrow>" 25)
-    \<comment> \<open>Forward Simulation\<close>
-  where \<open>f \<Ztypecolon> T \<Rrightarrow> U \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>v x. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> g v \<Turnstile> (f x \<Ztypecolon> U))\<close>
-  deriving (*TODO!*)
-
-text \<open>Again it is a form requiring satisfaction operator, and derivers are very limited on this.\<close>
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> (\<And>x. St x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T)
-\<Longrightarrow> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ct x)
-\<Longrightarrow> (\<And>x. Ct x \<Longrightarrow> f x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Cu x )
-\<Longrightarrow> f \<Ztypecolon> T \<Rrightarrow> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>x. St x \<longrightarrow> Ct x \<and> Cu x) \<close>
-  unfolding Inhabited_def Action_Tag_def \<r>ESC_def \<r>EIF_def
-  apply clarsimp
-  apply blast .
 
 
 subsection \<open>Point on a Mapping\<close>
@@ -1906,19 +1806,11 @@ declare [[collect_reasoner_statistics \<phi>MapAt start,
 declare [[collect_reasoner_statistics \<phi>MapAt stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>MapAt})) "derivation"\<close>
-
-ML \<open>Phi_Reasoner.reasoners_of_group (Context.Proof \<^context>) (fn L => member (op =) L (the (snd @{reasoner_group %\<phi>MapAt}))) |> length\<close>
-
 \<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. [] \<^bold>\<rightarrow> T\<close>
 
 
-subsubsection \<open>By List of Keys\<close>
-    
-\<phi>reasoner_group \<phi>MapAt_L = (100,[0,9999]) \<open>derived reasoning rules of \<phi>MapAt_L\<close>
 
-declare [[collect_reasoner_statistics \<phi>MapAt_L start,
-          \<phi>LPR_collect_statistics derivation start]]
+subsubsection \<open>By List of Keys\<close>
 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
@@ -1937,11 +1829,6 @@ declare [[collect_reasoner_statistics \<phi>MapAt_L start,
        and \<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a list \<Rightarrow> ?'c::one, ?'a list \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @action to (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>))
         \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = ?k \<tribullet>\<^sub>m x \<and> ?r x' x) @action to (Itself::(?'a list \<Rightarrow> ?'c, ?'a list \<Rightarrow> ?'c) \<phi>) \<close>
 
-declare [[collect_reasoner_statistics \<phi>MapAt_L stop,
-          \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>MapAt_L})) "derivation"\<close>
-
 declare [[\<phi>ToA_assoc_normalization \<open>?k\<^sub>1 \<^bold>\<rightarrow>\<^sub>@ ?k\<^sub>2 \<^bold>\<rightarrow>\<^sub>@ ?T\<close> (100)]]
 
 
@@ -1952,14 +1839,8 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
   where \<open>\<phi>MapAt_Lnil key T \<equiv> \<phi>MapAt_L [key] (\<phi>MapAt [] T)\<close>
 
 
+
 subsection \<open>Permission Sharing\<close>
-
-text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
-
-\<phi>reasoner_group \<phi>Share = (100,[0,9999]) \<open>derived reasoning rules of \<phi>Share\<close>
-
-declare [[collect_reasoner_statistics \<phi>Share start,
-          \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
@@ -1977,11 +1858,6 @@ declare [[collect_reasoner_statistics \<phi>Share start,
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-
-declare [[collect_reasoner_statistics \<phi>Share stop,
-          \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Share})) "derivation"\<close>
 
 
 declare [[\<phi>ToA_assoc_normalization \<open>?n \<odiv> ?m \<odiv> ?T\<close> (100)]]
@@ -2041,7 +1917,6 @@ subsection \<open>Injection into Discrete Algebra\<close>
 
 \<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Discrete T\<close> \<open>\<lambda>T. \<fish_eye> Discrete T\<close> \<open>\<lambda>T. \<fish_eye>\<^sub>L Discrete T\<close>
 
-(*TODO: give a configure flag to control this sugar*)
 translations
   "\<coercion> T" <= "\<fish_eye> CONST Discrete T"
 
@@ -2076,11 +1951,6 @@ subsection \<open>Parameterized FMQ\<close>
        and \<open>Semimodule_SDistr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
        and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
-
-ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U UNIV zip_fun \<close>),
-  (@{thm' \<phi>Mul_Quant\<^sub>\<Lambda>.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?T ?U unzip_fun \<close>)
-]\<close>
 
 
 subsubsection \<open>Syntax\<close>
@@ -2272,7 +2142,7 @@ lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:
   \<medium_left_bracket> premises Tr and _ and _  and xx[THEN eq_right_frame, simp]
     note hd_drop_conv_nth[simp] \<phi>Some_\<phi>Prod[symmetric, simp] \<phi>Prod_expn'[simp]
     ;; Tr
-       unfold One_nat_def \<comment> \<open>????? TODO\<close>
+       unfold One_nat_def
   \<medium_right_bracket> .
 
 declare \<phi>Mul_Quant_LenIv.wrap_module_src[\<phi>reason del]
@@ -2458,17 +2328,6 @@ lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
                   \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
                   times_list_def[where a=ks] times_list_def[where a=ks']
                   append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil] .
-
-
-section \<open>Misc.\<close>
-
-subsection \<open>Forward Simulation\<close> (*TODO*)
-
-definition \<phi>F_simulation
-    :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> (('av \<times> 'bv) set, ('a \<times> 'b) set) \<phi>\<close> (infixr "\<Rrightarrow>\<^sub>r" 25)
-    \<comment> \<open>Forward Simulation\<close>
-  where \<open>(T \<Rrightarrow>\<^sub>r U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>u y. (v,u) \<in> g \<and> (x,y) \<in> f \<and> u \<in> (y \<Ztypecolon> U)) })\<close>
- 
 
 
 
