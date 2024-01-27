@@ -64,7 +64,7 @@ log_tick_positions = [np.log10(tick + pseudocount) for tick in tick_values]
 plt.xticks(log_tick_positions, tick_names)
 
 
-plt.yticks([5,10,15,20])
+plt.yticks([0,5,10,15,20])
 
 #plt.xlabel('seconds')
 #plt.ylabel('Portion')

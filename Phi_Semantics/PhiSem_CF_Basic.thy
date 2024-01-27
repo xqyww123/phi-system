@@ -286,7 +286,6 @@ lemma "__op_recursion__":
                      THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
     by simp .
 
-declare [[ML_debugger]]
 ML_file \<open>library/basic_recursion.ML\<close>
 
 attribute_setup recursive = \<open>Scan.repeat (Scan.lift Parse.term) >> (fn vars =>
