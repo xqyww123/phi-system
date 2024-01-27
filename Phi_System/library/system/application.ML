@@ -1,5 +1,5 @@
 (* FILE: library/system/application.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Authors of Submission 96
 
    The module contains reasoning infrastructure for applying application rules.
    An application rule can be a specification theorem for a procedure, a rule of view shift

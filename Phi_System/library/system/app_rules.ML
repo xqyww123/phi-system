@@ -1,5 +1,5 @@
 (* FILE: library/system/app_rules.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Authors of Submission 96
 
    The module manages application rules in the system, like name convention,
    parser, and overloading.

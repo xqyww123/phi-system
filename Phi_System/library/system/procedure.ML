@@ -1,5 +1,5 @@
 (* FILE: library/system/procedure.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Authors of Submission 96
 
    Defining procedures in IDE-CP.
 *)

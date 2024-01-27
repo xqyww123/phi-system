@@ -1,6 +1,6 @@
 (*  Title:      HOL/Statespace/state_space.ML
-    Author:     Norbert Schirmer, TU Muenchen, 2007
-    Author:     Norbert Schirmer, Apple, 2021
+    
+    
     Modified by Qiyuan Xu, 2022, to allow arbitray locale substituting for
     @{locale project_inject}. Resource State in Noe needs this feature to
     constrain the valuetype to be a resource algebra.

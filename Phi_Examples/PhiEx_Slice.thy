@@ -7,7 +7,7 @@ begin
 proc qsort:
   input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
           i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
-                                            the range of the pointer arithmetic.\<close>
+                                            the scope that a slice pointer can range over.\<close>
           len \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   premises \<open>i + len \<le> LEN\<close>
   output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>) \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>

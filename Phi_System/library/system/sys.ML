@@ -1,5 +1,5 @@
 (* FILE: library/system/sys.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Authors of Submission 96
 
    Several core operations in IDE-CP.
 *)

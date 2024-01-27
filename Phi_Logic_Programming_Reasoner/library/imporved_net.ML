@@ -1,6 +1,4 @@
 (*  Title:      Pure/net.ML
-    Author:     Lawrence C Paulson, Cambridge University Computer Laboratory
-    Copyright   1993  University of Cambridge
 
 Discrimination nets: a data structure for indexing items
 
@@ -12,7 +10,7 @@ From the book
 match_term no longer treats abstractions as wildcards; instead they match
 only wildcards in patterns.  Requires operands to be beta-eta-normal.
 
-MODIFIED BY: Qiyuan Xu
+MODIFIED BY: Authors of Submission 96
 
 Adding special support for \<open>TYPE\<close> so that the net can efficiently match terms containing explicit
   type annotation.

@@ -1,4 +1,4 @@
-(* AUTHOR: Qiyuan Xu
+(* AUTHOR: Authors of Submission 96
 
 This file provides a framework of template instantiation of reasoning rules, where a template is
 a rule with antecedents as the template parameters and argument rules can be given from which

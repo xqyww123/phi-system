@@ -1,5 +1,5 @@
 (*  Title:      HOL/Statespace/StateSpaceLocale.thy
-    Author:     Norbert Schirmer, TU Muenchen
+    
 *)
 
 section \<open>Setup for State Space Locales \label{sec:StateSpaceLocale}\<close>

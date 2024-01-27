@@ -1,6 +1,6 @@
 (*  Title:      HOL/Statespace/StateSpaceEx.thy
-    Author:     Norbert Schirmer, TU Muenchen, 2007
-    Author:     Norbert Schirmer, Apple, 2021
+    
+    
 *)
 
 section \<open>Examples \label{sec:Examples}\<close>

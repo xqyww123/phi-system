@@ -63,17 +63,9 @@ lemma list_all_replicate[simp]:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
   by (induct n; simp; blast)
 
-(*lemma Valid_Type_\<tau>Array[simp]:
-  \<open>Valid_Type (\<a>\<r>\<r>\<a>\<y>[n] T) \<longleftrightarrow> Valid_Type T\<close>
-  by (simp add: Inhabited_def;
-      meson length_replicate list_all_replicat)*)
 
 section \<open>\<phi>Type\<close>
 
-\<phi>reasoner_group Array = (100,[0,9999]) \<open>derived reasoning rules of Array\<close>
-
-declare [[collect_reasoner_statistics Array start,
-          \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
                     ("\<Aa>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
@@ -95,11 +87,6 @@ declare [[collect_reasoner_statistics Array start,
        and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
-
-declare [[collect_reasoner_statistics Array stop,
-          \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Array})) "derivation"\<close>
 
 lemma Separation_Homo\<^sub>I_Array[\<phi>reason add]:
   \<open>Separation_Homo\<^sub>I (Array n) (Array n) (Array n) T U {(x,y). length x = length y} (\<lambda>(x,y). zip x y)\<close>

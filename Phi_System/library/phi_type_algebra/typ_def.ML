@@ -1,6 +1,6 @@
 (*
 FILE: Phi_System/library/tools/functor_detect.ML
-AUTHOR: Qiyuan Xu
+AUTHOR: Authors of Submission 96
 
 Given a term of a \<phi>-type which is an application of a functor with an argument,
 it is undecidable by higher-order lambda pattern match to get the functor and the argument from it.

@@ -1,8 +1,3 @@
-(* Author: Norbert Schirmer, TU Muenchen, 2007
- * Author: Norbert Schirmer, Apple, 2021
- * Author: Qiyuan Xu, 2022, 2023
- * Modified from state_space.ML written by Norbert Schirmer. *)
-
 signature RESOURCE_LOCALE = sig
 
 val distinct_compsN : string

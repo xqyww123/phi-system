@@ -1,6 +1,4 @@
 session Virtual_Datatype = Phi_Statespace +
-  sessions
-    Phi_Statespace
   theories
     Virtual_Datatype
 
@@ -21,7 +19,6 @@ session Virtual_Datatype_Doc in example = Virtual_Datatype +
     "manual.bib"
   document_files (in "../../../document")
     phi.sty
-    bib.bib
   document_files
     "root.tex"
     "build"  

@@ -2191,8 +2191,6 @@ subsection \<open>Convention of Operator Precedence\<close>
 
 subsection \<open>ML codes\<close>
 
-declare [[ML_debugger]]
-
 ML_file "library/instructions.ML"
 ML_file "library/tools/parse.ML"
 

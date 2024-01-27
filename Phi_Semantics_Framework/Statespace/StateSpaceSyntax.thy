@@ -1,5 +1,5 @@
 (*  Title:      HOL/Statespace/StateSpaceSyntax.thy
-    Author:     Norbert Schirmer, TU Muenchen
+    
 *)
 
 section \<open>Syntax for State Space Lookup and Update \label{sec:StateSpaceSyntax}\<close>

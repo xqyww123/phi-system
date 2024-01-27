@@ -18,7 +18,6 @@ debt_axiomatization T_named_tup :: \<open>(symbol, TY) fmap type_entry\<close>
 interpretation named_tuple_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_named_tup
   using named_tuple_ty_ax .
 
-(*TODO: intergrate automatic hidding into the automation command*)
 hide_fact named_tuple_ty_ax
 
 definition \<open>semty_ntup \<equiv> named_tup.mk\<close>
@@ -75,12 +74,6 @@ print_translation \<open>[
   end)
 ]\<close>
 
-(*examples:
-
-term \<open>\<s>\<t>\<r>\<u>\<c>\<t> {a: A, b: B}\<close>
-
-
-*)
 
 subsubsection \<open>Value\<close>
 
@@ -94,11 +87,6 @@ interpretation named_tuple_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYP
   using named_tuple_val_ax .
 
 hide_fact named_tuple_val_ax
-
-(* abbreviation \<open>struct \<equiv> named_tup.mk\<close> *)
-
-(*TODO: syntax*)
-(* term \<open>struct {name: asd, nam2: TT}\<close> *)
 
 
 subsection \<open>Semantics\<close>
@@ -209,9 +197,6 @@ subsection \<open>Field\<close>
 
 \<phi>reasoner_group Field = (100,[0,9999]) \<open>storing derived reasoning rules of Field\<close>
 
-declare [[collect_reasoner_statistics Field start,
-          \<phi>LPR_collect_statistics derivation start]]
-
 \<phi>type_def Named_Tuple_Field :: "symbol \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
   where \<open>Named_Tuple_Field s T \<equiv> (\<lambda>v. V_named_tup.mk (fmupd s v fmempty)) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -219,11 +204,6 @@ declare [[collect_reasoner_statistics Field start,
        and Functionality
        and \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
        and Separation_Homo
-
-declare [[collect_reasoner_statistics Field stop,
-          \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Field})) "derivation"\<close>
 
 
 subsubsection \<open>Syntax\<close>
@@ -372,10 +352,6 @@ lemma [\<phi>reason 1200]:
   by simp
 
 subsection \<open>Index\<close>
-
-
-(* Is_Named_Tuple (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> X) fields \<and>\<^sub>\<r>
-           *)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' \<noteq> s

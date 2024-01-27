@@ -17,7 +17,6 @@ session Phi_Semantics_Framework = Main +
     "manual.bib"
   document_files (in "../document")
     phi.sty
-    bib.bib
   document_files
     "root.tex"
     "build"  

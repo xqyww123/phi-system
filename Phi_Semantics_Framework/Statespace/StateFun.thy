@@ -1,5 +1,5 @@
 (*  Title:      HOL/Statespace/StateFun.thy
-    Author:     Norbert Schirmer, TU Muenchen
+    
 *)
 
 section \<open>State Space Representation as Function \label{sec:StateFun}\<close>

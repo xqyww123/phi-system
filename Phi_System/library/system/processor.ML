@@ -1,5 +1,5 @@
 (* FILE: library/system/processor.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Authors of Submission 96
 
    Processor of IDE-CP. Processor is the core unit implementing the constructs in the programming
    of IDE-CP.

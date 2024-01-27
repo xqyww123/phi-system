@@ -1,8 +1,3 @@
-(* Author: Norbert Schirmer, TU Muenchen, 2007
- * Author: Norbert Schirmer, Apple, 2021
- * Author: Qiyuan Xu, NTU Singapore, 2022
- * Modified from state_space.ML written by Norbert Schirmer. *)
-
 signature VIRTUAL_DATATYPE = sig
   val distinct_compsN : string
   val valueN : string

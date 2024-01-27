@@ -1,8 +1,7 @@
 chapter \<open>Typed Variable\<close>
 
 text \<open>This is a generic formalization variables supporting either typed variables or non-typed.
-If the formalization is untyped, variables in the formalization can be assigned by values of
-any type.
+If the formalization is untyped, variables in the formalization can be assigned by values of any type.
 You can set the flag \<phi>variable_is_typed to indicate whether the formalization of variables is typed.\<close>
 
 theory PhiSem_Variable
@@ -24,7 +23,6 @@ declare [[typedef_overloaded = false]]
 setup \<open>Sign.mandatory_path "RES"\<close>
 
 type_synonym Var = \<open>varname \<rightharpoonup> VAL option discrete\<close>
-  \<comment> \<open>NONE: declared but not initialized.\<close>
 
 setup \<open>Sign.parent_path\<close>
 
@@ -33,8 +31,6 @@ lemma infinite_varname:
   using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>{k. varname.type k = TY}\<close>
         and f = \<open>\<lambda>n. varname n TY\<close>]
   using inj_def by fastforce
-
-(*TODO: polish this*)
 
 resource_space \<phi>var =
   Var  :: \<open>{vars::RES.Var. finite (dom vars)}\<close> (partial_map_resource \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
@@ -45,20 +41,10 @@ hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields
 
 subsubsection \<open>Fiction\<close>
 
-declare [[collect_reasoner_statistics Resource_Space start,
-          \<phi>LPR_collect_statistics derivation start]]
-
 fiction_space \<phi>var =
   Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
             (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
   by (standard; simp add: set_eq_iff)
-
-declare [[collect_reasoner_statistics Resource_Space stop,
-          \<phi>LPR_collect_statistics derivation stop]]
-
-
-hide_fact FIC.\<phi>var_fic_ax FIC.\<phi>var_fic_axioms
-
 
 
 
@@ -131,7 +117,7 @@ in [(\<^const_syntax>\<open>Inited_Var\<close>, (fn ctxt => fn [a,b] =>
 end
 \<close>
 
-text \<open>The rules below sets-up the IDE-CP synthesis engine, which is irrelevant with our \<phi>-type theory\<close>
+text \<open>The rules below sets-up the IDE-CP synthesis engine, which is independent with our \<phi>-type theory\<close>
 
 lemma [\<phi>reason %\<phi>synthesis_parse for
   \<open>Synthesis_Parse (?v::varname) (?Y::?'ret \<Rightarrow> assn)\<close>
@@ -541,7 +527,6 @@ proc (nodef) "__set_new_var_noty_rule_":
 
 
 ML_file "library/variable.ML"
-
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 

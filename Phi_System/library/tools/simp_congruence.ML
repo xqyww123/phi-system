@@ -1,5 +1,5 @@
 (* FILE: library/tools/simp_congruence.ML
-   Author: Qiyuan Xu
+   Author: Authors of Submission 96
 
 The module gives a generic simplification procedure for quasi-congruence rules
 of container \<phi>-types in the following form,

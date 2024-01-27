@@ -1,8 +1,4 @@
-(* Copied and Modified from HOL/Eisbach/eisbach_rule_insts.ML
-   Author[Original version]:     Daniel Matichuk, NICTA/UNSW
-   Author[Copy and Modification]: Xu Qiyuan
-
- *)
+(* Copied and Modified from HOL/Eisbach/eisbach_rule_insts.ML *)
 
 structure Where_Tac = struct
 

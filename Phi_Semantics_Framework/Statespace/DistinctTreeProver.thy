@@ -1,5 +1,5 @@
 (*  Title:      HOL/Statespace/DistinctTreeProver.thy
-    Author:     Norbert Schirmer, TU Muenchen
+    
 *)
 
 section \<open>Distinctness of Names in a Binary Tree \label{sec:DistinctTreeProver}\<close>

@@ -1,5 +1,5 @@
 (* FILE: library/syntax/name_by_type.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Authors of Submission 96
 
    Syntax tools for named type tag.
 *)

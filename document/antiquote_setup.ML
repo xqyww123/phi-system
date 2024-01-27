@@ -1,6 +1,6 @@
 (*  Title:      antiquote_setup.ML modified for phi-system
     Author:     Makarius
-    Author:     Qiyuan Xu
+    Author:     Authors of Submission 96
 
 Auxiliary antiquotations for the Isabelle manuals.
 *)

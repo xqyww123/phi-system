@@ -3,6 +3,7 @@ chapter Phi
 session Phi_Algebras = Main +
   options [document_build = build]
   sessions
+    "Phi_Statespace"
     "Phi_Document"
     "HOL-Library"
   theories

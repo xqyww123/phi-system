@@ -77,7 +77,7 @@ fun rewrite thy fixed_bounds bv_typs (pat,ret) term =
 
 end
 
-structure PLP_Reasoner_Pattern_Parse_Sender_Qiyuan_Xu = Proof_Data (
+structure PLP_Reasoner_Pattern_Parse_Sender = Proof_Data (
   type T = (Context.generic -> term -> term list option)
   val init = K (K (K NONE))
 )
@@ -212,10 +212,10 @@ val pat_ML = (Args.context -- term_pattern -- Scan.lift ((\<^keyword>\<open>=>\<
   >> (fn ((ctxt,(p1',pos)),(src,n)) =>
     let val ctxt' = Context.Proof ctxt
             |> ML_Context.expression (Input.pos_of src)
-              (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Pattern_Parse_Sender_Qiyuan_Xu.put ((" @
+              (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Pattern_Parse_Sender.put ((" @
                ML_Lex.read_source src @
                ML_Lex.read ") : Context.generic -> term -> term list option))")
-     in (n,p1',pos, By_ML (PLP_Reasoner_Pattern_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt')))
+     in (n,p1',pos, By_ML (PLP_Reasoner_Pattern_Parse_Sender.get (Context.the_proof ctxt')))
      end)
 
 fun setup_attribute binding comment =

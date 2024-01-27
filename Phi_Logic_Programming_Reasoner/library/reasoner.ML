@@ -1,6 +1,6 @@
 (*
 The engine of the Phi Logic Programming Reasoner
-Author: Qiyuan Xu
+Author: Authors of Submission 96
 *)
 signature NU_REASONER = sig
   (* This file is the major hot point of the whole system.
@@ -1345,10 +1345,10 @@ fun attr_syntax ext gen =
     val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
          let val ctxt = Context.Proof (Context.proof_of ctxt0)
               |> ML_Context.expression (Input.pos_of src)
-                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put ((" @
+                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender.put ((" @
                  ML_Lex.read_source src @
                  ML_Lex.read ") : context_state -> bool))")
-         in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
+         in (ctxt0, PLP_Reasoner_Guard_Parse_Sender.get (Context.the_proof ctxt)) end
        ))
     val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
   in

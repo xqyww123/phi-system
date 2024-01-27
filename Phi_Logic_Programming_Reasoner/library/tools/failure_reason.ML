@@ -1,4 +1,4 @@
-(* AUTHOR: Qiyuan XU
+(* AUTHOR: Authors of Submission 96
    A mechanism collecting potential failures of \<phi>-LPR reasoning.
  *)
 
