@@ -22,33 +22,32 @@
 \<rev_quest>       code: 0x00061f   font: PhiSymbols   group: punctuation
 \<BRarrow>         code: 0x0027A4   font: PhiSymbols   group: arrow
 
+\<semicolon>       code: 0x00FF1B   font: PhiSymbols   group: punctuation
 
-
-
-\<Aa>                    code: 0x01d5a0  group: letter font: PhiSymbols
-\<Bb>                    code: 0x01d5a1  group: letter font: PhiSymbols
-\<Cc>                    code: 0x01d5a2  group: letter font: PhiSymbols
-\<Dd>                    code: 0x01d5a3  group: letter font: PhiSymbols
-\<Ee>                    code: 0x01d5a4  group: letter font: PhiSymbols
-\<Ff>                    code: 0x01d5a5  group: letter font: PhiSymbols
-\<Gg>                    code: 0x01d5a6  group: letter font: PhiSymbols
-\<Hh>                    code: 0x01d5a7  group: letter font: PhiSymbols
-\<Ii>                    code: 0x01d5a8  group: letter font: PhiSymbols
-\<Jj>                    code: 0x01d5a9  group: letter font: PhiSymbols
-\<Kk>                    code: 0x01d5aa  group: letter font: PhiSymbols
-\<Ll>                    code: 0x01d5ab  group: letter font: PhiSymbols
-\<Mm>                    code: 0x01d5ac  group: letter font: PhiSymbols
-\<Nn>                    code: 0x01d5ad  group: letter font: PhiSymbols
-\<Oo>                    code: 0x01d5ae  group: letter font: PhiSymbols
-\<Pp>                    code: 0x01d5af  group: letter font: PhiSymbols
-\<Qq>                    code: 0x01d5b0  group: letter font: PhiSymbols
-\<Rr>                    code: 0x01d5b1  group: letter font: PhiSymbols
-\<Ss>                    code: 0x01d5b2  group: letter font: PhiSymbols
-\<Tt>                    code: 0x01d5b3  group: letter font: PhiSymbols
-\<Uu>                    code: 0x01d5b4  group: letter font: PhiSymbols
-\<Vv>                    code: 0x01d5b5  group: letter font: PhiSymbols
-\<Ww>                    code: 0x01d5b6  group: letter font: PhiSymbols
-\<Xx>                    code: 0x01d5b7  group: letter font: PhiSymbols
-\<Yy>                    code: 0x01d5b8  group: letter font: PhiSymbols
-\<Zz>                    code: 0x01d5b9  group: letter font: PhiSymbols
+\<Aa>              code: 0x01d5a0  group: letter font: PhiSymbols
+\<Bb>              code: 0x01d5a1  group: letter font: PhiSymbols
+\<Cc>              code: 0x01d5a2  group: letter font: PhiSymbols
+\<Dd>              code: 0x01d5a3  group: letter font: PhiSymbols
+\<Ee>              code: 0x01d5a4  group: letter font: PhiSymbols
+\<Ff>              code: 0x01d5a5  group: letter font: PhiSymbols
+\<Gg>              code: 0x01d5a6  group: letter font: PhiSymbols
+\<Hh>              code: 0x01d5a7  group: letter font: PhiSymbols
+\<Ii>              code: 0x01d5a8  group: letter font: PhiSymbols
+\<Jj>              code: 0x01d5a9  group: letter font: PhiSymbols
+\<Kk>              code: 0x01d5aa  group: letter font: PhiSymbols
+\<Ll>              code: 0x01d5ab  group: letter font: PhiSymbols
+\<Mm>              code: 0x01d5ac  group: letter font: PhiSymbols
+\<Nn>              code: 0x01d5ad  group: letter font: PhiSymbols
+\<Oo>              code: 0x01d5ae  group: letter font: PhiSymbols
+\<Pp>              code: 0x01d5af  group: letter font: PhiSymbols
+\<Qq>              code: 0x01d5b0  group: letter font: PhiSymbols
+\<Rr>              code: 0x01d5b1  group: letter font: PhiSymbols
+\<Ss>              code: 0x01d5b2  group: letter font: PhiSymbols
+\<Tt>              code: 0x01d5b3  group: letter font: PhiSymbols
+\<Uu>              code: 0x01d5b4  group: letter font: PhiSymbols
+\<Vv>              code: 0x01d5b5  group: letter font: PhiSymbols
+\<Ww>              code: 0x01d5b6  group: letter font: PhiSymbols
+\<Xx>              code: 0x01d5b7  group: letter font: PhiSymbols
+\<Yy>              code: 0x01d5b8  group: letter font: PhiSymbols
+\<Zz>              code: 0x01d5b9  group: letter font: PhiSymbols
 

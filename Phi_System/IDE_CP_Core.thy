@@ -8,7 +8,7 @@ theory IDE_CP_Core
     "var" "val" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "holds_fact"
     "input" "certified" "apply_rule" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
-  and ";;" :: prf_goal % "proof"
+  and ";;" "\<semicolon>" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>lang_parser" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>lang_operator" :: thy_decl

@@ -38,7 +38,7 @@ proc nth_llist:
   output   \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
   is [recursive]
   \<medium_left_bracket>
-    to \<open>OPEN 1 _\<close> ;; \<comment> \<open>annotation 1: open abstraction\<close>
+    to \<open>OPEN 1 _\<close> \<semicolon> \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data !
     \<medium_right_bracket> \<medium_left_bracket>
@@ -54,7 +54,7 @@ proc update_nth_llist:
   output   \<open>l[i := y] \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [recursive]
   \<medium_left_bracket>
-    to \<open>OPEN 1 _\<close> ;; \<comment> \<open>annotation 1: open abstraction\<close>
+    to \<open>OPEN 1 _\<close> \<semicolon> \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
         $addr \<tribullet> data := $y
     \<medium_right_bracket> \<medium_left_bracket>
@@ -75,7 +75,7 @@ proc length_of:
   if \<open>$addr = 0\<close> \<medium_left_bracket>
     0
   \<medium_right_bracket> \<medium_left_bracket>                           \<comment> \<open>TODO: create a syntax for this existential instantiation\<close>
-    to \<open>OPEN 1 _\<close> ;;
+    to \<open>OPEN 1 _\<close> \<semicolon>
     length_of ($addr \<tribullet> nxt !) + 1
     \<open>MAKE 1 (Linked_Lst addr TY T)\<close>
   \<medium_right_bracket>
@@ -91,7 +91,7 @@ proc length_of':
   if \<open>$addr = 0\<close> \<medium_left_bracket>
     0 is \<open>length l\<close>
   \<medium_right_bracket> \<medium_left_bracket>
-    to \<open>OPEN 1 _\<close> ;;
+    to \<open>OPEN 1 _\<close> \<semicolon>
     (length_of ($addr \<tribullet> nxt !) + 1) is \<open>length l\<close>
     \<open>MAKE 1 (Linked_Lst addr TY T)\<close>
   \<medium_right_bracket>
@@ -112,10 +112,10 @@ proc reverse_aux:
       to \<open>OPEN 0 _\<close>
       $addr'
     \<medium_right_bracket> \<medium_left_bracket>
-      to \<open>OPEN 1 _\<close> ;;
-      $addr \<tribullet> nxt ! \<rightarrow> val aa ;;
-      $addr \<tribullet> nxt := $addr' ;;
-      (*select*) \<open>Linked_Lst addr' TY T\<close> (*to apply*) \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> ;;
+      to \<open>OPEN 1 _\<close> \<semicolon>
+      $addr \<tribullet> nxt ! \<rightarrow> val aa \<semicolon>
+      $addr \<tribullet> nxt := $addr' \<semicolon>
+      (*select*) \<open>Linked_Lst addr' TY T\<close> (*to apply*) \<open>hd l # l' \<Ztypecolon> MAKE 1 (Linked_Lst addr TY T)\<close> \<semicolon>
       reverse_aux ($addr, $aa) 
     \<medium_right_bracket>
   \<medium_right_bracket> .

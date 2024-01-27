@@ -14,8 +14,8 @@ proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> ;;
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> ;;
+  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
+  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> den + $q2 \<tribullet> num * $q1 \<tribullet> den,
     den: $q1 \<tribullet> den * $q2 \<tribullet> den \<rbrace>
   \<open>MAKE _ \<rat>\<close>
@@ -26,8 +26,8 @@ proc rat_sub:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 - q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> ;;
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> ;;
+  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
+  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> den - $q2 \<tribullet> num * $q1 \<tribullet> den,
     den: $q1 \<tribullet> den * $q2 \<tribullet> den \<rbrace>
   \<open>MAKE _ \<rat>\<close>
@@ -38,8 +38,8 @@ proc rat_mul:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 * q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> ;;
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> ;;
+  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
+  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> num,
     den: $q1 \<tribullet> den * $q2 \<tribullet> den \<rbrace>
   \<open>MAKE _ \<rat>\<close>
@@ -51,8 +51,8 @@ proc rat_div:
   premises \<open>q2 \<noteq> 0\<close>
   output \<open>q1 / q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> ;;
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> ;;
+  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
+  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> den,
     den: $q1 \<tribullet> den * $q2 \<tribullet> num \<rbrace>
   \<open>MAKE _ \<rat>\<close>

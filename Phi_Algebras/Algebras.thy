@@ -1,6 +1,6 @@
 theory Algebras
   imports Phi_Spec_Pre HOL.Rat
-    "Phi_Statespace.StateFun" "Phi_Document.Base" "HOL-Library.Product_Plus"
+    "Phi_Document.Base" "HOL-Library.Product_Plus"
     "HOL-Library.Finite_Map"
 begin
 

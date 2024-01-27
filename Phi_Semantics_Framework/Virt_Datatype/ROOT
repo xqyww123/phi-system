@@ -2,23 +2,3 @@ session Virtual_Datatype = Phi_Statespace +
   theories
     Virtual_Datatype
 
-session Virtual_Datatype_Doc in example = Virtual_Datatype +
-  options [document_build = build]
-  sessions
-    Virtual_Datatype
-    Phi_Document
-  theories
-    VDT_Example
-  document_files (in "~~/src/Doc/")
-    "pdfsetup.sty"
-    "iman.sty"
-    "extra.sty"
-    "isar.sty"
-    "ttbox.sty"
-    "underscore.sty"
-    "manual.bib"
-  document_files (in "../../../document")
-    phi.sty
-  document_files
-    "root.tex"
-    "build"  

@@ -31,11 +31,11 @@ proc zero_mat:
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close>
 
-  map_slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
-    map_slice ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
+  map_slice ($m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
+    map_slice ($n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
       $a \<tribullet> ($i + $k) \<tribullet> ($j + $h) := \<open>0 \<Ztypecolon> \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
     \<medium_right_bracket>
-  \<medium_right_bracket> ;;
+  \<medium_right_bracket> \<semicolon>
 
   \<open>0\<^sub>m m n \<Ztypecolon> MAKE _ (MatSlice a i j m n)\<close>
 \<medium_right_bracket> .
@@ -78,15 +78,15 @@ proc copy_mat:
   output   \<open>y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 \<medium_left_bracket>
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
-  \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
+  \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> \<semicolon>
 
-  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
-    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
       $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
-    \<medium_right_bracket> ;;
-  \<medium_right_bracket> ;;
+    \<medium_right_bracket> \<semicolon>
+  \<medium_right_bracket> \<semicolon>
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> \<semicolon>
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
@@ -105,15 +105,15 @@ proc add_mat:
   output   \<open>x + y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 \<medium_left_bracket>
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
-  \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
+  \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> \<semicolon>
 
   map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k
     map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h
         $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) ! + $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
-    \<medium_right_bracket> ;;
-  \<medium_right_bracket> ;;
+    \<medium_right_bracket> \<semicolon>
+  \<medium_right_bracket> \<semicolon>
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>x + y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>x + y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> \<semicolon>
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
@@ -132,15 +132,15 @@ proc sub_mat:
   output   \<open>x - y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 \<medium_left_bracket>
   \<open>MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<close> to \<open>OPEN _ _\<close>
-  \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> ;;
+  \<open>MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close> to \<open>OPEN _ _\<close> \<semicolon>
 
-  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k ;;
-    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h ;;
+  map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
+    map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
       $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) ! - $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) ! 
-    \<medium_right_bracket> ;;
-  \<medium_right_bracket> ;;
+    \<medium_right_bracket> \<semicolon>
+  \<medium_right_bracket> \<semicolon>
 
-  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>x - y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> ;;
+  \<open>\<m>\<e>\<m>[a\<^sub>x] \<s>\<l>\<i>\<c>\<e>[i\<^sub>x, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>x, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>x - y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n)\<close> \<semicolon>
   \<open>\<m>\<e>\<m>[a\<^sub>y] \<s>\<l>\<i>\<c>\<e>[i\<^sub>y, m] \<s>\<l>\<i>\<c>\<e>[j\<^sub>y, n] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> \<open>y \<Ztypecolon> MAKE _ (MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n)\<close>
 \<medium_right_bracket> .
 
@@ -201,109 +201,109 @@ proc strassen:
   if ($n = 0)
   \<medium_left_bracket>
     \<open>MatSlice a\<^sub>A _ _ _ _\<close> to \<open>OPEN _ _\<close>
-    \<open>MatSlice a\<^sub>B _ _ _ _\<close> to \<open>OPEN _ _\<close> ;;
+    \<open>MatSlice a\<^sub>B _ _ _ _\<close> to \<open>OPEN _ _\<close> \<semicolon>
 
-    $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A := $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A ! * $a\<^sub>B \<tribullet> $i\<^sub>B \<tribullet> $j\<^sub>B ! ;;
+    $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A := $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A ! * $a\<^sub>B \<tribullet> $i\<^sub>B \<tribullet> $j\<^sub>B ! \<semicolon>
       
     holds_fact [\<phi>sledgehammer_simps]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof, Tac-s*)
-    note scalar_prod_def [\<phi>sledgehammer_simps] ;;                                       (*for proof, Tac-m*)
+    note scalar_prod_def [\<phi>sledgehammer_simps] \<semicolon>                                       (*for proof, Tac-m*)
 
-    \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n))\<close> ;;
+    \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n))\<close> \<semicolon>
     \<open>B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n))\<close>
   \<medium_right_bracket>
   \<medium_left_bracket>
     holds_fact t0: \<open>(2::nat) ^ n = 2 ^ (n - 1) + 2 ^ (n - 1)\<close>                          (*for proof, Tac-s*)
-    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close> ;;                 (*for reasoning, A*)
+    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close> \<semicolon>                 (*for reasoning, A*)
         \<comment> \<open>Even when ML-aided ATP \<open>Sledgehammer\<close> is so powerful now, it cannot solve some simple
             high-school problems without the \<open>t0\<close> hint ...\<close>
 
-    \<open>MatSlice a\<^sub>A _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>A\<^sub>1\<^sub>1, A\<^sub>1\<^sub>2, A\<^sub>2\<^sub>1, A\<^sub>2\<^sub>2 ;;
-    \<open>MatSlice a\<^sub>B _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>B\<^sub>1\<^sub>1, B\<^sub>1\<^sub>2, B\<^sub>2\<^sub>1, B\<^sub>2\<^sub>2 ;;
-    \<open>MatSlice a\<^sub>C _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>1, M\<^sub>2, M\<^sub>3, M\<^sub>4 ;;
-    \<open>MatSlice a\<^sub>D _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>5, M\<^sub>6, M\<^sub>7, M\<^sub>t ;;
+    \<open>MatSlice a\<^sub>A _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>A\<^sub>1\<^sub>1, A\<^sub>1\<^sub>2, A\<^sub>2\<^sub>1, A\<^sub>2\<^sub>2 \<semicolon>
+    \<open>MatSlice a\<^sub>B _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>B\<^sub>1\<^sub>1, B\<^sub>1\<^sub>2, B\<^sub>2\<^sub>1, B\<^sub>2\<^sub>2 \<semicolon>
+    \<open>MatSlice a\<^sub>C _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>1, M\<^sub>2, M\<^sub>3, M\<^sub>4 \<semicolon>
+    \<open>MatSlice a\<^sub>D _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>5, M\<^sub>6, M\<^sub>7, M\<^sub>t \<semicolon>
 
-    holds_fact t2: \<open>n < addrspace_bits\<close> ;;                                              (*for proof, Tac-s*)
+    holds_fact t2: \<open>n < addrspace_bits\<close> \<semicolon>                                              (*for proof, Tac-s*)
 
-    1 << ($n-1) \<rightarrow> val N ;;
-    $i\<^sub>A + $N \<rightarrow> val i\<^sub>A' ;;
-    $j\<^sub>A + $N \<rightarrow> val j\<^sub>A' ;;
-    $i\<^sub>B + $N \<rightarrow> val i\<^sub>B' ;;
-    $j\<^sub>B + $N \<rightarrow> val j\<^sub>B' ;;
-    $i\<^sub>C + $N \<rightarrow> val i\<^sub>C' ;;
-    $j\<^sub>C + $N \<rightarrow> val j\<^sub>C' ;;
-    $i\<^sub>D + $N \<rightarrow> val i\<^sub>D' ;;
-    $j\<^sub>D + $N \<rightarrow> val j\<^sub>D' ;;
+    1 << ($n-1) \<rightarrow> val N \<semicolon>
+    $i\<^sub>A + $N \<rightarrow> val i\<^sub>A' \<semicolon>
+    $j\<^sub>A + $N \<rightarrow> val j\<^sub>A' \<semicolon>
+    $i\<^sub>B + $N \<rightarrow> val i\<^sub>B' \<semicolon>
+    $j\<^sub>B + $N \<rightarrow> val j\<^sub>B' \<semicolon>
+    $i\<^sub>C + $N \<rightarrow> val i\<^sub>C' \<semicolon>
+    $j\<^sub>C + $N \<rightarrow> val j\<^sub>C' \<semicolon>
+    $i\<^sub>D + $N \<rightarrow> val i\<^sub>D' \<semicolon>
+    $j\<^sub>D + $N \<rightarrow> val j\<^sub>D' \<semicolon>
 
-    copy_mat ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
-    add_mat  ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) ;;
-    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*) $N, $N) ;;
-    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) ;;
+    copy_mat ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C,  (*M\<^sub>1*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) \<semicolon>
     strassen ($a\<^sub>C, $i\<^sub>C , $j\<^sub>C , (*M\<^sub>1*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t *)
-              $a\<^sub>C, $i\<^sub>C , $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3 *) $n-1) ;;
+              $a\<^sub>C, $i\<^sub>C , $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3 *) $n-1) \<semicolon>
 
-    copy_mat ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A , (*A\<^sub>2\<^sub>1*) $N, $N) ;;
-    add_mat  ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) ;;
+    copy_mat ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A , (*A\<^sub>2\<^sub>1*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) \<semicolon>
     strassen ($a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*)
-              $a\<^sub>C, $i\<^sub>C', $j\<^sub>C, (*M\<^sub>3*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $n-1) ;;
+              $a\<^sub>C, $i\<^sub>C', $j\<^sub>C, (*M\<^sub>3*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $n-1) \<semicolon>
 
-    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B', (*B\<^sub>1\<^sub>2*) $N, $N) ;;
-    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) ;;
-    copy_mat ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
+    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B', (*B\<^sub>1\<^sub>2*) $N, $N) \<semicolon>
+    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) \<semicolon>
     strassen ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*)
-              $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $n-1) ;;
+              $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $n-1) \<semicolon>
 
 
-    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B , (*B\<^sub>2\<^sub>1*) $N, $N) ;;
-    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*) $N, $N) ;;
-    copy_mat ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) ;;
+    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B , (*B\<^sub>2\<^sub>1*) $N, $N) \<semicolon>
+    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) \<semicolon>
     strassen ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*)
-              $a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $n-1) ;;
+              $a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $n-1) \<semicolon>
 
-    copy_mat ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
-    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*) $N, $N) ;;
+    copy_mat ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*) $N, $N) \<semicolon>
     strassen ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*)
-              $a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $n-1) ;;
+              $a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $n-1) \<semicolon>
 
-    copy_mat ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A , (*A\<^sub>2\<^sub>1*) $N, $N) ;;
-    sub_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) ;;
-    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*) $N, $N) ;;
-    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B', (*B\<^sub>1\<^sub>2*) $N, $N) ;;
+    copy_mat ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A , (*A\<^sub>2\<^sub>1*) $N, $N) \<semicolon>
+    sub_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B , (*B\<^sub>1\<^sub>1*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B , $j\<^sub>B', (*B\<^sub>1\<^sub>2*) $N, $N) \<semicolon>
     strassen ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*)
-              $a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $n-1) ;;
+              $a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*) $n-1) \<semicolon>
 
 
-    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*) $N, $N) ;;
-    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) ;;
-    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B , (*B\<^sub>2\<^sub>1*) $N, $N) ;;
-    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) ;;
+    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*) $N, $N) \<semicolon>
+    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B , (*B\<^sub>2\<^sub>1*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*) $a\<^sub>B, $i\<^sub>B', $j\<^sub>B', (*B\<^sub>2\<^sub>2*) $N, $N) \<semicolon>
     strassen ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>D, $i\<^sub>D', $j\<^sub>D', (*M\<^sub>t*)
-              $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*)$a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*) $n-1) ;;
+              $a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*)$a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*) $n-1) \<semicolon>
 
-    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>C, $i\<^sub>C , $j\<^sub>C , (*M\<^sub>1*) $N, $N) ;;
-    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $N, $N) ;;
-    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $N, $N) ;;
-    copy_mat ($a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*)$a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $N, $N) ;;
+    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>C, $i\<^sub>C , $j\<^sub>C , (*M\<^sub>1*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $N, $N) \<semicolon>
+    sub_mat  ($a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>A, $i\<^sub>A , $j\<^sub>A , (*A\<^sub>1\<^sub>1*)$a\<^sub>D, $i\<^sub>D', $j\<^sub>D , (*M\<^sub>7*) $N, $N) \<semicolon>
 
-    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3*) $N, $N) ;;
-    copy_mat ($a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*)$a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $N, $N) ;;
+    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C , (*M\<^sub>3*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>A, $i\<^sub>A , $j\<^sub>A', (*A\<^sub>1\<^sub>2*)$a\<^sub>D, $i\<^sub>D , $j\<^sub>D , (*M\<^sub>5*) $N, $N) \<semicolon>
 
-    add_mat  ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $N, $N) ;;
-    copy_mat ($a\<^sub>A, $i\<^sub>A', $j\<^sub>A , (*A\<^sub>2\<^sub>1*)$a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $N, $N) ;;
+    add_mat  ($a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $a\<^sub>C, $i\<^sub>C, $j\<^sub>C', (*M\<^sub>2*) $N, $N) \<semicolon>
+    copy_mat ($a\<^sub>A, $i\<^sub>A', $j\<^sub>A , (*A\<^sub>2\<^sub>1*)$a\<^sub>C, $i\<^sub>C', $j\<^sub>C', (*M\<^sub>4*) $N, $N) \<semicolon>
 
-    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>C, $i\<^sub>C , $j\<^sub>C, (*M\<^sub>1*) $N, $N) ;;
-    sub_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>C, $i\<^sub>C , $j\<^sub>C',(*M\<^sub>2*) $N, $N) ;;
-    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C, (*M\<^sub>3*) $N, $N) ;;
+    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>C, $i\<^sub>C , $j\<^sub>C, (*M\<^sub>1*) $N, $N) \<semicolon>
+    sub_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>C, $i\<^sub>C , $j\<^sub>C',(*M\<^sub>2*) $N, $N) \<semicolon>
+    add_mat  ($a\<^sub>D, $i\<^sub>D , $j\<^sub>D', (*M\<^sub>6*) $a\<^sub>C, $i\<^sub>C', $j\<^sub>C, (*M\<^sub>3*) $N, $N) \<semicolon>
     copy_mat ($a\<^sub>A, $i\<^sub>A', $j\<^sub>A', (*A\<^sub>2\<^sub>2*)$a\<^sub>D, $i\<^sub>D , $j\<^sub>D',(*M\<^sub>6*) $N, $N)
 
     (*Below, the proof is stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 175-182, 227-239, lemma strassen_mat_mult*)
 
     holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>                      (*for proof, Tac-s*)
-                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> ;;                   (*for proof, Tac-s*)
+                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> \<semicolon>                   (*for proof, Tac-s*)
 
     note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>                (*for proof, each line is counted as one Tac-m*)
                     \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
                     \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> ;;
+                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> \<semicolon>
 
     apply_rule merge_4mat[where a=a\<^sub>A and i=i\<^sub>A and s=\<open>?N\<close> and j=j\<^sub>A and t=\<open>?N\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
       is \<open>A * B\<close> certified by (                                                    (*is \<open>A * B\<close> is an annotation, A*)
@@ -320,16 +320,16 @@ proc strassen:
                          assoc_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
                          comm_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
                          minus_add_minus_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>])
-    (*end of stolen proof*) ;;
+    (*end of stolen proof*) \<semicolon>
 
 
     apply_rule merge_4mat[where a=a\<^sub>B and i=i\<^sub>B and s=\<open>?N\<close> and j=j\<^sub>B and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
-            is B ;;                                                                (*is \<open>B\<close> is an annotation, A*)
+            is B \<semicolon>                                                                (*is \<open>B\<close> is an annotation, A*)
 
     apply_rule merge_4mat[where a=a\<^sub>C and i=i\<^sub>C and s=\<open>?N\<close> and j=j\<^sub>C and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
     apply_rule merge_4mat[where a=a\<^sub>D and i=i\<^sub>D and s=\<open>?N\<close> and j=j\<^sub>D and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
     
-  \<medium_right_bracket> ;;
+  \<medium_right_bracket> \<semicolon>
 \<medium_right_bracket> .
 
 end
@@ -343,12 +343,12 @@ proc strassen_mul:
   output   \<open>A * B \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
             B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n) \<close>
 \<medium_left_bracket>
-  \<open>literal n \<Ztypecolon> \<nat>(size_t)\<close> \<rightarrow> val n ;;
-  1 << $n \<rightarrow> val N ;;
-  new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val C ;;
-  new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val D ;;
-  strassen ($a\<^sub>x, 0, 0, $a\<^sub>y, 0, 0, $C, 0, 0, $D, 0, 0, $n) ;;
-  del_mat ($C) ;;
+  \<open>literal n \<Ztypecolon> \<nat>(size_t)\<close> \<rightarrow> val n \<semicolon>
+  1 << $n \<rightarrow> val N \<semicolon>
+  new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val C \<semicolon>
+  new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val D \<semicolon>
+  strassen ($a\<^sub>x, 0, 0, $a\<^sub>y, 0, 0, $C, 0, 0, $D, 0, 0, $n) \<semicolon>
+  del_mat ($C) \<semicolon>
   del_mat ($D)
 \<medium_right_bracket> .
 

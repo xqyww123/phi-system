@@ -17,8 +17,8 @@ proc qsort:
   if ($len \<le> 1)
   \<medium_left_bracket> return \<medium_right_bracket>
   \<medium_left_bracket>
-    val pivot \<leftarrow> ($i + ($len - 1)) ! ;;
-    var d \<leftarrow> 0 ;;
+    val pivot \<leftarrow> ($i + ($len - 1)) ! \<semicolon>
+    var d \<leftarrow> 0 \<semicolon>
     replicate (0,$len) \<open>\<lambda>n. l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
                             d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)
                          \<s>\<u>\<b>\<j> l' d.
@@ -26,25 +26,25 @@ proc qsort:
                             (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
                             (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
     \<medium_left_bracket> 
-      for n \<rightarrow> val n ;;
-      ($i + $n)! \<rightarrow> val x ;;
+      for n \<rightarrow> val n \<semicolon>
+      ($i + $n)! \<rightarrow> val x \<semicolon>
       if ($x \<le> $pivot)
       \<medium_left_bracket>
-        ($i + $n) := ($i + $d)! ;;
-        ($i + $d) := $x ;;
+        ($i + $n) := ($i + $d)! \<semicolon>
+        ($i + $d) := $x \<semicolon>
         $d \<leftarrow> $d + 1
       \<medium_right_bracket>
-      \<medium_left_bracket> \<medium_right_bracket> ;;
-    \<medium_right_bracket> ;;
+      \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
+    \<medium_right_bracket> \<semicolon>
 
-    qsort ($i, $d) ;;
-    qsort ($i + $d, $len - $d) ;;
+    qsort ($i, $d) \<semicolon>
+    qsort ($i + $d, $len - $d) \<semicolon>
         
     holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x)\<close>
            and t2: \<open>(\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close>
            and t4[\<phi>sledgehammer_simps]: \<open>set l'b = set (drop d l')\<close>
     from \<open>mset (take d l') = mset l'a\<close> have t3[\<phi>sledgehammer_simps]: \<open>set l'a = set (take d l')\<close> by auto_sledgehammer
-    note [\<phi>sledgehammer_simps] = sorted_append  ;;
+    note [\<phi>sledgehammer_simps] = sorted_append  \<semicolon>
 
     return
   \<medium_right_bracket>

@@ -35,7 +35,7 @@ proc get_dynarr:
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> ;;
+  to \<open>OPEN _ _\<close> \<semicolon>
   $addr \<tribullet> data ! \<tribullet> $i !
   \<open>MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
@@ -46,8 +46,8 @@ proc set_dynarr:
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> ;;
-  $addr \<tribullet> data ! \<tribullet> $i := $v ;;
+  to \<open>OPEN _ _\<close> \<semicolon>
+  $addr \<tribullet> data ! \<tribullet> $i := $v \<semicolon>
  \<open>l[i := v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
@@ -65,22 +65,22 @@ proc push_dynarr:
   premises \<open>length l \<le> 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
   output   \<open>l @ [v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> ;;
-  val len \<leftarrow> $addr \<tribullet> len ! ;;
-  val cap \<leftarrow> $addr \<tribullet> cap ! ;;
+  to \<open>OPEN _ _\<close> \<semicolon>
+  val len \<leftarrow> $addr \<tribullet> len ! \<semicolon>
+  val cap \<leftarrow> $addr \<tribullet> cap ! \<semicolon>
   if ($cap = $len) \<medium_left_bracket>
-      val cap' \<leftarrow> Max($cap * 2, 1) ;;
-      val data' \<leftarrow> calloc_N ($cap') \<open>T\<close> ;;
-      memcpy ($data', $addr \<tribullet> data !, $len) ;;
-      mfree ($addr \<tribullet> data !) ;;
-      $addr \<tribullet> data := $data' ;;
-      $addr \<tribullet> len := $addr \<tribullet> len ! + 1 ;;
-      $addr \<tribullet> cap := $cap' ;;
-      $data' \<tribullet> $len := $v ;;
+      val cap' \<leftarrow> Max($cap * 2, 1) \<semicolon>
+      val data' \<leftarrow> calloc_N ($cap') \<open>T\<close> \<semicolon>
+      memcpy ($data', $addr \<tribullet> data !, $len) \<semicolon>
+      mfree ($addr \<tribullet> data !) \<semicolon>
+      $addr \<tribullet> data := $data' \<semicolon>
+      $addr \<tribullet> len := $addr \<tribullet> len ! + 1 \<semicolon>
+      $addr \<tribullet> cap := $cap' \<semicolon>
+      $data' \<tribullet> $len := $v \<semicolon>
       \<open>l@[v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
   \<medium_right_bracket> \<medium_left_bracket>
-      $addr \<tribullet> data ! \<tribullet> $len := $v ;;
-      $addr \<tribullet> len := $len + 1 ;;
+      $addr \<tribullet> data ! \<tribullet> $len := $v \<semicolon>
+      $addr \<tribullet> len := $len + 1 \<semicolon>
       \<open>l@[v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -91,17 +91,17 @@ proc pop_dynarr:
   premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
   output   \<open>butlast l \<Ztypecolon> DynArr addr TY T\<heavy_comma> last l \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> ;;
-  val len \<leftarrow> $addr \<tribullet> len ! - 1 ;;
-  val half_cap \<leftarrow> ($addr \<tribullet> cap !) / 2 ;;
-  val ret \<leftarrow> $addr \<tribullet> data ! \<tribullet> $len ! ;;
-  $addr \<tribullet> len := $len ;;
+  to \<open>OPEN _ _\<close> \<semicolon>
+  val len \<leftarrow> $addr \<tribullet> len ! - 1 \<semicolon>
+  val half_cap \<leftarrow> ($addr \<tribullet> cap !) / 2 \<semicolon>
+  val ret \<leftarrow> $addr \<tribullet> data ! \<tribullet> $len ! \<semicolon>
+  $addr \<tribullet> len := $len \<semicolon>
   if ($len \<le> $half_cap) \<medium_left_bracket>
-    val data' \<leftarrow> calloc_N ($half_cap) \<open>T\<close> ;;
-    memcpy ($data', $addr \<tribullet> data !, $len) ;;
-    mfree ($addr \<tribullet> data !) ;;
-    $addr \<tribullet> data := $data' ;;
-    $addr \<tribullet> cap := $half_cap ;;
+    val data' \<leftarrow> calloc_N ($half_cap) \<open>T\<close> \<semicolon>
+    memcpy ($data', $addr \<tribullet> data !, $len) \<semicolon>
+    mfree ($addr \<tribullet> data !) \<semicolon>
+    $addr \<tribullet> data := $data' \<semicolon>
+    $addr \<tribullet> cap := $half_cap \<semicolon>
     \<open>MAKE _ (DynArr addr _ _)\<close>
   \<medium_right_bracket>
   \<medium_left_bracket> \<open>MAKE _ (DynArr addr _ _)\<close> \<medium_right_bracket>
@@ -113,9 +113,9 @@ proc new_dynarr:
   input  \<open>Void\<close>
   output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>\<close> ;;
-  $ret \<tribullet> data := (calloc_N (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>) \<open>T\<close>) ;;
-  \<open>MAKE _ (DynArr addr _ _)\<close> ;;
+  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>\<close> \<semicolon>
+  $ret \<tribullet> data := (calloc_N (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>) \<open>T\<close>) \<semicolon>
+  \<open>MAKE _ (DynArr addr _ _)\<close> \<semicolon>
   $ret
 \<medium_right_bracket> .
 
@@ -124,8 +124,8 @@ proc del_dynarr:
   input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> ;;
-  mfree ($addr \<tribullet> data !) ;;
+  to \<open>OPEN _ _\<close> \<semicolon>
+  mfree ($addr \<tribullet> data !) \<semicolon>
   mfree ($addr)
 \<medium_right_bracket> .
 
