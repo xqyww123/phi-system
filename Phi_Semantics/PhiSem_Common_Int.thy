@@ -112,7 +112,7 @@ subsection \<open>Operator Overloading\<close>
 \<phi>overloads nat and int
 
 
-\<phi>overloads mod and floor and ceiling
+\<phi>overloads floor and ceiling
 
 declare [[
     overloaded_operator_in_synthesis \<open>(+)\<close>,
@@ -136,6 +136,7 @@ declare_\<phi>lang_operator
   prefix 80 ~
   infixl 70 *
   infixl 70 /
+  infixl 70 %
   infix  50 <
   infix  50 \<le>
   infix  50 >

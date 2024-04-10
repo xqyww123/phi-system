@@ -835,7 +835,7 @@ fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
                                  | SOME reporter => SOME (ngoals-1, iter, Timer.startCPUTimer (), reporter))
                              | some => some
 
-                    val _ = if score = 2000 then () else ()
+                    val _ = if score = 57980 then () else ()
 
                     val Z = if ngoals <= N
                             then raise Success (ctxt, th)

@@ -381,7 +381,7 @@ lemma op_udiv_anat_\<phi>app[\<phi>overload /,
 
 paragraph \<open>Modulo\<close>
 
-lemma op_mod_aint_\<phi>app[\<phi>overload mod,
+lemma op_mod_aint_\<phi>app[\<phi>overload %,
                        \<phi>synthesis for _ (%synthesis_arith)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_amod (vy \<^bold>, vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<int> \<rbrace>\<close>
@@ -389,7 +389,7 @@ lemma op_mod_aint_\<phi>app[\<phi>overload mod,
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
       rule, simp)                  
 
-lemma op_mod_anat_\<phi>app[\<phi>overload mod,
+lemma op_mod_anat_\<phi>app[\<phi>overload %,
                        \<phi>synthesis for _ (%synthesis_arith)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<p>\<r>\<o>\<c> op_amod (vy \<^bold>, vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<nat> \<rbrace>\<close>

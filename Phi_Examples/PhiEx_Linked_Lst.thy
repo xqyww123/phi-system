@@ -2,10 +2,11 @@ theory PhiEx_Linked_Lst
   imports Phi_Semantics.PhiSem_C
 begin
 
+abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
-      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) = ((nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}, data: T \<rbrace>\<heavy_comma>
+      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) = ((nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<heavy_comma>
                                            ls \<Ztypecolon> Linked_Lst nxt TY T
                                          \<s>\<u>\<b>\<j> nxt. \<top>)\<close>
 
@@ -31,6 +32,21 @@ context
     and TY :: TY                                      \<comment> \<open>semantic type\<close>
   assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>    \<comment> \<open>specify the semantic type of T\<close>
 begin
+
+proc prepend_llist:
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  requires [\<phi>reason]: \<open>Semantic_Zero_Val TY T z\<close>
+  output \<open>v#l \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma> addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY) \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+\<medium_left_bracket>
+  val ret \<leftarrow> calloc_1 \<open>\<lbrace> nxt: \<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<close> \<semicolon>
+  $ret \<tribullet> nxt := $addr \<semicolon>
+  $ret \<tribullet> data := $v \<semicolon>
+  \<open>MAKE 1 (Linked_Lst _ TY T)\<close> \<semicolon>
+  $ret
+\<medium_right_bracket> .
+
+
+
 
 proc nth_llist:
   input    \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
