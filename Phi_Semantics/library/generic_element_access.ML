@@ -126,11 +126,25 @@ fun gen_constructor kind pos_and_first_args cfg stat =
                            | NONE => error ("Don't know how to construct " ^ kind' ^
                                               " using the given arguments."))
             val args = Thm.cterm_of ctxt (HOLogic.mk_list \<^typ>\<open>VAL \<phi>arg\<close> args')
-            val pos_rules = map (fn ((_, pos), rules) => (pos, rules)) args0
-                         
+
+            val pos_rules = map_index (fn (i,((name, pos), rules)) =>
+                  let val sym = case name
+                                  of SOME str =>
+                                        \<^Const>\<open>Inl \<^Type>\<open>symbol\<close> \<^Type>\<open>nat\<close>\<close>
+                                                $ Phi_Tool_Symbol.mk_symbol str
+                                   | NONE =>
+                                        \<^Const>\<open>Inr \<^Type>\<open>nat\<close> \<^Type>\<open>symbol\<close>\<close> $ HOLogic.mk_nat i
+                      val csym = Thm.cterm_of ctxt (\<^Const>\<open>\<A>ctr_arg\<close> $ sym)
+                      val rules' = map (fn rule =>
+                            let val tag = Drule.infer_instantiate ctxt
+                                              [(("A",0),csym)] @{thm' Action_Tag_I}
+                             in rule RS tag
+                            end ) rules
+                   in (pos, rules')
+                  end ) args0
+
             val ctxt'' = Context.proof_map (
-                    Generic_Variable_Access.register_value_spec_thms_no_dup (
-                      map (fn ((_, pos), rules) => (pos, rules)) args0)
+                    Generic_Variable_Access.register_value_spec_thms_no_dup pos_rules
                   ) ctxt'
             val rule' =
                 @{thm' op_construct_aggregate_\<phi>app}
@@ -140,7 +154,7 @@ fun gen_constructor kind pos_and_first_args cfg stat =
                         ((("args", 0), \<^typ>\<open>VAL \<phi>arg list\<close>), args)
                       ])
                   |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1) ctxt''
-         in (oprs, (ctxt'', Phi_Apply.apply [rule'] ctxt'' sequent))
+         in (oprs, (ctxt' (*not ctxt''!*), Phi_Apply.apply [rule'] ctxt'' sequent))
         end
         | invoke _ _ = error "BUG 2CG4WNzYQqirWulpFUkQQA"
    in Phi_Opr_Stack.meta_apply cfg pos_and_first_args invoke stat

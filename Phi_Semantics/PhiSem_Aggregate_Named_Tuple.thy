@@ -427,21 +427,22 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @action \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor [s])
           (x \<Ztypecolon> List_Item T)
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def \<phi>SemType_def
+            Action_Tag_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @action \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor (s # sR))
           ((x,xs) \<Ztypecolon> List_Item T \<^emph> L)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
-  unfolding \<phi>Aggregate_Constructor_Synth_def \<phi>SemType_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def \<phi>SemType_def Action_Tag_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric] times_list_def; rule)
   subgoal premises prems for vs v
     by (insert prems(1,3-) 
@@ -463,21 +464,23 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @action \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
+            Action_Tag_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @action \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
+            Action_Tag_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
   subgoal for vs
     by (rule exI[where x=\<open>V_named_tup.mk vs\<close>], rule exI[where x=\<open>V_named_tup.mk (fmupd s (\<phi>arg.dest v) fmempty)\<close>],

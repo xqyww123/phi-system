@@ -360,7 +360,7 @@ definition \<phi>Aggregate_Constructor :: \<open>(VAL list \<Rightarrow> VAL) \<
   where \<open>\<phi>Aggregate_Constructor constructor args TY Spec
     \<longleftrightarrow> constructor (map \<phi>arg.dest args) \<Turnstile> Spec \<and> constructor (map \<phi>arg.dest args) \<in> Well_Type TY\<close>
 
-
+consts \<A>ctr_arg :: \<open>symbol + nat \<Rightarrow> action\<close>
 
 declare [[\<phi>reason_default_pattern
     \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> (100)

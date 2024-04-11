@@ -10,7 +10,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
   deriving Basic
        and \<open>Object_Equiv \<rat> (=)\<close>
 
-
+ 
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>

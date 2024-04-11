@@ -1,12 +1,14 @@
-theory PhiEx_DynArr
+theory Dyn_Arr_arbi
   imports Phi_Semantics.PhiSem_C
-          Phi_Semantics.PhiSem_Mem_C_MI
-          PhiStd.PhiStd_Slice
+          Phi_Semantics.PhiSem_Mem_C_AI
+          PhiStd.PhiStd_Slice_a
+          Phi_Semantics.PhiSem_Int_ArbiPrec
 begin
+ 
 
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
-                                (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>
+                                (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>, cap: \<nat> \<rbrace>
                                 \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                      len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
                                                      take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr\<close>
@@ -19,12 +21,12 @@ begin
        and Functional_Transformation_Functor
 
 
-abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
+abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<a>\<i>\<n>\<t>, cap: \<a>\<i>\<n>\<t>}\<close>
 
 
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
-  output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> \<semicolon>
   $addr \<tribullet> len !
@@ -41,7 +43,7 @@ context
 begin
 
 proc get_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
@@ -52,7 +54,7 @@ proc get_dynarr:
 
 
 proc set_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
@@ -62,8 +64,8 @@ proc set_dynarr:
 \<medium_right_bracket> .
 
 proc Max:
-  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
-  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
   if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -71,7 +73,6 @@ proc Max:
 
 proc push_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  premises \<open>length l \<le> 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
   output   \<open>l @ [v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> \<semicolon>
@@ -79,8 +80,8 @@ proc push_dynarr:
   val cap \<leftarrow> $addr \<tribullet> cap ! \<semicolon>
   if ($cap = $len) \<medium_left_bracket>
       val cap' \<leftarrow> Max($cap * 2, 1) \<semicolon>
-      val data' \<leftarrow> calloc_N ($cap') \<open>T\<close> \<semicolon>
-      memcpy ($data', $addr \<tribullet> data !, $len) \<semicolon>
+      val data' \<leftarrow> calloc_aN ($cap') \<open>T\<close> \<semicolon>
+      memcpy_a ($data', $addr \<tribullet> data !, $len) \<semicolon>
       mfree ($addr \<tribullet> data !) \<semicolon>
       $addr \<tribullet> data := $data' \<semicolon>
       $addr \<tribullet> len := $addr \<tribullet> len ! + 1 \<semicolon>
@@ -97,7 +98,7 @@ proc push_dynarr:
 
 proc pop_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
+  premises \<open>l \<noteq> []\<close>
   output   \<open>butlast l \<Ztypecolon> DynArr addr TY T\<heavy_comma> last l \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> \<semicolon>
@@ -106,8 +107,8 @@ proc pop_dynarr:
   val ret \<leftarrow> $addr \<tribullet> data ! \<tribullet> $len ! \<semicolon>
   $addr \<tribullet> len := $len \<semicolon>
   if ($len \<le> $half_cap) \<medium_left_bracket>
-    val data' \<leftarrow> calloc_N ($half_cap) \<open>T\<close> \<semicolon>
-    memcpy ($data', $addr \<tribullet> data !, $len) \<semicolon>
+    val data' \<leftarrow> calloc_aN ($half_cap) \<open>T\<close> \<semicolon>
+    memcpy_a ($data', $addr \<tribullet> data !, $len) \<semicolon>
     mfree ($addr \<tribullet> data !) \<semicolon>
     $addr \<tribullet> data := $data' \<semicolon>
     $addr \<tribullet> cap := $half_cap \<semicolon>
@@ -122,8 +123,8 @@ proc new_dynarr:
   input  \<open>Void\<close>
   output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>\<close> \<semicolon>
-  $ret \<tribullet> data := (calloc_N (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>) \<open>T\<close>) \<semicolon>
+  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>, cap: \<nat> \<rbrace>\<close> \<semicolon>
+  $ret \<tribullet> data := (calloc_aN (\<open>0 \<Ztypecolon> \<nat>\<close>) \<open>T\<close>) \<semicolon>
   \<open>MAKE _ (DynArr addr _ _)\<close> \<semicolon>
   $ret
 \<medium_right_bracket> .
@@ -144,7 +145,7 @@ proc map_dynarr:
   output \<open>map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_eq_iff_nth_eq nth_append ;;
-  replicate (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>, len_dynarr ($addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
+  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i ;;
      set_dynarr ($addr, $i, C (get_dynarr ($addr, $i)))
   \<medium_right_bracket> ;;
@@ -156,7 +157,7 @@ proc exists_dynarr:
   output \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P l \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> False ;;
-  replicate (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>, len_dynarr ($addr)) \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close>
+  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))  \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close> ;;
     \<medium_left_bracket> \<rightarrow> val i ;;
       $zz \<or> C (get_dynarr ($addr, $i)) \<rightarrow> $zz
     \<medium_right_bracket> ;;
@@ -171,8 +172,8 @@ proc fold_map_dynarr:
   output \<open>map f l \<Ztypecolon> DynArr addr TY T\<heavy_comma> fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> $z0 ;;
-  replicate (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>, len_dynarr ($addr))
-            \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<heavy_comma> fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<close>
+  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
+               \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<heavy_comma> fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<close>
   \<medium_left_bracket> \<rightarrow> val i ;;
     C (get_dynarr ($addr, $i), $zz) \<rightarrow> val x', var zz ;;
     set_dynarr ($addr, $i, $x')
@@ -182,5 +183,6 @@ proc fold_map_dynarr:
 \<medium_right_bracket> .
 
 end
+
 
 end

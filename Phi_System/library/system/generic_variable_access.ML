@@ -380,10 +380,10 @@ val number_of_values = values_number 0
 (** Predefined Processes **)
 
 fun get_val_of_spec_thm th =
-  case Thm.prop_of th
-    of _ $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
-             $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
-             $ _ ) => V
+  case PLPR_Syntax.dest_tags (Thm.prop_of th)
+    of Const (\<^const_name>\<open>Satisfaction\<close>, _)
+         $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
+         $ _ => V
      | _ => raise THM ("Not a specification theorem of a value!", 0, [th])
 
 fun register_value_spec_thms pos_rules =
@@ -410,15 +410,18 @@ fun register_value_spec_thms_no_dup pos_rules =
    in Phi_Reasoner.add_rules (map (fn (pos, rule) =>
         let
           val i = maxidx_of_term (Thm.prop_of rule) + 1
-          val pattern =
-                (case Thm.prop_of rule
-                   of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
-                                      $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
-                                      $ TM )
-                    => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
-                                       $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
-                                       $ Var (("spec",i), fastype_of TM) )
-                | _ => raise THM ("Not a specification theorem of a value!", 0, [rule]))
+          fun pattern_of ((Trueprop as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X) =
+                Trueprop $ pattern_of X
+            | pattern_of ((Tag as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ G) =
+                Tag $ pattern_of X $ G
+            | pattern_of (  Const (\<^const_name>\<open>Satisfaction\<close>, T1)
+                         $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
+                         $  TM ) =
+                Const (\<^const_name>\<open>Satisfaction\<close>, T1)
+                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
+                   $ Var (("spec",i), fastype_of TM)
+            | pattern_of TM = raise THM ("Not a specification theorem of a value!", 0, [rule])
+          val pattern = pattern_of (Thm.prop_of rule)
         in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
             [(pattern, NONE)], [], NONE) end
       ) pos_rules')

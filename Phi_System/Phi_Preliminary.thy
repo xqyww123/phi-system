@@ -150,6 +150,14 @@ method_setup prefer_tac = \<open>
 
 subsection \<open>Helper Lemmas\<close>
 
+(*TODO: IMPROVE ME!*)
+
+lemma [simp]:
+  \<open>list_all2 (\<lambda>x y. snd x = snd y \<and> fst x = fst y) = (=)\<close>
+  by (auto simp: fun_eq_iff,
+      smt (verit, ccfv_SIG) list.rel_eq list_all2_mono surjective_pairing,
+      simp add: list.rel_refl)
+
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
 lemma case_sum_collapse[simp, \<phi>safe_simp]:

@@ -1938,6 +1938,11 @@ subsection \<open>Parameterized FMQ\<close>
        and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
 
+lemma \<phi>Mul_Quant\<^sub>\<Lambda>_cong:
+  \<open> (\<And>i. i \<in> I \<Longrightarrow> T i = U i)
+\<Longrightarrow> \<big_ast>\<^sup>\<phi> I T = \<big_ast>\<^sup>\<phi> I U \<close>
+  by (rule \<phi>Type_eqI; auto simp: Mul_Quant_def; smt (verit) prod.cong)
+
 
 subsubsection \<open>Syntax\<close>
 
@@ -1946,6 +1951,7 @@ syntax
 
 consts "\<phi>Mul_Quant'" :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd"
 
+(*
 print_ast_translation \<open> let open Ast
   fun append (Appl L) x = Appl (L @ [x])
     | append X x = Appl [X, x]
@@ -1992,6 +1998,7 @@ in [(\<^const_syntax>\<open>\<phi>Type\<close>, fn ctxt =>
                    Appl [Constant \<^syntax_const>\<open>_one_dom\<close>, vjb, Dom],
                    fT]]
 )] end \<close>
+*)
 
 translations
   "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" => "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant\<^sub>\<Lambda> I (\<lambda>i. T))"
