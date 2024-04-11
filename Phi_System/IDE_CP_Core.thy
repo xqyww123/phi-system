@@ -2685,6 +2685,11 @@ end
     (oprs, (ctxt, Simplifier.full_simplify (ctxt addsimps Attrib.eval_thms ctxt thms) sequent))
 )\<close>
 
+lemma
+  \<open>P \<and> Q \<and> C\<close>
+apply (rule conjI)+
+apply (insert TrueI)[1]
+
 
 (* \<phi>lang_parser goal 1300 \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T\<close> \<open>
   fn (ctxt, sequent) => Parse.$$$ "goal" >> (fn _ => fn _ =>

@@ -9,6 +9,18 @@ abbreviation \<open>hash (x::nat) n \<equiv> x mod n\<close>
 declare [[ML_print_depth = 1000]]
 
 
+lemma
+  \<open> \<forall>a. a \<in> ran xa \<longrightarrow> Inhabited (a \<Ztypecolon> T) \<longrightarrow> (\<exists>xa. x a xa \<and> Inhabited (xa \<Ztypecolon> U)) \<Longrightarrow>
+     \<forall>i<xd. list_all2 (\<lambda>xa xy'. fst xy' = fst xa \<and> x (snd xa) (snd xy')) (xb i) (xe i) \<Longrightarrow>
+     \<forall>i<xd. list_all (\<lambda>(k, v). hash k xd = i) (xb i) \<and> distinct (map fst (xb i)) \<Longrightarrow>
+     \<forall>k x. (xa k = Some x) = (\<exists>i<xd. (k, x) \<in> set (xb i)) \<Longrightarrow>
+     0 < xd \<Longrightarrow>
+     memaddr.blk addr \<noteq> Null \<Longrightarrow>
+     \<forall>i<xd. list_all (\<lambda>x. Inhabited (snd x \<Ztypecolon> U)) (xe i) \<Longrightarrow>
+     \<exists>uu. (\<forall>i<xd. list_all (\<lambda>(k, v). hash k xd = i) (uu i) \<and> distinct (map fst (uu i))) \<and>
+          (\<exists>uua. (\<forall>k x. (uua k = Some x) = (\<exists>i<xd. (k, x) \<in> set (uu i))) \<and>
+                 dom xa = dom uua \<and> (\<forall>k\<in>dom uua. x (the (xa k)) (the (uua k))) \<and> (\<forall>i<xd. xe i = uu i)) \<close>
+apply (rule exI[where x=xe], auto simp: list_all2_conv_all_nth list_all_length)
 
 lemma relational_functor_proof_obligation:
   \<open> \<forall>i<length xb. list_all2 (\<lambda>xa xy'. fst xy' = fst xa \<and> x (snd xa) (snd xy')) (xc i) (xd i)
@@ -26,7 +38,7 @@ lemma relational_functor_proof_obligation:
       have t2: \<open>\<exists>i<length xb. (k,v1) \<in> set (xd i)
             \<Longrightarrow> \<exists>i<length xb. (k,v2) \<in> set (xd i)
             \<Longrightarrow> v1 = v2\<close> for k v1 v2
-        by (auto, smt (verit, ccfv_SIG) case_prod_beta' eq_key_imp_eq_value fst_conv last_index_less_size_conv local.t1 nth_last_index prems(1) prems(2))  
+        by auto_sledgehammer  
       have t3: \<open>(\<Union>i<length xb. set (xd i)) `` {k} = {} \<or> (\<exists>v. (\<Union>i<length xb. set (xd i)) `` {k} = {v})\<close> for k
         by (insert t2, auto simp: set_eq_iff, auto_sledgehammer)
       have t4: \<open>\<exists>g. \<forall>k x. g k = Some x \<longleftrightarrow> (\<exists>i<length xb. (k,x) \<in> set (xd i))\<close>
@@ -35,21 +47,21 @@ lemma relational_functor_proof_obligation:
       have t5[simp]: \<open>xa k = Some y \<longleftrightarrow> (\<exists>i<length xb. (k,y) \<in> set (xc i))\<close> for k y
         by auto_sledgehammer
 
-      obtain g where g: \<open>\<forall>k x. g k = Some x \<longleftrightarrow> (\<exists>i<length xb. (k,x) \<in> set (xd i))\<close> for k
+      obtain g where g: \<open>\<forall>k x. g k = Some x \<longleftrightarrow> (\<exists>i<length xb. (k,x) \<in> set (xd i))\<close>
         by auto_sledgehammer
 
       show ?thesis
-        apply (rule exI[where x=g], auto simp: g)
+        by (rule exI[where x=g], auto simp: g; auto_sledgehammer)
+        (*apply (metis fst_conv last_index_less_size_conv nth_last_index nth_mem prems(1) surjective_pairing)
         apply (metis fst_conv last_index_less_size_conv nth_last_index nth_mem prems(1) surjective_pairing)
-        apply (metis fst_conv last_index_less_size_conv nth_last_index nth_mem prems(1) surjective_pairing)
-        by (smt (verit, best) fst_conv g in_set_conv_nth option.sel prems(1) prod.collapse t5)
+        by (smt (verit, best) fst_conv g in_set_conv_nth option.sel prems(1) prod.collapse t5) *)
 qed .
 
 
 abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {tabl: \<p>\<t>\<r>, N: \<a>\<i>\<n>\<t>} \<close>
 
 
-(*
+
 \<phi>type_def Bucket :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>bucket \<Ztypecolon> Bucket base i TY T \<equiv> ptr \<Ztypecolon> \<m>\<e>\<m>[base \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h>] (\<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma>
                                        bucket \<Ztypecolon> Linked_Lst ptr TY T
@@ -90,19 +102,34 @@ and \<open>Object_Equiv T eq
           image_iff[simp]
     (tactic: auto simp: Ball_def Bex_def set_eq_iff,
         subgoal' for f f' buckets tabl_addr \<open>rule exI[where x=\<open>\<lambda>i. map (\<lambda>(k,_). (k, the (f' k))) (buckets i)\<close>]\<close>,
-        auto_sledgehammer)
+        auto_sledgehammer,
+        subgoal' for f f' buckets xx tabl_addr \<open>rule exI[where x=\<open>\<lambda>i. map (\<lambda>(k,_). (k, the (f' k))) (buckets i)\<close>]\<close>)
+  
 
-(*
 and \<open>Transformation_Functor (Hash addr) (Hash addr) T U ran (\<lambda>_. UNIV) (\<lambda>r f g. dom f = dom g \<and> (\<forall>k \<in> dom g. r (the (f k)) (the (g k))))\<close>
-    notes set_eq_iff [\<phi>sledgehammer_simps]
-    (tactic: auto, auto_sledgehammer, tactic \<open>all_tac o @{print}\<close>, rule relational_functor_proof_obligation) 
-
+    notes set_eq_iff [\<phi>sledgehammer_simps] list_all2_conv_all_nth[\<phi>sledgehammer_simps]
+          list_all_length[\<phi>sledgehammer_simps] in_set_conv_nth[\<phi>sledgehammer_simps]
+    (tactic: clarsimp, (rule conjI)+, (auto_sledgehammer)[1], clarify, tactic \<open>all_tac o @{print}\<close>,
+        subgoal' for x xa xb xc xd xe \<open>rule exI[where x=xe], tactic \<open>all_tac o @{print}\<close>, (rule conjI)+, tactic \<open>all_tac o @{print}\<close>, (auto_sledgehammer)[1],
+          subgoal_tac \<open>\<exists>g. \<forall>k x. g k = Some x \<longleftrightarrow> (\<exists>i<xd. (k,x) \<in> set (xe i))\<close>,
+          clarify, subgoal' for g \<open>rule exI[where x=g]\<close>,
+          tactic \<open>all_tac o @{print}\<close>,
+          (auto_sledgehammer)[1],
+          subgoal_tac \<open>\<And>k v1 v2.
+                \<exists>i<xd. (k,v1) \<in> set (xe i)
+            \<Longrightarrow> \<exists>i<xd. (k,v2) \<in> set (xe i)
+            \<Longrightarrow> v1 = v2\<close>,
+          subst choice_iff[symmetric],
+          (auto_sledgehammer)[1],
+          (auto_sledgehammer)[1]\<close>,
+          tactic \<open>all_tac o @{print}\<close>) 
+(*
 and \<open>Functional_Transformation_Functor (Hash addr) (Hash addr) T U ran (\<lambda>_. UNIV)
           (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
 *)
 
 
-*)
+
 
 
 
@@ -138,7 +165,7 @@ and \<open>Object_Equiv T eq
 
 and \<open>Transformation_Functor (Hash addr) (Hash addr) T U ran (\<lambda>_. UNIV) (\<lambda>r f g. dom f = dom g \<and> (\<forall>k \<in> dom g. r (the (f k)) (the (g k))))\<close>
     notes set_eq_iff [\<phi>sledgehammer_simps]
-    (tactic: auto, auto_sledgehammer, tactic \<open>all_tac o @{print}\<close>, rule relational_functor_proof_obligation) 
+    (tactic: auto, auto_sledgehammer, rule relational_functor_proof_obligation) 
 
 and \<open>Functional_Transformation_Functor (Hash addr) (Hash addr) T U ran (\<lambda>_. UNIV)
           (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
@@ -265,10 +292,7 @@ proc update_hash:
         have t2: \<open>\<lbrakk> (k,v) \<in> set (buckets i) ; i < ?N \<rbrakk> \<Longrightarrow> hash k ?N = i\<close> for k v i 
           by auto_sledgehammer
         show ?thesis
-          apply (auto, metis local.t1 nth_mem t2)
-          apply (metis \<open>list_upd_map (hash k (length bucket_ptrs)) (comb.K addr') bucket_ptrs \<equiv> bucket_ptrs'\<close> bot_nat_0.not_eq_extremum length_0_conv length_list_upd_map mod_less_divisor the_\<phi>lemmata(6))
-          using t2 apply blast
-          by metis
+          by auto_sledgehammer
         qed .
 \<medium_right_bracket> .
 

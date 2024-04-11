@@ -233,7 +233,9 @@ fun debug_param {debug=debug, verbose=verbose, overlord=overlord, spy=spy, prove
 
 
 fun raw_sledgehammer stat =
-  let val N = #goal (Proof.goal stat) |> Thm.nprems_of
+  let val (focus, stat) = Subgoal.subgoal Binding.empty_atts (SOME (Binding.name "\<S>\<H>_prem", [])) (false, []) stat
+      fun wrap prf = "subgoal' premises \<S>\<H>_prem \<open>" ^ prf ^ "\<close>"
+      val N = #goal (Proof.goal stat) |> Thm.nprems_of
       val _ = if N = 0 then error "No subgoal!" else ()
       val ret : string list Synchronized.var = Synchronized.var "\<phi>System.raw_sledgehammer" []
       val sledgehammer_params = sledgehammer_params_fixed @ get_sledgehammer_params (Proof.context_of stat)
@@ -241,7 +243,7 @@ fun raw_sledgehammer stat =
               (Sledgehammer_Commands.default_params (Proof.theory_of stat) sledgehammer_params)
               Sledgehammer_Prover.Normal (SOME (dirty_hack ret stat)) 1 Sledgehammer_Fact.no_fact_override
               (silence_state stat);
-       @{print} (Synchronized.value ret))
+       map wrap (@{print} (Synchronized.value ret)))
 
 (* For some unknown reason, the return of Sledgehammer.run_sledgehammer doesn't give me everything
    it finds (not match to its output to users), so I have to dirty hijack its output stream and
@@ -261,7 +263,7 @@ fun raw_sledgehammer stat =
              in @{print} alt_output
             end
          | _ => raise Phi_Reasoners.Automation_Fail NONE)*)
-    handle SH_Short_Cut ret => [ret]
+    handle SH_Short_Cut ret => [wrap ret]
          | err as Exn.Interrupt => (warning "Interrupted\n\
               \If this interruption is unexpected for you, it can be caused by the \<open>try0\<close> based\n\
               \proof reconstruction of Sledgehammer.\n\
@@ -365,28 +367,28 @@ fun sledgehammer (ctxt,sequent0) =
       fun rep_tries [] = raise Auto_Fail Application_Fails
         | rep_tries (f::L) = f () handle Auto_Fail _ => rep_tries L
       val prf = rep_tries [
-          (fn () => search_prf "insert \<phi>, auto simp add: \<phi>sledgehammer_simps"),
+          (fn () => search_prf "(insert \<phi>, auto simp add: \<phi>sledgehammer_simps)[1]"),
           (fn () => if null local_defs
                     then raise Auto_Fail Unknown
                     else (tracing "Unfolding local definitions..." ;
-                          search_prf "auto simp add: \<phi> \<phi>sledgehammer_simps local_defs"
+                          search_prf "(auto simp add: \<phi> \<phi>sledgehammer_simps local_defs)[1]"
                           handle Auto_Fail Too_Many_Subgoals =>
-                          search_prf "(clarsimp simp add: \<phi> \<phi>sledgehammer_simps local_defs)?, ((rule conjI)+)?"
+                          search_prf "((clarsimp simp add: \<phi> \<phi>sledgehammer_simps local_defs)?, ((rule conjI)+)?)[1]"
                           )),
           (fn () => (tracing "Prompt times out... Try instead a weaker prompt..." ;
-                       search_prf "auto simp add: \<phi> \<phi>sledgehammer_simps"
+                       search_prf "(auto simp add: \<phi> \<phi>sledgehammer_simps)[1]"
                         handle Auto_Fail Too_Many_Subgoals => (
                           tracing "The prompt generates too many subgoals. Try instead a weaker weaker prompt..." ;
-                          search_prf "(clarsimp simp add: \<phi> \<phi>sledgehammer_simps)?, ((rule conjI)+)?")
+                          search_prf "((clarsimp simp add: \<phi> \<phi>sledgehammer_simps)?, ((rule conjI)+)?)[1]")
                             | Auto_Fail Prompt_Timeout => (
                           tracing "The prompt times out again. Try instead a weaker weaker prompt..." ;
-                          search_prf "(clarsimp simp add: \<phi> \<phi>sledgehammer_simps)?, ((rule conjI)+)?"))),
+                          search_prf "((clarsimp simp add: \<phi> \<phi>sledgehammer_simps)?, ((rule conjI)+)?)[1]"))),
           (fn () => (tracing "Fails... Try instead a stronger or maybe weaker prompt..." ;
-                     search_prf "insert \<phi>, clarsimp simp add: \<phi>sledgehammer_simps")),
+                     search_prf "(insert \<phi>, clarsimp simp add: \<phi>sledgehammer_simps)[1]")),
           (fn () => if null local_defs
                     then raise Auto_Fail Unknown
                     else (tracing "Still fails... Unfolding local definitions with aggresive tactics..." ;
-                          search_prf "insert \<phi>, auto simp add: local_defs \<phi>sledgehammer_simps")),
+                          search_prf "(insert \<phi>, auto simp add: local_defs \<phi>sledgehammer_simps)[1]")),
           (fn () => (tracing "Fails... Try instead the weakest prompt..." ;
                      search_prf "-"))
         ]
