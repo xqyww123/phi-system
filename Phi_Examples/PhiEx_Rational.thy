@@ -10,10 +10,12 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
   deriving Basic
        and \<open>Object_Equiv \<rat> (=)\<close>
 
+thm \<phi>Rational.unfold
  
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
+  unfolding \<phi>Rational.unfold
 \<medium_left_bracket>  
   val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
   val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>

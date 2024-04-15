@@ -23,14 +23,14 @@ summary_quad = quantile_model_quad.summary()
 x_range = np.linspace(X.min(), X.max(), 100)
 y_fit = quantile_model_quad.params['Intercept'] + quantile_model_quad.params['X'] * x_range
 
-plt.figure(figsize=(4, 4.4))
+plt.figure(figsize=(4, 4))
 plt.plot(x_range, y_fit, linestyle='--', linewidth=0.6, color='black', label=r'\parbox{7em}{95th percentile\\regression}')
 
 plt.scatter(X, Y, color='grey', alpha=0.2, edgecolors='none')
 #plt.xlabel("100 typ oprs")
-plt.xticks([0,25,50,75,100], ['0','25','50','75', '100 typ oprs'])
+plt.xticks([0,25,50,75,100], ['0','25','50','75', 'operators'])
 ax = plt.gca()
-ax.xaxis.get_majorticklabels()[3].set_horizontalalignment("right")
+#ax.xaxis.get_majorticklabels()[3].set_horizontalalignment("right")
 plt.yticks([0,50,100,150,200,250], ['0','50','100','150','200','250\napps'])
 
 plt.legend(framealpha=0.1)

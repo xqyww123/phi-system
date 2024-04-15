@@ -1938,7 +1938,7 @@ subsection \<open>Parameterized FMQ\<close>
        and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
 
-lemma \<phi>Mul_Quant\<^sub>\<Lambda>_cong:
+lemma \<phi>Mul_Quant\<^sub>\<Lambda>_cong[cong]:
   \<open> (\<And>i. i \<in> I \<Longrightarrow> T i = U i)
 \<Longrightarrow> \<big_ast>\<^sup>\<phi> I T = \<big_ast>\<^sup>\<phi> I U \<close>
   by (rule \<phi>Type_eqI; auto simp: Mul_Quant_def; smt (verit) prod.cong)
@@ -2021,7 +2021,8 @@ lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_src:
 
 lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_tgt:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I \<longrightarrow> ((fst x i, snd x) \<Ztypecolon> T i \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P))
-       \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I
+                      \<comment> \<open>BUG!: must exclude trivial success!\<close>
+       \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] i \<in> I
 \<Longrightarrow> ((snd y, fst x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>R] R \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sup>\<phi> (I - {i}) T) = (r \<Ztypecolon> \<half_blkcirc>[C\<^sub>R'] R') @action \<A>merge
 \<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> U \<^emph>[C\<^sub>R'] R' \<w>\<i>\<t>\<h> P \<close>
   unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp

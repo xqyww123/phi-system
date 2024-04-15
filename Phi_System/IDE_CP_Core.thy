@@ -652,8 +652,11 @@ lemma [\<phi>reason %\<phi>synthesis_parse_success for
   \<comment> \<open>We do not need to rewrite the input once it is already an assertion\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason %\<phi>synthesis_parse_success for
-  \<open>Synthesis_Parse (?X'::assn) (?X::?'ret \<Rightarrow> assn)\<close>
+lemma [
+  \<phi>reason %\<phi>synthesis_parse_success for
+      \<open>Synthesis_Parse (?X'::assn) (?X::?'ret \<Rightarrow> assn)\<close>,
+  \<phi>reason default %\<phi>synthesis_parse_default for
+      \<open>Synthesis_Parse (?X'::?'a BI) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse X (\<lambda>_. X)\<close> for X :: \<open>assn\<close>
   \<comment> \<open>We do not need to rewrite the input once it is already an assertion\<close>
@@ -2684,11 +2687,6 @@ end
 >> (fn thms => fn _ =>
     (oprs, (ctxt, Simplifier.full_simplify (ctxt addsimps Attrib.eval_thms ctxt thms) sequent))
 )\<close>
-
-lemma
-  \<open>P \<and> Q \<and> C\<close>
-apply (rule conjI)+
-apply (insert TrueI)[1]
 
 
 (* \<phi>lang_parser goal 1300 \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T\<close> \<open>

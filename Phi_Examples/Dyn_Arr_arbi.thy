@@ -95,6 +95,22 @@ proc push_dynarr:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+proc concat_dynarr:
+  input   \<open>l1 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<heavy_comma>
+           addr1 \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> addr2 \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
+  output  \<open>l1 @ l2 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<close>
+\<medium_left_bracket>
+  val len \<leftarrow> len_dynarr ($addr2) \<semicolon>
+  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, $len)
+              \<open>\<lambda>i. l1 @ take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
+  \<medium_left_bracket> \<rightarrow> val i ;;
+    push_dynarr ($addr1, get_dynarr ($addr2, $i))
+  \<medium_right_bracket> ;;
+\<medium_right_bracket> .
+
+
+
+
 
 proc pop_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>

@@ -14,10 +14,9 @@ abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr TY T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
           and \<open>Identity_Elements\<^sub>E (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
           and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
-          and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
-              \<Longrightarrow> Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr' TY') T U set (\<lambda>_. UNIV) list_all2 \<close> 
-            (arbitrary: addr')
-          and Functional_Transformation_Functor
+          and \<open>Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY) T U set (\<lambda>_. UNIV) list_all2\<close>
+          and \<open>Functional_Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY) T U
+                                                 set (\<lambda>x. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f)\<close>
 
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
@@ -25,6 +24,15 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.
       Anyway, it is an engineering problem due to some bug in our system or Sledgehammer, so we don't
       count this line into our statistics in the paper.\<close>
+
+proc is_empty:
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+  output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l = [] \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+\<medium_left_bracket>
+  \<open>$addr = 0\<close>
+\<medium_right_bracket> .
+
+
 
 
 context
@@ -45,7 +53,25 @@ proc prepend_llist:
   $ret
 \<medium_right_bracket> .
 
+(*
+proc pop_llist:
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+  requires [\<phi>reason]: \<open>Semantic_Zero_Val TY T zero\<close>
+  output \<open>(if l = [] then [] else tl l) \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma>
+          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)
+          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  is [routine]
+\<medium_left_bracket>
+  if \<open>$addr = 0\<close> \<medium_left_bracket>
+    return (\<open>0 \<Ztypecolon> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>)
+  \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
+  to \<open>OPEN 1 _\<close> ;;
+  
 
+
+
+
+*)
 
 
 proc nth_llist:
