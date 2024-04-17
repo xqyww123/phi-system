@@ -76,7 +76,7 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, d
 
    in fn (ctxt,sequent) => Seq.make (fn () =>
   let val (Y, _, has_rem) = dest_Tr (Thm.major_prem_of sequent)
-      val no_var = has_no_var Y
+      val no_var = false (*has_no_var Y*) (*BUG: this short cut has problem, so disabled, may re-enable it after fixing*)
       val rule' = if no_var
                   then case has_rem of No_Rem => quick_rule | Has_Rem => quick_ruleR (*| True_Rem => quick_ruleRT*)
                   else case has_rem of No_Rem => rule | Has_Rem => ruleR (*| True_Rem => ruleRT*)
@@ -97,6 +97,9 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, d
                  |> Phi_Help.dest_Trueprop_c
                  |> Phi_Help.dest_binop_c \<^const_name>\<open>HOL.eq\<close>
       val vars = Term.add_vars (Thm.term_of Y) []
+            (*TODO: existing `mk_insts` have to be improved.
+                    diverge the schematic variables in object side only and keeps variables in
+                    types unchanged. May provide a generic implementation.*)
       val (inst, condition_term) = mk_insts ctxt'N (vars,Y,RHS)
     
       val sequent'' = Thm.instantiate (TVars.empty, inst) sequent'

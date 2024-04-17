@@ -296,7 +296,7 @@ proc lookup_bintree:
   is [routine]
 \<medium_left_bracket>
   obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-  to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R \<semicolon>
+  to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
   val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
   if (eq ($k', $k)) \<medium_left_bracket>
@@ -342,7 +342,7 @@ proc defined_bintree:
     return (False) 
   \<medium_right_bracket> \<medium_left_bracket>
     obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-    to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R \<semicolon>
+    to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
     val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
     if (eq ($k', $k)) \<medium_left_bracket>
@@ -400,7 +400,7 @@ proc insert_bintree:
       return ($ret)
   \<medium_right_bracket> \<medium_left_bracket>
       obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-      to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R \<semicolon>
+      to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
       if (eq ($k', $k)) \<medium_left_bracket>
@@ -485,7 +485,7 @@ proc maintain_i:
 
 \<medium_left_bracket>
 
-  to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>B, a\<^sub>E \<semicolon>                                                             (*for reasoning, \<Omega>*)
+  to \<open>OPEN 1 _\<close> \<exists>a\<^sub>B, a\<^sub>E \<semicolon>                                                             (*for reasoning, \<Omega>*)
 
   val B \<leftarrow> $a\<^sub>D \<tribullet> left ! \<semicolon>
   val E \<leftarrow> $a\<^sub>D \<tribullet> right ! \<semicolon>
@@ -494,7 +494,7 @@ proc maintain_i:
 
   if ($H\<^sub>B = $H\<^sub>E + 2) \<medium_left_bracket>
       obtain A k\<^sub>B h\<^sub>B v\<^sub>B C where B[simp]: \<open>B = \<langle>A, (k\<^sub>B, h\<^sub>B, v\<^sub>B), C\<rangle>\<close> by auto_sledgehammer \<semicolon> (*this line and the*)
-      \<open>BinTree a\<^sub>B _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>A, a\<^sub>C \<semicolon>                                        (*next line, for reasoning, one \<Omega>*)
+      \<open>BinTree a\<^sub>B _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>A, a\<^sub>C \<semicolon>                                        (*next line, for reasoning, one \<Omega>*)
 
       val A \<leftarrow> $B \<tribullet> left ! \<semicolon>
       val C \<leftarrow> $B \<tribullet> right ! \<semicolon>
@@ -516,7 +516,7 @@ proc maintain_i:
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by auto_sledgehammer \<semicolon>  (*this line and the next*)
-          \<open>BinTree a\<^sub>C _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>3, a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R \<semicolon>                                           (*line, for reasoning, one \<Omega>*)
+          \<open>BinTree a\<^sub>C _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R \<semicolon>                                           (*line, for reasoning, one \<Omega>*)
 
           val C\<^sub>L \<leftarrow> $C \<tribullet> left ! \<semicolon>
           val C\<^sub>R \<leftarrow> $C \<tribullet> right ! \<semicolon>
@@ -543,7 +543,7 @@ proc maintain_i:
     if ($H\<^sub>E = $H\<^sub>B + 2) \<medium_left_bracket>
 
       obtain F k\<^sub>E h\<^sub>E v\<^sub>E G where E[simp]: \<open>E = \<langle>F, (k\<^sub>E, h\<^sub>E, v\<^sub>E), G\<rangle>\<close> by auto_sledgehammer \<semicolon> (*for reasoning, \<Omega>*)
-      \<open>BinTree a\<^sub>E _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>2, a\<^sub>F, a\<^sub>G \<semicolon>
+      \<open>BinTree a\<^sub>E _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>F, a\<^sub>G \<semicolon>
   
       val F \<leftarrow> $E \<tribullet> left ! \<semicolon>
       val G \<leftarrow> $E \<tribullet> right ! \<semicolon>
@@ -566,7 +566,7 @@ proc maintain_i:
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-          \<open>BinTree a\<^sub>F _ _\<close> to \<open>OPEN 1 _\<close> \<exists>t\<^sub>4, a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R \<semicolon>
+          \<open>BinTree a\<^sub>F _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R \<semicolon>
 
           val F\<^sub>L \<leftarrow> $F \<tribullet> left ! \<semicolon>
           val F\<^sub>R \<leftarrow> $F \<tribullet> right ! \<semicolon>
@@ -635,7 +635,7 @@ proc insert_avl_i:
   \<medium_right_bracket>
   \<medium_left_bracket>
       obtain L k' h' v' R where tree_def[simp]: \<open>tree = \<langle>L, (k', h', v'), R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-      to \<open>OPEN 1 _\<close> \<exists>t\<^sub>1, a\<^sub>L, a\<^sub>R \<semicolon>
+      to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
       if (eq ($k', $k)) \<medium_left_bracket>

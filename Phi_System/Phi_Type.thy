@@ -9690,6 +9690,7 @@ lemmas [\<phi>deriver_simps] =
 lemmas [\<phi>deriver_simps] =
   Basic_BNFs.prod_set_defs
 
+declare option.rel_eq[iff] option.pred_True[iff]
 
 subsubsection \<open>List\<close>
 

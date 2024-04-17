@@ -7,6 +7,9 @@ You can set the flag \<phi>variable_is_typed to indicate whether the formalizati
 theory PhiSem_Variable
   imports Phi_System.Resource_Template PhiSem_Aggregate_Base
   abbrevs "<var>" = "\<v>\<a>\<r>"
+      and "<uninited>" = "\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d>"
+      and "<may>" = "\<m>\<a>\<y>"
+      and "<inited>" = "\<i>\<n>\<i>\<t>\<e>\<d>"
 begin
 
 section \<open>Semantics\<close>
@@ -74,10 +77,14 @@ abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Righta
 abbreviation Uninited_Var :: \<open>varname \<Rightarrow> assn\<close> ("\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[_]" [22] 21)
   where \<open>Uninited_Var vname \<equiv> () \<Ztypecolon> Var vname \<circle>\<close>
 
+abbreviation May_Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a option) \<phi>\<close>
+  where \<open>May_Inited_Var vname T \<equiv> Var vname (\<half_blkcirc> T)\<close>
+
 
 subsubsection \<open>Syntax\<close>
 
 syntax Inited_Var_ :: \<open>logic \<Rightarrow> logic\<close> ("\<v>\<a>\<r>[_]")
+       May_Inited_Var_ :: \<open>logic \<Rightarrow> logic\<close> ("\<m>\<a>\<y> \<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[_]")
 
 ML_file "library/variable_pre.ML"
 
@@ -90,6 +97,13 @@ fun get_bound ctxt (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ X $ _
 in [
   (\<^syntax_const>\<open>Inited_Var_\<close>, (fn ctxt => fn [v] =>
     Const (\<^const_abbrev>\<open>Inited_Var\<close>, dummyT)
+        $ (if Generic_Variable_Access.under_context ctxt
+           then (case get_bound ctxt v
+                   of SOME N => Const (\<^const_name>\<open>\<phi>identifier\<close>, dummyT) $ Abs (N, dummyT, Term.dummy)
+                    | NONE => v)
+           else v))),
+  (\<^syntax_const>\<open>May_Inited_Var_\<close>, (fn ctxt => fn [v] =>
+    Const (\<^const_abbrev>\<open>May_Inited_Var\<close>, dummyT)
         $ (if Generic_Variable_Access.under_context ctxt
            then (case get_bound ctxt v
                    of SOME N => Const (\<^const_name>\<open>\<phi>identifier\<close>, dummyT) $ Abs (N, dummyT, Term.dummy)
@@ -199,7 +213,7 @@ lemma [\<phi>reason 1180]:
   unfolding \<phi>Aggregate_Mapper_Opt_def \<phi>Aggregate_Mapper_def index_mode_value_opt_def
   by (clarsimp simp add: \<phi>Type_Mapping_def \<phi>Some_expn split: option.split)
 
-definition \<open>\<phi>SemType_opt S TY \<longleftrightarrow> (case TY of Some TY' \<Rightarrow> (\<forall>p. p \<Turnstile> S \<longrightarrow> (\<exists>p'. p = Some p' \<and> p' \<in> Well_Type TY'))
+definition \<open>\<phi>SemType_opt S TY \<longleftrightarrow> (case TY of Some TY' \<Rightarrow> (\<forall>p. Some p \<Turnstile> S \<longrightarrow> p \<in> Well_Type TY')
                                             | _ \<Rightarrow> S = {None}) \<close>
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>SemType_opt ?S _\<close> \<Rightarrow> \<open>\<phi>SemType_opt ?S _\<close> (100) ]]
@@ -214,6 +228,14 @@ lemma [\<phi>reason 1200]:
   \<open>\<phi>SemType_opt (x \<Ztypecolon> \<circle>) None\<close>
   unfolding \<phi>SemType_opt_def
   by (clarsimp simp add: set_eq_iff)
+
+lemma [\<phi>reason 1200]:
+  \<open> (\<And>x'. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Some x' \<Longrightarrow> \<phi>SemType (x' \<Ztypecolon> T) TY)
+\<Longrightarrow> \<phi>SemType_opt (x \<Ztypecolon> \<half_blkcirc> T) (Some TY)\<close>
+  unfolding Premise_def \<phi>SemType_opt_def \<phi>SemType_def
+  by (cases \<open>x\<close>; clarsimp simp add: image_iff subset_iff \<phi>Option.unfold set_eq_iff)
+
+
 
 definition \<open>
   parse_eleidx_input_least1_opt TY input_index sem_idx idx reject

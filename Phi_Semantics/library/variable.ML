@@ -3,7 +3,9 @@ signature PHI_VARIABLE = sig
   include PHI_VARIABLE
 
   val variable_is_typed : bool Config.T
-  val dest_Var : cterm -> (string * (cterm * cterm)) option
+
+  datatype var_state = Uninitialized | Initialized of cterm * cterm | May_Initialized of cterm * cterm
+  val dest_Var : cterm -> (string * var_state) option
 
   val varname_prefix : string
 
@@ -16,15 +18,24 @@ open Phi_Variable
 val varname_prefix = "\<v>\<a>\<r>_"
 val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K false)
 
+datatype var_state = Uninitialized | Initialized of cterm * cterm | May_Initialized of cterm * cterm
+
 fun dest_Var ctm =
   case Thm.term_of ctm
     of (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
           $ x
           $ (Const (\<^const_name>\<open>Var\<close>,_)
               $ Free (name, \<^typ>\<open>varname\<close>)
-              $ (Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T)))
-         => SOME (name, (Thm.dest_arg1 ctm (*x*),
-                         Thm.dest_arg (Thm.dest_arg (Thm.dest_arg ctm)) (*T*)))
+              $ T))
+         => (case T
+               of Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T =>
+                    SOME (name, Initialized (Thm.dest_arg1 ctm (*x*),
+                            Thm.dest_arg (Thm.dest_arg (Thm.dest_arg ctm)) (*T*)))
+                | Const (\<^const_name>\<open>\<phi>None\<close>, _) =>
+                    SOME (name, Uninitialized)
+                | Const (\<^const_name>\<open>\<phi>Option\<close>, _) $ T =>
+                    SOME (name, May_Initialized (Thm.dest_arg1 ctm (*x*),
+                            Thm.dest_arg (Thm.dest_arg (Thm.dest_arg ctm)) (*T*))))
      | _ => NONE
 
 fun find_Var var ctm =
@@ -39,6 +50,13 @@ fun find_Var var ctm =
 
 fun find_Var' var (_,sequent) =
   find_Var var (#4 (Phi_Syntax.dest_CurrentConstruction_c (Thm.cconcl_of sequent)))
+
+fun evaluation var state =
+      find_Var' var state
+        |> Option.mapPartial (
+              fn Initialized xT => SOME xT
+               | May_Initialized xT => SOME xT
+               | Uninitialized => NONE)
 
 fun declare_rule pos rule =
   let
@@ -85,7 +103,7 @@ fun variable_assigner' (b,idx) (ctxt,sequent) =
           val ctxt = ctxt
                   |> Generic_Variable_Access.bind_generic_vars
                         [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, @{typ varname})),
-                                              find_Var' vname))]
+                                              evaluation vname))]
                   |> bind_variable (vname, Binding.name_of b)
           in (rule, ctxt,
               [Thm.cterm_of ctxt (Free (vname, @{typ varname}))],
@@ -102,7 +120,7 @@ fun variable_declarer' TY (b,idx) (ctxt,sequent) =
     val ctxt = ctxt
             |> Generic_Variable_Access.bind_generic_vars
                         [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, @{typ varname})),
-                                              find_Var' vname))]
+                                              evaluation vname))]
             |> bind_variable (vname, Binding.name_of b)
     val idx = Thm.maxidx_of_cterm TY + 1
     val rule = @{thm "__new_var_rule__"}

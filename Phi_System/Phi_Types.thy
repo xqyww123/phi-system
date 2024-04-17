@@ -1768,6 +1768,59 @@ subsubsection \<open>Empty List\<close>
        and Abstraction_to_Raw
 
 
+subsection \<open>Option Abstraction of Unital Algebra\<close>
+
+
+    
+\<phi>type_def \<phi>Option :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x option) \<phi>\<close> ("\<half_blkcirc> _" [91] 90)
+  where \<open>\<half_blkcirc> T = (\<lambda>x. if x = None then 1 else the x \<Ztypecolon> \<black_circle> T)\<close>
+  deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<half_blkcirc> T) (pred_option P) \<close>
+       and \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (\<half_blkcirc> T) (pred_option P) \<close>
+       and \<open>Functionality T P \<Longrightarrow> Functionality (\<half_blkcirc> T) (case_option True P)\<close>
+       and \<open>Identity_Elements\<^sub>I (\<half_blkcirc> T) (\<lambda>x. x = None) (\<lambda>a. True)\<close>
+       and \<open>Identity_Elements\<^sub>E (\<half_blkcirc> T) (\<lambda>x. x = None)\<close>
+       and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<half_blkcirc> T) (rel_option eq)\<close>
+       and \<open>Transformation_Functor \<phi>Option \<phi>Option T U set_option (\<lambda>_. UNIV) rel_option \<close>
+       and \<open>Functional_Transformation_Functor \<phi>Option \<phi>Option T U set_option (\<lambda>_. UNIV) (\<lambda>_. pred_option) (\<lambda>f _. map_option f)\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Some y \<Ztypecolon> \<half_blkcirc> U \<w>\<i>\<t>\<h> P \<close>
+  unfolding \<phi>Option.unfold 
+  \<medium_left_bracket> premises [\<phi>reason add] \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> x \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> None \<Ztypecolon> \<half_blkcirc> T \<close>
+  unfolding \<phi>Option.unfold 
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<noteq> None
+\<Longrightarrow> the x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P \<close>
+  unfolding \<phi>Option.unfold 
+  \<medium_left_bracket> premises [\<phi>reason add] \<medium_right_bracket> certified by auto_sledgehammer .
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = None
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> () \<Ztypecolon> \<circle> \<close>
+  unfolding \<phi>Option.unfold 
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+(*
+term \<open>Separation_Homo\<^sub>I \<phi>Option \<phi>Option \<phi>Option T U UNIV \<close>
+term \<open>rel_option r\<close>
+term set_option
+term \<open>Transformation_Functor \<phi>Option \<phi>Option T U set_option (\<lambda>_. UNIV) rel_option \<close>
+term \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<half_blkcirc> T) (rel_option eq)\<close>
+term \<open>Identity_Elements\<^sub>E (\<half_blkcirc> T) (\<lambda>x. x = None)\<close>
+*)
+
+
+
+
 
 subsection \<open>Point on a Mapping\<close>
 
