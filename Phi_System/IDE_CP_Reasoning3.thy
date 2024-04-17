@@ -241,6 +241,12 @@ definition Identifier_of :: \<open>('c,'a) \<phi> \<Rightarrow> 'id \<Rightarrow
       By partially transforming a BI assertion to the \<open>pattern\<close>, we can find from the BI assertion
       a \<phi>-type specifying the object \<open>id\<close>\<close>
 
+\<phi>property_deriver Identifier_of 555 for (\<open>Identifier_of _ _ _\<close>)
+  = \<open>Phi_Type_Derivers.meta_Synt_Deriver
+      ("Identifier_of", @{lemma' \<open>Identifier_of T identifier pattern\<close> by (simp add: Identifier_of_def)},
+       SOME @{reasoner_group %cutting})\<close>
+
+
 subsubsection \<open>Conventions\<close>
 
 declare [[\<phi>reason_default_pattern
@@ -511,11 +517,36 @@ subsubsection \<open>Join Two \<phi>-Types\<close>
 
 paragraph \<open>Fallback by ToA\<close>
 
+definition Common_Base_Types :: \<open>('c,'a1) \<phi> \<Rightarrow> ('c,'a2) \<phi> \<Rightarrow> ('c,'a3) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Common_Base_Types T U Base \<equiv> True\<close>
+
+\<phi>reasoner_group Common_Base_Types = (1000, [1000,1100])
+    \<open>specifying the common base type between two given types, used in by_join.\<close>
+  and Common_Base_Types_derived = (40, [40,50]) \<open>derived\<close>
+  and Common_Base_Types_fallback = (10, [10,20])
+    \<open>fallbacks\<close>
+
+declare [[
+  \<phi>default_reasoner_group \<open>Common_Base_Types _ _ _\<close> : %Common_Base_Types (100),
+  \<phi>reason_default_pattern \<open>Common_Base_Types ?T ?U _\<close> \<Rightarrow> \<open>Common_Base_Types ?T ?U _\<close> (100)
+]]
+
+\<phi>property_deriver Common_Base_Types 555 for (\<open>Common_Base_Types _ _ _\<close>)
+  = \<open>Phi_Type_Derivers.meta_Synt_Deriver
+      ("Common_Base_Types", @{lemma' \<open>Common_Base_Types T U Base\<close> by (simp add: Common_Base_Types_def)},
+       SOME @{reasoner_group %cutting})\<close>
+
+lemma [\<phi>reason default %Common_Base_Types_fallback]:
+  \<open>Common_Base_Types T U T\<close>
+  unfolding Common_Base_Types_def by simp
+
 lemma [\<phi>reason default %br_join_fallback]:
-  \<open> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T @action NToA
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y' \<Ztypecolon> T @action br_join \<close>
-  unfolding Action_Tag_def Transformation_def \<r>Guard_def
-  by clarsimp
+  \<open> Common_Base_Types T U V
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> V @action NToA)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> V @action NToA)
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x' y' \<Ztypecolon> V @action br_join \<close>
+  unfolding Action_Tag_def Transformation_def \<r>Guard_def Premise_def
+  by clarsimp 
 
 \<phi>reasoner_ML br_join_fallback %br_join_fallback-4 (\<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>) = \<open>
   fn (_, (ctxt, sequent)) => Seq.make (fn () =>
@@ -598,7 +629,7 @@ setup \<open>PLPR_Template_Properties.add_property_kinds [
                          (fn ctxt => ctxt addsimps Useful_Thms.get ctxt
                                   |> Simplifier.del_cong @{thm' if_weak_cong}
                                   |> Simplifier.add_cong @{thm' if_cong}) {fix_vars=true})
-    o @{print} o snd\<close>
+      o snd\<close>
 
 lemma [\<phi>reason_template default %\<phi>br_join_derived]:
   \<open> Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds
@@ -608,8 +639,8 @@ lemma [\<phi>reason_template default %\<phi>br_join_derived]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D\<^sub>T x. z (Inl a) \<in> R\<^sub>T x) \<and>
            (\<forall>b \<in> D\<^sub>U y. z (Inr b) \<in> R\<^sub>U y)
 \<Longrightarrow> (\<And>a \<in> (If P (Inl ` D\<^sub>T x) (Inr ` D\<^sub>U y)). If P (projl a \<Ztypecolon> T) (projr a \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z a \<Ztypecolon> Z @action br_join)
-\<Longrightarrow> NO_SIMP (If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
-    (If P (fm\<^sub>T (z o Inl) (\<lambda>_. True) x) (fm\<^sub>U (z o Inr) (\<lambda>_. True) y)) \<Ztypecolon> F' Z @action br_join \<close>
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] zzz : (If P (fm\<^sub>T (\<lambda>x. z (Inl x)) (\<lambda>_. True) x) (fm\<^sub>U (\<lambda>x. z (Inr x)) (\<lambda>_. True) y))) @action \<A>_template_reason undefined
+\<Longrightarrow> NO_SIMP (If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zzz \<Ztypecolon> F' Z @action br_join \<close>
   unfolding Action_Tag_def Premise_def Functional_Transformation_Functor_def Transformation_def
             meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def NO_SIMP_def
   by (cases P; clarsimp)
@@ -642,6 +673,25 @@ let_\<phi>type \<phi>Share   deriving \<open>Gen_Br_Join ((\<odiv>) n) ((\<odiv>
 let_\<phi>type Discrete    deriving \<open>Gen_Br_Join Discrete Discrete Discrete P True\<close>
 let_\<phi>type Val      deriving \<open>Gen_Br_Join (Val v) (Val v) (Val v) P True\<close>
 
+lemma [\<phi>reason_template default %Common_Base_Types_derived]:
+  \<open> Functional_Transformation_Functor F\<^sub>T F' T V D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
+\<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F' U V D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
+\<Longrightarrow> Common_Base_Types T U V
+\<Longrightarrow> Common_Base_Types (F\<^sub>T T) (F\<^sub>U U) (F' V) \<close>
+  unfolding Common_Base_Types_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> Common_Base_Types T U V
+\<Longrightarrow> Common_Base_Types (\<half_blkcirc> T) (\<black_circle> U) (\<half_blkcirc> V)\<close>
+  unfolding Common_Base_Types_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> Common_Base_Types T U V
+\<Longrightarrow> Common_Base_Types (\<black_circle> T) (\<half_blkcirc> U) (\<half_blkcirc> V)\<close>
+  unfolding Common_Base_Types_def
+  by simp
 
 (*TODO: improve simplification*)
 

@@ -3,12 +3,11 @@ include PLPR_SYNTAX
 
 val merge_conditions : thm -> thm
 
-val guardize : {merge_cond: bool} -> Proof.context -> int (*N*) -> thm -> thm
+val guardize : {merge_cond: bool} -> Context.generic -> int (*N*) -> thm -> thm
   (*tags leading N antecedents as reasoning guards*)
-val merge_guards : {merge_cond: bool} -> Proof.context -> thm -> thm
-  (*if the rule contains multiple guards, move them into the beginning and consolidate them into one.
-    When moving an antecedent not at the beginning, all the previous antecedents before it are
-    also tagged as reasoning guards.*)
+val merge_guards : {merge_cond: bool} -> Context.generic -> thm -> thm
+  (*If the rule contains multiple guards, aggregate them into one guard.
+    If there is any non-guard antecedent before a guard, mark the antecedent as a guard.*)
 
 val atomize_antecedent : bool (*deep*) -> Proof.context -> conv (*converts an antecedent*)
       (*deep: if true, atomize by Phi_Conv.iso_atomize_conv, pure connectives into HOL*)
@@ -69,14 +68,28 @@ val merge_conditions =
    in fn th => if qchk (Thm.prop_of th) then Conv.fconv_rule conv th else th
   end
 
+val guard_atomize = [
+  @{lemma' \<open>(P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Q) \<equiv> Trueprop (\<g>\<u>\<a>\<r>\<d> (P \<longrightarrow> Q))\<close>
+       by (simp add: \<r>Guard_def atomize_imp)},
+  @{lemma' \<open>(\<And>x. \<g>\<u>\<a>\<r>\<d> Q x) \<equiv> Trueprop (\<g>\<u>\<a>\<r>\<d> (\<forall>x. Q x))\<close>
+       by (simp add: \<r>Guard_def atomize_all)}
+]
+
 fun guardize {merge_cond} ctxt =
-  let fun conv ctm =
+  let fun conv guard_unfold ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ P =>
             (case P of Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ => Conv.all_conv ctm
                      | _ => Conv.arg_conv (Conv.rewr_conv (
-                              Thm.transfer' ctxt @{thm' \<r>Guard_def[symmetric]})) ctm)
-           | _ => (Phi_Conv.atomize_conv ctxt then_conv conv) ctm
+                              Thm.transfer'' ctxt @{thm' \<r>Guard_def[symmetric]})) ctm)
+           | _ =>
+             let val ctxt' = Context.proof_of ctxt
+              in ((if guard_unfold
+                   then Raw_Simplifier.rewrite ctxt' true guard_atomize
+                   else Conv.all_conv)
+              then_conv Phi_Conv.atomize_conv (Context.proof_of ctxt)
+              then_conv conv guard_unfold) ctm
+             end
 
       fun can_merge_cond (Const(\<^const_name>\<open>Pure.imp\<close>, _)
                 $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(m1, _) $ _)))
@@ -88,9 +101,9 @@ fun guardize {merge_cond} ctxt =
 
       fun move_and_merge_ants N ctm =
         case N of 0 => Conv.all_conv ctm
-                | 1 => Conv.implies_conv conv Conv.all_conv ctm
+                | 1 => Conv.implies_conv (conv true) Conv.all_conv ctm
                 | _ =>
-         (Conv.implies_conv conv (move_and_merge_ants (N-1)) then_conv
+         (Conv.implies_conv (conv true) (move_and_merge_ants (N-1)) then_conv
           (fn ctm => Conv.rewr_conv
                (if can_merge_cond (Thm.term_of ctm)
                 then @{lemma \<open>(\<g>\<u>\<a>\<r>\<d> (Premise mode' P) \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (Premise mode Q) \<Longrightarrow> PROP R) \<equiv> (\<g>\<u>\<a>\<r>\<d> (Premise mode (P \<and> Q)) \<Longrightarrow> PROP R)\<close>
@@ -99,12 +112,17 @@ fun guardize {merge_cond} ctxt =
                           by (unfold \<r>Guard_def Ant_Seq_imp)}
                ) ctm)) ctm
 
-  in fn N => Conv.fconv_rule (move_and_merge_ants N)
+  in fn N => fn rule =>
+      case N of 0 => rule
+              | 1 => Conv.fconv_rule (Conv.implies_conv (conv false) Conv.all_conv) rule
+              | _ => Conv.fconv_rule (move_and_merge_ants N) rule
  end
 
 
 fun merge_guards {merge_cond} ctxt rule =
   let fun is_guard (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _)) = true
+        | is_guard (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_guard X
+        | is_guard (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = is_guard X
         | is_guard _ = false
       
       val last_ind = find_index is_guard (rev (Thm.prems_of rule))

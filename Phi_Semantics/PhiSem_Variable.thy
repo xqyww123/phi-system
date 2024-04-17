@@ -65,6 +65,7 @@ declare [[collect_reasoner_statistics Var start,
   deriving Basic
        and Functional_Transformation_Functor
        and \<open>Gen_Br_Join (Var v) (Var v) (Var v) P True \<close>
+       and \<open>Identifier_of (Var v T) v (Var v T')\<close>
 
 declare [[collect_reasoner_statistics Var stop,
           \<phi>LPR_collect_statistics derivation stop]]
@@ -79,6 +80,7 @@ abbreviation Uninited_Var :: \<open>varname \<Rightarrow> assn\<close> ("\<u>\<n
 
 abbreviation May_Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a option) \<phi>\<close>
   where \<open>May_Inited_Var vname T \<equiv> Var vname (\<half_blkcirc> T)\<close>
+
 
 
 subsubsection \<open>Syntax\<close>

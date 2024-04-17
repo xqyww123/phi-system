@@ -104,14 +104,14 @@ proc update_hash:
 
   insert_bucket ($tabl_addr \<tribullet> $hash !, $k, $v) \<semicolon>
 
-  holds_fact [\<phi>safe_simp]: \<open>{i. i < ?N} - ({i. i < ?N} - {hash k ?N}) = {hash k ?N}\<close> \<semicolon>
-
-  \<open>_ \<Ztypecolon> \<big_ast>\<^sup>\<phi> _ _ \<close> \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Hash addr T)\<close>
-      certified by (auto, auto_sledgehammer, auto_sledgehammer, auto_sledgehammer,
-                    rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
+  \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Hash addr T)\<close>
+    certified by (auto, auto_sledgehammer, auto_sledgehammer, auto_sledgehammer,
+                  rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
                     subgoal_tac \<open>\<And>k' v. \<lbrakk> (k',v) \<in> set bucket' ; k' \<noteq> k \<rbrakk> \<Longrightarrow> (k', v) \<in> set (buckets (hash k ?N))\<close>,
-                    subgoal_tac \<open>\<And>k v i.\<lbrakk> (k,v) \<in> set (buckets i) ; i < ?N \<rbrakk> \<Longrightarrow> hash k ?N = i\<close>;
-                    auto_sledgehammer)
+                    subgoal_tac \<open>\<And>k v i.\<lbrakk> (k,v) \<in> set (buckets i) ; i < ?N \<rbrakk> \<Longrightarrow> hash k ?N = i\<close>,
+                  clarsimp, rule conjI, auto_sledgehammer, rule conjI, auto_sledgehammer,
+                  rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
+                  auto_sledgehammer, auto_sledgehammer, auto_sledgehammer)
 \<medium_right_bracket> .
 
 proc bucket_has_key:
@@ -142,8 +142,7 @@ proc hash_has_key:
   val hash \<leftarrow> $k % $N \<semicolon>
   val ret \<leftarrow> bucket_has_key ($tabl_addr \<tribullet> $hash !, $k) \<semicolon>
 
-  holds_fact [\<phi>safe_simp]: \<open>{i. i < ?N} - ({i. i < ?N} - {hash k ?N}) = {hash k ?N}\<close> \<semicolon>
-  \<open>_ \<Ztypecolon> \<big_ast>\<^sup>\<phi> _ _ \<close> \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
+  \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
 
   $ret
 \<medium_right_bracket> .
@@ -165,8 +164,8 @@ proc lookup_bucket:
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     val entry \<leftarrow> get_dynarr($addr, $i) \<semicolon>
     if ($entry \<tribullet> k = $k) \<medium_left_bracket> 
-      ($ret \<leftarrow> $entry \<tribullet> v) to \<open>\<m>\<a>\<y> \<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[ret] T\<close>
-    \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
+      $ret \<leftarrow> $entry \<tribullet> v
+    \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
   \<medium_right_bracket> \<semicolon>
   $ret
 \<medium_right_bracket> .
@@ -185,13 +184,12 @@ proc hash_lookup:
   val hash \<leftarrow> $k % $N \<semicolon>
   val ret \<leftarrow> lookup_bucket ($tabl_addr \<tribullet> $hash !, $k) \<semicolon>
 
-  holds_fact [\<phi>safe_simp]: \<open>{i. i < ?N} - ({i. i < ?N} - {hash k ?N}) = {hash k ?N}\<close> \<semicolon>
-  \<open>_ \<Ztypecolon> \<big_ast>\<^sup>\<phi> _ _ \<close> \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
+  \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
 
   $ret
 \<medium_right_bracket> .
 
-
+lemma [simp]: \<open>{ia. ia < Suc i } - {i} = {ia. ia < i}\<close> for i :: nat by auto_sledgehammer
 
 
 proc new_hash:
@@ -213,9 +211,6 @@ proc new_hash:
     holds_fact [simp]: \<open>addra = bucket_ptrs' ! i\<close>
            and [simp]: \<open>\<big_ast>\<^sup>\<phi> {ia. ia < i} (\<lambda>i. DynArr (bucket_ptrs ! i) \<k>\<v>_\<e>\<n>\<t>\<r>\<y> \<lbrace> k: \<nat>, v: T \<rbrace>) =
                         \<big_ast>\<^sup>\<phi> {ia. ia < i} (\<lambda>i. DynArr (bucket_ptrs' ! i) \<k>\<v>_\<e>\<n>\<t>\<r>\<y> \<lbrace> k: \<nat>, v: T \<rbrace>)\<close> ;;
-    holds_fact [\<phi>safe_simp]: \<open>{ia. ia < Suc i} - {ia. ia < i} = {i}\<close> ;;
-
-    \<open>_ \<Ztypecolon> \<big_ast>\<^sup>\<phi> _ _ \<close>
   \<medium_right_bracket> \<semicolon>
   
   val ret \<leftarrow> calloc_1 \<open>\<lbrace> tabl: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat> \<rbrace>\<close> ;;
@@ -259,8 +254,6 @@ proc entries_of_hash:
                    \<s>\<u>\<b>\<j> l. set l = (\<Union>k<i. set (buckets k))\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     concat_dynarr ($dynarr, $tabl \<tribullet> $i !) \<semicolon>
-    \<open>_ \<Ztypecolon> \<big_ast>\<^sup>\<phi> _ _ \<close> \<semicolon>
-    holds_fact [\<phi>safe_simp]: \<open>{i. i < ?N} - ({i. i < ?N} - {i}) = {i}\<close> \<semicolon>
   \<medium_right_bracket> \<semicolon>
   \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
   $dynarr

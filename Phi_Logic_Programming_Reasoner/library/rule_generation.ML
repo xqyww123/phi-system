@@ -100,7 +100,7 @@ type TT = Phi_Reasoner.pattern
 structure Rule_Gen_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>\<phi>generation_simp\<close>
-  val comment = "Rules simplifying the reasoning rules instantiated from templates."
+  val comment = "simplifying the reasoning rules instantiated from templates."
   val attribute = NONE
   fun post_merging ctxt = ctxt
         |> Simplifier.del_cong @{thm' if_weak_cong}
@@ -432,7 +432,7 @@ fun pass_generated_rule {simp, masks, rule_pos} ctxt rule =
 
    in simplify rule'1
    |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def SIMP_def}
-   |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
+   |> PLPR_Syntax.merge_guards {merge_cond=true} (Context.Proof ctxt)
    |> normalize
   end
 
@@ -467,7 +467,8 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                               | parse_position (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) (LPR, prop, thm)
                                  = (case prop
                                       of SOME propx =>
-                                          (LPR, SOME (PLPR_Syntax.guardize {merge_cond=true} ctxt' (Thm.nprems_of propx) propx),
+                                          (LPR, SOME (PLPR_Syntax.guardize {merge_cond=true} (Context.Proof ctxt')
+                                                                           (Thm.nprems_of propx) propx),
                                            @{thm' \<r>Guard_I} RSN (i+1, thm))
                                        | _ => (LPR, prop, thm))
                               | parse_position (\<^Const>\<open>Pure.term \<^Type>\<open>prop\<close>\<close> $ X) data

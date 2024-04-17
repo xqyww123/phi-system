@@ -195,6 +195,11 @@ fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\
     in the fast_inst below.
 *)
 
+fun is_var' x =
+  case Term.strip_comb x
+    of (Var _, args) => forall (fn Bound _ => true | _ => false) args
+     | _ => false
+
 fun fast_inst can_inst th =
   case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
     of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
@@ -206,7 +211,7 @@ fun fast_inst can_inst th =
      | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
                     $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y)
                     $ _)) =>
-         if is_Var (Term.head_of X) orelse is_Var (Term.head_of Y)
+         if is_var' X orelse is_var' Y
          then (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
                      by (simp add: Premise_def)} RS th, Seq.empty)
                handle THM _ => NONE)
@@ -218,7 +223,7 @@ fun fast_inst can_inst th =
      | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y)) =>
          (*solves the equation by unification once single resolution*)
          (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
-         if is_Var (Term.head_of X) orelse is_Var (Term.head_of Y)
+         if is_var' X orelse is_var' Y
          then (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
                handle THM _ => NONE)
          else NONE

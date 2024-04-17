@@ -1462,7 +1462,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                 |> simp (phi, PLPR_Rule_Gen.Rule_Gen_SS.enhance ctxt)
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
                 |> PLPR_Syntax.merge_conditions
-                |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
+                |> PLPR_Syntax.merge_guards {merge_cond=true} (Context.Proof ctxt)
                 |> singleton (Proof_Context.export ctxt ctxt0)
 
    in rule'4
@@ -1905,7 +1905,7 @@ let fun elim_TA_ANT ctxt ctm =
                                                        (Conv.top_rewrs_conv eqs ctxt')) rule1
                    |> Assumption.export ctxt' ctxt't1
                    |> singleton (Variable.export ctxt't1 ctxt)
-       in PLPR_Syntax.merge_guards {merge_cond=false} ctxt rule'
+       in PLPR_Syntax.merge_guards {merge_cond=false} (Context.Proof ctxt) rule'
       end end
 
 
@@ -1964,7 +1964,7 @@ fun reasoning ctxt0 sequent0 =
       val local_prems = (maps pass_out_ant out_ants @ local_prems'1)
                      |> maps pass_prem
                      |> map (snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
-                          #> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
+                          #> PLPR_Syntax.merge_guards {merge_cond=true} (Context.Proof ctxt)
                           #> PLPR_Syntax.elim_leading_All ctxt)
 
       val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (phi, focus, lsequent) (local_prems, ctxt)

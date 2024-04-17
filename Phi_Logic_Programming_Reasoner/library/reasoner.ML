@@ -1205,6 +1205,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0_group0 pats0 guard0 rules0 =
     fun mk_reasoner (rules0, patterns, blacklist) =
       let val rules = rules0
                     |> map ( Phi_Help.beta_eta_contract
+                          #> PLPR_Syntax.merge_guards {merge_cond = false} ctxt
                           #> Drule.zero_var_indexes
                           #> Thm.trim_context )
           val pats = if null patterns

@@ -2215,7 +2215,7 @@ consts \<phi>instantiation :: mode
         (PLPR_Rule_Gen.Rule_Gen_SS.enhance) {fix_vars=true}) o snd\<close>
 
 lemmas [\<phi>generation_simp] =
-  conj_imp_eq_imp_imp sing_times_sing sing_if
+  conj_imp_eq_imp_imp sing_times_sing sing_if if_cancel
 
 setup \<open>Context.theory_map (PLPR_Rule_Gen.Rule_Gen_SS.map (
   Simplifier.add_cong @{thm' HOL.conj_cong[folded atomize_eq]}
