@@ -8,7 +8,7 @@ abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) = ((nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<heavy_comma>
                                            ls \<Ztypecolon> Linked_Lst nxt TY T
-                                         \<s>\<u>\<b>\<j> nxt. \<top>)\<close>
+                                         \<s>\<u>\<b>\<j> nxt. address_to_base addr )\<close> (**)
 
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr TY T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
@@ -25,9 +25,20 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
       Anyway, it is an engineering problem due to some bug in our system or Sledgehammer, so we don't
       count this line into our statistics in the paper.\<close>
 
+
+proc init:
+  input  Void
+  output \<open>[] \<Ztypecolon> Linked_Lst 0 TY T\<close>
+  is [routine]
+\<medium_left_bracket>
+  \<m>\<a>\<k>\<e>\<s>(0) \<open>Linked_Lst _ TY T\<close> \<semicolon>
+  return \<open>0 \<Ztypecolon> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+\<medium_right_bracket> .
+
 proc is_empty:
   input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l = [] \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  is [routine]
 \<medium_left_bracket>
   \<open>$addr = 0\<close>
 \<medium_right_bracket> .
@@ -52,6 +63,30 @@ proc prepend_llist:
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ TY T\<close> \<semicolon>
   $ret
 \<medium_right_bracket> .
+
+
+proc pop_llist:
+  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
+          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+  output \<open>(if l = [] then [] else tl l) \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma>
+          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)
+          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  is [routine]
+\<medium_left_bracket>
+  if \<open>$addr = 0\<close> \<medium_left_bracket>
+    return(\<open>0 \<Ztypecolon> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>)
+    \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
+      note [[\<phi>trace_reasoning = 2]]
+      \<semicolon> 
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
+  val ret \<leftarrow> $addr \<tribullet> nxt ! \<semicolon>
+  mfree ($addr) \<semicolon>
+
+
+
+
+
+
 
 
 

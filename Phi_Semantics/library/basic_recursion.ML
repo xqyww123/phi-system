@@ -32,7 +32,7 @@ fun mk_parameterized_schematic_proc mk_T mk_F ctxt arg_ty ret_ty var_name =
           else Const (\<^const_name>\<open>\<phi>V_case_prod\<close>, dummyT) $ Abs ("", dummyT, add_cases (N-1) X)
     val [(F_name,())] = Variable.variant_frees ctxt [] [(var_name,())]
     val var_F = Var ((F_name,0), f_T)
-    val f' = mk_F (N-1) (add_cases (N-1) o add_bounds (N-1)) var_F
+    val f' = (if N = 0 then var_F else mk_F (N-1) (add_cases (N-1) o add_bounds (N-1)) var_F)
           |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
    in f' end
 
