@@ -4,6 +4,7 @@ end
 
 structure BI_Quantifiers : BI_QUANTIFIERS = struct
 
+(*
 fun bi_conv (rule_L, rule_R) C ctxt ctm =
   (case (C ctxt (Thm.dest_arg1 ctm), C ctxt (Thm.dest_arg ctm))
      of (SOME th1, SOME th2) =>
@@ -29,7 +30,7 @@ fun skolemize_conv ctxt ctm =
         bi_conv (@{thm' ex_simps(1)[symmetric, folded atomize_eq]},
                  @{thm' ex_simps(2)[symmetric, folded atomize_eq]})
                 skolemize_conv ctxt ctm
-
+*)
 (*
 fun lift_Boolean_Ex_to_BI_Ex ctxt ctm =
   case Thm.term_of ctm
@@ -45,14 +46,13 @@ fun quick_check quantifier =
   let fun qchkB lv (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound i $ _) = i = lv
         | qchkB lv (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound i) = i = lv
         | qchkB lv (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) = qchkB lv A orelse qchkB lv B
+        | qchkB lv (Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ Abs (_, _, X)) = qchkB (lv+1) X
         | qchkB _ _ = false
-      fun qchkBE lv (Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ Abs (_, _, X)) = qchkBE (lv+1) X
-        | qchkBE lv X = qchkB lv X
 
       fun qchk lv (Const(N, _) $ Abs (_, _, X)) =
             if quantifier = N then qchk (lv+1) X else false
         | qchk lv (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ P) =
-            qchkBE lv P andalso
+            qchkB lv P andalso
             Phi_Syntax.forall_item_of_assertion (fn _ =>
                 fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => true (*not (Term.loose_bvar1 (T, lv))*)
                  | X => not (Term.loose_bvar1 (X, lv))
@@ -62,15 +62,76 @@ fun quick_check quantifier =
    in qchk ~1
   end
 
+val ExSet_boolean_Ex_lift = @{lemma
+        \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y)) \<equiv> (A x \<s>\<u>\<b>\<j> x y. P x y) \<close>
+        by (unfold BI_eq_iff atomize_eq, clarsimp)}
+
+val ExSet_boolean_Ex_lift' = @{lemma
+        \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y) \<and> Q x) \<equiv> (A x \<s>\<u>\<b>\<j> x y. P x y \<and> Q x) \<close>
+        by (unfold BI_eq_iff atomize_eq, clarsimp)}
+
 fun sink_Ex_quantifier C =
   let fun conv ctxt ctm =
        (  Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
           Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt)
-        else_conv (Conv.rewr_conv @{thm' ExSet_boolean_Ex_lift[folded atomize_eq]} then_conv
+        else_conv (Conv.rewr_conv ExSet_boolean_Ex_lift' then_conv
+                   conv ctxt)
+        else_conv (Conv.rewr_conv ExSet_boolean_Ex_lift then_conv
                    conv ctxt)
         else_conv C ctxt) ctm
    in conv
   end
+
+fun defined_Ex_direct ctm =
+  case Thm.term_of ctm
+    of Const _ (*Ex*) $ Abs (_, _, Const _ (*Subj*) $ _ $ X) =>
+        (case X
+           of Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _ =>
+                Conv.rewr_conv @{thm' ExSet_defined(1)[folded atomize_eq]} ctm
+            | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) $ _ =>
+                Conv.rewr_conv @{thm' ExSet_defined(3)[folded atomize_eq]} ctm
+            | _ => error "BI.defined_Ex")
+     | _ => error "BI.defined_Ex"
+
+val apply_conv =
+  let fun qchkB lv (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound i $ _) =
+            if i = lv then SOME (K Conv.all_conv) else NONE
+        | qchkB lv (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound i) =
+            if i = lv then SOME (K (Conv.rewr_conv @{thm' eq_commute[folded atomize_eq]}))
+                      else NONE
+        | qchkB lv (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
+            (case qchkB lv A
+               of SOME cv => SOME (fn ctxt =>
+                          Conv.arg1_conv (cv ctxt) then_conv
+                          Conv.try_conv (Conv.rewr_conv @{thm' conj_assoc[folded atomize_eq]}))
+                | _ => (case qchkB lv B
+               of SOME cv => SOME (fn ctxt =>
+                          Conv.arg_conv (cv ctxt) then_conv
+                          (Conv.rewr_conv @{thm' conj_left_commute[folded atomize_eq]} else_conv
+                           Conv.rewr_conv @{thm' conj_commute[folded atomize_eq]}))
+                | _ => NONE))
+        | qchkB lv (Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ Abs (_, _, X)) =
+            Option.map (fn C => fn ctxt => fn ctmxx =>
+                          Conv.arg_conv (fn ctm => Conv.abs_conv (C o snd) ctxt ctm) ctmxx)
+                       (qchkB (lv+1) X)
+        | qchkB _ _ = NONE
+
+      fun qchk lv (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ P)) =
+            Option.map (fn C => fn ctxt =>
+                            Conv.arg_conv (Conv.abs_conv (fn (_,ctxt) => Conv.arg_conv (C ctxt)) ctxt) then_conv
+                            sink_Ex_quantifier (K defined_Ex_direct) ctxt)
+                       (qchkB lv P)
+        | qchk lv (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, X)) =
+            Option.map (fn C => fn ctxt =>
+                                Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
+                                Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt))
+                        (qchk (lv+1) X)
+        | qchk _ _ = NONE
+
+   in qchk ~1
+  end
+
+(*
 
 fun move_conj qvar =
   let fun pop_left ctm =
@@ -108,17 +169,17 @@ fun move_conj qvar =
 
 (*fun lift_boolean*)
 
-fun defined_Ex_direct ctm =
-  case Thm.term_of ctm
-    of Const _ (*Ex*) $ Abs (_, _, Const _ (*Subj*) $ _ $ X) =>
-        (case X
-           of Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _ =>
-                Conv.rewr_conv @{thm' ExSet_defined(1)[folded atomize_eq]} ctm
-            | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) $ _ =>
-                Conv.rewr_conv @{thm' ExSet_defined(3)[folded atomize_eq]} ctm
-            | _ => error "BI.defined_Ex")
-     | _ => error "BI.defined_Ex"
+*)
 
+fun defined_Ex ctxt ctm =
+  let exception NO_CONV
+   in if quick_check \<^const_name>\<open>ExSet\<close> (Thm.term_of ctm)
+      then Option.map (fn cv => cv ctxt ctm)
+                      (apply_conv (Thm.term_of ctm))
+      else NONE
+  end
+
+(*
 fun defined_Ex ctxt ctm =
   let exception NO_CONV
    in if quick_check \<^const_name>\<open>ExSet\<close> (Thm.term_of ctm)
@@ -135,6 +196,7 @@ fun defined_Ex ctxt ctm =
               ctxt ctm)
       else NONE
   end
+*)
 
 end
 

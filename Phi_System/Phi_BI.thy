@@ -1590,10 +1590,7 @@ lemma ExSet_subj_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
   unfolding BI_eq_iff
   by clarsimp
 
-lemma ExSet_boolean_Ex_lift:
-  \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y)) = (A x \<s>\<u>\<b>\<j> x y. P x y) \<close>
-  unfolding BI_eq_iff
-  by clarsimp
+
 
 
 paragraph \<open>With Multiplicative Conjunction\<close>

@@ -77,7 +77,7 @@ proc pop_llist:
     return(\<open>0 \<Ztypecolon> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>)
     \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
       note [[\<phi>trace_reasoning = 2]]
-      \<semicolon> 
+      \<semicolon>    
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
   val ret \<leftarrow> $addr \<tribullet> nxt ! \<semicolon>
   mfree ($addr) \<semicolon>
