@@ -14,6 +14,8 @@ theory IDE_CP_Applications1
       and "<bubbling>" = "\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>"
       and "<assoc>" = "\<a>\<s>\<s>\<o>\<c>"
       and "<scalar>" = "\<s>\<c>\<a>\<l>\<a>\<r>"
+      and "<open>" = "\<o>\<p>\<e>\<n>"
+      and "<makes>" = "\<m>\<a>\<k>\<e>\<s>"
 begin
 
 text \<open> 
@@ -754,6 +756,8 @@ lemma to_\<phi>app:
   unfolding Do_def Action_Tag_def Transformation_def
   by simp
 
+lemmas "\<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o>_\<phi>app" = to_\<phi>app
+
 subsubsection \<open>Termination\<close>
 
 lemma ToA_trivial:
@@ -1188,6 +1192,23 @@ declare [[
     and \<open>_ \<Ztypecolon> OPEN _ ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>_ \<Ztypecolon> OPEN _ ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> (700)
 ]]
 
+paragraph \<open>Syntax\<close>
+
+syntax \<o>\<p>\<e>\<n>  :: \<open>logic\<close> ("\<o>\<p>\<e>\<n>")
+       \<o>\<p>\<e>\<n>' :: \<open>nat \<Rightarrow> logic\<close> ("\<o>\<p>\<e>\<n>'(_')")
+
+parse_ast_translation \<open>let open Ast in [
+  (\<^syntax_const>\<open>\<o>\<p>\<e>\<n>\<close>, fn ctxt => fn args =>
+      Appl [Constant \<^const_syntax>\<open>OPEN\<close>,
+        Appl [Constant "_constrain", Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, Variable "\^E\^Fposition\^E<position>\^E\^F\^E"],
+        Appl [Constant "_constrain", Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, Variable "\^E\^Fposition\^E<position>\^E\^F\^E"]] ),
+  (\<^syntax_const>\<open>\<o>\<p>\<e>\<n>'\<close>, fn ctxt => fn args =>
+      Appl [Constant \<^const_syntax>\<open>OPEN\<close>,
+        hd args,
+        Appl [Constant "_constrain", Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, Variable "\^E\^Fposition\^E<position>\^E\^F\^E"]] )
+] end\<close>
+
+
 paragraph \<open>Application\<close>
 
 (* depreciated
@@ -1409,6 +1430,23 @@ declare [[
       \<open>Derived rules\<close>
 
 ML_file \<open>library/syntax/make_and_open.ML\<close>
+
+paragraph \<open>Sugar\<close>
+
+\<phi>lang_parser \<m>\<a>\<k>\<e>\<s> (%\<phi>parser_unique, 0) ["\<m>\<a>\<k>\<e>\<s>"] (\<open>PROP _\<close>)
+\<open> fn s => Args.$$$ "\<m>\<a>\<k>\<e>\<s>" |-- Scan.option (\<^keyword>\<open>(\<close> |-- Parse.nat --| \<^keyword>\<open>)\<close>) --
+          Parse.position (Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number)))
+       >> (fn (n,term) =>
+          phi_synthesis_parser s (fn _ => fn term =>
+            let val make = Const(\<^const_name>\<open>MAKE\<close>, dummyT)
+                              $ (case n of NONE => Term.dummy
+                                         | SOME N => HOLogic.mk_number \<^Type>\<open>nat\<close> N)
+                fun mark ((t1 as Const(\<^const_name>\<open>\<phi>Type\<close>, _)) $ t2 $ t3)
+                      = t1 $ t2 $ (make $ t3)
+                  | mark t3 = make $ t3
+             in mark term
+            end) term ) \<close>
+
 
 paragraph \<open>Reductions in Source\<close>
 

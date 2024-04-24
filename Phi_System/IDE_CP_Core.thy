@@ -26,6 +26,7 @@ abbrevs
   and "|>" = "\<tribullet>"
   and "<-" = "\<leftarrow>"
   and "\<leftarrow>->" = "\<longleftrightarrow>"
+  and ";;" = "\<semicolon>"
 begin
 
 section \<open>Preliminary Configuration\<close>
@@ -2368,12 +2369,11 @@ hide_fact \<phi>cast_exception_UI
          of SOME (th, _) => (ctxt,th)
           | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) *)
 
-ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
+ML \<open>
 
-\<phi>lang_parser synthesis (%\<phi>parser_synthesis, %\<phi>lang_push_val) ["<cartouche>", "<number>"] (\<open>PROP _\<close>)
-  \<open>fn (oprs, (ctxt, sequent)) =>
-   Parse.position (Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number)))
->> (fn (raw_term, pos) => fn cfg =>
+val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)
+
+fun phi_synthesis_parser (oprs, (ctxt, sequent)) F (raw_term, pos) cfg = 
   let val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
                         |> Config.put phi_synthesis_parsing true
                         |> Config.put Generic_Variable_Access.mode_synthesis true
@@ -2384,6 +2384,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
                               (case Vartab.lookup binds name of SOME (_,Y) => Y | _ => X)
                            | X => X
                        ) (*patch to enable term binding*)
+                    |> F ctxt
                     |> Syntax.check_term ctxt_parser
                     |> Thm.cterm_of ctxt
 
@@ -2396,7 +2397,14 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
    else Phi_Opr_Stack.push_meta_operator cfg
             ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val}, SOME 0), ("<synthesis>", pos), NONE,
             (K (apsnd (Phi_Reasoners.wrap'' (Phi_Sys.synthesis term))))) (oprs, (ctxt, sequent))
-  end)\<close>
+  end
+
+\<close>
+
+\<phi>lang_parser synthesis (%\<phi>parser_synthesis, %\<phi>lang_push_val) ["<cartouche>", "<number>"] (\<open>PROP _\<close>)
+  \<open>fn s =>
+   Parse.position (Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number)))
+>> phi_synthesis_parser s (K I)\<close>
 
 
 (*access local value or variable or any generic variables*)

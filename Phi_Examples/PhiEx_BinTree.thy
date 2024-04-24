@@ -296,7 +296,7 @@ proc lookup_bintree:
   is [routine]
 \<medium_left_bracket>
   obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-  to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
   val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
   if (eq ($k', $k)) \<medium_left_bracket>
@@ -307,11 +307,11 @@ proc lookup_bintree:
   \<medium_left_bracket>
     if (cmp ($k, $k')) \<medium_left_bracket>
       lookup_bintree ($addr \<tribullet> left  !, $k) \<rightarrow> val ret \<semicolon>
-      \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+      \<open>BinTree a\<^sub>R _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
       return ($ret)
     \<medium_right_bracket> \<medium_left_bracket> 
       lookup_bintree ($addr \<tribullet> right !, $k) \<rightarrow> val ret \<semicolon>
-      \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+      \<open>BinTree a\<^sub>R _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
       return ($ret)
     \<medium_right_bracket> \<semicolon>
   \<medium_right_bracket>
@@ -323,9 +323,9 @@ proc (nodef) lookup_bst:
   output   \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
   is [recursive]
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   lookup_bintree ($addr, $k)
-  \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr _ _ _ _)\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Bin_Search_Tree addr _ _ _ _\<close>
 \<medium_right_bracket> .
 
 
@@ -342,21 +342,21 @@ proc defined_bintree:
     return (False) 
   \<medium_right_bracket> \<medium_left_bracket>
     obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-    to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
     val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
     if (eq ($k', $k)) \<medium_left_bracket>
-      \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+      \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
       return (True)
     \<medium_right_bracket>
     \<medium_left_bracket>
       if (cmp ($k, $k')) \<medium_left_bracket>
         val ret \<leftarrow> defined_bintree ($addr \<tribullet> left  !, $k) \<semicolon>
-        \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+        \<open>BinTree a\<^sub>R _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
         return ($ret)
       \<medium_right_bracket> \<medium_left_bracket> 
         val ret \<leftarrow> defined_bintree ($addr \<tribullet> right !, $k) \<semicolon>
-        \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+        \<open>BinTree a\<^sub>R _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
         return ($ret)
       \<medium_right_bracket> \<semicolon>
     \<medium_right_bracket>
@@ -369,9 +369,9 @@ proc (nodef) defined_bst:
   output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
   is [recursive]
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   defined_bintree ($addr, $k)
-  \<open>f \<Ztypecolon> MAKE _ (Bin_Search_Tree addr _ _ _ _)\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Bin_Search_Tree addr _ _ _ _\<close>
 \<medium_right_bracket> .
 
 
@@ -396,7 +396,7 @@ proc insert_bintree:
       val ret \<leftarrow> calloc_1 \<open>Bst_Node\<close> \<semicolon>
       $ret \<tribullet> data \<tribullet> k := $k \<semicolon>
       $ret \<tribullet> data \<tribullet> v := $v \<semicolon>
-      \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BinTree addrb (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>)\<close> \<semicolon>
+      \<m>\<a>\<k>\<e>\<s>(1) \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> BinTree addrb (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<close> \<semicolon>
       return ($ret)
   \<medium_right_bracket> \<medium_left_bracket>
       obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
@@ -405,18 +405,18 @@ proc insert_bintree:
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
       if (eq ($k', $k)) \<medium_left_bracket>
           $addr \<tribullet> data \<tribullet> v := $v \<semicolon>
-          \<open>MAKE 1 (BinTree addr _ _)\<close> certified by (instantiate \<open>(k,v)\<close>, auto_sledgehammer) \<semicolon>
+          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> certified by (instantiate \<open>(k,v)\<close>, auto_sledgehammer) \<semicolon>
           return ($addr)
       \<medium_right_bracket> \<medium_left_bracket>
           if (cmp ($k, $k')) \<medium_left_bracket>
               insert_bintree ($addr \<tribullet> left !, $k, $v) \<rightarrow> val a\<^sub>L' \<semicolon>
               $addr \<tribullet> left := $a\<^sub>L' \<semicolon>
-              \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+              \<open>BinTree a\<^sub>R _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
               return ($addr)
           \<medium_right_bracket> \<medium_left_bracket>
               insert_bintree ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' \<semicolon>
               $addr \<tribullet> right := $a\<^sub>R' \<semicolon>
-              \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+              \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
               return ($addr)
           \<medium_right_bracket>
       \<medium_right_bracket>
@@ -433,9 +433,9 @@ proc (nodef) insert_bst:
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   insert_bintree ($addr, $k, $v)
-  \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>f(k \<mapsto> v) \<Ztypecolon> Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 
@@ -459,9 +459,9 @@ proc height_of:
       return (0)
   \<medium_right_bracket> \<medium_left_bracket>
       obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-      to \<open>OPEN 1 _\<close> \<semicolon>
+      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
       $addr \<tribullet> data \<tribullet> v \<tribullet> height ! \<rightarrow> val ret \<semicolon>
-      \<open>tree \<Ztypecolon> MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+      \<m>\<a>\<k>\<e>\<s>(1) \<open>tree \<Ztypecolon> BinTree addr _ _\<close> \<semicolon>
       return ($ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -485,7 +485,7 @@ proc maintain_i:
 
 \<medium_left_bracket>
 
-  to \<open>OPEN 1 _\<close> \<exists>a\<^sub>B, a\<^sub>E \<semicolon>                                                             (*for reasoning, \<Omega>*)
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>OPEN 1 _\<close> \<exists>a\<^sub>B, a\<^sub>E \<semicolon>                                                 (*for reasoning, \<Omega>*)
 
   val B \<leftarrow> $a\<^sub>D \<tribullet> left ! \<semicolon>
   val E \<leftarrow> $a\<^sub>D \<tribullet> right ! \<semicolon>
@@ -494,7 +494,7 @@ proc maintain_i:
 
   if ($H\<^sub>B = $H\<^sub>E + 2) \<medium_left_bracket>
       obtain A k\<^sub>B h\<^sub>B v\<^sub>B C where B[simp]: \<open>B = \<langle>A, (k\<^sub>B, h\<^sub>B, v\<^sub>B), C\<rangle>\<close> by auto_sledgehammer \<semicolon> (*this line and the*)
-      \<open>BinTree a\<^sub>B _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>A, a\<^sub>C \<semicolon>                                        (*next line, for reasoning, one \<Omega>*)
+      \<open>BinTree a\<^sub>B _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>A, a\<^sub>C \<semicolon>                                        (*next line, for reasoning, one \<Omega>*)
 
       val A \<leftarrow> $B \<tribullet> left ! \<semicolon>
       val C \<leftarrow> $B \<tribullet> right ! \<semicolon>
@@ -509,14 +509,14 @@ proc maintain_i:
           $B \<tribullet> right := $a\<^sub>D \<semicolon>
           $B \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>A, $H\<^sub>D') + 1 \<semicolon>
 
-          \<open>BinTree a\<^sub>C _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
-          \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> \<semicolon>                                                  (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>C _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _ _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
+          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>B _ _\<close> \<semicolon>                                                  (*for reasoning, \<Omega>*)
  
           return ($B) certified by (auto simp add: fun_eq_iff map_add_def split: option.split; auto_sledgehammer) (*Tac-1n-2m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by auto_sledgehammer \<semicolon>  (*this line and the next*)
-          \<open>BinTree a\<^sub>C _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R \<semicolon>                                           (*line, for reasoning, one \<Omega>*)
+          \<open>BinTree a\<^sub>C _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R \<semicolon>                                           (*line, for reasoning, one \<Omega>*)
 
           val C\<^sub>L \<leftarrow> $C \<tribullet> left ! \<semicolon>
           val C\<^sub>R \<leftarrow> $C \<tribullet> right ! \<semicolon>
@@ -530,9 +530,9 @@ proc maintain_i:
           $C \<tribullet> right := $a\<^sub>D \<semicolon>
           $C \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>B', $H\<^sub>D') + 1 \<semicolon>
 
-          \<open>BinTree a\<^sub>A _ _\<close> \<open>BinTree a\<^sub>C\<^sub>L _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>B _ _)\<close> \<semicolon>         (*for reasoning, \<Omega>*)
-          \<open>BinTree a\<^sub>C\<^sub>R _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> \<semicolon>         (*for reasoning, \<Omega>*)
-          \<open>MAKE 1 (BinTree a\<^sub>C _ _)\<close> \<semicolon>                                           (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>A _ _\<close> \<open>BinTree a\<^sub>C\<^sub>L _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>B _ _\<close> \<semicolon>         (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>C\<^sub>R _ _\<close> \<open>BinTree a\<^sub>E _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _ _\<close> \<semicolon>         (*for reasoning, \<Omega>*)
+          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>C _ _\<close> \<semicolon>                                           (*for reasoning, \<Omega>*)
 
           holds_fact t1[useful]: \<open>k\<^sub>B < k\<^sub>D\<close>  \<semicolon>                                    (*for proof, Tac-s*)
 
@@ -543,7 +543,7 @@ proc maintain_i:
     if ($H\<^sub>E = $H\<^sub>B + 2) \<medium_left_bracket>
 
       obtain F k\<^sub>E h\<^sub>E v\<^sub>E G where E[simp]: \<open>E = \<langle>F, (k\<^sub>E, h\<^sub>E, v\<^sub>E), G\<rangle>\<close> by auto_sledgehammer \<semicolon> (*for reasoning, \<Omega>*)
-      \<open>BinTree a\<^sub>E _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>F, a\<^sub>G \<semicolon>
+      \<open>BinTree a\<^sub>E _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F, a\<^sub>G \<semicolon>
   
       val F \<leftarrow> $E \<tribullet> left ! \<semicolon>
       val G \<leftarrow> $E \<tribullet> right ! \<semicolon>
@@ -558,15 +558,14 @@ proc maintain_i:
           $E \<tribullet> left := $a\<^sub>D \<semicolon>
           $E \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>D', $H\<^sub>G) + 1 \<semicolon>
 
-          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
-          \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> \<semicolon>                                  (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _ _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>G _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>E _ _\<close> \<semicolon>                                  (*for reasoning, \<Omega>*)
 
           return ($E) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)  (*Tac-1n-3m*)
-
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-          \<open>BinTree a\<^sub>F _ _\<close> to \<open>OPEN 1 _\<close> \<exists>a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R \<semicolon>
+          \<open>BinTree a\<^sub>F _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R \<semicolon>
 
           val F\<^sub>L \<leftarrow> $F \<tribullet> left ! \<semicolon>
           val F\<^sub>R \<leftarrow> $F \<tribullet> right ! \<semicolon>
@@ -580,9 +579,9 @@ proc maintain_i:
           $F \<tribullet> right := $E \<semicolon>
           $F \<tribullet> data \<tribullet> v \<tribullet> height := Max($H\<^sub>D', $H\<^sub>E') + 1\<semicolon>
 
-          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F\<^sub>L _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> \<semicolon>
-          \<open>BinTree a\<^sub>F\<^sub>R _ _\<close> \<open>BinTree a\<^sub>G _ _\<close> \<open>MAKE 1 (BinTree a\<^sub>E _ _)\<close> \<semicolon>
-          \<open>MAKE 1 (BinTree a\<^sub>F _ _)\<close> \<semicolon>
+          \<open>BinTree a\<^sub>B _ _\<close> \<open>BinTree a\<^sub>F\<^sub>L _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _ _\<close> \<semicolon>
+          \<open>BinTree a\<^sub>F\<^sub>R _ _\<close> \<open>BinTree a\<^sub>G _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>E _ _\<close> \<semicolon>
+          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>F _ _\<close> \<semicolon>
 
           return ($F) certified by (clarsimp, rule,
                                     ((auto simp: map_add_def fun_eq_iff split: option.split)[1]; auto_sledgehammer),
@@ -591,7 +590,7 @@ proc maintain_i:
     \<medium_right_bracket>
     \<medium_left_bracket>
       $a\<^sub>D \<tribullet> data \<tribullet> v \<tribullet> height := Max (height_of ($a\<^sub>D \<tribullet> left !), height_of ($a\<^sub>D \<tribullet> right !)) + 1  \<semicolon>
-      \<open>MAKE 1 (BinTree a\<^sub>D _ _)\<close> \<semicolon>
+      \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _ _\<close> \<semicolon>
       return ($a\<^sub>D)
     \<medium_right_bracket>
   \<medium_right_bracket>
@@ -630,29 +629,29 @@ proc insert_avl_i:
       $ret \<tribullet> data \<tribullet> k := $k \<semicolon>
       $ret \<tribullet> data \<tribullet> v \<tribullet> v := $v \<semicolon>
       $ret \<tribullet> data \<tribullet> v \<tribullet> height := 1 \<semicolon>
-      \<open>\<langle>\<langle>\<rangle>, (k,1,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> MAKE 1 (BinTree addrb (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>)\<close> \<semicolon>
+      \<m>\<a>\<k>\<e>\<s>(1) \<open>\<langle>\<langle>\<rangle>, (k,1,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> BinTree addrb (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close> \<semicolon>
       return ($ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
       obtain L k' h' v' R where tree_def[simp]: \<open>tree = \<langle>L, (k', h', v'), R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-      to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
       if (eq ($k', $k)) \<medium_left_bracket>
         $addr \<tribullet> data \<tribullet> v \<tribullet> v := $v \<semicolon>
-        \<open>MAKE 1 (BinTree addr _ _)\<close>  \<semicolon>
+        \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close>  \<semicolon>
         return ($addr)
       \<medium_right_bracket> \<medium_left_bracket>
         if (cmp ($k, $k')) \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> left !, $k, $v) \<rightarrow> val a\<^sub>L' \<semicolon>
             $addr \<tribullet> left := $a\<^sub>L' \<semicolon>
-            \<open>BinTree a\<^sub>R _ _\<close> \<open>MAKE 1 (BinTree addr _ _)\<close>  \<semicolon>
+            \<open>BinTree a\<^sub>R _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
             return (maintain_i ($addr))
         \<medium_right_bracket>
         \<medium_left_bracket>
             insert_avl_i ($addr \<tribullet> right !, $k, $v) \<rightarrow> val a\<^sub>R' \<semicolon>
             $addr \<tribullet> right := $a\<^sub>R' \<semicolon>
-            \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+            \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
 
             return (maintain_i ($addr))
         \<medium_right_bracket>
@@ -670,9 +669,9 @@ proc (nodef) insert_avl:
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   insert_avl_i ($addr, $k, $v)
-  \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close>
+  \<m>\<a>\<k>\<e>\<s>(1) \<open>f(k \<mapsto> v) \<Ztypecolon> AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 end

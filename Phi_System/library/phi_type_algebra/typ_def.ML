@@ -234,6 +234,7 @@ val elimN = "elim"
 val elim_reasoningN = "elim_reasoning"
 val elim_mapN = "elim_map"
 val unfoldN = "unfold"
+val unfold_valN = "unfold_val"
 val expansionN = "expansion"
 (* val open_abstractionN = "open_abstraction" *)
 
@@ -1258,6 +1259,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                                   Conv.arg_conv (Simplifier.rewrite (
                                       Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
                                 ) ctxt)) tagged_eqs
+      val unfold_vals = gen_from_tagged_eq_in_type (K I) (K I) @{thm' \<phi>unfold_val}
 
       fun mk_open_abstraction inst_i =
             gen_from_tagged_eq_in_type
@@ -1367,7 +1369,8 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
        end)
    |> note_properties_s false phi_type (
         (* (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @ *)
-        [(unfoldN, eqs), (expansionN, expansions)])
+        (if null unfold_vals then [] else [(unfold_valN, unfold_vals)])
+        @ [(unfoldN, eqs), (expansionN, expansions)])
    |> (if no_auto then I
        else note_properties_s true phi_type 
             [(introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),

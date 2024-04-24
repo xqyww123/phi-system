@@ -2867,6 +2867,22 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
+lemma \<phi>unfold_val:
+  \<open> (x \<Ztypecolon> T) = (y \<Ztypecolon> U)
+\<Longrightarrow> (x \<Ztypecolon> \<v>\<a>\<l>[v] T) = (y \<Ztypecolon> \<v>\<a>\<l>[v] U) \<close>
+  unfolding Val_def BI_eq_iff \<phi>Type_def
+  by auto
+
+
+
+
+
+
+
+
+
+  
+
 
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 

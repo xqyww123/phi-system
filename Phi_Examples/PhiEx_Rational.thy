@@ -9,19 +9,16 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
   where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
   deriving Basic
        and \<open>Object_Equiv \<rat> (=)\<close>
-
-thm \<phi>Rational.unfold
  
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
-  unfolding \<phi>Rational.unfold
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
+  val q1 \<leftarrow> $q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
+  val q2 \<leftarrow> $q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> den + $q2 \<tribullet> num * $q1 \<tribullet> den,
     den: $q1 \<tribullet> den * $q2 \<tribullet> den \<rbrace>
-  \<open>MAKE _ \<rat>\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>\<rat>\<close>
 \<medium_right_bracket> .
 
 
@@ -29,11 +26,11 @@ proc rat_sub:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 - q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
+  val q1 \<leftarrow> $q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
+  val q2 \<leftarrow> $q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> den - $q2 \<tribullet> num * $q1 \<tribullet> den,
     den: $q1 \<tribullet> den * $q2 \<tribullet> den \<rbrace>
-  \<open>MAKE _ \<rat>\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>\<rat>\<close>
 \<medium_right_bracket> .
 
 
@@ -41,11 +38,11 @@ proc rat_mul:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 * q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
+  val q1 \<leftarrow> $q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
+  val q2 \<leftarrow> $q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> num,
     den: $q1 \<tribullet> den * $q2 \<tribullet> den \<rbrace>
-  \<open>MAKE _ \<rat>\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>\<rat>\<close>
 \<medium_right_bracket> .
 
 
@@ -54,11 +51,11 @@ proc rat_div:
   premises \<open>q2 \<noteq> 0\<close>
   output \<open>q1 / q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close> \<semicolon>
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close> \<semicolon>
+  val q1 \<leftarrow> $q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
+  val q2 \<leftarrow> $q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> den,
     den: $q1 \<tribullet> den * $q2 \<tribullet> num \<rbrace>
-  \<open>MAKE _ \<rat>\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>\<rat>\<close>
 \<medium_right_bracket> .
 
 

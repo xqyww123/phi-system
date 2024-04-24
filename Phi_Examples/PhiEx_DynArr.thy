@@ -25,10 +25,9 @@ abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
   output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  unfolding DynArr.unfold
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<semicolon>
   $addr \<tribullet> len !
-  \<open>MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
 
@@ -44,10 +43,9 @@ proc get_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  unfolding DynArr.unfold
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<semicolon>
   $addr \<tribullet> data ! \<tribullet> $i !
-  \<open>MAKE _ (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
 
@@ -55,10 +53,9 @@ proc set_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
+  unfolding DynArr.unfold
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<semicolon>
-  $addr \<tribullet> data ! \<tribullet> $i := $v \<semicolon>
- \<open>l[i := v] \<Ztypecolon> MAKE _ (DynArr addr _ _)\<close>
+  $addr \<tribullet> data ! \<tribullet> $i := $v
 \<medium_right_bracket> .
 
 proc Max:

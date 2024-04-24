@@ -97,14 +97,14 @@ proc update_hash:
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length ;;
 
-  to \<open>OPEN _ _\<close> \<exists>bucket_ptrs, base, buckets \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
   val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
   val hash \<leftarrow> $k % $N \<semicolon>
 
   insert_bucket ($tabl_addr \<tribullet> $hash !, $k, $v) \<semicolon>
 
-  \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Hash addr T)\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>f(k \<mapsto> v) \<Ztypecolon> Hash addr T\<close>
     certified by (auto, auto_sledgehammer, auto_sledgehammer, auto_sledgehammer,
                   rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
                     subgoal_tac \<open>\<And>k' v. \<lbrakk> (k',v) \<in> set bucket' ; k' \<noteq> k \<rbrakk> \<Longrightarrow> (k', v) \<in> set (buckets (hash k ?N))\<close>,
@@ -136,13 +136,13 @@ proc hash_has_key:
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
-  to \<open>OPEN _ _\<close> \<exists>bucket_ptrs, base, buckets \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
   val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
   val hash \<leftarrow> $k % $N \<semicolon>
   val ret \<leftarrow> bucket_has_key ($tabl_addr \<tribullet> $hash !, $k) \<semicolon>
 
-  \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
+  \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Hash addr T\<close> \<semicolon>
 
   $ret
 \<medium_right_bracket> .
@@ -178,13 +178,13 @@ proc hash_lookup:
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
-  to \<open>OPEN _ _\<close> \<exists>bucket_ptrs, base, buckets \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
   val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
   val hash \<leftarrow> $k % $N \<semicolon>
   val ret \<leftarrow> lookup_bucket ($tabl_addr \<tribullet> $hash !, $k) \<semicolon>
 
-  \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
+  \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Hash addr T\<close> \<semicolon>
 
   $ret
 \<medium_right_bracket> .
@@ -206,17 +206,17 @@ proc new_hash:
     val dynarr \<leftarrow> apply_rule new_dynarr[where T=\<open>\<lbrace> k: \<nat>, v: T \<rbrace>\<close>] \<semicolon>
     $tabl_addr \<tribullet> $i := $dynarr \<semicolon>
 
-    define bucket_ptrs' where \<open>bucket_ptrs' \<equiv> list_upd_map i (comb.K addra) bucket_ptrs\<close> ;;
-    fold bucket_ptrs'_def ;;
+    define bucket_ptrs' where \<open>bucket_ptrs' \<equiv> list_upd_map i (comb.K addra) bucket_ptrs\<close> \<semicolon>
+    fold bucket_ptrs'_def \<semicolon>
     holds_fact [simp]: \<open>addra = bucket_ptrs' ! i\<close>
            and [simp]: \<open>\<big_ast>\<^sup>\<phi> {ia. ia < i} (\<lambda>i. DynArr (bucket_ptrs ! i) \<k>\<v>_\<e>\<n>\<t>\<r>\<y> \<lbrace> k: \<nat>, v: T \<rbrace>) =
-                        \<big_ast>\<^sup>\<phi> {ia. ia < i} (\<lambda>i. DynArr (bucket_ptrs' ! i) \<k>\<v>_\<e>\<n>\<t>\<r>\<y> \<lbrace> k: \<nat>, v: T \<rbrace>)\<close> ;;
+                        \<big_ast>\<^sup>\<phi> {ia. ia < i} (\<lambda>i. DynArr (bucket_ptrs' ! i) \<k>\<v>_\<e>\<n>\<t>\<r>\<y> \<lbrace> k: \<nat>, v: T \<rbrace>)\<close> \<semicolon>
   \<medium_right_bracket> \<semicolon>
   
-  val ret \<leftarrow> calloc_1 \<open>\<lbrace> tabl: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat> \<rbrace>\<close> ;;
-  $ret \<tribullet> N := $N ;;
-  $ret \<tribullet> tabl := $tabl_addr ;;
-  \<open>Map.empty \<Ztypecolon> MAKE _ (Hash addra T)\<close> ;;
+  val ret \<leftarrow> calloc_1 \<open>\<lbrace> tabl: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat> \<rbrace>\<close> \<semicolon>
+  $ret \<tribullet> N := $N \<semicolon>
+  $ret \<tribullet> tabl := $tabl_addr \<semicolon>
+  \<m>\<a>\<k>\<e>\<s> \<open>Map.empty \<Ztypecolon> Hash addra T\<close> \<semicolon>
   $ret
 \<medium_right_bracket> .
 
@@ -225,7 +225,7 @@ proc del_hash:
   input  \<open>f \<Ztypecolon> Hash addr T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
   val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
   val tabl \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
   replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, $N)
@@ -245,7 +245,7 @@ proc entries_of_hash:
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>
           \<s>\<u>\<b>\<j> l addr'. set l = Map.graph f\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
   val dynarr \<leftarrow> apply_rule new_dynarr[where T=\<open>\<lbrace> k: \<nat>, v: T \<rbrace>\<close>] \<semicolon>
   val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
   val tabl \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
@@ -255,7 +255,7 @@ proc entries_of_hash:
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     concat_dynarr ($dynarr, $tabl \<tribullet> $i !) \<semicolon>
   \<medium_right_bracket> \<semicolon>
-  \<open>f \<Ztypecolon> MAKE _ (Hash addr T)\<close> \<semicolon>
+  \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Hash addr T\<close> \<semicolon>
   $dynarr
 \<medium_right_bracket> .
 
