@@ -152,6 +152,9 @@ subsection \<open>Helper Lemmas\<close>
 
 (*TODO: IMPROVE ME!*)
 
+lemma [simp]: \<open>{ia. ia < Suc i } - {i} = {ia. ia < i}\<close> for i :: nat
+  by fastforce
+  
 lemma [simp]:
   \<open>list_all2 (\<lambda>x y. snd x = snd y \<and> fst x = fst y) = (=)\<close>
   by (auto simp: fun_eq_iff,

@@ -1,4 +1,6 @@
+#include <stdlib.h>
 
+// we fix T to int though our verification is generic
 typedef int T;
 
 struct Linked_Lst {
@@ -6,12 +8,40 @@ struct Linked_Lst {
   T data;
 };
 
-int nth_llist(Linked_Lst* addr, int i) {
+Linked_Lst* init() {
+  return 0;
+}
+
+bool is_empty(Linked_Lst* addr) {
+  return addr == 0;
+}
+
+Linked_Lst* prepend_llist (Linked_Lst* addr, T v) {
+  Linked_Lst* ret = (Linked_Lst*) malloc (sizeof(Linked_Lst));
+  ret -> nxt = addr;
+  ret -> data = v;
+  return ret;
+}
+
+Linked_Lst* pop_llist (Linked_Lst* addr) {
+  if (addr == NULL) {
+    return addr;
+  }
+  Linked_Lst* ret = addr -> nxt;
+  free(addr);
+  return ret;
+}
+
+T nth_llist(Linked_Lst* addr, int i) {
   if (i = 0) {
     return addr -> data;
   } {
     return nth_llist (addr -> nxt, i-1);
   }
+}
+
+T hd_llist(Linked_Lst* addr) {
+  return nth_llist (addr, 0);
 }
 
 void update_nth_llist(Linked_Lst* addr, int i, T y) {

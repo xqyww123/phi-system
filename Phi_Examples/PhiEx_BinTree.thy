@@ -247,8 +247,7 @@ abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
          \<Longrightarrow> Abstract_Domain (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
-            (tactic: clarsimp, subgoal' for tree x h y \<open>
-              induct tree arbitrary: x\<close>)
+            (tactic: clarsimp, subgoal' for tree x h y \<open>induct tree arbitrary: x\<close>)
        and \<open> Identity_Elements\<^sub>E (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. addr = 0 \<and> l = Map.empty) \<close>
        and \<open> Identity_Elements\<^sub>I (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0) \<close>
        and \<open> Object_Equiv V eq
@@ -301,7 +300,7 @@ proc lookup_bintree:
   val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
   if (eq ($k', $k)) \<medium_left_bracket>
     val ret \<leftarrow> $addr \<tribullet> data \<tribullet> v ! \<semicolon>
-    \<open>MAKE 1 (BinTree addr _ _)\<close> \<semicolon>
+    \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
     return ($ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
@@ -321,11 +320,9 @@ proc (nodef) lookup_bst:
   input    \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>k \<in> dom f\<close>
   output   \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
-  is [recursive]
+  unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
-  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   lookup_bintree ($addr, $k)
-  \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Bin_Search_Tree addr _ _ _ _\<close>
 \<medium_right_bracket> .
 
 
@@ -367,11 +364,9 @@ proc defined_bintree:
 proc (nodef) defined_bst:
   input  \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   output \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<heavy_comma> k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
-  is [recursive]
+  unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
-  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   defined_bintree ($addr, $k)
-  \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Bin_Search_Tree addr _ _ _ _\<close>
 \<medium_right_bracket> .
 
 
@@ -400,7 +395,7 @@ proc insert_bintree:
       return ($ret)
   \<medium_right_bracket> \<medium_left_bracket>
       obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
-      to \<open>OPEN 1 _\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
       if (eq ($k', $k)) \<medium_left_bracket>
@@ -432,10 +427,9 @@ proc (nodef) insert_bst:
   output \<open>f(k \<mapsto> v) \<Ztypecolon> Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V\<heavy_comma>
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
-  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   insert_bintree ($addr, $k, $v)
-  \<m>\<a>\<k>\<e>\<s> \<open>f(k \<mapsto> v) \<Ztypecolon> Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 
@@ -668,10 +662,9 @@ proc (nodef) insert_avl:
   output \<open>f(k \<mapsto> v) \<Ztypecolon> AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V\<heavy_comma>
           addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  unfolding AVL_Tree.unfold
 \<medium_left_bracket>
-  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   insert_avl_i ($addr, $k, $v)
-  \<m>\<a>\<k>\<e>\<s>(1) \<open>f(k \<mapsto> v) \<Ztypecolon> AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 end

@@ -120,7 +120,7 @@ val apply_conv =
             Option.map (fn C => fn ctxt =>
                             Conv.arg_conv (Conv.abs_conv (fn (_,ctxt) => Conv.arg_conv (C ctxt)) ctxt) then_conv
                             sink_Ex_quantifier (K defined_Ex_direct) ctxt)
-                       (qchkB lv P)
+                       (qchkB (lv+1) P)
         | qchk lv (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, X)) =
             Option.map (fn C => fn ctxt =>
                                 Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv

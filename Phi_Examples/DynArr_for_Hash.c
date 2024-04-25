@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef int T;
+typedef struct KV_Entry T;
 
 struct DynArr {
   T *data;
@@ -25,7 +25,7 @@ size_t max (size_t x, size_t y) {
   if (x < y) return y; else return x;
 }
 
-void push_dynarr (struct DynArr *addr, T v)\
+void push_dynarr (struct DynArr *addr, T v)
 {
   size_t len = addr -> len;
   size_t cap = addr -> cap;
@@ -71,6 +71,7 @@ void del_dynarr(struct DynArr* addr) {
   free (addr);
 }
 
+
 void concat_dynarr (struct DynArr* addr1, struct DynArr* addr2)
 {
   int len = len_dynarr (addr2);
@@ -78,4 +79,3 @@ void concat_dynarr (struct DynArr* addr1, struct DynArr* addr2)
     push_dynarr (addr1, get_dynarr (addr2, i));
   }
 }
-

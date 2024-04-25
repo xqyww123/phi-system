@@ -1783,8 +1783,6 @@ subsection \<open>Option Abstraction of Unital Algebra\<close>
        and \<open>Transformation_Functor \<phi>Option \<phi>Option T U set_option (\<lambda>_. UNIV) rel_option \<close>
        and \<open>Functional_Transformation_Functor \<phi>Option \<phi>Option T U set_option (\<lambda>_. UNIV) (\<lambda>_. pred_option) (\<lambda>f _. map_option f)\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma [\<phi>reason %ToA_cut]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Some y \<Ztypecolon> \<half_blkcirc> U \<w>\<i>\<t>\<h> P \<close>

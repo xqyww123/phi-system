@@ -26,6 +26,31 @@ lemma RETURN_FRAME_unit:
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
   using op_break_\<phi>app[where S=Y] .
 
+(* TODO: suppress the Frame tailing in the above rules!!!!
+lemma RETURN_FRAME_normal:
+  \<open> RETURN_FRAME TYPE('rets) label Y
+\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret\<heavy_comma> TECHNICAL Brk_Frame label @action NToA
+\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> State \<longmapsto> 0 \<rbrace>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
+  for ret :: \<open>'rets::FIX_ARITY_VALs \<phi>arg\<close>
+\<medium_left_bracket> premises _ and Tr 
+  Tr
+  op_break_\<phi>app
+\<medium_right_bracket> .
+
+term \<open>Identity_Elements\<close>
+
+lemma RETURN_FRAME_unit:
+  \<open> RETURN_FRAME TYPE(unit) label Y
+\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y (\<phi>arg ())\<heavy_comma> TECHNICAL Brk_Frame label @action NToA
+\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> State \<longmapsto> 0 \<rbrace>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
+\<medium_left_bracket> premises _ and Tr
+  Tr
+  apply_rule op_break_\<phi>app[where S=Y]
+\<medium_right_bracket> .
+*)
+
 attribute_setup RETURN_FRAME = \<open>Scan.succeed (Thm.rule_attribute [] (fn ctxt => fn th =>
                     th RS (Thm.transfer'' ctxt @{thm' RETURN_FRAME_unit})
     handle THM _ => th RS (Thm.transfer'' ctxt @{thm' RETURN_FRAME_normal})) )\<close>
@@ -42,9 +67,10 @@ proc op_routine:
       and  \<open>\<r>Success\<close>
       and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
             return_\<phi>app\<^bold>: TECHNICAL(RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret Y)
-            \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs) \<lbrace> X (case_named id vs)\<heavy_comma> TECHNICAL Brk_Frame label_ret
-                                                \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret
-                                                  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<b>\<r>\<e>\<a>\<k> label_ret \<w>\<i>\<t>\<h> Y \<o>\<r> E e))\<close>
+            \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs)
+                   \<lbrace> X (case_named id vs)\<heavy_comma> TECHNICAL Brk_Frame label_ret
+                 \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret
+                   \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<b>\<r>\<e>\<a>\<k> label_ret \<w>\<i>\<t>\<h> Y \<o>\<r> E e))\<close>
   input  \<open>X vs\<close>
   output \<open>Y\<close>
   throws \<open>E\<close>

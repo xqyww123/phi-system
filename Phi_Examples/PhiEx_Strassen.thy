@@ -22,9 +22,7 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
 
 
 
-
-declare mat_to_list_def [\<phi>sledgehammer_simps] list_eq_iff_nth_eq [\<phi>sledgehammer_simps]   (*counted in Tac-4m,*)
-        list_all2_conv_all_nth[\<phi>sledgehammer_simps] zero_mat_def[\<phi>sledgehammer_simps]    (*as 2 proof lines*)
+lemmas [\<phi>sledgehammer_simps] = mat_to_list_def list_eq_iff_nth_eq list_all2_conv_all_nth zero_mat_def
 
 proc zero_mat:
   input    \<open>x \<Ztypecolon> MatSlice a i j m n\<heavy_comma>
@@ -34,7 +32,6 @@ proc zero_mat:
   output   \<open>0\<^sub>m m n \<Ztypecolon> MatSlice a i j m n\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-
   map_slice ($m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_slice ($n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
       $a \<tribullet> ($i + $k) \<tribullet> ($j + $h) := \<open>0 \<Ztypecolon> \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
@@ -50,10 +47,10 @@ proc new_mat:
   input    \<open>Void\<close>
   output   \<open>0\<^sub>m M N \<Ztypecolon> MatSlice a 0 0 M N\<heavy_comma>
             a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<m>\<a>\<t> M N
-            \<s>\<u>\<b>\<j> a. address_to_base a\<close> \<comment> \<open>TODO: why is there a syntax warning?\<close>
+            \<s>\<u>\<b>\<j> a. address_to_base a\<close>
+  unfolding MatSlice.unfold
 \<medium_left_bracket>
-  calloc_1 \<open>\<Aa>\<r>\<r>\<a>\<y>[M] \<Aa>\<r>\<r>\<a>\<y>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close> 
-  \<open>0\<^sub>m M N \<Ztypecolon> MAKE _ (MatSlice addr 0 0 M N)\<close>
+  calloc_1 \<open>\<Aa>\<r>\<r>\<a>\<y>[M] \<Aa>\<r>\<r>\<a>\<y>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
 \<medium_right_bracket> .
 
 
@@ -81,7 +78,6 @@ proc copy_mat:
   output   \<open>y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-
   map_2slice ($m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_2slice ($n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
       $a\<^sub>x \<tribullet> ($i\<^sub>x + $k) \<tribullet> ($j\<^sub>x + $h) := $a\<^sub>y \<tribullet> ($i\<^sub>y + $k) \<tribullet> ($j\<^sub>y + $h ) !
@@ -136,7 +132,7 @@ proc sub_mat:
 
 context
   notes [\<phi>sledgehammer_simps] = Let_def image_iff split_block_def four_block_mat_def mat_to_list_def
-                                list_eq_iff_nth_eq nth_append         (*counted as Tac-7m, 2 proof lines*)
+                                list_eq_iff_nth_eq nth_append
 begin
 
 lemma split_4mat:
@@ -189,20 +185,20 @@ proc strassen:
 \<medium_left_bracket>
   if ($n = 0)
   \<medium_left_bracket>
-    \<open>MatSlice a\<^sub>A _ _ _ _\<close> to \<open>OPEN _ _\<close>
-    \<open>MatSlice a\<^sub>B _ _ _ _\<close> to \<open>OPEN _ _\<close> \<semicolon>
+    \<open>MatSlice a\<^sub>A _ _ _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
+    \<open>MatSlice a\<^sub>B _ _ _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
 
     $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A := $a\<^sub>A \<tribullet> $i\<^sub>A \<tribullet> $j\<^sub>A ! * $a\<^sub>B \<tribullet> $i\<^sub>B \<tribullet> $j\<^sub>B ! \<semicolon>
       
-    holds_fact [\<phi>sledgehammer_simps]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof, Tac-s*)
-    note scalar_prod_def [\<phi>sledgehammer_simps] \<semicolon>                                       (*for proof, Tac-m*)
+    holds_fact [\<phi>sledgehammer_simps]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof obligation*)
+    note scalar_prod_def [\<phi>sledgehammer_simps] \<semicolon>                                       (*for proof obligation*)
 
-    \<open>A * B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n))\<close> \<semicolon>
-    \<open>B \<Ztypecolon> MAKE _ (MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n))\<close>
+    \<m>\<a>\<k>\<e>\<s> \<open>A * B \<Ztypecolon> MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n)\<close> \<semicolon>
+    \<m>\<a>\<k>\<e>\<s> \<open>B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<close>
   \<medium_right_bracket>
   \<medium_left_bracket>
-    holds_fact t0: \<open>(2::nat) ^ n = 2 ^ (n - 1) + 2 ^ (n - 1)\<close>                          (*for proof, Tac-s*)
-    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close> \<semicolon>                 (*for reasoning, A*)
+    holds_fact t0: \<open>(2::nat) ^ n = 2 ^ (n - 1) + 2 ^ (n - 1)\<close>                          (*for proof obligation*)
+    holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close> \<semicolon>                  (*an annotation for reasoning*)
         \<comment> \<open>Even when ML-aided ATP \<open>Sledgehammer\<close> is so powerful now, it cannot solve some simple
             high-school problems without the \<open>t0\<close> hint ...\<close>
 
@@ -211,7 +207,7 @@ proc strassen:
     \<open>MatSlice a\<^sub>C _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>1, M\<^sub>2, M\<^sub>3, M\<^sub>4 \<semicolon>
     \<open>MatSlice a\<^sub>D _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>5, M\<^sub>6, M\<^sub>7, M\<^sub>t \<semicolon>
 
-    holds_fact t2: \<open>n < addrspace_bits\<close> \<semicolon>                                              (*for proof, Tac-s*)
+    holds_fact t2: \<open>n < addrspace_bits\<close> \<semicolon>                                              (*for proof obligation*)
 
     1 << ($n-1) \<rightarrow> val N \<semicolon>
     $i\<^sub>A + $N \<rightarrow> val i\<^sub>A' \<semicolon>
@@ -286,16 +282,16 @@ proc strassen:
 
     (*Below, the proof is stolen from $AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 175-182, 227-239, lemma strassen_mat_mult*)
 
-    holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>                      (*for proof, Tac-s*)
-                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> \<semicolon>                   (*for proof, Tac-s*)
+    holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>                      (*for proof obligation*)
+                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> \<semicolon>                    (*for proof obligation*)
 
-    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>                (*for proof, each line is counted as one Tac-m*)
+    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>                (*for proof obligation*)
                     \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
                     \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
                     \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> \<semicolon>
 
     apply_rule merge_4mat[where a=a\<^sub>A and i=i\<^sub>A and s=\<open>?N\<close> and j=j\<^sub>A and t=\<open>?N\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
-      is \<open>A * B\<close> certified by (                                                    (*is \<open>A * B\<close> is an annotation, A*)
+      is \<open>A * B\<close> certified by (                                                    (*\<open>A * B\<close> is an annotation*)
          simp add: carriers split_A_B mult_four_block_mat[OF carriers],
          rule cong_four_block_mat,
          insert carriers,
@@ -313,7 +309,7 @@ proc strassen:
 
 
     apply_rule merge_4mat[where a=a\<^sub>B and i=i\<^sub>B and s=\<open>?N\<close> and j=j\<^sub>B and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
-            is B \<semicolon>                                                                (*is \<open>B\<close> is an annotation, A*)
+            is B \<semicolon>                                                                (*\<open>B\<close> is an annotation*)
 
     apply_rule merge_4mat[where a=a\<^sub>C and i=i\<^sub>C and s=\<open>?N\<close> and j=j\<^sub>C and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
     apply_rule merge_4mat[where a=a\<^sub>D and i=i\<^sub>D and s=\<open>?N\<close> and j=j\<^sub>D and t=\<open>2^(n-1)\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
