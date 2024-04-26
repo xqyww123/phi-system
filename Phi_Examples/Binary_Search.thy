@@ -3,19 +3,6 @@ theory Binary_Search
 begin
 
 
-
-
-ML \<open>fun report_utilization statistic_groups reasoner_groups =
-  let open Pretty
-      val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
-          (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
-        |> filter (fn (_, i) => i > 0)
-   in (length statistics, Integer.sum (map snd statistics))
-  end
-\<close>
-
-ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close>
-
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
@@ -74,10 +61,5 @@ proc generalized_binary_search:
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
-
-ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close> 
-ML \<open>Phi_Reasoner.utilization_of_groups_in_all_theories
-          (Context.Theory \<^theory>) (map (the o snd) [@{reasoner_group %all_derived_rules} ]) ["program"]
-|> filter (fn (_, i) => i > 0)\<close>
 
 end
