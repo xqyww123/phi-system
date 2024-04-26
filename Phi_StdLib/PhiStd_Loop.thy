@@ -4,8 +4,6 @@ theory PhiStd_Loop
           Phi_Semantics.PhiSem_Variable
 begin
 
-declare [[\<phi>LPR_collect_statistics program start]]
-
 proc (nodef) replicate:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @action NToA\<close>
@@ -93,8 +91,6 @@ proc (nodef) map_2list_loop:
             certified using ToA_Mapper_f_expn[OF map\<^sub>a[where i1=i]] by auto_sledgehammer
   \<medium_right_bracket> ;;
 \<medium_right_bracket> certified unfolding list_eq_iff_nth_eq by auto_sledgehammer  .
-
-declare [[\<phi>LPR_collect_statistics program stop]]
 
 
 end

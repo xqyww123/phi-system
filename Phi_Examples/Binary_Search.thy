@@ -3,11 +3,6 @@ theory Binary_Search
 begin
 
 
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = false]]
-
 proc binary_search_array:
   input  \<open>arr \<Ztypecolon> \<m>\<e>\<m>[ptr] \<Aa>\<r>\<r>\<a>\<y>[cap] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
           ptr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] \<i>\<n>\<t>\<heavy_comma> lower \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
@@ -32,7 +27,6 @@ proc binary_search_array:
     return ($u)
   \<medium_right_bracket>
 \<medium_right_bracket> .
-
 
 
 proc generalized_binary_search:

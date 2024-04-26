@@ -866,7 +866,8 @@ lemma op_div_int_fail[\<phi>synthesis %synthesis_arith for _
 subsubsection \<open>Modulo\<close>
 
 lemma op_umod_word_\<phi>app
-  [\<phi>synthesis %synthesis_arith for _
+  [\<phi>overload %,
+   \<phi>synthesis %synthesis_arith for _
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umod TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> Word('b) \<rbrace>\<close>
@@ -875,7 +876,8 @@ lemma op_umod_word_\<phi>app
       rule \<phi>M_assert, simp add: unat_gt_0, rule, simp add: unat_div)
 
 lemma op_mod_nat_\<phi>app
-  [\<phi>synthesis %synthesis_arith for _
+  [\<phi>overload %,
+   \<phi>synthesis %synthesis_arith for _
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umod TYPE('b) (\<phi>V_pair vy vx)
@@ -895,7 +897,8 @@ lemma op_smod_word_\<phi>app
       rule \<phi>M_assert, simp add: unat_gt_0, rule, simp add: unat_div)
 
 lemma op_mod_int_\<phi>app
-  [\<phi>synthesis %synthesis_arith for _
+  [\<phi>overload %,
+   \<phi>synthesis %synthesis_arith for _
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x smod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_smod TYPE('b) (\<phi>V_pair vy vx)

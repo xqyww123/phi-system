@@ -4,15 +4,10 @@ theory PhiEx_DynArr
           PhiStd.PhiStd_Slice
 begin
 
-\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
-
-declare [[collect_reasoner_statistics DynArr start,
-         \<phi>LPR_collect_statistics derivation start]]
-
 
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
-                                (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>
+                                (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>
                                 \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                      len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
                                                      take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr\<close>
@@ -25,26 +20,12 @@ declare [[collect_reasoner_statistics DynArr start,
        and Functional_Transformation_Functor
 
 
-declare [[collect_reasoner_statistics DynArr stop,
-         \<phi>LPR_collect_statistics derivation stop]]
+abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>), cap: \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)}\<close>
 
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
-
-
-abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
-
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = false]]
-
-(*
-ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close>
-*)
 
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
-  output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
   $addr \<tribullet> len !
@@ -60,7 +41,7 @@ context
 begin
 
 proc get_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
   unfolding DynArr.unfold
@@ -70,7 +51,7 @@ proc get_dynarr:
 
 
 proc set_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
   unfolding DynArr.unfold
@@ -79,8 +60,8 @@ proc set_dynarr:
 \<medium_right_bracket> .
 
 proc Max:
-  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
-  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
+  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
 \<medium_left_bracket>
   if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -119,7 +100,7 @@ proc concat_dynarr:
 \<medium_left_bracket>
   val len \<leftarrow> len_dynarr ($addr2) \<semicolon>
 
-  replicate (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>, $len) \<open>\<lambda>i. l1 @ take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
+  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, $len) \<open>\<lambda>i. l1 @ take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     push_dynarr ($addr1, get_dynarr ($addr2, $i))
   \<medium_right_bracket>
@@ -153,8 +134,8 @@ proc new_dynarr:
   input  \<open>Void\<close>
   output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>\<close> \<semicolon>
-  $ret \<tribullet> data := (calloc_N (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>) \<open>T\<close>) \<semicolon>
+  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<close> \<semicolon>
+  $ret \<tribullet> data := (calloc_N (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>) \<open>T\<close>) \<semicolon>
   \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close> \<semicolon>
   $ret
 \<medium_right_bracket> .
@@ -175,7 +156,7 @@ proc map_dynarr:
   output \<open>map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_eq_iff_nth_eq nth_append \<semicolon>
-  replicate (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>, len_dynarr ($addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
+  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr ($addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
      set_dynarr ($addr, $i, C (get_dynarr ($addr, $i)))
   \<medium_right_bracket> \<semicolon>
@@ -187,7 +168,7 @@ proc exists_dynarr:
   output \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P l \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> False \<semicolon>
-  replicate (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>, len_dynarr ($addr)) \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close>
+  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr ($addr)) \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close>
     \<medium_left_bracket> \<rightarrow> val i \<semicolon>
       $zz \<or> C (get_dynarr ($addr, $i)) \<rightarrow> $zz
     \<medium_right_bracket> \<semicolon>
@@ -202,7 +183,7 @@ proc fold_map_dynarr:
   output \<open>map f l \<Ztypecolon> DynArr addr TY T\<heavy_comma> fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> $z0 \<semicolon>
-  replicate (\<open>0 \<Ztypecolon> \<nat>(size_t)\<close>, len_dynarr ($addr))
+  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr ($addr))
             \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<heavy_comma> fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     C (get_dynarr ($addr, $i), $zz) \<rightarrow> val x', var zz ;;
@@ -213,34 +194,5 @@ proc fold_map_dynarr:
 \<medium_right_bracket> .
 
 end
-
-declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics = false,
-          recording_timing_of_semantic_operation = false,
-          \<phi>async_proof = true]]
-
-(*
-ML \<open>PLPR_Statistics.timing_of_semantic_operations () \<close>
-
-ML \<open>fun report_utilization statistic_groups reasoner_groups =
-  let open Pretty
-      val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
-          (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
-        |> filter (fn (_, i) => i > 0)
-   in (length statistics, Integer.sum (map snd statistics))
-  end
-\<close>
-
-ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
-
-
-ML \<open>report_utilization ["program"] [@{reasoner_group %Field}, @{reasoner_group %Array},
-        @{reasoner_group %\<phi>MapAt}, @{reasoner_group %\<phi>MapAt_L}, @{reasoner_group %\<phi>Some},
-        @{reasoner_group %Mem_Coercion}, @{reasoner_group %\<phi>Share},
-        @{reasoner_group %Resource_Space},
-        @{reasoner_group %Var}, @{reasoner_group %MemBlk},
-        @{reasoner_group %\<phi>Mul_Quant_Tree},
-        @{reasoner_group %DynArr} ] \<close>
-*)
 
 end

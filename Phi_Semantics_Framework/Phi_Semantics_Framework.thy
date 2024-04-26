@@ -333,7 +333,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
   considered or modelled by the trust base.
   For example, the formalization of the allocation instruction may assume the size of the object
   to be allocated is always less than the size of the address space (e.g., \<open>2\<^sup>3\<^sup>2\<close> bytes).
-  In another case users may assume the size of their objects is representable by \<open>size_t\<close>.
+  In another case users may assume the size of their objects is representable by \<open>\<s>\<i>\<z>\<e>_\<t>\<close>.
   \<open>Assumption_Violated\<close> enables an easy way for semantic assumptions, e.g., to assume \<open>P\<close>,
   \[ \<open>if P then do-something else return Assumption_Violated\<close> \]
   \<open>Assumption_Violated\<close> is admitted by any post-condition, i.e.,

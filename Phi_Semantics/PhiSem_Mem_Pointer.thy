@@ -71,14 +71,14 @@ consts addrspace_bits :: "nat" \<comment> \<open>bit width of address space, in 
 specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by blast
   \<comment> \<open>We leave it unspecified and only require it is positive\<close>
 
-typedecl size_t \<comment> \<open>size of address space\<close>
+typedecl \<s>\<i>\<z>\<e>_\<t> \<comment> \<open>size of address space\<close>
 
-instantiation size_t :: len begin
-definition [iff]: "len_of_size_t (_::size_t itself) = addrspace_bits"
+instantiation \<s>\<i>\<z>\<e>_\<t> :: len begin
+definition [iff]: "len_of_\<s>\<i>\<z>\<e>_\<t> (_::\<s>\<i>\<z>\<e>_\<t> itself) = addrspace_bits"
 instance apply standard using addrspace_bits_L0 by simp
 end
 
-abbreviation to_size_t :: \<open>nat \<Rightarrow> size_t word\<close> where \<open>to_size_t \<equiv> of_nat\<close>
+abbreviation to_size_t :: \<open>nat \<Rightarrow> \<s>\<i>\<z>\<e>_\<t> word\<close> where \<open>to_size_t \<equiv> of_nat\<close>
 
 lemma unat_to_size_t[simp]:
   \<open>n < 2 ^ addrspace_bits \<Longrightarrow> unat (to_size_t n) = n\<close>
@@ -87,7 +87,7 @@ lemma unat_to_size_t[simp]:
 paragraph \<open>Logical and Physical Addresses\<close>
 
 type_synonym logaddr = "aggregate_path memaddr"
-type_synonym rawaddr = \<open>size_t word memaddr\<close> \<comment> \<open>physical pointer having physical offset\<close>
+type_synonym rawaddr = \<open>\<s>\<i>\<z>\<e>_\<t> word memaddr\<close> \<comment> \<open>physical pointer having physical offset\<close>
 
 
 subsubsection \<open>Algebraic Properties\<close>

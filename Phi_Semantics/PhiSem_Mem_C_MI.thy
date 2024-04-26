@@ -11,19 +11,19 @@ lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
   unfolding phantom_mem_semantic_type_def
   using MemObj_Size_int by clarsimp
 
-
+abbreviation \<open>\<s>\<i>\<z>\<e>_\<t> \<equiv> \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)\<close>
 
 
 proc calloc_N:
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
-  input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>(size_t)\<close>
+  input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
   output \<open>replicate n z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr (\<a>\<r>\<r>\<a>\<y>[n] TY) \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] ;;
 
-  semantic_local_value($n) \<open>\<i>\<n>\<t>(size_t)\<close>
+  semantic_local_value($n) \<open>\<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<a>\<r>\<r>\<a>\<y>[snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
                                                and v=\<open>V_array.mk (replicate (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]

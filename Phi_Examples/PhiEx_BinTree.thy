@@ -176,14 +176,6 @@ abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<
 abbreviation \<open>\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
 abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
-\<phi>reasoner_group BinTree = (100,[0,9999]) \<open>derived reasoning rules of BinTree\<close>
-            and Bin_Search_Tree = (100,[0,9999]) \<open>derived reasoning rules of Bin_Search_Tree\<close>
-            and AVL_Tree = (100,[0,9999]) \<open>derived reasoning rules of AVL_Tree\<close>
-
-declare [[collect_reasoner_statistics BinTree start,
-         \<phi>LPR_collect_statistics derivation start]]
-
-
 \<phi>type_def BinTree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
   where \<open> (Leaf \<Ztypecolon> BinTree addr TY T)     = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
       | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BinTree addr TY T) =
@@ -200,14 +192,6 @@ declare [[collect_reasoner_statistics BinTree start,
          \<Longrightarrow> Transformation_Functor (BinTree addr TY) (BinTree addr' TY') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
            (arbitrary: addr')
        and Functional_Transformation_Functor
-
-declare [[collect_reasoner_statistics BinTree stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %BinTree})) "derivation"\<close>
-
-declare [[collect_reasoner_statistics Bin_Search_Tree start,
-         \<phi>LPR_collect_statistics derivation start]]
 
 
 \<phi>type_def Bin_Search_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
@@ -231,12 +215,6 @@ declare [[collect_reasoner_statistics Bin_Search_Tree start,
        and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
-declare [[collect_reasoner_statistics Bin_Search_Tree stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Bin_Search_Tree})) "derivation"\<close>
-
-
 
 primrec AVL_invar
   where \<open>AVL_invar \<langle>\<rangle> \<longleftrightarrow> True\<close>
@@ -256,9 +234,6 @@ lemma rel_tree__AVL_tree_invar:
 
 abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
 abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
-
-declare [[collect_reasoner_statistics AVL_Tree start,
-         \<phi>LPR_collect_statistics derivation start]]
 
 
 \<phi>type_def AVL_Tree :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
@@ -282,23 +257,12 @@ declare [[collect_reasoner_statistics AVL_Tree start,
                                                (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
-declare [[collect_reasoner_statistics AVL_Tree stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %AVL_Tree})) "derivation"\<close>
-
-
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
   \<comment> \<open>For some reason I don't know, Sledgehammer fails silently (with throwing an Interrupt exception)
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.
       Anyway, it is an engineering problem due to some bug in our system or Sledgehammer, so we don't
       count this line into our statistics in the paper.\<close>
-
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = false]]
 
 
 context
@@ -700,11 +664,5 @@ proc (nodef) insert_avl:
 \<medium_right_bracket> .
 
 end
-
-declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics=false,
-          recording_timing_of_semantic_operation = false,
-          \<phi>async_proof = true]]
-
 
 end

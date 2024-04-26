@@ -5,12 +5,6 @@ theory Dyn_Arr_arbi
           Phi_Semantics.PhiSem_Int_ArbiPrec
 begin
 
-\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
-
-declare [[collect_reasoner_statistics DynArr start,
-         \<phi>LPR_collect_statistics derivation start]]
-
-
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
                                 (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>, cap: \<nat> \<rbrace>
@@ -25,19 +19,8 @@ declare [[collect_reasoner_statistics DynArr start,
          \<Longrightarrow> Transformation_Functor (DynArr addr TY) (DynArr addr' TY') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
        and Functional_Transformation_Functor
 
-
-declare [[collect_reasoner_statistics DynArr stop,
-         \<phi>LPR_collect_statistics derivation stop]]
-
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
-
-
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<a>\<i>\<n>\<t>, cap: \<a>\<i>\<n>\<t>}\<close>
 
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = false]]
 
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
@@ -122,9 +105,6 @@ proc concat_dynarr:
     push_dynarr ($addr1, get_dynarr ($addr2, $i))
   \<medium_right_bracket>
 \<medium_right_bracket> .
-
-
-
 
 
 proc pop_dynarr:
@@ -216,11 +196,5 @@ proc fold_map_dynarr:
 \<medium_right_bracket> .
 
 end
-
-
-declare [[\<phi>LPR_collect_statistics program stop,
-          collecting_subgoal_statistics = false,
-          recording_timing_of_semantic_operation = false,
-          \<phi>async_proof = true]]
 
 end

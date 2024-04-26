@@ -152,6 +152,8 @@ subsection \<open>Helper Lemmas\<close>
 
 (*TODO: IMPROVE ME!*)
 
+(*declare Suc_le_eq[simp]*)
+
 lemma [simp]: \<open>{ia. ia < Suc i } - {i} = {ia. ia < i}\<close> for i :: nat
   by fastforce
   
