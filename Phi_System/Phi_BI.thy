@@ -2842,8 +2842,18 @@ subsection \<open>Injection into Unital Algebra\<close>
 
 \<phi>reasoner_group \<phi>Some = (100,[0,9999]) \<open>derived reasoning rules of \<phi>Some\<close>
 
+declare [[collect_reasoner_statistics \<phi>Some start,
+          \<phi>LPR_collect_statistics derivation start]]
+
+
 definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
   where \<open>\<black_circle> T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+
+declare [[collect_reasoner_statistics \<phi>Some stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Some})) "derivation"\<close>
+
 
 lemma \<phi>Some_expn[simp, \<phi>expns]:
   \<open>p \<Turnstile> (x \<Ztypecolon> \<black_circle> T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))\<close>

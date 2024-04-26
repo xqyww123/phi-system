@@ -4,6 +4,12 @@ theory PhiEx_DynArr
           PhiStd.PhiStd_Slice
 begin
 
+\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
+
+declare [[collect_reasoner_statistics DynArr start,
+         \<phi>LPR_collect_statistics derivation start]]
+
+
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
                                 (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(size_t), cap: \<nat>(size_t) \<rbrace>
@@ -19,8 +25,22 @@ begin
        and Functional_Transformation_Functor
 
 
+declare [[collect_reasoner_statistics DynArr stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
+
+
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<i>\<n>\<t>(size_t), cap: \<i>\<n>\<t>(size_t)}\<close>
 
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
+
+(*
+ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close>
+*)
 
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
@@ -193,5 +213,34 @@ proc fold_map_dynarr:
 \<medium_right_bracket> .
 
 end
+
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics = false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
+
+(*
+ML \<open>PLPR_Statistics.timing_of_semantic_operations () \<close>
+
+ML \<open>fun report_utilization statistic_groups reasoner_groups =
+  let open Pretty
+      val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
+          (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
+        |> filter (fn (_, i) => i > 0)
+   in (length statistics, Integer.sum (map snd statistics))
+  end
+\<close>
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
+
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %Field}, @{reasoner_group %Array},
+        @{reasoner_group %\<phi>MapAt}, @{reasoner_group %\<phi>MapAt_L}, @{reasoner_group %\<phi>Some},
+        @{reasoner_group %Mem_Coercion}, @{reasoner_group %\<phi>Share},
+        @{reasoner_group %Resource_Space},
+        @{reasoner_group %Var}, @{reasoner_group %MemBlk},
+        @{reasoner_group %\<phi>Mul_Quant_Tree},
+        @{reasoner_group %DynArr} ] \<close>
+*)
 
 end

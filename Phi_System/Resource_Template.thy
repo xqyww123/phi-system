@@ -98,10 +98,20 @@ begin
 
 subsubsection \<open>\<phi>-Type\<close>
 
+declare [[collect_reasoner_statistics Resource_Space start,
+          \<phi>LPR_collect_statistics derivation start]]
+
+
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
   deriving Sep_Functor_1
        and \<open>Gen_Br_Join \<phi> \<phi> \<phi> P True\<close>
+
+declare [[collect_reasoner_statistics Resource_Space stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Resource_Space})) "derivation"\<close>
+
 
 lemma \<phi>_unit: \<comment> \<open>this lemma is not used for SL reasoning, but building of fictional disjointness\<close>
   \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>

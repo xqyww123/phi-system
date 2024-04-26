@@ -10,6 +10,11 @@ begin
 
 abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<i>\<n>\<t>\<close>
 
+\<phi>reasoner_group MatSlice = (100,[0,9999]) \<open>derived reasoning rules of MatSlice\<close>
+
+declare [[collect_reasoner_statistics MatSlice start,
+         \<phi>LPR_collect_statistics derivation start]]
+
 
 \<phi>type_def MatSlice :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
@@ -20,6 +25,14 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
        and Basic
 
 
+declare [[collect_reasoner_statistics MatSlice stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
 
 
 lemmas [\<phi>sledgehammer_simps] = mat_to_list_def list_eq_iff_nth_eq list_all2_conv_all_nth zero_mat_def
@@ -153,6 +166,7 @@ lemma merge_4mat:
   \<medium_left_bracket> \<medium_right_bracket> certified by (clarsimp simp: \<phi>sledgehammer_simps \<phi>[unfolded carrier_mat_def, simplified]; auto_sledgehammer) .
 
 end
+
 
 
 context
@@ -337,5 +351,10 @@ proc strassen_mul:
   del_mat ($D)
 \<medium_right_bracket> .
 
+
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 end

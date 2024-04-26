@@ -66,6 +66,11 @@ lemma list_all_replicate[simp]:
 
 section \<open>\<phi>Type\<close>
 
+\<phi>reasoner_group Array = (100,[0,9999]) \<open>derived reasoning rules of Array\<close>
+
+declare [[collect_reasoner_statistics Array start,
+          \<phi>LPR_collect_statistics derivation start]]
+
 
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
                     ("\<Aa>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
@@ -86,6 +91,11 @@ section \<open>\<phi>Type\<close>
        and \<open>\<forall>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
        and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
+
+declare [[collect_reasoner_statistics Array stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Array})) "derivation"\<close>
 
 
 lemma Separation_Homo\<^sub>I_Array[\<phi>reason add]:

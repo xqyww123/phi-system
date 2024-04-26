@@ -1,5 +1,5 @@
 theory Bucket_Hash2
-  imports PhiEx_Linked_Lst PhiEx_Rational Dyn_Arr_arbi
+  imports PhiEx_Rational Dyn_Arr_arbi
           "HOL-Data_Structures.AList_Upd_Del"
 begin
 
@@ -12,6 +12,11 @@ abbreviation \<open>\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY \<equiv> \<s>\<t>\<r>\<u>\<
 abbreviation \<open>hash (x::nat) n \<equiv> x mod n\<close>
 
 abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {tabl: \<p>\<t>\<r>, N: \<a>\<i>\<n>\<t>} \<close>
+
+\<phi>reasoner_group Hash = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
+
+declare [[collect_reasoner_statistics Hash start,
+         \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def Hash :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, nat \<rightharpoonup> 'x) \<phi>\<close>
   where \<open>f \<Ztypecolon> Hash addr TY T \<equiv> 
@@ -54,6 +59,16 @@ deriving \<open> Abstract_Domain T P
   and \<open>Functional_Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
             (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
 
+declare [[collect_reasoner_statistics Hash stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Hash})) "derivation"\<close>
+
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
 
 
 proc calc_hash:
@@ -291,6 +306,11 @@ proc rehash:
 
 end
 
+
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 
 end

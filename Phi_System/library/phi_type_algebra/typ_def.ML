@@ -594,6 +594,7 @@ fun err_derive ctxt prop_name msg hints = let open Pretty in
       end
 
 fun derive_properties (dervs:derivings, bundles) phityp thy = thy
+  |> Phi_Reasoner.start_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules}))
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
   |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn thy'goal =>
@@ -605,6 +606,7 @@ fun derive_properties (dervs:derivings, bundles) phityp thy = thy
       end
      ) dervs
   |> Context_Position.restore_visible_generic thy
+  |> Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules}))
 
 (* Derived Properties *)
 
@@ -1331,6 +1333,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
             is_impredicative = false
           } : phi_type
    in thy
+   |> Phi_Reasoner.start_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules}))
    |> Context.mapping
         (Context.theory_map (Phi_Types.map (
               Net.insert_term (phi_typ_term_equiv (Context.theory_of thy))
@@ -1387,7 +1390,8 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
        |> derive_properties (dervs, bundles) phi'
        |> Context_Position.restore_visible_generic thy
       end
- ) |> pair phi_type
+ ) |> Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules}))
+   |> pair phi_type
   end
 
 fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =

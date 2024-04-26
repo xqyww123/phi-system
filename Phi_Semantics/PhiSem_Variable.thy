@@ -44,11 +44,17 @@ hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields
 
 subsubsection \<open>Fiction\<close>
 
+declare [[collect_reasoner_statistics Resource_Space start,
+          \<phi>LPR_collect_statistics derivation start]]
+
+
 fiction_space \<phi>var =
   Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
             (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
   by (standard; simp add: set_eq_iff)
 
+declare [[collect_reasoner_statistics Resource_Space stop,
+          \<phi>LPR_collect_statistics derivation stop]]
 
 
 section \<open>\<phi>-Types\<close>

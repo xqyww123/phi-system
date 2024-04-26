@@ -4,7 +4,12 @@ theory Dyn_Arr_arbi
           PhiStd.PhiStd_Slice_a
           Phi_Semantics.PhiSem_Int_ArbiPrec
 begin
- 
+
+\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
+
+declare [[collect_reasoner_statistics DynArr start,
+         \<phi>LPR_collect_statistics derivation start]]
+
 
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
@@ -21,8 +26,18 @@ begin
        and Functional_Transformation_Functor
 
 
+declare [[collect_reasoner_statistics DynArr stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
+
+
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: pointer, len: \<a>\<i>\<n>\<t>, cap: \<a>\<i>\<n>\<t>}\<close>
 
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
 
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
@@ -202,5 +217,10 @@ proc fold_map_dynarr:
 
 end
 
+
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics = false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 end

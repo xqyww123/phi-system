@@ -4,6 +4,13 @@ theory PhiEx_Slice
           PhiStd.PhiStd_Loop
 begin
 
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
+
+
 proc qsort:
   input  \<open>l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
           i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
@@ -52,6 +59,12 @@ proc qsort:
 
 thm qsort_def   \<comment> \<open>semantic representation of \<open>qsort\<close>\<close>
 thm qsort_\<phi>app \<comment> \<open>specification theorem\<close>
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = true,
+          \<phi>async_proof = true]]
+
 
 
 end
