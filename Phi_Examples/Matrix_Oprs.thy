@@ -1,4 +1,4 @@
-theory PhiEx_Strassen
+theory Matrix_Oprs
   imports Phi_Semantics.PhiSem_C
           Jordan_Normal_Form.Matrix
           PhiStd.PhiStd_Slice

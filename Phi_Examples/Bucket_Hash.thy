@@ -1,11 +1,12 @@
 theory Bucket_Hash
-  imports PhiEx_Rational Dyn_Arr_arbi Phi_Semantics.PhiSem_Mem_C_MI
+  imports Rational_Arith Dynamic_Array_arbi_len Phi_Semantics.PhiSem_Mem_C_MI
           PhiStd.PhiStd_Slice
           "HOL-Data_Structures.AList_Upd_Del"
 begin
 
 text \<open>We ignore arithmetic overflow in the length of a dynamic array,
-      because otherwise the hash table cannot be specified in the expected way\<close>
+      because otherwise the hash table cannot be specified in the expected way.
+      However, we still consider arithmetic overflow in any other cases.\<close>
 
 declare Suc_le_eq[simp]
 
@@ -256,9 +257,9 @@ proc entries_of_hash:
   val dynarr \<leftarrow> apply_rule new_dynarr[where T=\<open>\<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>] \<semicolon>
   val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
   val tabl \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
-  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, $N)
-              \<open>\<lambda>i. l \<Ztypecolon> DynArr addra (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>
-                   \<s>\<u>\<b>\<j> l. set l = (\<Union>k<i. set (buckets k))\<close>
+  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, $N)
+            \<open>\<lambda>i. l \<Ztypecolon> DynArr addra (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>
+                 \<s>\<u>\<b>\<j> l. set l = (\<Union>k<i. set (buckets k))\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     concat_dynarr ($dynarr, $tabl \<tribullet> $i !) \<semicolon>
   \<medium_right_bracket> \<semicolon>

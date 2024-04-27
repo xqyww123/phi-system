@@ -1,4 +1,4 @@
-theory PhiEx_Linked_Lst
+theory Linked_List
   imports Phi_Semantics.PhiSem_C
 begin
 

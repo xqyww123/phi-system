@@ -1,10 +1,10 @@
 theory PhiEx_All
-  imports PhiEx_DynArr
-          PhiEx_Linked_Lst
-          PhiEx_Slice
-          PhiEx_Rational
-          PhiEx_BinTree
-          PhiEx_Strassen
+  imports Dynamic_Array
+          Linked_List
+          Quicksort
+          Rational_Arith
+          Binary_Trees
+          Matrix_Oprs
           Binary_Search
           Bucket_Hash
 begin

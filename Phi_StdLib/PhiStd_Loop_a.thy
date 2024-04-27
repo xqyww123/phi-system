@@ -4,8 +4,6 @@ theory PhiStd_Loop_a \<comment> \<open>suffix a stands for \<open>arbitrary prec
           Phi_Semantics.PhiSem_Variable
 begin
 
-declare [[\<phi>LPR_collect_statistics program start]]
-
 proc (nodef) replicate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @action NToA\<close>
@@ -21,13 +19,11 @@ proc (nodef) replicate_a:
          \<s>\<u>\<b>\<j> i. Inv: (s \<le> i \<and> i \<le> t) \<and> Guard: (i < t)\<close>
   \<medium_left_bracket> $i < $t \<medium_right_bracket>
   \<medium_left_bracket>
-    ITER ($i) ;;
+    ITER ($i) \<semicolon>
     $i \<leftarrow> $i + 1
-  \<medium_right_bracket> ;;
+  \<medium_right_bracket> \<semicolon>
   have[simp]: \<open>i = t\<close> by auto_sledgehammer \<comment> \<open>TODO: optimize this annotation\<close> ;;
 \<medium_right_bracket> .
-
-
 
 
 
@@ -60,9 +56,8 @@ proc (nodef) map_list_loop_a:
       apply_rule ToA_Mapper_backward[OF map[where i1=i]]
               is \<open>list_upd_map i (f i) l'\<close> certified using ToA_Mapper_f_expn[OF map[where i1=i]] by auto_sledgehammer ;;
       $i \<leftarrow> $i + 1
-    \<medium_right_bracket> ;;
+    \<medium_right_bracket> \<semicolon>
 \<medium_right_bracket> .
-
 
 
 
@@ -108,13 +103,8 @@ proc (nodef) map_2list_loop_a:
     body
     apply_rule ToA_Mapper_backward[OF map\<^sub>b[where i1=i]] is l\<^sub>b
             certified using ToA_Mapper_f_expn[OF map\<^sub>a[where i1=i]] by auto_sledgehammer
-  \<medium_right_bracket> ;;
+  \<medium_right_bracket> \<semicolon>
 \<medium_right_bracket> certified unfolding list_eq_iff_nth_eq by auto_sledgehammer  .
-
-
-
-declare [[\<phi>LPR_collect_statistics program stop]]
-
 
 
 

@@ -89,7 +89,7 @@ proc (nodef) map_2list_loop:
     body
     apply_rule ToA_Mapper_backward[OF map\<^sub>b[where i1=i]] is l\<^sub>b
             certified using ToA_Mapper_f_expn[OF map\<^sub>a[where i1=i]] by auto_sledgehammer
-  \<medium_right_bracket> ;;
+  \<medium_right_bracket> \<semicolon>
 \<medium_right_bracket> certified unfolding list_eq_iff_nth_eq by auto_sledgehammer  .
 
 

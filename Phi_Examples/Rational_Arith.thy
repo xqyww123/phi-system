@@ -1,4 +1,4 @@
-theory PhiEx_Rational
+theory Rational_Arith
   imports Phi_Semantics.PhiSem_C
           Phi_Semantics.PhiSem_Int_ArbiPrec
 begin

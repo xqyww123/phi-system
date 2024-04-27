@@ -1,14 +1,8 @@
-theory PhiEx_Slice
+theory Quicksort
   imports Phi_Semantics.PhiSem_C
           "HOL-Combinatorics.List_Permutation"
           PhiStd.PhiStd_Loop
 begin
-
-
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics,
-          recording_timing_of_semantic_operation,
-          \<phi>async_proof = false]]
 
 
 proc qsort:
@@ -59,12 +53,6 @@ proc qsort:
 
 thm qsort_def   \<comment> \<open>semantic representation of \<open>qsort\<close>\<close>
 thm qsort_\<phi>app \<comment> \<open>specification theorem\<close>
-
-declare [[\<phi>LPR_collect_statistics program start,
-          collecting_subgoal_statistics=false,
-          recording_timing_of_semantic_operation = true,
-          \<phi>async_proof = true]]
-
 
 
 end

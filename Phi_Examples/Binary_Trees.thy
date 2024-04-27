@@ -1,4 +1,4 @@
-theory PhiEx_BinTree
+theory Binary_Trees
   imports Phi_Semantics.PhiSem_C
           "HOL-Data_Structures.Tree_Map"
           Phi_Semantics.PhiSem_Int_ArbiPrec
@@ -664,5 +664,7 @@ proc (nodef) insert_avl:
 \<medium_right_bracket> .
 
 end
+
+
 
 end
