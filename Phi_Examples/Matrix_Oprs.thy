@@ -125,8 +125,6 @@ proc sub_mat:
 \<medium_right_bracket> .
 
 
-declare [[ML_print_depth = 100]]
-
 context
   notes [\<phi>sledgehammer_simps] = Let_def image_iff split_block_def four_block_mat_def mat_to_list_def
                                 list_eq_iff_nth_eq nth_append Bex_def in_set_conv_nth image_iff
@@ -335,5 +333,27 @@ proc strassen_mul:
   del_mat ($D)
 \<medium_right_bracket> .
 
+
+text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
+
+thm zero_mat_\<phi>app
+thm new_mat_\<phi>app
+thm del_mat_\<phi>app
+thm copy_mat_\<phi>app
+thm add_mat_\<phi>app
+thm sub_mat_\<phi>app
+thm strassen_\<phi>app
+thm strassen_mul_\<phi>app
+
+text \<open>Semantic Representations of the Programs: \<close>
+
+thm zero_mat_def
+thm new_mat_def
+thm del_mat_def
+thm copy_mat_def
+thm add_mat_def
+thm sub_mat_def
+thm strassen_def
+thm strassen_mul_def
 
 end

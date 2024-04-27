@@ -663,8 +663,31 @@ proc (nodef) insert_avl:
   insert_avl_i ($addr, $k, $v)
 \<medium_right_bracket> .
 
+
+text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
+
+thm lookup_bintree_\<phi>app
+thm lookup_bst_\<phi>app
+thm defined_bintree_\<phi>app
+thm defined_bst_\<phi>app
+thm insert_bintree_\<phi>app
+thm insert_bst_\<phi>app
+thm insert_bintree_\<phi>app
+thm height_of_\<phi>app
+thm maintain_i_\<phi>app
+thm insert_avl_i_\<phi>app
+thm insert_avl_\<phi>app
+
+text \<open>Semantic Representations of the Programs: \<close>
+
+thm lookup_bintree_def
+thm defined_bintree_def
+thm insert_bintree_def
+thm insert_bintree_def
+thm height_of_def
+thm maintain_i_def
+thm insert_avl_i_def
+
 end
-
-
 
 end

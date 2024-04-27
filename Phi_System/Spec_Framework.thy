@@ -996,6 +996,12 @@ definition \<phi>Procedure :: "'ret proc
 abbreviation \<phi>Procedure_no_exception ("\<p>\<r>\<o>\<c> (2_)/ \<lbrace> (2_) \<longmapsto>/ (2_) \<rbrace>/ " [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
 
+notation \<phi>Procedure_no_exception
+         ("\<p>\<r>\<o>\<c> (2_)/ \<i>\<n>\<p>\<u>\<t> (2_)/ \<o>\<u>\<t>\<p>\<u>\<t> (2_)" [101,2,2] 100)
+
+notation \<phi>Procedure
+         ("\<p>\<r>\<o>\<c> (2_)/ \<i>\<n>\<p>\<u>\<t> (2_)/ \<o>\<u>\<t>\<p>\<u>\<t> (2_)/ \<t>\<h>\<r>\<o>\<w>\<s> (100_)/ " [101,2,2,100] 100)
+
 lemma \<phi>Procedure_alt:
   \<open>\<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> U \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_SPEC ({r} * T) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC ({r} * U v)) (\<lambda>v. INTERP_SPEC ({r} * E v)))\<close>

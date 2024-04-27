@@ -55,5 +55,14 @@ proc generalized_binary_search:
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
+text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
+
+thm binary_search_array_\<phi>app
+thm generalized_binary_search_\<phi>app
+
+text \<open>Semantic Representations of the Programs: \<close>
+
+thm binary_search_array_def
+thm generalized_binary_search_def
 
 end

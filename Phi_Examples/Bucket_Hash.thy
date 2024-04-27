@@ -292,7 +292,34 @@ proc rehash:
 \<medium_right_bracket> .
 
 
-end
+text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 
+thm calc_hash_\<phi>app
+thm insert_bucket_\<phi>app
+thm update_hash_\<phi>app
+thm bucket_has_key_\<phi>app
+thm hash_has_key_\<phi>app
+thm lookup_bucket_\<phi>app
+thm hash_lookup_\<phi>app
+thm new_hash_\<phi>app
+thm del_hash_\<phi>app
+thm entries_of_hash_\<phi>app
+thm rehash_\<phi>app
+
+text \<open>Semantic Representations of the Programs: \<close>
+
+thm calc_hash_def
+thm insert_bucket_def
+thm update_hash_def
+thm bucket_has_key_def
+thm hash_has_key_def
+thm lookup_bucket_def
+thm hash_lookup_def
+thm new_hash_def
+thm del_hash_def
+thm entries_of_hash_def
+thm rehash_def
+
+end
 
 end

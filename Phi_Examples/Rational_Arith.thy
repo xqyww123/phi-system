@@ -59,4 +59,18 @@ proc rat_div:
   \<m>\<a>\<k>\<e>\<s> \<open>\<rat>\<close>
 \<medium_right_bracket> .
 
+text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
+
+thm rat_add_\<phi>app
+thm rat_sub_\<phi>app
+thm rat_mul_\<phi>app
+thm rat_div_\<phi>app
+
+text \<open>Semantic Representations of the Programs: \<close>
+
+thm rat_add_def
+thm rat_sub_def
+thm rat_mul_def
+thm rat_div_def
+
 end

@@ -10,3 +10,4 @@ session "Phi_Examples" = "PhiStd" +
     Quicksort
     Matrix_Oprs
     Bucket_Hash
+    Dynamic_Array

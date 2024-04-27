@@ -196,8 +196,35 @@ proc fold_map_dynarr:
   $zz
 \<medium_right_bracket> .
 
+text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
+
+thm len_dynarr_\<phi>app
+thm get_dynarr_\<phi>app
+thm set_dynarr_\<phi>app
+thm push_dynarr_\<phi>app
+thm concat_dynarr_\<phi>app
+thm pop_dynarr_\<phi>app
+thm new_dynarr_\<phi>app
+thm del_dynarr_\<phi>app
+thm map_dynarr_\<phi>app
+thm exists_dynarr_\<phi>app
+thm fold_map_dynarr_\<phi>app
+
+text \<open>Semantic Representations of the Programs: \<close>
+
+thm len_dynarr_def
+thm get_dynarr_def
+thm set_dynarr_def
+thm push_dynarr_def
+thm concat_dynarr_def
+thm pop_dynarr_def
+thm new_dynarr_def
+thm del_dynarr_def
+thm map_dynarr_def
+thm exists_dynarr_def
+thm fold_map_dynarr_def
+
+
 end
-
-
 
 end

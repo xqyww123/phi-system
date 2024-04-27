@@ -51,8 +51,13 @@ proc qsort:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
-thm qsort_def   \<comment> \<open>semantic representation of \<open>qsort\<close>\<close>
-thm qsort_\<phi>app \<comment> \<open>specification theorem\<close>
 
+text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
+
+thm qsort_\<phi>app
+
+text \<open>Semantic Representations of the Programs: \<close>
+
+thm qsort_def
 
 end
