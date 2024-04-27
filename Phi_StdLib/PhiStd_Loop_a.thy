@@ -4,6 +4,9 @@ theory PhiStd_Loop_a \<comment> \<open>suffix a stands for \<open>arbitrary prec
           Phi_Semantics.PhiSem_Variable
 begin
 
+text \<open>Predefined abstractions of Loop statemetns, counted as a part of loop invariants in our statistics\<close>
+
+
 proc (nodef) replicate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @action NToA\<close>

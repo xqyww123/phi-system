@@ -125,9 +125,11 @@ proc sub_mat:
 \<medium_right_bracket> .
 
 
+declare [[ML_print_depth = 100]]
+
 context
   notes [\<phi>sledgehammer_simps] = Let_def image_iff split_block_def four_block_mat_def mat_to_list_def
-                                list_eq_iff_nth_eq nth_append
+                                list_eq_iff_nth_eq nth_append Bex_def in_set_conv_nth image_iff
 begin
 
 lemma split_4mat:
@@ -137,7 +139,7 @@ lemma split_4mat:
                                     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
                                     \<s>\<u>\<b>\<j> x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2. (x\<^sub>1\<^sub>1, x\<^sub>1\<^sub>2, x\<^sub>2\<^sub>1, x\<^sub>2\<^sub>2) = split_block x s t\<close>
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
-  \<medium_left_bracket> \<medium_right_bracket> certified by (auto_sledgehammer) .
+  \<medium_left_bracket> \<medium_right_bracket> certified by (auto simp: Bex_def in_set_conv_nth image_iff; auto_sledgehammer) .
 
 lemma merge_4mat:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n
@@ -145,7 +147,7 @@ lemma merge_4mat:
     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> four_block_mat x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a i j m n \<close>
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
-  \<medium_left_bracket> \<medium_right_bracket> certified by (clarsimp simp: \<phi>sledgehammer_simps \<phi>[unfolded carrier_mat_def, simplified]; auto_sledgehammer) .
+  \<medium_left_bracket> \<medium_right_bracket> certified by (auto simp: \<phi>sledgehammer_simps \<phi>[unfolded carrier_mat_def, simplified]) .
 
 end
 

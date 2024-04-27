@@ -74,9 +74,10 @@ proc test_prime':
     certified proof simp
         have \<open>False\<close> if assm: \<open>\<not> prime x\<close>
           proof -
-            obtain k where \<open>k dvd x \<and> 1 < k \<and> k < x\<close> by auto_sledgehammer
+            obtain k where t1: \<open>k dvd x \<and> 1 < k \<and> k < x\<close> by auto_sledgehammer
             then have \<open>k < i \<or> x div k < i\<close> by auto_sledgehammer
-            then show False by auto_sledgehammer
+            then show False using t1
+              by (metis One_nat_def dvd_mult_div_cancel dvd_triv_right greaterThanLessThan_iff nat_mult_1_right nat_mult_less_cancel_disj the_\<phi>lemmata(3))
           qed
         then show \<open>prime x\<close>
           by auto_sledgehammer
