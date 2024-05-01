@@ -567,7 +567,7 @@ ML_file \<open>library/generic_element_access.ML\<close>
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>]\<close> -- Scan.option (Parse.position \<^keyword>\<open>:=\<close>)
 >> (fn ((_, pos), assign) => fn cfg => (
     if Phi_Opr_Stack.inside_calling_stack "[" (#1 opr_ctxt) then ()
-    else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
+    else error ("Unbalanced brackets. " ^ Position.here pos) ;
     Phi_Opr_Stack.close_parenthesis
       (cfg, SOME (case assign of SOME (_, pos') => Generic_Element_Access.Bracket_Opr_Write pos'
                                | NONE => Generic_Element_Access.Bracket_Opr_Read), false)

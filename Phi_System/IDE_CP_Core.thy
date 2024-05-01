@@ -2409,7 +2409,8 @@ fun phi_synthesis_parser (oprs, (ctxt, sequent)) F (raw_term, pos) cfg =
 
 (*access local value or variable or any generic variables*)
 \<phi>lang_parser get_var (%\<phi>parser_unique, %\<phi>lang_push_val) ["$"] (\<open>PROP _\<close>)  \<open>
-  fn (oprs,(ctxt,sequent)) => \<^keyword>\<open>$\<close> |-- Parse.position (Parse.short_ident || Parse.long_ident || Parse.number)
+  fn (oprs,(ctxt,sequent)) => \<^keyword>\<open>$\<close> |--
+        Parse.position (Phi_CP_IDE.long_idt_to_triangle (Parse.short_ident || Parse.number))
   >> (fn (var,pos) => fn cfg =>
     let val get = Phi_Reasoners.wrap'' (Generic_Variable_Access.get_value var Generic_Element_Access.empty_input)
         val mode_subproc = Phi_Opr_Stack.precedence_of (#1 oprs) < 0 andalso

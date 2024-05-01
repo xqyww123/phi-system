@@ -63,6 +63,9 @@ val almost_safe : proc -> proc
 val not_safe : proc -> proc
 val parse_auto_level : proc -> proc
 
+
+val long_idt_to_triangle : 'a parser -> 'a parser
+
 end
 
 structure Phi_CP_IDE : PHI_CP_IDE = struct
@@ -378,5 +381,20 @@ val _ =
       -- (\<^keyword>\<open>(\<close> |-- Parse.enum1 "|" Parse.term --| \<^keyword>\<open>)\<close> )
       -- Parse.for_fixes -- Parse.ML_source
         >> (Toplevel.theory o setup_cmd))
+
+
+val triangle_keywords = Keyword.add_minor_keywords ["\<tribullet>"] Keyword.empty_keywords
+
+fun long_idt_to_triangle parse toks =
+  let fun translate tok =
+        String.translate (fn #"." => "\<tribullet>" | c => String.str c) (Token.unparse tok)
+          |> Token.explode triangle_keywords (Token.pos_of tok)
+   in case toks
+        of [] => parse toks
+         | tok :: toks => (
+      case Token.kind_of tok
+        of Token.Long_Ident => parse (translate tok @ toks)
+         | _ => parse (translate tok @ toks)
+) end
 
 end

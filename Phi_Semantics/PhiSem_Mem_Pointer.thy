@@ -651,7 +651,7 @@ section \<open>Primitive Instructions\<close>
 
 subsection \<open>GEP\<close>
 
-proc op_get_element_pointer[\<phi>overload \<tribullet>]:
+proc op_get_element_pointer[\<phi>overload \<tribullet>, \<phi>overload "[]"]:
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>

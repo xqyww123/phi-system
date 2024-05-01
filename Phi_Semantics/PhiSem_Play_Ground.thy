@@ -53,21 +53,6 @@ proc test_ptr:
 \<medium_right_bracket> .
 
 
-ML \<open>String.translate (fn #"." => "\<tribullet>" | c => String.str c) "aaa.bb.cc"\<close>
-
-ML \<open>val keywords = Thy_Header.get_keywords \<^theory>\<close>
-
-ML \<open>fun translate tok =
-  String.translate (fn #"." => "\<tribullet>" | c => String.str c) (Token.unparse tok)
-    |> Token.explode keywords (Token.pos_of tok) \<close>
-
-ML \<open>Parse.read_embedded \<^context> (Thy_Header.get_keywords \<^theory>) (fn toks =>
-        (@{print} (translate (hd toks)) ; ((), [Token.eof])))
-    (Input.string "aaa.bb.cc")\<close>
-
-
-
-
 
 
 
@@ -81,7 +66,7 @@ proc test_ptr2:
   output \<open>ptr \<tribullet>\<^sub>a x \<tribullet>\<^sub>a 1\<^sup>\<t>\<^sup>\<h>  \<tribullet>\<^sub>a w \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<p>\<t>\<r>\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 1) ;
-  $1[$a]\<tribullet>x\<tribullet>$b\<tribullet>w
+  $1[$a]\<tribullet>x[$b]\<tribullet>w
 \<medium_right_bracket> .
 
 proc test_ptr3:
@@ -89,15 +74,18 @@ proc test_ptr3:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr \<tribullet>\<^sub>a a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> a
+  $addr.a
 \<medium_right_bracket> .
 
 proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
-  var v \<leftarrow> $1 ;
-  $v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
+  var v \<leftarrow> $1
+  
+  note [[\<phi>trace_reasoning = 2]]
+  \<semicolon>
+  $v[0,1]:= \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
   $v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
   $v
 \<medium_right_bracket> .
@@ -107,8 +95,8 @@ proc test_agg3:
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<nat>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 ;
-  $v \<tribullet> x \<tribullet> n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
-  $v \<tribullet> x \<tribullet> m \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
+  $v.x.n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
+  $v.x.m \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
   $v
 \<medium_right_bracket> .
 
