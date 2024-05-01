@@ -52,6 +52,26 @@ proc test_ptr:
   $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
 
+
+ML \<open>String.translate (fn #"." => "\<tribullet>" | c => String.str c) "aaa.bb.cc"\<close>
+
+ML \<open>val keywords = Thy_Header.get_keywords \<^theory>\<close>
+
+ML \<open>fun translate tok =
+  String.translate (fn #"." => "\<tribullet>" | c => String.str c) (Token.unparse tok)
+    |> Token.explode keywords (Token.pos_of tok) \<close>
+
+ML \<open>Parse.read_embedded \<^context> (Thy_Header.get_keywords \<^theory>) (fn toks =>
+        (@{print} (translate (hd toks)) ; ((), [Token.eof])))
+    (Input.string "aaa.bb.cc")\<close>
+
+
+
+
+
+
+
+
 no_notation Set.member ("(_/ : _)" [51, 51] 50)
 
 
