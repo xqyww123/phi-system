@@ -182,7 +182,7 @@ consts default :: mode
                               goal but never instantiating the contextual premises\<close>
        NO_INST :: mode \<comment> \<open>prohibiting instantiation\<close>
        MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
-       MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*depreciated!*)
+       MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*deprecated!*)
        MODE_SAT :: mode
        MODE_SAFE :: mode ("\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
        MODE_NO_INST_SAFE :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>

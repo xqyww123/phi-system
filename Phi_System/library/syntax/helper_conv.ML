@@ -6,12 +6,12 @@ val aggregate_imps : conv -> conv
 val expand_aggregated_imps : conv -> conv
 
 (*Converting \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<dots> \<Longrightarrow> An \<Longrightarrow> C\<close> to \<open>A1 \<and> A2 \<and> \<dots> \<and> An \<and> True \<Longrightarrow> C\<close>*)
-(*depreciated, use aggregate_imps_hol instead*)
+(*deprecated, use aggregate_imps_hol instead*)
 val aggregate_imps_obj : (Proof.context -> conv) -> Proof.context -> conv
 val expand_aggregated_imps_obj : (Proof.context -> conv) -> Proof.context -> conv
 
 
-(*depreciated
+(*deprecated
 (*for HOL only, no objectize.
 Converting \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<dots> \<Longrightarrow> An \<Longrightarrow> C\<close> to \<open>A1 \<and> A2 \<and> \<dots> \<and> An \<and> True \<Longrightarrow> C*)
 val aggregate_imps_hol : conv -> conv

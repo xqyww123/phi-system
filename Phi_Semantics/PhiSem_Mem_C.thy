@@ -230,7 +230,23 @@ proc op_store_mem:
 \<medium_right_bracket> .
 
 
-text \<open>(depreciated! as we can have non-deterministic monad)
+proc op_store_mem:
+  input  \<open>State\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
+       and \<open>report_unprocessed_element_index reject\<close>
+  requires Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
+                   \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
+                 \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+       and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+       and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  output \<open>\<lambda>_::unit \<phi>arg. State'\<close>
+\<medium_left_bracket>
+
+
+
+text \<open>(deprecated! as we can have non-deterministic monad)
   A simplification in the semantics is, we only consider allocation with zero initialization
   (i.e., \<open>calloc\<close> but not \<open>malloc\<close>), which frees us from modelling uninitialized memory state so
   simplifies the system a lot. We can do so because we aim to provide a certified language

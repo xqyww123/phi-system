@@ -114,7 +114,7 @@ lemma Dom_of_TY:
   \<open>valid_index T idx \<Longrightarrow> Dom_of_TY (index_type idx T) \<subseteq> Dom_of_TY T\<close>
   by (induct idx arbitrary: T; simp; meson Dom_of_TY_step dual_order.trans)
 
-(* depreciated
+(* deprecated
 lemma total_Mapof_disjoint:
    \<open>g ## (push_map idx (to_share \<circ> h))
 \<Longrightarrow> to_share \<circ> f = g * (push_map idx (to_share \<circ> h))
@@ -164,7 +164,7 @@ lemma Map_of_Val_mod:
   by (cases \<open>n = 0\<close>; simp add: pull_map_share pull_map_to_share Map_of_Val_pull)
 *)*)
 
-(* depreciated
+(* deprecated
 lemma map_add_restrict_itself [simp]: \<open>(f ++ g) |` dom g = g\<close>
   unfolding fun_eq_iff restrict_map_def map_add_def
   by (simp add: domIff option.case_eq_if)

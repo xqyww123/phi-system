@@ -24,7 +24,7 @@ locale resource =
   for Res :: "'T::sep_algebra resource_entry"
 begin
 
-lemma get_res_valid_raw: (*TODO: depreciated?*)
+lemma get_res_valid_raw: (*TODO: deprecated?*)
   \<open> res \<in> RES.SPACE
 \<Longrightarrow> get res \<in>\<^sub>S\<^sub>H domain\<close>
   unfolding RES.SPACE_def

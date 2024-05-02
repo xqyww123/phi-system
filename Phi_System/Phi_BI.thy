@@ -4387,7 +4387,7 @@ lemma ToA_by_Equiv_Class:
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> eq_y_y' : eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
   \<comment> \<open>\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq_y_y' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P)
-      depreciated: the target object is always constrained even when it can be variable\<close>
+      deprecated: the target object is always constrained even when it can be variable\<close>
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq_y_y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def Action_Tag_def Simplify_def
@@ -5185,7 +5185,7 @@ lemma normalize_target:
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] P : (\<forall>y'. r y' \<longrightarrow> eq y' y)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Q
 \<comment> \<open>\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Q)\<close>
-    \<comment> \<open>depreciated: the relationship between \<open>y\<close> and \<open>y'\<close> is always maintained in any context which is helpful
+    \<comment> \<open>deprecated: the relationship between \<open>y\<close> and \<open>y'\<close> is always maintained in any context which is helpful
         for rules relying on the value of the target object. The rules are though rare and somehow
         violate the convention of ToA where it infers a function from the source object to the target
         (so the target object should, always be able to be an unknown variable),

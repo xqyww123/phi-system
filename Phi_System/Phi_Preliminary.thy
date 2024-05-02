@@ -315,7 +315,7 @@ lemma embedded_func_red[iff, \<phi>safe_simp]:
 subsubsection \<open>Big Number\<close>
 
 text \<open>A tag to suppress unnecessary expanding of big numbers like \<open>2^256\<close>
-  (*depreciated! use \<open>declare power_numeral[simp del]\<close> instead!*)\<close>
+  (*deprecated! use \<open>declare power_numeral[simp del]\<close> instead!*)\<close>
 
 definition \<open>Big x = x\<close>
 

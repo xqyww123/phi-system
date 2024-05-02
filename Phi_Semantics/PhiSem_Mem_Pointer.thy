@@ -405,7 +405,7 @@ subsubsection \<open>Address Arithmetic - Shift\<close>
 abbreviation shift_addr :: "'idx memaddr \<Rightarrow> ('idx::monoid_add) \<Rightarrow> 'idx memaddr" (infixl "+\<^sub>a" 60)
   where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. delta + x) addr"
 
-notation shift_addr (infixl "||+" 60) (*depreciated!*)
+notation shift_addr (infixl "||+" 60) (*deprecated!*)
 
 lemma mem_shift_shift[simp]: "a +\<^sub>a i +\<^sub>a j = a +\<^sub>a (j + i)" by (cases a) (simp add: add.assoc)
 
@@ -648,6 +648,7 @@ lemma [\<phi>reason %cutting ]:
 
 
 section \<open>Primitive Instructions\<close>
+
 
 subsection \<open>GEP\<close>
 

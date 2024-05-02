@@ -3194,7 +3194,7 @@ lemma map_option_funcomp_map_add:
   \<open>(map_option f o (g ++ h)) = (map_option f o g) ++ (map_option f o h)\<close>
   unfolding fun_eq_iff map_add_def by (clarsimp simp add: fun_eq_iff split: option.split)
 
-(* lemma to_share_funcomp_map_add: (*depreciated*)
+(* lemma to_share_funcomp_map_add: (*deprecated*)
   \<open>to_share o (f ++ g) = (to_share o f) ++ (to_share o g)\<close>
   unfolding fun_eq_iff map_add_def by (auto split: option.split) *)
 

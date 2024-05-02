@@ -404,7 +404,7 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def by simp
 *)
 
-(* depreciated
+(* deprecated
 subsubsection \<open>Actions of multi-arity\<close>
 
 text \<open>for transformations containing remainder, of form \<open>?R\<heavy_comma> X \<longmapsto> ?R\<heavy_comma> Y\<close>
@@ -716,7 +716,7 @@ lemma [\<phi>reason default 0]:
 \<Longrightarrow> \<A>ction_parser A B \<close>
   unfolding \<A>ction_parser_def ..*)
 
-(*depreciated
+(*deprecated
 lemma destruct_\<phi>app:
   \<open> \<d>\<o> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to OPEN
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
@@ -1211,7 +1211,7 @@ parse_ast_translation \<open>let open Ast in [
 
 paragraph \<open>Application\<close>
 
-(* depreciated
+(* deprecated
 lemma open_abstraction_\<phi>app:
   \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
       \<open>Input a lambda abstraction e.g. \<open>\<lambda>x. List (Box x)\<close> as a pattern where the lambda variable is the \<phi>-type you want to destruct.\<close>

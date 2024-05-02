@@ -54,6 +54,8 @@ fun get_value name element_index ctxt sequent =
               vname)
               element_index
    in Phi_Sys.synthesis target ctxt sequent
+   handle THM ("Application Fail", _, _) =>
+      Generic_Element_Access.error_unprocessed_element_index ctxt element_index
   end
 
 (*** Assignment ***)

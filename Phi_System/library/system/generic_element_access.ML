@@ -7,6 +7,7 @@ val enable_report_unprocessed_element_index : Proof.context -> Proof.context
 val stop_reporting_unprocessed_element_index : Proof.context -> Proof.context
 val report_unprocessed_element_index : cterm -> Proof.context -> Proof.context
 val get_unprocessed_element_index : Proof.context -> cterm
+val error_unprocessed_element_index : Proof.context -> cterm -> 'a
 
 val empty_input : cterm
 val is_empty_input : term -> bool
@@ -55,5 +56,20 @@ fun get_unprocessed_element_index ctxt =
   case Unprc_EleIdx.get ctxt
     of SOME ret => ret
      | NONE => error "reporting_unprocessed_element_index is not turned on"
+
+fun error_unprocessed_element_index ctxt idx =
+  error (Pretty.string_of (Pretty.block (
+            Pretty.str "Fail to access element " ::
+            flat (Library.separate [Pretty.str "."] (map single (
+                HOLogic.dest_list (Thm.term_of idx)
+             |> map (
+                  (fn term => case Phi_Tool_Symbol.revert_symbol_term term
+                                of SOME str => Pretty.str str
+                                 | NONE => Syntax.pretty_term ctxt term) o
+                  (fn term => case try Phi_Syntax.dest_phi_type_assertion term
+                                of SOME (x, _) => x
+                                 | _ => term) o
+                  snd o HOLogic.dest_prod))))
+        )))
 
 end

@@ -1,6 +1,6 @@
 chapter \<open>Reasoning Processes in IDE-CP - Part I\<close>
 
-(*Entirely depreciated!*)
+(*Entirely deprecated!*)
 
 theory IDE_CP_Reasoning2
   imports IDE_CP_Applications1 Phi_Domainoid

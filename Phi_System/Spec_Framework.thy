@@ -400,13 +400,13 @@ declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightar
 
 subsubsection \<open>Basic Rules\<close>
 
-(*depreciated*)
+(*deprecated*)
 lemma Is_Functional_premise_extraction:
   \<open>Is_Functional S \<equiv> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) \<and> True\<close>
   unfolding Is_Functional_def atomize_eq
   by blast
 
-(*depreciated*)
+(*deprecated*)
 lemma Functionality_premise_extraction:
   \<open>Functionality T P \<equiv> (\<forall>x u v. P x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v) \<and> True\<close>
   unfolding Functionality_def atomize_eq

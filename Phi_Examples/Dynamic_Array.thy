@@ -55,7 +55,7 @@ proc set_dynarr:
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  $addr \<tribullet> data ! \<tribullet> $i := $v
+  $addr.data ! \<tribullet> $i := $v
 \<medium_right_bracket> .
 
 proc Max:
@@ -78,15 +78,15 @@ proc push_dynarr:
       val cap' \<leftarrow> Max($cap * 2, 1) \<semicolon>
       val data' \<leftarrow> calloc_N ($cap') \<open>T\<close> \<semicolon>
       memcpy ($data', $addr \<tribullet> data !, $len) \<semicolon>
-      mfree ($addr \<tribullet> data !) \<semicolon>
-      $addr \<tribullet> data := $data' \<semicolon>
-      $addr \<tribullet> len := $addr \<tribullet> len ! + 1 \<semicolon>
-      $addr \<tribullet> cap := $cap' \<semicolon>
+      mfree ($addr.data !) \<semicolon>
+      $addr.data := $data' \<semicolon>
+      $addr.len := $addr \<tribullet> len ! + 1 \<semicolon>
+      $addr.cap := $cap' \<semicolon>
       $data' \<tribullet> $len := $v \<semicolon>
       \<m>\<a>\<k>\<e>\<s> \<open>l@[v] \<Ztypecolon> DynArr addr _ _\<close>
   \<medium_right_bracket> \<medium_left_bracket>
-      $addr \<tribullet> data ! \<tribullet> $len := $v \<semicolon>
-      $addr \<tribullet> len := $len + 1 \<semicolon>
+      $addr.data ! \<tribullet> $len := $v \<semicolon>
+      $addr.len := $len + 1 \<semicolon>
       \<m>\<a>\<k>\<e>\<s> \<open>l@[v] \<Ztypecolon> DynArr addr _ _\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -119,9 +119,9 @@ proc pop_dynarr:
   if ($len \<le> $half_cap) \<medium_left_bracket>
     val data' \<leftarrow> calloc_N ($half_cap) \<open>T\<close> \<semicolon>
     memcpy ($data', $addr \<tribullet> data !, $len) \<semicolon>
-    mfree ($addr \<tribullet> data !) \<semicolon>
-    $addr \<tribullet> data := $data' \<semicolon>
-    $addr \<tribullet> cap := $half_cap \<semicolon>
+    mfree ($addr.data !) \<semicolon>
+    $addr.data := $data' \<semicolon>
+    $addr.cap := $half_cap \<semicolon>
     \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close>
   \<medium_right_bracket>
   \<medium_left_bracket> \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close> \<medium_right_bracket>

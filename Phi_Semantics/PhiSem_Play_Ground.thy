@@ -85,7 +85,7 @@ proc test_agg2:
   
   note [[\<phi>trace_reasoning = 2]]
   \<semicolon>
-  $v[0,1]:= \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
   $v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
   $v
 \<medium_right_bracket> .

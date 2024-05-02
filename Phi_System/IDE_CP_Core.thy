@@ -70,7 +70,7 @@ syntax "_LABEL_" :: "idt \<Rightarrow> label" ("LABEL _" [0] 1000)
 translations "LABEL name" == "CONST LABEL_TAG (\<lambda>name. ())"
 
 
-paragraph \<open>Label Input\<close> (*depreciated*)
+paragraph \<open>Label Input\<close> (*deprecated*)
 
 definition LabelTag :: " label \<Rightarrow> bool" ("\<l>\<a>\<b>\<e>\<l> _" [1000] 26) where "\<l>\<a>\<b>\<e>\<l> x \<equiv> True"
 
@@ -2052,12 +2052,7 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
       then SOME ((Generic_Element_Access.report_unprocessed_element_index idx ctxt,
                  @{thm report_unprocessed_element_index_I} RS sequent),
                 Seq.empty)
-      else (
-        warning (Pretty.string_of (Pretty.block [
-            Pretty.str "Fail to access element ",
-            Syntax.pretty_term ctxt (Thm.term_of idx)
-        ])) ;
-        NONE )
+      else Generic_Element_Access.error_unprocessed_element_index ctxt idx
   end)
 \<close>
 

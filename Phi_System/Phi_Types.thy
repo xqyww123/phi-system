@@ -757,7 +757,7 @@ subsubsection \<open>\<S>-Homomorphism (Commutativity over \<S>)\<close>
 
 text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the transformation functor directly.\<close>
 
-lemma \<S>_Homo\<^sub>E: (*depreciated*)
+lemma \<S>_Homo\<^sub>E: (*deprecated*)
   \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason undefined

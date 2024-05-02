@@ -472,10 +472,10 @@ proc (nodef) "__set_var_rule_":
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
        and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
+       and T8: \<open>report_unprocessed_element_index reject\<close>
        and T5: \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
        and T6: \<open>\<phi>SemType (y \<Ztypecolon> U') UY\<close>
        and T7: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
-       and T8: \<open>report_unprocessed_element_index reject\<close>
   output \<open>Z\<close>
   throws E
 \<medium_left_bracket>

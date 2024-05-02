@@ -6528,7 +6528,7 @@ lemma SE_Module_SDistr_dac_b_ToA_mapper
   qed .
 
 
-(*depreciated, I believe, we only need to provide the identity element version for a_d\<epsilon>c situation
+(*deprecated, I believe, we only need to provide the identity element version for a_d\<epsilon>c situation
 
 lemma SE_Module_SDistr_d\<epsilon>c_b_ToA_mapper_cond
       [\<phi>reason_template name: F\<^sub>1.module_mapper\<^sub>d\<^sub>\<epsilon>\<^sub>c\<^sub>_\<^sub>b_cond[]]:
@@ -6622,7 +6622,7 @@ lemma SE_Module_SDistr_d\<epsilon>c_b_ToA_mapper_cond
 *)
 
 
-(* depreciated, use conditioned version instead
+(* deprecated, use conditioned version instead
 
 lemma SE_Module_SDistr_dac_b_ToA_mapper
       [\<phi>reason_template default %\<phi>mapToA_derived_module_SDistri
@@ -9303,7 +9303,7 @@ lemma case_unzip[simp]:
   \<open>(case list.unzip x of (a,b) \<Rightarrow> f a b) = (let a = map fst x; b = map snd x in f a b)\<close>
   by simp
 
-(*depreciated
+(*deprecated
 lemma zip'_inj[iff]:
   \<open>length (fst l) = length (snd l) \<Longrightarrow> map fst (zip' l) = fst l\<close>
   \<open>length (fst l) = length (snd l) \<Longrightarrow> map snd (zip' l) = snd l\<close>

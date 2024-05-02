@@ -1059,7 +1059,7 @@ abbreviation share_orthogonal_homo :: \<open>('key \<Rightarrow> 'key2 \<Rightar
   where \<open>share_orthogonal_homo \<equiv> (o) ((o) to_share)\<close>
 abbreviation \<open>share_fiction \<equiv> basic_fiction ;\<^sub>\<I> \<F>_functional share_orthogonal_homo\<close>
 
-(*depreciated!*)
+(*deprecated!*)
 (*lemma share_fiction_expn_full':
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := to_share o f))))
  = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := f)))})\<close>
@@ -1106,7 +1106,7 @@ lemma share_fiction_expn_full:
  = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := 1(k2 \<mapsto> v))))})\<close>
   using share_fiction_expn_full'[where f=\<open>1(k2 \<mapsto> v)\<close>, simplified] .
 
-(*depreciated!*)
+(*deprecated!*)
 lemma share_fiction_partially_implies:
   \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<odiv> v)))))
 \<Longrightarrow> \<exists>objs. get res = Fine objs \<and> objs k k2 = Some v\<close>
@@ -1355,7 +1355,7 @@ paragraph \<open>basic resource\<close>
 
 context resource begin
 
-definition \<phi>R_get_res :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close> \<comment> \<open>depreciated\<close>
+definition \<phi>R_get_res :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close> \<comment> \<open>deprecated\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (get res) res)\<close>
 
 definition \<phi>R_get_res' :: \<open>'T proc\<close> \<comment> \<open>use this\<close>
@@ -1443,7 +1443,7 @@ end
 
 paragraph \<open>partial_map_resource2\<close>
 
-definition (in partial_map_resource2) \<comment> \<open>depreciated\<close>
+definition (in partial_map_resource2) \<comment> \<open>deprecated\<close>
     \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
     case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>

@@ -56,5 +56,7 @@ print_translation \<open>[
   (\<^const_syntax>\<open>mk_symbol\<close>, (fn ctxt => fn [tm] => Const (\<^syntax_const>\<open>_MK_SYMBOL_\<close>, dummyT) $ Phi_Tool_Symbol.print tm))
 ]\<close>
 
+ML \<open>@{term \<open>SYMBOL(xxx)\<close>}\<close>
+
 
 end

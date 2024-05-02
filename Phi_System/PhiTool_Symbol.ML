@@ -3,6 +3,7 @@ signature PHI_TOOL_SYMBOL = sig
 val mk_symbol : string -> term
 val revert_symbol : int -> string option
 val revert_symbol1: int -> string
+val revert_symbol_term : term -> string option
 
 end
 
@@ -33,6 +34,10 @@ fun revert_symbol1 id =
     of SOME x => x
      | NONE => error ("Phi_Tool_Symbol: bad symbol " ^ string_of_int id)
 
+
+fun revert_symbol_term (Const(\<^const_name>\<open>mk_symbol\<close>, _) $ num) =
+      SOME (revert_symbol1 (snd (HOLogic.dest_number num)))
+  | revert_symbol_term _ = NONE
 
 
 end

@@ -1199,7 +1199,7 @@ fun accept_one _ gen [] phityp thy = gen NONE phityp thy
             map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints)))
       end*)
 
-(*depreciated:*)
+(*deprecated:*)
 local
 
 fun is_the_hint prop_name (\<^Const>\<open>Trueprop\<close> $ X) = is_the_hint prop_name X

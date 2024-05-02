@@ -226,6 +226,8 @@ val dot_triangle_opr =
                           |> apfst Generic_Element_Access.enable_report_unprocessed_element_index
                           |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules')
                           |> post_app cfg
+                   handle THM ("Application Fail", _, _) =>
+                      Generic_Element_Access.error_unprocessed_element_index (fst s) idx
                 in process_index (Generic_Element_Access.get_unprocessed_element_index (fst s')) s'
                end
      in (stack'', process_index idx_input' (ctxt'4, sequent'4))
