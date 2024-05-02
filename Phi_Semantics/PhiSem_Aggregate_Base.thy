@@ -543,6 +543,28 @@ ML \<open>fun strip_phi_tuple_args (Const(\<^syntax_const>\<open>_\<phi>tuple_ar
       | strip_phi_tuple_args _ = error "Bad Syntax"\<close>
 
 
+subsection \<open>Access to Element Field\<close>
+
+consts access_to_ele_synt :: \<open>'a \<Rightarrow> 'b \<Rightarrow> 'c\<close>
+    \<comment> \<open>A syntax sugar to be overloaded\<close>
+syntax "_access_to_ele_synt_" :: \<open>logic \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logic\<close> (infixl "\<tribullet>" 55)
+
+parse_translation \<open>[
+  (\<^syntax_const>\<open>_access_to_ele_synt_\<close>, fn ctxt => fn [a,x] =>
+      Const(\<^const_syntax>\<open>access_to_ele_synt\<close>, dummyT) $ a $ Phi_Aggregate_Syntax.parse_index x)
+]\<close>
+
+print_translation \<open>[
+  (\<^syntax_const>\<open>_access_to_ele_synt_\<close>, fn ctxt => fn [a,x] =>
+      Const(\<^const_syntax>\<open>access_to_ele_synt\<close>, dummyT) $ a $ Phi_Aggregate_Syntax.print_index x )
+]\<close>
+ 
+text \<open>We can use \<^term>\<open>p \<tribullet> field\<close> to access the address of the element named \<open>field\<close> in the
+  object pointed by \<open>p\<close>.
+  We may also use \<^term>\<open>p \<tribullet> 2\<close> to access the address of the 2nd element.
+  Use \<^term>\<open>p \<tribullet> LOGIC_IDX(var)\<close> to access the element \<open>var\<close> which is a logical variable\<close>
+
+
 
 section \<open>IDE Interface\<close>
 

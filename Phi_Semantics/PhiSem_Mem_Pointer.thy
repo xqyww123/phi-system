@@ -3,7 +3,6 @@ theory PhiSem_Mem_Pointer
   keywords
       "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
-      and "\<tribullet>_a"  = "\<tribullet>\<^sub>a"
       and "<Ptr>" = "\<Pp>\<t>\<r>"
       and "<ptr>" = "\<p>\<t>\<r>"
 begin
@@ -431,7 +430,10 @@ definition addr_gep :: "logaddr \<Rightarrow> aggregate_index \<Rightarrow> loga
 definition addr_geps :: "logaddr \<Rightarrow> aggregate_path \<Rightarrow> logaddr"
   where "addr_geps addr path = map_memaddr (\<lambda>idx. idx @ path) addr"
 
-syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<tribullet>\<^sub>a" 55)
+\<phi>adhoc_overloading access_to_ele_synt addr_gep
+
+(*
+syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<tribullet>" 55)
 
 parse_translation \<open>[
   (\<^syntax_const>\<open>_addr_gep_\<close>, fn ctxt => fn [a,x] =>
@@ -444,19 +446,14 @@ print_translation \<open>[
 ]\<close>
 
 
-text \<open>We can use \<^term>\<open>p \<tribullet>\<^sub>a field\<close> to access the address of the element named \<open>field\<close> in the
+text \<open>We can use \<^term>\<open>p \<tribullet> field\<close> to access the address of the element named \<open>field\<close> in the
   object pointed by \<open>p\<close>.
-  We may also use \<^term>\<open>p \<tribullet>\<^sub>a 2\<close> to access the address of the 2nd element.
-  Use \<^term>\<open>p \<tribullet>\<^sub>a LOGIC_IDX(var)\<close> to access the element \<open>var\<close> which is a logical variable\<close>
-
-text \<open>BTW, we also make the syntax for \<phi>-Type
-
-TODO ...
-\<close>
-
+  We may also use \<^term>\<open>p \<tribullet> 2\<close> to access the address of the 2nd element.
+  Use \<^term>\<open>p \<tribullet> LOGIC_IDX(var)\<close> to access the element \<open>var\<close> which is a logical variable\<close>
+*)
 
 lemma addr_gep_memblk[iff, \<phi>safe_simp]:
-  \<open>memaddr.blk (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.blk addr\<close>
+  \<open>memaddr.blk (addr \<tribullet> LOGIC_IDX(i)) = memaddr.blk addr\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
 lemma addr_geps_memblk[iff, \<phi>safe_simp]:
@@ -464,7 +461,7 @@ lemma addr_geps_memblk[iff, \<phi>safe_simp]:
   unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_path[iff, \<phi>safe_simp]:
-  \<open>memaddr.index (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.index addr @ [i]\<close>
+  \<open>memaddr.index (addr \<tribullet> LOGIC_IDX(i)) = memaddr.index addr @ [i]\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
 lemma addr_geps_path[iff, \<phi>safe_simp]:
@@ -472,11 +469,11 @@ lemma addr_geps_path[iff, \<phi>safe_simp]:
   unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_eq[iff, \<phi>safe_simp]:
-  \<open>addra \<tribullet>\<^sub>a LOGIC_IDX(ia) = addrb \<tribullet>\<^sub>a LOGIC_IDX(ib) \<longleftrightarrow> addra = addrb \<and> ia = ib\<close>
+  \<open>addra \<tribullet> LOGIC_IDX(ia) = addrb \<tribullet> LOGIC_IDX(ib) \<longleftrightarrow> addra = addrb \<and> ia = ib\<close>
   unfolding addr_gep_def by (cases addra; cases addrb; simp)
 
 lemma addr_geps_simp[iff, \<phi>safe_simp]:
-  \<open>addr_geps addr (i#path) = addr_geps (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) path\<close>
+  \<open>addr_geps addr (i#path) = addr_geps (addr \<tribullet> LOGIC_IDX(i)) path\<close>
   unfolding addr_geps_def addr_gep_def by (cases addr; simp)
 
 lemma addr_geps0_simp[iff, \<phi>safe_simp]:
@@ -484,18 +481,18 @@ lemma addr_geps0_simp[iff, \<phi>safe_simp]:
   unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_not_eq_zero[intro!, simp, \<phi>safe_simp]:
-  \<open>addr \<noteq> 0 \<Longrightarrow> addr \<tribullet>\<^sub>a LOGIC_IDX(i) \<noteq> 0\<close>
+  \<open>addr \<noteq> 0 \<Longrightarrow> addr \<tribullet> LOGIC_IDX(i) \<noteq> 0\<close>
   unfolding zero_memaddr_def addr_gep_def
   by (cases addr) simp
 
 lemma logaddr_type_gep[iff, \<phi>safe_simp]:
-  \<open>logaddr_type (addr \<tribullet>\<^sub>a LOGIC_IDX(x)) = idx_step_type x (logaddr_type addr)\<close>
+  \<open>logaddr_type (addr \<tribullet> LOGIC_IDX(x)) = idx_step_type x (logaddr_type addr)\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
 lemma addr_gep_valid[intro!, simp, \<phi>safe_simp]:
   \<open> valid_idx_step (logaddr_type addr) i
 \<Longrightarrow> valid_logaddr addr
-\<Longrightarrow> valid_logaddr (addr \<tribullet>\<^sub>a LOGIC_IDX(i))\<close>
+\<Longrightarrow> valid_logaddr (addr \<tribullet> LOGIC_IDX(i))\<close>
   unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
   by (cases addr; clarsimp simp add: valid_idx_step_void)
 
@@ -510,7 +507,7 @@ lemma addr_geps_valid[intro!, simp, \<phi>safe_simp]:
 lemma logaddr_to_raw_phantom_mem_type:
   \<open> phantom_mem_semantic_type (logaddr_type addr)
 \<Longrightarrow> valid_idx_step (logaddr_type addr) i
-\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = logaddr_to_raw addr\<close>
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet> LOGIC_IDX(i)) = logaddr_to_raw addr\<close>
   unfolding logaddr_to_raw_def addr_gep_def phantom_mem_semantic_type_def
   by (cases addr; clarsimp; insert idx_step_offset_size; fastforce)
 
@@ -701,44 +698,44 @@ lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)))\<close>]:
+           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (_ \<tribullet> LOGIC_IDX(_)))\<close>]:
   \<open> common_multiplicator_2 (@) a b (memaddr.index c @ [i])
-\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i))) \<close>
+\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (c \<tribullet> LOGIC_IDX(i))) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)) @ _)\<close>]:
+           for \<open>common_multiplicator_2 (@) _ _ (memaddr.index (_ \<tribullet> LOGIC_IDX(_)) @ _)\<close>]:
   \<open> common_multiplicator_2 (@) a b (memaddr.index c @ [i] @ cr)
-\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (c \<tribullet>\<^sub>a LOGIC_IDX(i)) @ cr) \<close>
+\<Longrightarrow> common_multiplicator_2 (@) a b (memaddr.index (c \<tribullet> LOGIC_IDX(i)) @ cr) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_))) _\<close>]:
+           for \<open>common_multiplicator_2 (@) _ (memaddr.index (_ \<tribullet> LOGIC_IDX(_))) _\<close>]:
   \<open> common_multiplicator_2 (@) a (memaddr.index b @ [i]) c
-\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (b \<tribullet>\<^sub>a LOGIC_IDX(i))) c \<close>
+\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (b \<tribullet> LOGIC_IDX(i))) c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)) @ _) _\<close>]:
+           for \<open>common_multiplicator_2 (@) _ (memaddr.index (_ \<tribullet> LOGIC_IDX(_)) @ _) _\<close>]:
   \<open> common_multiplicator_2 (@) a (memaddr.index b @ [i] @ br) c
-\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (b \<tribullet>\<^sub>a LOGIC_IDX(i)) @ br) c \<close>
+\<Longrightarrow> common_multiplicator_2 (@) a (memaddr.index (b \<tribullet> LOGIC_IDX(i)) @ br) c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_))) _ _\<close>]:
+           for \<open>common_multiplicator_2 (@) (memaddr.index (_ \<tribullet> LOGIC_IDX(_))) _ _\<close>]:
   \<open> common_multiplicator_2 (@) (memaddr.index a @ [i]) b c
-\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (a \<tribullet>\<^sub>a LOGIC_IDX(i))) b c \<close>
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (a \<tribullet> LOGIC_IDX(i))) b c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) (memaddr.index (_ \<tribullet>\<^sub>a LOGIC_IDX(_)) @ _) _ _ \<close>]:
+           for \<open>common_multiplicator_2 (@) (memaddr.index (_ \<tribullet> LOGIC_IDX(_)) @ _) _ _ \<close>]:
   \<open> common_multiplicator_2 (@) (memaddr.index a @ [i] @ ar) b c
-\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (a \<tribullet>\<^sub>a LOGIC_IDX(i)) @ ar) b c \<close>
+\<Longrightarrow> common_multiplicator_2 (@) (memaddr.index (a \<tribullet> LOGIC_IDX(i)) @ ar) b c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 

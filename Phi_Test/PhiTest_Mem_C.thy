@@ -27,7 +27,7 @@ proc test_mem2:
 proc test_ptr3:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr \<tribullet>\<^sub>a c \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
+  output \<open>addr \<tribullet> c \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   $addr \<tribullet> c
 \<medium_right_bracket> .
@@ -254,7 +254,7 @@ proc test_mem15:
 lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
 \<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] \<r>\<e>\<f> T
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
              drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<heavy_comma>
              take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
   \<medium_left_bracket>
@@ -264,7 +264,7 @@ lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
 \<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] \<r>\<e>\<f> T
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<heavy_comma>
-             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
+             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
              take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
   \<medium_left_bracket> 
   \<medium_right_bracket> certified by auto_sledgehammer .
@@ -274,7 +274,7 @@ lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
 \<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] \<r>\<e>\<f> T
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T \<heavy_comma>
-             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
+             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
              drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<close>
              
   \<medium_left_bracket> 
@@ -285,7 +285,7 @@ lemma
 \<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] \<r>\<e>\<f> T
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T \<heavy_comma>
              drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T \<heavy_comma>
-             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T \<close>
+             y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> j\<^sup>\<t>\<^sup>\<h>] T \<close>
              
   \<medium_left_bracket> 
   \<medium_right_bracket> certified by auto_sledgehammer .
@@ -294,7 +294,7 @@ lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
 \<Longrightarrow> y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] \<r>\<e>\<f> T
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T \<heavy_comma>
-              y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>] T \<heavy_comma>
+              y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> j\<^sup>\<t>\<^sup>\<h>] T \<heavy_comma>
              drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T \<close>
              
   \<medium_left_bracket> 

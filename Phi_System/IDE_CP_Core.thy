@@ -2085,7 +2085,12 @@ declare [[
 
 subsubsection \<open>Syntax\<close>
 
-nonterminal \<phi>identifier and \<phi>identifier_element
+(*I will disable the synthesis mechanism for accessing element by index
+  because we have no spare syntax to assign the operation.
+  The "\<tribullet>" will be used in address arithmetic.
+  Moreover, the same function is already provided by programming syntax, without the need of synthesis.*)
+
+nonterminal \<phi>identifier (* and \<phi>identifier_element *)
 
 syntax
   "_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$\"_")
@@ -2093,11 +2098,11 @@ syntax
   "_identifier_num_" :: \<open>num_token \<Rightarrow> \<phi>identifier\<close> ("_")
   "_identifier_1_" :: \<open>\<phi>identifier\<close> ("1")
   "_identifier_logic_" :: \<open>logic \<Rightarrow> \<phi>identifier\<close> ("'(_')")
-  "_identifier_element_0_" :: \<open>\<phi>identifier \<Rightarrow> \<phi>identifier_element\<close> ("_")
+(*  "_identifier_element_0_" :: \<open>\<phi>identifier \<Rightarrow> \<phi>identifier_element\<close> ("_")
   "_identifier_element_"   :: \<open>\<phi>identifier_element \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> \<phi>identifier_element\<close> (infixl "\<tribullet>" 910)
-  "_\<phi>element_step_" :: \<open>logic \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logic\<close> (infixl "\<tribullet>" 910)
+  "_\<phi>element_step_" :: \<open>logic \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logic\<close> (infixl "\<tribullet>" 910) *)
   "_get_\<phi>var_" :: "\<phi>identifier \<Rightarrow> logic" ("$_")
-  "_set_\<phi>var_" :: "\<phi>identifier_element \<Rightarrow> logic \<Rightarrow> logic" ("$_ := _" [910, 51] 50)
+  "_set_\<phi>var_" :: "\<phi>identifier \<Rightarrow> logic \<Rightarrow> logic" ("$_ := _" [910, 51] 50)
 
 consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only in syntax parsing\<close>
 

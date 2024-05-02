@@ -388,7 +388,7 @@ subsection \<open>Auxiliary Simplification\<close>
 
 subsubsection \<open>Converting \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk a] ((memaddr.index a @ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
                           \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk a] (memaddr.index a \<^bold>\<rightarrow>\<^sub>@ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
-                      to \<open>\<m>\<e>\<m>[a \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h>] \<dots>\<close>\<close>
+                      to \<open>\<m>\<e>\<m>[a \<tribullet> i\<^sup>\<t>\<^sup>\<h>] \<dots>\<close>\<close>
 
 lemma MemBlk_\<phi>MapAt_L_assoc[no_atp, \<phi>programming_simps, \<phi>programming_base_simps]:
   \<open> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (a \<^bold>\<rightarrow>\<^sub>@ b \<^bold>\<rightarrow>\<^sub>@ T) = \<m>\<e>\<m>-\<b>\<l>\<k>[blk] ((a @ b) \<^bold>\<rightarrow>\<^sub>@ T) \<close>

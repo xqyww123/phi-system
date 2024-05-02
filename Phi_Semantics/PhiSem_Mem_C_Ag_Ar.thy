@@ -17,7 +17,7 @@ debt_axiomatization
 
 lemma logaddr_to_raw_array_GEP:
   \<open> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
-\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
   unfolding logaddr_to_raw_def addr_gep_def
   by (cases addr; clarsimp simp: idx_step_offset_arr)
 
@@ -26,7 +26,7 @@ lemma logaddr_to_raw_inj_array:
 \<Longrightarrow> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> i \<le> N \<and> j \<le> N
 \<Longrightarrow> \<not> phantom_mem_semantic_type TY
-\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw (addr \<tribullet>\<^sub>a (j)\<^sup>\<t>\<^sup>\<h>) \<longleftrightarrow> i = j \<close>
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw (addr \<tribullet> (j)\<^sup>\<t>\<^sup>\<h>) \<longleftrightarrow> i = j \<close>
   unfolding logaddr_to_raw_array_GEP valid_logaddr_def Valid_MemBlk_def
   apply (clarsimp; cases addr; clarsimp)
   subgoal for blk idx
@@ -43,14 +43,14 @@ lemma logaddr_to_raw_inj_array:
 
 lemma logaddr_to_raw_array_0th:
   \<open> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
-\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr \<close>
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr \<close>
   unfolding logaddr_to_raw_def addr_gep_def
   by (auto simp: idx_step_offset_arr split: memaddr.split)
 
 lemma logaddr_to_raw_array_ith:
   \<open> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> phantom_mem_semantic_type TY
-\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr \<close>
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw addr \<close>
   unfolding logaddr_to_raw_def addr_gep_def
   by (auto simp: idx_step_offset_arr phantom_mem_semantic_type_def split: memaddr.split)
 
@@ -65,15 +65,15 @@ lemma logaddr_to_raw_inj_arr:
      logaddr_to_raw addr1 = logaddr_to_raw addr2 \<Longrightarrow>
      addr1 = addr2 \<close>
   subgoal premises prems proof -
-    have t1: \<open>logaddr_to_raw (addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw (addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>)\<close>
+    have t1: \<open>logaddr_to_raw (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_to_raw (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>)\<close>
       by (simp add: logaddr_to_raw_array_0th prems(3) prems(4) prems(8))
-    have t2: \<open>valid_logaddr (addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) \<close>
+    have t2: \<open>valid_logaddr (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
       using prems(1) prems(3) prems(6) valid_idx_step_arr by fastforce
-    have t3: \<open>valid_logaddr (addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) \<close>
+    have t3: \<open>valid_logaddr (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
       by (simp add: prems(2) prems(4) prems(7) valid_idx_step_arr)
-    have t4: \<open>logaddr_type (addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_type (addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>)\<close>
+    have t4: \<open>logaddr_type (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = logaddr_type (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>)\<close>
       by (simp add: idx_step_type_arr prems(3) prems(4) prems(6) prems(7))
-    have t5: \<open>addr1 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h> = addr2 \<tribullet>\<^sub>a (0)\<^sup>\<t>\<^sup>\<h>\<close>
+    have t5: \<open>addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h> = addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>\<close>
       using idx_step_type_arr logaddr_to_raw_inj logaddr_type_gep prems(4) prems(5) prems(7) t1 t2 t3 t4 by presburger
     show ?thesis
       using t5 by blast
@@ -155,7 +155,7 @@ lemma valid_logaddr_range_sub:
 *)
 
 \<phi>type_def SlicePtr :: \<open>logaddr \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
-  where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> logaddr_to_raw (addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
+  where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> logaddr_to_raw (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
                 \<s>\<u>\<b>\<j> i \<le> N \<and> valid_logaddr addr \<and> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
   deriving Basic
        and \<open>Object_Equiv (SlicePtr addr N TY) (=)\<close>
@@ -183,16 +183,16 @@ lemma [\<phi>reason %slice_ptr_ToA]: \<comment> \<open>TODO: automatically gener
 lemma [\<phi>reason %slice_ptr_ToA]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
-\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY' \<close>
+\<Longrightarrow> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
     to \<open>\<Pp>\<t>\<r> TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr, auto_sledgehammer)
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet>\<^sub>a (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
-\<Longrightarrow> addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY' \<close>
+\<Longrightarrow> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<Ss>\<Pp>\<t>\<r>[addr:len] TY' \<close>
   \<medium_left_bracket>
     to RawPointer
     note idx_step_type_arr[simp] ;;
@@ -356,7 +356,7 @@ term logaddr_type
 lemma [\<phi>reason add]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (\<a>\<r>\<r>\<a>\<y>[N] TY) : logaddr_type addr
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] i+n < N
-\<Longrightarrow> abstract_address_offset (addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet>\<^sub>a (i+n)\<^sup>\<t>\<^sup>\<h>) \<close>
+\<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> (i+n)\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def
             logaddr_to_raw_def addr_gep_def 
   by (cases addr; clarsimp, rule,
@@ -368,7 +368,7 @@ lemma [\<phi>reason add]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (\<a>\<r>\<r>\<a>\<y>[N] \<a>\<r>\<r>\<a>\<y>[M] TY) : logaddr_type addr
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] i*M+j+n < M * N
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (i', j') : (i + (j + n) div M, (j + n) mod M)
-\<Longrightarrow> abstract_address_offset (addr \<tribullet>\<^sub>a i\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a j\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet>\<^sub>a i'\<^sup>\<t>\<^sup>\<h> \<tribullet>\<^sub>a j'\<^sup>\<t>\<^sup>\<h>) \<close>
+\<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<tribullet> j\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> i'\<^sup>\<t>\<^sup>\<h> \<tribullet> j'\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def
             logaddr_to_raw_def addr_gep_def 
   apply (cases addr; clarsimp, rule;

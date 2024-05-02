@@ -194,11 +194,12 @@ val mode_synthesis = Config.declare_bool ("\<phi>-System.GVA.mode_synthesis", \<
 local open Ast
 
 fun ident X = Appl[Constant \<^const_syntax>\<open>\<phi>identifier\<close>, X]
-fun parse_elements ret (Appl [Constant \<^syntax_const>\<open>_identifier_element_\<close>, X, idx])
+(*fun parse_elements ret (Appl [Constant \<^syntax_const>\<open>_identifier_element_\<close>, X, idx])
       = parse_elements (idx :: ret) X
   | parse_elements ret (Appl [Constant \<^syntax_const>\<open>_identifier_element_0_\<close>, X])
       = (ret, X)
   | parse_elements _ _ = error "Internal bug #fc1bc973-fab2-4706-a68e-6d4ce9cbe7d0"
+*)
 
 fun mk_element_path (idx :: R) =
       Appl [Constant \<^const_syntax>\<open>Cons\<close>,
@@ -217,7 +218,7 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
               Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>,
               ident X,
               Constant \<^const_syntax>\<open>Nil\<close> ])),
-  (\<^syntax_const>\<open>_\<phi>element_step_\<close>, fn ctxt => fn [left, idx] =>
+(*  (\<^syntax_const>\<open>_\<phi>element_step_\<close>, fn ctxt => fn [left, idx] =>
     (case left
        of Appl [Constant \<^const_syntax>\<open>Value_of\<close>, x, idt, path]
             => let fun insert (Appl [Constant \<^const_syntax>\<open>Cons\<close>, X, Y]) =
@@ -228,13 +229,12 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
                                 Constant \<^const_syntax>\<open>Nil\<close>]
                 in Appl [Constant \<^const_syntax>\<open>Value_of\<close>, x, idt, insert path]
                end
-        | _ => error "Syntax Error: Aggregate Element Access operator \<tribullet> can only be used after variables like $x.")),
+        | _ => error "Syntax Error: Aggregate Element Access operator \<tribullet> can only be used after variables like $x.")), *)
   (\<^syntax_const>\<open>_set_\<phi>var_\<close>, (fn _ => fn [V,Y] =>
-      case parse_elements [] V of (path, V') =>
         Appl[ Constant \<^const_syntax>\<open>Set_Value\<close>,
               Y,
-              ident V',
-              mk_element_path path ])),
+              ident V,
+              Constant \<^const_syntax>\<open>Nil\<close> ])),
   (\<^syntax_const>\<open>_identifier_id_\<close>, (fn _ => fn [X] =>
       Appl [Constant \<^syntax_const>\<open>_abs\<close>, X, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>])),
   (\<^syntax_const>\<open>_identifier_logic_\<close>, (fn _ => fn [X] => X))
