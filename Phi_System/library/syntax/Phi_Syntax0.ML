@@ -15,6 +15,8 @@ include PHI_SYNTAX
 
   val strip_separations : term -> term list
   val mk_separations : typ -> term list -> term
+  val leftmost_sep : term -> term
+  val rightmost_sep : term -> term
 
   val mk_phi_type_ty : typ (*concrete*) * typ (*abstract*) -> typ
   val mk_phi_type : term * term -> term
@@ -261,8 +263,8 @@ fun conv_items_of_assertion C =
                 Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
            | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
                 Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
-           | Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ =>
-                Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
+           | Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ =>
+                Conv.combination_conv (Conv.arg1_conv (conv ctxt)) (conv ctxt) ctm
            | Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
            | Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
            | Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>) => Conv.all_conv ctm
@@ -284,7 +286,25 @@ fun conv_all_typings C = conv_items_of_assertion (fn ctxt => fn ctm =>
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
   | strip_separations (Abs (_, _, T)) = strip_separations T
-  | strip_separations T = Phi_Help.strip_binop_l @{const_name times} T
+  | strip_separations T = Phi_Help.strip_binop_r @{const_name times} T
+
+(*the left-most non-branching ending element*)
+fun leftmost_sep (Const (\<^const_name>\<open>times\<close>, _) $ X $ _) = leftmost_sep X
+  | leftmost_sep (Const (@{const_name Subjection}, _) $ T) = leftmost_sep T
+  | leftmost_sep (Const (@{const_name ExSet}, _) $ T) = leftmost_sep T
+  | leftmost_sep (Const (@{const_name AllSet}, _) $ T) = leftmost_sep T
+  | leftmost_sep (Const (@{const_name REMAINS}, _) $ X $ _ $ _) = leftmost_sep X
+  | leftmost_sep (Abs (_, _, T)) = leftmost_sep T
+  | leftmost_sep X = X
+
+(*the right-most non-branching ending element*)
+fun rightmost_sep (Const (\<^const_name>\<open>times\<close>, _) $ _ $ X) = rightmost_sep X
+  | rightmost_sep (Const (@{const_name Subjection}, _) $ T) = rightmost_sep T
+  | rightmost_sep (Const (@{const_name ExSet}, _) $ T) = rightmost_sep T
+  | rightmost_sep (Const (@{const_name AllSet}, _) $ T) = rightmost_sep T
+  | rightmost_sep (Const (@{const_name REMAINS}, _) $ _ $ _ $ X) = rightmost_sep X
+  | rightmost_sep (Abs (_, _, T)) = rightmost_sep T
+  | rightmost_sep X = X
 
 fun mk_separations model_ty [] = \<^Const>\<open>one_class.one model_ty\<close>
   | mk_separations model_ty L = foldr1 (fn (A,X) => \<^Const>\<open>times model_ty\<close> $ A $ X) L

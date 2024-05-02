@@ -88,15 +88,14 @@ lemma semantic_assumption_\<phi>app:
 \<Longrightarrow> \<p>\<r>\<o>\<c> (\<phi>M_assume P) \<lbrace> Void \<longmapsto> Void \<s>\<u>\<b>\<j> P \<rbrace> \<close>
   using \<phi>M_assume1 .
 
-lemma \<phi>M_tail_left:  \<open>\<p>\<r>\<o>\<c> F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
-lemma \<phi>M_tail_right: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. 1 \<heavy_comma> Y v \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
-lemma \<phi>M_tail_right_right: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. Y v\<heavy_comma> 1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
-lemma \<phi>M_shrink_left:  \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
-lemma \<phi>M_shrink_right[intro!]: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
+lemma \<phi>M_tail_left:  \<open>\<p>\<r>\<o>\<c> F \<lbrace> X\<heavy_comma> 1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
+lemma \<phi>M_tail_right: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. Y v\<heavy_comma> 1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
+lemma \<phi>M_shrink_left:  \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X\<heavy_comma> 1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
+lemma \<phi>M_shrink_right[intro!]: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. Y v\<heavy_comma> 1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> by simp
 
 lemma \<phi>M_getV_raw[intro!]:
    \<open>(v \<Turnstile> (x \<Ztypecolon> A) \<Longrightarrow> \<p>\<r>\<o>\<c> F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
-\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV_raw VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV_raw VDT_dest (\<phi>arg v) F \<lbrace> x \<Ztypecolon> Val (\<phi>arg v) A\<heavy_comma> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_getV_raw_def Premise_def
   by (clarsimp simp add: Val.unfold norm_precond_conj)
 
@@ -105,7 +104,7 @@ declare \<phi>M_getV_raw[where X=1, simplified, intro!]
 lemma \<phi>M_getV[intro!]:
    \<open>(v \<Turnstile> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)
 \<Longrightarrow> (v \<Turnstile> (x \<Ztypecolon> A) \<Longrightarrow> \<p>\<r>\<o>\<c> F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
-\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV TY VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV TY VDT_dest (\<phi>arg v) F \<lbrace> x \<Ztypecolon> Val (\<phi>arg v) A\<heavy_comma> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_getV_def Premise_def
   by (clarsimp simp add: Val.unfold norm_precond_conj)
 
@@ -127,7 +126,7 @@ lemma "__Return_rule__":
 lemma semantic_return_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<Turnstile> (y \<Ztypecolon> T))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (y \<Ztypecolon> T)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. y \<Ztypecolon> Val u T\<heavy_comma> X \<rbrace> \<close>
   unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val.unfold)
 
@@ -225,7 +224,8 @@ proc (nodef) [\<phi>reason %\<phi>synthesis_cut
   output \<open>\<lambda>ret. (x\<^sub>h, x\<^sub>L) \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] (List_Item T \<^emph> L) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>2\<close>
   @tag synthesis
 \<medium_left_bracket>
-  C1 C2 semantic_cons_lval
+  C1 \<rightarrow> val h \<semicolon>
+  C2 $h semantic_cons_lval
 \<medium_right_bracket> .
 
 
@@ -256,8 +256,8 @@ lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n
   unfolding Transformation_def Action_Tag_def
   by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
 
-lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @tag action_drop\<close>]:
-  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @tag action_drop\<close>
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T\<heavy_comma> ?R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @tag action_drop\<close>]:
+  \<open>x \<Ztypecolon> Val raw T\<heavy_comma> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @tag action_drop\<close>
   unfolding Transformation_def Action_Tag_def
   by (clarsimp simp add: Val.unfold)
 
@@ -304,11 +304,11 @@ lemma "__op_try__"[intro!]:
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
       by (metis (no_types, lifting) INTERP_SPEC LooseState_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) sep_conj_expn)
     subgoal premises prems for a b c d u v2 proof -
-      have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
+      have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (Y1 v\<heavy_comma> R)) (\<lambda>v. INTERP_SPEC (E v\<heavy_comma> R))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
         using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
       note this[simplified]
-      then have \<open>Success c d \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
+      then have \<open>Success c d \<in> LooseState (\<lambda>v. INTERP_SPEC (Y2 v\<heavy_comma> R)) (\<lambda>v. INTERP_SPEC (E2 v\<heavy_comma> R))\<close>
         using prems(2)[of a, THEN spec[where x=b], THEN spec[where x=R]]
         by (meson INTERP_SPEC prems(4) sep_conj_expn)
       note this[simplified]
@@ -316,11 +316,11 @@ lemma "__op_try__"[intro!]:
         by (metis INTERP_SPEC prems(11) sep_conj_expn)
     qed
     subgoal premises prems for a b c d u v proof -
-      have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
+      have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (Y1 v\<heavy_comma> R)) (\<lambda>v. INTERP_SPEC (E v\<heavy_comma> R))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
         using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
       note this[simplified]
-      then have \<open>Abnormal c d \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
+      then have \<open>Abnormal c d \<in> LooseState (\<lambda>v. INTERP_SPEC (Y2 v\<heavy_comma> R)) (\<lambda>v. INTERP_SPEC (E2 v\<heavy_comma> R))\<close>
         using prems(2)[THEN spec[where x=b], THEN spec[where x=R]]
         by (meson INTERP_SPEC prems(4) sep_conj_expn)
       note this[simplified]

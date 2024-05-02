@@ -19,9 +19,9 @@ abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {tabl: \<
 
 \<phi>type_def Hash :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, nat \<rightharpoonup> 'x) \<phi>\<close>
   where \<open>f \<Ztypecolon> Hash addr TY T \<equiv> 
-       buckets \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. i < N} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>)\<heavy_comma>
-       bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[tabl_addr] \<Aa>\<r>\<r>\<a>\<y>[N] (\<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
-       (tabl_addr, N) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> tabl: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>
+       (tabl_addr, N) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> tabl: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
+        bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[tabl_addr] \<Aa>\<r>\<r>\<a>\<y>[N] (\<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
+        buckets \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. i < N} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>)
        \<s>\<u>\<b>\<j> bucket_ptrs buckets tabl_addr N.
            length bucket_ptrs = N \<and>
            (\<forall>i < N. list_all (\<lambda>(k,v). hash k N = i) (buckets i) \<and> distinct (map fst (buckets i))) \<and>
@@ -76,8 +76,8 @@ context
 begin
 
 proc insert_bucket:
-  input \<open>bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<heavy_comma>
-         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma>
+         bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>
   premises \<open>distinct (map fst bucket)\<close>
   output \<open>bucket' \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>
           \<s>\<u>\<b>\<j> bucket'. set bucket' = (set bucket - {(k',_). k' = k}) \<union> {(k,v)} \<and>
@@ -87,9 +87,9 @@ proc insert_bucket:
 \<medium_left_bracket>
   var met \<leftarrow> False \<semicolon>
   replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
-              \<open>\<lambda>i. (map (\<lambda>kv. if fst kv = k then (k,v) else kv) (take i bucket) @ drop i bucket)
-                        \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<heavy_comma>
-                   (\<exists>v. (k,v) \<in> set (take i bucket)) \<Ztypecolon> \<v>\<a>\<r>[met] \<bool>\<close>
+              \<open>\<lambda>i. (\<exists>v. (k,v) \<in> set (take i bucket)) \<Ztypecolon> \<v>\<a>\<r>[met] \<bool>\<heavy_comma>
+                   (map (\<lambda>kv. if fst kv = k then (k,v) else kv) (take i bucket) @ drop i bucket)
+                        \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     val kv \<leftarrow> get_dynarr($addr, $i) \<semicolon>
     if ($kv \<tribullet> k = $k) \<medium_left_bracket>
@@ -103,8 +103,10 @@ proc insert_bucket:
   \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> 
 \<medium_right_bracket> .
 
+declare [[ML_print_depth = 100]]
+
 proc update_hash:
-  input  \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> Hash addr TY T\<close> 
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length ;;
@@ -117,20 +119,20 @@ proc update_hash:
   insert_bucket ($tabl_addr \<tribullet> $hash !, $k, $v) \<semicolon>
 
   \<m>\<a>\<k>\<e>\<s> \<open>f(k \<mapsto> v) \<Ztypecolon> Hash addr TY T\<close>
-    certified by (auto, auto_sledgehammer, auto_sledgehammer, auto_sledgehammer,
-                  rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
+  certified by (auto, auto_sledgehammer, auto_sledgehammer, auto_sledgehammer,
+                rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
                     subgoal_tac \<open>\<And>k' v. \<lbrakk> (k',v) \<in> set bucket' ; k' \<noteq> k \<rbrakk> \<Longrightarrow> (k', v) \<in> set (buckets (hash k ?N))\<close>,
                     subgoal_tac \<open>\<And>k v i.\<lbrakk> (k,v) \<in> set (buckets i) ; i < ?N \<rbrakk> \<Longrightarrow> hash k ?N = i\<close>,
-                  clarsimp, rule conjI, auto_sledgehammer, rule conjI, auto_sledgehammer,
-                  rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
-                  auto_sledgehammer, auto_sledgehammer, auto_sledgehammer)
+                clarsimp, rule conjI, auto_sledgehammer, rule conjI, auto_sledgehammer,
+                rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
+                auto_sledgehammer, auto_sledgehammer, auto_sledgehammer)
 \<medium_right_bracket> .
 
 proc bucket_has_key:
-  input  \<open>bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
-  output \<open>bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<heavy_comma>
-          (\<exists>v. (k,v) \<in> set bucket) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+          bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>
+  output \<open>(\<exists>v. (k,v) \<in> set bucket) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma>
+          bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>
 \<medium_left_bracket>
   var met \<leftarrow> False \<semicolon>
   replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
@@ -142,8 +144,8 @@ proc bucket_has_key:
 \<medium_right_bracket> .
 
 proc hash_has_key:
-  input  \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
-  output \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma> k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
+  output \<open>k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
@@ -161,11 +163,12 @@ proc hash_has_key:
 
 
 proc lookup_bucket:
-  input \<open>bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<heavy_comma>
-         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+         bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>
   premises \<open>\<exists>v. (k,v) \<in> set bucket\<close>
-  output \<open>bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<heavy_comma>
-          v \<Ztypecolon> \<v>\<a>\<l> T \<s>\<u>\<b>\<j> v. (k,v) \<in> set bucket\<close>
+  output \<open>v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma>
+          bucket \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>
+          \<s>\<u>\<b>\<j> v. (k,v) \<in> set bucket\<close>
 \<medium_left_bracket>
   var ret \<semicolon>
   replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
@@ -182,9 +185,9 @@ proc lookup_bucket:
 
 
 proc hash_lookup:
-  input  \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
   premises \<open>k \<in> dom f\<close>
-  output \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma> the (f k) \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  output \<open>the (f k) \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
@@ -203,12 +206,12 @@ proc hash_lookup:
 proc new_hash:
   input  \<open>N \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   premises \<open>0 < N\<close>
-  output \<open>Map.empty \<Ztypecolon> Hash addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h> \<s>\<u>\<b>\<j> addr. \<top>\<close>
+  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> Map.empty \<Ztypecolon> Hash addr TY T \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
-  val tabl_addr \<leftarrow> calloc_N ($N) \<open>\<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close> \<semicolon>
+  val tabl_addr \<leftarrow> calloc ($N) \<open>\<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close> \<semicolon>
   replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, $N)
-              \<open>\<lambda>M. (\<lambda>i. []) \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. i < M} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>)\<heavy_comma>
-                   bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[N] (\<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)
+              \<open>\<lambda>M. bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[N] (\<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
+                   (\<lambda>i. []) \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. i < M} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>)
                    \<s>\<u>\<b>\<j> bucket_ptrs. \<top> \<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     val dynarr \<leftarrow> apply_rule new_dynarr[where T=\<open>\<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>] \<semicolon>
@@ -222,7 +225,7 @@ proc new_hash:
          by (rule \<phi>Mul_Quant\<^sub>\<Lambda>_cong, auto_sledgehammer)\<semicolon>
   \<medium_right_bracket> \<semicolon>
   
-  val ret \<leftarrow> calloc_1 \<open>\<lbrace> tabl: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<close> \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> tabl: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<close> \<semicolon>
   $ret \<tribullet> N := $N \<semicolon>
   $ret \<tribullet> tabl := $tabl_addr \<semicolon>
   \<m>\<a>\<k>\<e>\<s> \<open>Map.empty \<Ztypecolon> Hash addra TY T\<close> \<semicolon>
@@ -231,16 +234,16 @@ proc new_hash:
 
 
 proc del_hash:
-  input  \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
-  val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
-  val tabl \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
+  val N \<leftarrow> $addr.N ! \<semicolon>
+  val tabl \<leftarrow> $addr.tabl ! \<semicolon>
   replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, $N)
             \<open>\<lambda>M. buckets \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. M \<le> i \<and> i < ?N} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>) \<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-    del_dynarr ($tabl \<tribullet> $i !)
+    del_dynarr ($tabl.$i !)
   \<medium_right_bracket> \<semicolon>
   mfree ($tabl) \<semicolon>
   mfree ($addr)
@@ -248,21 +251,21 @@ proc del_hash:
 
 
 proc entries_of_hash:
-  input  \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<close>
-  output \<open>f \<Ztypecolon> Hash addr TY T\<heavy_comma>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
+  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma>
           l \<Ztypecolon> DynArr addr' (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>
+          f \<Ztypecolon> Hash addr TY T
           \<s>\<u>\<b>\<j> l addr'. set l = Map.graph f\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
   val dynarr \<leftarrow> apply_rule new_dynarr[where T=\<open>\<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>] \<semicolon>
-  val N \<leftarrow> $addr \<tribullet> N ! \<semicolon>
-  val tabl \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
+  val N \<leftarrow> $addr.N ! \<semicolon>
+  val tabl \<leftarrow> $addr.tabl ! \<semicolon>
   replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, $N)
             \<open>\<lambda>i. l \<Ztypecolon> DynArr addra (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>
                  \<s>\<u>\<b>\<j> l. set l = (\<Union>k<i. set (buckets k))\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-    concat_dynarr ($dynarr, $tabl \<tribullet> $i !) \<semicolon>
+    concat_dynarr ($dynarr, $tabl.$i !) \<semicolon>
   \<medium_right_bracket> \<semicolon>
   \<m>\<a>\<k>\<e>\<s> \<open>f \<Ztypecolon> Hash addr TY T\<close> \<semicolon>
   $dynarr
@@ -271,9 +274,9 @@ proc entries_of_hash:
 
 
 proc rehash:
-  input  \<open>f \<Ztypecolon> Hash addr  TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> N \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> N \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> f \<Ztypecolon> Hash addr  TY T\<close>
   premises \<open>0 < N\<close>
-  output \<open>f \<Ztypecolon> Hash addr' TY T\<heavy_comma> addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h> \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> f \<Ztypecolon> Hash addr' TY T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = Map.graph_def \<semicolon>
 
@@ -284,7 +287,7 @@ proc rehash:
               \<open>\<lambda>i. f \<Ztypecolon> Hash addra TY T \<s>\<u>\<b>\<j> f. set (take i l) = Map.graph f\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     val entry \<leftarrow> get_dynarr ($dynarr, $i) \<semicolon>
-    update_hash ($ret, $entry \<tribullet> k, $entry \<tribullet> v)
+    update_hash ($ret, $entry.k, $entry.v)
   \<medium_right_bracket> certified by (clarify, rule exI[where x=\<open>fa(fst (l ! i) \<mapsto> snd (l ! i))\<close>],
                   auto_sledgehammer) \<semicolon>
   del_dynarr ($dynarr) \<semicolon>

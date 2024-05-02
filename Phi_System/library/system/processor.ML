@@ -65,6 +65,7 @@ val parse_auto_level : proc -> proc
 
 
 val long_idt_to_triangle : 'a parser -> 'a parser
+val translate_tokens : Token.src -> Token.src
 
 end
 
@@ -175,9 +176,27 @@ fun eval_tokens cfg ctxt =
 
 val empty_tokens = forall (Token.is_eof)
 
+val triangle_brace_keywords =
+      Keyword.add_minor_keywords ["\<tribullet>",")","]","$","!"] Keyword.empty_keywords
+
+fun translate_token tok =
+  case Token.content_of tok
+    of ")." => SOME (Token.explode triangle_brace_keywords (Token.pos_of tok) ")\<tribullet>")
+     | "]." => SOME (Token.explode triangle_brace_keywords (Token.pos_of tok) "]\<tribullet>")
+     | ".$" => SOME (Token.explode triangle_brace_keywords (Token.pos_of tok) "\<tribullet>$")
+     | "!." => SOME (Token.explode triangle_brace_keywords (Token.pos_of tok) "!\<tribullet>")
+     | _ => NONE
+
+fun translate_tokens [] = []
+  | translate_tokens (tok :: toks) =
+      case translate_token tok
+        of SOME toks' => toks' @ translate_tokens toks
+         | NONE => tok :: translate_tokens toks
+
 fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
   Phi_CP_IDE.call_of_state_sequent (fn stat0 =>
-    let val auto_lev = if empty_tokens toks then auto_lev_no_input else auto_lev
+    let val toks = translate_tokens toks
+        val auto_lev = if empty_tokens toks then auto_lev_no_input else auto_lev
         val stat = (case auto_lev of SOME lev => apfst (Config.put Phi_Reasoner.auto_level lev) stat0
                                    | NONE => stat0)
                 |> apfst Phi_ID.next
@@ -396,5 +415,6 @@ fun long_idt_to_triangle parse toks =
         of Token.Long_Ident => parse (translate tok @ toks)
          | _ => parse (translate tok @ toks)
 ) end
+
 
 end

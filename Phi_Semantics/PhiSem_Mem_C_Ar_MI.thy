@@ -13,7 +13,7 @@ proc op_add_ptr[\<phi>overload +]:
   $j semantic_local_value \<open>\<i>\<n>\<t>('b)\<close> 
 
   have [simp]: \<open>word_of_nat (nat (2 ^ LENGTH('b) + j)) = (word_of_int j :: 'b word)\<close>
-    by (smt (verit, ccfv_SIG) More_Word.power_not_zero diff_less int_nat_eq len_gt_0 of_int_of_nat_eq power_increasing_iff power_overflow the_\<phi>lemmata(5) word_of_int_0 word_of_int_2p_len word_of_int_hom_syms(1) zero_less_Suc) ;;
+    by (smt (verit, ccfv_threshold) One_nat_def nat_0_le of_int_of_nat_eq sint_of_int_eq the_\<phi>lemmata(1) two_less_eq_exp_length wi_hom_add word_of_int_0 word_of_int_2p_len) \<semicolon>
 
   semantic_return \<open>
       V_pointer.mk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)

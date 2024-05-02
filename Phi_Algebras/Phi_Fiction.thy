@@ -41,7 +41,7 @@ subsubsection \<open>Fictional Refinement\<close>
 definition Fictional_Forward_Simulation :: \<open>'c rel \<Rightarrow> 'a rel \<Rightarrow> ('a::sep_magma,'c::sep_magma) interp \<Rightarrow> 'a set \<Rightarrow> bool\<close>
       ("_/ \<r>\<e>\<f>\<i>\<n>\<e>\<s> _/ \<w>.\<r>.\<t> _/ \<i>\<n> _" [11,11,11] 10)
   where \<open>(F \<r>\<e>\<f>\<i>\<n>\<e>\<s> G \<w>.\<r>.\<t> T \<i>\<n> D)
-    \<longleftrightarrow> (\<forall>x r R. F `` (R * T (r * x) \<s>\<u>\<b>\<j> r ## x \<and> x \<in> D) \<subseteq> { y'. \<exists>y. y' \<in> R * T (r * y) \<and> r ## y \<and> (x,y) \<in> G})\<close>
+    \<longleftrightarrow> (\<forall>x r R. F `` (T (x * r) * R \<s>\<u>\<b>\<j> x ## r \<and> x \<in> D) \<subseteq> { y'. \<exists>y. y' \<in> T (y * r) * R \<and> y ## r \<and> (x,y) \<in> G})\<close>
 
 text \<open>We use relation directly here but doesn't mean we cannot model return value or threw exceptions.
 They can parameterize the relation, as we don't need to (it is not designed to) abstract the values.
@@ -78,7 +78,7 @@ lemma refinement_sub_fun_right:
 
 lemma refinement_frame:
   \<open> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
-\<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on R * B \<w>.\<r>.\<t> I \<i>\<n> R * D\<close>
+\<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B * Id_on R \<w>.\<r>.\<t> I \<i>\<n> D * R\<close>
   for B :: \<open>'b::sep_semigroup rel\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: subset_iff Subjection_expn_set set_mult_expn Image_def Bex_def Id_on_iff)
@@ -93,7 +93,7 @@ lemma sep_refinement_horizontal_stepwise:
   apply (clarsimp simp add: set_mult_expn Subjection_expn_set subset_iff Image_def Bex_def)
   subgoal premises prems for x r R u v y z
   proof -
-    have \<open>(\<exists>xa. (\<exists>u v. xa = u * v \<and> u \<in> R \<and> v \<in> I (r * x) \<and> u ## v) \<and> r ## x \<and> x \<in> D \<and> (xa, y) \<in> A1)\<close>
+    have \<open>\<exists>xa. (\<exists>u v. xa = u * v \<and> u \<in> I (x * r) \<and> v \<in> R \<and> u ## v) \<and> x ## r \<and> x \<in> D \<and> (xa, y) \<in> A1\<close>
       using prems(10) prems(4) prems(5) prems(6) prems(8) prems(9) by blast
     note prems(1)[THEN spec[where x=x], THEN spec[where x=r], THEN spec[where x=R], THEN spec[where x=y],
           THEN mp, OF this]
@@ -101,7 +101,7 @@ lemma sep_refinement_horizontal_stepwise:
       apply clarsimp
       subgoal premises prems2 for y' u' v'
       proof -
-        have \<open>(\<exists>x. (\<exists>u v. x = u * v \<and> u \<in> R \<and> v \<in> I (r * y') \<and> u ## v) \<and> r ## y' \<and> y' \<in> D' \<and> (x, z) \<in> A2)\<close>
+        have \<open>(\<exists>x. (\<exists>u v. x = u * v \<and> u \<in> I (y' * r) \<and> v \<in> R \<and> u ## v) \<and> y' ## r \<and> y' \<in> D' \<and> (x, z) \<in> A2)\<close>
           using prems(3) prems(5) prems(7) prems2(1) prems2(2) prems2(3) prems2(4) prems2(5) prems2(6) by blast
         note prems(2)[THEN spec[where x=y'], THEN spec[where x=r], THEN spec[where x=R], THEN spec[where x=z],
           THEN mp, OF this]
@@ -112,7 +112,7 @@ lemma sep_refinement_horizontal_stepwise:
   qed .
 
 lemma constant_refinement:
-  \<open>Id_on UNIV * Id_on A \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on B \<w>.\<r>.\<t> I \<i>\<n> B\<close>
+  \<open>Id_on A * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on B \<w>.\<r>.\<t> I \<i>\<n> B\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: subset_iff Id_on_iff set_mult_expn Subjection_expn_set times_fun; blast)
 
@@ -142,7 +142,7 @@ lemma refinement_ExSet:
 
 
 definition refinement_projection :: \<open>('abstract::sep_magma \<Rightarrow> 'concrete set) \<Rightarrow> 'abstract spec \<Rightarrow> 'concrete spec\<close>
-  where \<open>refinement_projection I D = \<Union> (I ` (UNIV * D))\<close>
+  where \<open>refinement_projection I D = \<Union> (I ` (D * UNIV))\<close>
 
 lemma refinement_projection_mono:
   \<open> D \<subseteq> D'
@@ -156,9 +156,9 @@ lemma UNIV_times_idem:
   by (clarsimp simp add: set_mult_expn, metis mult_1_class.mult_1_right sep_magma_1_left)
 
 lemma refinement_projection_UNIV_times_D[simp]:
-  \<open> refinement_projection I (UNIV * D) = refinement_projection I D \<close>
+  \<open> refinement_projection I (D * UNIV) = refinement_projection I D \<close>
   for D :: \<open>'a::sep_monoid set\<close>
-  unfolding refinement_projection_def mult.assoc[symmetric] UNIV_times_idem ..
+  unfolding refinement_projection_def mult.assoc UNIV_times_idem ..
 
 subsection \<open>Instances\<close>
 
@@ -168,16 +168,16 @@ definition [simp]: "\<F>_it x = {x}"
 
 lemma \<F>_it_refinement_projection:
   \<open> S \<subseteq> S'
-\<Longrightarrow> refinement_projection \<F>_it S \<subseteq> UNIV * S'\<close>
+\<Longrightarrow> refinement_projection \<F>_it S \<subseteq> S' * UNIV\<close>
   unfolding refinement_projection_def
   by (clarsimp simp add: set_mult_expn)
 
 lemma \<F>_it_refinement:
-  \<open>Id_on UNIV * {(u,v)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(u,v)} \<w>.\<r>.\<t> \<F>_it \<i>\<n> {u}\<close>
+  \<open>{(u,v)} * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(u,v)} \<w>.\<r>.\<t> \<F>_it \<i>\<n> {u}\<close>
   for u :: \<open>'a::{sep_cancel,sep_semigroup}\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: Subjection_expn_set set_mult_expn,
-      metis sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc')
+      metis sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
 
 
 subsubsection \<open>Composition\<close>
@@ -209,7 +209,7 @@ lemma sep_refinement_stepwise:
   proof -
     thm prems
     thm prems(1)[THEN spec[where x=xb],THEN spec[where x=1],THEN spec[where x=\<open>R\<close>],THEN spec[where x=\<open>t\<close>]]
-    have \<open>(\<exists>x. (\<exists>u v. x = u * v \<and> u \<in> R \<and> v \<in> Ia (1 * xb) \<and> u ## v) \<and> 1 ## xb \<and> xb \<in> D \<and> (x, t) \<in> S1)\<close>
+    have \<open>\<exists>x. (\<exists>u v. x = u * v \<and> u \<in> Ia (xb * 1) \<and> v \<in> R \<and> u ## v) \<and> xb ## 1 \<and> xb \<in> D \<and> (x, t) \<in> S1\<close>
       using prems(10) prems(3) prems(4) prems(5) prems(6) prems(7) prems(8) prems(9) by fastforce
     note prems(1)[THEN spec[where x=xb],THEN spec[where x=1],THEN spec[where x=\<open>R\<close>],THEN spec[where x=\<open>t\<close>],
           THEN mp, OF this]
@@ -217,7 +217,7 @@ lemma sep_refinement_stepwise:
       apply clarsimp
       subgoal premises prems2 for y u'' v''
       proof -
-        have \<open>(\<exists>xa. (\<exists>u v. xa = u * v \<and> u \<in> {1} \<and> v \<in> Ib (r * x) \<and> u ## v) \<and> r ## x \<and> x \<in> D' \<and> (xa, y) \<in> S2)\<close>
+        have \<open>(\<exists>xa. (\<exists>u v. xa = u * v \<and> u \<in> Ib (x * r) \<and> v \<in> {1} \<and> u ## v) \<and> x ## r \<and> x \<in> D' \<and> (xa, y) \<in> S2)\<close>
           by (simp, rule exI[where x=xb], simp add: prems2 prems)
         note prems(2)[THEN spec[where x=x],THEN spec[where x=r],THEN spec[where x=\<open>{1}\<close>], THEN spec[where x=y],
                 THEN mp, OF this]
@@ -243,12 +243,12 @@ lemma refinement_projections_stepwise:
   unfolding refinement_projection_def
   apply (clarsimp simp add: Bex_def set_eq_iff set_mult_expn)
   subgoal for x x' u v
-    by (metis mult_1_class.mult_1_left sep_magma_1_right) .
+    by (metis mult_1_class.mult_1_right sep_magma_1_left) .
 
 lemma refinement_projections_stepwise_UNIV_paired:
-  \<open> refinement_projection Ia Da \<subseteq> UNIV * Dc
-\<Longrightarrow> refinement_projection Ib Db \<subseteq> UNIV * Da
-\<Longrightarrow> refinement_projection (Ia \<Zcomp>\<^sub>\<I> Ib) Db \<subseteq> UNIV * Dc\<close>
+  \<open> refinement_projection Ia Da \<subseteq> Dc * UNIV
+\<Longrightarrow> refinement_projection Ib Db \<subseteq> Da * UNIV
+\<Longrightarrow> refinement_projection (Ia \<Zcomp>\<^sub>\<I> Ib) Db \<subseteq> Dc * UNIV \<close>
   for Ia :: \<open>('c::sep_monoid, 'a::sep_magma_1) interp\<close>
   using refinement_projections_stepwise
   by (metis (mono_tags, lifting) refinement_projection_UNIV_times_D refinement_projection_mono subset_trans)
@@ -261,7 +261,7 @@ definition [simp]: "\<F>_finite_product I f = prod (\<lambda>x. I x (f x)) (dom1
 lemma \<F>_finite_product_split:
   " finite (dom1 f)
 \<Longrightarrow> (\<And>k. homo_one (I k))
-\<Longrightarrow> \<F>_finite_product I f = \<F>_finite_product I (f(k:=1)) * I k (f k)
+\<Longrightarrow> \<F>_finite_product I f = I k (f k) * \<F>_finite_product I (f(k:=1))
    \<and> \<F>_finite_product I (f(k:=1)) ## I k (f k)"
   for I :: \<open>'a \<Rightarrow> 'b::sep_algebra \<Rightarrow> 'c::sep_algebra set\<close>
   by (simp add: homo_one_def,
@@ -272,8 +272,8 @@ definition [simp]: "\<F>_FP_homo I f = prod (\<lambda>x. apply_unital_homo (I x)
 
 lemma \<F>_FP_homo_split:
   " finite (dom1 f)
-\<Longrightarrow> \<F>_FP_homo I f = \<F>_FP_homo I (f(k:=1)) * apply_unital_homo (I k) (f k)
-   \<and> \<F>_FP_homo I (f(k:=1)) ## apply_unital_homo (I k) (f k)"
+\<Longrightarrow> \<F>_FP_homo I f = apply_unital_homo (I k) (f k) * \<F>_FP_homo I (f(k:=1))
+   \<and> apply_unital_homo (I k) (f k) ## \<F>_FP_homo I (f(k:=1)) "
   for I :: \<open>'a \<Rightarrow> ('b::sep_algebra, 'c::sep_algebra set) unital_homo\<close>
   by (simp add: homo_one_def,
       smt (verit, ccfv_SIG) Diff_empty Diff_insert0 apply_unital_homo_1 dom1_def mem_Collect_eq mult.commute mult_1_class.mult_1_right prod.remove)
@@ -317,58 +317,57 @@ lemma \<F>_pointwise_\<F>_it:
   by (simp add: fun_eq_iff set_eq_iff)
 
 lemma \<F>_pointwise_projection:
-  \<open> refinement_projection (I k) D' \<subseteq> UNIV * D
-\<Longrightarrow> refinement_projection (\<F>_pointwise I) (fun_upd 1 k ` D') \<subseteq> UNIV * fun_upd 1 k ` D\<close>
+  \<open> refinement_projection (I k) D' \<subseteq> D * UNIV
+\<Longrightarrow> refinement_projection (\<F>_pointwise I) (fun_upd 1 k ` D') \<subseteq> fun_upd 1 k ` D * UNIV\<close>
   for D :: \<open>'b::sep_monoid set\<close>
   apply (clarsimp simp add: subset_iff Bex_def image_iff set_mult_expn times_fun
             refinement_projection_def)
   subgoal premises prems for t u xb
   proof -
-    have t1: \<open>u k ## xb\<close>
+    have t1: \<open>xb ## u k\<close>
       by (metis fun_upd_same prems(3) sep_disj_fun)
-    have \<open>(\<exists>x. (\<exists>xa. (\<exists>u v. xa = u * v \<and> v \<in> D' \<and> u ## v) \<and> x = I k xa) \<and> t k \<in> x)\<close>
+    have \<open>(\<exists>x. (\<exists>xa. (\<exists>u v. xa = u * v \<and> u \<in> D' \<and> u ## v) \<and> x = I k xa) \<and> t k \<in> x)\<close>
       by (metis prems(2) prems(4) t1)
     note prems(1)[THEN spec[where x=\<open>t k\<close>], THEN mp, OF this]
     then show ?thesis
       apply clarsimp
       subgoal premises prems2 for u' v'
-        apply (rule exI[where x=\<open>t(k := u')\<close>], rule exI[where x=\<open>1(k := v')\<close>])
-        by (simp add: fun_eq_iff prems2 sep_disj_fun_def times_fun) .
+        by (rule exI[where x=\<open>1(k := u')\<close>], rule exI[where x=\<open>t(k := v')\<close>],
+            simp add: fun_eq_iff prems2 sep_disj_fun_def times_fun) .
   qed .
 
 lemma \<F>_pointwise_refinement:
-  \<open> Id_on UNIV * A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I k \<i>\<n> D
-\<Longrightarrow> Id_on UNIV * pairself (fun_upd 1 k) ` A \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` B
+  \<open> A * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I k \<i>\<n> D
+\<Longrightarrow> pairself (fun_upd 1 k) ` A * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` B
     \<w>.\<r>.\<t> \<F>_pointwise I \<i>\<n> fun_upd 1 k ` D\<close>
   for I :: \<open>'c \<Rightarrow> 'b::sep_magma_1 \<Rightarrow> 'a::sep_magma_1 set\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: set_mult_expn Subjection_expn_set image_iff Image_def subset_iff Bex_def times_fun Id_on_iff)
   subgoal premises prems for r R u v xb xc a b
   proof -
-    have t1[simp]: \<open>xc k ## a\<close>
+    have t1[simp]: \<open>a ## xc k\<close>
       by (metis fun_upd_same prems(8) sep_disj_fun)
-    have t2[simp]: \<open>xc k ## b\<close>
+    have t2[simp]: \<open>b ## xc k\<close>
       by (metis fun_upd_same prems(9) sep_disj_fun)
-    have \<open>(\<exists>x. (\<exists>ua v. x = ua * v \<and> ua \<in> {u k} \<and> v \<in> I k (r k * xb) \<and> ua ## v) \<and>
-     r k ## xb \<and>
-     xb \<in> D \<and> (\<exists>a ba aa. x = a * aa \<and> (\<exists>bb. xc k * b = ba * bb \<and> a = ba \<and> (aa, bb) \<in> A \<and> a ## aa \<and> ba ## bb)))\<close>
-      by (simp add: prems,
-          smt (verit, del_insts) fun_upd_same prems(10) prems(2) prems(5) prems(6) prems(7) sep_disj_fun_def t1 t2 times_fun)
-    note prems(1)[THEN spec[where x=xb], THEN spec[where x=\<open>r k\<close>], THEN spec[where x=\<open>{u k}\<close>, THEN spec[where x=\<open>xc k * b\<close>]],
+    have \<open>\<exists>x. (\<exists>u va. x = u * va \<and> u \<in> I k (xb * r k) \<and> va \<in> {v k} \<and> u ## va) \<and>
+      xb ## r k \<and> xb \<in> D \<and> (\<exists>a ba aa. x = a * aa \<and> b * xc k = ba * aa \<and> (a, ba) \<in> A \<and> a ## aa \<and> ba ## aa)\<close>
+      by (auto simp add: prems,
+          smt (verit, ccfv_threshold) fun_upd_same prems(10) prems(2) prems(3) prems(5) prems(7) sep_disj_fun_def t1 t2 times_fun_def)
+    note prems(1)[THEN spec[where x=xb], THEN spec[where x=\<open>r k\<close>], THEN spec[where x=\<open>{v k}\<close>, THEN spec[where x=\<open>b * xc k\<close>]],
           THEN mp, OF this]
     then show ?thesis
       apply clarsimp
       subgoal premises prems2 for y v'
       proof -
-        have t4: \<open>u ## v(k := v')\<close>
+        have t4: \<open>u(k := v') ## v\<close>
           by (clarsimp simp add: sep_disj_fun_def prems2 prems(7)) (simp add: prems(7))
-        have t3: \<open>xc * 1(k := b) = u * v(k := v')\<close>
+        have t3: \<open>1(k := b) * xc = u(k := v') * v\<close>
           by (clarsimp simp add: fun_eq_iff times_fun prems2,
-              metis (no_types, opaque_lifting) fun_upd_other mult_1_class.mult_1_right prems(5) times_fun_def)
+              metis (mono_tags, lifting) fun_upd_apply mult_1_class.mult_1_left prems(5) times_fun_def)
         show ?thesis
           by (rule exI[where x=\<open>1(k := y)\<close>]; simp add: prems prems2; rule,
-               smt (verit, ccfv_threshold) fun_split_1 fun_upd_other fun_upd_same prems(3) prems(6) prems2(4) t3 t4 times_fun,
-               metis fun_sep_disj_1_fupdt(1) fun_upd_triv prems2(1) prems2(2))
+              smt (verit) fun_upd_apply mult_1_class.mult_1_left one_fun_def prems(3) prems(6) prems2(4) t3 t4,
+              metis fun_sep_disj_1_fupdt(2) fun_upd_triv prems2(1) prems2(2))
       qed .
   qed .
 
@@ -439,9 +438,8 @@ lemma map_option_inj_at_1[simp]:
 
 lemma (in sep_orthogonal_monoid) \<F>_functional_projection:
   \<open> S \<subseteq> D
-\<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) (\<psi> ` S) \<subseteq> UNIV * S\<close>
+\<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) (\<psi> ` S) \<subseteq> S * UNIV\<close>
   unfolding refinement_projection_def
-  apply (simp)
   by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>] sep_orthogonal; blast)
 
 lemma \<F>_functional_pointwise:
@@ -484,7 +482,7 @@ lemma refinement_projection:
 subgoal for r R u v w *)
 
 definition \<F>_functional_condition
-  where \<open>\<F>_functional_condition D \<longleftrightarrow> (\<forall>r x y. r ## x \<and> r ## y \<and> r \<in> D \<and> x \<in> D \<and> r * x \<in> D \<and> y \<in> D \<longrightarrow> r * y \<in> D)\<close>
+  where \<open>\<F>_functional_condition D \<longleftrightarrow> (\<forall>r x y. x ## r \<and> y ## r \<and> r \<in> D \<and> x \<in> D \<and> x * r \<in> D \<and> y \<in> D \<longrightarrow> y * r \<in> D)\<close>
 
 lemma \<F>_functional_condition_UNIV[simp]:
   \<open>\<F>_functional_condition UNIV\<close>
@@ -492,8 +490,8 @@ lemma \<F>_functional_condition_UNIV[simp]:
 
 definition frame_preserving_relation \<comment> \<open>TODO: REALLY UGLY!\<close>
   where \<open>frame_preserving_relation R
-    \<longleftrightarrow> (\<forall>a b c d r w. (a,b) \<in> R \<and> (c,d) \<in> R \<and> r * a = w * c \<and> r ## a \<and> r ## b \<and> w ## c
-            \<longrightarrow> r * b = w * d \<and> w ## d)\<close>
+    \<longleftrightarrow> (\<forall>a b c d r w. (a,b) \<in> R \<and> (c,d) \<in> R \<and> a * r = c * w \<and> a ## r \<and> b ## r \<and> c ## w
+            \<longrightarrow> b * r = d * w \<and> d ## w)\<close>
 
 context cancl_sep_orthogonal_monoid begin
 
@@ -501,7 +499,7 @@ lemma \<F>_functional_refinement_complex:
   \<open> (\<forall>a b. (a,b) \<in> R \<longrightarrow> a \<in> D \<and> b \<in> D)
 \<Longrightarrow> frame_preserving_relation R
 \<Longrightarrow> Sep_Closed D
-\<Longrightarrow> Id_on UNIV * R \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` R \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` (Domain R) \<close>
+\<Longrightarrow> R * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` R \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` (Domain R) \<close>
   unfolding Fictional_Forward_Simulation_def
   apply (auto simp add: set_mult_expn Subjection_expn_set sep_orthogonal Sep_Closed_def image_iff Bex_def)
   by (smt (z3) frame_preserving_relation_def homo_mult sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
@@ -509,11 +507,11 @@ lemma \<F>_functional_refinement_complex:
 lemma \<F>_functional_refinement:
   \<open> a \<in> D \<and> b \<in> D
 \<Longrightarrow> \<F>_functional_condition D
-\<Longrightarrow> Id_on UNIV * {(a, b)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` {a} \<close>
+\<Longrightarrow> {(a, b)} * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` {a} \<close>
   unfolding Fictional_Forward_Simulation_def \<F>_functional_condition_def
   apply (auto simp add: set_mult_expn Subjection_expn_set sep_orthogonal)
   apply (metis (no_types, lifting) homo_mult sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
-  by (metis sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_mult_assoc')
+  by (metis sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI2 sep_mult_assoc)
 
 end
 
@@ -523,7 +521,7 @@ subsubsection \<open>Cancellative Permission Insertion Homomorphism\<close>
 context cancl_share_orthogonal_homo begin
 
 lemma refinement_projection_half_perm:
-  \<open>S \<subseteq> D \<Longrightarrow> 0 < n \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
+  \<open>S \<subseteq> D \<Longrightarrow> 0 < n \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) ((share n o \<psi>) ` S) \<subseteq> S * UNIV\<close>
   unfolding refinement_projection_def
   by (auto simp add: set_mult_expn sep_orthogonal share_orthogonal';
       cases \<open>n \<le> 1\<close>,

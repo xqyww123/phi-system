@@ -7,9 +7,9 @@ abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<
 
 \<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
-      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) = ((nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<heavy_comma>
-                                           ls \<Ztypecolon> Linked_Lst nxt TY T
-                                         \<s>\<u>\<b>\<j> nxt. address_to_base addr )\<close> (**)
+      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) = (ls \<Ztypecolon> Linked_Lst nxt TY T\<heavy_comma>
+                                          (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>
+                                         \<s>\<u>\<b>\<j> nxt. address_to_base addr )\<close>
 
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr TY T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
@@ -37,8 +37,8 @@ proc init:
 \<medium_right_bracket> .
 
 proc is_empty:
-  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
-  output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l = [] \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
+  output \<open>l = [] \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [routine]
 \<medium_left_bracket>
   $addr = \<open>0 \<Ztypecolon> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
@@ -54,11 +54,11 @@ context
 begin
 
 proc prepend_llist:
-  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   requires [\<phi>reason]: \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>v#l \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma> addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY) \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v#l \<Ztypecolon> Linked_Lst addr' TY T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc_1 \<open>\<lbrace> nxt: \<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<close> \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<Pp>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<close> \<semicolon>
   $ret \<tribullet> nxt := $addr \<semicolon>
   $ret \<tribullet> data := $v \<semicolon>
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ TY T\<close> \<semicolon>
@@ -67,10 +67,10 @@ proc prepend_llist:
 
 
 proc pop_llist:
-  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
-  output \<open>(if l = [] then [] else tl l) \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma>
+          l \<Ztypecolon> Linked_Lst addr TY T \<close>
+  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma>
+          (if l = [] then [] else tl l) \<Ztypecolon> Linked_Lst addr' TY T
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
   is [routine]
 \<medium_left_bracket>
@@ -87,7 +87,7 @@ proc pop_llist:
 
 
 proc nth_llist:
-  input    \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
   is [recursive]
@@ -103,8 +103,7 @@ proc nth_llist:
 
 
 proc hd_llist:
-  input \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
-         addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   premises \<open>l \<noteq> []\<close>
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
           hd l \<Ztypecolon> \<v>\<a>\<l> T\<close>
@@ -112,9 +111,10 @@ proc hd_llist:
   nth_llist ($addr, 0)
 \<medium_right_bracket> .
 
+declare [[ML_print_depth = 1000]]
 
 proc update_nth_llist:
-  input    \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := y] \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [recursive]
@@ -124,17 +124,17 @@ proc update_nth_llist:
         $addr \<tribullet> data := $y
     \<medium_right_bracket> \<medium_left_bracket>
         update_nth_llist ($addr \<tribullet> nxt !, $i - 1, $y)
-    \<medium_right_bracket>
-    \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close> \<comment> \<open>annotation 2: close abstraction\<close>
- \<medium_right_bracket> .
+    \<medium_right_bracket> note [[\<phi>trace_reasoning = 2]] \<semicolon>
+    \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close>  \<comment> \<open>annotation 2: close abstraction\<close>
+  \<medium_right_bracket> .
 
 
 end
 
 proc length_of:
-  input    \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   premises \<open>length l < 2 ^ LENGTH(\<i>\<n>\<t>)\<close>
-  output   \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
+  output   \<open>length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [recursive]
   is [routine]
 \<medium_left_bracket>
@@ -150,12 +150,12 @@ proc length_of:
 
 
 proc reverse_aux:
-  input  \<open>l' \<Ztypecolon> Linked_Lst addr' TY T\<heavy_comma>
+  input  \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
+          addr  \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
           l  \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
-          addr  \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
-  output \<open>rev l @ l' \<Ztypecolon> Linked_Lst addr'' TY T\<heavy_comma>
-          addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}
+          l' \<Ztypecolon> Linked_Lst addr' TY T\<close>
+  output \<open>addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
+          rev l @ l' \<Ztypecolon> Linked_Lst addr'' TY T
           \<s>\<u>\<b>\<j> addr''. \<top>\<close>
   is [recursive]
   \<medium_left_bracket>
@@ -172,10 +172,10 @@ proc reverse_aux:
   \<medium_right_bracket> .
 
 proc reverse:
-  input  \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
-  output \<open>rev l \<Ztypecolon> Linked_Lst addr'' TY T\<heavy_comma>
-          addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
+          l \<Ztypecolon> Linked_Lst addr TY T\<close>
+  output \<open>addr'' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>
+          rev l \<Ztypecolon> Linked_Lst addr'' TY T
           \<s>\<u>\<b>\<j> addr''. \<top>\<close>
   \<medium_left_bracket>
     \<m>\<a>\<k>\<e>\<s>(0) \<open>Linked_Lst 0 TY T\<close>

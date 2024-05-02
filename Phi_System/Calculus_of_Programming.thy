@@ -43,7 +43,7 @@ consts programming_mode :: mode
        view_shift_mode  :: mode
 
 definition CurrentConstruction :: " mode \<Rightarrow> resource \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
-  where "CurrentConstruction mode s R S \<longleftrightarrow> s \<in> INTERP_SPEC (R * S)"
+  where "CurrentConstruction mode s R S \<longleftrightarrow> s \<in> INTERP_SPEC (S * R)"
 
 abbreviation Programming_CurrentConstruction ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _" [1000,1000,11] 10)
   where \<open>Programming_CurrentConstruction \<equiv> CurrentConstruction programming_mode\<close>
@@ -61,7 +61,7 @@ definition PendingConstruction :: " 'ret proc
                                   \<Rightarrow> (ABNM \<Rightarrow> assn)
                                   \<Rightarrow> bool "
     ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> _ \<o>\<n> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,1000,1000,11,11] 10)
-    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> LooseState (\<lambda>ret. INTERP_SPEC (R * S ret)) (\<lambda>ex. INTERP_SPEC (R * E ex))"
+    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> LooseState (\<lambda>ret. INTERP_SPEC (S ret * R)) (\<lambda>ex. INTERP_SPEC (E ex * R))"
 
 consts PendingConstruction_syntax :: \<open>'ret proc \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn) \<Rightarrow> (ABNM \<Rightarrow> assn) \<Rightarrow> bool\<close>
   ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> _/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,11,11] 10)
@@ -105,7 +105,7 @@ lemma \<phi>apply_proc:
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S \<longmapsto> T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow>(\<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E)"
   unfolding \<phi>Procedure_def CurrentConstruction_def PendingConstruction_def bind_def Satisfaction_def
-  by (auto 0 5)
+  by (simp add: mult.commute)
 
 lemma
   \<open> (\<exists>s' x. CodeBlock s  s'  f x \<and> CodeBlock s' s'' (g x) y)
@@ -180,7 +180,7 @@ lemma \<phi>reassemble_proc_final:
   "(\<And>s H. \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> g \<o>\<n> s [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> g \<lbrace> S \<longmapsto> T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
   unfolding CurrentConstruction_def PendingConstruction_def \<phi>Procedure_def bind_def split_paired_all Satisfaction_def
-  by blast
+  by (simp add: mult.commute)
 
 lemma "\<phi>__Return_rule__":
   \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> Any
@@ -421,14 +421,14 @@ paragraph \<open>Return\<close>
 
 lemma \<phi>M_Success[intro!]: (*deprecated?*)
   \<open> v \<Turnstile> (y \<Ztypecolon> T)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. y \<Ztypecolon> Val u T\<heavy_comma> X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val_def \<phi>Type_def)
 
 lemma \<phi>M_Success_P:
   \<open> v \<Turnstile> (y \<Ztypecolon> T)
 \<Longrightarrow> P (\<phi>arg v)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<s>\<u>\<b>\<j> P u \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. y \<Ztypecolon> Val u T\<heavy_comma> X \<s>\<u>\<b>\<j> P u \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val_def \<phi>Type_def INTERP_SPEC_subj Subjection_expn_set)
 

@@ -14,7 +14,7 @@ lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
 abbreviation \<open>\<s>\<i>\<z>\<e>_\<t> \<equiv> \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)\<close>
 
 
-proc calloc_N:
+proc calloc:
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>

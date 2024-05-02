@@ -3,6 +3,7 @@ include PLPR_SYNTAX
 
 val dest_premise_tag : term -> term * term
 val dest_premise_tag_opt : term -> (term * term) option
+val may_dest_premise_tag : term -> term
 val dest_premise_tag_c : cterm -> cterm * cterm
 val add_premise_tag_conv : cterm (*mode*) -> conv
 val premise_tag_conv : (term -> bool) -> conv -> conv
@@ -17,9 +18,15 @@ open PLPR_Syntax
 fun dest_premise_tag_opt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_premise_tag_opt X
   | dest_premise_tag_opt (Const(\<^const_name>\<open>Premise\<close>, _) $ tag $ X) = SOME (tag, X)
   | dest_premise_tag_opt _ = NONE
+
 fun dest_premise_tag tm =
   case dest_premise_tag_opt tm of SOME ret => ret
      | NONE => raise TERM ("dest_premise_tag", [tm])
+
+fun may_dest_premise_tag tm =
+  case dest_premise_tag_opt tm of SOME (_, ret) => ret 
+     | NONE => tm
+
 val dest_premise_tag_c= Phi_Help.dest_binop_c @{const_name "Premise"} o perhaps (try Phi_Help.dest_Trueprop_c)
 
 

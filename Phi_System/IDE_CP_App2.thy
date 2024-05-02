@@ -128,21 +128,22 @@ It should be some generic structural morphism.*)
 
 lemma [\<phi>reason 2100 for \<open>
   PROP \<phi>Application (Trueprop (?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
-          (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R\<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T)) ?Result
+          (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?x \<Ztypecolon> Val ?raw ?T\<heavy_comma> ?R)) ?Result
 \<close> except \<open>
   PROP \<phi>Application (Trueprop (?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
           (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R)) ?Result
 \<close>]:
   \<open> PROP \<phi>Application (Trueprop (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
-      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Val raw T))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P)\<close>
+      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> x \<Ztypecolon> Val raw T\<heavy_comma> R))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> y \<Ztypecolon> Val raw U\<heavy_comma> R) \<and> P)\<close>
   unfolding \<phi>Application_def Premise_def
-  by (simp, smt (z3) Premise_norm(1) Val.functional_transformation \<phi>apply_implication \<r>Guard_I transformation_left_frame)
+  by (simp, smt (verit, del_insts) CurrentConstruction_def INTERP_SPEC_subj Satisfaction_def
+                                   Subjection_expn Subjection_times(1) Transformation_def Val.unfold)
 
 
 lemma [\<phi>reason 2000 for \<open>
   PROP \<phi>Application (Trueprop (?x' \<Ztypecolon> ?T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
-      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R\<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T)) ?Result
+      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?x \<Ztypecolon> Val ?raw ?T\<heavy_comma> ?R)) ?Result
 \<close> except \<open>
   PROP \<phi>Application (Trueprop (?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
           (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R)) ?Result
@@ -152,10 +153,11 @@ lemma [\<phi>reason 2000 for \<open>
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
-      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Val raw T))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P)\<close>
+      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> x \<Ztypecolon> Val raw T\<heavy_comma> R))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> y \<Ztypecolon> Val raw U\<heavy_comma> R) \<and> P)\<close>
   unfolding \<phi>Application_def Action_Tag_def Premise_def
-  by (simp, smt (z3) Premise_I Val.functional_transformation \<phi>apply_implication \<r>Guard_def mk_elim_transformation transformation_left_frame)
+  by (simp, metis (mono_tags, opaque_lifting) Premise_I Val.functional_transformation
+                                              \<phi>apply_implication \<r>Guard_I transformation_right_frame)
 
 
 subsubsection \<open>Synthesis\<close>
@@ -206,20 +208,20 @@ lemma [\<phi>reason %Val_ToA+10 for \<open>_ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<t
 
 
 
-lemma [\<phi>reason %Val_ToA+20 for \<open>_ \<heavy_comma> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
-  "R \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R"
+lemma [\<phi>reason %Val_ToA+20 for \<open>_ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<heavy_comma> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  "x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R"
   unfolding REMAINS_def Transformation_def by simp
 
-lemma [\<phi>reason %Val_ToA+10 for \<open>_ \<heavy_comma> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+lemma [\<phi>reason %Val_ToA+10 for \<open>_ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<heavy_comma> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<v>\<a>\<l>[_] _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
                     if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o Context.Proof o fst\<close>]:
   " y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<w>\<i>\<t>\<h> P"
+\<Longrightarrow> y \<Ztypecolon> \<v>\<a>\<l>[v] U\<heavy_comma> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<w>\<i>\<t>\<h> P"
   unfolding Transformation_def
   by (simp add: times_list_def) metis
 
 lemma [\<phi>reason %Val_ToA]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R \<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'\<heavy_comma> X \<w>\<i>\<t>\<h> P"
+\<Longrightarrow> X\<heavy_comma> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] X\<heavy_comma> R' \<w>\<i>\<t>\<h> P"
   unfolding REMAINS_def split_paired_All
   by (simp; metis transformation_left_frame mult.assoc mult.commute)
 
@@ -231,7 +233,7 @@ lemma [\<phi>reason %Val_ToA except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m
                   not (Phi_Syntax.is_BI_connective X)
        \<close> ]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] V \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] V \<w>\<i>\<t>\<h> P"
+\<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[v] V\<heavy_comma> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] x \<Ztypecolon> \<v>\<a>\<l>[v] V\<heavy_comma> R' \<w>\<i>\<t>\<h> P"
   unfolding REMAINS_def
   by (metis (no_types, opaque_lifting) transformation_right_frame mult.assoc mult.commute)
 
@@ -298,9 +300,9 @@ lemma [\<phi>reason %ToA_access_to_local_value for
   by blast
 
 lemma [OF \<phi>arg_val_varify_type,
-       \<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))\<close>]:
+       \<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> Val ret ?T\<heavy_comma> ?R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))\<close>]:
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
-\<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>))\<close>
+\<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x \<Ztypecolon> Val ret T\<heavy_comma> R \<rbrace>))\<close>
   unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
   by (cases raw; simp add: Val.unfold)
 

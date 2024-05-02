@@ -11,7 +11,7 @@ val quantify_args_of_proc_term_meta : bool (*whether to record the names in the 
 
 (* \<p>\<r>\<o>\<c> f ?a ?b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 --------------------------------------------------------------------------------------
-   \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
+   \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 *)
 val package_argument : Proof.context -> thm -> thm
 
@@ -39,7 +39,7 @@ fun quantify_args_of_proc_term' record_name proc =
                                         else SOME []
                                         else NONE
                             | _      => NONE
-      val (pack, X') = package_values "" true Vs X
+      val (pack, X') = package_values "" false Vs X
       fun parameterize_var (Var (v,T))   = Var (v, fastype_of pack --> T) $ Bound 0
         | parameterize_var (X $ Bound i) = parameterize_var X $ Bound (i + 1)
       val f' = if is_Var (Term.head_of f)
@@ -50,11 +50,11 @@ fun quantify_args_of_proc_term' record_name proc =
                               then incr_boundvars 1 F $ Bound 0
                               else incr_boundvars 1 f
                               else incr_boundvars 1 (
-                                      snd (package_values "" true (SOME (dest_arg_tuple pack)) f))
+                                      snd (package_values "" false (SOME (dest_arg_tuple pack)) f))
                                    $ Bound 0
                             | _      =>
                               incr_boundvars 1 (
-                                snd (package_values "" true (SOME (dest_arg_tuple pack)) f))
+                                snd (package_values "" false (SOME (dest_arg_tuple pack)) f))
                               $ Bound 0
       val T = fastype_of pack
       val abs1 = Abs ("", T,
@@ -100,7 +100,7 @@ fun quantify_args_of_proc_term record_name (Const (\<^const_name>\<open>Trueprop
 
 (*
     (\<And>a b. \<p>\<r>\<o>\<c> f a b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE ) \<Longrightarrow>
-    (\<forall>a. \<p>\<r>\<o>\<c> f a \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE )
+    (\<forall>a. \<p>\<r>\<o>\<c> f a \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE )
 *)
 fun rule_of_package_arguement ctxt proc =
   let val packed = quantify_args_of_proc_term false proc

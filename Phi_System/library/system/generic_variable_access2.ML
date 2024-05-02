@@ -132,7 +132,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
   let
   (*make the assignment procedure*)
   val (rule', ctxt, vterms', decl') = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
-        |> fold (fn (name_idx,(_,f)) => fn (proc, ctxt, vterms, Asm) =>
+        |> fold_rev (fn (name_idx,(_,f)) => fn (proc, ctxt, vterms, Asm) =>
               let val (rule, ctxt', vterms', Asm') = f name_idx  (ctxt,sequent)
                in (rule RS proc, ctxt', rev vterms' @ vterms, rev Asm' @ Asm) end
            ) name_assigner
@@ -196,8 +196,8 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
           val ((goal_Pending, goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
           fun instantiate_R inst spec =
             let
-              fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
-                | left_most X = X
+              fun right_most (Const (\<^const_name>\<open>times\<close>, _) $ _ $ A) = right_most A
+                | right_most X = X
               val spec' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) spec
               fun err () = error "At least one of the assignment rules is not configured properly."
               val inst_ty = case Thm.typ_of_cterm inst
@@ -206,8 +206,8 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
                                | \<^Type>\<open>fun \<^typ>\<open>ABNM\<close> _\<close> => NONE
                                | _ => err ()
               val (R, tv) = case (case Thm.term_of spec'
-                                    of Abs (_,_,X) => left_most X |> dest_comb |> fst
-                                     | X => left_most X)
+                                    of Abs (_,_,X) => right_most X |> dest_comb |> fst
+                                     | X => right_most X)
                               of Var (R, \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<open>TVar tv\<close>\<close> _\<close>) => (R, SOME tv)
                                | Var (R, \<^Type>\<open>fun \<^typ>\<open>ABNM\<close> _\<close>) => (R, NONE)
                                | _ => err ()

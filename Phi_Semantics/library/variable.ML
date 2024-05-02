@@ -40,10 +40,10 @@ fun dest_Var ctm =
 
 fun find_Var var ctm =
   case Thm.term_of ctm
-    of Const (\<^const_name>\<open>times\<close>, _) $ R $ X
-        => (case dest_Var (Thm.dest_arg ctm)
-              of SOME (name, xT) => if name = var then SOME xT else find_Var var (Thm.dest_arg1 ctm)
-               | NONE => find_Var var (Thm.dest_arg1 ctm))
+    of Const (\<^const_name>\<open>times\<close>, _) $ X $ R
+        => (case dest_Var (Thm.dest_arg1 ctm)
+              of SOME (name, xT) => if name = var then SOME xT else find_Var var (Thm.dest_arg ctm)
+               | NONE => find_Var var (Thm.dest_arg ctm))
     | _ => (case dest_Var ctm
               of SOME (name, xT) => if name = var then SOME xT else NONE
                | NONE => NONE)

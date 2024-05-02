@@ -49,7 +49,7 @@ val package_values0 :
 val translate_arg : term -> term
 val translate_ret : term -> term
 (* Syntax translation during parse of the post-condition,
-   roughly identical to (package_values "\<r>\<e>\<t>" true).
+   roughly identical to (package_values "\<r>\<e>\<t>" false).
 *)
 
 val is_argT : typ -> bool
@@ -295,7 +295,7 @@ fun translate_ret' (term as (Abs _)) = term
       =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_constrainAbs", ty) $ B $ Y)
                               | B => Const ("_constrainAbs", ty) $ B $ Y)
   | translate_ret' term =
-      snd (package_values0 "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> true NONE term)
+      snd (package_values0 "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> false NONE term)
 
 
 (* fun translate_num term =

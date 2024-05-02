@@ -54,7 +54,7 @@ fun pack _    f (Abs (N,TY,X)) = Abs (N,TY, f X)
       case Phi_Help.safe_fastype_of term
         of \<^Type>\<open>fun T _\<close> => Abs ("", T, f (term $ Bound 0))
          | _ => if flag
-                then snd (Procedure_Syntax.package_values "" true NONE (f term))
+                then snd (Procedure_Syntax.package_values "" false NONE (f term))
                 else f term
 
 fun encode_pattern _    No_Pattern = \<^term>\<open>TERM ()\<close>
@@ -62,9 +62,9 @@ fun encode_pattern _    No_Pattern = \<^term>\<open>TERM ()\<close>
   | encode_pattern flag (Arg_and_Ret (arg,ret)) =
       let val idx = Int.max (maxidx_of_term arg, maxidx_of_term ret) + 1
           val R = Var(("R",idx), \<^typ>\<open>assn\<close>)
-          fun prepend_R ((H as Const (\<^const_name>\<open>times\<close>, _)) $ A $ B) = H $ prepend_R A $ B
-            | prepend_R X = Const(\<^const_name>\<open>times\<close>, \<^typ>\<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close>) $ R $ X
-       in Logic.mk_conjunction (Logic.mk_term (pack flag prepend_R arg),
+          fun append_R ((H as Const (\<^const_name>\<open>times\<close>, _)) $ A $ B) = H $ A $ append_R B
+            | append_R X = Const(\<^const_name>\<open>times\<close>, \<^typ>\<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close>) $ R $ X
+       in Logic.mk_conjunction (Logic.mk_term (pack flag append_R arg),
                                 Logic.mk_term (pack true I ret))
       end
 

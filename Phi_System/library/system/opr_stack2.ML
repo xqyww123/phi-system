@@ -33,10 +33,7 @@ val push_operator : Phi_CP_IDE.eval_cfg -> operator_info * (string * Position.T)
                  -> context -> context
 
 val push_meta_operator : Phi_CP_IDE.eval_cfg
-                      -> operator_info * (string * Position.T) * free_param option
-                       * ( Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option
-                              -> opr_frame list * context_state
-                              -> opr_frame list * context_state )
+                      -> operator_info * (string * Position.T) * free_param option * meta_opr
                        -> context -> context
 
 (* End of Expression *)
@@ -71,6 +68,8 @@ val end_of_input : unit parser
 
 (* declaring operators *)
 
+val error_arity_opr : string * int * int -> string * Position.T -> 'a
+val get_operands : string * int -> string * Position.T -> context_state -> thm list * context_state
 
 end
 
@@ -93,7 +92,7 @@ open Phi_Opr_Stack
 fun chk_arity_constraint NONE _ _ _ = ()
   | chk_arity_constraint(SOME n) mode (name,pos) (_,sequent)
       = let val actual = Generic_Variable_Access.number_of_values (#spec_of mode (Thm.prop_of sequent))
-         in if actual = n
+         in if actual = n orelse n = VAR_ARITY_IN_SEQUENT orelse n = VAR_ARITY_IN_OPSTACK
             then ()
             else error (Pretty.string_of (Pretty.block ([
                   Pretty.str (if actual < n then "Less " else "More "),
@@ -151,22 +150,25 @@ fun eval_until gen_ctxt (limit, num) (mode, complete_eval, cfg) =
       fun eval 0 prev_name acts s = (0, prev_name, acts, s)
         | eval num prev_name (acts as (Apply _ :: _)) s = (num, prev_name, acts, s)
         | eval num prev_name (acts as (Begin_Block :: _)) s = (num, prev_name, acts, s)
-        | eval num prev_name (acts as (Opr (pr, arity, name, expr_id, rules) :: aR)) (ctxt,sequent)
+        | eval num prev_name (acts as (Opr (pr, arity, name, expr_id, vals, rules) :: aR)) (ctxt,sequent)
             = if pr < limit then (num, prev_name, acts, (ctxt,sequent))
               else if pr = limit then bad_syntax prev_name
               else let val name' = (SOME "operator", Markup.operator, name)
                 in chk_arity_constraint arity mode name (ctxt,sequent);
                    chk_complete_eval mode prev_name (ctxt,sequent);
-                   eval (num-1) name' aR ( (ctxt, Phi_Apply.apply rules ctxt sequent)
+                   (ctxt, sequent)
+                     |> Generic_Variable_Access.push_values vals
+                     |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
                      |> post_app (Phi_CP_IDE.set_expr_id expr_id cfg)
-                     |> complete_eval ? chk_complete_eval mode (SOME "operator", Markup.operator, name) )
+                     |> complete_eval ? chk_complete_eval mode (SOME "operator", Markup.operator, name)
+                     |> eval (num-1) name' aR
                end
-        | eval num prev_name (acts as (Meta_Opr (pr, arity, name, expr_id, param, meta) :: aR)) s
+        | eval num prev_name (acts as (Meta_Opr (pr, arity, name, expr_id, param, vals, meta) :: aR)) s
             = if pr < limit then (num, prev_name, acts, s)
               else if pr = limit then bad_syntax prev_name
               else let val _ = chk_arity_constraint arity mode name (chk_complete_eval mode prev_name s)
                        val name' = (SOME "operator", Markup.operator, name)
-                       val (acts',s') = meta (cfg,name,param) (aR,s)
+                       val (acts',s') = meta (cfg,name,param,vals) (aR,s)
                                      |> apsnd (fn (ctxt,sequent) => (ctxt,sequent)
                                           |> post_app (Phi_CP_IDE.set_expr_id expr_id cfg)
                                           |> complete_eval ? chk_complete_eval mode name'
@@ -237,29 +239,46 @@ fun open_parenthesis arg_name ((oprs, arg_names), (ctxt,sequent)) =
 
 (** Operator **)
 
-fun push_operator cfg ((left_prec,prec,arity_delta),name,rule) ((actions, arg_names), (ctxt,sequent)) =
-  let val mode = Phi_Working_Mode.mode1 ctxt
-      val (_, _, actions', (ctxt',sequent')) =
-              eval_until (Context.Proof ctxt) (left_prec, ~1) (mode, true, cfg)
-                         (SOME "operator", Markup.operator, name) actions (ctxt,sequent)
-      val arity_constraint =
-            Option.map (fn x => x + Generic_Variable_Access.number_of_values
-                                      (#spec_of mode (Thm.prop_of sequent')))
-                       arity_delta
-   in ((Opr (prec,arity_constraint,name,#id cfg,rule) :: actions', arg_names), (ctxt',sequent'))
+fun error_arity_opr (left_or_right,arity,actual) (name,pos) =
+  error (let open Pretty
+          in string_of (block ([str "Operator", brk 1, keyword2 name, brk 1,
+              str "requires", brk 1, str (string_of_int arity), brk 1,
+              str left_or_right, brk 1, str "operands,", brk 1, str "but given", brk 1,
+              str (string_of_int actual)] @ Pretty.here pos))
+         end)
+
+fun get_operands (left_or_right,arity) name stat =
+  let val (vals,stat') =
+          if arity = VAR_ARITY_IN_SEQUENT
+          then ([], stat)
+          else Generic_Variable_Access.extract_values (~1,true) stat
+   in if arity = VAR_ARITY_IN_SEQUENT orelse
+         arity = VAR_ARITY_IN_OPSTACK orelse
+         length vals = arity
+      then (vals,stat')
+      else error_arity_opr (left_or_right,arity,length vals) name
   end
 
-fun push_meta_operator cfg ((left_prec,prec,arity_delta),name,param,meta)
-                       ((actions, arg_names), (ctxt,sequent)) =
+fun push_opr' cfg name (left_prec,prec,(arityL, arityR)) ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
       val (_, _, actions', (ctxt',sequent')) =
               eval_until (Context.Proof ctxt) (left_prec, ~1) (mode, true, cfg)
                          (SOME "operator", Markup.operator, name) actions (ctxt,sequent)
-      val arity_constraint =
-            Option.map (fn x => x + Generic_Variable_Access.number_of_values (
-                                        #spec_of (Phi_Working_Mode.mode1 ctxt') (Thm.prop_of sequent')))
-                       arity_delta
-   in ((Meta_Opr (prec,arity_constraint,name,#id cfg,param,meta) :: actions', arg_names), (ctxt',sequent'))
+      val (vals,(ctxt',sequent')) = get_operands ("left",arityL) name (ctxt',sequent')
+      val arity_constraint = SOME arityR
+   in (arity_constraint, vals, (actions', arg_names), (ctxt',sequent'))
+  end
+
+fun push_operator cfg (opr,name,rule) s =
+  let val (arity_constraint, vals, (actions', arg_names), s') =
+              push_opr' cfg name opr s
+   in ((Opr (#2 opr, arity_constraint, name, #id cfg, vals, rule) :: actions', arg_names), s')
+  end
+
+fun push_meta_operator cfg (opr,name,param,meta) s =
+  let val (arity_constraint, vals, (actions', arg_names), s') =
+              push_opr' cfg name opr s
+   in ((Meta_Opr (#2 opr, arity_constraint, name, #id cfg, param, vals, meta) :: actions', arg_names), s')
   end
 
 (** End of Expression **)

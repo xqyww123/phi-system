@@ -256,16 +256,13 @@ fun oblg_template report_time {can_inst, fix_level} f ctxt th00 = Seq.make (fn (
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
-   in case fast_inst can_inst th01
-   of SOME ret => SOME ret
-    | _ => let
-
       val th = Conv.gconv_rule (Simplifier.full_rewrite ctxt) 1 th01
    in case Thm.major_prem_of th
    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) =>
         SOME (@{thm' TrueI} RS' (ctxt, th), Seq.empty)
-    | _ => let
-            (* simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+    | _ => case fast_inst can_inst th
+   of SOME ret => SOME ret
+    | _ => let (* simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (Conv.arg_conv (
                   Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
              ) ctxt) 1 th01) *)
@@ -296,7 +293,7 @@ fun oblg_template report_time {can_inst, fix_level} f ctxt th00 = Seq.make (fn (
         let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
          in (f th, Seq.map f seq')
         end)
-  end end end) ())
+  end end) ())
 
 
 (*** Auxiliaries ***)

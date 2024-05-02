@@ -45,7 +45,7 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
                        => X
                    | X => raise TERM ("The leading subgoal is not a procedure", [X])
     val (_,X,Y,_) = Phi_Syntax.dest_procedure proc0
-    val (v,X') = Procedure_Syntax.package_values "" true NONE X
+    val (v,X') = Procedure_Syntax.package_values "" false NONE X
 
     val sem_args  = Procedure_Syntax.dest_arg_tuple v
     val names = map (Variable.revert_fixed ctxt o Term.term_name) sem_args

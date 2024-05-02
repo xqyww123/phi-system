@@ -145,7 +145,7 @@ proc test_mem10:
   input  \<open>Void\<close>
   output \<open>2 \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<i>\<n>\<t> \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
-  calloc_1 \<nat> \<rightarrow> val addr
+  calloc1 \<nat> \<rightarrow> val addr
   $addr := \<open>2 \<Ztypecolon> \<nat>\<close> ;
   $addr
 \<medium_right_bracket> .
@@ -154,7 +154,7 @@ proc test_mem11:
   input  \<open>Void\<close>
   output \<open>(4,2) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>} \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
 \<medium_left_bracket>
-  calloc_1 \<open>\<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<close> \<rightarrow> val addr
+  calloc1 \<open>\<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<close> \<rightarrow> val addr
   $addr \<tribullet> b := \<open>4 \<Ztypecolon> \<nat>\<close> ;
   $addr \<tribullet> c := \<open>2 \<Ztypecolon> \<nat>\<close> ;
   $addr

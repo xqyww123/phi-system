@@ -1,6 +1,7 @@
 # VIM
 *.ll
 *~
+*.swn
 *.swp
 *.swo
 .*.marks

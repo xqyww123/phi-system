@@ -15,14 +15,14 @@ lemma RETURN_FRAME_I:
 
 lemma RETURN_FRAME_normal:
   \<open> RETURN_FRAME TYPE('rets) label Y
-\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> Y ret\<heavy_comma> TECHNICAL Brk_Frame label \<longmapsto> 0 \<rbrace>
+\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y ret \<longmapsto> 0 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
   for ret :: \<open>'rets::FIX_ARITY_VALs \<phi>arg\<close>
   using op_break_\<phi>app .
 
 lemma RETURN_FRAME_unit:
   \<open> RETURN_FRAME TYPE(unit) label Y
-\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> Y (\<phi>arg ())\<heavy_comma> TECHNICAL Brk_Frame label \<longmapsto> 0 \<rbrace>
+\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y (\<phi>arg ()) \<longmapsto> 0 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
   using op_break_\<phi>app[where S=Y] .
 
@@ -68,8 +68,8 @@ proc op_routine:
       and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
             return_\<phi>app\<^bold>: TECHNICAL(RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret Y)
             \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs)
-                   \<lbrace> X (case_named id vs)\<heavy_comma> TECHNICAL Brk_Frame label_ret
-                 \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> TECHNICAL Brk_Frame label_ret
+                   \<lbrace> TECHNICAL Brk_Frame label_ret\<heavy_comma> X (case_named id vs)
+                 \<longmapsto> \<lambda>ret. TECHNICAL Brk_Frame label_ret\<heavy_comma> Y ret
                    \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<b>\<r>\<e>\<a>\<k> label_ret \<w>\<i>\<t>\<h> Y \<o>\<r> E e))\<close>
   input  \<open>X vs\<close>
   output \<open>Y\<close>

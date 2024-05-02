@@ -156,7 +156,16 @@ subsection \<open>Helper Lemmas\<close>
 
 lemma [simp]: \<open>{ia. ia < Suc i } - {i} = {ia. ia < i}\<close> for i :: nat
   by fastforce
-  
+
+lemma proj_eq_pair_eq[simp]:
+  \<open>fst x = fst y \<and> snd x = snd y \<longleftrightarrow> x = y\<close>
+  using prod.expand by blast
+
+lemma fst_snd_If_pair[simp]:
+  \<open> fst (If C (a,b) (c,d)) = (If C a c) \<close>
+  \<open> snd (If C (a,b) (c,d)) = (If C b d) \<close>
+  by auto
+
 lemma [simp]:
   \<open>list_all2 (\<lambda>x y. snd x = snd y \<and> fst x = fst y) = (=)\<close>
   by (auto simp: fun_eq_iff,

@@ -15,8 +15,8 @@ proc test_prime:
   if ( $x \<le> 1 )  \<medium_left_bracket>
     return (False)
   \<medium_right_bracket>
-  \<medium_left_bracket>
-    2 \<rightarrow> var v ;;
+  \<medium_left_bracket> 
+    2 \<rightarrow> var v \<semicolon>
 
     while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i.
             Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j. 1 < j \<and> j < i \<longrightarrow> \<not> j dvd x)) \<and>
@@ -86,6 +86,8 @@ proc test_prime':
 \<medium_right_bracket> \<comment> \<open>Close the function body\<close> .
 
 
+declare [[\<phi>display_value_internal_name]]
+
 proc GCD:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 
@@ -103,8 +105,9 @@ declare GCD_\<phi>app[\<phi>synthesis add] \<comment> \<open>So that we can use 
 proc Coprime:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>coprime x y \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
-\<medium_left_bracket>
-  \<open>gcd $x $y = 1\<close>
+  \<medium_left_bracket>
+  GCD($x, $y) = 1
+(*  \<open>gcd $x $y = 1\<close> *)
 \<medium_right_bracket>.
 
 proc binary_search:
@@ -119,7 +122,7 @@ proc binary_search:
 
   if ( F($lower) ) \<medium_left_bracket>
      return ($lower)
-  \<medium_right_bracket> \<medium_left_bracket>
+  \<medium_right_bracket> \<medium_left_bracket> 
     ($lower, $upper) \<rightarrow> var $l, $u ;;
     while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<int>\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<int> \<s>\<u>\<b>\<j> l u.
             Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> \<not> f l \<and> f u) \<and>

@@ -1,6 +1,11 @@
+val VAR_ARITY_IN_SEQUENT = ~999
+val VAR_ARITY_IN_OPSTACK = ~998
+
 signature PHI_OPR_STACK = sig
 
-type operator_info = (int (*left precedence*) * int (*precedence*) * int (*arity delta*) option)
+type arity = int (*left arity*) * int (*right arity*)
+
+type operator_info = (int (*left precedence*) * int (*precedence*) * arity)
 type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 type free_param = exn
@@ -31,12 +36,14 @@ datatype opr_frame = Apply of ( (string * Position.T)
                    | Opr of ( int (*precedence*) * int option (*arity constraint*)
                             * (string * Position.T)
                             * Phi_CP_IDE.expr_id
-                            * thm list)
+                            * thm list (*values before*)
+                            * thm list (*rules*))
                    | Meta_Opr of (int (*precedence*) * int option (*arity constraint*)
                                * (string * Position.T)
                                * Phi_CP_IDE.expr_id
                                * free_param option
-                               * (Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
+                               * thm list (*values before*)
+                               * (Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option * thm list (*values before*) ->
                                     opr_frame list * context_state ->
                                     opr_frame list * context_state))
                    | Left_Parenthesis of thm list (*values before*)
@@ -56,16 +63,16 @@ val initialize_opr_stack : Proof.context -> Proof.context
 
 val lookup_operator : theory -> string -> operator_info option
 
-val decl_opr : int * int * string * int option -> theory -> theory
-val decl_infix : int * string * int option -> theory -> operator_info * theory
-val decl_infixl : int * string * int option -> theory -> operator_info * theory
-val decl_infixr : int * string * int option -> theory -> operator_info * theory
-val decl_prefix : int * string * int option -> theory -> operator_info * theory
-val decl_postfix : int * string * int option -> theory -> operator_info * theory
+val decl_opr : int * int * string * arity -> theory -> theory
+val decl_infix : int * string * arity option -> theory -> operator_info * theory
+val decl_infixl : int * string * arity option -> theory -> operator_info * theory
+val decl_infixr : int * string * arity option -> theory -> operator_info * theory
+val decl_prefix : int * string * arity option -> theory -> operator_info * theory
+val decl_postfix : int * string * arity option -> theory -> operator_info * theory
 
 (* Data Base of Meta Operators *)
 
-type meta_opr = Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
+type meta_opr = Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option * thm list (*values before*) ->
                 opr_frame list * context_state ->
                 opr_frame list * context_state
 
@@ -120,19 +127,21 @@ datatype opr_frame = Apply of ( (string * Position.T)
                       | Begin_Block
                       | Comma of named_arg
                       | Opr of ( int (*precedence*) * int option (*arity constraint*)
-                               * (string * Position.T)
-                               * Phi_CP_IDE.expr_id
-                               * thm list)
+                            * (string * Position.T)
+                            * Phi_CP_IDE.expr_id
+                            * thm list (*values before*)
+                            * thm list (*rules*))
                       | Meta_Opr of (int (*precedence*) * int option (*arity constraint*)
                                   * (string * Position.T)
                                   * Phi_CP_IDE.expr_id
                                   * free_param option
-                                  * (Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
+                                  * thm list (*values before*)
+                                  * (Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option * thm list (*values before*) ->
                                       opr_frame list * context_state ->
                                       opr_frame list * context_state))
                       | Left_Parenthesis of thm list (*values before*)
 
-type meta_opr = Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
+type meta_opr = Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option * thm list (*values before*) ->
                 opr_frame list * context_state ->
                 opr_frame list * context_state
 
@@ -144,8 +153,8 @@ fun precedence_of_frame (Apply _) = ~1
   | precedence_of_frame (Meta_Apply _) = ~1
   | precedence_of_frame Begin_Block = ~1
   | precedence_of_frame (Comma _) = ~1
-  | precedence_of_frame (Opr (prec, _, _, _, _)) = prec
-  | precedence_of_frame (Meta_Opr (prec, _, _, _, _, _)) = prec
+  | precedence_of_frame (Opr (prec, _, _, _, _, _)) = prec
+  | precedence_of_frame (Meta_Opr (prec, _, _, _, _, _, _)) = prec
   | precedence_of_frame (Left_Parenthesis _) = ~1
 
 fun precedence_of [] = ~1
@@ -165,15 +174,15 @@ exception String_Param of string
  *)
 
 val statement_interruptionN = "<interrupt>"
-val statement_interruptionO = Meta_Opr (~1, NONE, (statement_interruptionN,Position.none), [], NONE, K I)
+val statement_interruptionO = Meta_Opr (~1, NONE, (statement_interruptionN,Position.none), [], NONE, [], K I)
 
-fun is_interrupted (Meta_Opr (_, _, ("<interrupt>", _), _, _, _) :: _) = true
+fun is_interrupted (Meta_Opr (_, _, ("<interrupt>", _), _, _, _, _) :: _) = true
   | is_interrupted _ = false
 
 fun interrupt ((opr,anames),s) = ((statement_interruptionO::opr,anames),s)
 
 fun uninterrupted ((opr,anames),s) =
-  let val opr' = case opr of (Meta_Opr (_, _, ("<interrupt>", _), _, _, _) :: opr') => opr'
+  let val opr' = case opr of (Meta_Opr (_, _, ("<interrupt>", _), _, _, _, _) :: opr') => opr'
                            | _ => opr
    in ((opr',anames),s)
   end
@@ -181,13 +190,13 @@ fun uninterrupted ((opr,anames),s) =
 
 (* Mark of the First Statement in a Block *)
 val initial_statementN = "<initial>"
-val initial_statementO = Meta_Opr (1001,NONE,(initial_statementN,Position.none),[],NONE,K I)
+val initial_statementO = Meta_Opr (1001,NONE,(initial_statementN,Position.none),[],NONE,[],K I)
 
-fun is_the_first_statement (Meta_Opr (_, _, ("<initial>", _), _, _, _) :: _) = true
+fun is_the_first_statement (Meta_Opr (_, _, ("<initial>", _), _, _, _, _) :: _) = true
   | is_the_first_statement _ = false
 
 fun uninitialize ((opr,anames),s) =
-  let val opr' = case opr of (Meta_Opr (_, _, ("<initial>", _), _, _, _) :: opr') => opr'
+  let val opr' = case opr of (Meta_Opr (_, _, ("<initial>", _), _, _, _, _) :: opr') => opr'
                            | _ => opr
    in ((opr',anames),s)
   end
@@ -207,7 +216,9 @@ val initialize_opr_stack = Data.put init_opr_stack
 
 (** Operator Database **)
 
-type operator_info = (int (*left precedence*) * int (*precedence*) * int (*arity delta*) option)
+type arity = int (*left arity*) * int (*right arity*)
+
+type operator_info = (int (*left precedence*) * int (*precedence*) * arity)
 
 structure Operators = Theory_Data (
   type T = operator_info Symtab.table
@@ -220,42 +231,52 @@ fun chk_precedence p =
   else error "precedence of operator should be within [1,1000]"
 
 fun decl_infix' (precedence, symbol, arity) =
-      Operators.map (Symtab.update_new (symbol, (precedence, chk_precedence precedence, the_default (SOME 1) arity)))
+      Operators.map (Symtab.update_new (symbol, (precedence, chk_precedence precedence, arity)))
 
 fun decl_infix (precedence, symbol, arity) thy =
-  ( (precedence, precedence, arity),
-    decl_infix' (precedence, symbol, SOME arity) thy )
+  let val arity = the_default (1,1) arity
+   in ( (precedence, precedence, arity),
+        decl_infix' (precedence, symbol, arity) thy )
+  end
 
 fun decl_opr (left_precedence, precedence, symbol, arity) =
-      Operators.map (Symtab.update_new (symbol, (chk_precedence left_precedence, chk_precedence precedence, arity)))
+  Operators.map (Symtab.update_new (symbol, (chk_precedence left_precedence, chk_precedence precedence, arity)))
 
 fun decl_infixr' (precedence, symbol, arity) =
-      Operators.map (Symtab.update_new (symbol, (precedence + 1, chk_precedence precedence, the_default (SOME 1) arity)))
+      Operators.map (Symtab.update_new (symbol, (precedence + 1, chk_precedence precedence, arity)))
 
 fun decl_infixr (precedence, symbol, arity) thy =
-  ( (precedence + 1, precedence, arity),
-    decl_infixr' (precedence, symbol, SOME arity) thy )
+  let val arity = the_default (1,1) arity
+   in ( (precedence + 1, precedence, arity),
+         decl_infixr' (precedence, symbol, arity) thy )
+  end
 
 fun decl_infixl' (precedence, symbol, arity) =
-      Operators.map (Symtab.update_new (symbol, (chk_precedence precedence, precedence+1, the_default (SOME 1) arity)))
+      Operators.map (Symtab.update_new (symbol, (chk_precedence precedence, precedence+1, arity)))
 
 fun decl_infixl (precedence, symbol, arity) thy =
-  ( (precedence, precedence+1, arity),
-    decl_infixl' (precedence, symbol, SOME arity) thy )
+  let val arity = the_default (1,1) arity
+   in ( (precedence, precedence+1, arity),
+         decl_infixl' (precedence, symbol, arity) thy )
+  end
 
 fun decl_prefix' (precedence, symbol, arity) =
-      Operators.map (Symtab.update_new (symbol, (1001, chk_precedence precedence, the_default (SOME 1) arity)))
+      Operators.map (Symtab.update_new (symbol, (1001, chk_precedence precedence, arity)))
 
 fun decl_prefix (precedence, symbol, arity) thy =
-  ( (1001, precedence, arity),
-    decl_prefix' (precedence, symbol, SOME arity) thy )
+  let val arity = the_default (0,1) arity
+   in ( (1001, precedence, arity),
+        decl_prefix' (precedence, symbol, arity) thy )
+  end
 
 fun decl_postfix' (precedence, symbol, arity) =
-      Operators.map (Symtab.update_new (symbol, (chk_precedence precedence, 1001, the_default (SOME 0) arity)))
+      Operators.map (Symtab.update_new (symbol, (chk_precedence precedence, 1001, arity)))
 
 fun decl_postfix (precedence, symbol, arity) thy =
-  ( (precedence, 1001, arity),
-    decl_postfix' (precedence, symbol, SOME arity) thy )
+  let val arity = the_default (1,0) arity
+   in ( (precedence, 1001, arity),
+         decl_postfix' (precedence, symbol, arity) thy )
+  end
 
 fun lookup_operator thy symbol = Symtab.lookup (Operators.get thy) symbol
 
@@ -265,16 +286,17 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>declare_\<phi>lang_operator\<close>
     "declare operators in \<phi>-programming"
     (Scan.repeat1
-        (( \<^keyword>\<open>infixl\<close> >> K decl_infixl' || \<^keyword>\<open>infixr\<close> >> K decl_infixr' ||
-           \<^keyword>\<open>infix\<close> >> K decl_infix' ||
-         Args.$$$ "prefix" >> K decl_prefix' || Args.$$$ "postfix" >> K decl_postfix')
+        (( \<^keyword>\<open>infixl\<close> >> K decl_infixl || \<^keyword>\<open>infixr\<close> >> K decl_infixr ||
+           \<^keyword>\<open>infix\<close> >> K decl_infix ||
+         Args.$$$ "prefix" >> K decl_prefix || Args.$$$ "postfix" >> K decl_postfix)
        -- Reasoner_Group.parser
        -- Parse.position symbol
-       -- Scan.option (Parse.int >> SOME || \<^keyword>\<open>var\<close> >> K NONE))
+       -- Scan.option (Parse.int -- Parse.int))
     >> (fn decls => Toplevel.theory (
             fold (fn (((f,prec),(sym,_)),arity) => fn thy =>
                 f (fst (Reasoner_Group.check_group true (Context.Theory thy) prec),
-                   sym, arity) thy) decls
+                   sym, arity) thy
+              |> snd) decls
          #> Named_Target.theory_map (
               fold (fn ((_,sym),_) =>
                 Phi_App_Rules.declare_overloading (Binding.make sym)

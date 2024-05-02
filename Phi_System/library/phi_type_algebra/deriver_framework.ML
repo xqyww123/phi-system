@@ -535,7 +535,7 @@ val _ = Theory.setup (Context.theory_map (
               zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
               plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
               distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
-              mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
+              mult.assoc[where 'a=\<open>'a::sep_semigroup BI\<close>]
 
               FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
               list_all2_Cons1 list_all2_Nil

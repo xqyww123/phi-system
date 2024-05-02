@@ -978,7 +978,7 @@ lemma  INTERP_SPEC_ex[\<phi>expns]:
   \<open> INTERP_SPEC (ExSet S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
   unfolding INTERP_SPEC_def by (simp add: set_eq_iff ExSet_expn_set, blast)
 
-abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [15,16] 15)
+abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [17,16] 16)
   where \<open>COMMA \<equiv> (*)\<close>
 
 
@@ -991,7 +991,7 @@ definition \<phi>Procedure :: "'ret proc
                         \<Rightarrow> bool"
     ("\<p>\<r>\<o>\<c> (2_)/ (0\<lbrace> _/ \<longmapsto> _ \<rbrace>)/ \<t>\<h>\<r>\<o>\<w>\<s> (100_)/ " [101,2,2,100] 100)
   where "\<phi>Procedure f T U E \<longleftrightarrow>
-    (\<forall>comp R. comp \<in> INTERP_SPEC (R * T) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC (R * U v)) (\<lambda>v. INTERP_SPEC (R * E v)))"
+    (\<forall>comp R. comp \<in> INTERP_SPEC (T * R) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC (U v * R)) (\<lambda>v. INTERP_SPEC (E v * R)))"
 
 abbreviation \<phi>Procedure_no_exception ("\<p>\<r>\<o>\<c> (2_)/ \<lbrace> (2_) \<longmapsto>/ (2_) \<rbrace>/ " [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
@@ -1004,7 +1004,7 @@ notation \<phi>Procedure
 
 lemma \<phi>Procedure_alt:
   \<open>\<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> U \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_SPEC ({r} * T) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC ({r} * U v)) (\<lambda>v. INTERP_SPEC ({r} * E v)))\<close>
+\<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_SPEC (T * {r}) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC (U v * {r})) (\<lambda>v. INTERP_SPEC (E v * {r})))\<close>
   apply rule
   apply ((unfold \<phi>Procedure_def)[1], blast)
   unfolding \<phi>Procedure_def INTERP_SPEC subset_iff
@@ -1028,7 +1028,7 @@ section \<open>View Shift\<close>
 
 definition View_Shift
     :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2_/ \<s>\<h>\<i>\<f>\<t>\<s> _/ \<w>\<i>\<t>\<h> _)" [13,13,13] 12)
-  where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<Turnstile> INTERP_SPEC (R * T) \<longrightarrow> x \<Turnstile> INTERP_SPEC (R * U) \<and> P)"
+  where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<Turnstile> INTERP_SPEC (T * R) \<longrightarrow> x \<Turnstile> INTERP_SPEC (U * R) \<and> P)"
 
 abbreviation Simple_View_Shift
     :: "assn \<Rightarrow> assn \<Rightarrow> bool" ("(2_/ \<s>\<h>\<i>\<f>\<t>\<s> _)"  [13,13] 12)
@@ -1080,7 +1080,7 @@ lemma view_shift_union[\<phi>reason 800]:
 \<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X + Y \<w>\<i>\<t>\<h> P\<close>
   \<open> A \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X + Y \<w>\<i>\<t>\<h> P\<close>
-  by (simp add: View_Shift_def distrib_left)+
+  by (simp add: View_Shift_def distrib_right)+
 
 lemma \<phi>view_shift_trans:
   "A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P
@@ -1090,17 +1090,17 @@ lemma \<phi>view_shift_trans:
 
 lemma \<phi>frame_view:
   \<open> A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * A \<s>\<h>\<i>\<f>\<t>\<s> R * B \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> A * R \<s>\<h>\<i>\<f>\<t>\<s> B * R \<w>\<i>\<t>\<h> P\<close>
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc)
 
 lemma \<phi>view_shift_intro_frame:
-  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> R * U' \<s>\<h>\<i>\<f>\<t>\<s> R * U \<w>\<i>\<t>\<h> P "
+  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> U' * R \<s>\<h>\<i>\<f>\<t>\<s> U * R \<w>\<i>\<t>\<h> P "
   by (simp add: \<phi>frame_view)
 
 lemma \<phi>view_shift_intro_frame_R:
-  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> U' * R \<s>\<h>\<i>\<f>\<t>\<s> U * R \<w>\<i>\<t>\<h> P "
-  by (simp add: \<phi>frame_view mult.commute)
+  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> R * U' \<s>\<h>\<i>\<f>\<t>\<s> R * U \<w>\<i>\<t>\<h> P "
+  by (metis \<phi>frame_view mult.commute)
 
 subsection \<open>Basic Rules\<close>
 
@@ -1135,11 +1135,11 @@ lemma \<phi>SEQ:
 
 lemma \<phi>frame:
   " \<p>\<r>\<o>\<c> f \<lbrace> A \<longmapsto> B \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>ex. R * E ex) "
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A * R \<longmapsto> \<lambda>ret. B ret * R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>ex. E ex * R) "
   unfolding \<phi>Procedure_def subset_iff
   apply clarify subgoal premises prems for comp R' s
-    using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R' * R\<close>],
-          simplified mult.assoc, THEN mp, OF prems(2)] prems(3) by blast .
+    using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R * R'\<close>],
+          simplified mult.assoc[symmetric], THEN mp, OF prems(2)] prems(3) by presburger .
 
 lemma \<phi>Inhabited:
   \<open>(Inhabited X \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
@@ -1175,7 +1175,7 @@ lemma \<phi>CONSEQ:
 subsection \<open>Helper Rules\<close>
 
 lemma \<phi>frame0:
-  "\<p>\<r>\<o>\<c> f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace>"
+  "\<p>\<r>\<o>\<c> f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A * R \<longmapsto> \<lambda>ret. B ret * R \<rbrace>"
   using \<phi>frame[where E=0, simplified, folded zero_fun_def] .
 
 lemma \<phi>CONSEQ'E:
@@ -1193,14 +1193,14 @@ lemma \<phi>CASE:
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> B \<longmapsto> C \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A + B \<longmapsto> C \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding \<phi>Procedure_def
-  by (simp add: distrib_left)
+  by(simp add: distrib_right)
 
 lemma \<phi>CASE_VS:
   \<open> A \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> B \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P2
 \<Longrightarrow> B + A \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P2 \<or> P1\<close>
   unfolding View_Shift_def
-  by (simp add: distrib_left)
+  by (simp add: distrib_right)
 
 lemma \<phi>CASE_IMP:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1

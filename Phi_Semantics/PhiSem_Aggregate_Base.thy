@@ -178,10 +178,10 @@ debt_axiomatization allow_assigning_different_typ :: \<open>TY \<Rightarrow> agg
 
 definition op_set_aggregate :: "TY \<Rightarrow> TY \<Rightarrow> aggregate_path \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_set_aggregate Tt Tv idx = 
-    \<phi>M_caseV (\<lambda>v tup.
+    \<phi>M_caseV (\<lambda>tup v.
     \<phi>M_assert (valid_index Tt idx \<and> (index_type idx Tt = Tv \<or> allow_assigning_different_typ Tt idx)) \<ggreater>
-    \<phi>M_getV Tv id v (\<lambda>v'.
     \<phi>M_getV Tt id tup (\<lambda>tup'.
+    \<phi>M_getV Tv id v (\<lambda>v'.
     Return (\<phi>arg (index_mod_value idx (\<lambda>_. v') tup'))
 )))"
 
@@ -468,15 +468,15 @@ lemma "_op_set_aggregate_":
 \<Longrightarrow> Premise eval_aggregate_path (TY\<^sub>U' = TY\<^sub>U \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
 \<Longrightarrow> report_unprocessed_element_index reject
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY\<^sub>U sem_idx (ru\<^bold>, rv)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY\<^sub>U sem_idx (rv\<^bold>,ru)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> \<lambda>ret. f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l>[ret] T'
         \<s>\<u>\<b>\<j> (TY\<^sub>U' = TY\<^sub>U \<longrightarrow> \<phi>arg.dest ret \<in> Well_Type TY) \<rbrace>\<close>
   unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
             parse_eleidx_input_def is_valid_index_of_def
             parse_eleidx_input_least1_def
   by (cases rv; cases ru; simp, rule, rule, simp, rule, simp,
-      rule \<phi>M_Success_P[where X=1, simplified],
-      simp add: \<phi>Type_Mapping_def, simp add: index_mod_value_welltyp)
+      rule \<phi>M_Success_P[where X=1, simplified], simp add: \<phi>Type_Mapping_def,
+      simp add: index_mod_value_welltyp)
 
 lemma op_set_aggregate:
   \<open> Is_Aggregate T
@@ -487,7 +487,7 @@ lemma op_set_aggregate:
 \<Longrightarrow> Premise eval_aggregate_path (TY2' = TY2 \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
 \<Longrightarrow> report_unprocessed_element_index reject
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 sem_idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 sem_idx (rv\<^bold>, ru) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
   by ((rule \<phi>CONSEQ[OF "_op_set_aggregate_" view_shift_refl view_shift_by_implication view_shift_refl]; simp?),
       simp add: Transformation_def, blast)
 
@@ -612,19 +612,21 @@ ML_file \<open>library/generic_element_access.ML\<close>
 \<phi>lang_parser triangle_operator (%\<phi>parser_unique, %\<phi>lang_top) ["\<tribullet>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<tribullet>\<close> >> (fn (_, pos) => fn cfg => (
 let open Phi_Opr_Stack
-    fun is_the_first (Meta_Opr (_,_,("\<tribullet>",_),_,_,_) :: _) = false
+    fun is_the_first (Meta_Opr (_,_,("\<tribullet>",_),_,_,_,_) :: _) = false
       | is_the_first (Meta_Opr _ :: L) = is_the_first L
-      | is_the_first (Meta_Opr (pr,_,_,_,_,_) :: L) =
+      | is_the_first (Meta_Opr (pr,_,_,_,_,_,_) :: L) =
           if pr > @{priority %\<phi>lang_app} then is_the_first L else true
-      | is_the_first (Opr (pr,_,_,_,_) :: L) =
+      | is_the_first (Opr (pr,_,_,_,_,_) :: L) =
           if pr > @{priority %\<phi>lang_app} then is_the_first L else true
       | is_the_first _ = true
  in if is_the_first (#1 (#1 opr_ctxt))
     then push_meta_operator cfg
-            ((@{priority loose %\<phi>lang_push_val+1}, @{priority %\<phi>lang_dot_opr}, SOME 1), ("\<tribullet>", pos), NONE,
+            ((@{priority loose %\<phi>lang_push_val+1}, @{priority %\<phi>lang_dot_opr},
+                  (VAR_ARITY_IN_OPSTACK, 1)), ("\<tribullet>", pos), NONE,
              Generic_Element_Access.dot_triangle_opr) opr_ctxt
     else push_meta_operator cfg
-            ((@{priority loose %\<phi>lang_dot_opr+1}, @{priority %\<phi>lang_dot_opr}, SOME 1), ("\<tribullet>", pos), NONE,
+            ((@{priority loose %\<phi>lang_dot_opr+1}, @{priority %\<phi>lang_dot_opr},
+                  (VAR_ARITY_IN_OPSTACK, 1)), ("\<tribullet>", pos), NONE,
              Generic_Element_Access.dot_triangle_opr) opr_ctxt
 end
 )) \<close>
@@ -640,18 +642,18 @@ text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
 \<phi>lang_parser assignment_opr (%\<phi>parser_left_arrow, %\<phi>lang_top) ["\<leftarrow>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<leftarrow>\<close> >> (fn (_, pos) => fn cfg => (
 let open Phi_Opr_Stack
-    fun chk_val (Meta_Opr (_,_,("$",_),_,_,_) :: _) = ()
-      | chk_val (Meta_Opr (_,_,("\<tribullet>",_),_,_,_) :: L) = chk_val L
-      | chk_val (Meta_Opr (pr,_,_,_,_,_) :: L) =
+    fun chk_val (Meta_Opr (_,_,("$",_),_,_,_,_) :: _) = ()
+      | chk_val (Meta_Opr (_,_,("\<tribullet>",_),_,_,_,_) :: L) = chk_val L
+      | chk_val (Meta_Opr (pr,_,_,_,_,_,_) :: L) =
           if pr > @{priority %\<phi>lang_app} then chk_val L else Generic_Element_Access.err_assignment pos
-      | chk_val (Opr (pr,_,_,_,_) :: L) =
+      | chk_val (Opr (pr,_,_,_,_,_) :: L) =
           if pr > @{priority %\<phi>lang_app} then chk_val L else Generic_Element_Access.err_assignment pos
       | chk_val _ = Generic_Element_Access.err_assignment pos
     val _ = chk_val (#1 (#1 opr_ctxt))
     val prio = case (#1 (#1 opr_ctxt))
-                 of (Meta_Opr (_,_,("$",_),_,_,_) :: _) => @{priority loose %\<phi>lang_push_val+1}
+                 of (Meta_Opr (_,_,("$",_),_,_,_,_) :: _) => @{priority loose %\<phi>lang_push_val+1}
                   | _ => @{priority loose %\<phi>lang_dot_opr+1}
- in push_meta_operator cfg ((prio, @{priority %\<phi>lang_assignment}, SOME 1), ("\<leftarrow>", pos), NONE,
+ in push_meta_operator cfg ((prio, @{priority %\<phi>lang_assignment}, (VAR_ARITY_IN_OPSTACK,1)), ("\<leftarrow>", pos), NONE,
                        Generic_Element_Access.dot_triangle_assignment) opr_ctxt
 end
 )) \<close>
@@ -660,7 +662,7 @@ end
                                       (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>) \<open>
 fn (oprs,(ctxt,sequent)) =>
   case #1 oprs
-    of Phi_Opr_Stack.Meta_Opr (_,_,("\<tribullet>",_),_,_,_) :: _ => (
+    of Phi_Opr_Stack.Meta_Opr (_,_,("\<tribullet>",_),_,_,_,_) :: _ => (
         Parse.name >> (fn s => fn _ =>
         (oprs, (ctxt, #transformation_rule Phi_Working_Mode.programming
                   OF [sequent, Thm.instantiate

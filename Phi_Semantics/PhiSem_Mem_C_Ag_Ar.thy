@@ -236,28 +236,29 @@ text \<open>The following lemma cannot be automated because it is tightly relate
 
 lemma split_mem_coerce_array':
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length l = Suc n
-\<Longrightarrow> (l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[Suc n] T) = (take n l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] T) * (last l \<Ztypecolon> AG_IDX(n\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<close>
+\<Longrightarrow> (l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[Suc n] T) = (last l \<Ztypecolon> AG_IDX(n\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) * (take n l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] T)\<close>
   unfolding BI_eq_iff Premise_def
   apply (clarsimp; rule; clarsimp)
 
   subgoal for vs
-    apply (rule exI[where x=\<open>to_share \<circ> map_option discrete \<circ> Map_of_Val (V_array.mk (take n vs))\<close>])
     apply (rule exI[where x=\<open>[AG_IDX(n\<^sup>\<t>\<^sup>\<h>)] \<tribullet>\<^sub>m (to_share \<circ> map_option discrete \<circ> Map_of_Val (last vs))\<close>])
+    apply (rule exI[where x=\<open>to_share \<circ> map_option discrete \<circ> Map_of_Val (V_array.mk (take n vs))\<close>])
+    
     apply (auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq sep_disj_fun_def
                       list_all2_lengthD
                 split: list.split aggregate_index'.split)
     apply (metis (mono_tags, lifting) comp_apply diff_add_inverse last_conv_nth length_0_conv less_antisym list_all2_lengthD nat.simps(3) plus_1_eq_Suc push_map_cons push_map_mult_nil)
 
-    apply (rule exI[where x=\<open>V_array.mk (take n vs)\<close>],
-        auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq list_all2_lengthD
-             split: list.split aggregate_index'.split)
     apply (rule exI[where x=\<open>to_share \<circ> map_option discrete \<circ> Map_of_Val (last vs)\<close>],
         auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq list_all2_lengthD
              split: list.split aggregate_index'.split,
-        rule exI[where x=\<open>last vs\<close>], clarsimp)
-    by (metis diff_add_inverse last_conv_nth lessI list.size(3) list_all2_conv_all_nth nat.simps(3) plus_1_eq_Suc)
+        rule exI[where x=\<open>last vs\<close>],
+        metis add_diff_cancel_left' last_conv_nth length_0_conv lessI list_all2_conv_all_nth nat.simps(3) plus_1_eq_Suc)
+    apply (rule exI[where x=\<open>V_array.mk (take n vs)\<close>])
+    by (auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq list_all2_lengthD
+             split: list.split aggregate_index'.split)
 
-  subgoal for v_h v_t
+  subgoal for v_t v_h
     apply (rule exI[where x=\<open>V_array.mk (v_h @ [v_t])\<close>])
     apply (auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq sep_disj_fun_def
                       list_all2_lengthD nth_append

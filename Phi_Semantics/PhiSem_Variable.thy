@@ -265,21 +265,21 @@ proc op_get_var:
     and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
     and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
     and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
-  output \<open>x \<Ztypecolon> \<v>\<a>\<r>[v] T\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  output \<open>f x \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[v] T\<close>
 \<medium_left_bracket>
   to Itself
   unfold Var.unfold
   FIC.Var.getter_rule
   semantic_assert \<open>discrete.dest (\<phi>arg.dest \<v>0) \<Turnstile> Some ` Well_Type TY\<close>
   semantic_return \<open>the (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
-  \<open>MAKE _ (\<v>\<a>\<r>[v] Itself)\<close>
+   \<open>MAKE _(\<v>\<a>\<r>[v] Itself)\<close>
   apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx
                                 and reject=reject, unfolded Is_Aggregate_def]
  \<medium_right_bracket> .
 
 lemma op_get_var0:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_var v TY [] \<lbrace> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<v>\<a>\<r>[v] T\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[ret] T \<rbrace> \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_var v TY [] \<lbrace> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<v>\<a>\<l>[ret] T\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<rbrace> \<close>
   by (rule op_get_var_\<phi>app[where input_index=\<open>[]\<close> and idx=\<open>[]\<close> and reject=\<open>[]\<close> and f=id, simplified];
       simp add: parse_eleidx_input_least1_def
                 parse_eleidx_input_def
@@ -287,7 +287,7 @@ lemma op_get_var0:
 
 
 proc op_set_var:
-  input  \<open>x \<Ztypecolon> Var v T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U'\<close>
+  input  \<open>y \<Ztypecolon> \<v>\<a>\<l> U'\<heavy_comma> x \<Ztypecolon> Var v T\<close>
   requires [useful]: \<open>varname.type v \<equiv> TY_var\<close>
     and           \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
     and [useful]: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
@@ -331,7 +331,7 @@ lemma op_set_var_0:
 \<Longrightarrow> pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U') UY
 \<Longrightarrow> pred_option ((=) UY) TY_var
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_var UY vari TY [] v \<lbrace> x \<Ztypecolon> Var vari U\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v] U' \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<v>\<a>\<r>[vari] U' \<rbrace> \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_var UY vari TY [] v \<lbrace> y \<Ztypecolon> \<v>\<a>\<l>[v] U'\<heavy_comma> x \<Ztypecolon> Var vari U \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<v>\<a>\<r>[vari] U' \<rbrace> \<close>
   by (rule op_set_var_\<phi>app[where f=id and input_index=\<open>[]\<close> and sem_idx=\<open>[]\<close> and idx=\<open>[]\<close>
                              and reject=\<open>[]\<close> and T=U and T'=U' and U=U and U'=U',
                             simplified];
@@ -356,8 +356,8 @@ proc op_free_var:
 proc op_var_scope:
   requires \<open>\<p>\<a>\<r>\<a>\<m> TY\<close>
        and BLK: \<open>\<And>vari. varname.type vari \<equiv> TY
-                  \<Longrightarrow> \<p>\<r>\<o>\<c> F vari \<lbrace> X\<heavy_comma> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari] \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any \<rbrace>
-                      \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any) \<close>
+                  \<Longrightarrow> \<p>\<r>\<o>\<c> F vari \<lbrace> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari]\<heavy_comma> X \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Y ret \<rbrace>
+                      \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E v) \<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws  E
@@ -391,19 +391,21 @@ proc [\<phi>reason 1200]:
       and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
       and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
       and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
-  output \<open>\<v>\<a>\<l> f x <val-of> vari <path> input_index \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<close>
+  output \<open>\<v>\<a>\<l> f x <val-of> vari <path> input_index \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<heavy_comma> Y\<close>
   @tag synthesis
+  unfolding REMAINS_def
 \<medium_left_bracket>
   Find
   apply_rule op_get_var[where input_index=input_index and sem_idx=sem_idx and idx=idx and reject=reject]
-\<medium_right_bracket>.
+\<medium_right_bracket> .
 
 proc [\<phi>reason 1210]:
   input \<open>X\<close>
   requires Find: \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> Any\<close>
       and  \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  output \<open>\<v>\<a>\<l> x <val-of> vari <path> [] \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<close>
+  output \<open>\<v>\<a>\<l> x <val-of> vari <path> [] \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<heavy_comma> Y\<close>
   @tag synthesis
+  unfolding REMAINS_def
 \<medium_left_bracket>
   Find
   op_get_var0
@@ -415,7 +417,7 @@ subsubsection \<open>Set\<close>
 proc (nodef) [\<phi>reason 1200]:
   input X
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
-       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<heavy_comma> x \<Ztypecolon> Var vari T \<w>\<i>\<t>\<h> Any @tag NToA\<close>
+       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any @tag NToA\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
@@ -424,9 +426,10 @@ proc (nodef) [\<phi>reason 1200]:
        and T5: \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
        and T6: \<open>\<phi>SemType (y \<Ztypecolon> U') UY\<close>
        and T7: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
-  output \<open>\<v>\<a>\<l> (y <set-to> vari <path> input_index) \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<close>
+  output \<open>\<v>\<a>\<l> (y <set-to> vari <path> input_index) \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<heavy_comma> Y\<close>
   throws E
   @tag synthesis
+  unfolding REMAINS_def
 \<medium_left_bracket>
   G  
   S \<rightarrow> val v
@@ -437,15 +440,16 @@ proc (nodef) [\<phi>reason 1200]:
 proc (nodef) [\<phi>reason 1210]:
   input X
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
-       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<heavy_comma> x \<Ztypecolon> Var vari T \<w>\<i>\<t>\<h> Any @tag NToA\<close>
+       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any @tag NToA\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
        and T6: \<open>\<phi>SemType (y \<Ztypecolon> T') UY\<close>
        and T7: \<open>pred_option ((=) UY) TY_var\<close>
-  output \<open>\<v>\<a>\<l> (y <set-to> vari <path> []) \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<close>
+  output \<open>\<v>\<a>\<l> (y <set-to> vari <path> []) \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<heavy_comma> Y\<close>
   throws E
   @tag synthesis
+  unfolding REMAINS_def
 \<medium_left_bracket>
   G
   S \<rightarrow> val v
@@ -466,8 +470,8 @@ ML \<open>Generic_Variable_Access.parse_phi_type_of_generic_var :=
   \<open>storing semantic types of local variables\<close>
 
 proc (nodef) "__set_var_rule_":
-  input  \<open>x \<Ztypecolon> Var vari T \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U'\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
-  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<heavy_comma> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[vari] T' \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+  input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U'\<heavy_comma> x \<Ztypecolon> Var vari T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
+  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<heavy_comma> R \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
@@ -480,12 +484,12 @@ proc (nodef) "__set_var_rule_":
   throws E
 \<medium_left_bracket>
   apply_rule op_set_var_\<phi>app[OF T1 T2 T3 T4 T5 T6 T7 T8]
-  ;;  G
+  G
 \<medium_right_bracket> .
 
 proc (nodef) "__set_var_rule_0_":
-  input  \<open>x \<Ztypecolon> Var vari T \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U'\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
-  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[vari] U' \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+  input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U'\<heavy_comma> x \<Ztypecolon> Var vari T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
+  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U'\<heavy_comma> R \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
@@ -501,18 +505,18 @@ proc (nodef) "__set_var_rule_0_":
 
 lemma "__new_var_rule__":
   \<open> (\<And>vari. varname.type vari \<equiv> TY
-              \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<heavy_comma> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari] \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any \<rbrace>
-                  \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any))
+              \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari]\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
+                  \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e))
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) TY g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G
     op_var_scope \<open>TY\<close> \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type vari \<equiv> _\<close>] G \<medium_right_bracket>
   \<medium_right_bracket> .
 
 proc (nodef) "__set_new_var_rule_":
-  input  \<open>y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
+  input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
   requires G: \<open>\<And>vari. varname.type vari \<equiv> Some TY
-            \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[vari] U \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any \<rbrace>
-                \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any)\<close>
+            \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
+                \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e)\<close>
       and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   output \<open>Z\<close>
   throws E
@@ -525,10 +529,10 @@ proc (nodef) "__set_new_var_rule_":
 \<medium_right_bracket> .
 
 proc (nodef) "__set_new_var_noty_rule_":
-  input  \<open>y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
+  input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
   requires G: \<open>\<And>vari. varname.type vari \<equiv> None
-        \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[vari] U \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any \<rbrace>
-            \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var vari \<phi>Any)\<close>
+        \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
+            \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e)\<close>
        and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   output \<open>Z\<close>
   throws E

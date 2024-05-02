@@ -169,10 +169,10 @@ definition \<open>address_to_base addr \<equiv> memaddr.index addr = 0\<close>
 subsection \<open>Main\<close>
 
 proc op_load_mem:
-  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> state\<close>
   requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state\<close>
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
@@ -198,7 +198,7 @@ proc op_load_mem:
 \<medium_right_bracket> .
 
 proc op_store_mem:
-  input  \<open>State\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
   requires Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
                    \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
                  \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
@@ -230,8 +230,9 @@ proc op_store_mem:
 \<medium_right_bracket> .
 
 
+(*
 proc op_store_mem:
-  input  \<open>State\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
@@ -243,7 +244,7 @@ proc op_store_mem:
        and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   output \<open>\<lambda>_::unit \<phi>arg. State'\<close>
 \<medium_left_bracket>
-
+*)
 
 
 text \<open>(deprecated! as we can have non-deterministic monad)
@@ -254,11 +255,11 @@ text \<open>(deprecated! as we can have non-deterministic monad)
   but only little performance which we believe worthy against the simplification in reasoning. \<close>
 
 
-proc calloc_1:
+proc calloc1:
   input \<open>Void\<close>
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
        and \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
+  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
 \<medium_left_bracket>
@@ -279,7 +280,7 @@ proc calloc_1:
 
  
 proc mfree:
-  input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
   requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   premises \<open>address_to_base addr\<close>
   output \<open>Void\<close>
@@ -313,7 +314,7 @@ text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
 
 
 proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
-  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> state\<close>
   requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx reject\<close>
        and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
@@ -321,14 +322,14 @@ proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
   requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr spec_idx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>state\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state\<close>
 \<medium_left_bracket>
   $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
   apply_rule op_load_mem[OF Extr L01]
 \<medium_right_bracket> .
 
 proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
-  input \<open>state\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> state\<close>
   requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx reject\<close>
        and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
@@ -341,8 +342,8 @@ proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>\<lambda>_::unit \<phi>arg. state'\<close>
 \<medium_left_bracket>
-  $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
-  $y apply_rule op_store_mem[OF Map L01 L02]
+  $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4] \<rightarrow> val ptr \<semicolon>
+  apply_rule op_store_mem[OF Map L01 L02] ($ptr, $y)
 \<medium_right_bracket> .
 
 section \<open>Reasoning Setup\<close>

@@ -91,14 +91,14 @@ debt_axiomatization
   and   zero_tup[simp]: \<open>Zero (semty_tup Ts)     = map_option V_tup.mk (those (map Zero Ts))\<close>
   and   V_tup_sep_disj_R[simp]: \<open>V_tup.mk l1 ## vl2 \<longleftrightarrow> (\<exists>l2. vl2 = V_tup.mk l2)\<close>
   and   V_tup_sep_disj_L[simp]: \<open>vl1 ## V_tup.mk l2 \<longleftrightarrow> (\<exists>l1. vl1 = V_tup.mk l1)\<close>
-  and   V_tup_mult    : \<open>V_tup.mk l1 * V_tup.mk l2 = V_tup.mk (l2 @ l1)\<close>
+  and   V_tup_mult    : \<open>V_tup.mk l1 * V_tup.mk l2 = V_tup.mk (l1 @ l2)\<close>
   and   idx_step_type_tup [eval_aggregate_path] : \<open>i < length tys \<Longrightarrow> idx_step_type (AgIdx_N i) (semty_tup tys) = tys!i \<close>
   and   valid_idx_step_tup[eval_aggregate_path] : \<open>valid_idx_step (semty_tup tys) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < length tys}\<close>
   and   idx_step_value_tup[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (V_tup.mk vs) = vs!i\<close>
   and   idx_step_mod_value_tup : \<open>idx_step_mod_value (AgIdx_N i) f (V_tup.mk vs) = V_tup.mk (vs[i := f (vs!i)])\<close>
 
 lemma V_tup_mult_cons:
-  \<open>NO_MATCH vs ([]::VAL list) \<Longrightarrow> V_tup.mk (v#vs) = V_tup.mk vs * V_tup.mk [v]\<close>
+  \<open>NO_MATCH vs ([]::VAL list) \<Longrightarrow> V_tup.mk (v#vs) = V_tup.mk [v] * V_tup.mk vs\<close>
   using V_tup_mult by simp
 
 lemma list_all_replicate:
@@ -155,9 +155,9 @@ lemma Empty_Tuple_reduce[simp]:
   \<open>((a,()) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Empty_Tuple) = (a \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding BI_eq_iff
   by ((clarsimp; rule; clarsimp simp add: V_tup_mult),
-      (metis V_tup_mult append_Nil),
+      metis Cons_eq_append_conv V_tup_mult,
       (clarsimp; rule; clarsimp simp add: V_tup_mult),
-      metis V_tup_mult append.right_neutral)
+      metis NO_MATCH_def V_tup_mult_cons)
 
 lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   \<open> Semantic_Zero_Val ty T x
@@ -216,7 +216,7 @@ lemma idx_step_value_V_tup_suc:
   by (simp add: idx_step_value_tup)
 
 lemma idx_step_mod_value_V_tup_suc:
-  \<open>idx_step_mod_value (AgIdx_N (Suc i)) g (V_tup.mk (va # vs)) = idx_step_mod_value (AgIdx_N i) g (V_tup.mk vs) * V_tup.mk [va]\<close>
+  \<open>idx_step_mod_value (AgIdx_N (Suc i)) g (V_tup.mk (va # vs)) = V_tup.mk [va] * idx_step_mod_value (AgIdx_N i) g (V_tup.mk vs)\<close>
   by (metis NO_MATCH_I V_tup_mult_cons idx_step_mod_value_tup list_update_code(3) nth_Cons_Suc)
 
 lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Getter (AgIdx_N 0 # _) _ _ _\<close>

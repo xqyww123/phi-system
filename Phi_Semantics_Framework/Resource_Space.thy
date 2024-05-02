@@ -81,9 +81,9 @@ lemma inject_inj[iff]:
   by (metis proj_inj)
 
 lemma inject_assoc_homo[simp]:
-  "R ## inject x \<and> R * inject x ## inject y
-\<Longrightarrow> R * inject x * inject y = R * inject (x * y)"
-  by (metis mult_in_dom sep_disj_multD2 sep_mult_assoc)
+  "inject y ## R \<and> inject x ## inject y * R
+\<Longrightarrow> inject x * inject y * R = inject (x * y) * R"
+  by (metis mult_in_dom sep_disj_multD1)
 
 lemma inj_Sep_Homo:
   \<open>Homo_Sep_Homo inject\<close>
@@ -138,11 +138,11 @@ lemma sep_disj_mk[iff]:
   by force
 
 lemma sep_disj_mk_name[simp]:
-  \<open>r ## mk x \<Longrightarrow> r name ## inject x\<close>
+  \<open>mk x ## r \<Longrightarrow> inject x ## r name\<close>
   by (metis fun_upd_same sep_disj_fun)
 
 lemma sep_disj_get_name:
-  \<open>r ## mk x \<longrightarrow> get r ## x\<close>
+  \<open>mk x ## r \<longrightarrow> x ## get r\<close>
   by (metis prj.sep_disj_homo_semi proj_inj sep_disj_mk_name)
 
 lemma get_homo_mult:
@@ -173,7 +173,7 @@ lemma sep_disj_clean[simp]:
   by simp *)
 
 lemma times_fun_upd:
-  \<open>(R * mk x)(name := inject y) = (clean R * mk y)\<close>
+  \<open>(mk x * R)(name := inject y) = (mk y * clean R)\<close>
   unfolding times_fun_def fun_upd_def fun_eq_iff by simp
 
 end
@@ -322,20 +322,20 @@ lemma interp_m[simp]: "homo_one I \<Longrightarrow> INTERP (mk x) = I x"
       metis homo_one.homo_one prj.homo_one_axioms proj_inj)
 
 lemma sep_disj_get_name_eq[simp]:
-  \<open>r \<in> SPACE \<Longrightarrow> get r ## x \<longleftrightarrow> r ## mk x\<close>
-  by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo inj_prj_in_SPACE)
+  \<open>r \<in> SPACE \<Longrightarrow> x ## get r \<longleftrightarrow> mk x ## r\<close>
+  by (metis fun_sep_disj_1_fupdt(2) fun_upd_triv inj.sep_disj_homo_semi inj_prj_in_SPACE sep_disj_get_name)
 
 lemma interp_split:
   " NO_MATCH (clean f') f
 \<Longrightarrow> homo_one I
 \<Longrightarrow> f \<in> SPACE \<Longrightarrow>
-    INTERP f = INTERP (clean f) * I (project (f name))
-  \<and> INTERP (clean f) ## I (project (f name))"
+    INTERP f = I (project (f name)) * INTERP (clean f)
+  \<and> I (project (f name)) ## INTERP (clean f) "
   unfolding INTERP_def SPACE_def
   by (subst \<F>_FP_homo_split[where ?f = f and ?k = name],
       simp_all add: interpret_reduct prj.homo_one_axioms)
 
-lemma Fic_Space_mm[simp]: "f ## mk x \<Longrightarrow> f * mk x \<in> SPACE \<longleftrightarrow> f \<in> SPACE"
+lemma Fic_Space_mm[simp]: "mk x ## f \<Longrightarrow> mk x * f \<in> SPACE \<longleftrightarrow> f \<in> SPACE"
   unfolding SPACE_def finite_dom1_mult1
   apply clarsimp
   by (smt (verit, ccfv_threshold) Fic_Space_m SPACE_def SPACE_mult_homo finite_dom1_mult1 mem_Collect_eq)

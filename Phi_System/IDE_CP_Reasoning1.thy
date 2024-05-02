@@ -153,13 +153,13 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> R * S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  \<open> S x * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> R * S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A>
-\<Longrightarrow> R * (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A> \<close>
+  \<open> S x * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A>
+\<Longrightarrow> (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A> \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
@@ -377,19 +377,19 @@ consts frame_var_rewrs :: mode
           Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>) {fix_vars=false}) o snd\<close>
 
 definition \<phi>IntroFrameVar :: "'a::sep_magma BI option \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool"
-  where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> (case R of Some R' \<Rightarrow> S' = (R' * S) \<and> T' = R' * T
+  where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> (case R of Some R' \<Rightarrow> S' = (S * R') \<and> T' = T * R'
                                                  | None \<Rightarrow> S' = S \<and> T' = T )"
 
 definition \<phi>IntroFrameVar' ::
   "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> bool"
-  where "\<phi>IntroFrameVar' R S' S T' T E' E \<longleftrightarrow> S' = (R * S) \<and> T' = (\<lambda>ret. R * T ret) \<and> E' = (\<lambda>ex. R * E ex) "
+  where "\<phi>IntroFrameVar' R S' S T' T E' E \<longleftrightarrow> S' = (S * R) \<and> T' = (\<lambda>ret. T ret * R) \<and> E' = (\<lambda>ex. E ex * R) "
 
 definition TAIL :: \<open>assn \<Rightarrow> assn\<close> where \<open>TAIL S = S\<close>
 
 text \<open>Antecedent \<^schematic_prop>\<open>\<phi>IntroFrameVar ?R ?S' S ?T' T\<close> appends a frame variable
   \<^schematic_term>\<open>?R\<close> to the source MTF \<^term>\<open>S\<close> if the items in \<^term>\<open>S\<close> do not have an ending
   frame variable already nor the ending item is not tagged by \<open>TAIL\<close>.
-  If so, the reasoner returns \<open>?S' := ?R * S\<close> for a schematic \<open>?R\<close>,
+  If so, the reasoner returns \<open>?S' := S * ?R\<close> for a schematic \<open>?R\<close>,
   or else, the \<open>S\<close> is returned unchanged \<open>?S' := ?S\<close>.
   \<open>\<phi>IntroFrameVar'\<close> is similar.
 
@@ -413,7 +413,7 @@ lemma \<phi>IntroFrameVar_Yes:
   unfolding \<phi>IntroFrameVar_def REMAINS_def by simp
 
 lemma \<phi>IntroFrameVar'_Yes:
-  " \<phi>IntroFrameVar' R (S \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R) S (\<lambda>ret. R * T ret) T (\<lambda>ex. R * E ex) E"
+  " \<phi>IntroFrameVar' R (S \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R) S (\<lambda>ret. T ret * R) T (\<lambda>ex. E ex * R) E"
   unfolding \<phi>IntroFrameVar'_def REMAINS_def by simp
 
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
@@ -425,7 +425,7 @@ lemma \<phi>IntroFrameVar'_Yes:
                               Term.is_Var (Term.head_of R) andalso
                               (case C of Const(\<^const_name>\<open>True\<close>, _) => true
                                        | _ => Term.is_Var (Term.head_of C))
-                          | _ => (case hd (Phi_Syntax.strip_separations S)
+                          | _ => (case Phi_Syntax.rightmost_sep S
                          of (\<^const>\<open>TAIL\<close> $ _) => true
                           | RR => Term.is_Var (Term.head_of RR))
   in if suppressed
@@ -442,7 +442,7 @@ lemma \<phi>IntroFrameVar'_Yes:
                               Term.is_Var (Term.head_of R) andalso
                               (case C of Const(\<^const_name>\<open>True\<close>, _) => true
                                        | _ => Term.is_Var (Term.head_of C))
-                          | _ => (case hd (Phi_Syntax.strip_separations S)
+                          | _ => (case Phi_Syntax.rightmost_sep S
                          of (\<^const>\<open>TAIL\<close> $ _) => true
                           | RR => Term.is_Var (Term.head_of RR))
   in if suppressed
@@ -510,22 +510,22 @@ end\<close>
 
 subsection \<open>Semantic Type of Multiple Values\<close>
 
-lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?R vs\<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T) _\<close>]:
+lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs) TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R (\<phi>V_snd vs)\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T) (TY#TYs)\<close>
+\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T\<heavy_comma> R (\<phi>V_snd vs)) (TY#TYs)\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[vs] T) [TY]\<close>
+\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[vs] T\<heavy_comma> R) [TY]\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>_Have_Types R TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs\<heavy_comma> S) TYs\<close>
+\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. S\<heavy_comma> R vs) TYs\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
 
 lemma [\<phi>reason 2000]:
@@ -533,7 +533,7 @@ lemma [\<phi>reason 2000]:
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
 
 lemma [\<phi>reason 1020 except \<open>\<phi>_Have_Types (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
-  \<open> \<phi>_Have_Types (\<lambda>vs. Void\<heavy_comma> R vs) TYs
+  \<open> \<phi>_Have_Types (\<lambda>vs. R vs\<heavy_comma> Void) TYs
 \<Longrightarrow> \<phi>_Have_Types R TYs\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
 
@@ -592,8 +592,8 @@ lemma [\<phi>reason 1200]:
   by simp blast
 
 lemma [\<phi>reason 1200]:
-  \<open>(\<And>c. Remove_Values (R * T c) (R' * T' c))
-\<Longrightarrow> Remove_Values (R * ExSet T) (R' * ExSet T')\<close>
+  \<open>(\<And>c. Remove_Values (T c * R) (T' c * R'))
+\<Longrightarrow> Remove_Values (ExSet T * R) (ExSet T' * R')\<close>
   unfolding Remove_Values_def Transformation_def
   by simp blast
 
@@ -604,8 +604,8 @@ lemma [\<phi>reason 1200]:
   by simp
 
 lemma [\<phi>reason 1200]:
-  \<open> Remove_Values (R * T) (R' * T')
-\<Longrightarrow> Remove_Values (R * (T \<s>\<u>\<b>\<j> P)) (R' * (T' \<s>\<u>\<b>\<j> P))\<close>
+  \<open> Remove_Values (T * R) (T' * R')
+\<Longrightarrow> Remove_Values ((T \<s>\<u>\<b>\<j> P) * R) ((T' \<s>\<u>\<b>\<j> P) * R')\<close>
   unfolding Remove_Values_def Transformation_def
   by simp
 
@@ -625,7 +625,7 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values R R'
-\<Longrightarrow> Remove_Values (R * (x \<Ztypecolon> Val raw T)) R'\<close>
+\<Longrightarrow> Remove_Values ((x \<Ztypecolon> Val raw T) * R) R'\<close>
   unfolding Remove_Values_def Transformation_def by (simp add: Val_expn)
 
 lemma [\<phi>reason 1200]:
@@ -643,12 +643,12 @@ lemma [\<phi>reason 1200]:
   unfolding Remove_Values_def Transformation_def by simp
 
 lemma [\<phi>reason 1200]:
-  \<open>Remove_Values (A * 0) 0\<close>
+  \<open>Remove_Values (0 * A) 0\<close>
   unfolding Remove_Values_def Transformation_def by simp
 
 lemma [\<phi>reason 1100]:
-  \<open> Remove_Values B B'
-\<Longrightarrow> Remove_Values A A'
+  \<open> Remove_Values A A'
+\<Longrightarrow> Remove_Values B B'
 \<Longrightarrow> Remove_Values (A * B) (A' * B')\<close>
   unfolding Remove_Values_def Transformation_def by simp blast
 

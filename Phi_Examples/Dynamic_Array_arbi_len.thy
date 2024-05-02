@@ -7,8 +7,8 @@ begin
 
 
 \<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
-  where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T\<heavy_comma>
-                                (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>, cap: \<nat> \<rbrace>
+  where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>, cap: \<nat> \<rbrace>\<heavy_comma>
+                                data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] T
                                 \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                      len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
                                                      take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr\<close>
@@ -24,8 +24,8 @@ abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {
 
 
 proc len_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
-  output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> length l \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
+  output   \<open>length l \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   $addr \<tribullet> len !
@@ -42,9 +42,9 @@ context
 begin
 
 proc get_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   premises \<open>i < length l\<close>
-  output   \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  output   \<open>l!i \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   $addr \<tribullet> data ! \<tribullet> $i !
@@ -53,7 +53,7 @@ proc get_dynarr:
 
 
 proc set_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
@@ -71,7 +71,7 @@ proc Max:
 
 
 proc push_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   output   \<open>l @ [v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
@@ -95,8 +95,8 @@ proc push_dynarr:
 \<medium_right_bracket> .
 
 proc concat_dynarr:
-  input   \<open>l1 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<heavy_comma>
-           addr1 \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> addr2 \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
+  input   \<open>addr1 \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> addr2 \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma>
+           l1 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<close>
   output  \<open>l1 @ l2 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<close>
 \<medium_left_bracket>
   val len \<leftarrow> len_dynarr ($addr2) \<semicolon>
@@ -109,9 +109,9 @@ proc concat_dynarr:
 
 
 proc pop_dynarr:
-  input    \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   premises \<open>l \<noteq> []\<close>
-  output   \<open>butlast l \<Ztypecolon> DynArr addr TY T\<heavy_comma> last l \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  output   \<open>last l \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> butlast l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   val len \<leftarrow> $addr \<tribullet> len ! - 1 \<semicolon>
@@ -133,9 +133,9 @@ proc pop_dynarr:
 
 proc new_dynarr:
   input  \<open>Void\<close>
-  output \<open>[] \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r> \<s>\<u>\<b>\<j> addr. \<top>\<close>
+  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> [] \<Ztypecolon> DynArr addr TY T \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc_1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>, cap: \<nat> \<rbrace>\<close> \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> data: \<Pp>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>, cap: \<nat> \<rbrace>\<close> \<semicolon>
   $ret \<tribullet> data := (calloc_aN (\<open>0 \<Ztypecolon> \<nat>\<close>) \<open>T\<close>) \<semicolon>
   \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close> \<semicolon>
   $ret
@@ -143,7 +143,7 @@ proc new_dynarr:
 
 
 proc del_dynarr:
-  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
@@ -152,7 +152,7 @@ proc del_dynarr:
 \<medium_right_bracket> .
 
 proc map_dynarr:
-  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   requires C: \<open>\<And>x u. \<p>\<r>\<o>\<c> C u \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[u] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> T \<rbrace> \<close>
   output \<open>map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
@@ -165,9 +165,9 @@ proc map_dynarr:
 \<medium_right_bracket> .
 
 proc exists_dynarr:
-  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   requires C: \<open>\<And>x u. \<p>\<r>\<o>\<c> C u \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[u] T \<longmapsto> P x \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
-  output \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P l \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  output \<open>list_ex P l \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> False ;;
   replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
@@ -180,14 +180,14 @@ proc exists_dynarr:
 
 
 proc fold_map_dynarr:
-  input  \<open>l \<Ztypecolon> DynArr addr TY T\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> z0 \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   requires [\<phi>reason]: \<open>\<And>z. \<phi>SemType (z \<Ztypecolon> U) TY\<^sub>U\<close>
        and C: \<open>\<And>x z u v. \<p>\<r>\<o>\<c> C u v \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[u] T\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l>[v] U \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> g x z \<Ztypecolon> \<v>\<a>\<l> U \<rbrace> \<close>
-  output \<open>map f l \<Ztypecolon> DynArr addr TY T\<heavy_comma> fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  output \<open>fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> $z0 \<semicolon>
   replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
-               \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<heavy_comma> fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<close>
+               \<open>\<lambda>i. fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<heavy_comma> (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     C (get_dynarr ($addr, $i), $zz) \<rightarrow> val x', var zz \<semicolon>
     set_dynarr ($addr, $i, $x')

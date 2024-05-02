@@ -249,7 +249,7 @@ section \<open>Derivatives of Transformation \<close>
 subsection \<open>Preliminary Helpers\<close>
 
 lemma \<phi>Some_mult_contract:
-  \<open>(x \<Ztypecolon> \<black_circle> T) * (y \<Ztypecolon> \<black_circle> U) = ((y,x) \<Ztypecolon> \<black_circle> (U \<^emph> T)) \<close>
+  \<open>(x \<Ztypecolon> \<black_circle> T) * (y \<Ztypecolon> \<black_circle> U) = ((x,y) \<Ztypecolon> \<black_circle> (T \<^emph> U)) \<close>
   by (metis \<phi>Prod_expn' \<phi>Some_\<phi>Prod)
 
 lemma \<phi>Some_not_1:
@@ -1156,14 +1156,14 @@ lemma \<phi>mapToA_split_goal_Ty[
     
     apply_rule ToA_Mapper_onward[OF MP\<^sub>2,
         where x=\<open>(case x of (x,(w\<^sub>1,w\<^sub>2),e) \<Rightarrow> case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow> r\<^sub>1)\<close>,
-        THEN transformation_right_frame, simplified]
+        THEN transformation_left_frame, simplified]
     certified by (insert the_\<phi>(5), clarsimp simp add: image_iff split: prod.split, force)
   \<medium_right_bracket> certified by (clarsimp simp add: image_iff split: prod.split)
     apply (rule conjunctionI, rule, rule conjunctionI)
   \<medium_left_bracket> premises [] and MP\<^sub>1 and _ and MP\<^sub>2
     apply_rule ToA_Mapper_backward[OF MP\<^sub>2,
         where x=\<open>case x of ((y\<^sub>1,y\<^sub>2),r) \<Rightarrow> (y\<^sub>2,r)\<close>,
-        THEN transformation_right_frame, simplified]
+        THEN transformation_left_frame, simplified]
     certified by (insert useful(1), clarsimp simp add: image_iff case_prod_beta prod.map_beta, force) ;;
 
     apply_rule ToA_Mapper_backward[OF MP\<^sub>1, where x=\<open>case x of ((y\<^sub>1,y\<^sub>2),r) \<Rightarrow> (y\<^sub>1,s\<^sub>2 (y\<^sub>2,r))\<close>]
@@ -1257,7 +1257,7 @@ lemma \<phi>mapToA_split_source
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin;
          simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric])
   \<medium_left_bracket> premises MP\<^sub>1 and _ and MP\<^sub>2
-    apply_rule ToA_Mapper_onward[OF MP\<^sub>2, where x=\<open>case x of ((x\<^sub>1,x\<^sub>2),w\<^sub>2e) \<Rightarrow> (x\<^sub>2, w\<^sub>2e)\<close>, THEN transformation_right_frame, simplified]
+    apply_rule ToA_Mapper_onward[OF MP\<^sub>2, where x=\<open>case x of ((x\<^sub>1,x\<^sub>2),w\<^sub>2e) \<Rightarrow> (x\<^sub>2, w\<^sub>2e)\<close>, THEN transformation_left_frame, simplified]
     certified by (clarsimp split: prod.split simp: image_iff, insert the_\<phi>(5), force) ;;
     apply_rule ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>case x of ((x\<^sub>1,x\<^sub>2),w\<^sub>2e) \<Rightarrow> (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e))\<close>]
     certified by (clarsimp split: prod.split simp: image_iff, insert the_\<phi>(5), force)
@@ -1271,7 +1271,7 @@ lemma \<phi>mapToA_split_source
 
     apply_rule ToA_Mapper_backward[OF MP\<^sub>2,
         where x=\<open>case x of (y,(r\<^sub>1,r\<^sub>2),e) \<Rightarrow> case s\<^sub>1 (y,r\<^sub>1,r\<^sub>2,e) of (x\<^sub>1,w\<^sub>2e) \<Rightarrow> w\<^sub>2e\<close>,
-        THEN transformation_right_frame, simplified]
+        THEN transformation_left_frame, simplified]
     certified apply (insert useful(1) ToA_Mapper_f_expn[OF MP\<^sub>1],
           clarsimp split: prod.split simp add: image_iff)
       subgoal premises prems for a b aa ba x1 ab bb bc x1a ac ad bd
@@ -1411,24 +1411,25 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal]:
 
 
 lemma [\<phi>reason %\<phi>mapToA_split_source]:
-  \<open> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<t>\<o> Y\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>2' \<Ztypecolon> W\<^sub>2' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>2'
-\<Longrightarrow> subst_sp C\<^sub>W\<^sub>2 (w\<^sub>2' \<Ztypecolon> W\<^sub>2') (w\<^sub>2 \<Ztypecolon> W\<^sub>2) S\<^sub>1 Y\<^sub>1 False
-             C\<^sub>R\<^sub>1 R\<^sub>1 R\<^sub>1' C\<^sub>W (w \<Ztypecolon> W) (w' \<Ztypecolon> W')
+  \<open> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1 \<t>\<o> Y\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>1' \<Ztypecolon> W\<^sub>1' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>1'
+\<Longrightarrow> subst_sp C\<^sub>W\<^sub>1 (w\<^sub>1' \<Ztypecolon> W\<^sub>1') (w\<^sub>1 \<Ztypecolon> W\<^sub>1) S\<^sub>2 Y\<^sub>2 False
+             C\<^sub>R\<^sub>2 R\<^sub>2 R\<^sub>2' C\<^sub>W (w \<Ztypecolon> W) (w' \<Ztypecolon> W')
 \<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R  = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1  * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2  @tag \<A>merge
 \<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R' = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1' * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2' @tag \<A>merge
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Y\<^sub>1 * Y\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R' \<close>
   for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
   unfolding ToA_Subst_def Action_Tag_def subst_sp_def
-  by (cases C\<^sub>R; cases C\<^sub>R\<^sub>1; cases C\<^sub>R\<^sub>2; cases C\<^sub>W; cases C\<^sub>W\<^sub>2;
+  by (cases C\<^sub>R; cases C\<^sub>R\<^sub>1; cases C\<^sub>R\<^sub>2; cases C\<^sub>W; cases C\<^sub>W\<^sub>1;
       clarsimp simp add: \<phi>Cond_Unital_BI_eq_strip Cond_Unital_Ins_BI_contract Cond_Unital_Ins_BI_eq_1;
       smt (verit, ccfv_threshold)
         transformation_trans[where P=True and Q=True, simplified]
-        transformation_left_frame transformation_right_frame
+        transformation_right_frame transformation_left_frame
         mult.assoc)
 
+
 lemma [\<phi>reason %\<phi>mapToA_split_source]:
-  \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
-\<Longrightarrow> getter_sp C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) S\<^sub>1 C\<^sub>R\<^sub>1 R\<^sub>1 C\<^sub>W (w \<Ztypecolon> W) False
+  \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
+\<Longrightarrow> getter_sp C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) S\<^sub>2 C\<^sub>R\<^sub>2 R\<^sub>2 C\<^sub>W (w \<Ztypecolon> W) False
 \<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1 * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2 @tag \<A>merge
 \<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
@@ -1436,7 +1437,6 @@ lemma [\<phi>reason %\<phi>mapToA_split_source]:
   by (cases C\<^sub>R; cases C\<^sub>R\<^sub>1; cases C\<^sub>R\<^sub>2; cases C\<^sub>W; cases C\<^sub>W\<^sub>2;
       clarsimp simp add: \<phi>Cond_Unital_BI_eq_strip Cond_Unital_Ins_BI_contract Cond_Unital_Ins_BI_eq_1;
       metis mult.assoc)
-
 
 (*
 
@@ -1656,8 +1656,8 @@ lemma [\<phi>reason %ToAmap_assign_empty_src]:
   unfolding ToAmap_assign_empty_src_def Identity_Elements\<^sub>E_def Identity_Elements\<^sub>I_def
             Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def Premise_def
   by (auto simp: ToA_Mapper_def Transformation_def prod.map_beta,
-      metis mult_1_class.mult_1_left sep_magma_1_right,
-      metis mult_1_class.mult_1_left snd_conv,
+      metis mult_1_class.mult_1_right sep_magma_1_left,
+      metis mult_1_class.mult_1_right snd_conv,
       metis fst_conv)
 
 

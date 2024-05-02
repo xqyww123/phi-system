@@ -3,7 +3,7 @@ theory Phi_Types_Test
 begin
 
 subsection \<open>Testing \<phi>-Types\<close>
-        
+       
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -216,17 +216,17 @@ lemma
 
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
-\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (T i)) * (f i \<Ztypecolon> T i) \<close>
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (T i)) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> i \<noteq> j
-\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {j} - {i}] (T i)) * (f i \<Ztypecolon> T i) * (f j \<Ztypecolon> T j) \<close>
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {j} - {i}] (T i)) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> k \<in> S \<and> i \<noteq> j \<and> i \<noteq> k \<and> j \<noteq> k
-\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> \<big_ast>[i\<in>S - {k} - {j} - {i}] (T i)) * (f i \<Ztypecolon> T i) * (f j \<Ztypecolon> T j) * (f k \<Ztypecolon> T k) \<close>
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f k \<Ztypecolon> T k) * (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {k} - {j} - {i}] (T i)) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 end

@@ -244,10 +244,10 @@ interpretation Map_of_Val_ins: cancl_sep_orthogonal_monoid \<open>Map_of_Val_ins
                                   sep_disj_fun_def split_discrete_meta_all
                         split: option.split)[1]
   using Mapof_not_1 apply fastforce
-  apply (metis Map_of_Val_dom domIff option.map_disc_iff times_option(2))
+  apply (metis Map_of_Val_dom domIff option.map_disc_iff times_option_none)
   subgoal premises prems for a x x' proof -
     have t1: \<open>a x = 1\<close> for x
-      by (metis Map_of_Val_dom domIff one_option_def option.map_disc_iff prems(1) prems(2) prems(3) prems(4) times_option(2))
+      by (metis Map_of_Val_dom domIff map_option_is_None mult_1 one_option_def prems(1) prems(2) prems(3) prems(4))
     have t2: \<open>map_option discrete o Map_of_Val x = map_option discrete o Map_of_Val x'\<close>
       using prems(4) t1 by auto
     show ?thesis
@@ -257,7 +257,7 @@ interpretation Map_of_Val_ins: cancl_sep_orthogonal_monoid \<open>Map_of_Val_ins
 lemma map_tree_refinement_modify:
   \<open> dom a = dom b \<and> dom b \<subseteq> D
 \<Longrightarrow> (\<And>r. r ## push_map idx a \<and> r ## push_map idx b \<and> r * push_map idx a \<in> S \<Longrightarrow> r * push_map idx b \<in> S)
-\<Longrightarrow> Id_on UNIV * ({(a, a ++ push_map idx b)} \<s>\<u>\<b>\<j> a. dom a = D)
+\<Longrightarrow> ({(a, a ++ push_map idx b)} \<s>\<u>\<b>\<j> a. dom a = D) * Id_on UNIV
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> { (push_map idx a, push_map idx b)}
     \<w>.\<r>.\<t> \<F>_functional id S
     \<i>\<n> { push_map idx a }\<close>
@@ -269,18 +269,18 @@ lemma map_tree_refinement_modify:
     have t1: \<open>dom x \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
       using disjoint_iff prems(10) sep_disj_partial_map_disjoint by fastforce
     have t2: \<open>dom r \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
-      by (metis prems(2) prems(4) push_map_dom_eq sep_disj_partial_map_disjoint)
+      by (metis dom1_dom inf_sup_aci(1) prems(2) prems(4) push_map_dom_eq sep_disj_dom1_disj_disjoint)
     have t3: \<open>dom u \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
-      by (metis prems(12) prems(2) push_map_dom_eq sep_disj_partial_map_disjoint)
-    have t4: \<open>u ## idx \<tribullet>\<^sub>m b\<close>
+      by (metis Int_commute prems(11) prems(2) push_map_dom_eq sep_disj_partial_map_disjoint)
+    have t4: \<open>idx \<tribullet>\<^sub>m b ## u\<close>
       using sep_disj_partial_map_disjoint t3 by blast
-    have t5: \<open>r ## idx \<tribullet>\<^sub>m b\<close>
+    have t5: \<open>idx \<tribullet>\<^sub>m b ## r\<close>
       using sep_disj_partial_map_disjoint t2 by blast
-    have t6: \<open>dom x \<inter> dom a' = {}\<close>
+    have t6: \<open>dom a' \<inter> dom x = {}\<close>
       by (meson prems(9) sep_disj_partial_map_disjoint)
     show ?thesis
       apply (simp add: t5, rule exI[where x=u], simp add: t4 prems)
-      by (smt (verit, best) map_add_subsumed_dom mult.left_commute prems(1) prems(2) prems(4) prems(6) prems(8) push_map_distrib_map_add t1 t2 t3 t5 times_fun_map_add_right verit_comp_simplify1(2))
+      by (metis map_add_subsumed_dom mult.commute prems(1) prems(2) prems(4) prems(6) prems(7) push_map_distrib_map_add sep_disj_commute subset_refl t1 t2 t3 t5 times_fun_map_add_right)
   qed .
 
 lemma fiction_Map_of_Val_ins_comp_id_simp:
@@ -293,7 +293,7 @@ lemma val_map_eq_index_value_eq:
   \<open>valid_index TY idx \<Longrightarrow>
     u_idx \<in> Well_Type (index_type idx TY) \<Longrightarrow>
     v \<in> Well_Type TY \<Longrightarrow>
-    map_option discrete \<circ> Map_of_Val v = u * idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) \<Longrightarrow>
+    map_option discrete \<circ> Map_of_Val v = idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) * u \<Longrightarrow>
     u ## idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) \<Longrightarrow>
     index_value idx v = u_idx \<close>
   subgoal premises prems proof -
@@ -301,7 +301,7 @@ lemma val_map_eq_index_value_eq:
       using Map_of_Val_dom Map_of_Val_pull index_value_welltyp prems(1) prems(3) by auto
     have t2: \<open>dom (pull_map idx (Map_of_Val v)) =
               dom (pull_map idx u) \<union> dom (Map_of_Val u_idx)\<close>
-      by (metis dom1_dom dom1_mult dom_map_option_comp homo_one_map_option prems(4) prems(5) pull_map_funcomp pull_map_homo_mult pull_map_sep_disj pull_push_map)
+      by (metis dom1_dom dom1_mult dom_map_option_comp homo_one_map_option prems(4) prems(5) pull_map_funcomp pull_map_homo_mult pull_map_sep_disj pull_push_map sep_mult_commute)
     have t3: \<open>dom (pull_map idx u) \<inter> dom (Map_of_Val u_idx) = {}\<close>
       by (metis dom1_dom dom_map_option_comp prems(5) pull_map_sep_disj pull_push_map sep_disj_dom1_disj_disjoint)
     have t4: \<open>dom (Map_of_Val u_idx) = Dom_of_TY (index_type idx TY)\<close>
@@ -321,30 +321,33 @@ lemma val_map_mod_index_value:
     x \<in> Well_Type TY \<Longrightarrow>
     u \<in> Well_Type (index_type idx TY) \<Longrightarrow>
     v \<in> Well_Type (index_type idx TY) \<Longrightarrow>
-    r ## idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u) \<Longrightarrow>
-    r ## idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v) \<Longrightarrow>
-    r * idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u) = map_option discrete \<circ> Map_of_Val x \<Longrightarrow>
-    r * idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v) = map_option discrete \<circ> Map_of_Val (index_mod_value idx (\<lambda>_. v) x)\<close>
+    idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u) ## r \<Longrightarrow>
+    idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v) ## r \<Longrightarrow>
+    idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u) * r = map_option discrete \<circ> Map_of_Val x \<Longrightarrow>
+    idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v) * r = map_option discrete \<circ> Map_of_Val (index_mod_value idx (\<lambda>_. v) x)\<close>
   by (simp add: Map_of_Val_mod map_option_funcomp_map_add,
-      smt (verit) Map_of_Val_dom dom_map_option_comp map_add_subsumed_dom map_le_implies_dom_le homo_one_map_option pull_push_map push_map_dom_eq push_map_homo push_pull_map sep_disj_partial_map_disjoint times_fun_map_add_right)
+      smt (verit, del_insts) Dom_of_TY Map_of_Val_dom homo_one_map_option index_type_idem
+          map_add_subsumed_dom map_option_funcomp_map_add mult.commute push_map_distrib_map_add
+          push_map_homo sep_disj_commute sep_disj_partial_map_disjoint times_fun_map_add_right valid_index.simps(1))
+      
 
 lemma val_map_mod_index_value_projection:
   \<open> valid_index TY idx \<Longrightarrow>
     u_idx \<in> Well_Type (index_type idx TY) \<Longrightarrow>
     refinement_projection (\<F>_functional id (Map_of_Val_ins ` Map_of_Val_ins_dom TY)) {idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}
-    \<subseteq> UNIV * Map_of_Val_ins ` Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>
+    \<subseteq> Map_of_Val_ins ` Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} * UNIV\<close>
   apply (clarsimp simp add: image_iff set_mult_expn refinement_projection_def
                             Map_of_Val_ins_dom_def Map_of_Val_ins_def;
          case_tac xb; simp add: split_discrete_meta_all)
   apply (smt (verit, best) Mapof_not_1 dom_1 dom_eq_empty_conv dom_map_option_comp)
-  by (metis mult.commute mult_1_class.mult_1_right sep_magma_1_right val_map_eq_index_value_eq)
+  by (metis mult_1_class.mult_1_right sep_disj_commuteI sep_magma_1_left val_map_eq_index_value_eq)
 
 lemma fiction_Map_of_Val_ins_projection:
   \<open> valid_index TY idx
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> refinement_projection (\<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY))
                           {idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}
-      \<subseteq> UNIV * Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY }\<close>
+      \<subseteq> Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY } * UNIV\<close>
   apply (subst fiction_Map_of_Val_ins_comp_id_simp[symmetric])
   apply (rule refinement_projections_stepwise_UNIV_paired)
   apply (rule Map_of_Val_ins.\<F>_functional_projection)
@@ -356,10 +359,10 @@ lemma fiction_Map_of_Val_ins_projection':
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> refinement_projection (\<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY))
                           {idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}
-      \<subseteq> UNIV * Some ` discrete ` {a. index_value idx a = u_idx }\<close>
+      \<subseteq> Some ` discrete ` {a. index_value idx a = u_idx } * UNIV\<close>
   subgoal premises prems proof -
-    have \<open> UNIV * Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY }
-        \<subseteq> UNIV * Some ` discrete ` {a. index_value idx a = u_idx }\<close>
+    have \<open> Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY } * UNIV
+         \<subseteq> Some ` discrete ` {a. index_value idx a = u_idx } * UNIV \<close>
       by (simp add: Collect_mono_iff image_mono)
     then show ?thesis
       using fiction_Map_of_Val_ins_projection prems(1) prems(2) by blast
@@ -371,9 +374,9 @@ lemma fiction_Map_of_Val_ins_refinement:
 \<Longrightarrow> v \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> (\<forall>x \<in> Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x )
-\<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
-                    \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx}
-                      \<and> u \<in> discrete ` Well_Type TY)
+\<Longrightarrow> ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
+          \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx}
+            \<and> u \<in> discrete ` Well_Type TY) * Id_on UNIV
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
     \<w>.\<r>.\<t> \<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY)
@@ -387,7 +390,7 @@ lemma fiction_Map_of_Val_ins_refinement:
                    ExSet_expn_set Subjection_expn_set)
   apply (simp add: Sep_Closed_def)
   subgoal premises prems proof -
-    have t1: \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close> for A B B'
+    have t1: \<open>A \<subseteq> A' \<Longrightarrow> A * B \<subseteq> A' * B\<close> for A A' B
       by (clarsimp simp add: subset_iff set_mult_expn; blast)
     have \<open>pairself Map_of_Val_ins `
             ({(Some u, (Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))) u)} \<s>\<u>\<b>\<j> u.
@@ -403,7 +406,7 @@ lemma fiction_Map_of_Val_ins_refinement:
       using Map_of_Val_dom prems(2) by force
     have t4: \<open>idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) \<noteq> 1\<close>
       by (metis Map_of_Val_ins_None Map_of_Val_ins_dom_eval Map_of_Val_ins_eval(1) option.distinct(1) prems(3) push_map_eq_1)
-    then have t5: \<open> r * idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) \<noteq> 1\<close> for r
+    then have t5: \<open> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) * r \<noteq> 1\<close> for r
       by (metis (no_types, opaque_lifting) dom1_disjoint_sep_disj dom1_dom dom_eq_empty_conv empty_subsetI inf.orderE one_partial_map sep_no_inverse times_fun_def times_option_none)
 
     show ?thesis
@@ -412,7 +415,7 @@ lemma fiction_Map_of_Val_ins_refinement:
       apply (simp add: Dom_of_TY Map_of_Val_dom prems(1) prems(3) t3)
       apply (simp add: Map_of_Val_ins_def Map_of_Val_ins_dom_def image_iff split_option_ex
                        split_discrete_ex split_discrete_meta_all split_discrete_all t5)
-      by (metis index_mod_value_welltyp prems(1) prems(2) prems(3) val_map_mod_index_value)
+      by (smt (verit, ccfv_threshold) index_mod_value_welltyp prems(1) prems(2) prems(3) sep_disj_commuteI sep_mult_commute sep_no_inverse t4 val_map_mod_index_value)
   qed
   subgoal premises prems proof -
     have t1: \<open> Domain ({(a u, b u)} \<s>\<u>\<b>\<j> u. P u) = { a u |u. P u }\<close> for a b P
@@ -432,9 +435,9 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
 \<Longrightarrow> v \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> \<forall>x\<in>Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x
-\<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
-                    \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx}
-                      \<and> u \<in> discrete ` Well_Type TY)
+\<Longrightarrow> ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
+          \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx}
+            \<and> u \<in> discrete ` Well_Type TY) * Id_on UNIV
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
     \<w>.\<r>.\<t> \<F>_functional((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY)
@@ -459,7 +462,7 @@ lemma fiction_Map_of_Val_ins_perm_projection:
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> refinement_projection (\<F>_functional ((\<circ>) to_share o Map_of_Val_ins) (Map_of_Val_ins_dom TY))
                           { to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) }
-      \<subseteq> UNIV * Some ` discrete ` {a. index_value idx a = u_idx }\<close>
+      \<subseteq> Some ` discrete ` {a. index_value idx a = u_idx } * UNIV \<close>
   unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
   by (rule refinement_projections_stepwise_UNIV_paired,
       rule fiction_Map_of_Val_ins_projection',
@@ -475,7 +478,7 @@ lemma fiction_Map_of_Val_ins_perm_projection_half:
 \<Longrightarrow> 0 < n
 \<Longrightarrow> refinement_projection (\<F>_functional ((\<circ>) to_share o Map_of_Val_ins) (Map_of_Val_ins_dom TY))
                           { n \<odivr> (to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) }
-      \<subseteq> UNIV * Some ` discrete ` {a. index_value idx a = u_idx }\<close>
+      \<subseteq> Some ` discrete ` {a. index_value idx a = u_idx } * UNIV\<close>
   unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
   by (rule refinement_projections_stepwise_UNIV_paired,
       rule fiction_Map_of_Val_ins_projection',

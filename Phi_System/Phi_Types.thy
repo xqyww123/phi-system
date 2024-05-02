@@ -84,7 +84,7 @@ setup \<open>Context.theory_map (
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Prod\<close>, \<^pattern>\<open>\<phi>Prod::(?'c::sep_magma,?'a\<^sub>1) \<phi> \<Rightarrow> (?'c,?'a\<^sub>2) \<phi> \<Rightarrow> (?'c,?'a\<^sub>1 \<times> ?'a\<^sub>2) \<phi>\<close>,
          Phi_Type.DIRECT_DEF (Thm.transfer \<^theory>
-            @{lemma' \<open>(x \<Ztypecolon> T \<^emph> U) = (snd x \<Ztypecolon> U) * (fst x \<Ztypecolon> T)\<close>
+            @{lemma' \<open>(x \<Ztypecolon> T \<^emph> U) = (fst x \<Ztypecolon> T) * (snd x \<Ztypecolon> U)\<close>
                       for T :: \<open>('c::sep_magma,'a\<^sub>1) \<phi>\<close> and U :: \<open>('c::sep_magma,'a\<^sub>2) \<phi>\<close>
                   by (simp add: \<phi>Prod_expn'')}),
          \<^here>, Phi_Type.Derivings.empty, [])
@@ -94,6 +94,9 @@ let_\<phi>type \<phi>Prod
   deriving Basic
        and Functional_Transformation_Functor
        and Functionality
+       and \<open>  Object_Equiv T er
+          \<Longrightarrow> Object_Equiv U eq
+          \<Longrightarrow> Object_Equiv (T \<^emph> U) (\<lambda>x y. er (fst x) (fst y) \<and> eq (snd x) (snd y))\<close>
 
 
 subsection \<open>Func\<close>
@@ -919,7 +922,7 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
-    by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
+    by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. {x}\<close>], THEN spec[where x=\<open>\<lambda>_. {y}\<close>], simplified]
                prems(1,3-5),
         auto simp add: Satisfaction_def) .
   
@@ -936,7 +939,7 @@ lemma (*The above rule is reversible*)
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def Satisfaction_def)
   subgoal premises prems for x y v
-    by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
+    by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {x}\<close>], THEN spec[where x=\<open>\<lambda>_. {y}\<close>], simplified]
                prems(2-3), blast) .
 
 
@@ -1025,14 +1028,14 @@ paragraph \<open>Reduction for individually inserted elements\<close>
 
 lemma [\<phi>reason %ToA_derived_red-10]: \<comment>\<open>The priority must be lower than the derived \<open> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> {x} T\<close>\<close>
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) * (x k \<Ztypecolon> T) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x k \<Ztypecolon> T) * (x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 (insert k I) T \<w>\<i>\<t>\<h> P \<close>
   unfolding \<phi>Mul_Quant.unfold \<r>Guard_def Premise_def
   by (clarsimp simp add: sep_quant_insert)
 
 lemma [\<phi>reason %ToA_derived_red-10]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) * (x k \<Ztypecolon> T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x k \<Ztypecolon> T) * (x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 I T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi>\<^sub>0 (insert k I) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding \<phi>Mul_Quant.unfold \<r>Guard_def Premise_def
   by (clarsimp simp add: sep_quant_insert)
@@ -1320,7 +1323,7 @@ text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi>
 \<Longrightarrow> closed_homo_sep \<psi> \<and>\<^sub>\<r> Dx = UNIV \<or>\<^sub>c\<^sub>u\<^sub>t
-    Separation_Disj\<^sub>\<phi> \<psi> Dx U T
+    Separation_Disj\<^sub>\<phi> \<psi> Dx T U
 \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U Dx (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
             Separation_Disj\<^sub>\<phi>_def Separation_Disj\<^sub>\<psi>_def closed_homo_sep_def
@@ -1543,7 +1546,7 @@ lemma [\<phi>reason %abstract_domain]:
 \<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited (x \<Ztypecolon> T)) \<Longrightarrow> (f x \<Ztypecolon> T') \<le> (x \<Ztypecolon> \<DD>[\<delta>] T))
           \<comment>\<open>expand \<open>\<Psi>[d] A, \<Psi>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
 \<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited (y \<Ztypecolon> U)) \<Longrightarrow> (g y \<Ztypecolon> U') \<le> (y \<Ztypecolon> \<DD>[\<delta>] U))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. D\<^sub>T x \<and> D\<^sub>U y \<longrightarrow> (\<exists>a b. a \<Turnstile> (f x \<Ztypecolon> T') \<and> b \<Turnstile> (g y \<Ztypecolon> U') \<and> b ## a))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. D\<^sub>T x \<and> D\<^sub>U y \<longrightarrow> (\<exists>a b. a \<Turnstile> (f x \<Ztypecolon> T') \<and> b \<Turnstile> (g y \<Ztypecolon> U') \<and> a ## b))
 \<Longrightarrow> Abstract_Domain\<^sub>L (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y)\<close>
   unfolding Inhabited_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
             Abstract_Domain\<^sub>L_def \<r>ESC_def
@@ -1552,6 +1555,7 @@ lemma [\<phi>reason %abstract_domain]:
 
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
+
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
@@ -1579,7 +1583,7 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
        and Functional_Transformation_Functor
        and \<open> homo_sep (scalar_mult \<psi> s)
          \<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
-             Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T
+             Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx T U
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
        and \<open> homo_sep (\<psi> s)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
@@ -1599,6 +1603,7 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
        and \<open> ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T \<Longrightarrow> scalar_mult ?f ?s ?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T \<close>
        and \<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c2,?'c2) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @tag to (Itself::(?'c2,?'c2) \<phi>))
          \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = ?f ?s x \<and> ?r x' x) @tag to (Itself::(?'c,?'c) \<phi>) \<close>
+
 
 declare [[\<phi>ToA_assoc_normalization \<open>\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?t \<Zcomp> ?T\<close> (100)]]
 
@@ -1622,13 +1627,13 @@ lemma Semimodule_One\<^sub>E_by_function [\<phi>reason 1000]:
 
 lemma Semimodule_Scalar_Assoc\<^sub>I_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
-\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (*) (\<lambda>_ _ x. x) \<close>
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc\<^sub>I_def scalar_mult_def Transformation_def
   by (clarsimp; blast)
 
 lemma Semimodule_Scalar_Assoc\<^sub>E_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
-\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (*) (\<lambda>_ _ x. x) \<close>
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc\<^sub>E_def scalar_mult_def Transformation_def
   by clarsimp metis
 
@@ -1752,8 +1757,8 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
 \<Longrightarrow> v2 \<Turnstile> (x2 \<Ztypecolon> T2)
 \<Longrightarrow> [v1,v2] \<Turnstile> ((x1, x2) \<Ztypecolon> (List_Item T1 \<^emph> List_Item T2))\<close>
   by (simp add: times_list_def,
-      rule exI[where x=\<open>[v2]\<close>],
       rule exI[where x=\<open>[v1]\<close>],
+      rule exI[where x=\<open>[v2]\<close>],
       simp)
 
 
@@ -1918,7 +1923,7 @@ subsection \<open>Injection from partial map to permissioned partial map\<close>
   where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
        and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U (\<lambda>x. x) \<close>
-       and \<open>Separation_Disj\<^sub>\<phi> to_share Dx U T
+       and \<open>Separation_Disj\<^sub>\<phi> to_share Dx T U
         \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
        and Functionality
        and Carrier_Set
@@ -2076,7 +2081,7 @@ lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_tgt:
   unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
   apply (simp add: cond_prod_transformation_rewr,
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
-  \<medium_left_bracket> premises Tr and _ and [THEN eq_right_frame, simp]
+  \<medium_left_bracket> premises Tr and _ and XX[THEN eq_left_frame, simp]
     Tr
   \<medium_right_bracket> .
 
@@ -2101,6 +2106,8 @@ context begin
 private lemma list_all2_single_length_1[simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
+
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
@@ -2139,10 +2146,10 @@ private lemma list_all2_single_length_1[simp]:
        and \<open> Semimodule_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>
        and \<open> Semimodule_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True) \<close>
        and \<open> Semimodule_SDistr_Homo\<^sub>S (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
-                                     (\<lambda>t s x. len_intvl.len s + len_intvl.len t = length x)
-                                     (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) \<close>
+                                     (\<lambda>s t x. len_intvl.len s + len_intvl.len t = length x)
+                                     (\<lambda>s t x. (take (len_intvl.len s) x, drop (len_intvl.len s) x)) \<close>
        and \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
-                                     (\<lambda>t s (y, x). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>t s (y, x). x @ y) \<close>
+                                     (\<lambda>s t (x,y). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>s t (x,y). x @ y) \<close>
 
 declare list_all2_single_length_1[simp del]
 
@@ -2181,10 +2188,10 @@ lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:
   unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp Simplify_def
   apply (simp add: cond_prod_transformation_rewr,
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
-  \<medium_left_bracket> premises Tr and _ and _  and xx[THEN eq_right_frame, simp]
+  \<medium_left_bracket> premises Tr and _ and _  and xx[THEN eq_left_frame, simp]
     note hd_drop_conv_nth[simp] \<phi>Some_\<phi>Prod[symmetric, simp] \<phi>Prod_expn'[simp]
-    ;; Tr
-       unfold One_nat_def
+    \<semicolon> Tr
+      unfold One_nat_def
   \<medium_right_bracket> .
 
 declare \<phi>Mul_Quant_LenIv.wrap_module_src[\<phi>reason del]
@@ -2202,22 +2209,26 @@ subsubsection \<open>Array of Tree Nodes\<close>
 
 lemma [\<phi>reason add]:
   \<open>separatable_module_zip True d a b c
-                          (\<lambda>_ d x. (drop (len_intvl.len d) x, take (len_intvl.len d) x)) (\<lambda>_ _ (y, x). x @ y)
-                          (\<lambda>_ b x. (drop (len_intvl.len b) x, take (len_intvl.len b) x)) (\<lambda>_ _ (y, x). x @ y)
-                          (\<lambda>(x\<^sub>a,x\<^sub>d) (y\<^sub>c,y\<^sub>b). length x\<^sub>d = len_intvl.len d) (map f\<^sub>c) (map f)
-                          (\<lambda>x. map f (take (len_intvl.len b - len_intvl.len d) x) @ map f\<^sub>c (drop (len_intvl.len b - len_intvl.len d) x))
-                          (map f) \<close>
+                          (\<lambda>d _ x. (take (len_intvl.len d) x, drop (len_intvl.len d) x))
+                          (\<lambda>_ _ (x,y). x @ y)
+                          (\<lambda>b _ x. (take (len_intvl.len b) x, drop (len_intvl.len b) x))
+                          (\<lambda>_ _ (x,y). x @ y)
+                          (\<lambda>(x\<^sub>d,x\<^sub>a) (y\<^sub>b,y\<^sub>c). length x\<^sub>d = len_intvl.len d) (map f) (map f\<^sub>c)
+                          (map f)
+                          (\<lambda>x. map f (take (len_intvl.len b - len_intvl.len d) x) @ map f\<^sub>c (drop (len_intvl.len b - len_intvl.len d) x)) \<close>
   for d :: \<open>nat len_intvl\<close>
   unfolding separatable_module_zip_def
   by (clarsimp dest!: dabc_equation__len_intvl_D)
 
 lemma [\<phi>reason add]:
   \<open>separatable_module_zip False d a b c
-                          (\<lambda>_ d x. (drop (len_intvl.len d) x, take (len_intvl.len d) x)) (\<lambda>_ _ (y, x). x @ y)
-                          (\<lambda>_ b x. (drop (len_intvl.len b) x, take (len_intvl.len b) x)) (\<lambda>_ _ (y, x). x @ y)
-                          (\<lambda>(x\<^sub>a,x\<^sub>d) (y\<^sub>c,y\<^sub>b). length x\<^sub>d = len_intvl.len d) (map f\<^sub>c) (map f)
-                          (map f\<^sub>c)
-                          (\<lambda>x. map f (take (len_intvl.len b) x) @ map f\<^sub>c (drop (len_intvl.len b) x)) \<close>
+                          (\<lambda>d _ x. (take (len_intvl.len d) x, drop (len_intvl.len d) x))
+                          (\<lambda>_ _ (x,y). x @ y)
+                          (\<lambda>b _ x. (take (len_intvl.len b) x, drop (len_intvl.len b) x))
+                          (\<lambda>_ _ (x,y). x @ y)
+                          (\<lambda>(x\<^sub>d,x\<^sub>a) (y\<^sub>b,y\<^sub>c). length x\<^sub>d = len_intvl.len d)
+                          (map f) (map f\<^sub>c)
+                          (\<lambda>x. map f (take (len_intvl.len b) x) @ map f\<^sub>c (drop (len_intvl.len b) x)) (map f\<^sub>c) \<close>
   for d :: \<open>nat len_intvl\<close>
   unfolding separatable_module_zip_def
   by (clarsimp dest!: dabc_equation__len_intvl_D)
@@ -2299,9 +2310,9 @@ lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
                 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a' = a \<and>\<^sub>\<r> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c d \<lbrakk>j : 1\<rwpar> d\<epsilon> c a
 \<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C C\<^sub>c C\<^sub>d c \<lbrakk>j : 1\<rwpar> d\<epsilon> d
-      (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd
-      (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
-      (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) D\<^sub>G f\<^sub>c f f\<^sub>d f' getter
+      (\<lambda>s t x. (take (len_intvl.len s) x, drop (len_intvl.len s) x)) (\<lambda>s t (x,y). x @ y) hd
+      (\<lambda>x. [x]) (\<lambda>l. length l = 1) (\<lambda>_. True) (\<lambda>s t x. length x = len_intvl.len s + len_intvl.len t)
+      (\<lambda>s t (x, y). length x = len_intvl.len s \<and> length y = len_intvl.len t) D\<^sub>G f\<^sub>c f f\<^sub>d f' getter
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : fa j \<^bold>\<rightarrow>\<^sub># ks \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># ks' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : fa j \<^bold>\<rightarrow>\<^sub># T \<^emph>[C\<^sub>W] W \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
@@ -2311,53 +2322,58 @@ lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
 \<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G' \<^emph> \<half_blkcirc>[C\<^sub>d] \<big_ast>\<^sub>\<bbbT> fa d T' \<^emph> \<half_blkcirc>[C\<^sub>c] \<big_ast>\<^sub>\<bbbT> fa c T' @tag \<A>merge
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f f\<^sub>d \<otimes>\<^sub>f f\<^sub>c : (fa j # ks) \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R] R \<mapsto> (fa j # ks') \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : \<big_ast>\<^sub>\<bbbT> fa a T \<^emph>[C\<^sub>W] W \<mapsto> \<big_ast>\<^sub>\<bbbT> fa a' T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x, w). case getter x of (x\<^sub>c, x\<^sub>b, x\<^sub>d) \<Rightarrow> case h (x\<^sub>b, w) of (y, r) \<Rightarrow> (y, r, x\<^sub>d, x\<^sub>c))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y, r, x\<^sub>d, x\<^sub>c). case s (y, r) of (x\<^sub>b, x) \<Rightarrow> (?\<^sub>j\<^sub>L C\<^sub>c (\<lambda>(y, x). x @ y) (x\<^sub>c, ?\<^sub>j\<^sub>R C\<^sub>d (\<lambda>(y, x). x @ y) ([x\<^sub>b], x\<^sub>d)), x))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x, w). case getter x of (x\<^sub>d, x\<^sub>b, x\<^sub>c) \<Rightarrow> case h (x\<^sub>b, w) of (y, r) \<Rightarrow> (y, r, x\<^sub>d, x\<^sub>c))
+         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y, r, x\<^sub>d, x\<^sub>c). case s (y, r) of (x\<^sub>b, x) \<Rightarrow> (?\<^sub>j\<^sub>R C\<^sub>c (\<lambda>(x,y). x @ y) (?\<^sub>j\<^sub>L C\<^sub>d (\<lambda>(x,y). x @ y) (x\<^sub>d, [x\<^sub>b]), x\<^sub>c), x))
     \<i>\<n> D\<close>
   unfolding \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
-            \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
-            times_list_def[where a=ks] times_list_def[where a=ks']
+            \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks'] times_list_def
             append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil
 
   using \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>\<^sub>c
         [where U=\<open>ks \<^bold>\<rightarrow>\<^sub>@ U\<close> and fa=fa and j=j and Ua=\<open>ks' \<^bold>\<rightarrow>\<^sub>@ U'\<close>,
          unfolded \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
-                  \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
-                  times_list_def[where a=ks] times_list_def[where a=ks']
+                  \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks'] times_list_def
                   append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil] .
 
+thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>
+        [where U=\<open>ks \<^bold>\<rightarrow>\<^sub>@ U\<close> and fa=fa and j=j and Ua=\<open>ks' \<^bold>\<rightarrow>\<^sub>@ U'\<close>,
+         unfolded \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
+                  \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
+                  times_list_def[where a=ks] times_list_def[where a=ks']
+                  append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil]
 
 lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
            for \<open>\<m>\<a>\<p> _ : (?fa ?j # _ # _) \<^bold>\<rightarrow>\<^sub>@ _ \<^emph>[_] _ \<mapsto> (?fa ?j # _ # _) \<^bold>\<rightarrow>\<^sub>@ _ \<^emph>[_] _
                 \<o>\<v>\<e>\<r> _ : \<big_ast>\<^sub>\<bbbT> ?fa ?a _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
                 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a' = a \<and>\<^sub>\<r> equation\<^sub>2\<^sub>1 d \<lbrakk>j : 1\<rwpar> a
-\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>j : Suc 0\<rwpar> d (\<lambda>t s x. (drop (len_intvl.len s) x, take (len_intvl.len s) x)) (\<lambda>t s (y, x). x @ y) hd (\<lambda>x. [x])
-     (\<lambda>l. length l = Suc 0) (\<lambda>_. True) (\<lambda>t s x. length x = len_intvl.len s + len_intvl.len t)
-     (\<lambda>t s (y, x). length x = len_intvl.len s \<and> length y = len_intvl.len t) D\<^sub>G f f\<^sub>d f' getter
+\<Longrightarrow> module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>L \<lbrakk>j : Suc 0\<rwpar> d
+     (\<lambda>s t x. (take (len_intvl.len s) x, drop (len_intvl.len s) x))
+     (\<lambda>s t (x,y). x @ y) hd (\<lambda>x. [x])
+     (\<lambda>l. length l = Suc 0) (\<lambda>_. True)
+     (\<lambda>s t x. length x = len_intvl.len s + len_intvl.len t)
+     (\<lambda>s t (x,y). length x = len_intvl.len s \<and> length y = len_intvl.len t) D\<^sub>G f f\<^sub>d f' getter
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : fa j \<^bold>\<rightarrow>\<^sub># ks \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># ks' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R\<^sub>G] R\<^sub>G'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : fa j \<^bold>\<rightarrow>\<^sub># T \<^emph>[C\<^sub>W] W \<mapsto> fa j \<^bold>\<rightarrow>\<^sub># T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
-      \<i>\<n> (\<lambda>(x, w). case getter x of (x\<^sub>b, x\<^sub>d) \<Rightarrow> (x\<^sub>b, w)) ` D
+      \<i>\<n> (\<lambda>(x, w). case getter x of (x\<^sub>d, x\<^sub>b) \<Rightarrow> (x\<^sub>b, w)) ` D
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. D\<^sub>G (fst x))
 \<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R  = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G  \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sub>\<bbbT> fa d T  @tag \<A>merge
 \<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>G] R\<^sub>G' \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sub>\<bbbT> fa d T' @tag \<A>merge
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f f\<^sub>d : (fa j # ks) \<^bold>\<rightarrow>\<^sub>@ U \<^emph>[C\<^sub>R] R \<mapsto> (fa j # ks') \<^bold>\<rightarrow>\<^sub>@ U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : \<big_ast>\<^sub>\<bbbT> fa a T \<^emph>[C\<^sub>W] W \<mapsto> \<big_ast>\<^sub>\<bbbT> fa a' T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x, w). case getter x of (x\<^sub>b, x\<^sub>d) \<Rightarrow> case h (x\<^sub>b, w) of (y, r) \<Rightarrow> (y, r, x\<^sub>d))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x, w). case getter x of (x\<^sub>d, x\<^sub>b) \<Rightarrow> case h (x\<^sub>b, w) of (y, r) \<Rightarrow> (y, r, x\<^sub>d))
          \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y, r, x\<^sub>d). case s (y, r) of (x\<^sub>b, x) \<Rightarrow> (x\<^sub>d @ [x\<^sub>b], x))
     \<i>\<n> D \<close>
 
   unfolding \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
-            \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
-            times_list_def[where a=ks] times_list_def[where a=ks']
+            \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks'] times_list_def
             append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil
 
   using \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>
         [where U=\<open>ks \<^bold>\<rightarrow>\<^sub>@ U\<close> and fa=fa and j=j and Ua=\<open>ks' \<^bold>\<rightarrow>\<^sub>@ U'\<close>,
          unfolded \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
-                  \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks']
-                  times_list_def[where a=ks] times_list_def[where a=ks']
+                  \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks'] times_list_def
                   append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil] .
 
 

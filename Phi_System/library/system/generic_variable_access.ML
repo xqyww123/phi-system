@@ -47,8 +47,8 @@ structure Process_of_Argument : GENERIC_DATA
 (** Basic Operations about Local Values **)
 
 val extract_values : int * bool -> context_state -> thm list * context_state
-  (*extracts local values given in a programming sequent, with option to also remove the values
-    in the sequent*)
+  (*extracts local values given in a programming sequent,
+    with an option to also remove the values in the sequent*)
 
 val push_values : thm list -> context_state -> context_state
 
@@ -284,9 +284,31 @@ val value_extraction_rule_remove =
   @{lemma' \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
         by (simp add: Transformation_def)}
 
+val implies_prod_left_1 = @{lemma
+  \<open> L' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> L' * R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (R::'a::sep_magma_1 BI) \<w>\<i>\<t>\<h> P \<and> Q \<close>
+  by (unfold Transformation_def split_paired_All, fastforce)}
+
+fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true
+  | is_local_value _ = false
+
+fun values_number ret (Const (@{const_name Subjection}, _) $ T) = values_number ret T
+  | values_number ret (Const (@{const_name ExSet}, _) $ T) = values_number ret T
+  | values_number ret (Abs (_, _, T)) = values_number ret T
+  | values_number ret (Const (\<^const_name>\<open>times\<close>, _) $ X $ L)
+      = values_number (if is_local_value X then ret+1 else ret) L
+  | values_number ret X = if is_local_value X then ret+1 else ret
+
+val number_of_values = values_number 0
+
 fun extract_values (num_limit, remove) (ctxt, sequent) =
-  if num_limit = 0 then ([], (ctxt, sequent)) else
-  let val mode = Phi_Working_Mode.mode1 ctxt
+  if num_limit = 0 then ([], (ctxt, sequent))
+  else let
+      val mode = Phi_Working_Mode.mode1 ctxt
+   in if number_of_values (#spec_of mode (Thm.prop_of sequent)) = 0
+      then ([], (ctxt, sequent))
+      else let
       val _ = if #constr_is_ready mode (Thm.prop_of sequent)
               then ()
               else raise THM ("The sequent is not ready for construction", 0, [sequent])
@@ -305,24 +327,24 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                 => gen_rule num (@{thm Subjection_transformation} RS thm)
            | (Const (\<^const_name>\<open>ExSet\<close>, _) $ _ $ _ ,_,_)
                 => gen_rule num (@{thm ExSet_transformation} RS thm)
-           | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm) ,_,_)
+           | (Const (\<^const_name>\<open>times\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm) $ _ ,_,_)
                 => (case extr_rule tm
                       of SOME (remove_rule, no_remove_rule) =>
                           let val rule = if remove then remove_rule else no_remove_rule
                               val bi_prod_rule =
                                     case Phi_Syntax.dest_transformation (Thm.concl_of rule)
                                       of (_,Const(\<^const_name>\<open>one_class.one\<close>,_),_) =>
-                                           @{thm implies_prod_right_1}
+                                           implies_prod_left_1
                                        | _ => @{thm transformation_bi_frame}
                               val m = Thm.nprems_of rule
                            in (rule RS (bi_prod_rule RS thm))
                            |> Phi_Reasoner.reason1 (gen_rule_err rule) NONE (SOME m) ctxt
                            |> gen_rule (num - 1)
                           end
-                       | _ => gen_rule num (@{thm transformation_right_frame} RS thm)
+                       | _ => gen_rule num (@{thm transformation_left_frame} RS thm)
                       )
            | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _ , _, _)
-                => gen_rule num (@{thm transformation_right_frame} RS thm)
+                => gen_rule num (@{thm transformation_left_frame} RS thm)
            | (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm, _ , _)
                 => (case extr_rule tm
                       of SOME (remove_rule, no_remove_rule) =>
@@ -345,12 +367,13 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                                                           | _ => H::L))
    in (vals, (ctxt, sequent'))
   end
+  end
 
 
 val rule_push_a_value =
   @{lemma' \<open>  \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
           \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B
-          \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
+          \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<v>\<a>\<l>[v] T) * B \<close>
       for A :: \<open>'a::sep_magma_1 BI\<close>
        by (clarsimp simp add: Action_Tag_def Transformation_def)}
 
@@ -359,21 +382,9 @@ fun push_values [] s = s
   let
     val mode = Phi_Working_Mode.mode1 ctxt
     val initial = sequent RS #transformation_rule mode
-    val sequent' = fold_rev (fn v => fn th => (v RS' (ctxt, rule_push_a_value)) RS th) values initial
+    val sequent' = fold (fn v => fn th => (v RS' (ctxt, rule_push_a_value)) RS th) values initial
    in (ctxt, fst (PLPR_Syntax.elim_ant_seq_or_HOL_conj (@{thm transformation_refl} RS sequent')))
   end
-
-fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true
-  | is_local_value _ = false
-
-fun values_number ret (Const (@{const_name Subjection}, _) $ T) = values_number ret T
-  | values_number ret (Const (@{const_name ExSet}, _) $ T) = values_number ret T
-  | values_number ret (Abs (_, _, T)) = values_number ret T
-  | values_number ret (Const (\<^const_name>\<open>times\<close>, _) $ L $ X)
-      = values_number (if is_local_value X then ret+1 else ret) L
-  | values_number ret X = if is_local_value X then ret+1 else ret
-
-val number_of_values = values_number 0
 
 
 
@@ -486,7 +497,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
 
 fun is_value (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const (\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true
   | is_value _ = false
-fun has_value (Const (\<^const_name>\<open>times\<close>,_) $ R $ X) = is_value X orelse has_value R
+fun has_value (Const (\<^const_name>\<open>times\<close>,_) $ X $ R) = is_value X orelse has_value R
   | has_value X = is_value X
 
 fun gen_default_process clean pos (ctxt,sequent) =

@@ -99,9 +99,9 @@ lemma Separation_Homo\<^sub>E_Array[\<phi>reason add]:
                     ex_simps(6)[where P=\<open>i < j\<close> for i j, symmetric]
               simp del: ex_simps)
   subgoal for z vs f1 f2
-    by(rule exI[where x=\<open>V_array.mk (map f1 [0..<length z])\<close>],
-       rule exI[where x=\<open>V_array.mk (map f2 [0..<length z])\<close>],
-       auto_sledgehammer) .
+    by (rule exI[where x=\<open>V_array.mk (map f1 [0..<length z])\<close>],
+        rule exI[where x=\<open>V_array.mk (map f2 [0..<length z])\<close>],
+        auto simp add: nth_equalityI list_all2_conv_all_nth) .
 
 
 

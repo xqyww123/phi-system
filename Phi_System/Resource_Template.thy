@@ -143,12 +143,10 @@ private lemma from_fictional_refinement':
           R.inj.sep_orthogonal inj.sep_orthogonal prj.homo_mult eval_stat_forall
           split: eval_stat.split)
   subgoal premises prems for r u y v y' rr
-    thm prems
-    thm prems(4)[THEN spec[where x=v], THEN spec[where x=x], THEN spec[where x=\<open>get r\<close>], THEN spec[where x=\<open>{u}\<close>], THEN spec[where x=\<open>y'\<close>]]
   proof -
-    have t2: \<open>(\<exists>xa. (\<exists>ua v. xa = ua * v \<and> ua \<in> {u} \<and> (\<exists>xa. xa \<in> I (get r * x) \<and> v = R.mk xa) \<and> ua ## v) \<and>
-      get r ## x \<and> x \<in> D \<and> Success v y' \<in> f xa \<and> R.clean xa \<in> R.SPACE \<and> (\<exists>m. xa R.name = R.inject m \<and> m \<in>\<^sub>S\<^sub>H R.domain))\<close>
-      apply (rule exI[where x=\<open>(u * R.mk y)\<close>], simp add: prems R.inj.homo_mult[symmetric] )
+    have t2: \<open>\<exists>xa. (\<exists>ua v. xa = ua * v \<and> (\<exists>xa. xa \<in> I (x * get r) \<and> ua = R.mk xa) \<and> v \<in> {u} \<and> ua ## v) \<and>
+      x ## get r \<and> x \<in> D \<and> Success v y' \<in> f xa \<and> R.clean xa \<in> R.SPACE \<and> (\<exists>m. xa R.name = R.inject m \<and> m \<in>\<^sub>S\<^sub>H R.domain)\<close>
+      apply (rule exI[where x=\<open>(R.mk y * u)\<close>], simp add: prems R.inj.homo_mult[symmetric] )
       using prems(11) prems(12) by blast
     note prems(4)[THEN spec[where x=v], THEN spec[where x=x], THEN spec[where x=\<open>get r\<close>], THEN spec[where x=\<open>{u}\<close>], THEN spec[where x=\<open>y'\<close>],
             THEN mp, OF this]
@@ -162,8 +160,8 @@ qed
   subgoal premises prems for r u y v y' rr
   proof -
     thm prems(5)[THEN spec[where x=v], THEN spec[where x=x], THEN spec[where x=\<open>get r\<close>], THEN spec[where x=\<open>{u}\<close>], THEN spec[where x=\<open>y'\<close>]]
-    have t2: \<open>(\<exists>xa. (\<exists>ua v. xa = ua * v \<and> ua \<in> {u} \<and> (\<exists>xa. xa \<in> I (get r * x) \<and> v = R.mk xa) \<and> ua ## v) \<and>
-      get r ## x \<and> x \<in> D \<and> Abnormal v y' \<in> f xa \<and> R.clean xa \<in> R.SPACE \<and> (\<exists>m. xa R.name = R.inject m \<and> m \<in>\<^sub>S\<^sub>H R.domain))\<close>
+    have t2: \<open>\<exists>xa. (\<exists>ua v. xa = ua * v \<and> (\<exists>xa. xa \<in> I (x * get r) \<and> ua = R.mk xa) \<and> v \<in> {u} \<and> ua ## v) \<and>
+       x ## get r \<and> x \<in> D \<and> Abnormal v y' \<in> f xa \<and> R.clean xa \<in> R.SPACE \<and> (\<exists>m. xa R.name = R.inject m \<and> m \<in>\<^sub>S\<^sub>H R.domain)\<close>
       by (metis (no_types, lifting) R.inj.homo_mult fiction_kind.sep_disj_get_name_eq fiction_kind_axioms insert_iff mult_in_sep_homo_set prems(11) prems(12) prems(13) prems(14) prems(15) prems(16) prems(17) prems(3) prems(7) prems(8) prems(9) times_fupdt_1_apply_sep times_fupdt_1_fupdt_1_sep)
     note prems(5)[THEN spec[where x=v], THEN spec[where x=x], THEN spec[where x=\<open>get r\<close>], THEN spec[where x=\<open>{u}\<close>], THEN spec[where x=\<open>y'\<close>],
             THEN mp, OF this]
@@ -285,19 +283,21 @@ lemma allocator_transition:
       using dom1_def prems(1) t1 by fastforce
     have t3[simp]: \<open>get r ?kk = 1 \<and> P ?kk\<close>
       by (insert t2; clarify; rule someI[where P=\<open>\<lambda>k. get r k = 1 \<and> P k\<close>]; blast)
-    have t4 [simp]: \<open>(get r)(?kk := init) = get r * 1(?kk := init)\<close>
+    have t4 [simp]: \<open>(get r)(?kk := init) = 1(?kk := init) * get r\<close>
       by (simp add: fun_eq_iff)
-    have t5[simp]: \<open>get r ## 1(?kk := init)\<close>
+    have t5[simp]: \<open>1(?kk := init) ## get r\<close>
       by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(2) fun_upd_triv sep_disj_commuteI sep_magma_1_left t3)
     have t6[simp]: \<open>r(name := inject ((get r)(?kk := init))) \<in> SPACE\<close>
       by (metis comp.simps(6) empty_iff insert_iff prems(5))
-    have t61[simp]: \<open>r(name := inject (get r * 1(?kk := init))) \<in> SPACE\<close>
+    have t61[simp]: \<open>r(name := inject (1(?kk := init) * get r)) \<in> SPACE\<close>
       using t6 by auto
     have t7[simp]: \<open>b = r(name := inject ((get r)(?kk := init)))\<close>
       using prems[simplified] t4 by presburger 
     show ?thesis
       by (simp add: fun_eq_iff inj.homo_mult prems,
-          metis (no_types, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo_semi inj_prj_in_SPACE prems(4) t5)
+          smt (verit, best) fun_sep_disj_1_fupdt(2) fun_upd_triv inj.sep_disj_homo_semi
+                            inj_prj_in_SPACE prems(4) sep_disj_commuteI sep_mult_commute t5
+                            times_fupdt_1_apply'_sep times_fupdt_1_apply_sep)
   qed
   subgoal premises prems for r proof -
     let ?kk = \<open>SOME k. get r k = 1 \<and> P k\<close>
@@ -307,9 +307,9 @@ lemma allocator_transition:
       using dom1_def prems(1) t1 by fastforce
     have t3[simp]: \<open>get r ?kk = 1 \<and> P ?kk\<close>
       by (insert t2; clarify; rule someI[where P=\<open>\<lambda>k. get r k = 1 \<and> P k\<close>]; blast)
-    have t4 [simp]: \<open>(get r)(?kk := init) = get r * 1(?kk := init)\<close>
+    have t4 [simp]: \<open>(get r)(?kk := init) = 1(?kk := init) * get r\<close>
       by (simp add: fun_eq_iff)
-    have t5[simp]: \<open>get r ## 1(?kk := init)\<close>
+    have t5[simp]: \<open>1(?kk := init) ## get r\<close>
       by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(2) fun_upd_triv sep_disj_commuteI sep_magma_1_left t3)
     have t7: \<open>r(name := inject ((get r)(?kk := init))) \<in> SPACE\<close>
       by (metis (no_types, lifting) \<r>_valid_split fun_upd_same fun_upd_upd mult_in_sep_homo_set prems(2) prems(5) t1 t3 t4 t5)
@@ -328,11 +328,11 @@ lemma allocator_refinement:
   apply (cases ret; clarsimp simp add: set_mult_expn Subjection_expn_set mk_homo_mult)
   subgoal premises prems for r R u k
   proof -
-    have [simp]: \<open>r ## 1(k := init)\<close>
-      using prems(5) prems(7) sep_disj_multD2 by blast
+    have [simp]: \<open>1(k := init) ## r\<close>
+      using prems(5) prems(7) sep_disj_commuteI sep_disj_multD1 by blast
     show ?thesis
-      apply (simp add: mk_homo_mult)
-      using mk_homo_mult prems(4) prems(5) prems(7) prems(8) sep_disj_multI2 sep_mult_assoc by fastforce
+      by (simp add: mk_homo_mult,
+          smt (verit) prems(4) prems(5) prems(7) sep_disj_commute sep_disj_multI1 sep_mult_assoc' sep_mult_commute)  
   qed .
 
 lemma allocator_valid:
@@ -357,7 +357,7 @@ begin
 sublocale basic_fiction Res I Fic ..
 
 lemma "__allocate_rule_2__":
-  \<open> (\<And>k. P k \<Longrightarrow> Id_on UNIV * {(1, 1(k := u))} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1, u' k)} \<w>.\<r>.\<t> I \<i>\<n> {1})
+  \<open> (\<And>k. P k \<Longrightarrow> {(1, 1(k := u))} * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1, u' k)} \<w>.\<r>.\<t> I \<i>\<n> {1})
 \<Longrightarrow> \<forall>k. P k \<longrightarrow> 1(k := u) \<in>\<^sub>S\<^sub>H R.domain
 \<Longrightarrow> \<forall>r. r \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' P u \<lbrace> Void \<longmapsto> \<lambda>ret. u' k \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace> \<close>
@@ -369,7 +369,7 @@ lemma "__allocate_rule_2__":
         OF R.allocator_refinement[THEN refinement_frame[where R=UNIV]]],
       assumption,
       assumption,
-      unfold ExSet_times_right Subjection_times,
+      unfold ExSet_times_left Subjection_times,
       rule refinement_ExSet,
       rule refinement_subjection,
       blast,
@@ -437,7 +437,7 @@ lemma getter_refinement:
   apply (cases ret; clarsimp split: option.split simp add: set_mult_expn Id_on_iff
                               Subjection_expn_set prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
                               inj.sep_orthogonal[simplified] in_invariant)
-  by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_discrete(2) times_fun)
+  by (smt (verit, best) domIff fun_upd_same imageE mult_1_class.mult_1_right option.inject sep_disj_fun_discrete(1) sep_disj_partial_map_not_1_1 sep_mult_assoc times_fupdt_1_apply_sep times_option_not_none(2))
  
 
 lemma getter_valid:
@@ -462,47 +462,47 @@ lemma setter_refinement:
             prj.homo_mult \<r>_valid_split' inj.sep_orthogonal[simplified])
   subgoal premises prems for r R x' u v
   proof -
-    have x1: \<open>r ## 1(k \<mapsto> v)\<close> using prems(4) by blast
-    have x2: \<open>get u ## (r * 1(k \<mapsto> v))\<close>
-      using prems(7) sep_disj_get_name by blast
-    have a1: \<open>k \<in> dom (get u * (r * 1(k \<mapsto> v)))\<close>
+    have x1: \<open>1(k \<mapsto> v) ## r\<close> using prems(4) by blast
+    have x2: \<open>(r * 1(k \<mapsto> v)) ## get u\<close>
+      using prems(2) prems(3) sep_mult_commute x1 by fastforce
+    have a1: \<open>k \<in> dom ((1(k \<mapsto> v) * r) * get u)\<close>
       by (simp add: domIff times_fun_def)
-    have a3: \<open>get u * (r * 1(k \<mapsto> v)) \<in>\<^sub>S\<^sub>H domain\<close>
+    have a3: \<open>(1(k \<mapsto> v) * r) * get u \<in>\<^sub>S\<^sub>H domain\<close>
       using prems(2) prems(3) by fastforce
     then have \<open>1(k \<mapsto> v) \<in>\<^sub>S\<^sub>H domain\<close>
-      using mult_in_sep_homo_set x1 x2 by blast
+      by (metis mult_in_sep_homo_set sep_mult_commute x1 x2)
     then have a2: \<open>v \<in> P k\<close>
       by (clarsimp simp add: in_invariant Ball_def times_fun)
-    have q3: \<open>map_fun_at k (F \<circ> the) (get u * (r * 1(k \<mapsto> v))) = get u * (r * 1(k := F v))\<close>
+    have q3: \<open>map_fun_at k (F \<circ> the) ((1(k \<mapsto> v) * r) * get u) = (1(k := F v) * r) * get u\<close>
       apply (clarsimp simp add: fun_eq_iff map_fun_at_def times_fun)
-      by (metis (mono_tags, lifting) dom_1 dom_eq_empty_conv fun_upd_same mult_1_class.mult_1_left option.sel sep_disj_fun sep_disj_option_discrete(1) times_fupdt_1_apply_sep x1 x2)
+      by (metis (mono_tags, lifting) fun_upd_same mult_1_class.mult_1_right one_option_def option.sel sep_disj_commute sep_disj_fun_discrete(1) sep_disj_multD2 x1 x2)
     have q4: \<open>1(k := F v) \<in>\<^sub>S\<^sub>H domain\<close>
       apply (clarsimp simp add: in_invariant)
       using a2 prems(1) prems(5) by fastforce
-    have x3: \<open>map_fun_at k (F \<circ> the) (get u * (r * 1(k \<mapsto> v))) \<in>\<^sub>S\<^sub>H domain\<close>
+    have x3: \<open>map_fun_at k (F \<circ> the) ((1(k \<mapsto> v) * r) * get u) \<in>\<^sub>S\<^sub>H domain\<close>
       unfolding q3
-      by (metis a3 mult_in_sep_homo_set discrete_semigroup_sepdisj_fun q4 sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 x1 x2) 
-    have x5: \<open>w ## r * 1(k \<mapsto> v) \<Longrightarrow>
-                  map_fun_at k (F \<circ> the) (w * (r * 1(k \<mapsto> v))) = w * (r * (1(k := F v)))\<close> for w
+      by (metis (no_types, lifting) a3 discrete_semigroup_sepdisj_fun mult_in_sep_homo_set q4 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_commute x1 x2)
+    have x5: \<open>1(k \<mapsto> v) * r ## w \<Longrightarrow>
+                  map_fun_at k (F \<circ> the) ((1(k \<mapsto> v) * r) * w) = ((1(k := F v)) * r) * w\<close> for w
           unfolding map_fun_at_def apply (clarsimp simp add: fun_eq_iff times_fun)
-          by (metis (mono_tags, opaque_lifting) map_upd_Some_unfold option.sel sep_disj_fun_def sep_disj_option_discrete(1) times_fupdt_1_apply_sep times_option(3) x1)
+          by (metis (mono_tags, lifting) fun_upd_same option.sel sep_disj_fun_discrete(1) times_fupdt_1_apply_sep times_option(2) x1)
     show ?thesis
       apply (insert prems, clarsimp simp add: x3 times_fun_upd x5, simp add: mk_homo_mult)
       subgoal premises prems for w
       proof -
-        have x4: \<open>r ## 1(k := F v)\<close>
+        have x4: \<open>1(k := F v) ## r\<close>
           by (meson discrete_semigroup_sepdisj_fun x1)
-        have x4': \<open>w ## 1(k := F v)\<close>
-          by (meson discrete_semigroup_sepdisj_fun prems(10) sep_disj_commuteI sep_disj_multD2 x1)
-        have x6: \<open>w ## (r * 1(k := F v))\<close>
-          by (meson discrete_semigroup_sepdisj_fun prems(10) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 x1)
-        have x6': \<open>r ## (w * 1(k := F v))\<close>
+        have x4': \<open>1(k := F v) ## w\<close>
+          by (metis discrete_semigroup_sepdisj_fun prems(10) sep_disj_commute sep_disj_multD1 x1)
+        have x6: \<open>(1(k := F v) * r) ## w\<close>
+          by (meson discrete_semigroup_sepdisj_fun prems(10) sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 x1)
+        have x6': \<open>(1(k := F v) * w) ## r\<close>
           by (metis sep_disj_commute sep_disj_multI2 sep_mult_commute x4 x4' x6)
-        have x7: \<open>clean u * mk w = u\<close>
+        have x7: \<open>mk w * clean u = u\<close>
           by (metis fun_split_1 prems(9))
         show ?thesis
-          apply (insert prems, clarsimp simp add: x4 x4' x6 x6' mk_homo_mult)
-          by (metis (no_types, lifting) a2 fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.homo_mult inj.sep_disj_homo_semi mult_1_class.mult_1_left prems(7) x4 x6 x7)
+          by (insert prems, clarsimp simp add: x4 x4' x6 x6' mk_homo_mult,
+              metis (no_types, lifting) a2 fun_1upd_homo_left1 fun_sep_disj_1_fupdt(2) inj.homo_mult inj.sep_disj_homo_semi mult_1_class.mult_1_right x4 x6 x7)
       qed .
   qed .
 
@@ -528,7 +528,7 @@ lemmas "__allocate_rule_3__" =
 
 lemma "_getter_rule_2_":
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
-\<Longrightarrow> refinement_projection (I k) {x} \<subseteq> UNIV * Some ` S
+\<Longrightarrow> refinement_projection (I k) {x} \<subseteq> Some ` S * UNIV
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace> 1(k' := x) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. 1(k' := x) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> RP k' \<and> v \<in> S \<rbrace>\<close>
   unfolding Premise_def
 subgoal premises prems
@@ -543,7 +543,7 @@ proof -
       rule R.getter_valid,
       rule sep_refinement_stepwise,
       rule R.getter_refinement[where S=S, THEN refinement_frame[where R=UNIV]],
-      unfold Subjection_Id_on Subjection_times ExSet_Id_on ExSet_times_right,
+      unfold Subjection_Id_on Subjection_times ExSet_Id_on ExSet_times_left,
       rule refinement_existential[OF refinement_subjection[OF constant_refinement]],
       simp,
       rule \<F>_pointwise_projection[where D'=\<open>{x}\<close> and D=\<open>Some ` S\<close>, simplified],
@@ -552,15 +552,15 @@ qed .
 
 lemma "_setter_rule_2_":
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
-\<Longrightarrow> (Id_on UNIV * ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k) \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', F v')} \<w>.\<r>.\<t> I k \<i>\<n> {v'})
-\<Longrightarrow> refinement_projection (I k) {v'} \<subseteq> UNIV * Some ` V
+\<Longrightarrow> (({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k) * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', F v')} \<w>.\<r>.\<t> I k \<i>\<n> {v'})
+\<Longrightarrow> refinement_projection (I k) {v'} \<subseteq> Some ` V * UNIV
 \<Longrightarrow> (\<And>v. v \<in> V \<and> v \<in> RP k \<Longrightarrow> pred_option (\<lambda>x. x \<in> RP k) (f v))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (f o the))
       \<lbrace> 1(k' := v') \<Ztypecolon> \<phi> Itself \<longmapsto> 1(k' := F v') \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   unfolding Premise_def
 subgoal premises prems proof -
-  have t1: \<open>Id_on UNIV * (pairself (fun_upd 1 k) ` {(Some v, f v)} \<s>\<u>\<b>\<j> v. ret = Normal \<phi>V_none \<and> v \<in> V \<and> v \<in> RP k)
-         = (Id_on UNIV * (pairself (fun_upd 1 k) ` ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k )) \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none)\<close>
+  have t1: \<open>(pairself (fun_upd 1 k) ` {(Some v, f v)} \<s>\<u>\<b>\<j> v. ret = Normal \<phi>V_none \<and> v \<in> V \<and> v \<in> RP k)  * Id_on UNIV
+         = ((pairself (fun_upd 1 k) ` ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k )) * Id_on UNIV \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none)\<close>
     for ret
     by (unfold Subjection_Id_on Subjection_times ExSet_Id_on ExSet_times_right ExSet_image
                   Subjection_image; simp add: set_eq_iff Subjection_expn_set ExSet_expn_set; blast)

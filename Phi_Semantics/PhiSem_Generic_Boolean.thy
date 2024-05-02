@@ -52,8 +52,8 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
     \<phi>M_caseV (\<lambda>va vb.
     \<phi>M_getV TY id va (\<lambda>v.
     \<phi>M_getV TY id vb (\<lambda>u.
-    (\<lambda>res. \<phi>M_assert (Can_EqCompare res u v) res) \<ggreater>
-    Return (\<phi>arg (V_bool.mk (EqCompare u v)))
+    (\<lambda>res. \<phi>M_assert (Can_EqCompare res v u) res) \<ggreater>
+    Return (\<phi>arg (V_bool.mk (EqCompare v u)))
 )))"
 
 
@@ -108,16 +108,16 @@ lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
 subsection \<open>And\<close>
 
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
-  \<open>\<p>\<r>\<o>\<c> op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_and (\<phi>V_pair va vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
-  by (cases va; cases vb; simp, rule, rule, simp, rule, simp, rule, simp, blast)
+  by (cases va; cases vb; simp, rule, rule, simp, rule, simp, rule, simp)
 
 subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
-  \<open>\<p>\<r>\<o>\<c> op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_or (\<phi>V_pair va vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
-  by(cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp, blast)
+  by(cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp)
 
 
 subsection \<open>Equal\<close>
@@ -133,13 +133,13 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
 \<Longrightarrow> \<phi>SemType (a \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (b \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> can_eq a b
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_equal TY (\<phi>V_pair rawb rawa) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[rawa] T\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_equal TY (\<phi>V_pair rawa rawb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[rawa] T\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
   unfolding op_equal_def
-  apply (cases rawa; cases rawb; simp, rule, rule)
-    apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
-    apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
-   apply (unfold \<phi>Equal_def Premise_def, simp)
-  by (rule \<phi>M_Success', rule, simp)
+  by ((cases rawa; cases rawb; simp, rule, rule),
+      simp add: \<phi>SemType_def subset_iff Premise_def, rule,
+      simp add: \<phi>SemType_def subset_iff Premise_def, rule,
+      unfold \<phi>Equal_def Premise_def, simp,
+      rule \<phi>M_Success', rule, simp)
 
 declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]
 declare op_equal_\<phi>app[where eq=\<open>(\<lambda>x y. x mod N = y mod N)\<close> for N, \<phi>synthesis 100]

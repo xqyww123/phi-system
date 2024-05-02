@@ -47,8 +47,8 @@ proc test_ptr:
   premises \<open>ptr \<noteq> 0\<close>
   output \<open>ptr \<tribullet> 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
-  val a, b \<leftarrow> (0, 0) ;;
-  $1[$b]\<tribullet>$a\<tribullet>0 ;;
+  val a, b \<leftarrow> (0, 0) \<semicolon>
+  $1[$b]\<tribullet>$a\<tribullet>0 \<semicolon>
   $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
 
@@ -65,13 +65,8 @@ proc test_ptr2:
   premises \<open>ptr \<noteq> 0\<close>
   output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<p>\<t>\<r>\<close>
 \<medium_left_bracket>
-  val a, b \<leftarrow> (0, 1) 
-  \<semicolon> $1 \<rightarrow> var xx
-    note [[\<phi>trace_reasoning = 2]]
-  \<semicolon>  
-    $xx \<tribullet> 1
-  \<semicolon>
-  $1[$a]\<tribullet>x[$b]\<tribullet>w
+  val a, b \<leftarrow> (0, 1) \<semicolon>
+  $1[$a].x[$b].w
 \<medium_right_bracket> .
 
 proc test_ptr3:
@@ -99,14 +94,12 @@ proc test_agg3:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<int>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<nat>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
-  var v \<leftarrow> $1 ;
-  $v.x.n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
-  $v.x.m \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
+  var v \<leftarrow> $1 \<semicolon>
+  $v.x.n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v.x.m \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
   $v
 \<medium_right_bracket> .
 
-
-thm test_agg2_def
 
 (*
 proc
@@ -211,7 +204,7 @@ proc
 declare [[\<phi>hide_techinicals=false]]
 
 
-
+declare [[\<phi>trace_reasoning = 2]]
 
 proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -228,7 +221,7 @@ proc
     \<medium_right_bracket> 
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v ;; continue \<medium_right_bracket>
     assert \<open>\<bottom>\<^sub>B\<^sub>I\<close>  
-  \<medium_right_bracket> ;; (*loop body*)
+  \<medium_right_bracket> \<semicolon>
   $v
 \<medium_right_bracket>.
 

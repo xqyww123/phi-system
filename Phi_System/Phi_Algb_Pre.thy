@@ -168,6 +168,8 @@ There are pre-built reasoning rules for,
       \<open>Cutting rules\<close>
   and \<A>_partial_add_specific = (1300, [1300, 1700]) in \<A>_partial_add and > \<A>_partial_add_cut
       \<open>for speicifc structures\<close>
+  and \<A>_partial_add_specific' = (3500, [3400, 3599]) in \<A>_partial_add and > \<A>_partial_add_normalizing
+      \<open>for speicifc structures, of higher priority superceding any normalizations\<close>
 
 \<phi>reasoner_group EIF_dabc = (%cutting, [10, 3000]) for \<open>\<r>EIF (dabc_equation d a b c) what\<close>
                                                    in extract_pure_all
@@ -455,11 +457,15 @@ lemma [\<phi>reason %\<A>_partial_add_specific]:
 
 subparagraph \<open>Wrapped by set\<close>
 
-\<phi>reasoner_group \<A>_partial_add__len_intvl_set = (1350, [1350, 1350])
+\<phi>reasoner_group (*\<A>_partial_add__len_intvl_set = (1350, [1350, 1350])
                                                 in \<A>_partial_add_specific and > \<A>_partial_add__set
                  \<open>Len_Intvl.set\<close>
+             and*) \<A>_partial_add__len_intvl_set' = (3500, [3450, 3550])
+                                                in \<A>_partial_add_specific' and > \<A>_partial_add__set
+                 \<open>Len_Intvl.set\<close>
 
-lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
+
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set'
            for \<open>equation\<^sub>2\<^sub>1 ?var (Len_Intvl.set _) (Len_Intvl.set _)\<close>
                \<open>equation\<^sub>2\<^sub>1 (Len_Intvl.set _) ?var (Len_Intvl.set _)\<close>]:
   \<open> equation\<^sub>2\<^sub>1 a b c
@@ -468,7 +474,7 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
   by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord,
       metis (mono_tags, lifting) dual_order.asym not_le_imp_less order.strict_trans2 shift_by_nat_assoc shift_by_nat_ord)
 
-lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set']:
   \<open> dabc_equation a b c d
 \<Longrightarrow> dabc_equation (Len_Intvl.set a) (Len_Intvl.set b) (Len_Intvl.set c) (Len_Intvl.set d) \<close>
   unfolding dabc_equation_def
@@ -484,7 +490,7 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
     by force .
     
 
-lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set'
            for \<open>equation\<^sub>3\<^sub>1 ?var (Len_Intvl.set _) ?var (Len_Intvl.set _)\<close>]:
   \<open> equation\<^sub>3\<^sub>1 a b c d
 \<Longrightarrow> equation\<^sub>3\<^sub>1 (Len_Intvl.set a) (Len_Intvl.set b) (Len_Intvl.set c) (Len_Intvl.set d) \<close>
@@ -492,7 +498,7 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set
   by (cases a; cases b; cases c; clarsimp simp add: plus_set_def set_eq_iff shift_by_nat_ord,
       smt (verit, ccfv_SIG) dual_order.trans linorder_not_less shift_by_nat_assoc shift_by_nat_ord)
 
-lemma [\<phi>reason %\<A>_partial_add__len_intvl_set]:
+lemma [\<phi>reason %\<A>_partial_add__len_intvl_set']:
   \<open> equation\<^sub>3\<^sub>1_cond C\<^sub>a C\<^sub>c a b ab c d
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond C\<^sub>a C\<^sub>c (Len_Intvl.set a) (Len_Intvl.set b) (Len_Intvl.set ab) (Len_Intvl.set c) (Len_Intvl.set d) \<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def Premise_def
@@ -828,17 +834,17 @@ paragraph \<open>List\<close>
   (%common_multiplicator_2_algos, [%common_multiplicator_2_algos, %common_multiplicator_2_algos+20]) \<open>\<close>
 
 
-lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (\<lambda>a b. b * a) ?var _ _\<close>]:
+lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (*) ?var _ _\<close>]:
   \<open> common_multiplicator_2 (@) a b c
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a' : a
-\<Longrightarrow> common_multiplicator_2 (\<lambda>a b. b * a) a' b c \<close>
+\<Longrightarrow> common_multiplicator_2 (*) a' b c \<close>
   unfolding common_multiplicator_2_def times_list_def Simplify_def
   by clarsimp
 
-lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (\<lambda>a b. b * a) _ ?var _\<close>]:
+lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (*) _ ?var _\<close>]:
   \<open> common_multiplicator_2 (@) a b c
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] b' : b
-\<Longrightarrow> common_multiplicator_2 (\<lambda>a b. b * a) a b' c \<close>
+\<Longrightarrow> common_multiplicator_2 (*) a b' c \<close>
   unfolding common_multiplicator_2_def times_list_def Simplify_def
   by clarsimp
 

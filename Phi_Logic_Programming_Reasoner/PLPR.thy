@@ -147,6 +147,10 @@ lemma Ant_Seq_imp:
 
 subsubsection \<open>General Annotation\<close>
 
+text \<open>A pure syntactical tag, maybe used to divide spaces of reasoning rules for specific sorts
+  of reasoning tasks. Specifically, a reasoning rule tagged by a specific tag, may be used
+  exclusively in specific reasoning mechanism.\<close>
+
 typedecl action
 
 definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @tag _" [9,10] 9)
