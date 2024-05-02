@@ -119,14 +119,14 @@ lemma t1[\<phi>reason %ToA_num_conv_cut, \<phi>synthesis %\<phi>synthesis_transf
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
-\<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat> \<s>\<u>\<b>\<j> y. y = nat x @action to \<nat>\<close> \<medium_left_bracket> \<medium_right_bracket>.
+\<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat> \<s>\<u>\<b>\<j> y. y = nat x @tag to \<nat>\<close> \<medium_left_bracket> \<medium_right_bracket>.
 
 declare \<phi>ANat.elim[condition \<open>\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d> 2\<close>,
                    \<phi>reason %ToA_num_conv_cut,
                    \<phi>synthesis %\<phi>synthesis_transformation]
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  " x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<int> \<s>\<u>\<b>\<j> y. y = Int.int x @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>.
+  " x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<int> \<s>\<u>\<b>\<j> y. y = Int.int x @tag to \<int> " \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>.
 
@@ -236,7 +236,7 @@ subsubsection \<open>Constant Integer\<close>
 
 lemma op_const_aint_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_aint.mk x)] \<int> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_aint.mk x)] \<int> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x \<Turnstile> (x \<Ztypecolon> \<int>)\<close>
@@ -244,7 +244,7 @@ lemma op_const_aint_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 
 lemma op_const_anat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] x' : of_nat x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (semantic_literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (semantic_literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x' \<Turnstile> (x \<Ztypecolon> \<nat>)\<close>
@@ -278,11 +278,11 @@ lemma [\<phi>reason %\<phi>synthesis_parse_number
 
 
 (* lemma [\<phi>reason 1200
-    for \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> (numeral ?n) \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis ?G\<close>
-       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 0 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis ?G\<close>
-       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 1 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis ?G\<close>
+    for \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> (numeral ?n) \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag synthesis ?G\<close>
+       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 0 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag synthesis ?G\<close>
+       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 1 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag synthesis ?G\<close>
 ]:
-  \<open>\<p>\<r>\<o>\<c> op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<v>\<a>\<l> n \<Ztypecolon> Size \<rbrace> @action synthesis G\<close>
+  \<open>\<p>\<r>\<o>\<c> op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<v>\<a>\<l> n \<Ztypecolon> Size \<rbrace> @tag synthesis G\<close>
   unfolding Synthesis_def Action_Tag_def
   using op_const_size_t[THEN \<phi>frame, simplified] . *)
 

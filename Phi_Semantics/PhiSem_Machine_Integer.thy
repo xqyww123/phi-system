@@ -160,8 +160,8 @@ parse_ast_translation \<open>
           Appl [Constant \<^const_syntax>\<open>Word\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (Word _)\<close> \<Rightarrow>
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (Word _)\<close>    (200)
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (Word _)\<close> \<Rightarrow>
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (Word _)\<close>    (200)
   and \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Word _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow>
       \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Word _ \<w>\<i>\<t>\<h> _ \<close>    (200)]]
 
@@ -193,8 +193,8 @@ parse_ast_translation \<open>
                 Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<phi>RoundedNat _)\<close> \<Rightarrow>
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<phi>RoundedNat _)\<close>    (200)
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (\<phi>RoundedNat _)\<close> \<Rightarrow>
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (\<phi>RoundedNat _)\<close>    (200)
   and \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>RoundedNat _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow>
       \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>RoundedNat _ \<w>\<i>\<t>\<h> _ \<close>    (200) ]]
 
@@ -203,7 +203,7 @@ declare \<phi>RoundedNat.elim[condition \<open>Threshold_Cost 7\<close>,
                          \<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Word(_) \<w>\<i>\<t>\<h> _\<close>]
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open>x \<Ztypecolon> \<nat>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Word('b) \<s>\<u>\<b>\<j> y. y = (of_nat x :: 'b::len word) @action to Word('b)\<close>
+  \<open>x \<Ztypecolon> \<nat>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Word('b) \<s>\<u>\<b>\<j> y. y = (of_nat x :: 'b::len word) @tag to Word('b)\<close>
   \<medium_left_bracket>  \<medium_right_bracket>.
  
 lemma [\<phi>reason %ToA_num_conv_cut]:
@@ -213,7 +213,7 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
   \<medium_left_bracket> \<open>unat x \<Ztypecolon> MAKE _ (\<nat>\<^sup>r('b))\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> unat x \<Ztypecolon> \<nat>\<^sup>r('b) @action to \<nat>\<^sup>r('b)\<close>
+  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> unat x \<Ztypecolon> \<nat>\<^sup>r('b) @tag to \<nat>\<^sup>r('b)\<close>
   for x :: \<open>'b::len word\<close> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
@@ -239,8 +239,8 @@ parse_ast_translation \<open>
           Appl [Constant \<^const_syntax>\<open>\<phi>Nat\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<phi>Nat _)\<close> \<Rightarrow>
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<phi>Nat _)\<close>    (200)
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (\<phi>Nat _)\<close> \<Rightarrow>
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (\<phi>Nat _)\<close>    (200)
   and \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>Nat _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow>
       \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>Nat _ \<w>\<i>\<t>\<h> _ \<close>    (200) ]]
 
@@ -254,11 +254,11 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
   \<medium_left_bracket> \<phi>Nat.elim \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open>x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat>\<^sup>r('b) \<s>\<u>\<b>\<j> y. y = x \<and> x < 2 ^ LENGTH('b) @action to \<nat>\<^sup>r('b)\<close>
+  \<open>x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat>\<^sup>r('b) \<s>\<u>\<b>\<j> y. y = x \<and> x < 2 ^ LENGTH('b) @tag to \<nat>\<^sup>r('b)\<close>
   \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open> x \<Ztypecolon> \<nat>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat>('b) \<s>\<u>\<b>\<j> y. y = x mod 2 ^ LENGTH('b) @action to \<nat>('b)\<close>
+  \<open> x \<Ztypecolon> \<nat>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat>('b) \<s>\<u>\<b>\<j> y. y = x mod 2 ^ LENGTH('b) @tag to \<nat>('b)\<close>
   \<medium_left_bracket> \<open>x mod 2 ^ LENGTH('b) \<Ztypecolon> MAKE _ (\<nat>('b))\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
@@ -274,7 +274,7 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
   \<medium_left_bracket> to \<open>\<nat>\<^sup>r(_)\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open>x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (of_nat x :: 'b::len word) \<Ztypecolon> Word('b) \<w>\<i>\<t>\<h> x < 2 ^ LENGTH('b) @action to Word('b)\<close>
+  \<open>x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (of_nat x :: 'b::len word) \<Ztypecolon> Word('b) \<w>\<i>\<t>\<h> x < 2 ^ LENGTH('b) @tag to Word('b)\<close>
   \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
@@ -284,7 +284,7 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
   \<medium_left_bracket> to \<open>\<nat>\<^sup>r('b)\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> unat x \<Ztypecolon> \<nat>('b) @action to \<nat>('b)\<close>
+  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> unat x \<Ztypecolon> \<nat>('b) @tag to \<nat>('b)\<close>
   for x :: \<open>'b::len word\<close> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
@@ -349,10 +349,10 @@ lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\
 
 
 lemma [
-  \<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to Word(_)\<close>
+  \<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to Word(_)\<close>
 ]:
   \<open>x \<Ztypecolon> \<int>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (of_int x :: 'b::len word) \<Ztypecolon> Word('b) \<w>\<i>\<t>\<h> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)}
-   @action to Word('b)\<close>
+   @tag to Word('b)\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma [\<phi>reason %ToA_num_conv for \<open>?x \<Ztypecolon> Word(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<int>(_) \<w>\<i>\<t>\<h> _\<close>]:
@@ -363,13 +363,13 @@ lemma [\<phi>reason %ToA_num_conv for \<open>?x \<Ztypecolon> Word(_) \<t>\<r>\<
     certified using sint_greater_eq sint_less by blast
   \<medium_right_bracket>.
 
-lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> Word(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (Word _)\<close>]:
-  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sint x \<Ztypecolon> \<int>('b) @action to Word('b) \<close>
+lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> Word(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (Word _)\<close>]:
+  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sint x \<Ztypecolon> \<int>('b) @tag to Word('b) \<close>
   \<medium_left_bracket> \<medium_right_bracket>.
  
-lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<phi>Nat _)\<close>]:
+lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (\<phi>Nat _)\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x \<and> x < 2 ^ (LENGTH('b)-1)
-\<Longrightarrow> x \<Ztypecolon> \<int>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat>('b) @action to \<nat>('b)\<close>
+\<Longrightarrow> x \<Ztypecolon> \<int>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat>('b) @tag to \<nat>('b)\<close>
   \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
     certified by (smt (verit, best) \<open>0 \<le> x \<and> x < 2 ^ (LENGTH('b) - 1)\<close> sint_of_int_eq unat_eq_nat_uint word_arith_wis(7) word_of_int_2p_len word_of_int_inverse zero_less_power) .
   
@@ -380,9 +380,9 @@ lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\
 \<Longrightarrow> x \<Ztypecolon> \<int>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat>('b)\<close>
   \<medium_left_bracket> to \<open>\<nat>('b)\<close> \<medium_right_bracket>.
 
-lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<nat>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to \<int>(_)\<close>]:
+lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<nat>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to \<int>(_)\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x < 2 ^ (LENGTH('b)-1)
-\<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_nat x \<Ztypecolon> \<int>('b) @action to \<int>(_) \<close>
+\<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_nat x \<Ztypecolon> \<int>('b) @tag to \<int>(_) \<close>
   \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket> certified by auto_sledgehammer .
 
 lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<nat>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<int>(_) \<w>\<i>\<t>\<h> _ \<close>]:
@@ -439,8 +439,8 @@ parse_ast_translation \<open>
                 Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<phi>RoundedInt _)\<close> \<Rightarrow>
-      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<phi>RoundedInt _)\<close>    (200)
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (\<phi>RoundedInt _)\<close> \<Rightarrow>
+      \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to (\<phi>RoundedInt _)\<close>    (200)
   and \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>RoundedInt _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow>
       \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>RoundedInt _ \<w>\<i>\<t>\<h> _ \<close>    (200) ]]
 
@@ -449,7 +449,7 @@ declare \<phi>RoundedInt.elim[condition \<open>Threshold_Cost 7\<close>,
                          \<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>\<^sup>r(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Word(_) \<w>\<i>\<t>\<h> _\<close>]
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open>x \<Ztypecolon> \<int>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Word('b) \<s>\<u>\<b>\<j> y. y = (of_int x :: 'b::len word) @action to Word('b)\<close>
+  \<open>x \<Ztypecolon> \<int>\<^sup>r('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Word('b) \<s>\<u>\<b>\<j> y. y = (of_int x :: 'b::len word) @tag to Word('b)\<close>
   \<medium_left_bracket>  \<medium_right_bracket>.
  
 lemma [\<phi>reason %ToA_num_conv_cut]:
@@ -459,7 +459,7 @@ lemma [\<phi>reason %ToA_num_conv_cut]:
   \<medium_left_bracket> \<open>uint x \<Ztypecolon> MAKE _ (\<int>\<^sup>r('b))\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
-  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uint x \<Ztypecolon> \<int>\<^sup>r('b) @action to \<int>\<^sup>r('b)\<close>
+  \<open> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uint x \<Ztypecolon> \<int>\<^sup>r('b) @tag to \<int>\<^sup>r('b)\<close>
   for x :: \<open>'b::len word\<close> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
@@ -608,7 +608,7 @@ subsubsection \<open>Constant Integer\<close>
 
 lemma op_const_word_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n : unat n'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n' \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n))] Word('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n' \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n))] Word('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_int.mk (LENGTH('b),n) \<Turnstile> (n' \<Ztypecolon> Word('b))\<close>
@@ -617,7 +617,7 @@ lemma op_const_word_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 lemma op_const_nat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n < 2 ^ LENGTH('b)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : n
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<nat>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<nat>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_int.mk (LENGTH('b),n') \<Turnstile> (n \<Ztypecolon> \<nat>('b))\<close>
@@ -626,7 +626,7 @@ lemma op_const_nat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 
 lemma op_const_natR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : n mod 2 ^ LENGTH('b)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<nat>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<nat>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified, OF Simplify_to_Premise]
@@ -636,7 +636,7 @@ lemma op_const_natR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 lemma op_const_int_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> - (2 ^ (LENGTH('b)-1)) \<le> n \<and> n < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : (if 0 \<le> n then nat n else nat (2^LENGTH('b) + n))
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<int>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<int>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_int.mk (LENGTH('b),n') \<Turnstile> (n \<Ztypecolon> \<int>('b))\<close>
@@ -645,7 +645,7 @@ lemma op_const_int_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 
 lemma op_const_intR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : (let n = n mod 2 ^ LENGTH('b) in if 0 \<le> n then nat n else nat (2^LENGTH('b) + n))
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<int>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<int>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_int n\<close>, simplified, OF Simplify_to_Premise]
@@ -670,11 +670,11 @@ lemma [\<phi>reason %\<phi>synthesis_parse_number
 
 
 (* lemma [\<phi>reason 1200
-    for \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> (numeral ?n) \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis ?G\<close>
-       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 0 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis ?G\<close>
-       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 1 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis ?G\<close>
+    for \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> (numeral ?n) \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag synthesis ?G\<close>
+       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 0 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag synthesis ?G\<close>
+       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<v>\<a>\<l> 1 \<Ztypecolon> Size \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag synthesis ?G\<close>
 ]:
-  \<open>\<p>\<r>\<o>\<c> op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<v>\<a>\<l> n \<Ztypecolon> Size \<rbrace> @action synthesis G\<close>
+  \<open>\<p>\<r>\<o>\<c> op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<v>\<a>\<l> n \<Ztypecolon> Size \<rbrace> @tag synthesis G\<close>
   unfolding Synthesis_def Action_Tag_def
   using op_const_size_t[THEN \<phi>frame, simplified] . *)
 

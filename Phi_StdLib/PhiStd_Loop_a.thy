@@ -9,7 +9,7 @@ text \<open>Predefined abstractions of Loop statemetns, counted as a part of loo
 
 proc (nodef) replicate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
-       and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @action NToA\<close>
+       and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @tag NToA\<close>
        and ITER: \<open>\<And>i v. \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> i \<and> i < t \<Longrightarrow>
               \<p>\<r>\<o>\<c> ITER v \<lbrace> R\<heavy_comma> X i\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l>[v] \<nat> \<longmapsto> R\<heavy_comma> X (i+1) \<rbrace>\<close>
   input  \<open>X\<^sub>0\<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> t \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>

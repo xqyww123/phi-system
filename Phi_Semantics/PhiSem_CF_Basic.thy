@@ -123,7 +123,7 @@ lemma sel_\<phi>app:
 lemma branch_\<phi>app:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T )
 \<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F )
-\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @action invoke_br_join)
+\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @tag invoke_br_join)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_if br\<^sub>T br\<^sub>F rawc \<lbrace> X\<heavy_comma> C \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E\<^sub>T e \<s>\<u>\<b>\<j> C) + (E\<^sub>F e \<s>\<u>\<b>\<j> \<not> C)) \<close>
   unfolding op_if_def Premise_def Action_Tag_def
   apply (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool)
@@ -133,7 +133,7 @@ proc "if":
   requires C: \<open>\<p>\<r>\<o>\<c> cond \<lbrace> X \<longmapsto> X1\<heavy_comma> \<v>\<a>\<l> C \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
       and brT: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T \<close>
       and brF: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F \<close>
-      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @action invoke_br_join)\<close>
+      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @tag invoke_br_join)\<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
@@ -166,7 +166,7 @@ lemma "__DoWhile__rule_\<phi>app":
   
 proc (nodef) do_while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
-       and V: \<open>\<r>CALL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<w>\<i>\<t>\<h> Any @action NToA\<close>
+       and V: \<open>\<r>CALL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<w>\<i>\<t>\<h> Any @tag NToA\<close>
        and B: \<open>\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x
       \<longrightarrow> \<p>\<r>\<o>\<c> body \<lbrace> X' x \<longmapsto> (X' x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   input  \<open>X\<close>
@@ -196,7 +196,7 @@ causing it is very difficult to recover the actual abstract guard
 
 proc while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
-    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<w>\<i>\<t>\<h> Any @action NToA"
+    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<w>\<i>\<t>\<h> Any @tag NToA"
     and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
     and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
   input  \<open>X'\<close>
@@ -215,7 +215,7 @@ ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_
 proc (nodef) refine_while
   [unfolded \<phi>Type_def[where T=\<open>X::'a \<Rightarrow> (FIC_N \<Rightarrow> FIC) set\<close>]]:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> Transition: f x)\<close>
-    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<w>\<i>\<t>\<h> Any @action NToA"
+    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<w>\<i>\<t>\<h> Any @tag NToA"
     and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x\<heavy_comma> \<v>\<a>\<l> cond x \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
     and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. x' = f x \<and> invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
   input \<open>X'\<close>

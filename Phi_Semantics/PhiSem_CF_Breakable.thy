@@ -10,7 +10,7 @@ text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<ope
 
 proc while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> End: termination x)\<close>
-  and S: \<open>U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) @action NToA\<close>
+  and S: \<open>U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) @tag NToA\<close>
   and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. invariant x \<and> \<not> cond x \<longrightarrow> termination x)\<close>
   and C: "\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<Longrightarrow>
                   \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"

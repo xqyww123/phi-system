@@ -173,19 +173,19 @@ lemmas [\<phi>reason 2010 for \<open>PROP Gen_Synthesis_Rule (
 *)
 
 lemma [\<phi>reason %\<phi>synthesis_normalize]:
-  \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. 1 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. Suc 0 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+  \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. 1 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. Suc 0 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
   unfolding One_nat_def .
 
 lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
-  \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+  \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
   for x :: nat
   unfolding push_bit_nat_def .
 
 lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
-  \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+  \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
   for x :: int
   unfolding push_bit_int_def .
 

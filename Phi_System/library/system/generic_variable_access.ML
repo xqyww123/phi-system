@@ -223,7 +223,9 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
             => let fun insert (Appl [Constant \<^const_syntax>\<open>Cons\<close>, X, Y]) =
                           Appl [Constant \<^const_syntax>\<open>Cons\<close>, X, insert Y]
                      | insert (Constant \<^const_syntax>\<open>Nil\<close>) =
-                          Appl [Constant \<^const_syntax>\<open>Cons\<close>, Appl [Constant \<^syntax_const>\<open>_MK_ag_idx_\<close>, idx]]
+                          Appl [Constant \<^const_syntax>\<open>Cons\<close>,
+                                Appl [Constant \<^syntax_const>\<open>_MK_ag_idx_\<close>, idx],
+                                Constant \<^const_syntax>\<open>Nil\<close>]
                 in Appl [Constant \<^const_syntax>\<open>Value_of\<close>, x, idt, insert path]
                end
         | _ => error "Syntax Error: Aggregate Element Access operator \<tribullet> can only be used after variables like $x.")),

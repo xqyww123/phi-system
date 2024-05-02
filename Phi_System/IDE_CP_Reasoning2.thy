@@ -58,10 +58,10 @@ text \<open>\<A>SEi is for algebras having no identity element.
   We use the two actions because they are essentially three different reasoning procedures.
   Their forms of goal are different.
 
-\<comment> \<open>\<A>SE : \<^prop>\<open>x \<Ztypecolon> Source \<^emph> Further_Work \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> Target \<^emph> Remain \<w>\<i>\<t>\<h> some @action \<A>SE\<close>\<close>
-\<^item> \<A>SEi: \<open>x \<Ztypecolon> \<black_circle> Source \<^emph> \<half_blkcirc>[Cw] Further \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> \<black_circle> Target \<^emph> \<half_blkcirc>[Cr] Remain \<w>\<i>\<t>\<h> some @action \<A>SEi\<close>
+\<comment> \<open>\<A>SE : \<^prop>\<open>x \<Ztypecolon> Source \<^emph> Further_Work \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> Target \<^emph> Remain \<w>\<i>\<t>\<h> some @tag \<A>SE\<close>\<close>
+\<^item> \<A>SEi: \<open>x \<Ztypecolon> \<black_circle> Source \<^emph> \<half_blkcirc>[Cw] Further \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> \<black_circle> Target \<^emph> \<half_blkcirc>[Cr] Remain \<w>\<i>\<t>\<h> some @tag \<A>SEi\<close>
     \<open>\<black_circle>\<close> inserts it into a unital algebra.
-(*\<A>SEa: \<^prop>\<open>x \<Ztypecolon> Source \<^emph> Further \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> Target \<w>\<i>\<t>\<h> some @action \<A>SEa\<close>
+(*\<A>SEa: \<^prop>\<open>x \<Ztypecolon> Source \<^emph> Further \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> Target \<w>\<i>\<t>\<h> some @tag \<A>SEa\<close>
     It doesn't has the remain part because it cannot has because it is non-associative.
     It must has some unsolved further work because it is separation extraction, of form
       \<^prop>\<open>A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>, not the simple transformation of form \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>.
@@ -73,7 +73,7 @@ text \<open>\<A>SEi is for algebras having no identity element.
 
 text \<open>TODO: move\<close>
 
-text \<open>Task of Structural Extract \<^prop>\<open>(x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y,r) \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P2 @action \<A>SE \<close>,
+text \<open>Task of Structural Extract \<^prop>\<open>(x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y,r) \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P2 @tag \<A>SE \<close>,
   given \<^term>\<open>x \<Ztypecolon> T\<close>, expecting \<^term>\<open>y \<Ztypecolon> U\<close>, the reasoner finds the further element \<^term>\<open>w \<Ztypecolon> W\<close>
   that needs to be extracted further and the remain \<^term>\<open>r \<Ztypecolon> R\<close> that remains from the extraction.
   \<^prop>\<open>x \<Ztypecolon> (Source \<^emph> Further_Task) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> (Target \<^emph> Remain) \<w>\<i>\<t>\<h> some_info\<close>.
@@ -87,7 +87,7 @@ text \<open>Task of Structural Extract \<^prop>\<open>(x,w) \<Ztypecolon> T \<^e
   \<^prop>\<open> x \<Ztypecolon> (Source \<^emph> Further_Task) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> (Target \<^emph> Remain) \<w>\<i>\<t>\<h> (
         Auto_Transform_Hint (y' \<Ztypecolon> From_the_Target \<^emph> With_the_Remains)
                             (x' \<Ztypecolon> Recover_the_Source \<^emph> With_works_to_be_recovered_further) \<and> True
-    ) @action \<A>SE \<close>
+    ) @tag \<A>SE \<close>
   The \<open>the_Target\<close> is a pattern having same constant and the rough structure with the \<open>Target\<close>.
   Many SE rules are equipped with a version with Auto_Transform_Hint. The rules maintains the patterns
   \<open>the_Target\<close> and \<open>the_Source\<close>, and later the system can pattern-match \<open>the_Target\<close> after
@@ -1137,8 +1137,8 @@ lemma \<phi>mapToA_split_goal_Ty[
    (\<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r\<^sub>2 : U\<^sub>2 \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> U\<^sub>2' \<^emph>[C\<^sub>R, C\<^sub>E] (R', E') \<comment> \<open>goto, \<section>\<open>Conditioned Targets\<close>\<close>
     \<o>\<v>\<e>\<r> f\<^sub>2 : R\<^sub>1 [C\<^sub>R\<^sub>1]\<^emph>[C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>2, E) \<mapsto> R\<^sub>1' [C\<^sub>R\<^sub>1]\<^emph>[C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>2', E')
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> (\<lambda>(x,(w\<^sub>1,w\<^sub>2),e). snd (h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e))) ` D)
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1  \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2  @action \<A>merge \<comment> \<open>goto, \<section>\<open>Filter out empty slots\<close>\<close>
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2' @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1  \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2  @tag \<A>merge \<comment> \<open>goto, \<section>\<open>Filter out empty slots\<close>\<close>
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2' @tag \<A>merge
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>2: (U\<^sub>1 \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R, C\<^sub>E] (R', E')
     \<o>\<v>\<e>\<r> f\<^sub>1 \<otimes>\<^sub>f (w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2) \<otimes>\<^sub>f e : T \<^emph>[C\<^sub>W, C\<^sub>E] (W, E) \<mapsto> T' \<^emph>[C\<^sub>W, C\<^sub>E] (W', E')
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,(w\<^sub>1,w\<^sub>2),e). case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow>
@@ -1194,8 +1194,8 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal,
    (\<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r\<^sub>2 : U\<^sub>2 \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> U\<^sub>2' \<^emph>[C\<^sub>R, C\<^sub>E] (R', E') \<comment> \<open>goto, \<section>\<open>Conditioned Targets\<close>\<close>
     \<o>\<v>\<e>\<r> f\<^sub>2 : R\<^sub>1 [C\<^sub>R\<^sub>1]\<^emph>[C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>2, E) \<mapsto> R\<^sub>1' [C\<^sub>R\<^sub>1]\<^emph>[C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>2', E')
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> snd ` h\<^sub>1 ` apsnd prod.rotR ` D)
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1  \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2  @action \<A>merge \<comment> \<open>goto, \<section>\<open>Filter out empty slots\<close>\<close>
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2' @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1  \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2  @tag \<A>merge \<comment> \<open>goto, \<section>\<open>Filter out empty slots\<close>\<close>
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2' @tag \<A>merge
 \<Longrightarrow> \<m>\<a>\<p> (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f r\<^sub>2: (U\<^sub>1 \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R, C\<^sub>E] (R', E')
     \<o>\<v>\<e>\<r> f\<^sub>1 \<otimes>\<^sub>f (w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2) \<otimes>\<^sub>f e : T \<^emph>[C\<^sub>W, C\<^sub>E] (W, E) \<mapsto> T' \<^emph>[C\<^sub>W, C\<^sub>E] (W', E')
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> prod.rotL o apsnd h\<^sub>2 o h\<^sub>1 o apsnd prod.rotR
@@ -1243,8 +1243,8 @@ lemma \<phi>mapToA_split_source
    (\<m>\<a>\<p> w\<^sub>1 : W\<^sub>1 [C\<^sub>W\<^sub>1]\<^emph>[C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>2,E) \<mapsto> W\<^sub>1' [C\<^sub>W\<^sub>1]\<^emph>[C\<^sub>R\<^sub>2,C\<^sub>E] (R\<^sub>2',E')
     \<o>\<v>\<e>\<r> f\<^sub>2 \<otimes>\<^sub>f w\<^sub>2 : T\<^sub>2 \<^emph>[C\<^sub>W,C\<^sub>E] (W,E) \<mapsto> T\<^sub>2' \<^emph>[C\<^sub>W,C\<^sub>E] (W',E')
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). (x\<^sub>2, w\<^sub>2e)) ` D)
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R  = \<half_blkcirc>[C\<^sub>R\<^sub>1] R\<^sub>1  \<^emph> \<half_blkcirc>[C\<^sub>R\<^sub>2] R\<^sub>2  @action \<A>merge
-\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>1] R\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>R\<^sub>2] R\<^sub>2' @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R  = \<half_blkcirc>[C\<^sub>R\<^sub>1] R\<^sub>1  \<^emph> \<half_blkcirc>[C\<^sub>R\<^sub>2] R\<^sub>2  @tag \<A>merge
+\<Longrightarrow> \<half_blkcirc>[C\<^sub>R] R' = \<half_blkcirc>[C\<^sub>R\<^sub>1] R\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>R\<^sub>2] R\<^sub>2' @tag \<A>merge
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2) \<otimes>\<^sub>f e : U \<^emph>[C\<^sub>R,C\<^sub>E] (R,E) \<mapsto> U' \<^emph>[C\<^sub>R,C\<^sub>E] (R',E')
     \<o>\<v>\<e>\<r> (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f w\<^sub>2 : (T\<^sub>1 \<^emph> T\<^sub>2) \<^emph>[C\<^sub>W,C\<^sub>E] (W,E) \<mapsto> (T\<^sub>1' \<^emph> T\<^sub>2') \<^emph>[C\<^sub>W,C\<^sub>E] (W',E')
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). case h\<^sub>1 (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e)) of (y,r\<^sub>1,r\<^sub>2,e) \<Rightarrow> (y,(r\<^sub>1,r\<^sub>2),e))
@@ -1369,8 +1369,8 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal]:
   \<open> \<s>\<u>\<b>\<s>\<t> fst y \<Ztypecolon> U\<^sub>1 \<f>\<o>\<r> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1 \<t>\<o> Y \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>1' \<Ztypecolon> W\<^sub>1' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>1'
 \<Longrightarrow> subst_sp C\<^sub>R\<^sub>1 (snd y \<Ztypecolon> U\<^sub>2) (x\<^sub>2 \<Ztypecolon> T\<^sub>2) R\<^sub>1 R\<^sub>1' True
              C\<^sub>R R R' C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) (w\<^sub>2' \<Ztypecolon> W\<^sub>2')
-\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1, w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
-\<Longrightarrow> (w' \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W') = ((w\<^sub>1', w\<^sub>2') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2') @action \<A>merge
+\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1, w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @tag \<A>merge
+\<Longrightarrow> (w' \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W') = ((w\<^sub>1', w\<^sub>2') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2') @tag \<A>merge
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<f>\<o>\<r> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Y \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R' \<close>
   for S :: \<open>'c::sep_semigroup BI\<close>
   unfolding ToA_Subst_def Action_Tag_def subst_sp_def
@@ -1385,8 +1385,8 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal+5]:
   \<open> \<s>\<u>\<b>\<s>\<t> y\<^sub>1 \<Ztypecolon> U\<^sub>1 \<f>\<o>\<r> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] R\<^sub>1 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1 \<t>\<o> Y \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>1' \<Ztypecolon> W\<^sub>1' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>1'
 \<Longrightarrow> subst_sp C\<^sub>R\<^sub>1 (y\<^sub>2 \<Ztypecolon> U\<^sub>2) (x\<^sub>2 \<Ztypecolon> T\<^sub>2) R\<^sub>1 R\<^sub>1' True
              C\<^sub>R R R' C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) (w\<^sub>2' \<Ztypecolon> W\<^sub>2')
-\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1, w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
-\<Longrightarrow> (w' \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W') = ((w\<^sub>1', w\<^sub>2') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2') @action \<A>merge
+\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1, w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @tag \<A>merge
+\<Longrightarrow> (w' \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W') = ((w\<^sub>1', w\<^sub>2') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2') @tag \<A>merge
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> (y\<^sub>1, y\<^sub>2) \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<f>\<o>\<r> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Y \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R' \<close>
   for S :: \<open>'c::sep_semigroup BI\<close>
   unfolding ToA_Subst_def Action_Tag_def subst_sp_def
@@ -1401,7 +1401,7 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal+5]:
 lemma [\<phi>reason %\<phi>mapToA_split_goal]:
   \<open> \<g>\<e>\<t> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] M \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1
 \<Longrightarrow> getter_sp C\<^sub>R\<^sub>1 (x\<^sub>2 \<Ztypecolon> T\<^sub>2) M C\<^sub>R\<^sub>2 R C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) True
-\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
+\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @tag \<A>merge
 \<Longrightarrow> \<g>\<e>\<t> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   for S :: \<open>'c::sep_semigroup BI\<close>
   unfolding ToA_Extract_def Premise_def Action_Tag_def getter_sp_def
@@ -1414,8 +1414,8 @@ lemma [\<phi>reason %\<phi>mapToA_split_source]:
   \<open> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2 \<t>\<o> Y\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w\<^sub>2' \<Ztypecolon> W\<^sub>2' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R\<^sub>2'
 \<Longrightarrow> subst_sp C\<^sub>W\<^sub>2 (w\<^sub>2' \<Ztypecolon> W\<^sub>2') (w\<^sub>2 \<Ztypecolon> W\<^sub>2) S\<^sub>1 Y\<^sub>1 False
              C\<^sub>R\<^sub>1 R\<^sub>1 R\<^sub>1' C\<^sub>W (w \<Ztypecolon> W) (w' \<Ztypecolon> W')
-\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R  = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1  * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2  @action \<A>merge
-\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R' = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1' * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2' @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R  = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1  * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2  @tag \<A>merge
+\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R' = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1' * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2' @tag \<A>merge
 \<Longrightarrow> \<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> U \<f>\<o>\<r> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<t>\<o> Y\<^sub>1 * Y\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> w' \<Ztypecolon> W' \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g> R' \<close>
   for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
   unfolding ToA_Subst_def Action_Tag_def subst_sp_def
@@ -1429,7 +1429,7 @@ lemma [\<phi>reason %\<phi>mapToA_split_source]:
 lemma [\<phi>reason %\<phi>mapToA_split_source]:
   \<open> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R\<^sub>2 \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
 \<Longrightarrow> getter_sp C\<^sub>W\<^sub>2 (w\<^sub>2 \<Ztypecolon> W\<^sub>2) S\<^sub>1 C\<^sub>R\<^sub>1 R\<^sub>1 C\<^sub>W (w \<Ztypecolon> W) False
-\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1 * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2 @action \<A>merge
+\<Longrightarrow> \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R] R = \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>1] R\<^sub>1 * \<half_blkcirc>\<^sub>B\<^sub>I[C\<^sub>R\<^sub>2] R\<^sub>2 @tag \<A>merge
 \<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> T \<f>\<r>\<o>\<m> S\<^sub>1 * S\<^sub>2 \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   for S\<^sub>1 :: \<open>'c::sep_semigroup BI\<close>
   unfolding ToA_Extract_def Action_Tag_def getter_sp_def
@@ -1444,7 +1444,7 @@ lemma
   \<open> \<g>\<e>\<t> x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>1] M \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>1] w\<^sub>1 \<Ztypecolon> W\<^sub>1
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R\<^sub>1
 \<Longrightarrow> \<g>\<e>\<t> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<f>\<r>\<o>\<m> M \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W\<^sub>2] w\<^sub>2 \<Ztypecolon> W\<^sub>2
-\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
+\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @tag \<A>merge
 \<Longrightarrow> \<g>\<e>\<t> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   for S :: \<open>'c::sep_semigroup BI\<close>
   unfolding ToA_Extract'_def Premise_def Action_Tag_def
@@ -1459,7 +1459,7 @@ lemma
              \<and>\<^sub>\<r> (Hint_Identity_Element T x\<^sub>2 \<or>\<^sub>c\<^sub>u\<^sub>t True)
              \<and>\<^sub>\<r> (w\<^sub>2, W\<^sub>2, C\<^sub>W\<^sub>2, C\<^sub>R\<^sub>2, R) = (unspec, \<top>\<^sub>\<phi>, False, False, \<top>)
              \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> (D x\<^sub>2))
-\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @action \<A>merge
+\<Longrightarrow> (w \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W) = ((w\<^sub>1,w\<^sub>2) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1 \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2) @tag \<A>merge
 \<Longrightarrow> \<g>\<e>\<t> (x\<^sub>1, x\<^sub>2) \<Ztypecolon> T\<^sub>1 \<^emph> T\<^sub>2 \<f>\<r>\<o>\<m> S \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R\<^sub>2] R \<d>\<e>\<m>\<a>\<n>\<d>\<i>\<n>\<g>[C\<^sub>W] w \<Ztypecolon> W \<close>
   for S :: \<open>'c::sep_monoid BI\<close>
   unfolding ToA_Extract'_def Premise_def Action_Tag_def Ant_Seq_def

@@ -155,7 +155,7 @@ fun force_rule_pass rule ctxt =
                     of SOME R => rule RS (Thm.transfer (Context.theory_of ctxt) R)
                      | NONE => if has_substantial_changes
                                then rule RS (Thm.transfer (Context.theory_of ctxt)
-                                                          @{lemma' \<open>P @action \<A>simp' forward True \<Longrightarrow> P @action \<A>simp' forward Any\<close>
+                                                          @{lemma' \<open>P @tag \<A>simp' forward True \<Longrightarrow> P @tag \<A>simp' forward Any\<close>
                                                                by (simp add: Action_Tag_def)})
                                else rule )
               |> Phi_Help.beta_eta_contract
@@ -235,8 +235,8 @@ structure Phi_CoP_Simp = Phi_CoP_Simp_GEN (
   val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_simp\<close>
 
   val PLPR_pass_name = "Phi_CoP_Simp"
-  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' True _\<close>
-  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' True _\<close>
+  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>simp' True _\<close>
+  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' True _\<close>
 
   fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
     | select_trans_rule (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = select_trans_rule X
@@ -257,8 +257,8 @@ structure Phi_CoP_Backward_Simp = Phi_CoP_Simp_GEN (
   val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_backward_simp\<close>
 
   val PLPR_pass_name = "Phi_CoP_Simp"
-  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @action \<A>simp' False _\<close>
-  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' False _\<close>
+  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>simp' False _\<close>
+  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' False _\<close>
 
   val select_trans_rule = K @{thm' \<A>simp_trans_backward}
 

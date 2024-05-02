@@ -337,18 +337,18 @@ lemma \<phi>_unit:
   by (clarsimp simp add: set_eq_iff \<phi>_expn Itself_expn)
 
 
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
+lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @tag clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<phi> \<circle>) = (() \<Ztypecolon> \<circle>) @tag clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None by simp
 
-lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) = 1 @action clean_automation_waste\<close>
+lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @tag clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<phi> \<circle>) = 1 @tag clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None by simp
 
 
 (*
-lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action (?Act::?'act::simplification action)\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (() \<Ztypecolon> \<circle>) @action Act\<close>
+lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @tag (?Act::?'act::simplification action)\<close>]:
+  \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (() \<Ztypecolon> \<circle>) @tag Act\<close>
   for Act :: \<open>'act::simplification action\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None
   by (simp add: transformation_refl) *)
@@ -420,13 +420,13 @@ lemma NToA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecol
   by (metis ab_semigroup_mult_class.mult_ac(1) transformation_left_frame mult.commute)
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act \<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @tag \<A>_structural Act
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<w>\<i>\<t>\<h> P @tag \<A>_structural Act \<close>
   unfolding Action_Tag_def using \<phi>_cast .
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action to Target
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<w>\<i>\<t>\<h> P @action to Target \<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @tag to Target
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<w>\<i>\<t>\<h> P @tag to Target \<close>
   unfolding Action_Tag_def using \<phi>_cast .
 
 
@@ -436,9 +436,9 @@ lemma [\<phi>reason 1200]:
   unfolding Identity_Element\<^sub>I_def Transformation_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
 
-lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<phi> _) (_ \<Ztypecolon> \<phi> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
-  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Z) @action br_join
-\<Longrightarrow> If P (x \<Ztypecolon> \<phi> T) (y \<Ztypecolon> \<phi> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> \<phi> Z) @action br_join\<close>
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<phi> _) (_ \<Ztypecolon> \<phi> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Z) @tag br_join
+\<Longrightarrow> If P (x \<Ztypecolon> \<phi> T) (y \<Ztypecolon> \<phi> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> \<phi> Z) @tag br_join\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>_cast)
 
 paragraph \<open>Conversion\<close>
@@ -1210,13 +1210,13 @@ section \<open>Common Instructions\<close>
 
 subsection \<open>Drop & Duplicate Value\<close>
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action action_dup\<close>]:
-  \<open>x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @tag action_dup\<close>]:
+  \<open>x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @tag action_dup\<close>
   unfolding Transformation_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action action_drop\<close>]:
-  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @action action_drop\<close>
+lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @tag action_drop\<close>]:
+  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @tag action_drop\<close>
   unfolding Transformation_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 

@@ -153,11 +153,11 @@ There are pre-built reasoning rules for,
   formalized in Isabelle standard library.
 \<close>
 
-\<phi>reasoner_group \<A>_partial_add = (1000, [1, 4000]) for \<open>_ = _ @action \<A>arith_eq\<close>
+\<phi>reasoner_group \<A>_partial_add = (1000, [1, 4000]) for \<open>_ = _ @tag \<A>arith_eq\<close>
       \<open>Decision procedure solving equantions of partial additive groups, with finding appropriate instantiations
        for schematic variables inside.\<close>
   and \<A>_partial_add_default = (10, [10,20]) in \<A>_partial_add \<open>\<close>
-  and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @action \<A>arith_eq\<close> in \<A>_partial_add
+  and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @tag \<A>arith_eq\<close> in \<A>_partial_add
       \<open>Rules leading to success directly\<close>
   and \<A>_partial_add__top = (3800, [3800, 3899]) in \<A>_partial_add and < \<A>_partial_add_success \<open>\<close>
   and \<A>_partial_add_normalizing = (3000, [2801, 3399]) in \<A>_partial_add and < \<A>_partial_add__top
@@ -178,13 +178,13 @@ There are pre-built reasoning rules for,
 
 declare [[
   \<phi>reason_default_pattern
-      \<open>?Eq @action \<A>arith_eq\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eq\<close> (10)
+      \<open>?Eq @tag \<A>arith_eq\<close> \<Rightarrow> \<open>?Eq @tag \<A>arith_eq\<close> (10)
   and \<open>equation\<^sub>3\<^sub>1 _ ?a _ ?b\<close> \<Rightarrow> \<open>equation\<^sub>3\<^sub>1 _ ?a _ ?b\<close>     (100)
   and \<open>equation\<^sub>3\<^sub>1_cond _ _ _ ?a _ _ ?b\<close> \<Rightarrow>
       \<open>equation\<^sub>3\<^sub>1_cond _ _ _ ?a _ _ ?b\<close>                (100)
 
-  and \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close> \<Rightarrow>
-      \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @action \<A>arith_eq \<close>    (100)
+  and \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @tag \<A>arith_eq \<close> \<Rightarrow>
+      \<open> ?\<^sub>+ _ _ + ?\<^sub>+ True ?b + ?\<^sub>+ _ _ = ?\<^sub>+ True ?a @tag \<A>arith_eq \<close>    (100)
   and \<open>dabc_equation _ ?a ?b _\<close> \<Rightarrow> \<open>dabc_equation _ ?a ?b _\<close>             (100)
 
   and \<open>equation\<^sub>2\<^sub>1 ?c ?a ?b\<close> \<Rightarrow> \<open>ERROR TEXT((equation\<^sub>2\<^sub>1 ?c ?a ?b) \<open>must be indicated with explicit LPR pattern\<close>)\<close> (0),
@@ -225,10 +225,10 @@ subsubsection \<open>Normalizing Equations\<close>
 paragraph \<open>Flip\<close>
 
 (*
-lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id ?var_c + id _ @action \<A>arith_eq\<close>
-                                           except \<open>id ?var_d + _ = _ + id ?var_c @action _\<close>]:
-  \<open> id c + id b = id a + id d @action \<A>arith_eq
-\<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eq \<close>
+lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id ?var_c + id _ @tag \<A>arith_eq\<close>
+                                           except \<open>id ?var_d + _ = _ + id ?var_c @tag _\<close>]:
+  \<open> id c + id b = id a + id d @tag \<A>arith_eq
+\<Longrightarrow> id a + id d = id c + id b @tag \<A>arith_eq \<close>
   unfolding Action_Tag_def
   by simp
 *)
@@ -540,7 +540,7 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>equation\<^sub>2\<^sub>1 _ 
 
 lemma [\<phi>reason %\<A>_partial_add_cut for \<open>equation\<^sub>2\<^sub>1 _ [] _\<close>,
        \<phi>reason %\<A>_partial_add_cut+10 for \<open>equation\<^sub>2\<^sub>1 _ ?var _\<close>]:
-  \<open> equation\<^sub>2\<^sub>1 zs [] zs @action \<A>arith_eq \<close>
+  \<open> equation\<^sub>2\<^sub>1 zs [] zs @tag \<A>arith_eq \<close>
   unfolding Premise_def Action_Tag_def plus_list_def
   by simp
 
@@ -611,13 +611,13 @@ paragraph \<open>None_Commutative Additive Group\<close>
 
 (*
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id b + id c = id a @action \<A>arith_eq
+  \<open> id b + id c = id a @tag \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
-  \<open> id a + id d = id b @action \<A>arith_eq
+  \<open> id a + id d = id b @tag \<A>arith_eq
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast

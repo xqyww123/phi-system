@@ -161,26 +161,26 @@ consts infer_var_type :: \<open>action\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> varname.type v \<equiv> TY'
-\<Longrightarrow> pred_option ((=) TY) TY' @action infer_var_type
-\<Longrightarrow> pred_option ((=) TY) (varname.type v) @action infer_var_type\<close>
+\<Longrightarrow> pred_option ((=) TY) TY' @tag infer_var_type
+\<Longrightarrow> pred_option ((=) TY) (varname.type v) @tag infer_var_type\<close>
   \<comment> \<open>TY is the output. The rule invokes evaluation of the \<open>varname.type vari\<close>.\<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open>pred_option P None @action infer_var_type\<close>
+  \<open>pred_option P None @tag infer_var_type\<close>
   \<comment> \<open>the output TY can be anything freely\<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason 1020 for \<open>pred_option ((=) ?TY') (Some ?TY) @action infer_var_type\<close>]:
-  \<open>pred_option ((=) TY) (Some TY) @action infer_var_type\<close>
+lemma [\<phi>reason 1020 for \<open>pred_option ((=) ?TY') (Some ?TY) @tag infer_var_type\<close>]:
+  \<open>pred_option ((=) TY) (Some TY) @tag infer_var_type\<close>
   \<comment> \<open>the output TY equals to that TY in \<open>Some TY\<close> exactly.\<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason 1000]:
   \<open> P TY
-\<Longrightarrow> pred_option P (Some TY) @action infer_var_type\<close>
+\<Longrightarrow> pred_option P (Some TY) @tag infer_var_type\<close>
   \<comment> \<open>the output TY equals to that TY in \<open>Some TY\<close> exactly.\<close>
   unfolding Action_Tag_def
   by simp
@@ -392,7 +392,7 @@ proc [\<phi>reason 1200]:
       and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
       and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
   output \<open>\<v>\<a>\<l> f x <val-of> vari <path> input_index \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<close>
-  @action synthesis
+  @tag synthesis
 \<medium_left_bracket>
   Find
   apply_rule op_get_var[where input_index=input_index and sem_idx=sem_idx and idx=idx and reject=reject]
@@ -403,7 +403,7 @@ proc [\<phi>reason 1210]:
   requires Find: \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> Any\<close>
       and  \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   output \<open>\<v>\<a>\<l> x <val-of> vari <path> [] \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<close>
-  @action synthesis
+  @tag synthesis
 \<medium_left_bracket>
   Find
   op_get_var0
@@ -414,8 +414,8 @@ subsubsection \<open>Set\<close>
 
 proc (nodef) [\<phi>reason 1200]:
   input X
-  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
-       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<heavy_comma> x \<Ztypecolon> Var vari T \<w>\<i>\<t>\<h> Any @action NToA\<close>
+  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
+       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<heavy_comma> x \<Ztypecolon> Var vari T \<w>\<i>\<t>\<h> Any @tag NToA\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
@@ -426,7 +426,7 @@ proc (nodef) [\<phi>reason 1200]:
        and T7: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
   output \<open>\<v>\<a>\<l> (y <set-to> vari <path> input_index) \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<close>
   throws E
-  @action synthesis
+  @tag synthesis
 \<medium_left_bracket>
   G  
   S \<rightarrow> val v
@@ -436,8 +436,8 @@ proc (nodef) [\<phi>reason 1200]:
 
 proc (nodef) [\<phi>reason 1210]:
   input X
-  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
-       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<heavy_comma> x \<Ztypecolon> Var vari T \<w>\<i>\<t>\<h> Any @action NToA\<close>
+  requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
+       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<heavy_comma> x \<Ztypecolon> Var vari T \<w>\<i>\<t>\<h> Any @tag NToA\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
@@ -445,7 +445,7 @@ proc (nodef) [\<phi>reason 1210]:
        and T7: \<open>pred_option ((=) UY) TY_var\<close>
   output \<open>\<v>\<a>\<l> (y <set-to> vari <path> []) \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<close>
   throws E
-  @action synthesis
+  @tag synthesis
 \<medium_left_bracket>
   G
   S \<rightarrow> val v

@@ -138,15 +138,15 @@ fun instantiate_the_var (vP, vf) ctxt sequent =
                                                (vf, Thm.cterm_of ctxt f)]) sequent
   end
 
-val rewr_CL = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> X @action \<phi>TA_subgoal \<A>)
-                       \<equiv> (Ant \<Longrightarrow> P \<Longrightarrow> X @action \<A>)\<close>
+val rewr_CL = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> X @tag \<phi>TA_subgoal \<A>)
+                       \<equiv> (Ant \<Longrightarrow> P \<Longrightarrow> X @tag \<A>)\<close>
                      by (unfold Action_Tag_def atomize_imp)}
 
-val rewr_IH = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_subgoal \<A>)
+val rewr_IH = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @tag \<phi>TA_subgoal \<A>)
                      \<equiv> (\<And>A. Ant \<Longrightarrow> P \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)\<close>
                    by (unfold Action_Tag_def atomize_imp Transformation_def, rule, blast, blast)}
 
-val rewr_ant = @{lemma \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action to A \<equiv> \<forall>A y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = x \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X) \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) \<close>
+val rewr_ant = @{lemma \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @tag to A \<equiv> \<forall>A y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = x \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X) \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) \<close>
                     by (simp add: Transformation_def atomize_eq Action_Tag_def Premise_def, rule, blast, blast)}
 
 fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =

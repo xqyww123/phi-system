@@ -151,7 +151,7 @@ val _ = Theory.setup (
 (*fun implied_fact_extraction pattern =
   let fun extr ctxt ctm =
         let val sequent = \<^instantiate>\<open>P=ctm in
-                                  lemma \<open>\<And>C. P \<longrightarrow> C @action \<A>EIF \<Longrightarrow> P \<equiv> C \<and> P\<close>
+                                  lemma \<open>\<And>C. P \<longrightarrow> C @tag \<A>EIF \<Longrightarrow> P \<equiv> C \<and> P\<close>
                                      by (unfold Action_Tag_def atomize_eq, blast)\<close>
             val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
                     Pretty.str "Extracting implied pure facts from:",

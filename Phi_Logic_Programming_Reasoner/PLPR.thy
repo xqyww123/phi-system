@@ -1,6 +1,6 @@
 theory PLPR
   imports PLPR_error_msg "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
-  keywords "except" "@action" "requires" :: quasi_command
+  keywords "except" "@tag" "requires" :: quasi_command
        and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
        and "\<phi>reasoner_group" :: thy_defn
        and "\<phi>reasoner_group_assert" :: thy_decl
@@ -149,18 +149,18 @@ subsubsection \<open>General Annotation\<close>
 
 typedecl action
 
-definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [9,10] 9)
+definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @tag _" [9,10] 9)
   where \<open>Action_Tag P A \<equiv> P\<close>
 
 definition Meta_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_ @tag'' _" [9,10] 9)
   where \<open>Meta_Tag P A \<equiv> P\<close>
 
 lemma Action_Tag_I:
-  \<open>P \<Longrightarrow> P @action A\<close>
+  \<open>P \<Longrightarrow> P @tag A\<close>
   unfolding Action_Tag_def .
 
 lemma Action_Tag_E:
-  \<open> P @action A \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C \<close>
+  \<open> P @tag A \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C \<close>
   unfolding Action_Tag_def
   by simp
 
@@ -896,7 +896,7 @@ The purpose is denoted by \<open>action\<close> type, which is an unspecified ty
   syntactic purpose.\<close>
 
 text \<open>
-\<open>\<open>P @action A\<close>\<close> tags antecedent \<^prop>\<open>P\<close> by the specific purpose denoted by \<^term>\<open>A\<close>.
+\<open>\<open>P @tag A\<close>\<close> tags antecedent \<^prop>\<open>P\<close> by the specific purpose denoted by \<^term>\<open>A\<close>.
 
   The type variable \<^typ>\<open>'category\<close> enables to classify actions by types and type classes.
   For example, some operation may be designed for any generic action \<open>?act :: (?'ty::cls) action\<close>
@@ -909,11 +909,11 @@ text \<open>
 
 
 lemma Action_Tag_D:
-  \<open>P @action A \<Longrightarrow> P\<close>
+  \<open>P @tag A \<Longrightarrow> P\<close>
   unfolding Action_Tag_def .
 
 lemma Conv_Action_Tag_I:
-  \<open>X = X @action A\<close>
+  \<open>X = X @tag A\<close>
   unfolding Action_Tag_def ..
 
 ML_file \<open>library/action_tag.ML\<close>
@@ -1409,7 +1409,7 @@ lemma Do_Generate_Implication_Reasoning:
 
 lemma [\<phi>reason 1000]:
   \<open> Generate_Implication_Reasoning P OL OR
-\<Longrightarrow> Generate_Implication_Reasoning (P @action A) OL OR\<close>
+\<Longrightarrow> Generate_Implication_Reasoning (P @tag A) OL OR\<close>
   unfolding Generate_Implication_Reasoning_def Action_Tag_def .
 
 subsubsection \<open>ML Implementation\<close>
@@ -2077,8 +2077,8 @@ text \<open>Forms of antecedents are significant in \<phi>-LPR reasoning.
   An example of specific predicate constant form:
   \<open>Predicate_Constant param1 param2 param3\<close>
   An example of free form not using a specific predicate constant:
-  \<open>A \<longrightarrow> B @action reduction_job\<close>
-  where this task assumes a form of \<open>_ \<longrightarrow> _ @action reduction_job\<close> implicitly and the form
+  \<open>A \<longrightarrow> B @tag reduction_job\<close>
+  where this task assumes a form of \<open>_ \<longrightarrow> _ @tag reduction_job\<close> implicitly and the form
   will be destroyed by simplification when \<open>A \<equiv> True\<close>.
 
   In order to protect those free form of the tasks, this subsection provides a mechanism which
@@ -2280,147 +2280,56 @@ lemma simplify_literal_implies_literal:
 
 subsubsection \<open>Single Step Literal Evaluation\<close>
 
-\<phi>reasoner_group single_step_literal_evaluation = (1000, [20,3000]) for \<open>RET = EXPR @action mode_literal\<close> \<open>\<close>
+\<phi>reasoner_group single_step_literal_evaluation = (1000, [20,3000]) for \<open>RET = EXPR @tag mode_literal\<close> \<open>\<close>
             and single_step_literal_evaluation_fail = (10, [10,10]) < single_step_literal_evaluation \<open>\<close>
 
-declare [[\<phi>reason_default_pattern \<open>_ = ?RHS @action mode_literal\<close> \<Rightarrow> \<open>_ = ?RHS @action mode_literal\<close> (100),
-          \<phi>default_reasoner_group \<open>_ = _ @action mode_literal\<close> : %single_step_literal_evaluation     (100)]]
+declare [[\<phi>reason_default_pattern \<open>_ = ?RHS @tag mode_literal\<close> \<Rightarrow> \<open>_ = ?RHS @tag mode_literal\<close> (100),
+          \<phi>default_reasoner_group \<open>_ = _ @tag mode_literal\<close> : %single_step_literal_evaluation     (100)]]
 
 lemma [\<phi>reason default %single_step_literal_evaluation_fail]:
   \<open> FAIL TEXT(\<open>fail to evaluate\<close> EXPR \<open>to literal\<close>)
-\<Longrightarrow> RET = EXPR @action mode_literal \<close>
+\<Longrightarrow> RET = EXPR @tag mode_literal \<close>
   unfolding FAIL_def
   by blast
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> True \<and> True @action mode_literal \<close>
+  \<open> True \<longleftrightarrow> True \<and> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> True \<and> False @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> True \<and> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> False \<and> True @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> False \<and> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> False \<and> False @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> False \<and> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> True \<and> \<not> False @action mode_literal \<close>
+  \<open> True \<longleftrightarrow> True \<and> \<not> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> True \<and> \<not> True @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> True \<and> \<not> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> False \<and> \<not> False @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> False \<and> \<not> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> False \<and> \<not> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-
-
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> False \<and> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> False \<and> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> True \<and> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> True \<and> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> False \<and> \<not> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> False \<and> \<not> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> True \<and> \<not> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> True \<and> \<not> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-
-
-
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> True \<or> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> False \<or> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> True \<or> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> False \<or> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> True \<or> \<not> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> False \<or> \<not> False @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> True \<or> \<not> True @action mode_literal \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> False \<or> \<not> True @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> False \<and> \<not> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
@@ -2428,43 +2337,134 @@ lemma [\<phi>reason add]:
 
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> False \<or> True @action mode_literal \<close>
+  \<open> True \<longleftrightarrow> \<not> False \<and> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> True \<or> True @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> \<not> False \<and> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> False \<or> False @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> \<not> True \<and> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> True \<or> False @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> \<not> True \<and> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<and> \<not> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> False \<and> \<not> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<and> \<not> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<and> \<not> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> False \<or> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<or> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> \<not> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> False \<or> \<not> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> True \<or> \<not> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> False \<or> \<not> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<or> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> True \<or> True @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> True \<longleftrightarrow> \<not> False \<or> False @tag mode_literal \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> False \<longleftrightarrow> \<not> True \<or> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> False \<or> \<not> False @action mode_literal \<close>
+  \<open> True \<longleftrightarrow> \<not> False \<or> \<not> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> True \<or> \<not> False @action mode_literal \<close>
+  \<open> True \<longleftrightarrow> \<not> True \<or> \<not> False @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> True \<longleftrightarrow> \<not> False \<or> \<not> True @action mode_literal \<close>
+  \<open> True \<longleftrightarrow> \<not> False \<or> \<not> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason add]:
-  \<open> False \<longleftrightarrow> \<not> True \<or> \<not> True @action mode_literal \<close>
+  \<open> False \<longleftrightarrow> \<not> True \<or> \<not> True @tag mode_literal \<close>
   unfolding Action_Tag_def
   by simp
 
@@ -2530,7 +2530,7 @@ the remain antecedents after the \<^prop>\<open>\<r>Success\<close> and how to r
 consts \<A>frame :: action
 
 abbreviation \<r>Call :: \<open>bool \<Rightarrow> bool\<close> ("\<r>CALL _" [9] 8)
-  where \<open>\<r>Call P \<equiv> P @action \<A>frame\<close>
+  where \<open>\<r>Call P \<equiv> P @tag \<A>frame\<close>
   \<comment> \<open>Call the antecedent \<^prop>\<open>P\<close> in a frame\<close>
 
 lemma \<r>BEGIN_I: \<open>\<r>BEGIN\<close> unfolding \<r>BEGIN_def ..
@@ -2572,7 +2572,7 @@ typedecl "subgoal"
 consts subgoal_context :: \<open>subgoal \<Rightarrow> action\<close>
 
 abbreviation GOAL_CTXT :: "bool \<Rightarrow> subgoal \<Rightarrow> bool"  ("_  @GOAL _" [26,1000] 26)
-  where "(P @GOAL G) \<equiv> (P @action subgoal_context G)"
+  where "(P @GOAL G) \<equiv> (P @tag subgoal_context G)"
 
 definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
   where "CHK_SUBGOAL X \<longleftrightarrow> True"

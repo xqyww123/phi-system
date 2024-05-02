@@ -1859,7 +1859,7 @@ let fun elim_TA_ANT ctxt ctm =
                         let val X = Thm.dest_arg ctm
                          in rule COMP_INCR
                             \<^instantiate>\<open>X in lemma \<open>\<And>P A C B. (P \<Longrightarrow> (A \<Longrightarrow> C) \<Longrightarrow> (B \<Longrightarrow> C) \<Longrightarrow> C)
-                                                \<Longrightarrow> (P @action X \<Longrightarrow> (A @action X \<Longrightarrow> C) \<Longrightarrow> (B @action X \<Longrightarrow> C) \<Longrightarrow> C) \<close>
+                                                \<Longrightarrow> (P @tag X \<Longrightarrow> (A @tag X \<Longrightarrow> C) \<Longrightarrow> (B @tag X \<Longrightarrow> C) \<Longrightarrow> C) \<close>
                                               by (unfold Action_Tag_def, blast)\<close>
                         end) *)
             | check _ = NONE

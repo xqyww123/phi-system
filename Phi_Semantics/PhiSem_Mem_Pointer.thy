@@ -627,7 +627,7 @@ lemma Ptr_to_Raw_Pointer[\<phi>reason %ToA_cut]:
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:
-  \<open>x \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = logaddr_to_raw x \<and> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) @action to RawPointer\<close>
+  \<open>x \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = logaddr_to_raw x \<and> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) @tag to RawPointer\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma Raw_Pointer_to_Ptr[\<phi>reason %ToA_cut]:
@@ -641,7 +641,7 @@ lemma Raw_Pointer_to_Ptr[\<phi>reason %ToA_cut]:
 
 lemma [\<phi>reason %cutting ]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
-\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<Pp>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @action to (\<Pp>\<t>\<r> TY)\<close>
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<Pp>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @tag to (\<Pp>\<t>\<r> TY)\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 
@@ -669,7 +669,7 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>, \<phi>overload "[]"]:
 
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_pointer.mk 0)] \<Pp>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_pointer.mk 0)] \<Pp>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
   \<medium_left_bracket>
     semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<Pp>\<t>\<r> TY)\<close>

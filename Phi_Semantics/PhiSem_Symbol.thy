@@ -25,7 +25,7 @@ text \<open>There is no semantic instruction to make a symbol, because they are 
   known during compilation time.\<close>
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (\<phi>embed_semantic_symbol s)] Symbol \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @action synthesis\<close>
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (\<phi>embed_semantic_symbol s)] Symbol \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
   unfolding Transformation_def semantic_literal_def Action_Tag_def
   by clarsimp

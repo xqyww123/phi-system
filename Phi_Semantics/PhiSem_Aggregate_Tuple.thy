@@ -327,13 +327,13 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @action \<A>ctr_arg (Inr N)
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inr N)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_tuple_constructor N) (x \<Ztypecolon> List_Item T) (semty_tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_Synth_def \<phi>SemType_def Action_Tag_def
   by (clarsimp; blast)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @action \<A>ctr_arg (Inr N)
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inr N)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_tuple_constructor (Suc N))
         (xs \<Ztypecolon> Ts) (semty_tup Tys) (r \<Ztypecolon> Tr)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_tuple_constructor N)
@@ -348,14 +348,14 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @action \<A>ctr_arg (Inr N)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inr N)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_tuple_constructor N) [v] (semty_tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def Action_Tag_def
   by (cases v; clarsimp; blast)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @action \<A>ctr_arg (Inr N)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inr N)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_tuple_constructor (Suc N)) vR (semty_tup Tys) (r \<Ztypecolon> Tr)
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_tuple_constructor N) (v # vR) (semty_tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
@@ -380,17 +380,17 @@ subsection \<open>Synthesis\<close>
 declare synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> T \<rbrace> \<^emph> U\<close> for T U,
          \<phi>reason %\<phi>synthesis_ag_T
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> T \<rbrace>\<close> for T,
          \<phi>reason %\<phi>synthesis_ag_T
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> \<rbrace>\<close>,
          \<phi>reason %\<phi>synthesis_ag_T
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. () \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. () \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
 
 
 hide_fact semantic_tuple_constructor_N_no_use

@@ -20,14 +20,14 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                | _ => [])
         | extract_oprs_from_hint _ = []
 
-      val ind_rewr_I = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_subgoal \<A>)
-                             \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
+      val ind_rewr_I = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @tag \<phi>TA_subgoal \<A>)
+                             \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @tag \<A>)\<close>
                           by (unfold atomize_imp Action_Tag_def)}
-      val ind_rewr_E_IH = @{lemma' \<open> Trueprop (A \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> B \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_subgoal undefined)
-                                  \<equiv> (\<And>x'. A \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> B \<and> x' = x \<Longrightarrow> (x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<A>backward_simp)\<close>
+      val ind_rewr_E_IH = @{lemma' \<open> Trueprop (A \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> B \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @tag \<phi>TA_subgoal undefined)
+                                  \<equiv> (\<And>x'. A \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> B \<and> x' = x \<Longrightarrow> (x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @tag \<A>backward_simp)\<close>
                           by (simp add: atomize_imp Action_Tag_def atomize_all Premise_def)}
-      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_subgoal undefined)
-                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action NToA)\<close>
+      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> C @tag \<phi>TA_subgoal undefined)
+                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @tag NToA)\<close>
                                 by (simp add: atomize_imp Action_Tag_def Bubbling_def atomize_all)}
       val equip_expansion = equip_expansion_ss phi0
       fun gen_ind_conv is_IH ctxt _ ctm = (

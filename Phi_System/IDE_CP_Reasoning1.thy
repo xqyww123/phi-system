@@ -148,8 +148,8 @@ lemma [\<phi>reason 1000]:
 
 (*TODO! this \<A>?!*)
 lemma [\<phi>reason 1000]:
-  \<open> S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>
-\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  \<open> S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A>
+\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A> \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
@@ -158,8 +158,8 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> R * S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>
-\<Longrightarrow> R * (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  \<open> R * S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A>
+\<Longrightarrow> R * (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A> \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
@@ -168,8 +168,8 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<w>\<i>\<t>\<h> P @action \<A>
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<w>\<i>\<t>\<h> P @tag \<A>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<w>\<i>\<t>\<h> P @tag \<A> \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
@@ -178,8 +178,8 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @action \<A>
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<A>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<A> \<close>
   by simp
 
 

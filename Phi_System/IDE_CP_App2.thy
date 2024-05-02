@@ -12,10 +12,10 @@ subsubsection \<open>Semantic Type\<close>
 context begin
 
 private lemma \<phi>TA_SemTy_rule:
-  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @action \<phi>TA_subgoal undefined
+  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @tag \<phi>TA_subgoal undefined
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<close>
   unfolding Action_Tag_def
   by blast
@@ -41,7 +41,7 @@ private lemma \<phi>TA_Semantic_Zero_Val_rule:
   \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
 \<Longrightarrow> Semantic_Zero_Val TY T z \<close>
   unfolding Semantic_Zero_Val_def Premise_def Action_Tag_def
   by clarsimp
@@ -68,7 +68,7 @@ subsection \<open>\<open>\<phi>App_Conv\<close>\<close> \<comment> \<open>used o
 
 lemma [\<phi>reason_template default %\<phi>app_conv_derived+10]:
   \<open> Functional_Transformation_Functor Fa Fb T U (\<lambda>x. {D x}) R pm fm
-\<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('c\<^sub>a \<times> 'x\<^sub>a) TYPE('c \<times> 'x) @action \<A>_template_reason None
+\<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('c\<^sub>a \<times> 'x\<^sub>a) TYPE('c \<times> 'x) @tag \<A>_template_reason None
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x = a \<and> b \<in> R x
 \<Longrightarrow> NO_SIMP (ToA_App_Conv TYPE('c\<^sub>a\<^sub>a) TYPE('c\<^sub>a) T ToA (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
 \<Longrightarrow> ToA_App_Conv TYPE('c\<^sub>a\<^sub>a) TYPE('c) (Fa T) ToA (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>_. b) (\<lambda>_. P) x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm (\<lambda>_. b) (\<lambda>_. P) x) \<close>
@@ -79,8 +79,8 @@ lemma [\<phi>reason_template default %\<phi>app_conv_derived+10]:
 (* TODO: planned
 lemma [\<phi>reason_template default %\<phi>app_conv_derived]:
   \<open> Functional_Transformation_Functor Fa Fb T U D R pm fm
-\<Longrightarrow> NO_MATCH (\<lambda>x. {D'' x}) D @action \<A>_template_reason
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<forall>a \<in> D x. Q a) @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH (\<lambda>x. {D'' x}) D @tag \<A>_template_reason
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<forall>a \<in> D x. Q a) @tag \<A>_template_reason
 \<Longrightarrow> NO_SIMP (\<phi>App_Conv ToA (\<forall>a. Q a \<longrightarrow> (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a \<in> D x. f a \<in> R x)
 \<Longrightarrow> \<phi>App_Conv ToA (D' \<longrightarrow> (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm f P x)) \<close>
@@ -148,7 +148,7 @@ lemma [\<phi>reason 2000 for \<open>
           (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R)) ?Result
 \<close>]:
   \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> Any @action NToA
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> Any @tag NToA
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
@@ -181,8 +181,8 @@ lemma [\<phi>reason %\<phi>synthesis_parse for
 subsubsection \<open>Special Parsing of Annotations\<close>
 
 lemma [\<phi>reason %To_ToA_fallback]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to U'
-\<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[v] U \<s>\<u>\<b>\<j> y. r y @action to U' \<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @tag to U'
+\<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[v] U \<s>\<u>\<b>\<j> y. r y @tag to U' \<close>
   unfolding Action_Tag_def Transformation_def
   by clarsimp
 
@@ -272,11 +272,11 @@ lemma [\<phi>reason %ToA_access_to_local_value for \<open>_ \<t>\<r>\<a>\<n>\<s>
   by (cases raw; simp add: Val.unfold)
 
 lemma [\<phi>reason %ToA_access_to_local_value for
-    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
+    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @tag synthesis\<close>
 ]:
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @action synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
@@ -318,11 +318,11 @@ lemma [OF \<phi>arg_val_varify_type,
 
 lemma [OF \<phi>arg_val_varify_type,
        \<phi>reason %synthesis_access_to_local_value for
-    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
+    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @tag synthesis\<close>
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @action synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
@@ -357,10 +357,10 @@ translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph
 
 subsection \<open>MAKE Abstraction for Values\<close>
 
-lemma [\<phi>reason %\<phi>synthesis_cut for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?y \<Ztypecolon> MAKE ?n (\<v>\<a>\<l>[ret] ?U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>]:
+lemma [\<phi>reason %\<phi>synthesis_cut for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?y \<Ztypecolon> MAKE ?n (\<v>\<a>\<l>[ret] ?U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @tag synthesis\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE n U \<w>\<i>\<t>\<h> any
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return v \<lbrace> X \<longmapsto> \<lambda>ret. y \<Ztypecolon> MAKE n (\<v>\<a>\<l>[ret] U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @action synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return v \<lbrace> X \<longmapsto> \<lambda>ret. y \<Ztypecolon> MAKE n (\<v>\<a>\<l>[ret] U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding MAKE_def
   \<medium_left_bracket> premises X[] and T[]
     X T

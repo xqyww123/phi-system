@@ -65,7 +65,12 @@ proc test_ptr2:
   premises \<open>ptr \<noteq> 0\<close>
   output \<open>ptr \<tribullet>\<^sub>a x \<tribullet>\<^sub>a 1\<^sup>\<t>\<^sup>\<h>  \<tribullet>\<^sub>a w \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<p>\<t>\<r>\<close>
 \<medium_left_bracket>
-  val a, b \<leftarrow> (0, 1) ;
+  val a, b \<leftarrow> (0, 1) 
+  \<semicolon> $1 \<rightarrow> var xx
+    note [[\<phi>trace_reasoning = 2]]
+  \<semicolon>  
+    $xx \<tribullet> 1
+  \<semicolon>
   $1[$a]\<tribullet>x[$b]\<tribullet>w
 \<medium_right_bracket> .
 

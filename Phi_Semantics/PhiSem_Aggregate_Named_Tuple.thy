@@ -425,7 +425,7 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @action \<A>ctr_arg (Inl s)
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor [s])
           (x \<Ztypecolon> List_Item T)
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
@@ -434,7 +434,7 @@ lemma [\<phi>reason %aggregate_access+20]:
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @action \<A>ctr_arg (Inl s)
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor (s # sR))
@@ -462,7 +462,7 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @action \<A>ctr_arg (Inl s)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
@@ -471,7 +471,7 @@ lemma [\<phi>reason %aggregate_access+20]:
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @action \<A>ctr_arg (Inl s)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
@@ -508,17 +508,17 @@ subsection \<open>Synthesis\<close>
 declare synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U,
          \<phi>reason %\<phi>synthesis_ag_NT
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> \<rbrace>\<close>,
          \<phi>reason %\<phi>synthesis_ag_NT
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] Empty_Named_Tuple \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] Empty_Named_Tuple \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace>\<close> for s T,
          \<phi>reason %\<phi>synthesis_ag_NT
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]
+             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
 
 
 end

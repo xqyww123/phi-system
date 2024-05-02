@@ -143,8 +143,8 @@ lemma [\<phi>reason 1200 for
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<o>\<c> g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> \<blangle> f x \<Ztypecolon> T v \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> \<blangle> f \<Ztypecolon> T v <func-over> x \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+  \<open> \<p>\<r>\<o>\<c> g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> \<blangle> f x \<Ztypecolon> T v \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> \<blangle> f \<Ztypecolon> T v <func-over> x \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 *)
 
@@ -153,7 +153,7 @@ text \<open>TODO!\<close>
 (*TODO!
 lemma [\<phi>reason 1200]:
   \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
+\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> P @tag \<A>SE True\<close>
   unfolding Action_Tag_def \<r>Guard_def
   apply (cases C; cases x; simp add: \<phi>Prod_expn')
   \<medium_left_bracket> premises A
@@ -167,7 +167,7 @@ lemma [\<phi>reason 1211]:
 \<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> (
       Reverse_Transformation (fst y' \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> snd y' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P') (
         y' \<Ztypecolon> Agreement U' \<^emph> (Agreement T' ?\<^sub>\<phi> C) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd y', ()) \<Ztypecolon> Agreement T' \<^emph> \<circle> \<w>\<i>\<t>\<h> P')
-    \<and> P) @action \<A>SE True \<close>
+    \<and> P) @tag \<A>SE True \<close>
   unfolding Action_Tag_def \<r>Guard_def Generated_Rule_def
   apply (rule transformation_weaken[where P=P], defer_tac)
   apply (cases C; cases x; simp add: \<phi>Prod_expn')
@@ -190,10 +190,10 @@ consts partial_add_split :: action
        non_trivial_partial_add_split :: action
 
 declare [[
-    \<phi>premise_attribute       [unfolded Action_Tag_def] for \<open>_ @action partial_add_split\<close> (%\<phi>attr_late_normalize),
-    \<phi>premise_attribute once? [useful] for \<open>_ @action partial_add_split\<close>                  (%\<phi>attr),
-    \<phi>premise_attribute       [unfolded Action_Tag_def] for \<open>_ @action non_trivial_partial_add_split\<close> (%\<phi>attr_late_normalize),
-    \<phi>premise_attribute once? [useful] for \<open>_ @action non_trivial_partial_add_split\<close>      (%\<phi>attr)
+    \<phi>premise_attribute       [unfolded Action_Tag_def] for \<open>_ @tag partial_add_split\<close> (%\<phi>attr_late_normalize),
+    \<phi>premise_attribute once? [useful] for \<open>_ @tag partial_add_split\<close>                  (%\<phi>attr),
+    \<phi>premise_attribute       [unfolded Action_Tag_def] for \<open>_ @tag non_trivial_partial_add_split\<close> (%\<phi>attr_late_normalize),
+    \<phi>premise_attribute once? [useful] for \<open>_ @tag non_trivial_partial_add_split\<close>      (%\<phi>attr)
 ]]
 
 lemma fst_snt_lambda_pair[simp]:
@@ -250,41 +250,41 @@ definition Identifier_of :: \<open>('c,'a) \<phi> \<Rightarrow> 'id \<Rightarrow
 subsubsection \<open>Conventions\<close>
 
 declare [[\<phi>reason_default_pattern
-    \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join \<close> (100)
-and \<open>If ?P ?A ?B = _ @action br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B = _ @action br_join \<close> (100)
+    \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join \<close> (100)
+and \<open>If ?P ?A ?B = _ @tag br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B = _ @tag br_join \<close> (100)
 
-and \<open>?X @action br_join \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad rule\<close> (?X @action br_join ))\<close> (0)
+and \<open>?X @tag br_join \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad rule\<close> (?X @tag br_join ))\<close> (0)
 
 and \<open>Identifier_of ?T _ _\<close> \<Rightarrow> \<open>Identifier_of ?T _ _\<close> (100)
 ]]
 
-\<phi>reasoner_group \<phi>br_join_all = (100, [1,3000]) for \<open>If C A B @action br_join\<close>
+\<phi>reasoner_group \<phi>br_join_all = (100, [1,3000]) for \<open>If C A B @tag br_join\<close>
     \<open>All rules of \<phi>-type branch convergence\<close>
-  and \<phi>br_join_fail = (1,[1,10]) for \<open>If C A B @action br_join\<close> in \<phi>br_join_all
+  and \<phi>br_join_fail = (1,[1,10]) for \<open>If C A B @tag br_join\<close> in \<phi>br_join_all
                      \<open>Fallbacks\<close>
-  and \<phi>br_join_search_counterpart = (30, [28,30]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_search_counterpart = (30, [28,30]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_fail
                      \<open>Looks from the false-branch for the counterpart of the heading \<phi>-type in the true-branch,
                       and enters the sub-reasoning for joining the two \<phi>-types.\<close>
-  and \<phi>br_join_derived = (50,[50,50]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_derived = (50,[50,50]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_search_counterpart
                      \<open>Derived from functor properties\<close>
-  and \<phi>br_join_cut = (1000, [1000, 1030]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_cut = (1000, [1000, 1030]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all > \<phi>br_join_derived
                      \<open>Cutting rules\<close>
-  and \<phi>br_join_spec = (1100, [1100,2000]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_spec = (1100, [1100,2000]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_cut
                      \<open>Rules for specific connectives\<close>
-  and \<phi>br_join_normalize = (2100, [2100,2300]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_normalize = (2100, [2100,2300]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_spec
                      \<open>Normalization rules\<close>
-  and \<phi>br_join_red = (2500, [2500, 2800]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_red = (2500, [2500, 2800]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_spec
                      \<open>Reductions of high priority\<close>
-  and \<phi>br_join_red_zero = (2900, [2900,2900]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_red_zero = (2900, [2900,2900]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all > \<phi>br_join_red
                      \<open>Reductions for zero\<close>
-  and \<phi>br_join_success = (2990, [2990,3000]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_success = (2990, [2990,3000]) for \<open>If C A B @tag br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_red_zero
                      \<open>Direct success\<close>
 
@@ -313,11 +313,11 @@ subsection \<open>Reasonings of Branch Join\<close>
 
 subsubsection \<open>Entry Point\<close>
 
-lemma [\<phi>reason %\<phi>br_join_success for \<open>If _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action invoke_br_join\<close>]:
+lemma [\<phi>reason %\<phi>br_join_success for \<open>If _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag invoke_br_join\<close>]:
   \<open> Simplify (assertion_simps undefined) A' A
 \<Longrightarrow> Simplify (assertion_simps undefined) B' B
-\<Longrightarrow> If P A' B' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C @action br_join
-\<Longrightarrow> If P A  B  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C @action invoke_br_join \<close>
+\<Longrightarrow> If P A' B' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C @tag br_join
+\<Longrightarrow> If P A  B  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C @tag invoke_br_join \<close>
   unfolding Action_Tag_def Simplify_def
   by blast
 
@@ -325,101 +325,101 @@ lemma [\<phi>reason %\<phi>br_join_success for \<open>If _ _ _ \<t>\<r>\<a>\<n>\
 subsubsection \<open>Fallback and Termination\<close>
 
 lemma [\<phi>reason default %\<phi>br_join_fail]:
-  \<open>If P A B = If P A B @action br_join\<close>
+  \<open>If P A B = If P A B @tag br_join\<close>
   unfolding Action_Tag_def ..
 
-lemma [\<phi>reason %\<phi>br_join_success for \<open>If ?P ?A ?A'' = ?X @action br_join\<close>]:
-  \<open>If P A A = A @action br_join\<close>
+lemma [\<phi>reason %\<phi>br_join_success for \<open>If ?P ?A ?A'' = ?X @tag br_join\<close>]:
+  \<open>If P A A = A @tag br_join\<close>
   unfolding Action_Tag_def by simp
 
 lemma [\<phi>reason default %\<phi>br_join_fail]:
-  \<open> If P A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P A B @action br_join \<close>
+  \<open> If P A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P A B @tag br_join \<close>
   unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason default %\<phi>br_join_fail+4]:
-  " If P T U = Z @action br_join
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P x y \<Ztypecolon> Z) @action br_join"
+  " If P T U = Z @tag br_join
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P x y \<Ztypecolon> Z) @tag br_join"
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma [\<phi>reason %\<phi>br_join_success+5 for \<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
-  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P x y \<Ztypecolon> T) @action br_join\<close>
+lemma [\<phi>reason %\<phi>br_join_success+5 for \<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P x y \<Ztypecolon> T) @tag br_join\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma [\<phi>reason %\<phi>br_join_success for \<open>If ?P ?A ?A'' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X @action br_join\<close>]:
-  \<open>If P A A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @action br_join\<close>
+lemma [\<phi>reason %\<phi>br_join_success for \<open>If ?P ?A ?A'' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X @tag br_join\<close>]:
+  \<open>If P A A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @tag br_join\<close>
   unfolding Action_Tag_def Transformation_def by simp
 
 
 subsubsection \<open>Zero\<close>
 
 lemma [\<phi>reason %\<phi>br_join_red_zero]:
-  \<open>If P A 0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> P) @action br_join\<close>
+  \<open>If P A 0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> P) @tag br_join\<close>
   unfolding Action_Tag_def Transformation_def
   by (simp add: zero_set_def)
 
 lemma [\<phi>reason %\<phi>br_join_red_zero]:
-  \<open>If P 0 A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> \<not> P) @action br_join\<close>
+  \<open>If P 0 A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> \<not> P) @tag br_join\<close>
   unfolding Action_Tag_def Transformation_def
   by (simp add: zero_set_def)
 
 
 subsubsection \<open>Subjection\<close>
 
-\<phi>reasoner_group \<phi>br_join_subj = (%\<phi>br_join_spec+800, [%\<phi>br_join_spec+800, %\<phi>br_join_spec+820]) for \<open>If C A B @action br_join\<close>
+\<phi>reasoner_group \<phi>br_join_subj = (%\<phi>br_join_spec+800, [%\<phi>br_join_spec+800, %\<phi>br_join_spec+820]) for \<open>If C A B @tag br_join\<close>
                                  in \<phi>br_join_spec
                                 \<open>Reductions for Subejction\<close>
 
 lemma [\<phi>reason %\<phi>br_join_subj+20]:
-  \<open> If P (L \<s>\<u>\<b>\<j> Q1 \<and> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join \<close>
+  \<open> If P (L \<s>\<u>\<b>\<j> Q1 \<and> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join \<close>
   unfolding Subjection_Subjection .
 
 lemma [\<phi>reason %\<phi>br_join_subj+20]:
-  \<open> If P L (R \<s>\<u>\<b>\<j> Q1 \<and> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
-\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join \<close>
+  \<open> If P L (R \<s>\<u>\<b>\<j> Q1 \<and> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
+\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join \<close>
   unfolding Subjection_Subjection .
 
 lemma [\<phi>reason %\<phi>br_join_subj+10]:
-  \<open> If P QL QR = Q @action br_join
-\<Longrightarrow> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> QL) (R \<s>\<u>\<b>\<j> QR) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> Q) @action br_join\<close>
+  \<open> If P QL QR = Q @tag br_join
+\<Longrightarrow> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> QL) (R \<s>\<u>\<b>\<j> QR) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> Q) @tag br_join\<close>
   unfolding Action_Tag_def Transformation_def by force
 
 lemma [\<phi>reason %\<phi>br_join_subj]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> P \<longrightarrow> Q) @action br_join\<close>
+  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> P \<longrightarrow> Q) @tag br_join\<close>
   unfolding Transformation_def Action_Tag_def by simp
 
 lemma [\<phi>reason %\<phi>br_join_subj]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> \<not>P \<longrightarrow> Q) @action br_join\<close>
+  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> \<not>P \<longrightarrow> Q) @tag br_join\<close>
   unfolding Action_Tag_def Transformation_def by simp
 
 
 subsubsection \<open>Existential\<close>
 
 \<phi>reasoner_group \<phi>br_join_ex = (%\<phi>br_join_spec+700, [%\<phi>br_join_spec+700, %\<phi>br_join_spec+720])
-                                for \<open>If C A B @action br_join\<close> in \<phi>br_join_spec and < \<phi>br_join_subj
+                                for \<open>If C A B @tag br_join\<close> in \<phi>br_join_spec and < \<phi>br_join_subj
                               \<open>Reductions for Existence\<close>
 
 lemma Conv_Merge_Ex_both_imp:
-  \<open> (\<And>x. If P (L x) (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @action br_join)
-\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @action br_join \<close>
+  \<open> (\<And>x. If P (L x) (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @tag br_join)
+\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @tag br_join \<close>
   unfolding Action_Tag_def Transformation_def
   by (cases P; clarsimp simp add: set_eq_iff; blast)
 
 lemma Conv_Merge_Ex_R_imp [\<phi>reason %\<phi>br_join_ex]:
-  \<open> (\<And>x. If P L (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @action br_join)
-\<Longrightarrow> If P L (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @action br_join \<close>
+  \<open> (\<And>x. If P L (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @tag br_join)
+\<Longrightarrow> If P L (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @tag br_join \<close>
   unfolding Action_Tag_def Transformation_def
   by (cases P; simp add: set_eq_iff; blast)
 
 lemma [\<phi>reason %\<phi>br_join_ex]:
-  \<open> (\<And>x. If P (L x) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @action br_join)
-\<Longrightarrow> If P (\<exists>* x. L x) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @action br_join \<close>
+  \<open> (\<And>x. If P (L x) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @tag br_join)
+\<Longrightarrow> If P (\<exists>* x. L x) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @tag br_join \<close>
   unfolding Action_Tag_def Transformation_def
   by (cases P; simp add: set_eq_iff; blast)
 
@@ -456,11 +456,11 @@ lemma [\<phi>reason default %cutting]:
 
 lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
-\<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action NToA) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @tag NToA) \<or>\<^sub>c\<^sub>u\<^sub>t
     br_join_counter_part_fail (x \<Ztypecolon> T) (y \<Ztypecolon> T')
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
-\<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Z @action br_join\<close>
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
+\<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Z @tag br_join\<close>
   unfolding Action_Tag_def Transformation_def Premise_def Orelse_shortcut_def
             br_join_counter_part_fail_def
   by (cases P; clarsimp; blast)
@@ -469,10 +469,10 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
 \<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
-\<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
-\<Longrightarrow> if C\<^sub>R then (If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @action br_join) \<and>\<^sub>\<r> (Z' = Z\<^sub>R * Z)
+\<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
+\<Longrightarrow> if C\<^sub>R then (If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join) \<and>\<^sub>\<r> (Z' = Z\<^sub>R * Z)
           else Identity_Element\<^sub>I (snd x \<Ztypecolon> T\<^sub>R) Any \<and>\<^sub>\<r> Z' = Z
-\<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z' @action br_join \<close>
+\<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z' @tag br_join \<close>
   for Z' :: \<open>'c::sep_magma_1 set\<close>
   unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
             Orelse_shortcut_def Ant_Seq_def Identity_Element\<^sub>I_def
@@ -482,9 +482,9 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
   \<open> Identifier_of T identifier T'
 \<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<and> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
-\<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
-\<Longrightarrow> If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @action br_join
-\<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R * Z @action br_join \<close>
+\<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
+\<Longrightarrow> If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join
+\<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R * Z @tag br_join \<close>
   unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
             Orelse_shortcut_def
   by (cases P; clarsimp; blast)
@@ -492,17 +492,17 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
 
 lemma Br_join_atom_assertion[no_atp]:
       \<comment> \<open>For assertion \<open>A\<close> that is not a \<phi>-type\<close>
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @action NToA
-\<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P (L * A) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * A @action br_join \<close>
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @tag NToA
+\<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P (L * A) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * A @tag br_join \<close>
   unfolding Action_Tag_def
   by ((cases P; simp),
       insert transformation_right_frame, blast,
       insert mk_elim_transformation transformation_right_frame, blast)
 
 lemma Br_join_atom_assertion'[no_atp]:
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @action NToA
-\<Longrightarrow> If P A R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @action br_join \<close>
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @tag NToA
+\<Longrightarrow> If P A R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @tag br_join \<close>
   unfolding Action_Tag_def
   by (cases P; simp)
   
@@ -511,7 +511,7 @@ lemma Br_join_atom_assertion'[no_atp]:
 
 subsubsection \<open>Join Two \<phi>-Types\<close>
 
-\<phi>reasoner_group br_join_fallback = (20, [11,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action br_join\<close> 
+\<phi>reasoner_group br_join_fallback = (20, [11,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag br_join\<close> 
                                                   in \<phi>br_join_all and > \<phi>br_join_fail
       \<open>Fallbacks of joining two \<phi>-types, using ToA\<close>
 
@@ -542,13 +542,13 @@ lemma [\<phi>reason default %Common_Base_Types_fallback]:
 
 lemma [\<phi>reason default %br_join_fallback]:
   \<open> Common_Base_Types T U V
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> V @action NToA)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> V @action NToA)
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x' y' \<Ztypecolon> V @action br_join \<close>
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> V @tag NToA)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> V @tag NToA)
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x' y' \<Ztypecolon> V @tag br_join \<close>
   unfolding Action_Tag_def Transformation_def \<r>Guard_def Premise_def
   by clarsimp 
 
-\<phi>reasoner_ML br_join_fallback %br_join_fallback-4 (\<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>) = \<open>
+\<phi>reasoner_ML br_join_fallback %br_join_fallback-4 (\<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join\<close>) = \<open>
   fn (_, (ctxt, sequent)) => Seq.make (fn () =>
     let exception NOT_AVAILABLE
         fun conv ctm =
@@ -603,7 +603,7 @@ lemma [\<phi>reason default %br_join_fallback]:
 
 lemma [\<phi>reason default %br_join_fallback-8]:
   \<open> WARNING TEXT(\<open>Fail to join \<phi>type\<close> T \<open>and\<close> U)
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y \<Ztypecolon> If P T U @action br_join \<close>
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y \<Ztypecolon> If P T U @tag br_join \<close>
   unfolding Action_Tag_def Transformation_def
   by (cases P; clarsimp)
 
@@ -638,9 +638,9 @@ lemma [\<phi>reason_template default %\<phi>br_join_derived]:
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds \<and> \<not> P \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F' U Z D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D\<^sub>T x. z (Inl a) \<in> R\<^sub>T x) \<and>
            (\<forall>b \<in> D\<^sub>U y. z (Inr b) \<in> R\<^sub>U y)
-\<Longrightarrow> (\<And>a \<in> (If P (Inl ` D\<^sub>T x) (Inr ` D\<^sub>U y)). If P (projl a \<Ztypecolon> T) (projr a \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z a \<Ztypecolon> Z @action br_join)
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] zzz : (If P (fm\<^sub>T (\<lambda>x. z (Inl x)) (\<lambda>_. True) x) (fm\<^sub>U (\<lambda>x. z (Inr x)) (\<lambda>_. True) y))) @action \<A>_template_reason undefined
-\<Longrightarrow> NO_SIMP (If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zzz \<Ztypecolon> F' Z @action br_join \<close>
+\<Longrightarrow> (\<And>a \<in> (If P (Inl ` D\<^sub>T x) (Inr ` D\<^sub>U y)). If P (projl a \<Ztypecolon> T) (projr a \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z a \<Ztypecolon> Z @tag br_join)
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] zzz : (If P (fm\<^sub>T (\<lambda>x. z (Inl x)) (\<lambda>_. True) x) (fm\<^sub>U (\<lambda>x. z (Inr x)) (\<lambda>_. True) y))) @tag \<A>_template_reason undefined
+\<Longrightarrow> NO_SIMP (If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zzz \<Ztypecolon> F' Z @tag br_join \<close>
   unfolding Action_Tag_def Premise_def Functional_Transformation_Functor_def Transformation_def
             meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def NO_SIMP_def
   by (cases P; clarsimp)
@@ -652,9 +652,9 @@ lemma [\<phi>reason_template default %\<phi>br_join_derived]:
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds \<and> \<not> P \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F\<^sub>U F' U Z D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>p. \<forall>a \<in> D\<^sub>T p x. z p (Inl a) \<in> R\<^sub>T p x) \<and>
            (\<forall>p. \<forall>b \<in> D\<^sub>U p y. z p (Inr b) \<in> R\<^sub>U p y)
-\<Longrightarrow> (\<And>p. \<And>a \<in> (If P (Inl ` D\<^sub>T p x) (Inr ` D\<^sub>U p y)). If P (projl a \<Ztypecolon> T p) (projr a \<Ztypecolon> U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z p a \<Ztypecolon> Z p @action br_join)
+\<Longrightarrow> (\<And>p. \<And>a \<in> (If P (Inl ` D\<^sub>T p x) (Inr ` D\<^sub>U p y)). If P (projl a \<Ztypecolon> T p) (projr a \<Ztypecolon> U p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z p a \<Ztypecolon> Z p @tag br_join)
 \<Longrightarrow> NO_SIMP (If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
-    (If P (fm\<^sub>T (\<lambda>p. z p o Inl) (\<lambda>_ _. True) x) (fm\<^sub>U (\<lambda>p. z p o Inr) (\<lambda>_ _. True) y)) \<Ztypecolon> F' Z @action br_join \<close>
+    (If P (fm\<^sub>T (\<lambda>p. z p o Inl) (\<lambda>_ _. True) x) (fm\<^sub>U (\<lambda>p. z p o Inr) (\<lambda>_ _. True) y)) \<Ztypecolon> F' Z @tag br_join \<close>
   unfolding Action_Tag_def Premise_def Functional_Transformation_Functor\<^sub>\<Lambda>_def Transformation_def
             meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def NO_SIMP_def
   by (cases P; clarsimp)
@@ -697,25 +697,25 @@ lemma [\<phi>reason add]:
 
 
 (* TODO:
-lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Val _ _) (_ \<Ztypecolon> Val _ _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
-  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Z) @action br_join
-\<Longrightarrow> If P (x \<Ztypecolon> Val v T) (y \<Ztypecolon> Val v U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Val v Z) @action br_join\<close>
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Val _ _) (_ \<Ztypecolon> Val _ _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Z) @tag br_join
+\<Longrightarrow> If P (x \<Ztypecolon> Val v T) (y \<Ztypecolon> Val v U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Val v Z) @tag br_join\<close>
   unfolding Action_Tag_def by (cases P; simp add: Val_transformation)
 
 *)
 
 
 (* TODO: fix me!!!
-lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join\<close>]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> Itself \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P (Some x') None \<Ztypecolon> Itself) @action br_join\<close>
+\<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P (Some x') None \<Ztypecolon> Itself) @tag br_join\<close>
   unfolding Action_Tag_def     
   \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Itself\<close>]  
     cases \<medium_left_bracket> to Itself \<medium_right_bracket>. \<medium_left_bracket> to Itself \<medium_right_bracket>. ;; \<medium_right_bracket>. .
 
-lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypecolon> \<black_circle> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypecolon> \<black_circle> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag br_join\<close>]:
   \<open> y \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Itself \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> If P (x \<Ztypecolon> \<circle>) (y \<Ztypecolon> \<black_circle> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P None (Some y') \<Ztypecolon> Itself) @action br_join\<close>
+\<Longrightarrow> If P (x \<Ztypecolon> \<circle>) (y \<Ztypecolon> \<black_circle> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P None (Some y') \<Ztypecolon> Itself) @tag br_join\<close>
   unfolding Action_Tag_def     
   \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Itself\<close>]  
     cases \<medium_left_bracket> to Itself \<medium_right_bracket>. \<medium_left_bracket> to Itself \<medium_right_bracket>. ;; \<medium_right_bracket>. .
@@ -725,14 +725,14 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypec
 subsubsection \<open>Unfold\<close>
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
-  " If P L (N * R1 * R2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P L (N * (R1 * R2)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join"
+  " If P L (N * R1 * R2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P L (N * (R1 * R2)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
   for N :: \<open>'a::sep_semigroup set\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
-  " If P (L1 * L2 * L3) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P (L1 * (L2 * L3)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join"
+  " If P (L1 * L2 * L3) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P (L1 * (L2 * L3)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
   for R :: \<open>'a::sep_semigroup set\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
@@ -740,26 +740,26 @@ lemma [\<phi>reason %\<phi>br_join_normalize]:
 subsubsection \<open>Eliminate Void Hole\<close>
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
-  " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P L (R * 1) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join"
+  " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P L (R * 1) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
-  " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P L (1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join"
+  " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P L (1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
-  " If P L (R' * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P L (R' * 1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join"
+  " If P L (R' * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P L (R' * 1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
-  " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
-\<Longrightarrow> If P (L * 1) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join"
+  " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
+\<Longrightarrow> If P (L * 1) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
@@ -784,38 +784,38 @@ section \<open>Implementation of Synthesis Mechanism\<close>
 subsubsection \<open>Multi-Target\<close>
 
 lemma [\<phi>reason %\<phi>synthesis_split+20]:
-  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<bind> (\<lambda>v1. f2 \<bind> (\<lambda>v2. Return (\<phi>V_pair v2 v1))))
          \<lbrace> R1 \<longmapsto> \<lambda>ret. A (\<phi>V_snd ret)\<heavy_comma> B (\<phi>V_fst ret) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @action synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
     F1 F2
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %\<phi>synthesis_split]:
-  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<ggreater> f2) \<lbrace> R1 \<longmapsto> \<lambda>ret. A \<heavy_comma> B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (A \<heavy_comma> E2 e)) @action synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (A \<heavy_comma> E2 e)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
     F1 F2
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %\<phi>synthesis_split+10]:
-  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<bind> (\<lambda>v. f2 \<ggreater> Return v)) \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<heavy_comma> B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @action synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
     F1 F2
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %\<phi>synthesis_split+20]:
-  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret::unit \<phi>arg. A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret::unit \<phi>arg. B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret::unit \<phi>arg. A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret::unit \<phi>arg. B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<ggreater> f2) \<lbrace> R1 \<longmapsto> \<lambda>ret. A \<heavy_comma> B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (A \<heavy_comma> E2 e)) @action synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (A \<heavy_comma> E2 e)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
     F1 F2
   \<medium_right_bracket> .
@@ -888,26 +888,26 @@ ML_file \<open>library/additions/gen_synthesis_rule.ML\<close>
 subsubsection \<open>Conventions\<close>
 
 declare [[generate_pattern_of_synthesis_rule
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A> &&& TERM ()\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A>\<close>    (120)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A> &&& TERM ?Z\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A>\<close>    (110)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _  \<longmapsto> \<lambda>ret. _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A> &&& (TERM ?X &&& TERM ?Z)\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A>\<close>    (110)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A> &&& TERM ()\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A>\<close>    (125)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A> &&& TERM ?z\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?z \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action ?\<A>\<close>    (106)
-  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A> &&& TERM ()\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A>\<close>    (120)
-  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A> &&& TERM ?Z\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A>\<close>    (110)
-  and \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A> &&& (TERM ?X &&& TERM ?Z)\<close> \<Rightarrow>
-      \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A>\<close>    (110)
-  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A> &&& TERM ()\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A>\<close>    (125)
-  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A> &&& TERM ?z\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?z \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action ?\<A>\<close>    (106)
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A> &&& TERM ()\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A>\<close>    (120)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A> &&& TERM ?Z\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A>\<close>    (110)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _  \<longmapsto> \<lambda>ret. _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A> &&& (TERM ?X &&& TERM ?Z)\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A>\<close>    (110)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A> &&& TERM ()\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A>\<close>    (125)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A> &&& TERM ?z\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?z \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag ?\<A>\<close>    (106)
+  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A> &&& TERM ()\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A>\<close>    (120)
+  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A> &&& TERM ?Z\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A>\<close>    (110)
+  and \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A> &&& (TERM ?X &&& TERM ?Z)\<close> \<Rightarrow>
+      \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A>\<close>    (110)
+  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A> &&& TERM ()\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A>\<close>    (125)
+  and \<open>(?X::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A> &&& TERM ?z\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?z \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag ?\<A>\<close>    (106)
 ]]
 
 \<phi>reasoner_group \<phi>synthesis_gen = (1000, [1, 3000]) for \<open>PROP Gen_Synthesis_Rule (PROP _) (PROP _) (PROP _)\<close>
@@ -923,16 +923,16 @@ declare [[generate_pattern_of_synthesis_rule
 (*
 lemma [\<phi>reason 2000]:
   \<open> PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f  \<lbrace> X \<longmapsto> \<lambda>ret. R  \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action synthesis)
+      (\<p>\<r>\<o>\<c> f  \<lbrace> X \<longmapsto> \<lambda>ret. R  \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag synthesis)
       ()
-      (\<p>\<r>\<o>\<c> f' \<lbrace> X \<longmapsto> \<lambda>ret. R' \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action synthesis)\<close>
+      (\<p>\<r>\<o>\<c> f' \<lbrace> X \<longmapsto> \<lambda>ret. R' \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 
 lemma [\<phi>reason 1050]:
   \<open> PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f  \<lbrace> X \<longmapsto> \<lambda>ret. R  \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action synthesis)
+      (\<p>\<r>\<o>\<c> f  \<lbrace> X \<longmapsto> \<lambda>ret. R  \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag synthesis)
       Z'
-      (\<p>\<r>\<o>\<c> f' \<lbrace> X \<longmapsto> \<lambda>ret. R' \<heavy_comma> \<blangle> Z' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action synthesis)\<close>
+      (\<p>\<r>\<o>\<c> f' \<lbrace> X \<longmapsto> \<lambda>ret. R' \<heavy_comma> \<blangle> Z' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 *)
 
@@ -1068,7 +1068,7 @@ lemma Gen_Synthesis_Rule_transformation_12:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
       (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yr * Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y' \<w>\<i>\<t>\<h> P @action mode) \<close>
+      (PROP Ant \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y' \<w>\<i>\<t>\<h> P @tag mode) \<close>
   for X :: assn
   unfolding Gen_Synthesis_Rule_def Action_Tag_def Simplify_def
   by (simp; rule transformation_left_frame[where U=\<open>Yr * Y\<close>, simplified mult.assoc[symmetric]]; simp)
@@ -1078,7 +1078,7 @@ lemma Gen_Synthesis_Rule_transformation_11:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
       (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action mode) \<close>
+      (PROP Ant \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag mode) \<close>
   for X :: assn
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by (simp, rule transformation_left_frame, simp)
@@ -1088,7 +1088,7 @@ lemma Gen_Synthesis_Rule_transformation_01:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
       (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action mode) \<close>
+      (PROP Ant \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag mode) \<close>
   for X :: assn
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by simp
@@ -1098,7 +1098,7 @@ lemma Gen_Synthesis_Rule_transformation_00:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
       (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action mode) \<close>
+      (PROP Ant \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag mode) \<close>
   for X :: assn
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by simp
@@ -1148,7 +1148,7 @@ lemma Gen_Synthesis_Rule_VS_12:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
       (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Yr * Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> X' \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y' \<w>\<i>\<t>\<h> P @action mode) \<close>
+      (PROP Ant \<Longrightarrow> X' \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y' \<w>\<i>\<t>\<h> P @tag mode) \<close>
   unfolding Gen_Synthesis_Rule_def Action_Tag_def Simplify_def
   by (simp; rule \<phi>view_shift_intro_frame[where U=\<open>Yr * Y\<close>, simplified mult.assoc[symmetric]]; simp)
 
@@ -1157,7 +1157,7 @@ lemma Gen_Synthesis_Rule_VS_11:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
       (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> R * X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action mode) \<close>
+      (PROP Ant \<Longrightarrow> R * X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag mode) \<close>
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by (simp, rule \<phi>view_shift_intro_frame, simp)
 
@@ -1165,7 +1165,7 @@ lemma Gen_Synthesis_Rule_VS_01:
   \<open> PROP Gen_Synthesis_Rule
       (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> R * Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action synthesis) \<close>
+      (PROP Ant \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag synthesis) \<close>
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by simp
 
@@ -1173,7 +1173,7 @@ lemma Gen_Synthesis_Rule_VS_00:
   \<open> PROP Gen_Synthesis_Rule
       (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P))
       Ant
-      (PROP Ant \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P @action synthesis) \<close>
+      (PROP Ant \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P @tag synthesis) \<close>
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by simp
 
@@ -1232,7 +1232,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut for \<open>PROP Gen_Synthesis_
   \<open> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> (f \<bind> (\<lambda>v. F (\<phi>V_pair v vs)))
                                  \<lbrace> Xr vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (ExSet Xr \<heavy_comma> E1 e) + EF e)))
-            ((\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis) &&& PROP Ant)
+            ((\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis) &&& PROP Ant)
             Result
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> Xr (\<phi>V_snd vs) \<heavy_comma> X (\<phi>V_fst vs) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EF))
@@ -1247,7 +1247,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut for \<open>PROP Gen_Synthesis_
 lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut]: \<comment> \<open>Gen_Synthesis_Rule_step_value the last\<close>
   \<open> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>_::unit \<phi>arg. \<p>\<r>\<o>\<c> (f \<bind> F) \<lbrace> Xr \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (Xr\<heavy_comma> E1 e) + EF e)))
-            (\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis &&& PROP Ant)
+            (\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis &&& PROP Ant)
             Result
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> F v \<lbrace> Xr\<heavy_comma> X v \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EF))
@@ -1265,7 +1265,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut]: \<comment> \<open>Gen_Synthe
 \<Longrightarrow> PROP Gen_Synthesis_Rule
       (Trueprop (\<forall>_::unit \<phi>arg. \<p>\<r>\<o>\<c> F \<lbrace> Void \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
       Ant
-      (PROP Ant \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' @action synthesis) \<close>
+      (PROP Ant \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' @tag synthesis) \<close>
   unfolding Gen_Synthesis_Rule_def Remove_Values_def Simplify_def Action_Tag_def
   subgoal premises P
     apply (unfold P(2))
@@ -1275,7 +1275,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut]: \<comment> \<open>Gen_Synthe
 lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut+10]:
   \<open> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> (f \<ggreater> F v) \<lbrace> Xr v \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (ExSet Xr\<heavy_comma> E1 e) + EF e)))
-            (\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis &&& PROP Ant)
+            (\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis &&& PROP Ant)
             Result
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> F v \<lbrace> Xr v\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EF))
@@ -1414,7 +1414,7 @@ lemma make_synthesis_rule:
           ((\<And>vs. X' vs \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> Any1 vs)
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
-           @action synthesis)\<close>
+           @tag synthesis)\<close>
   unfolding Gen_Synthesis_Rule_def
   \<medium_left_bracket> premises E[assertion_simps] and F and X and A
     X
@@ -1429,7 +1429,7 @@ lemma make_synthesis_rule':
           ((\<And>vs. X' vs \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> Any1 vs)
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R'\<heavy_comma> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
-           @action synthesis)\<close>
+           @tag synthesis)\<close>
   unfolding REMAINS_simp
   using make_synthesis_rule[unfolded REMAINS_simp, where Y = \<open>\<lambda>v. R\<heavy_comma> Y v\<close>, folded mult.assoc] .
 
@@ -1447,39 +1447,39 @@ lemma synthesis_gen_mode_overloaded_I:
 subsubsection \<open>Conventions\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?x \<Ztypecolon> ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?x \<Ztypecolon> ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (100)
-  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (90)
+      \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?x \<Ztypecolon> ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag overloaded_synthesis\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?x \<Ztypecolon> ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @tag overloaded_synthesis\<close> (100)
+  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag overloaded_synthesis\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @tag overloaded_synthesis\<close> (90)
 
-  and \<open>(?A::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action overloaded_synthesis\<close>
-   \<Rightarrow> \<open>(?A::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action overloaded_synthesis\<close> (100)
-  and \<open>(?A::assn) \<s>\<h>\<i>\<f>\<t>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action overloaded_synthesis\<close>
-   \<Rightarrow> \<open>(?A::assn) \<s>\<h>\<i>\<f>\<t>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @action overloaded_synthesis\<close> (100)
+  and \<open>(?A::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag overloaded_synthesis\<close>
+   \<Rightarrow> \<open>(?A::assn) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag overloaded_synthesis\<close> (100)
+  and \<open>(?A::assn) \<s>\<h>\<i>\<f>\<t>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag overloaded_synthesis\<close>
+   \<Rightarrow> \<open>(?A::assn) \<s>\<h>\<i>\<f>\<t>\<s> ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag overloaded_synthesis\<close> (100)
 
-  and \<open>?X @action overloaded_synthesis\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form of overloaded synthesis\<close> ?X)\<close> (0),
+  and \<open>?X @tag overloaded_synthesis\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form of overloaded synthesis\<close> ?X)\<close> (0),
 
 
    generate_pattern_of_synthesis_rule
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
-  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (120)
-  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (120)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis &&& TERM ?Y'\<close>
-   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (110)
-  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis &&& TERM ?Y'\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (110)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis &&& (TERM ?X' &&& TERM ?Y')\<close>
-   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X' \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (110)
-  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis &&& (TERM ?X' &&& TERM ?Y')\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (110)
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis\<close>  (110)
+  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis\<close>  (110)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis\<close>  (120)
+  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag overloaded_synthesis\<close>  (120)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag overloaded_synthesis &&& TERM ?Y'\<close>
+   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @tag overloaded_synthesis\<close> (110)
+  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag overloaded_synthesis &&& TERM ?Y'\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @tag overloaded_synthesis\<close> (110)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag overloaded_synthesis &&& (TERM ?X' &&& TERM ?Y')\<close>
+   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X' \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @tag overloaded_synthesis\<close> (110)
+  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @tag overloaded_synthesis &&& (TERM ?X' &&& TERM ?Y')\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @tag overloaded_synthesis\<close> (110)
 ]]
 
-\<phi>reasoner_group \<phi>overloaded_synthesis_all = (100, [10, 3000]) for \<open>\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis\<close>
+\<phi>reasoner_group \<phi>overloaded_synthesis_all = (100, [10, 3000]) for \<open>\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag overloaded_synthesis\<close>
     \<open>Synthesizes an overloaded given operator\<close>
   and \<phi>overloaded_synthesis = (100, [100,100]) in \<phi>overloaded_synthesis_all
     \<open>the default reasoner group\<close>
@@ -1493,121 +1493,121 @@ consts synthesis_pattern2 :: \<open>'arg::{} \<Rightarrow> 'ret::{} \<Rightarrow
 (*
 lemma [\<phi>reason 2000]:
   \<open> (\<And>vs. PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis)
+      (\<p>\<r>\<o>\<c> f vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag overloaded_synthesis)
       GIVEN
-      (\<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis))
+      (\<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis))
 \<Longrightarrow> PROP Infer_Binding_Pattern
-      (\<forall>vs. \<p>\<r>\<o>\<c> f  vs \<lbrace> X  vs \<longmapsto> Y  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action overloaded_synthesis)
+      (\<forall>vs. \<p>\<r>\<o>\<c> f  vs \<lbrace> X  vs \<longmapsto> Y  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag overloaded_synthesis)
       GIVEN
-      (\<forall>vs. \<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
+      (\<forall>vs. \<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 
 lemma [\<phi>reason 2100]:
   \<open> (\<And>vs. PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis)
+      (\<p>\<r>\<o>\<c> f vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag overloaded_synthesis)
       (synthesis_pattern2 (XX vs) YY)
-      (\<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis))
+      (\<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis))
 \<Longrightarrow> PROP Infer_Binding_Pattern
-      (\<forall>vs. \<p>\<r>\<o>\<c> f  vs \<lbrace> X  vs \<longmapsto> Y  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action overloaded_synthesis)
+      (\<forall>vs. \<p>\<r>\<o>\<c> f  vs \<lbrace> X  vs \<longmapsto> Y  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag overloaded_synthesis)
       (synthesis_pattern2 XX YY)
-      (\<forall>vs. \<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
+      (\<forall>vs. \<p>\<r>\<o>\<c> f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 
 lemma [\<phi>reason 1050]:
   \<open> PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action overloaded_synthesis)
+      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag overloaded_synthesis)
       ()
-      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
+      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 
 lemma [\<phi>reason 1100]:
   \<open> PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action overloaded_synthesis)
+      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag overloaded_synthesis)
       (synthesis_pattern1 Y')
-      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
+      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 
 lemma [\<phi>reason 1100]:
   \<open> PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration RX X' X''
 \<Longrightarrow> PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f  \<lbrace> X   \<longmapsto> \<lambda>ret. Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action overloaded_synthesis)
+      (\<p>\<r>\<o>\<c> f  \<lbrace> X   \<longmapsto> \<lambda>ret. Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag overloaded_synthesis)
       (synthesis_pattern2 X' Y')
-      (\<p>\<r>\<o>\<c> f' \<lbrace> X'' \<longmapsto> \<lambda>ret. Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
+      (\<p>\<r>\<o>\<c> f' \<lbrace> X'' \<longmapsto> \<lambda>ret. Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 
 lemma [\<phi>reason 1100]:
   \<open> PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. x \<Ztypecolon> Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action overloaded_synthesis)
+      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. x \<Ztypecolon> Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag overloaded_synthesis)
       ()
-      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. x \<Ztypecolon> Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
+      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. x \<Ztypecolon> Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 
 lemma [\<phi>reason 1050]:
   \<open> PROP Infer_Binding_Pattern
-      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. x  \<Ztypecolon> Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @action overloaded_synthesis)
+      (\<p>\<r>\<o>\<c> f  \<lbrace> X  \<longmapsto> \<lambda>ret. x  \<Ztypecolon> Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  @tag overloaded_synthesis)
       (synthesis_pattern1 x')
-      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. x' \<Ztypecolon> Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
+      (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. x' \<Ztypecolon> Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @tag overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
 *)
 
 
 
 (* \<forall>vs. \<p>\<r>\<o>\<c> op_add LENGTH(?'b) vs \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?x + ?y \<Ztypecolon> \<v>\<a>\<l>[ret] \<nat>(?'b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. ?R\<heavy_comma> 0 e)
-    @action overloaded_synthesis *)
+    @tag overloaded_synthesis *)
 
 subsubsection \<open>Rules of Overloaded Synthesis\<close>
 
 lemma [\<phi>reason default %\<phi>overloaded_synthesis_fallback]:
-  \<open> (\<And>vs. R\<heavy_comma> S1 vs \<s>\<h>\<i>\<f>\<t>\<s> YY vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<w>\<i>\<t>\<h> Any @action overloaded_synthesis)
-\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> Return vs \<lbrace> R \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> @action overloaded_synthesis\<close>
+  \<open> (\<And>vs. R\<heavy_comma> S1 vs \<s>\<h>\<i>\<f>\<t>\<s> YY vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<w>\<i>\<t>\<h> Any @tag overloaded_synthesis)
+\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> Return vs \<lbrace> R \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> @tag overloaded_synthesis\<close>
   \<medium_left_bracket> premises I
     I
   \<medium_right_bracket> .
 
 lemma [\<phi>reason default %\<phi>overloaded_synthesis_fallback]:
-  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action overloaded_synthesis
-\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action overloaded_synthesis \<close>
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag overloaded_synthesis
+\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag overloaded_synthesis \<close>
   unfolding Action_Tag_def
   by (simp add: view_shift_by_implication)
 
 lemma overloaded_synthesis_nullary:
-  \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+  \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag overloaded_synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
   unfolding Action_Tag_def .
 
 lemma overloaded_synthesis_unary:
-  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
 \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-         \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
+         \<t>\<h>\<r>\<o>\<w>\<s> E @tag overloaded_synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (h1 \<bind> H) \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (E1 + E) @action synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (E1 + E) @tag synthesis\<close>
   \<medium_left_bracket> premises H1 and H
     H1 H
   \<medium_right_bracket> .
 
 lemma overloaded_synthesis_binary:
-  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret. S2 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret. S2 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R3 \<heavy_comma> S1 (\<phi>V_snd vs) \<heavy_comma> S2 (\<phi>V_fst vs) \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R4 \<rbrace>
-         \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
+         \<t>\<h>\<r>\<o>\<w>\<s> E @tag overloaded_synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. H (\<phi>V_pair v2 v1))))
       \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R4 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + E e) @action synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + E e) @tag synthesis\<close>
   \<medium_left_bracket> premises H1 and H2 and H
     H1 H2 H
   \<medium_right_bracket> .
 
 lemma overloaded_synthesis_ternary:
-  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S2 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> h3 \<lbrace> R3 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S3 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R4 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E3 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S2 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> h3 \<lbrace> R3 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S3 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R4 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E3 @tag synthesis
 \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R4 \<heavy_comma> S1 (\<phi>V_snd (\<phi>V_snd vs)) \<heavy_comma> S2 (\<phi>V_fst (\<phi>V_snd vs)) \<heavy_comma> S3 (\<phi>V_fst vs)
                   \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R5 \<rbrace>
-         \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
+         \<t>\<h>\<r>\<o>\<w>\<s> E @tag overloaded_synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. h3 \<bind> (\<lambda>v3. H (\<phi>V_pair v3 (\<phi>V_pair v2 v1))))))
       \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R5 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + ((\<exists>*v. S1 v)\<heavy_comma> (\<exists>*v. S2 v)\<heavy_comma> E3 e) + E e)
-    @action synthesis\<close>
+    @tag synthesis\<close>
   \<medium_left_bracket> premises H1 and H2 and H3 and H
     H1 H2 H3 H
   \<medium_right_bracket> .
@@ -1620,7 +1620,7 @@ lemma make_overloaded_synthesis_rule:
           ((\<And>vs. X' vs \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> Any1 vs)
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
-           @action overloaded_synthesis)\<close>
+           @tag overloaded_synthesis)\<close>
   unfolding Gen_Synthesis_Rule_def
   \<medium_left_bracket> premises E[assertion_simps] and F and X and A
     X
@@ -1635,7 +1635,7 @@ lemma make_overloaded_synthesis_rule':
           ((\<And>vs. X' vs \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> Any1 vs)
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R'\<heavy_comma> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
-           @action overloaded_synthesis)\<close>
+           @tag overloaded_synthesis)\<close>
   unfolding REMAINS_simp
   using make_overloaded_synthesis_rule[unfolded REMAINS_simp, where Y = \<open>\<lambda>v. R\<heavy_comma> Y v\<close>, folded mult.assoc] .
 

@@ -243,7 +243,7 @@ declare [[
   \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>parse_eleidx_input_least1 _ _ _ _ _\<close>  (%\<phi>attr)
 ]]
 
-\<phi>reasoner_group \<A>parse_eleidx = (1000, [1000,1000]) for \<open>\<phi>arg.dest v \<Turnstile> S @action \<A>parse_eleidx\<close>
+\<phi>reasoner_group \<A>parse_eleidx = (1000, [1000,1000]) for \<open>\<phi>arg.dest v \<Turnstile> S @tag \<A>parse_eleidx\<close>
       \<open>rules giving abstract specifiction of the values of an element index\<close>
   and parse_eleidx_input_all = (1000, [1, 2000]) for \<open>parse_eleidx_input TY input semantic_idx spec_idx reject\<close>
       \<open>reasoning parsing source of element index\<close>
@@ -286,7 +286,7 @@ lemma [\<phi>reason %parse_eleidx_literal_symbol]:
   by clarsimp
 
 lemma [\<phi>reason %parse_eleidx_number]:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest v \<Turnstile> S @action \<A>parse_eleidx) \<and>\<^sub>\<r>
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest v \<Turnstile> S @tag \<A>parse_eleidx) \<and>\<^sub>\<r>
           get_logical_nat_from_semantic_int S n \<and>\<^sub>\<r>
           is_valid_step_idx_of (AgIdx_N n) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx reject
@@ -298,7 +298,7 @@ lemma [\<phi>reason %parse_eleidx_number]:
   by (cases v; clarsimp; metis option.sel)
 
 lemma [\<phi>reason %parse_eleidx_literal_number]:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest (semantic_literal v) \<Turnstile> S @action \<A>parse_eleidx) \<and>\<^sub>\<r>
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest (semantic_literal v) \<Turnstile> S @tag \<A>parse_eleidx) \<and>\<^sub>\<r>
           get_logical_nat_from_semantic_int (v \<Ztypecolon> Itself) n \<and>\<^sub>\<r>
           is_valid_step_idx_of (AgIdx_N n) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx reject
@@ -507,10 +507,10 @@ proc op_construct_aggregate:
 proc synthesis_construct_aggregate:
   requires [unfolded \<phi>Aggregate_Constructor_def, useful]:
            \<open>\<phi>Aggregate_Constructor_Synth constructor (y \<Ztypecolon> U) TY (x \<Ztypecolon> T)\<close>
-       and C: \<open>\<p>\<r>\<o>\<c> C \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. y \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace> @action synthesis\<close>
+       and C: \<open>\<p>\<r>\<o>\<c> C \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. y \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace> @tag synthesis\<close>
   input  \<open>R\<^sub>0\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1\<close>
-  @action synthesis
+  @tag synthesis
   \<medium_left_bracket>
     C semantic_local_values_nochk
     semantic_assert \<open>constructor (\<phi>arg.dest \<v>0) \<in> Well_Type TY\<close>
