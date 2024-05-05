@@ -1577,7 +1577,7 @@ lemma ExSet_defined[\<phi>programming_base_simps, simp, \<phi>safe_simp]:
   unfolding BI_eq_iff
   by simp_all
 
-lemma Ex_transformation_expn:
+lemma BI_Skolem:
   \<open>((\<exists>*x. A x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (\<forall>x. A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)\<close>
   unfolding Transformation_def ExSet_expn
   by blast
@@ -4890,13 +4890,20 @@ fun conv_transformation_by_assertion_ss ctxt =
                                      Conv.all_conv
   end
 
-fun skolimization_transformation ctxt =
-  let fun 
+fun skolemization_transformation C ctxt =
+  let fun skolem ctxt ctm =
+        case Phi_Syntax.dest_transformation (Thm.term_of ctm)
+          of (Const(\<^const_name>\<open>ExSet\<close>, _) $ _, _, _) =>
+             (Conv.rewr_conv @{thm' BI_Skolem[folded atomize_eq, THEN Meson.TruepropI, folded atomize_all]}
+              then_conv Conv.arg_conv (Phi_Conv.abs_conv (skolem o snd) ctxt)) ctm
+           | _ => C ctxt ctm
    in conv_transformation_by_assertion_ss ctxt then_conv
-      Conv.repeat_conv
+      skolem ctxt
   end
-
 \<close>
+
+thm BI_Skolem[folded atomize_eq, THEN Meson.TruepropI, folded atomize_all]
+thm atomize_all
 
 
 subsection \<open>Transformation-based Simplification\<close>
@@ -5880,9 +5887,9 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
               Conv.combination_conv (Conv.arg_conv (insert_tag_src ctxt)) (insert_tag_src ctxt) ctm
            | _ => Conv.rewr_conv rule ctm*)
 
-      val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-            conv_transformation_by_assertion_ss ctxt then_conv
-            Phi_Syntax.transformation_conv (insert_tag_src ctxt) (insert_tag_tgt ctxt) Conv.all_conv
+      val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (
+            skolemization_transformation (fn ctxt =>
+              Phi_Syntax.transformation_conv (insert_tag_src ctxt) (insert_tag_tgt ctxt) Conv.all_conv)
           ) ctxt) 1 sequent
 
       val sequent = @{thm "_NToA_init_"} RS sequent
@@ -5904,10 +5911,10 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
                     | _ => false
 
       val (ctxt, sequent) = normalize_source_of_ToA (ctxt, sequent)
-(*
+
       val sequent = if deep andalso Config.get ctxt augment_ToA_by_implication
                     then @{thm' "_NToA_init_having_Q_"} RS sequent
-                    else sequent*)
+                    else sequent
 
    in SOME ((ctxt, sequent), Seq.empty)
   end

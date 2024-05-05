@@ -40,7 +40,7 @@ proc while:
       \<medium_left_bracket> op_brk_scope \<medium_left_bracket> for lc 
           apply_rule B[where lb1=lb]
           apply_rule op_break[THEN Technical_I, THEN Labelled_I]
-          apply_rule op_break[THEN Technical_I, THEN Labelled_I] \<semicolon>
+          apply_rule op_break[THEN Technical_I, THEN Labelled_I] \<semicolon> note [[\<phi>trace_reasoning = 2]] 
         \<medium_right_bracket> for \<open>TECHNICAL Brk_Frame lc\<heavy_comma> (TECHNICAL Brk_Frame lb\<heavy_comma> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x')\<close> ;;
       \<medium_right_bracket> ;;
     \<medium_right_bracket> for \<open>(R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> TECHNICAL Brk_Frame lb\<close> ;;

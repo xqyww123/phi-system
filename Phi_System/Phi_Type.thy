@@ -3057,7 +3057,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<
   \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @tag \<A>simp\<close>
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def \<r>Guard_def
-  by (clarsimp simp: Subjection_transformation_rewr Ex_transformation_expn)
+  by (clarsimp simp: Subjection_transformation_rewr BI_Skolem)
 
 (*Object_Sep_Homo\<^sub>I is necessary at least for composition \<phi>-type
 Object_Sep_Homo\<^sub>I B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
@@ -3231,7 +3231,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<
   \<open> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>\<Lambda>\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (\<lambda>p. U\<^sub>L p \<^emph>\<^sub>\<A> U\<^sub>R p) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @tag \<A>simp\<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Action_Tag_def Bubbling_def \<r>Guard_def
-  by (clarsimp simp: Subjection_transformation_rewr Ex_transformation_expn)
+  by (clarsimp simp: Subjection_transformation_rewr BI_Skolem)
 
 lemma [\<phi>reason_template name Fc.\<phi>Prod_ty []]:
   \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>I Ft Fu Fc T U UNIV (\<lambda>x. x)
