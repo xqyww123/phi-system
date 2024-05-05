@@ -103,8 +103,6 @@ proc insert_bucket:
   \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> 
 \<medium_right_bracket> .
 
-declare [[ML_print_depth = 100]]
-
 proc update_hash:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> Hash addr TY T\<close> 

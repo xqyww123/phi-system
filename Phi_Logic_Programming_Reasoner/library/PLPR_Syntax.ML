@@ -29,7 +29,6 @@ fun may_dest_premise_tag tm =
 
 val dest_premise_tag_c= Phi_Help.dest_binop_c @{const_name "Premise"} o perhaps (try Phi_Help.dest_Trueprop_c)
 
-
 fun add_premise_tag_conv mode =
   let val rule = Thm.instantiate (TVars.empty, Vars.make [((("mode",0),\<^typ>\<open>mode\<close>),mode)])
                     @{thm Premise_def[folded atomize_eq,symmetric]}

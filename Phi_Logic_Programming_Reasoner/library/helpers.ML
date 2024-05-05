@@ -308,12 +308,14 @@ fun hhf_concl_conv C ctxt ctm =
   case Thm.term_of ctm
     of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => meta_all_conv (hhf_concl_conv C o snd) ctxt ctm
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv C ctxt) ctm
+     | Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ => meta_ball_conv Conv.all_conv (hhf_concl_conv C o snd) ctxt ctm
      | _ => C ctxt ctm
 
 fun hhf_conv Cp Cc ctxt ctm =
   case Thm.term_of ctm
     of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => meta_all_conv (hhf_conv Cp Cc o snd) ctxt ctm
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (hhf_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ => meta_ball_conv Conv.all_conv (hhf_conv Cp Cc o snd) ctxt ctm
      | _ => Cc ctxt ctm
 
 fun premises_conv Cp Cc ctxt ctm =
