@@ -2108,7 +2108,7 @@ private lemma list_all2_single_length_1[simp]:
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
 
 declare [[\<phi>trace_reasoning = 0]]
-  
+   
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")

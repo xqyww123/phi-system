@@ -195,7 +195,9 @@ lemma [\<phi>reason %ToA_brk_frame+10]:
   unfolding Premise_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason %ToA_brk_frame+10]:
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma AAAA[\<phi>reason %ToA_brk_frame+10]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> l = l'
 \<Longrightarrow> TECHNICAL Brk_Frame l\<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brk_Frame l' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X \<close>
   unfolding Premise_def \<r>Guard_def
