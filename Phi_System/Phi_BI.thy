@@ -4881,13 +4881,22 @@ subsubsection \<open>Reasoners\<close>
   (\<open>Premise (assertion_simps _) _\<close> | \<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close> )
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get' {fix_vars=false}) o snd\<close>
 
-ML \<open>fun conv_transformation_by_assertion_ss ctxt =
-      let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
-          val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
-       in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
-                                         (Simplifier.rewrite target_ctxt)
-                                         Conv.all_conv
-      end\<close>
+ML \<open>
+fun conv_transformation_by_assertion_ss ctxt =
+  let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
+      val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
+   in Phi_Syntax.transformation_conv (Simplifier.rewrite src_ctxt)
+                                     (Simplifier.rewrite target_ctxt)
+                                     Conv.all_conv
+  end
+
+fun skolimization_transformation ctxt =
+  let fun 
+   in conv_transformation_by_assertion_ss ctxt then_conv
+      Conv.repeat_conv
+  end
+
+\<close>
 
 
 subsection \<open>Transformation-based Simplification\<close>
@@ -5857,8 +5866,8 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
                         | _ => Conv.all_conv ctm
             end)
 
-      fun insert_tag_src ctxt ctm =
-        case Thm.term_of ctm
+      fun insert_tag_src ctxt ctm = Conv.rewr_conv rule ctm
+        (*case Thm.term_of ctm
           of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
               Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag_src ctxt) ctxt) ctm
            | Const(\<^const_name>\<open>AllSet\<close>, _) $ _ =>
@@ -5869,7 +5878,7 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
               Conv.combination_conv (Conv.arg_conv (insert_tag_src ctxt)) (insert_tag_src ctxt) ctm
            | Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ _ $ _ =>
               Conv.combination_conv (Conv.arg_conv (insert_tag_src ctxt)) (insert_tag_src ctxt) ctm
-           | _ => Conv.rewr_conv rule ctm
+           | _ => Conv.rewr_conv rule ctm*)
 
       val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
             conv_transformation_by_assertion_ss ctxt then_conv
@@ -5895,10 +5904,10 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
                     | _ => false
 
       val (ctxt, sequent) = normalize_source_of_ToA (ctxt, sequent)
-
+(*
       val sequent = if deep andalso Config.get ctxt augment_ToA_by_implication
                     then @{thm' "_NToA_init_having_Q_"} RS sequent
-                    else sequent
+                    else sequent*)
 
    in SOME ((ctxt, sequent), Seq.empty)
   end

@@ -2108,7 +2108,7 @@ private lemma list_all2_single_length_1[simp]:
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
 
 declare [[\<phi>trace_reasoning = 0]]
-
+  
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
                               \<Rightarrow> ('c::sep_algebra, 'x list) \<phi>\<close> ("\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi>")
@@ -2126,7 +2126,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> iv = iv'
         \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv') T U (\<lambda>_. set) (\<lambda>_ x. UNIV)
                                     (\<lambda>r x y. length x = length y \<and> (\<forall>i < Len_Intvl.len iv. r (Len_Intvl.start iv + i) (x ! i) (y ! i))) \<close>
-           (tactic: auto ; subgoal' for r l cc \<open>rule exI[where x=\<open>map cc [len_intvl.start iv' ..< len_intvl.start iv'+len_intvl.len iv']\<close>]\<close> )
+           (tactic: auto ; tactic \<open>all_tac o @{print}\<close> ; 
+subgoal' for r l cc \<open>rule exI[where x=\<open>map cc [len_intvl.start iv' ..< len_intvl.start iv'+len_intvl.len iv']\<close>]\<close> )
        and \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> iv = iv'
         \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv') T U (\<lambda>_. set) (\<lambda>_ x. UNIV)
                                                (\<lambda>f P x. \<forall>i < len_intvl.len iv. P (len_intvl.start iv + i) (x ! i))
