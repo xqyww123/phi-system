@@ -1152,7 +1152,7 @@ lemma \<phi>mapToA_split_goal_Ty[
          simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric])
   \<medium_left_bracket> premises [] and MP\<^sub>1 and _ and MP\<^sub>2
     apply_rule ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>case x of (x,(w\<^sub>1,w\<^sub>2),e) \<Rightarrow> (x,w\<^sub>1,w\<^sub>2,e)\<close>]
-    certified by (clarsimp simp add: image_iff split: prod.split, insert the_\<phi>(5), blast) ;;
+    certified by (clarsimp simp add: image_iff split: prod.split, insert the_\<phi>(5), blast) \<semicolon> note [[\<phi>trace_reasoning = 2]] \<semicolon>
     
     apply_rule ToA_Mapper_onward[OF MP\<^sub>2,
         where x=\<open>(case x of (x,(w\<^sub>1,w\<^sub>2),e) \<Rightarrow> case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow> r\<^sub>1)\<close>,
