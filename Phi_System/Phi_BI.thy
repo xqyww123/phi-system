@@ -1659,20 +1659,6 @@ lemma skolemize_transformation_tR[\<phi>reason %ToA_fixes_quant+5]:
   unfolding Transformation_def REMAINS_def \<phi>TagA_def
   by (cases C; simp; blast)
 
-ML \<open>
-fun skolemize_transformation th =
- (case Phi_Syntax.dest_transformation (Thm.major_prem_of th)
-    of (Const(\<^const_name>\<open>ExSet\<close>, _) $ _,
-        Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _), _) =>
-        skolemize_transformation (@{thm' skolemize_transformation_tR} RS th)
-     | (Const(\<^const_name>\<open>ExSet\<close>, _) $ _,
-        Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _, _) =>
-        skolemize_transformation (@{thm' skolemize_transformation_R} RS th)
-     | (Const(\<^const_name>\<open>ExSet\<close>, _) $ _, _, _) =>
-        skolemize_transformation (@{thm' skolemize_transformation} RS th)
-     | _ => th)
-\<close>
-
 lemma [\<phi>reason %ToA_fixes_quant]:
   "(\<And>x. T x * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P x)
 \<Longrightarrow> ExSet T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> Ex P"
@@ -4903,6 +4889,26 @@ fun conv_transformation_by_assertion_ss ctxt =
                                      (Simplifier.rewrite target_ctxt)
                                      Conv.all_conv
   end
+
+fun skolemize_transformation ctxt th =
+  let fun skolem th =
+       (case Phi_Syntax.dest_transformation (Thm.major_prem_of th)
+          of (Const(\<^const_name>\<open>ExSet\<close>, _) $ _,
+              Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _), _) =>
+              skolem (@{thm' skolemize_transformation_tR} RS th)
+           | (Const(\<^const_name>\<open>ExSet\<close>, _) $ _,
+              Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _, _) =>
+              skolem (@{thm' skolemize_transformation_R} RS th)
+           | (Const(\<^const_name>\<open>ExSet\<close>, _) $ _, _, _) =>
+              skolem (@{thm' skolemize_transformation} RS th)
+           | _ => th)
+   in th
+   |> Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+            conv_transformation_by_assertion_ss ctxt
+          ) ctxt) 1
+   |> skolem
+  end
+
 (*
 fun skolemization_transformation C ctxt =
   let fun skolem ctxt ctm =
@@ -5902,10 +5908,7 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
               Conv.combination_conv (Conv.arg_conv (insert_tag_src ctxt)) (insert_tag_src ctxt) ctm
            | _ => Conv.rewr_conv rule ctm*)
 
-      val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-            conv_transformation_by_assertion_ss ctxt
-          ) ctxt) 1 sequent
-      val sequent = skolemize_transformation sequent
+      val sequent = skolemize_transformation ctxt sequent
       val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
             Phi_Syntax.transformation_conv (insert_tag_src ctxt) (insert_tag_tgt ctxt) Conv.all_conv
           ) ctxt) 1 sequent
