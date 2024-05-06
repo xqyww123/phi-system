@@ -591,7 +591,7 @@ lemma [\<phi>reason %ToA_red]:
 
 lemma [\<phi>reason %ToA_red]:
   \<open> x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Bubbling_def .
 
 subparagraph \<open>Reduction in Target\<close>
