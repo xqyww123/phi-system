@@ -896,9 +896,9 @@ paragraph \<open>Bottom Groups\<close>
   ToA_unified_refl = (5, [5,6]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_falling_latice
                      \<open>Reflexive tranformation rules with unification, of a low priority because
                       unification is aggresive.\<close>
-  ToA_varify_target_object = (7, [7,7]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_unified_refl
+  ToA_varify_target_object = (51, [51,51]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>  > ToA_splitting_source
                     \<open>Varifies the fixed target object, using Object_Equiv\<close>
-  ToA_inst_qunat  = (8, [8,8]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_varify_target_object
+  ToA_inst_qunat  = (8, [8,8]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom
                     \<open>Transformation rules instantiating quantified variables. It is unsafe unless
                      all fixable variables are fixed. If any variable is fixed later than the instantiation,
                      the instantiated schematic variable cannot caputure the later fixed variable.\<close>
