@@ -866,7 +866,7 @@ subsubsection \<open>Allocation of Priorities\<close>
                      normal process of the reasoning, and may cause unexpected exception in them.\<close>
   ToA_refl        = (4000, [3990, 4019]) in ToA and < ToA_assigning_var and > ToA_success
                     \<open>Reflexive tranformation rules\<close>
-  ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
+  ToA_splitting_source = (4, [4,4]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
                     \<open>split the separation sequent in the source part and reason the tranformation for
                      each separated item one by one.\<close>
   ToA_elim_intro  = (19, [19,19]) in ToA < default
@@ -896,7 +896,7 @@ paragraph \<open>Bottom Groups\<close>
   ToA_unified_refl = (5, [5,6]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_falling_latice
                      \<open>Reflexive tranformation rules with unification, of a low priority because
                       unification is aggresive.\<close>
-  ToA_varify_target_object = (51, [51,51]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>  > ToA_splitting_source
+  ToA_varify_target_object = (7, [7,7]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>  > ToA_splitting_source
                     \<open>Varifies the fixed target object, using Object_Equiv\<close>
   ToA_inst_qunat  = (8, [8,8]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom
                     \<open>Transformation rules instantiating quantified variables. It is unsafe unless
@@ -6315,7 +6315,6 @@ val SE_entry_point_b = SE_entry_point (
 \<close>
 
 thm ToA_by_Equiv_Class'[OF _ _ enter_SE]
-thm normalize_target[OF _ _ _ enter_SE]
 
 
 \<phi>reasoner_ML \<A>SE_Entry default %ToA_splitting_source (\<open>(_ \<Ztypecolon> _) * (_::?'a::sep_semigroup BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
@@ -6787,9 +6786,10 @@ subsubsection \<open>Conditioned Remains\<close>
 
 paragraph \<open>When the conditional boolean is fixed\<close>
 
-\<phi>reasoner_group ToA_constant_remains = (%ToA_splitting_source, [%ToA_splitting_source-4,%ToA_splitting_source+2])
+
+\<phi>reasoner_group ToA_constant_remains = (%ToA_user+5, [%ToA_user,%ToA_user+10])
                                         for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<w>\<i>\<t>\<h> P\<close>)
-                                         in ToA \<open>\<close>
+                                         in ToA_user \<open>\<close>
 
 lemma [\<phi>reason default %ToA_constant_remains-2 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] ?var \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P

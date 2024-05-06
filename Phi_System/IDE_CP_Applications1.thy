@@ -1417,12 +1417,12 @@ declare [[
   and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _ \<close> (700)
 ]]
 
-\<phi>reasoner_group ToA_make_\<phi>type = (100, [%ToA_splitting_source+2, %ToA_splitting_target-1])
+\<phi>reasoner_group ToA_make_\<phi>type = (100, [70, %ToA_splitting_target-1])
                                   for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<^emph>[Cr] R\<close>)
                                    in ToA and > ToA_splitting_source and < ToA_splitting_target
       \<open>Transformation rules that making the annotated \<phi>-type. The tag \<open>MAKE\<close> emphasizes the user's intention
        to apply the \<phi>-type construction rules which are normally not activated in the usual reasoning.\<close>
-  and ToA_make_\<phi>type_fail = (%ToA_splitting_source+1, [%ToA_splitting_source+1, %ToA_splitting_source+1])
+  and ToA_make_\<phi>type_fail = (68, [68,69])
                              for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE i U \<^emph>[Cr] R\<close>)
                               in ToA and > ToA_splitting_source and < ToA_make_\<phi>type
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
