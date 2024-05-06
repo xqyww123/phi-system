@@ -3372,7 +3372,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 lemma [\<phi>reason_template default %ToA_derived_red ]:
   \<open> Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+\<Longrightarrow> NO_SIMP ((x \<Ztypecolon> F zero) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Semimodule_Zero_def NO_SIMP_def
   using transformation_bi_frame
@@ -3383,7 +3383,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @tag \<A>_template_reason undefined
 \<Longrightarrow> NO_MATCH zero zero' @tag \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
-\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
+\<Longrightarrow> NO_SIMP ((x \<Ztypecolon> F zero') * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   using transformation_bi_frame
