@@ -6286,7 +6286,7 @@ fun SE_entry_point rules thy sequent =
       fun sel_obj x T =
             let val var = Term.head_of x
              in if is_Var var andalso not (exists_subterm (fn y => x aconv y) T)
-                then fst else snd
+                then fst else error ""
             end
       fun parse (Const(\<^const_name>\<open>REMAINS\<close>, _)
                     $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T)
@@ -6313,6 +6313,9 @@ val SE_entry_point_b = SE_entry_point (
       (@{thm' enter_SEbi}, @{thm' ToA_by_Equiv_Class[OF _ _ enter_SEbi]}))
 
 \<close>
+
+thm ToA_by_Equiv_Class'[OF _ _ enter_SE]
+thm normalize_target[OF _ _ _ enter_SE]
 
 
 \<phi>reasoner_ML \<A>SE_Entry default %ToA_splitting_source (\<open>(_ \<Ztypecolon> _) * (_::?'a::sep_semigroup BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
