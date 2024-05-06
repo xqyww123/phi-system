@@ -178,7 +178,7 @@ fun SgTH_reasoning phi ctxt =
   default_reasoning true
       reasoning_configure
       (K (K NONE))
-      (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA}
+      (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp}
          (K (chk_unfolded ctxt phi)))
       ctxt
 

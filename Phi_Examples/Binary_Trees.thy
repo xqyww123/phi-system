@@ -399,7 +399,7 @@ proc insert_bintree:
       val k' \<leftarrow> $addr \<tribullet> data \<tribullet> k ! \<semicolon>
       if (eq ($k', $k)) \<medium_left_bracket>
           $addr \<tribullet> data \<tribullet> v := $v \<semicolon>
-          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> certified by (instantiate \<open>(k,v)\<close>, auto_sledgehammer) \<semicolon>
+          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close>  \<semicolon>
           return ($addr)
       \<medium_right_bracket> \<medium_left_bracket>
           if (cmp ($k, $k')) \<medium_left_bracket>

@@ -121,8 +121,8 @@ fun SH_reasoning is_intro phi ctxt =
                | chk 0 X = chk_unfolded bads ctxt phi X
                | chk _ _ = ()
           in if is_intro
-          then exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} chk ctxt sequent
-          else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
+          then exhaustive_PLPR_reasoner (SOME 1) chk ctxt sequent
+          else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp} chk ctxt sequent
          end) phi ctxt
 
 fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =

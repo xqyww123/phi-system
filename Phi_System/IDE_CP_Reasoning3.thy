@@ -456,7 +456,7 @@ lemma [\<phi>reason default %cutting]:
 
 lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
-\<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @tag NToA) \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> R') \<or>\<^sub>c\<^sub>u\<^sub>t
     br_join_counter_part_fail (x \<Ztypecolon> T) (y \<Ztypecolon> T')
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
 \<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
@@ -467,7 +467,7 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
 
 lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
-\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R
+\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R @tag \<T>\<P>'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
 \<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
 \<Longrightarrow> if C\<^sub>R then (If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join) \<and>\<^sub>\<r> (Z' = Z * Z\<^sub>R)
@@ -480,7 +480,7 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
 
 lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
   \<open> Identifier_of T identifier T'
-\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R
+\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R @tag \<T>\<P>'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<and> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
 \<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
 \<Longrightarrow> If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join
@@ -492,7 +492,7 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
 
 lemma Br_join_atom_assertion[no_atp]:
       \<comment> \<open>For assertion \<open>A\<close> that is not a \<phi>-type\<close>
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' @tag NToA
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R'
 \<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (A * L) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A * X @tag br_join \<close>
   unfolding Action_Tag_def
@@ -501,7 +501,7 @@ lemma Br_join_atom_assertion[no_atp]:
       insert mk_elim_transformation transformation_right_frame, blast)
 
 lemma Br_join_atom_assertion'[no_atp]:
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @tag NToA
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A
 \<Longrightarrow> If P A R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @tag br_join \<close>
   unfolding Action_Tag_def
   by (cases P; simp)
@@ -542,8 +542,8 @@ lemma [\<phi>reason default %Common_Base_Types_fallback]:
 
 lemma [\<phi>reason default %br_join_fallback]:
   \<open> Common_Base_Types T U V
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> V @tag NToA)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> V @tag NToA)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> V)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> V)
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x' y' \<Ztypecolon> V @tag br_join \<close>
   unfolding Action_Tag_def Transformation_def \<r>Guard_def Premise_def
   by clarsimp 

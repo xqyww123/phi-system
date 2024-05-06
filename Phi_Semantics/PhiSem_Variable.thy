@@ -417,7 +417,7 @@ subsubsection \<open>Set\<close>
 proc (nodef) [\<phi>reason 1200]:
   input X
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
-       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any @tag NToA\<close>
+       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
@@ -440,7 +440,7 @@ proc (nodef) [\<phi>reason 1200]:
 proc (nodef) [\<phi>reason 1210]:
   input X
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
-       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any @tag NToA\<close>
+       and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any\<close>
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>

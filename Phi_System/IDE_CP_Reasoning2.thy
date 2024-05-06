@@ -870,7 +870,6 @@ context
         ToA_splitting_source_has_remainder_first[\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]*)
 begin
 
-
 lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ [False]\<^emph> _) \<^emph>[_] _ \<mapsto> (_ [False]\<^emph> _) \<^emph>[_] _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r : U\<^sub>2 \<^emph>[C\<^sub>R] R \<mapsto> U\<^sub>2' \<^emph>[C\<^sub>R] R'
@@ -1117,6 +1116,8 @@ subsubsection \<open>Product\<close>
 
 paragraph \<open>Type Level\<close>
 
+declare [[ML_print_depth = 100]]
+
 context
   notes BiCond_assoc[simp] BiCond_assoc'[simp] \<phi>Prod_expn''[simp, \<phi>programming_simps]
         prod_opr_norm[simp] comp_assoc[symmetric, simp]
@@ -1152,8 +1153,8 @@ lemma \<phi>mapToA_split_goal_Ty[
          simp add: BiCond_expn_BiCond BiCond_expn_\<phi>Some Cond_\<phi>Prod_expn_\<phi>Some \<phi>Some_\<phi>Prod[symmetric])
   \<medium_left_bracket> premises [] and MP\<^sub>1 and _ and MP\<^sub>2
     apply_rule ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>case x of (x,(w\<^sub>1,w\<^sub>2),e) \<Rightarrow> (x,w\<^sub>1,w\<^sub>2,e)\<close>]
-    certified by (clarsimp simp add: image_iff split: prod.split, insert the_\<phi>(5), blast) ;;
-    
+    certified by (clarsimp simp add: image_iff split: prod.split, insert the_\<phi>(5), blast) \<semicolon>
+  
     apply_rule ToA_Mapper_onward[OF MP\<^sub>2,
         where x=\<open>(case x of (x,(w\<^sub>1,w\<^sub>2),e) \<Rightarrow> case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow> r\<^sub>1)\<close>,
         THEN transformation_left_frame, simplified]

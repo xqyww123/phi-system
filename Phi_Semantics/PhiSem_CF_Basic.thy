@@ -168,7 +168,7 @@ lemma "__DoWhile__rule_\<phi>app":
   
 proc (nodef) do_while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
-       and V: \<open>\<r>CALL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<w>\<i>\<t>\<h> Any @tag NToA\<close>
+       and V: \<open>\<r>CALL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<w>\<i>\<t>\<h> Any\<close>
        and B: \<open>\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x
       \<longrightarrow> \<p>\<r>\<o>\<c> body \<lbrace> X' x \<longmapsto> (\<v>\<a>\<l> cond x' \<Ztypecolon> \<bool>\<heavy_comma> X' x' \<s>\<u>\<b>\<j> x'. invariant x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   input  \<open>X\<close>
@@ -198,7 +198,7 @@ causing it is very difficult to recover the actual abstract guard
 
 proc while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
-    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<w>\<i>\<t>\<h> Any @tag NToA"
+    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<w>\<i>\<t>\<h> Any"
     and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> X x\<heavy_comma> R \<longmapsto> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool>\<heavy_comma> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
     and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> X x\<heavy_comma> R \<longmapsto> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
   input  \<open>X'\<close>
@@ -217,7 +217,7 @@ ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_
 proc (nodef) refine_while
   [unfolded \<phi>Type_def[where T=\<open>X::'a \<Rightarrow> (FIC_N \<Rightarrow> FIC) set\<close>]]:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> Transition: f x)\<close>
-    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<w>\<i>\<t>\<h> Any @tag NToA"
+    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<w>\<i>\<t>\<h> Any"
     and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x\<heavy_comma> \<v>\<a>\<l> cond x \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
     and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. x' = f x \<and> invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
   input \<open>X'\<close>
@@ -230,17 +230,17 @@ proc (nodef) refine_while
         Guard: cond x'\<close>
     \<medium_left_bracket> C \<medium_right_bracket>
     \<medium_left_bracket> B \<medium_right_bracket> certified by (clarsimp, rule exI[where x=\<open>i+1\<close>],
-                        insert \<phi>, auto simp add: less_Suc_eq_le,
-                        (insert le_neq_implies_less, blast)[1],
-                        metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply) ;;
+                        auto simp add: less_Suc_eq_le \<phi>,
+                        (insert le_eq_less_or_eq the_\<phi>(5) the_\<phi>(7), fastforce)[1],
+                        metis funpow.simps(2) le_SucE o_apply the_\<phi>(6) the_\<phi>lemmata(3) the_\<phi>lemmata(4)) \<semicolon>
 
     have [\<phi>reason add]:
         \<open>\<And>y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (f ^^ y) x = While_Combinator.while cond f x
       \<Longrightarrow> X ((f ^^ y) x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X (While_Combinator.while cond f x)\<close>
       by (simp add: Premise_def)
 
- \<medium_right_bracket> certified
-   using \<phi> by (auto simp add: While_Combinator.while_def while_option_def, auto_sledgehammer) .
+  \<medium_right_bracket> certified
+    by (auto simp add: While_Combinator.while_def while_option_def \<phi>; auto_sledgehammer) .
 
 
 subsection \<open>Recursion\<close>

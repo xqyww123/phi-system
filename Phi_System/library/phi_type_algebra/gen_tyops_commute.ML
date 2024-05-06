@@ -27,7 +27,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                                   \<equiv> (\<And>x'. A \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> B \<and> x' = x \<Longrightarrow> (x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @tag \<A>backward_simp)\<close>
                           by (simp add: atomize_imp Action_Tag_def atomize_all Premise_def)}
       val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> C @tag \<phi>TA_subgoal undefined)
-                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @tag NToA)\<close>
+                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C)\<close>
                                 by (simp add: atomize_imp Action_Tag_def Bubbling_def atomize_all)}
       val equip_expansion = equip_expansion_ss phi0
       fun gen_ind_conv is_IH ctxt _ ctm = (
@@ -92,7 +92,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                          | chk 0 X = chk_unfolded bads ctxt phi X
                          | chk _ _ = ()
                     in if is_intro
-                    then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
+                    then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp} chk ctxt sequent
                     else exhaustive_PLPR_reasoner NONE chk ctxt sequent
                    end) phi ctxt
 

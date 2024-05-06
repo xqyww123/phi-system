@@ -44,6 +44,7 @@ val hol_imp_conv : conv -> conv -> conv
 
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
+val hhf_concl_conv_no_ball : (Proof.context -> conv) -> Proof.context -> conv
 val hhf_conv : (Proof.context -> conv) (*premise conv*)
             -> (Proof.context -> conv) (*concl conv*)
             -> Proof.context -> conv
@@ -304,6 +305,13 @@ fun exhausitively_expand_meta_and_hol_ball Cs C ctxt ctm =
 
 
 fun leading_antecedent_conv C = implies_conv C all_conv
+
+fun hhf_concl_conv_no_ball C ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => meta_all_conv (hhf_concl_conv_no_ball C o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv_no_ball C ctxt) ctm
+     | _ => C ctxt ctm
+
 fun hhf_concl_conv C ctxt ctm =
   case Thm.term_of ctm
     of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => meta_all_conv (hhf_concl_conv C o snd) ctxt ctm

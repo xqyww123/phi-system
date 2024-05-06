@@ -126,7 +126,7 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (Conv.bottom_rewrs_conv @{thms' OPEN_def MAKE_def} ctxt),
              fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
+                  Conv.rewr_conv TA_common_rewr_imp2_noact then_conv
                   Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (Phi_Conv.meta_alls_conv (fn ctxt =>

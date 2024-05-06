@@ -15,6 +15,9 @@ include PHI_SYNTAX
 
   val conv_ToR_add_tag : conv
 
+
+  val enable_auto_chk_and_conv : bool Config.T
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
@@ -41,9 +44,10 @@ fun is_intro_transformation rule =
   let val (prems, concl) = Logic.strip_horn rule
    in case dest_transformation concl
    of (Var v, _, _) =>
-        exists (fn prem => case try dest_transformation (Logic.strip_assums_concl prem)
+        exists (PLPR_Syntax.eixsts_antecedent (
+            fn prem => case try dest_transformation (Logic.strip_assums_concl prem)
                              of SOME (Var v', _, _) => v' = v
-                              | _ => false) prems
+                              | _ => false)) prems
     | _ => false
   end
 
@@ -51,9 +55,10 @@ fun is_elim_transformation rule =
   let val (prems, concl) = Logic.strip_horn rule
    in case dest_transformation concl
    of (_, Var v, _) =>
-        exists (fn prem => case dest_transformation prem
-                             of (_, Var v', _) => v' = v
-                              | _ => false) prems
+        exists (PLPR_Syntax.eixsts_antecedent (
+            fn prem => case try dest_transformation (Logic.strip_assums_concl prem)
+                             of SOME (_, Var v', _) => v' = v
+                              | _ => false)) prems
     | _ => false
   end
 
@@ -69,6 +74,35 @@ fun pass_ensures_elim_transformation _ (rules, (mode, priority), (pattern, excep
    in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
   end
 
+fun pass_pattern_of_intro_ToR _ (data as (rules, (mode, priority), (pattern, except), guard, ctxt)) =
+  case (rules, pattern)
+    of ([rule], []) =>
+        if is_intro_transformation (Thm.prop_of rule)
+        then let val i = Thm.maxidx_of rule + 1
+                 fun var N = Var((N,i),TVar((N,i),[]))
+                 val pattern = case Thm.concl_of rule
+                                 of Trueprop $ (Tag $ (Trans $ X $ Y $ P) $ A) =>
+                                    [(Trueprop $ (Tag $ (Trans $ var "X" $ Y $ var "P") $ A), NONE)]
+                                  | _ => []
+              in (rules, (mode, priority), (pattern, except), guard, ctxt)
+             end
+        else data
+     | _ => data
+
+fun pass_pattern_of_elim_ToR _ (data as (rules, (mode, priority), (pattern, except), guard, ctxt)) =
+  case (rules, pattern)
+    of ([rule], []) =>
+        if is_elim_transformation (Thm.prop_of rule)
+        then let val i = Thm.maxidx_of rule + 1
+                 fun var N = Var((N,i),TVar((N,i),[]))
+                 val pattern = case Thm.concl_of rule
+                                 of Trueprop $ (Tag $ (Trans $ X $ Y $ P) $ A) =>
+                                    [(Trueprop $ (Tag $ (Trans $ X $ var "Y" $ var "P") $ A), NONE)]
+                                  | _ => []
+              in (rules, (mode, priority), (pattern, except), guard, ctxt)
+             end
+        else data
+     | _ => data
 
 fun transformation_conv C_s C_t C_p ctm = (
   dest_transformation_c ctm;
@@ -76,25 +110,36 @@ fun transformation_conv C_s C_t C_p ctm = (
     Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
 )
 
-fun is_Var x =
-  let val (h,args) = Term.strip_comb x
-   in Term.is_Var h andalso forall (fn Bound _ => true | _ => false) args
-  end
 
-fun err ctm = raise CTERM("Fail to classify the Transformation rule automatically into \<T>\<P>, \<T>\<P>', \<T>\<P>\<A>", [ctm])
+(** Auto Classify Transformation Rules **)
+
+val enable_auto_chk_and_conv = Config.declare_bool ("enable_auto_chk_and_conv_\<phi>ToR", \<^here>) (K true)
+
+fun err ctm = raise CTERM("Fail to classify the Transformation rule automatically into \<T>\<P>, \<T>\<P>'", [ctm])
+fun err' tm = raise TERM("Fail to classify the Transformation rule automatically into \<T>\<P>, \<T>\<P>'", [tm])
+
+fun is_Var X =
+  case Term.strip_comb X
+    of (Var _, args) => forall (fn Bound _ => true | _ => false) args
+     | _ => false
 
 fun conv_ToR_add_tag ctm =
-  let datatype kind = ProdTy | Ty | Oth
+  let datatype kind = ProdTy | Ty | Var | Oth
       fun cond_Ty (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _) = ProdTy
         | cond_Ty _ = Ty
       fun dest_ty (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ U) = cond_Ty U
-        | dest_ty _ = Oth
+        | dest_ty X = if is_Var X then Var else Oth
       val (X,Y,_) = dest_transformation (Thm.term_of ctm)
    in case (dest_ty X, dest_ty Y)
    of (ProdTy, ProdTy) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>'\<close>, symmetric]} ctm
-    | (Oth, _) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<A>\<close>, symmetric]} ctm
-    | (_, Oth) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<A>\<close>, symmetric]} ctm
+    | (Var, ProdTy) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>'\<close>, symmetric]} ctm
+    | (ProdTy, Var) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>'\<close>, symmetric]} ctm
+    | (Oth, _) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
+    | (_, Oth) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
     | (Ty, Ty)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
+    | (Ty, Var)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
+    | (Var, Ty)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
+    | (Var, Var)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
     | _ => err ctm
   end
 
@@ -113,33 +158,57 @@ fun conv_ToR_add_tag' ctm =
         else err ctm
     end
 
-fun ToR_rule_add_tag ctxt th =
-  Conv.fconv_rule (Phi_Conv.hhf_conv (Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv conv_ToR_add_tag')))
-                                     (K (HOLogic.Trueprop_conv conv_ToR_add_tag')) ctxt) th
-  |> (fn th =>
-    let val last = Unsynchronized.ref NONE
+fun chk_ToR_prop term = let
+        val last = Unsynchronized.ref NONE
         fun set v = case !last of NONE => last := SOME v
                                 | SOME v' => if v = v' then ()
-                                             else err (Thm.cprop_of th)
-        fun scan' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ Const(\<^const_name>\<open>\<T>\<P>\<close>, _)) = set 2
-          | scan' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ Const(\<^const_name>\<open>\<T>\<P>'\<close>, _)) = set 3
-          | scan' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ Const(\<^const_name>\<open>\<T>\<P>\<A>\<close>, _)) = set 1
-          | scan' _ = ()
-        fun scan (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = scan' X
+                                             else err' term
+        fun scan (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>\<close>, _)) = (set 1; scan' X)
+          | scan (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>'\<close>, _)) = (set 2; scan' X)
+          | scan (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) =
+              error "The use of transformation must be tagged in any transformation rule.\n\
+                    \You can disable this check by \
+                    \\<open>setup \<open>Config.put_global (Phi_Syntax.enable_auto_chk_and_conv) false\<close>\<close>.\n\
+                    \if you are sure about what you are doing."
           | scan (X $ Y) = (scan X ; scan Y)
           | scan (Abs (_, _, X)) = scan X
           | scan _ = ()
-     in scan (Thm.prop_of th) ;
-        th
-    end)
+        and scan' (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) = ()
+          | scan' X = scan X
+   in scan term
+  end
+
+fun ToR_rule_add_tag ctxt th =
+  Conv.fconv_rule (Phi_Conv.hhf_conv (Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv conv_ToR_add_tag')))
+                                     (K (HOLogic.Trueprop_conv conv_ToR_add_tag')) ctxt) th
+  |> (fn th => (chk_ToR_prop (Thm.prop_of th) ; th))
 
 val _ = Theory.setup (Context.theory_map (
   Phi_Reasoner.add_pass (Free("Add ToR tag auto", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>,
-    fn pos => fn (rules, prio, pats, guard, ctxt) =>
-                 (map (fn rule =>
-                    if Thm.is_dummy rule
-                    then rule
-                    else ToR_rule_add_tag (Context.proof_of ctxt) rule) rules, prio, pats, guard, ctxt))
+    fn _ => fn (rules, prio, pats, guard, ctxt) =>
+        if Config.get_generic ctxt enable_auto_chk_and_conv
+        then(List.app (chk_ToR_prop o fst) (fst pats)
+           ; List.app chk_ToR_prop (snd pats)
+           ; (map (fn rule =>
+                if Thm.is_dummy rule
+                then rule
+                else ToR_rule_add_tag (Context.proof_of ctxt) rule) rules,
+             prio, pats, guard, ctxt))
+        else (rules, prio, pats, guard, ctxt) ) (*
+#>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
+          \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>, pass_pattern_of_intro_ToR)
+#>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),
+          \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>, pass_pattern_of_elim_ToR)
+#>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
+          \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>, pass_pattern_of_intro_ToR)
+#>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),
+          \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>, pass_pattern_of_elim_ToR)
+#>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
+          \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close>, pass_pattern_of_intro_ToR)
+#>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),
+          \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ \<close>, pass_pattern_of_elim_ToR) *)
 ))
+
+(* pass_pattern_of_intro_ToR *)
 
 end

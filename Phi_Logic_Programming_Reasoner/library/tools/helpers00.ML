@@ -43,6 +43,7 @@ signature PHI_HELP = sig
   val dest_Trueprop_c : cterm -> cterm
 
 
+(*TODO: consider meta_Ball*)
 val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
                             * term list (*premises of the antecedent*)
                             * term (*conclusion containing loose bound*)

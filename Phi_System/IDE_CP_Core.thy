@@ -914,8 +914,8 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis]:
 \<Longrightarrow> End_Optimum_Solution
 \<comment> \<open>BUG! TODO\<close>
 \<Longrightarrow> (\<And>ret. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] (A'' ret, E'') : (A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R, E'))
-\<Longrightarrow> (\<And>ret. A'' ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret @tag NToA)
-\<Longrightarrow> (\<And>e. E'' e \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E e @tag NToA)
+\<Longrightarrow> (\<And>ret. A'' ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret)
+\<Longrightarrow> (\<And>e. E'' e \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E e)
 \<Longrightarrow> PROP Synthesis_by A (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ))\<close>
   unfolding Synthesis_by_def Action_Tag_def Simplify_def
   by (simp, meson "_\<phi>cast_proc_exception_internal_rule_" "_\<phi>cast_proc_return_internal_rule_" Action_Tag_def Premise_True \<r>Success_I)
@@ -1474,7 +1474,7 @@ subparagraph \<open>Normal\<close>
 
 lemma \<phi>apply_transformation_fully[\<phi>reason %\<phi>app_ToA_on_proc_or_VS]:
   " \<phi>IntroFrameVar R S'' S' T'' T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @tag NToA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T'') \<and> P)"
@@ -1563,7 +1563,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason %\<phi>app_VS_on_proc_or_VS for 
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> P1 @tag NToA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<s>\<h>\<i>\<f>\<t>\<s> T' \<w>\<i>\<t>\<h> P2))
       (Trueprop (CurrentConstruction mode blk RR S))
@@ -1594,7 +1594,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason %\<phi>app_proc_on_proc_or_VS for
             (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S)) ?Result\<close>
 ]:
   \<open> \<phi>IntroFrameVar' R S'' S' T T' E'' E'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> P @tag NToA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E''' E''
 \<Longrightarrow> (\<And>v. Remove_Values (E''' v) (E v))
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -1694,9 +1694,9 @@ lemma [\<phi>reason %\<phi>app_conv for \<open>
   \<phi>App_Conv (\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E) (\<p>\<r>\<o>\<c> ?f' \<lbrace> ?X' \<longmapsto> ?Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E')
 \<close>]:
   \<open> Simple_HO_Unification f f'
-\<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1 @tag NToA
-\<Longrightarrow> (\<And>ret. Y ret \<s>\<h>\<i>\<f>\<t>\<s> Y' ret \<w>\<i>\<t>\<h> Any2 @tag NToA)
-\<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<w>\<i>\<t>\<h> Any3 @tag NToA)
+\<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1
+\<Longrightarrow> (\<And>ret. Y ret \<s>\<h>\<i>\<f>\<t>\<s> Y' ret \<w>\<i>\<t>\<h> Any2)
+\<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<w>\<i>\<t>\<h> Any3)
 \<Longrightarrow> \<phi>App_Conv (\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ) (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E') \<close>
   unfolding \<phi>App_Conv_def Simple_HO_Unification_def Action_Tag_def
   using \<phi>CONSEQ view_shift_by_implication by blast
@@ -1705,8 +1705,8 @@ lemma [\<phi>reason %\<phi>app_conv for \<open>
   \<phi>App_Conv (PendingConstruction _ _ _ _ _) (PendingConstruction _ _ _ _ _)
 \<close>]:
   \<open> Simple_HO_Unification f f'
-\<Longrightarrow> (\<And>ret. S ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' ret \<w>\<i>\<t>\<h> Any2 @tag NToA)
-\<Longrightarrow> (\<And>ex.  E ex \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' ex \<w>\<i>\<t>\<h> Any3 @tag NToA)
+\<Longrightarrow> (\<And>ret. S ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' ret \<w>\<i>\<t>\<h> Any2)
+\<Longrightarrow> (\<And>ex.  E ex \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' ex \<w>\<i>\<t>\<h> Any3)
 \<Longrightarrow> \<phi>App_Conv (PendingConstruction f s R S E) (PendingConstruction f' s R S' E') \<close>
   unfolding \<phi>App_Conv_def Simple_HO_Unification_def Action_Tag_def
   using \<phi>apply_implication_pending \<phi>apply_implication_pending_E by blast
@@ -1715,8 +1715,8 @@ lemma [\<phi>reason %\<phi>app_conv for \<open>
 subsubsection \<open>Applying on View Shift Construction\<close>
 
 lemma [\<phi>reason %\<phi>app_conv for \<open>\<phi>App_Conv (?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> ?P) (?X' \<s>\<h>\<i>\<f>\<t>\<s> ?Y' \<w>\<i>\<t>\<h> ?P')\<close>]:
-  \<open> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1 @tag NToA
-\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> Any2 @tag NToA
+  \<open> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1
+\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> Any2
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any1 \<and> Any2 \<and> P \<longrightarrow> P')
 \<Longrightarrow> \<phi>App_Conv (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P) (X' \<s>\<h>\<i>\<f>\<t>\<s> Y' \<w>\<i>\<t>\<h> P') \<close>
   unfolding \<phi>App_Conv_def Simple_HO_Unification_def Action_Tag_def Premise_def
@@ -1765,7 +1765,7 @@ lemma apply_cast_on_imply_right_prod
 lemma [\<phi>reason %\<phi>app_ToA_on_ToA+50]:
   " ToA_App_Conv TYPE('c\<^sub>a) TYPE('c) T (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P') (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<phi>IntroFrameVar R X'' X Y'' Y
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> P2 @tag NToA
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> P2
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P'))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> x \<Ztypecolon> T))
@@ -1780,7 +1780,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA+50]:
 lemma [\<phi>reason %\<phi>app_ToA_on_ToA+50]:
   " ToA_App_Conv TYPE('c\<^sub>a) TYPE('c) T (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P') (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<phi>IntroFrameVar R'' X'' X Y'' Y
-\<Longrightarrow> (x \<Ztypecolon> T) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> P2 @tag NToA
+\<Longrightarrow> (x \<Ztypecolon> T) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> P2
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P'))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> (x \<Ztypecolon> T) * R))
@@ -1794,7 +1794,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA+50]:
 
 lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
   "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @tag NToA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
@@ -1805,7 +1805,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
 
 lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
   "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @tag NToA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T'))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
@@ -1816,7 +1816,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
 
 
 lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
-  " S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Any @tag NToA
+  " S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> S))
@@ -1826,7 +1826,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
   by metis
 
 lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
-  " S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Any @tag NToA
+  " S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
@@ -1857,7 +1857,7 @@ lemma [\<phi>reason 1200 for \<open>
         (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   " \<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> P1 @tag NToA' False
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> P1' False
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (S' \<s>\<h>\<i>\<f>\<t>\<s> T' \<w>\<i>\<t>\<h> P2 @tag morphism_mode)
       (Trueprop (CurrentConstruction mode blk RR S))
@@ -1870,7 +1870,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @tag NToA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk RR S))

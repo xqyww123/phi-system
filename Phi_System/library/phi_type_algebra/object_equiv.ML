@@ -156,8 +156,7 @@ fun OE_reasoning phi ctxt rule =
                           (@{reasoner_group %deriving_local_rules}, @{thm' mk_ToA_rule'})]
            oo default_reasoning_configure)
           (K (K NONE))
-          (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]}
-                                            (K (chk_unfolded [\<^const_name>\<open>OPEN\<close>] ctxt' phi)))
+          (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [\<^const_name>\<open>OPEN\<close>] ctxt' phi)))
           phi ctxt' rule
   end
 

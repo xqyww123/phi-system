@@ -4,10 +4,17 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 val semimodule_identity_I : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 val semimodule_identity_E : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
+val TA_common_rewr_imp2_noact : thm
+
 end
 
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
+
+val TA_common_rewr_imp2_noact = @{lemma
+    \<open> Trueprop (Ant \<longrightarrow> Q \<longrightarrow> P @tag \<phi>TA_subgoal \<A>)
+   \<equiv> (Ant \<Longrightarrow> Q \<longrightarrow> P) \<close>
+    by (unfold Action_Tag_def atomize_imp)}
 
 fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
@@ -26,7 +33,7 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
                   Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2_noact} then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
              fn ctxt => fn phi =>
-                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
+                  Conv.rewr_conv TA_common_rewr_imp2_noact then_conv
                   Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps eqs) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (conv_hol_imp_to_meta_if_has Conv.all_conv))

@@ -446,6 +446,7 @@ lemma meta_case_prod_simp[iff]:
 
 subsubsection \<open>ML Libraries - II\<close>
 
+ML_file \<open>library/tools/helpers01.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
@@ -1033,7 +1034,7 @@ lemma [\<phi>reason %meta_ball]:
 
 \<phi>reasoner_ML meta_case_prod_in_meta_Ball ! %meta_ball_fallback (\<open>PROP meta_Ball _ _\<close> | \<open>Ball _ _\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv
+  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv_no_ball
                         (Phi_Conv.expand_meta_and_hol_ball (K Conv.all_conv) (K Conv.all_conv))
 (*fn ctxt =>
                 Conv.rewr_conv @{thm meta_Ball_def} then_conv
@@ -3077,6 +3078,10 @@ ML_file \<open>library/tools/failure_reason.ML\<close>
     val _ = error str
   in Seq.empty
   end\<close>
+
+subsection \<open>Finale\<close>
+
+ML_file \<open>library/tools/helpers99.ML\<close>
 
 
 (*

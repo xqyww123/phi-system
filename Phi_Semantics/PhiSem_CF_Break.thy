@@ -221,17 +221,18 @@ subsection \<open>sift brking frame\<close>
       \<open>\<close>
 
 declare [[\<phi>reason_default_pattern
-     \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' ?l ?Y ?E \<w>\<i>\<t>\<h> ?Any\<close>
-  \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' ?l _ _ \<w>\<i>\<t>\<h> _\<close> (1000)
- and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?Y ?E \<w>\<i>\<t>\<h> ?Any\<close>
-  \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l _ _ \<w>\<i>\<t>\<h> _\<close>  (1000)]]
+     \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' ?l ?Y ?E \<w>\<i>\<t>\<h> ?Any @tag \<T>\<P>\<close>
+  \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' ?l _ _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close> (1000)
+ and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?Y ?E \<w>\<i>\<t>\<h> ?Any @tag \<T>\<P>\<close>
+  \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l _ _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>  (1000)]]
 
 
-lemma [\<phi>reason %entry_of_sift_brking_frame+10 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?var_Y' ?var_E' \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E \<w>\<i>\<t>\<h> P
+lemma [\<phi>reason %entry_of_sift_brking_frame+10
+           for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?var_Y' ?var_E' \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E \<w>\<i>\<t>\<h> P @tag \<T>\<P>
 \<Longrightarrow> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps SOURCE] (Y' v) : Y v)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps ABNORMAL] E' : E
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame  l Y' E' \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame  l Y' E' \<w>\<i>\<t>\<h> P @tag \<T>\<P>\<close>
   unfolding sift_brking_frame_def Simplify_def
   by simp presburger
 
@@ -249,9 +250,9 @@ lemma [\<phi>reason %entry_of_sift_brking_frame]:
 
 (*Y, E in \<open>sift_brking_frame' l Y E\<close> are always schematic variables*)
 
-lemma [\<phi>reason 3000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?Y ?E \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E \<r>\<e>\<m>\<a>\<i>\<n>\<s> 1 \<w>\<i>\<t>\<h> P\<close>
+lemma [\<phi>reason 3000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E \<r>\<e>\<m>\<a>\<i>\<n>\<s> 1 \<w>\<i>\<t>\<h> P @tag \<T>\<P>\<close>
   unfolding Action_Tag_def
   by simp
 

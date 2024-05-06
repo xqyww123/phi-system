@@ -105,7 +105,11 @@ fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                       solver, K I, K I)
                                      phi0 instruction ctxt0
    in case Seq.pull rules
-   of SOME (rule, _) => thy
+   of SOME (rule, _) =>
+      let val rule = Conv.fconv_rule  (Conv.bottom_rewrs_conv
+                     @{thms' Action_Tag_def[where P=\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> and A=\<open>\<T>\<P>\<close> for X Y P, symmetric]} ctxt0)
+                     rule
+       in thy
         |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_abstract_from_raw}
@@ -113,6 +117,7 @@ fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                         ([],[]) NONE [Morphism.thm m rule])
         |> note_properties_s false phi0 [(name, [rule])]
         |> pair [rule]
+      end
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 

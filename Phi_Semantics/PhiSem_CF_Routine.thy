@@ -29,7 +29,7 @@ lemma RETURN_FRAME_unit:
 (* TODO: suppress the Frame tailing in the above rules!!!!
 lemma RETURN_FRAME_normal:
   \<open> RETURN_FRAME TYPE('rets) label Y
-\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret\<heavy_comma> TECHNICAL Brk_Frame label @tag NToA
+\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret\<heavy_comma> TECHNICAL Brk_Frame label
 \<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> State \<longmapsto> 0 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
   for ret :: \<open>'rets::FIX_ARITY_VALs \<phi>arg\<close>
@@ -42,7 +42,7 @@ term \<open>Identity_Elements\<close>
 
 lemma RETURN_FRAME_unit:
   \<open> RETURN_FRAME TYPE(unit) label Y
-\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y (\<phi>arg ())\<heavy_comma> TECHNICAL Brk_Frame label @tag NToA
+\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y (\<phi>arg ())\<heavy_comma> TECHNICAL Brk_Frame label
 \<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> State \<longmapsto> 0 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
 \<medium_left_bracket> premises _ and Tr

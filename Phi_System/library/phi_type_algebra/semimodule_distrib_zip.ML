@@ -9,6 +9,16 @@ end
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
 
+val TA_common_rewr_imp23 = @{lemma
+  \<open> Trueprop (Ant \<longrightarrow> Q1 \<longrightarrow> Q2 \<longrightarrow> P @tag \<phi>TA_subgoal \<A>)
+ \<equiv> (Ant \<Longrightarrow> Q1 \<Longrightarrow> Q2 \<longrightarrow> P) \<close>
+  by (unfold Action_Tag_def atomize_imp)}
+
+val TA_common_rewr_imp23' = @{lemma
+  \<open> Trueprop (Ant \<longrightarrow> Q1 \<longrightarrow> Q2 \<longrightarrow> P @tag \<phi>TA_subgoal \<A>)
+ \<equiv> (Ant \<Longrightarrow> Q1 \<Longrightarrow> Q2 \<longrightarrow> (P @tag \<A>)) \<close>
+  by (unfold Action_Tag_def atomize_imp)}
+
 fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
               fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ _ $ _ $ _) =>
@@ -38,7 +48,7 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
             (K (K NONE))
             (if is_zip
              then exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))
-             else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA}
+             else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp}
                       (K (chk_unfolded [] ctxt phi))) phi ctxt
       val mode_infer = not (is_some (#1 instruction))
 
@@ -52,7 +62,8 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                   Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_IH}
                                             else @{thm' \<phi>TA_MD\<^sub>U_rewr_IH}),
              fn ctxt => fn phi =>
-                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp23'} then_conv
+                  Conv.rewr_conv (if is_zip then TA_common_rewr_imp23
+                                            else TA_common_rewr_imp23') then_conv
                   Phi_Reasoners.asm_rewrite true (equip_expansion ctxt) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                                     (Phi_Conv.meta_alls_conv (Phi_Conv.hol_alls_to_meta_alls (fn ctxt =>

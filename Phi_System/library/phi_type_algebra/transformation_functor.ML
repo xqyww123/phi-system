@@ -198,7 +198,7 @@ fun TF_reasoning phi ctxt = default_reasoning true
          in SOME (map Free frees, fn frees' =>
               Term_Subst.instantiate_frees (TFrees.empty, Frees.build (fold2 (curry Frees.add) frees frees')) term)
         end))
-      (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded [] ctxt phi)))
+      (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp} (K (chk_unfolded [] ctxt phi)))
       phi ctxt
 
 fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
