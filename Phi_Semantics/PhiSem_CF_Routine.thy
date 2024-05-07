@@ -86,9 +86,11 @@ proc op_routine:
 
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>op_routine\<close>, 0))\<close>
 
+
 abbreviation
   \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
         op_routine TYPE('ret::FIX_ARITY_VALs) TYPE('arg::FIX_ARITY_VALs) argtys rettys (F \<f>))\<close>
+
 
 attribute_setup routine =
   \<open>Scan.succeed (Phi_Modifier.wrap_to_attribute
@@ -98,5 +100,62 @@ attribute_setup routine =
           @{thm "op_routine_\<phi>app"}))\<close>
 
 hide_fact RETURN_FRAME_normal RETURN_FRAME_unit
+
+
+subsection \<open>Syntax\<close>
+
+syntax "_routine_" :: \<open>idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> do_binds \<Rightarrow> do_bind\<close>
+          ("((2\<r>\<o>\<u>\<t>\<i>\<n>\<e> '(_ : _') : _ {//)(_)//})" [12,12,100,12] 13)
+       "_recursive_routine_" :: \<open>idt \<Rightarrow> idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> do_binds \<Rightarrow> do_bind\<close>
+          ("((2\<r>\<e>\<c>\<u>\<r>\<s>\<i>\<v>\<e>-\<r>\<o>\<u>\<t>\<i>\<n>\<e> _ '(_ : _') : _ {//)(_)//})")
+
+print_ast_translation \<open>let open Ast
+  fun get_label (Appl [Constant "_constrain", BV, _]) = get_label BV
+    | get_label (Appl [Constant "_bound", Variable bv]) = bv
+  fun is_label lb (Appl [Constant "_constrain", BV, _]) = is_label lb BV
+    | is_label lb (Appl [Constant "_bound", Variable bv]) = bv = lb
+  fun tr lret (tm as Appl [Constant \<^const_syntax>\<open>PhiSem_CF_Break.op_break\<close>, _, _, BV, X]) =
+        if is_label lret BV
+        then Appl [Constant \<^const_syntax>\<open>Return\<close>, X]
+        else tm
+    | tr lret (Appl aps) = Appl (map (tr lret) aps)
+    | tr _ X = X
+  fun tr0 cfg (Appl [Constant \<^syntax_const>\<open>_do_block\<close>, X]) = tr cfg X
+    | tr0 cfg X = tr cfg X
+  fun strip_list (Appl [Constant \<^syntax_const>\<open>_list\<close>, X]) = strip_list X
+    | strip_list (Appl [Constant "_args", A, B]) =
+        Appl [Constant "\<^const>Product_Type.Times", strip_list A, strip_list B]
+    | strip_list X = X
+in [
+  (\<^const_syntax>\<open>op_routine\<close>, fn ctxt =>
+    if Syntax_Group.is_enabled (Proof_Context.theory_of ctxt) @{syntax_group do_notation}
+    then
+      fn [_, _, TY1, TY2, Appl [Constant "_abs", lret, Appl [Constant "_abs", arg, X]]] =>
+          Appl [Constant \<^syntax_const>\<open>_routine_\<close>, arg,
+                strip_list TY1, strip_list TY2, tr0 (get_label lret) X]
+       | [_, _, TY1, TY2, Appl [Constant "_abs", lret, Appl [Constant "_abs", arg, X]], Y] =>
+          Appl [
+            Appl [Constant \<^syntax_const>\<open>_routine_\<close>, arg,
+                  strip_list TY1, strip_list TY2, tr0 (get_label lret) X],
+            Y]
+    else fn _ => raise Match),
+  (\<^const_syntax>\<open>op_rec_routine\<close>, fn ctxt =>
+    if Syntax_Group.is_enabled (Proof_Context.theory_of ctxt) @{syntax_group do_notation}
+    then
+      fn [TY1, TY2, Appl [Constant "_abs", lf,
+                              Appl [Constant "_abs", lret, Appl [Constant "_abs", arg, X]]]] =>
+          Appl [Constant \<^syntax_const>\<open>_recursive_routine_\<close>, lf, arg,
+                strip_list TY1, strip_list TY2, tr0 (get_label lret) X]
+       | [TY1, TY2, Appl [Constant "_abs", lf, 
+                              Appl [Constant "_abs", lret, Appl [Constant "_abs", arg, X]], Y]] =>
+          Appl [
+            Appl [Constant \<^syntax_const>\<open>_routine_\<close>, lf, arg,
+                  strip_list TY1, strip_list TY2, tr0 (get_label lret) X],
+            Y]
+    else fn _ => raise Match)
+] end\<close>
+
+
+
 
 end

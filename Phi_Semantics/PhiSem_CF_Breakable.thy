@@ -2,7 +2,7 @@ theory PhiSem_CF_Breakable
   imports PhiSem_CF_Break PhiSem_CF_Basic
 begin
 
-declare [[\<phi>hide_techinicals=false]]
+(*declare [[\<phi>hide_techinicals=false]]*)
 
 text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<open>continue\<close> now, the termination condition of a loop is not
   necessarily the negative of the loop guard. Therefore here we need 3 assertions, invariance,
@@ -49,5 +49,38 @@ proc while:
 hide_const (open) PhiSem_CF_Basic.while
 
 lemmas while'_\<phi>app = PhiSem_CF_Basic.while_\<phi>app \<comment> \<open>Non-breaking while loop\<close>
+
+
+subsection \<open>Syntax\<close>
+
+optional_translations (do_notation)
+  "_while_ C B" <= "CONST PhiSem_CF_Breakable.while C B"
+
+syntax "_continue_" :: \<open>do_bind\<close> ("\<c>\<o>\<n>\<t>\<i>\<n>\<u>\<e>")
+       "_break_" :: \<open>do_bind\<close> ("\<b>\<r>\<e>\<a>\<k>")
+
+print_ast_translation \<open>let open Ast
+  fun get_label (Appl [Constant "_constrain", BV, _]) = get_label BV
+    | get_label (Appl [Constant "_bound", Variable bv]) = bv
+  fun is_label lb (Appl [Constant "_constrain", BV, _]) = is_label lb BV
+    | is_label lb (Appl [Constant "_bound", Variable bv]) = bv = lb
+  fun tr (lc,lb) (tm as Appl [Constant \<^const_syntax>\<open>PhiSem_CF_Break.op_break\<close>, _, _, BV, _]) =
+        if is_label lc BV
+        then Constant \<^syntax_const>\<open>_continue_\<close>
+        else if is_label lb BV
+        then Constant \<^syntax_const>\<open>_break_\<close>
+        else tm
+    | tr lbc (Appl aps) = Appl (map (tr lbc) aps)
+    | tr _ X = X
+  fun tr0 cfg (Appl [Constant \<^syntax_const>\<open>_do_block\<close>, X]) = tr cfg X
+    | tr0 cfg X = tr cfg X
+in [
+  (\<^syntax_const>\<open>_while_\<close>, fn ctxt =>
+    fn [C, Appl [Constant "_abs", lb0, Appl [Constant "_abs", lc0, X]]] =>
+      if Syntax_Group.is_enabled (Proof_Context.theory_of ctxt) @{syntax_group do_notation}
+      then Appl [Constant \<^syntax_const>\<open>_while_\<close>, C, tr0 (get_label lc0, get_label lb0) X]
+      else raise Match)
+] end\<close>
+
 
 end

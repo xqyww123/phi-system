@@ -92,6 +92,7 @@ proc GCD:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 
   is [recursive x y] \<comment> \<open>x, y are variable through recursive callings\<close>
+  is [routine]
 \<medium_left_bracket>
   if ($y < $x) \<medium_left_bracket> GCD ($y, $x) \<medium_right_bracket>
   \<medium_left_bracket>
@@ -100,6 +101,8 @@ proc GCD:
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
+
+thm GCD_def
 
 declare GCD_\<phi>app[\<phi>synthesis add] \<comment> \<open>So that we can use abstract spec \<open>gcd\<close> in synthesis\<close>
 
@@ -135,7 +138,7 @@ proc binary_search:
     \<medium_right_bracket>
     return ($u)
   \<medium_right_bracket>
-\<medium_right_bracket>.
+\<medium_right_bracket> .
 
 
 end

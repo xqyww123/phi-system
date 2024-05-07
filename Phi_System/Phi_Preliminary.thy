@@ -8,6 +8,7 @@ theory Phi_Preliminary
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
           Phi_Algebras.Arrow_st
   keywords "optional_translations" :: thy_decl
+       and "optional_translation_group" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
   abbrevs "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
       and "<suffices>" = "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>"
@@ -777,11 +778,21 @@ subsection \<open>Helper Isar Commands\<close>
 
 (* declare [[ML_debugger=false, ML_exception_debugger=false]] *)
 
-ML_file \<open>library/tools/optional_translation.ML\<close>
+ML_file \<open>library/tools/syntax_group.ML\<close>
 ML_file \<open>library/tools/adhoc_overloading.ML\<close>
 
 (* declare [[ML_debugger, ML_exception_debugger]] *)
 
+subsection \<open>Syntax\<close>
+
+optional_translation_group do_notation
+  \<open>enables the do-notation for program monads\<close>
+  \<open>fn flag => fn ctxt =>
+      (print_mode := (if flag then insert else remove)
+                        (op =) "do_notation" (!print_mode) ;
+       ctxt)\<close>
+
+declare [[do_notation]]
 
 subsection \<open>The Friendly Character\<close>
 

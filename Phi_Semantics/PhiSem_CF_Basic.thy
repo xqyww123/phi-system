@@ -143,6 +143,8 @@ proc "if":
 
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>if\<close>, 3))\<close>
 
+
+
 subsection \<open>Loops\<close>
  
 lemma "__DoWhile__rule_\<phi>app":
@@ -304,5 +306,27 @@ attribute_setup recursive = \<open>Scan.repeat (Scan.lift Parse.term) >> (fn var
             end
            )
   ))\<close>
+
+
+subsection \<open>Syntax\<close>
+
+syntax "_while_" :: \<open>do_binds \<Rightarrow> do_binds \<Rightarrow> do_binds\<close>
+                 ("((2\<w>\<h>\<i>\<l>\<e> {//(_))//(2} {//(_))//})" [11,11] 20)
+       "_if_" :: \<open>do_binds \<Rightarrow> do_binds \<Rightarrow> do_binds \<Rightarrow> do_binds\<close>
+                 ("((2\<i>\<f> {//(_))//(2} \<t>\<h>\<e>\<n> {//(_))//(2} \<e>\<l>\<s>\<e> {//(_))//})" [11,11,11] 20)
+       "_fix_point_" :: \<open>idt \<Rightarrow> idt \<Rightarrow> do_binds \<Rightarrow> do_bind\<close> ("((2\<f>\<i>\<x> _ '(_') {//)(_)//})" [100,100,10] 20)
+
+optional_translations (do_notation)
+
+  "_while_ C B" <= "CONST PhiSem_CF_Basic.while C B"
+  "_while_ C B" <= "_while_ (_do_block C) B"
+  "_while_ C B" <= "_while_ C (_do_block B)"
+
+  "_if_ C A B" <= "CONST PhiSem_CF_Basic.if TY C A B"
+  "_if_ C A B" <= "_if_ (_do_block C) A B"
+  "_if_ C A B" <= "_if_ C (_do_block A) B"
+  "_if_ C A B" <= "_if_ C A (_do_block B)"
+
+  "_fix_point_ f arg B" <= "CONST op_fix_point (\<lambda>f arg. B)"
 
 end

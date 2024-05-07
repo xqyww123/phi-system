@@ -114,14 +114,29 @@ proc
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
 
- 
-proc
+  
+proc AAA:
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
   is [routine]
-  \<medium_left_bracket> ($x, $x) \<rightarrow> val y, var z
-    ;; if \<open>0 < $x\<close> \<open>$x - 1\<close> 0
+  \<medium_left_bracket>
+    ($x, $x) \<rightarrow> val y, var z \<semicolon> 
+    if \<open>0 < $x\<close> \<open>$x - 1\<close> 0
   \<medium_right_bracket> .
+
+thm AAA_def
+
+(*
+optional_translations (do_notation)
+  "_routine_ TY1 TY2 ret B" <= "CONST op_routine V1 V2 TY1 TY2 (\<lambda>ret. B)"
+*)
+ 
+thm AAA_def
+
+
+
+
+
 
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -165,6 +180,17 @@ proc FIB:
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
+(*
+syntax "_rec_fun_"
+    ("\<r>\<e>\<c>\<u>\<r>\<s>\<i>\<v>\<e>- *)
+
+
+
+
+
+
+
+
 proc FIB2:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
@@ -178,9 +204,14 @@ proc FIB2:
 \<medium_right_bracket>.
 
 
+
+thm FIB2_def
+
+
 proc YYY:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + of_nat b + c \<Ztypecolon> \<int>\<close>
+  is [routine]
   \<medium_left_bracket> \<open>$a + of_nat $b + $c\<close> \<medium_right_bracket>.
 
 proc YYY2:
@@ -206,6 +237,8 @@ declare [[\<phi>hide_techinicals=false]]
 
 declare [[\<phi>trace_reasoning = 2]]
 
+
+
 proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   premises \<open>x < 10\<close>
@@ -224,6 +257,18 @@ proc
   \<medium_right_bracket> \<semicolon>
   $v
 \<medium_right_bracket>.
+
+
+
+
+(*
+print_ast_translation \<open>
+[(\<^syntax_const>\<open>_do_bind\<close>, fn _ => fn L => (@{print} L; hd L))]
+\<close>
+*)
+
+thm op_var_scope_def
+thm AAA_def
 
 proc
   input \<open>\<v>\<a>\<l> b \<Ztypecolon> \<bool>\<close>

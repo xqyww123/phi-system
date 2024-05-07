@@ -72,7 +72,7 @@ val aconv_bound_diff : int -> term * term -> bool
 val subst_with_loose_bounds : (term * term) list -> term -> term
           (*supports loose bounds either in the redex or the residue*)
 
-
+val K_I : 'a -> 'b -> 'b
 
 end
 
@@ -82,7 +82,7 @@ fun has_head c (Const (c', _)) = (c = c')
   | has_head c (h $ _) = has_head c h
   | has_head _ _ = false
 
-
+fun K_I _ x = x
 
 
 fun strip_meta_hhf term =
@@ -307,6 +307,5 @@ fun strip_binder_raw binder tm =
 
 fun strip_implies_c tm = strip_implies_c (#2 (Thm.dest_implies tm))
   handle TERM _ => tm
-
 
 end

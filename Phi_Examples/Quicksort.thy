@@ -56,7 +56,7 @@ text \<open>The Conclusions of above Certification is the following Specificatio
 thm qsort_\<phi>app
 
 text \<open>Semantic Representations of the Programs: \<close>
-
+ 
 thm qsort_def
 
 end

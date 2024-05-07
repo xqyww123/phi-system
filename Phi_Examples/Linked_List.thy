@@ -101,6 +101,7 @@ proc nth_llist:
     \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close> \<comment> \<open>annotation 2: close abstraction\<close>
   \<medium_right_bracket> .
 
+thm nth_llist_def
 
 proc hd_llist:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
@@ -111,7 +112,6 @@ proc hd_llist:
   nth_llist ($addr, 0)
 \<medium_right_bracket> .
 
-declare [[ML_print_depth = 1000]]
 
 proc update_nth_llist:
   input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
@@ -128,6 +128,7 @@ proc update_nth_llist:
     \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close>  \<comment> \<open>annotation 2: close abstraction\<close>
   \<medium_right_bracket> .
 
+  thm update_nth_llist_def
 
 end
 
@@ -147,7 +148,8 @@ proc length_of:
     return ($ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .
-
+ 
+thm length_of_def
 
 proc reverse_aux:
   input  \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<heavy_comma>

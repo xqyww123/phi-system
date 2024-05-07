@@ -373,9 +373,13 @@ proc op_var_scope:
     \<medium_right_bracket>
   \<medium_right_bracket> .
 
+syntax "_var_scope_" :: \<open>idts \<Rightarrow> do_bind\<close> ("\<v>\<a>\<r>\<i>\<a>\<b>\<l>\<e> _" [14] 13)
 
+optional_translations (do_notation)
+  "_do_cons (_var_scope_ v) P " <= "CONST op_var_scope T TY (\<lambda>v. P)"
+  "_do_cons (_var_scope_ v) P" <= "_do_cons (_var_scope_ v) (_do_block P)"
+  "_do_cons (_var_scope_ (v1 v2)) P" <= "_do_cons (_var_scope_ v1) (_do_cons (_var_scope_ v2) P)"
 
-thm op_var_scope_def
 
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (
       Symtab.update (\<^const_name>\<open>op_var_scope\<close>, 0)

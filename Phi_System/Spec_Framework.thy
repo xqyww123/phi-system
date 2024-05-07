@@ -18,6 +18,54 @@ declare [[\<phi>reason_default_pattern \<open>Valid_Proc ?F\<close> \<Rightarrow
 declare Valid_Proc_bind[\<phi>reason 1200]
 declare \<phi>arg.simps[\<phi>safe_simp] \<phi>arg.sel[\<phi>safe_simp]
 
+optional_translations (do_notation)
+  "_do_then t" <= "_do_bind (_constrain _idtdummy TY) t"
+  "_do_cons A (_do_cons B C)" <= "_do_cons (_do_cons A B) C"
+
+syntax "_\<phi>V3" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>3\<^sub>')")
+       "_\<phi>V4" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>4\<^sub>')")
+       "_\<phi>V5" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>5\<^sub>')")
+       "_\<phi>V6" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>6\<^sub>')")
+       "_\<phi>V7" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>7\<^sub>')")
+
+optional_translations (do_notation)
+  "x\<^sub>(\<^sub>2\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>1\<^sub>)"
+  "x\<^sub>(\<^sub>3\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>2\<^sub>)"
+  "x\<^sub>(\<^sub>4\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>3\<^sub>)"
+  "x\<^sub>(\<^sub>5\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>4\<^sub>)"
+  "x\<^sub>(\<^sub>6\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>5\<^sub>)"
+  "x\<^sub>(\<^sub>7\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>6\<^sub>)"
+
+  "x" <= "CONST \<phi>arg x"
+
+print_translation \<open>[
+  (\<^const_syntax>\<open>bind_do\<close>, fn _ => (
+    fn (*[A, Abs B] =>
+          Const(\<^const_syntax>\<open>bind_do\<close>, dummyT)
+            $ A
+            $ (case Syntax_Trans.atomic_abs_tr' B
+                 of (f,x) => Const(\<^syntax_const>\<open>_abs\<close>, dummyT) $ f $ x)
+     |*) [A, Const ("_abs", _) $ _ $ _] => raise Match
+     | [_, Abs _] => raise Match
+     | [A, B] =>
+          Const(\<^const_syntax>\<open>bind_do\<close>, dummyT)
+            $ A
+            $ (case Syntax_Trans.atomic_abs_tr' ("_", dummyT, Term.incr_boundvars 1 B $ Bound 0)
+                 of (f,x) => Const(\<^syntax_const>\<open>_abs\<close>, dummyT) $ f $ x) ))
+]\<close>
+
+(*
+term \<open>\<phi>V_fst x\<close>
+term \<open>\<phi>V_snd x\<close>
+term \<open>\<lambda>x. \<phi>V_fst (\<phi>V_snd x)\<close>
+term \<open>\<lambda>x. (\<phi>V_snd (\<phi>V_snd x))\<close>
+term \<open>\<lambda>x. \<phi>V_fst (\<phi>V_snd (\<phi>V_snd x))\<close>
+term \<open>\<lambda>x. \<phi>V_snd (\<phi>V_snd (\<phi>V_snd x))\<close>
+term \<open>\<lambda>x. \<phi>V_fst (\<phi>V_snd (\<phi>V_snd (\<phi>V_snd x)))\<close>
+term \<open>\<lambda>x. \<phi>V_snd (\<phi>V_snd (\<phi>V_snd (\<phi>V_snd x)))\<close>
+term \<open>\<lambda>x. \<phi>V_snd (\<phi>V_fst (\<phi>V_snd (\<phi>V_snd x)))\<close>
+term \<open>\<lambda>x. \<phi>V_snd (\<phi>V_snd (\<phi>V_snd (\<phi>V_snd (\<phi>V_snd x))))\<close>
+*)
 
 section \<open>Fiction\<close>
 
@@ -1134,7 +1182,7 @@ lemma \<phi>SKIP[simp,intro!]: "\<p>\<r>\<o>\<c> det_lift (Success v) \<lbrace> 
 lemma \<phi>SEQ:
    "\<p>\<r>\<o>\<c> f \<lbrace> A \<longmapsto> B \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> (\<And>vs. \<p>\<r>\<o>\<c> g vs \<lbrace> B vs \<longmapsto> C \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
-\<Longrightarrow> \<p>\<r>\<o>\<c> (f \<bind> g) \<lbrace> A \<longmapsto> C \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
+\<Longrightarrow> \<p>\<r>\<o>\<c> (f \<bind> (\<lambda>v. g v)) \<lbrace> A \<longmapsto> C \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
   unfolding \<phi>Procedure_def bind_def apply (clarsimp simp add: subset_iff)
   subgoal for comp R x s
     apply (cases s; clarsimp; cases x; clarsimp; blast) . .

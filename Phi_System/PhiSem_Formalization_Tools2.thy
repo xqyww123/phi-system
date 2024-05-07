@@ -12,6 +12,8 @@ subsection \<open>Elementary Constructions for Formalizing Instructions\<close>
 
 definition \<open>semantic_literal = \<phi>arg\<close>
 
+notation
+
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>semantic_literal\<close>, 0))\<close>
 
 definition \<phi>M_assert :: \<open>bool \<Rightarrow> unit proc\<close>

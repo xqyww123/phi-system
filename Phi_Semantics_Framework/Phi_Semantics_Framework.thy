@@ -257,17 +257,16 @@ lemma \<phi>V_simps[simp]:
   \<open>\<phi>V_hd (\<phi>V_cons hv lv) = hv\<close>
   \<open>\<phi>V_tl (\<phi>V_cons hv lv) = lv\<close>
   \<open>\<phi>V_case_prod f (\<phi>V_pair a b) = f a b\<close>
-  \<open>\<phi>V_case_prod (\<lambda>a b. f2 (\<phi>V_pair a b)) = f2\<close>
+  \<open>\<phi>V_case_prod f = (\<lambda>v. f (\<phi>V_fst v) (\<phi>V_snd v))\<close>
+(*  \<open>\<phi>V_case_prod (\<lambda>a b. f2 (\<phi>V_pair a b)) = f2\<close>
   \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b c. f3 (\<phi>V_pair a (\<phi>V_pair b c)))) = f3\<close>
-  \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b. \<phi>V_case_prod (\<lambda>c d. f4 (\<phi>V_pair a (\<phi>V_pair b (\<phi>V_pair c d)))))) = f4\<close>
+  \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b. \<phi>V_case_prod (\<lambda>c d. f4 (\<phi>V_pair a (\<phi>V_pair b (\<phi>V_pair c d)))))) = f4\<close> *)
   unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def \<phi>V_case_prod_def
     apply (cases v, simp)
     apply (cases v, simp)
     apply (cases v, simp)
     apply simp apply simp apply simp
     apply simp apply simp apply simp
-    apply (simp add: fun_eq_iff \<phi>arg_forall)
-    apply (simp add: fun_eq_iff \<phi>arg_forall)
     apply (simp add: fun_eq_iff \<phi>arg_forall) .
 
 
@@ -313,6 +312,12 @@ instance apply standard
   by (metis unreachable.exhaust)
 end
 *)
+
+paragraph \<open>Syntax\<close>
+
+notation (do_notation) \<phi>V_fst ("_\<^sub>'(\<^sub>1\<^sub>')")
+                   and \<phi>V_snd ("_\<^sub>'(\<^sub>2\<^sub>')")
+
 
 subsubsection \<open>Monadic Formalization\<close>
 
@@ -408,21 +413,21 @@ is expressed by returning \<open>Invalid\<close>.
 type_synonym 'ret proc = "resource \<Rightarrow> 'ret comp set"
 type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
 
-ML \<open>print_mode := "do_notation" :: !print_mode\<close>
-
 definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
                                            | Abnormal v x \<Rightarrow> {Abnormal v x}
                                            | Invalid \<Rightarrow> {Invalid}
                                            | NonTerm \<Rightarrow> {NonTerm}
                                            | AssumptionBroken \<Rightarrow> {AssumptionBroken}
-                              ) ` f res))"
+                              ) ` f res))" 
+
 
 adhoc_overloading Monad_Syntax.bind bind
 
 definition \<open>det_lift f x = {f x}\<close>
 
-definition \<open>Return = det_lift o Success\<close>
+definition Return ("\<r>\<e>\<t>\<u>\<r>\<n>")
+  where \<open>Return = det_lift o Success\<close>
 
 definition Nondet :: \<open>'ret proc \<Rightarrow> 'ret proc \<Rightarrow> 'ret proc\<close>
   where \<open>Nondet f g = (\<lambda>res. f res \<union> g res)\<close>

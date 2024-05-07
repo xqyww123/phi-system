@@ -117,6 +117,9 @@ lemma Technical_I': \<open>PROP P \<Longrightarrow> PROP Technical P\<close> unf
 lemma Technical_D : \<open>Technical P \<Longrightarrow> P\<close> unfolding Technical_def .
 lemma Technical_D': \<open>PROP Technical P \<Longrightarrow> PROP P\<close> unfolding Technical_def .
 
+optional_translation_group \<phi>hide_techinicals
+  \<open>Hides internal techinical constructions\<close>
+ 
 optional_translations (\<phi>hide_techinicals)
   ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (CONST Technical X)) Y"
   ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (name\<^bold>: CONST Technical X)) Y"
@@ -127,7 +130,6 @@ optional_translations (\<phi>hide_techinicals)
   "R\<heavy_comma> L" <= "R \<heavy_comma> CONST Technical X\<heavy_comma> L"
   "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>: XCONST Void" <= "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>: TECHNICAL X"
   "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: XCONST Void" <= "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: TECHNICAL X"
-  \<open>show hidden internal techinical constructs\<close>
 
 declare [[\<phi>hide_techinicals,
           \<phi>premise_attribute [THEN Technical_D ] for \<open>Technical ?P\<close>       (%\<phi>attr_normalize),
