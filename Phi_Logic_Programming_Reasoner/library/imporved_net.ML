@@ -10,7 +10,7 @@ From the book
 match_term no longer treats abstractions as wildcards; instead they match
 only wildcards in patterns.  Requires operands to be beta-eta-normal.
 
-MODIFIED BY: Authors of Submission 96
+MODIFIED BY: Qiyuan Xu
 
 Adding special support for \<open>TYPE\<close> so that the net can efficiently match terms containing explicit
   type annotation.

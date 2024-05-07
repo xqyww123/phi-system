@@ -478,7 +478,7 @@ definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> VAL proc"
 *)
 (* definition op_const_size_t :: "nat \<Rightarrow> (VAL,VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
-                          \<ggreater> Return (\<phi>arg (V_int.mk (addrspace_bits,c)))"
+                          \<then> Return (\<phi>arg (V_int.mk (addrspace_bits,c)))"
   \<comment> \<open> `op_const_size_t` checks the overflow during the compilation towards certain decided platform.  \<close>
 *)
 
@@ -511,7 +511,7 @@ definition op_udiv :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      \<phi>M_assert (val_b \<noteq> 0) \<ggreater>
+      \<phi>M_assert (val_b \<noteq> 0) \<then>
       Return (\<phi>arg (V_int.mk (bits, (val_a div val_b))))
   )))"
 
@@ -520,7 +520,7 @@ definition op_sdiv :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
       \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
-      \<phi>M_assert (val_b \<noteq> 0) \<ggreater>
+      \<phi>M_assert (val_b \<noteq> 0) \<then>
       Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_a sdiv val_b))))
   )))"
 
@@ -529,7 +529,7 @@ definition op_umod :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
       \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
-      \<phi>M_assert (val_b \<noteq> 0) \<ggreater>
+      \<phi>M_assert (val_b \<noteq> 0) \<then>
       Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_a mod val_b))))
   )))"
 
@@ -538,7 +538,7 @@ definition op_smod :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
       \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
-      \<phi>M_assert (val_b \<noteq> 0) \<ggreater>
+      \<phi>M_assert (val_b \<noteq> 0) \<then>
       Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_a smod val_b))))
   )))"
 

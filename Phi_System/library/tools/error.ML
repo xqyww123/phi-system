@@ -1,5 +1,5 @@
 (* FILE: library/tools/error.ML
-   AUTHOR: Authors of Submission 96
+   AUTHOR: Qiyuan Xu
 
    An unfinished error mechanism for IDE-CP.
 *)

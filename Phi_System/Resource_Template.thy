@@ -262,7 +262,7 @@ definition
     \<phi>R_get_res' \<bind> (\<lambda>res.
     let k = (@k. \<phi>arg.dest res k = 1 \<and> P k)
      in \<phi>R_set_res' (\<lambda>f. f(k := init))
-        \<ggreater> Return (\<phi>arg k)
+        \<then> Return (\<phi>arg k)
 )\<close>
 
 lemma allocator_transition:

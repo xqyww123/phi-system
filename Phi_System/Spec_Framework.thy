@@ -989,18 +989,24 @@ definition \<phi>Procedure :: "'ret proc
                         \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
                         \<Rightarrow> (ABNM \<Rightarrow> assn)
                         \<Rightarrow> bool"
-    ("\<p>\<r>\<o>\<c> (2_)/ (0\<lbrace> _/ \<longmapsto> _ \<rbrace>)/ \<t>\<h>\<r>\<o>\<w>\<s> (100_)/ " [101,2,2,100] 100)
   where "\<phi>Procedure f T U E \<longleftrightarrow>
     (\<forall>comp R. comp \<in> INTERP_SPEC (T * R) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC (U v * R)) (\<lambda>v. INTERP_SPEC (E v * R)))"
 
-abbreviation \<phi>Procedure_no_exception ("\<p>\<r>\<o>\<c> (2_)/ \<lbrace> (2_) \<longmapsto>/ (2_) \<rbrace>/ " [101,2,2] 100)
+abbreviation \<phi>Procedure_no_exception
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
 
-notation \<phi>Procedure_no_exception
-         ("\<p>\<r>\<o>\<c> (2_)/ \<i>\<n>\<p>\<u>\<t> (2_)/ \<o>\<u>\<t>\<p>\<u>\<t> (2_)" [101,2,2] 100)
+notation (input)
+         \<phi>Procedure ("\<p>\<r>\<o>\<c> (2_)/ (0\<lbrace> _/ \<longmapsto> _ \<rbrace>)/ \<t>\<h>\<r>\<o>\<w>\<s> (_)/ " [10,2,2,100] 100)
+     and \<phi>Procedure_no_exception ("\<p>\<r>\<o>\<c> (2_)/ \<lbrace> (2_) \<longmapsto>/ (2_) \<rbrace>/ " [10,2,2] 100)
 
-notation \<phi>Procedure
-         ("\<p>\<r>\<o>\<c> (2_)/ \<i>\<n>\<p>\<u>\<t> (2_)/ \<o>\<u>\<t>\<p>\<u>\<t> (2_)/ \<t>\<h>\<r>\<o>\<w>\<s> (100_)/ " [101,2,2,100] 100)
+notation \<phi>Procedure_no_exception
+            ("(\<open>consistent\<close>\<p>\<r>\<o>\<c> (_)/ \<i>\<n>\<p>\<u>\<t> (_)/ \<o>\<u>\<t>\<p>\<u>\<t> (_))" [2,2,2] 100)
+     and \<phi>Procedure
+            ("(\<open>consistent\<close>\<p>\<r>\<o>\<c> (_)/ \<i>\<n>\<p>\<u>\<t> (_)/ \<o>\<u>\<t>\<p>\<u>\<t> (_)/ \<t>\<h>\<r>\<o>\<w>\<s> (_))" [2,2,2,100] 100)
+
+translations
+  "CONST \<phi>Procedure p X Y E" <= "CONST \<phi>Procedure (_do_block p) X Y E"
+  "CONST \<phi>Procedure_no_exception p X Y" <= "CONST \<phi>Procedure_no_exception (_do_block p) X Y"
 
 lemma \<phi>Procedure_alt:
   \<open>\<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> U \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E

@@ -1,5 +1,5 @@
 (* FILE: library/system/toplevel.ML
-   AUTHOR: Authors of Submission 96
+   AUTHOR: Qiyuan Xu
 
    Definition of Isar commands for IDE-CP.
 *)

@@ -1,6 +1,6 @@
 (*
 The engine of the Phi Logic Programming Reasoner
-Author: Authors of Submission 96
+Author: Qiyuan Xu
 *)
 signature NU_REASONER = sig
   (* This file is the major hot point of the whole system.

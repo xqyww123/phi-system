@@ -1,5 +1,5 @@
 (* library/system/generic variable access.ML
-   AUTHOR: Authors of Submission 96
+   AUTHOR: Qiyuan Xu
 
    Access (get and set) generic variables.
    A generic variable can be a local value, a variable, or any other registered thing.

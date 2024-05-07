@@ -52,7 +52,7 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
     \<phi>M_caseV (\<lambda>va vb.
     \<phi>M_getV TY id va (\<lambda>v.
     \<phi>M_getV TY id vb (\<lambda>u.
-    (\<lambda>res. \<phi>M_assert (Can_EqCompare res v u) res) \<ggreater>
+    (\<lambda>res. \<phi>M_assert (Can_EqCompare res v u) res) \<then>
     Return (\<phi>arg (V_bool.mk (EqCompare v u)))
 )))"
 

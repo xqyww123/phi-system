@@ -11,9 +11,9 @@ text \<open>Procedure in \<open>\<phi>\<close>-system is a program segment, whic
 definition op_routine_basic :: \<open>TY list \<Rightarrow> TY list \<Rightarrow> ('a::FIX_ARITY_VALs, 'b::FIX_ARITY_VALs) proc' \<Rightarrow> ('a,'b) proc'\<close>
   where \<open>op_routine_basic argtys rettys F = (\<lambda>args.
       \<phi>M_assert (args \<in> Well_Typed_Vals argtys)
-   \<ggreater> F args
+   \<then> F args
   \<bind> (\<lambda>rets. \<phi>M_assert (rets \<in> Well_Typed_Vals rettys)
-           \<ggreater> Return rets))\<close>
+           \<then> Return rets))\<close>
 
 lemma "__routine_basic__":
   \<open> \<phi>_Have_Types X TY_ARGs

@@ -172,7 +172,7 @@ proc op_break:
 \<medium_right_bracket> .
 
 lemma op_break_reduce_tail[procedure_simps,simp]:
-  \<open>(op_break TYPE('ret) TYPE('val::VALs) L v \<ggreater> f) = op_break TYPE('ret2) TYPE('val::VALs) L v\<close>
+  \<open>(op_break TYPE('ret) TYPE('val::VALs) L v \<then> f) = op_break TYPE('ret2) TYPE('val::VALs) L v\<close>
   unfolding op_break_def by simp
 
 

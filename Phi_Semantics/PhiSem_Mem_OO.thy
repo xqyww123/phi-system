@@ -195,7 +195,7 @@ definition op_obj_load_field :: \<open>field_name \<Rightarrow> TY \<Rightarrow>
   where \<open>op_obj_load_field field TY v =
     \<phi>M_getV reference V_ref.dest v (\<lambda>ref.
     RES.Objs.\<phi>R_get_res_entry ref field (\<lambda>v.
-    \<phi>M_assert (discrete.dest v \<in> Well_Type TY) \<ggreater>
+    \<phi>M_assert (discrete.dest v \<in> Well_Type TY) \<then>
     Return (\<phi>arg (discrete.dest v))))\<close>
 
 
@@ -207,7 +207,7 @@ definition op_obj_store_field :: \<open>field_name \<Rightarrow> TY \<Rightarrow
     \<phi>M_getV TY id vstore (\<lambda>store.
     \<phi>M_getV reference V_ref.dest vref (\<lambda>ref.
     RES.Objs.\<phi>R_get_res_entry ref field (\<lambda>v. \<phi>M_assert (discrete.dest v \<in> Well_Type TY))
- \<ggreater> RES.Objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (discrete store)) field) ref)
+ \<then> RES.Objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (discrete store)) field) ref)
 )))\<close>
 
 paragraph \<open>Dispose\<close>
@@ -217,7 +217,7 @@ definition op_obj_dispose :: \<open>class \<Rightarrow> (VAL, unit) proc'\<close
     \<phi>M_getV reference V_ref.dest vref (\<lambda>ref.
     RES.Objs.\<phi>R_get_res (\<lambda>m.
     \<phi>M_assert ((ref \<in> dom1 m \<or> class.fields_of cls = 1) \<and> object_ref.class ref = cls))
- \<ggreater> RES.Objs.\<phi>R_set_res (\<lambda>f. f(ref := 1))
+ \<then> RES.Objs.\<phi>R_set_res (\<lambda>f. f(ref := 1))
 )\<close>
 
 

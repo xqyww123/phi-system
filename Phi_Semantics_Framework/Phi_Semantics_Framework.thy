@@ -14,6 +14,7 @@ supporting most of control flows and therefore most of (imperative) languages.
 
 theory Phi_Semantics_Framework
   imports Resource_Space Virtual_Datatype.Virtual_Datatype Debt_Axiom.Debt_Axiom
+          "HOL-Library.Monad_Syntax"
   keywords "resource_space" :: thy_goal
   abbrevs "<throws>" = "\<t>\<h>\<r>\<o>\<w>\<s>"
     and "<proc>" = "\<p>\<r>\<o>\<c>"
@@ -407,8 +408,9 @@ is expressed by returning \<open>Invalid\<close>.
 type_synonym 'ret proc = "resource \<Rightarrow> 'ret comp set"
 type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
 
+ML \<open>print_mode := "do_notation" :: !print_mode\<close>
 
-definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"  ("_ \<bind>/ _" [75,76] 75)
+definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
                                            | Abnormal v x \<Rightarrow> {Abnormal v x}
                                            | Invalid \<Rightarrow> {Invalid}
@@ -416,8 +418,7 @@ definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"  
                                            | AssumptionBroken \<Rightarrow> {AssumptionBroken}
                               ) ` f res))"
 
-abbreviation bind' ("_ \<ggreater>/ _" [75,76] 75)
-  where \<open>bind' f g \<equiv> (f \<bind> (\<lambda>_. g))\<close>
+adhoc_overloading Monad_Syntax.bind bind
 
 definition \<open>det_lift f x = {f x}\<close>
 
@@ -426,17 +427,19 @@ definition \<open>Return = det_lift o Success\<close>
 definition Nondet :: \<open>'ret proc \<Rightarrow> 'ret proc \<Rightarrow> 'ret proc\<close>
   where \<open>Nondet f g = (\<lambda>res. f res \<union> g res)\<close>
 
+term \<open>f \<bind> Return\<close>
+term \<open>do { x <- (f::'a proc); Return xaa }\<close>
 
 lemma proc_bind_SKIP'[simp]:
   "f \<bind> Return \<equiv> f"
   "Return any \<bind> ff \<equiv> ff any"
-  "(g \<ggreater> Return any) \<ggreater> f \<equiv> g \<ggreater> f"
+  "(g \<then> Return any) \<then> f \<equiv> g \<then> f"
   "(\<lambda>v. Return v \<bind> h) \<equiv> h"
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
   by (clarsimp; metis comp.exhaust)+
 
 lemma proc_bind_return_none[simp]:
-  "f_nil \<ggreater> Return \<phi>V_none \<equiv> f_nil"
+  "f_nil \<then> Return \<phi>V_none \<equiv> f_nil"
   for f_nil :: \<open>unit proc\<close>
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def \<phi>V_none_def
   apply (clarsimp)
@@ -452,7 +455,7 @@ lemmas proc_bind_SKIP[simp] =
   proc_bind_return_none[unfolded Return_def, simplified]
 
 lemma proc_bind_assoc[simp]:
-  "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
+  "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))" for A :: \<open>'a proc\<close>
   unfolding bind_def fun_eq_iff det_lift_def set_eq_iff
   by clarsimp
 

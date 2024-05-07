@@ -153,10 +153,10 @@ text \<open>A pure syntactical tag, maybe used to divide spaces of reasoning rul
 
 typedecl action
 
-definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @tag _" [9,10] 9)
+definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_/ @tag _" [9,10] 9)
   where \<open>Action_Tag P A \<equiv> P\<close>
 
-definition Meta_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_ @tag'' _" [9,10] 9)
+definition Meta_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_/ @tag'' _" [9,10] 9)
   where \<open>Meta_Tag P A \<equiv> P\<close>
 
 lemma Action_Tag_I:

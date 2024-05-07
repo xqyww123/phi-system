@@ -1,4 +1,4 @@
-(* AUTHOR: Authors of Submission 96, 2022 *)
+(* AUTHOR: Qiyuan Xu, 2022 *)
 
 theory VDT_Example
   imports "Virtual_Datatype.Virtual_Datatype" "Phi_Document.Base"

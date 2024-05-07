@@ -100,14 +100,14 @@ proc GCD:
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
+
 declare GCD_\<phi>app[\<phi>synthesis add] \<comment> \<open>So that we can use abstract spec \<open>gcd\<close> in synthesis\<close>
 
 proc Coprime:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>coprime x y \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
-  \<medium_left_bracket>
-  GCD($x, $y) = 1
-(*  \<open>gcd $x $y = 1\<close> *)
+\<medium_left_bracket>
+  \<open>gcd $x $y = 1\<close>
 \<medium_right_bracket>.
 
 proc binary_search:

@@ -1,6 +1,6 @@
 (* FILE: Phi_Logic_Programming_Reasoner/library/pattern.ML
    AUTHOR: Tobias Nipkow, Christine Heinzelmann, and Stefan Berghofer, TU Muenchen
-   Modified by: Authors of Submission 96
+   Modified by: Qiyuan Xu
 
    To support matching loose bounds in the target object.
    Regard them as fixed variables.

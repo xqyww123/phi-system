@@ -156,7 +156,7 @@ lemma \<phi>accept_proc_optimize_return_v:
 (*
 lemma \<phi>return_when_unreachable:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. T) \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<ggreater> Return (\<phi>arg undefined)) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. T) \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<then> Return (\<phi>arg undefined)) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. T) \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   for f :: \<open>unreachable proc\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .

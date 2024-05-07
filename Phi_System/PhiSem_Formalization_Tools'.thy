@@ -20,7 +20,7 @@ definition \<phi>M_getV_raw :: \<open>(VAL \<Rightarrow> 'v) \<Rightarrow> VAL \
 
 definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Rightarrow> VAL \<phi>arg \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
-    (\<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<ggreater> F (VDT_dest (\<phi>arg.dest v)))\<close>
+    (\<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<then> F (VDT_dest (\<phi>arg.dest v)))\<close>
 
 definition \<phi>M_caseV :: \<open>(VAL \<phi>arg \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr::FIX_ARITY_VALs,'ret) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of \<phi>arg (a1,a2) \<Rightarrow> F (\<phi>arg a1) (\<phi>arg a2))\<close>
@@ -57,11 +57,11 @@ lemma \<phi>M_assert_True[simp]:
   unfolding \<phi>M_assert_def by simp
 
 lemma \<phi>M_assert':
-  \<open>P \<Longrightarrow> Q (F args) \<Longrightarrow> Q ((\<phi>M_assert P \<ggreater> F) args)\<close>
+  \<open>P \<Longrightarrow> Q (F args) \<Longrightarrow> Q ((\<phi>M_assert P \<then> F) args)\<close>
   unfolding \<phi>M_assert_def bind_def Return_def det_lift_def by simp
 
 lemma \<phi>M_assume[intro!]:
-  \<open>(P \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) \<Longrightarrow> \<p>\<r>\<o>\<c> (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+  \<open>(P \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) \<Longrightarrow> \<p>\<r>\<o>\<c> (\<phi>M_assume P \<then> F) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding \<phi>Procedure_def \<phi>M_assume_def bind_def Return_def det_lift_def
   by clarsimp
 
@@ -1227,7 +1227,7 @@ definition throw :: \<open>ABNM \<Rightarrow> 'ret proc\<close>
   where \<open>throw raw = det_lift (Abnormal raw)\<close>
 
 lemma throw_reduce_tail[procedure_simps,simp]:
-  \<open>(throw any \<ggreater> f) = throw any\<close>
+  \<open>(throw any \<then> f) = throw any\<close>
   unfolding throw_def bind_def det_lift_def by simp
 
 lemma "__throw_rule__"[intro!]:
@@ -1649,7 +1649,7 @@ definition
     \<phi>R_get_res (\<lambda>res.
     let k = (@k. res k = 1 \<and> P k)
      in \<phi>R_set_res (\<lambda>f. f(k := init))
-        \<ggreater> F k
+        \<then> F k
 )\<close>
 
 definition
@@ -1660,7 +1660,7 @@ definition
     \<phi>R_get_res (\<lambda>res.
     let k = (@k. res k = 1 \<and> P k)
      in \<phi>R_set_res (\<lambda>f. f(k := init))
-        \<ggreater> Return (\<phi>arg k)
+        \<then> Return (\<phi>arg k)
 )\<close>
 
 lemma \<phi>R_set_res_new[intro!]:
@@ -1735,7 +1735,7 @@ definition cons_tup :: "TY list \<Rightarrow> VAL list \<Rightarrow> (VAL,'RES_N
   where "cons_tup tys vs = (
     let N = length tys in
     \<phi>M_assert (N \<le> length vs \<and> list_all2 (\<lambda>v t. v \<in> Well_Type t) (rev (take N vs)) tys)
-    \<ggreater> Success (V_tup.mk (rev (take N vs))))"
+    \<then> Success (V_tup.mk (rev (take N vs))))"
 
 lemma cons_tup_nil:
   \<open>cons_tup [] = \<phi>M_put_Val (V_tup.mk [])\<close>
@@ -1744,10 +1744,10 @@ lemma cons_tup_nil:
 
 lemma cons_tup_cons:
   \<open>cons_tup (TY#TYs) =
-    cons_tup TYs \<ggreater>
+    cons_tup TYs \<then>
     \<phi>M_get_Val (\<lambda>tup.
     \<phi>M_get_Val (\<lambda>v.
-    \<phi>M_assert (v \<in> Well_Type TY) \<ggreater>
+    \<phi>M_assert (v \<in> Well_Type TY) \<then>
     \<phi>M_put_Val (V_tup.mk [v] * tup)
     ))\<close>
   apply (auto split: list.split
@@ -1791,9 +1791,9 @@ lemma op_dest_tup_nil_expn:
 lemma op_dest_tup_cons_expn:
   \<open>op_dest_tup (TY#TYs) =
     \<phi>M_get_Val (\<lambda>tup.
-    \<phi>M_assert (\<exists>h tup'. tup = V_tup.mk (h#tup') \<and> h \<in> Well_Type TY) \<ggreater>
-    \<phi>M_put_Val (hd (V_tup.dest tup)) \<ggreater>
-    \<phi>M_put_Val (V_tup.mk (tl (V_tup.dest tup))) \<ggreater>
+    \<phi>M_assert (\<exists>h tup'. tup = V_tup.mk (h#tup') \<and> h \<in> Well_Type TY) \<then>
+    \<phi>M_put_Val (hd (V_tup.dest tup)) \<then>
+    \<phi>M_put_Val (V_tup.mk (tl (V_tup.dest tup))) \<then>
     op_dest_tup TYs)\<close>
   apply (auto split: list.split
     simp add: op_dest_tup_def \<phi>M_get_Val_def \<phi>M_put_Val_def \<phi>M_getV_def Let_def fun_eq_iff \<phi>M_assert_def
@@ -1822,14 +1822,14 @@ subsubsection \<open>Accessing Elements\<close>
 definition op_get_element :: "nat list \<Rightarrow> TY \<Rightarrow> (VAL,'RES_N,'RES) proc"
   where "op_get_element idx TY =
     \<phi>M_get_Val (\<lambda>v.
-    \<phi>M_assert (v \<in> Well_Type TY \<and> valid_index TY idx) \<ggreater>
+    \<phi>M_assert (v \<in> Well_Type TY \<and> valid_index TY idx) \<then>
     \<phi>M_put_Val (index_value idx v))"
 
 definition op_set_element :: "nat list \<Rightarrow> TY \<Rightarrow> (VAL,'RES_N,'RES) proc"
   where "op_set_element idx TY =
     \<phi>M_get_Val (\<lambda>u.
     \<phi>M_get_Val (\<lambda>v.
-    \<phi>M_assert (v \<in> Well_Type TY \<and> valid_index TY idx \<and> u \<in> Well_Type (index_type idx TY)) \<ggreater>
+    \<phi>M_assert (v \<in> Well_Type TY \<and> valid_index TY idx \<and> u \<in> Well_Type (index_type idx TY)) \<then>
     \<phi>M_put_Val (index_mod_value idx (\<lambda>_. u) v)
   ))"
 

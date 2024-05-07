@@ -1,5 +1,5 @@
 (* FILE: Phi_System/library/tools/optional_translation.ML
-   AUTHOR: Authors of Submission 96
+   AUTHOR: Qiyuan Xu
 
    Syntax translation command like that in Isar but improved by option flags controlling whether
    the translations are enabled.

@@ -25,7 +25,7 @@ definition \<phi>M_getV_raw :: \<open>(VAL \<Rightarrow> 'v) \<Rightarrow> VAL \
 
 definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Rightarrow> VAL \<phi>arg \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
-    (\<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<ggreater> F (VDT_dest (\<phi>arg.dest v)))\<close>
+    (\<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<then> F (VDT_dest (\<phi>arg.dest v)))\<close>
 
 definition \<phi>M_caseV :: \<open>(VAL \<phi>arg \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr::FIX_ARITY_VALs,'ret) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of \<phi>arg (a1,a2) \<Rightarrow> F (\<phi>arg a1) (\<phi>arg a2))\<close>
@@ -70,11 +70,11 @@ lemma \<phi>M_assert_True[simp]:
   unfolding \<phi>M_assert_def by simp
 
 lemma \<phi>M_assert':
-  \<open>P \<Longrightarrow> Q (F args) \<Longrightarrow> Q ((\<phi>M_assert P \<ggreater> F) args)\<close>
+  \<open>P \<Longrightarrow> Q (F args) \<Longrightarrow> Q ((\<phi>M_assert P \<then> F) args)\<close>
   unfolding \<phi>M_assert_def bind_def Return_def det_lift_def by simp
 
 lemma \<phi>M_assume[intro!]:
-  \<open>(P \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) \<Longrightarrow> \<p>\<r>\<o>\<c> (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+  \<open>(P \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) \<Longrightarrow> \<p>\<r>\<o>\<c> (\<phi>M_assume P \<then> F) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding \<phi>Procedure_def \<phi>M_assume_def bind_def Return_def det_lift_def
   by clarsimp
 
@@ -268,7 +268,7 @@ definition throw :: \<open>ABNM \<Rightarrow> 'ret proc\<close>
   where \<open>throw raw = det_lift (Abnormal raw)\<close>
 
 lemma throw_reduce_tail[procedure_simps,simp]:
-  \<open>(throw any \<ggreater> f) = throw any\<close>
+  \<open>(throw any \<then> f) = throw any\<close>
   unfolding throw_def bind_def det_lift_def by simp
 
 lemma "__throw_rule__"[intro!]:

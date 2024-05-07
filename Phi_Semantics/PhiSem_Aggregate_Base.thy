@@ -170,7 +170,7 @@ section \<open>Instructions\<close>
 definition op_get_aggregate :: "aggregate_path \<Rightarrow> TY \<Rightarrow> (VAL, VAL) proc'"
   where "op_get_aggregate idx T = (\<lambda>v.
     \<phi>M_getV T id v (\<lambda>v'.
-    \<phi>M_assert (valid_index T idx) \<ggreater>
+    \<phi>M_assert (valid_index T idx) \<then>
     Return (\<phi>arg (index_value idx v'))
 ))"
 
@@ -179,7 +179,7 @@ debt_axiomatization allow_assigning_different_typ :: \<open>TY \<Rightarrow> agg
 definition op_set_aggregate :: "TY \<Rightarrow> TY \<Rightarrow> aggregate_path \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_set_aggregate Tt Tv idx = 
     \<phi>M_caseV (\<lambda>tup v.
-    \<phi>M_assert (valid_index Tt idx \<and> (index_type idx Tt = Tv \<or> allow_assigning_different_typ Tt idx)) \<ggreater>
+    \<phi>M_assert (valid_index Tt idx \<and> (index_type idx Tt = Tv \<or> allow_assigning_different_typ Tt idx)) \<then>
     \<phi>M_getV Tt id tup (\<lambda>tup'.
     \<phi>M_getV Tv id v (\<lambda>v'.
     Return (\<phi>arg (index_mod_value idx (\<lambda>_. v') tup'))

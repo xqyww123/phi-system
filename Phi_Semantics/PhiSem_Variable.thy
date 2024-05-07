@@ -371,7 +371,11 @@ proc op_var_scope:
         op_free_var \<open>\<phi>arg.dest \<v>0\<close>
         throw \<open>v\<close>
     \<medium_right_bracket>
-\<medium_right_bracket> .
+  \<medium_right_bracket> .
+
+
+
+thm op_var_scope_def
 
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (
       Symtab.update (\<^const_name>\<open>op_var_scope\<close>, 0)
