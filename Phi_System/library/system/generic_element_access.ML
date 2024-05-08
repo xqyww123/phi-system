@@ -1,12 +1,15 @@
 signature GENERIC_ELEMENT_ACCESS = sig
 
+type prohibit_remainig_eleidx = bool
+exception Remaining_Eleidx of cterm
+
 val get_element_of_abstract_object : Proof.context -> cterm * cterm * cterm -> cterm
 
 val is_enabled_report_unprocessed_element_index : Proof.context -> bool
-val enable_report_unprocessed_element_index : Proof.context -> Proof.context
+val enable_report_unprocessed_element_index : prohibit_remainig_eleidx -> Proof.context -> Proof.context
 val stop_reporting_unprocessed_element_index : Proof.context -> Proof.context
 val report_unprocessed_element_index : cterm -> Proof.context -> Proof.context
-val get_unprocessed_element_index : Proof.context -> cterm
+val get_unprocessed_element_index : Proof.context -> cterm option
 val error_unprocessed_element_index : Proof.context -> cterm -> 'a
 
 val empty_input : cterm
@@ -35,13 +38,16 @@ fun get_element_of_abstract_object ctxt (x,T,path) =
 
 (*** Element Index Process ***)
 
+type prohibit_remainig_eleidx = bool
+exception Remaining_Eleidx of cterm
+
 val empty_input = \<^cterm>\<open>[]::element_index_input\<close>
 fun is_empty_input (Const (\<^const_name>\<open>Nil\<close>, _)) = true
   | is_empty_input _ = false
 
-structure Unprc_EleIdx = Single_Thread_Proof_Data_Opt (type T = cterm)
+structure Unprc_EleIdx = Single_Thread_Proof_Data_Opt (type T = prohibit_remainig_eleidx * cterm option)
 
-val enable_report_unprocessed_element_index = Unprc_EleIdx.put empty_input
+fun enable_report_unprocessed_element_index flag = Unprc_EleIdx.put (flag, NONE)
 val stop_reporting_unprocessed_element_index = Unprc_EleIdx.del
 
 fun is_enabled_report_unprocessed_element_index ctxt =
@@ -49,13 +55,17 @@ fun is_enabled_report_unprocessed_element_index ctxt =
 
 fun report_unprocessed_element_index ctm ctxt =
   case Unprc_EleIdx.get ctxt
-    of SOME _ => Unprc_EleIdx.put ctm ctxt
+    of SOME (prohibit_remain, _) =>
+        if prohibit_remain andalso not (is_empty_input (Thm.term_of ctm))
+        then raise Remaining_Eleidx ctm
+        else Unprc_EleIdx.put (false, SOME ctm) ctxt
      | NONE => ctxt
 
 fun get_unprocessed_element_index ctxt =
   case Unprc_EleIdx.get ctxt
-    of SOME ret => ret
+    of SOME (_, ret) => ret
      | NONE => error "reporting_unprocessed_element_index is not turned on"
+
 
 fun error_unprocessed_element_index ctxt idx =
   error (Pretty.string_of (Pretty.block (

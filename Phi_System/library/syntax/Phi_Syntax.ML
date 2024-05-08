@@ -26,6 +26,7 @@ include PHI_SYNTAX
   val dest_CodeBlock_c : cterm -> cterm * cterm * cterm * cterm
 
   val dest_satisfaction : term -> term * term
+  val dest_satisfaction_c : cterm -> cterm * cterm
 
   val dest_target_assertion : term -> term
 
@@ -108,6 +109,9 @@ val dest_ToA_Construction_c =
 
 val dest_satisfaction =
       PLPR_Syntax.dest_tags #> dest_binop \<^const_name>\<open>Satisfaction\<close>
+fun dest_satisfaction_c ctm = ctm
+      |> PLPR_Syntax.dest_tags_c
+      |> dest_binop_c \<^const_name>\<open>Satisfaction\<close>
 
 fun dest_target_assertion' (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ X $ _) = X
   | dest_target_assertion' (Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ X $ _ ) = X

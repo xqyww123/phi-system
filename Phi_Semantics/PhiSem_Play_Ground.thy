@@ -48,6 +48,7 @@ proc test_ptr:
   output \<open>ptr \<tribullet> 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 0) \<semicolon>
+  $1[$b]\<tribullet>$a[0] \<semicolon>
   $1[$b]\<tribullet>$a\<tribullet>0 \<semicolon>
   $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
@@ -81,14 +82,57 @@ proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
-  var v \<leftarrow> $1
-  
-  note [[\<phi>trace_reasoning = 2]]
-  \<semicolon>
-  $v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
+  var v \<leftarrow> $1 \<semicolon>
+    
+  $v[0,1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v[0,0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
   $v
 \<medium_right_bracket> .
+
+proc test_agg21:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 \<semicolon>
+    
+  $v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  $v
+\<medium_right_bracket> .
+
+proc test_agg22:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 \<semicolon>
+     
+  $v[0]\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v[0]\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  $v
+\<medium_right_bracket> .
+
+proc test_agg23:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 \<semicolon>
+     
+  $v[0][1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v[0][0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  $v
+\<medium_right_bracket> .
+
+proc test_agg24:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 \<semicolon>
+     
+  $v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  $v
+\<medium_right_bracket> .
+
 
 proc test_agg3:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<int>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
@@ -123,17 +167,6 @@ proc AAA:
     ($x, $x) \<rightarrow> val y, var z \<semicolon> 
     if \<open>0 < $x\<close> \<open>$x - 1\<close> 0
   \<medium_right_bracket> .
-
-thm AAA_def
-
-(*
-optional_translations (do_notation)
-  "_routine_ TY1 TY2 ret B" <= "CONST op_routine V1 V2 TY1 TY2 (\<lambda>ret. B)"
-*)
- 
-thm AAA_def
-
-
 
 
 

@@ -13,6 +13,7 @@ val begin_apply : Phi_CP_IDE.eval_cfg -> (string * Position.T) * thm list -> con
 
 val meta_apply : Phi_CP_IDE.eval_cfg
               -> (string * Position.T) * arg_name
+              -> int
               -> (Phi_CP_IDE.eval_cfg * named_arg list * free_param option -> context -> context)
               -> context -> context
 
@@ -32,9 +33,10 @@ val comma : Phi_CP_IDE.eval_cfg -> arg_name -> context -> context
 val push_operator : Phi_CP_IDE.eval_cfg -> operator_info * (string * Position.T) * thm list
                  -> context -> context
 
+type meta_operator = operator_info * (string * Position.T) * free_param option * meta_opr
 val push_meta_operator : Phi_CP_IDE.eval_cfg
-                      -> operator_info * (string * Position.T) * free_param option * meta_opr
-                       -> context -> context
+                      -> meta_operator
+                      -> context -> context
 
 (* End of Expression *)
 
@@ -70,6 +72,8 @@ val end_of_input : unit parser
 
 val error_arity_opr : string * int * int -> string * Position.T -> 'a
 val get_operands : string * int -> string * Position.T -> context_state -> thm list * context_state
+
+val check_meta_apply_balance : string -> Position.T -> Phi_Opr_Stack.opr_frame list -> unit
 
 end
 
@@ -275,6 +279,7 @@ fun push_operator cfg (opr,name,rule) s =
    in ((Opr (#2 opr, arity_constraint, name, #id cfg, vals, rule) :: actions', arg_names), s')
   end
 
+type meta_operator = operator_info * (string * Position.T) * free_param option * meta_opr
 fun push_meta_operator cfg (opr,name,param,meta) s =
   let val (arity_constraint, vals, (actions', arg_names), s') =
               push_opr' cfg name opr s
@@ -331,11 +336,11 @@ fun begin_apply cfg (name, rules) ((actions, arg_names), (ctxt,sequent)) =
    in ((Apply (name, #id cfg, rules, vals) :: actions', (NONE, snd name) :: arg_names), (ctxt'', sequent''))
   end
 
-fun meta_apply cfg (pos,arg_name) f ((actions, arg_names), (ctxt,sequent)) =
+fun meta_apply cfg (pos,arg_name) left_precedence f ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
       val fun_name = (SOME "function", Markup.plain_text, pos)
       val (_, _, actions', (ctxt',sequent')) =
-              eval_until (Context.Proof ctxt) (@{priority %\<phi>lang_app}, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
+              eval_until (Context.Proof ctxt) (left_precedence, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
       val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
    in ((Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names), (ctxt'', sequent''))
   end
@@ -358,7 +363,17 @@ fun inside_calling_stack name (actions, _) =
   end
 
 
-
+fun check_meta_apply_balance opr pos =
+  let fun err () = error ("Unbalanced " ^ opr ^ " " ^ Position.here pos)  
+      fun chk_stack (Left_Parenthesis _ :: _) = err ()
+        | chk_stack (Apply _ :: _) = err ()
+        | chk_stack (Meta_Apply (_,_,(opr',_)) :: _) =
+            if opr = opr' then () else err ()
+        | chk_stack (Begin_Block :: _) = err ()
+        | chk_stack (_ :: L) = chk_stack L
+        | chk_stack [] = err ()
+   in chk_stack
+  end
 
 
 (*** Prefix, Infix, Postfix operators  ***)

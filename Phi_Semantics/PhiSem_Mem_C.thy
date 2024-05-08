@@ -199,7 +199,8 @@ proc op_load_mem:
 
 proc op_store_mem:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
-  requires Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
+  requires \<open>report_unprocessed_element_index input_index\<close>
+       and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
                    \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
                  \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
@@ -312,7 +313,7 @@ text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
   to updating the variable or writing to the memory object.
 \<close>
 
-
+(*
 proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> state\<close>
   requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx reject\<close>
@@ -345,6 +346,7 @@ proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
   $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4] \<rightarrow> val ptr \<semicolon>
   apply_rule op_store_mem[OF Map L01 L02] ($ptr, $y)
 \<medium_right_bracket> .
+*)
 
 section \<open>Reasoning Setup\<close>
 

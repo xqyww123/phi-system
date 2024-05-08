@@ -2160,9 +2160,9 @@ subsection \<open>Convention of Operator Precedence\<close>
       \<open>dereference operator\<close>
   and \<phi>lang_app = (900, [900,900]) in \<phi>lang_expr and < \<phi>lang_dot_opr
       \<open>precedence of lambda application\<close>
-  and \<phi>lang_assignment_opr = (50, [50,50]) in \<phi>lang_expr and < \<phi>lang_app
+  and \<phi>lang_update_opr = (50, [50,50]) in \<phi>lang_expr and < \<phi>lang_app
       \<open>\<open>:=\<close>, as an arithmetic operartor\<close>
-  and \<phi>lang_assignment = (5, [5,5]) in \<phi>lang_statement and < \<phi>lang_assignment_opr
+  and \<phi>lang_assignment = (5, [5,5]) in \<phi>lang_statement and < \<phi>lang_update_opr
       \<open>\<open>\<leftarrow>\<close>, as a connective of statement\<close>
 
 \<phi>reasoner_group \<phi>parser_priority = (0, [0, 10000])

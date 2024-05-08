@@ -36,13 +36,13 @@ datatype opr_frame = Apply of ( (string * Position.T)
                    | Opr of ( int (*precedence*) * int option (*arity constraint*)
                             * (string * Position.T)
                             * Phi_CP_IDE.expr_id
-                            * thm list (*values before*)
+                            * thm list (*left operands*)
                             * thm list (*rules*))
                    | Meta_Opr of (int (*precedence*) * int option (*arity constraint*)
                                * (string * Position.T)
                                * Phi_CP_IDE.expr_id
                                * free_param option
-                               * thm list (*values before*)
+                               * thm list (*left operands*)
                                * (Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option * thm list (*values before*) ->
                                     opr_frame list * context_state ->
                                     opr_frame list * context_state))

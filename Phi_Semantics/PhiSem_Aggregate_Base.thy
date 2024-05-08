@@ -568,67 +568,42 @@ text \<open>We can use \<^term>\<open>p \<tribullet> field\<close> to access the
 
 section \<open>IDE Interface\<close>
 
-declare_\<phi>lang_operator infix 40 :=
+(* declare_\<phi>lang_operator infix 40 := *)
 
-\<phi>overloads "[]" and "[]:=" and "\<tribullet>"
+\<phi>overloads (*"[]" and "[]:=" and*) "\<tribullet>" and ":="
 
-declare op_get_aggregate[\<phi>overload "[]", \<phi>overload "\<tribullet>"]
-        op_set_aggregate[\<phi>overload "[]:="]
+declare op_get_aggregate[\<phi>overload "\<tribullet>"]
+        op_set_aggregate[\<phi>overload ":="]
 
 \<phi>reasoner_group \<phi>parser_lbrack = (500, [500,500]) \<open>\<close>
   and \<phi>parser_rbrack = (500,[500,500]) \<open>\<close>
 
 ML_file \<open>library/generic_element_access.ML\<close>
 
-\<phi>lang_parser aggregate_getter_setter (%\<phi>parser_lbrack, %\<phi>lang_app) ["["] (\<open>PROP _\<close>)
+\<phi>lang_parser aggregate_getter_setter (%\<phi>parser_lbrack, %\<phi>lang_top) ["["] (\<open>PROP _\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>[\<close> >> (fn (_, pos) => fn cfg =>
-    Generic_Element_Access.gen_access (@{\<phi>overloading "[]"}, @{\<phi>overloading "[]:="})
-                                      (("[",pos), (NONE, pos))
-                                      cfg s) \<close>
+    Generic_Element_Access.open_bracket_opr pos cfg s) \<close>
 
 \<phi>lang_parser aggregate_getter_end (%\<phi>parser_rbrack, %\<phi>lang_top) ["]"] (\<open>PROP _\<close>)
-\<open> fn opr_ctxt => Parse.position \<^keyword>\<open>]\<close> -- Scan.option (Parse.position \<^keyword>\<open>:=\<close>)
->> (fn ((_, pos), assign) => fn cfg => (
-    if Phi_Opr_Stack.inside_calling_stack "[" (#1 opr_ctxt) then ()
-    else error ("Unbalanced brackets. " ^ Position.here pos) ;
-    Phi_Opr_Stack.close_parenthesis
-      (cfg, SOME (case assign of SOME (_, pos') => Generic_Element_Access.Bracket_Opr_Write pos'
-                               | NONE => Generic_Element_Access.Bracket_Opr_Read), false)
-      opr_ctxt
+\<open> fn opr_ctxt => Parse.position \<^keyword>\<open>]\<close> >> (fn (_, pos) => fn cfg => (
+    Generic_Element_Access.close_bracket pos cfg opr_ctxt
 )) \<close>
 
-\<phi>lang_parser construct_aggregate (%\<phi>parser_lbrack, %\<phi>lang_app) ["\<lbrace>"] (\<open>PROP _\<close>)
+\<phi>lang_parser construct_aggregate (%\<phi>parser_lbrack, %\<phi>lang_top) ["\<lbrace>"] (\<open>PROP _\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>\<lbrace>\<close> -- Scan.option (Parse.short_ident --| \<^keyword>\<open>:\<close>)
 >> (fn ((_, pos), arg_name) => fn cfg =>
     Generic_Element_Access.gen_constructor "" (("\<lbrace>",pos), (arg_name, pos)) cfg s) \<close>
 
 \<phi>lang_parser construct_aggregate_end (%\<phi>parser_rbrack, %\<phi>lang_top) ["\<rbrace>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<rbrace>\<close> >> (fn (_, pos) => fn cfg => (
-    if Phi_Opr_Stack.inside_calling_stack "\<lbrace>" (#1 opr_ctxt) then ()
-    else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
+    Phi_Opr_Stack.check_meta_apply_balance "\<lbrace>" pos (#1 (#1 opr_ctxt)) ;
     Phi_Opr_Stack.close_parenthesis (cfg, NONE, false) opr_ctxt
 )) \<close>
 
 \<phi>lang_parser triangle_operator (%\<phi>parser_unique, %\<phi>lang_top) ["\<tribullet>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<tribullet>\<close> >> (fn (_, pos) => fn cfg => (
-let open Phi_Opr_Stack
-    fun is_the_first (Meta_Opr (_,_,("\<tribullet>",_),_,_,_,_) :: _) = false
-      | is_the_first (Meta_Opr _ :: L) = is_the_first L
-      | is_the_first (Meta_Opr (pr,_,_,_,_,_,_) :: L) =
-          if pr > @{priority %\<phi>lang_app} then is_the_first L else true
-      | is_the_first (Opr (pr,_,_,_,_,_) :: L) =
-          if pr > @{priority %\<phi>lang_app} then is_the_first L else true
-      | is_the_first _ = true
- in if is_the_first (#1 (#1 opr_ctxt))
-    then push_meta_operator cfg
-            ((@{priority loose %\<phi>lang_push_val+1}, @{priority %\<phi>lang_dot_opr},
-                  (VAR_ARITY_IN_OPSTACK, 1)), ("\<tribullet>", pos), NONE,
-             Generic_Element_Access.dot_triangle_opr) opr_ctxt
-    else push_meta_operator cfg
-            ((@{priority loose %\<phi>lang_dot_opr+1}, @{priority %\<phi>lang_dot_opr},
-                  (VAR_ARITY_IN_OPSTACK, 1)), ("\<tribullet>", pos), NONE,
-             Generic_Element_Access.dot_triangle_opr) opr_ctxt
-end
+  Phi_Opr_Stack.push_meta_operator cfg
+            (Generic_Element_Access.mk_dot_opr pos (#1 (#1 opr_ctxt))) opr_ctxt
 )) \<close>
 
 text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
@@ -639,22 +614,51 @@ text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
   to updating the variable or writing to the memory object.
 \<close>
 
+ML \<open>
+fun dot_opr_chk_left_precedence prio pos oprs =
+  let open Phi_Opr_Stack
+      fun prec_of first (Meta_Opr (_,_,("$",_),_,_,_,_) :: L) =
+            let val p = precedence_of L
+             in if p >= @{priority %\<phi>lang_dot_opr}
+                then prec_of false L
+                else if p < prio
+                then if first
+                  then @{priority loose %\<phi>lang_push_val+1}
+                  else @{priority loose %\<phi>lang_dot_opr+1}
+                else prio
+            end
+        | prec_of first [] =
+            if first
+            then @{priority loose %\<phi>lang_push_val+1}
+            else @{priority loose %\<phi>lang_dot_opr+1}
+        | prec_of _ (Meta_Opr (_,_,("\<tribullet>",_),_,_,_,_) :: L) = prec_of false L
+        | prec_of _ (Meta_Opr (pr,_,_,_,_,_,_) :: L) =
+            if pr > @{priority %\<phi>lang_app}
+            then prec_of false L
+            else Generic_Element_Access.err_assignment pos
+        | prec_of _ (Opr (pr,_,_,_,_,_) :: L) =
+            if pr > @{priority %\<phi>lang_app}
+            then prec_of false L
+            else Generic_Element_Access.err_assignment pos
+        | prec_of _ _ = prio
+   in prec_of true oprs
+  end
+\<close>
+
 \<phi>lang_parser assignment_opr (%\<phi>parser_left_arrow, %\<phi>lang_top) ["\<leftarrow>"] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>\<leftarrow>\<close> >> (fn (_, pos) => fn cfg => (
 let open Phi_Opr_Stack
-    fun chk_val (Meta_Opr (_,_,("$",_),_,_,_,_) :: _) = ()
-      | chk_val (Meta_Opr (_,_,("\<tribullet>",_),_,_,_,_) :: L) = chk_val L
-      | chk_val (Meta_Opr (pr,_,_,_,_,_,_) :: L) =
-          if pr > @{priority %\<phi>lang_app} then chk_val L else Generic_Element_Access.err_assignment pos
-      | chk_val (Opr (pr,_,_,_,_,_) :: L) =
-          if pr > @{priority %\<phi>lang_app} then chk_val L else Generic_Element_Access.err_assignment pos
-      | chk_val _ = Generic_Element_Access.err_assignment pos
-    val _ = chk_val (#1 (#1 opr_ctxt))
-    val prio = case (#1 (#1 opr_ctxt))
-                 of (Meta_Opr (_,_,("$",_),_,_,_,_) :: _) => @{priority loose %\<phi>lang_push_val+1}
-                  | _ => @{priority loose %\<phi>lang_dot_opr+1}
+    val prio = dot_opr_chk_left_precedence @{priority %\<phi>lang_assignment} pos (#1 (#1 opr_ctxt))
  in push_meta_operator cfg ((prio, @{priority %\<phi>lang_assignment}, (VAR_ARITY_IN_OPSTACK,1)), ("\<leftarrow>", pos), NONE,
                        Generic_Element_Access.dot_triangle_assignment) opr_ctxt
+end
+)) \<close>
+
+\<phi>lang_parser update_opr (%\<phi>parser_left_arrow, %\<phi>lang_top) [":="] (\<open>PROP _\<close>)
+\<open> fn opr_ctxt => Parse.position \<^keyword>\<open>:=\<close> >> (fn (_, pos) => fn cfg => (
+let open Phi_Opr_Stack
+ in push_meta_operator cfg ((@{priority %\<phi>lang_update_opr}, @{priority %\<phi>lang_update_opr}, (VAR_ARITY_IN_OPSTACK,1)), (":=", pos), NONE,
+                       Generic_Element_Access.dot_triangle_update_opr) opr_ctxt
 end
 )) \<close>
 

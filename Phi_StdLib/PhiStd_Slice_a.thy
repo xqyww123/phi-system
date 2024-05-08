@@ -48,8 +48,8 @@ proc memcpy_a:
   output \<open>l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>a] \<s>\<l>\<i>\<c>\<e>[i\<^sub>a,len] T\<heavy_comma> l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>b] \<s>\<l>\<i>\<c>\<e>[i\<^sub>b,len] T\<close>
   for T :: \<open>(VAL, 'x) \<phi>\<close>
 \<medium_left_bracket>
-  map_2slice_a ($len) \<medium_left_bracket> \<rightarrow> val k ;;
-    $i\<^sub>a + $k := ($i\<^sub>b + $k) !
+  map_2slice_a ($len) \<medium_left_bracket> \<rightarrow> val k \<semicolon>
+     $i\<^sub>a + $k := ($i\<^sub>b + $k) !
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
