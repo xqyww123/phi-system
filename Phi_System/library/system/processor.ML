@@ -13,6 +13,7 @@ include PHI_CP_IDE
 
 
 exception Bypass
+exception ReParse of Token.src
 
 type proc = (Phi_Opr_Stack.context -> (eval_cfg -> Phi_Opr_Stack.context) parser)
 
@@ -75,6 +76,7 @@ open Phi_CP_IDE
 (*** Syntax Processors ***)
 
 exception Bypass
+exception ReParse of Token.src
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_processing\<close> (K false);
 
@@ -138,6 +140,7 @@ fun apply_processors thy =
                                     else (apsnd (post_app (set_tokens toks cfg)) s, toks)
                                    ))
                          handle Bypass => NONE
+                              | ReParse toks => apply toks prec cfg (oprs, (ctxt,sequent))
                     else NONE
       
                in get_first try_app ps

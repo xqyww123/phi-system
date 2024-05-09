@@ -117,9 +117,9 @@ proc test_agg23:
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
-  $v[0][1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v[0][0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
-  $v
+  v[0][1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  v[0][0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  v
 \<medium_right_bracket> .
 
 proc test_agg24:
@@ -128,9 +128,9 @@ proc test_agg24:
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
-  $v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
-  $v
+  v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  v
 \<medium_right_bracket> .
 
 proc test_agg25:
@@ -139,9 +139,9 @@ proc test_agg25:
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
-  $v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
-  $v[0,1] := \<open>3 \<Ztypecolon> \<int>\<close>
+  v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  v[0,1] := \<open>3 \<Ztypecolon> \<int>\<close>
 \<medium_right_bracket> .
 
 proc test_agg26:

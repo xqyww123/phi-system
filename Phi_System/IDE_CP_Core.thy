@@ -2288,8 +2288,13 @@ lemma \<phi>cast_exception_UI:
 
 hide_fact \<phi>cast_exception_UI
 
+ML \<open>Generic_Variable_Access.lookup_bindings\<close>
+
+(* Generic_Variable_Access.lookup_bindings *)
+
 \<phi>lang_parser "apply" (%\<phi>parser_app, %\<phi>lang_app) ["", "apply_rule"] (\<open>PROP _\<close>)
-\<open> fn (oprs,(ctxt,sequent)) => Phi_App_Rules.parser >> (fn xnames => fn cfg =>
+\<open> fn (oprs,(ctxt,sequent)) =>
+    Generic_Variable_Access.parser_no_lvar ctxt Phi_App_Rules.parser >> (fn xnames => fn cfg =>
   (oprs, (ctxt, sequent)
           |> Phi_Reasoners.wrap'' (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames]))
   ))\<close>

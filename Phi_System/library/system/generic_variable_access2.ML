@@ -36,6 +36,8 @@ val register_assigner : string (*keyword that the assigner binds*)
 
 structure Assignment_Hooks : HOOKS
 
+val parser_no_lvar : Proof.context -> 'a parser -> 'a parser
+
 end
 
 structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
@@ -281,5 +283,41 @@ fun assignment_cmd binds (ctxt,sequent) =
       assignment' binds (ctxt,sequent)
       handle ASSIGN_FAIL (_, p) => error (Pretty.string_of (p ()))
 
+
+
+(** Parser **)
+
+val separator_char = String.nth Long_Name.separator 0;
+fun first_separator name =
+  let val size = String.size name
+      fun first i = if i = size then ~1
+                    else if String.nth name i = separator_char
+                    then i else first (i + 1)
+  in first 0 end;
+
+fun qualifier name =
+  let val i = first_separator name
+  in if i < 0 then "" else String.substring (name, 0, i) end;
+
+val dollar_keys = Keyword.add_minor_keywords ["$"] Keyword.empty_keywords
+val [dollar_tok] = Token.explode dollar_keys \<^here> "$"
+
+fun reparse toks =
+  raise Phi_CP_IDE.ReParse (dollar_tok :: toks)
+
+fun parser_no_lvar ctxt parser toks =
+  case toks
+    of [] => parser []
+     | (tok :: _) =>
+          (case Token.kind_of tok
+             of Token.Long_Ident =>
+                  if Generic_Variable_Access.is_a_binding ctxt (qualifier (Token.content_of tok))
+                  then reparse toks
+                  else parser toks
+              | Token.Ident =>
+                  if Generic_Variable_Access.is_a_binding ctxt (Token.content_of tok)
+                  then reparse toks
+                  else parser toks
+              | _ => parser toks )
 
 end

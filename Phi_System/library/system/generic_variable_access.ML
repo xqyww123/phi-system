@@ -16,6 +16,7 @@ val open_context : cterm list (*arguments*) -> Proof.context -> Proof.context
 val assign_anony_local_val : typ option -> Proof.context -> string * Proof.context
 val bind_generic_vars : (xstring (*external name*) * (cterm * evaluation)) list -> Proof.context -> Proof.context
 val lookup_bindings : Proof.context -> xstring -> (cterm * evaluation) option
+val is_a_binding : Proof.context -> xstring -> bool
 val under_context : Proof.context -> bool
 
 val mode_synthesis : bool Config.T
@@ -109,6 +110,11 @@ fun bind_generic_vars vals =
   map_value_context (fn (A,V,N) => (A, fold (Symtab.update o apsnd (apfst Thm.trim_context_cterm)) vals V ,N))
 
 fun lookup_bindings ctxt = Symtab.lookup (#2 (value_context_of ctxt))
+
+fun is_a_binding ctxt =
+  case Value_Ctxt.get ctxt
+    of NONE => (fn _ => false)
+     | SOME c => Symtab.defined (#2 c)
 
 (*** Parser for Access ***)
 
@@ -526,5 +532,5 @@ Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
   else (ctxt,sequent)
 )))
 
-
 end
+
