@@ -103,20 +103,51 @@ fun mk_element_index_input_internal args0 ctxt =
 fun is_empty (Const (\<^const_name>\<open>Nil\<close>, _)) = true
   | is_empty _ = false
 
+exception RW_RETURN of Phi_Opr_Stack.opr_frame list * context_state
 fun rw_access (read_rule_name, write_rule_name) read_or_write idx_input cfg (oprs, (ctxt,sequent)) =
   let val post_app = Phi_CP_IDE.Post_App.invoke (Context.Proof ctxt)
-      val (idx_input', ctxt'1, sequent'1, oprs'1) =
+      val (oprs'1, (idx_input', (ctxt'1, sequent'1))) =
         case oprs
-          of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", _), _, SOME (Phi_Opr_Stack.String_Param vname), _, _) :: oprs')
-              => let val ctxt' = Generic_Element_Access.enable_report_unprocessed_element_index false ctxt
-                     val (ctxt'1, sequent'1) = (ctxt', sequent)
-                            |> Phi_Reasoners.wrap'' (Generic_Variable_Access.get_value vname idx_input)
+          of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), _, SOME (Phi_Opr_Stack.String_Param vname), _, _) :: oprs')
+              => let
+                 fun attempt prohibit_remains_idx idx F s =
+                    let val s' = s
+                            |> apfst (Generic_Element_Access.enable_report_unprocessed_element_index prohibit_remains_idx)
+                            |> F idx
                             |> post_app cfg
-                     val idx_input' = Generic_Element_Access.get_unprocessed_element_index ctxt'1
-                                   |> the_default idx_input
-                  in (idx_input', ctxt'1, sequent'1, oprs')
-                 end
-           | _ => (idx_input, ctxt, sequent, oprs)
+                          handle THM ("Application Fail", _, _) =>
+                            raise Generic_Element_Access.Remaining_Eleidx idx
+                        val idx' = Generic_Element_Access.get_unprocessed_element_index (fst s')
+                                     |> the_default idx
+                        val _ = if prohibit_remains_idx andalso not (is_empty (Thm.term_of idx'))
+                                then raise Generic_Element_Access.Remaining_Eleidx idx'
+                                else ()
+                     in (idx', s')
+                    end
+              in if read_or_write
+                 then attempt false idx_input
+                            (Phi_Reasoners.wrap'' o Generic_Variable_Access.get_value vname)
+                            (ctxt,sequent)
+                        |> pair oprs'
+                 else attempt false empty_input
+                                (Phi_Reasoners.wrap'' o Generic_Variable_Access.get_value vname)
+                                (ctxt,sequent)
+                              |> (fn (_, s') => (oprs', (idx_input, s'))) 
+                (*let (*the commented programs allows ":=" to assign / alter a variable *)
+                      fun fallback () =
+                            attempt false empty_input
+                                (Phi_Reasoners.wrap'' o Generic_Variable_Access.get_value vname)
+                                (ctxt,sequent)
+                              |> (fn (_, s') => (oprs', (idx_input, s')))
+                   in attempt true idx_input
+                            (fn idx => Generic_Variable_Access.assignment' [(NONE, (Binding.make (vname, pos), idx))])
+                            (ctxt,sequent)
+                        |> (fn idx_stat => raise RW_RETURN (oprs', snd idx_stat))
+                      handle Generic_Element_Access.Remaining_Eleidx _ => fallback()
+                           | Generic_Variable_Access.ASSIGN_FAIL _ => fallback()
+                  end*)
+             end
+           | _ => (oprs, (idx_input, (ctxt, sequent)))
 
       val r_rules = Phi_App_Rules.get_overloadings ctxt'1 read_rule_name
       val w_rules = if read_or_write then []
@@ -138,7 +169,7 @@ fun rw_access (read_rule_name, write_rule_name) read_or_write idx_input cfg (opr
                          |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
                          |> post_app cfg
                     handle THM ("Application Fail", _, _) =>
-                        Generic_Element_Access.error_unprocessed_element_index (fst s) idx
+                        raise Generic_Element_Access.Remaining_Eleidx idx
                     val idx' = Generic_Element_Access.get_unprocessed_element_index (fst s')
                             |> the_default idx
                     val _ = if prohibit_remains_idx andalso not (is_empty (Thm.term_of idx'))
@@ -156,8 +187,11 @@ fun rw_access (read_rule_name, write_rule_name) read_or_write idx_input cfg (opr
                    handle Generic_Element_Access.Remaining_Eleidx _ =>
                       process_index (attempt false r_rules s))
          end
+         handle Generic_Element_Access.Remaining_Eleidx idx =>
+            Generic_Element_Access.error_unprocessed_element_index (fst s) idx
    in (oprs'1, process_index (idx_input', (ctxt'1, sequent'1)))
   end
+  handle RW_RETURN ret => ret
 
 fun gen_access named_thm_of_rules pos_and_first_args cfg stat =
   let fun invoke read_or_write args (oprs, (ctxt,sequent)) =
@@ -333,7 +367,7 @@ fun build_dot_opr_stack cfg idxs oprs =
              then @{priority loose %\<phi>lang_push_val}
              else @{priority loose %\<phi>lang_dot_opr}),
             SOME (if i = last then 0 else 1),
-            (if i = last then "$" else "\<tribullet>", pos),
+            (if i = last then "<val>" else "\<tribullet>", pos),
             #id cfg,
             NONE,
             vals,

@@ -6,7 +6,7 @@ begin
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
 proc qsort:
-  input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<Pp>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
+  input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<bbbP>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma> \<comment> \<open>\<open>LEN\<close> is the length of the entire array, which decides
                                             the scope that a slice pointer can range over.\<close>
           len \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
           l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<close>

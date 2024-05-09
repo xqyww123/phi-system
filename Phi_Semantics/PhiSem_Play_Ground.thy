@@ -62,18 +62,18 @@ no_notation Set.member ("(_/ : _)" [51, 51] 50)
 
 
 proc test_ptr2:
-  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: \<p>\<t>\<r>, x: \<t>\<u>\<p> {\<b>\<o>\<o>\<l>, \<s>\<t>\<r>\<u>\<c>\<t> {q: \<a>\<i>\<n>\<t>, w: \<p>\<t>\<r>}}, y: \<a>\<i>\<n>\<t>}, \<int> \<rbrace>\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: \<p>\<t>\<r>, x: \<t>\<u>\<p> {\<b>\<o>\<o>\<l>, \<s>\<t>\<r>\<u>\<c>\<t> {q: \<a>\<i>\<n>\<t>, w: \<p>\<t>\<r>}}, y: \<a>\<i>\<n>\<t>}, \<int> \<rbrace>\<close>
   premises \<open>ptr \<noteq> 0\<close>
-  output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<p>\<t>\<r>\<close>
+  output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<p>\<t>\<r>\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 1) \<semicolon>
   $1[$a].x[$b].w
 \<medium_right_bracket> .
 
 proc test_ptr3:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr \<tribullet> a \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
+  output \<open>addr \<tribullet> a \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   $addr.a
 \<medium_right_bracket> .
@@ -131,6 +131,43 @@ proc test_agg24:
   $v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
   $v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
   $v
+\<medium_right_bracket> .
+
+proc test_agg25:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,3), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 \<semicolon>
+     
+  $v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  $v[0,1] := \<open>3 \<Ztypecolon> \<int>\<close>
+\<medium_right_bracket> .
+
+proc test_agg26:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,3), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 \<semicolon>
+     
+  $v\<tribullet>0[1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  $v\<tribullet>0[0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  $v \<tribullet> 0 \<tribullet> 1 := \<open>3 \<Ztypecolon> \<int>\<close>
+\<medium_right_bracket> .
+
+proc test_agg27:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket>  
+  val v \<leftarrow> ( $1[0,1] := \<open>2 \<Ztypecolon> \<int>\<close> )\<semicolon>
+  $v[0,0] := \<open>1 \<Ztypecolon> \<nat>\<close>
+\<medium_right_bracket> .
+
+proc test_agg28:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket>  
+  ($1[0,1] := \<open>2 \<Ztypecolon> \<int>\<close>) [0,0] := \<open>1 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
 
@@ -217,12 +254,7 @@ proc FIB:
 syntax "_rec_fun_"
     ("\<r>\<e>\<c>\<u>\<r>\<s>\<i>\<v>\<e>- *)
 
-
-
-
-
-
-
+declare [[\<phi>hide_techinicals, \<phi>display_value_internal_name=false]]
 
 proc FIB2:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>

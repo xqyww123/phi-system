@@ -56,9 +56,9 @@ proc op_shift_pointer [\<phi>overload +]:
 
 proc abst_shift_pointer [\<phi>overload +]:
   requires [unfolded abstract_address_offset_def, useful]: \<open>abstract_address_offset addr TY TY' n addr'\<close>
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> TY\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>('b::len)\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> TY\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>('b::len)\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<Pp>\<t>\<r> TY'\<close>
+  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> TY'\<close>
 \<medium_left_bracket>
   op_shift_pointer ($addr to RawPointer, $n) \<open>TY\<close>
 \<medium_right_bracket> .

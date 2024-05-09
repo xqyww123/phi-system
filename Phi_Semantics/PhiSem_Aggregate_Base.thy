@@ -555,8 +555,8 @@ parse_translation \<open>[
 ]\<close>
 
 print_translation \<open>[
-  (\<^syntax_const>\<open>_access_to_ele_synt_\<close>, fn ctxt => fn [a,x] =>
-      Const(\<^const_syntax>\<open>access_to_ele_synt\<close>, dummyT) $ a $ Phi_Aggregate_Syntax.print_index x )
+  (\<^const_syntax>\<open>access_to_ele_synt\<close>, fn ctxt => fn [a,x] =>
+      Const(\<^syntax_const>\<open>_access_to_ele_synt_\<close>, dummyT) $ a $ Phi_Aggregate_Syntax.print_index x )
 ]\<close>
  
 text \<open>We can use \<^term>\<open>p \<tribullet> field\<close> to access the address of the element named \<open>field\<close> in the
@@ -657,7 +657,8 @@ end
 \<phi>lang_parser update_opr (%\<phi>parser_left_arrow, %\<phi>lang_top) [":="] (\<open>PROP _\<close>)
 \<open> fn opr_ctxt => Parse.position \<^keyword>\<open>:=\<close> >> (fn (_, pos) => fn cfg => (
 let open Phi_Opr_Stack
- in push_meta_operator cfg ((@{priority %\<phi>lang_update_opr}, @{priority %\<phi>lang_update_opr}, (VAR_ARITY_IN_OPSTACK,1)), (":=", pos), NONE,
+    val prio = dot_opr_chk_left_precedence @{priority %\<phi>lang_update_opr} pos (#1 (#1 opr_ctxt))
+ in push_meta_operator cfg ((prio, @{priority %\<phi>lang_update_opr}, (VAR_ARITY_IN_OPSTACK,1)), (":=", pos), NONE,
                        Generic_Element_Access.dot_triangle_update_opr) opr_ctxt
 end
 )) \<close>

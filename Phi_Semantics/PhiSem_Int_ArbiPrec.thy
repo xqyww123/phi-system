@@ -467,8 +467,6 @@ lemma op_lt_aint[\<phi>overload <,
   unfolding op_a_lt_def
   by (cases rawx; cases rawy; simp, rule, rule, simp, rule, simp, rule, simp)
 
-declare [[\<phi>display_value_internal_name]]
-
 lemma op_lt_anat[\<phi>overload <,
                  \<phi>synthesis for _ (%synthesis_arith)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:

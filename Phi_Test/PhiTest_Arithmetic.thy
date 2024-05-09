@@ -86,8 +86,6 @@ proc test_prime':
 \<medium_right_bracket> \<comment> \<open>Close the function body\<close> .
 
 
-declare [[\<phi>display_value_internal_name]]
-
 proc GCD:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 

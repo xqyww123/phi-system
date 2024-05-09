@@ -1,13 +1,17 @@
 signature GENERIC_VARIABLE_ACCESS = sig
 include GENERIC_VARIABLE_ACCESS
 
+type element_index_input = cterm
+
+datatype assign_fail_reason = NEXIST_VAR of string | NOT_ASSGN_TARGET of string
+exception ASSIGN_FAIL of assign_fail_reason * (unit -> Pretty.T)
+
 (** Get **)
 
-val get_value : string -> cterm -> Proof.context -> thm -> thm
+val get_value : string -> element_index_input -> Proof.context -> thm -> thm
 
 (** Assignment **)
 
-type element_index_input = cterm
 type assigner = string (*identifier (kind) of the assigner*)
               * ( binding (*name of the value or variable*)
                 * element_index_input
@@ -19,6 +23,8 @@ type assigner = string (*identifier (kind) of the assigner*)
                       (*declare the condition, coinciding with the order of the conditions*))
 
 val assignment : ((binding * element_index_input) * assigner) list
+              -> context_state -> context_state
+val assignment' : (string (*keyword*) option * (binding (*of generic variables*) * element_index_input)) list
               -> context_state -> context_state
 val assignment_cmd : (string (*keyword*) option * (binding (*of generic variables*) * element_index_input)) list
               -> context_state -> context_state
@@ -86,18 +92,23 @@ fun register_assigner (keyword, typ_const, descr, assigner) =
   Assigner.map (fn (A,K) => (Symtab.update_new (keyword, (descr, assigner)) A,
                              Symtab.update_new (typ_const, keyword) K))
 
+datatype assign_fail_reason = NEXIST_VAR of string | NOT_ASSGN_TARGET of string
+exception ASSIGN_FAIL of assign_fail_reason * (unit -> Pretty.T)
+
 fun parse_assigner ctxt assgm =
   let
     val (assigner, type_map) = Assigner.get (Proof_Context.theory_of ctxt)
-    fun not_found name = let open Pretty in
-        error (string_of (chunks (
-          block [Binding.pretty name, str " is not an existing local value or variable."] ::
-          str "Use the following syntax:" ::
-          (map (fn (key, (descr,_)) =>
-                    item [keyword1 key, str " ", Binding.pretty name, str ", ", str descr])
-               (Symtab.dest assigner))
-        )))
-      end
+    fun not_found name = 
+      raise ASSIGN_FAIL (NEXIST_VAR (Binding.name_of name),
+        fn () => let open Pretty in
+          error (string_of (chunks (
+            block [Binding.pretty name, str " is not an existing local value or variable."] ::
+            str "Use the following syntax:" ::
+            (map (fn (key, (descr,_)) =>
+                      item [keyword1 key, str " ", Binding.pretty name, str ", ", str descr])
+                 (Symtab.dest assigner))
+          )))
+        end)
     fun find name =
       case Generic_Variable_Access.lookup_bindings ctxt (Binding.name_of name)
         of SOME (X,_) => (
@@ -112,10 +123,11 @@ fun parse_assigner ctxt assgm =
       | parse (SOME key, name) =
           case Symtab.lookup assigner key
             of SOME (_, A) => (name, A)
-             | _ => let open Pretty
-                     in error (string_of (block [
-                          keyword1 key, str " is not a kind of assignment target."
-                     ])) end
+             | _ => raise ASSIGN_FAIL (NOT_ASSGN_TARGET key, fn () =>
+                      let open Pretty
+                       in error (string_of (block [
+                            keyword1 key, str " is not a kind of assignment target."
+                       ])) end)
   in map parse assgm
   end
 
@@ -262,8 +274,12 @@ fun assignment assgns (ctxt,sequent)
       = Assignment_Hooks.invoke_until_success (Context.Proof ctxt)
                                               default_assignment assgns (ctxt,sequent)
 
-fun assignment_cmd binds (ctxt,sequent) =
+fun assignment' binds (ctxt,sequent) =
       assignment (parse_assigner ctxt binds) (ctxt,sequent)
+
+fun assignment_cmd binds (ctxt,sequent) =
+      assignment' binds (ctxt,sequent)
+      handle ASSIGN_FAIL (_, p) => error (Pretty.string_of (p ()))
 
 
 end

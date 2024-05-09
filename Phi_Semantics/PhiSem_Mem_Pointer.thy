@@ -3,7 +3,7 @@ theory PhiSem_Mem_Pointer
   keywords
       "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
-      and "<Ptr>" = "\<Pp>\<t>\<r>"
+      and "<Ptr>" = "\<bbbP>\<t>\<r>"
       and "<ptr>" = "\<p>\<t>\<r>"
 begin
 
@@ -430,7 +430,7 @@ definition addr_gep :: "logaddr \<Rightarrow> aggregate_index \<Rightarrow> loga
 definition addr_geps :: "logaddr \<Rightarrow> aggregate_path \<Rightarrow> logaddr"
   where "addr_geps addr path = map_memaddr (\<lambda>idx. idx @ path) addr"
 
-\<phi>adhoc_overloading access_to_ele_synt addr_gep
+adhoc_overloading access_to_ele_synt addr_gep
 
 (*
 syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<tribullet>" 55)
@@ -598,15 +598,13 @@ subsection \<open>Standard Logical Pointer\<close>
       cannot point to the end of an allocation block, which is its limitation.
       only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
   
-\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<Pp>\<t>\<r> _" [900] 899)
+\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<bbbP>\<t>\<r> _" [900] 899)
   where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY)\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>
        and Functionality
        and \<open>\<phi>SemType (x \<Ztypecolon> Ptr TY) pointer\<close>
        and \<open>Semantic_Zero_Val pointer (Ptr TY) 0\<close>
-
-
 
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
@@ -617,28 +615,28 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 
 lemma Ptr_to_Raw_Pointer[\<phi>reason %ToA_cut]:
   \<open> Threshold_Cost 9
-\<Longrightarrow> x \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> logaddr_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) \<close>
+\<Longrightarrow> x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> logaddr_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) \<close>
   \<medium_left_bracket>
      to \<open>OPEN _ _\<close>
      \<open>logaddr_to_raw x \<Ztypecolon> MAKE _ RawPointer\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:
-  \<open>x \<Ztypecolon> \<Pp>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = logaddr_to_raw x \<and> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) @tag to RawPointer\<close>
+  \<open>x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = logaddr_to_raw x \<and> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) @tag to RawPointer\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma Raw_Pointer_to_Ptr[\<phi>reason %ToA_cut]:
   \<open> Threshold_Cost 9
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
-\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Pp>\<t>\<r> TY \<close>
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<bbbP>\<t>\<r> TY \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
-    \<open>y \<Ztypecolon> MAKE _ (\<Pp>\<t>\<r> TY)\<close>
+    \<open>y \<Ztypecolon> MAKE _ (\<bbbP>\<t>\<r> TY)\<close>
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
-\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<Pp>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @tag to (\<Pp>\<t>\<r> TY)\<close>
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<bbbP>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @tag to (\<bbbP>\<t>\<r> TY)\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 
@@ -666,10 +664,10 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
 
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_pointer.mk 0)] \<Pp>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_pointer.mk 0)] \<bbbP>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
   \<medium_left_bracket>
-    semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<Pp>\<t>\<r> TY)\<close>
+    semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<bbbP>\<t>\<r> TY)\<close>
     certified by auto_sledgehammer
   \<medium_right_bracket> .
 

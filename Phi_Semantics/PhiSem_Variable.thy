@@ -257,8 +257,6 @@ lemma parse_eleidx_input_least1_opt_NIL:
 
 subsection \<open>Variable Operations\<close>
 
-declare [[\<phi>display_value_internal_name=true]]
-
 proc op_get_var:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<r>[v] T\<close>
   requires [\<phi>reason, unfolded \<phi>SemType_def, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
