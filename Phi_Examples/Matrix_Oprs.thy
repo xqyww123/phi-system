@@ -45,7 +45,7 @@ proc new_mat:
             \<s>\<u>\<b>\<j> a. address_to_base a\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-  calloc1 \<open>\<Aa>\<r>\<r>\<a>\<y>[M] \<Aa>\<r>\<r>\<a>\<y>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
+  calloc1 \<open>\<bbbA>\<r>\<r>\<a>\<y>[M] \<bbbA>\<r>\<r>\<a>\<y>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
 \<medium_right_bracket> .
 
 

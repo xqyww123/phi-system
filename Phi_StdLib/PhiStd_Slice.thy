@@ -44,8 +44,8 @@ proc (nodef) map_2slice:
 
 proc memcpy:
   requires \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
-  input  \<open>i\<^sub>a \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<bbbP>\<t>\<r>[addr\<^sub>a:LEN\<^sub>a] TY\<heavy_comma>
-          i\<^sub>b \<Ztypecolon> \<v>\<a>\<l> \<Ss>\<bbbP>\<t>\<r>[addr\<^sub>b:LEN\<^sub>b] TY\<heavy_comma>
+  input  \<open>i\<^sub>a \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr\<^sub>a:LEN\<^sub>a] TY\<heavy_comma>
+          i\<^sub>b \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr\<^sub>b:LEN\<^sub>b] TY\<heavy_comma>
           len \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma>
           l\<^sub>a \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>a] \<s>\<l>\<i>\<c>\<e>[i\<^sub>a,len] T\<heavy_comma>
           l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>b] \<s>\<l>\<i>\<c>\<e>[i\<^sub>b,len] T\<close>

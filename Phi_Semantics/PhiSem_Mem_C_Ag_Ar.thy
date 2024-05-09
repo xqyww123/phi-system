@@ -1,6 +1,6 @@
 theory PhiSem_Mem_C_Ag_Ar
   imports PhiSem_Mem_C PhiSem_Aggregate_Array
-  abbrevs "<SPtr>" = "\<Ss>\<bbbP>\<t>\<r>"
+  abbrevs "<SPtr>" = "\<bbbS>\<p>\<t>\<r>"
 begin
 
 section \<open>Semantics\<close>
@@ -164,11 +164,11 @@ lemma valid_logaddr_range_sub:
 
 
 
-notation SlicePtr ("\<Ss>\<bbbP>\<t>\<r>[_:_] _" [20,20,900] 899)
+notation SlicePtr ("\<bbbS>\<p>\<t>\<r>[_:_] _" [20,20,900] 899)
 
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
-  \<open>\<phi>Equal (\<Ss>\<bbbP>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
+  \<open>\<phi>Equal (\<bbbS>\<p>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
   unfolding \<phi>Equal_def
   by (clarsimp simp: logaddr_to_raw_inj_array)
 
@@ -176,36 +176,36 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 
 lemma [\<phi>reason %slice_ptr_ToA]: \<comment> \<open>TODO: automatically generate this rule!\<close>
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr \<and> len' = len \<and> TY' = TY
-\<Longrightarrow> x \<Ztypecolon> \<Ss>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<Ss>\<bbbP>\<t>\<r>[addr':len'] TY' \<close>
+\<Longrightarrow> x \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr':len'] TY' \<close>
   unfolding Premise_def
   by simp
 
 lemma [\<phi>reason %slice_ptr_ToA]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
-\<Longrightarrow> i \<Ztypecolon> \<Ss>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY' \<close>
+\<Longrightarrow> i \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
     to \<open>\<bbbP>\<t>\<r> TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr, auto_sledgehammer)
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<Ss>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
-\<Longrightarrow> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<Ss>\<bbbP>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
+\<Longrightarrow> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
   \<medium_left_bracket>
     to RawPointer
     note idx_step_type_arr[simp] ;;
-    \<open>i \<Ztypecolon> MAKE _ (\<Ss>\<bbbP>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
+    \<open>i \<Ztypecolon> MAKE _ (\<bbbS>\<p>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<Ss>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr \<noteq> 0
-\<Longrightarrow> addr \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[LEN] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<Ss>\<bbbP>\<t>\<r>[addr:LEN] TY @tag \<T>\<P> \<close>
+\<Longrightarrow> addr \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[LEN] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:LEN] TY @tag \<T>\<P> \<close>
   \<medium_left_bracket>
     to RawPointer ;;
-    \<open>0 \<Ztypecolon> MAKE _ (\<Ss>\<bbbP>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
+    \<open>0 \<Ztypecolon> MAKE _ (\<bbbS>\<p>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 
@@ -214,7 +214,7 @@ section \<open>Array in Memory\<close>
 
 subsection \<open>Syntax\<close>
 
-term \<open>\<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] T\<close>
+term \<open>\<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[n] T\<close>
 
 setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 110 (
@@ -226,7 +226,7 @@ setup \<open>Context.theory_map (
      | X => NONE)
 )\<close>
 
-term \<open>\<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[n] (T::(VAL,'x) \<phi>)\<close>
+term \<open>\<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[n] (T::(VAL,'x) \<phi>)\<close>
 
 subsection \<open>Reasoning\<close>
 
@@ -236,7 +236,7 @@ text \<open>The following lemma cannot be automated because it is tightly relate
 
 lemma split_mem_coerce_array':
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length l = Suc n
-\<Longrightarrow> (l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[Suc n] T) = (last l \<Ztypecolon> AG_IDX(n\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) * (take n l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] T)\<close>
+\<Longrightarrow> (l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<bbbA>\<r>\<r>\<a>\<y>[Suc n] T) = (last l \<Ztypecolon> AG_IDX(n\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) * (take n l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<bbbA>\<r>\<r>\<a>\<y>[n] T)\<close>
   unfolding BI_eq_iff Premise_def
   apply (clarsimp; rule; clarsimp)
 
@@ -269,7 +269,7 @@ lemma split_mem_coerce_array':
 
 
 lemma split_mem_coerce_array:
-  \<open> (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] T) = \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<close>
+  \<open> (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<bbbA>\<r>\<r>\<a>\<y>[n] T) = \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<close>
   apply (induct n,
       (rule \<phi>Type_eqI_BI; unfold BI_eq_iff; clarsimp; rule;
        clarsimp simp: Map_of_Val_arr fun_eq_iff atLeast0_lessThan_Suc list_all2_Cons2
@@ -295,8 +295,8 @@ lemma [\<phi>reason %mapToA_mem_coerce,
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] U) \<^emph>[C\<^sub>R] R
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] U') \<^emph>[C\<^sub>R] R'
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] U) \<^emph>[C\<^sub>R] R
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] U') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
@@ -310,8 +310,8 @@ lemma [\<phi>reason %mapToA_mem_coerce,
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
 \<Longrightarrow> \<m>\<a>\<p> g : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T') \<^emph>[C\<^sub>W] W'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] T') \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
@@ -322,28 +322,28 @@ lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] T) \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 lemma [\<phi>reason %ToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %ToA_mem_coerce]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>[0,n] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[sty] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<Aa>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<a>\<r>\<r>\<a>\<y>[n] sty] (\<bbbA>\<r>\<r>\<a>\<y>[n] T) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Guided_Mem_Coercion_def split_mem_coerce_array .
 
 

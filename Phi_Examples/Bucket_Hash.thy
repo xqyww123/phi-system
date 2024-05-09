@@ -20,7 +20,7 @@ abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {tabl: \<
 \<phi>type_def Hash :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, nat \<rightharpoonup> 'x) \<phi>\<close>
   where \<open>f \<Ztypecolon> Hash addr TY T \<equiv> 
        (tabl_addr, N) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> tabl: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
-        bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[tabl_addr] \<Aa>\<r>\<r>\<a>\<y>[N] (\<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
+        bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[tabl_addr] \<bbbA>\<r>\<r>\<a>\<y>[N] (\<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
         buckets \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. i < N} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>)
        \<s>\<u>\<b>\<j> bucket_ptrs buckets tabl_addr N.
            length bucket_ptrs = N \<and>
@@ -208,7 +208,7 @@ proc new_hash:
 \<medium_left_bracket>
   val tabl_addr \<leftarrow> calloc ($N) \<open>\<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<close> \<semicolon>
   replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, $N)
-              \<open>\<lambda>M. bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[addr] \<Aa>\<r>\<r>\<a>\<y>[N] (\<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
+              \<open>\<lambda>M. bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[N] (\<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
                    (\<lambda>i. []) \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. i < M} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>)
                    \<s>\<u>\<b>\<j> bucket_ptrs. \<top> \<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>

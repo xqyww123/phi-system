@@ -6,9 +6,9 @@ theory Dyn_Arr2
   
 begin
 
-term \<open>\<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] \<nat>\<close>
+term \<open>\<m>\<e>\<m>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] \<nat>\<close>
 term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0,cap] \<nat>\<close>
-ML \<open>@{term \<open>\<m>\<e>\<m>[a\<^sub>D] \<Aa>\<r>\<r>\<a>\<y>[cap] \<nat>\<close>}\<close>
+ML \<open>@{term \<open>\<m>\<e>\<m>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] \<nat>\<close>}\<close>
 ML \<open>@{term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0,cap] \<nat>\<close>}\<close>
 term Mem_Coercion
 

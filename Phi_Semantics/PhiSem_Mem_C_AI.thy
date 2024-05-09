@@ -48,7 +48,7 @@ proc calloc_aN2:
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>replicate n (replicate m z) \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<Aa>\<r>\<r>\<a>\<y>[n] \<Aa>\<r>\<r>\<a>\<y>[m] T)\<heavy_comma>
+  output \<open>replicate n (replicate m z) \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<bbbA>\<r>\<r>\<a>\<y>[n] \<bbbA>\<r>\<r>\<a>\<y>[m] T)\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> Ptr (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY)
           \<s>\<u>\<b>\<j> addr. address_to_base addr \<close>
   including Semantic_Zero_Val_EIF_brute
