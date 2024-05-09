@@ -5,7 +5,7 @@ begin
 abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
 
-\<phi>type_def Linked_Lst :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
+\<phi>type_def Linked_Lst :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr TY T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) = (ls \<Ztypecolon> Linked_Lst nxt TY T\<heavy_comma>
                                           (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>
@@ -59,8 +59,8 @@ proc prepend_llist:
   output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v#l \<Ztypecolon> Linked_Lst addr' TY T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
   val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<close> \<semicolon>
-  $ret \<tribullet> nxt := $addr \<semicolon>
-  $ret \<tribullet> data := $v \<semicolon>
+  $ret.nxt := $addr \<semicolon>
+  $ret.data := $v \<semicolon>
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ TY T\<close> \<semicolon>
   $ret
 \<medium_right_bracket> .
@@ -79,7 +79,7 @@ proc pop_llist:
   \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
    
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
-  val ret \<leftarrow> $addr \<tribullet> nxt ! \<semicolon>
+  val ret \<leftarrow> $addr.nxt ! \<semicolon>
   mfree ($addr) \<semicolon>
 
   $ret  
@@ -94,7 +94,7 @@ proc nth_llist:
   \<medium_left_bracket>
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon> \<comment> \<open>annotation 1: open abstraction\<close>
     if ($i = \<open>0 \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<close>) \<medium_left_bracket>
-        $addr \<tribullet> data !
+        $addr.data !
     \<medium_right_bracket> \<medium_left_bracket>
         nth_llist ($addr \<tribullet> nxt !, $i - 1)
     \<medium_right_bracket>
@@ -121,10 +121,10 @@ proc update_nth_llist:
   \<medium_left_bracket>
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon> \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
-        $addr \<tribullet> data := $y
+        $addr.data := $y
     \<medium_right_bracket> \<medium_left_bracket>
         update_nth_llist ($addr \<tribullet> nxt !, $i - 1, $y)
-    \<medium_right_bracket> note [[\<phi>trace_reasoning = 2]] \<semicolon>
+    \<medium_right_bracket> \<semicolon>
     \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close>  \<comment> \<open>annotation 2: close abstraction\<close>
   \<medium_right_bracket> .
 
@@ -166,8 +166,8 @@ proc reverse_aux:
       $addr'
     \<medium_right_bracket> \<medium_left_bracket>
       \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
-      $addr \<tribullet> nxt ! \<rightarrow> val aa \<semicolon>
-      $addr \<tribullet> nxt := $addr' \<semicolon>
+      $addr.nxt! \<rightarrow> val aa \<semicolon>
+      $addr.nxt := $addr' \<semicolon>
       \<open>Linked_Lst addr' TY T\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>hd l # l' \<Ztypecolon> Linked_Lst addr TY T\<close> \<semicolon>
       reverse_aux ($addr, $aa) 
     \<medium_right_bracket>

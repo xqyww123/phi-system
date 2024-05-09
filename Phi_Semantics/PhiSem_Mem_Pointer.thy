@@ -85,8 +85,8 @@ lemma unat_to_size_t[simp]:
 
 paragraph \<open>Logical and Physical Addresses\<close>
 
-type_synonym logaddr = "aggregate_path memaddr"
-type_synonym rawaddr = \<open>\<s>\<i>\<z>\<e>_\<t> word memaddr\<close> \<comment> \<open>physical pointer having physical offset\<close>
+type_synonym address = "aggregate_path memaddr" \<comment> \<open>Logical address\<close>
+type_synonym rawaddr = \<open>\<s>\<i>\<z>\<e>_\<t> word memaddr\<close> \<comment> \<open>Physical pointer having physical offset\<close>
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -177,22 +177,22 @@ lemma Valid_MemBlk_zero[simp]: \<open>Valid_MemBlk Null\<close>
 abbreviation valid_rawaddr :: \<open>rawaddr \<Rightarrow> bool\<close>
   where \<open>valid_rawaddr addr \<equiv> Valid_MemBlk (memaddr.blk addr)\<close>
 
-definition valid_logaddr :: "logaddr \<Rightarrow> bool"
-  where "valid_logaddr addr \<longleftrightarrow>
+definition valid_address :: "address \<Rightarrow> bool"
+  where "valid_address addr \<longleftrightarrow>
     Valid_MemBlk (memaddr.blk addr) \<and>
     (memaddr.blk addr = Null \<longrightarrow> memaddr.index addr = []) \<and>
     valid_index (memblk.layout (memaddr.blk addr)) (memaddr.index addr)"
 
 lemma valid_rawaddr_nil[simp]:
-  \<open>valid_logaddr (memaddr blk []) = Valid_MemBlk blk\<close>
-  unfolding valid_logaddr_def
+  \<open>valid_address (memaddr blk []) = Valid_MemBlk blk\<close>
+  unfolding valid_address_def
   by auto
 
 lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr 0\<close>
   by (simp add: zero_prod_def Valid_MemBlk_def zero_memaddr_def)
 
-lemma valid_logaddr_0[simp]: \<open>valid_logaddr 0\<close>
-  by (simp add: valid_logaddr_def zero_prod_def Valid_MemBlk_def zero_memaddr_def)
+lemma valid_address_0[simp]: \<open>valid_address 0\<close>
+  by (simp add: valid_address_def zero_prod_def Valid_MemBlk_def zero_memaddr_def)
 
 subsubsection \<open>Basic Operations and Properties of Addresses\<close>
 
@@ -213,37 +213,37 @@ lemma index_type_type_storable_in_mem:
 
 paragraph \<open>The type of the object that a pointer points to\<close>
 
-abbreviation logaddr_type :: \<open>logaddr \<Rightarrow> TY\<close>
-  where \<open>logaddr_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
+abbreviation address_type :: \<open>address \<Rightarrow> TY\<close>
+  where \<open>address_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
 
-lemma logaddr_storable_in_mem:
-  \<open>valid_logaddr addr \<Longrightarrow> type_storable_in_mem (logaddr_type addr)\<close>
-  unfolding valid_logaddr_def Valid_MemBlk_def zero_memaddr_def
+lemma address_storable_in_mem:
+  \<open>valid_address addr \<Longrightarrow> type_storable_in_mem (address_type addr)\<close>
+  unfolding valid_address_def Valid_MemBlk_def zero_memaddr_def
   by (cases addr; case_tac x1; simp; insert index_type_type_storable_in_mem; blast)
 
 
 
 paragraph \<open>Relation between Logical Address and Physical Address\<close>
 
-definition logaddr_to_raw :: \<open>logaddr \<Rightarrow> rawaddr\<close>
-  where \<open>logaddr_to_raw addr =
+definition address_to_raw :: \<open>address \<Rightarrow> rawaddr\<close>
+  where \<open>address_to_raw addr =
     (case addr of memaddr seg idx \<Rightarrow> memaddr seg (to_size_t (index_offset (memblk.layout seg) idx)))\<close>
 
-lemma logaddr_to_raw_nil[simp]:
-  \<open>logaddr_to_raw (memaddr blk []) = (memaddr blk 0)\<close>
-  unfolding logaddr_to_raw_def by simp
+lemma address_to_raw_nil[simp]:
+  \<open>address_to_raw (memaddr blk []) = (memaddr blk 0)\<close>
+  unfolding address_to_raw_def by simp
 
-lemma logaddr_to_raw_0[simp]:
-  \<open>logaddr_to_raw 0 = 0\<close>
-  unfolding logaddr_to_raw_def zero_memaddr_def by simp
+lemma address_to_raw_0[simp]:
+  \<open>address_to_raw 0 = 0\<close>
+  unfolding address_to_raw_def zero_memaddr_def by simp
 
-lemma logaddr_to_raw_MemBlk[simp]:
-  \<open>memaddr.blk (logaddr_to_raw addr) = memaddr.blk addr\<close>
-  unfolding logaddr_to_raw_def by (cases addr) simp
+lemma address_to_raw_MemBlk[simp]:
+  \<open>memaddr.blk (address_to_raw addr) = memaddr.blk addr\<close>
+  unfolding address_to_raw_def by (cases addr) simp
 
-lemma valid_logaddr_rawaddr [simp]:
-  \<open>valid_logaddr addr \<Longrightarrow> valid_rawaddr (logaddr_to_raw addr)\<close>
-  unfolding valid_logaddr_def by simp 
+lemma valid_address_rawaddr [simp]:
+  \<open>valid_address addr \<Longrightarrow> valid_rawaddr (address_to_raw addr)\<close>
+  unfolding valid_address_def by simp 
 
 lemma index_offset_inj:
   assumes prems:
@@ -338,65 +338,65 @@ proof -
     qed
   qed
 
-lemma logaddr_to_raw_inj:
-    \<open>valid_logaddr addr1 \<Longrightarrow>
-     valid_logaddr addr2 \<Longrightarrow>
-     logaddr_type addr1 = logaddr_type addr2 \<Longrightarrow>
-     \<not> phantom_mem_semantic_type (logaddr_type addr1) \<Longrightarrow>
-     logaddr_to_raw addr1 = logaddr_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
-  unfolding logaddr_to_raw_def valid_logaddr_def
+lemma address_to_raw_inj:
+    \<open>valid_address addr1 \<Longrightarrow>
+     valid_address addr2 \<Longrightarrow>
+     address_type addr1 = address_type addr2 \<Longrightarrow>
+     \<not> phantom_mem_semantic_type (address_type addr1) \<Longrightarrow>
+     address_to_raw addr1 = address_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
+  unfolding address_to_raw_def valid_address_def
   by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def;
-      metis add_leD1 index_offset_inj index_offset_upper_bound_0 index_type_idem logaddr_storable_in_mem memaddr.sel(1) memaddr.sel(2) memblk.layout(2) not_gr_zero order_le_less_trans phantom_mem_semantic_type_def unat_to_size_t valid_index.simps(1) valid_logaddr_def)
+      metis add_leD1 index_offset_inj index_offset_upper_bound_0 index_type_idem address_storable_in_mem memaddr.sel(1) memaddr.sel(2) memblk.layout(2) not_gr_zero order_le_less_trans phantom_mem_semantic_type_def unat_to_size_t valid_index.simps(1) valid_address_def)
       
 
 
-definition \<open>rawaddr_to_log T raddr = (@laddr. logaddr_to_raw laddr = raddr \<and> logaddr_type laddr = T \<and> valid_logaddr laddr)\<close>
+definition \<open>rawaddr_to_log T raddr = (@laddr. address_to_raw laddr = raddr \<and> address_type laddr = T \<and> valid_address laddr)\<close>
 
 lemma rawaddr_to_log[simp]:
-  \<open> valid_logaddr addr
-\<Longrightarrow> \<not> phantom_mem_semantic_type (logaddr_type addr)
-\<Longrightarrow> rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr) = addr\<close>
+  \<open> valid_address addr
+\<Longrightarrow> \<not> phantom_mem_semantic_type (address_type addr)
+\<Longrightarrow> rawaddr_to_log (address_type addr) (address_to_raw addr) = addr\<close>
   unfolding rawaddr_to_log_def
-  by (rule some_equality, simp) (metis logaddr_to_raw_inj) 
+  by (rule some_equality, simp) (metis address_to_raw_inj) 
 
-lemma logaddr_to_raw[iff]:
-  \<open> (\<exists>laddr. logaddr_to_raw laddr = addr \<and> logaddr_type laddr = TY \<and> valid_logaddr laddr)
-\<Longrightarrow> logaddr_to_raw (rawaddr_to_log TY addr) = addr \<and>
-    logaddr_type (rawaddr_to_log TY addr) = TY \<and>
-    valid_logaddr (rawaddr_to_log TY addr)\<close>
+lemma address_to_raw[iff]:
+  \<open> (\<exists>laddr. address_to_raw laddr = addr \<and> address_type laddr = TY \<and> valid_address laddr)
+\<Longrightarrow> address_to_raw (rawaddr_to_log TY addr) = addr \<and>
+    address_type (rawaddr_to_log TY addr) = TY \<and>
+    valid_address (rawaddr_to_log TY addr)\<close>
   unfolding rawaddr_to_log_def
   by (elim exE; rule someI; blast)
 
-lemma logaddr_type__rawaddr_to_log__logaddr_type[simp]:
-  \<open> valid_logaddr laddr
-\<Longrightarrow> logaddr_type (rawaddr_to_log (logaddr_type laddr) (logaddr_to_raw laddr)) = logaddr_type laddr\<close>
+lemma address_type__rawaddr_to_log__address_type[simp]:
+  \<open> valid_address laddr
+\<Longrightarrow> address_type (rawaddr_to_log (address_type laddr) (address_to_raw laddr)) = address_type laddr\<close>
   unfolding rawaddr_to_log_def
   by (rule someI2; simp)
 
 
 lemma dereference_pointer_type:
-  \<open> valid_logaddr addr
+  \<open> valid_address addr
 \<Longrightarrow> c \<in> Well_Type (memblk.layout (memaddr.blk addr))
-\<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) c \<in> Well_Type (logaddr_type addr) \<close>
-  by (smt (verit, del_insts) index_value_welltyp logaddr_to_raw_MemBlk rawaddr_to_log_def someI valid_logaddr_def)
+\<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (address_type addr) (address_to_raw addr))) c \<in> Well_Type (address_type addr) \<close>
+  by (smt (verit, del_insts) index_value_welltyp address_to_raw_MemBlk rawaddr_to_log_def someI valid_address_def)
 
 lemma dereference_pointer_value:
-  \<open> valid_logaddr addr
+  \<open> valid_address addr
 \<Longrightarrow> c \<in> Well_Type (memblk.layout (memaddr.blk addr))
-\<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) c
+\<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (address_type addr) (address_to_raw addr))) c
   = index_value (memaddr.index addr) c \<close>
-  by (cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>,
-      meson dereference_pointer_type index_value_welltyp phantom_mem_semantic_type_single_value valid_logaddr_def,
+  by (cases \<open>phantom_mem_semantic_type (address_type addr)\<close>,
+      meson dereference_pointer_type index_value_welltyp phantom_mem_semantic_type_single_value valid_address_def,
       simp)
 
 lemma dereference_pointer_update:
-  \<open> valid_logaddr addr
+  \<open> valid_address addr
 \<Longrightarrow> u \<in> Well_Type (memblk.layout (memaddr.blk addr))
-\<Longrightarrow> v \<in> Well_Type (logaddr_type addr)
-\<Longrightarrow> index_mod_value (memaddr.index (rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr))) (\<lambda>_. v) u
+\<Longrightarrow> v \<in> Well_Type (address_type addr)
+\<Longrightarrow> index_mod_value (memaddr.index (rawaddr_to_log (address_type addr) (address_to_raw addr))) (\<lambda>_. v) u
   = index_mod_value (memaddr.index addr) (\<lambda>_. v) u \<close>
-  by (cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>,
-      metis dereference_pointer_type dereference_pointer_value index_mod_value_unchanged logaddr_to_raw logaddr_to_raw_MemBlk phantom_mem_semantic_type_single_value valid_logaddr_def,
+  by (cases \<open>phantom_mem_semantic_type (address_type addr)\<close>,
+      metis dereference_pointer_type dereference_pointer_value index_mod_value_unchanged address_to_raw address_to_raw_MemBlk phantom_mem_semantic_type_single_value valid_address_def,
       simp)
 
 subsubsection \<open>Address Arithmetic - Shift\<close>
@@ -424,16 +424,16 @@ lemma mem_shift_add_cancel[simp]:
 
 subsubsection \<open>Address Arithmetic - Get Element Pointer\<close>
 
-definition addr_gep :: "logaddr \<Rightarrow> aggregate_index \<Rightarrow> logaddr"
+definition addr_gep :: "address \<Rightarrow> aggregate_index \<Rightarrow> address"
   where "addr_gep addr i = map_memaddr (\<lambda>idx. idx @ [i]) addr"
 
-definition addr_geps :: "logaddr \<Rightarrow> aggregate_path \<Rightarrow> logaddr"
+definition addr_geps :: "address \<Rightarrow> aggregate_path \<Rightarrow> address"
   where "addr_geps addr path = map_memaddr (\<lambda>idx. idx @ path) addr"
 
 adhoc_overloading access_to_ele_synt addr_gep
 
 (*
-syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<tribullet>" 55)
+syntax "_addr_gep_" :: \<open>address \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> address\<close> (infixl "\<tribullet>" 55)
 
 parse_translation \<open>[
   (\<^syntax_const>\<open>_addr_gep_\<close>, fn ctxt => fn [a,x] =>
@@ -485,37 +485,37 @@ lemma addr_gep_not_eq_zero[intro!, simp, \<phi>safe_simp]:
   unfolding zero_memaddr_def addr_gep_def
   by (cases addr) simp
 
-lemma logaddr_type_gep[iff, \<phi>safe_simp]:
-  \<open>logaddr_type (addr \<tribullet> LOGIC_IDX(x)) = idx_step_type x (logaddr_type addr)\<close>
+lemma address_type_gep[iff, \<phi>safe_simp]:
+  \<open>address_type (addr \<tribullet> LOGIC_IDX(x)) = idx_step_type x (address_type addr)\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
 lemma addr_gep_valid[intro!, simp, \<phi>safe_simp]:
-  \<open> valid_idx_step (logaddr_type addr) i
-\<Longrightarrow> valid_logaddr addr
-\<Longrightarrow> valid_logaddr (addr \<tribullet> LOGIC_IDX(i))\<close>
-  unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
+  \<open> valid_idx_step (address_type addr) i
+\<Longrightarrow> valid_address addr
+\<Longrightarrow> valid_address (addr \<tribullet> LOGIC_IDX(i))\<close>
+  unfolding valid_address_def zero_memaddr_def addr_gep_def
   by (cases addr; clarsimp simp add: valid_idx_step_void)
 
 lemma addr_geps_valid[intro!, simp, \<phi>safe_simp]:
-  \<open> valid_index (logaddr_type addr) path
-\<Longrightarrow> valid_logaddr addr
-\<Longrightarrow> valid_logaddr (addr_geps addr path)\<close>
-  unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
+  \<open> valid_index (address_type addr) path
+\<Longrightarrow> valid_address addr
+\<Longrightarrow> valid_address (addr_geps addr path)\<close>
+  unfolding valid_address_def zero_memaddr_def addr_gep_def
   by (induct path arbitrary: addr; clarsimp simp add: valid_idx_step_void;
-      metis addr_geps_path addr_geps_simp addr_gep_memblk addr_gep_valid append_self_conv2 logaddr_type_gep not_Cons_self2 valid_logaddr_def)
+      metis addr_geps_path addr_geps_simp addr_gep_memblk addr_gep_valid append_self_conv2 address_type_gep not_Cons_self2 valid_address_def)
 
-lemma logaddr_to_raw_phantom_mem_type:
-  \<open> phantom_mem_semantic_type (logaddr_type addr)
-\<Longrightarrow> valid_idx_step (logaddr_type addr) i
-\<Longrightarrow> logaddr_to_raw (addr \<tribullet> LOGIC_IDX(i)) = logaddr_to_raw addr\<close>
-  unfolding logaddr_to_raw_def addr_gep_def phantom_mem_semantic_type_def
+lemma address_to_raw_phantom_mem_type:
+  \<open> phantom_mem_semantic_type (address_type addr)
+\<Longrightarrow> valid_idx_step (address_type addr) i
+\<Longrightarrow> address_to_raw (addr \<tribullet> LOGIC_IDX(i)) = address_to_raw addr\<close>
+  unfolding address_to_raw_def addr_gep_def phantom_mem_semantic_type_def
   by (cases addr; clarsimp; insert idx_step_offset_size; fastforce)
 
-lemma logaddr_to_raw_phantom_mem_type_gep_N:
-  \<open> phantom_mem_semantic_type (logaddr_type addr)
-\<Longrightarrow> valid_index (logaddr_type addr) path
-\<Longrightarrow> logaddr_to_raw (addr_geps addr path) = logaddr_to_raw addr\<close>
-  unfolding logaddr_to_raw_def phantom_mem_semantic_type_def addr_geps_def
+lemma address_to_raw_phantom_mem_type_gep_N:
+  \<open> phantom_mem_semantic_type (address_type addr)
+\<Longrightarrow> valid_index (address_type addr) path
+\<Longrightarrow> address_to_raw (addr_geps addr path) = address_to_raw addr\<close>
+  unfolding address_to_raw_def phantom_mem_semantic_type_def addr_geps_def
   apply (induct path arbitrary: addr; clarsimp simp add: split_memaddr_meta_all)
   subgoal premises prems for a path blk ofs proof -
     have t1: \<open>MemObj_Size (index_type (ofs @ [a]) (memblk.layout blk)) = 0\<close>
@@ -533,9 +533,9 @@ subsubsection \<open>Reasoning Configuration\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr = addr'
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> valid_logaddr addr
-\<Longrightarrow> is_valid_index_of (memaddr.index addr) (memblk.layout (memaddr.blk addr')) (logaddr_type addr)\<close>
-  unfolding valid_logaddr_def Premise_def is_valid_index_of_def
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> valid_address addr
+\<Longrightarrow> is_valid_index_of (memaddr.index addr) (memblk.layout (memaddr.blk addr')) (address_type addr)\<close>
+  unfolding valid_address_def Premise_def is_valid_index_of_def
   by clarsimp
 
 subsubsection \<open>Install Semantics\<close>
@@ -598,8 +598,8 @@ subsection \<open>Standard Logical Pointer\<close>
       cannot point to the end of an allocation block, which is its limitation.
       only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
   
-\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>" ("\<bbbP>\<t>\<r> _" [900] 899)
-  where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY)\<close>
+\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, address) \<phi>" ("\<bbbP>\<t>\<r> _" [900] 899)
+  where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (address_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_address x \<and> (x = 0 \<or> address_type x = TY)\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>
        and Functionality
@@ -610,24 +610,24 @@ subsection \<open>Standard Logical Pointer\<close>
 lemma Ptr_eqcmp[\<phi>reason 1000]:
     "\<phi>Equal (Ptr TY) (\<lambda>x y. x = 0 \<or> y = 0 \<or> memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
   unfolding \<phi>Equal_def
-  by simp (metis logaddr_to_raw_0 logaddr_to_raw_MemBlk logaddr_to_raw_inj memaddr.expand memaddr_blk_zero valid_logaddr_def zero_list_def zero_memaddr_def)  
+  by simp (metis address_to_raw_0 address_to_raw_MemBlk address_to_raw_inj memaddr.expand memaddr_blk_zero valid_address_def zero_list_def zero_memaddr_def)  
 
 
 lemma Ptr_to_Raw_Pointer[\<phi>reason %ToA_cut]:
   \<open> Threshold_Cost 9
-\<Longrightarrow> x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> logaddr_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) \<close>
+\<Longrightarrow> x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> address_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_address x \<and> (x = 0 \<or> address_type x = TY) \<close>
   \<medium_left_bracket>
      to \<open>OPEN _ _\<close>
-     \<open>logaddr_to_raw x \<Ztypecolon> MAKE _ RawPointer\<close> certified by auto_sledgehammer
+     \<open>address_to_raw x \<Ztypecolon> MAKE _ RawPointer\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:
-  \<open>x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = logaddr_to_raw x \<and> valid_logaddr x \<and> (x = 0 \<or> logaddr_type x = TY) @tag to RawPointer\<close>
+  \<open>x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = address_to_raw x \<and> valid_address x \<and> (x = 0 \<or> address_type x = TY) @tag to RawPointer\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma Raw_Pointer_to_Ptr[\<phi>reason %ToA_cut]:
   \<open> Threshold_Cost 9
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y \<and> (y = 0 \<or> address_type y = TY)
 \<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<bbbP>\<t>\<r> TY \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
@@ -635,7 +635,7 @@ lemma Raw_Pointer_to_Ptr[\<phi>reason %ToA_cut]:
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> logaddr_to_raw y = x \<and> valid_logaddr y \<and> (y = 0 \<or> logaddr_type y = TY)
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y \<and> (y = 0 \<or> address_type y = TY)
 \<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<bbbP>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @tag to (\<bbbP>\<t>\<r> TY)\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
@@ -658,7 +658,7 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-    V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
+    V_pointer.mk (address_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
       \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 
@@ -786,12 +786,12 @@ lemma [\<phi>reason %common_multiplicator_2_list
 
 subsection \<open>Abstracting Raw Address Offset\<close>
 
-definition abstract_address_offset :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> nat \<Rightarrow> logaddr \<Rightarrow> bool\<close>
+definition abstract_address_offset :: \<open>address \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> nat \<Rightarrow> address \<Rightarrow> bool\<close>
   where \<open>abstract_address_offset addr TY TY' n addr' \<longleftrightarrow>
-    valid_logaddr addr \<and> logaddr_type addr = TY \<longrightarrow>
-   (valid_logaddr addr' \<and>
-    logaddr_to_raw addr ||+ of_nat (MemObj_Size TY * n) = logaddr_to_raw addr' \<and>
-    logaddr_type addr' = TY') \<close>
+    valid_address addr \<and> address_type addr = TY \<longrightarrow>
+   (valid_address addr' \<and>
+    address_to_raw addr ||+ of_nat (MemObj_Size TY * n) = address_to_raw addr' \<and>
+    address_type addr' = TY') \<close>
 
 
 

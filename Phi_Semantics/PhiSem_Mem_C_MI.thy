@@ -33,8 +33,8 @@ proc calloc:
   \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
   \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] Array n T)\<close>
 
-  have t1: \<open>valid_logaddr (memaddr blk [])\<close>
-    unfolding valid_logaddr_def Valid_MemBlk_def
+  have t1: \<open>valid_address (memaddr blk [])\<close>
+    unfolding valid_address_def Valid_MemBlk_def
     using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
     by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close>) ;;
   

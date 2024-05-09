@@ -35,12 +35,11 @@ subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
 subsection \<open>Memory Object\<close>
 
-
 \<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
   where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
   deriving Sep_Functor_1
 
-\<phi>type_def Mem :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
+\<phi>type_def Mem :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
   where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
   deriving Sep_Functor_1
 
@@ -48,13 +47,15 @@ declare Mem.intro_reasoning[\<phi>reason default]
         Mem.elim_reasoning [\<phi>reason default]
         Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
         Mem.elim_map [where \<phi> =\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
+
 thm Mem.intro_reasoning
+thm Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified]
 
 subsubsection \<open>Syntax\<close>
 
 paragraph \<open>Memory Object\<close>
 
-consts Mem_synt :: \<open>logaddr \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
+consts Mem_synt :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
        may_mem_coerce :: \<open>('c, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close>
 
 \<phi>adhoc_overloading may_mem_coerce \<open>\<lambda>x. x\<close> Mem_Coercion
@@ -272,7 +273,7 @@ proc calloc1:
 
   semantic_assumption \<open>type_storable_in_mem TY\<close>
 
-  have t1: \<open>valid_logaddr (memaddr blk [])\<close>
+  have t1: \<open>valid_address (memaddr blk [])\<close>
     by (insert \<phi>; auto simp add: Valid_MemBlk_def split: memblk.split) ;;
 
   semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>

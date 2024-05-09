@@ -15,7 +15,7 @@ proc op_add_ptr_a[\<phi>overload +]:
   semantic_return \<open>
       V_pointer.mk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1) ||+ of_int (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>2)) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
-    certified by (clarsimp simp: logaddr_to_raw_array_GEP[OF \<open>logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] useful distrib_right)
+    certified by (clarsimp simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] useful distrib_right)
 
 \<medium_right_bracket> .
 

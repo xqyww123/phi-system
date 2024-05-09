@@ -19,7 +19,7 @@ proc op_add_ptr[\<phi>overload +]:
       V_pointer.mk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.scast (of_nat (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
-  certified by (insert useful, auto simp: logaddr_to_raw_array_GEP[OF \<open>logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] distrib_right,
+  certified by (insert useful, auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] distrib_right,
                 metis signed_of_int signed_take_bit_int_eq_self_iff the_\<phi>lemmata(4))
 \<medium_right_bracket> .
 
@@ -37,7 +37,7 @@ proc op_add_ptr_unsigned[\<phi>overload +]:
               ||+ Word.ucast (of_nat (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (i + j \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
   certified by (insert useful,
-                auto simp: logaddr_to_raw_array_GEP[OF \<open>logaddr_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>]
+                auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>]
                            distrib_right ucast_of_nat_small)
 \<medium_right_bracket> .
 

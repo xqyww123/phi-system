@@ -17,7 +17,7 @@ abbreviation \<open>hash (x::nat) n \<equiv> x mod n\<close>
 abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {tabl: \<p>\<t>\<r>, N: \<s>\<i>\<z>\<e>_\<t>} \<close>
 
 
-\<phi>type_def Hash :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, nat \<rightharpoonup> 'x) \<phi>\<close>
+\<phi>type_def Hash :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, nat \<rightharpoonup> 'x) \<phi>\<close>
   where \<open>f \<Ztypecolon> Hash addr TY T \<equiv> 
        (tabl_addr, N) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> tabl: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>, N: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
         bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[tabl_addr] \<bbbA>\<r>\<r>\<a>\<y>[N] (\<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>)\<heavy_comma>
@@ -92,7 +92,7 @@ proc insert_bucket:
                         \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     val kv \<leftarrow> get_dynarr($addr, $i) \<semicolon>
-    if ($kv \<tribullet> k = $k) \<medium_left_bracket>
+    if ($kv.k = $k) \<medium_left_bracket>
       set_dynarr($addr, $i, \<lbrace> k: $k, v: $v \<rbrace>) \<semicolon>
       $met \<leftarrow> True
     \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
@@ -136,7 +136,7 @@ proc bucket_has_key:
   replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
               \<open>\<lambda>i. (\<exists>v. (k,v) \<in> set (take i bucket)) \<Ztypecolon> \<v>\<a>\<r>[met] \<bool>\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-    $met \<leftarrow> $met \<or> (get_dynarr($addr, $i) \<tribullet> k = $k)
+    $met \<leftarrow> $met \<or> (get_dynarr($addr, $i).k = $k)
   \<medium_right_bracket> \<semicolon>
   $met
 \<medium_right_bracket> .
@@ -148,7 +148,7 @@ proc hash_has_key:
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
-  val tabl_addr \<leftarrow> $addr \<tribullet> tabl ! \<semicolon>
+  val tabl_addr \<leftarrow> $addr.tabl ! \<semicolon>
   val N \<leftarrow> $addr.N ! \<semicolon>
   val hash \<leftarrow> $k % $N \<semicolon>
   val ret \<leftarrow> bucket_has_key ($tabl_addr[$hash]!, $k) \<semicolon>

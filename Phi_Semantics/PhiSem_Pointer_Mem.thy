@@ -54,7 +54,7 @@ declare [ [typedef_overloaded = false] ]
 declare memaddr.sel[iff]
 hide_const (open) segment index
 
-type_synonym logaddr = \<open>nat list memaddr\<close> (* the index of logaddr is non empty *)
+type_synonym address = \<open>nat list memaddr\<close> (* the index of address is non empty *)
 type_synonym rawaddr = \<open>\<s>\<i>\<z>\<e>_\<t> memaddr\<close>
 
 instantiation segidx :: zero begin

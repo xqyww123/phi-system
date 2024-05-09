@@ -14,7 +14,7 @@ term Mem_Coercion
 
 declare [[ML_print_depth = 100]]
 
-\<phi>type_def DynArr :: \<open>logaddr \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
+\<phi>type_def DynArr :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> buf \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<s>\<l>\<i>\<c>\<e>[len,cap-len] (\<top>\<^sub>\<phi> :: (VAL, 'x) \<phi>)\<heavy_comma>
                                 l \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<s>\<l>\<i>\<c>\<e>[0, len] T\<heavy_comma>
                                 (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>, cap: \<nat> \<rbrace>
