@@ -23,12 +23,12 @@ fun guess_property phi ctxt =
               end) else ()
 
    in Seq.single ([], HOLogic.Trueprop $ (
-          \<^Const>\<open>\<phi>SemType\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x_term $ T_term) $ Var (("TY", 0), \<^Type>\<open>TY\<close>)),
+          \<^Const>\<open>Semantic_Type x_ty\<close> $ T_term $ Var (("TY", 0), \<^Type>\<open>TY\<close>)),
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
 fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
-  let val parse_hint = parse_hint (fn \<^Const>\<open>\<phi>SemType\<close> $ (\<^Const_>\<open>\<phi>Type _ _\<close> $ x $ T) $ _ => T $ x)
+  let val parse_hint = parse_hint (fn \<^Const>\<open>Semantic_Type _\<close> $ T $ _ => T)
 
       val equip_expansion = equip_expansion_ss phi0
       val ind_conv = default_ind_conv (
@@ -43,9 +43,9 @@ fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
       val varifier = if is_some (#1 instruction) then K (K NONE)
                      else fn _ => fn (Trueprop $ (SemTyp $ TY)) =>
                             SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
-      fun reasoning phi ctxt =
+      fun reasoning phi ctxt sequent =
             default_reasoning true default_reasoning_configure varifier
-                              (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [] ctxt phi))) phi ctxt
+                              (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
 
       val solver = K NONE
       val simp = if is_some (#1 instruction) then K I

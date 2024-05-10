@@ -46,7 +46,7 @@ subsection \<open>Value\<close>
 unspecified_type VAL
 unspecified_type VAL_N
 type_synonym 'T value_entry = \<open>(VAL_N, VAL, 'T) Virtual_Datatype.Field\<close>
-type_synonym vassn = \<open>VAL set\<close>
+type_synonym value_assertion = \<open>VAL set\<close>
 
 consts VAL_CONS_OF :: \<open>VAL \<Rightarrow> VAL_N\<close>
 

@@ -79,7 +79,7 @@ subsection \<open>Integer in the normal sense\<close>
 \<phi>type_def \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
   where \<open>x \<Ztypecolon> \<phi>AInt \<equiv> V_aint.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
-       and \<open>\<phi>SemType (x \<Ztypecolon> \<int>) aint\<close>
+       and \<open>Semantic_Type \<int> aint\<close>
        and Semantic_Zero_Val
 
 lemma [\<phi>reason 1000]:

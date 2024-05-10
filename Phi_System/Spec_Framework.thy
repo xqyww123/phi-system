@@ -152,7 +152,7 @@ lemma INTERP_mult:
 
 section \<open>Specification of Value\<close>
 
-type_synonym vassn = \<open>VAL BI\<close>
+type_synonym value_assertion = \<open>VAL BI\<close>
 
 subsection \<open>Primitive \<phi>-Types\<close>
 
@@ -213,24 +213,30 @@ subsection \<open>Semantic Type\<close>
 
 subsubsection \<open>Single Value\<close>
 
-definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
-  where \<open>\<phi>SemType S TY \<longleftrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)\<close>
+definition Semantic_Type :: \<open>(VAL,'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
+  where \<open>Semantic_Type T TY \<longleftrightarrow> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)\<close>
+
+definition Semantic_Type' :: "value_assertion \<Rightarrow> TY \<Rightarrow> bool"
+  where \<open>Semantic_Type' S TY \<longleftrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
 
 (*definition \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> TY) \<Rightarrow> bool"
   where \<open>\<phi>\<phi>SemType T D TY \<equiv> (\<forall>x. D x \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) (TY x))\<close>*)
 
 declare [[
-  \<phi>reason_default_pattern \<open>\<phi>SemType ?S _\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close> (100)
+  \<phi>reason_default_pattern \<open>Semantic_Type ?T _\<close> \<Rightarrow> \<open>Semantic_Type ?T _\<close> (100)
+                      and \<open>Semantic_Type' ?A _\<close> \<Rightarrow> \<open>Semantic_Type' ?A _\<close> (100)
 ]]
 
-\<phi>reasoner_group \<phi>sem_type = (100, [0, 3000]) for (\<open>\<phi>SemType S TY\<close>)
+\<phi>reasoner_group \<phi>sem_type = (100, [0, 3000]) for (\<open>Semantic_Type T TY\<close>)
       \<open>giving the semantic type of the concrete value satisfying the given assertion or \<phi>-type\<close>
   and \<phi>sem_type_fail = (0, [0,0]) in \<phi>sem_type
       \<open>failures\<close>
   and \<phi>sem_type_brute = (2, [2,2]) in \<phi>sem_type > \<phi>sem_type_fail
       \<open>reducing to concrete level, used only when deriving rules.\<close>
-  and \<phi>sem_type_assertion = (10, [10,10]) in \<phi>sem_type and > \<phi>sem_type_brute
+  and \<phi>sem_type_failback = (3, [3,3]) in \<phi>sem_type > \<phi>sem_type_brute
+      \<open>system usage\<close>
+  and \<phi>sem_type_assertion = (10, [10,10]) in \<phi>sem_type and > \<phi>sem_type_failback
       \<open>asserting the given with a semantic type if any\<close>
 (*and \<phi>sem_type_\<phi>typ = (10, [10,10]) in \<phi>sem_type and > \<phi>sem_type_fail
       \<open>\<open>\<phi>SemType\<close> -> \<open>\<phi>\<phi>SemType\<close>\<close>*)
@@ -267,88 +273,72 @@ lemma [\<phi>reason 100]:
 paragraph \<open>Basic Rules\<close>
 
 lemma [\<phi>reason default %\<phi>sem_type_fail]:
-  \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
-\<Longrightarrow> \<phi>SemType X Any\<close>
+  \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> T)
+\<Longrightarrow> Semantic_Type T Any\<close>
   unfolding FAIL_def
   by blast
 
-lemma [\<phi>reason default %\<phi>sem_type_assertion except \<open>\<phi>SemType _ ?var\<close>]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<Longrightarrow> \<phi>SemType A TY')
+lemma [\<phi>reason default %\<phi>sem_type_assertion except \<open>Semantic_Type _ ?var\<close>]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<Longrightarrow> Semantic_Type A TY')
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>expecting\<close> A \<open>of semantic type\<close> TY \<open>but actually of\<close> TY')
-\<Longrightarrow> \<phi>SemType A TY \<close>
+\<Longrightarrow> Semantic_Type A TY \<close>
   unfolding Premise_def Orelse_shortcut_def ERROR_def
   by blast
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> Well_Type TY
-\<Longrightarrow> \<phi>SemType (v \<Ztypecolon> Itself) TY \<close>
-  unfolding Premise_def \<phi>SemType_def subset_iff
+\<Longrightarrow> Semantic_Type' (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def Semantic_Type'_def subset_iff
   by simp
 
 lemma \<phi>SemType_Itself_brute:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
-\<Longrightarrow> \<phi>SemType (v \<Ztypecolon> Itself) TY \<close>
-  unfolding Premise_def \<phi>SemType_def subset_iff
+\<Longrightarrow> Semantic_Type' (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def Semantic_Type'_def subset_iff
   by simp
 
 lemma \<phi>sem_type_by_sat:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)
-\<Longrightarrow> \<phi>SemType S TY \<close>
-  unfolding Premise_def \<phi>SemType_def \<r>Guard_def .
+\<Longrightarrow> Semantic_Type' S TY \<close>
+  unfolding Premise_def Semantic_Type'_def \<r>Guard_def .
 
 lemma \<phi>sem_type_brute_EIF:
-  \<open> \<r>EIF (\<phi>SemType S TY) (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<close>
-  unfolding \<r>EIF_def \<phi>SemType_def
+  \<open> \<r>EIF (Semantic_Type' S TY) (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<close>
+  unfolding \<r>EIF_def Semantic_Type'_def
   by blast
 
 bundle \<phi>sem_type_sat_EIF = \<phi>sem_type_by_sat[\<phi>reason default %\<phi>sem_type_brute]
                            \<phi>sem_type_brute_EIF[\<phi>reason %extract_pure]
                            \<phi>SemType_Itself_brute[\<phi>reason %\<phi>sem_type_cut+10]
 
+lemma [\<phi>reason default %\<phi>sem_type_failback]:
+  \<open> Semantic_Type T TY
+\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY \<close>
+  unfolding Semantic_Type'_def Semantic_Type_def
+  by simp
+
 
 paragraph \<open>Over Logic Connectives\<close>
 
+
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> \<phi>SemType X TY1
-\<Longrightarrow> \<phi>SemType Y TY2
+  \<open> Semantic_Type' T TY1
+\<Longrightarrow> Semantic_Type' U TY2
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> TY1 = TY2
-\<Longrightarrow> \<phi>SemType (X + Y) TY1\<close>
-  unfolding \<phi>SemType_def subset_iff Premise_def
+\<Longrightarrow> Semantic_Type' (T + U) TY1\<close>
+  unfolding Semantic_Type'_def subset_iff Premise_def
   by simp
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> \<phi>SemType X TY
-\<Longrightarrow> \<phi>SemType (X \<s>\<u>\<b>\<j> P) TY\<close>
-  unfolding \<phi>SemType_def subset_iff
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> Semantic_Type' X TY
+\<Longrightarrow> Semantic_Type' (X \<s>\<u>\<b>\<j> P) TY\<close>
+  unfolding Semantic_Type'_def subset_iff
   by simp
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> (\<And>x. \<phi>SemType (X x) TY)
-\<Longrightarrow> \<phi>SemType (ExSet X) TY\<close>
-  unfolding \<phi>SemType_def subset_iff by clarsimp
-
-
-subsubsection \<open>Reduction \& Evaluation\<close>
-
-lemma [\<phi>reason %\<phi>sem_type_red]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (fst (x,y) \<Ztypecolon> T) TY \<close>
-  by simp
-
-lemma [\<phi>reason %\<phi>sem_type_red]:
-  \<open> \<phi>SemType (y \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (snd (x,y) \<Ztypecolon> T) TY \<close>
-  by simp
-
-lemma [\<phi>reason %\<phi>sem_type_red]:
-  \<open> \<phi>SemType ((f x, y) \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (apfst f (x,y) \<Ztypecolon> T) TY \<close>
-  by simp
-
-lemma [\<phi>reason %\<phi>sem_type_red]:
-  \<open> \<phi>SemType ((x, f y) \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (apsnd f (x,y) \<Ztypecolon> T) TY \<close>
-  by simp
+  \<open> (\<And>x. Semantic_Type' (X x) TY)
+\<Longrightarrow> Semantic_Type' (ExSet X) TY\<close>
+  unfolding Semantic_Type'_def subset_iff by clarsimp
 
 
 subsubsection \<open>Multiple Values\<close>

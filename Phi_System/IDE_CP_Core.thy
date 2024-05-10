@@ -427,7 +427,7 @@ lemma [\<phi>reason %\<phi>programming_method]:
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>someone which is functional, so that we can verify your claim.\<close>)
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
+  unfolding \<phi>Programming_Method_def  ToA_Construction_def conjunction_imp
             Subj_Reasoning_def
   by (rule Is_Functional_imp''[where S'=S']; simp)
 
@@ -2237,7 +2237,7 @@ Scan.succeed (Thm.rule_attribute [] (fn ctxt' =>
 declare [[\<phi>premise_attribute  [THEN Do_D] for \<open>\<d>\<o> PROP _\<close>          (%\<phi>attr_normalize),
           \<phi>premise_attribute  [THEN Premise_D] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>     (%\<phi>attr_late_normalize),
           \<phi>premise_attribute  [THEN Premise_D] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] ?x\<close> (%\<phi>attr_late_normalize),
-          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>\<phi>SemType _ _\<close> \<open>\<d>\<o> \<phi>SemType _ _\<close> (%\<phi>attr),
+          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semantic_Type _ _\<close> \<open>\<d>\<o> Semantic_Type _ _\<close> (%\<phi>attr),
           \<phi>premise_attribute  [THEN Simplify_D] for \<open>Simplify _ _ _\<close> \<open>\<d>\<o> Simplify _ _ _\<close>   (%\<phi>attr_late_normalize),
           \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Is_Functional ?S\<close>     (%\<phi>attr),
           \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>  (%\<phi>attr)

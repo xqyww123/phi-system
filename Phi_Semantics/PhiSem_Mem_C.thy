@@ -172,7 +172,7 @@ subsection \<open>Main\<close>
 proc op_load_mem:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> state\<close>
   requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
-       and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+       and \<open>Semantic_Type' (x \<Ztypecolon> T) TY\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state\<close>
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF

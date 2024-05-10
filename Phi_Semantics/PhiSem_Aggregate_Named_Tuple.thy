@@ -186,7 +186,7 @@ subsection \<open>Empty Tuple\<close>
   where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> V_named_tup.mk fmempty \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>\<phi>SemType (x \<Ztypecolon> Empty_Named_Tuple) (semty_ntup fmempty)\<close>
+       and \<open>Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close>
        and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Named_Tuple\<close>
 
@@ -230,9 +230,11 @@ print_translation \<open>[
 
 subsubsection \<open>Properties\<close>
 
+declare [[\<phi>trace_reasoning = 3]]
+
 let_\<phi>type Named_Tuple_Field
-  deriving \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-         \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>) (semty_ntup (fmupd s TY fmempty))\<close>
+  deriving \<open> Semantic_Type T TY
+         \<Longrightarrow> Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty))\<close>
        and \<open> Semantic_Zero_Val ty T x
          \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
 

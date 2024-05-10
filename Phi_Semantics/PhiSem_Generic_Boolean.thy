@@ -63,7 +63,7 @@ section \<open>\<phi>-Type\<close>
   where \<open>x \<Ztypecolon> \<bool> \<equiv> V_bool.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) bool\<close>
+       and \<open>Semantic_Type \<bool> bool\<close>
        and \<open>Semantic_Zero_Val bool \<bool> False\<close>
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
@@ -130,14 +130,14 @@ declare [[
 
 lemma op_equal_\<phi>app[\<phi>overload =]:
   \<open> \<phi>Equal T can_eq eq
-\<Longrightarrow> \<phi>SemType (a \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (b \<Ztypecolon> T) TY
+\<Longrightarrow> Semantic_Type' (a \<Ztypecolon> T) TY
+\<Longrightarrow> Semantic_Type' (b \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> can_eq a b
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_equal TY (\<phi>V_pair rawa rawb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[rawa] T\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
   unfolding op_equal_def
   by ((cases rawa; cases rawb; simp, rule, rule),
-      simp add: \<phi>SemType_def subset_iff Premise_def, rule,
-      simp add: \<phi>SemType_def subset_iff Premise_def, rule,
+      simp add: Semantic_Type'_def subset_iff Premise_def, rule,
+      simp add: Semantic_Type'_def subset_iff Premise_def, rule,
       unfold \<phi>Equal_def Premise_def, simp,
       rule \<phi>M_Success', rule, simp)
 

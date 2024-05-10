@@ -12,24 +12,24 @@ subsubsection \<open>Semantic Type\<close>
 context begin
 
 private lemma \<phi>TA_SemTy_rule:
-  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @tag \<phi>TA_subgoal undefined
+  \<open> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<close>
-  unfolding Action_Tag_def
+\<Longrightarrow> Semantic_Type T TY \<close>
+  unfolding Action_Tag_def Semantic_Type'_def Semantic_Type_def
   by blast
 
 private lemma \<phi>TA_SemTy_cong:
   \<open> TY \<equiv> TY'
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<equiv> \<phi>SemType (x \<Ztypecolon> T) TY' \<close>
+\<Longrightarrow> Semantic_Type T TY \<equiv> Semantic_Type T TY' \<close>
   by simp
 
 ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
 
 end
 
-\<phi>property_deriver Semantic_Type 100 for (\<open>\<phi>SemType (_ \<Ztypecolon> _) _\<close>)
+\<phi>property_deriver Semantic_Type 100 for (\<open>Semantic_Type _ _\<close>)
     = \<open> Phi_Type_Derivers.semantic_type \<close> 
 
 
@@ -376,13 +376,16 @@ subsection \<open>Programming Methods for Showing Properties of Values\<close>
 subsubsection \<open>Semantic Type\<close>
 
 lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S')) M D R F
+  \<open> PROP \<phi>Programming_Method (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x) M D R F
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show the value abstraction\<close> S \<open>has semantic type\<close> TY
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>some representation of \<phi>-types whose semantic type is know so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>SemType S TY)) M D (\<phi>SemType S' TY &&& PROP R) F\<close>
-  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def Transformation_def
-  by (simp add: subset_iff conjunction_imp)
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semantic_Type T TY)) M D ((\<And>x. Semantic_Type' (A x) TY) &&& PROP R) F\<close>
+  unfolding \<phi>Programming_Method_def ToA_Construction_def Semantic_Type_def Transformation_def
+            Semantic_Type'_def
+  apply (simp add: subset_iff conjunction_imp, rule)
+  subgoal premises prems
+    by (insert prems(3) prems(1)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>], blast) .
 
 
 subsubsection \<open>Zero Value\<close>
@@ -390,7 +393,7 @@ subsubsection \<open>Zero Value\<close>
 consts working_mode_Semantic_Zero_Val :: working_mode
 
 lemma \<phi>deduce_zero_value:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> (y \<Ztypecolon> U)
 \<Longrightarrow> Semantic_Zero_Val TY U y
 \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Any

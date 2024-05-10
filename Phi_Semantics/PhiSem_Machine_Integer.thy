@@ -147,7 +147,7 @@ subsection \<open>Words\<close>
   where \<open>x \<Ztypecolon> Word _ \<equiv> V_int.mk (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
   deriving Basic
        and \<open>Object_Equiv (Word ?uu) (=)\<close>
-       and \<open>\<phi>SemType (x \<Ztypecolon> Word TYPE('b)) int('b)\<close>
+       and \<open>Semantic_Type (Word TYPE('b)) int('b)\<close>
        and \<open>Semantic_Zero_Val int('b) (Word ?uu) (0::'b::len word)\<close>
 
 syntax Word_syntax :: "type \<Rightarrow> (VAL, 'b::len word) \<phi>" ("Word'(_')")

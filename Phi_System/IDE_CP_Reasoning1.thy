@@ -511,16 +511,16 @@ end\<close>
 subsection \<open>Semantic Type of Multiple Values\<close>
 
 lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> Semantic_Type T TY
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs) TYs
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T\<heavy_comma> R (\<phi>V_snd vs)) (TY#TYs)\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> Semantic_Type T TY
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[vs] T\<heavy_comma> R) [TY]\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
