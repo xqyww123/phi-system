@@ -86,7 +86,7 @@ proc insert_bucket:
   is [routine]
 \<medium_left_bracket>
   var met \<leftarrow> False \<semicolon>
-  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr (addr))
               \<open>\<lambda>i. (\<exists>v. (k,v) \<in> set (take i bucket)) \<Ztypecolon> \<v>\<a>\<r>[met] \<bool>\<heavy_comma>
                    (map (\<lambda>kv. if fst kv = k then (k,v) else kv) (take i bucket) @ drop i bucket)
                         \<Ztypecolon> DynArr addr (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace> k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T \<rbrace>\<close>
@@ -98,8 +98,8 @@ proc insert_bucket:
     \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
   \<medium_right_bracket> certified by (auto simp add: list_eq_iff_nth_eq nth_append list_update_append; auto_sledgehammer) \<semicolon>
   
-  if (\<not> $met) \<medium_left_bracket>
-    push_dynarr ($addr, \<lbrace> k: k, v: v \<rbrace>)
+  if (\<not> met) \<medium_left_bracket>
+    push_dynarr (addr, \<lbrace> k: k, v: v \<rbrace>)
   \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> 
 \<medium_right_bracket> .
 

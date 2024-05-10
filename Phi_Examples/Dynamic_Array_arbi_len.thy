@@ -100,7 +100,7 @@ proc concat_dynarr:
   output  \<open>l1 @ l2 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<close>
 \<medium_left_bracket>
   val len \<leftarrow> len_dynarr ($addr2) \<semicolon>
-  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, $len)
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, $len)
               \<open>\<lambda>i. l1 @ take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     push_dynarr ($addr1, get_dynarr ($addr2, $i))
@@ -158,7 +158,7 @@ proc map_dynarr:
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_eq_iff_nth_eq nth_append \<semicolon>
 
-  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
      set_dynarr ($addr, $i, C (get_dynarr ($addr, $i)))
   \<medium_right_bracket>
@@ -170,8 +170,8 @@ proc exists_dynarr:
   output \<open>list_ex P l \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> False ;;
-  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
-              \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close> \<semicolon>
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
+            \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close> \<semicolon>
     \<medium_left_bracket> \<rightarrow> val i \<semicolon>
       $zz \<or> C (get_dynarr ($addr, $i)) \<rightarrow> $zz
     \<medium_right_bracket> \<semicolon>
@@ -186,8 +186,8 @@ proc fold_map_dynarr:
   output \<open>fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> $z0 \<semicolon>
-  replicate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
-               \<open>\<lambda>i. fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<heavy_comma> (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
+             \<open>\<lambda>i. fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<heavy_comma> (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     C (get_dynarr ($addr, $i), $zz) \<rightarrow> val x', var zz \<semicolon>
     set_dynarr ($addr, $i, $x')

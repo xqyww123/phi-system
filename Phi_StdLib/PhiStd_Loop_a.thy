@@ -7,7 +7,7 @@ begin
 text \<open>Predefined abstractions of Loop statemetns, counted as a part of loop invariants in our statistics\<close>
 
 
-proc (nodef) replicate_a:
+proc (nodef) iterate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
        and TR: \<open>X\<^sub>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X s \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
        and ITER: \<open>\<And>i v. \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> i \<and> i < t \<Longrightarrow>
@@ -17,7 +17,7 @@ proc (nodef) replicate_a:
   output \<open>X t\<heavy_comma> R\<close>
 \<medium_left_bracket>
   TR
-  var i \<leftarrow> $s ;;
+  var i \<leftarrow> $s \<semicolon>
   while \<open>i \<Ztypecolon> \<v>\<a>\<r>[i] \<nat>\<heavy_comma> X i
          \<s>\<u>\<b>\<j> i. Inv: (s \<le> i \<and> i \<le> t) \<and> Guard: (i < t)\<close>
   \<medium_left_bracket> $i < $t \<medium_right_bracket>
