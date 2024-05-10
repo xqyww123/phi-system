@@ -65,12 +65,6 @@ proc Max:
   if (x < y) \<medium_left_bracket> y \<medium_right_bracket> \<medium_left_bracket> x \<medium_right_bracket>
 \<medium_right_bracket> .
 
-thm "<_\<phi>app"
-
-lemma \<open>l + y = l @ y\<close> by simp
-
-thm plus_list_def
-
 proc push_dynarr:
   input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
   premises \<open>length l \<le> 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
