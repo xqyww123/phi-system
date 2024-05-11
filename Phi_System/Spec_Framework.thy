@@ -302,19 +302,25 @@ lemma \<phi>sem_type_by_sat:
 \<Longrightarrow> Semantic_Type' S TY \<close>
   unfolding Premise_def Semantic_Type'_def \<r>Guard_def .
 
-lemma \<phi>sem_type_brute_EIF:
+lemma \<phi>sem_type_brute_EIF':
   \<open> \<r>EIF (Semantic_Type' S TY) (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<close>
   unfolding \<r>EIF_def Semantic_Type'_def
   by blast
 
+lemma \<phi>sem_type_brute_EIF:
+  \<open> \<r>EIF (Semantic_Type T TY) (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
+  unfolding \<r>EIF_def Semantic_Type_def
+  by blast
+
 bundle \<phi>sem_type_sat_EIF = \<phi>sem_type_by_sat[\<phi>reason default %\<phi>sem_type_brute]
                            \<phi>sem_type_brute_EIF[\<phi>reason %extract_pure]
+                           \<phi>sem_type_brute_EIF'[\<phi>reason %extract_pure]
                            \<phi>SemType_Itself_brute[\<phi>reason %\<phi>sem_type_cut+10]
 
 lemma [\<phi>reason default %\<phi>sem_type_failback]:
-  \<open> Semantic_Type T TY
+  \<open> \<g>\<u>\<a>\<r>\<d> Semantic_Type T TY
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY \<close>
-  unfolding Semantic_Type'_def Semantic_Type_def
+  unfolding Semantic_Type'_def Semantic_Type_def \<r>Guard_def
   by simp
 
 

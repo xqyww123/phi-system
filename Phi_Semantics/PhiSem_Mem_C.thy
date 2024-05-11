@@ -204,8 +204,8 @@ proc op_store_mem:
        and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
                    \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
                  \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
-       and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-       and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+       and \<open>Semantic_Type T TY\<close>
+       and \<open>Semantic_Type U TY\<close>
   output \<open>\<lambda>_::unit \<phi>arg. State'\<close>
   including \<phi>sem_type_sat_EIF
   unfolding Guided_Mem_Coercion_def
@@ -283,7 +283,7 @@ proc calloc1:
  
 proc mfree:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
-  requires \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  requires \<open>Semantic_Type T TY\<close>
   premises \<open>address_to_base addr\<close>
   output \<open>Void\<close>
   including \<phi>sem_type_sat_EIF

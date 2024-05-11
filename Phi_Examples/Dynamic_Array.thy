@@ -35,7 +35,7 @@ context
   fixes TY :: TY
     and T :: \<open>(VAL, 'x) \<phi>\<close>                              \<comment> \<open>we provide a generic verification\<close>
     and zero :: 'x
-  assumes [\<phi>reason add]: \<open>\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY\<close>      \<comment> \<open>specify the semantic type of T\<close>
+  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>      \<comment> \<open>specify the semantic type of T\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>  \<comment> \<open>specify the semantic zero value of T\<close>
 begin
 
@@ -98,7 +98,7 @@ proc concat_dynarr:
 \<medium_left_bracket>
   val len \<leftarrow> len_dynarr (addr2) \<semicolon>
 
-  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len) \<open>\<lambda>i. l1 + take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
+  iterate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len) \<open>\<lambda>i. l1 + take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     push_dynarr (addr1, get_dynarr (addr2, i))
   \<medium_right_bracket>
@@ -154,7 +154,7 @@ proc map_dynarr:
   output \<open>map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_eq_iff_nth_eq nth_append \<semicolon>
-  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr (addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
+  iterate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr (addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
      set_dynarr (addr, i, C (get_dynarr (addr, i)))
   \<medium_right_bracket> \<semicolon>
@@ -166,7 +166,7 @@ proc exists_dynarr:
   output \<open>list_ex P l \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> False \<semicolon>
-  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr (addr)) \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close>
+  iterate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr (addr)) \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close>
     \<medium_left_bracket> \<rightarrow> val i \<semicolon>
       zz \<or> C (get_dynarr (addr, i)) \<rightarrow> $zz
     \<medium_right_bracket> \<semicolon>
@@ -176,13 +176,13 @@ proc exists_dynarr:
 
 proc fold_map_dynarr:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
-  requires [\<phi>reason]: \<open>\<And>z. \<phi>SemType (z \<Ztypecolon> U) TY\<^sub>U\<close>
+  requires [\<phi>reason]: \<open>Semantic_Type U TY\<^sub>U\<close>
        and C: \<open>\<And>x z u v. \<p>\<r>\<o>\<c> C u v \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[u] T\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l>[v] U \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> g x z \<Ztypecolon> \<v>\<a>\<l> U \<rbrace> \<close>
   output \<open>fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> z0 \<semicolon>
-  replicate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr (addr))
-            \<open>\<lambda>i. fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<heavy_comma> (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
+  iterate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr (addr))
+           \<open>\<lambda>i. fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<heavy_comma> (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     C (get_dynarr (addr, i), zz) \<rightarrow> val x', var zz ;;
     set_dynarr (addr, i, x')

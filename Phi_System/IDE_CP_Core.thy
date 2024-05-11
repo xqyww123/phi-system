@@ -2441,7 +2441,7 @@ fun phi_synthesis_parser (oprs, (ctxt, sequent)) F (raw_term, pos) cfg =
 \<phi>lang_parser left_assignment (%\<phi>parser_var_decl, 0) ["var", "val"] (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
   fn opr_ctxt =>
     Parse.list1 ((\<^keyword>\<open>var\<close> || \<^keyword>\<open>val\<close>) -- Parse.list1 Parse.binding) --
-    Parse.position \<^keyword>\<open>\<leftarrow>\<close>
+    Parse.position (\<^keyword>\<open>\<leftarrow>\<close> || \<^keyword>\<open>=\<close>)
 >> (fn (vars,(_,pos)) => fn cfg =>
   let open Generic_Element_Access
       val vars' = maps (fn (k,bs) => map (pair (SOME k) o rpair empty_input) bs) vars

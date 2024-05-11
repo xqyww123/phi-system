@@ -20,12 +20,12 @@ proc qsort:
   \<medium_left_bracket>
     val pivot \<leftarrow> ($i + ($len - 1)) ! \<semicolon>
     var d \<leftarrow> 0 \<semicolon>
-    replicate (0,$len) \<open>\<lambda>n. d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
-                            l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)
+    iterate (0,$len) \<open>\<lambda>n. d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+                          l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)
                          \<s>\<u>\<b>\<j> l' d.
-                            d \<le> n \<and> l <~~> l' \<and>
-                            (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
-                            (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
+                           d \<le> n \<and> l <~~> l' \<and>
+                           (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
+                           (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
     \<medium_left_bracket> 
       for n \<rightarrow> val n \<semicolon>
       ($i + $n)! \<rightarrow> val x \<semicolon>
