@@ -41,7 +41,7 @@ proc is_empty:
   output \<open>l = [] \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   is [routine]
 \<medium_left_bracket>
-  $addr = \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+  addr = \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
 \<medium_right_bracket> .
 
 
@@ -50,19 +50,19 @@ proc is_empty:
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
     and TY :: TY                                      \<comment> \<open>semantic type\<close>
-  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close>
+  assumes [\<phi>reason add]: \<open>Semantic_Type T TY \<and> Inhabited_Type T\<close>    \<comment> \<open>specify the semantic type of T\<close>
 begin
 
 proc prepend_llist:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
+  input  \<open>v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<close>
   requires [\<phi>reason]: \<open>Semantic_Zero_Val TY T z\<close>
   output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v#l \<Ztypecolon> Linked_Lst addr' TY T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
   val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<close> \<semicolon>
-  $ret.nxt := $addr \<semicolon>
-  $ret.data := $v \<semicolon>
+  ret.nxt := addr \<semicolon>
+  ret.data := v \<semicolon>
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ TY T\<close> \<semicolon>
-  $ret
+  ret
 \<medium_right_bracket> .
 
 
@@ -74,15 +74,15 @@ proc pop_llist:
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
   is [routine]
 \<medium_left_bracket>
-  if ($addr = \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>) \<medium_left_bracket>
-    return($addr)
+  if (addr = \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>) \<medium_left_bracket>
+    return(addr)
   \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
    
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
-  val ret \<leftarrow> $addr.nxt ! \<semicolon>
-  mfree ($addr) \<semicolon>
+  val ret \<leftarrow> addr.nxt ! \<semicolon>
+  mfree (addr) \<semicolon>
 
-  $ret  
+  ret  
 \<medium_right_bracket> .
 
 
@@ -93,10 +93,10 @@ proc nth_llist:
   is [recursive]
   \<medium_left_bracket>
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon> \<comment> \<open>annotation 1: open abstraction\<close>
-    if ($i = \<open>0 \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<close>) \<medium_left_bracket>
-        $addr.data !
+    if (i = \<open>0 \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<close>) \<medium_left_bracket>
+        addr.data !
     \<medium_right_bracket> \<medium_left_bracket>
-        nth_llist ($addr \<tribullet> nxt !, $i - 1)
+        nth_llist (addr.nxt !, i - 1)
     \<medium_right_bracket>
     \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close> \<comment> \<open>annotation 2: close abstraction\<close>
   \<medium_right_bracket> .
@@ -109,7 +109,7 @@ proc hd_llist:
   output \<open>l \<Ztypecolon> Linked_Lst addr TY T\<heavy_comma>
           hd l \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
-  nth_llist ($addr, 0)
+  nth_llist (addr, 0)
 \<medium_right_bracket> .
 
 
@@ -121,9 +121,9 @@ proc update_nth_llist:
   \<medium_left_bracket>
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon> \<comment> \<open>annotation 1: open abstraction\<close>
     if \<open>$i = 0\<close> \<medium_left_bracket>
-        $addr.data := $y
+        addr.data := y
     \<medium_right_bracket> \<medium_left_bracket>
-        update_nth_llist ($addr \<tribullet> nxt !, $i - 1, $y)
+        update_nth_llist (addr.nxt !, i - 1, y)
     \<medium_right_bracket> \<semicolon>
     \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close>  \<comment> \<open>annotation 2: close abstraction\<close>
   \<medium_right_bracket> .
@@ -143,9 +143,9 @@ proc length_of:
     return(0)
   \<medium_right_bracket> \<medium_left_bracket>
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
-    val ret \<leftarrow> length_of ($addr \<tribullet> nxt !) + 1 \<semicolon>
+    val ret \<leftarrow> length_of (addr.nxt !) + 1 \<semicolon>
     \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr TY T\<close> \<semicolon> (* 1: call the second constructor *)
-    return ($ret)
+    return (ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .
  
@@ -163,13 +163,13 @@ proc reverse_aux:
   \<medium_left_bracket>
     if \<open>$addr = 0\<close> \<medium_left_bracket>
       \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(0)\<close>
-      $addr'
+      addr'
     \<medium_right_bracket> \<medium_left_bracket>
       \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
-      $addr.nxt! \<rightarrow> val aa \<semicolon>
-      $addr.nxt := $addr' \<semicolon>
+      addr.nxt! \<rightarrow> val aa \<semicolon>
+      addr.nxt := addr' \<semicolon>
       \<open>Linked_Lst addr' TY T\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>hd l # l' \<Ztypecolon> Linked_Lst addr TY T\<close> \<semicolon>
-      reverse_aux ($addr, $aa) 
+      reverse_aux (addr, aa) 
     \<medium_right_bracket>
   \<medium_right_bracket> .
 

@@ -11,6 +11,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
        and \<open>Object_Equiv \<rat> (=)\<close>
        and \<open>Abstract_Domain\<^sub>L \<rat> (\<lambda>_. True)\<close>
        and \<open>Abstract_Domain \<rat> (\<lambda>_. True)\<close>
+       and \<open>Semantic_Type T TY\<close>
 
 
 proc rat_add:

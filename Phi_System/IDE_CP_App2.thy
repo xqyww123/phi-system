@@ -9,16 +9,32 @@ subsection \<open>Properties of Semantic Value\<close>
 
 subsubsection \<open>Semantic Type\<close>
 
+definition Inhabited_Type
+  where \<open>Inhabited_Type T \<longleftrightarrow> (\<exists>x. Inhabited (x \<Ztypecolon> T))\<close>
+
+declare [[\<phi>reason_default_pattern
+            \<open>Inhabited_Type ?T\<close> \<Rightarrow> \<open>Inhabited_Type ?T\<close> (100) ]]
+
+lemma [\<phi>reason default]:
+  \<open> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<exists>x. D x)
+\<Longrightarrow> Inhabited_Type T \<close>
+  unfolding Inhabited_Type_def Abstract_Domain\<^sub>L_def Premise_def \<r>ESC_def
+  by blast
+
 context begin
 
 private lemma \<phi>TA_SemTy_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY \<and>\<^sub>\<r>
+                  Inhabited_Type T
+                  @tag \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
 \<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Action_Tag_def Semantic_Type'_def Semantic_Type_def
-  by blast
+  unfolding Action_Tag_def Semantic_Type'_def Semantic_Type_def Ant_Seq_def
+            Abstract_Domain\<^sub>L_def \<r>ESC_def Inhabited_def Premise_def Inhabited_Type_def
+  by clarsimp
 
 private lemma \<phi>TA_SemTy_cong:
   \<open> TY \<equiv> TY'
@@ -376,16 +392,22 @@ subsection \<open>Programming Methods for Showing Properties of Values\<close>
 subsubsection \<open>Semantic Type\<close>
 
 lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x) M D R F
+  \<open> Abstract_Domain\<^sub>L T DD
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P' : (Ex DD)
+\<Longrightarrow> PROP \<phi>Programming_Method (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x) M D R F
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show the value abstraction\<close> S \<open>has semantic type\<close> TY
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>some representation of \<phi>-types whose semantic type is know so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semantic_Type T TY)) M D ((\<And>x. Semantic_Type' (A x) TY) &&& PROP R) F\<close>
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semantic_Type T TY)) M D
+                             ((\<And>x. Semantic_Type' (A x) TY) &&& PROP R) (P' &&& PROP F)\<close>
   unfolding \<phi>Programming_Method_def ToA_Construction_def Semantic_Type_def Transformation_def
             Semantic_Type'_def
   apply (simp add: subset_iff conjunction_imp, rule)
   subgoal premises prems
-    by (insert prems(3) prems(1)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>], blast) .
+    by (insert prems(5) prems(3)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>], blast)
+  unfolding Abstract_Domain\<^sub>L_def Simplify_def
+  subgoal premises prems
+    by (insert prems(1,2) \<open>P'\<close>, clarsimp simp: Inhabited_def \<r>ESC_def, blast) .
 
 
 subsubsection \<open>Zero Value\<close>

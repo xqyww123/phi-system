@@ -271,7 +271,9 @@ lemma [\<phi>reason %\<phi>sem_type_cut+10]:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| fmdom TYs
 \<Longrightarrow> Semantic_Type (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (semty_ntup (fmupd s TY TYs))\<close>
   unfolding Semantic_Type_def subset_iff Premise_def
-  by (clarsimp, metis (no_types, lifting) V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right)
+  by (clarsimp, rule,
+      metis V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right,
+      metis V_named_tup_sep_disj fmap_sepdisj_fmempty(2) fmdom_notI fmempty_lookup fmrel_fmdom_eq sep_disj_fmupd_left)
 
 section \<open>Reasoning\<close>
 

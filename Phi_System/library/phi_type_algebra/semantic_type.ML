@@ -40,12 +40,20 @@ fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                 Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps (#equations phi0)) then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
 
-      val varifier = if is_some (#1 instruction) then K (K NONE)
-                     else fn _ => fn (Trueprop $ (SemTyp $ TY)) =>
-                            SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
+      fun varifier _ (Trueprop $ (
+              (conj as Const(\<^const_name>\<open>Ant_Seq\<close>, _))
+                $ ((SemTyp as Const(\<^const_name>\<open>Semantic_Type'\<close>, _) $ _) $ TY)
+                $ other
+              )) =
+            if is_some (#1 instruction)
+            then NONE
+            else SOME ([TY], fn [TY'] => Trueprop $ (conj $ (SemTyp $ TY') $ other))
+        | varifier _ X = NONE
       fun reasoning phi ctxt sequent =
             default_reasoning true default_reasoning_configure varifier
-                              (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
+                              (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
+          (*|> Phi_Reasoner.reason1 (fn _ =>
+                  "Semantic_Type relies on the property of Abstract_Domain\<^sub>L") NONE (SOME 1) ctxt *)
 
       val solver = K NONE
       val simp = if is_some (#1 instruction) then K I

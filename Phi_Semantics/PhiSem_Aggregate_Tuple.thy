@@ -171,7 +171,9 @@ lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
 \<Longrightarrow> Semantic_Type Ts (semty_tup TYs)
 \<Longrightarrow> Semantic_Type (\<lbrace> T \<rbrace> \<^emph> Ts) (semty_tup (TY#TYs))\<close>
   unfolding Semantic_Type_def subset_iff
-  by (clarsimp, metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
+  apply (clarsimp, rule)
+  using V_tup_mult apply fastforce
+  by (metis V_tup_sep_disj_L)
 
 
 section \<open>Reasoning\<close>

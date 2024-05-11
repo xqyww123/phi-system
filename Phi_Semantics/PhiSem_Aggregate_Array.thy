@@ -83,6 +83,7 @@ section \<open>\<phi>Type\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
        and \<open>Is_Aggregate (Array N T)\<close>
        and \<open>Semantic_Type T TY \<Longrightarrow> Semantic_Type (Array N T) (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
+           notes list_all2_conv_all_nth[simp] list_all_length[simp]
        and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
