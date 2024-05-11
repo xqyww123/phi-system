@@ -41,10 +41,10 @@ proc rat_mul:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 * q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  val q2 \<leftarrow> $q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> num,
-    den: $q1 \<tribullet> den * $q2 \<tribullet> den \<rbrace>
+  val q1 = (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
+  val q2 = (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
+  \<lbrace> num: q1.num * q2.num,
+    den: q1.den * q2.den \<rbrace>
   \<m>\<a>\<k>\<e>\<s> \<open>\<rat>\<close>
 \<medium_right_bracket> .
 
@@ -54,10 +54,10 @@ proc rat_div:
   premises \<open>q2 \<noteq> 0\<close>
   output \<open>q1 / q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
-  val q1 \<leftarrow> $q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  val q2 \<leftarrow> $q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  \<lbrace> num: $q1 \<tribullet> num * $q2 \<tribullet> den,
-    den: $q1 \<tribullet> den * $q2 \<tribullet> num \<rbrace>
+  val q1 \<leftarrow> (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
+  val q2 \<leftarrow> (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
+  \<lbrace> num: q1.num * q2.den,
+    den: q1.den * q2.num \<rbrace>
   \<m>\<a>\<k>\<e>\<s> \<open>\<rat>\<close>
 \<medium_right_bracket> .
 

@@ -54,7 +54,7 @@ section \<open>\<phi>-Types\<close>
   where \<open>x \<Ztypecolon> \<phi>AReal \<equiv> V_areal.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>\<phi>SemType (x \<Ztypecolon> \<real>) areal\<close>
+       and \<open>Semantic_Type \<real> areal\<close>
        and \<open>Semantic_Zero_Val areal \<real> 0\<close>
 
 lemma [\<phi>reason 1000]:
@@ -84,7 +84,7 @@ definition op_sub_ar :: "(VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV areal V_areal.dest va (\<lambda>val_a.
       \<phi>M_getV areal V_areal.dest vb (\<lambda>val_b.
-      Return (\<phi>arg (V_areal.mk (val_b - val_a)))
+      Return (\<phi>arg (V_areal.mk (val_a - val_b)))
   )))"
 
 definition op_neg_ar :: "(VAL, VAL) proc'"
@@ -97,7 +97,7 @@ definition op_mul_ar :: "(VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV areal V_areal.dest va (\<lambda>val_a.
       \<phi>M_getV areal V_areal.dest vb (\<lambda>val_b.
-      Return (\<phi>arg (V_areal.mk (val_b * val_a)))
+      Return (\<phi>arg (V_areal.mk (val_a * val_b)))
   )))"
 
 definition op_div_ar :: "(VAL \<times> VAL, VAL) proc'"
@@ -105,7 +105,7 @@ definition op_div_ar :: "(VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV areal V_areal.dest va (\<lambda>val_a.
       \<phi>M_getV areal V_areal.dest vb (\<lambda>val_b.
-      Return (\<phi>arg (V_areal.mk (val_b / val_a)))
+      Return (\<phi>arg (V_areal.mk (val_a / val_b)))
   )))"
 
 definition op_ar_lt :: "(VAL \<times> VAL, VAL) proc'"
@@ -113,7 +113,7 @@ definition op_ar_lt :: "(VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV areal V_areal.dest va (\<lambda>val_a.
       \<phi>M_getV areal V_areal.dest vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_b < val_a)))
+      Return (\<phi>arg (V_bool.mk (val_a < val_b)))
   )))"
 
 definition op_ar_le :: "(VAL \<times> VAL, VAL) proc'"
@@ -121,7 +121,7 @@ definition op_ar_le :: "(VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV areal V_areal.dest va (\<lambda>val_a.
       \<phi>M_getV areal V_areal.dest vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_b \<le> val_a)))
+      Return (\<phi>arg (V_bool.mk (val_a \<le> val_b)))
   )))"
 
 
@@ -156,7 +156,7 @@ lemma op_add_areal_\<phi>app
   [\<phi>overload +,
    \<phi>synthesis %synthesis_arith for _
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open> \<p>\<r>\<o>\<c> op_add_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<real> \<rbrace> \<close>
+  \<open> \<p>\<r>\<o>\<c> op_add_ar (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<real> \<rbrace> \<close>
   unfolding op_add_ar_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
@@ -166,7 +166,7 @@ lemma op_sub_areal_\<phi>app
   [\<phi>overload -,
    \<phi>synthesis %synthesis_arith for _
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open> \<p>\<r>\<o>\<c> op_sub_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<real> \<rbrace>\<close>
+  \<open> \<p>\<r>\<o>\<c> op_sub_ar (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<real> \<rbrace>\<close>
   unfolding op_sub_ar_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
@@ -186,7 +186,7 @@ paragraph \<open>Times\<close>
 lemma op_mul_areal[\<phi>overload *,
                   \<phi>synthesis %synthesis_arith for _
                              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open> \<p>\<r>\<o>\<c> op_mul_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<real> \<rbrace>\<close>
+  \<open> \<p>\<r>\<o>\<c> op_mul_ar (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<real> \<rbrace>\<close>
   unfolding op_mul_ar_def
   by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
@@ -196,7 +196,7 @@ paragraph \<open>Division\<close>
 lemma op_div_areal_\<phi>app[\<phi>overload /,
                         \<phi>synthesis %synthesis_arith for _
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open>\<p>\<r>\<o>\<c> op_div_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<real> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_div_ar (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<real> \<rbrace>\<close>
   unfolding op_div_ar_def
   by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
@@ -206,7 +206,7 @@ paragraph \<open>Less Than\<close>
 lemma op_lt_areal[\<phi>overload <,
                  \<phi>synthesis %synthesis_arith for _
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open>\<p>\<r>\<o>\<c> op_ar_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_ar_lt (rawx\<^bold>, rawy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_ar_lt_def
   by (cases rawx; cases rawy; simp, rule, rule, simp, rule, simp, rule, simp)
  
@@ -222,7 +222,7 @@ paragraph \<open>Less Equal\<close>
 lemma op_le_areal_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis %synthesis_arith for _
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open>\<p>\<r>\<o>\<c> op_ar_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_ar_le (rawx\<^bold>, rawy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_ar_le_def
   by (cases rawx; cases rawy; simp, rule, rule, simp, rule, simp, rule, simp)
 
