@@ -180,7 +180,7 @@ fun chk_quantifier_place (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ 
       = \<^Const>\<open>Trueprop\<close> $ (H2 $ Abs (N, Ty, H $ X $ A))
   | chk_quantifier_place X = X
 
-fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) ctxt0 (phi0 : phi_type) thy =
+fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) (phi0 : phi_type) thy =
   let val hint = Option.map (fn (a, aia) =>
            (chk_quantifier_place a
               |> chk_abstract_object_quantified (
@@ -190,7 +190,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) ctxt0 (p
                             then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
                             else SOME X
                  in target
-                end ) ctxt0
+                end ) thy
               |> rpair aia)
           ) (#1 instruction)
       val instruction = (hint, #2 instruction, #3 instruction, #4 instruction, #5 instruction, #6 instruction)
@@ -276,16 +276,16 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) ctxt0 (p
                | _ => error "BUG"
 
 
-      val ctxt0' = if is_some hint then ctxt0
-                   else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
+      val thy = if is_some hint then thy
+                else Config.put Phi_Reasoners.existential_obligation 2 thy
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrRA_rule},
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       solver, K I, simp)
-                                    phi0 instruction ctxt0'
+                                    phi0 instruction thy
    in case Seq.pull rules
    of SOME (rule, _) => thy
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %To_ToA_derived_to_raw}
                                                            (#2 instruction)))

@@ -125,7 +125,7 @@ fun SH_reasoning is_intro phi ctxt =
           else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp} chk ctxt sequent
          end) phi ctxt
 
-fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
+fun gen_SH is_intro (_,name) instruction (phi0 : phi_type) thy =
   let (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
@@ -188,12 +188,12 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                                                         else @{thm' \<phi>TA_SH\<^sub>E_rule}),
                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, SH_reasoning is_intro)],
                                      K NONE, pre_simp, simp)
-                                    phi0 instruction ctxt0
+                                    phi0 instruction thy
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
-         | SOME (rule', _) => generic
+         | SOME (rule', _) => thy
              |> note_properties_s false phi0 [(name, [rule'])]
-             |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+             |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                            (#2 instruction)))

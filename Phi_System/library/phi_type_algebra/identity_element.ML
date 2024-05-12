@@ -194,7 +194,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
          phi, ctxt))
   end
 
-fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
+fun gen_id_ele is_left (_,name) instruction (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ T $ _ $ _ => T
              | Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ T $ _ => T
@@ -253,7 +253,7 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                       by simp}
             ]
 
-      val ctxt = ctxt0
+      val thy = thy
               |> Bundle.includes ["IDE_CP_Applications1.abstract_domain_OPEN_MAKE"]
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
@@ -261,11 +261,11 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                      guess_property is_left, rule,
                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                      id_ele_infer, pre_simp, simp)
-                                    phi0 instruction ctxt
+                                    phi0 instruction thy
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
-         | SOME (rule', _) => generic
-            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+         | SOME (rule', _) => thy
+            |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_identity_element}
                                                            (#2 instruction)))
@@ -274,28 +274,28 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
             |> pair [rule']
   end
 
-fun id_ele_properties pos is_intro ctxt0 (phi0 : phi_type) thy =
+fun id_ele_properties pos is_intro (phi0 : phi_type) thy0 =
   let val (_,_,m_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-      val inst = lift_types_sort (Proof_Context.theory_of ctxt0) [(m_ty0, \<^sort>\<open>one\<close>)]
-      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt0) inst
+      val inst = lift_types_sort (Proof_Context.theory_of thy0) [(m_ty0, \<^sort>\<open>one\<close>)]
+      val inst' = Phi_Help.certify_tyvars (Context.Proof thy0) inst
       val phi = instantiate_phi (inst', Vars.empty) phi0
 
-      val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt0
+      val ((_, T_term), thy) = fix_phi_term_params phi thy0
       val (_,x_ty,m_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val trigger = (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close>
                                  else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close>) $ T_term
-                 |> singleton (Variable.export_terms ctxt ctxt0)
-                 |> Thm.cterm_of ctxt
+                 |> singleton (Variable.export_terms thy thy0)
+                 |> Thm.cterm_of thy
                  |> Drule.mk_term
 
-      val _ = if not (null (PLPR_Template_Properties.lookup_properties_match (Context.Proof ctxt0) (Thm.concl_of trigger)))
+      val _ = if not (null (PLPR_Template_Properties.lookup_properties_match (Context.Proof thy0) (Thm.concl_of trigger)))
               then raise Automation_Fail (fn () => let open Pretty in
                       [para "The deriver of Identity_Element_Properties can only be invoked once\
                             \ for each \<phi>-type."]
                     end)
               else ()
-   in thy
-   |> Phi_Help.generic_theory_mapping pos (fn m =>
+   in thy0
+   |> Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} (fn m =>
         PLPR_Template_Properties.add_property_instance (pos, Morphism.thm m trigger))
   end
 

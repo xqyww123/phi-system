@@ -7346,6 +7346,67 @@ lemma elim_TA_ANT:
   subgoal premises prems by (rule prems(1), rule prems(3), rule prems(2))
   subgoal premises prems by (rule prems(1), rule prems(3), rule prems(2), rule prems(3)) .
 
+
+
+(*
+
+ML \<open>
+structure Data = Generic_Data (
+  type T = int
+  val empty = 100
+  fun merge (a,_) = a
+)
+\<close>
+
+
+local_setup \<open>fn lthy => lthy
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+  |> snd o Local_Theory.begin_nested
+  |> Local_Theory.begin_nested
+  |> snd
+  |> (fn lthy => lthy addsimps @{thms allI})
+  |> Local_Theory.declaration {syntax=false,pervasive=false,pos=\<^here>} (
+      fn _ => Data.put 1)
+  |> Context.proof_map (Data.put 42)
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+  |> Local_Theory.end_nested
+|> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+
+  (*|> Context.proof_map (Data.put 666) *)
+  |> Local_Theory.map_contexts (fn i =>
+      if i >= 1 then Context.proof_map (Data.put 666) else I)
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+
+  |> snd o Local_Theory.begin_nested
+  |> snd o Local_Theory.begin_nested
+  |> (fn lthy => lthy addsimps @{thms allI})
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+  |> Local_Theory.end_nested
+  |> Local_Theory.end_nested
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+
+  |> snd o Local_Theory.begin_nested
+  |> (fn lthy => lthy addsimps @{thms allI})
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+  |> Local_Theory.end_nested
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy))
+
+  |> (fn lthy => lthy addsimps @{thms allI})
+  |> Local_Theory.end_nested
+  |> (fn lthy => lthy addsimps @{thms allI})
+  |> (fn lthy => (@{print} (Data.get (Context.Proof lthy)); lthy)) \<close>
+
+
+ML \<open>Data.get (Context.Theory \<^theory>)\<close>
+
+*)
+
+
+
+
+
+
+
 ML_file \<open>library/phi_type_algebra/deriver_framework.ML\<close>
 
 consts \<phi>deriver_expansion :: mode
@@ -7481,7 +7542,7 @@ lemma
 
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
-\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn (quiet, _) => fn [] => fn _ => fn phi => fn thy => (
+\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn (quiet, _) => fn [] => fn phi => fn thy => (
   if Phi_Syntax.is_nonnull_Type_Opr (Term.fastype_of (#term phi)) andalso
      Phi_Type.def_contains_satisfaction phi andalso
      not quiet

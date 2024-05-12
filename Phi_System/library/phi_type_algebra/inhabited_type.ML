@@ -16,7 +16,7 @@ fun guess_property phi ctxt =
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
-fun gen_inhabited_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_inhabited_type (_, name) instruction (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const>\<open>Inhabited_Type _ _\<close> $ T => T)
       val ind_conv = K (K I)
       val varifier = K (K NONE)
@@ -28,19 +28,19 @@ fun gen_inhabited_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
       val solver = K NONE
       val simp = K I
 
-      val ctxt = ctxt0
-            (*|> Config.put Phi_Reasoner.ignore_dup_reasoner true
+      (*val ctxt = ctxt0
+              |> Config.put Phi_Reasoner.ignore_dup_reasoner true
               |> Bundle.includes ["Spec_Framework.inh_typ_derv_tool"]
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0*)
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' inh_typ_derv_rule},
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       solver, K I, simp)
-                                    phi0 instruction ctxt
+                                    phi0 instruction thy
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s false phi0 [(name, [rule])]
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %\<phi>sem_type_derived}
                                                            (#2 instruction)))

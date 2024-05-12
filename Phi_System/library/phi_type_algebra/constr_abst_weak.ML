@@ -49,7 +49,7 @@ fun guess_property (phi:phi_type) ctxt =
                   NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
-fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_constr_from_raw (_,name) instruction (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _)
                  => T
@@ -103,14 +103,14 @@ fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                       guess_property, @{thm' \<phi>TA_TrCstr_rule},
                                       [(SOME (default_ind_inst (fn [_,x] => [SOME x]), K I), ind_conv, reasoning)],
                                       solver, K I, K I)
-                                     phi0 instruction ctxt0
+                                     phi0 instruction thy
    in case Seq.pull rules
    of SOME (rule, _) =>
       let val rule = Conv.fconv_rule  (Conv.bottom_rewrs_conv
-                     @{thms' Action_Tag_def[where P=\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> and A=\<open>\<T>\<P>\<close> for X Y P, symmetric]} ctxt0)
+                     @{thms' Action_Tag_def[where P=\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> and A=\<open>\<T>\<P>\<close> for X Y P, symmetric]} thy)
                      rule
        in thy
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_abstract_from_raw}
                                                            (#2 instruction)))

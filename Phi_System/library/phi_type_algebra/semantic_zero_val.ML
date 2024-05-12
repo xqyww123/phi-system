@@ -30,7 +30,7 @@ fun guess_property phi0 ctxt =
           NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
-fun gen_semantic_zero_val (_, name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_semantic_zero_val (_, name) instruction (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const_>\<open>Semantic_Zero_Val _\<close> $ _ $ T $ _ => T)
       fun reasoning phi ctxt =
             default_reasoning true default_reasoning_configure (K (K NONE))
@@ -39,20 +39,20 @@ fun gen_semantic_zero_val (_, name) instruction ctxt0 (phi0 : phi_type) thy =
       val solver = K NONE
       val simp = K I
 
-      val ctxt = ctxt0
+      val thy' = thy
               |> Config.put Phi_Reasoner.ignore_dup_reasoner true
               |> Bundle.includes ["Spec_Framework.Semantic_Zero_Val_EIF_brute"]
-              |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
+              |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property,
                                       @{thm' \<phi>TA_Semantic_Zero_Val_rule},
                                       [(NONE, K (K I), reasoning)],
                                       solver, K I, simp)
-                                    phi0 instruction ctxt
+                                    phi0 instruction thy'
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s false phi0 [(name, [rule])]
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %semantic_zero_val_derived}
                                                            (#2 instruction)))

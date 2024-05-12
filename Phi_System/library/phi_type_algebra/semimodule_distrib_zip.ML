@@ -19,7 +19,7 @@ val TA_common_rewr_imp23' = @{lemma
  \<equiv> (Ant \<Longrightarrow> Q1 \<Longrightarrow> Q2 \<longrightarrow> (P @tag \<A>)) \<close>
   by (unfold Action_Tag_def atomize_imp)}
 
-fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
+fun gen_MDz is_zip (_, name) instruction (phi : phi_type) thy =
   let val parse_hint = parse_hint (
               fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ _ $ _ $ _) =>
                     F1 $ Term.dummy
@@ -76,7 +76,7 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
             (@{print} o Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_pre}
                                       else @{thm' \<phi>TA_MD\<^sub>U_rewr_pre}))) ctm) o snd)
 
-      val ctxt = Bundle.includes ["Phi_Type.\<phi>TA_MD"] ctxt0
+      val thy = Bundle.includes ["Phi_Type.\<phi>TA_MD"] thy
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
                                       [(SOME (if is_zip
@@ -88,11 +88,11 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                                                 end),
                                         ind_conv, reasoning)],
                                       K NONE, pre_simp, simp)
-                                    phi instruction ctxt
+                                    phi instruction thy
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE'
                                     (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                        (#2 instruction)))

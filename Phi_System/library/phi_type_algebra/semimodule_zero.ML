@@ -9,7 +9,7 @@ end
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
 
-fun gen_M0 closed (der_id, name) instruction ctxt0 (phi : phi_type) thy =
+fun gen_M0 closed (der_id, name) instruction (phi : phi_type) thy =
   let val parse_hint = parse_hint (
           fn (Const(\<^const_name>\<open>Semimodule_Zero\<close>, _) $ F1 $ _ ) => F1
            | (Const(\<^const_name>\<open>Closed_Semimodule_Zero\<close>, _) $ F1 $ _ ) => F1)
@@ -39,11 +39,11 @@ fun gen_M0 closed (der_id, name) instruction ctxt0 (phi : phi_type) thy =
                                       (if closed then @{thm' \<phi>TA_M0c_rule} else @{thm' \<phi>TA_M0_rule}),
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       K NONE, pre_simp, simp)
-                                    phi instruction ctxt0
+                                    phi instruction thy
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE'
                                     (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                        (#2 instruction)))

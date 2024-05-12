@@ -20,11 +20,11 @@ lemma Itself_is_primitive: \<open>x \<Ztypecolon> Itself \<equiv> x \<Ztypecolon
 
 ML \<open>(Thm.transfer \<^theory> @{thm' Itself_is_primitive})\<close>
 
-setup \<open>Context.theory_map (
+local_setup \<open>
   Phi_Type.add_type {no_auto=true}
         (\<^binding>\<open>Itself\<close>, \<^pattern>\<open>Itself\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
          \<^here>, Phi_Type.Derivings.empty, [])
-   #> snd )\<close>
+   #> snd \<close>
 
 text \<open>No deriver is available on \<open>Itself\<close>, and they will trap in infinite loops because the fake
   definition \<open>Itself_is_primitive\<close> given to the deriving engine is infinitely recursive.\<close>
@@ -35,11 +35,11 @@ subsection \<open>Embedding of Empty\<close>
 lemma \<phi>None_def': \<open> (x \<Ztypecolon> \<circle>) = (1 \<Ztypecolon> Itself) \<close>
   by (simp add: BI_eq_iff)
 
-setup \<open>Context.theory_map (
+local_setup \<open>
   Phi_Type.add_type {no_auto=false}
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type.Derivings.empty, [])
-   #> snd )\<close>
+   #> snd \<close>
  
 
 let_\<phi>type \<phi>None
@@ -52,11 +52,11 @@ let_\<phi>type \<phi>None
 
 subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 
-setup \<open>Context.theory_map (
+local_setup \<open>
   Phi_Type.add_type {no_auto=false}
       (\<^binding>\<open>\<phi>Any\<close>, \<^pattern>\<open>\<phi>Any::(?'c, ?'x) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
        \<^here>, Phi_Type.Derivings.empty, [])
-   #> snd )\<close>
+   #> snd \<close>
 
 let_\<phi>type \<phi>Any deriving Basic
 
@@ -65,12 +65,12 @@ subsection \<open>Embedding of \<open>\<bottom>\<close>\<close>
 
 declare \<phi>Bot_def[embed_into_\<phi>type]
 
-setup \<open>Context.theory_map (
+local_setup \<open>
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Bot\<close>, \<^pattern>\<open>\<phi>Bot::(?'c,?'a) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
          \<^here>, Phi_Type.Derivings.empty, [])
-   #> snd )\<close>
-
+   #> snd \<close>
+ 
 let_\<phi>type \<phi>Bot
   deriving Basic
        and \<open>Abstract_Domain \<bottom>\<^sub>\<phi> (\<lambda>x. False)\<close>
@@ -81,7 +81,7 @@ let_\<phi>type \<phi>Bot
 
 subsection \<open>\<phi>Prod\<close>
 
-setup \<open>Context.theory_map (
+local_setup \<open>
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Prod\<close>, \<^pattern>\<open>\<phi>Prod::(?'c::sep_magma,?'a\<^sub>1) \<phi> \<Rightarrow> (?'c,?'a\<^sub>2) \<phi> \<Rightarrow> (?'c,?'a\<^sub>1 \<times> ?'a\<^sub>2) \<phi>\<close>,
          Phi_Type.DIRECT_DEF (Thm.transfer \<^theory>
@@ -89,7 +89,7 @@ setup \<open>Context.theory_map (
                       for T :: \<open>('c::sep_magma,'a\<^sub>1) \<phi>\<close> and U :: \<open>('c::sep_magma,'a\<^sub>2) \<phi>\<close>
                   by (simp add: \<phi>Prod_expn'')}),
          \<^here>, Phi_Type.Derivings.empty, [])
-   #> snd )\<close>
+   #> snd \<close>
 
 let_\<phi>type \<phi>Prod
   deriving Basic
@@ -1267,6 +1267,7 @@ text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close
   and carrier_set_of_\<phi>Fun = (60, [60,70]) for \<open>Carrier_Set _ _\<close>
                             in carrier_set and > derived_carrier_set and < carrier_set_cut \<open>\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
@@ -1311,6 +1312,7 @@ text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close
        and \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::('c2,'c2) \<phi>) \<s>\<u>\<b>\<j> y. r x y @tag to (Itself::('c2,'c2) \<phi>))
          \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> f \<Zcomp>\<^sub>f T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::('c,'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = f x \<and> r x' x) @tag to (Itself::('c,'c) \<phi>)  \<close>
        and \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<Longrightarrow> f c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> f \<Zcomp>\<^sub>f T  \<close>
+
 
 declare \<phi>Fun'.\<phi>Sum\<^sub>I[\<phi>reason add]
         \<phi>Fun'.\<phi>Sum\<^sub>E[\<phi>reason add]
@@ -1390,11 +1392,11 @@ subsection \<open>Injection into Unital Algebra\<close>
 lemma \<phi>Some_def': \<open> \<black_circle> T = (Some \<Zcomp>\<^sub>f T) \<close>
   by (rule \<phi>Type_eqI_BI; simp add: BI_eq_iff)
 
-setup \<open>Context.theory_map (
+local_setup \<open>
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Some\<close>, \<^pattern>\<open>\<phi>Some\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
          \<^here>, Phi_Type.Derivings.empty, [])
-   #> snd )\<close>
+   #> snd \<close>
   \<comment> \<open>Setup an alternative definition in the language of \<phi>-types so that we can apply
       derivers over these bootstrap \<phi>-types\<close>
 
@@ -1727,11 +1729,11 @@ setup \<open>Context.theory_map (Phi_Type.Defining_Phi_Type.add 12 (fn phi => fn
 
       open Pretty
       val _ = List.app (find o Thm.prop_of) (#equations phi)
-              handle Found (X,Y) => Phi_Reasoner.warn_pretty thy 0 (fn () =>
+              handle Found (X,Y) => Phi_Reasoner.warn_pretty (Context.Proof thy) 0 (fn () =>
                   paragraph (text "We have noticed you are using" @ [brk 1,
-                      Context.cases Syntax.pretty_term_global Syntax.pretty_term thy X, brk 1] @
+                      Syntax.pretty_term thy X, brk 1] @
                       text "instead of a more specific \<phi>-type" @ [brk 1,
-                      Context.cases Syntax.pretty_term_global Syntax.pretty_term thy Y, str ".", brk 1] @
+                      Syntax.pretty_term thy Y, str ".", brk 1] @
                       text "We highly recommend the later form which replaces the former totally and\
                            \ have more general automation on separation homomorphism." ))
    in thy

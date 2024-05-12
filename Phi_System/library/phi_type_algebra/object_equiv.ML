@@ -161,7 +161,7 @@ fun OE_reasoning phi ctxt rule =
   end
 
 
-fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_obj_equal' (_,name) instruction (phi0 : phi_type) thy0 =
   let val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
@@ -226,11 +226,11 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val simp = if is_some (#1 instruction) then K I
                  else simplifier_by_LPR' @{thm' \<phi>TA_OE_simp}
 
-      val ctxt = if def_contains_satisfaction phi0 then ctxt0
+      val thy = if def_contains_satisfaction phi0 then thy0
                       |> Config.put Phi_Reasoner.ignore_dup_reasoner true
                       |> Bundle.includes ["Phi_BI.ToA_extract_pure_sat"]
-                      |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
-                 else ctxt0
+                      |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy0
+                 else thy0
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
@@ -238,11 +238,11 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                        (SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, OE_reasoning)],
                                       infer, pre_simp, simp)
                                      phi0 instruction
-                                     ((*Config.put search_CSTR_rules true*) ctxt)
+                                     ((*Config.put search_CSTR_rules true*) thy)
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
-            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+            |> Local_Theory.declaration {syntax=false,pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_object_equiv}
                                                            (#2 instruction)))

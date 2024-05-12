@@ -82,7 +82,7 @@ val guess_property = guess_property_like_abst_domain (
  end
 *)
 
-fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_is_functional (_,name) instruction (phi0 : phi_type) thy0 =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Functionality\<close>, _) $ T $ _ => T )
 
       val equip_expansion = equip_expansion_ss phi0
@@ -122,20 +122,20 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                   Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
                 )) ctxt) rule*)
 
-      val ctxt = ctxt0 (*Context.proof_map (Phi_Reasoners.add_premise_extraction_rules
+      val thy = thy0 (*Context.proof_map (Phi_Reasoners.add_premise_extraction_rules
                     @{thms' Is_Functional_premise_extraction Functionality_premise_extraction}) ctxt0*)
               |> Config.put Phi_Reasoner.ignore_dup_reasoner true
               |> Bundle.includes ["Spec_Framework.Is_Functional_brute", "IDE_CP_Applications1.Functionality_OPEN"]
-              |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
+              |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy0
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                        solver, pre_simp, simp)
-                                    phi0 instruction ctxt
+                                    phi0 instruction thy
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s false phi0 [(name, [rule])]
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_\<phi>functionality}
                                                            (#2 instruction)))

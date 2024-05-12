@@ -12,7 +12,7 @@ open Phi_Type Phi_Type_Derivers
 
 (*is_intro: True for applying the inductive destruction on the source, False for on the target*)
 fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
-                            (_, name) instruction ctxt0 (phi0 : phi_type) thy =
+                            (_, name) instruction (phi0 : phi_type) thy =
   let val Const (const, _) = head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
       fun extract_oprs_from_hint (C $ D $ r) =
            (case head_of C
@@ -99,12 +99,12 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning is_intro)],
                                      K NONE, K I, simp)
-                                    phi0 instruction ctxt0
+                                    phi0 instruction thy
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
         |> note_properties_s false phi0 [(name, [rule'])]
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
              Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
                                    (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                       (#2 instruction)))
@@ -176,8 +176,8 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
 (*mode: 1 = only generates introduction deriver
         2 = only generates elimination deriver
         3 = generates both derivers*)
-fun meta_Tyops_Commute (reversed,mode) (quiet,_) ctxt (phi : phi_type) thy =
-  let val (binding, deriver, pattern) = meta_gen_Tyops_Commute reversed ctxt phi
+fun meta_Tyops_Commute (reversed,mode) (quiet,pos) (phi : phi_type) thy =
+  let val (binding, deriver, pattern) = meta_gen_Tyops_Commute reversed thy phi
       val (binding_I, binding_E) = if reversed
             then (Binding.suffix_name "\<^sub>E" binding, Binding.suffix_name "\<^sub>I" binding)
             else (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
@@ -189,35 +189,35 @@ fun meta_Tyops_Commute (reversed,mode) (quiet,_) ctxt (phi : phi_type) thy =
 
       fun report (name, thy) = (
             if quiet then () else 
-            Phi_Reasoner.info_pretty_generic thy 0 (fn () => let open Pretty in
+            Phi_Reasoner.info_pretty thy 0 (fn () => let open Pretty in
               block (text "Deriver for \<phi>-Type Operator Commutativity :" @
-                     [brk 1, Name_Space.pretty ctxt (Name_Space.space_of_table (deriver_name_space thy)) name])
+                     [brk 1, Name_Space.pretty thy (Name_Space.space_of_table
+                                  (deriver_name_space (Context.Proof thy))) name])
             end) ;
             (name, thy)
           )
-      fun bind pat (name, thy) = (name, Phi_Type.bind_derivers_on_patterns [(pat, name)] thy)
+      fun bind pat (name, thy) = (name,
+            Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn _ =>
+                Phi_Type.bind_derivers_on_patterns [(pat, name)]) thy)
 
       val (intro_deriver, thy) = ("", thy)
             |> gen_I ? (snd
-                #> Context.mapping_result (define_deriver_global binding_I (fst deriver))
-                                          (define_deriver binding_I (fst deriver))
+                #> define_deriver binding_I (fst deriver)
                 #> report
                 #> bind (fst pattern))
 
       val (elim_deriver, thy) = ("", thy)
             |> gen_E ? (snd
-                #> Context.mapping_result (define_deriver_global binding_E (snd deriver))
-                                          (define_deriver binding_E (snd deriver))
+                #> define_deriver binding_E (snd deriver)
                 #> report
                 #> bind (snd pattern))
 
       val combined_deriver = {priority = @{priority %derived_commutativity_deriver+1},
                               dependences = [(intro_deriver, false), (elim_deriver, false)],
-                              derive= K (K (K (K I)))}
+                              derive= K (K (K I))}
    in thy
    |> mode = 3 ? (
-          Context.mapping_result (define_deriver_global binding combined_deriver)
-                                 (define_deriver binding combined_deriver)
+          define_deriver binding combined_deriver
        #> report
        #> snd )
   end

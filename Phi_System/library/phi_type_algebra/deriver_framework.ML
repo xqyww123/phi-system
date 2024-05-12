@@ -19,11 +19,11 @@ type induct_inst_params = term option list
 (** Component: unify_hint **)
 
 type hint = term
-type parse_hint = Phi_Type.deriving_ctxt -> Phi_Type.phi_type ->  hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
+type parse_hint = Proof.context -> Phi_Type.phi_type ->  hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
 (* Common choices of the unification *)
 
-val malformed_hint : Phi_Type.deriving_ctxt -> term -> (unit -> Pretty.T list) -> 'a
+val malformed_hint : Proof.context -> term -> (unit -> Pretty.T list) -> 'a
 val parse_inst_params_from_phi_term : term -> induct_inst_params
 (*default parsing*)
 val parse_hint : (term -> term) (*extract the phi-type part from the hint. can be either the type assertion,
@@ -298,10 +298,9 @@ val deriver_framework : hint_mode * multiple_call * string (*name*)
                      -> (   int (*the times that the deriver has been invoked*)
                           * string (*name suffixed by the time*)
                           -> deriving_instruction
-                          -> Phi_Type.deriving_ctxt
                           -> Phi_Type.phi_type
-                          -> generic_theory
-                          -> thm list (*derived rule*) * generic_theory)
+                          -> local_theory
+                          -> thm list (*derived rule*) * local_theory)
                      -> quiet * Position.T
                      -> deriving_instruction list
                      -> Phi_Type.derive
@@ -320,10 +319,9 @@ val deriver_framework : hint_mode * multiple_call * string (*name*)
 
 val deriver_framework_no_hints : multiple_call * string (*name*)
                      -> (string (*name*)
-                          -> Phi_Type.deriving_ctxt
                           -> Phi_Type.phi_type
-                          -> generic_theory
-                          -> thm list (*derived rule*) * generic_theory)
+                          -> local_theory
+                          -> thm list (*derived rule*) * local_theory)
                      -> quiet * Position.T
                      -> Phi_Type.derive
 
@@ -345,8 +343,8 @@ val accept_one : string (*name for printing*) ->
     (*wraps and checks if the user gives at most one hint*)
 *)
 
-val chk_unfolded : string list (*bads*) -> Phi_Type.deriving_ctxt -> Phi_Type.phi_type -> term -> unit
-val conv_chk_unfolded : string list -> Phi_Type.phi_type -> Phi_Type.deriving_ctxt -> conv
+val chk_unfolded : string list (*bads*) -> Proof.context -> Phi_Type.phi_type -> term -> unit
+val conv_chk_unfolded : string list -> Phi_Type.phi_type -> Proof.context -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not.
         The bads are constants whose occurrence indicates the \<phi>-type is not expanded*)
 
@@ -1102,12 +1100,12 @@ datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 type quiet = bool
 
 fun deriver_framework (hint_mode, multiple_call, name) deriver
-                      (quiet, pos) (deriving_instructions0 : deriving_instruction list) ctxt_derv phi thy =
+                      (quiet, pos) (deriving_instructions0 : deriving_instruction list) phi (thy : local_theory) =
   let val deriving_instructions'1 = filter_out (fn DI => not (is_some (#1 DI)) andalso 
                                                          not (is_some (#4 DI)))
                                                deriving_instructions0
 
-      val ind = length (lookup_derived_properties thy phi name)
+      val ind = length (lookup_derived_properties (Context.Proof thy) phi name)
       val (deriving_instructions, just_dep) =
             case deriving_instructions'1
               of [] => if ind = 0
@@ -1141,14 +1139,14 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                if just_dep orelse null hint_terms then ()
                else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts no hint, but given") ::
-                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_) => item [Syntax.pretty_term thy H])
                       hint_terms
                 )
              | ACCEPT_ONE_HINT =>
                if just_dep orelse length hint_terms <= 1 then ()
                else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts at most one hint, but more hints are given") ::
-                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_) => item [Syntax.pretty_term thy H])
                       hint_terms
                 )
              | REQUIRE_EXACT_ONE_HINT =>
@@ -1159,7 +1157,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                 ])
                 else raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
-                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_) => item [Syntax.pretty_term thy H])
                       hint_terms
                 )
              | REQUIRE_HINTS =>
@@ -1172,10 +1170,12 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
 
       fun invoke (i,H) thy =
         let val iname = suffix_name_by_index (i+ind) name
-            val ctxt_derv' = ctxt_derv
-                          |> snd o Proof_Context.note_thms "" (Binding.empty_atts, #5 H)
-                          |> Bundle.includes (#6 H)
-         in deriver (i+ind, iname) H ctxt_derv' phi thy
+            val derv_thy = thy
+                        |> snd o Local_Theory.begin_nested
+                        |> snd o Proof_Context.note_thms "" (Binding.empty_atts, #5 H)
+                        |> Bundle.includes (#6 H)
+         in deriver (i+ind, iname) H phi derv_thy
+         |> Local_Theory.end_nested_result Morphism.fact
          |-> register_derived_properties phi (name, i+ind, #3 H)
         end
 
@@ -1281,7 +1281,8 @@ fun oblg_solver proof_id text ctxt sequent =
                         Method.evaluate text' ctxt [] (ctxt, @{thm' Premise_I} RS sequent'1))
                  | NONE => (ctxt, sequent'1)
        val nprems' = Thm.nprems_of sequent'2
-       val ctxt = ctxt addsimps Expansion.simp_rules ctxt
+       val rulex = Expansion.simp_rules ctxt
+       val ctxt = ctxt addsimps rulex
     in Phi_Help.ntimes (nprems' - nprems + 1)
                        (fn i => Phi_Sledgehammer_Solver.auto (SOME (proof_id ^ "\<^sub>" ^ string_of_int i)) ctxt) sequent'2
         (*|> (fn th => case Thm.major_prem_of th

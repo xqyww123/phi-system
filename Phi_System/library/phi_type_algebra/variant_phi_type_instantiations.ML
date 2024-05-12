@@ -1,8 +1,7 @@
 local open Phi_Type in
 val _ = Theory.setup (Context.theory_map (
   Phi_Type.Defining_Phi_Type.add 100 (fn phi => fn thy =>
-    let val ctxt' = Context.proof_of thy
-        val ctm0 = Drule.dest_term (#cterm phi)
+    let val ctm0 = Drule.dest_term (#cterm phi)
 
         (*pad arguments*)
         val ctm = let val (tys', _) = Thm.strip_type (Thm.ctyp_of_cterm ctm0)
@@ -17,16 +16,16 @@ val _ = Theory.setup (Context.theory_map (
                                       fold (fn (N,_) => fn L' => insert (op =) N L')
                                            (Term.add_tvarsT T []) L)
                                    (Term.add_vars F_tm []) []
-              val F_ctm = Thm.cterm_of ctxt' F_tm
+              val F_ctm = Thm.cterm_of thy F_tm
               val d = Thm.maxidx_of_cterm F_ctm + 1
               val F_ctm' =
                     Term.map_types (Term.map_atyps (
                             fn T as TVar ((N,i),S) =>
                                   if member (op =) protect_tvars (N,i) then T else TVar ((N,i+d),S)
                              | T => T)) F_tm
-                      |> Thm.cterm_of ctxt'
+                      |> Thm.cterm_of thy
 
-           in try (Drule.infer_instantiate ctxt' [(("Fa",d+d), F_ctm ), (("Fb",d+d), F_ctm')])
+           in try (Drule.infer_instantiate thy [(("Fa",d+d), F_ctm ), (("Fb",d+d), F_ctm')])
                   (Thm.incr_indexes (d+d) rule)
           end
 
@@ -85,7 +84,7 @@ val _ = Theory.setup (Context.theory_map (
                 (*@ mk_parameter_variant1 ctm
                   @ [mk_parameter_variant ctm]*)
      in thy
-     |> Phi_Help.generic_theory_mapping (#pos phi) (fn m =>
+     |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #pos phi} (fn m =>
         Phi_Reasoner.add_rules (
           map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT',
                            SOME @{reasoner_group %variants_of_type_opr}, [], [], NONE)) (Morphism.fact m rules))

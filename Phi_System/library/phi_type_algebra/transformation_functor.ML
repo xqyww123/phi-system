@@ -201,7 +201,7 @@ fun TF_reasoning phi ctxt = default_reasoning true
       (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp} (K (chk_unfolded [] ctxt phi)))
       phi ctxt
 
-fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
+fun gen_TF (der_id, name) instruction (phi0 : phi_type) thy0 =
   let       (*|> def_contains_satisfaction phi0 ? Context.proof_map (
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
@@ -265,15 +265,15 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                                                       | 2 => @{thms' \<phi>TA_biTF_deriver_cong}
                                                       | ~1 => @{thms' \<phi>TA_TF\<^sub>\<Lambda>_deriver_cong})
 
-      val ctxt = if def_contains_satisfaction phi0 then ctxt0
+      val thy  = if def_contains_satisfaction phi0 then thy0
                       |> Config.put Phi_Reasoner.ignore_dup_reasoner true
                       |> Bundle.includes ["Phi_BI.ToA_extract_pure_sat"]
-                      |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
-                 else ctxt0
+                      |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy0
+                 else thy0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_TF, rule,
                                       [(SOME (default_ind_inst (fn [_,x] => [SOME x]), K I), ind_conv, TF_reasoning)],
                                       K NONE, pre_simp, simp)
-                                     phi0 instruction ctxt
+                                     phi0 instruction thy
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) =>
@@ -303,9 +303,9 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                       |> Proof.refine_primitive (fn _ => fn th => locale_rule' RS th)
                       |> Proof.global_done_proof
                 end*)
-           in generic
+           in thy
            |> note_properties_s false phi0 [(name, [rule'])]
-           |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+           |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                            (#2 instruction)))
@@ -407,7 +407,7 @@ fun guess_property_FTF phi0 ctxt0 =
   end)
   end
 *)
-fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_FTF (der_id,name) instruction (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1
              | Const(\<^const_name>\<open>Functional_Transformation_BiFunctor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1
@@ -449,7 +449,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_FTF, rule,
                                       [(NONE, K (K I), reasoning)], K NONE, K I, simp)
-                                    phi0 instruction ctxt0
+                                    phi0 instruction thy
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule, _) =>
@@ -477,7 +477,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
                 end*)
            in thy
            |> note_properties_s false phi0 [(name, [rule])]
-           |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+           |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                            (#2 instruction)))

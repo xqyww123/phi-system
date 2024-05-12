@@ -21,7 +21,7 @@ val guess_property = guess_property_like_abst_domain (
                         $ (\<^Const>\<open>HOL.conj\<close> $ (oblg $ Bound 0) $ (pred $ Bound 0))),
         \<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
 
-fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_carrier_set (_,name) instruction (phi0 : phi_type) thy0 =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Carrier_Set\<close>, _) $ T $ _ => T )
 
       val equip_expansion = equip_expansion_ss phi0
@@ -54,15 +54,14 @@ fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val simp = if is_some (#1 instruction) then K I
                  else simplifier_by_cong @{thms' \<phi>TA_CarS_cong}
 
-      val ctxt = ctxt0
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_CarS_rule},
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                         solver, pre_simp, simp)
-                                    phi0 instruction ctxt
+                                    phi0 instruction thy0
    in case Seq.pull rules
-   of SOME (rule, _) => thy
+   of SOME (rule, _) => thy0
         |> note_properties_s false phi0 [(name, [rule])]
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_carrier_set}
                                                            (#2 instruction)))

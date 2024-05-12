@@ -16,7 +16,7 @@ val TA_common_rewr_imp2_noact = @{lemma
    \<equiv> (Ant \<Longrightarrow> Q \<longrightarrow> P) \<close>
     by (unfold Action_Tag_def atomize_imp)}
 
-fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
+fun gen_MI is_intro (_, name) instruction (phi : phi_type) thy =
   let val parse_hint = parse_hint (
             fn (Const(\<^const_name>\<open>Semimodule_One\<^sub>I\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F
              | (Const(\<^const_name>\<open>Semimodule_One\<^sub>E\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F )
@@ -43,11 +43,11 @@ fun gen_MI is_intro (_, name) instruction ctxt0 (phi : phi_type) thy =
                                       (if is_intro then @{thm' \<phi>TA_MI\<^sub>I_rule} else @{thm' \<phi>TA_MI\<^sub>E_rule}),
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       K NONE, K I, simp)
-                                    phi instruction ctxt0
+                                    phi instruction thy
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m => fn ctxt =>
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m => fn ctxt =>
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE'
                                     (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
                                                        (#2 instruction)))

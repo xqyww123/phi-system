@@ -316,7 +316,7 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent0,text) =
   in solver (phi, ctxt, sequent, text)
  end
 
-fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (phi0 : phi_type) thy =
+fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) (phi0 : phi_type) thy =
   let val guess_property = guess_property_like_abst_domain (
             not upper, false, true,
             if upper then fn (x,m) => \<^Const>\<open>Abstract_Domain x m\<close>
@@ -382,17 +382,17 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (p
                    Phi_Conv.hhf_concl_conv (fn ctxt =>
                       HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)) ))
 
-      val ctxt = ctxt0
+      val thy' = thy
               |> Bundle.includes ["IDE_CP_Applications1.abstract_domain_OPEN_MAKE"]
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, Inh_reasoning)],
                                       solver, pre_simp, simp)
-                                     phi0 instruction ctxt
+                                     phi0 instruction thy'
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
-            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+            |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_abstract_domain}
                                                            (#2 instruction)))
