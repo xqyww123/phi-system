@@ -1,14 +1,14 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val semantic_type : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val semantic_type : bool -> quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
 
-fun guess_property phi ctxt =
+fun guess_property weak phi ctxt =
   let val ((x_term, T_term), ctxt) = fix_phi_term_params phi ctxt
       val (arg_tys, x_ty, model_ty) = parameters_and_typs_of phi
 
@@ -23,12 +23,27 @@ fun guess_property phi ctxt =
               end) else ()
 
    in Seq.single ([], HOLogic.Trueprop $ (
-          \<^Const>\<open>Weak_Semantic_Type x_ty\<close> $ T_term $ Var (("TY", 0), \<^Type>\<open>TY\<close>)),
+          (if weak then \<^Const>\<open>Weak_Semantic_Type x_ty\<close> else \<^Const>\<open>Semantic_Type x_ty\<close>)
+            $ T_term $ Var (("TY", 0), \<^Type>\<open>TY\<close>)),
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
-fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
-  let val parse_hint = parse_hint (fn \<^Const>\<open>Weak_Semantic_Type _\<close> $ T $ _ => T)
+val chk_weak_sem_typ_derived = @{lemma
+      \<open> Weak_Semantic_Type T TY
+    \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+    \<Longrightarrow> True \<close>
+      by blast}
+
+fun is_weak_sem_typ_derived (phi : phi_type) ctxt =
+  let val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt
+      val T_cterm = Thm.cterm_of ctxt T_term
+      val rule = Drule.infer_instantiate ctxt [(("T",0),T_cterm)] chk_weak_sem_typ_derived
+   in is_some (Phi_Reasoner.reason NONE (SOME 1) ctxt rule)
+  end
+
+fun gen_semantic_type is_weak (_, name) instruction ctxt0 (phi0 : phi_type) thy =
+  let val parse_hint = parse_hint (fn \<^Const>\<open>Weak_Semantic_Type _\<close> $ T $ _ => T
+                                    | \<^Const>\<open>Semantic_Type _\<close> $ T $ _ => T)
 
       (*val equip_expansion = equip_expansion_ss phi0*)
       val ind_conv = default_ind_conv (
@@ -42,6 +57,12 @@ fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
 
       fun varifier _ (Trueprop $ (
                 (SemTyp as Const(\<^const_name>\<open>Weak_Semantic_Type'\<close>, _) $ _) $ TY
+              )) =
+            if is_some (#1 instruction)
+            then NONE
+            else SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
+        | varifier _ (Trueprop $ (
+                (SemTyp as Const(\<^const_name>\<open>Weak_Semantic_Type\<close>, _) $ _) $ TY
               )) =
             if is_some (#1 instruction)
             then NONE
@@ -62,7 +83,8 @@ fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
               |> Bundle.includes ["Spec_Framework.\<phi>sem_type_sat_EIF"]
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
 
-      val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_SemTy_rule},
+      val rules = deriving_framework (name, parse_hint, K [], guess_property is_weak,
+                                      if is_weak then @{thm' \<phi>TA_SemTy_rule} else @{thm' Semantic_Type_derv},
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       solver, K I, simp)
                                     phi0 instruction ctxt
@@ -78,6 +100,66 @@ fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val semantic_type = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Weak_Semantic_Type") gen_semantic_type
+fun semantic_type is_weak pos instr ctxt phi thy =
+  let val thy = if is_weak then thy
+                else if is_weak_sem_typ_derived phi ctxt
+                then thy
+                else semantic_type true pos instr ctxt phi thy
+      fun norm_hint ((A as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X) = A $ norm_hint X
+        | norm_hint (origin as \<^Const>\<open>Semantic_Type ty\<close> $ T $ TY) =
+            if is_weak then \<^Const>\<open>Weak_Semantic_Type ty\<close> $ T $ TY
+                       else origin
+        | norm_hint (origin as \<^Const>\<open>Weak_Semantic_Type ty\<close> $ T $ TY) =
+            if is_weak then origin
+                       else \<^Const>\<open>Semantic_Type ty\<close> $ T $ TY
+        | norm_hint X = X
+      val norm_hint = Phi_Conv.map_hhf_concl norm_hint
+      fun norm_derv_instr (hint,a2,a3,a4,a5,a6) =
+            (Option.map (apfst norm_hint) hint, a2, a3, a4, a5, a6)
+      val instr = map norm_derv_instr instr
+   in deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE,
+                         if is_weak then "Weak_Semantic_Type" else "Semantic_Type")
+                        (gen_semantic_type is_weak)
+                        pos instr ctxt phi thy
+  end
+
+(*
+fun gen_semantic_type (_, name) instruction ctxt (phi : phi_type) thy =
+  let val parse_hint = parse_hint (fn \<^Const>\<open>Semantic_Type _\<close> $ T $ _ => T)
+      val ind_conv = K (K I)
+
+      fun varifier _ (Trueprop $ (
+                (SemTyp as Const(\<^const_name>\<open>Weak_Semantic_Type\<close>, _) $ _) $ TY
+              )) =
+            if is_some (#1 instruction)
+            then NONE
+            else SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
+        | varifier _ X = NONE
+
+      fun reasoning phi ctxt sequent =
+            default_reasoning true default_reasoning_configure varifier
+                              (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
+
+      val solver = K NONE
+      val simp = K I
+
+      val rules = deriving_framework (name, parse_hint, K [], guess_property false, @{thm' Semantic_Type_derv},
+                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
+                                      solver, K I, simp)
+                                    phi instruction ctxt
+   in case Seq.pull rules
+   of SOME (rule, _) => thy
+        |> note_properties_s false phi [(name, [rule])]
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+                  Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
+                                        (SOME (the_default @{reasoner_group %\<phi>sem_type_derived}
+                                                           (#2 instruction)))
+                                        ([],[]) NONE [Morphism.thm m rule])
+        |> pair [rule]
+    | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
+  end
+
+val strong_semantic_type = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semantic_Type") gen_semantic_type
+*)
 
 end

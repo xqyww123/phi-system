@@ -2490,6 +2490,7 @@ lemma \<phi>unfold_val:
 
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
+
 (*TODO: move*)
 
 consts under_\<phi>deriving :: mode

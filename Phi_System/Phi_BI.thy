@@ -376,7 +376,7 @@ lemma [\<phi>reason default %extract_pure_phity]:
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by blast
 
-lemma [\<phi>reason default]:
+lemma [\<phi>reason default %extract_pure_phity]:
   \<open> Abstract_Domain\<^sub>L T D
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<exists>x. D x)
 \<Longrightarrow> Inhabited_Type T \<close>

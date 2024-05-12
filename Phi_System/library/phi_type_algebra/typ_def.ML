@@ -80,7 +80,7 @@ type arbi_ind_args = term list (*free variables that will be generalized before 
 type deriving_instruction = (hint * arbi_ind_args) option
                           * Reasoner_Group.group option
                           * Position.T
-                          * Method.text option
+                          * Method.text option               (*tactic hints*)
                           * (thm list * attribute list) list (*notes*)
                           * Bundle.name list
 type deriver = {
@@ -217,9 +217,10 @@ open Phi_Type
 (** Library **)
 
 fun open_proof_ctxt' bundles ctxt = ctxt
-    |> Config.put Phi_Reasoner.ignore_dup_reasoner true
-    |> not (null bundles) ? Bundle.includes bundles
-    |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt
+    |> not (null bundles) ? (
+          Config.put Phi_Reasoner.ignore_dup_reasoner true
+       #> Bundle.includes bundles
+       #> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt)
     |> Config.put augment_ToA_by_implication true
 
 fun open_proof_ctxt bundles = open_proof_ctxt' bundles o Context.proof_of

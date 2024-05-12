@@ -44,6 +44,7 @@ val hol_imp_conv : conv -> conv -> conv
 
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
+val map_hhf_concl : (term -> term) -> term -> term
 val hhf_concl_conv_no_ball : (Proof.context -> conv) -> Proof.context -> conv
 val hhf_conv : (Proof.context -> conv) (*premise conv*)
             -> (Proof.context -> conv) (*concl conv*)
@@ -318,6 +319,14 @@ fun hhf_concl_conv C ctxt ctm =
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv C ctxt) ctm
      | Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ => meta_ball_conv Conv.all_conv (hhf_concl_conv C o snd) ctxt ctm
      | _ => C ctxt ctm
+
+fun map_hhf_concl F =
+  let fun map ((A as Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _) $ X) = A $ map X
+        | map ((A as Const(\<^const_name>\<open>Pure.all\<close>, _)) $ X) = A $ map X
+        | map (Abs (N, Ty, X)) = Abs (N, Ty, map X)
+        | map X = F X
+   in map
+  end
 
 fun hhf_conv Cp Cc ctxt ctm =
   case Thm.term_of ctm
