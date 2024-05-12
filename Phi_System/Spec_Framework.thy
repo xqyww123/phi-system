@@ -10,6 +10,7 @@ theory Spec_Framework
   abbrevs "<shifts>" = "\<s>\<h>\<i>\<f>\<t>\<s>"
     and   "<val>" = "\<v>\<a>\<l>"
     and   "<vals>" = "\<v>\<a>\<l>\<s>"
+    and   "<typeof>" = "\<t>\<y>\<p>\<e>\<o>\<f>"
 begin
 
 subsubsection \<open>Configuration\<close>
@@ -213,22 +214,22 @@ subsection \<open>Semantic Type\<close>
 
 subsubsection \<open>Single Value\<close>
 
-definition Semantic_Type :: \<open>(VAL,'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
-  where \<open>Semantic_Type T TY \<longleftrightarrow> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)\<close>
+definition Weak_Semantic_Type :: \<open>(VAL,'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
+  where \<open>Weak_Semantic_Type T TY \<longleftrightarrow> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)\<close>
 
-definition Semantic_Type' :: "value_assertion \<Rightarrow> TY \<Rightarrow> bool"
-  where \<open>Semantic_Type' S TY \<longleftrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)\<close>
+definition Weak_Semantic_Type' :: "value_assertion \<Rightarrow> TY \<Rightarrow> bool"
+  where \<open>Weak_Semantic_Type' S TY \<longleftrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
 
 (*definition \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> TY) \<Rightarrow> bool"
   where \<open>\<phi>\<phi>SemType T D TY \<equiv> (\<forall>x. D x \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) (TY x))\<close>*)
 
 declare [[
-  \<phi>reason_default_pattern \<open>Semantic_Type ?T _\<close> \<Rightarrow> \<open>Semantic_Type ?T _\<close> (100)
-                      and \<open>Semantic_Type' ?A _\<close> \<Rightarrow> \<open>Semantic_Type' ?A _\<close> (100)
+  \<phi>reason_default_pattern \<open>Weak_Semantic_Type ?T _\<close> \<Rightarrow> \<open>Weak_Semantic_Type ?T _\<close> (100)
+                      and \<open>Weak_Semantic_Type' ?A _\<close> \<Rightarrow> \<open>Weak_Semantic_Type' ?A _\<close> (100)
 ]]
 
-\<phi>reasoner_group \<phi>sem_type = (100, [0, 3000]) for (\<open>Semantic_Type T TY\<close>)
+\<phi>reasoner_group \<phi>sem_type = (100, [0, 3000]) for (\<open>Weak_Semantic_Type T TY\<close>)
       \<open>giving the semantic type of the concrete value satisfying the given assertion or \<phi>-type\<close>
   and \<phi>sem_type_fail = (0, [0,0]) in \<phi>sem_type
       \<open>failures\<close>
@@ -274,42 +275,42 @@ paragraph \<open>Basic Rules\<close>
 
 lemma [\<phi>reason default %\<phi>sem_type_fail]:
   \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> T)
-\<Longrightarrow> Semantic_Type T Any\<close>
+\<Longrightarrow> Weak_Semantic_Type T Any\<close>
   unfolding FAIL_def
   by blast
 
-lemma [\<phi>reason default %\<phi>sem_type_assertion except \<open>Semantic_Type _ ?var\<close>]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<Longrightarrow> Semantic_Type A TY')
+lemma [\<phi>reason default %\<phi>sem_type_assertion except \<open>Weak_Semantic_Type _ ?var\<close>]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<Longrightarrow> Weak_Semantic_Type A TY')
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>expecting\<close> A \<open>of semantic type\<close> TY \<open>but actually of\<close> TY')
-\<Longrightarrow> Semantic_Type A TY \<close>
+\<Longrightarrow> Weak_Semantic_Type A TY \<close>
   unfolding Premise_def Orelse_shortcut_def ERROR_def
   by blast
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> Well_Type TY
-\<Longrightarrow> Semantic_Type' (v \<Ztypecolon> Itself) TY \<close>
-  unfolding Premise_def Semantic_Type'_def subset_iff
+\<Longrightarrow> Weak_Semantic_Type' (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def Weak_Semantic_Type'_def subset_iff
   by simp
 
 lemma \<phi>SemType_Itself_brute:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
-\<Longrightarrow> Semantic_Type' (v \<Ztypecolon> Itself) TY \<close>
-  unfolding Premise_def Semantic_Type'_def subset_iff
+\<Longrightarrow> Weak_Semantic_Type' (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def Weak_Semantic_Type'_def subset_iff
   by simp
 
 lemma \<phi>sem_type_by_sat:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)
-\<Longrightarrow> Semantic_Type' S TY \<close>
-  unfolding Premise_def Semantic_Type'_def \<r>Guard_def .
+\<Longrightarrow> Weak_Semantic_Type' S TY \<close>
+  unfolding Premise_def Weak_Semantic_Type'_def \<r>Guard_def .
 
 lemma \<phi>sem_type_brute_EIF':
-  \<open> \<r>EIF (Semantic_Type' S TY) (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<close>
-  unfolding \<r>EIF_def Semantic_Type'_def
+  \<open> \<r>EIF (Weak_Semantic_Type' S TY) (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<close>
+  unfolding \<r>EIF_def Weak_Semantic_Type'_def
   by blast
 
 lemma \<phi>sem_type_brute_EIF:
-  \<open> \<r>EIF (Semantic_Type T TY) (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
-  unfolding \<r>EIF_def Semantic_Type_def
+  \<open> \<r>EIF (Weak_Semantic_Type T TY) (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
+  unfolding \<r>EIF_def Weak_Semantic_Type_def
   by blast
 
 bundle \<phi>sem_type_sat_EIF = \<phi>sem_type_by_sat[\<phi>reason default %\<phi>sem_type_brute]
@@ -318,9 +319,9 @@ bundle \<phi>sem_type_sat_EIF = \<phi>sem_type_by_sat[\<phi>reason default %\<ph
                            \<phi>SemType_Itself_brute[\<phi>reason %\<phi>sem_type_cut+10]
 
 lemma [\<phi>reason default %\<phi>sem_type_failback]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Semantic_Type T TY
-\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY \<close>
-  unfolding Semantic_Type'_def Semantic_Type_def \<r>Guard_def
+  \<open> \<g>\<u>\<a>\<r>\<d> Weak_Semantic_Type T TY
+\<Longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY \<close>
+  unfolding Weak_Semantic_Type'_def Weak_Semantic_Type_def \<r>Guard_def
   by simp
 
 
@@ -328,23 +329,23 @@ paragraph \<open>Over Logic Connectives\<close>
 
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> Semantic_Type' T TY1
-\<Longrightarrow> Semantic_Type' U TY2
+  \<open> Weak_Semantic_Type' T TY1
+\<Longrightarrow> Weak_Semantic_Type' U TY2
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> TY1 = TY2
-\<Longrightarrow> Semantic_Type' (T + U) TY1\<close>
-  unfolding Semantic_Type'_def subset_iff Premise_def
+\<Longrightarrow> Weak_Semantic_Type' (T + U) TY1\<close>
+  unfolding Weak_Semantic_Type'_def subset_iff Premise_def
   by simp
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> Semantic_Type' X TY
-\<Longrightarrow> Semantic_Type' (X \<s>\<u>\<b>\<j> P) TY\<close>
-  unfolding Semantic_Type'_def subset_iff
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> Weak_Semantic_Type' X TY
+\<Longrightarrow> Weak_Semantic_Type' (X \<s>\<u>\<b>\<j> P) TY\<close>
+  unfolding Weak_Semantic_Type'_def subset_iff
   by simp
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> (\<And>x. Semantic_Type' (X x) TY)
-\<Longrightarrow> Semantic_Type' (ExSet X) TY\<close>
-  unfolding Semantic_Type'_def subset_iff by clarsimp
+  \<open> (\<And>x. Weak_Semantic_Type' (X x) TY)
+\<Longrightarrow> Weak_Semantic_Type' (ExSet X) TY\<close>
+  unfolding Weak_Semantic_Type'_def subset_iff by clarsimp
 
 
 subsubsection \<open>Multiple Values\<close>
@@ -358,6 +359,18 @@ definition \<phi>_Have_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \
 declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<Rightarrow> \<open>\<phi>_Have_Types ?S _\<close> (100)]]
 
 
+subsubsection \<open>Semantic Typeof\<close>
+
+definition SType_Of :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY\<close> ("\<t>\<y>\<p>\<e>\<o>\<f>")
+  where \<open>\<t>\<y>\<p>\<e>\<o>\<f> T = (@TY. Weak_Semantic_Type T TY)\<close>
+
+lemma SType_Of_unfold:
+  \<open> Weak_Semantic_Type T TY
+\<Longrightarrow> Inhabited_Type T
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T \<equiv> TY \<close>
+  unfolding Weak_Semantic_Type_def Inhabited_Type_def SType_Of_def atomize_eq
+  using Well_Type_unique
+  by (clarsimp, smt (verit, del_insts) Inhabited_def someI)
 
 
 subsection \<open>Zero Value\<close>

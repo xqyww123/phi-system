@@ -71,7 +71,7 @@ context
   fixes T :: \<open>(VAL, 'x) \<phi>\<close>
     and TY :: TY
     and zero :: 'x
-  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>
+  assumes [\<phi>reason add]: \<open>Weak_Semantic_Type T TY\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>
 begin
 

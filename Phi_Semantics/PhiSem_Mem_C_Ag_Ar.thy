@@ -160,8 +160,7 @@ lemma valid_address_range_sub:
   deriving Basic
        and \<open>Object_Equiv (SlicePtr addr N TY) (=)\<close>
        and Functionality
-       and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> valid_address addr \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
-        \<Longrightarrow> Semantic_Type (SlicePtr addr N TY) pointer\<close>
+       and \<open>Weak_Semantic_Type (SlicePtr addr N TY) pointer\<close>
 
 
 

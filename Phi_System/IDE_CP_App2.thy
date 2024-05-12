@@ -7,45 +7,49 @@ section \<open>Derivers for IDE-CP\<close>
 
 subsection \<open>Properties of Semantic Value\<close>
 
+subsubsection \<open>Type Inhabitance\<close>
+
+context begin
+
+private lemma inh_typ_derv_rule:
+  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Inhabited_Type T)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
+\<Longrightarrow> Inhabited_Type T \<close> .
+
+ML_file \<open>library/phi_type_algebra/inhabited_type.ML\<close>
+
+end
+
+\<phi>property_deriver Inhabited_Type 100 for (\<open>Inhabited_Type _\<close>)
+    = \<open> Phi_Type_Derivers.inhabited_type \<close> 
+
+
 subsubsection \<open>Semantic Type\<close>
-
-definition Inhabited_Type
-  where \<open>Inhabited_Type T \<longleftrightarrow> (\<exists>x. Inhabited (x \<Ztypecolon> T))\<close>
-
-declare [[\<phi>reason_default_pattern
-            \<open>Inhabited_Type ?T\<close> \<Rightarrow> \<open>Inhabited_Type ?T\<close> (100) ]]
-
-lemma [\<phi>reason default]:
-  \<open> Abstract_Domain\<^sub>L T D
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<exists>x. D x)
-\<Longrightarrow> Inhabited_Type T \<close>
-  unfolding Inhabited_Type_def Abstract_Domain\<^sub>L_def Premise_def \<r>ESC_def
-  by blast
 
 context begin
 
 private lemma \<phi>TA_SemTy_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY \<and>\<^sub>\<r>
-                  Inhabited_Type T
-                  @tag \<phi>TA_subgoal undefined)
+  \<open> (\<And>x. Ant \<longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY @tag \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
-\<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Action_Tag_def Semantic_Type'_def Semantic_Type_def Ant_Seq_def
+\<Longrightarrow> Weak_Semantic_Type T TY \<close>
+  unfolding Action_Tag_def Weak_Semantic_Type'_def Weak_Semantic_Type_def Ant_Seq_def
             Abstract_Domain\<^sub>L_def \<r>ESC_def Inhabited_def Premise_def Inhabited_Type_def
   by clarsimp
 
 private lemma \<phi>TA_SemTy_cong:
   \<open> TY \<equiv> TY'
-\<Longrightarrow> Semantic_Type T TY \<equiv> Semantic_Type T TY' \<close>
+\<Longrightarrow> Weak_Semantic_Type T TY \<equiv> Weak_Semantic_Type T TY' \<close>
   by simp
 
 ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
 
 end
 
-\<phi>property_deriver Semantic_Type 100 for (\<open>Semantic_Type _ _\<close>)
+\<phi>property_deriver Weak_Semantic_Type 100 for (\<open>Weak_Semantic_Type _ _\<close>)
     = \<open> Phi_Type_Derivers.semantic_type \<close> 
 
 
@@ -67,7 +71,7 @@ ML_file \<open>library/phi_type_algebra/semantic_zero_val.ML\<close>
 end
 
 \<phi>property_deriver Semantic_Zero_Val 110 for (\<open>Semantic_Zero_Val _ _ _\<close>)
-  requires Semantic_Type
+  requires Weak_Semantic_Type
     = \<open> Phi_Type_Derivers.semantic_zero_val \<close> 
 
 
@@ -392,22 +396,17 @@ subsection \<open>Programming Methods for Showing Properties of Values\<close>
 subsubsection \<open>Semantic Type\<close>
 
 lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> Abstract_Domain\<^sub>L T DD
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P' : (Ex DD)
-\<Longrightarrow> PROP \<phi>Programming_Method (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x) M D R F
+  \<open> PROP \<phi>Programming_Method (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x) M D R F
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show the value abstraction\<close> S \<open>has semantic type\<close> TY
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>some representation of \<phi>-types whose semantic type is know so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semantic_Type T TY)) M D
-                             ((\<And>x. Semantic_Type' (A x) TY) &&& PROP R) (P' &&& PROP F)\<close>
-  unfolding \<phi>Programming_Method_def ToA_Construction_def Semantic_Type_def Transformation_def
-            Semantic_Type'_def
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Weak_Semantic_Type T TY)) M D
+                             ((\<And>x. Weak_Semantic_Type' (A x) TY) &&& PROP R) F\<close>
+  unfolding \<phi>Programming_Method_def ToA_Construction_def Weak_Semantic_Type_def Transformation_def
+            Weak_Semantic_Type'_def
   apply (simp add: subset_iff conjunction_imp, rule)
   subgoal premises prems
-    by (insert prems(5) prems(3)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>], blast)
-  unfolding Abstract_Domain\<^sub>L_def Simplify_def
-  subgoal premises prems
-    by (insert prems(1,2) \<open>P'\<close>, clarsimp simp: Inhabited_def \<r>ESC_def, blast) .
+    by (insert prems(3) prems(1)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>], blast) .
 
 
 subsubsection \<open>Zero Value\<close>
@@ -415,7 +414,7 @@ subsubsection \<open>Zero Value\<close>
 consts working_mode_Semantic_Zero_Val :: working_mode
 
 lemma \<phi>deduce_zero_value:
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> (y \<Ztypecolon> U)
 \<Longrightarrow> Semantic_Zero_Val TY U y
 \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Any

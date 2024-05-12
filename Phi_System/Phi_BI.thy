@@ -166,6 +166,9 @@ definition Inhabited :: " 'a BI \<Rightarrow> bool "
       The fallback of extracting implied pure facts returns the original \<open>Inhabited T\<close> unchanged,
       \<open>P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Inhabited P\<close> where \<open>Inhabited P\<close> should be regarded as an atom.\<close>
 
+definition Inhabited_Type
+  where \<open>Inhabited_Type T \<longleftrightarrow> (\<exists>x. Inhabited (x \<Ztypecolon> T))\<close>
+
 
 abbreviation Inhabitance_Implication :: \<open>'a BI \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 10)
   where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> \<r>EIF (Inhabited S) P \<close>
@@ -178,6 +181,7 @@ abbreviation Sufficient_Inhabitance :: \<open>bool \<Rightarrow> 'a BI \<Rightar
 declare [[
   \<phi>reason_default_pattern \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
                       and \<open>_ \<longrightarrow> Inhabited ?X\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
+                      and \<open>Inhabited_Type ?T\<close>  \<Rightarrow> \<open>Inhabited_Type ?T\<close>      (100)
 ]]
 
 \<phi>reasoner_group extract_pure_phity = (10, [10,10]) for (\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>, \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close>)
@@ -237,7 +241,9 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> case_sum A B x \<i>\<m>\<p>\<l>\<i>\<e>\<s> case_sum P Q x \<close>
   by (cases x; simp)
 
-subsubsection \<open>Inhabitance of \<phi>-Type\<close>
+
+
+subsection \<open>Abstract Domain\<close>
 
 lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (x \<Ztypecolon> T)"
   unfolding Inhabited_def \<phi>Type_def by blast
@@ -275,7 +281,7 @@ declare [[
                        and > extract_pure and < extract_pure_sat \<open>\<close>
 
 
-paragraph \<open>Extracting Pure Facts\<close>
+subsubsection \<open>Extracting Pure Facts\<close>
 
 lemma Inhabitance_Implication_\<A>EIF [\<phi>reason %extract_\<i>\<m>\<p>\<l>\<i>\<e>\<s>]:
   \<open> \<r>ESC A' (Inhabited A)
@@ -356,7 +362,7 @@ lemma [\<phi>reason %extract_pure_all]:
   by blast
 
 
-paragraph \<open>Basic Rules\<close>
+subsubsection \<open>Basic Rules\<close>
 
 lemma [\<phi>reason default %extract_pure_phity]:
   \<open> Abstract_Domain T D
@@ -370,7 +376,14 @@ lemma [\<phi>reason default %extract_pure_phity]:
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by blast
 
-paragraph \<open>Fallback\<close>
+lemma [\<phi>reason default]:
+  \<open> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<exists>x. D x)
+\<Longrightarrow> Inhabited_Type T \<close>
+  unfolding Inhabited_Type_def Abstract_Domain\<^sub>L_def Premise_def \<r>ESC_def
+  by blast
+
+subsubsection \<open>Fallback\<close>
 
 lemma [\<phi>reason default %abstract_domain_fallback]:
   \<open> Abstract_Domain T (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
@@ -382,7 +395,7 @@ lemma [\<phi>reason default %abstract_domain_fallback]:
   unfolding Abstract_Domain\<^sub>L_def \<r>ESC_def
   by simp
 
-paragraph \<open>Configuration\<close>
+subsubsection \<open>Configuration\<close>
 
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
@@ -410,7 +423,7 @@ setup \<open> PLPR_Template_Properties.add_property_kinds [
   \<^pattern_prop>\<open>Abstract_Domain _ _\<close>, \<^pattern_prop>\<open>Abstract_Domain\<^sub>L _ _\<close>
 ]\<close>
 
-paragraph \<open>Template Instantiation\<close>
+subsubsection \<open>Template Instantiation\<close>
 
 lemma Inhabited_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
   \<open> Abstract_Domain T D

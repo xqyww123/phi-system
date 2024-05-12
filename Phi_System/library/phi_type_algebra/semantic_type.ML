@@ -23,37 +23,35 @@ fun guess_property phi ctxt =
               end) else ()
 
    in Seq.single ([], HOLogic.Trueprop $ (
-          \<^Const>\<open>Semantic_Type x_ty\<close> $ T_term $ Var (("TY", 0), \<^Type>\<open>TY\<close>)),
+          \<^Const>\<open>Weak_Semantic_Type x_ty\<close> $ T_term $ Var (("TY", 0), \<^Type>\<open>TY\<close>)),
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
 fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
-  let val parse_hint = parse_hint (fn \<^Const>\<open>Semantic_Type _\<close> $ T $ _ => T)
+  let val parse_hint = parse_hint (fn \<^Const>\<open>Weak_Semantic_Type _\<close> $ T $ _ => T)
 
-      val equip_expansion = equip_expansion_ss phi0
+      (*val equip_expansion = equip_expansion_ss phi0*)
       val ind_conv = default_ind_conv (
             fn _ => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
-            fn ctxt => fn _ =>
-                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
-                Phi_Reasoners.asm_rewrite true (equip_expansion ctxt addsimps (#equations phi0)) then_conv
-                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
+            fn ctxt => fn _ => fn ctm =>
+               (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+                Phi_Reasoners.asm_rewrite true (Simplifier.clear_simpset ctxt addsimps (#equations phi0)) then_conv
+                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)
 
       fun varifier _ (Trueprop $ (
-              (conj as Const(\<^const_name>\<open>Ant_Seq\<close>, _))
-                $ ((SemTyp as Const(\<^const_name>\<open>Semantic_Type'\<close>, _) $ _) $ TY)
-                $ other
+                (SemTyp as Const(\<^const_name>\<open>Weak_Semantic_Type'\<close>, _) $ _) $ TY
               )) =
             if is_some (#1 instruction)
             then NONE
-            else SOME ([TY], fn [TY'] => Trueprop $ (conj $ (SemTyp $ TY') $ other))
+            else SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
         | varifier _ X = NONE
       fun reasoning phi ctxt sequent =
             default_reasoning true default_reasoning_configure varifier
                               (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
           (*|> Phi_Reasoner.reason1 (fn _ =>
-                  "Semantic_Type relies on the property of Abstract_Domain\<^sub>L") NONE (SOME 1) ctxt *)
+                  "Weak_Semantic_Type relies on the property of Abstract_Domain\<^sub>L") NONE (SOME 1) ctxt *)
 
       val solver = K NONE
       val simp = if is_some (#1 instruction) then K I
@@ -80,6 +78,6 @@ fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val semantic_type = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Semantic_Type") gen_semantic_type
+val semantic_type = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Weak_Semantic_Type") gen_semantic_type
 
 end

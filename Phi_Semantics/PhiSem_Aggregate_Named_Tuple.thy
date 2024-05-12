@@ -186,7 +186,7 @@ subsection \<open>Empty Tuple\<close>
   where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> V_named_tup.mk fmempty \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close>
+       and \<open>Weak_Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close>
        and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Named_Tuple\<close>
 
@@ -231,8 +231,8 @@ print_translation \<open>[
 subsubsection \<open>Properties\<close>
 
 let_\<phi>type Named_Tuple_Field
-  deriving \<open> Semantic_Type T TY
-         \<Longrightarrow> Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty))\<close>
+  deriving \<open> Weak_Semantic_Type T TY
+         \<Longrightarrow> Weak_Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty))\<close>
        and \<open> Semantic_Zero_Val ty T x
          \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
 
@@ -260,20 +260,18 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
         metis (no_types, lifting) fmap_times_fempty(2) fmempty_lookup fmlookup_dom_iff fmlookup_map fmmap_empty fmupd_times_right option.distinct(1)) .
 
 lemma Tuple_Field_semty[\<phi>reason %\<phi>sem_type_cut]:
-  \<open> Semantic_Type T TY
-\<Longrightarrow> Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty)) \<close>
-  unfolding Semantic_Type_def subset_iff
+  \<open> Weak_Semantic_Type T TY
+\<Longrightarrow> Weak_Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty)) \<close>
+  unfolding Weak_Semantic_Type_def subset_iff
   by clarsimp blast
 
 lemma [\<phi>reason %\<phi>sem_type_cut+10]:
-  \<open> Semantic_Type T TY
-\<Longrightarrow> Semantic_Type Ts (semty_ntup TYs)
+  \<open> Weak_Semantic_Type T TY
+\<Longrightarrow> Weak_Semantic_Type Ts (semty_ntup TYs)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| fmdom TYs
-\<Longrightarrow> Semantic_Type (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (semty_ntup (fmupd s TY TYs))\<close>
-  unfolding Semantic_Type_def subset_iff Premise_def
-  by (clarsimp, rule,
-      metis V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right,
-      metis V_named_tup_sep_disj fmap_sepdisj_fmempty(2) fmdom_notI fmempty_lookup fmrel_fmdom_eq sep_disj_fmupd_left)
+\<Longrightarrow> Weak_Semantic_Type (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (semty_ntup (fmupd s TY TYs))\<close>
+  unfolding Weak_Semantic_Type_def subset_iff Premise_def
+  by (clarsimp, metis (no_types, lifting) V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right)
 
 section \<open>Reasoning\<close>
 
@@ -422,22 +420,22 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor [s])
           (x \<Ztypecolon> List_Item T)
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
-  unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def Semantic_Type'_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def Weak_Semantic_Type'_def
             Action_Tag_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor (s # sR))
           ((x,xs) \<Ztypecolon> List_Item T \<^emph> L)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
-  unfolding \<phi>Aggregate_Constructor_Synth_def Semantic_Type'_def Action_Tag_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def Weak_Semantic_Type'_def Action_Tag_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric] times_list_def; rule)
   subgoal premises prems for vs v
     by (insert prems(1,3-) 
@@ -462,22 +460,22 @@ lemma [\<phi>reason %aggregate_access]:
 
 lemma [\<phi>reason %aggregate_access+20]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inl s)
-\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
+\<Longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
-  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def Semantic_Type'_def
+  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def Weak_Semantic_Type'_def
             Action_Tag_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inl s)
-\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
+\<Longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (semty_ntup TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def
-            Action_Tag_def Semantic_Type'_def
+            Action_Tag_def Weak_Semantic_Type'_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
   subgoal for vs
     by (rule exI[where x=\<open>V_named_tup.mk (fmupd s (\<phi>arg.dest v) fmempty)\<close>],

@@ -79,7 +79,7 @@ subsection \<open>Integer in the normal sense\<close>
 \<phi>type_def \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
   where \<open>x \<Ztypecolon> \<phi>AInt \<equiv> V_aint.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
-       and \<open>Semantic_Type \<int> aint\<close>
+       and \<open>Weak_Semantic_Type \<int> aint\<close>
        and Semantic_Zero_Val
 
 lemma [\<phi>reason 1000]:
@@ -100,12 +100,12 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
 
 subsection \<open>Natural Nmber\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 3]]
 
 \<phi>type_def \<phi>ANat ("\<nat>")
   where \<open>n \<Ztypecolon> \<nat> \<equiv> of_nat n \<Ztypecolon> \<int>\<close>
   deriving Basic
-       and Semantic_Type
+       and Weak_Semantic_Type
        and Semantic_Zero_Val
  
 declare [[

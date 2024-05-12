@@ -29,9 +29,9 @@ fun gen_inhabited_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
       val simp = K I
 
       val ctxt = ctxt0
-              |> Config.put Phi_Reasoner.ignore_dup_reasoner true
+            (*|> Config.put Phi_Reasoner.ignore_dup_reasoner true
               |> Bundle.includes ["Spec_Framework.inh_typ_derv_tool"]
-              |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
+              |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0*)
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' inh_typ_derv_rule},
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],

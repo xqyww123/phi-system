@@ -5,13 +5,15 @@ begin
 
 abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t>{k: \<a>\<i>\<n>\<t>, v: \<a>\<i>\<n>\<t>}\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
   where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
   deriving Basic
        and \<open>Object_Equiv \<rat> (=)\<close>
        and \<open>Abstract_Domain\<^sub>L \<rat> (\<lambda>_. True)\<close>
        and \<open>Abstract_Domain \<rat> (\<lambda>_. True)\<close>
-       and \<open>Semantic_Type T TY\<close>
+       and Weak_Semantic_Type
 
 
 proc rat_add:

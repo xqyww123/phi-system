@@ -109,14 +109,14 @@ consts Transition :: \<open>'a \<Rightarrow> bool\<close> ("Transition: _" [100]
 subsection \<open>Branch-like\<close>
 
 lemma sel_\<phi>app:
-  \<open> Semantic_Type' (a \<Ztypecolon> A) TY
-\<Longrightarrow> Semantic_Type' (b \<Ztypecolon> B) TY
+  \<open> Weak_Semantic_Type' (a \<Ztypecolon> A) TY
+\<Longrightarrow> Weak_Semantic_Type' (b \<Ztypecolon> B) TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sel TY (\<phi>V_pair rawc (\<phi>V_pair rawa rawb)) \<lbrace>
         c \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool>\<heavy_comma> a \<Ztypecolon> \<v>\<a>\<l>[rawa] A\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] B
     \<longmapsto> (if c then a else b) \<Ztypecolon> \<v>\<a>\<l> (if c then A else B)
     \<rbrace>\<close>
   unfolding op_sel_def
-  by ((cases rawc; cases rawb; cases rawa; cases c; simp add: Semantic_Type'_def subset_iff),
+  by ((cases rawc; cases rawb; cases rawa; cases c; simp add: Weak_Semantic_Type'_def subset_iff),
       rule, rule, rule, simp add: \<phi>expns WT_bool, blast, rule, simp add: \<phi>expns WT_bool, rule,
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns WT_bool, rule, rule, rule,
       simp add: \<phi>expns WT_bool, blast, rule, simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns WT_bool,

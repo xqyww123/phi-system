@@ -50,11 +50,11 @@ proc is_empty:
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
     and TY :: TY                                      \<comment> \<open>semantic type\<close>
-  assumes [\<phi>reason add]: \<open>Semantic_Type T TY \<and> Inhabited_Type T\<close>    \<comment> \<open>specify the semantic type of T\<close>
+  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close>
 begin
 
 proc prepend_llist:
-  input  \<open>v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
   requires [\<phi>reason]: \<open>Semantic_Zero_Val TY T z\<close>
   output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v#l \<Ztypecolon> Linked_Lst addr' TY T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>

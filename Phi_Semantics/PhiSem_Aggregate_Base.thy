@@ -450,20 +450,20 @@ section \<open>First-level Abstraction of Instructions\<close>
 
 lemma op_get_aggregate:
   \<open> Is_Aggregate T
-\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
+\<Longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> parse_eleidx_input_least1 TY input_index sem_idx spec_idx reject
 \<Longrightarrow> \<phi>Aggregate_Getter spec_idx T U f
 \<Longrightarrow> report_unprocessed_element_index reject
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate sem_idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
-  unfolding op_get_aggregate_def Semantic_Type'_def subset_iff \<phi>Aggregate_Getter_def
+  unfolding op_get_aggregate_def Weak_Semantic_Type'_def subset_iff \<phi>Aggregate_Getter_def
             parse_eleidx_input_def
             parse_eleidx_input_least1_def
   by (cases rv; simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
 
 lemma "_op_set_aggregate_":
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> parse_eleidx_input_least1 TY input_index sem_idx idx reject
-\<Longrightarrow> Semantic_Type' (y \<Ztypecolon> U) TY\<^sub>U
+\<Longrightarrow> Weak_Semantic_Type' (y \<Ztypecolon> U) TY\<^sub>U
 \<Longrightarrow> is_valid_index_of idx TY TY\<^sub>U'
 \<Longrightarrow> Premise eval_aggregate_path (TY\<^sub>U' = TY\<^sub>U \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
@@ -471,7 +471,7 @@ lemma "_op_set_aggregate_":
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY\<^sub>U sem_idx (rv\<^bold>,ru)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> \<lambda>ret. f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l>[ret] T'
         \<s>\<u>\<b>\<j> (TY\<^sub>U' = TY\<^sub>U \<longrightarrow> \<phi>arg.dest ret \<in> Well_Type TY) \<rbrace>\<close>
-  unfolding op_set_aggregate_def Semantic_Type'_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
+  unfolding op_set_aggregate_def Weak_Semantic_Type'_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
             parse_eleidx_input_def is_valid_index_of_def
             parse_eleidx_input_least1_def
   by (cases rv; cases ru; simp, rule, rule, simp, rule, simp,
@@ -480,9 +480,9 @@ lemma "_op_set_aggregate_":
 
 lemma op_set_aggregate:
   \<open> Is_Aggregate T
-\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
+\<Longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> parse_eleidx_input_least1 TY input_index sem_idx idx reject
-\<Longrightarrow> Semantic_Type' (y \<Ztypecolon> U) TY2
+\<Longrightarrow> Weak_Semantic_Type' (y \<Ztypecolon> U) TY2
 \<Longrightarrow> is_valid_index_of idx TY TY2'
 \<Longrightarrow> Premise eval_aggregate_path (TY2' = TY2 \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f

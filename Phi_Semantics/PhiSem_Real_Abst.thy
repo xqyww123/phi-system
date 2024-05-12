@@ -54,7 +54,7 @@ section \<open>\<phi>-Types\<close>
   where \<open>x \<Ztypecolon> \<phi>AReal \<equiv> V_areal.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type \<real> areal\<close>
+       and \<open>Weak_Semantic_Type \<real> areal\<close>
        and \<open>Semantic_Zero_Val areal \<real> 0\<close>
 
 lemma [\<phi>reason 1000]:

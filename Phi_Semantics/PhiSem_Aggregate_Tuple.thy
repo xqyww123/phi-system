@@ -128,7 +128,7 @@ subsection \<open>Empty Tuple\<close>
   where \<open>x \<Ztypecolon> Empty_Tuple \<equiv> V_tup.mk [] \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type Empty_Tuple (semty_tup [])\<close>
+       and \<open>Weak_Semantic_Type Empty_Tuple (semty_tup [])\<close>
        and \<open>Semantic_Zero_Val (semty_tup []) Empty_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Tuple\<close>
 
@@ -141,8 +141,8 @@ subsection \<open>Field\<close>
   deriving Basic
        and Functional_Transformation_Functor
        and Functionality
-       and \<open>Semantic_Type T TY
-        \<Longrightarrow> Semantic_Type (Tuple_Field T) (semty_tup [TY])\<close>
+       and \<open>Weak_Semantic_Type T TY
+        \<Longrightarrow> Weak_Semantic_Type (Tuple_Field T) (semty_tup [TY])\<close>
        and \<open>Semantic_Zero_Val TY T x
         \<Longrightarrow> Semantic_Zero_Val (semty_tup [TY]) (Tuple_Field T) x \<close>
        and \<open>Is_Aggregate (Tuple_Field T)\<close>
@@ -167,13 +167,11 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   by (clarsimp simp add: V_tup_mult_cons image_iff, insert V_tup_sep_disj_L, blast)
 
 lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
-  \<open> Semantic_Type T TY
-\<Longrightarrow> Semantic_Type Ts (semty_tup TYs)
-\<Longrightarrow> Semantic_Type (\<lbrace> T \<rbrace> \<^emph> Ts) (semty_tup (TY#TYs))\<close>
-  unfolding Semantic_Type_def subset_iff
-  apply (clarsimp, rule)
-  using V_tup_mult apply fastforce
-  by (metis V_tup_sep_disj_L)
+  \<open> Weak_Semantic_Type T TY
+\<Longrightarrow> Weak_Semantic_Type Ts (semty_tup TYs)
+\<Longrightarrow> Weak_Semantic_Type (\<lbrace> T \<rbrace> \<^emph> Ts) (semty_tup (TY#TYs))\<close>
+  unfolding Weak_Semantic_Type_def subset_iff
+  by (clarsimp, insert V_tup_mult, fastforce)
 
 
 section \<open>Reasoning\<close>
@@ -329,18 +327,18 @@ lemma [\<phi>reason %aggregate_access]:
   by clarsimp
 
 lemma [\<phi>reason %aggregate_access+20]:
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inr N)
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inr N)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_tuple_constructor N) (x \<Ztypecolon> List_Item T) (semty_tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
-  unfolding \<phi>Aggregate_Constructor_Synth_def Semantic_Type'_def Action_Tag_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def Weak_Semantic_Type'_def Action_Tag_def
   by (clarsimp; blast)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inr N)
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inr N)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_tuple_constructor (Suc N))
         (xs \<Ztypecolon> Ts) (semty_tup Tys) (r \<Ztypecolon> Tr)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_tuple_constructor N)
         ((x,xs) \<Ztypecolon> List_Item T \<^emph> Ts) (semty_tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
-  unfolding \<phi>Aggregate_Constructor_Synth_def Semantic_Type'_def Action_Tag_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def Weak_Semantic_Type'_def Action_Tag_def
   by (clarsimp simp: V_tup_mult_cons times_list_def semantic_tuple_constructor_N_no_use,
       metis NO_MATCH_def V_tup.dest_mk V_tup_mult_cons V_tup_sep_disj_L list.rel_intros(2))
 
@@ -351,18 +349,18 @@ lemma [\<phi>reason %aggregate_access]:
 
 lemma [\<phi>reason %aggregate_access+20]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inr N)
-\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
+\<Longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_tuple_constructor N) [v] (semty_tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def Action_Tag_def
-            Semantic_Type'_def
+            Weak_Semantic_Type'_def
   by (cases v; clarsimp; blast)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inr N)
-\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
+\<Longrightarrow> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_tuple_constructor (Suc N)) vR (semty_tup Tys) (r \<Ztypecolon> Tr)
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_tuple_constructor N) (v # vR) (semty_tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
-  unfolding \<phi>Aggregate_Constructor_def Semantic_Type'_def Action_Tag_def
+  unfolding \<phi>Aggregate_Constructor_def Weak_Semantic_Type'_def Action_Tag_def
   by (cases v; clarsimp simp: semantic_tuple_constructor_N_no_use;
       metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 

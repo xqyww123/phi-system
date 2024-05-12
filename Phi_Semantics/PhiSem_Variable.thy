@@ -212,9 +212,9 @@ definition \<open>\<phi>SemType_opt S TY \<longleftrightarrow> (case TY of Some 
 declare [[\<phi>reason_default_pattern \<open>\<phi>SemType_opt ?S _\<close> \<Rightarrow> \<open>\<phi>SemType_opt ?S _\<close> (100) ]]
 
 lemma [\<phi>reason 1200]:
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType_opt (x \<Ztypecolon> \<black_circle> T) (Some TY)\<close>
-  unfolding \<phi>SemType_opt_def Semantic_Type'_def
+  unfolding \<phi>SemType_opt_def Weak_Semantic_Type'_def
   by (clarsimp simp add: image_iff subset_iff)
 
 lemma [\<phi>reason 1200]:
@@ -223,9 +223,9 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: set_eq_iff)
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<And>x'. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Some x' \<Longrightarrow> Semantic_Type' (x' \<Ztypecolon> T) TY)
+  \<open> (\<And>x'. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Some x' \<Longrightarrow> Weak_Semantic_Type' (x' \<Ztypecolon> T) TY)
 \<Longrightarrow> \<phi>SemType_opt (x \<Ztypecolon> \<half_blkcirc> T) (Some TY)\<close>
-  unfolding Premise_def \<phi>SemType_opt_def Semantic_Type'_def
+  unfolding Premise_def \<phi>SemType_opt_def Weak_Semantic_Type'_def
   by (cases \<open>x\<close>; clarsimp simp add: image_iff subset_iff \<phi>Option.unfold set_eq_iff)
 
 
@@ -259,7 +259,7 @@ subsection \<open>Variable Operations\<close>
 
 proc op_get_var:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<r>[v] T\<close>
-  requires [\<phi>reason, unfolded Semantic_Type'_def, useful]: \<open>Semantic_Type' (x \<Ztypecolon> T) TY\<close>
+  requires [\<phi>reason, unfolded Weak_Semantic_Type'_def, useful]: \<open>Weak_Semantic_Type' (x \<Ztypecolon> T) TY\<close>
     and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
     and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
     and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
@@ -276,7 +276,7 @@ proc op_get_var:
  \<medium_right_bracket> .
 
 lemma op_get_var0:
-  \<open> Semantic_Type' (x \<Ztypecolon> T) TY
+  \<open> Weak_Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_var v TY [] \<lbrace> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<v>\<a>\<l>[ret] T\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<rbrace> \<close>
   by (rule op_get_var_\<phi>app[where input_index=\<open>[]\<close> and idx=\<open>[]\<close> and reject=\<open>[]\<close> and f=id, simplified];
       simp add: parse_eleidx_input_least1_def
@@ -291,7 +291,7 @@ proc op_set_var:
     and [useful]: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
     and [useful]: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
     and AMO:      \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
-    and           \<open>Semantic_Type U' UY\<close>
+    and           \<open>Weak_Semantic_Type U' UY\<close>
     and [useful]: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
     and           \<open>report_unprocessed_element_index reject\<close>
   output \<open>f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[v] T'\<close>
@@ -327,7 +327,7 @@ lemma op_set_var_0:
   \<open> varname.type vari \<equiv> TY_var
 \<Longrightarrow> \<phi>SemType_opt (x \<Ztypecolon> U) TY
 \<Longrightarrow> pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var
-\<Longrightarrow> Semantic_Type U' UY
+\<Longrightarrow> Weak_Semantic_Type U' UY
 \<Longrightarrow> pred_option ((=) UY) TY_var
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_var UY vari TY [] v \<lbrace> y \<Ztypecolon> \<v>\<a>\<l>[v] U'\<heavy_comma> x \<Ztypecolon> Var vari U \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<v>\<a>\<r>[vari] U' \<rbrace> \<close>
   by (rule op_set_var_\<phi>app[where f=id and input_index=\<open>[]\<close> and sem_idx=\<open>[]\<close> and idx=\<open>[]\<close>
@@ -393,7 +393,7 @@ subsubsection \<open>Get\<close>
 proc [\<phi>reason 1200]:
   input \<open>X\<close>
   requires Find: \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> Any\<close>
-      and  \<open>Semantic_Type T TY\<close>
+      and  \<open>Weak_Semantic_Type T TY\<close>
       and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
       and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
       and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
@@ -408,7 +408,7 @@ proc [\<phi>reason 1200]:
 proc [\<phi>reason 1210]:
   input \<open>X\<close>
   requires Find: \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> Any\<close>
-      and  \<open>Semantic_Type T TY\<close>
+      and  \<open>Weak_Semantic_Type T TY\<close>
   output \<open>\<v>\<a>\<l> x <val-of> vari <path> [] \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<heavy_comma> Y\<close>
   @tag synthesis
   unfolding REMAINS_def
@@ -430,7 +430,7 @@ proc (nodef) [\<phi>reason 1200]:
        and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
        and     \<open>chk_element_index_all_solved reject\<close>
        and T5: \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
-       and T6: \<open>Semantic_Type U' UY\<close>
+       and T6: \<open>Weak_Semantic_Type U' UY\<close>
        and T7: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
   output \<open>\<v>\<a>\<l> (y <set-to> vari <path> input_index) \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<heavy_comma> Y\<close>
   throws E
@@ -450,7 +450,7 @@ proc (nodef) [\<phi>reason 1210]:
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
-       and T6: \<open>Semantic_Type T' UY\<close>
+       and T6: \<open>Weak_Semantic_Type T' UY\<close>
        and T7: \<open>pred_option ((=) UY) TY_var\<close>
   output \<open>\<v>\<a>\<l> (y <set-to> vari <path> []) \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<heavy_comma> Y\<close>
   throws E
@@ -484,7 +484,7 @@ proc (nodef) "__set_var_rule_":
        and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
        and T8: \<open>report_unprocessed_element_index reject\<close>
        and T5: \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
-       and T6: \<open>Semantic_Type U' UY\<close>
+       and T6: \<open>Weak_Semantic_Type U' UY\<close>
        and T7: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
   output \<open>Z\<close>
   throws E
@@ -499,7 +499,7 @@ proc (nodef) "__set_var_rule_0_":
        and T1: \<open>varname.type vari \<equiv> TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
-       and T4: \<open>Semantic_Type U' UY\<close>
+       and T4: \<open>Weak_Semantic_Type U' UY\<close>
        and T5: \<open>pred_option ((=) UY) TY_var\<close>
   output \<open>Z\<close>
   throws E
@@ -523,7 +523,7 @@ proc (nodef) "__set_new_var_rule_":
   requires G: \<open>\<And>vari. varname.type vari \<equiv> Some TY
             \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
                 \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e)\<close>
-      and \<open>Semantic_Type U TY\<close>
+      and \<open>Weak_Semantic_Type U TY\<close>
   output \<open>Z\<close>
   throws E
 \<medium_left_bracket> 
@@ -539,7 +539,7 @@ proc (nodef) "__set_new_var_noty_rule_":
   requires G: \<open>\<And>vari. varname.type vari \<equiv> None
         \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
             \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e)\<close>
-       and \<open>Semantic_Type U TY\<close>
+       and \<open>Weak_Semantic_Type U TY\<close>
   output \<open>Z\<close>
   throws E
 \<medium_left_bracket>
