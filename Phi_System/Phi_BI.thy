@@ -181,7 +181,8 @@ abbreviation Sufficient_Inhabitance :: \<open>bool \<Rightarrow> 'a BI \<Rightar
 declare [[
   \<phi>reason_default_pattern \<open>Satisfiable ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
                       and \<open>_ \<longrightarrow> Satisfiable ?X\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
-                      and \<open>Inhabited ?T\<close>  \<Rightarrow> \<open>Inhabited ?T\<close>      (100)
+                      and \<open>Inhabited ?T\<close>  \<Rightarrow> \<open>Inhabited ?T\<close>      (100),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Inhabited _\<close>  (%\<phi>attr)
 ]]
 
 \<phi>reasoner_group extract_pure_phity = (10, [10,10]) for (\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>, \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close>)

@@ -4073,7 +4073,7 @@ lemma [\<phi>reason_template name Fc.scalar_functor [no_atp]]:
             Transformation_def Premise_def Functional_Transformation_Functor_def
             meta_Ball_def Action_Tag_def
   by clarsimp metis
-
+ 
 lemma template_scalar_partial_functor[\<phi>reason_template name Fc.scalar_partial_functor [no_atp]]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs' Ft' Fc' U Ds' Dt' Dx' smul' f'
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f

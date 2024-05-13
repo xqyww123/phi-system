@@ -24,11 +24,17 @@ include PHI_SYNTAX
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
   val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*abstract*) * typ (*concrete*)
+  val is_phi_type_ty : typ -> bool
   val typ_parameter_of_phi_ty : bv_typs -> term -> ((typ list (*reserved!*) * typ (*abstract*) * typ (*concrete*)) * term) list
   val is_nonnull_Type_Opr : typ -> bool
   val is_non_parameterized_phityp : typ -> bool
+
   val number_of_typ_operators : bv_typs -> term -> int
   val number_of_typ_operators_in_assertion : bv_typs -> term -> int
+
+  val exists_parameters_that_are_phi_types : (term -> bool) -> term -> bool
+  val forall_parameters_that_are_phi_types : (term -> bool) -> term -> bool
+
 
   val ExSet_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
   val Subjection_conv : conv -> conv -> conv
@@ -332,6 +338,10 @@ fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>s
 
 val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
 
+fun is_phi_type_ty \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>\<close> = true
+  | is_phi_type_ty \<^Type>\<open>fun _ T\<close> = is_phi_type_ty T
+  | is_phi_type_ty _ = false
+
 fun typ_parameter_of_phi_ty bvtys T_term =
   let fun collect_params ret (F' $ T') =
            (case try dest_parameterized_phi_ty (Term.fastype_of1 (bvtys,T'))
@@ -373,6 +383,50 @@ fun number_of_typ_operators_in_assertion bvtys term =
         fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
             (fn S => S + number_of_typ_operators bvtys T)
           | _ => I) bvtys term 0
+
+local
+fun head_is_phi (X $ _) = head_is_phi X
+  | head_is_phi (Abs (_, _, X)) = head_is_phi X
+  | head_is_phi (Const(_, ty)) = is_phi_type_ty ty
+  | head_is_phi (Free (_, ty)) = is_phi_type_ty ty
+  | head_is_phi (Var (_, ty))  = is_phi_type_ty ty
+  | head_is_phi _ = false
+in
+(*
+fun fold_parameters_that_are_phi_types F =
+  let fun fold_s (A $ B) x = fold B (fold_s A x)
+        | fold_s (Abs (_, _, X)) x = fold_s X x
+        | fold_s X x = F X x
+      and fold tm x =
+        if head_is_phi tm
+        then fold_s tm x
+        else x
+   in fold
+  end *)
+
+fun exists_parameters_that_are_phi_types F =
+  let fun fold_s (A $ B) = fold_s A orelse fold B
+        | fold_s (Abs (_, _, X)) = fold_s X
+        | fold_s X = F X
+      and fold tm =
+        if head_is_phi tm
+        then F tm orelse fold_s tm
+        else false
+   in fold
+  end
+
+fun forall_parameters_that_are_phi_types F =
+  let fun fold_s (A $ B) = fold A andalso fold_s B
+        | fold_s (Abs (_, _, X)) = fold_s X
+        | fold_s X = F X
+      and fold tm =
+        if head_is_phi tm
+        then F tm andalso fold_s tm
+        else true
+   in fold
+  end
+
+end
 
 end
 

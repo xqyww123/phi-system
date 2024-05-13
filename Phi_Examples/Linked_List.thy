@@ -4,20 +4,21 @@ begin
 
 abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
-
-\<phi>type_def Linked_Lst :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
-  where \<open>([] \<Ztypecolon> Linked_Lst addr TY T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
-      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr TY T) = (ls \<Ztypecolon> Linked_Lst nxt TY T\<heavy_comma>
-                                          (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>
+(*declare [[\<phi>trace_reasoning = 3]]*)
+ 
+\<phi>type_def Linked_Lst :: \<open>address \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
+  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
+      | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
+                                          (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>
                                          \<s>\<u>\<b>\<j> nxt. address_to_base addr )\<close>
 
      deriving Basic
-          and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr TY T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
-          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr TY T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr TY T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
-          and \<open>Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY) T U set (\<lambda>_. UNIV) list_all2\<close>
-          and \<open>Functional_Transformation_Functor (Linked_Lst addr TY) (Linked_Lst addr TY) T U
-                                                 set (\<lambda>x. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f)\<close>
+          and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
+          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
+          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
+        (*and \<open>Transformation_Functor (Linked_Lst addr) (Linked_Lst addr) T U set (\<lambda>_. UNIV) list_all2\<close>
+          and \<open>Functional_Transformation_Functor (Linked_Lst addr) (Linked_Lst addr) T U
+                                                 set (\<lambda>x. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f)\<close>*)
 
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
@@ -29,23 +30,23 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
 
 proc init:
   input  Void
-  output \<open>[] \<Ztypecolon> Linked_Lst 0 TY T\<close>
+  output \<open>[] \<Ztypecolon> Linked_Lst 0 T\<close>
   is [routine]
 \<medium_left_bracket>
-  \<m>\<a>\<k>\<e>\<s>(0) \<open>Linked_Lst _ TY T\<close> \<semicolon>
-  return \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+  \<m>\<a>\<k>\<e>\<s>(0) \<open>Linked_Lst _ T\<close> \<semicolon>
+  return \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T))\<close>
 \<medium_right_bracket> .
 
 proc is_empty:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
-  output \<open>l = [] \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T))\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
+  output \<open>l = [] \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
   is [routine]
 \<medium_left_bracket>
-  addr = \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<close>
+  addr = \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T))\<close>
 \<medium_right_bracket> .
 
+(*
 
-declare [[\<phi>infer_requirements, \<phi>trace_reasoning=1]]
 
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
@@ -59,30 +60,32 @@ lemma
   apply simp
 
 end
+*)
 
 
 
-
-
+declare [[\<phi>infer_requirements, \<phi>trace_reasoning=1]]
 
 
 
 
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
-    and TY :: TY                                      \<comment> \<open>semantic type\<close>
+    (*and TY :: TY                                      \<comment> \<open>semantic type\<close>*)
 (*  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close> *)
 begin
 
 proc prepend_llist:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr TY T\<close>
-  requires [\<phi>reason]: \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY)\<heavy_comma> v#l \<Ztypecolon> Linked_Lst addr' TY T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T))\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
+  requires [\<phi>reason]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T z\<close>
+  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T))\<heavy_comma> v#l \<Ztypecolon> Linked_Lst addr' T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<close> \<semicolon>
-  ret.nxt := addr \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>\<close> \<semicolon>
+  ret.nxt := addr
+    note [[\<phi>trace_reasoning = 2]]
+    \<semicolon> 
   ret.data := v \<semicolon>
-  \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ TY T\<close> \<semicolon>
+  \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ T\<close> \<semicolon>
   ret
 \<medium_right_bracket> .
 

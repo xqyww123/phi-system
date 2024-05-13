@@ -18,7 +18,7 @@ val rule0 = @{lemma
 fun unfold_typeof _ ctxt cterm =
   let val T_term = Thm.dest_arg cterm
    in Drule.infer_instantiate ctxt [(("T",0),T_term)] rule0
-   |> Phi_Reasoner.reason NONE NONE ctxt
+   |> Phi_Reasoner.reason NONE NONE (Config.map Phi_Reasoner.trace (fn i => i-3)ctxt)
    |> Option.map (
         Conv.fconv_rule (Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Premise_def}))
                                            Conv.all_conv))

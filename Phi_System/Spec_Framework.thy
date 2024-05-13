@@ -380,9 +380,7 @@ lemma SType_Of_unfold:
 
 ML_file \<open>library/tools/unfold_typeof.ML\<close>
 
-simproc_setup \<t>\<y>\<p>\<e>\<o>\<f> ("\<t>\<y>\<p>\<e>\<o>\<f> T") = \<open>
-  Semantic_Type_Tools.unfold_typeof
-\<close>
+simproc_setup \<t>\<y>\<p>\<e>\<o>\<f> ("\<t>\<y>\<p>\<e>\<o>\<f> T") = \<open>Semantic_Type_Tools.unfold_typeof\<close>
 
 subsection \<open>Zero Value\<close>
 

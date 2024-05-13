@@ -150,7 +150,6 @@ structure Begining_Procedures = Hooks (
 )
 
 structure Infer_Requirements = Hooks (
-  (*all terms are not type-checked, and may contain "_" dummy type *)
   type arg = {
       arg: term,
       ret: term,

@@ -201,33 +201,33 @@ fun is_var' x =
      | _ => false
 
 fun fast_inst can_inst th =
-  case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
-    of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
+  case (can_inst, PLPR_Syntax.may_dest_premise_tag (major_prem_of th))
+    of (_, Const (\<^const_name>\<open>True\<close>, _)) =>
             SOME (@{thm' Premise_True} RS th, Seq.empty)
-     | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ X)) =>
+     | (true, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ X) =>
          (SOME (Thm.instantiate (TVars.empty, mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th,
                 Seq.empty)
           handle Match => NONE)
-     | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
+     | (true, Const(\<^const_name>\<open>HOL.conj\<close>, _)
                     $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y)
-                    $ _)) =>
+                    $ _) =>
          if is_var' X orelse is_var' Y
          then (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
                      by (simp add: Premise_def)} RS th, Seq.empty)
                handle THM _ => NONE)
          else NONE
-     | (true, (_, X as Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
+     | (true, X as Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
          (SOME (Thm.instantiate (TVars.empty, mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th,
                 Seq.empty)
           handle Match => NONE)
-     | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y)) =>
+     | (true, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) =>
          (*solves the equation by unification once single resolution*)
          (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
          if is_var' X orelse is_var' Y
          then (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
                handle THM _ => NONE)
          else NONE
-     | (true, (_, X)) =>
+     | (true, X) =>
           if is_Var (Term.head_of X)
           then SOME (@{thm' Premise_True} RS th, Seq.empty)
           else NONE
@@ -256,7 +256,8 @@ fun oblg_template report_time {can_inst, fix_level} f ctxt th00 = Seq.make (fn (
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
-      val th = Conv.gconv_rule (Simplifier.full_rewrite ctxt) 1 th01
+      val th = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+              PLPR_Syntax.premise_tag_conv (K true) (Simplifier.full_rewrite ctxt)) ctxt) 1 th01
    in case Thm.major_prem_of th
    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) =>
         SOME (@{thm' TrueI} RS' (ctxt, th), Seq.empty)

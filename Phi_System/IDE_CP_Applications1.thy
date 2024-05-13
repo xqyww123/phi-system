@@ -921,9 +921,10 @@ private lemma \<A>_pattern_meet_that:
       (*we give a fast but weak check, and expect improving it later*)
       val const_heads = map_filter ((fn Const(N, _) => SOME N | _ => NONE) o Term.head_of o snd) pats
       val free_heads = map_filter ((fn Free(N, _) => SOME N | _ => NONE) o Term.head_of o snd) pats
-      val cannot_shortcut = exists_subterm (fn Const (N', _) => member (op =) const_heads N'
-                                             | Free (N', _) => member (op =) free_heads N'
-                                             | _ => false)
+      val cannot_shortcut = Phi_Syntax.exists_parameters_that_are_phi_types
+                                 (fn Const (N', _) => member (op =) const_heads N'
+                                   | Free (N', _) => member (op =) free_heads N'
+                                   | _ => false)
 
    in case get_index (fn (param_num, pat) =>
         if PLPR_Pattern.matches thy (K false) bvs (pat, T)
