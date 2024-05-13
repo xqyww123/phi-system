@@ -47,11 +47,31 @@ proc is_empty:
 
 declare [[\<phi>infer_requirements, \<phi>trace_reasoning=1]]
 
+context
+  fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
+    and TY :: TY                                      \<comment> \<open>semantic type\<close>
+  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close> 
+  assumes [\<phi>reason add]: \<open>Inhabited T\<close>
+begin
+
+lemma 
+  \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace>x: \<nat>(32), y: T\<rbrace> = \<s>\<t>\<r>\<u>\<c>\<t> {x: \<i>\<n>\<t>(32), y: TY}\<close>
+  apply simp
+
+end
+
+
+
+
+
+
+
+
 
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
     and TY :: TY                                      \<comment> \<open>semantic type\<close>
-(*  assumes [\<phi>reason add]: \<open>Weak_Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close> *)
+(*  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close> *)
 begin
 
 proc prepend_llist:

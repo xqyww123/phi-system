@@ -45,7 +45,7 @@ context
   fixes TY :: TY
     and T :: \<open>(VAL, 'x) \<phi>\<close>                              \<comment> \<open>we provide a generic verification\<close>
     and zero :: 'x
-  assumes [\<phi>reason add]: \<open>Weak_Semantic_Type T TY\<close>      \<comment> \<open>specify the semantic type of T\<close>
+  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>      \<comment> \<open>specify the semantic type of T\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>  \<comment> \<open>specify the semantic zero value of T\<close>
 begin
 

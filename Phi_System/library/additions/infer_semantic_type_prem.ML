@@ -19,11 +19,11 @@ fun sem_rule_expr' bvtys0 T_term0 ctxt =
       val bvtys = List.tabulate (N, K \<^Type>\<open>TY\<close>) @ bvtys
       val T_params = Phi_Syntax.typ_parameter_of_phi_ty bvtys T_term
 
-      val rule = HOLogic.Trueprop $ (\<^Const>\<open>Weak_Semantic_Type x_ty\<close> $ T_term $ TY)
+      val rule = HOLogic.Trueprop $ (\<^Const>\<open>Semantic_Type x_ty\<close> $ T_term $ TY)
               |> fold_rev (fn (j,((rev_args, x, _), T'h)) => fn XX =>
                   let val arity = length rev_args
                       val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) rev_args T'h
-                   in HOLogic.Trueprop $ (\<^Const>\<open>Weak_Semantic_Type x\<close> $ T' $ Bound j)
+                   in HOLogic.Trueprop $ (\<^Const>\<open>Semantic_Type x\<close> $ T' $ Bound j)
                    |> fold (fn ty => fn X => \<^Const>\<open>Pure.all ty\<close> $ Abs("A", ty, X)) rev_args
                    |> (fn X => \<^Const>\<open>Pure.imp\<close> $ X $ XX)
                   end
@@ -43,7 +43,7 @@ fun existing_sematic_types (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X)
   | existing_sematic_types (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = existing_sematic_types X
   | existing_sematic_types (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = existing_sematic_types X
   | existing_sematic_types (Abs (_, _, X)) = existing_sematic_types X
-  | existing_sematic_types (Const(\<^const_name>\<open>Weak_Semantic_Type\<close>, _) $ X $ _) = get_name X
+  | existing_sematic_types (Const(\<^const_name>\<open>Semantic_Type\<close>, _) $ X $ _) = get_name X
   | existing_sematic_types (Const(\<^const_name>\<open>Inhabited\<close>, _) $ X) = get_name X
   | existing_sematic_types _ = NONE
 

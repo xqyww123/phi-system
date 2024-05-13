@@ -19,7 +19,7 @@ fun guess_property phi0 ctxt =
 
       val TY = get_first (fn th => case Thm.concl_of th of _ (*Trueprop*) $ (_ (*SemTyp*) $ TY) => SOME TY
                                       | _ => error "BUG: Bad rule of \<phi>SemType")
-                         (flat (lookup_derived_properties (Context.Proof ctxt) phi "Weak_Semantic_Type"))
+                         (flat (lookup_derived_properties (Context.Proof ctxt) phi "Semantic_Type"))
             |> (fn SOME TY' => TY'
                  | NONE => raise Automation_Fail (fn () => let open Pretty in
                               [para "The semantic type of the \<phi>-type is unknown from the existing \<phi>SemType rules."]

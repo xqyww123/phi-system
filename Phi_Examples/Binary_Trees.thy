@@ -277,8 +277,8 @@ context
     and zero\<^sub>V :: 'v
   assumes cmp: \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> CMP u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 < k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
       and eq : \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> Eq u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 = k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>  
-      and [\<phi>reason add]: \<open>Weak_Semantic_Type K TY\<^sub>K\<close>  \<comment> \<open>specify the semantic type of K\<close>
-      and [\<phi>reason add]: \<open>Weak_Semantic_Type V TY\<^sub>V\<close>
+      and [\<phi>reason add]: \<open>Semantic_Type K TY\<^sub>K\<close>  \<comment> \<open>specify the semantic type of K\<close>
+      and [\<phi>reason add]: \<open>Semantic_Type V TY\<^sub>V\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>K K zero\<^sub>K\<close>  \<comment> \<open>specify the semantic zero value of K\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>V V zero\<^sub>V\<close>
 begin

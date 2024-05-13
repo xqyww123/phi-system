@@ -14,10 +14,13 @@ debt_axiomatization \<phi>embed_semantic_symbol :: \<open>symbol \<Rightarrow> V
 
 section \<open>\<phi>-Types\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def Symbol :: "(VAL, symbol) \<phi>"
   where \<open>s \<Ztypecolon> Symbol \<equiv> \<phi>embed_semantic_symbol s \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
+
 
 section \<open>Instructions\<close>
 

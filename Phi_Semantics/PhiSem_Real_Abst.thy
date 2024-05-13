@@ -54,8 +54,9 @@ section \<open>\<phi>-Types\<close>
   where \<open>x \<Ztypecolon> \<phi>AReal \<equiv> V_areal.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Weak_Semantic_Type \<real> areal\<close>
+       and \<open>Semantic_Type \<real> areal\<close>
        and \<open>Semantic_Zero_Val areal \<real> 0\<close>
+       and Inhabited
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<real> (\<lambda>x y. True) (=)"

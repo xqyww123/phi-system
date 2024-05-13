@@ -35,7 +35,7 @@ context
   fixes TY :: TY
     and T :: \<open>(VAL, 'x) \<phi>\<close>                              \<comment> \<open>we provide a generic verification\<close>
     and zero :: 'x
-  assumes [\<phi>reason add]: \<open>Weak_Semantic_Type T TY\<close>      \<comment> \<open>specify the semantic type of T\<close>
+  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>      \<comment> \<open>specify the semantic type of T\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY T zero\<close>  \<comment> \<open>specify the semantic zero value of T\<close>
 begin
 
@@ -176,7 +176,7 @@ proc exists_dynarr:
 
 proc fold_map_dynarr:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
-  requires [\<phi>reason]: \<open>Weak_Semantic_Type U TY\<^sub>U\<close>
+  requires [\<phi>reason]: \<open>Semantic_Type U TY\<^sub>U\<close>
        and C: \<open>\<And>x z u v. \<p>\<r>\<o>\<c> C u v \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[u] T\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l>[v] U \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> g x z \<Ztypecolon> \<v>\<a>\<l> U \<rbrace> \<close>
   output \<open>fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>

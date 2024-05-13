@@ -61,6 +61,14 @@ fun decode_text_ast' ret (Appl [Constant \<^const_syntax>\<open>text.literal\<cl
 
 in
 
+(*deterministic decoding to plain string*)
+fun decode_str _ (\<^const>\<open>text.literal\<close> $ Abs (text, _, _)) = recovery_string text
+  | decode_str ctxt (\<^const>\<open>text.cat\<close> $ A $ B) =
+      decode_str ctxt A ^ " " ^ decode_str ctxt B
+  | decode_str _ (\<^const>\<open>text.newline\<close>) = "\n"
+  | decode_str ctxt (\<^const>\<open>text.text\<close> $ X) = decode_str ctxt X
+  | decode_str _ tm = raise TERM ("decode_str", [tm])
+
 fun decode_text _ (\<^const>\<open>text.literal\<close> $ Abs (text, _, _)) = (Pretty.text (recovery_string text))
   | decode_text ctxt (Const (\<^const_name>\<open>text.term\<close>, _) $ x) = [Syntax.pretty_term ctxt x]
   | decode_text ctxt (Const (\<^const_name>\<open>text.type\<close>, _) $ \<^Const_>\<open>Pure.type T\<close>) =
@@ -164,5 +172,9 @@ definition ERROR :: \<open>text \<Rightarrow> bool\<close> where \<open>ERROR x 
 
 (*TODO: depreciate these*)
 definition ERROR' :: \<open>text \<Rightarrow> prop\<close> where \<open>ERROR' x \<equiv> (\<And>P. PROP P)\<close>
+
+subsubsection \<open>Exception\<close>
+
+definition EXCEPTION :: \<open>text \<Rightarrow> bool\<close> where \<open>EXCEPTION x \<longleftrightarrow> False\<close>
 
 end

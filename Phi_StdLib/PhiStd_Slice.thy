@@ -43,7 +43,7 @@ proc (nodef) map_2slice:
 \<medium_right_bracket> .
 
 proc memcpy:
-  requires \<open>(\<And>x. Weak_Semantic_Type T TY)\<close>
+  requires \<open>(\<And>x. Semantic_Type T TY)\<close>
   input  \<open>i\<^sub>a \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr\<^sub>a:LEN\<^sub>a] TY\<heavy_comma>
           i\<^sub>b \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr\<^sub>b:LEN\<^sub>b] TY\<heavy_comma>
           len \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma>

@@ -13,7 +13,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Object_Equiv \<rat> (=)\<close>
        and \<open>Abstract_Domain\<^sub>L \<rat> (\<lambda>_. True)\<close>
        and \<open>Abstract_Domain \<rat> (\<lambda>_. True)\<close>
-       and Weak_Semantic_Type
+       and Semantic_Type
 
 
 proc rat_add:

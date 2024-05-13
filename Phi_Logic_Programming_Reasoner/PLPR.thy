@@ -3080,6 +3080,18 @@ ML_file \<open>library/tools/failure_reason.ML\<close>
   in Seq.empty
   end\<close>
 
+ML \<open>exception PLPR_EXCEPTION of string\<close>
+
+\<phi>reasoner_ML EXCEPTION %cutting (\<open>EXCEPTION ?x\<close>) = \<open>fn (_, (ctxt,sequent)) =>
+  let
+    val text = case Thm.major_prem_of sequent
+                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>EXCEPTION\<close> $ X) => X
+    val str = Text_Encoding.decode_str ctxt text
+    val _ = raise PLPR_EXCEPTION str
+  in Seq.empty
+  end\<close>
+
+
 subsection \<open>Finale\<close>
 
 ML_file \<open>library/tools/helpers99.ML\<close>

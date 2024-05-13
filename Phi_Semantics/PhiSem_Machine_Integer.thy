@@ -147,8 +147,9 @@ subsection \<open>Words\<close>
   where \<open>x \<Ztypecolon> Word _ \<equiv> V_int.mk (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
   deriving Basic
        and \<open>Object_Equiv (Word ?uu) (=)\<close>
-       and \<open>Weak_Semantic_Type (Word TYPE('b)) int('b)\<close>
+       and \<open>Semantic_Type (Word TYPE('b)) int('b)\<close>
        and \<open>Semantic_Zero_Val int('b) (Word ?uu) (0::'b::len word)\<close>
+       and Inhabited
 
 syntax Word_syntax :: "type \<Rightarrow> (VAL, 'b::len word) \<phi>" ("Word'(_')")
 
@@ -178,9 +179,9 @@ subsubsection \<open>Rounded Natural Number\<close>
   where \<open>x \<Ztypecolon> \<phi>RoundedNat _ \<equiv> ((of_nat x :: 'b word) \<Ztypecolon> Word('b))\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>RoundedNat (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
-       and Weak_Semantic_Type
+       and Semantic_Type
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedNat TYPE('b)) 0\<close>
-
+       and Inhabited
 
 syntax \<phi>RoundedNat_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<nat>\<^sup>r'(_')")
 
@@ -228,6 +229,7 @@ subsubsection \<open>Natural Number\<close>
   where \<open>x \<Ztypecolon> \<phi>Nat _ \<equiv> (x \<Ztypecolon> \<nat>\<^sup>r('b) \<s>\<u>\<b>\<j> x \<in> {0..< 2 ^ LENGTH('b)})\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>Nat uu) (=)\<close>
+       and Inhabited
 
 syntax \<phi>Nat_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<nat>'(_')")
 
@@ -245,7 +247,7 @@ declare [[\<phi>reason_default_pattern
       \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>Nat _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>    (200) ]]
 
 let_\<phi>type \<phi>Nat
-  deriving Weak_Semantic_Type
+  deriving Semantic_Type
        and \<open>Semantic_Zero_Val int('b) \<nat>('b) 0\<close>
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
@@ -314,7 +316,8 @@ subsubsection \<open>Integer\<close>
                               \<s>\<u>\<b>\<j> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)})\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>Int uu) (=)\<close>
-       and Weak_Semantic_Type
+       and Semantic_Type
+       and Inhabited
 
 syntax \<phi>Int_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<int>'(_')")
 
@@ -426,8 +429,9 @@ subsubsection \<open>Rounded Natural Number\<close>
   where \<open>x \<Ztypecolon> \<phi>RoundedInt _ \<equiv> ((of_int x :: 'b word) \<Ztypecolon> Word('b))\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>RoundedInt (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
-       and Weak_Semantic_Type
+       and Semantic_Type
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedInt TYPE('b)) 0\<close>
+       and Inhabited
 
 
 syntax \<phi>RoundedInt_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<int>\<^sup>r'(_')")

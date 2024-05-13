@@ -585,7 +585,7 @@ subsection \<open>Physical Pointer\<close>
   deriving Basic
        and \<open>Object_Equiv RawPointer (=)\<close>
        and Functionality
-       and \<open>Weak_Semantic_Type RawPointer pointer\<close>
+       and \<open>Semantic_Type RawPointer pointer\<close>
        and \<open>Semantic_Zero_Val pointer RawPointer 0\<close>
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
@@ -603,7 +603,7 @@ subsection \<open>Standard Logical Pointer\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>
        and Functionality
-       and \<open>Weak_Semantic_Type (Ptr TY) pointer\<close>
+       and \<open>Semantic_Type (Ptr TY) pointer\<close>
        and \<open>Semantic_Zero_Val pointer (Ptr TY) 0\<close>
 
 
