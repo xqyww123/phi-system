@@ -49,6 +49,7 @@ val hhf_concl_conv_no_ball : (Proof.context -> conv) -> Proof.context -> conv
 val hhf_conv : (Proof.context -> conv) (*premise conv*)
             -> (Proof.context -> conv) (*concl conv*)
             -> Proof.context -> conv
+val map_hhf : (term -> term) -> term -> term
 (*for any meta premise or HOL premise, meta quantification or HOL quantification*)
 val premises_conv : (Proof.context -> conv) (*premise conv*)
                   -> (Proof.context -> conv) (*concl conv*)
@@ -334,6 +335,14 @@ fun hhf_conv Cp Cc ctxt ctm =
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (hhf_conv Cp Cc ctxt) ctm
      | Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ => meta_ball_conv Conv.all_conv (hhf_conv Cp Cc o snd) ctxt ctm
      | _ => Cc ctxt ctm
+
+fun map_hhf F =
+  let fun map ((A as Const(\<^const_name>\<open>Pure.imp\<close>, _)) $ X $ Y) = A $ map X $ map Y
+        | map ((A as Const(\<^const_name>\<open>Pure.all\<close>, _)) $ X) = A $ map X
+        | map (Abs (N, Ty, X)) = Abs (N, Ty, map X)
+        | map X = F X
+   in map
+  end
 
 fun premises_conv Cp Cc ctxt ctm =
   case Thm.term_of ctm

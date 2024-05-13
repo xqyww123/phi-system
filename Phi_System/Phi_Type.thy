@@ -7853,6 +7853,26 @@ end
   requires Object_Equiv and Abstract_Domain and Carrier_Set ?
 
 
+subsubsection \<open>Type Inhabitance\<close>
+
+context begin
+
+private lemma inh_typ_derv_rule:
+  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Inhabited_Type T)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
+\<Longrightarrow> Inhabited_Type T \<close> .
+
+ML_file \<open>library/phi_type_algebra/inhabited_type.ML\<close>
+
+end
+
+\<phi>property_deriver Inhabited_Type 100 for (\<open>Inhabited_Type _\<close>)
+    = \<open> Phi_Type_Derivers.inhabited_type \<close> 
+
+
+
 subsubsection \<open>Transformation Functor\<close>
 
 context begin
@@ -9611,5 +9631,7 @@ declare Lifting.pred_prod_beta[\<phi>generation_simp]
 section \<open>Clean-up\<close>
 
 hide_const (open) introduced
+
+
 
 end

@@ -231,8 +231,8 @@ print_translation \<open>[
 subsubsection \<open>Properties\<close>
 
 let_\<phi>type Named_Tuple_Field
-  deriving \<open> Weak_Semantic_Type T TY
-         \<Longrightarrow> Weak_Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty))\<close>
+  deriving \<open> Semantic_Type T TY
+         \<Longrightarrow> Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty))\<close>
        and \<open> Semantic_Zero_Val ty T x
          \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
 
@@ -265,7 +265,13 @@ lemma Tuple_Field_semty[\<phi>reason %\<phi>sem_type_cut]:
   unfolding Weak_Semantic_Type_def subset_iff
   by clarsimp blast
 
-lemma [\<phi>reason %\<phi>sem_type_cut+10]:
+lemma Tuple_Field_semty'[\<phi>reason %\<phi>sem_type_cut]:
+  \<open> Semantic_Type T TY
+\<Longrightarrow> Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty)) \<close>
+  unfolding Semantic_Type_def subset_iff
+  by (clarsimp, rule, blast intro: Tuple_Field_semty, blast intro: Named_Tuple_Field.Inhabited_Type)
+
+lemma Tuple_Field_semty2[\<phi>reason %\<phi>sem_type_cut+10]:
   \<open> Weak_Semantic_Type T TY
 \<Longrightarrow> Weak_Semantic_Type Ts (semty_ntup TYs)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| fmdom TYs
@@ -325,6 +331,25 @@ lemma [\<phi>reason %chk_sem_ele_idx+20]:
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_S s) (semty_ntup fmempty) RET \<close>
   unfolding \<r>Guard_def Premise_def FAIL_def
   by blast
+
+
+lemma [\<phi>reason %\<phi>sem_type_cut+10]:
+  \<open> Semantic_Type T TY
+\<Longrightarrow> Semantic_Type Ts (semty_ntup TYs)
+\<Longrightarrow> Is_Named_Tuple Ts fields
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
+\<Longrightarrow> Semantic_Type (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (semty_ntup (fmupd s TY TYs))\<close>
+unfolding Semantic_Type_def subset_iff Premise_def
+          Inhabited_Type_def Inhabited_def Weak_Semantic_Type_def Is_Named_Tuple_def
+  apply (clarsimp, rule)
+  apply (metis V_named_tup.dest_mk V_named_tup_mult fmap_times_fempty(2) fmrel_upd fmupd_times_right)
+  subgoal premises prems for x p y q
+    by (insert prems(1)[THEN spec, THEN spec, THEN mp, OF prems(6)],
+        clarify,
+        rule exI[where x=x], rule exI[where x=y],
+        rule exI[where x=\<open>V_named_tup.mk (fmupd s p fmempty)\<close>],
+        rule exI[where x=q], insert prems(1-4,6), clarsimp, blast) .
+
 
 
 subsection \<open>General\<close>

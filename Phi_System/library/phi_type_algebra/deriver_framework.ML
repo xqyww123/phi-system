@@ -1168,14 +1168,15 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
              | _ => ()
           end
 
+      val num = length deriving_instructions
       fun invoke (i,H) thy =
         let val iname = suffix_name_by_index (i+ind) name
             val derv_thy = thy
-                        |> snd o Local_Theory.begin_nested
+                        |> num > 1 ? snd o Local_Theory.begin_nested
                         |> snd o Proof_Context.note_thms "" (Binding.empty_atts, #5 H)
                         |> Bundle.includes (#6 H)
          in deriver (i+ind, iname) H phi derv_thy
-         |> Local_Theory.end_nested_result Morphism.fact
+         |> num > 1 ? Local_Theory.end_nested_result Morphism.fact
          |-> register_derived_properties phi (name, i+ind, #3 H)
         end
 

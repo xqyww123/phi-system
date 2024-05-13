@@ -7,24 +7,6 @@ section \<open>Derivers for IDE-CP\<close>
 
 subsection \<open>Properties of Semantic Value\<close>
 
-subsubsection \<open>Type Inhabitance\<close>
-
-context begin
-
-private lemma inh_typ_derv_rule:
-  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Inhabited_Type T)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @tag \<phi>TA_ANT
-\<Longrightarrow> Inhabited_Type T \<close> .
-
-ML_file \<open>library/phi_type_algebra/inhabited_type.ML\<close>
-
-end
-
-\<phi>property_deriver Inhabited_Type 80 for (\<open>Inhabited_Type _\<close>)
-    = \<open> Phi_Type_Derivers.inhabited_type \<close> 
-
 
 subsubsection \<open>Semantic Type\<close>
 
@@ -60,10 +42,10 @@ ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
 
 end
 
-\<phi>property_deriver Weak_Semantic_Type 100 for (\<open>Weak_Semantic_Type _ _\<close>)
+\<phi>property_deriver Weak_Semantic_Type 120 for (\<open>Weak_Semantic_Type _ _\<close>)
     = \<open> Phi_Type_Derivers.semantic_type true \<close> 
 
-\<phi>property_deriver Semantic_Type 90 for (\<open>Semantic_Type _ _\<close>)
+\<phi>property_deriver Semantic_Type 110 for (\<open>Semantic_Type _ _\<close>)
   requires Inhabited_Type
     = \<open> Phi_Type_Derivers.semantic_type false \<close>
 
@@ -85,18 +67,14 @@ ML_file \<open>library/phi_type_algebra/semantic_zero_val.ML\<close>
 
 end
 
-\<phi>property_deriver Semantic_Zero_Val 120 for (\<open>Semantic_Zero_Val _ _ _\<close>)
+\<phi>property_deriver Semantic_Zero_Val 130 for (\<open>Semantic_Zero_Val _ _ _\<close>)
   requires Weak_Semantic_Type
     = \<open> Phi_Type_Derivers.semantic_zero_val \<close> 
 
 
 subsubsection \<open>Semantic Equality Comparison\<close>
 
-context begin
-
 (*TODO*)
-
-end
 
 
 subsection \<open>\<open>\<phi>App_Conv\<close>\<close> \<comment> \<open>used only when the given ToA is not in the target space\<close>

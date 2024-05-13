@@ -58,7 +58,9 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
 
 
 section \<open>\<phi>-Type\<close>
- 
+
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
   where \<open>x \<Ztypecolon> \<bool> \<equiv> V_bool.mk x \<Ztypecolon> Itself\<close>
   deriving Basic

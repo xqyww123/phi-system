@@ -223,6 +223,15 @@ lemma [\<phi>reason 1000]:
   unfolding \<r>ESC_def Premise_def
   by blast
 
+lemma inhabited_type_EIF':
+  \<open> \<r>EIF (Inhabited_Type T) (\<exists>x. Inhabited (x \<Ztypecolon> T)) \<close>
+  unfolding Inhabited_Type_def \<r>EIF_def
+  by blast
+
+bundle deriving_intabited_type = inhabited_type_EIF'[\<phi>reason default %extract_pure]
+
+
+
 paragraph \<open>Sum Type\<close>
 
 lemma [\<phi>reason 1020]:

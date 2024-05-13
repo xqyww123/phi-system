@@ -28,18 +28,28 @@ fun guess_property weak phi ctxt =
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
+(*
 val chk_weak_sem_typ_derived = @{lemma
       \<open> Weak_Semantic_Type T TY
     \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
     \<Longrightarrow> True \<close>
       by blast}
+*)
 
 fun is_weak_sem_typ_derived (phi : phi_type) ctxt =
-  let val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt
+  not (null (lookup_derived_properties (Context.Proof ctxt) phi "Weak_Semantic_Types"))
+(* let val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt
       val T_cterm = Thm.cterm_of ctxt T_term
       val rule = Drule.infer_instantiate ctxt [(("T",0),T_cterm)] chk_weak_sem_typ_derived
    in is_some (Phi_Reasoner.reason NONE (SOME 1) ctxt rule)
   end
+*)
+
+
+val strong_prems = @{lemma
+  \<open> Semantic_Type T TY
+\<Longrightarrow> \<exists>x. Inhabited (x \<Ztypecolon> T) \<close>
+  by (unfold Semantic_Type_def Inhabited_Type_def, blast)}
 
 fun gen_semantic_type is_weak (_, name) instruction (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const>\<open>Weak_Semantic_Type _\<close> $ T $ _ => T
@@ -69,8 +79,19 @@ fun gen_semantic_type is_weak (_, name) instruction (phi0 : phi_type) thy =
             else SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
         | varifier _ X = NONE
       fun reasoning phi ctxt sequent =
-            default_reasoning true default_reasoning_configure varifier
-                              (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
+            default_reasoning true
+                (fn triple => fn (lprems, ctxt) =>
+                    let val (prem_ants, rewrs, ants, ctxt) = default_reasoning_configure triple (lprems, ctxt)
+                        val ants' = map_filter (fn prem =>
+                                      SOME (prem RS Semantic_Type_Tools.strong_to_weak, NONE)
+                                      handle THM _ => NONE ) lprems
+                        val prems' = map_filter (fn prem =>
+                                        SOME (prem RS strong_prems)
+                                        handle THM _ => NONE ) lprems
+                     in (prems' @ prem_ants, rewrs, ants' @ ants, ctxt)
+                    end )
+                varifier
+                (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
           (*|> Phi_Reasoner.reason1 (fn _ =>
                   "Weak_Semantic_Type relies on the property of Abstract_Domain\<^sub>L") NONE (SOME 1) ctxt *)
 
@@ -105,17 +126,8 @@ fun semantic_type is_weak pos instr phi thy =
                 else if is_weak_sem_typ_derived phi thy
                 then thy
                 else semantic_type true pos instr phi thy
-      fun norm_hint ((A as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X) = A $ norm_hint X
-        | norm_hint (origin as \<^Const>\<open>Semantic_Type ty\<close> $ T $ TY) =
-            if is_weak then \<^Const>\<open>Weak_Semantic_Type ty\<close> $ T $ TY
-                       else origin
-        | norm_hint (origin as \<^Const>\<open>Weak_Semantic_Type ty\<close> $ T $ TY) =
-            if is_weak then origin
-                       else \<^Const>\<open>Semantic_Type ty\<close> $ T $ TY
-        | norm_hint X = X
-      val norm_hint = Phi_Conv.map_hhf_concl norm_hint
       fun norm_derv_instr (hint,a2,a3,a4,a5,a6) =
-            (Option.map (apfst norm_hint) hint, a2, a3, a4, a5, a6)
+            (Option.map (apfst (conv_sem_rule_expr is_weak)) hint, a2, a3, a4, a5, a6)
       val instr = map norm_derv_instr instr
    in deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE,
                          if is_weak then "Weak_Semantic_Type" else "Semantic_Type")

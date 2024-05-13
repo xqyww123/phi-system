@@ -601,9 +601,7 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
             |> Config.put under_deriving_ctxt true
             |> Phi_Reasoners.report_failure_reason []
    in thy
-   |> snd o Local_Theory.begin_nested
-   |> Local_Theory.map_contexts (fn i =>
-        if i >= level then setup else I)
+   |> Local_Theory.map_contexts (fn i => if i >= level - 1 then setup else I)
    |> Local_Theory.target setup
    |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn lthy =>
           lthy |> snd o Local_Theory.begin_nested
@@ -612,7 +610,6 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
                |> Local_Theory.end_nested
           handle Automation_Fail msg => err_derive lthy name (msg ()) hints
        ) dervs
-    |> Local_Theory.end_nested
     (*|> Context.proof_map (
           Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))*)
   end

@@ -1428,7 +1428,7 @@ text \<open>For technical reasons, the \<open>\<phi>Some\<close> is defined and 
 
 
 subsection \<open>Domainoid\<close>
- 
+   
 \<phi>type_def Domainoid ("\<DD>[_]" [4] 1000)
     where \<open>\<DD>[\<delta>] T \<equiv> \<delta> \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> closed_homo_sep \<delta>\<close>
   \<comment> \<open>\<open>\<Psi>[\<psi>] (x \<Ztypecolon> T) \<equiv> x \<Ztypecolon> \<phi>Fun \<psi> \<Zcomp> T\<close>, therefore \<open>\<phi>Fun \<psi> \<Zcomp> T\<close> is always an exact solution for
@@ -1437,7 +1437,7 @@ subsection \<open>Domainoid\<close>
       even if just an upper or lower approximation. Due to this, here
       we introduce a differentiated syntax to emphasize the intention of extracting domainoid,
       on which specific reasoning procedures can be given to reduce the expression further.\<close>
- deriving Sep_Functor
+ deriving Sep_Functor 
       and \<open> constant_1 \<delta> \<and>\<^sub>\<r> (D,P) = (\<lambda>_. True, \<lambda>_. True) \<or>\<^sub>c\<^sub>u\<^sub>t
             homo_one \<delta> \<and>\<^sub>\<r> Identity_Elements\<^sub>I T D P
         \<Longrightarrow> Identity_Elements\<^sub>I (\<DD>[\<delta>] T) D P \<close>

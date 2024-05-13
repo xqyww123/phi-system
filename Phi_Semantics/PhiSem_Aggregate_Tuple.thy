@@ -136,13 +136,15 @@ subsection \<open>Empty Tuple\<close>
 
 subsection \<open>Field\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+ 
 \<phi>type_def Tuple_Field :: "(VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
   where \<open>Tuple_Field T \<equiv> (\<lambda>v. V_tup.mk [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
        and Functional_Transformation_Functor
        and Functionality
-       and \<open>Weak_Semantic_Type T TY
-        \<Longrightarrow> Weak_Semantic_Type (Tuple_Field T) (semty_tup [TY])\<close>
+       and \<open>Semantic_Type T TY
+        \<Longrightarrow> Semantic_Type (Tuple_Field T) (semty_tup [TY])\<close>
        and \<open>Semantic_Zero_Val TY T x
         \<Longrightarrow> Semantic_Zero_Val (semty_tup [TY]) (Tuple_Field T) x \<close>
        and \<open>Is_Aggregate (Tuple_Field T)\<close>
@@ -172,6 +174,15 @@ lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
 \<Longrightarrow> Weak_Semantic_Type (\<lbrace> T \<rbrace> \<^emph> Ts) (semty_tup (TY#TYs))\<close>
   unfolding Weak_Semantic_Type_def subset_iff
   by (clarsimp, insert V_tup_mult, fastforce)
+
+lemma [\<phi>reason %\<phi>sem_type_cut]:
+  \<open> Semantic_Type T TY
+\<Longrightarrow> Semantic_Type Ts (semty_tup TYs)
+\<Longrightarrow> Semantic_Type (\<lbrace> T \<rbrace> \<^emph> Ts) (semty_tup (TY#TYs))\<close>
+  unfolding Semantic_Type_def subset_iff
+  by (rule, blast intro: Tuple_Field_semtys,
+      clarsimp simp: Inhabited_Type_def Inhabited_def,
+      smt (z3) V_tup_sep_disj_R WT_tup Weak_Semantic_Type_def mem_Collect_eq)
 
 
 section \<open>Reasoning\<close>

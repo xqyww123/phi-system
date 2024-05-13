@@ -359,6 +359,28 @@ lemma [\<phi>reason %\<phi>sem_type_cut]:
   unfolding Weak_Semantic_Type'_def subset_iff by clarsimp
 
 
+
+paragraph \<open>Conversion From Strong to Weak\<close>
+
+ML_file \<open>library/spec_framework/semantic_type.ML\<close>
+
+lemma
+  \<open> \<forall>T TY. Semantic_Type T TY \<longrightarrow> Semantic_Type (F T) (G TY)
+\<Longrightarrow> Weak_Semantic_Type T TY
+\<Longrightarrow> Weak_Semantic_Type (F T) (G TY) \<close>
+  unfolding Semantic_Type_def Inhabited_Type_def Weak_Semantic_Type_def
+  apply clarsimp
+  
+
+context
+  fixes F G
+  assumes A: \<open>Semantic_Type T TY \<Longrightarrow> Semantic_Type (F T) (G TY) \<close>
+begin
+   
+ML \<open>Semantic_Type_Tools.conv_sem_rule true \<^context> @{thm A}\<close>
+
+end
+
 subsubsection \<open>Multiple Values\<close>
 
 definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>

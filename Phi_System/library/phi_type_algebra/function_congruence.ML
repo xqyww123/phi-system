@@ -42,6 +42,7 @@ val _ = Theory.setup (Context.theory_map (
         val x' = Thm.var (("y", idx+idx), x_ty)
 
         val ((_,F_thms),ctxt) = Variable.import true (map Drule.mk_term [F, F', T, T', x, x']) ctxt0
+        val ctxt' = Context_Position.set_visible false ctxt
         val [Fi, Fi', Ti, Ti', xi, xi'] = map Drule.dest_term F_thms
 
         fun gen_eqs rets (Abs (_, _, X), Abs (_, _, X')) = gen_eqs rets (X, X')
@@ -60,13 +61,13 @@ val _ = Theory.setup (Context.theory_map (
         val rule = rule
                 |> Phi_Reasoner.reason NONE NONE ctxt
                 |> (fn SOME ret => ret
-                          |> oblg_solver (base_name ^ "/function-congruence") NONE ctxt 
+                          |> oblg_solver (base_name ^ "/function-congruence") NONE ctxt' 
                      | NONE => raise Automation_Fail (fn () => let open Pretty in
                                  [para "Fail to derive the congruence rule for Isabelle function package.",
                                   Thm.pretty_thm ctxt rule]
                                end))
-                |> Conv.gconv_rule (Simplifier.rewrite (ctxt addsimps @{thms' sing_times_sing sing_if})) 3
-                |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
+                |> Conv.gconv_rule (Simplifier.rewrite (ctxt' addsimps @{thms' sing_times_sing sing_if})) 3
+                |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt'
                 |> singleton (Variable.export ctxt ctxt0)
                 |> Drule.zero_var_indexes
         val _ = Phi_Reasoner.info_pretty_generic ctxt00 0 (fn () => let open Pretty in
