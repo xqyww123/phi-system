@@ -6,7 +6,7 @@ val is_numeral : term -> bool
 val is_literal : term -> bool
 
 val collect_statistics : Phi_Working_Mode.working_mode -> time -> thm -> Proof.context -> Proof.context
-val guess : Proof.context -> PLPR_Pattern.bv_typs -> time -> term -> cterm option
+val guess : Proof.context -> bv_typs -> time -> term -> cterm option
 
 val synthesisable_literals : Symtab.set Synchronized.var
 

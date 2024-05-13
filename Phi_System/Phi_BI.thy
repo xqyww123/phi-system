@@ -159,29 +159,29 @@ ML_file \<open>library/tools/simp_congruence.ML\<close>
 
 subsection \<open>Inhabitance\<close>
 
-definition Inhabited :: " 'a BI \<Rightarrow> bool "
-  where "Inhabited S = (\<exists>p. p \<Turnstile> S)"
-  \<comment> \<open>\<open>Inhabited S\<close> should be always an atom in the view of ATPs.
+definition Satisfiable :: " 'a BI \<Rightarrow> bool "
+  where "Satisfiable S = (\<exists>p. p \<Turnstile> S)"
+  \<comment> \<open>\<open>Satisfiable S\<close> should be always regarded as an atom in the view of ATPs.
 
-      The fallback of extracting implied pure facts returns the original \<open>Inhabited T\<close> unchanged,
-      \<open>P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Inhabited P\<close> where \<open>Inhabited P\<close> should be regarded as an atom.\<close>
+      The fallback of extracting implied pure facts returns the original \<open>Satisfiable T\<close> unchanged,
+      \<open>P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Satisfiable P\<close> where \<open>Satisfiable P\<close> should be regarded as an atom.\<close>
 
-definition Inhabited_Type
-  where \<open>Inhabited_Type T \<longleftrightarrow> (\<exists>x. Inhabited (x \<Ztypecolon> T))\<close>
+definition Inhabited
+  where \<open>Inhabited T \<longleftrightarrow> (\<exists>x. Satisfiable (x \<Ztypecolon> T))\<close>
 
 
 abbreviation Inhabitance_Implication :: \<open>'a BI \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 10)
-  where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> \<r>EIF (Inhabited S) P \<close>
+  where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> \<r>EIF (Satisfiable S) P \<close>
   \<comment> \<open>P is weaker than S. We want to get a simpler P and as strong as possible. \<close>
 
 abbreviation Sufficient_Inhabitance :: \<open>bool \<Rightarrow> 'a BI \<Rightarrow> bool\<close> (infix "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>" 10)
-  where \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S \<equiv> \<r>ESC P (Inhabited S) \<close>
+  where \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S \<equiv> \<r>ESC P (Satisfiable S) \<close>
   \<comment> \<open>P is stronger than S. We want to get a simpler P and as weak as possible. \<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
-                      and \<open>_ \<longrightarrow> Inhabited ?X\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
-                      and \<open>Inhabited_Type ?T\<close>  \<Rightarrow> \<open>Inhabited_Type ?T\<close>      (100)
+  \<phi>reason_default_pattern \<open>Satisfiable ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
+                      and \<open>_ \<longrightarrow> Satisfiable ?X\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
+                      and \<open>Inhabited ?T\<close>  \<Rightarrow> \<open>Inhabited ?T\<close>      (100)
 ]]
 
 \<phi>reasoner_group extract_pure_phity = (10, [10,10]) for (\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>, \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close>)
@@ -190,42 +190,42 @@ declare [[
 
 subsubsection \<open>Basic Rules\<close>
 
-lemma Inhabited_I:
-  \<open>x \<Turnstile> S \<Longrightarrow> Inhabited S\<close>
-  unfolding Inhabited_def ..
+lemma Satisfiable_I:
+  \<open>x \<Turnstile> S \<Longrightarrow> Satisfiable S\<close>
+  unfolding Satisfiable_def ..
 
-lemma Inhabited_fallback:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Inhabited X \<close>
+lemma Satisfiable_fallback:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Satisfiable X \<close>
   unfolding \<r>EIF_def by blast
 
-lemma Suf_Inhabited_fallback:
-  \<open> Inhabited X \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X \<close>
+lemma Suf_Satisfiable_fallback:
+  \<open> Satisfiable X \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X \<close>
   unfolding \<r>ESC_def by blast
 
-\<phi>reasoner_ML Inhabited_fallback default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) =
+\<phi>reasoner_ML Satisfiable_fallback default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
-  else SOME ((ctxt, @{thm Inhabited_fallback} RS sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Satisfiable_fallback} RS sequent), Seq.empty)
 )\<close>
 
-\<phi>reasoner_ML Suf_Inhabited_fallback default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> _\<close>) =
+\<phi>reasoner_ML Suf_Satisfiable_fallback default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
-  else SOME ((ctxt, @{thm Suf_Inhabited_fallback} RS sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Suf_Satisfiable_fallback} RS sequent), Seq.empty)
 )\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
-\<Longrightarrow> Inhabited A\<close>
+\<Longrightarrow> Satisfiable A\<close>
   unfolding \<r>ESC_def Premise_def
   by blast
 
 lemma inhabited_type_EIF':
-  \<open> \<r>EIF (Inhabited_Type T) (\<exists>x. Inhabited (x \<Ztypecolon> T)) \<close>
-  unfolding Inhabited_Type_def \<r>EIF_def
+  \<open> \<r>EIF (Inhabited T) (\<exists>x. Satisfiable (x \<Ztypecolon> T)) \<close>
+  unfolding Inhabited_def \<r>EIF_def
   by blast
 
 bundle deriving_intabited_type = inhabited_type_EIF'[\<phi>reason default %extract_pure]
@@ -254,8 +254,8 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Abstract Domain\<close>
 
-lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (x \<Ztypecolon> T)"
-  unfolding Inhabited_def \<phi>Type_def by blast
+lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> Satisfiable (x \<Ztypecolon> T)"
+  unfolding Satisfiable_def \<phi>Type_def by blast
 
 definition Abstract_Domain :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Abstract_Domain T d \<longleftrightarrow> (\<forall>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> d x)\<close>
@@ -293,47 +293,47 @@ declare [[
 subsubsection \<open>Extracting Pure Facts\<close>
 
 lemma Inhabitance_Implication_\<A>EIF [\<phi>reason %extract_\<i>\<m>\<p>\<l>\<i>\<e>\<s>]:
-  \<open> \<r>ESC A' (Inhabited A)
+  \<open> \<r>ESC A' (Satisfiable A)
 \<Longrightarrow> \<r>EIF (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) (A' \<longrightarrow> P) \<close>
   unfolding \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma Inhabitance_Implication_\<A>EIF_Sat:
   \<open> \<r>EIF (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) ((\<exists>v. v \<Turnstile> A) \<longrightarrow> P) \<close>
-  unfolding \<r>EIF_def Inhabited_def
+  unfolding \<r>EIF_def Satisfiable_def
   by blast
 
 lemma Inhabitance_Implication_\<A>ESC[\<phi>reason %extract_\<i>\<m>\<p>\<l>\<i>\<e>\<s>]:
-  \<open> \<r>EIF (Inhabited A) A'
+  \<open> \<r>EIF (Satisfiable A) A'
 \<Longrightarrow> \<r>ESC (A' \<longrightarrow> P) (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) \<close>
   unfolding \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma Inhabitance_Implication_\<A>ESC_Sat:
   \<open> \<r>ESC ((\<exists>v. v \<Turnstile> A) \<longrightarrow> P) (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) \<close>
-  unfolding \<r>ESC_def \<r>EIF_def Inhabited_def
+  unfolding \<r>ESC_def \<r>EIF_def Satisfiable_def
   by blast
 
 lemma Sufficient_Inhabitance_\<A>EIF[\<phi>reason %extract_\<i>\<m>\<p>\<l>\<i>\<e>\<s>]:
-  \<open> \<r>EIF (Inhabited A) A'
+  \<open> \<r>EIF (Satisfiable A) A'
 \<Longrightarrow> \<r>EIF (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) (P \<longrightarrow> A') \<close>
   unfolding \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma Sufficient_Inhabitance_\<A>EIF_Sat:
   \<open> \<r>EIF (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) (P \<longrightarrow> (\<exists>v. v \<Turnstile> A)) \<close>
-  unfolding \<r>EIF_def \<r>ESC_def Inhabited_def
+  unfolding \<r>EIF_def \<r>ESC_def Satisfiable_def
   by blast
 
 lemma Sufficient_Inhabitance_\<A>ESC[\<phi>reason %extract_\<i>\<m>\<p>\<l>\<i>\<e>\<s>]:
-  \<open> \<r>ESC A' (Inhabited A)
+  \<open> \<r>ESC A' (Satisfiable A)
 \<Longrightarrow> \<r>ESC (P \<longrightarrow> A') (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) \<close>
   unfolding \<r>EIF_def \<r>ESC_def
   by blast
 
 lemma Sufficient_Inhabitance_\<A>ESC_Sat:
   \<open> \<r>ESC (P \<longrightarrow> (\<exists>v. v \<Turnstile> A)) (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) \<close>
-  unfolding \<r>ESC_def Inhabited_def
+  unfolding \<r>ESC_def Satisfiable_def
   by blast
 
 bundle extracting_Inhabitance_Implication_sat =
@@ -388,19 +388,19 @@ lemma [\<phi>reason default %extract_pure_phity]:
 lemma [\<phi>reason default %extract_pure_phity]:
   \<open> Abstract_Domain\<^sub>L T D
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<exists>x. D x)
-\<Longrightarrow> Inhabited_Type T \<close>
-  unfolding Inhabited_Type_def Abstract_Domain\<^sub>L_def Premise_def \<r>ESC_def
+\<Longrightarrow> Inhabited T \<close>
+  unfolding Inhabited_def Abstract_Domain\<^sub>L_def Premise_def \<r>ESC_def
   by blast
 
 subsubsection \<open>Fallback\<close>
 
 lemma [\<phi>reason default %abstract_domain_fallback]:
-  \<open> Abstract_Domain T (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+  \<open> Abstract_Domain T (\<lambda>x. Satisfiable (x \<Ztypecolon> T)) \<close>
   unfolding Abstract_Domain_def \<r>EIF_def
   by simp
 
 lemma [\<phi>reason default %abstract_domain_fallback]:
-  \<open> Abstract_Domain\<^sub>L T (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+  \<open> Abstract_Domain\<^sub>L T (\<lambda>x. Satisfiable (x \<Ztypecolon> T)) \<close>
   unfolding Abstract_Domain\<^sub>L_def \<r>ESC_def
   by simp
 
@@ -409,7 +409,7 @@ subsubsection \<open>Configuration\<close>
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
     fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*\<r>EIF*) $ (
-                            _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)) $ _)) =>
+                            _ (*Satisfiable*) $ (_ (*\<phi>Type*) $ x $ _)) $ _)) =>
       if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
       then NONE
       else error (let open Pretty in string_of (chunks [
@@ -419,7 +419,7 @@ declare [[
 
   \<phi>reason_default_pattern_ML \<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> _ \<Ztypecolon> _\<close> \<Rightarrow> \<open>
     fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*\<r>ESC*) $ _ $ (
-                            _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)))) =>
+                            _ (*Satisfiable*) $ (_ (*\<phi>Type*) $ x $ _)))) =>
       if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
       then NONE
       else error (let open Pretty in string_of (chunks [
@@ -434,11 +434,11 @@ setup \<open> PLPR_Template_Properties.add_property_kinds [
 
 subsubsection \<open>Template Instantiation\<close>
 
-lemma Inhabited_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
+lemma Satisfiable_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> Abstract_Domain\<^sub>L T D'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. D' x = D x) @tag \<A>_template_reason None
-\<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<equiv> D x \<close>
+\<Longrightarrow> Satisfiable (x \<Ztypecolon> T) \<equiv> D x \<close>
   unfolding \<r>EIF_def \<r>ESC_def Action_Tag_def Abstract_Domain_def Abstract_Domain\<^sub>L_def Premise_def
   by (clarsimp, smt (verit, best))
 
@@ -447,42 +447,42 @@ lemma Inhabited_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
 (*depreciate!*)
 subsubsection \<open>The Variant of Inhabitance for Separation Carrier\<close>
 
-definition Inhabited\<^sub>M\<^sub>C :: " 'a::sep_carrier BI \<Rightarrow> bool " where  "Inhabited\<^sub>M\<^sub>C S = (\<exists>p. p \<Turnstile> S \<and> mul_carrier p)"
+definition Satisfiable\<^sub>M\<^sub>C :: " 'a::sep_carrier BI \<Rightarrow> bool " where  "Satisfiable\<^sub>M\<^sub>C S = (\<exists>p. p \<Turnstile> S \<and> mul_carrier p)"
 
 abbreviation Inhabitance_Implication\<^sub>M\<^sub>C :: \<open>'a::sep_carrier BI \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C" 10)
-  where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P \<equiv> Inhabited\<^sub>M\<^sub>C S \<longrightarrow> P @tag \<A>EIF\<close>
+  where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P \<equiv> Satisfiable\<^sub>M\<^sub>C S \<longrightarrow> P @tag \<A>EIF\<close>
   \<comment> \<open>P is weaker than S. We want to get a simpler P and as strong as possible. \<close>
 
 abbreviation Sufficient_Inhabitance\<^sub>M\<^sub>C :: \<open>bool \<Rightarrow> 'a::sep_carrier BI \<Rightarrow> bool\<close> (infix "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C" 10)
-  where \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C S \<equiv> P \<longrightarrow> Inhabited\<^sub>M\<^sub>C S @tag \<A>ESC\<close>
+  where \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C S \<equiv> P \<longrightarrow> Satisfiable\<^sub>M\<^sub>C S @tag \<A>ESC\<close>
   \<comment> \<open>P is stronger than S. We want to get a simpler P and as weak as possible. \<close>
 
-lemma Inhabited\<^sub>M\<^sub>C_fallback_True:
+lemma Satisfiable\<^sub>M\<^sub>C_fallback_True:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C True \<close>
   unfolding Action_Tag_def by blast
 
-lemma Suf\<^sub>M\<^sub>C_Inhabited_fallback_True:
+lemma Suf\<^sub>M\<^sub>C_Satisfiable_fallback_True:
   \<open> False \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C X \<close>
   unfolding Action_Tag_def by blast
 
-\<phi>reasoner_ML Inhabited_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
+\<phi>reasoner_ML Satisfiable_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
-  else SOME ((ctxt, @{thm Inhabited\<^sub>M\<^sub>C_fallback_True} RS sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Satisfiable\<^sub>M\<^sub>C_fallback_True} RS sequent), Seq.empty)
 )\<close>
 
-\<phi>reasoner_ML Suf_Inhabited_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
+\<phi>reasoner_ML Suf_Satisfiable_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
-  else SOME ((ctxt, @{thm Suf\<^sub>M\<^sub>C_Inhabited_fallback_True} RS sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Suf\<^sub>M\<^sub>C_Satisfiable_fallback_True} RS sequent), Seq.empty)
 )\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C A
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
-\<Longrightarrow> Inhabited\<^sub>M\<^sub>C A\<close>
+\<Longrightarrow> Satisfiable\<^sub>M\<^sub>C A\<close>
   unfolding Action_Tag_def Premise_def
   by blast
 
@@ -525,7 +525,7 @@ lemma [\<phi>reason default 1]:
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C _\<close> \<Rightarrow> \<open>
     fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ (
-                            _ (*Inhabited\<^sub>M\<^sub>C*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _)) =>
+                            _ (*Satisfiable\<^sub>M\<^sub>C*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _)) =>
       if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
       then NONE
       else error (let open Pretty in string_of (chunks [
@@ -535,7 +535,7 @@ declare [[
 
   \<phi>reason_default_pattern_ML \<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C _ \<Ztypecolon> _\<close> \<Rightarrow> \<open>
     fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ _ $ (
-                            _ (*Inhabited\<^sub>M\<^sub>C*) $ (_ (*\<phi>Type*) $ x $ _))) $ _)) =>
+                            _ (*Satisfiable\<^sub>M\<^sub>C*) $ (_ (*\<phi>Type*) $ x $ _))) $ _)) =>
       if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
       then NONE
       else error (let open Pretty in string_of (chunks [
@@ -548,9 +548,9 @@ declare [[
 (*
 lemma Membership_E_Inhabitance:
   \<open> x \<Turnstile> S
-\<Longrightarrow> Inhabited S \<longrightarrow> C
+\<Longrightarrow> Satisfiable S \<longrightarrow> C
 \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by blast
+  unfolding Satisfiable_def by blast
 *)
 
 subsection \<open>Auxiliary Tag\<close>
@@ -659,9 +659,9 @@ lemma transformation_weaken:
   unfolding Transformation_def by simp
 
 lemma transformation_intro_inhab:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> Inhabited A \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> Satisfiable A \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<close>
-  unfolding Transformation_def Inhabited_def Satisfaction_def
+  unfolding Transformation_def Satisfiable_def Satisfaction_def
   by blast
 
 lemma assertion_eq_intro:
@@ -1020,7 +1020,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> P\<^sub>A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
 \<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<^sub>B
 \<Longrightarrow> \<r>EIF (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) (P\<^sub>A \<longrightarrow> P\<^sub>B \<and> P) \<close>
-  unfolding Action_Tag_def \<r>EIF_def \<r>ESC_def Inhabited_def Transformation_def
+  unfolding Action_Tag_def \<r>EIF_def \<r>ESC_def Satisfiable_def Transformation_def
   by clarsimp
 
 ML \<open>
@@ -1062,14 +1062,14 @@ lemma ToA_EIF_sat:
   \<open> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vA v : v \<Turnstile> A)
 \<Longrightarrow> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vB v : v \<Turnstile> B)
 \<Longrightarrow> \<r>EIF (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) (\<forall>v. vA v \<longrightarrow> vB v \<and> P) \<close>
-  unfolding \<r>EIF_def Inhabited_def Transformation_def Simplify_def
+  unfolding \<r>EIF_def Satisfiable_def Transformation_def Simplify_def
   by clarsimp
 
 lemma ToA_ESC_sat:
   \<open> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vA v : v \<Turnstile> A)
 \<Longrightarrow> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vB v : v \<Turnstile> B)
 \<Longrightarrow> \<r>ESC (\<forall>v. vA v \<longrightarrow> vB v \<and> P) (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<close>
-  unfolding \<r>ESC_def Inhabited_def Transformation_def Simplify_def
+  unfolding \<r>ESC_def Satisfiable_def Transformation_def Simplify_def
   by clarsimp
 
 bundle ToA_extract_pure_sat = ToA_EIF_sat[\<phi>reason %extract_pure_sat]
@@ -1110,20 +1110,20 @@ paragraph \<open>Inhabitance Reasoning - Part II\<close>
 (*TODO: move me!!*)
 
 lemma [\<phi>reason 1000]:
-  \<open> Generate_Implication_Reasoning (Inhabited X \<longrightarrow> Y) (Inhabited X) Y \<close>
+  \<open> Generate_Implication_Reasoning (Satisfiable X \<longrightarrow> Y) (Satisfiable X) Y \<close>
   unfolding Generate_Implication_Reasoning_def
   ..
 
 lemma [\<phi>reason 1100]:
   \<open> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
-\<Longrightarrow> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) (Inhabited X) P \<close>
-  unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def \<r>EIF_def
+\<Longrightarrow> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) (Satisfiable X) P \<close>
+  unfolding Generate_Implication_Reasoning_def Transformation_def Satisfiable_def \<r>EIF_def
   by blast
 
 lemma [\<phi>reason 1000]:
   \<open> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
-\<Longrightarrow> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) (Inhabited X) (Q \<and> P) \<close>
-  unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def \<r>EIF_def
+\<Longrightarrow> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) (Satisfiable X) (Q \<and> P) \<close>
+  unfolding Generate_Implication_Reasoning_def Transformation_def Satisfiable_def \<r>EIF_def
   by blast
 
 
@@ -1133,9 +1133,9 @@ notation top ("\<top>")
 
 subsubsection \<open>Rewrites\<close>
 
-lemma Top_Inhabited[simp]:
-  \<open>Inhabited \<top> \<longleftrightarrow> True\<close>
-  unfolding Inhabited_def
+lemma Top_Satisfiable[simp]:
+  \<open>Satisfiable \<top> \<longleftrightarrow> True\<close>
+  unfolding Satisfiable_def
   by clarsimp
 
 subsubsection \<open>Transformation Rules\<close>
@@ -1237,9 +1237,9 @@ lemma zero_implies_any[simp]:
 
 subsubsection \<open>Rewrites\<close>
 
-lemma Bot_Inhabited[simp]:
-  \<open> Inhabited 0 \<longleftrightarrow> False \<close>
-  unfolding Inhabited_def
+lemma Bot_Satisfiable[simp]:
+  \<open> Satisfiable 0 \<longleftrightarrow> False \<close>
+  unfolding Satisfiable_def
   by clarsimp
 
 subsubsection \<open>Transformation Rules\<close>
@@ -1341,12 +1341,12 @@ lemma [\<phi>reason %extract_pure]:
 
 lemma [\<phi>reason %extract_pure]:
   \<open> True \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> 1 \<close>
-  unfolding \<r>ESC_def Inhabited_def
+  unfolding \<r>ESC_def Satisfiable_def
   by simp
 
-lemma Emp_Inhabited[simp]:
-  \<open> Inhabited 1 \<longleftrightarrow> True \<close>
-  unfolding Inhabited_def
+lemma Emp_Satisfiable[simp]:
+  \<open> Satisfiable 1 \<longleftrightarrow> True \<close>
+  unfolding Satisfiable_def
   by clarsimp
 
 subsubsection \<open>Transformation Rules\<close>
@@ -1385,30 +1385,30 @@ lemma Disjunction_expn[iff, \<phi>expns]:
   \<open>p \<Turnstile> (A + B) \<longleftrightarrow> p \<Turnstile> A \<or> p \<Turnstile> B\<close>
   unfolding Satisfaction_def by simp
 
-lemma Add_Disj_Inhabited[simp]:
-  \<open> Inhabited (A + B) \<longleftrightarrow> Inhabited A \<or> Inhabited B \<close>
-  unfolding Inhabited_def
+lemma Add_Disj_Satisfiable[simp]:
+  \<open> Satisfiable (A + B) \<longleftrightarrow> Satisfiable A \<or> Satisfiable B \<close>
+  unfolding Satisfiable_def
   by clarsimp blast
 
 lemma [\<phi>reason %cutting]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
 \<Longrightarrow> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> B
 \<Longrightarrow> X + Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<or> B\<close>
-  unfolding \<r>EIF_def Inhabited_def
+  unfolding \<r>EIF_def Satisfiable_def
   by simp blast
 
 lemma [\<phi>reason %cutting]:
   \<open> A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X
 \<Longrightarrow> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> Y
 \<Longrightarrow> A \<or> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X + Y\<close>
-  unfolding \<r>ESC_def Inhabited_def
+  unfolding \<r>ESC_def Satisfiable_def
   by simp blast
 
 text \<open>The above two rules are reversible.\<close>
 
 lemma set_plus_inhabited[elim!]:
-  \<open>Inhabited (S + T) \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def
+  \<open>Satisfiable (S + T) \<Longrightarrow> (Satisfiable S \<Longrightarrow> C) \<Longrightarrow> (Satisfiable T \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def
   by (simp, blast)
 
 lemma implies_union:
@@ -1490,25 +1490,25 @@ hide_fact ToA_disj_target_A' ToA_disj_target_B'
 subsection \<open>Existential Quantification\<close>
 
 lemma ExSet_inhabited_E[elim!]:
-  \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def
+  \<open>Satisfiable (ExSet S) \<Longrightarrow> (\<And>x. Satisfiable (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def
   by simp blast
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<And>x. S x \<i>\<m>\<p>\<l>\<i>\<e>\<s> C x)
 \<Longrightarrow> ExSet S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ex C \<close>
-  unfolding Inhabited_def \<r>EIF_def
+  unfolding Satisfiable_def \<r>EIF_def
   by (simp; blast)
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<And>x. C x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S x)
 \<Longrightarrow> Ex C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> ExSet S \<close>
-  unfolding Inhabited_def \<r>ESC_def
+  unfolding Satisfiable_def \<r>ESC_def
   by (simp; blast)
 
-lemma ExSet_Inhabited[simp]:
-  \<open> Inhabited (\<exists>*x. S x) \<longleftrightarrow> (\<exists>x. Inhabited (S x)) \<close>
-  unfolding Inhabited_def
+lemma ExSet_Satisfiable[simp]:
+  \<open> Satisfiable (\<exists>*x. S x) \<longleftrightarrow> (\<exists>x. Satisfiable (S x)) \<close>
+  unfolding Satisfiable_def
   by clarsimp blast
 
 
@@ -1764,8 +1764,8 @@ lemma Additive_Conj_expn[iff, \<phi>expns]:
   unfolding Satisfaction_def Additive_Conj_def by simp
 
 lemma additive_conj_inhabited_E[elim!]:
-  \<open>Inhabited (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def
+  \<open>Satisfiable (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> (Satisfiable A \<Longrightarrow> Satisfiable B \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def
   by simp blast
 
 lemma [\<phi>reason %cutting]:
@@ -1779,7 +1779,7 @@ lemma
   \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
 \<Longrightarrow> Q \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> B
 \<Longrightarrow> P \<and> Q \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A \<and>\<^sub>B\<^sub>I B\<close>
-  unfolding Action_Tag_def Inhabited_def
+  unfolding Action_Tag_def Satisfiable_def
   oops
 
 text \<open>There is no sufficiency reasoning for additive conjunction, because the sufficient condition
@@ -1850,20 +1850,20 @@ text \<open>This is the only widely used additive conjunction under the interpre
 subsubsection \<open>Basic Rules\<close>
 
 lemma Subjection_inhabited_E[elim!]:
-  \<open>Inhabited (S \<s>\<u>\<b>\<j> P) \<Longrightarrow> (Inhabited S \<Longrightarrow> P \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def
+  \<open>Satisfiable (S \<s>\<u>\<b>\<j> P) \<Longrightarrow> (Satisfiable S \<Longrightarrow> P \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def
   by simp
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> C)
 \<Longrightarrow> S \<s>\<u>\<b>\<j> P \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> C \<close>
-  unfolding Inhabited_def Action_Tag_def Premise_def \<r>EIF_def
+  unfolding Satisfiable_def Action_Tag_def Premise_def \<r>EIF_def
   by simp
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S)
 \<Longrightarrow> P \<and> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S \<s>\<u>\<b>\<j> P \<close>
-  unfolding Inhabited_def Action_Tag_def Premise_def \<r>ESC_def
+  unfolding Satisfiable_def Action_Tag_def Premise_def \<r>ESC_def
   by simp 
 
 lemma Subjection_imp_I:
@@ -2033,8 +2033,8 @@ subsection \<open>Multiplicative Conjunction\<close>
 text \<open>Is the \<^term>\<open>(*) :: ('a::sep_magma) BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close> directly\<close>
 
 lemma set_mult_inhabited[elim!]:
-  \<open>Inhabited (S * T) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def
+  \<open>Satisfiable (S * T) \<Longrightarrow> (Satisfiable S \<Longrightarrow> Satisfiable T \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def
   by (simp, blast)
 
 lemma [\<phi>reason %cutting]:
@@ -2048,7 +2048,7 @@ lemma
   \<open> A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X
 \<Longrightarrow> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> Y
 \<Longrightarrow> A \<and> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X * Y\<close>
-  unfolding Action_Tag_def Inhabited_def
+  unfolding Action_Tag_def Satisfiable_def
   apply clarsimp
   oops
 
@@ -2217,7 +2217,7 @@ subsubsection \<open>Basic Rules\<close>
 lemma [\<phi>reason %cutting]:
   \<open> (\<And>i\<in>S. A i \<i>\<m>\<p>\<l>\<i>\<e>\<s> P i)
 \<Longrightarrow> (\<big_ast>i\<in>S. A i) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>i\<in>S. P i) \<close>
-  unfolding Mul_Quant_def Action_Tag_def Inhabited_def meta_Ball_def Premise_def \<r>EIF_def
+  unfolding Mul_Quant_def Action_Tag_def Satisfiable_def meta_Ball_def Premise_def \<r>EIF_def
   by (clarsimp; metis Satisfaction_def ex_in_conv prod_zero zero_set_iff)
 
 
@@ -2406,8 +2406,8 @@ lemma BI_All_comm:
   by (simp, blast)
 
 lemma [elim!]:
-  \<open>Inhabited (AllSet S) \<Longrightarrow> (Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def
+  \<open>Satisfiable (AllSet S) \<Longrightarrow> (Satisfiable (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def
   by clarsimp blast
 
 lemma [\<phi>inhabitance_rule 1000]:
@@ -2511,21 +2511,21 @@ lemma Itself_expn[\<phi>expns, iff]:
   unfolding \<phi>Type_def Itself_def Satisfaction_def by auto
 
 lemma Itself_inhabited_E[elim!]:
-  \<open> Inhabited (x \<Ztypecolon> Itself) \<Longrightarrow> C \<Longrightarrow> C \<close> .
+  \<open> Satisfiable (x \<Ztypecolon> Itself) \<Longrightarrow> C \<Longrightarrow> C \<close> .
 
 lemma Itself_inhabited[\<phi>reason %cutting, simp, intro!]:
-  \<open> Inhabited (x \<Ztypecolon> Itself) \<close>
-  unfolding Inhabited_def
+  \<open> Satisfiable (x \<Ztypecolon> Itself) \<close>
+  unfolding Satisfiable_def
   by blast
 
 lemma [\<phi>reason %cutting]:
   \<open> Abstract_Domain Itself (\<lambda>_. True) \<close>
-  unfolding Abstract_Domain_def \<r>EIF_def Inhabited_def
+  unfolding Abstract_Domain_def \<r>EIF_def Satisfiable_def
   by clarsimp
 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L Itself (\<lambda>_. True) \<close>
-  unfolding Abstract_Domain\<^sub>L_def \<r>ESC_def Inhabited_def
+  unfolding Abstract_Domain\<^sub>L_def \<r>ESC_def Satisfiable_def
   by simp
 
 lemma Itself_E:
@@ -2600,7 +2600,7 @@ lemma [\<phi>reason %extract_pure]:
 
 lemma [\<phi>reason %extract_pure]:
   \<open>True \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<top>\<^sub>\<phi>\<close>
-  unfolding \<r>ESC_def Inhabited_def
+  unfolding \<r>ESC_def Satisfiable_def
   by simp
 
 subsubsection \<open>Transformation Rules\<close>
@@ -2661,12 +2661,12 @@ subsubsection \<open>Basic Rules\<close>
 
 lemma [\<phi>reason %extract_pure]:
   \<open>x \<Ztypecolon> \<bottom>\<^sub>\<phi> \<i>\<m>\<p>\<l>\<i>\<e>\<s> False \<close>
-  unfolding \<r>EIF_def \<phi>Bot.unfold Inhabited_def
+  unfolding \<r>EIF_def \<phi>Bot.unfold Satisfiable_def
   by simp
 
 lemma [\<phi>reason %extract_pure]:
   \<open>False \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<bottom>\<^sub>\<phi>\<close>
-  unfolding \<r>ESC_def \<phi>Bot.unfold Inhabited_def
+  unfolding \<r>ESC_def \<phi>Bot.unfold Satisfiable_def
   by simp
 
 subsubsection \<open>Transformation Rules\<close>
@@ -2715,7 +2715,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> fst x \<Ztypecolon> T1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> C1
 \<Longrightarrow> snd x \<Ztypecolon> T2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> C2
 \<Longrightarrow> x \<Ztypecolon> T1 \<^emph> T2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> C1 \<and> C2\<close>
-  unfolding Inhabited_def Action_Tag_def \<r>EIF_def
+  unfolding Satisfiable_def Action_Tag_def \<r>EIF_def
   by (cases x; simp, blast)
 
 paragraph \<open>Frame Rules\<close>
@@ -2740,7 +2740,7 @@ lemma \<comment> \<open>will be derived later\<close>:
   \<open> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Abstract_Domain U D\<^sub>U
 \<Longrightarrow> Abstract_Domain (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y) \<close>
-  unfolding Abstract_Domain_def Action_Tag_def Inhabited_def
+  unfolding Abstract_Domain_def Action_Tag_def Satisfiable_def
   by (clarsimp, blast)
 *)
 
@@ -2810,7 +2810,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> snd x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q)
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[C] U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> (C \<longrightarrow> Q) \<close>
-  unfolding Inhabited_def \<r>EIF_def
+  unfolding Satisfiable_def \<r>EIF_def
   by (cases C; clarsimp; blast)
 
 paragraph \<open>Frame Rules\<close>
@@ -2844,7 +2844,7 @@ lemma \<phi>None_expn[\<phi>expns, simp]:
   by simp
 
 lemma \<phi>None_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+  \<open>Satisfiable (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 subsubsection \<open>Rewrites\<close>
 
@@ -2908,13 +2908,13 @@ lemma \<phi>Option_Insertion_expn[simp, \<phi>expns]:
 lemma [\<phi>reason 1000]:
   \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
 \<Longrightarrow> x \<Ztypecolon> \<half_blkcirc> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> pred_option P x\<close>
-  unfolding Action_Tag_def Inhabited_def
+  unfolding Action_Tag_def Satisfiable_def
   by (cases x; clarsimp)
 
 lemma [\<phi>reason 1000]:
   \<open> (\<And>x. P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T)
 \<Longrightarrow> pred_option P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<half_blkcirc> T\<close>
-  unfolding Action_Tag_def Inhabited_def
+  unfolding Action_Tag_def Satisfiable_def
   by (cases x; clarsimp)
 *)
 
@@ -2963,7 +2963,7 @@ subsubsection \<open>Properties\<close> \<comment> \<open>Some properties have t
 lemma Abstract_Domain_\<phi>Some[\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> Abstract_Domain (\<black_circle> T) D \<close>
-  unfolding Abstract_Domain_def \<r>EIF_def Inhabited_def
+  unfolding Abstract_Domain_def \<r>EIF_def Satisfiable_def
   by clarsimp
 
 
@@ -3105,7 +3105,7 @@ paragraph \<open>Reasoning Properties\<close>
 lemma [\<phi>reason 1000]:
   \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
 \<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[C] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<longrightarrow> P x\<close>
-  unfolding \<r>EIF_def Inhabited_def
+  unfolding \<r>EIF_def Satisfiable_def
   by clarsimp blast
 
 
@@ -3723,15 +3723,15 @@ subsubsection \<open>Extracting Pure Facts\<close>
 paragraph \<open>Identity_Element\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<r>ESC Q (Inhabited S)
+  \<open> \<r>ESC Q (Satisfiable S)
 \<Longrightarrow> \<r>EIF (Identity_Element\<^sub>I S P) (Q \<longrightarrow> P) \<close>
-  unfolding Identity_Element\<^sub>I_def \<r>ESC_def \<r>EIF_def Transformation_def Inhabited_def
+  unfolding Identity_Element\<^sub>I_def \<r>ESC_def \<r>EIF_def Transformation_def Satisfiable_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<r>EIF (Inhabited S) P
+  \<open> \<r>EIF (Satisfiable S) P
 \<Longrightarrow> \<r>EIF (Identity_Element\<^sub>E S) P \<close>
-  unfolding Identity_Element\<^sub>E_def \<r>ESC_def \<r>EIF_def Transformation_def Inhabited_def
+  unfolding Identity_Element\<^sub>E_def \<r>ESC_def \<r>EIF_def Transformation_def Satisfiable_def
   by blast
 
 lemma Identity_Element\<^sub>I_\<A>EIF_sat:
@@ -4197,7 +4197,7 @@ lemma [\<phi>reason %identity_element_cut]:
 
 lemma
   \<open> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q) \<Longrightarrow> (P \<Longrightarrow> Identity_Element\<^sub>I A Q)\<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def Inhabited_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def Satisfiable_def
   by (cases P; clarsimp)
 
 lemma [\<phi>reason %identity_element_cut]:
@@ -6170,7 +6170,7 @@ val NToA_init_having_Q = @{lemma
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>\<close>
-  by (clarsimp simp: \<r>EIF_def Simplify_def Identity_Element\<^sub>I_def Inhabited_def Premise_def
+  by (clarsimp simp: \<r>EIF_def Simplify_def Identity_Element\<^sub>I_def Satisfiable_def Premise_def
                      Action_Tag_def Transformation_def, blast)}
 \<close>
 

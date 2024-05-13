@@ -174,12 +174,12 @@ lemma Vals_expn [simp, \<phi>expns]:
   unfolding Vals_def \<phi>Type_def by simp
 
 lemma Val_inh_rewr:
-  \<open>Inhabited (x \<Ztypecolon> Val val T) \<equiv> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
-  unfolding Inhabited_def by clarsimp
+  \<open>Satisfiable (x \<Ztypecolon> Val val T) \<equiv> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
+  unfolding Satisfiable_def by clarsimp
 
 lemma Vals_inh_rewr:
-  \<open>Inhabited (x \<Ztypecolon> Vals val T) \<equiv> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
-  unfolding Inhabited_def by clarsimp
+  \<open>Satisfiable (x \<Ztypecolon> Vals val T) \<equiv> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
+  unfolding Satisfiable_def by clarsimp
 
 
 paragraph \<open>Syntax\<close>
@@ -360,7 +360,7 @@ definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg se
   where \<open>Well_Typed_Vals TYs = {vs. list_all2 (\<lambda>v T. v \<in> Well_Type T) (to_vals (\<phi>arg.dest vs)) TYs}\<close>
 
 definition \<phi>_Have_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> TY list \<Rightarrow> bool\<close>
-  where \<open>\<phi>_Have_Types spec TYs = (\<forall>v. Inhabited (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
+  where \<open>\<phi>_Have_Types spec TYs = (\<forall>v. Satisfiable (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<Rightarrow> \<open>\<phi>_Have_Types ?S _\<close> (100)]]
 
@@ -372,11 +372,11 @@ definition SType_Of :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY\<close> ("\<t>\<
 
 lemma SType_Of_unfold:
   \<open> Weak_Semantic_Type T TY
-\<Longrightarrow> Inhabited_Type T
+\<Longrightarrow> Inhabited T
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T \<equiv> TY \<close>
-  unfolding Weak_Semantic_Type_def Inhabited_Type_def SType_Of_def atomize_eq
+  unfolding Weak_Semantic_Type_def Inhabited_def SType_Of_def atomize_eq
   using Well_Type_unique
-  by (clarsimp, smt (verit, del_insts) Inhabited_def someI)
+  by (clarsimp, smt (verit, del_insts) Satisfiable_def someI)
 
 
 subsection \<open>Zero Value\<close>
@@ -408,7 +408,7 @@ lemma [\<phi>reason default %semantic_zero_val_fail]:
 lemma [\<phi>reason %extract_pure]:
   \<open> Abstract_Domain T P
 \<Longrightarrow> \<r>EIF (Semantic_Zero_Val TY T x) (P x) \<close>
-  unfolding Abstract_Domain_def Semantic_Zero_Val_def \<r>EIF_def Inhabited_def
+  unfolding Abstract_Domain_def Semantic_Zero_Val_def \<r>EIF_def Satisfiable_def
   by blast
 
 (*lemma Semantic_Zero_Val_brute:
@@ -854,10 +854,10 @@ proof clarsimp
 subsection \<open>Injective\<close>
 
 lemma is_singleton_I''[\<phi>reason 1000]:
-  \<open> Inhabited A
+  \<open> Satisfiable A
 \<Longrightarrow> Is_Functional A
 \<Longrightarrow> is_singleton A\<close>
-  unfolding Satisfaction_def Inhabited_def Is_Functional_def
+  unfolding Satisfaction_def Satisfiable_def Is_Functional_def
   by (metis empty_iff is_singletonI')
   
 lemma [\<phi>reason 1000]:
@@ -1210,10 +1210,10 @@ lemma \<phi>frame:
     using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R * R'\<close>],
           simplified mult.assoc[symmetric], THEN mp, OF prems(2)] prems(3) by presburger .
 
-lemma \<phi>Inhabited:
-  \<open>(Inhabited X \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
+lemma \<phi>Satisfiable:
+  \<open>(Satisfiable X \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding \<phi>Procedure_def Inhabited_def
+  unfolding \<phi>Procedure_def Satisfiable_def
   by (meson INTERP_SPEC sep_conj_expn)
 
 

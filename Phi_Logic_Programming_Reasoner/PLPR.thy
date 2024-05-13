@@ -1358,7 +1358,7 @@ text \<open>\<phi>-LPR reasoning rules are specially designed for execution of l
   boolean facts implied inside a reasoning rule to give such direct forms.
   One usage of thie feature is later in the \<phi>-deriver where inductive hypotheses (such as a transformation)
   can imply boolean conditions necessary to the proof.
-  For example, \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> A transforms B with Q\<close> implies \<open>P \<longrightarrow> Inhabited A \<longrightarrow> Inhabited B \<and> Q\<close>
+  For example, \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> A transforms B with Q\<close> implies \<open>P \<longrightarrow> Satisfiable A \<longrightarrow> Satisfiable B \<and> Q\<close>
 \<close>
 
 definition \<open>\<r>EIF P Q \<longleftrightarrow> (P \<longrightarrow> Q)\<close>

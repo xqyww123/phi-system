@@ -166,9 +166,9 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
   Lower mode: the unknown locates at the condition part of the obligation, and we infer an instantiation
               as strong as possible (but does not weaken the entire obligation)
 *)
-fun predicate_infer__contains_bad allows_Inhabited_and_Sat =
-      exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => allows_Inhabited_and_Sat
-                       | Const(\<^const_name>\<open>Satisfaction\<close>, _) => allows_Inhabited_and_Sat
+fun predicate_infer__contains_bad allows_Satisfiable_and_Sat =
+      exists_subterm (fn Const(\<^const_name>\<open>Satisfiable\<close>, _) => allows_Satisfiable_and_Sat
+                       | Const(\<^const_name>\<open>Satisfaction\<close>, _) => allows_Satisfiable_and_Sat
                        | Var _ => true
                        | _ => false)
 
@@ -192,14 +192,14 @@ fun predicate_infer_var upper (SOME var) (phi,ctxt,sequent) =
                end
              ) vars
 
-      val allows_Inhabited_and_Sat = (*the inferred condition contains Inhabited and Satisfaction
+      val allows_Satisfiable_and_Sat = (*the inferred condition contains Satisfiable and Satisfaction
                                        only when they are also contained in the definition of the \<phi>-type,
                                        to prevent the result corrupted by noises*)
-            exists (exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+            exists (exists_subterm (fn Const(\<^const_name>\<open>Satisfiable\<close>, _) => true
                                      | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
                                      | _ => false) o Thm.prop_of) (#equations phi)
               |> not
-      val exists_bad = predicate_infer__contains_bad allows_Inhabited_and_Sat
+      val exists_bad = predicate_infer__contains_bad allows_Satisfiable_and_Sat
 
       
       (*upper: true for parsing the conclusion part, false for parsing conditions*)
@@ -249,7 +249,7 @@ fun predicate_infer_var upper (SOME var) (phi,ctxt,sequent) =
       fun inst_Lw' context X = case inst_Lw context X of SOME ret => ret
                                   | NONE => \<^Const>\<open>True\<close>
 
-      val exists_bad'Pr = exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+      val exists_bad'Pr = exists_subterm (fn Const(\<^const_name>\<open>Satisfiable\<close>, _) => true
                                            | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
                                            | Var v => v <> var
                                            | _ => false)

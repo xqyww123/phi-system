@@ -48,7 +48,7 @@ fun del_thm thm ctxt =
 
 )
 *)
-(*sequent should be in shape \<open>(Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>.
+(*sequent should be in shape \<open>(Satisfiable X \<Longrightarrow> C) \<Longrightarrow> C\<close>.
   returns all facts implied in the inhabitance. *)
 
 val Do_Extract_Implied_Facts =
@@ -93,7 +93,7 @@ fun extract_implied_fact {wrap_all} ctxt statement0 =
 fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<r>EIF\<close> $ _ $ _))
     = true
 (*| is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
-      \<^Const>\<open>HOL.implies\<close> $ (\<^Const>\<open>Inhabited _\<close> $ _) $ _))
+      \<^Const>\<open>HOL.implies\<close> $ (\<^Const>\<open>Satisfiable _\<close> $ _) $ _))
     = true*)
   | is_extraction_rule _ = false
 

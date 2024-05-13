@@ -244,10 +244,10 @@ fun gen_id_ele is_left (_,name) instruction (phi0 : phi_type) thy =
 
       val simp = simplifier_by_cong [
               @{lemma' \<open> D \<equiv> D'
-                    \<Longrightarrow> (\<And>x. D' x \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> P x \<equiv> P' x)
+                    \<Longrightarrow> (\<And>x. D' x \<Longrightarrow> Satisfiable (x \<Ztypecolon> T) \<Longrightarrow> P x \<equiv> P' x)
                     \<Longrightarrow> Identity_Elements\<^sub>I T D P \<equiv> Identity_Elements\<^sub>I T D' P' \<close>
                       by (clarsimp simp add: Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
-                                             Transformation_def Inhabited_def atomize_eq, blast)},
+                                             Transformation_def Satisfiable_def atomize_eq, blast)},
               @{lemma' \<open> D \<equiv> D'
                     \<Longrightarrow> Identity_Elements\<^sub>E T D \<equiv> Identity_Elements\<^sub>E T D' \<close>
                       by simp}

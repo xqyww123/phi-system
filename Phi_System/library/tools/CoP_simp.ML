@@ -2,9 +2,9 @@ signature PHI_COP_SIMP = sig
 
 (* check if the simplification is required *)
 type pattern = term
-type trigger = Context.generic -> PLPR_Pattern.bvs * term -> bool
+type trigger = Context.generic -> bvs * term -> bool
 
-val is_simp_needed : Context.generic -> PLPR_Pattern.bvs -> term -> bool
+val is_simp_needed : Context.generic -> bvs -> term -> bool
     (*checks types and assertions recursively but never enters into objects*)
 val add_simp_pattern : pattern -> Context.generic -> Context.generic
 val add_simp_trigger : pattern * trigger -> Context.generic -> serial * Context.generic
@@ -25,8 +25,8 @@ val extract_pattern_trigger : bool Config.T
 
 (* Helpers *)
 
-val pass_recursively : (PLPR_Pattern.bvs -> term -> bool)
-                     -> PLPR_Pattern.bvs -> term -> bool
+val pass_recursively : (bvs -> term -> bool)
+                     -> bvs -> term -> bool
 
 end
 
@@ -50,7 +50,7 @@ functor Phi_CoP_Simp_GEN (RULES: PHI_COP_SIMP_RULES) : PHI_COP_SIMP = struct
 (*** Check the need of simplification ***)
 
 type pattern = term
-type trigger = Context.generic -> PLPR_Pattern.bvs * term -> bool
+type trigger = Context.generic -> bvs * term -> bool
 
 datatype checker = Chk_Pattern of term | Chk_ML of serial * pattern * trigger
 

@@ -3,7 +3,7 @@ include PHI_TYPE
 
 datatype weight = Weight of int * term ord | Leaf_W | Undefined_W
 datatype weight'= Static_W of weight
-                | Dynamic_W of (Context.generic -> PLPR_Pattern.bv_typs * term (*\<phi>-type operator*) -> weight)
+                | Dynamic_W of (Context.generic -> bv_typs * term (*\<phi>-type operator*) -> weight)
 (*A weight cannot be greater than 10000.
   The default weight is Undefined_W
 
@@ -19,13 +19,13 @@ datatype weight'= Static_W of weight
 
 
 val weight_gt : term * term -> weight * weight -> bool
-val weight_of : Context.generic -> PLPR_Pattern.bv_typs * term -> weight
+val weight_of : Context.generic -> bv_typs * term -> weight
 val assign_weight : term -> weight' -> Context.generic -> Context.generic
 
-val require_weight_normalization : Context.generic -> PLPR_Pattern.bv_typs * term -> bool
+val require_weight_normalization : Context.generic -> bv_typs * term -> bool
 
 val ML_sender__weight_ord : term ord option Unsynchronized.ref
-val ML_sender__dynamic_weight : (Context.generic -> PLPR_Pattern.bv_typs * term -> weight) option Unsynchronized.ref
+val ML_sender__dynamic_weight : (Context.generic -> bv_typs * term -> weight) option Unsynchronized.ref
 
 val weight_synt : (Context.generic -> weight) parser
 val dynamic_weight_synt : (Context.generic -> weight') parser
@@ -36,7 +36,7 @@ structure Phi_Type : PHI_TYPE = struct
 open Phi_Type
 
 datatype weight = Weight of int * term ord | Leaf_W | Undefined_W
-datatype weight'= Static_W of weight | Dynamic_W of (Context.generic -> PLPR_Pattern.bv_typs * term -> weight)
+datatype weight'= Static_W of weight | Dynamic_W of (Context.generic -> bv_typs * term -> weight)
 (* the lexical order considers the term of the operator but not the operands *)
 
 fun leading_term_name (X $ _) = leading_term_name X
@@ -132,7 +132,7 @@ fun comm_weight_geq ctxt =
 
 val ML_parser_locker__weight = Synchronized.var "\<phi>Type.ML_parser_locker__weight" ()
 val ML_sender__weight_ord : term ord option Unsynchronized.ref = Unsynchronized.ref NONE
-val ML_sender__dynamic_weight : (Context.generic -> PLPR_Pattern.bv_typs * term -> weight) option Unsynchronized.ref
+val ML_sender__dynamic_weight : (Context.generic -> bv_typs * term -> weight) option Unsynchronized.ref
       = Unsynchronized.ref NONE
 
 val weight_synt = 
@@ -166,7 +166,7 @@ val dynamic_weight_synt =
                    |> ML_Context.expression (Input.pos_of src)
                      (ML_Lex.read "Phi_Type.ML_sender__dynamic_weight := SOME ((" @
                       ML_Lex.read_source src @
-                     ML_Lex.read ") : Context.generic -> PLPR_Pattern.bv_typs * term -> Phi_Type.weight)")
+                     ML_Lex.read ") : Context.generic -> bv_typs * term -> Phi_Type.weight)")
               val ml = the (!ML_sender__dynamic_weight)
               val _ = ML_sender__dynamic_weight := NONE
            in (Dynamic_W ml, ())

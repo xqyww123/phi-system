@@ -146,8 +146,8 @@ lemma \<phi>Ref_expns[\<phi>expns]:
   unfolding Ref_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma \<phi>Ref_inhabited[\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (ref \<Ztypecolon> Ref cls) \<Longrightarrow> (of_class cls ref \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  \<open>Satisfiable (ref \<Ztypecolon> Ref cls) \<Longrightarrow> (of_class cls ref \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def by (simp add: \<phi>expns)
 
 lemma \<phi>Ref_zero[\<phi>reason 1000]:
   \<open>Semantic_Zero_Val reference (Ref cls) Nil\<close>

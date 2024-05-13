@@ -42,7 +42,8 @@ include PHI_HELP
   val reason_tracing_tyinst : Proof.context -> (thm -> thm option)
                            -> term -> (ctyp TVars.table * thm) option
 
-  val fold_aterms : (PLPR_Pattern.bvs -> term -> 'a -> 'a) -> PLPR_Pattern.bvs -> term -> 'a -> 'a
+  val fold_aterms : (bvs -> term -> 'a -> 'a) -> bvs -> term -> 'a -> 'a
+  val fold_aterms': (bv_typs -> term -> 'a -> 'a) -> bv_typs -> term -> 'a -> 'a
 
 end
 
@@ -185,7 +186,9 @@ fun fold_aterms F bvs (f $ x) = fold_aterms F bvs f #> fold_aterms F bvs x
   | fold_aterms F bvs (Abs (N, Ty, X)) = fold_aterms F ((N,Ty)::bvs) X
   | fold_aterms F bvs x = F bvs x
 
-
+fun fold_aterms' F bvs (f $ x) = fold_aterms' F bvs f #> fold_aterms' F bvs x
+  | fold_aterms' F bvs (Abs (_, Ty, X)) = fold_aterms' F (Ty::bvs) X
+  | fold_aterms' F bvs x = F bvs x
 
 end
 

@@ -484,7 +484,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
 
     fun setup_lemmata ctxt =
       let val facts = maps (fn thm =>
-                       case Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt (thm RS @{thm Inhabited_I})
+                       case Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt (thm RS @{thm Satisfiable_I})
                          of NONE => error "Internal BUG: Fail to extract pure fact implied inside"
                           | SOME l => l
                       ) rules

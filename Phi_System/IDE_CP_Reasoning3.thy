@@ -35,8 +35,8 @@ lemma MemAddrState_I_neq[intro]: "k2 \<noteq> k \<Longrightarrow> MemAddrState h
   unfolding MemAddrState_def addr_allocated_def by auto
 
 lemma MemAddrState_E[elim]:
-  "MemAddrState h addr S \<Longrightarrow> (addr_allocated h addr \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding MemAddrState_def Inhabited_def by blast
+  "MemAddrState h addr S \<Longrightarrow> (addr_allocated h addr \<Longrightarrow> Satisfiable S \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding MemAddrState_def Satisfiable_def by blast
 lemma MemAddrState_I:
   "addr_allocated h addr \<Longrightarrow> shallowize (the (h (MemAddress addr))) \<in> S \<Longrightarrow> MemAddrState h addr S"
   unfolding MemAddrState_def by auto

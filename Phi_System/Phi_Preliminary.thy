@@ -843,12 +843,12 @@ declare (* disjE[\<phi>inhabitance_rule] *) (*I don't like divergence!*)
         set_plus_inhabited[\<phi>inhabitance_rule]
 
 lemma [\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .*)
+  \<open>Satisfiable 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .*)
 
 (*TODO:
 lemma Membership_E_Inhabitance:
-  \<open>x \<in> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by blast*)
+  \<open>x \<in> S \<Longrightarrow> (Satisfiable S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def by blast*)
 
 
 

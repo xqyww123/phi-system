@@ -39,9 +39,9 @@ val control_swap_normalizations_on : (swap_direction * (term (*F*) * term list (
     (*if S_In, swap \<open>F\<close> into all of the operands \<open>Gs\<close>, \<open>F(Gs(T)) \<rightarrow> G(Fs(T))\<close>
       if S_Out, \<open>Gs\<close> can only have 1 element, and it swaps \<open>F\<close> out of the \<open>G\<close>, \<open>G(F(T)) \<rightarrow> F(G(T))\<close>*)
 
-val whether_to_swap_normalize  : Context.generic -> PLPR_Pattern.bvs -> term -> bool
-val whether_to_assoc_normalize : Context.generic -> assoc_direction -> PLPR_Pattern.bvs -> term -> bool
-val whether_to_SA_normalize : Context.generic -> assoc_direction -> PLPR_Pattern.bvs -> term -> bool
+val whether_to_swap_normalize  : Context.generic -> bvs -> term -> bool
+val whether_to_assoc_normalize : Context.generic -> assoc_direction -> bvs -> term -> bool
+val whether_to_SA_normalize : Context.generic -> assoc_direction -> bvs -> term -> bool
 
 (*
 val commutative_rules : Context.generic -> term (*F*) * term list (*Gs*) -> (Position.T * thm) list

@@ -43,7 +43,7 @@ and  zero_areal[simp]: \<open>Zero areal   = Some (V_areal.mk 0)\<close>
 
 (* lemma Valid_Types[simp]:
   \<open>Valid_Type areal\<close>
-  unfolding Inhabited_def
+  unfolding Satisfiable_def
   apply simp
   using less_exp by blast *)
 

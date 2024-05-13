@@ -951,7 +951,7 @@ lemma infer_FTF\<^sub>\<Lambda>_from_FT\<^sub>\<Lambda>:
 \<Longrightarrow> (\<forall>f P x y. P\<^sub>T x \<and> P\<^sub>U y \<and> mapper (\<lambda>p a b. b = f p a \<and> P p a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x)
 \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R pm fm \<close>
   unfolding Functional_Transformation_Functor\<^sub>\<Lambda>_def Transformation_Functor\<^sub>\<Lambda>_def
-            Object_Equiv_def Abstract_Domain_def Action_Tag_def Inhabited_def \<r>EIF_def
+            Object_Equiv_def Abstract_Domain_def Action_Tag_def Satisfiable_def \<r>EIF_def
   apply clarsimp
   subgoal premises prems for x f P
     by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>p a b. b = f p a \<and> P p a\<close>]]
@@ -7655,7 +7655,7 @@ private lemma \<phi>TA_Ident_I_rule_step:
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<Longrightarrow> Identity_Element\<^sub>I X Q)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (A \<longrightarrow> Q \<longrightarrow> P)
 \<Longrightarrow> Identity_Element\<^sub>I X P \<close>
-  unfolding Identity_Element\<^sub>I_def Premise_def Action_Tag_def Transformation_def Inhabited_def \<r>EIF_def
+  unfolding Identity_Element\<^sub>I_def Premise_def Action_Tag_def Transformation_def Satisfiable_def \<r>EIF_def
   by (clarsimp, blast)
 
 (* not enabled, DO NOT REMOVE, I am a bit of hesitate
@@ -7666,7 +7666,7 @@ lemma \<phi>TA_1I_simp:
 \<Longrightarrow> (\<And>x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P' x : P x)
 \<Longrightarrow> Identity_Elements\<^sub>I T D' P' \<close>
   unfolding Identity_Elements\<^sub>I_def Premise_def Simplify_def Abstract_Domain_def Identity_Element\<^sub>I_def
-            Action_Tag_def Transformation_def Inhabited_def
+            Action_Tag_def Transformation_def Satisfiable_def
   by clarsimp blast*)
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
@@ -7769,7 +7769,7 @@ private lemma \<phi>TA_OE_simp:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((\<forall>x. eq x x) \<longrightarrow> (\<forall>x. eq' x x))
 \<Longrightarrow> Object_Equiv T eq' \<close>
   unfolding Object_Equiv_def Transformation_def Simplify_def Premise_def
-            Abstract_Domain_def Action_Tag_def Inhabited_def \<r>EIF_def
+            Abstract_Domain_def Action_Tag_def Satisfiable_def \<r>EIF_def
   by clarsimp blast
 
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
@@ -7858,17 +7858,17 @@ subsubsection \<open>Type Inhabitance\<close>
 context begin
 
 private lemma inh_typ_derv_rule:
-  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Inhabited_Type T)
+  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Inhabited T)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
-\<Longrightarrow> Inhabited_Type T \<close> .
+\<Longrightarrow> Inhabited T \<close> .
 
 ML_file \<open>library/phi_type_algebra/inhabited_type.ML\<close>
 
 end
 
-\<phi>property_deriver Inhabited_Type 100 for (\<open>Inhabited_Type _\<close>)
+\<phi>property_deriver Inhabited 100 for (\<open>Inhabited _\<close>)
     = \<open> Phi_Type_Derivers.inhabited_type \<close> 
 
 
@@ -7893,9 +7893,9 @@ private lemma \<phi>TA_TF_rule:
 private lemma \<phi>TA_TF_deriver_cong:
   \<open> D \<equiv> D'
 \<Longrightarrow> (\<And>x. \<exists>a. a \<in> D' x \<Longrightarrow> R x \<equiv> R' x)
-\<Longrightarrow> (\<And>g x y. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> Inhabited (y \<Ztypecolon> F2 U) \<Longrightarrow> m g x y \<equiv> m' g x y)
+\<Longrightarrow> (\<And>g x y. Satisfiable (x \<Ztypecolon> F1 T) \<Longrightarrow> Satisfiable (y \<Ztypecolon> F2 U) \<Longrightarrow> m g x y \<equiv> m' g x y)
 \<Longrightarrow> Transformation_Functor F1 F2 T U D R m \<equiv> Transformation_Functor F1 F2 T U D' R' m' \<close>
-  unfolding Transformation_Functor_def atomize_eq Transformation_def Inhabited_def
+  unfolding Transformation_Functor_def atomize_eq Transformation_def Satisfiable_def
   by clarsimp blast
 
 (*
@@ -7947,10 +7947,10 @@ private lemma \<phi>TA_biTF_deriver_cong:
 \<Longrightarrow> D\<^sub>2 \<equiv> D'\<^sub>2
 \<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>1 x \<Longrightarrow> R\<^sub>1 x \<equiv> R'\<^sub>1 x)
 \<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>2 x \<Longrightarrow> R\<^sub>2 x \<equiv> R'\<^sub>2 x)
-\<Longrightarrow> (\<And>g\<^sub>1 g\<^sub>2 x y. Inhabited (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> Inhabited (y \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2) \<Longrightarrow> m g\<^sub>1 g\<^sub>2 x y \<equiv> m' g\<^sub>1 g\<^sub>2 x y)
+\<Longrightarrow> (\<And>g\<^sub>1 g\<^sub>2 x y. Satisfiable (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> Satisfiable (y \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2) \<Longrightarrow> m g\<^sub>1 g\<^sub>2 x y \<equiv> m' g\<^sub>1 g\<^sub>2 x y)
 \<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 m
  \<equiv> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D'\<^sub>1 D'\<^sub>2 R'\<^sub>1 R'\<^sub>2 m' \<close>
-  unfolding Transformation_BiFunctor_def atomize_eq Transformation_def Inhabited_def
+  unfolding Transformation_BiFunctor_def atomize_eq Transformation_def Satisfiable_def
   by clarsimp (smt (verit, ccfv_threshold))
 
 paragraph \<open>Parameterization\<close>
@@ -7971,9 +7971,9 @@ private lemma \<phi>TA_TF\<^sub>\<Lambda>_rule:
 private lemma \<phi>TA_TF\<^sub>\<Lambda>_deriver_cong:
   \<open> D \<equiv> D'
 \<Longrightarrow> (\<And>p x. \<exists>a. a \<in> D' p x \<Longrightarrow> R p x \<equiv> R' p x)
-\<Longrightarrow> (\<And>g x y. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> Inhabited (y \<Ztypecolon> F2 U) \<Longrightarrow> m g x y \<equiv> m' g x y)
+\<Longrightarrow> (\<And>g x y. Satisfiable (x \<Ztypecolon> F1 T) \<Longrightarrow> Satisfiable (y \<Ztypecolon> F2 U) \<Longrightarrow> m g x y \<equiv> m' g x y)
 \<Longrightarrow> Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R m \<equiv> Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D' R' m' \<close>
-  unfolding Transformation_Functor\<^sub>\<Lambda>_def atomize_eq Transformation_def Inhabited_def
+  unfolding Transformation_Functor\<^sub>\<Lambda>_def atomize_eq Transformation_def Satisfiable_def
   by clarsimp blast
 
 private lemma \<phi>TA_TF\<^sub>\<Lambda>_rewr_C:
@@ -8007,11 +8007,11 @@ private lemma \<phi>TA_FTF_rule:
 private lemma \<phi>TA_FTF_deriver_cong:
   \<open> D \<equiv> D'
 \<Longrightarrow> (\<And>x. \<exists>a. a \<in> D' x \<Longrightarrow> R x \<equiv> R' x)
-\<Longrightarrow> (\<And>f P x. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> fm f P x \<equiv> fm' f P x)
-\<Longrightarrow> (\<And>f P x. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> Inhabited (fm' f P x \<Ztypecolon> F2 U) \<Longrightarrow> pm f P x \<equiv> pm' f P x)
+\<Longrightarrow> (\<And>f P x. Satisfiable (x \<Ztypecolon> F1 T) \<Longrightarrow> fm f P x \<equiv> fm' f P x)
+\<Longrightarrow> (\<And>f P x. Satisfiable (x \<Ztypecolon> F1 T) \<Longrightarrow> Satisfiable (fm' f P x \<Ztypecolon> F2 U) \<Longrightarrow> pm f P x \<equiv> pm' f P x)
 \<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm \<equiv>
     Functional_Transformation_Functor F1 F2 T U D' R' pm' fm' \<close>
-  unfolding Functional_Transformation_Functor_def atomize_eq Transformation_def Inhabited_def
+  unfolding Functional_Transformation_Functor_def atomize_eq Transformation_def Satisfiable_def
   by (clarsimp, smt (verit, best))
 
 paragraph \<open>Bi-Functor\<close>
@@ -8035,11 +8035,11 @@ private lemma \<phi>TA_biFTF_deriver_cong:
 \<Longrightarrow> D\<^sub>2 \<equiv> D'\<^sub>2
 \<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>1 x \<Longrightarrow> R\<^sub>1 x \<equiv> R'\<^sub>1 x)
 \<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>2 x \<Longrightarrow> R\<^sub>2 x \<equiv> R'\<^sub>2 x)
-\<Longrightarrow> (\<And>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x. Inhabited (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> fm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<equiv> fm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x)
-\<Longrightarrow> (\<And>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x. Inhabited (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> Inhabited (fm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2) \<Longrightarrow> pm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<equiv> pm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x)
+\<Longrightarrow> (\<And>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x. Satisfiable (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> fm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<equiv> fm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x)
+\<Longrightarrow> (\<And>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x. Satisfiable (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> Satisfiable (fm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2) \<Longrightarrow> pm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<equiv> pm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x)
 \<Longrightarrow> Functional_Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pm fm \<equiv>
     Functional_Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D'\<^sub>1 D'\<^sub>2 R'\<^sub>1 R'\<^sub>2 pm' fm' \<close>
-  unfolding Functional_Transformation_BiFunctor_def atomize_eq Transformation_def Inhabited_def
+  unfolding Functional_Transformation_BiFunctor_def atomize_eq Transformation_def Satisfiable_def
   by (clarsimp, smt (verit, best))
 
 paragraph \<open>Parameterization\<close>
@@ -8061,11 +8061,11 @@ private lemma \<phi>TA_FTF\<^sub>\<Lambda>_rule:
 private lemma \<phi>TA_FTF\<^sub>\<Lambda>_deriver_cong:
   \<open> D \<equiv> D'
 \<Longrightarrow> (\<And>p x. \<exists>a. a \<in> D' p x \<Longrightarrow> R p x \<equiv> R' p x)
-\<Longrightarrow> (\<And>f P x. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> fm f P x \<equiv> fm' f P x)
-\<Longrightarrow> (\<And>f P x. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> Inhabited (fm' f P x \<Ztypecolon> F2 U) \<Longrightarrow> pm f P x \<equiv> pm' f P x)
+\<Longrightarrow> (\<And>f P x. Satisfiable (x \<Ztypecolon> F1 T) \<Longrightarrow> fm f P x \<equiv> fm' f P x)
+\<Longrightarrow> (\<And>f P x. Satisfiable (x \<Ztypecolon> F1 T) \<Longrightarrow> Satisfiable (fm' f P x \<Ztypecolon> F2 U) \<Longrightarrow> pm f P x \<equiv> pm' f P x)
 \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D R pm fm \<equiv>
     Functional_Transformation_Functor\<^sub>\<Lambda> F1 F2 T U D' R' pm' fm' \<close>
-  unfolding Functional_Transformation_Functor\<^sub>\<Lambda>_def atomize_eq Transformation_def Inhabited_def
+  unfolding Functional_Transformation_Functor\<^sub>\<Lambda>_def atomize_eq Transformation_def Satisfiable_def
   by (clarsimp, smt (verit, del_insts))
 
 
@@ -8901,7 +8901,7 @@ private lemma \<phi>TA_TrRA_simp:
  \<Longrightarrow> Abstract_Domain T P
  \<Longrightarrow> (\<And>x y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' x y : r x y )
  \<Longrightarrow> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r' x y @tag to (Itself::('b,'b) \<phi>)) \<close>
-  unfolding Transformation_def Action_Tag_def Inhabited_def Simplify_def
+  unfolding Transformation_def Action_Tag_def Satisfiable_def Simplify_def
             Abstract_Domain_def Premise_def \<r>EIF_def
   by (clarsimp, smt (verit, del_insts))
 

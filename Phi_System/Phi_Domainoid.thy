@@ -56,20 +56,20 @@ text \<open>
   See \<section>\<open>Domainoid gives Separation_Disj\<^sub>\<psi>\<close>
 
 \<^enum> The second mechanism focuses on satisfaction of multiplicative conjunction, of the following form,
-  \<open>Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> with_what_condition \<longrightarrow> Inhabited (A * B)\<close>
+  \<open>Satisfiable A \<Longrightarrow> Satisfiable B \<Longrightarrow> with_what_condition \<longrightarrow> Satisfiable (A * B)\<close>
 
-  The implication reasoning \<open>Inhabited A \<longrightarrow> P\<close> infers a weaker but simpler approximation
+  The implication reasoning \<open>Satisfiable A \<longrightarrow> P\<close> infers a weaker but simpler approximation
   of the pure fact implied inside \<open>A\<close>.
   However, only the weakening part is not enough for \<phi>-types of mappings such as
   \<open>f \<Ztypecolon> T \<Rrightarrow> U := {g. (\<forall>u x. u \<Turnstile> x \<Ztypecolon> T \<longrightarrow> g(y) \<Turnstile> f(x) \<Ztypecolon> U)}\<close> (forward simulation)
   whose domain \<phi>-type \<open>T\<close> is contravariant.
   To extract its implication, the dual of the implication reasoning is required, namely satisfaction reasoning.
-  It infers a stronger approximation \<open>Q\<close> such that \<open>Q \<longrightarrow> Inhabited A\<close> for a given assertion \<open>A\<close>.
+  It infers a stronger approximation \<open>Q\<close> such that \<open>Q \<longrightarrow> Satisfiable A\<close> for a given assertion \<open>A\<close>.
   By it, we can complete the implication rule of \<open>f \<Ztypecolon> T \<Rrightarrow> U\<close>,
-  \<open> (\<And>x. Q x \<longrightarrow> Inhabited (x \<Ztypecolon> T))
-\<Longrightarrow> (\<And>x. Inhabited (x \<Ztypecolon> T) \<rightarrow> P x)
-\<Longrightarrow> (\<And>y. Inhabited (y \<Ztypecolon> U) \<rightarrow> P' y)
-\<Longrightarrow> Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<longrightarrow> (\<forall>x. Q x \<longrightarrow> P x \<and> P' (f x))\<close>.
+  \<open> (\<And>x. Q x \<longrightarrow> Satisfiable (x \<Ztypecolon> T))
+\<Longrightarrow> (\<And>x. Satisfiable (x \<Ztypecolon> T) \<rightarrow> P x)
+\<Longrightarrow> (\<And>y. Satisfiable (y \<Ztypecolon> U) \<rightarrow> P' y)
+\<Longrightarrow> Satisfiable (f \<Ztypecolon> T \<Rrightarrow> U) \<longrightarrow> (\<forall>x. Q x \<longrightarrow> P x \<and> P' (f x))\<close>.
   
   The rules of satisfaction reasoning for logical connectives are given where???, except those
   for conjunctive operators (\<open>\<and>\<close> and \<open>*\<close>).
@@ -405,18 +405,18 @@ lemma [\<phi>reason 1000]:
   \<open> Pa \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
 \<Longrightarrow> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> B
 \<Longrightarrow> domainoid TYPE('c::sep_magma) \<delta>
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited A) \<Longrightarrow> A' \<le> \<Psi>[domainoid_tag \<delta>] A) \<comment>\<open>expand \<open>\<Psi>[d] A, \<Psi>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited B) \<Longrightarrow> B' \<le> \<Psi>[domainoid_tag \<delta>] B)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Satisfiable A) \<Longrightarrow> A' \<le> \<Psi>[domainoid_tag \<delta>] A) \<comment>\<open>expand \<open>\<Psi>[d] A, \<Psi>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Satisfiable B) \<Longrightarrow> B' \<le> \<Psi>[domainoid_tag \<delta>] B)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<Turnstile> A' \<and> b \<Turnstile> B' \<and> a ## b))
 \<Longrightarrow> Pa \<and> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A * B\<close>
-  unfolding Inhabited_def BI_sub_iff Premise_def \<r>EIF_def \<r>ESC_def domainoid_def domainoid_tag_def
+  unfolding Satisfiable_def BI_sub_iff Premise_def \<r>EIF_def \<r>ESC_def domainoid_def domainoid_tag_def
   by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; blast)
 
 
 lemma \<comment> \<open>The above rule is reversible for any domainoid extraction \<open>d\<close>\<close>
   \<open> domainoid TYPE('c::sep_magma) d
-\<Longrightarrow> Inhabited (A * B) \<longleftrightarrow> (\<exists>a b. a \<in> \<Psi>[d] A \<and> b \<in> \<Psi>[d] B \<and> a ## b)\<close>
-  unfolding Inhabited_def
+\<Longrightarrow> Satisfiable (A * B) \<longleftrightarrow> (\<exists>a b. a \<in> \<Psi>[d] A \<and> b \<in> \<Psi>[d] B \<and> a ## b)\<close>
+  unfolding Satisfiable_def
   by (clarsimp simp add: domainoid_def closed_homo_sep_def closed_homo_sep_disj_def; blast)
 
 

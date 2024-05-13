@@ -2,8 +2,8 @@ signature PLPR_SYNTAX = sig
 include PLPR_SYNTAX
 
 (*strips all controlling connectives*)
-val fold_antecedents : (PLPR_Pattern.bvs -> term -> 'a -> 'a)
-                    -> PLPR_Pattern.bvs -> term -> 'a -> 'a
+val fold_antecedents : (bvs -> term -> 'a -> 'a)
+                    -> bvs -> term -> 'a -> 'a
 
 val eixsts_antecedent : (term -> bool) -> term -> bool
 val forall_antecedent : (term -> bool) -> term -> bool

@@ -118,7 +118,7 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
 
 (*lemma Valid_Types[simp]:
   \<open>Valid_Type (T_int.mk n)\<close>
-  unfolding Inhabited_def
+  unfolding Satisfiable_def
   apply simp
   using less_exp by blast *)
 

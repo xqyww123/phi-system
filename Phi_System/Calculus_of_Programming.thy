@@ -73,8 +73,8 @@ translations
 
 definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
-lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
-  unfolding CurrentConstruction_def Inhabited_def
+lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Satisfiable T"
+  unfolding CurrentConstruction_def Satisfiable_def
   by (clarsimp simp add: INTERP_SPEC set_mult_expn, blast)
 
 definition ToA_Construction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s>/ _" [11,11] 10)
@@ -340,12 +340,12 @@ subsection \<open>Misc\<close>
 
 paragraph \<open>Inhabitance\<close>
 
-lemma ToA_Construction_Inhabited_rule:
-  \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S \<Longrightarrow> Inhabited S\<close>
-  unfolding ToA_Construction_def Inhabited_def by blast
+lemma ToA_Construction_Satisfiable_rule:
+  \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S \<Longrightarrow> Satisfiable S\<close>
+  unfolding ToA_Construction_def Satisfiable_def by blast
 
-lemma CurrentConstruction_Inhabited_rule:
-  "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
+lemma CurrentConstruction_Satisfiable_rule:
+  "CurrentConstruction mode s H T \<Longrightarrow> Satisfiable T"
   using CurrentConstruction_D by blast
 
 

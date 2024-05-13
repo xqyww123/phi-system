@@ -19,7 +19,7 @@ private lemma \<phi>TA_SemTy_rule:
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
 \<Longrightarrow> Weak_Semantic_Type T TY \<close>
   unfolding Action_Tag_def Weak_Semantic_Type'_def Weak_Semantic_Type_def Ant_Seq_def
-            Abstract_Domain\<^sub>L_def \<r>ESC_def Inhabited_def Premise_def Inhabited_Type_def
+            Abstract_Domain\<^sub>L_def \<r>ESC_def Satisfiable_def Premise_def Inhabited_def
   by clarsimp
 
 private lemma \<phi>TA_SemTy_cong:
@@ -34,6 +34,8 @@ end
 
 \<phi>property_deriver Weak_Semantic_Type 120 for (\<open>Weak_Semantic_Type _ _\<close>)
     = \<open> Phi_Type_Derivers.semantic_type \<close> 
+
+ML_file \<open>library/additions/infer_semantic_type_prem.ML\<close>
 
 
 subsubsection \<open>Semantic Zero Value\<close>
@@ -399,7 +401,7 @@ lemma \<phi>deduce_zero_value:
 \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Semantic_Zero_Val TY T x\<close>
-  unfolding ToA_Construction_def Semantic_Zero_Val_def image_iff Inhabited_def Transformation_def
+  unfolding ToA_Construction_def Semantic_Zero_Val_def image_iff Satisfiable_def Transformation_def
   by clarsimp
 
 lemma [\<phi>reason %\<phi>programming_method]:

@@ -47,8 +47,8 @@ val mk_map_of_bnf : type_info -> typ list -> typ list -> typ list -> term
 
 (*Tools*)
 
-val is_constructor : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
-val is_selector    : Context.generic -> PLPR_Pattern.bv_typs -> term -> bool
+val is_constructor : Context.generic -> bv_typs -> term -> bool
+val is_selector    : Context.generic -> bv_typs -> term -> bool
 
 end
 

@@ -2,14 +2,14 @@ signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
   val is_BI_connective : term -> bool
-  val fold_items_of_assertion : (PLPR_Pattern.bvs -> term -> 'a -> 'a) -> PLPR_Pattern.bvs -> term -> 'a -> 'a
-  val fold_items_of_assertion': (PLPR_Pattern.bv_typs -> term -> 'a -> 'a) -> PLPR_Pattern.bv_typs -> term -> 'a -> 'a
-  val exists_item_of_assertion : (PLPR_Pattern.bvs -> term -> bool) -> PLPR_Pattern.bvs -> term -> bool
-  val exists_item_of_assertion': (PLPR_Pattern.bv_typs -> term -> bool) -> PLPR_Pattern.bv_typs -> term -> bool
-  val forall_item_of_assertion : (PLPR_Pattern.bvs -> term -> bool) -> PLPR_Pattern.bvs -> term -> bool
-  val forall_item_of_assertion': (PLPR_Pattern.bv_typs -> term -> bool) -> PLPR_Pattern.bv_typs -> term -> bool
-  val forall_item_of_assertion_blv : (PLPR_Pattern.bvs * int (*level of lambda abstractions*) -> term -> bool)
-                                  -> PLPR_Pattern.bvs -> term -> bool
+  val fold_items_of_assertion : (bvs -> term -> 'a -> 'a) -> bvs -> term -> 'a -> 'a
+  val fold_items_of_assertion': (bv_typs -> term -> 'a -> 'a) -> bv_typs -> term -> 'a -> 'a
+  val exists_item_of_assertion : (bvs -> term -> bool) -> bvs -> term -> bool
+  val exists_item_of_assertion': (bv_typs -> term -> bool) -> bv_typs -> term -> bool
+  val forall_item_of_assertion : (bvs -> term -> bool) -> bvs -> term -> bool
+  val forall_item_of_assertion': (bv_typs -> term -> bool) -> bv_typs -> term -> bool
+  val forall_item_of_assertion_blv : (bvs * int (*level of lambda abstractions*) -> term -> bool)
+                                  -> bvs -> term -> bool
   val conv_items_of_assertion : (Proof.context -> conv) -> Proof.context -> conv
   val conv_all_typings : (Proof.context -> conv) -> Proof.context -> conv
 
@@ -24,10 +24,11 @@ include PHI_SYNTAX
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
   val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*abstract*) * typ (*concrete*)
+  val typ_parameter_of_phi_ty : bv_typs -> term -> ((typ list (*reserved!*) * typ (*abstract*) * typ (*concrete*)) * term) list
   val is_nonnull_Type_Opr : typ -> bool
   val is_non_parameterized_phityp : typ -> bool
-  val number_of_typ_operators : PLPR_Pattern.bv_typs -> term -> int
-  val number_of_typ_operators_in_assertion : PLPR_Pattern.bv_typs -> term -> int
+  val number_of_typ_operators : bv_typs -> term -> int
+  val number_of_typ_operators_in_assertion : bv_typs -> term -> int
 
   val ExSet_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
   val Subjection_conv : conv -> conv -> conv
@@ -330,6 +331,15 @@ fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>s
   | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
 
 val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
+
+fun typ_parameter_of_phi_ty bvtys T_term =
+  let fun collect_params ret (F' $ T') =
+           (case try dest_parameterized_phi_ty (Term.fastype_of1 (bvtys,T'))
+              of SOME dest => collect_params ((dest,T') :: ret) F'
+               | NONE => collect_params ret F')
+        | collect_params ret _  = ret
+   in collect_params [] T_term
+  end
 
 fun is_nonnull_Type_Opr ty =
   case dest_parameterized_phi_ty ty

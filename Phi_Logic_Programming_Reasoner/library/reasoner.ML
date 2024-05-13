@@ -100,7 +100,7 @@ signature NU_REASONER = sig
   (*val call_reasoners : reasoners -> Proof.context -> *)
   val get_reasoners : theory -> reasoners -> pattern -> reasoner list
   (*a faster version but a bit dirty*)
-  val get_reasoners' : theory -> reasoners -> PLPR_Pattern.bvs
+  val get_reasoners' : theory -> reasoners -> bvs
                     -> pattern -> (priority * pattern * serial (*reasoner id*) * reasoner) list
   val pretty : Context.generic -> reasoner -> Pretty.T
   (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
@@ -172,7 +172,7 @@ signature NU_REASONER = sig
   val the_default_pattern_of : Context.generic -> term -> term list
 
   (* Default Reasoner Group *)
-  val the_default_group_of : Context.generic -> PLPR_Pattern.bvs
+  val the_default_group_of : Context.generic -> bvs
                           -> term -> Reasoner_Group.group option
   val assign_default_group : (priority * term * Reasoner_Group.group) list
                           -> Context.generic -> Context.generic

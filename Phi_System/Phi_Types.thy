@@ -837,14 +837,14 @@ lemma [\<phi>reason 1000]:
   \<open> Abstract_Domain U A
 \<Longrightarrow> Abstract_Domain T B
 \<Longrightarrow> Abstract_Domain (T \<Zcomp> U) (\<lambda>x. A x \<and> Ex B) \<close>
-  unfolding Inhabited_def Action_Tag_def Abstract_Domain_def \<r>EIF_def
+  unfolding Satisfiable_def Action_Tag_def Abstract_Domain_def \<r>EIF_def
   by simp blast
 
 lemma [\<phi>reason 1000]:
   \<open> Abstract_Domain\<^sub>L U A
 \<Longrightarrow> Abstract_Domain\<^sub>L T B
 \<Longrightarrow> Abstract_Domain\<^sub>L (T \<Zcomp> U) (\<lambda>x. A x \<and> All B) \<close>
-  unfolding Inhabited_def Action_Tag_def Abstract_Domain\<^sub>L_def \<r>ESC_def
+  unfolding Satisfiable_def Action_Tag_def Abstract_Domain\<^sub>L_def \<r>ESC_def
   by clarsimp blast
 
 text \<open>The space between the upper bound and the lower bound is inevitable as we lost the exact value
@@ -885,9 +885,9 @@ lemma [\<phi>reason 1000]:
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>I B D\<^sub>B P\<^sub>B
-\<Longrightarrow> Identity_Elements\<^sub>I (B \<Zcomp> T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> D\<^sub>B v) (\<lambda>x. (\<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> P\<^sub>B v) \<and> Inhabited (x \<Ztypecolon> T))\<close>
+\<Longrightarrow> Identity_Elements\<^sub>I (B \<Zcomp> T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> D\<^sub>B v) (\<lambda>x. (\<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> P\<^sub>B v) \<and> Satisfiable (x \<Ztypecolon> T))\<close>
   unfolding Identity_Element\<^sub>I_def Identity_Elements\<^sub>I_def Transformation_def Orelse_shortcut_def
-            Inhabited_def
+            Satisfiable_def
   by clarsimp blast
 
 (*TODO: analysis of completeness*)
@@ -1276,16 +1276,16 @@ declare [[\<phi>trace_reasoning = 0]]
           Identity_Element_sat
   deriving Basic
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
-         \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>_. True) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>_. True) (\<lambda>x. Satisfiable (x \<Ztypecolon> T)) \<close>
            (%identity_elements_of_\<phi>Fun+40)
        and \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
          \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) D P \<close>
            (%identity_elements_of_\<phi>Fun+20)
-       and \<open> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f v = 1) (\<lambda>x. Inhabited (x \<Ztypecolon> T))\<close>
+       and \<open> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f v = 1) (\<lambda>x. Satisfiable (x \<Ztypecolon> T))\<close>
            (%identity_elements_of_\<phi>Fun)
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
-         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. Satisfiable (x \<Ztypecolon> T)) \<close>
            (%identity_elements_of_\<phi>Fun+40)
        and \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
          \<Longrightarrow> Identity_Elements\<^sub>E T D
@@ -1489,11 +1489,11 @@ lemma [\<phi>reason %BI_approx_success]:
   by clarsimp
 
 lemma [\<phi>reason %BI_approx_success]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Inhabited (x \<Ztypecolon> T)
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Satisfiable (x \<Ztypecolon> T)
 \<Longrightarrow> (d \<Ztypecolon> Itself) \<le> (x \<Ztypecolon> \<DD>[(\<lambda>_. d)] T) \<close>
   for T :: \<open>('c::discrete_semigroup,'a) \<phi>\<close>
   and d :: \<open>'d::discrete_semigroup\<close>
-  unfolding BI_sub_transformation Transformation_def Premise_def Inhabited_def
+  unfolding BI_sub_transformation Transformation_def Premise_def Satisfiable_def
   by clarsimp
 
 lemma [\<phi>reason %BI_approx_success]:
@@ -1546,12 +1546,12 @@ lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L T D\<^sub>T
 \<Longrightarrow> Abstract_Domain\<^sub>L U D\<^sub>U
 \<Longrightarrow> domainoid TYPE('c::sep_magma) \<delta>
-\<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited (x \<Ztypecolon> T)) \<Longrightarrow> (f x \<Ztypecolon> T') \<le> (x \<Ztypecolon> \<DD>[\<delta>] T))
+\<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Satisfiable (x \<Ztypecolon> T)) \<Longrightarrow> (f x \<Ztypecolon> T') \<le> (x \<Ztypecolon> \<DD>[\<delta>] T))
           \<comment>\<open>expand \<open>\<Psi>[d] A, \<Psi>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
-\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited (y \<Ztypecolon> U)) \<Longrightarrow> (g y \<Ztypecolon> U') \<le> (y \<Ztypecolon> \<DD>[\<delta>] U))
+\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Satisfiable (y \<Ztypecolon> U)) \<Longrightarrow> (g y \<Ztypecolon> U') \<le> (y \<Ztypecolon> \<DD>[\<delta>] U))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. D\<^sub>T x \<and> D\<^sub>U y \<longrightarrow> (\<exists>a b. a \<Turnstile> (f x \<Ztypecolon> T') \<and> b \<Turnstile> (g y \<Ztypecolon> U') \<and> a ## b))
 \<Longrightarrow> Abstract_Domain\<^sub>L (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y)\<close>
-  unfolding Inhabited_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
+  unfolding Satisfiable_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
             Abstract_Domain\<^sub>L_def \<r>ESC_def
   by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; metis)
 
@@ -1571,10 +1571,10 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
          \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
            (%identity_elements_of_\<phi>Fun+20)
-       and \<open> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f s v = 1) (\<lambda>x. Inhabited (x \<Ztypecolon> T))\<close>
+       and \<open> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f s v = 1) (\<lambda>x. Satisfiable (x \<Ztypecolon> T))\<close>
            (%identity_elements_of_\<phi>Fun)
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
-         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. Satisfiable (x \<Ztypecolon> T)) \<close>
            (%identity_elements_of_\<phi>Fun+40)
        and \<open> \<g>\<u>\<a>\<r>\<d> homo_one (f s)
          \<Longrightarrow> Identity_Elements\<^sub>E T D
@@ -1649,7 +1649,7 @@ lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
                             (\<lambda>s t (x,y). (eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst) \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
-            Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
+            Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Satisfiable_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
 
@@ -1677,7 +1677,7 @@ lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
                             (\<lambda>s t x. Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))\<close>
   unfolding Semimodule_SDistr_Homo\<^sub>S_def Transformation_def module_S_distr_def Is_Functional_def
-            Object_Equiv_def Functionality_def Action_Tag_def Inhabited_def
+            Object_Equiv_def Functionality_def Action_Tag_def Satisfiable_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
 

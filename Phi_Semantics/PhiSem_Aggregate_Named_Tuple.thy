@@ -235,7 +235,7 @@ let_\<phi>type Named_Tuple_Field
          \<Longrightarrow> Weak_Semantic_Type \<lbrace> SYMBOL_VAR(s): T \<rbrace> (semty_ntup (fmupd s TY fmempty))\<close>
        and \<open> Semantic_Zero_Val ty T x
          \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
-       and Inhabited_Type
+       and Inhabited
 
 text \<open>All the reasoning rules below are for semantic properties.
       All reasoning rules for transformations and SL are derived automatically by the above \<open>\<phi>type_def\<close> command\<close>
@@ -329,12 +329,12 @@ lemma [\<phi>reason %chk_sem_ele_idx+20]:
 
 
 lemma [\<phi>reason %\<phi>sem_type_cut+10]:
-  \<open> Inhabited_Type T
+  \<open> Inhabited T
 \<Longrightarrow> Is_Named_Tuple Ts fields
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
-\<Longrightarrow> Inhabited_Type Ts
-\<Longrightarrow> Inhabited_Type (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) \<close>
-  unfolding subset_iff Premise_def Inhabited_Type_def Inhabited_def Weak_Semantic_Type_def Is_Named_Tuple_def
+\<Longrightarrow> Inhabited Ts
+\<Longrightarrow> Inhabited (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) \<close>
+  unfolding subset_iff Premise_def Inhabited_def Satisfiable_def Weak_Semantic_Type_def Is_Named_Tuple_def
   apply (clarsimp)
   subgoal premises prems for x y p q
     by (insert prems(1)[THEN spec, THEN spec, THEN mp, OF prems(4)],

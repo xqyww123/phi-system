@@ -56,9 +56,9 @@ subsection \<open>Basic Rules\<close>
 declare \<phi>SEQ[intro!]
 
 lemma \<phi>M_assert[intro!]:
-  \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
+  \<open>(Satisfiable X \<Longrightarrow> P) \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
   unfolding \<phi>M_assert_def
-  by (rule \<phi>Inhabited; simp; rule)
+  by (rule \<phi>Satisfiable; simp; rule)
 
 lemma semantic_assert_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> P

@@ -158,14 +158,14 @@ val is_term_of_phi : phi_type -> term -> bool (*ignores type*)
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
     (*note the T below is a \<phi>-type parameter*)
-val separate_tyopr_and_its_typ_param : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
-val separate_tyopr_and_its_non_parameterized_typ_param : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
-val separate_tyopr_and_its_non_parameterized_typ_param_safe : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
-val separate_tyopr_and_its_non_parameterized_typ_params : PLPR_Pattern.bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
-val separate_tyopr_and_its_typ_params : PLPR_Pattern.bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
-val separate_tyopr_and_its_typ_param_safe : PLPR_Pattern.bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
-val separate_module_tyopr : PLPR_Pattern.bv_typs -> term (*F\<^sub>c(T)*) -> (term (*T*) * term (*c*) * term (*F*)) option
-val separate_scalar_tyopr : PLPR_Pattern.bv_typs -> term (*F\<^sub>c(T)*) -> (term option (*T*) * term (*c*) * term (*F*)) option
+val separate_tyopr_and_its_typ_param : bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_tyopr_and_its_non_parameterized_typ_param : bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_tyopr_and_its_non_parameterized_typ_param_safe : bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_tyopr_and_its_non_parameterized_typ_params : bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
+val separate_tyopr_and_its_typ_params : bvs -> term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
+val separate_tyopr_and_its_typ_param_safe : bv_typs -> term (*F(T)*) -> (term (*T*) * term (*F*)) Seq.seq
+val separate_module_tyopr : bv_typs -> term (*F\<^sub>c(T)*) -> (term (*T*) * term (*c*) * term (*F*)) option
+val separate_scalar_tyopr : bv_typs -> term (*F\<^sub>c(T)*) -> (term option (*T*) * term (*c*) * term (*F*)) option
 
 val def_contains_satisfaction : phi_type -> bool
 

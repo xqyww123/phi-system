@@ -13,6 +13,8 @@ signature PHI_TOPLEVEL = sig
 
   structure Finishing_Modifier_Hooks : HOOKS
   structure Finishing_Construction_Hooks : HOOKS
+  structure Begining_Procedures : HOOKS
+  structure Infer_Requirements : HOOKS
 
   (*val is_interactive : bool Config.T
   exception Schematic*)
@@ -136,6 +138,32 @@ structure Finishing_Modifier_Hooks = Hooks (type arg = unit
                                             type state = context_state)
 structure Finishing_Construction_Hooks = Hooks (type arg = unit
                                                 type state = context_state)
+structure Begining_Procedures = Hooks (
+  type arg = unit
+  type state = {
+    includes: string list,
+    assms: (typ, term, thm list) Element.ctxt list,
+    concls: (typ, term) Element.stmt,
+    after_qed: thm list list -> Proof.context -> Proof.context,
+    lthy: local_theory
+  }
+)
+
+structure Infer_Requirements = Hooks (
+  (*all terms are not type-checked, and may contain "_" dummy type *)
+  type arg = {
+      arg: term,
+      ret: term,
+      throw: term,
+      existing_requirements: ((binding * Token.src list) * (term * term list)) list
+    }
+  type state = {
+    parse_ctxt: Proof.context,
+    new_requirements: ((binding * Token.src list) * (term * term list)) list (*inferred premises / requirements*)
+  }
+)
+
+val enable_infer_requirements = Attrib.setup_config_bool \<^binding>\<open>\<phi>infer_requirements\<close> (K false)
 
 structure Procedure_Envir = Proof_Data (
   type T = { binding: binding,
@@ -145,6 +173,23 @@ structure Procedure_Envir = Proof_Data (
 
 val name_of_the_building_procedure = Option.map #binding o Procedure_Envir.get
 val free_fixed_outside = Option.map #free_fixed_outside o Procedure_Envir.get
+
+fun infer_requirements ctxt arg =
+  if Config.get ctxt enable_infer_requirements
+  then case Infer_Requirements.invoke (Context.Proof ctxt) arg {
+                parse_ctxt = ctxt,
+                new_requirements = []
+              }
+         of {new_requirements=[], ...} => (ctxt, #existing_requirements arg)
+          | {new_requirements, parse_ctxt} => (
+              Phi_Reasoner.warn_pretty (Context.Proof parse_ctxt) 1 (fn () => let open Pretty in
+                  chunks ([block (text "Several comonly useful premises are inferred and added to the specification")] @
+                    map (fn (_,(prem,_)) =>
+                      item [Syntax.pretty_term parse_ctxt prem]) new_requirements @
+                    [block (text "If they are too aggressive, you may disable this automation by \<open>declare [[\<phi>infer_requirements = false]]\<close>")])
+                end) ;
+              (parse_ctxt, #existing_requirements arg @ new_requirements))
+  else (ctxt, #existing_requirements arg)
 
 fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
       binding arg ret throws rawfixes includes raw_defines raw_preconds action raw_modifiers
@@ -156,6 +201,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
     val ((fixes,var_names), ctxt_parse) = lthy
                                        |> not (null includes) ? Bundle.includes includes
                                        |> prep_decls prep_var rawfixes
+                                       |> apsnd (Proof_Context.set_mode Proof_Context.mode_schematic)
     val binding = binding |> apsnd (map (Attrib.check_src lthy))
     val parse_term = prep_term ctxt_parse
     val parse_prop = prep_prop ctxt_parse
@@ -180,7 +226,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
                                  \use keyword \<open>assume\<close> for introducing advanced arbitrary \
                                  \antecedents.")) c
       | prep_precond (Assumption, c) = prep_attrterm parse_prop c
-    val preconds = map prep_precond raw_preconds
+    val preconds0 = map prep_precond raw_preconds
 
     val arg = Procedure_Syntax.translate_arg (parse_term arg)
     val ret = Procedure_Syntax.translate_ret (parse_term ret)
@@ -189,8 +235,17 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
                     of SOME thr => parse_term thr
                      | NONE => Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT))
     val goal0 = Const (@{const_name \<phi>Procedure}, dummyT) $ v_proc $ arg $ ret $ throws
-    val goal = (case action of NONE => HOLogic.Trueprop $ goal0
-                   | SOME A => HOLogic.Trueprop $ (\<^Const>\<open>Action_Tag\<close> $ goal0 $ parse_term A))
+    val goal0 = case action of NONE => HOLogic.Trueprop $ goal0
+                   | SOME A => HOLogic.Trueprop $ (\<^Const>\<open>Action_Tag\<close> $ goal0 $ parse_term A)
+
+    val preconds0'1 = map (fn (_,(P,_)) => P) preconds0
+    val (arg::ret::throws::goal0::preconds0'1) =
+            Syntax.check_terms ctxt_parse (arg::ret::throws::goal0::preconds0'1)
+    val preconds0 = map2 (fn (a,(_,b)) => fn c => (a,(c,b))) preconds0 preconds0'1
+
+    val (ctxt_parse, preconds) = infer_requirements ctxt_parse
+                        {arg=arg, ret=ret, throw=throws, existing_requirements=preconds0}
+    val goal = goal0
             |> fold_rev (fn (_,(P,_)) => fn X => \<^const>\<open>Pure.imp\<close> $ P $ X) preconds
 
     fun post_process' binding int lthy th =
@@ -204,12 +259,17 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
                 (("\<phi>procedure", ""), [("", [th])]); lthy))
 
     val defines = map (prep_attrterm parse_prop) raw_defines
-    val elems = [Element.Fixes fixes, Element.Defines defines]
+    val assms = [Element.Fixes fixes, Element.Defines defines]
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
     fun after_qed [[th]] lthy = post_process' binding int lthy th
+
+    val {includes, assms, concls, after_qed, lthy} =
+          Begining_Procedures.invoke (Context.Proof lthy) () {
+              includes=includes, assms=assms, concls=concls, after_qed=after_qed, lthy=lthy
+            }
   in
     lthy |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
-              includes elems concls int
+              includes assms concls int
          |> Proof.map_context (fn ctxt =>
               ctxt |> Phi_ID.set_construct (Binding.name_of (fst binding))
                    |> Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)

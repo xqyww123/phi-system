@@ -1,7 +1,7 @@
 signature PATTERN_REWRITE_GLOBAL = sig
 
-type bv_typs = PLPR_Pattern.bv_typs
-type bvs = PLPR_Pattern.bvs
+type bv_typs = bv_typs
+type bvs = bvs
 type fixed_bounds = PLPR_Pattern.fixed_bounds
 
 type spattern = term (*improved pattern where variables of a name exactly \<open>var\<close> or leaded by \<open>var_\<close>,
@@ -38,8 +38,8 @@ end
 
 structure Pattern_Translation : PATTERN_REWRITE_GLOBAL = struct
 
-type bv_typs = PLPR_Pattern.bv_typs
-type bvs = PLPR_Pattern.bvs
+type bv_typs = bv_typs
+type bvs = bvs
 type fixed_bounds = PLPR_Pattern.fixed_bounds
 
 type redex_residues = term * term list

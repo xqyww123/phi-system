@@ -210,7 +210,7 @@ lemma Well_Type_unique:
   using Well_Type_disjoint by blast
 
 (*
-abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>*)
+abbreviation \<open>Valid_Type T \<equiv> Satisfiable (Well_Type T)\<close>*)
 
 
 subsection \<open>Formalization of Computation\<close>

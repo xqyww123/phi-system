@@ -90,14 +90,14 @@ fun instantiate_the_var var phi ctxt sequent =
 
       val has_the_var = Term.exists_subterm (fn Var v' => v' = var | _ => false)
 
-      val allows_Inhabited_and_Sat = (*the inferred condition contains Inhabited and Satisfaction
+      val allows_Satisfiable_and_Sat = (*the inferred condition contains Satisfiable and Satisfaction
                                        only when they are also contained in the definition of the \<phi>-type,
                                        to prevent the result corrupted by noises*)
-            exists (exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+            exists (exists_subterm (fn Const(\<^const_name>\<open>Satisfiable\<close>, _) => true
                                      | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
                                      | _ => false) o Thm.prop_of) (#equations phi)
               |> not
-      val exists_bad = predicate_infer__contains_bad allows_Inhabited_and_Sat
+      val exists_bad = predicate_infer__contains_bad allows_Satisfiable_and_Sat
       fun augment P prems = if exists_bad P then prems else P :: prems
 
       fun opt_join NONE x = SOME x

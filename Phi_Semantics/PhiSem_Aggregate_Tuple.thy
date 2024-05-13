@@ -117,7 +117,7 @@ lemma semantic_tuple_constructor_N_no_use:
 
 (* lemma Valid_Type_\<tau>Tuple[simp]:
   \<open>Valid_Type (semty_tup Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
-  unfolding Inhabited_def
+  unfolding Satisfiable_def
   by (simp; induct Ts; simp add: list_all2_Cons1) *)
 
 section \<open>\<phi>Type\<close>
@@ -176,11 +176,11 @@ lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
   by (clarsimp, insert V_tup_mult, fastforce)
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> Inhabited_Type T
+  \<open> Inhabited T
 \<Longrightarrow> Weak_Semantic_Type Ts (semty_tup TYs)
-\<Longrightarrow> Inhabited_Type Ts
-\<Longrightarrow> Inhabited_Type (\<lbrace> T \<rbrace> \<^emph> Ts) \<close>
-  unfolding subset_iff Inhabited_Type_def Inhabited_def Weak_Semantic_Type_def
+\<Longrightarrow> Inhabited Ts
+\<Longrightarrow> Inhabited (\<lbrace> T \<rbrace> \<^emph> Ts) \<close>
+  unfolding subset_iff Inhabited_def Satisfiable_def Weak_Semantic_Type_def
   apply clarsimp
   subgoal for x y p q
     by (rule exI[where x=x], rule exI[where x=y], rule exI[where x=\<open>V_tup.mk [p]\<close>], rule exI[where x=q], clarsimp, blast) .

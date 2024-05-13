@@ -1343,7 +1343,7 @@ lemma abstract_domain_OPEN:
   \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. r x y @tag to (OPEN i T))
 \<Longrightarrow> Abstract_Domain U' D
 \<Longrightarrow> Abstract_Domain (OPEN i T) (\<lambda>x. \<exists>y. r x y \<and> D y) \<close>
-  unfolding OPEN_def Abstract_Domain_def Action_Tag_def \<r>EIF_def Transformation_def Inhabited_def
+  unfolding OPEN_def Abstract_Domain_def Action_Tag_def \<r>EIF_def Transformation_def Satisfiable_def
   by clarsimp blast
 
 lemma [\<phi>reason %abstract_domain]:
@@ -1548,7 +1548,7 @@ lemma abstract_domain_MAKE:
   \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<w>\<i>\<t>\<h> PP)
 \<Longrightarrow> (\<And>x. D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X x)
 \<Longrightarrow> Abstract_Domain\<^sub>L (MAKE i T) D \<close>
-  unfolding MAKE_def Abstract_Domain\<^sub>L_def \<r>ESC_def Transformation_def Action_Tag_def Inhabited_def
+  unfolding MAKE_def Abstract_Domain\<^sub>L_def \<r>ESC_def Transformation_def Action_Tag_def Satisfiable_def
   by clarsimp blast
 
 \<phi>reasoner_group abstract_domain_OPEN_MAKE = (%abstract_domain+100, [%abstract_domain+100, %abstract_domain+100])

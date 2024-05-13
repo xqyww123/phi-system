@@ -48,9 +48,9 @@ subsection \<open>Reasoning for Elementary Constructions\<close>
 declare \<phi>SEQ[intro!]
 
 lemma \<phi>M_assert[intro!]:
-  \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
+  \<open>(Satisfiable X \<Longrightarrow> P) \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
   unfolding \<phi>M_assert_def
-  by (rule \<phi>Inhabited; simp; rule)
+  by (rule \<phi>Satisfiable; simp; rule)
 
 lemma \<phi>M_assert_True[simp]:
   \<open>\<phi>M_assert True = Return \<phi>V_none\<close>
@@ -319,8 +319,8 @@ lemma \<phi>_expn[\<phi>expns]:
   unfolding \<phi>Type_def \<phi>_def by simp
 
 lemma \<phi>_inhabited[\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  \<open>Satisfiable (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Satisfiable (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Satisfiable_def by (simp add: \<phi>expns)
 
 lemma \<phi>_Prod:
   \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>

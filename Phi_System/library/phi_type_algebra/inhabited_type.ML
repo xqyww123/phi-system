@@ -1,6 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
+val inh_rule_expr : bv_typs -> term -> term
 val inhabited_type : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
@@ -8,32 +9,44 @@ end
 structure Phi_Type_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type Phi_Type_Derivers
 
-fun guess_property phi ctxt =
-  let val ((x_term, T_term), ctxt) = fix_phi_term_params phi ctxt
-      val (rev_arg_tys, x_ty, model_ty) = parameters_and_typs_of phi
-
-      fun collect_params ret [] _  = ret
-        | collect_params ret ((_,arg_ty) :: rev_arg_tys) (F' $ T') =
-            case try dest_parameterized_phi_ty arg_ty
-              of SOME dest => collect_params ((dest,T') :: ret) rev_arg_tys F'
-               | NONE => collect_params ret rev_arg_tys F'
-      val T_params = collect_params [] (rev rev_arg_tys) T_term
+fun inh_rule_expr' bvtys T_term =
+  let val T_params = Phi_Syntax.typ_parameter_of_phi_ty bvtys T_term
+      val (_, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of1 (bvtys,T_term))
 
       val ants = map (fn ((rev_args, x, m), T'h) =>
             let val arity = length rev_args
                 val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) rev_args T'h
-             in \<^Const>\<open>Inhabited_Type x m\<close> $ T'
+             in \<^Const>\<open>Inhabited x m\<close> $ T'
              |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
             end
           ) T_params
+   in (ants, \<^Const>\<open>Inhabited x_ty m_ty\<close> $ T_term)
+  end
 
-   in Seq.single (ants, HOLogic.Trueprop $
-          (\<^Const>\<open>Inhabited_Type x_ty model_ty\<close> $ T_term),
+fun inh_rule_expr bvtys T_term =
+  let val (rev_argtys, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of1 (bvtys, T_term))
+      val N = length rev_argtys
+      val T_term' = fold_index (fn (i,_) => fn X => X $ Bound (N - 1 - i)) rev_argtys
+                      (Term.incr_boundvars N T_term)
+      val (ants, concl) = inh_rule_expr' (rev_argtys @ bvtys) T_term'
+      
+   in fold_rev (fn ant => fn X =>
+        \<^Const>\<open>Pure.imp\<close> $ (HOLogic.Trueprop $ ant) $ X) ants
+        (HOLogic.Trueprop $ concl)
+   |> fold_index (fn (i,ty) => fn X =>
+          \<^Const>\<open>Pure.all ty\<close> $ Abs("T\<^sub>" ^ string_of_int (N-1-i), ty, X)) rev_argtys
+  end
+
+fun guess_property phi ctxt =
+  let val ((x_term, T_term), ctxt) = fix_phi_term_params phi ctxt
+      val (ants, concl) = inh_rule_expr' [] T_term
+
+   in Seq.single (ants, HOLogic.Trueprop $ concl,
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
 fun gen_inhabited_type (_, name) instruction (phi0 : phi_type) thy =
-  let val parse_hint = parse_hint (fn \<^Const>\<open>Inhabited_Type _ _\<close> $ T => T)
+  let val parse_hint = parse_hint (fn \<^Const>\<open>Inhabited _ _\<close> $ T => T)
       val ind_conv = K (K I)
       val varifier = K (K NONE)
 
@@ -65,6 +78,6 @@ fun gen_inhabited_type (_, name) instruction (phi0 : phi_type) thy =
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val inhabited_type = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Inhabited_Type") gen_inhabited_type
+val inhabited_type = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Inhabited") gen_inhabited_type
 
 end

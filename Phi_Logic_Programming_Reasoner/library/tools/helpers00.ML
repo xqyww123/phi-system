@@ -47,8 +47,8 @@ signature PHI_HELP = sig
 val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
                             * term list (*premises of the antecedent*)
                             * term (*conclusion containing loose bound*)
-val strip_meta_hhf_bvtys : term -> PLPR_Pattern.bv_typs * term
-val strip_meta_hhf_bvs : term -> PLPR_Pattern.bvs * term
+val strip_meta_hhf_bvtys : term -> bv_typs * term
+val strip_meta_hhf_bvs : term -> bvs * term
 val leading_antecedent : term -> (string * typ) list (*quantified variables*)
                                * term list (*premises of the antecedent*)
                                * term (*conclusion containing loose bound*)

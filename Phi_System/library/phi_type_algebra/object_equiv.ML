@@ -50,7 +50,7 @@ fun infer_equiv ctxt sequent =
       val (tya, tyb) = case snd var of \<^Type>\<open>fun a \<^Type>\<open>fun b _\<close>\<close> => (a,b)
       val (_,oblg) = PLPR_Syntax.dest_premise_tag (Thm.major_prem_of sequent)
       
-      val exists_bad = exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+      val exists_bad = exists_subterm (fn Const(\<^const_name>\<open>Satisfiable\<close>, _) => true
                                         | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
                                         | _ => false)
 

@@ -6,10 +6,11 @@
    Regard them as fixed variables.
 *)
 
-signature PLPR_PATTERN = sig
-
 type bv_typs = typ list (*types of contextual bound variables*)
 type bvs = (string * typ) list
+
+signature PLPR_PATTERN = sig
+
 type fixed_bounds = int -> bool
       (*whether the bound variable is fixed, so regarded as a normal free variable*)
 
