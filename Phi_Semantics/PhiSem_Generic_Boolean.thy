@@ -65,7 +65,7 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>x \<Ztypecolon> \<bool> \<equiv> V_bool.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type \<bool> bool\<close>
+       and \<open>Weak_Semantic_Type \<bool> bool\<close>
        and \<open>Semantic_Zero_Val bool \<bool> False\<close>
 
 

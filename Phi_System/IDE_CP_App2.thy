@@ -27,27 +27,13 @@ private lemma \<phi>TA_SemTy_cong:
 \<Longrightarrow> Weak_Semantic_Type T TY \<equiv> Weak_Semantic_Type T TY' \<close>
   by simp
 
-private lemma Semantic_Type_derv:
-  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Weak_Semantic_Type T TY)
-\<Longrightarrow> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Inhabited_Type T)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @tag \<phi>TA_ANT
-\<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Semantic_Type_def
-  by blast
-
 
 ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
 
 end
 
 \<phi>property_deriver Weak_Semantic_Type 120 for (\<open>Weak_Semantic_Type _ _\<close>)
-    = \<open> Phi_Type_Derivers.semantic_type true \<close> 
-
-\<phi>property_deriver Semantic_Type 110 for (\<open>Semantic_Type _ _\<close>)
-  requires Inhabited_Type
-    = \<open> Phi_Type_Derivers.semantic_type false \<close>
+    = \<open> Phi_Type_Derivers.semantic_type \<close> 
 
 
 subsubsection \<open>Semantic Zero Value\<close>

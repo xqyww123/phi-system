@@ -50,7 +50,7 @@ proc is_empty:
 context
   fixes T :: \<open>(VAL, 'a) \<phi>\<close>                            \<comment> \<open>we provide a generic verification\<close>
     and TY :: TY                                      \<comment> \<open>semantic type\<close>
-  assumes [\<phi>reason add]: \<open>Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close>
+  assumes [\<phi>reason add]: \<open>Weak_Semantic_Type T TY\<close>    \<comment> \<open>specify the semantic type of T\<close>
 begin
 
 proc prepend_llist:

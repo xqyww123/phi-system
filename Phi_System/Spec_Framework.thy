@@ -217,9 +217,6 @@ subsubsection \<open>Single Value\<close>
 definition Weak_Semantic_Type :: \<open>(VAL,'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
   where \<open>Weak_Semantic_Type T TY \<longleftrightarrow> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)\<close>
 
-definition Semantic_Type :: \<open>(VAL,'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
-  where \<open>Semantic_Type T TY \<longleftrightarrow> Weak_Semantic_Type T TY \<and> Inhabited_Type T\<close>
-
 definition Weak_Semantic_Type' :: "value_assertion \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>Weak_Semantic_Type' S TY \<longleftrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
@@ -230,7 +227,6 @@ definition Weak_Semantic_Type' :: "value_assertion \<Rightarrow> TY \<Rightarrow
 declare [[
   \<phi>reason_default_pattern \<open>Weak_Semantic_Type ?T _\<close>  \<Rightarrow> \<open>Weak_Semantic_Type ?T _\<close>  (100)
                       and \<open>Weak_Semantic_Type' ?A _\<close> \<Rightarrow> \<open>Weak_Semantic_Type' ?A _\<close> (100)
-                      and \<open>Semantic_Type ?T _\<close> \<Rightarrow> \<open>Semantic_Type ?T _\<close>             (100)
 ]]
 
 \<phi>reasoner_group \<phi>sem_type = (100, [0, 3000]) for (\<open>Weak_Semantic_Type T TY\<close>)
@@ -328,13 +324,6 @@ lemma [\<phi>reason default %\<phi>sem_type_failback]:
   unfolding Weak_Semantic_Type'_def Weak_Semantic_Type_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason default %\<phi>sem_type_failback]:
-  \<open> Weak_Semantic_Type T TY
-\<Longrightarrow> Inhabited_Type T
-\<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Semantic_Type_def
-  by blast
-
 
 paragraph \<open>Over Logic Connectives\<close>
 
@@ -362,24 +351,8 @@ lemma [\<phi>reason %\<phi>sem_type_cut]:
 
 paragraph \<open>Conversion From Strong to Weak\<close>
 
-ML_file \<open>library/spec_framework/semantic_type.ML\<close>
+(* ML_file \<open>library/spec_framework/semantic_type.ML\<close> *)
 
-lemma
-  \<open> \<forall>T TY. Semantic_Type T TY \<longrightarrow> Semantic_Type (F T) (G TY)
-\<Longrightarrow> Weak_Semantic_Type T TY
-\<Longrightarrow> Weak_Semantic_Type (F T) (G TY) \<close>
-  unfolding Semantic_Type_def Inhabited_Type_def Weak_Semantic_Type_def
-  apply clarsimp
-  
-
-context
-  fixes F G
-  assumes A: \<open>Semantic_Type T TY \<Longrightarrow> Semantic_Type (F T) (G TY) \<close>
-begin
-   
-ML \<open>Semantic_Type_Tools.conv_sem_rule true \<^context> @{thm A}\<close>
-
-end
 
 subsubsection \<open>Multiple Values\<close>
 
@@ -398,10 +371,10 @@ definition SType_Of :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY\<close> ("\<t>\<
   where \<open>\<t>\<y>\<p>\<e>\<o>\<f> T = (@TY. Weak_Semantic_Type T TY)\<close>
 
 lemma SType_Of_unfold:
-  \<open> Semantic_Type T TY
+  \<open> Weak_Semantic_Type T TY
+\<Longrightarrow> Inhabited_Type T
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T \<equiv> TY \<close>
   unfolding Weak_Semantic_Type_def Inhabited_Type_def SType_Of_def atomize_eq
-            Semantic_Type_def
   using Well_Type_unique
   by (clarsimp, smt (verit, del_insts) Inhabited_def someI)
 

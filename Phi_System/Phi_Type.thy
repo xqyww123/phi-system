@@ -4728,7 +4728,7 @@ lemma SE_Semimodule_Scalar_left
   \<medium_right_bracket> .
 
 
- 
+
 lemma SE_Semimodule_Scalar_partial_right:
   \<open> \<g>\<u>\<a>\<r>\<d> common_multiplicator_2 smul a c b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>a a \<and> D\<^sub>c c
