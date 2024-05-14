@@ -154,10 +154,10 @@ subsection \<open>Helper Lemmas\<close>
 (*TODO: IMPROVE ME!*)
 
 (*declare Suc_le_eq[simp]*)
-
+(*
 lemma [simp]: \<open>{ia. ia < Suc i } - {i} = {ia. ia < i}\<close> for i :: nat
   by fastforce
-
+*)
 lemma proj_eq_pair_eq[simp]:
   \<open>fst x = fst y \<and> snd x = snd y \<longleftrightarrow> x = y\<close>
   using prod.expand by blast
@@ -167,12 +167,15 @@ lemma fst_snd_If_pair[simp]:
   \<open> snd (If C (a,b) (c,d)) = (If C b d) \<close>
   by auto
 
+
+
+(*
 lemma [simp]:
   \<open>list_all2 (\<lambda>x y. snd x = snd y \<and> fst x = fst y) = (=)\<close>
   by (auto simp: fun_eq_iff,
       smt (verit, ccfv_SIG) list.rel_eq list_all2_mono surjective_pairing,
       simp add: list.rel_refl)
-
+*)
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
 lemma case_sum_collapse[simp, \<phi>safe_simp]:
@@ -189,10 +192,11 @@ lemma apfst_id'[simp, \<phi>safe_simp]:
   \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
   by (simp add: fun_eq_iff)
 
+(*
 lemma stupid_pair_eq_prj3[simp]:
   \<open>snd (snd x) = snd (snd y) \<and> fst (snd x) = fst (snd y) \<and> fst x = fst y \<longleftrightarrow> x = y\<close>
   by (meson prod.expand)
-
+*)
 
 ML_file \<open>library/tools/help_lemmas.ML\<close>
 

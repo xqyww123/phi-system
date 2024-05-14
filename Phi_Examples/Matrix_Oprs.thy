@@ -28,8 +28,23 @@ proc zero_mat:
   unfolding MatSlice.unfold
 \<medium_left_bracket>
   map_slice(m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
-    map_slice(n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
+    map_slice(n) \<medium_left_bracket> for h \<rightarrow> val h  \<semicolon>
       a[i+k, j+h] := \<open>0 \<Ztypecolon> \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     \<medium_right_bracket>
   \<medium_right_bracket> \<semicolon>
 

@@ -712,6 +712,13 @@ fun auto_obligation_solver1 ctxt sequent =  (
      )
 
 
+fun timed_tac time tac th =
+  let val s = tac th
+   in Seq.make (fn () =>
+    Timeout.apply time Seq.pull s
+    handle Timeout.TIMEOUT _ => NONE
+  ) end
+
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
 fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
@@ -725,22 +732,20 @@ fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
              (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
                             else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW *)
-                Classical.clarify_tac (addSss ctxt)
+                (fn i => timed_tac (Time.fromMilliseconds 300) (Classical.fast_tac (addSss ctxt) i))
        in
-        Timeout.apply (Time.fromMilliseconds 10) (fn () =>
         apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
                  THEN HEADGOAL (
                               case_split_by_annotations_leading_subgoal ctxt 
                  THEN_ALL_NEW Method.insert_tac ctxt aux
-                 (*THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x)*)
-                 THEN_ALL_NEW (fn s => fn x => Clasimp.fast_force_tac (ctxt addsimps @{thms' Premise_def}) s x)
+                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x)
+               (*THEN_ALL_NEW (fn s => fn x => Clasimp.fast_force_tac
+                      (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) s x)*)
 ) )
                ) Safe_Solver th'
-       |> Seq.pull) ()
-       |> (fn x => x)
-       (* |> Timeout.apply (Time.fromMilliseconds 10) Seq.pull *)
-       handle Timeout.TIMEOUT _ => NONE
+       |> Seq.take 1
+       |> Seq.pull
       end)
 
 val weak_obligation_solver' = context_tactic_to_state_transition o weak_obligation_solver
