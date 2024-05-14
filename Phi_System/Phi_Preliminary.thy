@@ -54,10 +54,16 @@ structure Phi_Programming_Simp_Hook = Hooks (
 
 fun equip_Phi_Programming_Simp lev ctxt =
   if lev >= 2
-  then Phi_Programming_Simp_SS.enhance ctxt
+  then ctxt
+    |> Context_Position.set_visible false
+    |> Phi_Programming_Simp_SS.enhance
     |> Phi_Programming_Simp_Hook.invoke (Context.Proof ctxt) ()
-  else Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
+    |> Context_Position.restore_visible ctxt
+  else ctxt
+    |> Context_Position.set_visible false
+    |> Phi_Programming_Simp_SS.enhance o Phi_Programming_Base_Simp_SS.equip
     |> Phi_Programming_Simp_Hook.invoke (Context.Proof ctxt) ()
+    |> Context_Position.restore_visible ctxt
 
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 structure Expansion : SIMPSET (*The standard simpset for deriving*)

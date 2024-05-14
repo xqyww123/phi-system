@@ -305,6 +305,7 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 
+
 (*Wrap a context tactic of type `Proof.context -> thm -> thm Seq.seq` to the
   transition between states, of type `Proof.context * thm -> Proof.context * thm`.
   *This wrap only adopts the first result of applying the tactic, and drops other alternatives.*
@@ -719,6 +720,31 @@ fun timed_tac time tac th =
     handle Timeout.TIMEOUT _ => NONE
   ) end
 
+fun slow_step_tac' ctxt =
+  Classical.appWrappers ctxt
+    (Classical.instp_step_tac ctxt APPEND' Classical.unsafe_step_tac ctxt);
+
+fun nodup_depth_tac ctxt m i st =
+  SELECT_GOAL
+    (Classical.safe_steps_tac ctxt 1 THEN_ELSE
+      (DEPTH_SOLVE (nodup_depth_tac ctxt m 1),
+        Classical.inst0_step_tac ctxt 1 APPEND COND (K (m = 0)) no_tac
+          (slow_step_tac' ctxt 1 THEN DEPTH_SOLVE (nodup_depth_tac ctxt (m - 1) 1)))) i st;
+
+fun auto_search_tac ctxt m n =
+  let
+    val main_tac =
+      Blast.depth_tac ctxt m  (* fast but can't use wrappers *)
+      ORELSE'
+      (CHANGED o nodup_depth_tac (addss ctxt) n);  (* slower but more general *)
+  in
+    TRY (Classical.safe_tac ctxt) THEN
+    REPEAT_DETERM (FIRSTGOAL main_tac) THEN
+    TRY (Classical.safe_tac (addSss ctxt)) THEN
+    prune_params_tac ctxt
+  end;
+
+
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
 fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
@@ -727,22 +753,33 @@ fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
       let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1*)
           val th' = th
+          fun auto_tac ctxt =
+                ALLGOALS (Simplifier.asm_full_simp_tac ctxt) THEN
+                (fn th => timed_tac (Time.fromMilliseconds 500)
+                    (head_only (auto_search_tac ctxt 10 6)) th)
           fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
              (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
                             else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW *)
-                (fn i => timed_tac (Time.fromMilliseconds 300) (Classical.fast_tac (addSss ctxt) i))
+                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.fast_tac (addSss ctxt) i) th)
+          fun clarsimp'_tac ctxt =
+                Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
+                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.fast_tac (addss ctxt) i) th)
+          fun force_tac ctxt =
+                Classical.clarify_tac ctxt THEN_ALL_NEW
+                Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
+                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.first_best_tac (addss ctxt) i) th)
        in
-        apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (
+        apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> head_only (
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
                  THEN HEADGOAL (
                               case_split_by_annotations_leading_subgoal ctxt 
                  THEN_ALL_NEW Method.insert_tac ctxt aux
-                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x)
+                 ) THEN auto_tac (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) 
+               (*THEN_ALL_NEW (fn s => fn x => force_tac (ctxt addsimps @{thms' Premise_def}) s x) )*)
                (*THEN_ALL_NEW (fn s => fn x => Clasimp.fast_force_tac
-                      (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) s x)*)
-) )
+                      (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) s x)*) )
                ) Safe_Solver th'
        |> Seq.take 1
        |> Seq.pull

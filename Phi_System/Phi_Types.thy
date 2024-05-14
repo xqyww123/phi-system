@@ -558,7 +558,6 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[no_atp]]:
   by clarsimp force
 
 
-
 subsection \<open>Nondeterministic Abstraction\<close>
 
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
@@ -570,6 +569,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
 declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abst\<close>\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def Set_Abst :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
@@ -1057,7 +1058,7 @@ lemma pred_sum_is_case_sum[simp]:
   \<open>pred_sum = case_sum\<close>
   using pred_sum_eq_case_sum by blast
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>Sum :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
@@ -1401,6 +1402,8 @@ local_setup \<open>
   \<comment> \<open>Setup an alternative definition in the language of \<phi>-types so that we can apply
       derivers over these bootstrap \<phi>-types\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 let_\<phi>type \<phi>Some
   deriving Sep_Functor
        and Carrier_Set
@@ -1542,7 +1545,7 @@ lemma [\<phi>reason %guess_tyop_commute for \<open>Guess_Tyops_Commute True _ ?v
 
 
 subsubsection \<open>Application \label{phi-types/Domainoid/App}\<close>
-
+  
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L T D\<^sub>T
 \<Longrightarrow> Abstract_Domain\<^sub>L U D\<^sub>U
@@ -1554,7 +1557,8 @@ lemma [\<phi>reason %abstract_domain]:
 \<Longrightarrow> Abstract_Domain\<^sub>L (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y)\<close>
   unfolding Satisfiable_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
             Abstract_Domain\<^sub>L_def \<r>ESC_def
-  by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; metis)
+  apply (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def)
+  by metis
 
 
 
@@ -1693,6 +1697,8 @@ declare Guess_Tyops_Commute_by_unfolding
          \<phi>reason %guess_tyop_commute]
 
 paragraph \<open>Deriving the Commutativity with Itself\<close>
+
+declare [[\<phi>trace_reasoning = 3]]
 
 let_\<phi>type \<phi>ScalarMul deriving \<phi>ScalarMul.Comm\<^sub>I
 

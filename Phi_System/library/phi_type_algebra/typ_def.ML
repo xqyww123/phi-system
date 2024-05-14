@@ -601,11 +601,11 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
             |> Config.put under_deriving_ctxt true
             |> Phi_Reasoners.report_failure_reason []
    in thy
-   |> Local_Theory.map_contexts (fn i => if i >= level - 1 then setup else I)
+   |> Local_Theory.map_contexts (fn i => if i >= level - 1 then  setup else I)
    |> Local_Theory.target setup
    |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn lthy =>
           lthy |> snd o Local_Theory.begin_nested
-               |> setup
+               |> Context_Position.set_visible false
                |> #derive derv (is_weak, pos) hints phityp
                |> Local_Theory.end_nested
           handle Automation_Fail msg => err_derive lthy name (msg ()) hints

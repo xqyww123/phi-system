@@ -55,7 +55,7 @@ proc set_dynarr:
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  addr.data![i] := $v
+  addr.data![i] := v
 \<medium_right_bracket> .
 
 proc Max:

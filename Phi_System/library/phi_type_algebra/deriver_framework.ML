@@ -1173,6 +1173,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
         let val iname = suffix_name_by_index (i+ind) name
             val derv_thy = thy
                         |> num > 1 ? snd o Local_Theory.begin_nested
+                        |> Context_Position.set_visible false
                         |> snd o Proof_Context.note_thms "" (Binding.empty_atts, #5 H)
                         |> Bundle.includes (#6 H)
          in deriver (i+ind, iname) H phi derv_thy

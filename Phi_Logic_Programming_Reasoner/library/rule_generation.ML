@@ -508,7 +508,7 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                                           raise Generation_Fail (0, fn () =>
                                                             [Text_Encoding.decode_text_pretty ctxt' text])
                                                       | Const(\<^const_name>\<open>undefined\<close>, _) =>
-                                                          raise Generation_Fail (0, fn () => 
+                                                          raise Generation_Fail (1, fn () => 
                                                             [para "fail to reason a compulsory antecedent",
                                                              Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))])
                                                       | Const(\<^const_name>\<open>None\<close>, _) =>
