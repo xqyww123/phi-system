@@ -755,8 +755,8 @@ fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
           val th' = th
           fun auto_tac ctxt =
                 ALLGOALS (Simplifier.asm_full_simp_tac ctxt) THEN
-                (fn th => timed_tac (Time.fromMilliseconds 500)
-                    (head_only (auto_search_tac ctxt 10 6)) th)
+                (fn th => timed_tac (Time.fromMilliseconds 300)
+                    (head_only (auto_search_tac ctxt 4 2)) th)
           fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
              (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 

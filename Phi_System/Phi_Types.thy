@@ -1698,7 +1698,7 @@ declare Guess_Tyops_Commute_by_unfolding
 
 paragraph \<open>Deriving the Commutativity with Itself\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
 let_\<phi>type \<phi>ScalarMul deriving \<phi>ScalarMul.Comm\<^sub>I
 

@@ -28,6 +28,8 @@ val hol_ball_conv : conv -> (cterm * Proof.context -> conv) -> Proof.context -> 
 val rulify_Ball : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val hol_alls_to_meta_alls: (Proof.context -> conv) -> Proof.context -> conv
+val hol_alls_balls_conv : (Proof.context -> conv) -> Proof.context -> conv
+val hol_alls_balls_to_meta : (Proof.context -> conv) -> Proof.context -> conv
 
 val prod_case_split_in_all_conv : (Proof.context -> conv) -> Proof.context -> conv
       (*converts \<open>\<And>x. meta_case_prod (meta_case_prod f) x\<close>, \<open>\<And>x. prem \<Longrightarrow>  meta_case_prod (meta_case_prod f) x\<close>
@@ -183,6 +185,24 @@ fun quant_conv head cv ctxt ct =
       | _ => raise CTERM ("quant_conv", [ct]))
 
 val hol_all_conv = quant_conv \<^const_name>\<open>All\<close>
+
+fun hol_alls_balls_conv cv ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>HOL.All\<close>, _) $ _ => hol_all_conv (meta_alls_conv cv o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Ball\<close>, _) $ _ $ _ =>
+          hol_ball_conv Conv.all_conv (meta_alls_conv cv o snd) ctxt ctm
+     | _ => cv ctxt ctm
+
+fun hol_alls_balls_to_meta C ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>All\<close>, _) $ _) =>
+         (Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
+          meta_all_conv (hol_alls_balls_to_meta C o snd) ctxt) ctm
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ _) =>
+         (Conv.rewr_conv @{thm' Ball_for_reason} then_conv
+          meta_all_conv (fn (_, ctxt) =>
+              Conv.implies_concl_conv (hol_alls_balls_to_meta C ctxt)) ctxt) ctm
+     | _ => C ctxt ctm
 
 fun meta_all_body_conv C ctxt =
   meta_all_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt

@@ -420,7 +420,7 @@ lemma atomize_Ball:
   unfolding meta_Ball_def Premise_def Ball_def atomize_imp atomize_all .
 
 lemma Ball_for_reason:
-  \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
+  \<open>Trueprop (\<forall>x\<in>A. P x) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
   unfolding atomize_imp atomize_all Ball_def Premise_def .
 
 lemma meta_Ball_pair:
@@ -1119,7 +1119,6 @@ subsubsection \<open>Basic Reasoning Rules\<close>
 
 declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
-        allI [\<phi>reason %cutting]
         exI  [\<phi>reason %cutting]
         HOL.refl [\<phi>reason %lambda_unify__default for \<open>_ = _\<close>]
 
@@ -2162,28 +2161,42 @@ subsubsection \<open>Augmenting Refined Local Conditions\<close>
 
 (*TODO: shortcut when \<open>P = False\<close>*)
 
-\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %\<phi>LPR_imp+10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>) = \<open>
-  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+declare allI [\<phi>reason %\<phi>LPR_imp]
+
+\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %\<phi>LPR_imp+10 ( \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>
+                                                  | \<open>HOL.All _\<close> | \<open>Set.Ball _ _\<close> ) = \<open>
+  fn (_, (ctxt,sequent)) =>
+  let fun qchk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk X
+        | qchk (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = qchk X
+        | qchk (Abs (_, _, X)) = qchk X
+        | qchk (Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ X) = qchk X
+        | qchk (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) $ _) = true
+        | qchk _ = false
+   in if qchk (Thm.major_prem_of sequent)
+   then Seq.make (fn () =>
     let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
                    |> Conv.gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt =>
-                        Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv (
+                        Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_alls_balls_conv (K (
                             Phi_Conv.hol_imp_conv (Conv.arg_conv PLPR_Simplifier.conjs_to_aseq)
+(* Conv.rewr_conv @{thm' Premise_def} then_conv *)
                                                   (Conv.rewr_conv @{thm' NO_SIMP_def[symmetric]})
-                        ))) ctxt then_conv
+                        )) ctxt)) ctxt then_conv
                         Phi_Reasoners.asm_rewrite false ctxt then_conv
-                        Phi_Conv.hhf_concl_conv (K (fn ctm => 
+                        Phi_Conv.hhf_concl_conv (Phi_Conv.hol_alls_balls_to_meta (K (fn ctm => 
                             case Thm.term_of ctm
-                              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
-                                      (HOLogic.Trueprop_conv ( 
+                              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) => (
+                                       HOLogic.Trueprop_conv (
                                           Phi_Conv.hol_imp_conv (Conv.arg_conv PLPR_Simplifier.aseq_to_conjs)
-                                                                (Conv.rewr_conv @{thm' NO_SIMP_def})
-                                       ) then_conv
+                                                                (Conv.rewr_conv @{thm' NO_SIMP_def}))
+                                       then_conv
                                        Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctm
-                               | _ => (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def})) ctm
-                            )) ctxt
+                               | _ => HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def}) ctm
+                            ))) ctxt
                       ) ctxt) 1
      in SOME ((ctxt, sequent'), Seq.empty)
     end)
+  else Seq.empty
+  end
 \<close>
 
 lemma [\<phi>reason %\<phi>LPR_imp+10]:
