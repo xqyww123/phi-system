@@ -143,10 +143,12 @@ structure Tactic_Configures = Hooks (
 )
 
 fun apply_tac ctxt tactic mode =
-  HEADGOAL (SOLVED' (K
-    (#2 (Tactic_Configures.invoke_until_success (Context.Proof ctxt)
+  HEADGOAL (SOLVED' (fn i => fn th =>
+    let val tac = #2 (Tactic_Configures.invoke_until_success (Context.Proof ctxt)
           (fn mode => fn (aux,tac,ctxt) =>
-              ([], tactic (ctxt,tac,aux,mode), ctxt)) mode (aux_thms ctxt, all_tac, ctxt)))))
+              ([], tactic (ctxt,tac,aux,mode), ctxt)) mode (aux_thms ctxt, all_tac, ctxt))
+     in tac th
+    end ))
 
 (*
 (** Tactic Template **)
@@ -713,12 +715,16 @@ fun auto_obligation_solver1 ctxt sequent =  (
      )
 
 
-fun timed_tac time tac th =
+fun timed_tac time tac th = Seq.make (fn () => Timeout.apply time (fn () =>
   let val s = tac th
-   in Seq.make (fn () =>
-    Timeout.apply time Seq.pull s
-    handle Timeout.TIMEOUT _ => NONE
-  ) end
+   in Seq.pull s
+  end ) ()
+  handle Timeout.TIMEOUT _ => NONE)
+
+fun quick_cut i th =
+  case Logic.strip_assums_concl (Logic.nth_prem (i, Thm.prop_of th))
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>False\<close>, _) => Seq.empty
+     | _ => Seq.single th
 
 fun slow_step_tac' ctxt =
   Classical.appWrappers ctxt
@@ -754,9 +760,13 @@ fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
           val th' = @{thm' Premise_I} RS th'1*)
           val th' = th
           fun auto_tac ctxt =
-                ALLGOALS (Simplifier.asm_full_simp_tac ctxt) THEN
-                (fn th => timed_tac (Time.fromMilliseconds 300)
-                    (head_only (auto_search_tac ctxt 4 2)) th)
+                ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
+                (fn th => Seq.make (fn () =>
+                    let val x = timed_tac (Time.fromMilliseconds 300)
+                    (auto_search_tac ctxt 4 2) th
+                        val ret  = Seq.pull x
+                     in ret
+                    end))
           fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
              (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 
@@ -771,16 +781,17 @@ fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
                 Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
                 (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.first_best_tac (addss ctxt) i) th)
        in
-        apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> head_only (
+        apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (quick_cut 1 THEN (head_only (
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
                  THEN HEADGOAL (
                               case_split_by_annotations_leading_subgoal ctxt 
                  THEN_ALL_NEW Method.insert_tac ctxt aux
-                 ) THEN auto_tac (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) 
-               (*THEN_ALL_NEW (fn s => fn x => force_tac (ctxt addsimps @{thms' Premise_def}) s x) )*)
+                 ) THEN auto_tac (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def})
+               (* THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x) ) *)
                (*THEN_ALL_NEW (fn s => fn x => Clasimp.fast_force_tac
                       (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) s x)*) )
-               ) Safe_Solver th'
+               ))
+              |> Seq.take 1 ) Safe_Solver th'
        |> Seq.take 1
        |> Seq.pull
       end)
