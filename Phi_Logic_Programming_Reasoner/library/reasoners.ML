@@ -714,12 +714,22 @@ fun auto_obligation_solver1 ctxt sequent =  (
         ) ctxt sequent
      )
 
+fun norm_tac tac th = Seq.make (fn () => Seq.pull (tac th))
 
-fun timed_tac time tac th = Seq.make (fn () => Timeout.apply time (fn () =>
+fun timed_tac time tac th =
   let val s = tac th
-   in Seq.pull s
-  end ) ()
-  handle Timeout.TIMEOUT _ => NONE)
+   in Seq.make (fn () =>
+      Timeout.apply time Seq.pull s
+      handle Timeout.TIMEOUT _ => NONE )
+  end
+
+fun timed1_tac time t' tac th =
+  let val s = tac th
+   in Seq.make (fn () =>
+      Timeout.apply time Seq.pull s
+      handle Timeout.TIMEOUT t'' =>
+        if t'' > t' then raise Timeout.TIMEOUT t'' else NONE )
+  end
 
 fun quick_cut i th =
   case Logic.strip_assums_concl (Logic.nth_prem (i, Thm.prop_of th))
@@ -737,37 +747,89 @@ fun nodup_depth_tac ctxt m i st =
         Classical.inst0_step_tac ctxt 1 APPEND COND (K (m = 0)) no_tac
           (slow_step_tac' ctxt 1 THEN DEPTH_SOLVE (nodup_depth_tac ctxt (m - 1) 1)))) i st;
 
-fun auto_search_tac ctxt m n =
+fun auto_search_tac t ctxt =
   let
-    val main_tac =
-      Blast.depth_tac ctxt m  (* fast but can't use wrappers *)
-      ORELSE'
-      (CHANGED o nodup_depth_tac (addss ctxt) n);  (* slower but more general *)
+    val ctxt = Context_Position.set_visible false ctxt
+    val t1 = Time.fromMilliseconds t
+    val tn = Time.fromMilliseconds 100
+    val tm = Time.fromMilliseconds 200
+    fun main_tac i =
+      (*Blast.depth_tac ctxt 4 i
+      ORELSE*)
+      (*timed_tac tm ( *)
+          CHANGED (nodup_depth_tac (addss ctxt) 10 i)
+      (*)*)
+      (*Classical.fast_tac ctxt i*)
   in
-    TRY (Classical.safe_tac ctxt) THEN
-    REPEAT_DETERM (FIRSTGOAL main_tac) THEN
-    TRY (Classical.safe_tac (addSss ctxt)) THEN
-    prune_params_tac ctxt
+    timed_tac t1 (norm_tac (
+      TRY (Classical.safe_tac ctxt) THEN
+      REPEAT_DETERM (FIRSTGOAL main_tac) THEN
+      TRY (Classical.safe_tac (addSss ctxt)) THEN
+      prune_params_tac ctxt))
   end;
+
+(*
+fun auto_search1_tac ctxt m n th =
+  norm_tac (auto_search_tac ctxt m n) th
+    |> Seq.take 1
+
+fun dest_all ct used =
+  (case Thm.term_of ct of
+    Const ("Pure.all", _) $ Abs (x, _, _) =>
+      let
+        val (x', used') = Name.variant x used;
+        val (v, ct') = Thm.dest_abs_fresh x' (Thm.dest_arg ct);
+      in SOME ((x, Thm.ctyp_of_cterm v), (ct', used')) end
+  | _ => NONE)
+
+val negation = \<^cterm>\<open>Not\<close>
+fun prove_or_rebute can_inst ctxt ctxt0 =
+  timed_tac (Time.fromMilliseconds 30) (auto_search1_tac ctxt 4 2) ORELSE
+  (fn th =>
+    let exception Unsupported
+     in let
+        fun conv_goal used ctm =
+          case Thm.term_of ctm  
+            of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+                  let val (f,a) = Thm.dest_comb ctm
+                   in Thm.apply f (conv_goal used a)
+                  end
+             | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (x,_,_) =>
+                  let val (q,b) = Thm.dest_comb ctm
+                      val (x', used') = Name.variant x used;
+                      val (v, b') = Thm.dest_abs_fresh x' b
+                   in Thm.apply q (Thm.lambda v (conv_goal used' b'))
+                  end
+             | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                  let val (c,b) = Thm.dest_comb ctm
+                   in Thm.apply c (Thm.apply negation b)
+                  end
+             | _ => raise Unsupported
+        fun mk_goal ctm =
+          let 
+           in ()
+          end
+        val goals = Thm.cprems_of th |> map Goal.init
+     in Seq.empty
+    end handle Unsupported =>
+      timed_tac (Time.fromMilliseconds 400) (auto_search1_tac ctxt 6 4) th
+    end)
+*)
+  
 
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
-                                                        fix_level= if can_inst then 1 else 2 }
+fun weak_obligation_solver {can_inst} ctxt0 =
+        oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
   (fn ctxt => fn th =>
       let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1*)
           val th' = th
           fun auto_tac ctxt =
                 ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
-                (fn th => Seq.make (fn () =>
-                    let val x = timed_tac (Time.fromMilliseconds 300)
-                    (auto_search_tac ctxt 4 2) th
-                        val ret  = Seq.pull x
-                     in ret
-                    end))
-          fun clarsimp_tac ctxt =
+                (auto_search_tac 300 ctxt)
+        (*fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
              (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
@@ -779,7 +841,7 @@ fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
           fun force_tac ctxt =
                 Classical.clarify_tac ctxt THEN_ALL_NEW
                 Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
-                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.first_best_tac (addss ctxt) i) th)
+                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.first_best_tac (addss ctxt) i) th) *)
        in
         apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (quick_cut 1 THEN (head_only (
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
@@ -794,7 +856,7 @@ fun weak_obligation_solver {can_inst} = oblg_template true {can_inst = can_inst,
               |> Seq.take 1 ) Safe_Solver th'
        |> Seq.take 1
        |> Seq.pull
-      end)
+      end) ctxt0
 
 val weak_obligation_solver' = context_tactic_to_state_transition o weak_obligation_solver
 
