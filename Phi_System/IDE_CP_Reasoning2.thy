@@ -680,7 +680,7 @@ lemma [\<phi>reason %lookup_a_mapper for \<open>lookup_a_mapper (comb.K _) _ _\<
   unfolding lookup_a_mapper_def comb.K_def ..
 
 lemma [\<phi>reason default %lookup_a_mapper_default+20 for \<open>lookup_a_mapper ?var _ _\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] x = y
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = y
 \<Longrightarrow> lookup_a_mapper id x y \<close>
   unfolding \<r>Guard_def Premise_def lookup_a_mapper_def
   by simp
@@ -982,7 +982,7 @@ lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _
 lemma ttt[\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond False _ _
                                   (\<m>\<a>\<p> _ : _ [False]\<^emph>[_] _ \<mapsto> _ [False]\<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
                                    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _)\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
 \<Longrightarrow> mapToA_cond False True C\<^sub>E
    (\<m>\<a>\<p> gg : W [False]\<^emph>[True,C\<^sub>E] (T,E) \<mapsto> W' [False]\<^emph>[True,C\<^sub>E] (T',E')
     \<o>\<v>\<e>\<r> ff : T \<^emph>[False,C\<^sub>E] (\<top>\<^sub>\<phi>,E) \<mapsto> T' \<^emph>[False,C\<^sub>E] (\<top>\<^sub>\<phi>,E')
@@ -1011,7 +1011,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm
         for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
              \<o>\<v>\<e>\<r> _ : (_ [False]\<^emph> _ ) \<^emph>[_] _ \<mapsto> (_ [False]\<^emph> _) \<^emph>[_] _
              \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] f\<^sub>1' : f\<^sub>1
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> f\<^sub>1' : f\<^sub>1
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>((x,_),_) \<in> D. f\<^sub>1' x = unspec)
 \<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
     \<o>\<v>\<e>\<r> f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3 : T\<^sub>2 \<^emph>[C\<^sub>W] W \<mapsto> T\<^sub>2' \<^emph>[C\<^sub>W] W'

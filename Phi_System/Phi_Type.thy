@@ -2444,10 +2444,6 @@ lemma \<phi>make_abstraction'R_specified:
 lemma \<phi>make_abstraction'Rt_infer:
   \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'
-    \<comment> \<open>Interesting, here \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x'\<close> is actually stronger than \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close>
-        because the \<open>fst x\<close> can be a schematic variable so \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close> always returns even
-        when the instantiating of \<open>fst x\<close> makes the entire sequent inconsistent but \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>\<close> just
-        has no way to recognize this.\<close>
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y, snd x) = y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>

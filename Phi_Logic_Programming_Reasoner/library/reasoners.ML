@@ -892,14 +892,37 @@ fun guard_condition_solver1 can_inst ctxt sequent =
         Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
   ]))) ctxt sequent
 
-fun safe_obligation_solver can_inst ctxt =
-  guard_condition_solver can_inst (Phi_Safe_Simps.equip ctxt)
+fun safe_obligation_solver {can_inst} ctxt0 =
+        oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
+  (fn ctxt => fn th =>
+      let val th' = th
+          fun clarsimp_tac ctxt =
+                Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
+                (fn i => fn th => Classical.clarify_tac (addSss ctxt) i th)
+       in
+        apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (quick_cut 1 THEN (
+             pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
+                 THEN HEADGOAL (
+                              case_split_by_annotations_leading_subgoal ctxt 
+                 THEN_ALL_NEW Method.insert_tac ctxt aux
+                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x) )
+               (*THEN_ALL_NEW (fn s => fn x => Clasimp.fast_force_tac
+                      (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) s x)*) )
+               )
+              |> Seq.take 1 ) Safe_Solver th'
+       |> Seq.take 1
+       |> Seq.pull
+      end)
+  (Phi_Safe_Simps.equip ctxt0)
 
-fun safe_obligation_solver' can_inst fallback ctxt =
-  guard_condition_solver' can_inst fallback (Phi_Safe_Simps.equip ctxt)
+val safe_obligation_solver' = context_tactic_to_state_transition o safe_obligation_solver
 
-fun safe_obligation_solver1 can_inst ctxt =
-  guard_condition_solver1 can_inst (Phi_Safe_Simps.equip ctxt)
+fun safe_obligation_solver1 can_inst ctxt sequent =
+  safe_obligation_solver' can_inst (fn _ =>
+    error (Pretty.string_of (Pretty.chunks [
+        Pretty.str "Fail to solve the proof obligation automatically:",
+        Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
+  ]))) ctxt sequent
 
 (*case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (

@@ -189,7 +189,6 @@ consts default :: mode
        NO_INST :: mode \<comment> \<open>prohibiting instantiation\<close>
        MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
        MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*deprecated!*)
-       MODE_SAT :: mode
        MODE_SAFE :: mode ("\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
        MODE_NO_INST_SAFE :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
 
@@ -223,12 +222,6 @@ text \<open>
     users. There is no way suspending the reasoning and asking users' intervention because there
     can be a lot of searching branches which do not always succeed in the end, so we just collect
     the proof obligations and store it somewhere in the final result of the reasoning.
-
-  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P\<close> seats between \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> and \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>. As \<open>P\<close> may contain
-    some schematic variable and the safe solver @{method clarsimp} powerless on instantiating the variables,
-    \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P\<close> first checks if there is at least one possible instantiation of the variables
-    making the assertion \<open>P\<close> provable by the safe solver, and if so reports a proof obligation in the
-    same way as \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>.
 \<close>
 
 
@@ -239,8 +232,7 @@ lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by s
 lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma Premise_const_True[simp]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] True\<close>
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] True\<close>
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] True\<close>
   unfolding Premise_def by simp+
 
@@ -2003,30 +1995,6 @@ fun defer_premise ctxt =
 \<phi>reasoner_ML \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=false}) o snd\<close>
 
-\<phi>reasoner_ML \<open>Premise MODE_SAT\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (fn ctxt => fn sequent => Seq.make (fn () =>
-      let val (qvars, prems, concl) = Phi_Help.leading_antecedent (Thm.prop_of sequent)
-          val vars = subtract (op =) (fold Term.add_vars prems []) (Term.add_vars concl [])
-          val concl' = Term.incr_boundvars (length vars) concl
-                  |> Phi_Help.subst_with_loose_bounds (map_index (fn (i, x) => (Var x, Bound i)) vars)
-                  |> (fn Trueprop $ (Premise $ mode $ P) =>
-                        let val P' = fold (fn ((N,_),Ty) => fn X =>
-                                        \<^Const>\<open>HOL.Ex Ty\<close> $ Abs (N, Ty, X)
-                                     ) vars P
-                         in Trueprop $ (Premise $ mode $ P')
-                        end)
-          val goal' = Phi_Help.mk_meta_hhf (qvars, prems, concl')
-                  |> Thm.cterm_of ctxt
-          val test = Thm.implies_intr goal' (Thm.transfer' ctxt @{thm' TrueI})
-                  |> Phi_Reasoners.guard_condition_solver {can_inst=true} ctxt
-                  |> Seq.pull
-                  |> is_some
-       in if test
-       then Seq.pull (defer_premise ctxt sequent)
-       else NONE
-      end)
-    ) o snd\<close>
-
 consts prove_obligations_in_time :: mode
 
 setup \<open>Context.theory_map (PLPR_Env.set_effect \<^const_name>\<open>prove_obligations_in_time\<close> (SOME (
@@ -2050,7 +2018,6 @@ paragraph \<open>Extracting Pure\<close>
 lemma [\<phi>reason %extract_pure]:
   \<open> \<r>EIF (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) P \<close>
   \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) P \<close>
-  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P) P \<close>
   \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P) P  \<close>
   \<open> \<r>EIF (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P) P \<close>
   \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P) P \<close>
@@ -2061,7 +2028,6 @@ lemma [\<phi>reason %extract_pure]:
 lemma [\<phi>reason %extract_pure]:
   \<open> \<r>ESC P (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<close>
   \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<close>
-  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P) \<close>
   \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P) \<close>
   \<open> \<r>ESC P (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P) \<close>
   \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P) \<close>
