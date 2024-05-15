@@ -26,12 +26,12 @@ signature PHI_REASONERS = sig
                               -> Proof.context -> thm -> thm
   val auto_obligation_solver1 : Proof.context -> thm -> thm
 
-  val weak_obligation_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
+  val guard_condition_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
       (*The annotation of \<open>case_split\<close> is supported*)
-  val weak_obligation_solver': {can_inst: bool}
+  val guard_condition_solver': {can_inst: bool}
                              -> (Proof.context -> thm -> thm) (*failure callback*)
                              -> Proof.context -> thm -> thm
-  val weak_obligation_solver1: {can_inst: bool} -> Proof.context -> thm -> thm
+  val guard_condition_solver1: {can_inst: bool} -> Proof.context -> thm -> thm
 
   val safe_obligation_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
       (*The annotation of \<open>case_split\<close> is supported*)
@@ -317,7 +317,7 @@ fun head_only tac th =
   this short-cut makes differences only when the antecedent to be solved has some schematic variables
   to be instantiated during the tactic application.
 
-  The semantics of schematic variables in auto_obligation_solver and weak_obligation_solver is,
+  The semantics of schematic variables in auto_obligation_solver and guard_condition_solver is,
   any possible instantiation is acceptable.
 
   If the schematic variables are not able to be chosen arbitrarily, additional mechanisms have
@@ -844,7 +844,7 @@ fun prove_or_rebute can_inst ctxt ctxt0 =
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun weak_obligation_solver {can_inst} ctxt0 =
+fun guard_condition_solver {can_inst} ctxt0 =
         oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
   (fn ctxt => fn th =>
       let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
@@ -883,23 +883,23 @@ fun weak_obligation_solver {can_inst} ctxt0 =
        |> Seq.pull
       end) ctxt0
 
-val weak_obligation_solver' = context_tactic_to_state_transition o weak_obligation_solver
+val guard_condition_solver' = context_tactic_to_state_transition o guard_condition_solver
 
-fun weak_obligation_solver1 can_inst ctxt sequent =
-  weak_obligation_solver' can_inst (fn _ =>
+fun guard_condition_solver1 can_inst ctxt sequent =
+  guard_condition_solver' can_inst (fn _ =>
     error (Pretty.string_of (Pretty.chunks [
         Pretty.str "Fail to solve the proof obligation automatically:",
         Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
   ]))) ctxt sequent
 
 fun safe_obligation_solver can_inst ctxt =
-  weak_obligation_solver can_inst (Phi_Safe_Simps.equip ctxt)
+  guard_condition_solver can_inst (Phi_Safe_Simps.equip ctxt)
 
 fun safe_obligation_solver' can_inst fallback ctxt =
-  weak_obligation_solver' can_inst fallback (Phi_Safe_Simps.equip ctxt)
+  guard_condition_solver' can_inst fallback (Phi_Safe_Simps.equip ctxt)
 
 fun safe_obligation_solver1 can_inst ctxt =
-  weak_obligation_solver1 can_inst (Phi_Safe_Simps.equip ctxt)
+  guard_condition_solver1 can_inst (Phi_Safe_Simps.equip ctxt)
 
 (*case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
@@ -908,7 +908,7 @@ fun safe_obligation_solver1 can_inst ctxt =
             Syntax.pretty_term ctxt Goal,
             Pretty.block (Pretty.here \<^here>)
         ]); *)
-        weak_obligation_solver' (fn _ =>
+        guard_condition_solver' (fn _ =>
           error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",
               Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)

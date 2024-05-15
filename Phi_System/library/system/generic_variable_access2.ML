@@ -178,7 +178,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
            Phi_Reasoner.reason1 (fn _ =>
             "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
            ) NONE (SOME (Thm.nprems_of proc'3 - 2)) ctxt proc'3
-        |> Phi_Reasoners.weak_obligation_solver' {can_inst=true} (fn _ =>
+        |> Phi_Reasoners.guard_condition_solver' {can_inst=true} (fn _ =>
             error "Fail to solve proof obligations in the assignment automatically. \
                   \It is a limitation for now that it cannot be proven manually. \
                   \We are improving this soon.") ctxt
@@ -261,7 +261,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
                                         else Phi_Sys.cast ret_spec ctxt sequentx
                         val sequentx2 =
                               #cast_exception Phi_Working_Mode.programming E_spec ctxt sequentx1
-                                    |> Phi_Reasoners.weak_obligation_solver1 {can_inst=true} ctxt
+                                    |> Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxt
                          in sequentx2
                         end),
                  I)) [] ctxt

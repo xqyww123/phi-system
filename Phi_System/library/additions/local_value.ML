@@ -173,7 +173,7 @@ fun optimized_value_assign bs stat =
                     RS rule) vterms
               |> (fn rule => @{thm "__fast_assign_val_0__"} RS rule)
         val sequent = Phi_Apply.apply [rule] ctxt sequent
-              |> Phi_Reasoners.weak_obligation_solver1 {can_inst=false} ctxt
+              |> Phi_Reasoners.guard_condition_solver1 {can_inst=false} ctxt
         val (sequent, vals) = PLPR_Syntax.elim_ant_seq_or_HOL_conj sequent
         val vals = PLPR_Syntax.elim_ant_sequence_or_HOL_conj vals
               |> Phi_Help.front
