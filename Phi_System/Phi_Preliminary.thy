@@ -184,6 +184,8 @@ lemma [simp]:
 *)
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
+lemmas [\<phi>safe_simp] = comb.K_app comb.K_comp comb.K_comp'
+
 lemma case_sum_collapse[simp, \<phi>safe_simp]:
   \<open>case_sum Inl Inr = (\<lambda>x. x)\<close>
   unfolding fun_eq_iff

@@ -714,7 +714,7 @@ fun del_reasoners patterns filter ctxt =
                             #> List.filter (fn (_,_,_,r) => filter r) ) patterns
                      |> distinct pointer_eq
         val _ = if null to_remove
-                then warn_pretty ctxt 0 (fn () =>
+                then warn_pretty ctxt 1 (fn () =>
                         Pretty.para "No reasoning rule is removed!")
                 else info_pretty_generic ctxt 1 (fn () => let open Pretty in
                         chunks (para "Removing following reasoing rules..." ::

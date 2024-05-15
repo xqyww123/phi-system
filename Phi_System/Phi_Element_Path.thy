@@ -6,6 +6,8 @@ section \<open>Path of Elements in an Aggregate Structure\<close>
 
 datatype 'val aggregate_index' = AgIdx_N nat | AgIdx_S symbol | AgIdx_V 'val
 
+declare aggregate_index'.simps[\<phi>safe_simp]
+
 type_synonym aggregate_index = \<open>VAL aggregate_index'\<close>
 type_synonym aggregate_path = \<open>aggregate_index list\<close>
 

@@ -58,6 +58,7 @@ deriving \<open> Abstract_Domain T P
   and \<open>Functional_Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
             (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
 
 proc calc_hash:
   input  \<open>k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> N \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
@@ -231,6 +232,7 @@ proc new_hash:
   ret
 \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 0]]
 
 proc del_hash:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<h>\<a>\<s>\<h>\<heavy_comma> f \<Ztypecolon> Hash addr TY T\<close>

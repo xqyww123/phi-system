@@ -716,12 +716,12 @@ fun auto_obligation_solver1 ctxt sequent =  (
 
 fun norm_tac tac th = Seq.make (fn () => Seq.pull (tac th))
 
-fun timed_tac time tac th =
-  let val s = tac th
-   in Seq.make (fn () =>
-      Timeout.apply time Seq.pull s
+fun timed_seq time s =
+  Seq.make (fn () => 
+    Timeout.apply time Seq.pull s
       handle Timeout.TIMEOUT _ => NONE )
-  end
+
+fun timed_tac time tac th = timed_seq time (tac th)
 
 fun timed1_tac time t' tac th =
   let val s = tac th
@@ -747,31 +747,25 @@ fun nodup_depth_tac ctxt m i st =
         Classical.inst0_step_tac ctxt 1 APPEND COND (K (m = 0)) no_tac
           (slow_step_tac' ctxt 1 THEN DEPTH_SOLVE (nodup_depth_tac ctxt (m - 1) 1)))) i st;
 
-fun auto_search_tac t ctxt =
+fun auto_search_tac ctxt =
   let
     val ctxt = Context_Position.set_visible false ctxt
-    val t1 = Time.fromMilliseconds t
-    val tn = Time.fromMilliseconds 100
-    val tm = Time.fromMilliseconds 200
     fun main_tac i =
-      (*Blast.depth_tac ctxt 4 i
-      ORELSE*)
-      (*timed_tac tm ( *)
-          CHANGED (nodup_depth_tac (addss ctxt) 10 i)
-      (*)*)
-      (*Classical.fast_tac ctxt i*)
+        CHANGED (nodup_depth_tac (addss ctxt) 10 i)
   in
-    timed_tac t1 (norm_tac (
+    norm_tac ((
       TRY (Classical.safe_tac ctxt) THEN
       REPEAT_DETERM (FIRSTGOAL main_tac) THEN
       TRY (Classical.safe_tac (addSss ctxt)) THEN
-      prune_params_tac ctxt))
+      prune_params_tac ctxt)
+      #> Seq.take 1 )
   end;
 
+
 (*
-fun auto_search1_tac ctxt m n th =
-  norm_tac (auto_search_tac ctxt m n) th
-    |> Seq.take 1
+fun auto_search1_tac ctxt t th =
+  norm_tac (auto_search_tac ctxt t) th
+    |> Seq.take 1 *)
 
 fun dest_all ct used =
   (case Thm.term_of ct of
@@ -783,11 +777,25 @@ fun dest_all ct used =
   | _ => NONE)
 
 val negation = \<^cterm>\<open>Not\<close>
+
 fun prove_or_rebute can_inst ctxt ctxt0 =
-  timed_tac (Time.fromMilliseconds 30) (auto_search1_tac ctxt 4 2) ORELSE
+  let val search = auto_search_tac ctxt
+   in timed_tac (Time.fromMilliseconds 30) search ORELSE
   (fn th =>
     let exception Unsupported
+        val goals = Thm.cprems_of th
+        val fail = Seq.make (fn () => (
+              List.app (fn goal =>
+                Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () => let open Pretty in
+                  chunks (
+                    [block (text "Fail to prove or falisfy the following guard condition"),
+                    Goal_Display.pretty_a_goal ctxt (Thm.term_of goal),
+                    block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
+                    )
+                end)) goals
+              ; NONE))
      in let
+        exception Falsified
         fun conv_goal used ctm =
           case Thm.term_of ctm  
             of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
@@ -805,16 +813,32 @@ fun prove_or_rebute can_inst ctxt ctxt0 =
                    in Thm.apply c (Thm.apply negation b)
                   end
              | _ => raise Unsupported
-        fun mk_goal ctm =
-          let 
-           in ()
-          end
-        val goals = Thm.cprems_of th |> map Goal.init
-     in Seq.empty
+        val goals = map (fn goal =>
+                      Goal.init (conv_goal (Term.declare_term_frees (Thm.term_of goal) Name.context) goal)
+                    ) goals
+        val goals = if can_inst
+                    then Variable.import false goals ctxt |> #1 |> #2
+                    else Variable.export ctxt ctxt0 goals
+        val falsify = Seq.make (fn () =>
+            if exists (fn goal =>
+              case Seq.pull (search goal)
+                of SOME (ret, _) => Thm.no_prems ret
+                 | _ => false ) goals
+            then raise Falsified
+            else NONE
+          )
+     in Seq.make (fn () => Seq.pull (
+            timed_seq (Time.fromMilliseconds 30) falsify ORELSE0
+            timed_seq (Time.fromMilliseconds 200) (search th) ORELSE0
+            timed_seq (Time.fromMilliseconds 100) falsify ORELSE0
+            fail )
+          handle Falsified => NONE)
     end handle Unsupported =>
-      timed_tac (Time.fromMilliseconds 400) (auto_search1_tac ctxt 6 4) th
+      timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt) th ORELSE0
+      fail
     end)
-*)
+  end
+
   
 
 
@@ -828,7 +852,8 @@ fun weak_obligation_solver {can_inst} ctxt0 =
           val th' = th
           fun auto_tac ctxt =
                 ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
-                (auto_search_tac 300 ctxt)
+                (prove_or_rebute can_inst ctxt ctxt0)
+                (* (timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt)) *)
         (*fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
              (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 

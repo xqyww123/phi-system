@@ -267,6 +267,7 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
       Anyway, it is an engineering problem due to some bug in our system or Sledgehammer, so we don't
       count this line into our statistics in the paper.\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
 
 context
   fixes K :: \<open>(VAL, 'k::linorder) \<phi>\<close>                  \<comment> \<open>we provide a generic verification\<close>
@@ -283,7 +284,7 @@ context
       and [\<phi>reason add]: \<open>Semantic_Zero_Val TY\<^sub>V V zero\<^sub>V\<close>
 begin
 
- 
+
 proc lookup_bintree:
   input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
             tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<close>
@@ -295,7 +296,7 @@ proc lookup_bintree:
 \<medium_left_bracket>
   obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
-
+ 
   val k' \<leftarrow> $addr.data.k ! \<semicolon>
   if (eq ($k', $k)) \<medium_left_bracket>
     val ret \<leftarrow> $addr.data.v ! \<semicolon>
@@ -307,7 +308,7 @@ proc lookup_bintree:
       lookup_bintree ($addr.left !, $k) \<rightarrow> val ret \<semicolon>
       \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
       return ($ret)
-    \<medium_right_bracket> \<medium_left_bracket> 
+    \<medium_right_bracket> \<medium_left_bracket>
       lookup_bintree ($addr.right !, $k) \<rightarrow> val ret \<semicolon>
       \<open>BinTree a\<^sub>L _ _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _ _\<close> \<semicolon>
       return ($ret)

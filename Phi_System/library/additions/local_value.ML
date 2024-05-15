@@ -116,11 +116,13 @@ fun update_val b rule ctxt =
       val pattern = pattern_of__value_of ctxt' (Binding.name_of b) rule
       val thy = Proof_Context.theory_of ctxt
    in ctxt'
+     |> Config.map Phi_Reasoner.trace (fn i => i - 1)
      |> Context.proof_map (
           Phi_Reasoner.del_reasoners [pattern] (fn r => Pattern.matches thy (pattern, #name r))
        #> Phi_Reasoner.add_rule (Binding.pos_of b) Phi_Reasoner.NORMAL_LOCAL_CUT'
                                 (SOME @{reasoner_group %local_value})
                                 ([(pattern, NONE)],[]) NONE [rule])
+     |> Config.restore Phi_Reasoner.trace ctxt'
      |> Generic_Variable_Access.bind_generic_vars
             [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, T)), K V))]
      |> Proof_Context.maybe_bind_term ((Binding.name_of b,0),

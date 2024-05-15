@@ -70,6 +70,8 @@ ML_file \<open>library/reasoner_decl.ML\<close>
 ML_file \<open>library/priority_group.ML\<close>
 ML_file \<open>library/tools/where_tac.ML\<close>
 ML_file \<open>library/tools/helpers00.ML\<close>
+ML_file \<open>library/tools/pretty_goal.ML\<close>
+
 
 attribute_setup condition = \<open>
   Scan.peek (fn ctxt_g => Args.internal_term ||
@@ -2165,20 +2167,20 @@ declare allI [\<phi>reason %\<phi>LPR_imp]
 
 \<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %\<phi>LPR_imp+10 ( \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>
                                                   | \<open>HOL.All _\<close> | \<open>Set.Ball _ _\<close> ) = \<open>
-  fn (_, (ctxt,sequent)) =>
+  fn (_, (ctxt0,sequent)) =>
   let fun qchk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk X
         | qchk (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = qchk X
         | qchk (Abs (_, _, X)) = qchk X
         | qchk (Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ X) = qchk X
         | qchk (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) $ _) = true
         | qchk _ = false
+      val ctxt = Context_Position.set_visible false ctxt0 delsimps @{thms' imp_disjL}
    in if qchk (Thm.major_prem_of sequent)
    then Seq.make (fn () =>
     let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
                    |> Conv.gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt =>
                         Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_alls_balls_conv (K (
-                            Phi_Conv.hol_imp_conv (Conv.arg_conv PLPR_Simplifier.conjs_to_aseq)
-(* Conv.rewr_conv @{thm' Premise_def} then_conv *)
+                            Phi_Conv.hol_imp_conv (Conv.rewr_conv @{thm' Premise_def})
                                                   (Conv.rewr_conv @{thm' NO_SIMP_def[symmetric]})
                         )) ctxt)) ctxt then_conv
                         Phi_Reasoners.asm_rewrite false ctxt then_conv
@@ -2186,14 +2188,17 @@ declare allI [\<phi>reason %\<phi>LPR_imp]
                             case Thm.term_of ctm
                               of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) => (
                                        HOLogic.Trueprop_conv (
-                                          Phi_Conv.hol_imp_conv (Conv.arg_conv PLPR_Simplifier.aseq_to_conjs)
+                                          Phi_Conv.hol_imp_conv (Conv.rewr_conv @{thm' Premise_def[where mode=\<open>default\<close>, symmetric]})
                                                                 (Conv.rewr_conv @{thm' NO_SIMP_def}))
                                        then_conv
                                        Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctm
-                               | _ => HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def}) ctm
+                               | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) =>
+                                       HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def}) ctm
+                               | _ => Conv.all_conv ctm
                             ))) ctxt
                       ) ctxt) 1
-     in SOME ((ctxt, sequent'), Seq.empty)
+                   |> Phi_Help.instantiate_higher_order_var_in_antecedents 1 ctxt
+     in SOME ((ctxt0, sequent'), Seq.empty)
     end)
   else Seq.empty
   end
