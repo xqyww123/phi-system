@@ -51,7 +51,7 @@ abbreviation Programming_CurrentConstruction ("(2\<c>\<u>\<r>\<r>\<e>\<n>\<t> _ 
 abbreviation View_Shift_CurrentConstruction ("(2\<v>\<i>\<e>\<w> _ [_] \<i>\<s>/ _)" [1000,1000,11] 10)
   where \<open>View_Shift_CurrentConstruction \<equiv> CurrentConstruction view_shift_mode\<close>
 
-consts Programming_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("(2\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>:/ _)" [11] 10)
+consts Programming_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("(2\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>:/ (\<open>consistent=true\<close>_))" [11] 10)
 consts View_Shift_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("(2\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>:/ _)" [11] 10)
 
 definition PendingConstruction :: " 'ret proc
