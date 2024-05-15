@@ -829,7 +829,7 @@ fun prove_or_rebute can_inst ctxt ctxt0 =
           )
      in Seq.make (fn () => Seq.pull (
             timed_seq (Time.fromMilliseconds 30) falsify ORELSE0
-            timed_seq (Time.fromMilliseconds 200) (search th) ORELSE0
+            timed_seq (Time.fromMilliseconds 250) (search th) ORELSE0
             timed_seq (Time.fromMilliseconds 100) falsify ORELSE0
             fail )
           handle Falsified => NONE)
@@ -844,15 +844,26 @@ fun prove_or_rebute can_inst ctxt ctxt0 =
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun guard_condition_solver {can_inst} ctxt0 =
-        oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
+fun guard_condition_solver {can_inst} ctxt0 th0 =
+  let fun is_guard_mode (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
+        | is_guard_mode (Const(\<^const_name>\<open>NO_INST\<close>, _)) = true
+        | is_guard_mode _ = false
+      fun is_false (Const(\<^const_name>\<open>Premise\<close>, _) $ mode $ Const(\<^const_name>\<open>False\<close>, _))
+            = is_guard_mode mode
+        | is_false (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_false X
+        | is_false _ = false
+      val is_F = is_false (Thm.major_prem_of th0)
+
+   in oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
   (fn ctxt => fn th =>
       let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1*)
           val th' = th
           fun auto_tac ctxt =
                 ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
-                (prove_or_rebute can_inst ctxt ctxt0)
+                (if is_F
+                 then timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt)
+                 else prove_or_rebute can_inst ctxt ctxt0)
                 (* (timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt)) *)
         (*fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
@@ -881,7 +892,8 @@ fun guard_condition_solver {can_inst} ctxt0 =
               |> Seq.take 1 ) Safe_Solver th'
        |> Seq.take 1
        |> Seq.pull
-      end) ctxt0
+      end) ctxt0 th0
+  end
 
 val guard_condition_solver' = context_tactic_to_state_transition o guard_condition_solver
 

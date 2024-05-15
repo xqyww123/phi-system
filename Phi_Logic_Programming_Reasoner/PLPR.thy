@@ -3079,7 +3079,6 @@ ML \<open>exception PLPR_EXCEPTION of string\<close>
 subsection \<open>Finale\<close>
 
 ML_file \<open>library/tools/helpers99.ML\<close>
-(* ML_file \<open>library/tools/reasoner_checkers.ML\<close> *)
 
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>

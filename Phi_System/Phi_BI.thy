@@ -3799,6 +3799,7 @@ lemma [\<phi>reason %cutting]:
 
 subsubsection \<open>Fallback\<close>
 
+(*
 lemma [\<phi>reason default %identity_element_fallback]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
 \<Longrightarrow> Identity_Element\<^sub>I S False\<close>
@@ -3810,6 +3811,7 @@ lemma [\<phi>reason default %identity_element_fallback]:
 \<Longrightarrow> Identity_Element\<^sub>E S\<close>
   unfolding Premise_def
   by blast
+*)
 
 lemma [\<phi>reason default %fail]:
   \<open> TRACE_FAIL TEXT(\<open>Fail to show\<close> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1))
