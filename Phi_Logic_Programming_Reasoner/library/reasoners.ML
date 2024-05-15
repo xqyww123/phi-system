@@ -944,4 +944,7 @@ fun safe_obligation_solver1 can_inst ctxt sequent =
 
 (*fun declare_local_assume_reasoners sequent i *)
 
+
+
+
 end

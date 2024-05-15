@@ -244,7 +244,7 @@ proc del_hash:
   iterate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, N)
            \<open>\<lambda>M. buckets \<Ztypecolon> \<big_ast>\<^sup>\<phi> {i. M \<le> i \<and> i < ?N} (\<lambda>i. DynArr (bucket_ptrs ! i) (\<k>\<v>_\<e>\<n>\<t>\<r>\<y> TY) \<lbrace>k: \<nat>(\<s>\<i>\<z>\<e>_\<t>), v: T\<rbrace>) \<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-    del_dynarr ( tabl[i]! )
+    del_dynarr ( tabl[i]! ) 
   \<medium_right_bracket> \<semicolon>
   mfree (tabl) \<semicolon>
   mfree (addr)

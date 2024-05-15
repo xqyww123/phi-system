@@ -7,6 +7,8 @@ val fold_antecedents : (bvs -> term -> 'a -> 'a)
 
 val eixsts_antecedent : (term -> bool) -> term -> bool
 val forall_antecedent : (term -> bool) -> term -> bool
+val app_antecedents : (bvs -> term -> unit)
+                    -> bvs -> term -> unit
 
 end
 
@@ -55,6 +57,9 @@ fun fold_antecedents F =
         | fold bvtys X x = F bvtys X x
    in fold
   end
+
+fun app_antecedents F bvs term =
+  fold_antecedents (fn bvs => fn term => fn _ => F bvs term) bvs term ()
 
 fun eixsts_antecedent P X = fold_antecedents (fn _ => fn X => fn b => b orelse P X) [] X false
 fun forall_antecedent P X = fold_antecedents (fn _ => fn X => fn b => b andalso P X) [] X true

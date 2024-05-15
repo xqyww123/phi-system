@@ -186,7 +186,7 @@ text \<open>We provide a serial of predefined modes, which may be commonly usefu
 consts default :: mode
        MODE_GUARD :: mode \<comment> \<open>necessary condition for exploring a search branch, may instantiating the
                               goal but never instantiating the contextual premises\<close>
-       NO_INST :: mode \<comment> \<open>prohibiting instantiation\<close>
+       NO_INST :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>") \<comment> \<open>prohibiting instantiation\<close>
        MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
        MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*deprecated!*)
        MODE_SAFE :: mode ("\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
@@ -3079,7 +3079,7 @@ ML \<open>exception PLPR_EXCEPTION of string\<close>
 subsection \<open>Finale\<close>
 
 ML_file \<open>library/tools/helpers99.ML\<close>
-
+(* ML_file \<open>library/tools/reasoner_checkers.ML\<close> *)
 
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>
