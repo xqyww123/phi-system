@@ -881,11 +881,11 @@ subsubsection \<open>Allocation of Priorities\<close>
 \<phi>reasoner_group
   ToA_all         = (100, [0, 4999]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
                     \<open>Rules of transformation\<close>
-  ToA_bottom      = (0, [0, 13]) in ToA_all
+  ToA_bottom      = (0, [0, 15]) in ToA_all
                     \<open>System transformation rules, of the lowest priority\<close>
-  ToA             = (100, [14, 4999]) in ToA_all > ToA_bottom
+  ToA             = (100, [16, 4999]) in ToA_all > ToA_bottom
                     \<open>User rules for transformation\<close>
-  ToA_bk          = (100, [14, 999]) in ToA
+  ToA_bk          = (100, [16, 999]) in ToA
                     \<open>Backtracking rules\<close>
   ToA_cut         = (1000, [1000, 1399]) in ToA
                     \<open>Deterministic transformation rules without backtracking, meaning the reasoning
@@ -948,13 +948,15 @@ paragraph \<open>Bottom Groups\<close>
   ToA_unified_refl = (5, [5,6]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_falling_latice
                      \<open>Reflexive tranformation rules with unification, of a low priority because
                       unification is aggresive.\<close>
-  ToA_varify_target_object = (7, [7,7]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_unified_refl
+  ToA_derv_unify_refl = (7, [7,8]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_unified_refl
+                     \<open>derived ToA_unified_refl that override the default behaviors.\<close>
+  ToA_varify_target_object = (9, [9,9]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_derv_unify_refl
                     \<open>Varifies the fixed target object, using Object_Equiv\<close>
-  ToA_inst_qunat  = (8, [8,8]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_varify_target_object
+  ToA_inst_qunat  = (10, [10,10]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_varify_target_object
                     \<open>Transformation rules instantiating quantified variables. It is unsafe unless
                      all fixable variables are fixed. If any variable is fixed later than the instantiation,
                      the instantiated schematic variable cannot caputure the later fixed variable.\<close>
-  ToA_branches    = (10, [9,13]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_inst_qunat
+  ToA_branches    = (12, [11,15]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_inst_qunat
                     \<open>Branching transformation rules.\<close>
 
 
@@ -2544,7 +2546,7 @@ subsubsection \<open>Construction from Raw Abstraction represented by Itself \<c
   \<comment> \<open>is a sort of reasoning process useful later in making initial Hoare triples from semantic raw
       representation (which are represented by Itself, i.e., no abstraction).\<close>
 
-\<phi>reasoner_group abstract_from_raw = (100, [15, 1399]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close>
+\<phi>reasoner_group abstract_from_raw = (100, [16, 1399]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close>
       > ToA_bottom and < ToA_splitting_target
       \<open>Rules constructing abstraction from raw representations\<close>
   and abstract_from_raw_cut = (1000, [1000, 1030]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close> in abstract_from_raw
@@ -5710,11 +5712,11 @@ only when no other rules are applicable.\<close>
 (*TODO: Auto_Transform_Hint*)
 
 declare transformation_refl [\<phi>reason %ToA_refl for \<open>?A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>
-                                                   \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]
+                                                   \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>,
+                             \<phi>reason %ToA_unified_refl for \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]
 
 lemma [\<phi>reason default %ToA_unified_refl for \<open>?A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A' \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
-  \<open> \<comment> \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>\<close>
-    A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
   unfolding Premise_def \<r>Guard_def Action_Tag_def
   by simp
 
@@ -5733,8 +5735,7 @@ lemma transformation_refl_assigning_remainder [\<phi>reason %ToA_assigning_var f
   by simp
 
 lemma [\<phi>reason default %ToA_unified_refl for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
-  \<open> \<comment> \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>\<close>
-    A * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R\<close>
+  \<open> A * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R\<close>
   unfolding Premise_def REMAINS_def \<r>Guard_def Action_Tag_def
   by simp
 
@@ -5746,8 +5747,7 @@ lemma transformation_refl_with_remainder [\<phi>reason %ToA_assigning_var for \<
   by simp
 
 lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
-  \<open> \<comment> \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>\<close>
-    A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] \<top>\<close>
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] \<top>\<close>
   unfolding Premise_def \<r>Guard_def Action_Tag_def
   by simp
 
@@ -5757,8 +5757,7 @@ lemma transformation_refl_assigning_W [\<phi>reason %ToA_assigning_var]:
   by simp
 
 lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
-  \<open> \<comment> \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> T = T' \<Longrightarrow>\<close>
-    x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+  \<open> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<close>
   unfolding Premise_def \<r>Guard_def Action_Tag_def
   by simp
 

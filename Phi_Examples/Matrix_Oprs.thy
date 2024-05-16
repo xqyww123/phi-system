@@ -6,11 +6,11 @@ theory Matrix_Oprs
 begin
 
 abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<i>\<n>\<t>\<close>
-
+ 
 \<phi>type_def MatSlice :: \<open>address \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
-
+  parametric (id,id,id,id,id)
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
        and \<open>Object_Equiv (MatSlice addr i j m n) (=)\<close>
        and Basic
@@ -30,21 +30,6 @@ proc zero_mat:
   map_slice(m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_slice(n) \<medium_left_bracket> for h \<rightarrow> val h  \<semicolon>
       a[i+k, j+h] := \<open>0 \<Ztypecolon> \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     \<medium_right_bracket>
   \<medium_right_bracket> \<semicolon>
 

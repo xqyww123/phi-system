@@ -20,11 +20,13 @@ include PHI_TYPE
 (** \<phi>-Type Definition \& Infos **)
 
 datatype def = DIRECT_DEF of thm (*def*) | WFREC_DEF  of Function.info
+datatype parameter_variability = PV_Var | PV_Id
 
 type parameter_info = {
   name: string option (*not always given*),
-  mutating: bool option (*if the parameter mutates throughout the (recursive) definition.
-                          we are not always able to check if a parameter mutates from definition*)
+  mutating: bool option, (*if the parameter mutates throughout the (recursive) definition.
+                           we are not always able to check if a parameter mutates from definition*)
+  variability: parameter_variability (*Two \<phi>-types \<open>T a\<^sub>1 \<cdots> a\<^sub>n\<close> and \<open>T a\<^sub>1' \<cdots> a\<^sub>n'\<close> are *)
 }
 
 type phi_type = {
@@ -54,7 +56,7 @@ val fold_phi_type : (term -> 'a -> 'a) * (thm -> 'a -> 'a) -> phi_type -> 'a -> 
 val has_mutating_params : phi_type -> bool
 val may_has_mutating_params : phi_type -> bool
 val parameters_of : phi_type -> (parameter_info * typ) list
-val parameters_and_typs_of : phi_type -> (parameter_info * typ) list (*reversed!*) * typ (*abstract typ*) * typ (*concrete typ*)
+val parameters_and_typs_of : phi_type -> (parameter_info * typ) list * typ (*abstract typ*) * typ (*concrete typ*)
 
 val morphism_phi_type : morphism -> phi_type -> phi_type
 val instantiate_phi : (ctyp TVars.table * cterm Vars.table)
@@ -147,7 +149,10 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
 val add_type : {no_auto: bool}
-            -> binding * term * def * Position.T * derivings * Bundle.name list
+            -> binding * term * def * Position.T
+             * derivings
+             * Bundle.name list
+             * parameter_variability option list option
             -> local_theory -> phi_type * local_theory
 
 val override_ind_rule : term * thm -> Context.generic -> Context.generic
@@ -240,10 +245,13 @@ val expansionN = "expansion"
 datatype def = DIRECT_DEF of thm (*def*)
              | WFREC_DEF  of Function.info
 
+datatype parameter_variability = PV_Var | PV_Id
+
 type parameter_info = {
   name: string option,
-  mutating: bool option (*if the parameter mutates throughout the (recursive) definition.
-                          we are not always able to check if a parameter mutates from definition*)
+  mutating: bool option, (*if the parameter mutates throughout the (recursive) definition.
+                           we are not always able to check if a parameter mutates from definition*)
+  variability: parameter_variability
 }
 
 type phi_type = {
@@ -443,7 +451,7 @@ fun def_contains_satisfaction phi =
   end
 
 fun parameters_of phi = #params phi ~~ rev (#1 (dest_parameterized_phi_ty (Term.fastype_of (#term phi))))
-fun parameters_and_typs_of phi =
+fun parameters_and_typs_of (phi:phi_type) =
   let val (rev_atys, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
    in (#params phi ~~ rev rev_atys, x_ty, m_ty)
   end
@@ -451,7 +459,8 @@ fun parameters_and_typs_of phi =
 fun fix_phi_term_params phi ctxt =
   let val (params, x_ty, _) = parameters_and_typs_of phi
       val (x_name :: param_names, ctxt') =
-              Variable.variant_fixes ("x" :: map (the_default "A" o #name o fst) params) ctxt
+              Variable.variant_fixes (
+                  "x" :: map (the_default "A" o #name o fst) params) ctxt
       val param_terms = map2 (fn N => fn (_,T) => Free(N,T)) param_names params
       val x_term = Free(x_name, x_ty)
       val T_term = fold (fn a => fn X => X $ a) param_terms (#term phi)
@@ -819,7 +828,7 @@ fun check_deriving_ast ctxt (derv_ast : deriving_ast list) =
         ]))
   end
 
-(* Interface for Deriver *)
+(* Interfaces for Derivers *)
 
 val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
 val ML_sender : (quiet * Position.T -> deriving_instruction list -> derive) option Unsynchronized.ref
@@ -859,6 +868,66 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
    end
    )))
 
+
+(** Ad-hoc derivation **)
+
+val to_cond_rewr = @{lemma \<open>
+        (A \<equiv> B) \<equiv> Trueprop (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = B)
+  \<close> by (simp add: atomize_eq Premise_def) }
+
+val rule_refl1 = @{lemma \<open>
+        T \<equiv> U
+    \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U @tag \<T>\<P>
+  \<close> by (simp add: Action_Tag_def transformation_refl) }
+
+val rule_refl_WR = @{lemma \<open>
+        T \<equiv> T'
+    \<Longrightarrow> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T' \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> @tag \<T>\<P>'
+  \<close> by (simp add: Action_Tag_def transformation_refl) }
+
+fun gen_refl_Tr term ctxt cong =
+  if Thm.no_prems cong
+  then []
+  else let
+      val (rev_param_tys, x, m_ty) = Phi_Syntax.dest_parameterized_phi_ty (fastype_of term)
+      val param_tys = rev rev_param_tys
+      val idx = maxidx_of_term term + 1
+      val idx = idx + idx
+      val T = fold_index (fn (i,ty) => fn X => X $ Var(("A",idx+i), ty))
+                         param_tys term
+      val idx = idx + length rev_param_tys
+      val U = fold_index (fn (i,ty) => fn X => X $ Var(("A",idx+i), ty))
+                         param_tys term
+      val idx = idx + length rev_param_tys
+      val (a,b) = (TVar(("a", idx), \<^sort>\<open>sep_magma\<close>), TVar(("b", idx), \<^sort>\<open>sep_magma\<close>))
+
+      val cong = Conv.fconv_rule (
+            Phi_Conv.hhf_conv (fn _ => Conv.rewr_conv to_cond_rewr)
+                              (K Conv.all_conv) ctxt
+          ) cong
+
+      fun mk_pat x T y U tag =
+        \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close>
+            $ (\<^Const>\<open>Transformation m_ty\<close>
+                $ (\<^Const>\<open>\<phi>Type x m_ty\<close> $ Var (("x",idx),x) $ T)
+                $ (\<^Const>\<open>\<phi>Type y m_ty\<close> $ Var (("var_y",idx),y) $ U)
+                $ Var (("P",idx), \<^Type>\<open>bool\<close>) )
+            $ tag)
+
+   in (@{reasoner_group %ToA_derv_unify_refl},
+       mk_pat x T x U \<^Const>\<open>\<T>\<P>\<close>,
+       cong RS' (ctxt, rule_refl1)) ::
+      ( [(@{reasoner_group %ToA_derv_unify_refl},
+          mk_pat \<^Type>\<open>prod x a\<close> (\<^Const>\<open>Cond_\<phi>Prod x m_ty a\<close> $ T
+                                    $ Var(("C\<^sub>W",idx),\<^Type>\<open>bool\<close>)
+                                    $ Var(("W",idx), Phi_Syntax.mk_phi_type_ty (m_ty, a)))
+                \<^Type>\<open>prod x b\<close> (\<^Const>\<open>Cond_\<phi>Prod x m_ty b\<close> $ U
+                                    $ Var(("C\<^sub>R",idx),\<^Type>\<open>bool\<close>)
+                                    $ Var(("R",idx), Phi_Syntax.mk_phi_type_ty (m_ty, b)))
+                \<^Const>\<open>\<T>\<P>'\<close>,
+         cong RS' (ctxt, rule_refl_WR))]
+        handle THM _ => [] )
+  end
 
 (*** \<phi>-Type Definition Part II ***)
 
@@ -1074,8 +1143,9 @@ fun mk_mutating_param_eq ctxt mode phi =
 
 (*ctxt: the context used to derive properties*)
 (*term: the term of the phi type, can be parameterized by fixed free variables like those in locales *)
-fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
+fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, variability) thy =
   let val ctxt = open_proof_ctxt bundles thy delsimps @{thms' One_nat_def}
+      val term = chk_zero_index_term term
 
       fun match_head head (term as f $ _) = Term.aconv_untyped (head, term) orelse match_head head f
         | match_head head term = Term.aconv_untyped (head, term)
@@ -1110,14 +1180,19 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
       val param_names = map (fn eq =>
                           case LHS_of (Thm.concl_of eq)
                             of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T =>
-                                  map (fn Var ((N,_),_) => SOME N | Free (N,_) => SOME N | _ => NONE)
+                                  map (fn Var ((N,_),Ty) => SOME N
+                                        | Free (N,_) => SOME N
+                                        | _ => NONE)
                                       (List.drop (snd (strip_comb T), fixed_num))
                              | _ => error "BUG") eqs
-                     |> foldl1 (uncurry (map2 (curry merge_options)))
-      val (x_ty, m_ty) = case LHS_of (Thm.concl_of (hd eqs))
-                           of Const(\<^const_name>\<open>\<phi>Type\<close>, \<^Type>\<open>fun x_ty \<^Type>\<open>fun _ \<^Type>\<open>set m_ty\<close>\<close>\<close>) $ _ $ _
-                                => (x_ty, m_ty)
-                            | _ => error "BUG"
+                      |> foldl1 (uncurry (map2 (curry merge_options)))
+
+      val (rev_param_tys, x_ty, m_ty) = Phi_Syntax.dest_parameterized_phi_ty (fastype_of term)
+            (*case LHS_of (Thm.concl_of (hd eqs))
+               of Const(\<^const_name>\<open>\<phi>Type\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun ty _\<close>\<close>) $ _ $ _
+                    => Phi_Syntax.dest_parameterized_phi_ty ty
+                | _ => error "BUG" *)
+      val param_tys = rev rev_param_tys
 
       val tagged_eqs_in_type =
             if no_auto then [] else
@@ -1171,6 +1246,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                      end
                | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0"
             ) eqs
+
       val mutating_params = map (op !) mutating_params
       val _ = if exists (fn SOME true => true | _ => false) mutating_params
               then warning (Pretty.string_of (Pretty.para
@@ -1190,9 +1266,62 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                      \ side to the right place."))
               else ()
 
-      val params = map2 (fn name => fn mut =>
-                     {name=name, mutating=mut}
-                   ) param_names mutating_params
+      val _ = case variability
+                of SOME vars =>
+                    if length vars = length param_tys then ()
+                    else error "Incorrect number of parameter variabilities, which must equal the number of the \<phi>-type parameters"
+                 | _ => ()
+
+      val variability = case variability
+              of SOME vars =>
+                   map2 (fn SOME v => K v
+                          | NONE => (fn ty =>
+                              if Phi_Syntax.is_phi_type_ty ty then PV_Id else PV_Var
+                        )) vars param_tys
+               | _ => map (fn ty =>
+                              if Phi_Syntax.is_phi_type_ty ty then PV_Id else PV_Var
+                        ) param_tys
+
+      val params = map3 (fn name => fn mut => fn var =>
+                     {name=name, mutating=mut, variability=var}
+                   ) param_names mutating_params variability
+      
+      val cong =
+        let val (param_names, ctxt') =
+              Variable.variant_fixes (map (the_default "A" o #name) params) ctxt
+            fun filter [] [] = []
+              | filter (PV_Var :: P) (name :: names) = name :: filter P names
+              | filter (PV_Id  :: P) (name :: names) = filter P names
+            val (param_names', ctxt') =
+              Variable.variant_fixes (filter variability param_names) ctxt'
+            fun burrow [] [] [] = []
+              | burrow (PV_Var :: P) (_ :: names) (name' :: names') = name' :: burrow P names names'
+              | burrow (PV_Id  :: P) (name :: names) names' = name  :: burrow P names names'
+            val param_names' = burrow variability param_names param_names'
+            val params  = map Free (param_names  ~~ param_tys)
+            val params' = map Free (param_names' ~~ param_tys)
+
+            fun mk_conds [] [] [] = []
+              | mk_conds (PV_Var :: P) (param :: params) (param' :: params')
+                  = \<^Const>\<open>Pure.eq \<open>fastype_of param\<close>\<close> $ param $ param' :: mk_conds P params params'
+              | mk_conds (PV_Id :: P) (_ :: params) (_ :: params')
+                  = mk_conds P params params'
+            val conds = mk_conds variability params params'
+
+            val LHS = fold (fn param => fn X => X $ param) params  term
+            val RHS = fold (fn param => fn X => X $ param) params' term
+            val concl = \<^Const>\<open>Pure.eq \<open>fastype_of LHS\<close>\<close> $ LHS $ RHS
+            val goal = fold_rev (fn cond => fn X => \<^Const>\<open>Pure.imp\<close> $ cond $ X) conds concl
+            val ([goal], ctxt') = Variable.import_terms false [goal] ctxt'
+         in Thm.cterm_of ctxt' goal
+         |> Goal.init
+         |> SINGLE (SOLVED' (Simplifier.asm_simp_tac (Simplifier.clear_simpset ctxt')) 1)
+         |> (fn SOME ret => Goal.conclude ret
+                         |> singleton (Variable.export ctxt' ctxt)
+              | NONE => error "BUG")
+        end
+      val refl_Tr = gen_refl_Tr term ctxt cong
+
 
       val ind =(case def
                   of DIRECT_DEF _ => NONE
@@ -1322,13 +1451,11 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
                                     (gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
                                      handle THM _ => [] (*the concrete algebra can be non-unital*))*)
 
-      val the_term = chk_zero_index_term term
-
       val phi_type = {
             name = binding,
-            term = the_term,
+            term = term,
             params = params,
-            cterm = Drule.mk_term (Thm.cterm_of ctxt the_term),
+            cterm = Drule.mk_term (Thm.cterm_of ctxt term),
             pos = pos,
             equations = map chk_zero_index_thm eqs,
             type_equations = typeqs,
@@ -1345,7 +1472,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
         let val phi = morphism_phi_type m (phi_trim_context phi_type)
          in ctxt
          |> Phi_Types.map (Net.insert_term (phi_typ_term_equiv (Context.theory_of ctxt))
-                                           (the_term, phi))
+                                           (term, phi))
         end)
    |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m =>
         let val expns = Morphism.fact m expansions
@@ -1370,6 +1497,8 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA_sp
                               (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
              |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
+             |> Phi_Reasoner.add_rules (map (fn (group,pat,refl) =>
+                  ([Morphism.thm m refl], pos, Phi_Reasoner.TO_BE_OVERRIDE', SOME group, [(pat,NONE)], [], NONE)) refl_Tr)
        ) |> Phi_Expansions.add_simps expns
          |> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
@@ -1404,7 +1533,7 @@ fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =
    in (dervs, bundles)
   end
 
-fun add_type_i {no_auto} (name, term, def, pos, raw_derv, raw_bundles) thy =
+fun add_type_i {no_auto} (name, term, def, pos, raw_derv, raw_bundles, variabilities) thy =
   let val (dervs, bundles) = prep_deriving_and_bundles raw_bundles raw_derv thy
       val (term, def) = case def of DIRECT_DEF def =>
             let val cterm = Drule.mk_term (Thm.cterm_of thy term)
@@ -1413,7 +1542,7 @@ fun add_type_i {no_auto} (name, term, def, pos, raw_derv, raw_bundles) thy =
             end
                                   | def => (term, def)
       
-   in add_type {no_auto=no_auto} (name, term, def, pos, dervs, bundles) thy
+   in add_type {no_auto=no_auto} (name, term, def, pos, dervs, bundles, variabilities) thy
   end
 
 (** Interface **)
@@ -1435,6 +1564,13 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
       val phi = instantiate_phi inst' phi0
    in (inst', phi, ctxt)
   end
+
+val parameter_varibility = Scan.option (
+      \<^keyword>\<open>parametric\<close> |-- \<^keyword>\<open>(\<close> |--
+        Parse.list1 ( \<^keyword>\<open>var\<close> >> K (SOME PV_Var)
+                   || Args.$$$ "id" >> K (SOME PV_Id)
+                   || Args.$$$ "_"  >> K NONE ) --| \<^keyword>\<open>)\<close>
+  )
 
 val bundle_parser = Scan.optional (\<^keyword>\<open>opening\<close> |-- Scan.repeat1 Parse.name_position) []
 
@@ -1466,7 +1602,7 @@ fun is_phi_type \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>
   | is_phi_type \<^Type>\<open>fun _ T\<close> = is_phi_type T
   | is_phi_type _ = false
 
-fun gen_add_fun bs raw_derv raw_bundles add (thy : local_theory) =
+fun gen_add_fun bs raw_derv raw_bundles variabilities add (thy : local_theory) =
   let
     fun pat_completeness_auto ctxt =
       Pat_Completeness.pat_completeness_tac ctxt 1
@@ -1487,7 +1623,7 @@ fun gen_add_fun bs raw_derv raw_bundles add (thy : local_theory) =
               |> (fn SOME x => x
                    | NONE => error "No \<phi>-type is defined.")
       in add_type_i {no_auto=false}
-                    (name, const, WFREC_DEF info, Binding.pos_of name, raw_derv, raw_bundles) #> snd
+                    (name, const, WFREC_DEF info, Binding.pos_of name, raw_derv, raw_bundles, variabilities) #> snd
      end)
   end
 
@@ -1500,8 +1636,8 @@ fun add_function_cmd a b c tac int lthy = lthy
 in
 
 (* fun add_fun a b c = gen_add_fun (Function.add_function a b c) *)
-fun add_fun_cmd a b c raw_derv raw_bundles int generic =
-  gen_add_fun (map #1 a) raw_derv raw_bundles
+fun add_fun_cmd a b c raw_derv raw_bundles var int generic =
+  gen_add_fun (map #1 a) raw_derv raw_bundles var
       (fn tac => snd o add_function_cmd a b c tac int) generic
 
 end
@@ -1515,10 +1651,11 @@ fun let_phityp_deriving_cmd (((raw_const_name, pos), raw_bundles), raw_derv) thy
   end
 
 val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config
+               -- parameter_varibility
                -- bundle_parser
                -- deriving_parser
-      >> (fn (((config, (fixes, specs)), raw_bundles), raw_dervs) =>
-                add_fun_cmd fixes specs config raw_dervs raw_bundles))
+      >> (fn ((((config, (fixes, specs)), vars), raw_bundles), raw_dervs) =>
+                add_fun_cmd fixes specs config raw_dervs raw_bundles vars))
 
 val def_by_function = (Function_Common.function_parser Function_Common.default_config
       >> (fn (config, (fixes, specs)) => Function.function_cmd fixes specs config))
@@ -1532,10 +1669,11 @@ fun my_definition decl params prems spec int lthy = lthy
 
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
       Parse_Spec.if_assumes -- Parse.for_fixes
+        -- parameter_varibility
         -- bundle_parser
         -- deriving_parser
         -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ())) (*to distinguish with the `def_by_fun` syntax*)
-   >> (fn ((((((decl, (spec, pos)), prems), params), raw_bundles), raw_dervs), _) => fn int => fn lthy =>
+   >> (fn (((((((decl, (spec, pos)), prems), params), vars), raw_bundles), raw_dervs), _) => fn int => fn lthy =>
         lthy
          |> snd o Local_Theory.begin_nested
          |> my_definition decl params prems spec int
@@ -1545,7 +1683,7 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
                   val name = case decl of SOME (name, _, _) => name
                                         | NONE => Binding.make (Term.term_name def_term, pos)
                in add_type_i {no_auto=false} (name, def_term, DIRECT_DEF def_eq, pos,
-                                              raw_dervs, raw_bundles) generic |> snd
+                                              raw_dervs, raw_bundles, vars) generic |> snd
               end)
          ))
 in

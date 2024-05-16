@@ -2141,6 +2141,20 @@ declare allI [\<phi>reason %\<phi>LPR_imp]
         | qchk (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) $ _) = true
         | qchk _ = false
       val ctxt = Context_Position.set_visible false ctxt0 delsimps @{thms' imp_disjL}
+
+      fun convX ctxt ctm =
+        Phi_Conv.hol_alls_balls_to_meta (fn ctxt => fn ctm =>
+          case Thm.term_of ctm
+            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) => (
+                     HOLogic.Trueprop_conv (
+                        Phi_Conv.hol_imp_conv (Conv.rewr_conv @{thm' Premise_def[where mode=\<open>default\<close>, symmetric]})
+                                              Conv.all_conv)
+                     then_conv Conv.rewr_conv @{thm' atomize_imp[symmetric]}
+                     then_conv Conv.arg_conv (convX ctxt)) ctm
+             | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) =>
+                     HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def}) ctm
+             | _ => Conv.all_conv ctm) ctxt ctm
+
    in if qchk (Thm.major_prem_of sequent)
    then Seq.make (fn () =>
     let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
@@ -2150,18 +2164,7 @@ declare allI [\<phi>reason %\<phi>LPR_imp]
                                                   (Conv.rewr_conv @{thm' NO_SIMP_def[symmetric]})
                         )) ctxt)) ctxt then_conv
                         Phi_Reasoners.asm_rewrite false ctxt then_conv
-                        Phi_Conv.hhf_concl_conv (Phi_Conv.hol_alls_balls_to_meta (K (fn ctm => 
-                            case Thm.term_of ctm
-                              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) => (
-                                       HOLogic.Trueprop_conv (
-                                          Phi_Conv.hol_imp_conv (Conv.rewr_conv @{thm' Premise_def[where mode=\<open>default\<close>, symmetric]})
-                                                                (Conv.rewr_conv @{thm' NO_SIMP_def}))
-                                       then_conv
-                                       Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctm
-                               | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) =>
-                                       HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def}) ctm
-                               | _ => Conv.all_conv ctm
-                            ))) ctxt
+                        Phi_Conv.hhf_concl_conv convX ctxt
                       ) ctxt) 1
                    |> Phi_Help.instantiate_higher_order_var_in_antecedents 1 ctxt
      in SOME ((ctxt0, sequent'), Seq.empty)

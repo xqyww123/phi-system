@@ -23,7 +23,7 @@ ML \<open>(Thm.transfer \<^theory> @{thm' Itself_is_primitive})\<close>
 local_setup \<open>
   Phi_Type.add_type {no_auto=true}
         (\<^binding>\<open>Itself\<close>, \<^pattern>\<open>Itself\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
-         \<^here>, Phi_Type.Derivings.empty, [])
+         \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
 
 text \<open>No deriver is available on \<open>Itself\<close>, and they will trap in infinite loops because the fake
@@ -38,7 +38,7 @@ lemma \<phi>None_def': \<open> (x \<Ztypecolon> \<circle>) = (1 \<Ztypecolon> It
 local_setup \<open>
   Phi_Type.add_type {no_auto=false}
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
-       \<^here>, Phi_Type.Derivings.empty, [])
+       \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
  
 
@@ -55,7 +55,7 @@ subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 local_setup \<open>
   Phi_Type.add_type {no_auto=false}
       (\<^binding>\<open>\<phi>Any\<close>, \<^pattern>\<open>\<phi>Any::(?'c, ?'x) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
-       \<^here>, Phi_Type.Derivings.empty, [])
+       \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
 
 let_\<phi>type \<phi>Any deriving Basic
@@ -68,7 +68,7 @@ declare \<phi>Bot_def[embed_into_\<phi>type]
 local_setup \<open>
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Bot\<close>, \<^pattern>\<open>\<phi>Bot::(?'c,?'a) \<phi>\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
-         \<^here>, Phi_Type.Derivings.empty, [])
+         \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
  
 let_\<phi>type \<phi>Bot
@@ -88,7 +88,7 @@ local_setup \<open>
             @{lemma' \<open>(x \<Ztypecolon> T \<^emph> U) = (fst x \<Ztypecolon> T) * (snd x \<Ztypecolon> U)\<close>
                       for T :: \<open>('c::sep_magma,'a\<^sub>1) \<phi>\<close> and U :: \<open>('c::sep_magma,'a\<^sub>2) \<phi>\<close>
                   by (simp add: \<phi>Prod_expn'')}),
-         \<^here>, Phi_Type.Derivings.empty, [])
+         \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
 
 let_\<phi>type \<phi>Prod
@@ -101,7 +101,7 @@ let_\<phi>type \<phi>Prod
 
 
 subsection \<open>Func\<close>
- 
+
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>Identity_Elements\<^sub>E (\<phi>Fun f) (\<lambda>x. f x = 1)\<close>
@@ -1397,7 +1397,7 @@ lemma \<phi>Some_def': \<open> \<black_circle> T = (Some \<Zcomp>\<^sub>f T) \<c
 local_setup \<open>
   Phi_Type.add_type {no_auto=false}
         (\<^binding>\<open>\<phi>Some\<close>, \<^pattern>\<open>\<phi>Some\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
-         \<^here>, Phi_Type.Derivings.empty, [])
+         \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
   \<comment> \<open>Setup an alternative definition in the language of \<phi>-types so that we can apply
       derivers over these bootstrap \<phi>-types\<close>

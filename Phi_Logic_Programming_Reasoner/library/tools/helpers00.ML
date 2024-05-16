@@ -309,3 +309,12 @@ fun strip_implies_c tm = strip_implies_c (#2 (Thm.dest_implies tm))
   handle TERM _ => tm
 
 end
+
+fun map3 _ [] [] [] = []
+  | map3 f (x :: xs) (y :: ys) (z :: zs) = f x y z :: map3 f xs ys zs
+  | map3 _ _ _ _ = raise ListPair.UnequalLengths
+
+fun map4 _ [] [] [] [] = []
+  | map4 f (x :: xs) (y :: ys) (z :: zs) (w :: ws)
+      = f x y z w :: map4 f xs ys zs ws
+  | map4 _ _ _ _ _ = raise ListPair.UnequalLengths

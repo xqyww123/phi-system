@@ -597,7 +597,7 @@ subsection \<open>Standard Logical Pointer\<close>
   \<comment> \<open>which always points to the beginning address of a component of a valid memory object.
       cannot point to the end of an allocation block, which is its limitation.
       only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
-  
+
 \<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, address) \<phi>" ("\<bbbP>\<t>\<r> _" [900] 899)
   where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (address_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_address x \<and> (x = 0 \<or> address_type x = TY)\<close>
   deriving Basic
