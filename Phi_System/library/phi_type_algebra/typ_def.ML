@@ -120,6 +120,8 @@ val derive_properties : derivings * Bundle.name list -> phi_type -> local_theory
     (*no need to call it manually. It is invoked by `add_type` *)
 val under_deriving_ctxt : bool Config.T
 
+structure Deriving_Hooks : HOOKS
+
 (* Derived Properties *)
 
 val lookup_derived_properties : Context.generic -> phi_type -> string (*name*) -> thm list list
@@ -477,6 +479,8 @@ fun fix_phi_term_params phi ctxt =
 
 (*** Deriving Properties ***)
 
+(** Data Types **)
+
 type priority = int
 type deriver_name = string
 type derive = phi_type -> local_theory -> local_theory
@@ -509,6 +513,11 @@ structure Deriver_Bindings = Generic_Data (
   type T = (pattern * deriver_name) Net.net
   val empty = Net.empty
   val merge = Net.merge (op =)
+)
+
+structure Deriving_Hooks = Hooks (
+  type arg = phi_type
+  type state = derivings * local_theory
 )
 
 fun chk_deriver ctxt (derv : deriver) =
@@ -590,7 +599,15 @@ fun complete_deriver_dependences ctxt dervs =
   Derivings.fold (fn (_,(hints,derv,_,pos)) =>
       add_deriver_dependences pos (forall (is_none o #1) hints) ctxt (#dependences derv)) dervs dervs
 
-(* Deriving *)
+val _ = Theory.setup (
+  ML_Antiquotation.value \<^binding>\<open>\<phi>deriver\<close>
+    (Scan.peek (fn ctxt => Parse.name_position >> (fn name =>
+        check_deriver ctxt name
+          |> apsnd #priority
+          |> ML_Syntax.print_pair ML_Syntax.print_string ML_Syntax.print_int )))
+)
+
+(** Deriving **)
 
 val under_deriving_ctxt = Attrib.setup_config_bool \<^binding>\<open>under_\<phi>deriving\<close> (K false)
 
@@ -610,6 +627,7 @@ fun err_derive ctxt prop_name msg hints = let open Pretty in
 
 fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
   let val level = Local_Theory.level thy
+      val dervs = complete_deriver_dependences (Context.Proof thy) dervs
       fun setup ctxt = ctxt
             |> Context.proof_map (
                   Phi_Reasoner.start_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))
@@ -619,7 +637,11 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
             |> Phi_Reasoners.report_failure_reason []
    in thy
    |> Local_Theory.map_contexts (fn i => if i >= level - 1 then setup else I)
-   (*|> Local_Theory.target setup*)
+   |> pair dervs
+   |> Deriving_Hooks.invoke (Context.Proof thy) phityp
+   |> (fn (dervs, thy) =>
+     let val dervs = complete_deriver_dependences (Context.Proof thy) dervs
+      in thy
    |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn lthy =>
           lthy |> snd o Local_Theory.begin_nested
                |> Context_Position.set_visible false
@@ -627,11 +649,13 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
                |> Local_Theory.end_nested
           handle Automation_Fail msg => err_derive lthy name (msg ()) hints
        ) dervs
+     end)
+(*TODO: un-setup*)
     (*|> Context.proof_map (
           Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))*)
   end
 
-(* Derived Properties *)
+(** Derived Properties **)
 
 val dp_eq = eq_pair3 (op aconv) (op =) (eq_list pointer_eq)
 structure Derived_Properties = Generic_Data (
@@ -731,7 +755,17 @@ val _ = Theory.setup (
 
 )
 
-(* Syntax *)
+(** Simple Checkers **)
+
+(* Suggest some property should be derived *)
+
+fun chk_deriving_or_derived (deriver_name, prop_name) phi_type (derving, lthy) =
+  let val (deriver_name, deriver) = check_deriver (Context.Proof lthy) (deriver_name, Position.none)
+   in Derivings.defined derving (#priority deriver, deriver_name) orelse
+      not (null (lookup_derived_properties (Context.Proof lthy) phi_type prop_name))
+  end
+
+(** Syntax **)
 
 datatype deriving_ast' = Derv_By_Name of xstring * Position.T
                        | Derv_By_Term of ((string * Position.T) * string list (*arbi_ind_args*)) * Reasoner_Group.priority_syntax option
@@ -828,7 +862,6 @@ fun check_deriving_ast ctxt (derv_ast : deriving_ast list) =
                                              chk_notes notes, chk_bundles bundle)
             end
        ) derv_ast
-   |> complete_deriver_dependences ctxt
    handle Unknown_Hint term =>
       error (Pretty.string_of (Pretty.chunks [
           Pretty.para "Do not know how to derive from the given hint. There is no known deriver for it.",
@@ -836,7 +869,7 @@ fun check_deriving_ast ctxt (derv_ast : deriving_ast list) =
         ]))
   end
 
-(* Interfaces for Derivers *)
+(** Interfaces for Derivers **)
 
 val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
 val ML_sender : (quiet * Position.T -> deriving_instruction list -> derive) option Unsynchronized.ref
@@ -968,7 +1001,7 @@ fun gen_refl_Tr term ctxt cong =
         handle THM _ => [] )
   end
 
-(*** \<phi>-Type Definition Part II ***)
+(*** \<phi>-Type Definition ***)
 
 (** Tools **)
 

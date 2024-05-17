@@ -86,4 +86,15 @@ val _ = Theory.setup (Context.theory_map (
     )
 ))
 
+local
+
+fun chk_deriving (phi : phi_type) (dervs, lthy) =
+  let 
+   in (dervs, lthy)
+  end
+
+in
+
+end
+
 end
