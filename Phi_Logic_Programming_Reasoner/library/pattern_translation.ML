@@ -1,19 +1,10 @@
 signature PATTERN_REWRITE_GLOBAL = sig
 
-type bv_typs = bv_typs
-type bvs = bvs
-type fixed_bounds = PLPR_Pattern.fixed_bounds
-
-type spattern = term (*improved pattern where variables of a name exactly \<open>var\<close> or leaded by \<open>var_\<close>,
-                       match only schematic variables.*)
-val mk_spattern : term -> spattern
-val does_match_term : theory -> fixed_bounds -> bvs -> spattern * term -> bool
-
 type redex_residues = spattern * term list
 type redex_residue = spattern * term
 
-val rewrites : theory -> fixed_bounds -> bvs -> redex_residues -> term -> term list option
-val rewrite  : theory -> fixed_bounds -> bvs -> redex_residue -> term -> term option
+val rewrites : theory -> PLPR_Pattern.fixed_bounds -> bvs -> redex_residues -> term -> term list option
+val rewrite  : theory -> PLPR_Pattern.fixed_bounds -> bvs -> redex_residue -> term -> term option
 
 end
 
@@ -38,39 +29,13 @@ end
 
 structure Pattern_Translation : PATTERN_REWRITE_GLOBAL = struct
 
-type bv_typs = bv_typs
-type bvs = bvs
-type fixed_bounds = PLPR_Pattern.fixed_bounds
-
 type redex_residues = term * term list
 type redex_residue = term * term
-type spattern = term
 
-fun mk_spattern raw =
-  map_aterms (fn Var ((s,i),T) =>
-                    if i < 0
-                    then raise TERM ("Pattern_Translation: the pattern contains negative schematic index", [raw])
-                    else Var ((s, if String.isPrefix "var_" s orelse s = "var" then ~i - 1 else i),T)
-               | X => X) raw
-
-val chk_trick = Vartab.forall (fn ((_,i),(_,tm)) => i >= 0 orelse is_Var (Term.head_of (Envir.beta_eta_contract tm)))
-
-fun match_term thy fixed_bounds bvs pat_obj env =
-  let val (tys,tms) = PLPR_Pattern.match thy fixed_bounds bvs pat_obj env
-   in if chk_trick tms then (tys,tms)
-      else raise Pattern.MATCH
-  end
-
-fun does_match_term thy fixed_bounds bv_typs pat_obj =
-      (match_term thy fixed_bounds bv_typs pat_obj (Vartab.empty, Vartab.empty) ; true)
-      handle Pattern.MATCH => false
-
-fun rewrites thy fixed_bounds bv_typs (pat,rets) term =
-  let val s = PLPR_Pattern.match thy fixed_bounds bv_typs (pat, term) (Vartab.empty, Vartab.empty)
-      in if chk_trick (snd s)
-         then SOME (map (Envir.subst_term s) rets)
-         else NONE
-   end handle Pattern.MATCH => NONE
+fun rewrites thy fixed_bounds bvs (pat,rets) term =
+  let val s = PLPR_Pattern.smatch thy fixed_bounds bvs (pat, term) (Vartab.empty, Vartab.empty)
+   in SOME (map (Envir.subst_term s) rets)
+  end handle Pattern.MATCH => NONE
 
 fun rewrite thy fixed_bounds bv_typs (pat,ret) term =
       Option.map hd (rewrites thy fixed_bounds bv_typs (pat,[ret]) term)
@@ -89,14 +54,15 @@ functor Pattern_Translation (Config : sig
 end) : PATTERN_REWRITE = struct
 
 datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list option)
-type rewr = int * term * Position.T * rewrite
 
-fun rewrite_eq (By_Pattern tms1, By_Pattern tms2) = eq_list (op aconv) (tms1, tms2)
-  | rewrite_eq (By_ML _, By_ML _ ) = true
-  | rewrite_eq _ = false
+structure Store = Term_Pattern_Store (struct
+    type T = rewrite
+    fun eq (By_Pattern tms1, By_Pattern tms2) = eq_list (op aconv) (tms1, tms2)
+      | eq (By_ML _, By_ML _ ) = true
+      | eq _ = false
+  end)
 
-fun pat_pat_eq ((p1,a1,o1,b1),(p2,a2,o2,b2)) =
-      p1 = p2 andalso a1 aconv a2 andalso o1 = o2 andalso rewrite_eq (b1,b2)
+type rewr = Store.entry
 
 fun export_rewrite ctxt ctxt' (n, tm, pos, By_Pattern terms)
       = (case Variable.export_terms ctxt ctxt' (tm::terms)
@@ -104,27 +70,10 @@ fun export_rewrite ctxt ctxt' (n, tm, pos, By_Pattern terms)
   | export_rewrite ctxt ctxt' (n, tm, pos, By_ML f)
       = (n, singleton (Variable.export_terms ctxt ctxt') tm, pos, By_ML f)
 
-structure Data = Generic_Data (
-  type T = (int (*priority*) * term (*pattern P*) * Position.T * rewrite (*the default pattern X*)) Net.net
-  (*It gives the default pattern P of an introduction rule whose conclusion matches some pattern P.
-    Larger priority is more prior.*)
-  val empty = Net.empty
-  val merge = Net.merge pat_pat_eq
-)
-
-fun add pat_pats ctxt =
-      Data.map (fold (fn (n,p1,pos,p2) =>
-            let val p1' = Pattern_Translation.mk_spattern p1
-             in Net.insert_term pat_pat_eq (p1',(n,p1',pos,p2))
-            end
-          ) pat_pats
-        ) ctxt
-      handle Net.INSERT => Exn.error ("Some pattern clashes with existing entries.")
-
-fun remove (n,p1,pos,p2) =
-      Data.map (Net.delete_term_safe pat_pat_eq (p1,(n,p1,pos,p2)))
-
-fun list_rewrites ctxt = Net.content (Data.get ctxt)
+val add = Store.add
+val remove = Store.remove
+val list_rewrites = Store.list
+val rewrite_eq = Store.Config.eq
 
 local open Pretty in
 fun print_rewrite ctxt (n,pat,pos, By_Pattern [dest]) =
@@ -164,9 +113,9 @@ fun get_distinct_seq ctxt (n,ret) seq =
 
 (*the term cannot contain loose bounded variables*)
 fun gen_translate rewr ctxt =
-  let val data = Data.get ctxt
-   in fn term => Net.match_term data term
-    |> sort (fn ((n1,_,_,_),(n2,_,_,_)) => int_ord (n2,n1))
+  let val get = Store.get ctxt
+   in fn term =>
+       get term
     |> Seq.of_list
     |> Seq.map_filter (rewr ctxt term)
     |> Seq.pull

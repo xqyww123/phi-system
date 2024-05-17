@@ -444,6 +444,7 @@ ML_file \<open>library/tools/helpers01.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
+ML_file \<open>library/tools/term_pattern_store.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 

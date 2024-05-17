@@ -9,17 +9,26 @@
 type bv_typs = typ list (*types of contextual bound variables*)
 type bvs = (string * typ) list
 
+type spattern = term (*improved pattern where variables of a name \<open>var\<close> or a name leaded by \<open>var_\<close>,
+                       match only schematic variables.*)
+
 signature PLPR_PATTERN = sig
 
 type fixed_bounds = int -> bool
       (*whether the bound variable is fixed, so regarded as a normal free variable*)
 
-val match: theory -> fixed_bounds
-                  -> bvs -> term * term -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
-val first_order_match: theory -> bv_typs -> term *term
+val match: theory -> fixed_bounds -> bvs -> term * term
+        -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
+
+val first_order_match: theory -> bv_typs -> term * term
                               -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 
 val matches: theory -> fixed_bounds -> bvs -> term * term -> bool
+
+val mk_spattern : term -> spattern
+val smatch : theory -> fixed_bounds -> bvs -> spattern * term
+          -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
+val does_smatch : theory -> fixed_bounds -> bvs -> spattern * term -> bool
 
 end
 
@@ -163,6 +172,26 @@ in mtch bvs po envir' handle Pattern => first_order_match thy bvtys po envir' en
 
 fun matches thy fixed_bounds bv_typs po =
   (match thy fixed_bounds bv_typs po (Vartab.empty, Vartab.empty); true) handle MATCH => false;
+
+
+fun mk_spattern raw =
+  map_aterms (fn Var ((s,i),T) =>
+                    if i < 0
+                    then raise TERM ("Pattern_Translation: the pattern contains negative schematic index", [raw])
+                    else Var ((s, if String.isPrefix "var_" s orelse s = "var" then ~i - 1 else i),T)
+               | X => X) raw
+
+val chk_trick = Vartab.forall (fn ((_,i),(_,tm)) => i >= 0 orelse is_Var (Term.head_of (Envir.beta_eta_contract tm)))
+
+fun smatch thy fixed_bounds bvs pat_obj env =
+  let val (tys,tms) = match thy fixed_bounds bvs pat_obj env
+   in if chk_trick tms then (tys,tms)
+      else raise MATCH
+  end
+
+fun does_smatch thy fixed_bounds bv_typs pat_obj =
+      (smatch thy fixed_bounds bv_typs pat_obj (Vartab.empty, Vartab.empty) ; true)
+      handle MATCH => false
 
 
 end

@@ -283,8 +283,8 @@ type reasoner = {name: term,
 
 fun normalize_reasoner f ({name,group,pos,mode,pattern,blacklist,tactic}:reasoner) =
   ({name=name, pos=pos, mode=mode, group=group,
-    pattern = map (fn (x,y) => (Pattern_Translation.mk_spattern (Envir.beta_eta_contract x), f y)) pattern,
-    blacklist = map (Pattern_Translation.mk_spattern o Envir.beta_eta_contract) blacklist,
+    pattern = map (fn (x,y) => (PLPR_Pattern.mk_spattern (Envir.beta_eta_contract x), f y)) pattern,
+    blacklist = map (PLPR_Pattern.mk_spattern o Envir.beta_eta_contract) blacklist,
     tactic = tactic}:reasoner)
 
 fun transform_reasoner phi ({name,pos,mode,group,pattern,blacklist,tactic}:reasoner) =
@@ -307,7 +307,7 @@ fun name_of_intro_reasoner rules = Logic.mk_conjunction_list (map Thm.prop_of ru
 fun match_reasoner_name thy pattern name =
   let val name_concls = Logic.dest_conjunction_list name
                      |> map Logic.strip_assums_concl
-   in exists (fn X => Pattern_Translation.does_match_term thy (K false) [] (pattern, X)) name_concls
+   in exists (fn X => PLPR_Pattern.does_smatch thy (K false) [] (pattern, X)) name_concls
   end
 fun match_reasoner thy pattern reasoner = match_reasoner_name thy pattern (#name reasoner)
 
@@ -695,9 +695,9 @@ fun apply_tactic _ _ bmode (Tac_ML tac) s = tac (bmode, s)
 fun get_reasoners' thy tactics bvs term =
   iNet.match_term tactics term
     |> filter (fn (_,pat,_,reasoner) =>
-        Pattern_Translation.does_match_term thy (K true) bvs (pat,term)
+        PLPR_Pattern.does_smatch thy (K true) bvs (pat,term)
         andalso forall (fn pat =>
-          not (Pattern_Translation.does_match_term thy (K true) bvs (pat,term)))
+          not (PLPR_Pattern.does_smatch thy (K true) bvs (pat,term)))
         (#blacklist reasoner))
     |> sort (fn ((c1,_,_,r1),(c2,_,_,r2)) =>
           case int_ord (c1,c2) of EQUAL => mode_ord (#mode r1, #mode r2)
@@ -1087,7 +1087,7 @@ val _ =
 
 val DRG_eq = eq_pair3 (op =) (op aconv) (op =)
 structure Default_Reasoner_Groups = Generic_Data (
-  type T = (priority * Pattern_Translation.spattern * Reasoner_Group.group) iNet.net
+  type T = (priority * spattern * Reasoner_Group.group) iNet.net
   val empty = iNet.empty
   val merge = iNet.merge DRG_eq
 )
@@ -1097,7 +1097,7 @@ fun the_default_group_of ctxt =
       val thy = Context.theory_of ctxt
    in fn bvs => fn term =>
       iNet.match_term reasoner_groups term
-        |> filter (fn (_, pat, _) => Pattern_Translation.does_match_term thy (K true) bvs (pat, term))
+        |> filter (fn (_, pat, _) => PLPR_Pattern.does_smatch thy (K true) bvs (pat, term))
         |> Phi_Help.max_of (int_ord o apply2 #1)
         |> Option.map #3
   end

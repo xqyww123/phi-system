@@ -2,7 +2,7 @@ theory Linked_List
   imports Phi_Semantics.PhiSem_C
 begin
 
-
+(*
 abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
 (*declare [[\<phi>trace_reasoning = 3]]*)
