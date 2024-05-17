@@ -110,11 +110,14 @@ fun gen_constr_from_raw (_,name) instruction (phi0 : phi_type) thy =
                      @{thms' Action_Tag_def[where P=\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> and A=\<open>\<T>\<P>\<close> for X Y P, symmetric]} thy)
                      rule
        in thy
-        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (
+              fn m => fn lthy => lthy
+               |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+               |> Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_abstract_from_raw}
                                                            (#2 instruction)))
-                                        ([],[]) NONE [Morphism.thm m rule])
+                                        ([],[]) NONE [Morphism.thm m rule]
+               |> Config.restore_generic Phi_Reasoner.trace lthy)
         |> note_properties_s false phi0 [(name, [rule])]
         |> pair [rule]
       end

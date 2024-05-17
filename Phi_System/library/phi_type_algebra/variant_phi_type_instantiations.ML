@@ -84,10 +84,13 @@ val _ = Theory.setup (Context.theory_map (
                 (*@ mk_parameter_variant1 ctm
                   @ [mk_parameter_variant ctm]*)
      in thy
-     |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #pos phi} (fn m =>
-        Phi_Reasoner.add_rules (
-          map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT',
-                           SOME @{reasoner_group %variants_of_type_opr}, [], [], NONE)) (Morphism.fact m rules))
+     |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #pos phi} (fn m => fn lthy => lthy
+          |> Config.map_generic Phi_Reasoner.trace (fn i => i-1)
+          |> Phi_Reasoner.add_rules (
+                map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT',
+                                 SOME @{reasoner_group %variants_of_type_opr}, [], [], NONE))
+                    (Morphism.fact m rules))
+          |> Config.map_generic Phi_Reasoner.trace (fn i => i+1)
      )
     end)
 ))

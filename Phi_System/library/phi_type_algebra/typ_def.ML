@@ -699,7 +699,7 @@ fun add_derived_properties phi (name, pos) ths ctxt =
 fun register_derived_properties phi (name, ind, pos) ths thy =
   let val ind' = length (lookup_derived_properties (Context.Proof thy) phi name)
       val _ = if ind' = ind then () else error "Bad Index"
-      val _ = Phi_Reasoner.info_pretty thy 0 (fn () =>
+      val _ = Phi_Reasoner.info_pretty thy ~1 (fn () =>
               let open Pretty
                in block [str (suffix_name_by_index ind name), brk 1,
                          chunks (map (fn th => item [Thm.pretty_thm thy th]) ths)]
@@ -1317,8 +1317,8 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
                    map2 (fn SOME v => K v
                           | NONE => default_eq_of) vars param_tys
                | _ => let val eqs = map default_eq_of param_tys
-                          val _ = Phi_Reasoner.info_pretty ctxt 0 (fn () => let open Pretty in
-                                    block ([keyword1 "parameter_equality", brk 1, str "("] @
+                          val _ = Phi_Reasoner.info_pretty ctxt ~1 (fn () => let open Pretty in
+                                    block ([str "Infferred", brk 1, keyword1 "parameter_equality", brk 1, str "("] @
                                            commas (map pretty_parameter_equality eqs) @ [str ")"])
                                   end)
                        in eqs
@@ -1531,17 +1531,16 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
             fun add_rules mode priority rules =
                   Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, SOME priority, [], [], NONE)) rules)
-            fun add_rules_G mode priority G rules =
+          (*fun add_rules_G mode priority G rules =
                   Phi_Reasoner.add_rules (map (fn rule =>
-                      ([Morphism.thm m rule], pos, mode, SOME priority, [], [], SOME G)) rules)
+                      ([Morphism.thm m rule], pos, mode, SOME priority, [], [], SOME G)) rules)*)
          in fn ctxt => ctxt
          |> not no_auto ? (fn ctxt => ctxt
+             |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction_sp
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10} make_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived}
-                            (*(fn (ctxt, _) => Config.get ctxt search_CSTR_rules)*)
-                            make_abstraction_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction_sp
            (*|> not (null make_Identity_Element_E) ?
                 add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %derived_identity_element} make_Identity_Element_E *)
              |> Config.put_generic phi_allow_source_object_to_be_not_variable true
@@ -1551,6 +1550,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
              |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
              |> Phi_Reasoner.add_rules (map (fn (group,pat,refl) =>
                   ([Morphism.thm m refl], pos, Phi_Reasoner.TO_BE_OVERRIDE', SOME group, [(pat,NONE)], [], NONE)) refl_Tr)
+             |> Config.map_generic Phi_Reasoner.trace (fn i=>i+1)
        ) |> Phi_Expansions.add_simps expns
          |> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
@@ -1563,19 +1563,14 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
             [(introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
              (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA),
              (intro_mapN, intro_map), (elim_mapN, elim_map)])
-   |> not no_auto ? (fn thy' =>
-      let val phi' = phi_type (*case thy'
-                       of Context.Proof lthy => morphism_phi_type (Local_Theory.target_morphism lthy) phi_type
-                        | Context.Theory _ => phi_type*)
-       in thy'
+   |> not no_auto ? ( fn thy' => thy'
        |> Context_Position.set_visible false
-       |> Defining_Phi_Type.invoke (Context.Proof thy') phi'
-       |> derive_properties (dervs, bundles) phi'
+       |> Defining_Phi_Type.invoke (Context.Proof thy') phi_type
+       |> derive_properties (dervs, bundles) phi_type
        |> Context_Position.restore_visible thy
-      end
  ) |> Context.proof_map (
-        Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))
-   |> pair phi_type
+        Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules}))
+ ) |> pair phi_type
   end
 
 fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =
@@ -1595,7 +1590,11 @@ fun add_type_i {no_auto} (name, term, def, pos, raw_derv, raw_bundles, variabili
                                   | def => (term, def)
       val level = Local_Theory.level thy
    in thy
+   |> Local_Theory.map_contexts (fn i =>
+        if i >= level - 1 then Config.map Phi_Reasoner.trace (fn i=>i-1) else I)
    |> add_type {no_auto=no_auto} (name, term, def, pos, dervs, bundles, variabilities)
+   |> apsnd (Local_Theory.map_contexts (fn i =>
+        if i >= level - 1 then Config.map Phi_Reasoner.trace (fn i=>i+1) else I))
   end
 
 (** Interface **)

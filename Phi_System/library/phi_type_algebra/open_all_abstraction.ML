@@ -285,11 +285,14 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) (phi0 : 
                                     phi0 instruction thy
    in case Seq.pull rules
    of SOME (rule, _) => thy
-        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+        |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (
+              fn m => fn lthy => lthy
+               |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+               |> Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %To_ToA_derived_to_raw}
                                                            (#2 instruction)))
-                                        ([],[]) NONE [Morphism.thm m rule])
+                                        ([],[]) NONE [Morphism.thm m rule]
+               |> Config.restore_generic Phi_Reasoner.trace lthy)
         |> note_properties_s false phi0 [(name, [rule])]
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

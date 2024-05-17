@@ -392,11 +392,13 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) (phi0 : 
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
-            |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+            |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (fn m => fn lthy => lthy
+               |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+               |> Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_abstract_domain}
                                                            (#2 instruction)))
-                                        ([],[]) NONE [Morphism.thm m rule'])
+                                        ([],[]) NONE [Morphism.thm m rule']
+               |> Config.restore_generic Phi_Reasoner.trace lthy)
             |> note_properties_s false phi0 [(name, [rule'])]
             |> pair [rule']
   end

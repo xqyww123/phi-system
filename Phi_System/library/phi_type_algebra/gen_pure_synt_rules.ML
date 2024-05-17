@@ -23,10 +23,13 @@ fun meta_Synt_Deriver' (rule, default_group) (_, name) (H, group, pos, text, not
       val _ = if null bundles then () else err "bundles here are meaningless."
       val _ = if is_none text then () else err "tactic hint here is meaningless."
    in thy
-   |> Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} (fn m =>
-         Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE'
+   |> Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} (
+        fn m => fn lthy => lthy
+          |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+          |> Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE'
                                (merge_options (group, default_group))
-                               ([],[]) NONE [Morphism.thm m result])
+                               ([],[]) NONE [Morphism.thm m result]
+          |> Config.restore_generic Phi_Reasoner.trace lthy)
    |> pair [result]
   end
 

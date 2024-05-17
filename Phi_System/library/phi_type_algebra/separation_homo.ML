@@ -193,11 +193,14 @@ fun gen_SH is_intro (_,name) instruction (phi0 : phi_type) thy =
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => thy
              |> note_properties_s false phi0 [(name, [rule'])]
-             |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
-                                        (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                           (#2 instruction)))
-                                        ([],[]) NONE [Morphism.thm m rule'])
+             |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (
+                  fn m => fn lthy => lthy
+                    |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+                    |> Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+                                             (SOME (the_default @{reasoner_group %\<phi>TA_derived_properties}
+                                                                (#2 instruction)))
+                                             ([],[]) NONE [Morphism.thm m rule']
+                    |> Config.restore_generic Phi_Reasoner.trace lthy)
              |> pair [rule']
   end
 

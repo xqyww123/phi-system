@@ -265,11 +265,14 @@ fun gen_id_ele is_left (_,name) instruction (phi0 : phi_type) thy =
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => thy
-            |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
+            |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (
+                fn m => fn lthy => lthy
+                  |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+                  |> Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_identity_element}
                                                            (#2 instruction)))
-                                        ([],[]) NONE [Morphism.thm m rule'])
+                                        ([],[]) NONE [Morphism.thm m rule']
+                  |> Config.restore_generic Phi_Reasoner.trace lthy)
             |> note_properties_s false phi0 [(name, [rule'])]
             |> pair [rule']
   end
@@ -295,8 +298,11 @@ fun id_ele_properties pos is_intro (phi0 : phi_type) thy0 =
                     end)
               else ()
    in thy0
-   |> Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} (fn m =>
-        PLPR_Template_Properties.add_property_instance (pos, Morphism.thm m trigger))
+   |> Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} (
+      fn m => fn lthy => lthy
+        |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+        |> PLPR_Template_Properties.add_property_instance (pos, Morphism.thm m trigger)
+        |> Config.restore_generic Phi_Reasoner.trace lthy)
   end
 
 val identity_element_I = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Identity_Element\<^sub>I") (gen_id_ele true)
