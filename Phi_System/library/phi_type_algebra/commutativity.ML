@@ -6,7 +6,7 @@ include PHI_TYPE
 type arity = int list (*Gs, its length is the arity of F, its elements are the arities of each G*)
 
 val parse_comm_F_Gs_from_appl : Context.generic ->
-        Pattern_Translation.bvs * term (*lambda combination of F(G(T))*) ->
+        bvs * term (*lambda combination of F(G(T))*) ->
         ((term (*F*) * term list (*Gs*)) * (term (*G'*) * term list (*Fs'*))) list
 
 val register_comm_tyoprs : ((arity * arity) * Pattern_Translation.redex_residues) list ->
@@ -152,7 +152,7 @@ fun is_assoc_appl direction ctxt =
       iNet.match_term rewrites (encoding_assoc' direction F_G_T)
         |> exists (fn (_, (pattern, _), IE) =>
               select_direction direction IE andalso
-              Pattern_Translation.does_match_term thy (K true) bvs (pattern, F_G_T))
+              PLPR_Pattern.does_smatch thy (K true) bvs (pattern, F_G_T))
   end
 
 end
@@ -355,7 +355,7 @@ fun NA_eq' thy = eq_pair3 (Pattern.equiv thy) pointer_eq (op =)
 type whether_assoc_norm = Context.generic * assoc_direction * term (*F_G_T*) -> bool option
 
 structure Norm_Assoc = Generic_Data (
-  type T = (Pattern_Translation.spattern * whether_assoc_norm * Reasoner_Group.group) Net.net
+  type T = (spattern * whether_assoc_norm * Reasoner_Group.group) Net.net
   val empty = Net.empty
   val merge = Net.merge NA_eq
 )
@@ -372,7 +372,7 @@ fun whether_to_assoc_normalize ctxt =
    in fn direction => fn bvs => fn F_G_T =>
       Net.match_term norm_assoc F_G_T
            |> filter (fn (term',_,_) =>
-                Pattern_Translation.does_match_term thy (K true) bvs (term', F_G_T))
+                PLPR_Pattern.does_smatch thy (K true) bvs (term', F_G_T))
            |> sort (int_ord o apply2 (#1 o #3))
            |> get_first (fn (_,chk,_) => chk (ctxt, direction, F_G_T))
            |> (fn NONE => false

@@ -8,6 +8,8 @@ val declare_rule : Position.T
                 -> (pattern * Phi_Reasoner.priority option) list * pattern list
                 -> thm -> Context.generic -> Context.generic
 
+val ML_sender : (Context.generic -> term -> spattern list option) option Unsynchronized.ref
+
 end
 
 structure Phi_Synthesis : PHI_SYNTHESIS = struct
@@ -42,8 +44,10 @@ structure Pattern = Pattern_Translation(
         \Clash of multiple translation"
 )
 
-val _ = Theory.setup (Pattern.setup_attribute \<^binding>\<open>generate_pattern_of_synthesis_rule\<close>
-    "generated_rule &&& TERM user_given_pattern\<close> \<Rightarrow> \<open>pattern of the antecedents that the reasoner binds on\<close>")
+val ML_sender = Theory.setup_result (Pattern.setup_attribute
+          \<^binding>\<open>generate_pattern_of_synthesis_rule\<close>
+          "Phi_Synthesis.ML_sender"
+          "generated_rule &&& TERM user_given_pattern\<close> \<Rightarrow> \<open>pattern of the antecedents that the reasoner binds on\<close>")
 
 datatype pattern = Arg_and_Ret of term * term | Ret_only of term | No_Pattern
 
