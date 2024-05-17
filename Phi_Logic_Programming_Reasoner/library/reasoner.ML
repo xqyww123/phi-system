@@ -216,6 +216,9 @@ signature NU_REASONER = sig
   val utilization_of_groups_in_all_theories : Context.generic -> Reasoner_Group.name list -> PLPR_Statistics.group_name list -> (thm * int) list
   val reasoners_of_group : Context.generic -> (Reasoner_Group.name list -> bool) -> reasoner list
 
+  (* Technical Internal *)
+  val default_pattern_ML_sender : Default_Pattern.ML_rewr option Unsynchronized.ref
+
 end
 
 (*A special name to prevent someone overriding this structure, whose visibility is essential
@@ -1140,7 +1143,9 @@ fun is_error (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_
 
 val the_default_pattern_of = filter_out is_error oo the_default_pattern_of'
 
-val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>reason_default_pattern\<close>
+val default_pattern_ML_sender = Theory.setup_result (
+        Default_Pattern.setup_attribute \<^binding>\<open>\<phi>reason_default_pattern\<close>
+          "Phi_Reasoner.default_pattern_ML_sender"
           "set the default pattern of a reasoning rule once its conclusion matches some pattern")
 
 (** Reasoning Rule Pass **)

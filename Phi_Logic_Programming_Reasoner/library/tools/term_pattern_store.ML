@@ -1,8 +1,8 @@
 signature TERM_PATTERN_STORE_CFG = sig
 
 type T
-
 val eq : T * T -> bool
+val export : Proof.context -> Proof.context -> T -> T
 
 end
 
@@ -18,6 +18,17 @@ val add : entry list -> Context.generic -> Context.generic
 val remove : entry -> Context.generic -> Context.generic
 val get : Context.generic -> term -> entry list
 val list : Context.generic -> entry list
+val export : Proof.context -> Proof.context -> entry -> entry
+
+val setup_decl_attr : binding -> T parser -> 't parser
+                   -> (Proof.context -> string * 't -> term * T)
+                   -> string
+                   -> theory -> theory
+val setup_decl_ML_attr : binding -> string
+                   -> (Proof.context -> string -> term) -> (Proof.context -> 'a -> T)
+                   -> string
+                   -> theory
+                   -> 'a option Unsynchronized.ref * theory
 
 end
 
@@ -51,32 +62,72 @@ fun remove (n,p,pos,x) =
 
 fun list ctxt = Net.content (Data.get ctxt)
 
+fun export ctxt ctxt' (n, tm, pos, x)
+      = (n, singleton (Variable.export_terms ctxt ctxt') tm, pos, Config.export ctxt ctxt' x)
+
+
 fun get ctxt =
   let val data = Data.get ctxt
    in fn term => Net.match_term data term
               |> sort (fn ((n1,_,_,_),(n2,_,_,_)) => int_ord (n2,n1))
   end
 
-(*
-fun pat_synt T =
+
+fun decl_synt cached_parser parser parse_pattern =
    ((Scan.lift (Parse.position Args.internal_term --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) --
-     T --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
+     cached_parser --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
   >> (fn (((p,pos),x),n) => (n,p,pos,x)))
 || ((Args.context -- Scan.lift (Parse.position (Parse.token Parse.embedded) --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>)
-                  -- Scan.repeat1 (Parse.token Parse.embedded) --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
+                  -- parser --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
   >> (fn (ctxt,(((tok_p,pos),x),n)) =>
     let val p = Token.inner_syntax_of tok_p
         val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-        val p' = Syntax.check_prop ctxt_p (Syntax.parse_prop ctxt_p p)
+        val (p',x') = parse_pattern ctxt_p (p,x)
         val _ = Token.assign (SOME (Token.Term p')) tok_p
-     in (n,p',pos,x)
+     in (n,p',pos,x')
      end))
 
-fun setup_decl_attr binding =
+
+fun setup_decl_attr binding cached_parser parser parse_pattern comment =
   Attrib.setup binding
-        (Args.context -- Parse.and_list' pat2 >> (fn (_,pats) =>
+        (Args.context -- Parse.and_list' (decl_synt cached_parser parser parse_pattern) >> (fn (_,pats) =>
                 Thm.declaration_attribute (K (fn ctxt' =>
                     add pats ctxt'
                     )))) comment
-*)
+
+fun setup_decl_ML_attr binding access_to_sender parse_pattern constructor comment =
+  let val sender = Unsynchronized.ref NONE
+      val locker = Synchronized.var (Binding.name_of binding) ()
+
+      val term_pattern = Scan.peek (fn generic => Parse.position (Args.named_term (
+            let val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of generic)
+             in parse_pattern ctxt end)))
+
+      val decl_synt_ML =
+          (Args.context -- term_pattern -- Scan.lift ((\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>)
+                       |-- Parse.ML_source --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
+        >> (fn ((ctxt,(p,pos)),(src,n)) =>
+          let val ret = Synchronized.change_result locker (fn () =>
+                          let val _ = ML_Context.expression (Input.pos_of src)
+                                        (ML_Lex.read access_to_sender @
+                                         ML_Lex.read ":= SOME (" @
+                                         ML_Lex.read_source src @
+                                         ML_Lex.read ")")
+                                      (Context.Proof ctxt)
+                              val ret = the (!sender)
+                              val _ = sender := NONE
+                           in (ret, ())
+                          end)
+           in (n,p,pos,constructor ctxt ret)
+           end)
+ 
+   in Attrib.setup binding
+        (Args.context -- Parse.and_list' decl_synt_ML >> (fn (ctxt,pats) =>
+                Thm.declaration_attribute (K (fn ctxt' =>
+                    let val ctxt'' = Context.proof_of ctxt'
+                     in add (map (export ctxt ctxt'') pats) ctxt' end)))) comment
+   #> pair sender
+  end
+
+
 end

@@ -318,3 +318,35 @@ fun map4 _ [] [] [] [] = []
   | map4 f (x :: xs) (y :: ys) (z :: zs) (w :: ws)
       = f x y z w :: map4 f xs ys zs ws
   | map4 _ _ _ _ _ = raise ListPair.UnequalLengths
+
+
+signature THEORY = sig
+include THEORY
+val setup_result : (theory -> 'a * theory) -> 'a
+val local_setup_result : (Proof.context -> 'a * Proof.context) -> 'a
+end
+
+structure Theory : THEORY = struct
+open Theory
+
+fun setup_result F =
+  let val ret = Unsynchronized.ref NONE
+   in setup (fn thy =>
+        let val (x, thy) = F thy
+         in ret := SOME x;
+            thy
+        end ) ;
+      the (! ret)
+  end
+
+fun local_setup_result F =
+  let val ret = Unsynchronized.ref NONE
+   in local_setup (fn thy =>
+        let val (x, thy) = F thy
+         in ret := SOME x;
+            thy
+        end ) ;
+      the (! ret)
+  end
+
+end

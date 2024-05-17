@@ -10,7 +10,9 @@ end
 
 signature PATTERN_REWRITE = sig
 
-datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list option)
+type ML_rewr = Context.generic -> term -> spattern list option
+datatype rewrite = By_Pattern of spattern list
+                 | By_ML of ML_rewr
 val rewrite_eq : rewrite * rewrite -> bool
 
 type rewr = int * term * Position.T * rewrite
@@ -18,7 +20,9 @@ type rewr = int * term * Position.T * rewrite
 val add : rewr list -> Context.generic -> Context.generic
 val remove : rewr -> Context.generic -> Context.generic
 val translate : Context.generic -> term -> term list
-val setup_attribute : binding -> string -> theory -> theory
+val setup_attribute : binding -> string -> string
+                  -> theory
+                  -> ML_rewr option Unsynchronized.ref * theory
 
 val list_rewrites : Context.generic -> rewr list
 
@@ -53,22 +57,20 @@ functor Pattern_Translation (Config : sig
   val multi_translation_err_msg : string
 end) : PATTERN_REWRITE = struct
 
-datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list option)
+type ML_rewr = Context.generic -> term -> spattern list option
+datatype rewrite = By_Pattern of term list | By_ML of ML_rewr
 
 structure Store = Term_Pattern_Store (struct
     type T = rewrite
     fun eq (By_Pattern tms1, By_Pattern tms2) = eq_list (op aconv) (tms1, tms2)
       | eq (By_ML _, By_ML _ ) = true
       | eq _ = false
+    fun export ctxt ctxt' (By_Pattern terms) =
+          By_Pattern (Variable.export_terms ctxt ctxt' terms)
+      | export _ _ (By_ML f) = By_ML f
   end)
 
 type rewr = Store.entry
-
-fun export_rewrite ctxt ctxt' (n, tm, pos, By_Pattern terms)
-      = (case Variable.export_terms ctxt ctxt' (tm::terms)
-           of (tm'::terms') => (n, tm', pos, By_Pattern terms'))
-  | export_rewrite ctxt ctxt' (n, tm, pos, By_ML f)
-      = (n, singleton (Variable.export_terms ctxt ctxt') tm, pos, By_ML f)
 
 val add = Store.add
 val remove = Store.remove
@@ -135,6 +137,7 @@ val translate = gen_translate do_rewrite
 fun app2 f [] [] = ()
   | app2 f (h1::L1) (h2::L2) = (f (h1,h2); app2 f L1 L2)
 
+(*
 val pat2 =
    ((Scan.lift (Parse.position Args.internal_term --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) --
      Scan.repeat1 Args.internal_term --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
@@ -166,8 +169,27 @@ val pat_ML = (Args.context -- term_pattern -- Scan.lift ((\<^keyword>\<open>=>\<
                ML_Lex.read ") : Context.generic -> term -> term list option))")
      in (n,p1',pos, By_ML (PLP_Reasoner_Pattern_Parse_Sender.get (Context.the_proof ctxt')))
      end)
+*)
 
-fun setup_attribute binding comment =
+val cached_parser = Scan.repeat1 Args.internal_term >> By_Pattern
+val T_parser = Scan.repeat1 (Parse.token Parse.embedded)
+
+fun setup_attribute binding access_to_sender comment =
+    Store.setup_decl_attr binding cached_parser T_parser
+      (fn ctxt => fn (p1,emb) =>
+          let val p2 = map (Token.inner_syntax_of) emb
+              val (p1'::p2') = Config.check_pattern ctxt
+                                    (Config.parse_pattern ctxt p1 ::
+                                     map (Config.parse_pattern ctxt) p2)
+           in (p1', By_Pattern p2')
+          end) comment
+ #> Store.setup_decl_ML_attr (Binding.suffix_name "_ML" binding)
+                             access_to_sender
+                             (fn ctxt => singleton (Config.check_pattern ctxt) o Config.parse_pattern ctxt)
+                             (K By_ML)
+                             comment
+      
+(*
       Attrib.setup binding
         (Args.context -- Parse.and_list' pat2 >> (fn (_,pats) =>
                 Thm.declaration_attribute (K (fn ctxt' =>
@@ -178,5 +200,5 @@ fun setup_attribute binding comment =
                 Thm.declaration_attribute (K (fn ctxt' =>
                     let val ctxt'' = Context.proof_of ctxt'
                      in add (map (export_rewrite ctxt ctxt'') pats) ctxt' end)))) comment
-
+*)
 end
