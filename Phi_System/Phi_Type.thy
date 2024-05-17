@@ -1,7 +1,7 @@
 theory Phi_Type
   imports IDE_CP_Reasoning2
   keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" :: thy_defn
-       and "deriving" :: quasi_command
+       and "deriving" "parameter_equality" :: quasi_command
 begin
 
 chapter \<open>The Algebra of \<open>\<phi>\<close>-Type\<close>
@@ -8259,9 +8259,12 @@ lemma function_congruence_template:
                prems(2)[THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
                prems(3-);
         clarsimp; rule; meson) .
-  
-ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 
+(* (*This package is still necessary but I have no good ideo to realize it now.
+     Maybe I think there should be an ad-hoc deriver maybe?
+     The thing is the conditions of the congruence rule cannot be robustly inferred.*)
+ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
+*)
 
 subsubsection \<open>Configuration for guessing default Semimodule properties\<close>
 

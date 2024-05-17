@@ -14,6 +14,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Abstract_Domain\<^sub>L \<rat> (\<lambda>_. True)\<close>
        and \<open>Abstract_Domain \<rat> (\<lambda>_. True)\<close>
        and Semantic_Type
+       and Inhabited
 
 
 proc rat_add:

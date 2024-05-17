@@ -225,7 +225,11 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
 
   in
     stat
-      |> Proof.map_context (Config.put phi_allow_source_object_to_be_not_variable true)
+      |> Proof.map_context (fn ctxt =>
+         ctxt |> Context_Position.set_visible false
+              |> (fn ctxt => ctxt addsimprocs [Semantic_Type_Tools.unfold_typeof_simproc])
+              |> Context_Position.restore_visible ctxt
+              |> Config.put phi_allow_source_object_to_be_not_variable true)
       |> Proof.internal_goal (print_results int) Proof_Context.mode_pattern true
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)

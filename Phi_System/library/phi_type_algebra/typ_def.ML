@@ -20,13 +20,13 @@ include PHI_TYPE
 (** \<phi>-Type Definition \& Infos **)
 
 datatype def = DIRECT_DEF of thm (*def*) | WFREC_DEF  of Function.info
-datatype parameter_variability = PV_Var | PV_Id
+datatype parameter_equality = PE_Synt | PE_Guard | PE_Proof
 
 type parameter_info = {
   name: string option (*not always given*),
   mutating: bool option, (*if the parameter mutates throughout the (recursive) definition.
                            we are not always able to check if a parameter mutates from definition*)
-  variability: parameter_variability (*Two \<phi>-types \<open>T a\<^sub>1 \<cdots> a\<^sub>n\<close> and \<open>T a\<^sub>1' \<cdots> a\<^sub>n'\<close> are *)
+  equality: parameter_equality (*Two \<phi>-types \<open>T a\<^sub>1 \<cdots> a\<^sub>n\<close> and \<open>T a\<^sub>1' \<cdots> a\<^sub>n'\<close> are *)
 }
 
 type phi_type = {
@@ -152,7 +152,7 @@ val add_type : {no_auto: bool}
             -> binding * term * def * Position.T
              * derivings
              * Bundle.name list
-             * parameter_variability option list option
+             * parameter_equality option list option
             -> local_theory -> phi_type * local_theory
 
 val override_ind_rule : term * thm -> Context.generic -> Context.generic
@@ -245,13 +245,13 @@ val expansionN = "expansion"
 datatype def = DIRECT_DEF of thm (*def*)
              | WFREC_DEF  of Function.info
 
-datatype parameter_variability = PV_Var | PV_Id
+datatype parameter_equality = PE_Synt | PE_Guard | PE_Proof
 
 type parameter_info = {
   name: string option,
   mutating: bool option, (*if the parameter mutates throughout the (recursive) definition.
                            we are not always able to check if a parameter mutates from definition*)
-  variability: parameter_variability
+  equality: parameter_equality
 }
 
 type phi_type = {
@@ -363,6 +363,14 @@ fun invoke_automations_on_def (phi,hints) ctxt =
        end
 *)
 
+(** Pretty Printer **)
+
+local open Pretty in
+fun pretty_parameter_equality PE_Synt  = keyword2 "id"
+  | pretty_parameter_equality PE_Guard = keyword2 "guard"
+  | pretty_parameter_equality PE_Proof = keyword2 "obligation"
+
+end
 
 (** Impl of Basic Conversions **)
 
@@ -610,8 +618,8 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
             |> Config.put under_deriving_ctxt true
             |> Phi_Reasoners.report_failure_reason []
    in thy
-   |> Local_Theory.map_contexts (fn i => if i >= level - 1 then  setup else I)
-   |> Local_Theory.target setup
+   |> Local_Theory.map_contexts (fn i => if i >= level - 1 then setup else I)
+   (*|> Local_Theory.target setup*)
    |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn lthy =>
           lthy |> snd o Local_Theory.begin_nested
                |> Context_Position.set_visible false
@@ -868,12 +876,46 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
    end
    )))
 
+(** Parameter Equality **)
+
+structure Default_Equality = Type_Pattern_Store (struct
+  type T = parameter_equality
+  val eq = (op =)
+  val export = K (K I)
+end)
+
+fun default_eq_of ctxt typ =
+  case Default_Equality.get_uniq ctxt typ
+    of NONE => if Phi_Syntax.is_phi_type_ty typ then PE_Synt else PE_Guard
+     | SOME ret  => #4 ret
+
+
+val parameter_equality = Args.$$$ "guard"  >> K PE_Guard
+                      || Args.$$$ "id" >> K PE_Synt
+                      || Args.$$$ "obligation"  >> K PE_Proof
+
+val parameter_equality' = Scan.option (
+      \<^keyword>\<open>parameter_equality\<close> |-- \<^keyword>\<open>(\<close> |--
+        Parse.list1 (parameter_equality >> SOME || Args.$$$ "_"  >> K NONE) --| \<^keyword>\<open>)\<close> )
+
+val _ = Theory.setup (
+      Default_Equality.setup_decl_attr \<^binding>\<open>\<phi>parameter_default_equality\<close>
+          parameter_equality parameter_equality
+          (apfst o Syntax.read_typ)
+          "declaring the default equality of \<phi>-type parameters under a certain type"
+(*
+   #> Default_Equality.setup_decl_ML_attr \<^binding>\<open>\<phi>parameter_default_equality_ML\<close>
+          Syntax.read_typ
+          "declaring the default equality of \<phi>-type parameters under a certain type" *)
+)
 
 (** Ad-hoc derivation **)
 
+(*
 val to_cond_rewr = @{lemma \<open>
         (A \<equiv> B) \<equiv> Trueprop (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = B)
   \<close> by (simp add: atomize_eq Premise_def) }
+*)
 
 val rule_refl1 = @{lemma \<open>
         T \<equiv> U
@@ -901,10 +943,7 @@ fun gen_refl_Tr term ctxt cong =
       val idx = idx + length rev_param_tys
       val (a,b) = (TVar(("a", idx), \<^sort>\<open>sep_magma\<close>), TVar(("b", idx), \<^sort>\<open>sep_magma\<close>))
 
-      val cong = Conv.fconv_rule (
-            Phi_Conv.hhf_conv (fn _ => Conv.rewr_conv to_cond_rewr)
-                              (K Conv.all_conv) ctxt
-          ) cong
+      val cong = cong
 
       fun mk_pat x T y U tag =
         \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close>
@@ -1143,7 +1182,7 @@ fun mk_mutating_param_eq ctxt mode phi =
 
 (*ctxt: the context used to derive properties*)
 (*term: the term of the phi type, can be parameterized by fixed free variables like those in locales *)
-fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, variability) thy =
+fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
   let val ctxt = open_proof_ctxt bundles thy delsimps @{thms' One_nat_def}
       val term = chk_zero_index_term term
 
@@ -1266,47 +1305,56 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, variability) th
                      \ side to the right place."))
               else ()
 
-      val _ = case variability
+      val _ = case equality
                 of SOME vars =>
                     if length vars = length param_tys then ()
                     else error "Incorrect number of parameter variabilities, which must equal the number of the \<phi>-type parameters"
                  | _ => ()
 
-      val variability = case variability
+      val default_eq_of = default_eq_of (Context.Proof ctxt)
+      val equality = case equality
               of SOME vars =>
                    map2 (fn SOME v => K v
-                          | NONE => (fn ty =>
-                              if Phi_Syntax.is_phi_type_ty ty then PV_Id else PV_Var
-                        )) vars param_tys
-               | _ => map (fn ty =>
-                              if Phi_Syntax.is_phi_type_ty ty then PV_Id else PV_Var
-                        ) param_tys
+                          | NONE => default_eq_of) vars param_tys
+               | _ => let val eqs = map default_eq_of param_tys
+                          val _ = Phi_Reasoner.info_pretty ctxt 0 (fn () => let open Pretty in
+                                    block ([keyword1 "parameter_equality", brk 1, str "("] @
+                                           commas (map pretty_parameter_equality eqs) @ [str ")"])
+                                  end)
+                       in eqs
+                      end
 
       val params = map3 (fn name => fn mut => fn var =>
-                     {name=name, mutating=mut, variability=var}
-                   ) param_names mutating_params variability
+                     {name=name, mutating=mut, equality=var}
+                   ) param_names mutating_params equality
       
       val cong =
         let val (param_names, ctxt') =
               Variable.variant_fixes (map (the_default "A" o #name) params) ctxt
             fun filter [] [] = []
-              | filter (PV_Var :: P) (name :: names) = name :: filter P names
-              | filter (PV_Id  :: P) (name :: names) = filter P names
+              | filter (PE_Synt :: P) (_ :: names) = filter P names
+              | filter (_ :: P) (name :: names) = name :: filter P names
             val (param_names', ctxt') =
-              Variable.variant_fixes (filter variability param_names) ctxt'
+              Variable.variant_fixes (filter equality param_names) ctxt'
             fun burrow [] [] [] = []
-              | burrow (PV_Var :: P) (_ :: names) (name' :: names') = name' :: burrow P names names'
-              | burrow (PV_Id  :: P) (name :: names) names' = name  :: burrow P names names'
-            val param_names' = burrow variability param_names param_names'
+              | burrow (PE_Synt  :: P) (name :: names) names' = name  :: burrow P names names'
+              | burrow (_ :: P) (_ :: names) (name' :: names') = name' :: burrow P names names'
+            val param_names' = burrow equality param_names param_names'
             val params  = map Free (param_names  ~~ param_tys)
             val params' = map Free (param_names' ~~ param_tys)
 
             fun mk_conds [] [] [] = []
-              | mk_conds (PV_Var :: P) (param :: params) (param' :: params')
-                  = \<^Const>\<open>Pure.eq \<open>fastype_of param\<close>\<close> $ param $ param' :: mk_conds P params params'
-              | mk_conds (PV_Id :: P) (_ :: params) (_ :: params')
+              | mk_conds (PE_Guard :: P) (param :: params) (param' :: params')
+                  = HOLogic.Trueprop $ (
+                      \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ (\<^Const>\<open>HOL.eq \<open>fastype_of param\<close>\<close> $ param $ param')
+                    ) :: mk_conds P params params'
+              | mk_conds (PE_Proof :: P) (param :: params) (param' :: params')
+                  = HOLogic.Trueprop $ (
+                      \<^Const>\<open>Premise\<close> $ \<^Const>\<open>default\<close> $ (\<^Const>\<open>HOL.eq \<open>fastype_of param\<close>\<close> $ param $ param')
+                    ) :: mk_conds P params params'
+              | mk_conds (PE_Synt :: P) (_ :: params) (_ :: params')
                   = mk_conds P params params'
-            val conds = mk_conds variability params params'
+            val conds = mk_conds equality params params'
 
             val LHS = fold (fn param => fn X => X $ param) params  term
             val RHS = fold (fn param => fn X => X $ param) params' term
@@ -1315,6 +1363,10 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, variability) th
             val ([goal], ctxt') = Variable.import_terms false [goal] ctxt'
          in Thm.cterm_of ctxt' goal
          |> Goal.init
+         |> Conv.gconv_rule (
+              Phi_Conv.hhf_conv (fn _ => HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Premise_def}))
+                                (K Conv.all_conv) ctxt
+            ) 1
          |> SINGLE (SOLVED' (Simplifier.asm_simp_tac (Simplifier.clear_simpset ctxt')) 1)
          |> (fn SOME ret => Goal.conclude ret
                          |> singleton (Variable.export ctxt' ctxt)
@@ -1541,8 +1593,9 @@ fun add_type_i {no_auto} (name, term, def, pos, raw_derv, raw_bundles, variabili
              in (Thm.term_of (Drule.dest_term cterm), DIRECT_DEF def)
             end
                                   | def => (term, def)
-      
-   in add_type {no_auto=no_auto} (name, term, def, pos, dervs, bundles, variabilities) thy
+      val level = Local_Theory.level thy
+   in thy
+   |> add_type {no_auto=no_auto} (name, term, def, pos, dervs, bundles, variabilities)
   end
 
 (** Interface **)
@@ -1564,13 +1617,6 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
       val phi = instantiate_phi inst' phi0
    in (inst', phi, ctxt)
   end
-
-val parameter_varibility = Scan.option (
-      \<^keyword>\<open>parametric\<close> |-- \<^keyword>\<open>(\<close> |--
-        Parse.list1 ( \<^keyword>\<open>var\<close> >> K (SOME PV_Var)
-                   || Args.$$$ "id" >> K (SOME PV_Id)
-                   || Args.$$$ "_"  >> K NONE ) --| \<^keyword>\<open>)\<close>
-  )
 
 val bundle_parser = Scan.optional (\<^keyword>\<open>opening\<close> |-- Scan.repeat1 Parse.name_position) []
 
@@ -1651,7 +1697,7 @@ fun let_phityp_deriving_cmd (((raw_const_name, pos), raw_bundles), raw_derv) thy
   end
 
 val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config
-               -- parameter_varibility
+               -- parameter_equality'
                -- bundle_parser
                -- deriving_parser
       >> (fn ((((config, (fixes, specs)), vars), raw_bundles), raw_dervs) =>
@@ -1669,7 +1715,7 @@ fun my_definition decl params prems spec int lthy = lthy
 
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
       Parse_Spec.if_assumes -- Parse.for_fixes
-        -- parameter_varibility
+        -- parameter_equality'
         -- bundle_parser
         -- deriving_parser
         -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ())) (*to distinguish with the `def_by_fun` syntax*)

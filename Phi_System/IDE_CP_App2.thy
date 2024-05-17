@@ -60,9 +60,7 @@ end
     = \<open> Phi_Type_Derivers.semantic_zero_val \<close> 
 
 
-subsubsection \<open>Semantic Equality Comparison\<close>
-
-(*TODO*)
+declare [[\<phi>parameter_default_equality \<open>TY\<close> \<Rightarrow> obligation (100)]]
 
 
 subsection \<open>\<open>\<phi>App_Conv\<close>\<close> \<comment> \<open>used only when the given ToA is not in the target space\<close>

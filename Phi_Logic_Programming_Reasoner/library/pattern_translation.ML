@@ -117,7 +117,7 @@ fun get_distinct_seq ctxt (n,ret) seq =
 fun gen_translate rewr ctxt =
   let val get = Store.get ctxt
    in fn term =>
-       get term
+       get [] term
     |> Seq.of_list
     |> Seq.map_filter (rewr ctxt term)
     |> Seq.pull

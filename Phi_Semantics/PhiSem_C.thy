@@ -10,6 +10,7 @@ theory PhiSem_C
           PhiSem_Mem_C_Ar_MI
 begin
 
+(*declare [[\<phi>infer_requirements]]*)
 
 (*
 setup \<open>Context.theory_map (Phi_Hacks.Thy_At_Begin.add 66 (K (

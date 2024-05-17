@@ -350,3 +350,22 @@ fun local_setup_result F =
   end
 
 end
+
+signature VARIABLE = sig
+include VARIABLE
+
+val export_types: Proof.context -> Proof.context -> typ list -> typ list
+
+end
+
+
+structure Variable : VARIABLE = struct
+open Variable
+
+fun export_types ctxt ctxt' typs =
+  let val tms = map Logic.mk_type typs
+   in export_terms ctxt ctxt' tms
+   |> map Logic.dest_type
+  end
+
+end

@@ -59,8 +59,13 @@ in
 
 val _ = Theory.setup (Context.theory_map (
   Phi_Toplevel.Infer_Requirements.add 100 (fn spec => fn {parse_ctxt, new_requirements} =>
-    let val annotated_typs = map_filter (existing_sematic_types o #1 o #2)
-                                        (#existing_requirements spec)
+    let val annotated_typs = ( map_filter (existing_sematic_types o #1 o #2)
+                                          (#existing_requirements spec)
+                             @ map_filter (existing_sematic_types o Thm.term_of)
+                                          (Assumption.all_assms_of parse_ctxt)
+                             @ map_filter (existing_sematic_types o Thm.prop_of)
+                                          (Assumption.all_prems_of parse_ctxt))
+                          |> distinct (op =)
         val (prems,_,ctxt) = 
             Phi_Help.fold_aterms' (fn bvs => fn T => fn (prems,visited,ctxt) =>
                     if is_val_Tm visited T

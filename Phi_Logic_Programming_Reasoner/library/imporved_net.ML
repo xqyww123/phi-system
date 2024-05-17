@@ -15,7 +15,36 @@ MODIFIED BY: Qiyuan Xu
 Adding special support for \<open>TYPE\<close> so that the net can efficiently match terms containing explicit
   type annotation.
 
+TODO: support for normalized lambda abstraction
+
 *)
+
+(*
+signature NET = sig
+include NET
+
+val insert_typ : ('a * 'a -> bool) -> typ * 'a -> 'a net -> 'a net
+val insert_typ_safe : ('a * 'a -> bool) -> typ * 'a -> 'a net -> 'a net
+val delete_typ : ('b * 'a -> bool) -> typ * 'b -> 'a net -> 'a net
+val delete_typ_safe : ('b * 'a -> bool) -> typ * 'b -> 'a net -> 'a net
+val match_typ : 'a net -> typ -> 'a list
+val unify_typ : 'a net -> typ -> 'a list
+
+end
+
+structure Net : NET = struct
+open Net
+
+fun insert_typ eq (typ,x) = insert_term eq (encode_type typ, x)
+fun insert_typ_safe eq (typ,x) = insert_term_safe eq (encode_type typ, x)
+fun delete_typ eq (typ,x) = delete_term eq (encode_type typ, x)
+fun delete_typ_safe eq (typ,x) = delete_term_safe eq (encode_type typ, x)
+
+fun match_typ net typ 
+
+end
+*)
+
 
 structure iNet: NET =
 struct
