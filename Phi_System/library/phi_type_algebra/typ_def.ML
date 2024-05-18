@@ -121,6 +121,7 @@ val derive_properties : derivings * Bundle.name list -> phi_type -> local_theory
 val under_deriving_ctxt : bool Config.T
 
 structure Deriving_Hooks : HOOKS
+type deriving_hook = phi_type -> derivings * local_theory -> derivings * local_theory
 
 (* Derived Properties *)
 
@@ -205,6 +206,13 @@ val mk_mutating_param_eq : Proof.context -> term (*mode of condition equation*) 
 (* Internal Technical stuffs *)
 
 val ML_sender : (quiet * Position.T -> deriving_instruction list -> derive) option Unsynchronized.ref
+
+(* Suggest some property should be derived *)
+
+val chk_deriving_or_derived : string * string -> phi_type -> derivings * Proof.context -> bool
+val suggest_property_should_be_derived : (Proof.context -> phi_type -> (string * string) option)
+                                      -> (Proof.context -> phi_type -> unit)
+                                      -> deriving_hook
 
 (** Controllers **)
 
@@ -515,6 +523,7 @@ structure Deriver_Bindings = Generic_Data (
   val merge = Net.merge (op =)
 )
 
+type deriving_hook = phi_type -> derivings * local_theory -> derivings * local_theory
 structure Deriving_Hooks = Hooks (
   type arg = phi_type
   type state = derivings * local_theory
@@ -759,11 +768,21 @@ val _ = Theory.setup (
 
 (* Suggest some property should be derived *)
 
-fun chk_deriving_or_derived (deriver_name, prop_name) phi_type (derving, lthy) =
-  let val (deriver_name, deriver) = check_deriver (Context.Proof lthy) (deriver_name, Position.none)
+fun chk_deriving_or_derived (deriver_name, prop_name) (phi_type : phi_type) (derving, ctxt) =
+  let val (deriver_name, deriver) = check_deriver (Context.Proof ctxt) (deriver_name, Position.none)
    in Derivings.defined derving (#priority deriver, deriver_name) orelse
-      not (null (lookup_derived_properties (Context.Proof lthy) phi_type prop_name))
+      not (null (lookup_derived_properties (Context.Proof ctxt) phi_type prop_name))
   end
+
+fun suggest_property_should_be_derived P warn (phi_type : phi_type) (derving, lthy) =
+  case P lthy phi_type
+    of SOME (deriver_name, prop_name) => (
+        if chk_deriving_or_derived (deriver_name, prop_name) phi_type (derving, lthy)
+        then ()
+        else warn lthy phi_type ;
+        (derving, lthy) )
+     | _ => (derving, lthy)
+
 
 (** Syntax **)
 

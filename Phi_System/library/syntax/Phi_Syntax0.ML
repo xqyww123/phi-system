@@ -22,6 +22,7 @@ include PHI_SYNTAX
   val mk_phi_type : term * term -> term
   val dest_phi_type_assertion : term -> term (*x*) * term (*T*)
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
+  val dest_phi_type_ty' : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
   val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*abstract*) * typ (*concrete*)
   val is_phi_type_ty : typ -> bool
@@ -331,6 +332,10 @@ fun dest_phi_type_ty \<^Type>\<open>fun x \<^Type>\<open>set model\<close>\<clos
 fun dest_phi_type_ty_c T =
   (dest_phi_type_ty (Thm.typ_of T) ;
    (Thm.dest_ctyp0 T, Thm.dest_ctyp0 (Thm.dest_ctyp1 T)))
+
+fun dest_phi_type_ty' \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (x, c)
+  | dest_phi_type_ty' \<^Type>\<open>fun a T\<close> = dest_phi_type_ty' T
+  | dest_phi_type_ty' T = raise TYPE ("not a phi-type",[T],[])
 
 fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
   | dest_parameterized_phi_ty' args \<^Type>\<open>fun a T\<close> = dest_parameterized_phi_ty' (a::args) T

@@ -86,15 +86,29 @@ val _ = Theory.setup (Context.theory_map (
     )
 ))
 
-local
-
-fun chk_deriving (phi : phi_type) (dervs, lthy) =
-  let 
-   in (dervs, lthy)
-  end
-
-in
-
-end
+val _ = Theory.setup (Context.theory_map (
+  Phi_Type.Deriving_Hooks.add 100 (
+    Phi_Type.suggest_property_should_be_derived
+      (fn _ => fn phi =>
+          case Phi_Syntax.dest_phi_type_ty' (fastype_of (#term phi))
+            of (_, \<^Type>\<open>VAL\<close>) =>
+                 SOME (#1 @{\<phi>deriver Semantic_Type}, "Semantic_Type")
+             | _ => NONE)
+      (fn ctxt => fn _ =>
+          Phi_Reasoner.warn_pretty (Context.Proof ctxt) 0 (fn () => let open Pretty in
+              block (text "property \<open>Semantic_Type\<close> is highly recommended to be derived on this \<phi>-type")
+            end)))
+#> Phi_Type.Deriving_Hooks.add 101 (
+    Phi_Type.suggest_property_should_be_derived
+      (fn _ => fn phi =>
+          case Phi_Syntax.dest_phi_type_ty' (fastype_of (#term phi))
+            of (_, \<^Type>\<open>VAL\<close>) =>
+                 SOME (#1 @{\<phi>deriver Inhabited}, "Inhabited")
+             | _ => NONE)
+      (fn ctxt => fn _ =>
+          Phi_Reasoner.warn_pretty (Context.Proof ctxt) 0 (fn () => let open Pretty in
+              block (text "property \<open>Inhabited\<close> is highly recommended to be derived on this \<phi>-type")
+            end)))
+))
 
 end
