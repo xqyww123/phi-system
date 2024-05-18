@@ -10,12 +10,12 @@ end
 
 signature PATTERN_REWRITE = sig
 
-type ML_rewr = Context.generic -> term -> spattern list option
-datatype rewrite = By_Pattern of spattern list
+type ML_rewr = Context.generic -> spattern -> term list option
+datatype rewrite = By_Pattern of term list
                  | By_ML of ML_rewr
 val rewrite_eq : rewrite * rewrite -> bool
 
-type rewr = int * term * Position.T * rewrite
+type rewr = int * spattern * Position.T * rewrite
 
 val add : rewr list -> Context.generic -> Context.generic
 val remove : rewr -> Context.generic -> Context.generic
@@ -43,6 +43,8 @@ fun rewrites thy fixed_bounds bvs (pat,rets) term =
 
 fun rewrite thy fixed_bounds bv_typs (pat,ret) term =
       Option.map hd (rewrites thy fixed_bounds bv_typs (pat,[ret]) term)
+
+      
 
 end
 

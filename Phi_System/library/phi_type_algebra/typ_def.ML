@@ -35,7 +35,7 @@ type phi_type = {
   params: parameter_info list (*the default name of the parameters. note the abstract object is not considered as a parameter*),
   cterm: thm (*TERM <the_cterm>*),
   pos : Position.T,
-  equations: thm list (*unfolding the term*),
+  equations: thm list (*definitional equations, in HOL.eq*),
   type_equations: thm option list,
                   (*the equations are given between BI assertions, \<open>x : T = y : U\<close>.
                     Here the type equations are given between types, \<open>T = U\<close>.

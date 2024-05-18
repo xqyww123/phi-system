@@ -74,6 +74,7 @@ unspecified_type FIC
 unspecified_type FIC_N
 
 type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
+type_synonym 'a assertion = \<open>'a set\<close>
 type_synonym assn = \<open>fiction set\<close>
 type_synonym rassn = \<open>resource set\<close>
 type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Resource_Space.kind"
@@ -379,6 +380,16 @@ lemma SType_Of_unfold:
   by (clarsimp, smt (verit, del_insts) Satisfiable_def someI)
 
 ML_file \<open>library/tools/unfold_typeof.ML\<close>
+
+parse_translation \<open>[
+  (\<^const_syntax>\<open>SType_Of\<close>, fn ctxt => fn [tm] =>
+      case Syntactical_Type_Of.translate (Context.Proof ctxt) tm
+        of [] => \<^Const>\<open>SType_Of dummyT\<close> $ tm
+         | L => hd L )
+]\<close>
+
+term \<open>\<t>\<y>\<p>\<e>\<o>\<f> T\<close>
+
 
 subsection \<open>Zero Value\<close>
 

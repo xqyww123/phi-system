@@ -5,6 +5,8 @@ theory PhiSem_Mem_Pointer
   abbrevs "+_a" = "+\<^sub>a"
       and "<Ptr>" = "\<bbbP>\<t>\<r>"
       and "<ptr>" = "\<p>\<t>\<r>"
+      and "<pointer-of>" = "\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>"
+      and "<ptrof>" = "\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>"
 begin
 
 section \<open>Semantics of Pointer\<close>
@@ -792,6 +794,20 @@ definition abstract_address_offset :: \<open>address \<Rightarrow> TY \<Rightarr
    (valid_address addr' \<and>
     address_to_raw addr ||+ of_nat (MemObj_Size TY * n) = address_to_raw addr' \<and>
     address_type addr' = TY') \<close>
+
+
+subsection \<open>Syntax of and auto deriviation for \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>\<close>\<close>
+
+syntax "_pointer_of_" :: \<open>logic \<Rightarrow> logic\<close> ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>")
+
+
+definition Pointer_Of :: \<open>('c,'x) \<phi> \<Rightarrow> 'v assertion \<Rightarrow> bool\<close>
+                          ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f> _ \<i>\<s> _" [11,11] 10)
+  where \<open>Pointer_Of T assn \<equiv> True\<close>
+
+ML_file \<open>library/reasoning/pointer_of.ML\<close>
+
+
 
 
 

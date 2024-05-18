@@ -30,6 +30,8 @@ val smatch : theory -> fixed_bounds -> bvs -> spattern * term
           -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 val does_smatch : theory -> fixed_bounds -> bvs -> spattern * term -> bool
 
+val strip_typs : term -> term
+
 end
 
 structure PLPR_Pattern : PLPR_PATTERN = struct
@@ -193,5 +195,17 @@ fun does_smatch thy fixed_bounds bv_typs pat_obj =
       (smatch thy fixed_bounds bv_typs pat_obj (Vartab.empty, Vartab.empty) ; true)
       handle MATCH => false
 
+
+fun strip_typs tm =
+  let val i = Unsynchronized.ref (maxidx_of_term tm)
+      fun var () = (i := !i + 1; TVar (("_",!i),[]))
+      fun strip (Const(N,_)) = Const (N, var())
+        | strip (Free(N,_)) = Free (N, var())
+        | strip (Var(N,_)) = Var (N, var())
+        | strip (A $ B) = strip A $ strip B
+        | strip (Abs (N,T,X)) = Abs (N,T, strip X)
+        | strip X = X
+   in strip tm
+  end
 
 end

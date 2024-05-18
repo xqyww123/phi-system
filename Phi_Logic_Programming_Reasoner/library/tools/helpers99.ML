@@ -4,6 +4,7 @@ include PLPR_SYNTAX
 (*strips all controlling connectives*)
 val fold_antecedents : (bvs -> term -> 'a -> 'a)
                     -> bvs -> term -> 'a -> 'a
+val concl_of_antecedent : bvs -> term -> bvs * term
 
 val eixsts_antecedent : (term -> bool) -> term -> bool
 val forall_antecedent : (term -> bool) -> term -> bool
@@ -14,6 +15,32 @@ end
 
 structure PLPR_Syntax : PLPR_SYNTAX = struct
 open PLPR_Syntax
+
+val concl_of_antecedent =
+  let fun concl bvs (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (N, Ty, X)) = concl ((N,Ty)::bvs) X
+        | concl bvs (Const(\<^const_name>\<open>pure_all_embed\<close>, _) $ Abs (N, Ty, X)) = concl ((N,Ty)::bvs) X
+        | concl bvs (Const(\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ Abs (N, Ty, X))
+            = concl ((N,Ty)::bvs) X
+        | concl bvs (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>pure_prop_embed\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Do\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Do_embed\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ X $ _) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>With_IN_Arg\<close>, _) $ X $ _) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>With_Pattern\<close>, _) $ X $ _) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ X $ _) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Try\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Attempt_Fallback\<close>, _) $ X) = concl bvs X
+        | concl bvs (Const(\<^const_name>\<open>Memoize\<close>, _) $ X) = concl bvs X
+        | concl bvs X = (bvs,X)
+   in concl
+  end
 
 fun fold_antecedents F =
   let fun fold bvtys (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ X $ Y) x = fold bvtys Y (fold bvtys X x)

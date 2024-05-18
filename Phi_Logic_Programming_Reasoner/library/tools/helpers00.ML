@@ -42,6 +42,8 @@ signature PHI_HELP = sig
   val mk_Trueprop : term -> term
   val dest_Trueprop_c : cterm -> cterm
 
+  val dest_HOL_eq : term -> term * term
+
 
 (*TODO: consider meta_Ball*)
 val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
@@ -273,6 +275,9 @@ fun mk_Trueprop (tm as (Const (@{const_name Trueprop}, _) $ _)) = tm
   | mk_Trueprop tm = HOLogic.Trueprop $ tm
 val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
+val dest_HOL_eq = perhaps (try HOLogic.dest_Trueprop)
+               #> dest_binop \<^const_name>\<open>HOL.eq\<close>
+
 fun mk_monop name arg = Const (name, Term.dummyT) $ arg
 fun mk_binop name (lhs,rhs) = Const (name, Term.dummyT) $ lhs $ rhs
 fun mk_binop_ty name (lhs,rhs) = Type (name, [lhs, rhs])
@@ -366,6 +371,28 @@ fun export_types ctxt ctxt' typs =
   let val tms = map Logic.mk_type typs
    in export_terms ctxt ctxt' tms
    |> map Logic.dest_type
+  end
+
+end
+
+signature SYNTAX = sig
+include SYNTAX
+
+val replace_types_to_dummy : term -> term
+
+end
+
+structure Syntax : SYNTAX = struct
+open Syntax
+
+fun replace_types_to_dummy tm =
+  let fun replace (Free(N,_)) = Free (N, dummyT)
+        | replace (Var(N,_)) = Var (N, dummyT)
+        | replace (Const(N,_)) = Const (N, dummyT)
+        | replace (A $ B) = replace A $ replace B
+        | replace (Abs (N,T,X)) = Abs (N,T, replace X)
+        | replace X = X
+   in replace tm
   end
 
 end
