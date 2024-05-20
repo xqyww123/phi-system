@@ -19,7 +19,7 @@ type rewr = int * spattern * Position.T * rewrite
 
 val add : rewr list -> Context.generic -> Context.generic
 val remove : rewr -> Context.generic -> Context.generic
-val translate : Context.generic -> term -> term list
+val translate : Context.generic -> bvs -> term -> term list
 val setup_attribute : binding -> string -> string
                   -> theory
                   -> ML_rewr option Unsynchronized.ref * theory
@@ -93,9 +93,9 @@ fun print_rewrites ctxt =
       writeln (chunks (map (print_rewrite (Context.proof_of ctxt)) (list_rewrites ctxt)))
 end
 
-fun do_rewrite ctxt term (n, pat0, _, By_Pattern ret0) =
-      Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) (K false) [] (pat0, ret0) term)
-  | do_rewrite ctxt term (n, _, _, By_ML rewr) =
+fun do_rewrite ctxt bvs term (n, pat0, _, By_Pattern ret0) =
+      Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) (K true) bvs (pat0, ret0) term)
+  | do_rewrite ctxt bvs term (n, _, _, By_ML rewr) =
       Option.map (pair n) (rewr ctxt term)
 
 fun rewr_clash ctxt (_,ret) (_,ret2) =
@@ -118,10 +118,10 @@ fun get_distinct_seq ctxt (n,ret) seq =
 (*the term cannot contain loose bounded variables*)
 fun gen_translate rewr ctxt =
   let val get = Store.get ctxt
-   in fn term =>
-       get [] term
+   in fn bvs => fn term =>
+       get (K true) bvs term
     |> Seq.of_list
-    |> Seq.map_filter (rewr ctxt term)
+    |> Seq.map_filter (rewr ctxt bvs term)
     |> Seq.pull
     |> (fn SOME ((n,ret), seq) => get_distinct_seq ctxt (n,ret) seq
          | NONE => [])

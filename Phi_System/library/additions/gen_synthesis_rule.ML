@@ -77,10 +77,10 @@ fun declare_rule pos (mode, prio_group) (patterns0,blacklist0) proc_thm0 ctxt0 =
       val proc_thm = Drule.zero_var_indexes (gen_rule ctxt proc_thm0)
       val concl = Thm.concl_of proc_thm
       fun pat_of P =
-            case Pattern.translate ctxt0 (Logic.mk_conjunction (concl, encode_pattern false P))
+            case Pattern.translate ctxt0 [] (Logic.mk_conjunction (concl, encode_pattern false P))
               of h::L => h::L
                | [] => (
-            case Pattern.translate ctxt0 (Logic.mk_conjunction (concl, encode_pattern true P))
+            case Pattern.translate ctxt0 [] (Logic.mk_conjunction (concl, encode_pattern true P))
               of h::L => h::L
                | [] => error "Cannot infer the pattern of the antecedent to be bound.\n\
                   \Some translation rule for giving the pattern may be required, and can be decalred\

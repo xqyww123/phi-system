@@ -16,8 +16,8 @@ type entry = priority * spattern * Position.T * T
 
 val add : entry list -> Context.generic -> Context.generic
 val remove : entry -> Context.generic -> Context.generic
-val get : Context.generic -> bvs -> term -> entry list
-val get_uniq : Context.generic -> bvs -> term -> entry option
+val get : Context.generic -> PLPR_Pattern.fixed_bounds -> bvs -> term -> entry list
+val get_uniq : Context.generic -> PLPR_Pattern.fixed_bounds -> bvs -> term -> entry option
 val list : Context.generic -> entry list
 val export : Proof.context -> Proof.context -> entry -> entry
 
@@ -69,9 +69,10 @@ fun export ctxt ctxt' (n, tm, pos, x)
 
 fun get ctxt =
   let val data = Data.get ctxt
-      val match = PLPR_Pattern.does_smatch (Context.theory_of ctxt) (K false)
-   in fn bvs => fn term => Net.match_term data term
-              |> filter (fn (_,p,_,_) => match bvs (p,term))
+      val match = PLPR_Pattern.does_smatch (Context.theory_of ctxt)
+   in fn fixed_bounds => fn bvs => fn term =>
+          Net.match_term data term
+              |> filter (fn (_,p,_,_) => match fixed_bounds bvs (p,term))
               |> sort (fn ((n1,_,_,_),(n2,_,_,_)) => int_ord (n2,n1))
   end
 
@@ -90,8 +91,8 @@ fun get_uniq ctxt =
                    ])
                  end)
             else SOME x1
-   in fn bvs => fn term =>
-         uniq (get bvs term)
+   in fn fixed_bounds => fn bvs => fn term =>
+         uniq (get fixed_bounds bvs term)
   end
 
 fun decl_synt cached_parser parser parse_pattern =

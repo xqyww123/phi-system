@@ -338,7 +338,7 @@ lemma [\<phi>reason %ToA_mem_coerce,
 subsubsection \<open>Generalized_Semantic_Type\<close>
 
 lemma [\<phi>reason %\<A>sem_typ_mod_cut]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] f : (f\<^sub>1 ++\<^sub>f f\<^sub>2)
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] f : (f\<^sub>2 ++\<^sub>f f\<^sub>1)
 \<Longrightarrow> \<A>sem_typ_mod2 (\<^emph>) (semty_ntup f\<^sub>1) (semty_ntup f\<^sub>2) (semty_ntup f) \<close>
   unfolding \<A>sem_typ_mod2_def ..
 
@@ -347,6 +347,20 @@ lemma [\<phi>reason %generalized_sematic_type_cut]:
 \<Longrightarrow> Generalized_Semantic_Type (AgIdx_S k \<^bold>\<rightarrow> T) (semty_ntup (fmupd k TY fmempty)) \<close>
   unfolding Generalized_Semantic_Type_def ..
 
+lemma [\<phi>reason %generalized_sematic_type_cut+10]:
+  \<open> Generalized_Semantic_Type T TY
+\<Longrightarrow> Generalized_Semantic_Type (AgIdx_S k \<^bold>\<rightarrow>\<^sub># T) (semty_ntup (fmupd k TY fmempty)) \<close>
+  unfolding Generalized_Semantic_Type_def ..
+
+lemma [\<phi>reason %generalized_sematic_type_cut]:
+  \<open> Generalized_Semantic_Type (L \<^bold>\<rightarrow>\<^sub>@ T) TY
+\<Longrightarrow> Generalized_Semantic_Type ((AgIdx_S k # L) \<^bold>\<rightarrow>\<^sub>@ T) (semty_ntup (fmupd k TY fmempty)) \<close>
+  unfolding Generalized_Semantic_Type_def ..
+
+lemma [\<phi>reason %generalized_sematic_type_cut]:
+  \<open> Generalized_Semantic_Type T TY
+\<Longrightarrow> Generalized_Semantic_Type ([] \<^bold>\<rightarrow>\<^sub>@ T) TY \<close>
+  unfolding Generalized_Semantic_Type_def ..
 
 (* term \<open>\<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, len] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> a: A, b: B \<rbrace>)\<close> *)
 

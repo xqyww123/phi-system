@@ -7,6 +7,7 @@ theory PhiSem_Mem_Pointer
       and "<ptr>" = "\<p>\<t>\<r>"
       and "<pointer-of>" = "\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>"
       and "<ptrof>" = "\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>"
+      and "<ref>" = "\<r>\<e>\<f>"
 begin
 
 section \<open>Semantics of Pointer\<close>
@@ -674,6 +675,13 @@ lemma [\<phi>reason %\<phi>synthesis_literal]:
   \<medium_right_bracket> .
 
 
+proc NULL:
+  input  Void
+  output \<open>0 \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> TY\<close>
+\<medium_left_bracket>
+  \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> TY\<close>
+\<medium_right_bracket> .
+
 
 section \<open>Reasoning Configuration\<close>
 
@@ -798,8 +806,15 @@ definition abstract_address_offset :: \<open>address \<Rightarrow> TY \<Rightarr
 
 subsection \<open>Syntax of and auto deriviation for \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>\<close>\<close>
 
-syntax "_pointer_of_" :: \<open>logic \<Rightarrow> logic\<close> ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>")
+consts pointer_of_syntax :: \<open>('c,'x) \<phi> \<Rightarrow> VAL assertion\<close> ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>")
+       pointer_val_of_syntax :: \<open>VAL \<phi>arg \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> 'm::one assertion\<close>
 
+syntax "_ref_" :: \<open>logic \<Rightarrow> logic\<close> ("\<r>\<e>\<f> _" [22] 21)
+
+translations
+  "\<v>\<a>\<l> \<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f> T" => "CONST pointer_val_of_syntax (CONST anonymous) T"
+  "x \<Ztypecolon> \<r>\<e>\<f> T\<heavy_comma> C"    => "CONST pointer_val_of_syntax (CONST anonymous) T\<heavy_comma> x \<Ztypecolon> T\<heavy_comma> C"
+  "x \<Ztypecolon> \<r>\<e>\<f> T"       => "CONST pointer_val_of_syntax (CONST anonymous) T\<heavy_comma> x \<Ztypecolon> T"
 
 definition Pointer_Of :: \<open>('c,'x) \<phi> \<Rightarrow> 'v assertion \<Rightarrow> bool\<close>
                           ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f> _ \<i>\<s> _" [11,11] 10)

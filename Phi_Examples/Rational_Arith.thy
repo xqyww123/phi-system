@@ -17,8 +17,10 @@ declare [[\<phi>trace_reasoning = 1]]
        and Inhabited
 
 
+term \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat>\<close>
+
 proc rat_add:
-  input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
+  input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
   val q1 = (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>

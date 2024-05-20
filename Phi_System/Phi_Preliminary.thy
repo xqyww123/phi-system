@@ -267,7 +267,8 @@ end\<close>
 
 lemmas [\<phi>safe_simp] =
     fmdom_fmupd fmdom_empty finsert_iff fempty_iff
-    mk_symbol_inject[OF UNIV_I UNIV_I]
+    mk_symbol_inject[OF UNIV_I UNIV_I] fmadd_empty fmadd_idempotent
+    fmadd_assoc fmadd_fmupd fmupd_idem
 
 declare rel_fun_eq[iff]
 

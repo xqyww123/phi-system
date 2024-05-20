@@ -1120,7 +1120,7 @@ structure Default_Pattern = Pattern_Translation (
 )
 
 fun the_default_pattern_of' ctxt pattern =
-  Default_Pattern.translate ctxt (snd (PLPR_Syntax.strip_embedded_patterns pattern))
+  Default_Pattern.translate ctxt [] (snd (PLPR_Syntax.strip_embedded_patterns pattern))
 
 fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>ERROR\<close>, _) $ text))
       = (Exn.error (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)

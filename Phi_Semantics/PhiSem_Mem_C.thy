@@ -60,8 +60,6 @@ consts Mem_synt :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow
 
 \<phi>adhoc_overloading may_mem_coerce \<open>\<lambda>x. x\<close> Mem_Coercion
 
-abbreviation ("input") no_mem_coerce :: \<open>(mem_fic, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close> ("\<r>\<e>\<f> _" [910] 910)
-  where \<open>no_mem_coerce \<equiv> (\<lambda>x. x)\<close>
 
 ML \<open>
 structure Phi_Mem_Parser = Handlers (

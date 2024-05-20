@@ -11,27 +11,32 @@ val derv_rule = @{lemma
   \<open> Derive_Pointer_Of assn ptr
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> TERM ptr \<close>
+\<Longrightarrow> TERM (T, ptr) \<close>
   by this
 }
 
 fun guess_pointer ctxt eqs =
-  let fun infer_one eq =
-        let val (LHS, RHS) = Phi_Help.dest_eq_c (Thm.cconcl_of eq)
-            val T = case Thm.term_of LHS
-                      of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T => T
-                       | T => T
-         in Drule.infer_instantiate ctxt [(("assn",0), RHS)] derv_rule
+  let val ctxt = Bundle.includes ["Spec_Framework.Semantic_Type_by_Synt_Sugar"] ctxt
+      fun infer_one eq =
+        let val (LHS, RHS) = Phi_Help.dest_eq_c (Thm.incr_indexes_cterm 1 (Thm.cconcl_of eq))
+            val cT =
+                case Thm.term_of LHS
+                  of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => Thm.dest_arg LHS
+                   | _ => LHS
+         in Drule.infer_instantiate ctxt [(("assn",0), RHS), (("T",0), cT)] derv_rule
          |> Phi_Reasoner.reason NONE NONE ctxt
          |> Option.mapPartial (fn th =>
-        let val term = Logic.dest_term (Thm.concl_of th)
+        let val ret = Logic.dest_term (Thm.concl_of th)
+            val (T,term) = HOLogic.dest_prod ret
             val frees = Term.add_frees term []
                      |> subtract (op =) (Term.add_frees T [])
             val vars  = Term.add_vars  term []
                      |> subtract (op =) (Term.add_vars T [])
          in if null frees andalso null vars
-            then NONE
-            else SOME (HOLogic.mk_prod (T, term))
+            then (case term
+                    of Const(\<^const_name>\<open>Some\<close>, _) $ ptr => SOME (HOLogic.mk_prod (T, ptr))
+                     | _ => NONE)
+            else NONE
         end)
         end
 
@@ -48,8 +53,8 @@ fun guess_pointer ctxt eqs =
    in case chk_all_equiv red_pairs
         of SOME ret => HOLogic.dest_prod ret
          | NONE => raise Phi_Type.Automation_Fail (fn () => let open Pretty in
-                      [paragraph (text "Fail to infer the pointer assertion from the syntax")]
-                   end)
+                       [paragraph (text "Fail to infer the pointer assertion from the syntax")]
+                    end)
   end
 
 fun pointer_of_deriver (_, pos) intrs (phityp : phi_type) lthy =
@@ -81,10 +86,19 @@ fun pointer_of_deriver (_, pos) intrs (phityp : phi_type) lthy =
            | _ => raise Automation_Fail (fn () => let open Pretty in
                     [block (text "The deriver of \<open>Pointer_Of\<close> accepts at most one hint.")]
                   end)
+
+      val _ = Phi_Reasoner.info_pretty lthy ~1 (fn () =>
+                let open Pretty
+                    val (xty,mty) = Phi_Syntax.dest_phi_type_ty (fastype_of T)
+                    val c_ty = Phi_Syntax.dest_BI_ty (fastype_of ptr)
+                 in block ([str "Inferred: ", Syntax.pretty_term lthy (
+                                  \<^Const>\<open>Pointer_Of xty mty c_ty\<close> $ T $ ptr)])
+                end)
    in lthy
-   |> Context.proof_map (Phi_Pointer_Of.add [
-        (10, T, pos, Phi_Pointer_Of.By_Pattern [ptr])
-      ])
+   |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m =>
+        Phi_Pointer_Of.add [
+          (10, Morphism.term m T, pos, Phi_Pointer_Of.By_Pattern [Morphism.term m ptr])
+        ])
   end
 
 open Phi_Type
@@ -93,5 +107,67 @@ in
 
 val pointer_of_deriver : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
       = pointer_of_deriver
+
+val _ = Theory.setup (Context.theory_map (Syntax_Phases.term_check 200 "syntax_of_<pointer_of>" (
+  fn ctxt => fn tms =>
+    let val qchk = Term.exists_Const (fn (\<^const_name>\<open>pointer_of_syntax\<close>, _) => true
+                                       | (\<^const_name>\<open>pointer_val_of_syntax\<close>, _) => true
+                                       | _ => false)
+
+        fun fail_coerce tm =
+              error (let open Pretty in string_of (
+                      block (text "Fail to coerce" @ [brk 1,
+                          Syntax.pretty_term ctxt tm, brk 1] @ text "to an assertion")
+                   ) end)
+
+        fun coerce_VAL v mty tm
+              = (case tm
+                   of \<^Const_>\<open>\<phi>Type x_ty _\<close> $ x $ T =>
+                        \<^Const>\<open>\<phi>Type x_ty mty\<close> $ x
+                            $ (\<^Const>\<open>Val x_ty mty\<close> $ v $ T)
+                    | _ => fail_coerce tm)
+      (*fun coercion \<^Type>\<open>VAL\<close> tm = tm
+          | coercion (TVar _) tm = tm
+          | coercion (TFree _) tm = tm
+          | coercion ty tm =
+              if ty = \<^typ>\<open>fiction\<close>
+              then coerce_fiction tm
+              else fail_coerce tm*)
+
+        fun trans bvs (\<^Const>\<open>pointer_of_syntax _ _\<close> $ tm) =
+             (case Phi_Pointer_Of.translate (Context.Proof ctxt) bvs tm
+                of [ret] => SOME ret
+                 | _ => error (let open Pretty in string_of (
+                          block (text "The pointer of" @ [brk 1,
+                              Syntax.pretty_term ctxt tm, brk 1] @ text "is unknown.")
+                      ) end))
+          | trans bvs (\<^Const>\<open>pointer_val_of_syntax _ _ mty\<close> $ v $ tm) =
+             (case Phi_Pointer_Of.translate (Context.Proof ctxt) bvs tm
+                of [ret] => SOME (coerce_VAL v mty ret)
+                 | _ => error (let open Pretty in string_of (
+                          block (text "The pointer of" @ [brk 1,
+                              Syntax.pretty_term ctxt tm, brk 1] @ text "is unknown.")
+                      ) end))
+          | trans bvs (A $ B) =
+              (case (trans bvs A, trans bvs B)
+                 of (SOME A', SOME B') => SOME (A' $ B')
+                  | (SOME A', NONE) => SOME (A' $ B)
+                  | (NONE, SOME B') => SOME (A $ B')
+                  | (NONE, NONE)    => NONE )
+          | trans bvs (Abs (N,T,X)) =
+              (case trans ((N,T)::bvs) X of SOME X' => SOME (Abs (N,T,X'))
+                             | NONE => NONE)
+          | trans _ _ = NONE
+
+        fun translate tm =
+          case trans [] tm
+            of SOME tm' => tm'
+             | NONE => tm
+
+     in if exists qchk tms
+     then map translate tms
+     else tms
+    end
+)))
 
 end

@@ -131,6 +131,8 @@ val lookup_derived_properties : Context.generic -> phi_type -> string (*name*) -
 val register_derived_properties : phi_type -> string * int * Position.T -> thm list -> local_theory -> local_theory
       (*It will also bind in Isabelle the properties to names <phi_type_name.property_names\<^sub>i>
         for the i-th property each.*)
+val print_derived_properties : Context.generic -> string * int * Position.T -> Pretty.T list -> unit
+
 val note_properties' : bool (*true for no_atp*) -> string -> (binding * thm list) list -> local_theory -> local_theory
 val note_properties  : bool (*true for no_atp*) -> phi_type -> (binding * thm list) list -> local_theory -> local_theory
 val note_properties_s: bool (*true for no_atp*) -> phi_type -> (bstring * thm list) list -> local_theory -> local_theory
@@ -729,14 +731,18 @@ fun add_derived_properties phi (name, pos) ths ctxt =
    in Derived_Properties.map (Net.insert_term dp_eq (key, (key, ind, ths))) ctxt
   end
 
+fun print_derived_properties ctxt (name, ind, pos) pps =
+  Phi_Reasoner.info_pretty_generic ctxt ~1 (fn () =>
+    let open Pretty
+     in block [str (suffix_name_by_index ind name), brk 1,
+               chunks (map (fn p => item [p]) pps)]
+    end)
+
 fun register_derived_properties phi (name, ind, pos) ths thy =
   let val ind' = length (lookup_derived_properties (Context.Proof thy) phi name)
       val _ = if ind' = ind then () else error "Bad Index"
-      val _ = Phi_Reasoner.info_pretty thy ~1 (fn () =>
-              let open Pretty
-               in block [str (suffix_name_by_index ind name), brk 1,
-                         chunks (map (fn th => item [Thm.pretty_thm thy th]) ths)]
-              end)
+      val _ = print_derived_properties (Context.Proof thy)
+                                       (name, ind, pos) (map (Thm.pretty_thm thy) ths)
    in Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} (fn m =>
         let val key = Const(name, dummyT) $ Morphism.term m (#term phi)
             val ths' = Morphism.fact m ths
@@ -1370,7 +1376,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
                           | NONE => default_eq_of) vars param_tys
                | _ => let val eqs = map default_eq_of param_tys
                           val _ = Phi_Reasoner.info_pretty ctxt ~1 (fn () => let open Pretty in
-                                    block ([str "Infferred", brk 1, keyword1 "parameter_equality", brk 1, str "("] @
+                                    block ([str "Inferred", brk 1, keyword1 "parameter_equality", brk 1, str "("] @
                                            commas (map pretty_parameter_equality eqs) @ [str ")"])
                                   end)
                        in eqs

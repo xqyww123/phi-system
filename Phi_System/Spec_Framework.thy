@@ -398,9 +398,17 @@ declare [[ \<phi>reason_default_pattern
             and generalized_sematic_type_fallback = (10, [10,10]) in generalized_sematic_type \<open>fallback\<close>
 
 lemma [\<phi>reason default %generalized_sematic_type_fallback]:
-  \<open> Semantic_Type T TY
+  \<open> (SYNTACTIC_MODE \<Longrightarrow> Semantic_Type T TY)
 \<Longrightarrow> Generalized_Semantic_Type T TY\<close>
   unfolding Generalized_Semantic_Type_def ..
+
+lemma Semantic_Type_by_Synt_Sugar:
+  \<open> \<g>\<u>\<a>\<r>\<d> SYNTACTIC_MODE
+\<Longrightarrow> Semantic_Type T (\<t>\<y>\<p>\<e>\<o>\<f> T) \<close>
+  unfolding \<r>Guard_def SYNTACTIC_MODE_def by blast
+
+bundle Semantic_Type_by_Synt_Sugar =
+          Semantic_Type_by_Synt_Sugar[\<phi>reason default %\<phi>sem_type_failback]
 
 
 subsection \<open>Zero Value\<close>

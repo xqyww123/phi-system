@@ -3082,6 +3082,16 @@ ML \<open>exception PLPR_EXCEPTION of string\<close>
   end\<close>
 
 
+subsection \<open>Syntactic Mode\<close>
+
+definition \<open>SYNTACTIC_MODE \<equiv> False\<close>
+
+\<phi>reasoner_ML SYNTACTIC_MODE (\<open>SYNTACTIC_MODE\<close>) = \<open>fn (_, (ctxt,sequent)) =>
+  assume_tac ctxt 1 sequent
+    |> Seq.map (pair ctxt)
+\<close>
+
+
 subsection \<open>Finale\<close>
 
 ML_file \<open>library/tools/helpers99.ML\<close>
