@@ -190,17 +190,5 @@ fun setup_attribute binding access_to_sender comment =
                              (fn ctxt => singleton (Config.check_pattern ctxt) o Config.parse_pattern ctxt)
                              (K By_ML)
                              comment
-      
-(*
-      Attrib.setup binding
-        (Args.context -- Parse.and_list' pat2 >> (fn (_,pats) =>
-                Thm.declaration_attribute (K (fn ctxt' =>
-                    add pats ctxt'
-                    )))) comment
-   #> Attrib.setup (Binding.suffix_name "_ML" binding)
-        (Args.context -- Parse.and_list' pat_ML >> (fn (ctxt,pats) =>
-                Thm.declaration_attribute (K (fn ctxt' =>
-                    let val ctxt'' = Context.proof_of ctxt'
-                     in add (map (export_rewrite ctxt ctxt'') pats) ctxt' end)))) comment
-*)
+
 end

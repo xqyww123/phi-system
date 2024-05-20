@@ -8,7 +8,7 @@ structure Phi_Pointer_Of = Pattern_Translation (
 local
 
 val derv_rule = @{lemma
-  \<open> Derive_Pointer_Of (assn::prop) ptr
+  \<open> Derive_Pointer_Of assn ptr
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> TERM ptr \<close>
@@ -16,7 +16,30 @@ val derv_rule = @{lemma
 }
 
 fun guess_pointer ctxt eqs =
-  let val RHSS = map (Phi_Help.mk_term o #2 o Phi_Help.dest_eq_c o Thm.cconcl_of) eqs
+  let fun infer_one eq =
+        let val (LHS, RHS) = Phi_Help.dest_eq_c (Thm.cconcl_of eq)
+            val T = case Thm.term_of LHS
+                      of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T => T
+                       | T => T
+         in Drule.infer_instantiate ctxt [(("assn",0), RHS)] derv_rule
+         |> Phi_Reasoner.reason NONE NONE ctxt
+         |> Option.mapPartial (fn th =>
+        let val term = Logic.dest_term (Thm.concl_of th)
+            val frees = Term.add_frees term []
+                     |> subtract (op =) (Term.add_frees T [])
+            val vars  = Term.add_vars  term []
+                     |> subtract (op =) (Term.add_vars T [])
+         in if null frees andalso null vars
+            then NONE
+            else SOME (HOLogic.mk_prod (T, term))
+        end)
+        end
+
+      val red_pairs = map_filter infer_one eqs
+
+      fun chk_all_equiv 
+
+      val RHSS = map (Phi_Help.mk_term o #2 o Phi_Help.dest_eq_c o Thm.cconcl_of) eqs
               |> foldr1 Conjunction.mk_conjunction
       val rule = Thm.instantiate (TVars.empty,
                     Vars.make [((("assn",0),\<^Type>\<open>prop\<close>),RHSS)]) derv_rule
