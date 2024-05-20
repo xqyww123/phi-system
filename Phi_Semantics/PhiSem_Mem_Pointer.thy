@@ -805,7 +805,84 @@ definition Pointer_Of :: \<open>('c,'x) \<phi> \<Rightarrow> 'v assertion \<Righ
                           ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f> _ \<i>\<s> _" [11,11] 10)
   where \<open>Pointer_Of T assn \<equiv> True\<close>
 
+definition Derive_Pointer_Of :: \<open>'assertion_or_\<phi>type::{} \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>
+  where \<open>Derive_Pointer_Of assn ptr \<equiv> True\<close>
+
 ML_file \<open>library/reasoning/pointer_of.ML\<close>
+
+
+subsubsection \<open>Reasoning Rules\<close>
+
+\<phi>reasoner_group deriving_pointer = (100, [1,3000])
+      \<open>Infer the pointer assertion from a given \<phi>-type\<close>
+  and deriving_pointer_cut = (1000, [1000,1030]) in deriving_pointer \<open>cutting\<close>
+
+declare [[ \<phi>reason_default_pattern
+    \<open>Derive_Pointer_Of ?X _\<close> \<Rightarrow> \<open>Derive_Pointer_Of ?X _\<close> (100)
+]]
+
+definition \<A>merge_option :: \<open>VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>
+  where \<open>\<A>merge_option _ _ _ \<equiv> True\<close>
+
+lemma [\<phi>reason %cutting for \<open>\<A>merge_option (Some _) None _\<close>]:
+  \<open> \<A>merge_option (Some p) None (Some p) \<close>
+  unfolding \<A>merge_option_def ..
+
+lemma [\<phi>reason %cutting for \<open>\<A>merge_option None (Some _) _\<close>]:
+  \<open> \<A>merge_option None (Some p) (Some p) \<close>
+  unfolding \<A>merge_option_def ..
+
+lemma [\<phi>reason %cutting for \<open>\<A>merge_option (Some _) (Some _) _\<close>]:
+  \<open> p \<equiv> p'
+\<Longrightarrow> \<A>merge_option (Some p) (Some p') (Some p) \<close>
+  unfolding \<A>merge_option_def ..
+
+lemma [\<phi>reason %cutting for \<open>\<A>merge_option None None _\<close>]:
+  \<open> \<A>merge_option None None None \<close>
+  unfolding \<A>merge_option_def ..
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Derive_Pointer_Of A ptr\<^sub>A
+\<Longrightarrow> Derive_Pointer_Of B ptr\<^sub>B
+\<Longrightarrow> \<A>merge_option ptr\<^sub>A ptr\<^sub>B ptr
+\<Longrightarrow> Derive_Pointer_Of (PROP A &&& PROP B) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Derive_Pointer_Of A ptr
+\<Longrightarrow> Derive_Pointer_Of (TERM A) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Derive_Pointer_Of A ptr\<^sub>A
+\<Longrightarrow> Derive_Pointer_Of B ptr\<^sub>B
+\<Longrightarrow> \<A>merge_option ptr\<^sub>A ptr\<^sub>B ptr
+\<Longrightarrow> Derive_Pointer_Of (A * B) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Derive_Pointer_Of A ptr\<^sub>A
+\<Longrightarrow> Derive_Pointer_Of B ptr\<^sub>B
+\<Longrightarrow> \<A>merge_option ptr\<^sub>A ptr\<^sub>B ptr
+\<Longrightarrow> Derive_Pointer_Of (A + B) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Derive_Pointer_Of A ptr\<^sub>A
+\<Longrightarrow> Derive_Pointer_Of B ptr\<^sub>B
+\<Longrightarrow> \<A>merge_option ptr\<^sub>A ptr\<^sub>B ptr
+\<Longrightarrow> Derive_Pointer_Of (A \<and>\<^sub>B\<^sub>I B) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> (\<And>x. Derive_Pointer_Of (A x) ptr)
+\<Longrightarrow> Derive_Pointer_Of (\<exists>*x. A x) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Derive_Pointer_Of A ptr
+\<Longrightarrow> Derive_Pointer_Of (A \<s>\<u>\<b>\<j> P) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
 
 
 

@@ -50,6 +50,17 @@ val unfold_typeof_simproc = Simplifier.make_simproc \<^context> "\<phi>.\<t>\<y>
         proc = unfold_typeof
     }
 
+(*
+val infer_generalized_semantic_type = @{lemma \<open>
+    Generalized_Semantic_Type T TY
+  \<close>}
+
+fun generalized_semantic_type_of T ctxt =
+  let 
+   in ()
+  end
+*)
+
 end
 
 structure Syntactical_Type_Of = Pattern_Translation (
@@ -58,40 +69,3 @@ structure Syntactical_Type_Of = Pattern_Translation (
   val multi_translation_err_msg =
         "The \<phi>-type is registered with multiple inconsistent semantic types!"
 )
-
-local
-
-fun register_parse_rule pos rule ctxt =
-  let val (_, prems, concl) =Phi_Help.strip_meta_hhf (Thm.prop_of rule)
-      fun chk_atom (tm as Free _) = tm
-        | chk_atom (tm as Var _) = tm
-        | chk_atom tm = error (let open Pretty in string_of (
-              block (text "Bad rule of Semantic_Type," @
-                     [brk 1, Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm, brk 1] @
-                     text "must be an atom")
-          ) end)
-      val subst = map_filter (fn prem =>
-            case snd (PLPR_Syntax.concl_of_antecedent [] prem)
-              of Const(\<^const_name>\<open>Semantic_Type\<close>, _) $ T $ TY =>
-                  SOME (chk_atom TY, Const(\<^const_syntax>\<open>SType_Of\<close>, dummyT) $ T)
-               | _ => NONE
-              ) prems
-      val (T,TY) = case snd (PLPR_Syntax.concl_of_antecedent [] concl)
-                     of Const(\<^const_name>\<open>Semantic_Type\<close>, _) $ T $ TY => (T,TY)
-      val TY = subst_atomic subst TY
-   in ctxt
-   |> Syntactical_Type_Of.add [
-        (10, PLPR_Pattern.strip_typs T, pos,
-            Syntactical_Type_Of.By_Pattern [Syntax.replace_types_to_dummy TY]) ]
-  end
-
-in
-
-val _ = Theory.setup (Context.theory_map (
-  Phi_Reasoner.add_pass (\<^term>\<open>Gen_Syntax_Rule_of \<t>\<y>\<p>\<e>\<o>\<f>\<close>,
-                         \<^pattern_prop>\<open>Semantic_Type _ _\<close>,
-    fn pos => fn (rules, group, pats, G, ctxt) =>
-                 (rules, group, pats, G, fold (register_parse_rule pos) rules ctxt) )
-))
-
-end

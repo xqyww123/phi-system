@@ -429,4 +429,50 @@ simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memadd
         end else NONE end \<close>
 
 
+subsection \<open>Pointer Of\<close>
+
+subsubsection \<open>Preliminary - Modifier\<close>
+
+definition \<A>sem_typ_mod1 :: \<open>'any \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> bool\<close>
+  where \<open>\<A>sem_typ_mod1 param TY TY' \<equiv> True\<close>
+
+definition \<A>sem_typ_mod2 :: \<open>'any \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> bool\<close>
+  where \<open>\<A>sem_typ_mod2 param TY\<^sub>1 TY\<^sub>2 TY \<equiv> True\<close>
+
+\<phi>reasoner_group \<A>sem_typ_mod = (100, [1,3000])
+        \<open>modifying the given semantic type(s) syntactically according to the given parameter\<close>
+  and \<A>sem_typ_mod_cut = (1000, [1000,1030]) in \<A>sem_typ_mod \<open>cut\<close>
+
+declare [[\<phi>reason_default_pattern
+     \<open>\<A>sem_typ_mod1 ?p ?TY _\<close> \<Rightarrow> \<open>\<A>sem_typ_mod1 ?p ?TY _\<close> (100)
+ and \<open>\<A>sem_typ_mod2 ?p ?TY1 ?TY2 _\<close> \<Rightarrow> \<open>\<A>sem_typ_mod2 ?p ?TY1 ?TY2 _\<close> (100)
+]]
+
+
+
+
+subsubsection \<open>Reasoning Rules\<close>
+
+
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Generalized_Semantic_Type T TY
+\<Longrightarrow> Derive_Pointer_Of (x \<Ztypecolon> \<m>\<e>\<m>[addr] T) (Some (addr \<Ztypecolon> \<bbbP>\<t>\<r> TY)) \<close>
+  for T :: \<open>(mem_fic,'x) \<phi>\<close>
+  unfolding Derive_Pointer_Of_def ..
+
+lemma [\<phi>reason %generalized_sematic_type_cut]:
+  \<open> Generalized_Semantic_Type T TY\<^sub>1
+\<Longrightarrow> Generalized_Semantic_Type U TY\<^sub>2
+\<Longrightarrow> \<A>sem_typ_mod2 (\<^emph>) TY\<^sub>1 TY\<^sub>2 TY
+\<Longrightarrow> Generalized_Semantic_Type (T \<^emph> U) TY \<close>
+  unfolding Generalized_Semantic_Type_def ..
+
+lemma [\<phi>reason %generalized_sematic_type_cut]:
+  \<open> Generalized_Semantic_Type T TY
+\<Longrightarrow> Generalized_Semantic_Type (Mem_Coercion T) TY \<close>
+  unfolding Generalized_Semantic_Type_def ..
+
+
+
+
 end

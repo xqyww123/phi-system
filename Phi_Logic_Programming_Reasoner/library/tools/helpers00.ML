@@ -42,7 +42,10 @@ signature PHI_HELP = sig
   val mk_Trueprop : term -> term
   val dest_Trueprop_c : cterm -> cterm
 
-  val dest_HOL_eq : term -> term * term
+  val dest_eq   : term  -> term  * term
+  val dest_eq_c : cterm -> cterm * cterm
+
+  val mk_term   : cterm (*X*) -> cterm (*TERM C*)
 
 
 (*TODO: consider meta_Ball*)
@@ -275,8 +278,33 @@ fun mk_Trueprop (tm as (Const (@{const_name Trueprop}, _) $ _)) = tm
   | mk_Trueprop tm = HOLogic.Trueprop $ tm
 val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
-val dest_HOL_eq = perhaps (try HOLogic.dest_Trueprop)
-               #> dest_binop \<^const_name>\<open>HOL.eq\<close>
+fun dest_eq (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_eq X
+  | dest_eq (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B) = (A, B)
+  | dest_eq (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ A $ B) = (A, B)
+  | dest_eq tm = raise TERM("dest_eq", [tm])
+
+fun dest_eq_c ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+          dest_eq_c (Thm.dest_arg ctm)
+     | Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _ =>
+          let val (f,a2) = Thm.dest_comb ctm
+           in (Thm.dest_arg f, a2)
+          end
+     | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _ =>
+          let val (f,a2) = Thm.dest_comb ctm
+           in (Thm.dest_arg f, a2)
+          end
+     | _ => raise CTERM("dest_eq_c", [ctm])
+
+val TERM_c = \<^schematic_cterm>\<open>Pure.term :: ?'a::{} \<Rightarrow> prop\<close>
+          |> Thm.trim_context_cterm
+
+fun mk_term ctm =
+      Thm.apply (Thm.instantiate_cterm (TVars.make [((("a",0),[]), Thm.ctyp_of_cterm ctm)],
+                                        Vars.empty) TERM_c)
+                ctm
+
 
 fun mk_monop name arg = Const (name, Term.dummyT) $ arg
 fun mk_binop name (lhs,rhs) = Const (name, Term.dummyT) $ lhs $ rhs

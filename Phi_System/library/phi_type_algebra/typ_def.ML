@@ -1868,3 +1868,5 @@ fun simplified_exists_qualify ctxt ty X = simp_term ctxt (exists_qualify ty X)
 
 end
 
+type phi_type = Phi_Type.phi_type
+

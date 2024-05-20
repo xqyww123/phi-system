@@ -381,14 +381,26 @@ lemma SType_Of_unfold:
 
 ML_file \<open>library/tools/unfold_typeof.ML\<close>
 
-parse_translation \<open>[
-  (\<^const_syntax>\<open>SType_Of\<close>, fn ctxt => fn [tm] =>
-      case Syntactical_Type_Of.translate (Context.Proof ctxt) tm
-        of [] => \<^Const>\<open>SType_Of dummyT\<close> $ tm
-         | L => hd L )
-]\<close>
 
-term \<open>\<t>\<y>\<p>\<e>\<o>\<f> T\<close>
+subsubsection \<open>Generalized Semantic Typeof --- using Syntax Inference only\<close>
+
+definition Generalized_Semantic_Type :: \<open>'any \<Rightarrow> TY \<Rightarrow> bool\<close>
+  where \<open>Generalized_Semantic_Type T TY \<equiv> True\<close>
+  \<comment> \<open>merely providing a syntactical inference that may help certain inferences like inferring
+      the semantic type of a memory partial object as that used in the inference for \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>\<close>\<close>
+
+declare [[ \<phi>reason_default_pattern
+    \<open>Generalized_Semantic_Type ?T _\<close> \<Rightarrow> \<open>Generalized_Semantic_Type ?T _\<close> (100)
+]]
+
+\<phi>reasoner_group generalized_sematic_type = (100, [1,3000]) \<open>Generalized_Semantic_Type\<close>
+            and generalized_sematic_type_cut = (1000, [1000,1030]) in generalized_sematic_type \<open>cut\<close>
+            and generalized_sematic_type_fallback = (10, [10,10]) in generalized_sematic_type \<open>fallback\<close>
+
+lemma [\<phi>reason default %generalized_sematic_type_fallback]:
+  \<open> Semantic_Type T TY
+\<Longrightarrow> Generalized_Semantic_Type T TY\<close>
+  unfolding Generalized_Semantic_Type_def ..
 
 
 subsection \<open>Zero Value\<close>

@@ -1117,6 +1117,7 @@ declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
         exI  [\<phi>reason %cutting]
         HOL.refl [\<phi>reason %lambda_unify__default for \<open>_ = _\<close>]
+        Pure.reflexive [\<phi>reason %lambda_unify__default for \<open>_ \<equiv> _\<close>]
 
 \<phi>reasoner_group \<phi>LPR_imp = (%cutting, [%cutting, %cutting+100]) for \<open>_ \<longrightarrow> _\<close>
   \<open>Rules handling implifications, may involving different optimizations for specific cases\<close>
