@@ -37,14 +37,16 @@ fun guess_pointer ctxt eqs =
 
       val red_pairs = map_filter infer_one eqs
 
-      fun chk_all_equiv 
+      val thy = Proof_Context.theory_of ctxt
+      fun chk_all_equiv [] = NONE
+        | chk_all_equiv [x] = SOME x
+        | chk_all_equiv (x::y::L) =
+            if Pattern.equiv thy (x,y)
+            then chk_all_equiv (y::L)
+            else NONE
 
-      val RHSS = map (Phi_Help.mk_term o #2 o Phi_Help.dest_eq_c o Thm.cconcl_of) eqs
-              |> foldr1 Conjunction.mk_conjunction
-      val rule = Thm.instantiate (TVars.empty,
-                    Vars.make [((("assn",0),\<^Type>\<open>prop\<close>),RHSS)]) derv_rule
-   in case Phi_Reasoner.reason NONE NONE ctxt rule
-        of SOME ret => (Logic.dest_term (Thm.concl_of ret))
+   in case chk_all_equiv red_pairs
+        of SOME ret => HOLogic.dest_prod ret
          | NONE => raise Phi_Type.Automation_Fail (fn () => let open Pretty in
                       [paragraph (text "Fail to infer the pointer assertion from the syntax")]
                    end)
@@ -68,11 +70,11 @@ fun pointer_of_deriver (_, pos) intrs (phityp : phi_type) lthy =
         else ()
       val _ = List.app chk_intr intrs
       val hints = map_filter #1 intrs |> map fst
-      val ptr = case hints
+      val (T, ptr) = case hints
           of [] => guess_pointer lthy (#equations phityp)
            | [x] => (case x
                  of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Pointer_Of\<close>, _) $ Ty $ assn) =>
-                    Thm.cterm_of lthy assn
+                    (Ty, assn)
                   | _ => raise Automation_Fail (fn () => let open Pretty in
                       [block (text "Bad hint" @ [brk 1, Syntax.pretty_term lthy x])]
                     end))
@@ -81,12 +83,15 @@ fun pointer_of_deriver (_, pos) intrs (phityp : phi_type) lthy =
                   end)
    in lthy
    |> Context.proof_map (Phi_Pointer_Of.add [
-        (10)
+        (10, T, pos, Phi_Pointer_Of.By_Pattern [ptr])
       ])
   end
 
+open Phi_Type
+
 in
 
-
+val pointer_of_deriver : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+      = pointer_of_deriver
 
 end

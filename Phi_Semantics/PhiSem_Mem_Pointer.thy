@@ -810,12 +810,15 @@ definition Derive_Pointer_Of :: \<open>'assertion_or_\<phi>type::{} \<Rightarrow
 
 ML_file \<open>library/reasoning/pointer_of.ML\<close>
 
+\<phi>property_deriver Pointer_Of 100 for ( \<open>Pointer_Of _ _\<close> ) = \<open> pointer_of_deriver \<close>
+
 
 subsubsection \<open>Reasoning Rules\<close>
 
 \<phi>reasoner_group deriving_pointer = (100, [1,3000])
       \<open>Infer the pointer assertion from a given \<phi>-type\<close>
   and deriving_pointer_cut = (1000, [1000,1030]) in deriving_pointer \<open>cutting\<close>
+  and deriving_pointer_fallback = (5, [5,10]) in deriving_pointer \<open>fallback\<close>
 
 declare [[ \<phi>reason_default_pattern
     \<open>Derive_Pointer_Of ?X _\<close> \<Rightarrow> \<open>Derive_Pointer_Of ?X _\<close> (100)
@@ -824,22 +827,26 @@ declare [[ \<phi>reason_default_pattern
 definition \<A>merge_option :: \<open>VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>
   where \<open>\<A>merge_option _ _ _ \<equiv> True\<close>
 
-lemma [\<phi>reason %cutting for \<open>\<A>merge_option (Some _) None _\<close>]:
-  \<open> \<A>merge_option (Some p) None (Some p) \<close>
+lemma [\<phi>reason %cutting+5 for \<open>\<A>merge_option (Some _) _ _\<close>]:
+  \<open> \<A>merge_option (Some p) any (Some p) \<close>
   unfolding \<A>merge_option_def ..
 
-lemma [\<phi>reason %cutting for \<open>\<A>merge_option None (Some _) _\<close>]:
-  \<open> \<A>merge_option None (Some p) (Some p) \<close>
+lemma [\<phi>reason %cutting+5 for \<open>\<A>merge_option _ (Some _) _\<close>]:
+  \<open> \<A>merge_option any (Some p) (Some p) \<close>
   unfolding \<A>merge_option_def ..
 
-lemma [\<phi>reason %cutting for \<open>\<A>merge_option (Some _) (Some _) _\<close>]:
+lemma [\<phi>reason %cutting+10 for \<open>\<A>merge_option (Some _) (Some _) _\<close>]:
   \<open> p \<equiv> p'
 \<Longrightarrow> \<A>merge_option (Some p) (Some p') (Some p) \<close>
   unfolding \<A>merge_option_def ..
 
-lemma [\<phi>reason %cutting for \<open>\<A>merge_option None None _\<close>]:
-  \<open> \<A>merge_option None None None \<close>
+lemma [\<phi>reason %cutting for \<open>\<A>merge_option _ _ _\<close>]:
+  \<open> \<A>merge_option any\<^sub>1 any\<^sub>2 None \<close>
   unfolding \<A>merge_option_def ..
+
+lemma [\<phi>reason default %deriving_pointer_fallback]:
+  \<open> Derive_Pointer_Of A None \<close>
+  unfolding Derive_Pointer_Of_def ..
 
 lemma [\<phi>reason %deriving_pointer_cut]:
   \<open> Derive_Pointer_Of A ptr\<^sub>A
