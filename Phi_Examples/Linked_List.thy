@@ -4,7 +4,7 @@ begin
 
 abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
-declare [[\<phi>trace_reasoning = 4]]
+declare [[\<phi>trace_reasoning = 1]]
  
 \<phi>type_def Linked_Lst :: \<open>address \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
@@ -12,7 +12,7 @@ declare [[\<phi>trace_reasoning = 4]]
                                       (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>
                                       \<s>\<u>\<b>\<j> nxt. address_to_base addr )\<close>
 
-     deriving (* Basic
+     deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
           and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
           and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
@@ -21,7 +21,7 @@ declare [[\<phi>trace_reasoning = 4]]
           and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
             \<Longrightarrow> Functional_Transformation_Functor (Linked_Lst addr) (Linked_Lst addr) T U
                                                  set (\<lambda>x. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f)\<close>
-          and*) Pointer_Of
+          (* and Pointer_Of *)
 
 
 

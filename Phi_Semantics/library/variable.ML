@@ -59,15 +59,12 @@ fun evaluation var state =
                | Uninitialized => NONE)
 
 fun declare_rule pos rule =
-  let
-  val pattern = case Thm.prop_of rule
-                  of Const (\<^const_name>\<open>Pure.eq\<close>, (T1 as Type ("fun", [T,_]))) $ V1 $ _ =>
-                      Const (\<^const_name>\<open>Pure.eq\<close>, T1)
-                        $ V1 $ Var (("out", maxidx_of_term V1 + 1), T)
-                   | _ => raise THM ("Bad rule.", 0, [rule])
+  let val () = case Thm.prop_of rule
+                 of _ (*Trueprop*) $ (Const(\<^const_name>\<open>LOCAL_VAR\<close>, _) $ _ $ _) => ()
+                  | _ => raise THM ("Bad rule.", 0, [rule])
    in Context.proof_map (Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT'
                                                (SOME @{reasoner_group %local_var})
-                                               ([(pattern,NONE)], []) NONE [rule])
+                                               ([], []) NONE [rule])
   end
 
 fun chk_no_path_during_creating (b,idx) =

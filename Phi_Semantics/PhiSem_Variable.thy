@@ -155,15 +155,32 @@ section \<open>Semantic Operations\<close>
 
 subsection \<open>Preliminary - Reasoning Process\<close>
 
+subsubsection \<open>Local Variable\<close>
+
+definition LOCAL_VAR :: \<open>varname \<Rightarrow> TY option \<Rightarrow> bool\<close>
+  where \<open>LOCAL_VAR v TY \<equiv> (varname.type v = TY)\<close>
+
+declare [[\<phi>reason_default_pattern
+  \<open>LOCAL_VAR ?v _\<close> \<Rightarrow> \<open>LOCAL_VAR ?v _\<close> (100)
+]]
+
+\<phi>reasoner_group local_var = (1000, [1000,1000]) for (\<open>LOCAL_VAR vari TY\<close>)
+  \<open>storing semantic types of local variables\<close>
+
+(*
+(* It seems the following code is deprecated though in my memory I still remember the reasoning
+  should be still somehow important, though not that clear. I'm not sure, maybe my memory is wrong *)
+
 subsubsection \<open>Infer Semantic Type of Variable\<close>
 
 consts infer_var_type :: \<open>action\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> varname.type v \<equiv> TY'
+  \<open> LOCAL_VAR v TY'
 \<Longrightarrow> pred_option ((=) TY) TY' @tag infer_var_type
 \<Longrightarrow> pred_option ((=) TY) (varname.type v) @tag infer_var_type\<close>
   \<comment> \<open>TY is the output. The rule invokes evaluation of the \<open>varname.type vari\<close>.\<close>
+  unfolding LOCAL_VAR_def
   by simp
 
 lemma [\<phi>reason 1000]:
@@ -184,6 +201,7 @@ lemma [\<phi>reason 1000]:
   \<comment> \<open>the output TY equals to that TY in \<open>Some TY\<close> exactly.\<close>
   unfolding Action_Tag_def
   by simp
+*)
 
 subsubsection \<open>Aggregate_Mapper that can handle option\<close>
 
@@ -286,7 +304,7 @@ lemma op_get_var0:
 
 proc op_set_var:
   input  \<open>y \<Ztypecolon> \<v>\<a>\<l> U'\<heavy_comma> x \<Ztypecolon> Var v T\<close>
-  requires [useful]: \<open>varname.type v \<equiv> TY_var\<close>
+  requires [useful]: \<open>LOCAL_VAR v TY_var\<close>
     and           \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
     and [useful]: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
     and [useful]: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
@@ -308,7 +326,8 @@ proc op_set_var:
         simp add: parse_eleidx_input_least1_opt_def
                   parse_eleidx_input_least1_def
                   parse_eleidx_input_def
-                  is_valid_index_of_def) ;;
+                  is_valid_index_of_def
+                  LOCAL_VAR_def) ;;
 
   apply_rule FIC.Var.setter_rule[
     where u=\<open>Some (discrete (Some (index_mode_value_opt sem_idx (\<lambda>_. \<phi>arg.dest \<a>\<r>\<g>1)
@@ -324,7 +343,7 @@ proc op_set_var:
 
 
 lemma op_set_var_0:
-  \<open> varname.type vari \<equiv> TY_var
+  \<open> LOCAL_VAR vari TY_var
 \<Longrightarrow> \<phi>SemType_opt (x \<Ztypecolon> U) TY
 \<Longrightarrow> pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var
 \<Longrightarrow> Semantic_Type U' UY
@@ -353,14 +372,15 @@ proc op_free_var:
 
 proc op_var_scope:
   requires \<open>\<p>\<a>\<r>\<a>\<m> TY\<close>
-       and BLK: \<open>\<And>vari. varname.type vari \<equiv> TY
+       and BLK: \<open>\<And>vari. LOCAL_VAR vari TY
                   \<Longrightarrow> \<p>\<r>\<o>\<c> F vari \<lbrace> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari]\<heavy_comma> X \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Y ret \<rbrace>
                       \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E v) \<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws  E
   \<medium_left_bracket>
-    apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. varname.type v = TY)\<close> and u=\<open>Some (discrete None)\<close>]
+    note LOCAL_VAR_def[\<phi>sledgehammer_simps]\<semicolon>
+    apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. LOCAL_VAR v TY)\<close> and u=\<open>Some (discrete None)\<close>]
     \<exists>v \<open>() \<Ztypecolon> MAKE _ (Var v \<circle>)\<close>
     try'' \<medium_left_bracket>
         apply_rule BLK[of \<open>\<phi>arg.dest \<v>0\<close>, unfolded atomize_eq, OF Premise_D[where mode=default], simplified]
@@ -424,7 +444,7 @@ proc (nodef) [\<phi>reason 1200]:
   input X
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> U' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
        and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any\<close>
-       and T1: \<open>varname.type vari \<equiv> TY_var\<close>
+       and T1: \<open>LOCAL_VAR vari TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
        and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
@@ -447,7 +467,7 @@ proc (nodef) [\<phi>reason 1210]:
   input X
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> \<v>\<a>\<l> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
        and S : \<open>X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Var vari T\<heavy_comma> Y \<w>\<i>\<t>\<h> Any\<close>
-       and T1: \<open>varname.type vari \<equiv> TY_var\<close>
+       and T1: \<open>LOCAL_VAR vari TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
        and T6: \<open>Semantic_Type T' UY\<close>
@@ -472,13 +492,10 @@ ML \<open>Generic_Variable_Access.parse_phi_type_of_generic_var :=
                     (!Generic_Variable_Access.parse_phi_type_of_generic_var)\<close>
 
 
-\<phi>reasoner_group local_var = (1000, [1000,1000]) for (\<open>varname.type vari \<equiv> TY\<close>)
-  \<open>storing semantic types of local variables\<close>
-
 proc (nodef) "__set_var_rule_":
   input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U'\<heavy_comma> x \<Ztypecolon> Var vari T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[vari] T'\<heavy_comma> R \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-       and T1: \<open>varname.type vari \<equiv> TY_var\<close>
+       and T1: \<open>LOCAL_VAR vari TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
        and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
@@ -496,7 +513,7 @@ proc (nodef) "__set_var_rule_":
 proc (nodef) "__set_var_rule_0_":
   input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U'\<heavy_comma> x \<Ztypecolon> Var vari T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
   requires G : \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U'\<heavy_comma> R \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-       and T1: \<open>varname.type vari \<equiv> TY_var\<close>
+       and T1: \<open>LOCAL_VAR vari TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
        and T4: \<open>Semantic_Type U' UY\<close>
@@ -510,17 +527,17 @@ proc (nodef) "__set_var_rule_0_":
 
 
 lemma "__new_var_rule__":
-  \<open> (\<And>vari. varname.type vari \<equiv> TY
-              \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari]\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
-                  \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e))
+  \<open> (\<And>vari. LOCAL_VAR vari TY
+        \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[vari]\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
+            \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e))
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) TY g \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G
-    op_var_scope \<open>TY\<close> \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type vari \<equiv> _\<close>] G \<medium_right_bracket>
+    op_var_scope \<open>TY\<close> \<medium_left_bracket> premises [\<phi>reason for \<open>LOCAL_VAR vari _\<close>] G \<medium_right_bracket>
   \<medium_right_bracket> .
 
 proc (nodef) "__set_new_var_rule_":
   input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
-  requires G: \<open>\<And>vari. varname.type vari \<equiv> Some TY
+  requires G: \<open>\<And>vari. LOCAL_VAR vari (Some TY)
             \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
                 \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e)\<close>
       and \<open>Semantic_Type U TY\<close>
@@ -528,7 +545,7 @@ proc (nodef) "__set_new_var_rule_":
   throws E
 \<medium_left_bracket> 
   op_var_scope \<open>Some TY\<close> \<medium_left_bracket>
-    premises [\<phi>reason for \<open>varname.type vari \<equiv> _\<close>]
+    premises [\<phi>reason for \<open>LOCAL_VAR vari _\<close>]
     op_set_var_0
     G
   \<medium_right_bracket>
@@ -536,7 +553,7 @@ proc (nodef) "__set_new_var_rule_":
 
 proc (nodef) "__set_new_var_noty_rule_":
   input  \<open>X\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
-  requires G: \<open>\<And>vari. varname.type vari \<equiv> None
+  requires G: \<open>\<And>vari. LOCAL_VAR vari None
         \<Longrightarrow> \<p>\<r>\<o>\<c> g vari \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> y \<Ztypecolon> \<v>\<a>\<r>[vari] U\<heavy_comma> R \<longmapsto> \<lambda>ret. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> Z ret \<rbrace>
             \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. () \<Ztypecolon> Var vari \<phi>Any\<heavy_comma> E e)\<close>
        and \<open>Semantic_Type U TY\<close>
@@ -544,7 +561,7 @@ proc (nodef) "__set_new_var_noty_rule_":
   throws E
 \<medium_left_bracket>
   op_var_scope None \<medium_left_bracket>
-    premises [\<phi>reason for \<open>varname.type vari \<equiv> _\<close>]
+    premises [\<phi>reason for \<open>LOCAL_VAR vari _\<close>]
     op_set_var_0
     G
   \<medium_right_bracket>

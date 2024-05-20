@@ -5,7 +5,7 @@ theory PhiStd_Loop_a \<comment> \<open>suffix a stands for \<open>arbitrary prec
 begin
 
 text \<open>Predefined abstractions of Loop statemetns, counted as a part of loop invariants in our statistics\<close>
-
+ 
 
 proc (nodef) iterate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
