@@ -397,4 +397,11 @@ lemma [\<phi>reason add]:
   qed .
 
 
+subsubsection \<open>Generalized_Semantic_Type\<close>
+
+lemma [\<phi>reason %generalized_sematic_type_cut]:
+  \<open> Generalized_Semantic_Type T TY
+\<Longrightarrow> Generalized_Semantic_Type (\<s>\<l>\<i>\<c>\<e>[0, N] T) (\<a>\<r>\<r>\<a>\<y>[N] TY) \<close>
+  unfolding Generalized_Semantic_Type_def ..
+
 end

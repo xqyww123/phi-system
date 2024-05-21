@@ -87,7 +87,7 @@ fun pointer_of_deriver (_, pos) intrs (phityp : phi_type) lthy =
                     [block (text "The deriver of \<open>Pointer_Of\<close> accepts at most one hint.")]
                   end)
 
-      val _ = Phi_Reasoner.info_pretty lthy ~1 (fn () =>
+      val _ = Phi_Reasoner.info_pretty lthy 0 (fn () =>
                 let open Pretty
                     val (xty,mty) = Phi_Syntax.dest_phi_type_ty (fastype_of T)
                     val c_ty = Phi_Syntax.dest_BI_ty (fastype_of ptr)

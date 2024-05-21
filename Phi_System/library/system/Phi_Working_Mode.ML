@@ -299,9 +299,13 @@ fun vcg_before_assembling goal (ctxt,sequent) =
                        |> Thm.incr_indexes idx_delt
                        |> Drule.infer_instantiate ctxt
                               [(("T",idx_delt),current_nu),(("ret",idx_delt),ins)]
-        in (sequent RS return_rule)
-            |> rule_by_tactic ctxt
-                  (SOLVED' (Simplifier.simp_tac ctxt) 1)
+        val goal = sequent RS return_rule
+        in goal
+            |> SOLVED' (TRY o Simplifier.simp_tac ctxt THEN_ALL_NEW
+                        resolve_tac ctxt @{thms' HOL.refl}) 1
+            |> Seq.pull
+            |> (fn SOME (ret, _) => ret
+                 | NONE => raise THM ("vcg_before_assembling", 0, [goal]))
         end
       else sequent
     val desired_nu = #4 (Phi_Syntax.dest_PendingConstruction_c goal)

@@ -851,9 +851,9 @@ lemma [\<phi>reason %cutting+5 for \<open>\<A>merge_option _ (Some _) _\<close>]
   unfolding \<A>merge_option_def ..
 
 lemma [\<phi>reason %cutting+10 for \<open>\<A>merge_option (Some _) (Some _) _\<close>]:
-  \<open> p \<equiv> p'
+  \<open> \<g>\<u>\<a>\<r>\<d> p = p'
 \<Longrightarrow> \<A>merge_option (Some p) (Some p') (Some p) \<close>
-  unfolding \<A>merge_option_def ..
+  unfolding \<A>merge_option_def \<r>Guard_def ..
 
 lemma [\<phi>reason %cutting for \<open>\<A>merge_option _ _ _\<close>]:
   \<open> \<A>merge_option any\<^sub>1 any\<^sub>2 None \<close>
