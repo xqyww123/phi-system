@@ -14,6 +14,9 @@ section \<open>Semantics of Pointer\<close>
 
 subsection \<open>Type\<close>
 
+debt_axiomatization \<p>\<o>\<i>\<n>\<t>\<e>\<r> :: TY ("\<p>\<t>\<r>")
+
+(*
 virtual_datatype c_mem_ty =
   T_pointer :: unit
 
@@ -23,6 +26,7 @@ debt_axiomatization T_pointer :: \<open>unit type_entry\<close>
 interpretation c_mem_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_pointer using c_mem_ty_ax .
 
 abbreviation pointer ("\<p>\<t>\<r>") where \<open>pointer \<equiv> T_pointer.mk ()\<close>
+*)
 
 subsection \<open>Value\<close>
 
@@ -559,23 +563,31 @@ resource_space aggregate_mem =
 
 paragraph \<open>Install Pointer\<close>
 
+(*
 virtual_datatype c_mem_val = V_pointer :: rawaddr
 
 debt_axiomatization V_pointer :: \<open>rawaddr value_entry\<close>
   where c_mem_val_ax: \<open>c_mem_val VAL_CONS_OF V_pointer\<close>
 
 interpretation c_mem_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_pointer using c_mem_val_ax .
+*)
 
 definition In_Mem :: \<open> resource \<Rightarrow> memblk \<Rightarrow> bool \<close>
   where \<open>In_Mem res seg \<equiv> seg \<in> dom (RES.aggregate_mem.get res)\<close>
 
-debt_axiomatization
-    can_eqcmp_ptr[simp]: "Can_EqCompare res (V_pointer.mk rp1) (V_pointer.mk rp2)
+  
+debt_axiomatization sem_mk_pointer   :: \<open>rawaddr \<Rightarrow> VAL\<close>
+                and sem_dest_pointer :: \<open>VAL \<Rightarrow> rawaddr\<close>
+where sem_dest_mk_pointer[simp]:
+        \<open>sem_dest_pointer (sem_mk_pointer raw) = raw\<close>
+  and can_eqcmp_ptr[simp]: 
+        \<open>Can_EqCompare res (sem_mk_pointer rp1) (sem_mk_pointer rp2)
            \<longleftrightarrow> (memaddr.blk rp1 = memaddr.blk rp2) \<or> (rp1 = 0) \<or> (rp2 = 0) \<or>
-               (In_Mem res (memaddr.blk rp1) \<and> In_Mem res (memaddr.blk rp2))"
-and eqcmp_ptr[simp]: "EqCompare (V_pointer.mk rp1) (V_pointer.mk rp2) \<longleftrightarrow> rp1 = rp2"
-and zero_ptr[simp]: \<open>Zero pointer = Some (V_pointer.mk 0)\<close>
-and WT_ptr[simp]: \<open>Well_Type pointer = { V_pointer.mk addr |addr. valid_rawaddr addr }\<close>
+               (In_Mem res (memaddr.blk rp1) \<and> In_Mem res (memaddr.blk rp2))\<close>
+  and eqcmp_ptr[simp]: "EqCompare (sem_mk_pointer rp1) (sem_mk_pointer rp2) \<longleftrightarrow> rp1 = rp2"
+  and zero_ptr[simp]: \<open>Zero \<p>\<t>\<r> = Some (sem_mk_pointer 0)\<close>
+  and WT_ptr[simp]: \<open>Well_Type \<p>\<t>\<r> = { sem_mk_pointer addr |addr. valid_rawaddr addr }\<close>
+
 
 subsubsection \<open>Syntax\<close>
 
@@ -584,12 +596,12 @@ section \<open>\<phi>-Types for Pointer\<close>
 subsection \<open>Physical Pointer\<close>
 
 \<phi>type_def RawPointer :: "(VAL, rawaddr) \<phi>"
-  where \<open>x \<Ztypecolon> RawPointer \<equiv> (V_pointer.mk x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_rawaddr x)\<close>
+  where \<open>x \<Ztypecolon> RawPointer \<equiv> (sem_mk_pointer x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_rawaddr x)\<close>
   deriving Basic
        and \<open>Object_Equiv RawPointer (=)\<close>
        and Functionality
-       and \<open>Semantic_Type RawPointer pointer\<close>
-       and \<open>Semantic_Zero_Val pointer RawPointer 0\<close>
+       and \<open>Semantic_Type RawPointer \<p>\<t>\<r>\<close>
+       and \<open>Semantic_Zero_Val \<p>\<t>\<r> RawPointer 0\<close>
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
   "\<phi>Equal RawPointer (\<lambda>x y. x = 0 \<or> y = 0 \<or> memaddr.blk x = memaddr.blk y) (=)"
@@ -602,12 +614,12 @@ subsection \<open>Standard Logical Pointer\<close>
       only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
 
 \<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, address) \<phi>" ("\<bbbP>\<t>\<r> _" [900] 899)
-  where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (address_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_address x \<and> (x = 0 \<or> address_type x = TY)\<close>
+  where \<open>x \<Ztypecolon> Ptr TY \<equiv> sem_mk_pointer (address_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_address x \<and> (x = 0 \<or> address_type x = TY)\<close>
   deriving Basic
        and \<open>Object_Equiv (Ptr TY) (=)\<close>
        and Functionality
-       and \<open>Semantic_Type (Ptr TY) pointer\<close>
-       and \<open>Semantic_Zero_Val pointer (Ptr TY) 0\<close>
+       and \<open>Semantic_Type (Ptr TY) \<p>\<t>\<r>\<close>
+       and \<open>Semantic_Zero_Val \<p>\<t>\<r> (Ptr TY) 0\<close>
 
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
@@ -650,7 +662,7 @@ section \<open>Primitive Instructions\<close>
 
 subsection \<open>GEP\<close>
 
-proc op_get_element_pointer[\<phi>overload \<tribullet>]:
+proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
@@ -659,18 +671,18 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr_geps addr spec_idx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
-  $addr semantic_local_value pointer
+  $addr semantic_local_value \<p>\<t>\<r>
   semantic_return \<open>
-    V_pointer.mk (address_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
-      \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr TY')\<close>
+    sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
+        \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_pointer.mk 0)] \<bbbP>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_pointer 0)] \<bbbP>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
   \<medium_left_bracket>
-    semantic_literal \<open>V_pointer.mk 0 \<Turnstile> (0 \<Ztypecolon> \<bbbP>\<t>\<r> TY)\<close>
+    semantic_literal \<open>sem_mk_pointer 0 \<Turnstile> (0 \<Ztypecolon> \<bbbP>\<t>\<r> TY)\<close>
     certified by auto_sledgehammer
   \<medium_right_bracket> .
 

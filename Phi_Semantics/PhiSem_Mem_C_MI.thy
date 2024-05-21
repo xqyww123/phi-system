@@ -38,7 +38,7 @@ proc calloc:
     using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
     by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close>) ;;
   
-  semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
+  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
 
 \<medium_right_bracket> .
 
@@ -48,10 +48,10 @@ proc op_shift_pointer [\<phi>overload +]:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> RawPointer\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>('b::len)\<close>
   output \<open>addr ||+ of_nat (MemObj_Size TY * n) \<Ztypecolon> \<v>\<a>\<l> RawPointer\<close>
 \<medium_left_bracket>
-  $addr semantic_local_value pointer
+  $addr semantic_local_value \<p>\<t>\<r>
   semantic_return \<open>
-    V_pointer.mk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1) ||+ of_nat (MemObj_Size TY * n))
-      \<Turnstile> (addr ||+ of_nat (MemObj_Size TY * n) \<Ztypecolon> RawPointer)\<close>
+    sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1) ||+ of_nat (MemObj_Size TY * n))
+        \<Turnstile> (addr ||+ of_nat (MemObj_Size TY * n) \<Ztypecolon> RawPointer)\<close>
 \<medium_right_bracket> .
 
 proc abst_shift_pointer [\<phi>overload +]:

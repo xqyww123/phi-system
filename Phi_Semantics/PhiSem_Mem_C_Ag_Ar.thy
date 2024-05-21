@@ -110,27 +110,25 @@ lemma address_to_raw_phantom_mem_type_gep_N__arr:
 
 
 
-proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 100]:
-  requires \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
+proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 50]:
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY''\<close>
+  requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY'' = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
+       and \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject\<close>
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr (\<a>\<r>\<r>\<a>\<y>[any] TY)\<close>
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
-  $addr semantic_local_value pointer ;;
+  $addr semantic_local_value \<p>\<t>\<r> ;;
   have t1: \<open>0 < any\<close>
     by (insert \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
                \<open>valid_address addr\<close> parse_eleidx_input_def that(1) valid_idx_step_arr,
-        cases addr, auto) ;;
+        cases addr, auto_sledgehammer) ;;
   holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N ;;
   semantic_return \<open>
-    V_pointer.mk (address_to_raw (addr_geps (rawaddr_to_log_arr TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
+    sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log_arr TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
       \<Turnstile> (addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
-
-
-thm "\<tribullet>_\<phi>app"
 
 
 
@@ -160,7 +158,7 @@ lemma valid_address_range_sub:
   deriving Basic
        and \<open>Object_Equiv (SlicePtr addr N TY) (=)\<close>
        and Functionality
-       and \<open>Semantic_Type (SlicePtr addr N TY) pointer\<close>
+       and \<open>Semantic_Type (SlicePtr addr N TY) \<p>\<t>\<r> \<close>
 
 
 

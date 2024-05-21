@@ -9,18 +9,18 @@ proc op_add_ptr[\<phi>overload +]:
   premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len\<close>
   output \<open>nat (int i + j) \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr:len] TY\<close>
 \<medium_left_bracket>
-  $i semantic_local_value \<open>pointer\<close>
+  $i semantic_local_value \<p>\<t>\<r>
   $j semantic_local_value \<open>\<i>\<n>\<t>('b)\<close> 
 
   have [simp]: \<open>word_of_nat (nat (2 ^ LENGTH('b) + j)) = (word_of_int j :: 'b word)\<close>
     by (smt (verit, ccfv_threshold) One_nat_def nat_0_le of_int_of_nat_eq sint_of_int_eq the_\<phi>lemmata(1) two_less_eq_exp_length wi_hom_add word_of_int_0 word_of_int_2p_len) \<semicolon>
 
   semantic_return \<open>
-      V_pointer.mk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)
+      sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.scast (of_nat (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
   certified by (insert useful, auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] distrib_right,
-                metis signed_of_int signed_take_bit_int_eq_self_iff the_\<phi>lemmata(4))
+                simp add: add.commute signed_of_int signed_take_bit_int_eq_self)
 \<medium_right_bracket> .
 
 
@@ -29,16 +29,16 @@ proc op_add_ptr_unsigned[\<phi>overload +]:
   premises \<open>i + j \<le> len\<close>
   output \<open>i + j \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr:len] TY\<close>
 \<medium_left_bracket>
-  $i semantic_local_value \<open>pointer\<close>
+  $i semantic_local_value \<p>\<t>\<r>
   $j semantic_local_value \<open>\<i>\<n>\<t>('b)\<close>
 
   semantic_return \<open>
-      V_pointer.mk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)
+      sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.ucast (of_nat (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (i + j \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
   certified by (insert useful,
                 auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>]
-                           distrib_right ucast_of_nat_small)
+                           distrib_right ucast_of_nat_small, simp add: add.commute)
 \<medium_right_bracket> .
 
 

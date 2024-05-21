@@ -16,7 +16,7 @@ declare [[\<phi>trace_reasoning = 1]]
   deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
        and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr T) (list_all2 eq)\<close>
             (tactic: auto, subgoal' for x xa xb xc \<open>rule exI[where x=\<open>xa @ drop (length xa) xc\<close>]\<close>)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>(\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
          \<Longrightarrow> Transformation_Functor (DynArr addr) (DynArr addr') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
        (* and Functional_Transformation_Functor *)
        and Pointer_Of
@@ -47,7 +47,7 @@ proc get_dynarr:
   output   \<open>l!i \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  addr.data![i]!
+  addr.data[i]!
 \<medium_right_bracket> .
 
 
@@ -57,7 +57,7 @@ proc set_dynarr:
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  addr.data![i] := v
+  addr.data[i] := v
 \<medium_right_bracket> .
 
 proc Max:
@@ -86,7 +86,7 @@ proc push_dynarr:
       data'[len] := v \<semicolon>
       \<m>\<a>\<k>\<e>\<s> \<open>l + [v] \<Ztypecolon> DynArr addr _\<close>
   \<medium_right_bracket> \<medium_left_bracket>
-      addr.data![len] := v \<semicolon>
+      addr.data[len] := v \<semicolon>
       addr.len := len + 1 \<semicolon>
       \<m>\<a>\<k>\<e>\<s> \<open>l + [v] \<Ztypecolon> DynArr addr _\<close>
   \<medium_right_bracket>
@@ -114,7 +114,7 @@ proc pop_dynarr:
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
   val len \<leftarrow> addr.len ! - 1 \<semicolon>
   val half_cap \<leftarrow> (addr.cap !) / 2 \<semicolon>
-  val ret \<leftarrow> addr.data![len]! \<semicolon>
+  val ret \<leftarrow> addr.data[len]! \<semicolon>
   addr.len := len \<semicolon>
   if (len \<le> half_cap) \<medium_left_bracket>
     val data' \<leftarrow> calloc (half_cap) \<open>T\<close> \<semicolon>

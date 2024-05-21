@@ -175,7 +175,7 @@ proc op_load_mem:
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
-  $addr semantic_local_value \<open>pointer\<close>
+  $addr semantic_local_value \<p>\<t>\<r>
 
   apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
@@ -183,7 +183,7 @@ proc op_load_mem:
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
   apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=1
-                and cblk=\<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+                and cblk=\<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
                 and blk=\<open>memaddr.blk addr\<close>
                 and idx=\<open>memaddr.index addr\<close>]
 
@@ -192,8 +192,8 @@ proc op_load_mem:
 
   apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
 
-  semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
-  semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+  semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
+  semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
 
 proc op_store_mem:
@@ -213,21 +213,30 @@ proc op_store_mem:
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
-  $addr semantic_local_value \<open>pointer\<close>
+  $addr semantic_local_value \<p>\<t>\<r>
   $y semantic_local_value \<open>TY\<close>
 
   apply_rule FIC.aggregate_mem.setter_rule[
         where u_idx=v and idx=\<open>memaddr.index addr\<close>
           and v=\<open>\<phi>arg.dest \<a>\<r>\<g>2\<close>
           and blk=\<open>memaddr.blk addr\<close>
-          and cblk = \<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
-          and cidx = \<open>memaddr.index (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
+          and cblk = \<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+          and cidx = \<open>memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
 
   \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U))))\<close>
   \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] U)\<close>
   
   apply_rule ToA_Subst_backward[OF Map, unfolded Remains_\<phi>Cond_Item]
 \<medium_right_bracket> .
+
+lemma op_load_mem_triangle_opr_\<phi>app[\<phi>overload \<tribullet> 10]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = \<p>\<t>\<r>
+\<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
+\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
+\<Longrightarrow> report_unprocessed_element_index input_index
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_load_mem TY v \<lbrace> addr \<Ztypecolon> \<v>\<a>\<l>[v] \<bbbP>\<t>\<r> TY\<heavy_comma> state \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state \<rbrace>\<close>
+  by (rule op_load_mem_\<phi>app, blast+)
+
 
 
 (*
@@ -274,7 +283,7 @@ proc calloc1:
   have t1: \<open>valid_address (memaddr blk [])\<close>
     by (insert \<phi>; auto simp add: Valid_MemBlk_def split: memblk.split) ;;
 
-  semantic_return \<open>V_pointer.mk (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
+  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
     
 \<medium_right_bracket> .
 
@@ -289,10 +298,10 @@ proc mfree:
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
-  $addr semantic_local_value \<open>pointer\<close>
+  $addr semantic_local_value \<p>\<t>\<r>
 
   apply_rule FIC.aggregate_mem.deallocate_rule
-             [where v=v and blk=\<open>memaddr.blk (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))\<close>]
+             [where v=v and blk=\<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>]
 
 \<medium_right_bracket> .
 

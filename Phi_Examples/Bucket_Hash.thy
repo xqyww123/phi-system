@@ -59,6 +59,8 @@ deriving \<open> Abstract_Domain T P
     and \<open>Functional_Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
               (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
 
+    and Pointer_Of
+
 declare [[\<phi>trace_reasoning = 1]]
 
 proc calc_hash:
@@ -192,6 +194,7 @@ proc hash_lookup:
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
+
   val tabl_addr \<leftarrow> addr.tabl ! \<semicolon>
   val N \<leftarrow> addr.N ! \<semicolon>
   val hash \<leftarrow> k % N \<semicolon>
@@ -286,7 +289,7 @@ proc rehash:
   del_hash (addr) \<semicolon>
   val ret \<leftarrow> new_hash (N) \<semicolon>
   iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr (dynarr))
-              \<open>\<lambda>i. f \<Ztypecolon> Hash addra TY T \<s>\<u>\<b>\<j> f. set (take i l) = Map.graph f\<close>
+             \<open>\<lambda>i. f \<Ztypecolon> Hash addra TY T \<s>\<u>\<b>\<j> f. set (take i l) = Map.graph f\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     val entry \<leftarrow> get_dynarr (dynarr, i) \<semicolon>
     update_hash (ret, entry.k, entry.v)
