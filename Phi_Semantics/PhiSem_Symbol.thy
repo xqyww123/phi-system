@@ -1,5 +1,6 @@
 theory PhiSem_Symbol
   imports PhiSem_Base
+  abbrevs "<symbol>" = "\<s>\<y>\<m>\<b>\<o>\<l>"
 begin
 
 text \<open>Semantic symbol type is a literal string which cannot be modified runtime and has fixed range
@@ -9,17 +10,33 @@ text \<open>Semantic symbol type is a literal string which cannot be modified ru
 
 section \<open>Semantics\<close>
 
-debt_axiomatization \<phi>embed_semantic_symbol :: \<open>symbol \<Rightarrow> VAL\<close>
-  where \<phi>embed_semantic_symbol_inj[simp]: \<open>\<phi>embed_semantic_symbol x = \<phi>embed_semantic_symbol y \<longleftrightarrow> x = y\<close>
+debt_axiomatization \<s>\<y>\<m>\<b>\<o>\<l> :: TY
+                and sem_mk_symbol   :: \<open>symbol \<Rightarrow> VAL\<close>
+                and sem_dest_symbol :: \<open>VAL \<Rightarrow> symbol\<close>
+where WT_symbol  [simp]: \<open>Well_Type \<s>\<y>\<m>\<b>\<o>\<l> = { sem_mk_symbol sym | sym. True } \<close>
+  and can_eqcmp_aint[simp]: \<open>Can_EqCompare res (sem_mk_symbol s1) (sem_mk_symbol s2)\<close>
+  and eqcmp_aint[simp]: \<open>EqCompare (sem_mk_symbol s1) (sem_mk_symbol s2) \<longleftrightarrow> s1 = s2\<close>
+  and  zero_aint[simp]: \<open>Zero \<s>\<y>\<m>\<b>\<o>\<l> = Some (sem_mk_symbol SYMBOL(zero))\<close>
+
+lemma sem_mk_symbol_inj[simp]:
+  \<open>sem_mk_symbol x = sem_mk_symbol y \<longleftrightarrow> x = y\<close>
+  by (metis eqcmp_aint)
 
 section \<open>\<phi>-Types\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def Symbol :: "(VAL, symbol) \<phi>"
-  where \<open>s \<Ztypecolon> Symbol \<equiv> \<phi>embed_semantic_symbol s \<Ztypecolon> Itself\<close>
+  where \<open>s \<Ztypecolon> Symbol \<equiv> sem_mk_symbol s \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
+       and \<open>Semantic_Type Symbol \<s>\<y>\<m>\<b>\<o>\<l>\<close>
+       and \<open>Semantic_Zero_Val \<s>\<y>\<m>\<b>\<o>\<l> Symbol SYMBOL(zero)\<close>
+       and Inhabited
+
+lemma [\<phi>reason 1000]:
+  "\<phi>Equal Symbol (\<lambda>x y. True) (=)"
+  unfolding \<phi>Equal_def by simp
 
 
 section \<open>Instructions\<close>
@@ -28,13 +45,13 @@ text \<open>There is no semantic instruction to make a symbol, because they are 
   known during compilation time.\<close>
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (\<phi>embed_semantic_symbol s)] Symbol \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_symbol s)] Symbol \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
   unfolding Transformation_def semantic_literal_def Action_Tag_def
   by clarsimp
 
 lemma "_intro_symbol_":
-  \<open>S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
+  \<open>S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_symbol s)] Symbol\<close>
   unfolding Transformation_def semantic_literal_def
   by clarsimp
 

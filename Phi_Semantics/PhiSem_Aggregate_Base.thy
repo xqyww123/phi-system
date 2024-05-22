@@ -278,7 +278,7 @@ lemma [\<phi>reason %parse_eleidx_literal_symbol]:
   \<open> \<g>\<u>\<a>\<r>\<d> is_valid_step_idx_of (AgIdx_S s) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx reject
 \<Longrightarrow> parse_eleidx_input TY
-      ((\<phi>arg.dest (semantic_literal (\<phi>embed_semantic_symbol s)), S) # input)
+      ((\<phi>arg.dest (semantic_literal (sem_mk_symbol s)), S) # input)
       (AgIdx_S s # sem_idx) (AgIdx_S s # spec_idx) reject \<close>
   unfolding parse_eleidx_input_def is_valid_step_idx_of_def \<r>Guard_def Ant_Seq_def
   by clarsimp

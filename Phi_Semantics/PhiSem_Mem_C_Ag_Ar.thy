@@ -13,7 +13,7 @@ debt_axiomatization
   and idx_step_offset_arr: \<open> idx_step_offset (\<a>\<r>\<r>\<a>\<y>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
   and MemObj_Size_arr: \<open>MemObj_Size (\<a>\<r>\<r>\<a>\<y>[N] ty) = N * MemObj_Size ty\<close>
 
-  and array_TY_neq_void: \<open>void \<noteq> \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
+  and array_TY_neq_void: \<open>\<v>\<o>\<i>\<d> \<noteq> \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
 
 lemma address_to_raw_array_GEP:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY

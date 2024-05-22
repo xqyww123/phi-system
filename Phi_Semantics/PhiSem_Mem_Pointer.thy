@@ -27,10 +27,10 @@ datatype memblk = Null | MemBlk nat \<comment> \<open>id\<close> TY
 
 setup \<open>Sign.mandatory_path "memblk"\<close>
 
-definition \<open>layout blk = (case blk of Null \<Rightarrow> void | MemBlk _ TY \<Rightarrow> TY)\<close>
+definition \<open>layout blk = (case blk of Null \<Rightarrow> \<v>\<o>\<i>\<d> | MemBlk _ TY \<Rightarrow> TY)\<close>
 
 lemma layout[simp]:
-  \<open>memblk.layout Null = void\<close>
+  \<open>memblk.layout Null = \<v>\<o>\<i>\<d>\<close>
   \<open>memblk.layout (MemBlk i TY) = TY\<close>
   unfolding memblk.layout_def by simp+
 
@@ -551,18 +551,8 @@ resource_space aggregate_mem =
 
 paragraph \<open>Install Pointer\<close>
 
-(*
-virtual_datatype c_mem_val = V_pointer :: rawaddr
-
-debt_axiomatization V_pointer :: \<open>rawaddr value_entry\<close>
-  where c_mem_val_ax: \<open>c_mem_val VAL_CONS_OF V_pointer\<close>
-
-interpretation c_mem_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_pointer using c_mem_val_ax .
-*)
-
 definition In_Mem :: \<open> resource \<Rightarrow> memblk \<Rightarrow> bool \<close>
   where \<open>In_Mem res seg \<equiv> seg \<in> dom (RES.aggregate_mem.get res)\<close>
-
   
 debt_axiomatization sem_mk_pointer   :: \<open>rawaddr \<Rightarrow> VAL\<close>
                 and sem_dest_pointer :: \<open>VAL \<Rightarrow> rawaddr\<close>

@@ -118,7 +118,6 @@ proc update_nth_llist:
 \<medium_right_bracket> .
 
 
-
 proc length_of:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<close>
   premises \<open>length l < 2 ^ LENGTH(\<i>\<n>\<t>)\<close>

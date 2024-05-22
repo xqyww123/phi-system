@@ -26,40 +26,17 @@ text \<open>The section provides the initial empty semantics of computation stat
 
 subsection \<open>Type\<close>
 
-(* virtual_datatype \<phi>empty_ty \<comment> \<open>base of type formalization\<close> *)
-
 unspecified_type TY
-unspecified_type TY_N
-type_synonym 'T type_entry = \<open>(TY_N, TY, 'T) Virtual_Datatype.Field\<close>
-
-consts TY_CONS_OF :: \<open>TY \<Rightarrow> TY_N\<close>
-
-interpretation "virtual_datatype" TY_CONS_OF .
-
-(* interpretation \<phi>empty_ty TY_CONS_OF by standard simp *)
-
 
 subsection \<open>Value\<close>
 
-(* virtual_datatype \<phi>empty_val :: sep_magma \<comment> \<open>base of value formalization\<close> *)
-
 unspecified_type VAL
-unspecified_type VAL_N
-type_synonym 'T value_entry = \<open>(VAL_N, VAL, 'T) Virtual_Datatype.Field\<close>
-type_synonym value_assertion = \<open>VAL set\<close>
-
-consts VAL_CONS_OF :: \<open>VAL \<Rightarrow> VAL_N\<close>
-
 instance VAL :: sep_magma ..
-
-interpretation "virtual_datatype" VAL_CONS_OF .
 
 text \<open>The semantic value is a separation magma. It is nothing related to the semantic
   or the specification framework themselves but just to be helpful in some situation for
   formalization of some semantics such as that in aggregate the separation can represent
   concatenation of fields.\<close>
-
-(* interpretation \<phi>empty_val VAL_CONS_OF by standard simp *)
 
 
 subsubsection \<open>Deep Representation of Aggregated Values\<close>
@@ -162,30 +139,10 @@ ML_file \<open>resource_space_more.ML\<close>
  
 ML \<open>Resource_Space.define_command \<^command_keyword>\<open>resource_space\<close> "extend resource semantics"\<close>
 
-(*
-definition "Valid_Resource = {R. (\<forall>N. R N \<in>\<^sub>S Resource_Validator N)}"
-
-lemma Valid_Resource_1[iff]:
-  \<open>1 \<in> Valid_Resource\<close>
-  unfolding Valid_Resource_def by simp
-
-lemma Valid_Resource_mult_homo:
-  \<open>A ## B \<Longrightarrow> A * B \<in> Valid_Resource \<longleftrightarrow> A \<in> Valid_Resource \<and> B \<in> Valid_Resource\<close>
-  unfolding Valid_Resource_def
-  by (simp add: times_fun sep_disj_fun_def; blast)*)
-
 
 subsection \<open>Abnormal\<close>
 
-virtual_datatype \<phi>empty_abnormal
-
 unspecified_type ABNM
-unspecified_type ABNM_N
-type_synonym 'T abnormal_entry = \<open>(ABNM_N, ABNM, 'T) Virtual_Datatype.Field\<close>
-
-consts ABNM_CONS_OF :: \<open>ABNM \<Rightarrow> ABNM_N\<close>
-
-interpretation \<phi>empty_abnormal ABNM_CONS_OF by standard simp
 
 
 subsection \<open>All-in-One Semantics\<close>

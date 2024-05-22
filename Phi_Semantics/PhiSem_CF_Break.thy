@@ -6,20 +6,9 @@ section \<open>Semantic Model\<close>
 
 subsection \<open>Abnormal\<close>
 
-virtual_datatype \<phi>CF_break_abnormal = \<phi>empty_abnormal +
-  ABN_break    :: unit
-
-debt_axiomatization ABN_break :: \<open>unit abnormal_entry\<close>
-  where \<phi>CF_break_abnormal_ax: \<open>\<phi>CF_break_abnormal ABN_CONS_OF ABN_break\<close>
-
-interpretation \<phi>CF_break_abnormal ABN_CONS_OF _ _ ABN_break
-  using \<phi>CF_break_abnormal_ax .
-
-hide_fact \<phi>CF_break_abnormal_ax
-
+debt_axiomatization sem_ABN_break :: ABNM
 
 subsection \<open>Resource of Scope Frames\<close>
-
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
@@ -47,11 +36,6 @@ hide_fact FIC.\<phi>CF_break_fic_ax
 
 
 section \<open>\<phi>-Types\<close>
-
-(*
-abbreviation Brk_Frame' :: \<open>brk_label \<Rightarrow> (VAL list option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
-  where \<open>Brk_Frame' label T \<equiv> (FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Discrete T)))\<close>
-*)
 
 definition Brk_Frame :: \<open>RES.brk_label \<Rightarrow> assn\<close>
   where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Discrete \<circle>))\<close>
@@ -168,7 +152,7 @@ proc op_break:
   unfold Brk_Frame_eq_identity'
   apply_rule FIC.brk_frame.setter_rule [where u=\<open>Some (discrete (Some (to_vals (\<phi>arg.dest vs))))\<close>]
   apply_rule Brking_Frame_eq_identity[symmetric, where S=S]
-  apply_rule throw[where 'a='ret] \<open>ABN_break.mk ()\<close>
+  apply_rule throw[where 'a='ret] sem_ABN_break
 \<medium_right_bracket> .
 
 lemma op_break_reduce_tail[procedure_simps,simp]:

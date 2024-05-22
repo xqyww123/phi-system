@@ -15,20 +15,6 @@ section \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
-(*
-virtual_datatype \<phi>machine_int_ty =
-  T_int     :: nat \<comment> \<open>in unit of bits\<close>
-
-debt_axiomatization T_int :: \<open>nat type_entry\<close>
-  where \<phi>machine_int_ty_ax: \<open>\<phi>machine_int_ty TY_CONS_OF T_int\<close>
-
-interpretation \<phi>machine_int_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_int using \<phi>machine_int_ty_ax .
-
-hide_fact \<phi>machine_int_ty_ax \<phi>machine_int_ty_axioms \<phi>machine_int_ty_names_def \<phi>machine_int_ty_def
-  \<phi>machine_int_ty_prjs_axioms \<phi>machine_int_ty_prjs_def \<phi>machine_int_ty.axioms \<phi>machine_int_ty.intro
-  \<phi>machine_int_ty__names.\<phi>machine_int_ty_names_axioms \<phi>machine_int_ty_prjs.axioms
-*)
-
 debt_axiomatization sem_int_T :: \<open>nat \<Rightarrow> TY\<close>
 
 definition \<open>mk_int_T = sem_int_T o len0_class.len_of\<close>
@@ -82,21 +68,6 @@ end
 
 abbreviation \<open>\<i>\<n>\<t> \<equiv> \<i>\<n>\<t>(\<i>\<n>\<t>)\<close>
 
-
-subsubsection \<open>Value\<close>
-
-(*
-virtual_datatype \<phi>machine_int_val =
-  V_int     :: \<open>nat \<times> nat\<close> \<comment> \<open>bits \<times> value\<close>
-
-debt_axiomatization V_int :: \<open>(nat \<times> nat) value_entry\<close>
-  where \<phi>machine_int_val_ax: \<open>\<phi>machine_int_val VAL_CONS_OF V_int\<close>
-
-interpretation \<phi>machine_int_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_int using \<phi>machine_int_val_ax .
-
-hide_fact \<phi>machine_int_val_ax \<phi>machine_int_val_axioms
-*)
-  
 
 subsubsection \<open>Semantics\<close>
 

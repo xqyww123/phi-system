@@ -80,6 +80,7 @@ declare [[
     overloaded_operator_in_synthesis \<open>nat\<close>
  ]]
 
+
 lemma t1[\<phi>reason %ToA_num_conv_cut, \<phi>synthesis %\<phi>synthesis_transformation]:
   " Threshold_Cost 4
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x

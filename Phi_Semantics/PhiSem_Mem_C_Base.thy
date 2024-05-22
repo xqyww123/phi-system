@@ -15,7 +15,7 @@ debt_axiomatization
                 idx_step_offset T i \<le> idx_step_offset T j \<Longrightarrow>
                 idx_step_offset T j < idx_step_offset T i + MemObj_Size (idx_step_type i T) \<Longrightarrow>
                 i = j\<close>
-    and memobj_size_void[simp]: \<open>MemObj_Size void = 0\<close>
+    and memobj_size_void[simp]: \<open>MemObj_Size \<v>\<o>\<i>\<d> = 0\<close>
     and phantom_mem_value_uniq: \<open>MemObj_Size TY = 0 \<Longrightarrow> u \<in> Well_Type TY \<Longrightarrow> v \<in> Well_Type TY \<Longrightarrow> u = v\<close>
 
 primrec index_offset :: \<open>TY \<Rightarrow> aggregate_path \<Rightarrow> nat\<close>

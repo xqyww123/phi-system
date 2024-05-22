@@ -12,7 +12,7 @@ proc test_prime:
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close> \<comment> \<open>\<^term>\<open>prime :: nat => bool\<close> is a predicate checking primes\<close>
   is [routine]
 \<medium_left_bracket>
-  if ( $x \<le> 1 )  \<medium_left_bracket>
+  if ( x \<le> 1 )  \<medium_left_bracket>
     return (False)
   \<medium_right_bracket>
   \<medium_left_bracket> 
@@ -24,13 +24,12 @@ proc test_prime:
             End: (i = x)\<close> \<comment> \<open>Specification of the loop\<close>
           ( \<open>$v \<noteq> $x\<close> ) \<comment> \<open>Code for loop guard\<close>
     \<medium_left_bracket>                   \<comment> \<open>Code for loop body\<close>
-      if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
+      if (x % v = 0) \<medium_left_bracket>
         return (False)
-      \<medium_right_bracket>
-      \<medium_left_bracket>
-        $v + 1 \<rightarrow> $v
+      \<medium_right_bracket> \<medium_left_bracket>
+        v + 1 \<rightarrow> v
       \<medium_right_bracket> 
-    \<medium_right_bracket> 
+    \<medium_right_bracket>
     return (True)
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -60,7 +59,7 @@ proc test_prime':
           Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
           Guard: (i * i \<le> x) \<and>
           End: (x < i * i)\<close>
-        ( $v * $v \<le> $x )
+        ( v * v \<le> x )
     \<medium_left_bracket>
       if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
         return (False)
