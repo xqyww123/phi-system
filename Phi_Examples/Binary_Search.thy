@@ -11,20 +11,20 @@ proc binary_search_array:
           (LEAST i. lower \<le> i \<and> i \<le> upper \<and> arr!i \<le> k) \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   is [routine]
 \<medium_left_bracket>
-  if ($ptr.$lower! \<le> $k) \<medium_left_bracket>
-    return ($lower)
+  if (ptr[lower] \<le> k) \<medium_left_bracket>
+    return (lower)
   \<medium_right_bracket> \<medium_left_bracket>
-    ($lower, $upper) \<rightarrow> var $l, $u
+    (lower, upper) \<rightarrow> var l, u
     while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<nat>(\<i>\<n>\<t>)\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<nat>(\<i>\<n>\<t>) \<s>\<u>\<b>\<j> l u.
             Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> k < arr!l \<and> arr!u \<le> k) \<and>
             Guard: (l + 1 < u) \<and>
             End: (l + 1 = u)\<close>
-         ( $l + 1 < $u )
+         ( l + 1 < u )
     \<medium_left_bracket>
-      val m \<leftarrow> $l + ($u - $l) / 2 \<semicolon>
-      if ( $ptr \<tribullet> $m! \<le> $k ) \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket> \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>
+      val m \<leftarrow> l + (u - l) / 2 \<semicolon>
+      if ( ptr[m] \<le> k ) \<medium_left_bracket> m \<rightarrow> u \<medium_right_bracket> \<medium_left_bracket> m \<rightarrow> l \<medium_right_bracket>
     \<medium_right_bracket>
-    return ($u)
+    return (u)
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
@@ -38,20 +38,20 @@ proc generalized_binary_search:
   is [routine]
 \<medium_left_bracket>
 
-  if ( F($lower) ) \<medium_left_bracket>
-     return ($lower)
+  if ( F(lower) ) \<medium_left_bracket>
+     return (lower)
   \<medium_right_bracket> \<medium_left_bracket>
-    ($lower, $upper) \<rightarrow> var $l, $u ;;
+    (lower, upper) \<rightarrow> var l, u ;;
     while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<nat>(\<i>\<n>\<t>)\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<nat>(\<i>\<n>\<t>) \<s>\<u>\<b>\<j> l u.
             Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> \<not> f l \<and> f u) \<and>
             Guard: (l + 1 < u) \<and>
             End: (l + 1 = u)\<close>
           ( \<open>$l + 1 < $u\<close> )
     \<medium_left_bracket>
-      val m \<leftarrow> $l + ($u - $l) / 2 ;;
-      if ( F($m) ) \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket> \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>
+      val m \<leftarrow> l + (u - l) / 2 ;;
+      if ( F(m) ) \<medium_left_bracket> m \<rightarrow> u \<medium_right_bracket> \<medium_left_bracket> m \<rightarrow> l \<medium_right_bracket>
     \<medium_right_bracket>
-    return ($u)
+    return (u)
   \<medium_right_bracket>
 \<medium_right_bracket>.
 

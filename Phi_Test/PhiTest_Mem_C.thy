@@ -29,7 +29,7 @@ proc test_ptr3:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr \<tribullet> c \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> c
+  &addr.c
 \<medium_right_bracket> .
 
 
@@ -43,40 +43,40 @@ thm ttt
 proc test_mem3:
   input \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
   output \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> b !
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.b
+\<medium_right_bracket> .
 
 proc test_mem4:
   input \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>}}\<close>
   output \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d \<tribullet> e !
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d.e
+\<medium_right_bracket> .
 
 
 proc test_mem4a:
   input \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>}}\<close>
   output \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> (y, z) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> b: \<nat>, e: \<nat> \<rbrace>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d !
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d
+\<medium_right_bracket> .
 
 
 proc test_mem5:
   input \<open>(x,(y,z,f)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<a>\<i>\<n>\<t>}}\<close>
   output \<open>(x,(y,z,f)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<nat>\<rbrace> \<rbrace>\<heavy_comma> f \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d \<tribullet> f !
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d.f
+\<medium_right_bracket> .
 
 proc test_mem6:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
          addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<s>\<t>\<r>\<u>\<c>\<t> {g: \<a>\<i>\<n>\<t>, h: \<a>\<i>\<n>\<t>, i: \<a>\<i>\<n>\<t>, j: \<a>\<i>\<n>\<t>}}}\<close>
   output \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace>\<rbrace> \<rbrace>\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d \<tribullet> f \<tribullet> j !
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d.f.j
+\<medium_right_bracket> .
 
 declare [[\<phi>reasoning_step_limit = 260]]
 
@@ -85,34 +85,34 @@ proc test_mem6a:
          addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<s>\<t>\<r>\<u>\<c>\<t> {g: \<a>\<i>\<n>\<t>, h: \<a>\<i>\<n>\<t>, i: \<a>\<i>\<n>\<t>, j: \<a>\<i>\<n>\<t>}}}\<close>
   output \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace>\<rbrace> \<rbrace>\<heavy_comma>
           (y, z, g, h, i, j) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d !
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d
+\<medium_right_bracket> .
 
 proc test_mem6b:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
          addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<s>\<t>\<r>\<u>\<c>\<t> {g: \<a>\<i>\<n>\<t>, h: \<a>\<i>\<n>\<t>, i: \<a>\<i>\<n>\<t>, j: \<a>\<i>\<n>\<t>}}}\<close>
   output \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace>\<rbrace> \<rbrace>\<heavy_comma>
           (g, h, i, j) \<Ztypecolon> \<v>\<a>\<l>[\<v>1] \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d \<tribullet> f !
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d.f
+\<medium_right_bracket> .
 
 declare [[\<phi>reasoning_step_limit = 140]]
 
 proc test_mem7:
   input  \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
   output \<open>(x,2) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> b := \<open>2 \<Ztypecolon> \<nat>\<close>
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.b := \<open>2 \<Ztypecolon> \<nat>\<close>
+\<medium_right_bracket> .
 
 proc test_mem8:
   input  \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>}}\<close>
   output \<open>(x,(y,2)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d \<tribullet> e := \<open>2 \<Ztypecolon> \<nat>\<close>
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d.e := \<open>2 \<Ztypecolon> \<nat>\<close>
+\<medium_right_bracket> .
 
 declare [[\<phi>reasoning_step_limit = 140]]
 
@@ -136,9 +136,9 @@ proc test_mem9:
   input  \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
           addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, d: \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, e: \<a>\<i>\<n>\<t>, f: \<s>\<t>\<r>\<u>\<c>\<t> {g: \<a>\<i>\<n>\<t>, h: \<a>\<i>\<n>\<t>, i: \<a>\<i>\<n>\<t>, j: \<a>\<i>\<n>\<t>}}}\<close>
   output \<open>(x,(y,z,(g,h,i,2))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<close>
-  \<medium_left_bracket>
-    $addr \<tribullet> d \<tribullet> f \<tribullet> j := \<open>2 \<Ztypecolon> \<nat>\<close>
-  \<medium_right_bracket> .
+\<medium_left_bracket>
+  addr.d.f.j := \<open>2 \<Ztypecolon> \<nat>\<close>
+\<medium_right_bracket> .
 
 
 proc test_mem10:
@@ -146,8 +146,8 @@ proc test_mem10:
   output \<open>2 \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t> \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
   calloc1 \<nat> \<rightarrow> val addr\<semicolon>
-  $addr := \<open>2 \<Ztypecolon> \<nat>\<close> \<semicolon>  
-  $addr
+  addr := \<open>2 \<Ztypecolon> \<nat>\<close> \<semicolon>  
+  addr
 \<medium_right_bracket> .
 
 proc test_mem11:
@@ -155,9 +155,9 @@ proc test_mem11:
   output \<open>(4,2) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>} \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
 \<medium_left_bracket>
   calloc1 \<open>\<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<close> \<rightarrow> val addr
-  $addr \<tribullet> b := \<open>4 \<Ztypecolon> \<nat>\<close> ;
-  $addr \<tribullet> c := \<open>2 \<Ztypecolon> \<nat>\<close> ;
-  $addr
+  addr.b := \<open>4 \<Ztypecolon> \<nat>\<close> ;
+  addr.c := \<open>2 \<Ztypecolon> \<nat>\<close> ;
+  addr
 \<medium_right_bracket> .
 
 proc test_mem12:
@@ -165,21 +165,21 @@ proc test_mem12:
   premises \<open>address_to_base addr\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
-  $addr mfree
+  mfree (addr)
 \<medium_right_bracket> .
 
 proc test_mem13:
   input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<a>\<i>\<n>\<t>)\<close>
   output \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<nat>\<heavy_comma> xs ! Suc 0 \<Ztypecolon> \<v>\<a>\<l>[\<v>1] \<nat>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> 1 !
+  addr[1]
 \<medium_right_bracket> .
 
 proc test_mem14:
   input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<a>\<i>\<n>\<t>)\<close>
   output \<open>xs[1 := 2] \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<nat>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> 1 := \<open>2 \<Ztypecolon> \<nat>\<close>
+  addr[1] := \<open>2 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
 
@@ -188,8 +188,8 @@ proc test_mem15:
   input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>})\<close>
   output \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0, 3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> snd (xs ! 2) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> 2 \<tribullet> c \<rightarrow> val t \<semicolon>
-  $t !
+  addr[2].c \<rightarrow> val t \<semicolon>
+  t
 \<medium_right_bracket> .
 
 
@@ -197,14 +197,14 @@ proc test_mem16:
   input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>})\<close>
   output \<open>list_upd_map 2 (id \<otimes>\<^sub>f (\<lambda>x. 3)) xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[0, 3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> 2 \<tribullet> c := \<open>3 \<Ztypecolon> \<nat>\<close>
+  addr[2].c := \<open>3 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
 proc test_mem17:
   input  \<open>[(1,2),(3,4),(5,6)] \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<s>\<t>\<r>\<u>\<c>\<t> {b: \<a>\<i>\<n>\<t>, c: \<a>\<i>\<n>\<t>})\<close>
   output \<open>[(1,2),(3,4),(5,42)] \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<lbrace> b: \<nat>, c: \<nat> \<rbrace>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> 2 \<tribullet> c := \<open>42 \<Ztypecolon> \<nat>\<close>
+  addr[2].c := \<open>42 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
 proc test_mem18:
@@ -214,7 +214,7 @@ proc test_mem18:
   premises \<open>i + n \<le> N \<and> j + m \<le> M\<close>
   output \<open>[[1,2],[3,4]] \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<s>\<l>\<i>\<c>\<e>[j,m] \<nat>\<heavy_comma> 3 \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
-  $addr \<tribullet> ($i + 1) \<tribullet> $j !
+  addr[i + 1, j]
 \<medium_right_bracket> .
 
 proc test_mem19:
@@ -223,7 +223,7 @@ proc test_mem19:
   premises \<open>i \<le> j \<and> j < i + n \<and> i + n \<le> N\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<heavy_comma> x ! (j-i) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
-  $j !
+  j !
 \<medium_right_bracket> .
 
 proc test_mem20:
@@ -231,7 +231,7 @@ proc test_mem20:
   premises \<open>j + k \<le> n\<close>
   output \<open>j+k \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
-  $j + $k
+  j + k
 \<medium_right_bracket> .
 
 

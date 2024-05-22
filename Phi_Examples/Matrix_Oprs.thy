@@ -75,7 +75,7 @@ proc copy_mat:
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
-      a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] := a\<^sub>y[i\<^sub>y+k, j\<^sub>y+h] !
+      a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] := a\<^sub>y[i\<^sub>y+k, j\<^sub>y+h]
     \<medium_right_bracket> \<semicolon>
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -97,7 +97,7 @@ proc add_mat:
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h
-        a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] := a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h]! + a\<^sub>y[i\<^sub>y+k, j\<^sub>y+h]!
+        a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] := a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] + a\<^sub>y[i\<^sub>y+k, j\<^sub>y+h]
     \<medium_right_bracket> \<semicolon>
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -119,7 +119,7 @@ proc sub_mat:
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
-      a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] := a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h]! - a\<^sub>y[i\<^sub>y+k, j\<^sub>y+h]! 
+      a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] := a\<^sub>x[i\<^sub>x+k, j\<^sub>x+h] - a\<^sub>y[i\<^sub>y+k, j\<^sub>y+h]
     \<medium_right_bracket> \<semicolon>
   \<medium_right_bracket> \<semicolon>
 \<medium_right_bracket> .
@@ -184,7 +184,7 @@ proc strassen:
     \<open>MatSlice a\<^sub>A _ _ _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
     \<open>MatSlice a\<^sub>B _ _ _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
 
-    a\<^sub>A[i\<^sub>A, j\<^sub>A] := a\<^sub>A[i\<^sub>A, j\<^sub>A]! * a\<^sub>B[i\<^sub>B, j\<^sub>B]! \<semicolon>
+    a\<^sub>A[i\<^sub>A, j\<^sub>A] := a\<^sub>A[i\<^sub>A, j\<^sub>A] * a\<^sub>B[i\<^sub>B, j\<^sub>B] \<semicolon>
       
     holds_fact [\<phi>sledgehammer_simps]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof obligation*)
     note scalar_prod_def [\<phi>sledgehammer_simps] \<semicolon>                                       (*for proof obligation*)

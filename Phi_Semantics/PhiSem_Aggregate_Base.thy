@@ -451,7 +451,7 @@ lemma op_get_aggregate:
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> parse_eleidx_input_least1 TY input_index sem_idx spec_idx reject
 \<Longrightarrow> \<phi>Aggregate_Getter spec_idx T U f
-\<Longrightarrow> report_unprocessed_element_index reject
+\<Longrightarrow> report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate sem_idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
   unfolding op_get_aggregate_def Semantic_Type'_def subset_iff \<phi>Aggregate_Getter_def
             parse_eleidx_input_def
@@ -465,7 +465,7 @@ lemma "_op_set_aggregate_":
 \<Longrightarrow> is_valid_index_of idx TY TY\<^sub>U'
 \<Longrightarrow> Premise eval_aggregate_path (TY\<^sub>U' = TY\<^sub>U \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
-\<Longrightarrow> report_unprocessed_element_index reject
+\<Longrightarrow> report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY\<^sub>U sem_idx (rv\<^bold>,ru)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> \<lambda>ret. f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l>[ret] T'
         \<s>\<u>\<b>\<j> (TY\<^sub>U' = TY\<^sub>U \<longrightarrow> \<phi>arg.dest ret \<in> Well_Type TY) \<rbrace>\<close>
@@ -484,7 +484,7 @@ lemma op_set_aggregate:
 \<Longrightarrow> is_valid_index_of idx TY TY2'
 \<Longrightarrow> Premise eval_aggregate_path (TY2' = TY2 \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
-\<Longrightarrow> report_unprocessed_element_index reject
+\<Longrightarrow> report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 sem_idx (rv\<^bold>, ru) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
   by ((rule \<phi>CONSEQ[OF "_op_set_aggregate_" view_shift_refl view_shift_by_implication view_shift_refl]; simp?),
       simp add: Transformation_def, blast)
@@ -568,7 +568,7 @@ section \<open>IDE Interface\<close>
 
 (* declare_\<phi>lang_operator infix 40 := *)
 
-\<phi>overloads (*"[]" and "[]:=" and*) "\<tribullet>" and ":="
+\<phi>overloads "\<tribullet>" and ":="
 
 declare op_get_aggregate[\<phi>overload "\<tribullet>"]
         op_set_aggregate[\<phi>overload ":="]

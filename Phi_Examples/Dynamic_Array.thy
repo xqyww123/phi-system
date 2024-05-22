@@ -30,7 +30,7 @@ proc len_dynarr:
   output   \<open>length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  addr.len !
+  addr.len
 \<medium_right_bracket> .
 
 declare [[\<phi>infer_requirements, \<phi>trace_reasoning = 1]]
@@ -47,7 +47,7 @@ proc get_dynarr:
   output   \<open>l!i \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  addr.data[i]!
+  addr.data[i]
 \<medium_right_bracket> .
 
 
@@ -74,15 +74,15 @@ proc push_dynarr:
   output   \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  val len \<leftarrow> addr.len ! \<semicolon>
-  val cap \<leftarrow> addr.cap ! \<semicolon>
+  val len \<leftarrow> addr.len \<semicolon>
+  val cap \<leftarrow> addr.cap \<semicolon>
   if (cap = len) \<medium_left_bracket>
       val cap' \<leftarrow> Max(cap * 2, 1) \<semicolon>
       val data' \<leftarrow> calloc (cap') \<open>T\<close> \<semicolon>
-      memcpy (data', addr.data! , len) \<semicolon>
-      mfree (addr.data !) \<semicolon>
+      memcpy (data', addr.data , len) \<semicolon>
+      mfree (addr.data) \<semicolon>
       addr.data := data' \<semicolon>
-      addr.len := addr.len! + 1 \<semicolon>
+      addr.len := addr.len + 1 \<semicolon>
       addr.cap := cap' \<semicolon>
       data'[len] := v \<semicolon>
       \<m>\<a>\<k>\<e>\<s> \<open>l + [v] \<Ztypecolon> DynArr addr _\<close>
@@ -113,14 +113,14 @@ proc pop_dynarr:
   output   \<open>last l \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> butlast l \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  val len \<leftarrow> addr.len ! - 1 \<semicolon>
-  val half_cap \<leftarrow> (addr.cap !) / 2 \<semicolon>
-  val ret \<leftarrow> addr.data[len]! \<semicolon>
+  val len \<leftarrow> addr.len - 1 \<semicolon>
+  val half_cap \<leftarrow> addr.cap / 2 \<semicolon>
+  val ret \<leftarrow> addr.data[len] \<semicolon>
   addr.len := len \<semicolon>
   if (len \<le> half_cap) \<medium_left_bracket>
     val data' \<leftarrow> calloc (half_cap) \<open>T\<close> \<semicolon>
-    memcpy (data', addr.data !, len) \<semicolon>
-    mfree (addr.data !) \<semicolon>
+    memcpy (data', addr.data, len) \<semicolon>
+    mfree (addr.data) \<semicolon>
     addr.data := data' \<semicolon>
     addr.cap := half_cap \<semicolon>
     \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close>
@@ -146,7 +146,7 @@ proc del_dynarr:
   output \<open>Void\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  mfree (addr.data!) \<semicolon>
+  mfree (addr.data) \<semicolon>
   mfree (addr)
 \<medium_right_bracket> .
 
@@ -170,7 +170,7 @@ proc exists_dynarr:
   var zz \<leftarrow> False \<semicolon>
   iterate (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>, len_dynarr (addr)) \<open>\<lambda>i. l \<Ztypecolon> DynArr addr T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close>
     \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-      zz \<or> C (get_dynarr (addr, i)) \<rightarrow> $zz
+      zz \<or> C (get_dynarr (addr, i)) \<rightarrow> zz
     \<medium_right_bracket> \<semicolon>
   zz
 \<medium_right_bracket> .

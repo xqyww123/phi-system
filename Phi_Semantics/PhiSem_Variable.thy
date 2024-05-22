@@ -280,7 +280,7 @@ proc op_get_var:
   requires [\<phi>reason, unfolded Semantic_Type'_def, useful]: \<open>Semantic_Type' (x \<Ztypecolon> T) TY\<close>
     and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
     and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
-    and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
+    and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
   output \<open>f x \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[v] T\<close>
 \<medium_left_bracket>
   to Itself
@@ -299,7 +299,7 @@ lemma op_get_var0:
   by (rule op_get_var_\<phi>app[where input_index=\<open>[]\<close> and idx=\<open>[]\<close> and reject=\<open>[]\<close> and f=id, simplified];
       simp add: parse_eleidx_input_least1_def
                 parse_eleidx_input_def
-                \<phi>Aggregate_Getter_Nil report_unprocessed_element_index_I)
+                \<phi>Aggregate_Getter_Nil report_unprocessed_element_index_def)
 
 
 proc op_set_var:
@@ -311,7 +311,7 @@ proc op_set_var:
     and AMO:      \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
     and           \<open>Semantic_Type U' UY\<close>
     and [useful]: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
-    and           \<open>report_unprocessed_element_index reject\<close>
+    and           \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
   output \<open>f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[v] T'\<close>
 \<medium_left_bracket>
   $y semantic_local_value UY
@@ -353,7 +353,7 @@ lemma op_set_var_0:
                              and reject=\<open>[]\<close> and T=U and T'=U' and U=U and U'=U',
                             simplified];
       simp add: parse_eleidx_input_least1_opt_NIL
-                \<phi>Aggregate_Mapper_Opt_Nil report_unprocessed_element_index_I
+                \<phi>Aggregate_Mapper_Opt_Nil report_unprocessed_element_index_def
                 is_valid_index_of_Nil;
       cases TY_var; simp)
 
@@ -416,7 +416,7 @@ proc [\<phi>reason 1200]:
       and  \<open>Semantic_Type T TY\<close>
       and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
       and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
-      and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
+      and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
   output \<open>\<v>\<a>\<l> f x <val-of> vari <path> input_index \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<heavy_comma> Y\<close>
   @tag synthesis
   unfolding REMAINS_def
@@ -499,7 +499,7 @@ proc (nodef) "__set_var_rule_":
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
        and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
-       and T8: \<open>report_unprocessed_element_index reject\<close>
+       and T8: \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
        and T5: \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
        and T6: \<open>Semantic_Type U' UY\<close>
        and T7: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>

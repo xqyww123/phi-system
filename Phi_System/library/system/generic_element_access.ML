@@ -8,16 +8,23 @@ val get_element_of_abstract_object : Proof.context -> cterm * cterm * cterm -> c
 val is_enabled_report_unprocessed_element_index : Proof.context -> bool
 val enable_report_unprocessed_element_index : prohibit_remainig_eleidx -> Proof.context -> Proof.context
 val stop_reporting_unprocessed_element_index : Proof.context -> Proof.context
-val report_unprocessed_element_index : cterm -> Proof.context -> Proof.context
-val get_unprocessed_element_index : Proof.context -> cterm option
+val report_unprocessed_element_index : cterm * cterm -> Proof.context -> Proof.context
+val get_unprocessed_element_index : Proof.context -> (cterm * cterm) option
 val error_unprocessed_element_index : Proof.context -> cterm -> 'a
 
 val empty_input : cterm
 val is_empty_input : term -> bool
 
+(*Final hook for parsing operators like 'Address-Of'*)
+
+val EIHook_none : cterm
+
 end
 
 structure Generic_Element_Access : GENERIC_ELEMENT_ACCESS = struct
+
+val EIHook_none = \<^cterm>\<open>\<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
+               |> Thm.trim_context_cterm
 
 (*** Get Element of Abstract Object ***)
 
@@ -36,6 +43,7 @@ fun get_element_of_abstract_object ctxt (x,T,path) =
          | _ => raise THM ("bad return of Get_Abstract_Element reasoning", 0, [ret])
   end
 
+
 (*** Element Index Process ***)
 
 type prohibit_remainig_eleidx = bool
@@ -45,7 +53,7 @@ val empty_input = \<^cterm>\<open>[]::element_index_input\<close>
 fun is_empty_input (Const (\<^const_name>\<open>Nil\<close>, _)) = true
   | is_empty_input _ = false
 
-structure Unprc_EleIdx = Single_Thread_Proof_Data_Opt (type T = prohibit_remainig_eleidx * cterm option)
+structure Unprc_EleIdx = Single_Thread_Proof_Data_Opt (type T = prohibit_remainig_eleidx * (cterm * cterm) option)
 
 fun enable_report_unprocessed_element_index flag = Unprc_EleIdx.put (flag, NONE)
 val stop_reporting_unprocessed_element_index = Unprc_EleIdx.del
@@ -53,12 +61,12 @@ val stop_reporting_unprocessed_element_index = Unprc_EleIdx.del
 fun is_enabled_report_unprocessed_element_index ctxt =
   is_some (Unprc_EleIdx.get ctxt)
 
-fun report_unprocessed_element_index ctm ctxt =
+fun report_unprocessed_element_index (ctm,hook) ctxt =
   case Unprc_EleIdx.get ctxt
     of SOME (prohibit_remain, _) =>
         if prohibit_remain andalso not (is_empty_input (Thm.term_of ctm))
         then raise Remaining_Eleidx ctm
-        else Unprc_EleIdx.put (false, SOME ctm) ctxt
+        else Unprc_EleIdx.put (false, SOME (ctm,hook)) ctxt
      | NONE => ctxt
 
 fun get_unprocessed_element_index ctxt =

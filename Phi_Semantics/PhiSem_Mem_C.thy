@@ -198,7 +198,7 @@ proc op_load_mem:
 
 proc op_store_mem:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
-  requires \<open>report_unprocessed_element_index input_index\<close>
+  requires \<open>report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
        and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
                    \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
                  \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
@@ -233,7 +233,7 @@ lemma op_load_mem_triangle_opr_\<phi>app[\<phi>overload \<tribullet> 10]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = \<p>\<t>\<r>
 \<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
-\<Longrightarrow> report_unprocessed_element_index input_index
+\<Longrightarrow> report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_load_mem TY v \<lbrace> addr \<Ztypecolon> \<v>\<a>\<l>[v] \<bbbP>\<t>\<r> TY\<heavy_comma> state \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state \<rbrace>\<close>
   by (rule op_load_mem_\<phi>app, blast+)
 
@@ -310,7 +310,7 @@ section \<open>IDE-CP Interfaces\<close>
 
 declare_\<phi>lang_operator postfix %\<phi>lang_deref "!" \<comment> \<open>dereference operator\<close>
 
-declare op_load_mem_\<phi>app[\<phi>overload "!"]
+declare op_load_mem_\<phi>app[\<phi>overload "!", \<phi>overload "&"]
         op_store_mem_\<phi>app[\<phi>overload ":="]
 
 text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
@@ -478,8 +478,6 @@ lemma [\<phi>reason %generalized_sematic_type_cut]:
   \<open> Generalized_Semantic_Type T TY
 \<Longrightarrow> Generalized_Semantic_Type (Mem_Coercion T) TY \<close>
   unfolding Generalized_Semantic_Type_def ..
-
-
 
 
 end

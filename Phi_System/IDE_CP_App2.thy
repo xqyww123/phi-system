@@ -269,7 +269,7 @@ lemma [\<phi>reason 1200 for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
 lemma [\<phi>reason %ToA_access_to_local_value
            for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
-\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> report_unprocessed_element_index path \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @tag \<T>\<P>\<close>
   for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Action_Tag_def
@@ -279,7 +279,7 @@ lemma [\<phi>reason %ToA_access_to_local_value for
     \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @tag synthesis\<close>
 ]:
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
-\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> report_unprocessed_element_index path \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
@@ -314,7 +314,7 @@ subsubsection \<open>Assignment\<close>
 lemma [OF \<phi>arg_val_varify_type,
        \<phi>reason %ToA_access_to_local_value for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?S2 \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T)
-\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> report_unprocessed_element_index path \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @tag \<T>\<P> \<close>
   for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Action_Tag_def
@@ -325,7 +325,7 @@ lemma [OF \<phi>arg_val_varify_type,
     \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @tag synthesis\<close>
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T)
-\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> report_unprocessed_element_index path \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)

@@ -635,7 +635,23 @@ lemma [\<phi>reason %cutting ]:
 
 
 
-section \<open>Primitive Instructions\<close>
+section \<open>Primitive Instructions \& Programming INterface\<close>
+
+subsection \<open>Preliminary\<close>
+
+consts \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of :: action \<comment> \<open>to parse Address-Of operator\<close>
+
+ML \<open>fun bad_Addr_Of pos =
+          error (let open Pretty in string_of (
+              block (text "Unspported Address-Of operator here." @ here pos)
+          ) end)\<close>
+
+\<phi>lang_parser aggregate_getter_setter (%\<phi>parser_unique, %\<phi>lang_app) ["&"] (\<open>PROP _\<close>)
+\<open> fn s => Parse.position (Args.$$$ "&") >> (fn (_, pos) => fn cfg =>
+    Phi_Opr_Stack.push_meta_operator cfg
+        ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_app-1},
+          (0, VAR_ARITY_IN_SEQUENT)), ("&", pos), NONE,
+          (fn _ => fn _ => bad_Addr_Of pos)) s ) \<close>
 
 
 subsection \<open>GEP\<close>
@@ -644,7 +660,7 @@ proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
-       and \<open>report_unprocessed_element_index reject\<close>
+       and \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr_geps addr spec_idx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
@@ -793,7 +809,6 @@ definition abstract_address_offset :: \<open>address \<Rightarrow> TY \<Rightarr
     address_to_raw addr ||+ of_nat (MemObj_Size TY * n) = address_to_raw addr' \<and>
     address_type addr' = TY') \<close>
 
-
 subsection \<open>Syntax of and auto deriviation for \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>\<close>\<close>
 
 consts pointer_of_syntax :: \<open>('c,'x) \<phi> \<Rightarrow> VAL assertion\<close> ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<o>\<f>")
@@ -895,6 +910,24 @@ lemma [\<phi>reason %deriving_pointer_cut]:
   \<open> Derive_Pointer_Of A ptr
 \<Longrightarrow> Derive_Pointer_Of (A \<s>\<u>\<b>\<j> P) ptr \<close>
   unfolding Derive_Pointer_Of_def ..
+
+subsection \<open>Address Of\<close>
+
+\<phi>overloads "&"
+
+setup \<open>Context.theory_map (
+  Generic_Element_Access.register_hook (\<^const_name>\<open>\<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>,
+  fn _ => fn read_or_write =>
+    fn (Phi_Opr_Stack.Meta_Opr (_,_, ("&",pos), _, _, _, _) :: oprs, s) =>
+        if read_or_write then (oprs, s)
+                         else bad_Addr_Of pos
+     | (oprs, s) =>
+        if read_or_write
+        then (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply
+                      (Phi_App_Rules.get_overloadings (#1 s) @{\<phi>overloading "&"})) s)
+        else (oprs, s))
+)\<close>
+
 
 
 

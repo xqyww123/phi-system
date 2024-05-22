@@ -15,12 +15,12 @@ proc qsort:
   is [recursive]
   is [routine]
 \<medium_left_bracket>
-  if ($len \<le> 1)
+  if (len \<le> 1)
   \<medium_left_bracket> return \<medium_right_bracket>
   \<medium_left_bracket>
-    val pivot \<leftarrow> ($i + ($len - 1)) ! \<semicolon>
+    val pivot \<leftarrow> (i + (len - 1)) ! \<semicolon>
     var d \<leftarrow> 0 \<semicolon>
-    iterate (0,$len) \<open>\<lambda>n. d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+    iterate (0,len) \<open>\<lambda>n. d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
                           l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)
                          \<s>\<u>\<b>\<j> l' d.
                            d \<le> n \<and> l <~~> l' \<and>
@@ -28,17 +28,17 @@ proc qsort:
                            (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
     \<medium_left_bracket> 
       for n \<rightarrow> val n \<semicolon>
-      ($i + $n)! \<rightarrow> val x \<semicolon>
-      if ($x \<le> $pivot)
+      (i + n)! \<rightarrow> val x \<semicolon>
+      if (x \<le> pivot)
       \<medium_left_bracket>
-        ($i + $n) := ($i + $d)! \<semicolon>
-        ($i + $d) := $x \<semicolon>
-        $d \<leftarrow> $d + 1
+        (i + n) := (i + d)! \<semicolon>
+        (i + d) := x \<semicolon>
+        d \<leftarrow> d + 1
       \<medium_right_bracket>
       \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
     \<medium_right_bracket>
-    qsort ($i, $d) \<semicolon>
-    qsort ($i + $d, $len - $d) \<semicolon>
+    qsort (i, d) \<semicolon>
+    qsort (i + d, len - d) \<semicolon>
         
     holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x)\<close>
            and t2: \<open>(\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close>

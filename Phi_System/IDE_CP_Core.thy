@@ -2001,26 +2001,28 @@ lemma [\<phi>reason 1000]:
   \<open>Get_Abstract_Element x T [] x\<close>
   unfolding Get_Abstract_Element_def ..
 
-subsubsection \<open>Other\<close>
+subsection \<open>Streamlined Parse for Element Index\<close>
 
-definition report_unprocessed_element_index :: \<open>element_index_input \<Rightarrow> bool\<close>
-  where \<open>report_unprocessed_element_index path \<longleftrightarrow> True\<close>
+definition report_unprocessed_element_index :: \<open>element_index_input \<Rightarrow> action \<Rightarrow> bool\<close>
+  where \<open>report_unprocessed_element_index path final_hook \<longleftrightarrow> True\<close>
   \<comment> \<open>Flow style processing of element index. A reasoning process can accept some leading part of the
       index and reject the remains to leave to other processors. \<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>report_unprocessed_element_index ?path\<close> \<Rightarrow> \<open>report_unprocessed_element_index ?path\<close> (100),
-  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>report_unprocessed_element_index _\<close>  (%\<phi>attr)
+  \<phi>reason_default_pattern \<open>report_unprocessed_element_index ?path _\<close> \<Rightarrow> \<open>report_unprocessed_element_index ?path _\<close> (100),
+  \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>report_unprocessed_element_index _ _\<close>  (%\<phi>attr)
 ]]
 
 lemma report_unprocessed_element_index_I:
-  \<open>report_unprocessed_element_index path\<close>
+  \<open>report_unprocessed_element_index path any\<close>
   unfolding report_unprocessed_element_index_def ..
 
 definition chk_element_index_all_solved :: \<open>element_index_input \<Rightarrow> bool\<close>
   where \<open>chk_element_index_all_solved path \<longleftrightarrow> True\<close>
 
 subsubsection \<open>ML\<close>               
+
+consts \<E>\<I>\<H>\<O>\<O>\<K>_none    :: action
 
 ML_file \<open>library/system/generic_element_access.ML\<close>
 
@@ -2041,14 +2043,16 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   end)
 \<close>
 
-\<phi>reasoner_ML report_unprocessed_element_index 1000 (\<open>report_unprocessed_element_index _\<close>) = \<open>
+\<phi>reasoner_ML report_unprocessed_element_index 1000 (\<open>report_unprocessed_element_index _ _\<close>) = \<open>
 fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (_,_,ant,_) =
         Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
-      val idx = Thm.dest_arg (Thm.dest_arg ant)
+      val main = Thm.dest_arg ant
+      val hook = Thm.dest_arg main
+      val idx  = Thm.dest_arg (Thm.dest_fun main)
    in if Generic_Element_Access.is_empty_input (Thm.term_of idx)
          orelse Generic_Element_Access.is_enabled_report_unprocessed_element_index ctxt
-      then SOME ((Generic_Element_Access.report_unprocessed_element_index idx ctxt,
+      then SOME ((Generic_Element_Access.report_unprocessed_element_index (idx, hook) ctxt,
                  @{thm report_unprocessed_element_index_I} RS sequent),
                 Seq.empty)
       else Generic_Element_Access.error_unprocessed_element_index ctxt idx
@@ -2202,9 +2206,15 @@ ML_file \<open>library/system/obtain.ML\<close>
 ML_file \<open>library/system/modifier.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 ML_file \<open>library/tools/CoP_simp_supp.ML\<close>
+ML_file \<open>library/system/generic_element_access2.ML\<close>
 
+subsubsection \<open>Setups\<close>
 
 hide_fact "__value_access_0__"
+
+setup \<open>Context.theory_map (
+  Generic_Element_Access.register_hook (\<^const_name>\<open>\<E>\<I>\<H>\<O>\<O>\<K>_none\<close>, K (K I))
+)\<close>
 
 subsection \<open>Isar Commands \& Attributes\<close>
 

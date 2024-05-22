@@ -47,10 +47,10 @@ proc test_ptr:
   premises \<open>ptr \<noteq> 0\<close>
   output \<open>ptr \<tribullet> 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
-  val a, b \<leftarrow> (0, 0) \<semicolon>
-  $1[$b]\<tribullet>$a[0] \<semicolon>
-  $1[$b]\<tribullet>$a\<tribullet>0 \<semicolon>
-  $1\<tribullet>$b\<tribullet>2
+  val a, b \<leftarrow> (0, 0)   \<semicolon>
+  & $1[b]\<tribullet>$a[0] \<semicolon>
+  & $1[$b]\<tribullet>$a\<tribullet>0 \<semicolon>
+  & $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
 
 
@@ -67,7 +67,7 @@ proc test_ptr2:
   output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<p>\<t>\<r>\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 1) \<semicolon>
-  $1[$a].x[$b].w
+  & $1[a].x[b].w
 \<medium_right_bracket> .
 
 proc test_ptr3:
@@ -75,7 +75,7 @@ proc test_ptr3:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr \<tribullet> a \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
-  $addr.a
+  &addr.a
 \<medium_right_bracket> .
 
 proc test_agg2:

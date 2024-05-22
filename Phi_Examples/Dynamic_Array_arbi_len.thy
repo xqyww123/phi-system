@@ -28,8 +28,9 @@ proc len_dynarr:
   output   \<open>length l \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  $addr \<tribullet> len !
-  \<open>MAKE _ (DynArr addr _ _)\<close>
+  val ret \<leftarrow> addr.len \<semicolon>
+  \<open>MAKE _ (DynArr addr _ _)\<close> \<semicolon>
+  ret
 \<medium_right_bracket> .
 
 
@@ -47,7 +48,7 @@ proc get_dynarr:
   output   \<open>l!i \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  $addr \<tribullet> data ! \<tribullet> $i !
+  addr.data[i]
   \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close>
 \<medium_right_bracket> .
 
@@ -58,7 +59,7 @@ proc set_dynarr:
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  $addr \<tribullet> data ! \<tribullet> $i := $v \<semicolon> 
+  addr.data[i] := v \<semicolon> 
   \<m>\<a>\<k>\<e>\<s> \<open>l[i := v] \<Ztypecolon> (DynArr addr _ _)\<close>
 \<medium_right_bracket> .
 
@@ -66,7 +67,7 @@ proc Max:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
-  if ($x < $y) \<medium_left_bracket> $y \<medium_right_bracket> \<medium_left_bracket> $x \<medium_right_bracket>
+  if (x < y) \<medium_left_bracket> y \<medium_right_bracket> \<medium_left_bracket> x \<medium_right_bracket>
 \<medium_right_bracket> .
 
 
@@ -75,21 +76,21 @@ proc push_dynarr:
   output   \<open>l @ [v] \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  val len \<leftarrow> $addr \<tribullet> len ! \<semicolon>
-  val cap \<leftarrow> $addr \<tribullet> cap ! \<semicolon>
-  if ($cap = $len) \<medium_left_bracket>
-      val cap' \<leftarrow> Max($cap * 2, 1) \<semicolon>
-      val data' \<leftarrow> calloc_aN ($cap') \<open>T\<close> \<semicolon>
-      memcpy_a ($data', $addr \<tribullet> data !, $len) \<semicolon>
-      mfree ($addr \<tribullet> data !) \<semicolon>
-      $addr \<tribullet> data := $data' \<semicolon>
-      $addr \<tribullet> len := $addr \<tribullet> len ! + 1 \<semicolon>
-      $addr \<tribullet> cap := $cap' \<semicolon>
-      $data' \<tribullet> $len := $v \<semicolon>
+  val len \<leftarrow> addr.len \<semicolon>
+  val cap \<leftarrow> addr.cap \<semicolon>
+  if (cap = len) \<medium_left_bracket>
+      val cap' \<leftarrow> Max(cap * 2, 1) \<semicolon>
+      val data' \<leftarrow> calloc_aN (cap') \<open>T\<close> \<semicolon>
+      memcpy_a (data', addr.data, len) \<semicolon>
+      mfree (addr.data) \<semicolon>
+      addr.data := data' \<semicolon>
+      addr.len := addr.len + 1 \<semicolon>
+      addr.cap := cap' \<semicolon>
+      data'[len] := v \<semicolon>
       \<m>\<a>\<k>\<e>\<s> \<open>l@[v] \<Ztypecolon> DynArr addr _ _\<close>
   \<medium_right_bracket> \<medium_left_bracket>
-      $addr \<tribullet> data ! \<tribullet> $len := $v \<semicolon>
-      $addr \<tribullet> len := $len + 1 \<semicolon>
+      addr.data[len] := v \<semicolon>
+      addr.len := len + 1 \<semicolon>
       \<m>\<a>\<k>\<e>\<s> \<open>l@[v] \<Ztypecolon> DynArr addr _ _\<close>
   \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -99,11 +100,11 @@ proc concat_dynarr:
            l1 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<close>
   output  \<open>l1 @ l2 \<Ztypecolon> DynArr addr1 TY T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 TY T\<close>
 \<medium_left_bracket>
-  val len \<leftarrow> len_dynarr ($addr2) \<semicolon>
-  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, $len)
-              \<open>\<lambda>i. l1 @ take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
+  val len \<leftarrow> len_dynarr (addr2) \<semicolon>
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len)
+            \<open>\<lambda>i. l1 @ take i l2 \<Ztypecolon> DynArr addr1 TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-    push_dynarr ($addr1, get_dynarr ($addr2, $i))
+    push_dynarr (addr1, get_dynarr (addr2, i))
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
@@ -114,20 +115,20 @@ proc pop_dynarr:
   output   \<open>last l \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> butlast l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  val len \<leftarrow> $addr \<tribullet> len ! - 1 \<semicolon>
-  val half_cap \<leftarrow> ($addr \<tribullet> cap !) / 2 \<semicolon>
-  val ret \<leftarrow> $addr \<tribullet> data ! \<tribullet> $len ! \<semicolon>
-  $addr \<tribullet> len := $len \<semicolon>
-  if ($len \<le> $half_cap) \<medium_left_bracket>
-    val data' \<leftarrow> calloc_aN ($half_cap) \<open>T\<close> \<semicolon>
-    memcpy_a ($data', $addr \<tribullet> data !, $len) \<semicolon>
-    mfree ($addr \<tribullet> data !) \<semicolon>
-    $addr \<tribullet> data := $data' \<semicolon>
-    $addr \<tribullet> cap := $half_cap \<semicolon>
+  val len \<leftarrow> addr.len - 1 \<semicolon>
+  val half_cap \<leftarrow> addr.cap / 2 \<semicolon>
+  val ret \<leftarrow> addr.data[len] \<semicolon>
+  addr.len := len \<semicolon>
+  if (len \<le> half_cap) \<medium_left_bracket>
+    val data' \<leftarrow> calloc_aN (half_cap) \<open>T\<close> \<semicolon>
+    memcpy_a (data', addr.data, len) \<semicolon>
+    mfree (addr.data) \<semicolon>
+    addr.data := data' \<semicolon>
+    addr.cap := half_cap \<semicolon>
     \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close>
   \<medium_right_bracket>
   \<medium_left_bracket> \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close> \<medium_right_bracket>
-  $ret
+  ret
 \<medium_right_bracket> .
 
 
@@ -136,9 +137,9 @@ proc new_dynarr:
   output \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> [] \<Ztypecolon> DynArr addr TY T \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
   val ret \<leftarrow> calloc1 \<open>\<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] TY, len: \<nat>, cap: \<nat> \<rbrace>\<close> \<semicolon>
-  $ret \<tribullet> data := (calloc_aN (\<open>0 \<Ztypecolon> \<nat>\<close>) \<open>T\<close>) \<semicolon>
+  ret.data := (calloc_aN (0) \<open>T\<close>) \<semicolon>
   \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _ _\<close> \<semicolon>
-  $ret
+  ret
 \<medium_right_bracket> .
 
 
@@ -147,8 +148,8 @@ proc del_dynarr:
   output \<open>Void\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-  mfree ($addr \<tribullet> data !) \<semicolon>
-  mfree ($addr)
+  mfree (addr.data) \<semicolon>
+  mfree (addr)
 \<medium_right_bracket> .
 
 proc map_dynarr:
@@ -160,7 +161,7 @@ proc map_dynarr:
 
   iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-     set_dynarr ($addr, $i, C (get_dynarr ($addr, $i)))
+     set_dynarr (addr, i, C (get_dynarr (addr, i)))
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
@@ -170,12 +171,12 @@ proc exists_dynarr:
   output \<open>list_ex P l \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
   var zz \<leftarrow> False ;;
-  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr (addr))
             \<open>\<lambda>i. l \<Ztypecolon> DynArr addr TY T\<heavy_comma> list_ex P (take i l) \<Ztypecolon> \<v>\<a>\<r>[zz] \<bool>\<close> \<semicolon>
     \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-      $zz \<or> C (get_dynarr ($addr, $i)) \<rightarrow> $zz
+      zz \<or> C (get_dynarr (addr, i)) \<rightarrow> zz
     \<medium_right_bracket> \<semicolon>
-  $zz
+  zz
 \<medium_right_bracket> .
 
 
@@ -185,12 +186,12 @@ proc fold_map_dynarr:
        and C: \<open>\<And>x z u v. \<p>\<r>\<o>\<c> C u v \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[u] T\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l>[v] U \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> g x z \<Ztypecolon> \<v>\<a>\<l> U \<rbrace> \<close>
   output \<open>fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> map f l \<Ztypecolon> DynArr addr TY T\<close>
 \<medium_left_bracket>
-  var zz \<leftarrow> $z0 \<semicolon>
-  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr ($addr))
+  var zz \<leftarrow> z0 \<semicolon>
+  iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr (addr))
              \<open>\<lambda>i. fold g (take i l) z0 \<Ztypecolon> \<v>\<a>\<r>[zz] U\<heavy_comma> (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr TY T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-    C (get_dynarr ($addr, $i), $zz) \<rightarrow> val x', var zz \<semicolon>
-    set_dynarr ($addr, $i, $x')
+    C (get_dynarr (addr, i), zz) \<rightarrow> val x', var zz \<semicolon>
+    set_dynarr (addr, i, x')
   \<medium_right_bracket> certified by (auto simp add: list_eq_iff_nth_eq nth_append, auto_sledgehammer,
                   insert \<open>i < length l\<close>, induct i, auto simp add: take_Suc_conv_app_nth) \<semicolon>
   $zz
