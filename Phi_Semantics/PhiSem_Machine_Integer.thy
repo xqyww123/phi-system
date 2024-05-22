@@ -15,6 +15,7 @@ section \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
+(*
 virtual_datatype \<phi>machine_int_ty =
   T_int     :: nat \<comment> \<open>in unit of bits\<close>
 
@@ -26,12 +27,14 @@ interpretation \<phi>machine_int_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>
 hide_fact \<phi>machine_int_ty_ax \<phi>machine_int_ty_axioms \<phi>machine_int_ty_names_def \<phi>machine_int_ty_def
   \<phi>machine_int_ty_prjs_axioms \<phi>machine_int_ty_prjs_def \<phi>machine_int_ty.axioms \<phi>machine_int_ty.intro
   \<phi>machine_int_ty__names.\<phi>machine_int_ty_names_axioms \<phi>machine_int_ty_prjs.axioms
+*)
+
+debt_axiomatization sem_int_T :: \<open>nat \<Rightarrow> TY\<close>
+
+definition \<open>mk_int_T = sem_int_T o len0_class.len_of\<close>
 
 syntax "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("int'(_')")
        "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<i>\<n>\<t>'(_')")
-
-
-definition \<open>mk_int_T = T_int.mk o len0_class.len_of\<close>
 
 (*translations "int('b)" => "CONST mk_int_T (CONST Pure.type :: 'b itself)" *)
 
@@ -64,7 +67,6 @@ parse_ast_translation \<open>
    in [(\<^syntax_const>\<open>BITS_syntax\<close>, (fn _ => fn [V] =>
           Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]))] end\<close>
 
-(* term \<open>int(32)\<close> *)
 
 typedecl \<i>\<n>\<t> \<comment> \<open>size of address space\<close>
 
@@ -83,6 +85,7 @@ abbreviation \<open>\<i>\<n>\<t> \<equiv> \<i>\<n>\<t>(\<i>\<n>\<t>)\<close>
 
 subsubsection \<open>Value\<close>
 
+(*
 virtual_datatype \<phi>machine_int_val =
   V_int     :: \<open>nat \<times> nat\<close> \<comment> \<open>bits \<times> value\<close>
 
@@ -92,26 +95,35 @@ debt_axiomatization V_int :: \<open>(nat \<times> nat) value_entry\<close>
 interpretation \<phi>machine_int_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_int using \<phi>machine_int_val_ax .
 
 hide_fact \<phi>machine_int_val_ax \<phi>machine_int_val_axioms
+*)
+  
 
 subsubsection \<open>Semantics\<close>
 
-debt_axiomatization
-    WT_int[simp]: \<open>Well_Type (T_int.mk b)     = { V_int.mk (b,x)    |x. x < 2 ^ b } \<close>
-and can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)) \<longleftrightarrow> b1 = b2"
-and eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
-and  zero_int[simp]: \<open>Zero (T_int.mk b)    = Some (V_int.mk (b,0))\<close>
-and \<phi>Sem_machine_int_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (V_int.mk (b,x)) = Some (of_nat x)\<close>
-and \<phi>Sem_machine_int_to_logic_int[simp]:
-      \<open>\<phi>Sem_int_to_logic_int (V_int.mk (b,x)) = Some (if x < 2^(b - 1) then of_nat x
-                                                      else - of_nat (2^b - x))\<close>
+debt_axiomatization sem_mk_int   :: \<open>nat \<times> nat \<Rightarrow> VAL\<close>
+                and sem_dest_int :: \<open>VAL \<Rightarrow> nat \<times> nat\<close>
+where sem_mk_dest_int[simp]: \<open>sem_dest_int (sem_mk_int bits_val) = bits_val\<close>
+  and WT_int[simp]: \<open>Well_Type (sem_int_T b)     = { sem_mk_int (b,x)    |x. x < 2 ^ b } \<close>
+  and can_eqcmp_int[simp]: "Can_EqCompare res (sem_mk_int (b1,x1)) (sem_mk_int (b2,x2)) \<longleftrightarrow> b1 = b2"
+  and eqcmp_int[simp]: "EqCompare (sem_mk_int i1) (sem_mk_int i2) \<longleftrightarrow> i1 = i2"
+  and  zero_int[simp]: \<open>Zero (sem_int_T b)    = Some (sem_mk_int (b,0))\<close>
+  and \<phi>Sem_machine_int_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (sem_mk_int (b,x)) = Some (of_nat x)\<close>
+  and \<phi>Sem_machine_int_to_logic_int[simp]:
+        \<open>\<phi>Sem_int_to_logic_int (sem_mk_int (b,x)) = Some (if x < 2^(b - 1) then of_nat x
+                                                          else - of_nat (2^b - x))\<close>
+
+lemma sem_mk_int_inj[simp]:
+  \<open> sem_mk_int i = sem_mk_int j \<equiv> i = j \<close>
+  by (smt (verit, ccfv_SIG) sem_mk_dest_int)
+  
 
 lemma [\<phi>reason %logical_spec_of_semantics]:
-  \<open>get_logical_int_from_semantic_int (V_int.mk (b,x) \<Ztypecolon> Itself) (if x < 2^(b - 1) then of_nat x else - of_nat (2^b - x))\<close>
+  \<open>get_logical_int_from_semantic_int (sem_mk_int (b,x) \<Ztypecolon> Itself) (if x < 2^(b - 1) then of_nat x else - of_nat (2^b - x))\<close>
   unfolding get_logical_int_from_semantic_int_def
   by simp
 
 lemma [\<phi>reason %logical_spec_of_semantics]:
-  \<open>get_logical_nat_from_semantic_int (V_int.mk (b,x) \<Ztypecolon> Itself) x\<close>
+  \<open>get_logical_nat_from_semantic_int (sem_mk_int (b,x) \<Ztypecolon> Itself) x\<close>
   unfolding get_logical_nat_from_semantic_int_def
   by simp
 
@@ -144,7 +156,7 @@ There is no direct transformation between \<open>\<nat>\<^sup>r\<close> and \<op
 subsection \<open>Words\<close>
 
 \<phi>type_def Word :: \<open>'b itself \<Rightarrow> (VAL, 'b::len word) \<phi>\<close>
-  where \<open>x \<Ztypecolon> Word _ \<equiv> V_int.mk (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
+  where \<open>x \<Ztypecolon> Word _ \<equiv> sem_mk_int (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
   deriving Basic
        and \<open>Object_Equiv (Word ?uu) (=)\<close>
        and \<open>Semantic_Type (Word TYPE('b)) int('b)\<close>
@@ -334,7 +346,7 @@ let_\<phi>type \<phi>Int
 declare \<phi>Int.expansion[simp del, \<phi>expns del]
 
 lemma \<phi>Int_expn[simp, \<phi>expns]:
-  \<open>p \<Turnstile> (n \<Ztypecolon> \<int>('b)) \<longleftrightarrow> p = V_int.mk (LENGTH('b), (if 0 \<le> n then nat n else nat (2^LENGTH('b) + n)))
+  \<open>p \<Turnstile> (n \<Ztypecolon> \<int>('b)) \<longleftrightarrow> p = sem_mk_int (LENGTH('b), (if 0 \<le> n then nat n else nat (2^LENGTH('b) + n)))
           \<and> n < 2 ^ (LENGTH('b) - 1) \<and> - (2 ^ (LENGTH('b) - 1)) \<le> n\<close>
   unfolding \<phi>Int.expansion
   by (auto,
@@ -489,121 +501,121 @@ definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> VAL proc"
 definition op_add :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_add bits =
       \<phi>M_caseV (\<lambda>vb va.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
-      Return (\<phi>arg (V_int.mk (bits, ((val_a + val_b) mod 2^bits))))
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) vb (\<lambda>val_b.
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) va (\<lambda>val_a.
+      Return (\<phi>arg (sem_mk_int (bits, ((val_a + val_b) mod 2^bits))))
   )))"
 
 definition op_sub :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_sub bits =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_int.mk (bits, ((2^bits + val_a - val_b) mod 2^bits))))
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) va (\<lambda>val_a.
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_int (bits, ((2^bits + val_a - val_b) mod 2^bits))))
   )))"
 
 definition op_umul :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_umul bits =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_int.mk (bits, ((val_a * val_b) mod 2^bits))))
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) va (\<lambda>val_a.
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_int (bits, ((val_a * val_b) mod 2^bits))))
   )))"
 
 definition op_udiv :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_udiv bits =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) va (\<lambda>val_a.
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) vb (\<lambda>val_b.
       \<phi>M_assert (val_b \<noteq> 0) \<then>
-      Return (\<phi>arg (V_int.mk (bits, (val_a div val_b))))
+      Return (\<phi>arg (sem_mk_int (bits, (val_a div val_b))))
   )))"
 
 definition op_sdiv :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_sdiv _ =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) vb (\<lambda>val_b::'b word.
       \<phi>M_assert (val_b \<noteq> 0) \<then>
-      Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_a sdiv val_b))))
+      Return (\<phi>arg (sem_mk_int (LENGTH('b), unat (val_a sdiv val_b))))
   )))"
 
 definition op_umod :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_umod _ =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) vb (\<lambda>val_b::'b word.
       \<phi>M_assert (val_b \<noteq> 0) \<then>
-      Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_a mod val_b))))
+      Return (\<phi>arg (sem_mk_int (LENGTH('b), unat (val_a mod val_b))))
   )))"
 
 definition op_smod :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_smod _ =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) vb (\<lambda>val_b::'b word.
       \<phi>M_assert (val_b \<noteq> 0) \<then>
-      Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_a smod val_b))))
+      Return (\<phi>arg (sem_mk_int (LENGTH('b), unat (val_a smod val_b))))
   )))"
 
 definition op_lshr :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_lshr b_a b_b =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk b_a) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (T_int.mk b_b) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_int.mk (b_a, (val_a div 2 ^ val_b))))
+      \<phi>M_getV (sem_int_T b_a) (snd o sem_dest_int) va (\<lambda>val_a.
+      \<phi>M_getV (sem_int_T b_b) (snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_int (b_a, (val_a div 2 ^ val_b))))
   )))"
 
 definition op_lshl :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_lshl b_a b_b =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk b_a) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (T_int.mk b_b) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_int.mk (b_a, (val_a * 2 ^ val_b mod 2^b_a))))
+      \<phi>M_getV (sem_int_T b_a) (snd o sem_dest_int) va (\<lambda>val_a.
+      \<phi>M_getV (sem_int_T b_b) (snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_int (b_a, (val_a * 2 ^ val_b mod 2^b_a))))
   )))"
 
 definition op_ult :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_ult bits =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_a < val_b)))
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) va (\<lambda>val_a.
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_bool (val_a < val_b)))
   )))"
 
 definition op_ule :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_ule bits =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_a \<le> val_b)))
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) va (\<lambda>val_a.
+      \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_bool (val_a \<le> val_b)))
   )))"
 
 definition op_slt :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_slt _ =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_a <s val_b)))
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_bool (val_a <s val_b)))
   )))"
 
 definition op_sle :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_sle _ =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
-      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_a \<le>s val_b)))
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (sem_int_T LENGTH('b)) (of_nat o snd o sem_dest_int) vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_bool (val_a \<le>s val_b)))
   )))"
 
 
 definition op_cast_uint :: \<open>'b1::len itself \<Rightarrow> 'b2::len itself \<Rightarrow> (VAL, VAL) proc'\<close>
   where \<open>op_cast_uint _ _ va =
-    \<phi>M_getV (T_int.mk LENGTH('b1)) (of_nat o snd o V_int.dest) va (\<lambda>val::'b1 word.
-    Return (\<phi>arg (V_int.mk (LENGTH('b2), unat (Word.cast val :: 'b2 word)))))\<close>
+    \<phi>M_getV (sem_int_T LENGTH('b1)) (of_nat o snd o sem_dest_int) va (\<lambda>val::'b1 word.
+    Return (\<phi>arg (sem_mk_int (LENGTH('b2), unat (Word.cast val :: 'b2 word)))))\<close>
 
 definition op_cast_int :: \<open>'b1::len itself \<Rightarrow> 'b2::len itself \<Rightarrow> (VAL, VAL) proc'\<close>
   where \<open>op_cast_int _ _ va =
-    \<phi>M_getV (T_int.mk LENGTH('b1)) (of_nat o snd o V_int.dest) va (\<lambda>val::'b1 word.
-    Return (\<phi>arg (V_int.mk (LENGTH('b2), unat (Word.scast val :: 'b2 word)))))\<close>
+    \<phi>M_getV (sem_int_T LENGTH('b1)) (of_nat o snd o sem_dest_int) va (\<lambda>val::'b1 word.
+    Return (\<phi>arg (sem_mk_int (LENGTH('b2), unat (Word.scast val :: 'b2 word)))))\<close>
 
 
 section \<open>Abstraction of Instructions\<close>
@@ -614,25 +626,25 @@ subsubsection \<open>Constant Integer\<close>
 
 lemma op_const_word_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n : unat n'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n' \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n))] Word('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n' \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_int (LENGTH('b),n))] Word('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
-  semantic_literal \<open>V_int.mk (LENGTH('b),n) \<Turnstile> (n' \<Ztypecolon> Word('b))\<close>
+  semantic_literal \<open>sem_mk_int (LENGTH('b),n) \<Turnstile> (n' \<Ztypecolon> Word('b))\<close>
 \<medium_right_bracket> .
 
 lemma op_const_nat_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n < 2 ^ LENGTH('b)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : n
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<nat>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_int (LENGTH('b),n'))] \<nat>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
-  semantic_literal \<open>V_int.mk (LENGTH('b),n') \<Turnstile> (n \<Ztypecolon> \<nat>('b))\<close>
+  semantic_literal \<open>sem_mk_int (LENGTH('b),n') \<Turnstile> (n \<Ztypecolon> \<nat>('b))\<close>
   certified by (simp add: \<phi> unat_of_nat_len)
 \<medium_right_bracket> .
 
 lemma op_const_natR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : n mod 2 ^ LENGTH('b)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<nat>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_int (LENGTH('b),n'))] \<nat>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified, OF Simplify_to_Premise]
@@ -642,16 +654,16 @@ lemma op_const_natR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
 lemma op_const_int_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> - (2 ^ (LENGTH('b)-1)) \<le> n \<and> n < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : (if 0 \<le> n then nat n else nat (2^LENGTH('b) + n))
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<int>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_int (LENGTH('b),n'))] \<int>('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
-  semantic_literal \<open>V_int.mk (LENGTH('b),n') \<Turnstile> (n \<Ztypecolon> \<int>('b))\<close>
+  semantic_literal \<open>sem_mk_int (LENGTH('b),n') \<Turnstile> (n \<Ztypecolon> \<int>('b))\<close>
   certified by (simp add: \<phi> unat_of_nat_len)
 \<medium_right_bracket> .
 
 lemma op_const_intR_\<phi>app[\<phi>reason %\<phi>synthesis_literal_number]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_literal] n' : (let n = n mod 2 ^ LENGTH('b) in if 0 \<le> n then nat n else nat (2^LENGTH('b) + n))
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (V_int.mk (LENGTH('b),n'))] \<int>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> n \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_int (LENGTH('b),n'))] \<int>\<^sup>r('b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
 \<medium_left_bracket>
   apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_int n\<close>, simplified, OF Simplify_to_Premise]

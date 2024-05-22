@@ -7,44 +7,50 @@ begin
 
 section \<open>Semantics\<close>
 
-consts bool :: TY ("\<b>\<o>\<o>\<l>")
+debt_axiomatization \<b>\<o>\<o>\<l>          :: TY
+                and sem_mk_bool   :: \<open>bool \<Rightarrow> VAL\<close>
+                and sem_dest_bool :: \<open>VAL \<Rightarrow> bool\<close>
+  where sem_mk_dest_bool[simp]: \<open>sem_dest_bool (sem_mk_bool b) = b\<close>
+    and can_eq_bool: \<open>Can_EqCompare res (sem_mk_bool x1) (sem_mk_bool x2)\<close>
+    and eq_bool:     \<open>EqCompare (sem_mk_bool x1) (sem_mk_bool x2) = (x1 = x2)\<close>
+    and zero_bool[simp]: \<open>Zero \<b>\<o>\<o>\<l> = Some (sem_mk_bool False)\<close>
+    and WT_bool[simp]:   \<open>Well_Type \<b>\<o>\<o>\<l> = { sem_mk_bool x |x. True }\<close>  
 
-debt_axiomatization V_bool :: \<open>bool value_entry\<close>
-  where V_bool_ax: \<open>VDT_field V_bool\<close>
+lemma sem_mk_bool_inj[simp]:
+  \<open>sem_mk_bool x = sem_mk_bool y \<equiv> x = y\<close>
+  by (smt (verit, del_insts) sem_mk_dest_bool)
+  
 
+(*
 interpretation V_bool: VDT_field V_bool using V_bool_ax .
+*)
 
-debt_axiomatization
-      can_eq_bool: \<open>Can_EqCompare res (V_bool.mk x1) (V_bool.mk x2)\<close>
-  and eq_bool:     \<open>EqCompare (V_bool.mk x1) (V_bool.mk x2) = (x1 = x2)\<close>
-  and zero_bool[simp]: \<open>Zero bool = Some (V_bool.mk False)\<close>
-  and WT_bool[simp]:   \<open>Well_Type bool = { V_bool.mk x |x. True }\<close>
 
 section \<open>Instructions\<close>
 
 definition op_const_bool :: "bool \<Rightarrow> VAL proc"
-  where "op_const_bool b = Return (\<phi>arg (V_bool.mk b))"
+  where "op_const_bool b = Return (\<phi>arg (sem_mk_bool b))"
 
 definition op_not :: "(VAL, VAL) proc'"
   where "op_not v =
-    \<phi>M_getV bool V_bool.dest v (\<lambda>v.
-    Return (\<phi>arg (V_bool.mk (\<not> v)))
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool v (\<lambda>v.
+    Return (\<phi>arg (sem_mk_bool (\<not> v)))
   )"
 
 definition op_and :: "(VAL \<times> VAL, VAL) proc'"
   where "op_and =
     \<phi>M_caseV (\<lambda>va vb.
-    \<phi>M_getV bool V_bool.dest va (\<lambda>v.
-    \<phi>M_getV bool V_bool.dest vb (\<lambda>u.
-    Return (\<phi>arg (V_bool.mk (v \<and> u)))
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool va (\<lambda>v.
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vb (\<lambda>u.
+    Return (\<phi>arg (sem_mk_bool (v \<and> u)))
   )))"
 
 definition op_or :: "(VAL \<times> VAL, VAL) proc'"
   where "op_or =
     \<phi>M_caseV (\<lambda>va vb.
-    \<phi>M_getV bool V_bool.dest va (\<lambda>v.
-    \<phi>M_getV bool V_bool.dest vb (\<lambda>u.
-    Return (\<phi>arg (V_bool.mk (v \<or> u)))
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool va (\<lambda>v.
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vb (\<lambda>u.
+    Return (\<phi>arg (sem_mk_bool (v \<or> u)))
   )))"
 
 definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -53,18 +59,18 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
     \<phi>M_getV TY id va (\<lambda>v.
     \<phi>M_getV TY id vb (\<lambda>u.
     (\<lambda>res. \<phi>M_assert (Can_EqCompare res v u) res) \<then>
-    Return (\<phi>arg (V_bool.mk (EqCompare v u)))
+    Return (\<phi>arg (sem_mk_bool (EqCompare v u)))
 )))"
 
 
 section \<open>\<phi>-Type\<close>
 
 \<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
-  where \<open>x \<Ztypecolon> \<bool> \<equiv> V_bool.mk x \<Ztypecolon> Itself\<close>
+  where \<open>x \<Ztypecolon> \<bool> \<equiv> sem_mk_bool x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type \<bool> bool\<close>
-       and \<open>Semantic_Zero_Val bool \<bool> False\<close>
+       and \<open>Semantic_Type \<bool> \<b>\<o>\<o>\<l>\<close>
+       and \<open>Semantic_Zero_Val \<b>\<o>\<o>\<l> \<bool> False\<close>
        and Inhabited
  
 term \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<bool>\<close>
@@ -106,21 +112,22 @@ subsection \<open>Not\<close>
 lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
   \<open>\<p>\<r>\<o>\<c> op_not raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<bool> \<longmapsto> \<v>\<a>\<l> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
-  by (cases raw, simp, rule, simp, rule, simp)
+  by (cases raw, simp, rule, simp, rule,  simp)
 
 subsection \<open>And\<close>
 
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
-  \<open>\<p>\<r>\<o>\<c> op_and (\<phi>V_pair va vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_and (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
   by (cases va; cases vb; simp, rule, rule, simp, rule, simp, rule, simp)
+
 
 subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
-  \<open>\<p>\<r>\<o>\<c> op_or (\<phi>V_pair va vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_or (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
-  by(cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp)
+  by (cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp)
 
 
 subsection \<open>Equal\<close>

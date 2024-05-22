@@ -10,6 +10,20 @@ theory PhiSem_C
           PhiSem_Mem_C_Ar_MI
 begin
 
+debt_axiomatization
+  where \<p>\<t>\<r>_neq_\<i>\<n>\<t>'  [simp]: \<open>\<p>\<t>\<r> \<noteq> sem_int_T n\<close>
+    and \<p>\<t>\<r>_neq_\<s>\<t>\<r>\<u>\<c>\<t> [simp]: \<open>\<p>\<t>\<r> \<noteq> semty_ntup f\<close>
+
+
+lemma TY_neqs[simp]:
+  \<open>\<p>\<t>\<r> \<noteq> \<i>\<n>\<t>('n)\<close>         \<open>\<i>\<n>\<t>('n) \<noteq> \<p>\<t>\<r>\<close>
+  \<open>\<p>\<t>\<r> \<noteq> \<b>\<o>\<o>\<l>\<close>            \<open>\<b>\<o>\<o>\<l> \<noteq> \<p>\<t>\<r>\<close>
+  \<open>semty_ntup f \<noteq> \<p>\<t>\<r>\<close>
+  unfolding mk_int_T_def bool_def'
+  by simp_all (metis \<p>\<t>\<r>_neq_\<i>\<n>\<t>' \<p>\<t>\<r>_neq_\<s>\<t>\<r>\<u>\<c>\<t>)+
+
+
+
 (*declare [[\<phi>infer_requirements]]*)
 
 (*

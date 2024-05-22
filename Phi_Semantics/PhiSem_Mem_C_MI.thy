@@ -4,10 +4,10 @@ begin
 
 
 debt_axiomatization
-      MemObj_Size_int: \<open>MemObj_Size (T_int.mk n) = 0 \<longleftrightarrow> n = 0\<close>
+      MemObj_Size_int: \<open>MemObj_Size (sem_int_T n) = 0 \<longleftrightarrow> n = 0\<close>
 
 lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
-  \<open> phantom_mem_semantic_type (T_int.mk n) \<longleftrightarrow> n = 0 \<close>
+  \<open> phantom_mem_semantic_type (sem_int_T n) \<longleftrightarrow> n = 0 \<close>
   unfolding phantom_mem_semantic_type_def
   using MemObj_Size_int by clarsimp
 
@@ -25,10 +25,10 @@ proc calloc:
 
   semantic_local_value($n) \<open>\<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
-  apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<a>\<r>\<r>\<a>\<y>[snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
-                                               and v=\<open>V_array.mk (replicate (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
+  apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<a>\<r>\<r>\<a>\<y>[snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
+                                               and v=\<open>V_array.mk (replicate (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
 
-  semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
+  semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
 
   \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
   \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] Array n T)\<close>

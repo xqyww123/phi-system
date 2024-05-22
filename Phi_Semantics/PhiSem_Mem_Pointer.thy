@@ -16,18 +16,6 @@ subsection \<open>Type\<close>
 
 debt_axiomatization \<p>\<o>\<i>\<n>\<t>\<e>\<r> :: TY ("\<p>\<t>\<r>")
 
-(*
-virtual_datatype c_mem_ty =
-  T_pointer :: unit
-
-debt_axiomatization T_pointer :: \<open>unit type_entry\<close>
-  where c_mem_ty_ax: \<open>c_mem_ty TY_CONS_OF T_pointer\<close>
-
-interpretation c_mem_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_pointer using c_mem_ty_ax .
-
-abbreviation pointer ("\<p>\<t>\<r>") where \<open>pointer \<equiv> T_pointer.mk ()\<close>
-*)
-
 subsection \<open>Value\<close>
 
 subsubsection \<open>Formalization Definitions\<close>

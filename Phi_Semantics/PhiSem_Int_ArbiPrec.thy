@@ -219,7 +219,7 @@ definition op_a_lt :: "(VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV aint V_aint.dest va (\<lambda>val_a.
       \<phi>M_getV aint V_aint.dest vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_a < val_b)))
+      Return (\<phi>arg (sem_mk_bool (val_a < val_b)))
   )))"
 
 definition op_a_le :: "(VAL \<times> VAL, VAL) proc'"
@@ -227,7 +227,7 @@ definition op_a_le :: "(VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV aint V_aint.dest va (\<lambda>val_a.
       \<phi>M_getV aint V_aint.dest vb (\<lambda>val_b.
-      Return (\<phi>arg (V_bool.mk (val_a \<le> val_b)))
+      Return (\<phi>arg (sem_mk_bool (val_a \<le> val_b)))
   )))"
 
 

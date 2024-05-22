@@ -17,7 +17,7 @@ proc op_add_ptr[\<phi>overload +]:
 
   semantic_return \<open>
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
-              ||+ Word.scast (of_nat (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
+              ||+ Word.scast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
   certified by (insert useful, auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] distrib_right,
                 simp add: add.commute signed_of_int signed_take_bit_int_eq_self)
@@ -34,7 +34,7 @@ proc op_add_ptr_unsigned[\<phi>overload +]:
 
   semantic_return \<open>
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
-              ||+ Word.ucast (of_nat (snd (V_int.dest (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
+              ||+ Word.ucast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (i + j \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
   certified by (insert useful,
                 auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>]

@@ -11,7 +11,7 @@ subsection \<open>Non-Branching Selection\<close>
 definition op_sel :: "TY \<Rightarrow> (VAL \<times> VAL \<times> VAL, VAL) proc'"
   where "op_sel TY =
     \<phi>M_caseV (\<lambda>vc. \<phi>M_caseV (\<lambda>va vb.
-    \<phi>M_getV bool V_bool.dest vc (\<lambda>c.
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vc (\<lambda>c.
     \<phi>M_getV TY id va (\<lambda>a.
     \<phi>M_getV TY id vb (\<lambda>b.
     Return (\<phi>arg (if c then a else b)))))))"
@@ -22,42 +22,26 @@ definition op_if :: "'ret proc
                   \<Rightarrow> 'ret proc
                   \<Rightarrow> (VAL,'ret) proc'"
   where "op_if brT brF v =
-    \<phi>M_getV bool V_bool.dest v (\<lambda>c. (if c then brT else brF))"
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool v (\<lambda>c. (if c then brT else brF))"
 
 subsection \<open>While Loop\<close>
 
 inductive SemDoWhile :: "VAL proc \<Rightarrow> resource \<Rightarrow> unit comp \<Rightarrow> bool" where
-  "Success (\<phi>arg (V_bool.mk False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (\<phi>arg ()) res)"
-| "Success (\<phi>arg (V_bool.mk True)) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
+  "Success (\<phi>arg (sem_mk_bool False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (\<phi>arg ()) res)"
+| "Success (\<phi>arg (sem_mk_bool True)) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
 | "Abnormal v e \<in> f s \<Longrightarrow> SemDoWhile f s (Abnormal v e)"
 | "NonTerm \<in> f s \<Longrightarrow> SemDoWhile f s NonTerm"
 | "AssumptionBroken \<in> f s \<Longrightarrow> SemDoWhile f s AssumptionBroken"
 | "Invalid \<in> f s \<Longrightarrow> SemDoWhile f s Invalid"
 
-lemma "\<nexists> y. SemDoWhile ((\<lambda>res. Return (\<phi>arg (V_bool.mk True)) res) :: VAL proc) res y"
+lemma "\<nexists> y. SemDoWhile ((\<lambda>res. Return (\<phi>arg (sem_mk_bool True)) res) :: VAL proc) res y"
   apply rule apply (elim exE) subgoal for y
-    apply (induct "((\<lambda>res. Return (\<phi>arg (V_bool.mk True)) (res::resource)) :: VAL proc)" res y
+    apply (induct "((\<lambda>res. Return (\<phi>arg (sem_mk_bool True)) (res::resource)) :: VAL proc)" res y
            rule: SemDoWhile.induct)
        apply (simp_all add: Return_def det_lift_def) . .
 
 definition op_do_while :: " VAL proc \<Rightarrow> unit proc"
   where "op_do_while f s = Collect (SemDoWhile f s)"
-
-(* lemma SemDoWhile_deterministic:
-  assumes "SemDoWhile c s s1"
-      and "SemDoWhile c s s2"
-    shows "s1 = s2"
-proof -
-  have "SemDoWhile c s s1 \<Longrightarrow> (\<forall>s2. SemDoWhile c s s2 \<longrightarrow> s1 = s2)"
-    apply (induct rule: SemDoWhile.induct)
-    by (subst SemDoWhile.simps, simp)+
-  thus ?thesis
-    using assms by simp
-qed
-
-lemma SemDoWhile_deterministic2:
-    "SemDoWhile body s x \<Longrightarrow> The ( SemDoWhile body s) = x"
-  using SemDoWhile_deterministic by blast *)
 
 
 subsection \<open>Recursion\<close>
