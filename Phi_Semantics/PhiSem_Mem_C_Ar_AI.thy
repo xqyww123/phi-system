@@ -13,7 +13,7 @@ proc op_add_ptr_a[\<phi>overload +]:
   $j semantic_local_value \<a>\<i>\<n>\<t>
 
   semantic_return \<open>
-      sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1) ||+ of_int (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>2)) * of_nat (MemObj_Size TY))
+      sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1) ||+ of_int (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>2)) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY)\<close>
     certified by (clarsimp simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] useful distrib_right,
                   simp add: add.commute)

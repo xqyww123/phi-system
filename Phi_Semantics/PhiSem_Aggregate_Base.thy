@@ -9,8 +9,6 @@ text \<open>The base for aggregate values which have inner structures and whose 
 
 section \<open>Semantics\<close>
 
-subsection \<open>Formalization\<close>
-
 debt_axiomatization
         valid_idx_step :: \<open>TY \<Rightarrow> aggregate_index \<Rightarrow> bool\<close>
     and idx_step_type  :: \<open>aggregate_index \<Rightarrow> TY \<Rightarrow> TY\<close>
@@ -163,7 +161,7 @@ section \<open>Instructions\<close>
   where "op_cons_tuple tys = (\<lambda>(vs,res).
     let N = length tys in
     if N \<le> length vs \<and> list_all2 (\<lambda>v t. v \<in> Well_Type t) (take N vs) tys
-    then Success (V_tup.mk (take N vs) # drop N vs, res)
+    then Success (sem_mk_tup (take N vs) # drop N vs, res)
     else Fail)" *)
 
 

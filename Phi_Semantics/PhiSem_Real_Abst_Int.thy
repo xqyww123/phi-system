@@ -9,13 +9,13 @@ section \<open>Conversion between Abstract Real and Arbitrary-precision Integers
 
 definition op_Ra_floor_Za :: \<open>(VAL, VAL) proc'\<close>
   where \<open>op_Ra_floor_Za rv =
-    \<phi>M_getV areal V_areal.dest rv (\<lambda>v.
-    Return (\<phi>arg (V_aint.mk \<lfloor>v\<rfloor>)))\<close>
+    \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal rv (\<lambda>v.
+    Return (\<phi>arg (sem_mk_aint \<lfloor>v\<rfloor>)))\<close>
 
 definition op_Ra_ceiling_Za :: \<open>(VAL, VAL) proc'\<close>
   where \<open>op_Ra_ceiling_Za rv =
-    \<phi>M_getV areal V_areal.dest rv (\<lambda>v.
-    Return (\<phi>arg (V_aint.mk \<lceil>v\<rceil>)))\<close>
+    \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal rv (\<lambda>v.
+    Return (\<phi>arg (sem_mk_aint \<lceil>v\<rceil>)))\<close>
 
 lemma op_Ra_floor_Za_\<phi>app[\<phi>overload floor, \<phi>synthesis 100]:
   \<open>\<p>\<r>\<o>\<c> op_Ra_floor_Za raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<real> \<longmapsto> \<lfloor>x\<rfloor> \<Ztypecolon> \<v>\<a>\<l> \<int> \<rbrace>\<close>
@@ -32,8 +32,8 @@ lemma op_Ra_ceiling_Za_\<phi>app[\<phi>overload ceiling, \<phi>synthesis 100]:
 
 definition op_Za_to_Ra :: \<open>(VAL, VAL) proc'\<close>
   where \<open>op_Za_to_Ra rv =
-    \<phi>M_getV aint V_aint.dest rv (\<lambda>v.
-    Return (\<phi>arg (V_areal.mk (real_of_int v))))\<close>
+    \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint rv (\<lambda>v.
+    Return (\<phi>arg (sem_mk_areal (real_of_int v))))\<close>
 
 
 declare [[

@@ -1735,10 +1735,10 @@ definition cons_tup :: "TY list \<Rightarrow> VAL list \<Rightarrow> (VAL,'RES_N
   where "cons_tup tys vs = (
     let N = length tys in
     \<phi>M_assert (N \<le> length vs \<and> list_all2 (\<lambda>v t. v \<in> Well_Type t) (rev (take N vs)) tys)
-    \<then> Success (V_tup.mk (rev (take N vs))))"
+    \<then> Success (sem_mk_tup (rev (take N vs))))"
 
 lemma cons_tup_nil:
-  \<open>cons_tup [] = \<phi>M_put_Val (V_tup.mk [])\<close>
+  \<open>cons_tup [] = \<phi>M_put_Val (sem_mk_tup [])\<close>
   unfolding cons_tup_def \<phi>M_put_Val_def
   by simp
 
@@ -1748,7 +1748,7 @@ lemma cons_tup_cons:
     \<phi>M_get_Val (\<lambda>tup.
     \<phi>M_get_Val (\<lambda>v.
     \<phi>M_assert (v \<in> Well_Type TY) \<then>
-    \<phi>M_put_Val (V_tup.mk [v] * tup)
+    \<phi>M_put_Val (sem_mk_tup [v] * tup)
     ))\<close>
   apply (auto split: list.split
     simp add: cons_tup_def fun_eq_iff pair_forall instr_comp_def bind_def
@@ -1779,11 +1779,11 @@ subsubsection \<open>Destruct Tuple\<close>
 
 definition op_dest_tup :: "TY list \<Rightarrow> (VAL,'RES_N,'RES) proc"
   where "op_dest_tup tys =
-    \<phi>M_getV (\<tau>Tuple tys) V_tup.dest (\<lambda>tup.
+    \<phi>M_getV (\<tau>Tuple tys) sem_dest_tup (\<lambda>tup.
     \<lambda>(vs, res). Success (rev tup@vs, res))"
 
 lemma op_dest_tup_nil_expn:
-  \<open>op_dest_tup [] = \<phi>M_getV (\<tau>Tuple []) V_tup.dest (\<lambda>_. SKIP)\<close>
+  \<open>op_dest_tup [] = \<phi>M_getV (\<tau>Tuple []) sem_dest_tup (\<lambda>_. SKIP)\<close>
   by (auto split: list.split
     simp add: op_dest_tup_def \<phi>M_get_Val_def \<phi>M_put_Val_def \<phi>M_getV_def Let_def fun_eq_iff \<phi>M_assert_def
       instr_comp_def bind_def)
@@ -1791,9 +1791,9 @@ lemma op_dest_tup_nil_expn:
 lemma op_dest_tup_cons_expn:
   \<open>op_dest_tup (TY#TYs) =
     \<phi>M_get_Val (\<lambda>tup.
-    \<phi>M_assert (\<exists>h tup'. tup = V_tup.mk (h#tup') \<and> h \<in> Well_Type TY) \<then>
-    \<phi>M_put_Val (hd (V_tup.dest tup)) \<then>
-    \<phi>M_put_Val (V_tup.mk (tl (V_tup.dest tup))) \<then>
+    \<phi>M_assert (\<exists>h tup'. tup = sem_mk_tup (h#tup') \<and> h \<in> Well_Type TY) \<then>
+    \<phi>M_put_Val (hd (sem_dest_tup tup)) \<then>
+    \<phi>M_put_Val (sem_mk_tup (tl (sem_dest_tup tup))) \<then>
     op_dest_tup TYs)\<close>
   apply (auto split: list.split
     simp add: op_dest_tup_def \<phi>M_get_Val_def \<phi>M_put_Val_def \<phi>M_getV_def Let_def fun_eq_iff \<phi>M_assert_def

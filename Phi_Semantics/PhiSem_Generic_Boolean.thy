@@ -21,11 +21,6 @@ lemma sem_mk_bool_inj[simp]:
   by (smt (verit, del_insts) sem_mk_dest_bool)
   
 
-(*
-interpretation V_bool: VDT_field V_bool using V_bool_ax .
-*)
-
-
 section \<open>Instructions\<close>
 
 definition op_const_bool :: "bool \<Rightarrow> VAL proc"

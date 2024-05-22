@@ -7,7 +7,7 @@ section \<open>Named Tuple in Memory\<close>
 subsection \<open>Semantics\<close>
 
 debt_axiomatization
-    Map_of_Val_ntup: \<open>Map_of_Val (V_named_tup.mk vs) =
+    Map_of_Val_ntup: \<open>Map_of_Val (sem_mk_ntup vs) =
       (\<lambda>path. case path of AgIdx_S s # path' \<Rightarrow>
                                 if s |\<in>| fmdom vs then Map_of_Val (the (fmlookup vs s)) path'
                                                   else 1
@@ -75,7 +75,7 @@ lemma Mem_Coerce_NTup:
         auto simp add: Map_of_Val_ntup fun_eq_iff push_map_cons_neq
              split: aggregate_index'.split list.split)
   subgoal for x v
-    by (rule exI[where x=\<open>V_named_tup.mk (fmupd s v fmempty)\<close>],
+    by (rule exI[where x=\<open>sem_mk_ntup (fmupd s v fmempty)\<close>],
         auto simp add: Map_of_Val_ntup fun_eq_iff push_map_cons_neq
              split: aggregate_index'.split list.split) .
 

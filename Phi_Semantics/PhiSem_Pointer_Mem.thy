@@ -175,7 +175,7 @@ fixes \<M> :: \<open>('TY,'VAL) \<M>\<close>
     and   valid_idx_step_tup : \<open>\<M>.valid_idx_step \<M> (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
     and   valid_idx_step_arr : \<open>\<M>.valid_idx_step \<M> (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
     and   idx_step_value_welltyp: \<open>\<M>.valid_idx_step \<M> T i \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> \<M>.idx_step_value \<M> i v \<in> Well_Type (\<M>.idx_step_type \<M> i T)\<close>
-    and   idx_step_value_tup : \<open>\<M>.idx_step_value \<M> i (V_tup.mk vs)   = vs!i\<close>
+    and   idx_step_value_tup : \<open>\<M>.idx_step_value \<M> i (sem_mk_tup vs)   = vs!i\<close>
     and   idx_step_value_arr : \<open>\<M>.idx_step_value \<M> i (V_array.mk (T,vs)) = vs!i\<close>
     and   idx_step_mod_value : \<open>\<M>.valid_idx_step \<M> T i
                             \<Longrightarrow> \<M>.valid_idx_step \<M> T j
@@ -186,7 +186,7 @@ fixes \<M> :: \<open>('TY,'VAL) \<M>\<close>
                                    \<Longrightarrow> v \<in> Well_Type T
                                    \<Longrightarrow> f (\<M>.idx_step_value \<M> i v) \<in> Well_Type (\<M>.idx_step_type \<M> i T)
                                    \<Longrightarrow> \<M>.idx_step_mod_value \<M> i f v \<in> Well_Type T\<close>
-    and   idx_step_mod_value_tup : \<open>\<M>.idx_step_mod_value \<M> i f (V_tup.mk vs) = V_tup.mk (vs[i := f (vs!i)])\<close>
+    and   idx_step_mod_value_tup : \<open>\<M>.idx_step_mod_value \<M> i f (sem_mk_tup vs) = sem_mk_tup (vs[i := f (vs!i)])\<close>
     and   idx_step_mod_value_arr : \<open>\<M>.idx_step_mod_value \<M> i f (V_array.mk (T,vs)) = V_array.mk (T,vs[i := f (vs!i)])\<close>
     and   idx_step_offset_arr: \<open>\<M>.idx_step_offset \<M> (\<tau>Array N T) i = i * \<M>.size_of \<M> T\<close>
     and   idx_step_offset_size:\<open>\<M>.valid_idx_step \<M> T i \<Longrightarrow> \<M>.idx_step_offset \<M> T i + \<M>.size_of \<M> (\<M>.idx_step_type \<M> i T) \<le> \<M>.size_of \<M> T\<close>

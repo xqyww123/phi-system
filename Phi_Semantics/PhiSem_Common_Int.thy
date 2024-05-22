@@ -6,11 +6,6 @@ section \<open>Common Integer Base\<close>
 
 subsection \<open>Logic Syntax and Isabelle Syntax Hijack\<close>
 
-(*
-ML \<open>structure PhiSem_Common_Int_Notation_Patch = Theory_Data (
-  type T = string; val empty = ""; val merge = K ""
-)\<close>*)
-
 setup \<open>
 let val remove_synt = Sign.notation false Syntax.mode_default [
     (Const (\<^const_abbrev>\<open>inter\<close>, dummyT), Infixl (Input.string "Int", 70, Position.no_range)),

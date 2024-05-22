@@ -6,40 +6,6 @@ begin
 
 section \<open>Semantics\<close>
 
-subsection \<open>Models\<close>
-
-subsubsection \<open>Type\<close>
-
-(*
-virtual_datatype array_ty =
-  array   :: \<open>'self \<times> nat\<close>
-
-debt_axiomatization T_array :: \<open>(TY \<times> nat) type_entry\<close>
-  where array_ty_ax: \<open>array_ty TY_CONS_OF T_array\<close>
-
-interpretation array_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_array using array_ty_ax .
-
-hide_fact array_ty_ax
-*)
-
-
-subsubsection \<open>Value\<close>
-
-(*
-virtual_datatype array_val =
-  V_array   :: \<open>'self list\<close>
-
-debt_axiomatization V_array :: \<open>(VAL list) value_entry\<close>
-  where array_val_ax: \<open>array_val VAL_CONS_OF V_array\<close>
-
-interpretation array_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_array using array_val_ax .
-
-hide_fact array_val_ax
-*)
-
-
-subsection \<open>Semantics\<close>
-
 debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
                 and sem_mk_array   :: \<open>VAL list \<Rightarrow> VAL\<close>
                 and sem_dest_array :: \<open>VAL \<Rightarrow> VAL list\<close>
@@ -63,7 +29,6 @@ debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<
 lemma sem_mk_array_inj[simp]:
   \<open>sem_mk_array vs1 = sem_mk_array vs2 \<equiv> vs1 = vs2\<close>
   by (smt (verit, best) sem_mk_dest_array)
-  
 
 lemma list_all_replicate[simp]:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>

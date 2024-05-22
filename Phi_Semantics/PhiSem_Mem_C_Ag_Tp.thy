@@ -7,7 +7,7 @@ section \<open>Tuple in Memory\<close>
 subsection \<open>Semantics\<close>
 
 debt_axiomatization
-    Map_of_Val_tup: \<open>Map_of_Val (V_tup.mk vs) =
+    Map_of_Val_tup: \<open>Map_of_Val (sem_mk_tup vs) =
       (\<lambda>path. case path of AgIdx_N i # path' \<Rightarrow>
                                 if i < length vs then Map_of_Val (vs ! i) path' else 1
                          | _ \<Rightarrow> 1)\<close>
@@ -89,7 +89,7 @@ lemma Mem_Coerce_NTup:
         auto simp add: Map_of_Val_tup fun_eq_iff push_map_cons_neq
              split: aggregate_index'.split list.split)
   subgoal for x v
-    by (rule exI[where x=\<open>V_tup.mk [v]\<close>],
+    by (rule exI[where x=\<open>sem_mk_tup [v]\<close>],
         auto simp add: Map_of_Val_tup fun_eq_iff push_map_cons_neq
              split: aggregate_index'.split list.split) .
 
