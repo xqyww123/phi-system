@@ -10,6 +10,7 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
+(*
 virtual_datatype array_ty =
   array   :: \<open>'self \<times> nat\<close>
 
@@ -19,14 +20,12 @@ debt_axiomatization T_array :: \<open>(TY \<times> nat) type_entry\<close>
 interpretation array_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_array using array_ty_ax .
 
 hide_fact array_ty_ax
-
-abbreviation array_semty ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
-  where \<open>array_semty N T \<equiv> array.mk (T,N)\<close>
-
+*)
 
 
 subsubsection \<open>Value\<close>
 
+(*
 virtual_datatype array_val =
   V_array   :: \<open>'self list\<close>
 
@@ -36,28 +35,35 @@ debt_axiomatization V_array :: \<open>(VAL list) value_entry\<close>
 interpretation array_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_array using array_val_ax .
 
 hide_fact array_val_ax
+*)
 
 
 subsection \<open>Semantics\<close>
 
-debt_axiomatization
-        WT_arr[simp]: \<open>Well_Type (\<a>\<r>\<r>\<a>\<y>[n] t) = { V_array.mk vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
-  and   zero_arr[simp]: \<open>Zero (\<a>\<r>\<r>\<a>\<y>[N] T)  = map_option (\<lambda>z. V_array.mk (replicate N z)) (Zero T)\<close>
+debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
+                and sem_mk_array   :: \<open>VAL list \<Rightarrow> VAL\<close>
+                and sem_dest_array :: \<open>VAL \<Rightarrow> VAL list\<close>
+  where sem_mk_dest_array[simp]: \<open>sem_dest_array (sem_mk_array vs) = vs\<close>
+  and   WT_arr[simp]: \<open>Well_Type (\<a>\<r>\<r>\<a>\<y>[n] t) = { sem_mk_array vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
+  and   zero_arr[simp]: \<open>Zero (\<a>\<r>\<r>\<a>\<y>[N] T)  = map_option (\<lambda>z. sem_mk_array (replicate N z)) (Zero T)\<close>
   and   idx_step_type_arr [eval_aggregate_path] : \<open>idx_step_type (AgIdx_N i) (\<a>\<r>\<r>\<a>\<y>[N] T) = T\<close>
   and   valid_idx_step_arr[eval_aggregate_path] : \<open>valid_idx_step (\<a>\<r>\<r>\<a>\<y>[N] T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
-  and   idx_step_value_arr[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (V_array.mk vs) = vs!i\<close>
-  and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (V_array.mk vs) = V_array.mk (vs[i := f (vs!i)])\<close>
+  and   idx_step_value_arr[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (sem_mk_array vs) = vs!i\<close>
+  and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (sem_mk_array vs) = sem_mk_array (vs[i := f (vs!i)])\<close>
   and   type_measure_arr : \<open>type_measure (\<a>\<r>\<r>\<a>\<y>[N] T) = Suc (type_measure T)\<close>
-
   and   V_arr_sep_disj[simp]:
-            \<open>V_array.mk vs1 ## V_array.mk vs2 \<longleftrightarrow> list_all2 (##) vs1 vs2\<close>
+            \<open>sem_mk_array vs1 ## sem_mk_array vs2 \<longleftrightarrow> list_all2 (##) vs1 vs2\<close>
   and   V_arr_mult[simp]:
-            \<open>V_array.mk vs1 * V_array.mk vs2 = V_array.mk (map2 (*) vs1 vs2)\<close>
+            \<open>sem_mk_array vs1 * sem_mk_array vs2 = sem_mk_array (map2 (*) vs1 vs2)\<close>
   and   V_arr_sep_disj_R:
-            \<open>V_array.mk vs1 ## vs2' \<Longrightarrow> (\<exists>vs. vs2' = V_array.mk vs)\<close>
+            \<open>sem_mk_array vs1 ## vs2' \<Longrightarrow> (\<exists>vs. vs2' = sem_mk_array vs)\<close>
   and   V_named_tup_sep_disj_L:
-            \<open>vs1' ## V_array.mk vs2 \<Longrightarrow> (\<exists>vs. vs1' = V_array.mk vs)\<close>
+            \<open>vs1' ## sem_mk_array vs2 \<Longrightarrow> (\<exists>vs. vs1' = sem_mk_array vs)\<close>
 
+lemma sem_mk_array_inj[simp]:
+  \<open>sem_mk_array vs1 = sem_mk_array vs2 \<equiv> vs1 = vs2\<close>
+  by (smt (verit, best) sem_mk_dest_array)
+  
 
 lemma list_all_replicate[simp]:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
@@ -66,9 +72,10 @@ lemma list_all_replicate[simp]:
 
 section \<open>\<phi>Type\<close>
 
+
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
                     ("\<bbbA>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
-  where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
+  where \<open>l \<Ztypecolon> Array N T \<equiv> sem_mk_array vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
         \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
           (tactic: clarsimp ; subgoal' for x \<open>induct x arbitrary: N\<close>)
@@ -104,8 +111,8 @@ lemma Separation_Homo\<^sub>E_Array[\<phi>reason add]:
                     ex_simps(6)[where P=\<open>i < j\<close> for i j, symmetric]
               simp del: ex_simps)
   subgoal for z vs f1 f2
-    by (rule exI[where x=\<open>V_array.mk (map f1 [0..<length z])\<close>],
-        rule exI[where x=\<open>V_array.mk (map f2 [0..<length z])\<close>],
+    by (rule exI[where x=\<open>sem_mk_array (map f1 [0..<length z])\<close>],
+        rule exI[where x=\<open>sem_mk_array (map f2 [0..<length z])\<close>],
         auto simp add: nth_equalityI list_all2_conv_all_nth) .
 
 

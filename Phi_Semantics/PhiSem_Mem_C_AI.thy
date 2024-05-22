@@ -27,7 +27,7 @@ proc calloc_aN:
   semantic_local_value($n) \<open>\<a>\<i>\<n>\<t>\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<a>\<r>\<r>\<a>\<y>[nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
-                                               and v=\<open>V_array.mk (replicate (nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
+                                               and v=\<open>sem_mk_array (replicate (nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
 
@@ -61,8 +61,8 @@ proc calloc_aN2:
 
   apply_rule FIC.aggregate_mem.allocate_rule
             [where TY=\<open>\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY\<close>
-               and v=\<open>V_array.mk (replicate (nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1)))
-                                 (V_array.mk (replicate (nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>2))) (the (Zero TY)))))\<close>]
+               and v=\<open>sem_mk_array (replicate (nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1)))
+                                   (sem_mk_array (replicate (nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>2))) (the (Zero TY)))))\<close>]
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>1))] \<a>\<r>\<r>\<a>\<y>[nat (V_aint.dest (\<phi>arg.dest \<a>\<r>\<g>2))] TY)\<close>
 

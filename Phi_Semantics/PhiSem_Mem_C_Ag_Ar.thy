@@ -6,7 +6,7 @@ begin
 section \<open>Semantics\<close>
 
 debt_axiomatization
-      Map_of_Val_arr: \<open>Map_of_Val (V_array.mk vs) =
+      Map_of_Val_arr: \<open>Map_of_Val (sem_mk_array vs) =
         (\<lambda>path. case path of AgIdx_N i # path' \<Rightarrow>
                                   if i < length vs then Map_of_Val (vs ! i) path' else 1
                            | _ \<Rightarrow> 1)\<close>
@@ -240,7 +240,7 @@ lemma split_mem_coerce_array':
 
   subgoal for vs
     apply (rule exI[where x=\<open>[AG_IDX(n\<^sup>\<t>\<^sup>\<h>)] \<tribullet>\<^sub>m (to_share \<circ> map_option discrete \<circ> Map_of_Val (last vs))\<close>])
-    apply (rule exI[where x=\<open>to_share \<circ> map_option discrete \<circ> Map_of_Val (V_array.mk (take n vs))\<close>])
+    apply (rule exI[where x=\<open>to_share \<circ> map_option discrete \<circ> Map_of_Val (sem_mk_array (take n vs))\<close>])
     
     apply (auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq sep_disj_fun_def
                       list_all2_lengthD
@@ -252,12 +252,12 @@ lemma split_mem_coerce_array':
              split: list.split aggregate_index'.split,
         rule exI[where x=\<open>last vs\<close>],
         metis add_diff_cancel_left' last_conv_nth length_0_conv lessI list_all2_conv_all_nth nat.simps(3) plus_1_eq_Suc)
-    apply (rule exI[where x=\<open>V_array.mk (take n vs)\<close>])
+    apply (rule exI[where x=\<open>sem_mk_array (take n vs)\<close>])
     by (auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq list_all2_lengthD
              split: list.split aggregate_index'.split)
 
   subgoal for v_t v_h
-    apply (rule exI[where x=\<open>V_array.mk (v_h @ [v_t])\<close>])
+    apply (rule exI[where x=\<open>sem_mk_array (v_h @ [v_t])\<close>])
     apply (auto simp: fun_eq_iff times_fun Map_of_Val_arr push_map_cons_neq sep_disj_fun_def
                       list_all2_lengthD nth_append
                 split: list.split aggregate_index'.split)

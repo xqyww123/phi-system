@@ -26,7 +26,7 @@ proc calloc:
   semantic_local_value($n) \<open>\<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<a>\<r>\<r>\<a>\<y>[snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
-                                               and v=\<open>V_array.mk (replicate (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
+                                               and v=\<open>sem_mk_array (replicate (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
 
