@@ -18,7 +18,7 @@ proc qsort:
   if (len \<le> 1)
   \<medium_left_bracket> return \<medium_right_bracket>
   \<medium_left_bracket>
-    val pivot \<leftarrow> (i + (len - 1)) ! \<semicolon>
+    val pivot \<leftarrow> *(i + (len - 1)) \<semicolon>
     var d \<leftarrow> 0 \<semicolon>
     iterate (0,len) \<open>\<lambda>n. d \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
                           l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)
@@ -28,10 +28,10 @@ proc qsort:
                            (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
     \<medium_left_bracket> 
       for n \<rightarrow> val n \<semicolon>
-      (i + n)! \<rightarrow> val x \<semicolon>
+      *(i + n) \<rightarrow> val x \<semicolon>
       if (x \<le> pivot)
       \<medium_left_bracket>
-        (i + n) := (i + d)! \<semicolon>
+        (i + n) := *(i + d) \<semicolon>
         (i + d) := x \<semicolon>
         d \<leftarrow> d + 1
       \<medium_right_bracket>

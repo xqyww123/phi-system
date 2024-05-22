@@ -928,7 +928,23 @@ setup \<open>Context.theory_map (
         else (oprs, s))
 )\<close>
 
+subsection \<open>Dereference Operator\<close>
 
+declare_\<phi>lang_operator postfix %\<phi>lang_deref "!" \<comment> \<open>dereference operator\<close>
+
+\<phi>lang_parser apply_operator (%\<phi>parser_app-330, 70) ["*"] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close>)
+\<open> fn (opr_ctxt as (_,(ctxt,sequent))) =>
+        Parse.position (Args.$$$ "*") >> (fn (_,pos) => fn cfg =>
+    let val mode = Phi_Working_Mode.mode1 ctxt
+        val num = Generic_Variable_Access.number_of_values (#spec_of mode (Thm.prop_of sequent))
+        val name = if num = 0 then "!" else "*"
+        val opr = if num = 0
+                  then (70, @{priority %\<phi>lang_deref}, (0, 1))
+                  else the (Phi_Opr_Stack.lookup_operator (Proof_Context.theory_of ctxt) name)
+        val rules = Phi_App_Rules.app_rules ctxt [(Facts.Named ((name,pos), NONE), [])]
+     in Phi_Opr_Stack.push_operator cfg (opr, (name,pos), rules) opr_ctxt
+    end)
+\<close>
 
 
 
