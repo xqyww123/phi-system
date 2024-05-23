@@ -24,6 +24,9 @@ signature PHI_SYS = sig
         -> (binding * typ option * mixfix) list
         -> (Thm.binding * (term * term list) list) list
         -> thm -> Proof.state -> thm list * Proof.state
+
+  structure Lemmata_Processors : HOOKS
+
 end
 
 structure Phi_Sys : PHI_SYS = struct
@@ -38,28 +41,50 @@ fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 val cast = Phi_Working_Mode.cast
 val cast_exception = Phi_Working_Mode.cast_exception
 
-fun move_lemmata' (ctxt, sequent) =
-  let
-    fun filter_lemma th =
-      case Thm.prop_of th
-        of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>USELESS\<close> $ _) => NONE
-         | \<^const>\<open>Trueprop\<close> $ \<^const>\<open>True\<close> => NONE
-         | _ => SOME th
-    val all_lemmas = (sequent RS @{thm conjunct2})
-                  |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
-                  |> map_filter filter_lemma
-    val lemmas = all_lemmas
-    val ctxt' =
-      if null lemmas
-      then ctxt
-      else Context.proof_map (fold (fold (fn th =>
-               Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
-            #> Useful_Thms.add_thm th
-           ) o Phi_Envir.process_useful_lemmata true ctxt
-           ) lemmas) ctxt
-  in
-    (ctxt', sequent RS @{thm conjunct1})
+structure Lemmata_Processors = Hooks (
+  type arg = unit
+  type state = {
+        input   : thm list,
+        lemmata : thm list,
+        useful  : thm list,
+        rules   : Phi_Reasoner.add_rule_param list,
+        ctxt    : Proof.context
+    }
+)
+
+fun add_lemmata lemmas ctxt =
+  let fun filter_lemma th =
+        case Thm.prop_of th
+          of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>USELESS\<close> $ _) => NONE
+           | \<^const>\<open>Trueprop\<close> $ \<^const>\<open>True\<close> => NONE
+           | _ => SOME th
+      val lemmas = lemmas
+                |> maps PLPR_Syntax.elim_ant_sequence_or_HOL_conj
+                |> map_filter filter_lemma
+                |> maps (Phi_Envir.process_useful_lemmata true ctxt)
+      val {lemmata, useful, rules, ctxt, ...} =
+                Lemmata_Processors.invoke (Context.Proof ctxt) ()
+                  {input=lemmas, lemmata=[], useful=[], rules=[], ctxt=ctxt}
+   in ctxt
+   |> not (null lemmata) ? Context.proof_map (fold (Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close>) lemmas)
+   |> not (null useful)  ? Context.proof_map (fold Useful_Thms.add_thm lemmas)
+   |> not (null rules)   ? Context.proof_map (Phi_Reasoner.add_rules rules)
   end
+
+val _ = Theory.setup (Context.theory_map (Lemmata_Processors.add 1000 (
+  fn () => fn {input, lemmata, useful, rules, ctxt} =>
+    let fun is_useful (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_useful X
+          | is_useful (Const(\<^const_name>\<open>Satisfiable\<close>, _) $ _) = false
+          | is_useful _ = true
+        val useful = filter (is_useful o Thm.concl_of) input @ useful
+        val lemmata = input @ lemmata
+     in {input=[], lemmata=lemmata, useful=useful, rules=rules, ctxt=ctxt}
+    end
+)))
+
+fun move_lemmata' (ctxt, sequent) =
+      (add_lemmata [sequent RS @{thm conjunct2}] ctxt,
+       sequent RS @{thm conjunct1})
 
 fun move_lemmata (ctxt, sequent) =
   case Thm.prop_of sequent

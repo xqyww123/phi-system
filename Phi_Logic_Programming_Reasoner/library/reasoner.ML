@@ -144,10 +144,10 @@ signature NU_REASONER = sig
                     -> guard option
                     -> thm list
                     -> Context.generic -> Context.generic
-  val add_rules: (thm list * Position.T * mode' * Reasoner_Group.group option
-                       * (pattern * priority option) list * pattern list
-                       * (context_state -> bool) option) list
-                    -> Context.generic -> Context.generic
+  type add_rule_param = thm list * Position.T * mode' * Reasoner_Group.group option
+                      * (pattern * priority option) list * pattern list
+                      * (context_state -> bool) option
+  val add_rules: add_rule_param list -> Context.generic -> Context.generic
   val del_rules : pattern list option -> thm list -> Context.generic -> Context.generic
 
   type pass_data = thm list (*rules*) * (mode' * Reasoner_Group.group option) *
@@ -1269,6 +1269,10 @@ fun intro_reasoner ctxt0 pos mode0 priority0_group0 pats0 guard0 rules0 =
 fun add_rule pos mode priority pats guard rules ctxt =
       intro_reasoner ctxt pos mode priority pats guard rules
         |-> adds
+
+type add_rule_param = thm list * Position.T * mode' * Reasoner_Group.group option
+                    * (pattern * priority option) list * pattern list
+                    * (context_state -> bool) option
 
 fun add_rules [] ctxt = ctxt
   | add_rules rules ctxt =
