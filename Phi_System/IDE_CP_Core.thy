@@ -1838,49 +1838,6 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
   by metis
   
 
-
-
-
-subsubsection \<open>Automatic Transformation\<close>
-
-(*
-TODO!!!!
-
-lemma [\<phi>reason 2000]:
-  \<open> PROP \<phi>Application (RP \<Longrightarrow> RX @tag morphism_mode) (Trueprop S) (PROP RET)
-\<Longrightarrow> PROP \<phi>Application (Trueprop (Automatic_Transformation any_mode RP RX)) (Trueprop S) (PROP RET)\<close>
-  unfolding \<phi>Application_def Generated_Rule_def Action_Tag_def
-  subgoal premises prems using prems(1)[OF prems(2), OF prems(3)[THEN mp], simplified] . .
-
-(*TODO: ungly!!!*)
-
-lemma [\<phi>reason 1200 for \<open>
-  PROP \<phi>Application (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T' \<w>\<i>\<t>\<h> ?P2 @tag morphism_mode)
-        (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
-\<close>]:
-  " \<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> P1' False
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> PROP \<phi>Application (S' \<s>\<h>\<i>\<f>\<t>\<s> T' \<w>\<i>\<t>\<h> P2 @tag morphism_mode)
-      (Trueprop (CurrentConstruction mode blk RR S))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def Simplify_def
-  using \<phi>apply_implication \<phi>apply_view_shift \<phi>frame_view by blast
-
-lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
-  PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
-      (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
-\<close>]:
-  "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
-      (Trueprop (CurrentConstruction mode blk RR S))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (meson \<phi>apply_implication transformation_left_frame \<phi>apply_view_shift)
-*)
-
 subsection \<open>Action\<close>
 
 text \<open>Action provides a kind of meta calling mechanism.

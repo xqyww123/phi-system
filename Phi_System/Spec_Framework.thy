@@ -368,14 +368,18 @@ declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<R
 
 subsubsection \<open>Semantic Typeof\<close>
 
-definition SType_Of :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY\<close> ("\<t>\<y>\<p>\<e>\<o>\<f>")
-  where \<open>\<t>\<y>\<p>\<e>\<o>\<f> T = (@TY. Semantic_Type T TY)\<close>
+consts Type_Of_syntax :: \<open>'a \<Rightarrow> TY\<close> ("\<t>\<y>\<p>\<e>\<o>\<f>")
+
+definition SType_Of :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY\<close>
+  where \<open>SType_Of T = (@TY. Semantic_Type T TY)\<close>
+
+adhoc_overloading Type_Of_syntax SType_Of
 
 lemma SType_Of_unfold:
   \<open> Semantic_Type T TY
 \<Longrightarrow> Inhabited T
-\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T \<equiv> TY \<close>
-  unfolding Semantic_Type_def Inhabited_def SType_Of_def atomize_eq
+\<Longrightarrow> SType_Of T \<equiv> TY \<close>
+  unfolding Semantic_Type_def Inhabited_def SType_Of_def atomize_eq Satisfiable_def
   using Well_Type_unique
   by (clarsimp, smt (verit, del_insts) Satisfiable_def someI)
 

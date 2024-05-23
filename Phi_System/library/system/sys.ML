@@ -9,7 +9,6 @@ signature PHI_SYS = sig
   val cast : cterm -> Proof.context -> thm -> thm
   val cast_exception : cterm -> Proof.context -> thm -> thm
   val move_lemmata : context_state -> context_state
-  val apply_automatic_morphism : context_state -> context_state
 
   val accept_proc : context_state -> context_state
 
@@ -34,39 +33,10 @@ open Thm Phi_Envir Term
 fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
-(** Automatic Transformation **)
-
-structure Generated_Rules = Proof_Data (
-  type T = thm list
-  val init = K []
-);
-
-val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>generated\<close>,
-          fn genric =>
-              case genric
-              of Context.Theory _ => []
-               | Context.Proof ctxt => Generated_Rules.get ctxt))
-
 (** Basic Operations **)
 
 val cast = Phi_Working_Mode.cast
 val cast_exception = Phi_Working_Mode.cast_exception
-
-fun apply_automatic_morphism' _ [] _ _ = raise Empty
-  | apply_automatic_morphism' R (M::L) ctxt sequent =
-      case Thm.concl_of M
-        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Generated_Rule\<close>, _) $
-                                  (Const (\<^const_name>\<open>MODE_AUTO\<close>, _) $ _) $ _ $ _)
-             => (rev R @ L, Phi_Apply.apply [M] ctxt sequent)
-         | _ => apply_automatic_morphism' (M::R) L ctxt sequent
-
-fun apply_automatic_morphism (ctxt, sequent) =
-  case apply_automatic_morphism' [] (Generated_Rules.get ctxt) ctxt sequent
-    of (R, stat') => (Generated_Rules.put R ctxt, stat')
-
-fun simplify_morphisms _   [] = []
-  | simplify_morphisms ctxt L =
-      map (Raw_Simplifier.rewrite_rule ctxt @{thms' REMAINS_simp}) L
 
 fun move_lemmata' (ctxt, sequent) =
   let
@@ -75,15 +45,10 @@ fun move_lemmata' (ctxt, sequent) =
         of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>USELESS\<close> $ _) => NONE
          | \<^const>\<open>Trueprop\<close> $ \<^const>\<open>True\<close> => NONE
          | _ => SOME th
-    fun is_generated_stuff th =
-      case Thm.concl_of th
-        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Generated_Rule\<close>, _) $ _ $ _ $ _) => true
-         | _ => false
     val all_lemmas = (sequent RS @{thm conjunct2})
                   |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
                   |> map_filter filter_lemma
-    val lemmas = all_lemmas |> filter (not o is_generated_stuff)
-    val generated_stuffs = all_lemmas |> filter is_generated_stuff |> simplify_morphisms ctxt
+    val lemmas = all_lemmas
     val ctxt' =
       if null lemmas
       then ctxt
@@ -92,12 +57,8 @@ fun move_lemmata' (ctxt, sequent) =
             #> Useful_Thms.add_thm th
            ) o Phi_Envir.process_useful_lemmata true ctxt
            ) lemmas) ctxt
-    val ctxt'' =
-      if null generated_stuffs
-      then ctxt'
-      else Generated_Rules.map (fn L => generated_stuffs@L) ctxt'
   in
-    (ctxt'', sequent RS @{thm conjunct1})
+    (ctxt', sequent RS @{thm conjunct1})
   end
 
 fun move_lemmata (ctxt, sequent) =

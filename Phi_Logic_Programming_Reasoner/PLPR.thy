@@ -1105,19 +1105,19 @@ For example,
 
 subsubsection \<open>Basic Reasoning Rules\<close>
 
-\<phi>reasoner_group lambda_unify_all = (1000, [10, 3000]) for \<open>LHS = RHS\<close>
+\<phi>reasoner_group lambda_unify_all = (40, [10, 70]) for \<open>LHS = RHS\<close>
       \<open>lambda unification\<close>
-  and lambda_unify__default = (2000, [2000, 2000]) in lambda_unify_all \<open>system default\<close>
-  and lambda_unify_high = (2100, [2100, 3000]) in lambda_unify_all and > lambda_unify__default
+  and lambda_unify__default = (40, [40, 40]) in lambda_unify_all \<open>system default\<close>
+  and lambda_unify_high = (60, [50, 70]) in lambda_unify_all and > lambda_unify__default
       \<open>user rules of higher priority than the normal unification, used to override the default behavior\<close>
-  and lambda_unify_low = (1000, [100, 1900]) in lambda_unify_all and < lambda_unify__default
+  and lambda_unify_low = (20, [10, 30]) in lambda_unify_all and < lambda_unify__default
       \<open>user rules of lower priority than the normal unification, used when the normal unification fails.\<close>
 
 declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
         exI  [\<phi>reason %cutting]
-        HOL.refl [\<phi>reason %lambda_unify__default for \<open>_ = _\<close>]
-        Pure.reflexive [\<phi>reason %lambda_unify__default for \<open>_ \<equiv> _\<close>]
+        HOL.refl [\<phi>reason! %lambda_unify__default for \<open>_ = _\<close>]
+        Pure.reflexive [\<phi>reason! %lambda_unify__default for \<open>_ \<equiv> _\<close>]
 
 \<phi>reasoner_group \<phi>LPR_imp = (%cutting, [%cutting, %cutting+100]) for \<open>_ \<longrightarrow> _\<close>
   \<open>Rules handling implifications, may involving different optimizations for specific cases\<close>
@@ -1159,7 +1159,7 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Unification\<close>
 
-lemma [\<phi>reason %lambda_unify_low for \<open>?var = (_, _)\<close>
+lemma [\<phi>reason! %lambda_unify_low for \<open>?var = (_, _)\<close>
                                       \<open>(_,_) = (_,_)\<close>
                                       \<open>(_,_) = ?var\<close>]:
   \<open> x = a
@@ -1167,22 +1167,22 @@ lemma [\<phi>reason %lambda_unify_low for \<open>?var = (_, _)\<close>
 \<Longrightarrow> (x,y) = (a,b) \<close>
   by simp
 
-lemma [\<phi>reason %lambda_unify_low]:
+lemma [\<phi>reason! %lambda_unify_low]:
   \<open> x = a
 \<Longrightarrow> fst (x,y) = a \<close>
   by simp
 
-lemma [\<phi>reason %lambda_unify_low]:
+lemma [\<phi>reason! %lambda_unify_low]:
   \<open> y = a
 \<Longrightarrow> snd (x,y) = a \<close>
   by simp
 
-lemma [\<phi>reason %lambda_unify_low]:
+lemma [\<phi>reason! %lambda_unify_low]:
   \<open> a = x
 \<Longrightarrow> a = fst (x,y) \<close>
   by simp
 
-lemma [\<phi>reason %lambda_unify_low]:
+lemma [\<phi>reason! %lambda_unify_low]:
   \<open> a = y
 \<Longrightarrow> a = snd (x,y) \<close>
   by simp

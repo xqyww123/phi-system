@@ -211,8 +211,10 @@ paragraph \<open>The type of the object that a pointer points to\<close>
 abbreviation address_type :: \<open>address \<Rightarrow> TY\<close>
   where \<open>address_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
 
+adhoc_overloading Type_Of_syntax address_type
+
 lemma address_storable_in_mem:
-  \<open>valid_address addr \<Longrightarrow> type_storable_in_mem (address_type addr)\<close>
+  \<open>valid_address addr \<Longrightarrow> type_storable_in_mem (\<t>\<y>\<p>\<e>\<o>\<f> addr)\<close>
   unfolding valid_address_def Valid_MemBlk_def zero_memaddr_def
   by (cases addr; case_tac x1; simp; insert index_type_type_storable_in_mem; blast)
 
@@ -532,6 +534,33 @@ lemma [\<phi>reason %chk_sem_ele_idx]:
 \<Longrightarrow> is_valid_index_of (memaddr.index addr) (memblk.layout (memaddr.blk addr')) (address_type addr)\<close>
   unfolding valid_address_def Premise_def is_valid_index_of_def
   by clarsimp
+
+paragraph \<open>\<open>\<t>\<y>\<p>\<e>\<o>\<f> address\<close>\<close>
+
+declare [[\<phi>reason_default_pattern
+    \<open>address_type ?addr = _\<close> \<Rightarrow> \<open>address_type ?addr = ?var\<close> (100)
+]]
+
+\<phi>reasoner_group address_type = (100, [71, 2000]) for \<open>address_type addr = TY\<close>
+                                                  and > lambda_unify_all
+                 \<open>infer the type of a pointer\<close>
+            and address_type_fallback = (76, [76,76])  in address_type \<open>fallback\<close>
+            and address_type_fail = (71, [71,71])      in address_type < address_type_fallback \<open>fallback\<close>
+            and address_type_cut = (1000, [1000,1030]) in address_type \<open>cut\<close>
+
+lemma [\<phi>reason default %address_type_fallback]:
+  \<open> address_type addr = TY
+\<Longrightarrow> is_valid_step_idx_of i TY TY'
+\<Longrightarrow> address_type (addr \<tribullet> LOGIC_IDX(i)) = TY' \<close>
+  unfolding is_valid_step_idx_of_def
+  by clarsimp
+
+lemma [\<phi>reason default %address_type_fail]:
+  \<open> FAIL TEXT(\<open>Fail to infer the type of\<close> addr)
+\<Longrightarrow> address_type addr = TY \<close>
+  unfolding FAIL_def
+  by blast
+
 
 subsubsection \<open>Install Semantics\<close>
 

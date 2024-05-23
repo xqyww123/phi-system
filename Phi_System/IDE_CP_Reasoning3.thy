@@ -148,44 +148,6 @@ lemma [\<phi>reason 1200]:
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 *)
 
-text \<open>TODO!\<close>
-
-(*TODO!
-lemma [\<phi>reason 1200]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> P @tag \<A>SE True\<close>
-  unfolding Action_Tag_def \<r>Guard_def
-  apply (cases C; cases x; simp add: \<phi>Prod_expn')
-  \<medium_left_bracket> premises A
-    dup
-    apply_rule Agreement_cast[OF A]
-  \<medium_right_bracket>
-  using Agreement_cast .
-
-lemma [\<phi>reason 1211]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> (
-      Reverse_Transformation (fst y' \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> snd y' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P') (
-        y' \<Ztypecolon> Agreement U' \<^emph> (Agreement T' ?\<^sub>\<phi> C) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd y', ()) \<Ztypecolon> Agreement T' \<^emph> \<circle> \<w>\<i>\<t>\<h> P')
-    \<and> P) @tag \<A>SE True \<close>
-  unfolding Action_Tag_def \<r>Guard_def Generated_Rule_def
-  apply (rule transformation_weaken[where P=P], defer_tac)
-  apply (cases C; cases x; simp add: \<phi>Prod_expn')
-  \<medium_left_bracket> premises A
-    dup
-    apply_rule Agreement_cast[OF A]
-  \<medium_right_bracket>
-  apply (simp add: transformation_weaken Agreement_cast)
-  apply (clarsimp; cases C; cases y'; simp add: \<phi>Prod_expn')
-  \<medium_left_bracket> premises _ and _ and A and _
-    apply_rule Agreement_cast[OF A]
-    Agreement_shrink
-  \<medium_right_bracket>
-  using Agreement_cast .
-*)
-
-
-
 consts partial_add_split :: action
        non_trivial_partial_add_split :: action
 
