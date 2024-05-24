@@ -225,7 +225,7 @@ proc (nodef) [\<phi>reason %\<phi>synthesis_cut
   input  \<open>R\<^sub>0\<close>
   output \<open>\<lambda>ret. (x\<^sub>h, x\<^sub>L) \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] (List_Item T \<^emph> L) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>2\<close>
   @tag synthesis
-\<medium_left_bracket>  
+\<medium_left_bracket>
   C1 \<rightarrow> val h \<semicolon>
   C2 $h semantic_cons_lval
 \<medium_right_bracket> .

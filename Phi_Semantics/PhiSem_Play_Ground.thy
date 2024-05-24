@@ -49,7 +49,7 @@ proc test_ptr:
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 0)   \<semicolon>
   & $1[b]\<tribullet>$a[0] \<semicolon>
-  & $1[$b]\<tribullet>$a\<tribullet>0 \<semicolon>
+  & $1[b]\<tribullet>$a\<tribullet>0 \<semicolon>
   & $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
 
@@ -84,9 +84,9 @@ proc test_agg2:
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
     
-  $v[0,1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v[0,0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
-  $v
+  v[0,1] \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  v[0,0] \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  v
 \<medium_right_bracket> .
 
 proc test_agg21:
@@ -95,9 +95,9 @@ proc test_agg21:
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
     
-  $v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
-  $v
+  v\<tribullet>0\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  v\<tribullet>0\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  v
 \<medium_right_bracket> .
 
 proc test_agg22:
@@ -106,9 +106,9 @@ proc test_agg22:
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
-  $v[0]\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v[0]\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
-  $v
+  v[0]\<tribullet>1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  v[0]\<tribullet>0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  v
 \<medium_right_bracket> .
 
 proc test_agg23:

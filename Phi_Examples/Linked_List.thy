@@ -43,20 +43,15 @@ proc is_empty:
   addr = NULL
 \<medium_right_bracket> .
 
-
-declare [[\<phi>trace_reasoning = 1]]
   
 proc prepend_llist:
   input  \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T z\<close>
   output \<open>v#l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr' T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
- \<semicolon> val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>\<close> \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>\<close> \<semicolon>
   ret.nxt := addr \<semicolon> 
-  ret.data := v \<semicolon> ret
-thm useful
-thm \<phi>
-\<semicolon>
+  ret.data := v \<semicolon>
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ T\<close> \<semicolon>
   ret
 \<medium_right_bracket> .

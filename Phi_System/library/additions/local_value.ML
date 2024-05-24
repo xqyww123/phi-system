@@ -46,34 +46,22 @@ fun get_raw_val_in_rule rule =
            => V
        | _ => raise THM ("Bad Rule", 0, [rule])
 
-fun pattern_of' mk_var rule =
-  let val i = 1 + Thm.maxidx_of rule
-  in case Thm.prop_of rule
-       of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, (T1 as 
-Type ("fun", [_, Type ("fun", [T,_])])))
-              $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
-              $ _)
-             => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
-                  $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ mk_var (i,V))
-                  $ Var (("out", i), T))
-         | _ => raise THM ("Bad Rule", 0, [rule])
-  end
+
+fun mk_pattern_var ctxt xname rule i rawval =
+  case rawval of Const (\<^const_name>\<open>Value_of\<close>, T3)
+                        $ V1 $ Free (vname, T4) $ (path as Const (\<^const_name>\<open>Nil\<close>, _))
+      => if vname = internal_name_of ctxt xname
+         then Const (\<^const_name>\<open>Value_of\<close>, T3)
+                $ Var (("val", i), fastype_of V1)
+                $ Free (vname, T4)
+                $ path
+         else raise THM ("Bad Rule", 0, [rule])
+   | _ => raise THM ("Bad Rule", 0, [rule])
 
 fun pattern_of__value_of ctxt xname rule =
-      pattern_of' (fn (i,rawval) =>
-        case rawval of Const (\<^const_name>\<open>Value_of\<close>, T3)
-                        $ V1 $ Free (vname, T4) $ (path as Const (\<^const_name>\<open>Nil\<close>, _))
-              => if vname = internal_name_of ctxt xname
-                 then Const (\<^const_name>\<open>Value_of\<close>, T3)
-                        $ Var (("val", i), fastype_of V1)
-                        $ Free (vname, T4)
-                        $ path
-                 else raise THM ("Bad Rule", 0, [rule])
-           | _ => raise THM ("Bad Rule", 0, [rule])) rule
+  Generic_Variable_Access.pattern_of_value_rule
+    (mk_pattern_var ctxt xname rule) (Thm.prop_of rule)
 
-(*fun pattern_of rule =
-      pattern_of' (fn (i,rawval) => Var (("val",i), fastype_of rawval)) rule
-*)
 
 fun delete_val' pred xname ctxt =
   case Symtab.lookup (Values.get ctxt) xname
@@ -113,25 +101,16 @@ fun update_val b rule ctxt =
       val ctxt' = ctxt
                 |> delete_val' (fn rule' => Thm.eq_thm_prop (rule',rule)) (Binding.name_of b)
                 |> Values.map (Symtab.update ((Binding.name_of b), (rule, vname)))
-      val pattern = pattern_of__value_of ctxt' (Binding.name_of b) rule
+      val xname = Binding.name_of b
+      val pattern = pattern_of__value_of ctxt' xname rule
       val thy = Proof_Context.theory_of ctxt'
-
-      fun mk_pattern_var i rawval =
-        case rawval of Const (\<^const_name>\<open>Value_of\<close>, T3)
-                              $ V1 $ Free (vname, T4) $ (path as Const (\<^const_name>\<open>Nil\<close>, _))
-            => if vname = internal_name_of ctxt' (Binding.name_of b)
-               then Const (\<^const_name>\<open>Value_of\<close>, T3)
-                      $ Var (("val", i), fastype_of V1)
-                      $ Free (vname, T4)
-                      $ path
-               else raise THM ("Bad Rule", 0, [rule])
-         | _ => raise THM ("Bad Rule", 0, [rule])
 
    in ctxt'
      |> Config.map Phi_Reasoner.trace (fn i => i - 1)
      |> Context.proof_map (
-          Phi_Reasoner.del_reasoners [pattern] (fn r => Pattern.matches thy (pattern, #name r)))
-     |> Generic_Variable_Access.register_value_spec_thms mk_pattern_var [(Binding.pos_of b, [rule])]
+            Phi_Reasoner.del_reasoners [pattern] (fn r => Pattern.matches thy (pattern, #name r)))
+     |> Generic_Variable_Access.register_value_spec_thms
+            (mk_pattern_var ctxt' xname rule) [(Binding.pos_of b, [rule])]
      (*#> Phi_Reasoner.add_rule (Binding.pos_of b) Phi_Reasoner.NORMAL_LOCAL_CUT'
                                 (SOME @{reasoner_group %local_value})
                                 ([(pattern, NONE)],[]) NONE [rule]) *)
