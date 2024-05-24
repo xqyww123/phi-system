@@ -71,9 +71,9 @@ fun pattern_of__value_of ctxt xname rule =
                  else raise THM ("Bad Rule", 0, [rule])
            | _ => raise THM ("Bad Rule", 0, [rule])) rule
 
-fun pattern_of rule =
+(*fun pattern_of rule =
       pattern_of' (fn (i,rawval) => Var (("val",i), fastype_of rawval)) rule
-
+*)
 
 fun delete_val' pred xname ctxt =
   case Symtab.lookup (Values.get ctxt) xname
@@ -114,17 +114,30 @@ fun update_val b rule ctxt =
                 |> delete_val' (fn rule' => Thm.eq_thm_prop (rule',rule)) (Binding.name_of b)
                 |> Values.map (Symtab.update ((Binding.name_of b), (rule, vname)))
       val pattern = pattern_of__value_of ctxt' (Binding.name_of b) rule
-      val thy = Proof_Context.theory_of ctxt
+      val thy = Proof_Context.theory_of ctxt'
+
+      fun mk_pattern_var i rawval =
+        case rawval of Const (\<^const_name>\<open>Value_of\<close>, T3)
+                              $ V1 $ Free (vname, T4) $ (path as Const (\<^const_name>\<open>Nil\<close>, _))
+            => if vname = internal_name_of ctxt' (Binding.name_of b)
+               then Const (\<^const_name>\<open>Value_of\<close>, T3)
+                      $ Var (("val", i), fastype_of V1)
+                      $ Free (vname, T4)
+                      $ path
+               else raise THM ("Bad Rule", 0, [rule])
+         | _ => raise THM ("Bad Rule", 0, [rule])
+
    in ctxt'
      |> Config.map Phi_Reasoner.trace (fn i => i - 1)
      |> Context.proof_map (
-          Phi_Reasoner.del_reasoners [pattern] (fn r => Pattern.matches thy (pattern, #name r))
-       #> Phi_Reasoner.add_rule (Binding.pos_of b) Phi_Reasoner.NORMAL_LOCAL_CUT'
+          Phi_Reasoner.del_reasoners [pattern] (fn r => Pattern.matches thy (pattern, #name r)))
+     |> Generic_Variable_Access.register_value_spec_thms mk_pattern_var [(Binding.pos_of b, [rule])]
+     (*#> Phi_Reasoner.add_rule (Binding.pos_of b) Phi_Reasoner.NORMAL_LOCAL_CUT'
                                 (SOME @{reasoner_group %local_value})
-                                ([(pattern, NONE)],[]) NONE [rule])
+                                ([(pattern, NONE)],[]) NONE [rule]) *)
      |> Config.restore Phi_Reasoner.trace ctxt'
      |> Generic_Variable_Access.bind_generic_vars
-            [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, T)), K V))]
+            [(Binding.name_of b, (Thm.cterm_of ctxt' (Free (vname, T)), K V))]
      |> Proof_Context.maybe_bind_term ((Binding.name_of b,0),
                                        Option.map (Thm.term_of o fst) V)
   end

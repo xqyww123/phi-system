@@ -35,7 +35,7 @@ proc rat_add:
   val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close>
   val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close>
   val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1]
-  val denominator \<leftarrow> $q1[1] * $q2[1] ;
+  val denominator \<leftarrow> $q1[1] * $q2[1] \<semicolon>  
   \<lbrace> $numerator, $denominator \<rbrace>
 \<medium_right_bracket> . 
 

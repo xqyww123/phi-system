@@ -297,7 +297,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Thm.pretty_thm ctxt sequent_pre2
                ])) NONE NONE ctxt sequent_pre2
             end
-        val (ctxt',sequent') = Phi_Sys.move_lemmata (ctxt, sequent)
+        val (ctxt',sequent') = Phi_Sys.move_lemmata Position.none (ctxt, sequent)
         val (ctxt'',sequent'') = sequent'
               |> (case spec
                     of NONE => I

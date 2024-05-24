@@ -33,9 +33,14 @@ val dereference_generic_var1 : Proof.context -> term -> cterm
 (*controls if clean all values in the initial sequent of a procedure construction.
   By default, values in a routine construction will be cleaned but not in ordinary procedures.*)
 
-val register_value_spec_thms : (Position.T * thm list) list -> Context.generic -> Context.generic
+val pattern_of_value_rule : (int -> term -> term) -> term -> term
+val register_value_spec_thms : (int -> term -> term)
+                            -> (Position.T * thm list) list
+                            -> Proof.context -> Proof.context
   (*note, this is not for updating or accessing local values*)
-val register_value_spec_thms_no_dup : (Position.T * thm list) list -> Context.generic -> Context.generic
+val register_value_spec_thms_no_dup : (int -> term -> term)
+                                   -> (Position.T * thm list) list
+                                   -> Proof.context -> Proof.context
 
 type process_of_arguments = context_state -> context_state
 
@@ -392,6 +397,16 @@ fun push_values [] s = s
    in (ctxt, fst (PLPR_Syntax.elim_ant_seq_or_HOL_conj (@{thm transformation_refl} RS sequent')))
   end
 
+fun setup_lemmata pos rules ctxt =
+  let val facts = maps (fn thm =>
+                   let val thm = PLPR_Syntax.strip_tags ctxt thm
+                    in case Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt (thm RS @{thm Satisfiable_I})
+                    of NONE => error "Internal BUG: Fail to extract pure fact implied inside"
+                     | SOME l => l
+                   end
+                  ) rules
+   in Phi_Sys.add_lemmata pos facts ctxt
+  end
 
 
 (*** Initial Process for Arguments ***)
@@ -405,45 +420,44 @@ fun get_val_of_spec_thm th =
          $ _ => V
      | _ => raise THM ("Not a specification theorem of a value!", 0, [th])
 
-fun register_value_spec_thms pos_rules =
-  Phi_Reasoner.add_rules (maps (fn (pos, rules) => map (fn rule =>
-    let
-      val i = maxidx_of_term (Thm.prop_of rule) + 1
-      val pattern =
-            (case Thm.prop_of rule
-               of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
-                                  $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
-                                  $ TM )
-                => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
-                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
-                                   $ Var (("spec",i), fastype_of TM) )
-            | _ => raise THM ("Not a specification theorem of a value!", 0, [rule]))
-    in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
-        [(pattern, NONE)], [], NONE) end
-  ) rules) pos_rules)
+fun pattern_of_value_rule mk_var tm =
+  let val i = maxidx_of_term tm + 1
+      fun pattern_of ((Trueprop as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X) =
+            Trueprop $ pattern_of X
+        | pattern_of ((Tag as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ G) =
+            Tag $ pattern_of X $ G
+        | pattern_of (  Const (\<^const_name>\<open>Satisfaction\<close>, T1)
+                     $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
+                     $  TM ) =
+            Const (\<^const_name>\<open>Satisfaction\<close>, T1)
+               $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ mk_var i V)
+               $ Var (("spec",i), fastype_of TM)
+        | pattern_of TM = raise TERM ("Not a specification theorem of a value!", [TM])
+   in pattern_of tm
+  end
 
-fun register_value_spec_thms_no_dup pos_rules =
+fun register_value_spec_thms mk_var pos_rules ctxt = ctxt
+  |> Context.proof_map (
+      Phi_Reasoner.add_rules (maps (fn (pos, rules) => map (fn rule =>
+        let val i = maxidx_of_term (Thm.prop_of rule) + 1
+            val pattern = pattern_of_value_rule mk_var (Thm.prop_of rule)
+         in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
+             [(pattern, NONE)], [], NONE) end
+      ) rules) pos_rules))
+    |> fold (uncurry setup_lemmata) pos_rules
+
+fun register_value_spec_thms_no_dup mk_var pos_rules ctxt =
   let val pos_rules' = maps (fn (pos, rules) => map (pair pos) rules) pos_rules
                     |> distinct (fn ((_, th1), (_, th2)) =>
                           get_val_of_spec_thm th1 aconv get_val_of_spec_thm th2)
-   in Phi_Reasoner.add_rules (map (fn (pos, rule) =>
-        let
-          val i = maxidx_of_term (Thm.prop_of rule) + 1
-          fun pattern_of ((Trueprop as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X) =
-                Trueprop $ pattern_of X
-            | pattern_of ((Tag as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ G) =
-                Tag $ pattern_of X $ G
-            | pattern_of (  Const (\<^const_name>\<open>Satisfaction\<close>, T1)
-                         $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
-                         $  TM ) =
-                Const (\<^const_name>\<open>Satisfaction\<close>, T1)
-                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
-                   $ Var (("spec",i), fastype_of TM)
-            | pattern_of TM = raise THM ("Not a specification theorem of a value!", 0, [rule])
-          val pattern = pattern_of (Thm.prop_of rule)
-        in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
-            [(pattern, NONE)], [], NONE) end
-      ) pos_rules')
+   in ctxt
+   |> Context.proof_map (Phi_Reasoner.add_rules (map (fn (pos, rule) =>
+        let val pattern = pattern_of_value_rule mk_var (Thm.prop_of rule)
+         in ([rule], pos, Phi_Reasoner.NORMAL_LOCAL_CUT', SOME (@{reasoner_group %local_values}),
+             [(pattern, NONE)], [], NONE)
+        end
+      ) pos_rules'))
+   |> fold (uncurry setup_lemmata) pos_rules
   end
 
 
@@ -482,22 +496,10 @@ fun gen_default_process' clean pos (ctxt,sequent) =
                                 | _ => NONE)))
              | _ => NONE)
 
-    fun setup_lemmata ctxt =
-      let val facts = maps (fn thm =>
-                       case Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt (thm RS @{thm Satisfiable_I})
-                         of NONE => error "Internal BUG: Fail to extract pure fact implied inside"
-                          | SOME l => l
-                      ) rules
-       in ctxt |> Context.proof_map (
-            fold (fold (fn th => Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
-                              #> Useful_Thms.add_thm th)
-                  o Phi_Envir.process_useful_lemmata true ctxt) facts)
-      end
   in ctxt'
   |> open_context args
-  |> Context.proof_map (register_value_spec_thms [(pos,rules)])
+  |> register_value_spec_thms (K I) [(pos,rules)]
   |> bind_generic_vars (binds' @ binds)
-  |> clean ? setup_lemmata
   |> rpair sequent'
   end
 

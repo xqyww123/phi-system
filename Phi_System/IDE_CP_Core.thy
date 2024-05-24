@@ -2077,8 +2077,6 @@ lemma "__value_access_0__":
   \<open>Facts demonstrating values of local variables\<close>
 
 
-ML_file \<open>library/system/generic_variable_access.ML\<close>
-
 (*
 lemma [\<phi>reason 1000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
@@ -2151,6 +2149,8 @@ ML_file "library/tools/parse.ML"
 
 ML_file \<open>library/system/post-app-handlers.ML\<close>
 ML_file "library/system/procedure.ML"
+ML_file \<open>library/system/sys0.ML\<close>
+ML_file \<open>library/system/generic_variable_access.ML\<close>
 ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/opr_stack.ML\<close>
 ML_file \<open>library/system/toplevel0.ML\<close>
@@ -2490,7 +2490,7 @@ setup \<open>Context.theory_map (
    )
 
    (*move any obtained pure facts, \<open>_ \<and> _\<close>*)
-#> Phi_CP_IDE.Post_App.add 200 (K Phi_Sys.move_lemmata)
+#> Phi_CP_IDE.Post_App.add 200 (K (Phi_Sys.move_lemmata Position.none))
 
    (*simplification*)
 #> let val rewr_objects = Phi_Syntax.conv_all_typings (Conv.arg1_conv o Simplifier.rewrite)
@@ -2549,7 +2549,7 @@ end)) end
        | NONE => (ctxt, sequent))
        | _ => (ctxt, sequent))
 
-#> Phi_CP_IDE.Post_App.add 400 (K (fn s => Phi_Sys.move_lemmata s))
+#> Phi_CP_IDE.Post_App.add 400 (K (Phi_Sys.move_lemmata Position.none))
 
 #> Phi_CP_IDE.Post_App.add 500 (fn arg => fn s =>
       if (case Thm.prop_of (snd s)

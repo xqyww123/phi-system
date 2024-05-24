@@ -457,7 +457,7 @@ proc (nodef) [\<phi>reason 1200]:
   @tag synthesis
   unfolding REMAINS_def
 \<medium_left_bracket>
-  G  
+  G
   S \<rightarrow> val v
   $v apply_rule op_set_var[OF T1 T2 T3 T4 T5 T6 T7 report_unprocessed_element_index_I]
   $v

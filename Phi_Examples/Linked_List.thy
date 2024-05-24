@@ -12,7 +12,8 @@ abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<
   where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
                                       (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>
-                                      \<s>\<u>\<b>\<j> nxt. address_to_base addr )\<close>
+                                      \<s>\<u>\<b>\<j> nxt. address_to_base addr \<and>
+                                               \<t>\<y>\<p>\<e>\<o>\<f> addr = \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T) )\<close>
 
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
@@ -43,16 +44,19 @@ proc is_empty:
 \<medium_right_bracket> .
 
 
-
-
+declare [[\<phi>trace_reasoning = 1]]
+  
 proc prepend_llist:
   input  \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T z\<close>
   output \<open>v#l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr' T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>\<close> \<semicolon>
+ \<semicolon> val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>\<close> \<semicolon>
   ret.nxt := addr \<semicolon> 
-  ret.data := v \<semicolon>
+  ret.data := v \<semicolon> ret
+thm useful
+thm \<phi>
+\<semicolon>
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ T\<close> \<semicolon>
   ret
 \<medium_right_bracket> .
@@ -67,7 +71,7 @@ proc pop_llist:
   if (addr = NULL) \<medium_left_bracket>
     return(addr)
   \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
-    
+   
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
   val ret \<leftarrow> addr.nxt \<semicolon>
   mfree (addr) \<semicolon>

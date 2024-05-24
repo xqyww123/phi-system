@@ -1,6 +1,7 @@
 theory PhiSem_Mem_C_Ag_Ar
   imports PhiSem_Mem_C PhiSem_Aggregate_Array
-  abbrevs "<SPtr>" = "\<bbbS>\<p>\<t>\<r>"
+  abbrevs "<sliceptr>" = "\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>"
+      and "<slcptr>" = "\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>"
 begin
 
 section \<open>Semantics\<close>
@@ -18,7 +19,7 @@ debt_axiomatization
 lemma address_to_raw_array_GEP:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> address_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
-  unfolding address_to_raw_def addr_gep_def
+  unfolding address_to_raw_def addr_gep_def address_type_def
   by (cases addr; clarsimp simp: idx_step_offset_arr)
 
 lemma address_to_raw_inj_array:
@@ -31,9 +32,10 @@ lemma address_to_raw_inj_array:
   apply (clarsimp; cases addr; clarsimp)
   subgoal for blk idx
     apply (cases \<open>blk\<close>; clarsimp simp: array_TY_neq_void)
+    apply (simp add: address_type_def array_TY_neq_void)
     subgoal premises prems for _ BTY proof -
       have \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
-        using index_type_type_storable_in_mem prems(1) prems(3) prems(6) by fastforce
+        using MemObj_Size_LE_idx_0 address_type_def prems(1) prems(3) prems(6) by fastforce
       then have t1: \<open>N * MemObj_Size TY < 2^addrspace_bits\<close>
         using MemObj_Size_arr by force
       show ?thesis
@@ -44,14 +46,14 @@ lemma address_to_raw_inj_array:
 lemma address_to_raw_array_0th:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> address_to_raw (addr \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr \<close>
-  unfolding address_to_raw_def addr_gep_def
+  unfolding address_to_raw_def addr_gep_def address_type_def
   by (auto simp: idx_step_offset_arr split: memaddr.split)
 
 lemma address_to_raw_array_ith:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> phantom_mem_semantic_type TY
 \<Longrightarrow> address_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr \<close>
-  unfolding address_to_raw_def addr_gep_def
+  unfolding address_to_raw_def addr_gep_def address_type_def
   by (auto simp: idx_step_offset_arr phantom_mem_semantic_type_def split: memaddr.split)
 
 
@@ -161,12 +163,11 @@ lemma valid_address_range_sub:
        and \<open>Semantic_Type (SlicePtr addr N TY) \<p>\<t>\<r> \<close>
 
 
-
-notation SlicePtr ("\<bbbS>\<p>\<t>\<r>[_:_] _" [20,20,900] 899)
+notation SlicePtr ("\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _" [20,20,900] 899)
 
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
-  \<open>\<phi>Equal (\<bbbS>\<p>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
+  \<open>\<phi>Equal (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
   unfolding \<phi>Equal_def
   by (clarsimp simp: address_to_raw_inj_array)
 
@@ -174,36 +175,36 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 
 lemma [\<phi>reason %slice_ptr_ToA]: \<comment> \<open>TODO: automatically generate this rule!\<close>
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr \<and> len' = len \<and> TY' = TY
-\<Longrightarrow> x \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr':len'] TY' \<close>
+\<Longrightarrow> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr':len'] TY' \<close>
   unfolding Premise_def
   by simp
 
 lemma [\<phi>reason %slice_ptr_ToA]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
-\<Longrightarrow> i \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY' \<close>
+\<Longrightarrow> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
     to \<open>\<bbbP>\<t>\<r> TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr, auto_sledgehammer)
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
-\<Longrightarrow> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
-  \<medium_left_bracket>
+\<Longrightarrow> address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
+\<Longrightarrow> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
+  \<medium_left_bracket> premises _ and [useful]
     to RawPointer
     note idx_step_type_arr[simp] ;;
-    \<open>i \<Ztypecolon> MAKE _ (\<bbbS>\<p>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
+    \<open>i \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr \<noteq> 0
-\<Longrightarrow> addr \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[LEN] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<bbbS>\<p>\<t>\<r>[addr:LEN] TY @tag \<T>\<P> \<close>
+\<Longrightarrow> addr \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[LEN] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] TY @tag \<T>\<P> \<close>
   \<medium_left_bracket>
     to RawPointer ;;
-    \<open>0 \<Ztypecolon> MAKE _ (\<bbbS>\<p>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
+    \<open>0 \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 
@@ -350,26 +351,24 @@ hide_fact split_mem_coerce_array'
 
 subsubsection \<open>Address Offset\<close>
 
-term address_type
-
 lemma [\<phi>reason add]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (\<a>\<r>\<r>\<a>\<y>[N] TY) : address_type addr
+  \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i+n < N
 \<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> (i+n)\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def
-            address_to_raw_def addr_gep_def 
+            address_to_raw_def addr_gep_def address_type_def
   by (cases addr; clarsimp, rule,
       simp add: valid_address_def valid_idx_step_arr,
       simp add: idx_step_offset_arr,
       metis add.commute distrib_right idx_step_type_arr mult.commute)
 
 lemma [\<phi>reason add]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (\<a>\<r>\<r>\<a>\<y>[N] \<a>\<r>\<r>\<a>\<y>[M] TY) : address_type addr
+  \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] \<a>\<r>\<r>\<a>\<y>[M] TY
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i*M+j+n < M * N
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (i', j') : (i + (j + n) div M, (j + n) mod M)
 \<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<tribullet> j\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> i'\<^sup>\<t>\<^sup>\<h> \<tribullet> j'\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def
-            address_to_raw_def addr_gep_def 
+            address_to_raw_def addr_gep_def address_type_def
   apply (cases addr; clarsimp, rule;
         clarsimp simp: valid_address_def valid_idx_step_arr idx_step_type_arr
                        valid_index_tail[where idx=\<open>idx@[j]\<close> for idx j, simplified]

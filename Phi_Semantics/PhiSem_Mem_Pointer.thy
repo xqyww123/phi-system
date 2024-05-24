@@ -208,14 +208,14 @@ lemma index_type_type_storable_in_mem:
 
 paragraph \<open>The type of the object that a pointer points to\<close>
 
-abbreviation address_type :: \<open>address \<Rightarrow> TY\<close>
+definition address_type :: \<open>address \<Rightarrow> TY\<close>
   where \<open>address_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
 
 adhoc_overloading Type_Of_syntax address_type
 
 lemma address_storable_in_mem:
   \<open>valid_address addr \<Longrightarrow> type_storable_in_mem (\<t>\<y>\<p>\<e>\<o>\<f> addr)\<close>
-  unfolding valid_address_def Valid_MemBlk_def zero_memaddr_def
+  unfolding valid_address_def Valid_MemBlk_def zero_memaddr_def address_type_def
   by (cases addr; case_tac x1; simp; insert index_type_type_storable_in_mem; blast)
 
 
@@ -343,7 +343,7 @@ lemma address_to_raw_inj:
      address_to_raw addr1 = address_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
   unfolding address_to_raw_def valid_address_def
   by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def;
-      metis add_leD1 index_offset_inj index_offset_upper_bound_0 index_type_idem address_storable_in_mem memaddr.sel(1) memaddr.sel(2) memblk.layout(2) not_gr_zero order_le_less_trans phantom_mem_semantic_type_def unat_to_size_t valid_index.simps(1) valid_address_def)
+      metis Valid_MemBlk_def add.commute add_leD2 address_type_def index_offset_inj index_offset_upper_bound_0 memaddr.sel(1) memaddr.sel(2) memblk.case(2) memblk.layout(2) nat_less_le order.strict_trans1 phantom_mem_semantic_type_def unat_to_size_t)
       
 
 
@@ -375,7 +375,7 @@ lemma dereference_pointer_type:
   \<open> valid_address addr
 \<Longrightarrow> c \<in> Well_Type (memblk.layout (memaddr.blk addr))
 \<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (address_type addr) (address_to_raw addr))) c \<in> Well_Type (address_type addr) \<close>
-  by (smt (verit, del_insts) index_value_welltyp address_to_raw_MemBlk rawaddr_to_log_def someI valid_address_def)
+  by (metis address_to_raw address_to_raw_MemBlk address_type_def index_value_welltyp valid_address_def)
 
 lemma dereference_pointer_value:
   \<open> valid_address addr
@@ -383,8 +383,8 @@ lemma dereference_pointer_value:
 \<Longrightarrow> index_value (memaddr.index (rawaddr_to_log (address_type addr) (address_to_raw addr))) c
   = index_value (memaddr.index addr) c \<close>
   by (cases \<open>phantom_mem_semantic_type (address_type addr)\<close>,
-      meson dereference_pointer_type index_value_welltyp phantom_mem_semantic_type_single_value valid_address_def,
-      simp)
+      insert address_type_def dereference_pointer_type index_value_welltyp phantom_mem_semantic_type_single_value valid_address_def,
+      force, metis rawaddr_to_log)
 
 lemma dereference_pointer_update:
   \<open> valid_address addr
@@ -484,13 +484,13 @@ lemma addr_gep_not_eq_zero[intro!, simp, \<phi>safe_simp]:
 
 lemma address_type_gep[iff, \<phi>safe_simp]:
   \<open>address_type (addr \<tribullet> LOGIC_IDX(x)) = idx_step_type x (address_type addr)\<close>
-  unfolding addr_gep_def by (cases addr; simp)
+  unfolding addr_gep_def address_type_def by (cases addr; simp)
 
 lemma addr_gep_valid[intro!, simp, \<phi>safe_simp]:
   \<open> valid_idx_step (address_type addr) i
 \<Longrightarrow> valid_address addr
 \<Longrightarrow> valid_address (addr \<tribullet> LOGIC_IDX(i))\<close>
-  unfolding valid_address_def zero_memaddr_def addr_gep_def
+  unfolding valid_address_def zero_memaddr_def addr_gep_def address_type_def
   by (cases addr; clarsimp simp add: valid_idx_step_void)
 
 lemma addr_geps_valid[intro!, simp, \<phi>safe_simp]:
@@ -505,14 +505,14 @@ lemma address_to_raw_phantom_mem_type:
   \<open> phantom_mem_semantic_type (address_type addr)
 \<Longrightarrow> valid_idx_step (address_type addr) i
 \<Longrightarrow> address_to_raw (addr \<tribullet> LOGIC_IDX(i)) = address_to_raw addr\<close>
-  unfolding address_to_raw_def addr_gep_def phantom_mem_semantic_type_def
+  unfolding address_to_raw_def addr_gep_def phantom_mem_semantic_type_def address_type_def
   by (cases addr; clarsimp; insert idx_step_offset_size; fastforce)
 
 lemma address_to_raw_phantom_mem_type_gep_N:
   \<open> phantom_mem_semantic_type (address_type addr)
 \<Longrightarrow> valid_index (address_type addr) path
 \<Longrightarrow> address_to_raw (addr_geps addr path) = address_to_raw addr\<close>
-  unfolding address_to_raw_def phantom_mem_semantic_type_def addr_geps_def
+  unfolding address_to_raw_def phantom_mem_semantic_type_def addr_geps_def address_type_def
   apply (induct path arbitrary: addr; clarsimp simp add: split_memaddr_meta_all)
   subgoal premises prems for a path blk ofs proof -
     have t1: \<open>MemObj_Size (index_type (ofs @ [a]) (memblk.layout blk)) = 0\<close>
@@ -532,7 +532,7 @@ lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr = addr'
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> valid_address addr
 \<Longrightarrow> is_valid_index_of (memaddr.index addr) (memblk.layout (memaddr.blk addr')) (address_type addr)\<close>
-  unfolding valid_address_def Premise_def is_valid_index_of_def
+  unfolding valid_address_def Premise_def is_valid_index_of_def address_type_def
   by clarsimp
 
 paragraph \<open>\<open>\<t>\<y>\<p>\<e>\<o>\<f> address\<close>\<close>
@@ -560,6 +560,45 @@ lemma [\<phi>reason default %address_type_fail]:
 \<Longrightarrow> address_type addr = TY \<close>
   unfolding FAIL_def
   by blast
+
+lemma [\<phi>reason default %address_type_cut for \<open>address_type _ = ?var\<close>]:
+  \<open> address_type addr = TY'
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY'
+\<Longrightarrow> address_type addr = TY \<close>
+  unfolding Premise_def
+  by simp
+
+setup \<open>Context.theory_map (Phi_Sys.Lemmata_Processors.add 100 (fn pos =>
+  fn {input, lemmata, useful, rules, ctxt} =>
+    let val thy = Proof_Context.theory_of ctxt
+        fun is_rule_of_address_type rule =
+          Pattern.matches thy (\<^pattern_prop>\<open>address_type _ = _\<close>, Thm.prop_of rule)
+        val rules = filter is_rule_of_address_type input
+                 |> map (fn rule =>
+                      ([rule], pos, Phi_Reasoner.NORMAL_MODE', SOME @{reasoner_group %local},
+                       [], [], NONE) )
+        val input = filter_out is_rule_of_address_type input
+        fun chk (Const(\<^const_name>\<open>address_type\<close>, _) $ _) = true
+          | chk (X $ Y) = chk X orelse chk Y
+          | chk (Abs (_, _, X)) = chk X
+          | chk _ = false
+        fun chk' rule =
+              if chk (Thm.prop_of rule)
+              then Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () => let open Pretty in
+                      chunks [
+                        block (text "One inferred lemmata may contains specification to \<open>\<t>\<y>\<p>\<e>\<o>\<f>\<close> an address, \
+                                    \but in a form failed to be recognized by the reasoner."),
+                        Thm.pretty_thm ctxt rule,
+                        block (text "Consequently, the type of some address may be failed to be inferred \
+                                    \in the subsequent reasoning.")
+                      ]
+                   end)
+              else ()
+        val _ = List.app chk' input
+     in {input=input, lemmata=lemmata, useful=useful, rules=rules, ctxt=ctxt}
+    end
+))\<close>
+
 
 
 subsubsection \<open>Install Semantics\<close>

@@ -219,7 +219,7 @@ proc test_mem18:
 
 proc test_mem19:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<heavy_comma>
-          j \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr:N] \<a>\<i>\<n>\<t>\<close>
+          j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:N] \<a>\<i>\<n>\<t>\<close>
   premises \<open>i \<le> j \<and> j < i + n \<and> i + n \<le> N\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<heavy_comma> x ! (j-i) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
@@ -227,9 +227,9 @@ proc test_mem19:
 \<medium_right_bracket> .
 
 proc test_mem20:
-  input  \<open>j \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input  \<open>j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   premises \<open>j + k \<le> n\<close>
-  output \<open>j+k \<Ztypecolon> \<v>\<a>\<l> \<bbbS>\<p>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<close>
+  output \<open>j+k \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   j + k
 \<medium_right_bracket> .

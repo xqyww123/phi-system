@@ -1,5 +1,5 @@
 theory PhiSem_CF_Routine
-  imports PhiSem_CF_Break PhiSem_CF_Routine_Basic
+  imports PhiSem_CF_Break PhiSem_CF_Routine_Basic PhiSem_Void
 begin
 
 text \<open>Based on the basic routine module, we provide the version that supports return statement.\<close>
@@ -125,6 +125,8 @@ print_ast_translation \<open>let open Ast
   fun strip_list (Appl [Constant \<^syntax_const>\<open>_list\<close>, X]) = strip_list X
     | strip_list (Appl [Constant "_args", A, B]) =
         Appl [Constant "\<^const>Product_Type.Times", strip_list A, strip_list B]
+    | strip_list (Constant \<^const_syntax>\<open>Nil\<close>) =
+        Constant \<^const_syntax>\<open>\<v>\<o>\<i>\<d>\<close>
     | strip_list X = X
 in [
   (\<^const_syntax>\<open>op_routine\<close>, fn ctxt =>

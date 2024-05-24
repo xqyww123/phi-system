@@ -8,6 +8,7 @@ val dest_premise_tag_c : cterm -> cterm * cterm
 val add_premise_tag_conv : cterm (*mode*) -> conv
 val premise_tag_conv : (term -> bool) -> conv -> conv
 
+val strip_tags : Proof.context -> thm -> thm
 val provide_premise_condition : thm -> thm -> thm
 
 end
@@ -49,5 +50,12 @@ fun provide_premise_condition C th =
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
         C RS (@{thm' provide_premise_condition} RS th)
      | _ => raise THM ("provide_premise_condition", 0, [C])
+
+
+fun strip_tags ctxt thm =
+  case Thm.concl_of thm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ _) =>
+        strip_tags ctxt (thm RS' (ctxt, @{thm' Action_Tag_D}))
+     | _ => thm
 
 end

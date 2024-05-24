@@ -270,9 +270,7 @@ fun gen_constructor kind settings cfg stat =
                    in (pos, rules')
                   end ) args0
 
-            val ctxt'' = Context.proof_map (
-                    Generic_Variable_Access.register_value_spec_thms_no_dup pos_rules
-                  ) ctxt'
+            val ctxt'' = Generic_Variable_Access.register_value_spec_thms_no_dup (K I) pos_rules ctxt'
             val rule' =
                 @{thm' op_construct_aggregate_\<phi>app}
                   |> Thm.transfer' ctxt''

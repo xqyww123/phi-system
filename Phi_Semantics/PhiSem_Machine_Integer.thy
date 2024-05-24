@@ -816,7 +816,8 @@ lemma op_div_nat_\<phi>app[\<phi>overload /,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_udiv LENGTH('b) (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_udiv_word_\<phi>app[where 'b='b]
-    certified thm \<phi> using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast
+    certified
+    using Word.of_nat_neq_0 the_\<phi>(3) the_\<phi>lemmata(2) by blast
   \<medium_right_bracket> certified by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) of_nat_inverse unat_div) .
 
 declare op_udiv_word_\<phi>app[\<phi>overload /]
@@ -836,7 +837,7 @@ lemma op_div_int_\<phi>app[\<phi>synthesis %synthesis_arith for _
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sdiv TYPE('b) (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x sdiv y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket>
     op_sdiv_word
-    certified using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by force
+    certified using sint_of_int_eq the_\<phi>(5) the_\<phi>lemmata(3) the_\<phi>lemmata(4) by force
   \<medium_right_bracket>
     certified unfolding sdiv_word_def
     by (metis One_nat_def sdiv_word_max' sdiv_word_min' sint_int_min sint_of_int_eq the_\<phi>(1) the_\<phi>(3) the_\<phi>(6) the_\<phi>lemmata(1) the_\<phi>lemmata(3))  .
@@ -872,7 +873,7 @@ lemma op_mod_nat_\<phi>app
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umod TYPE('b) (vx\<^bold>, vy)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket>    
-    op_umod_word certified using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast
+    op_umod_word certified using Word.of_nat_neq_0 the_\<phi>(3) the_\<phi>lemmata(2) by blast
   \<medium_right_bracket>
     certified by (simp add: of_nat_inverse the_\<phi>lemmata(1) the_\<phi>lemmata(2) unat_mod_distrib) .
 
@@ -893,7 +894,7 @@ lemma op_mod_int_\<phi>app
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_smod TYPE('b) (vx\<^bold>, vy)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x smod y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> 
-    op_smod_word certified using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by fastforce
+    op_smod_word certified using sint_of_int_eq the_\<phi>(5) the_\<phi>lemmata(3) the_\<phi>lemmata(4) by fastforce
   \<medium_right_bracket> 
   certified
     by (metis One_nat_def signed_take_bit_int_eq_self sint_sbintrunc' smod_word_def smod_word_max smod_word_min the_\<phi>(1) the_\<phi>lemmata(1) the_\<phi>lemmata(2) the_\<phi>lemmata(3))  .
@@ -979,7 +980,7 @@ lemma op_lshl_nat_\<phi>app
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] \<nat>('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb) \<longmapsto> \<v>\<a>\<l> x * 2 ^ y \<Ztypecolon> \<nat>('ba) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_lshl_word_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
       certified unfolding push_bit_nat_def
-      by (metis dual_order.strict_trans n_less_equal_power_2 of_nat_push_bit push_bit_eq_mult the_\<phi>(2) unat_eq_of_nat) .
+      by (simp add: push_bit_eq_mult the_\<phi>(3) unat_eq_of_nat) .
 
 lemma op_lshl_natR_\<phi>app
   [\<phi>overload <<,
