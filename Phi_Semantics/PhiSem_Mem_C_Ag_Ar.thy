@@ -113,8 +113,9 @@ lemma address_to_raw_phantom_mem_type_gep_N__arr:
 
 
 proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 50]:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr (\<a>\<r>\<r>\<a>\<y>[any] TY)\<close>
-  requires \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY''\<close>
+  requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (TY'' = \<a>\<r>\<r>\<a>\<y>[any] TY)\<close>
+       and \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
   premises \<open>addr \<noteq> 0\<close>
@@ -125,7 +126,7 @@ proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 50]:
     by (insert \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
                \<open>valid_address addr\<close> parse_eleidx_input_def that(1) valid_idx_step_arr,
         cases addr, auto_sledgehammer) ;;
-  holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N \<semicolon>
+    holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N \<semicolon>
   semantic_return \<open>
     sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log_arr TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
       \<Turnstile> (addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> TypedPtr TY')\<close>

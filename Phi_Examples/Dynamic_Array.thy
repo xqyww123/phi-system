@@ -42,16 +42,15 @@ context
   assumes [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
 begin
 
+
+
 proc get_dynarr:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l!i \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  \<semicolon>
-thm \<phi>
-\<semicolon> addr.data \<rightarrow> val t
-\<semicolon> t[i]
+  addr.data[i]
 \<medium_right_bracket> .
 
 
@@ -110,6 +109,7 @@ proc concat_dynarr:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 2]]
 
 proc pop_dynarr:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
@@ -129,7 +129,13 @@ proc pop_dynarr:
     addr.cap := half_cap \<semicolon>
     \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close>
   \<medium_right_bracket>
-  \<medium_left_bracket> \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close> \<medium_right_bracket>
+    \<medium_left_bracket> 
+
+      \<semicolon> \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close>
+      
+      \<semicolon> thm \<phi>
+        
+      \<medium_right_bracket> \<semicolon> \<semicolon>
   ret
 \<medium_right_bracket> .
 
