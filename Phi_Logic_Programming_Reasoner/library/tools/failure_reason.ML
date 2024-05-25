@@ -7,10 +7,14 @@ include PHI_REASONERS
 
 type failure_reason = (unit -> Pretty.T)
 
-val report_failure_reason  : failure_reason list -> Proof.context -> Proof.context
-val report_failure_reason1 : Proof.context -> failure_reason list -> unit
-val report_failure_reason' : Proof.context -> failure_reason list -> unit
-val failure_reasons_of : Proof.context -> Pretty.T list
+val report_failure_reason  : int -> failure_reason list -> Proof.context -> Proof.context
+val report_failure_reason1 : Proof.context -> int -> failure_reason list -> unit
+val report_failure_reason' : Proof.context -> int -> failure_reason list -> unit
+val failure_reasons_of  : Proof.context -> Pretty.T list
+val failure_reasons_of' : Proof.context -> Pretty.T list
+
+val setup_failure_reason_environ : failure_reason list -> Proof.context -> Proof.context
+val reset_failure_reasons : Proof.context -> Proof.context
 
 end
 
@@ -24,30 +28,34 @@ structure Failure_Reasoners = Proof_Data (
   val init = K NONE
 )
 
-
-fun report_failure_reason G ctxt = (
-  List.app (Phi_Reasoner.warn_pretty (Context.Proof ctxt) 2) G ;
+val reset_failure_reasons = Failure_Reasoners.put NONE
+fun setup_failure_reason_environ G ctxt =
   case Failure_Reasoners.get ctxt
     of SOME rf =>
         (Synchronized.change rf (fn L => G @ L) ; ctxt)
      | NONE =>
         Failure_Reasoners.put (SOME (Synchronized.var "\<phi>LPR.failure_reasons" G)) ctxt
+
+fun report_failure_reason level G ctxt = (
+  List.app (Phi_Reasoner.warn_pretty (Context.Proof ctxt) level) G ;
+  setup_failure_reason_environ G ctxt
 )
 
-fun report_failure_reason1 ctxt G = (
-  List.app (Phi_Reasoner.warn_pretty (Context.Proof ctxt) 2) G ;
+fun report_failure_reason1 ctxt level G = (
+  List.app (Phi_Reasoner.warn_pretty (Context.Proof ctxt) level) G ;
   case Failure_Reasoners.get ctxt
     of SOME rf =>
         Synchronized.change rf (fn L => G @ L)
      | NONE => error "Failure storage is not allocated!"
 )
 
-fun report_failure_reason' ctxt G = (
-  List.app (Phi_Reasoner.warn_pretty (Context.Proof ctxt) 2) G ;
-  case Failure_Reasoners.get ctxt
+fun report_failure_reason' ctxt level G =
+  if level <= Config.get_generic (Context.Proof ctxt) Phi_Reasoner.trace
+  then List.app (fn G => warning (Pretty.string_of (G ()))) G
+  else case Failure_Reasoners.get ctxt
     of SOME rf => Synchronized.change rf (fn L => G @ L)
-     | NONE => ()
-)
+     | NONE => List.app (fn G => warning (Pretty.string_of (G ()))) G
+
 
 
 fun failure_reasons_of ctxt =
@@ -56,6 +64,17 @@ fun failure_reasons_of ctxt =
    of SOME rf => map (fn G => item [G ()]) (Synchronized.value rf)
     | NONE => []
   end
-  
+
+fun failure_reasons_of' ctxt =
+  let val reasons = failure_reasons_of ctxt
+      open Pretty
+   in case reasons
+   of [] => []
+    | L => (
+          block (text "There are some potential reasons:") ::
+          L
+        )
+  end
+
 
 end

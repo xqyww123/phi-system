@@ -214,7 +214,7 @@ fun gen_access named_thm_of_rules pos_and_first_args cfg stat =
             val rules = Phi_App_Rules.get_overloadings ctxt'
                             ((if read_or_write then fst else snd) named_thm_of_rules)
                       |> map (Drule.infer_instantiate ctxt' [(("input_index", 0), idx_input)])
-         in (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (ctxt', sequent))
+         in (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply1 rules) (ctxt', sequent))
         end*)
       fun invoke' (_, args, SOME Bracket_Opr_Read) vals opr_ctxt = opr_ctxt
             |> apsnd (Generic_Variable_Access.push_values vals)
@@ -279,7 +279,7 @@ fun gen_constructor kind settings cfg stat =
                         ((("args", 0), \<^typ>\<open>VAL \<phi>arg list\<close>), args)
                       ])
                   |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1) ctxt''
-         in (oprs, (ctxt' (*not ctxt''!*), Phi_Apply.apply [rule'] ctxt'' sequent))
+         in (oprs, (ctxt' (*not ctxt''!*), Phi_Apply.apply1 [rule'] ctxt'' sequent))
         end
         | invoke _ _ = error "BUG 2CG4WNzYQqirWulpFUkQQA"
    in Phi_Opr_Stack.meta_apply cfg settings @{priority %\<phi>lang_push_val} invoke stat

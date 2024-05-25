@@ -19,7 +19,8 @@ proc calloc_aN:
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>replicate n z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr (\<a>\<r>\<r>\<a>\<y>[n] TY) \<s>\<u>\<b>\<j> addr. address_to_base addr \<close>
+  output \<open>replicate n z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY)
+          \<s>\<u>\<b>\<j> addr. address_to_base addr \<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] ;;
@@ -37,9 +38,9 @@ proc calloc_aN:
   have t1: \<open>valid_address (memaddr blk [])\<close>
     unfolding valid_address_def Valid_MemBlk_def
     using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close>) ;;
+    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close>) \<semicolon>
   
-  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
+  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
 
 \<medium_right_bracket> .
 
@@ -49,7 +50,7 @@ proc calloc_aN2:
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> m \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
   output \<open>replicate n (replicate m z) \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<bbbA>\<r>\<r>\<a>\<y>[n] \<bbbA>\<r>\<r>\<a>\<y>[m] T)\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> Ptr (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY)
+          addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY)
           \<s>\<u>\<b>\<j> addr. address_to_base addr \<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
@@ -74,7 +75,7 @@ proc calloc_aN2:
     using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY\<close>
     by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY)\<close>) ;;
   
-  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>3) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY))\<close>
+  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>3) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY))\<close>
 
 \<medium_right_bracket> .
 

@@ -11,7 +11,7 @@ abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<
 \<phi>type_def Linked_Lst :: \<open>address \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
-                                      (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>
+                                      (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: Ptr, data: T \<rbrace>
                                       \<s>\<u>\<b>\<j> nxt. address_to_base addr \<and>
                                                \<t>\<y>\<p>\<e>\<o>\<f> addr = \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T) )\<close>
 
@@ -49,7 +49,7 @@ proc prepend_llist:
   requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T z\<close>
   output \<open>v#l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr' T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>\<close> \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: Ptr, data: T \<rbrace>\<close> \<semicolon>
   ret.nxt := addr \<semicolon> 
   ret.data := v \<semicolon>
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ T\<close> \<semicolon>

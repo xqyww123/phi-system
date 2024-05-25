@@ -113,23 +113,22 @@ lemma address_to_raw_phantom_mem_type_gep_N__arr:
 
 
 proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 50]:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY''\<close>
-  requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY'' = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
-       and \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr (\<a>\<r>\<r>\<a>\<y>[any] TY)\<close>
+  requires \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value \<p>\<t>\<r> ;;
   have t1: \<open>0 < any\<close>
     by (insert \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
                \<open>valid_address addr\<close> parse_eleidx_input_def that(1) valid_idx_step_arr,
         cases addr, auto_sledgehammer) ;;
-  holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N ;;
+  holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N \<semicolon>
   semantic_return \<open>
     sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log_arr TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
-      \<Turnstile> (addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> Ptr TY')\<close>
+      \<Turnstile> (addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> TypedPtr TY')\<close>
 \<medium_right_bracket> .
 
 
@@ -182,26 +181,25 @@ lemma [\<phi>reason %slice_ptr_ToA]: \<comment> \<open>TODO: automatically gener
 lemma [\<phi>reason %slice_ptr_ToA]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
-\<Longrightarrow> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY' \<close>
+\<Longrightarrow> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
-    to \<open>\<bbbP>\<t>\<r> TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr, auto_sledgehammer)
+    to \<open>TypedPtr TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr, auto_sledgehammer)
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
-\<Longrightarrow> address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
-\<Longrightarrow> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
-  \<medium_left_bracket> premises _ and [useful]
+lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
+\<Longrightarrow> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
+  \<medium_left_bracket>
     to RawPointer
     note idx_step_type_arr[simp] ;;
     \<open>i \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[_] _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr \<noteq> 0
-\<Longrightarrow> addr \<Ztypecolon> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[LEN] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] TY @tag \<T>\<P> \<close>
+\<Longrightarrow> addr \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[LEN] TY) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] TY' @tag \<T>\<P> \<close>
   \<medium_left_bracket>
     to RawPointer ;;
     \<open>0 \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
@@ -352,8 +350,7 @@ hide_fact split_mem_coerce_array'
 subsubsection \<open>Address Offset\<close>
 
 lemma [\<phi>reason add]:
-  \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i+n < N
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i+n < N \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> (i+n)\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def
             address_to_raw_def addr_gep_def address_type_def
@@ -363,8 +360,7 @@ lemma [\<phi>reason add]:
       metis add.commute distrib_right idx_step_type_arr mult.commute)
 
 lemma [\<phi>reason add]:
-  \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] \<a>\<r>\<r>\<a>\<y>[M] TY
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i*M+j+n < M * N
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i*M+j+n < M * N \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] \<a>\<r>\<r>\<a>\<y>[M] TY
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (i', j') : (i + (j + n) div M, (j + n) mod M)
 \<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<tribullet> j\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> i'\<^sup>\<t>\<^sup>\<h> \<tribullet> j'\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def

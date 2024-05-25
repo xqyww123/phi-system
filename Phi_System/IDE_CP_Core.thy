@@ -2264,7 +2264,7 @@ ML \<open>Generic_Variable_Access.lookup_bindings\<close>
 \<open> fn (oprs,(ctxt,sequent)) =>
     Generic_Variable_Access.parser_no_lvar ctxt Phi_App_Rules.parser >> (fn xnames => fn cfg =>
   (oprs, (ctxt, sequent)
-          |> Phi_Reasoners.wrap'' (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames]))
+          |> Phi_Reasoners.wrap'' (Phi_Apply.apply1 (Phi_App_Rules.app_rules ctxt [xnames]))
   ))\<close>
 
 \<phi>lang_parser delayed_apply (%\<phi>parser_app-200, %\<phi>lang_app) ["", "apply_rule"] (\<open>PROP _\<close>)
@@ -2325,7 +2325,7 @@ ML \<open>Generic_Variable_Access.lookup_bindings\<close>
     let open Phi_Envir
         val apps = Phi_App_Rules.app_rules ctxt [thm]
         val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-     in (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply apps) (ctxt,sequent))
+     in (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply1 apps) (ctxt,sequent))
     end)\<close>
 
 (* case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)

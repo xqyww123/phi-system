@@ -43,9 +43,9 @@ thm rat_add_def
 
 
 proc test_ptr:
-  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (\<t>\<u>\<p> {\<t>\<u>\<p> {aint}, aint, aint}), \<int> \<rbrace>\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> TypedPtr (\<t>\<u>\<p> {\<t>\<u>\<p> {aint}, aint, aint}), \<int> \<rbrace>\<close>
   premises \<open>ptr \<noteq> 0\<close>
-  output \<open>ptr \<tribullet> 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
+  output \<open>ptr \<tribullet> 2 \<Ztypecolon> \<v>\<a>\<l> TypedPtr aint\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 0)   \<semicolon>
   & $1[b]\<tribullet>$a[0] \<semicolon>
@@ -62,18 +62,18 @@ no_notation Set.member ("(_/ : _)" [51, 51] 50)
 
 
 proc test_ptr2:
-  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: \<p>\<t>\<r>, x: \<t>\<u>\<p> {\<b>\<o>\<o>\<l>, \<s>\<t>\<r>\<u>\<c>\<t> {q: \<a>\<i>\<n>\<t>, w: \<p>\<t>\<r>}}, y: \<a>\<i>\<n>\<t>}, \<int> \<rbrace>\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> TypedPtr (\<s>\<t>\<r>\<u>\<c>\<t> {a: \<p>\<t>\<r>, x: \<t>\<u>\<p> {\<b>\<o>\<o>\<l>, \<s>\<t>\<r>\<u>\<c>\<t> {q: \<a>\<i>\<n>\<t>, w: \<p>\<t>\<r>}}, y: \<a>\<i>\<n>\<t>}), \<int> \<rbrace>\<close>
   premises \<open>ptr \<noteq> 0\<close>
-  output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<p>\<t>\<r>\<close>
+  output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<v>\<a>\<l> TypedPtr \<p>\<t>\<r>\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 1) \<semicolon>
   & $1[a].x[b].w
 \<medium_right_bracket> .
 
 proc test_ptr3:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {a: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr (\<s>\<t>\<r>\<u>\<c>\<t> {a: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>})\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr \<tribullet> a \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<i>\<n>\<t>\<close>
+  output \<open>addr \<tribullet> a \<Ztypecolon> \<v>\<a>\<l> TypedPtr \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   &addr.a
 \<medium_right_bracket> .

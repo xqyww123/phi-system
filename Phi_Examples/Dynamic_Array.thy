@@ -7,11 +7,12 @@ begin
 declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def DynArr :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
-  where \<open>l \<Ztypecolon> DynArr addr T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] (\<t>\<y>\<p>\<e>\<o>\<f> T), len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
+  where \<open>l \<Ztypecolon> DynArr addr T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: TypedPtr (\<a>\<r>\<r>\<a>\<y>[cap] (\<t>\<y>\<p>\<e>\<o>\<f> T)), len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
                              data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] T
                              \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                   len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
-                                                  take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr\<close>
+                                                  take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr \<and>
+                                                  \<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<s>\<i>\<z>\<e>_\<t>, cap: \<s>\<i>\<z>\<e>_\<t>}\<close>
 
   deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
        and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr T) (list_all2 eq)\<close>
@@ -47,7 +48,10 @@ proc get_dynarr:
   output   \<open>l!i \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
-  addr.data[i]
+  \<semicolon>
+thm \<phi>
+\<semicolon> addr.data \<rightarrow> val t
+\<semicolon> t[i]
 \<medium_right_bracket> .
 
 

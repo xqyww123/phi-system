@@ -168,7 +168,7 @@ definition \<open>address_to_base addr \<equiv> memaddr.index addr = 0\<close>
 subsection \<open>Main\<close>
 
 proc op_load_mem:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> state\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> state\<close>
   requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and \<open>Semantic_Type' (x \<Ztypecolon> T) TY\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state\<close>
@@ -197,7 +197,7 @@ proc op_load_mem:
 \<medium_right_bracket> .
 
 proc op_store_mem:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
   requires \<open>report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
        and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
                    \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
@@ -234,7 +234,7 @@ lemma op_load_mem_triangle_opr_\<phi>app[\<phi>overload \<tribullet> 10]:
 \<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_load_mem TY v \<lbrace> addr \<Ztypecolon> \<v>\<a>\<l>[v] \<bbbP>\<t>\<r> TY\<heavy_comma> state \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_load_mem TY v \<lbrace> addr \<Ztypecolon> \<v>\<a>\<l>[v] TypedPtr TY\<heavy_comma> state \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state \<rbrace>\<close>
   by (rule op_load_mem_\<phi>app, blast+)
 
 
@@ -268,7 +268,7 @@ proc calloc1:
   input \<open>Void\<close>
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
        and \<open>Semantic_Zero_Val TY T z\<close>
-  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
+  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
 \<medium_left_bracket>
@@ -281,15 +281,15 @@ proc calloc1:
   semantic_assumption \<open>type_storable_in_mem TY\<close>
 
   have t1: \<open>valid_address (memaddr blk [])\<close>
-    by (insert \<phi>; auto simp add: Valid_MemBlk_def split: memblk.split) ;;
+    by (insert \<phi>; auto simp add: Valid_MemBlk_def split: memblk.split) \<semicolon>
 
-  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> Ptr TY)\<close>
+  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr TY)\<close>
     
 \<medium_right_bracket> .
 
  
 proc mfree:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
+  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
   requires \<open>Semantic_Type T TY\<close>
   premises \<open>address_to_base addr\<close>
   output \<open>Void\<close>
@@ -460,8 +460,7 @@ subsubsection \<open>Reasoning Rules\<close>
 
 
 lemma [\<phi>reason %deriving_pointer_cut]:
-  \<open> Generalized_Semantic_Type T TY
-\<Longrightarrow> Derive_Pointer_Of (x \<Ztypecolon> \<m>\<e>\<m>[addr] T) (Some (addr \<Ztypecolon> \<bbbP>\<t>\<r> TY)) \<close>
+  \<open> Derive_Pointer_Of (x \<Ztypecolon> \<m>\<e>\<m>[addr] T) (Some (addr \<Ztypecolon> Ptr)) \<close>
   for T :: \<open>(mem_fic,'x) \<phi>\<close>
   unfolding Derive_Pointer_Of_def ..
 

@@ -162,7 +162,7 @@ fun eval_until gen_ctxt (limit, num) (mode, complete_eval, cfg) =
                    chk_complete_eval mode prev_name (ctxt,sequent);
                    (ctxt, sequent)
                      |> Generic_Variable_Access.push_values vals
-                     |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
+                     |> Phi_Reasoners.wrap'' (Phi_Apply.apply1 rules)
                      |> post_app (Phi_CP_IDE.set_expr_id expr_id cfg)
                      |> complete_eval ? chk_complete_eval mode (SOME "operator", Markup.operator, name)
                      |> eval (num-1) name' aR
@@ -209,7 +209,7 @@ fun close_parenthesis (cfg, meta_arg, complete_eval) (oprs, s0) =
 
       fun close args (((Apply (name, expr_id, rules, vals_before) :: acts), arg_names), s) =
             s |> Generic_Variable_Access.push_values (vals_before @ chk_no_name args)
-              |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
+              |> Phi_Reasoners.wrap'' (Phi_Apply.apply1 rules)
               |> post_app (Phi_CP_IDE.set_expr_id expr_id cfg)
               |> complete_eval ? chk_complete_eval mode (SOME "function", Markup.plain_text, name)
               |> pair (acts, arg_names)

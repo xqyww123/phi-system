@@ -3042,7 +3042,7 @@ ML_file \<open>library/tools/failure_reason.ML\<close>
                         of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ X) => X
                          | \<^const>\<open>FAIL'\<close> $ X => X
            val str = Text_Encoding.decode_text_str ctxt text
-           val _ = Phi_Reasoners.report_failure_reason' ctxt [fn () =>
+           val _ = Phi_Reasoners.report_failure_reason' ctxt 2 [fn () =>
                         Text_Encoding.decode_text_pretty ctxt text]
         in Seq.empty
        end
@@ -3054,7 +3054,7 @@ ML_file \<open>library/tools/failure_reason.ML\<close>
                         of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>TRACE_FAIL\<close> $ X) => X
                          | \<^const>\<open>TRACE_FAIL\<close> $ X => X
            val str = Text_Encoding.decode_text_str ctxt text
-           val _ = Phi_Reasoners.report_failure_reason' ctxt [fn () =>
+           val _ = Phi_Reasoners.report_failure_reason' ctxt 2 [fn () =>
                         Text_Encoding.decode_text_pretty ctxt text]
         in Seq.empty
        end
