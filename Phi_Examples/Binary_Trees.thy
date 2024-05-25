@@ -176,12 +176,13 @@ abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<
 abbreviation \<open>\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
 abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
+(*
 \<phi>type_def BinTree :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
   where \<open> (Leaf \<Ztypecolon> BinTree addr TY T)     = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
       | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BinTree addr TY T) =
                 (L \<Ztypecolon> BinTree addr\<^sub>L TY T\<heavy_comma>
                  R \<Ztypecolon> BinTree addr\<^sub>R TY T\<heavy_comma>
-                 (addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> left: \<bbbP>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY, data: T, right: \<bbbP>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<rbrace> 
+                 (addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> left: Ptr[\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY], data: T, right: Ptr[\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY] \<rbrace> 
                 \<s>\<u>\<b>\<j> addr\<^sub>L addr\<^sub>R. \<top> )\<close>
 
    deriving Basic
@@ -192,27 +193,50 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
          \<Longrightarrow> Transformation_Functor (BinTree addr TY) (BinTree addr' TY') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
            (arbitrary: addr')
        and Functional_Transformation_Functor
+*)
+
+\<phi>type_def BinTree :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
+  where \<open> (Leaf \<Ztypecolon> BinTree addr T)     = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
+      | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BinTree addr T) =
+                (L \<Ztypecolon> BinTree addr\<^sub>L T\<heavy_comma>
+                 R \<Ztypecolon> BinTree addr\<^sub>R T\<heavy_comma>
+                 (addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> left: Ptr, data: T, right: Ptr \<rbrace> 
+                \<s>\<u>\<b>\<j> addr\<^sub>L addr\<^sub>R. \<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: \<t>\<y>\<p>\<e>\<o>\<f> T, right: \<p>\<t>\<r>} )\<close>
+
+   deriving Basic
+       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (BinTree addr T) (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0)) \<close>
+       and \<open>Identity_Elements\<^sub>E (BinTree addr T) (\<lambda>l. addr = 0 \<and> l = Leaf)\<close>  
+       and \<open>Identity_Elements\<^sub>I (BinTree addr T) (\<lambda>l. l = Leaf) (\<lambda>l. addr = 0)\<close>
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr
+         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
+         \<Longrightarrow> Transformation_Functor (BinTree addr) (BinTree addr') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
+           (arbitrary: addr')
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr
+         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
+         \<Longrightarrow> Functional_Transformation_Functor (BinTree addr) (BinTree addr') T U
+                Tree.tree.set_tree (\<lambda>x. UNIV) (\<lambda>f. Tree.tree.pred_tree) (\<lambda>f P. Tree.tree.map_tree f)\<close>
 
 declare [[ML_print_depth = 100]]
-
-\<phi>type_def Bin_Search_Tree :: \<open>address \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
-  where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>
-                                                \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted_lookup_tree tree \<close>
+  
+\<phi>type_def Bin_Search_Tree :: \<open>address \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
+  where \<open>f \<Ztypecolon> Bin_Search_Tree addr K V \<equiv> tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>
+                                         \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted_lookup_tree tree \<close>
 
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
-         \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
+         \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
             (tactic: clarsimp, subgoal' for tree x y \<open>induct tree arbitrary: x\<close>)
-       and \<open> Identity_Elements\<^sub>E (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. addr = 0 \<and> l = Map.empty) \<close>
-       and \<open> Identity_Elements\<^sub>I (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0) \<close>
+       and \<open> Identity_Elements\<^sub>E (Bin_Search_Tree addr K V) (\<lambda>l. addr = 0 \<and> l = Map.empty) \<close>
+       and \<open> Identity_Elements\<^sub>I (Bin_Search_Tree addr K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0) \<close>
        and \<open> Object_Equiv V eq
-         \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
+         \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
             (tactic: clarsimp, 
                      rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,_). (k, the (g k))) x\<close>],
                      auto intro!: rel_tree_self_map simp: fun_eq_iff)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
-         \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-       and \<open>Functional_Transformation_Functor (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) (Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
+         \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr K) (Bin_Search_Tree addr' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
+         \<Longrightarrow> Functional_Transformation_Functor (Bin_Search_Tree addr K) (Bin_Search_Tree addr' K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
 
 
@@ -286,10 +310,10 @@ begin
 
 
 proc lookup_bintree:
-  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
-            tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<close>
+  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
+            tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<close>
   premises \<open>k \<in> dom (lookup_tree tree) \<and> sorted_lookup_tree tree\<close>
-  output   \<open>tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
+  output   \<open>tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
             the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
   is [recursive]
   is [routine]

@@ -19,7 +19,7 @@ declare [[\<phi>trace_reasoning = 1]]
             (tactic: auto, subgoal' for x xa xb xc \<open>rule exI[where x=\<open>xa @ drop (length xa) xc\<close>]\<close>)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
          \<Longrightarrow> Transformation_Functor (DynArr addr) (DynArr addr') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
-       (* and Functional_Transformation_Functor *)
+       and Functional_Transformation_Functor
        and Pointer_Of
 
 
@@ -109,8 +109,6 @@ proc concat_dynarr:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
-declare [[\<phi>trace_reasoning = 2]]
-
 proc pop_dynarr:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
@@ -122,20 +120,16 @@ proc pop_dynarr:
   val ret \<leftarrow> addr.data[len] \<semicolon>
   addr.len := len \<semicolon>
   if (len \<le> half_cap) \<medium_left_bracket>
+    holds_fact [simp]: \<open>length l - Suc 0 = length ya div 2\<close> \<semicolon>
     val data' \<leftarrow> calloc (half_cap) \<open>T\<close> \<semicolon>
     memcpy (data', addr.data, len) \<semicolon>
     mfree (addr.data) \<semicolon>
     addr.data := data' \<semicolon>
-    addr.cap := half_cap \<semicolon>
+    addr.cap := half_cap \<semicolon> 
+    \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close>
+  \<medium_right_bracket> \<medium_left_bracket> 
     \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close>
   \<medium_right_bracket>
-    \<medium_left_bracket> 
-
-      \<semicolon> \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close>
-      
-      \<semicolon> thm \<phi>
-        
-      \<medium_right_bracket> \<semicolon> \<semicolon>
   ret
 \<medium_right_bracket> .
 
@@ -144,7 +138,7 @@ proc new_dynarr:
   input  \<open>Void\<close>
   output \<open>[] \<Ztypecolon> \<r>\<e>\<f> DynArr addr T \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc1 \<open>\<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[0] (\<t>\<y>\<p>\<e>\<o>\<f> T), len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<close> \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> data: Ptr[\<a>\<r>\<r>\<a>\<y>[0] (\<t>\<y>\<p>\<e>\<o>\<f> T)], len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<close> \<semicolon>
   ret.data := (calloc (\<open>0 \<Ztypecolon> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>) \<open>T\<close>) \<semicolon>
   \<m>\<a>\<k>\<e>\<s> \<open>DynArr addr _\<close> \<semicolon>
   ret
