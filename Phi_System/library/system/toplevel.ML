@@ -271,7 +271,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
               includes assms concls int
          |> Proof.map_context (fn ctxt =>
               ctxt |> Context_Position.set_visible false
-                   |> (fn ctxt => ctxt addsimprocs [Semantic_Type_Tools.unfold_typeof_simproc])
+                 (* |> (fn ctxt => ctxt addsimprocs [Semantic_Type_Tools.unfold_typeof_simproc]) *)
                    |> Context_Position.restore_visible ctxt
                    |> Phi_ID.set_construct (Binding.name_of (fst binding))
                    |> Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)

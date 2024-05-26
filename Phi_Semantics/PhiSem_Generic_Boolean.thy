@@ -65,15 +65,16 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
 
 section \<open>\<phi>-Type\<close>
 
+declare [[\<phi>trace_reasoning = 4]]
+ 
 \<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
   where \<open>x \<Ztypecolon> \<bool> \<equiv> sem_mk_bool x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type \<bool> \<b>\<o>\<o>\<l>\<close>
+       (*and \<open>Semantic_Type \<bool> \<b>\<o>\<o>\<l>\<close> *)
        and \<open>Semantic_Zero_Val \<b>\<o>\<o>\<l> \<bool> False\<close>
        and Inhabited
- 
-term \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<bool>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<bool> = \<b>\<o>\<o>\<l>\<close>
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)" (*TODO: auto derive!*)

@@ -2204,7 +2204,7 @@ Scan.succeed (Thm.rule_attribute [] (fn ctxt' =>
 declare [[\<phi>premise_attribute  [THEN Do_D] for \<open>\<d>\<o> PROP _\<close>          (%\<phi>attr_normalize),
           \<phi>premise_attribute  [THEN Premise_D] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>     (%\<phi>attr_late_normalize),
           \<phi>premise_attribute  [THEN Premise_D] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] ?x\<close> (%\<phi>attr_late_normalize),
-          \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semantic_Type _ _\<close> \<open>\<d>\<o> Semantic_Type _ _\<close> (%\<phi>attr),
+        (* \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semantic_Type _ _\<close> \<open>\<d>\<o> Semantic_Type _ _\<close> (%\<phi>attr), *)
           \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Semantic_Zero_Val _ _ _\<close> \<open>\<d>\<o> Semantic_Zero_Val _ _ _\<close> (%\<phi>attr),
           \<phi>premise_attribute  [THEN Simplify_D] for \<open>Simplify _ _ _\<close> \<open>\<d>\<o> Simplify _ _ _\<close>   (%\<phi>attr_late_normalize),
           \<phi>premise_attribute once? [\<phi>reason? %local] for \<open>Is_Functional ?S\<close>     (%\<phi>attr),

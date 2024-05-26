@@ -12,6 +12,8 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
   and   semty_ntup_eq_position: \<open>semty_ntup Ts = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> |\<in>| fmran Ts\<close>
   and   WT_named_tup[simp]:
             \<open>Well_Type (semty_ntup Ts)  = { sem_mk_ntup vs |vs. fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs }\<close>
+  and   semty_ntup_uniq:
+            \<open>sem_mk_ntup vs \<in> Well_Type TY \<Longrightarrow> \<exists>Ts. TY = semty_ntup Ts\<close>
   and   zero_named_tup[simp]:
             \<open>Zero (semty_ntup Ts) = (if fmpred (\<lambda>_ t. Zero t \<noteq> None) Ts
                                      then Some (sem_mk_ntup (fmmap (the o Zero) Ts))
@@ -189,10 +191,11 @@ subsection \<open>Empty Tuple\<close>
   where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> sem_mk_ntup fmempty \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close>
+       (*and \<open>Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close> *)
        and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Named_Tuple\<close>
        and Inhabited
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Empty_Named_Tuple = \<s>\<t>\<r>\<u>\<c>\<t> { }\<close>
 
 \<phi>adhoc_overloading \<phi>_Empty_Tuple_sugar Empty_Named_Tuple
 
@@ -233,6 +236,30 @@ print_translation \<open>[
 ]\<close>
 
 subsubsection \<open>Properties\<close>
+
+lemma
+  \<open> \<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> SYMBOL_VAR(s): T \<rbrace> = \<s>\<t>\<r>\<u>\<c>\<t> {SYMBOL_VAR(s): \<t>\<y>\<p>\<e>\<o>\<f> T} \<close> 
+  unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def
+  apply auto
+  apply (smt (z3) WT_named_tup Well_Type_unique exE_some fmempty_transfer fmrel_upd mem_Collect_eq)
+  apply (metis (mono_tags, lifting) WT_named_tup fmempty_transfer fmrel_upd mem_Collect_eq)
+   apply blast
+  subgoal premises prems for x TY v
+  proof -
+    have t1: \<open>sem_mk_ntup (fmupd s v fmempty) \<in> Well_Type TY\<close>
+      using prems(2) prems(3) by blast
+    obtain TY' where t2: \<open>TY = semty_ntup (fmupd s TY' fmempty)\<close>
+      apply (insert semty_ntup_uniq[OF t1]
+                    prems(2)[THEN spec[where x=x], THEN spec[where x=\<open>sem_mk_ntup (fmupd s v fmempty)\<close>]],
+             auto simp: fmrel_iff)
+      using prems(3) apply blast
+      by (smt (verit) fmap_exhaust fmdom_notD fmempty_lookup fmupd_lookup option.distinct(1) option_rel_Some2 rel_option_None2)
+    from prems(1)[THEN spec[where x=\<open>TY'\<close>]] prems(2) have False
+      by (auto simp: fmrel_iff t2,
+          smt (verit, best) fmupd_lookup option.distinct(1) option.rel_sel option.sel sem_mk_dest_ntup)
+    then show ?thesis
+      by blast
+  qed .
 
 let_\<phi>type Named_Tuple_Field
   deriving \<open> Semantic_Type T TY

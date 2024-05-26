@@ -490,6 +490,7 @@ in conv_mode >> (fn simp => fn ctxt =>
           (Phi_Conv.Embed_into_Phi_Type.equip ctxt) 1 ))
 end\<close>
 
+(*
 subsection \<open>Semantic Type of Multiple Values\<close>
 
 lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
@@ -545,7 +546,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. S ret \<s>\<u>\<b>\<j> P ret) TYs\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def Satisfiable_def Subjection_expn
   by clarsimp
-
+*)
 
 subsection \<open>Removing Values\<close> (*TODO: depreciate me*)
 

@@ -1,6 +1,6 @@
 local
 
-
+(*
 fun sem_rule_expr' bvtys0 T_term0 ctxt =
   let val (rev_args, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of1 (bvtys0,T_term0))
       val M = length rev_args
@@ -54,9 +54,11 @@ fun is_val_T ty =
 
 fun is_val_Tm ex (Free (N, ty)) = not (member (op = ) ex N) andalso is_val_T ty
   | is_val_Tm _  _ = false
+*)
 
 in
 
+(*
 val _ = Theory.setup (Context.theory_map (
   Phi_Toplevel.Infer_Requirements.add 100 (fn spec => fn {parse_ctxt, new_requirements} =>
     let val annotated_typs = ( map_filter (existing_sematic_types o #1 o #2)
@@ -85,6 +87,7 @@ val _ = Theory.setup (Context.theory_map (
     end
     )
 ))
+*)
 
 val _ = Theory.setup (Context.theory_map (
   Phi_Type.Deriving_Hooks.add 100 (

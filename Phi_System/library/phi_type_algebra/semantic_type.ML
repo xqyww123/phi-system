@@ -23,35 +23,37 @@ fun guess_property phi ctxt =
               end) else ()
 
    in Seq.single ([], HOLogic.Trueprop $ (
-            \<^Const>\<open>Semantic_Type x_ty\<close> $ T_term $ Var (("TY", 0), \<^Type>\<open>TY\<close>)),
+            \<^Const>\<open>HOL.eq \<^Type>\<open>VAL\<close>\<close>
+              $ (\<^Const>\<open>SType_Of x_ty\<close> $ T_term)
+              $ Var (("TY", 0), \<^Type>\<open>TY\<close>) ),
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
 fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
-  let val parse_hint = parse_hint (fn \<^Const>\<open>Semantic_Type _\<close> $ T $ _ => T)
+  let val parse_hint = parse_hint (
+            fn \<^Const>\<open>HOL.eq _\<close> $ (\<^Const>\<open>SType_Of _\<close> $ T) $ _ => T)
 
       (*val equip_expansion = equip_expansion_ss phi0*)
       val ind_conv = default_ind_conv (
             fn _ => fn _ =>
-                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
-                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
+                Conv.rewr_conv @{thm' \<phi>TA_SemTy_IH_rewr},
             fn ctxt => fn _ => fn ctm =>
-               (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+               (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
                 Phi_Reasoners.asm_rewrite true (Simplifier.clear_simpset ctxt addsimps (#equations phi0)) then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)
 
       fun varifier _ (Trueprop $ (
-                (SemTyp as Const(\<^const_name>\<open>Semantic_Type'\<close>, _) $ _) $ TY
+                EQ $ (SemTyp as Const(\<^const_name>\<open>SType_Of\<close>, _) $ _) $ TY
               )) =
             if is_some (#1 instruction)
             then NONE
-            else SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
+            else SOME ([TY], fn [TY'] => Trueprop $ (EQ $ SemTyp $ TY'))
         | varifier _ (Trueprop $ (
-                (SemTyp as Const(\<^const_name>\<open>Semantic_Type\<close>, _) $ _) $ TY
+                EQ $ (SemTyp as Const(\<^const_name>\<open>SType_Of'\<close>, _) $ _) $ TY
               )) =
             if is_some (#1 instruction)
             then NONE
-            else SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
+            else SOME ([TY], fn [TY'] => Trueprop $ (EQ $ SemTyp $ TY'))
         | varifier _ X = NONE
       fun reasoning phi ctxt sequent =
             default_reasoning true default_reasoning_configure varifier
@@ -79,7 +81,7 @@ fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
               fn m => fn lthy => lthy
                   |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
                   |> Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
-                                           (SOME (the_default @{reasoner_group %\<phi>sem_type_derived}
+                                           (SOME (the_default @{reasoner_group %\<phi>sem_type_infer_derived}
                                                               (#2 instruction)))
                                            ([],[]) NONE [Morphism.thm m rule]
                   |> Config.restore_generic Phi_Reasoner.trace lthy)

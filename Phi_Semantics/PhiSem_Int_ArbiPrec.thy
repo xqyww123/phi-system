@@ -48,6 +48,7 @@ subsection \<open>Integer in the normal sense\<close>
        and \<open>Semantic_Type \<int> \<a>\<i>\<n>\<t>\<close>
        and Semantic_Zero_Val
        and Inhabited
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<int> = \<a>\<i>\<n>\<t>\<close>
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
@@ -73,6 +74,7 @@ subsection \<open>Natural Nmber\<close>
        and Semantic_Type
        and Semantic_Zero_Val
        and Inhabited
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<nat> = \<a>\<i>\<n>\<t>\<close>
 
 
 declare [[

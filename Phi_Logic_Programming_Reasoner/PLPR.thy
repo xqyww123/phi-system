@@ -3082,6 +3082,16 @@ ML \<open>exception PLPR_EXCEPTION of string\<close>
   end\<close>
 
 
+lemma [\<phi>reason 100]:
+  \<open> P
+\<Longrightarrow> P \<o>\<r> \<f>\<a>\<i>\<l> text \<close>
+  unfolding OR_FAIL_def .
+
+lemma [\<phi>reason no explorative backtrack 90]:
+  \<open> FAIL text
+\<Longrightarrow> P \<o>\<r> \<f>\<a>\<i>\<l> text \<close>
+  unfolding FAIL_def by blast
+
 subsection \<open>Syntactic Mode\<close>
 
 definition \<open>SYNTACTIC_MODE \<equiv> False\<close>

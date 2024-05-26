@@ -143,8 +143,8 @@ lemma semantic_local_value_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> TY
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<longmapsto> \<lambda>_. Void \<s>\<u>\<b>\<j> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) \<rbrace>\<close>
-  unfolding \<phi>M_assert_def Premise_def Semantic_Type'_def subset_iff \<phi>Procedure_def det_lift_def Return_def
-  by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
+  unfolding \<phi>M_assert_def Premise_def Semantic_Type'_alt_def subset_iff \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set )
 
 lemma semantic_local_values_nochk_\<phi>app:
   \<open> x \<Ztypecolon> \<v>\<a>\<l>\<s>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) \<close>

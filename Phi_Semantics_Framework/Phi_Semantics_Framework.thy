@@ -151,6 +151,7 @@ subsection \<open>All-in-One Semantics\<close>
 
 debt_axiomatization Well_Type :: \<open>TY \<Rightarrow> VAL set\<close>
   where Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
+    and Well_Type_poison[simp]: \<open>Well_Type \<p>\<o>\<i>\<s>\<o>\<n> = {}\<close>
 
 debt_axiomatization Can_EqCompare :: \<open>resource \<Rightarrow> VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
   where can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
