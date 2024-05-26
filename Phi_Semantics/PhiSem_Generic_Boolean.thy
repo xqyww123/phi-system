@@ -11,6 +11,7 @@ debt_axiomatization \<b>\<o>\<o>\<l>          :: TY
                 and sem_mk_bool   :: \<open>bool \<Rightarrow> VAL\<close>
                 and sem_dest_bool :: \<open>VAL \<Rightarrow> bool\<close>
   where sem_mk_dest_bool[simp]: \<open>sem_dest_bool (sem_mk_bool b) = b\<close>
+    and \<b>\<o>\<o>\<l>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<b>\<o>\<o>\<l> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
     and can_eq_bool: \<open>Can_EqCompare res (sem_mk_bool x1) (sem_mk_bool x2)\<close>
     and eq_bool:     \<open>EqCompare (sem_mk_bool x1) (sem_mk_bool x2) = (x1 = x2)\<close>
     and zero_bool[simp]: \<open>Zero \<b>\<o>\<o>\<l> = Some (sem_mk_bool False)\<close>
@@ -19,7 +20,11 @@ debt_axiomatization \<b>\<o>\<o>\<l>          :: TY
 lemma sem_mk_bool_inj[simp]:
   \<open>sem_mk_bool x = sem_mk_bool y \<equiv> x = y\<close>
   by (smt (verit, del_insts) sem_mk_dest_bool)
-  
+
+lemma \<p>\<o>\<i>\<s>\<o>\<n>_neq_\<b>\<o>\<o>\<l>[simp]:
+  \<open>\<p>\<o>\<i>\<s>\<o>\<n> \<noteq> \<b>\<o>\<o>\<l>\<close>
+  using \<b>\<o>\<o>\<l>_neq_\<p>\<o>\<i>\<s>\<o>\<n> by fastforce
+
 
 section \<open>Instructions\<close>
 

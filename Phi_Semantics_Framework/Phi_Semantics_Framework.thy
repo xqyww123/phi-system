@@ -28,7 +28,7 @@ subsection \<open>Type\<close>
 
 unspecified_type TY
 
-
+debt_axiomatization \<p>\<o>\<i>\<s>\<o>\<n> :: TY
 
 subsection \<open>Value\<close>
 

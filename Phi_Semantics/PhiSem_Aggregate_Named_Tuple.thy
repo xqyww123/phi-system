@@ -9,6 +9,7 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
                 and sem_mk_ntup   :: \<open>(symbol, VAL) fmap \<Rightarrow> VAL\<close>
                 and sem_dest_ntup :: \<open>VAL \<Rightarrow> (symbol, VAL) fmap\<close>
   where sem_mk_dest_ntup[simp]: \<open>sem_dest_ntup (sem_mk_ntup vs) = vs\<close>
+  and   semty_ntup_eq_position: \<open>semty_ntup Ts = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> |\<in>| fmran Ts\<close>
   and   WT_named_tup[simp]:
             \<open>Well_Type (semty_ntup Ts)  = { sem_mk_ntup vs |vs. fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs }\<close>
   and   zero_named_tup[simp]:
@@ -146,6 +147,36 @@ lemma homo_sep_V_named_tup[simp]:
 lemma closed_homo_sep_V_named_tup[simp]:
   \<open>closed_homo_sep (\<lambda>v. sem_mk_ntup (fmupd s v fmempty))\<close>
   unfolding closed_homo_sep_def
+  by simp
+
+subsubsection \<open>Reduction to poison\<close>
+
+ML_file \<open>library/Ag_Named_Tuple.ML\<close>
+
+local_setup \<open>setup_semty_ntup_to_poison\<close>
+
+
+lemma semty_ntup_neq_poison[simp]:
+  \<open> k |\<notin>| fmdom Ts
+\<Longrightarrow> semty_ntup (fmupd k TY Ts) = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> TY = \<p>\<o>\<i>\<s>\<o>\<n> \<or> semty_ntup Ts = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  unfolding semty_ntup_eq_position atomize_eq
+  by (metis domIff fmdom.rep_eq fmdom_fmupd fmlookup_ran_iff fmupd_lookup option.simps(1))
+
+lemma semty_ntup_neq_poison0[simp]:
+  \<open> \<s>\<t>\<r>\<u>\<c>\<t> { } \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  unfolding semty_ntup_eq_position
+  by clarsimp
+
+lemma
+  \<open>\<s>\<t>\<r>\<u>\<c>\<t>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>} = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  by simp
+
+lemma
+  \<open>P (\<s>\<t>\<r>\<u>\<c>\<t>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  by simp
+
+lemma
+  \<open>\<s>\<t>\<r>\<u>\<c>\<t>{a: \<b>\<o>\<o>\<l>, b: \<b>\<o>\<o>\<l>, c: \<b>\<o>\<o>\<l>} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   by simp
 
 
