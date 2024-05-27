@@ -30,9 +30,9 @@ declare [[\<phi>trace_reasoning = 1]]
   where \<open>s \<Ztypecolon> Symbol \<equiv> sem_mk_symbol s \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type Symbol \<s>\<y>\<m>\<b>\<o>\<l>\<close>
        and \<open>Semantic_Zero_Val \<s>\<y>\<m>\<b>\<o>\<l> Symbol SYMBOL(zero)\<close>
        and Inhabited
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Symbol = \<s>\<y>\<m>\<b>\<o>\<l>\<close>
 
 lemma [\<phi>reason 1000]:
   "\<phi>Equal Symbol (\<lambda>x y. True) (=)"

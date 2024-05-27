@@ -10,6 +10,7 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
                 and sem_dest_ntup :: \<open>VAL \<Rightarrow> (symbol, VAL) fmap\<close>
   where sem_mk_dest_ntup[simp]: \<open>sem_dest_ntup (sem_mk_ntup vs) = vs\<close>
   and   semty_ntup_eq_position: \<open>semty_ntup Ts = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> |\<in>| fmran Ts\<close>
+  (*and   semty_ntup_inj: \<open> semty_ntup Ts1 = semty_ntup Ts2 \<longleftrightarrow> Ts1 = Ts2 \<close>*)
   and   WT_named_tup[simp]:
             \<open>Well_Type (semty_ntup Ts)  = { sem_mk_ntup vs |vs. fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs }\<close>
   and   semty_ntup_uniq:
@@ -34,6 +35,14 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
             \<open>idx_step_value (AgIdx_S s) (sem_mk_ntup vs) = the (fmlookup vs s)\<close>
   and   idx_step_mod_value_named_tup:
             \<open>idx_step_mod_value (AgIdx_S s) f (sem_mk_ntup vs) = sem_mk_ntup (fmupd s (f (the (fmlookup vs s))) vs)\<close>
+
+lemma semty_ntup_uniq':
+  \<open> sem_mk_ntup vs \<in> Well_Type TY
+\<Longrightarrow> \<exists>Ts. TY = semty_ntup Ts \<and> fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs \<close>
+  by (smt (verit, del_insts) WT_named_tup mem_Collect_eq sem_mk_dest_ntup semty_ntup_uniq)
+
+  
+
 
 subsubsection \<open>Syntax\<close>
 
@@ -237,7 +246,7 @@ print_translation \<open>[
 
 subsubsection \<open>Properties\<close>
 
-lemma
+lemma Named_Tuple_Field_\<t>\<y>\<p>\<e>\<o>\<f>[simp]:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> SYMBOL_VAR(s): T \<rbrace> = \<s>\<t>\<r>\<u>\<c>\<t> {SYMBOL_VAR(s): \<t>\<y>\<p>\<e>\<o>\<f> T} \<close> 
   unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def
   apply auto
@@ -260,6 +269,124 @@ lemma
     then show ?thesis
       by blast
   qed .
+
+term list_all
+term map_of
+
+definition Named_Tuple_Types :: \<open>(VAL, 'x) \<phi> \<Rightarrow> (symbol, TY) fmap \<Rightarrow> bool\<close>
+  where \<open>Named_Tuple_Types T Tys = (
+    (\<p>\<o>\<i>\<s>\<o>\<n> |\<notin>| fmran Tys \<longleftrightarrow> Inhabited T \<and> (\<exists>TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)) \<and>
+    (\<p>\<o>\<i>\<s>\<o>\<n> |\<notin>| fmran Tys \<longrightarrow>
+        (\<forall>x c. c \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>vf. c = sem_mk_ntup vf \<and> fmrel (\<lambda>t v. v \<in> Well_Type t) Tys vf)))
+)\<close>
+
+lemma
+  \<open> Named_Tuple_Types T Tys
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = semty_ntup Tys \<close>
+  unfolding Named_Tuple_Types_def SType_Of_def
+  apply (auto simp: semty_ntup_eq_position)
+  apply (metis semty_ntup_eq_position)
+  apply (metis semty_ntup_eq_position)
+  apply (metis semty_ntup_eq_position)
+  apply (metis semty_ntup_eq_position)
+  apply (smt (verit) Inhabited_def Satisfiable_def WT_named_tup Well_Type_unique mem_Collect_eq someI)
+  apply blast
+  apply (metis semty_ntup_eq_position)
+  apply (metis semty_ntup_eq_position)
+  apply (metis semty_ntup_eq_position)
+  by (metis semty_ntup_eq_position)
+  
+lemma
+  \<open> Named_Tuple_Types U Tys
+\<Longrightarrow> s |\<notin>| fmdom Tys
+\<Longrightarrow> Named_Tuple_Types (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) (fmupd s (\<t>\<y>\<p>\<e>\<o>\<f> T) Tys) \<close>
+  unfolding Named_Tuple_Types_def Inhabited_def Satisfiable_def
+apply auto
+  using semty_ntup_eq_position semty_ntup_neq_poison apply force
+  using semty_ntup_eq_position semty_ntup_neq_poison apply force
+  using semty_ntup_eq_position semty_ntup_neq_poison apply force
+  apply (drule V_named_tup_sep_disj_R, auto simp: )[1]
+prefer 2
+  using semty_ntup_eq_position semty_ntup_neq_poison apply force
+prefer 2
+  apply (metis Inhabited_def SType_Of_not_poison Satisfiable_def V_named_tup_sep_disj empty_iff fmap_sepdisj_fmempty(2) fmdom_empty fmrel_fmdom_eq fset_simps(1) semty_ntup_eq_position semty_ntup_neq_poison sep_disj_fmupd_left)
+prefer 2
+  apply (smt (verit, del_insts) SType_Of_not_poison V_named_tup_mult WT_named_tup fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right mem_Collect_eq semty_ntup_eq_position semty_ntup_neq_poison)
+prefer 3
+  apply (metis (mono_tags, lifting) SType_Of_not_poison V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right semty_ntup_eq_position semty_ntup_neq_poison) 
+prefer 3
+  using semty_ntup_eq_position semty_ntup_neq_poison apply force  
+prefer 3
+  using semty_ntup_eq_position semty_ntup_neq_poison apply fastforce
+prefer 3
+  using semty_ntup_eq_position semty_ntup_neq_poison apply force
+prefer 3
+  apply (metis (mono_tags, lifting) WT_named_tup mem_Collect_eq)
+prefer 3
+  using semty_ntup_eq_position semty_ntup_neq_poison apply force
+
+
+
+
+
+lemma
+  \<open> \<t>\<y>\<p>\<e>\<o>\<f> U = semty_ntup Ts
+\<Longrightarrow> Is_Named_Tuple U Fields
+\<Longrightarrow> s |\<notin>| Fields
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) = semty_ntup (fmupd s (\<t>\<y>\<p>\<e>\<o>\<f> T) Ts) \<close>
+  unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def
+            Is_Named_Tuple_def
+  apply auto
+  subgoal premises prems for x TY p a TYa b cb xa
+    proof -
+      have t1: \<open>\<exists>TY. \<forall>a b v. (\<exists>ca cb. v = ca * cb \<and> cb \<Turnstile> (b \<Ztypecolon> U) \<and> (\<exists>x. ca = sem_mk_ntup (fmupd s x fmempty) \<and> x \<Turnstile> (a \<Ztypecolon> T)) \<and> ca ## cb) \<longrightarrow> v \<in> Well_Type TY\<close>
+        using prems(6) by blast
+      define TY'
+        where \<open>TY' = (SOME TY. \<forall>a b v. (\<exists>ca cb. v = ca * cb \<and> cb \<Turnstile> (b \<Ztypecolon> U) \<and>
+                     (\<exists>x. ca = sem_mk_ntup (fmupd s x fmempty) \<and> x \<Turnstile> (a \<Ztypecolon> T)) \<and> ca ## cb) \<longrightarrow> v \<in> Well_Type TY)\<close>
+      from someI_ex[OF t1, folded TY'_def]
+           \<open>\<forall>a b v. _ \<longrightarrow> v \<in> Well_Type TYa\<close>
+      have t2: \<open>TY' = TYa\<close>
+        by (metis Well_Type_unique prems(7) prems(8) prems(9))
+      have t3: \<open>\<exists> TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY\<close>
+        using prems(4) by blast
+      define TY2
+        where \<open>TY2 = (SOME TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)\<close>
+have \<open>(\<exists>x p. p \<Turnstile> (x \<Ztypecolon> U))\<close>
+  using prems(7) by auto
+
+thm t3
+thm prems
+thm prems(1)[folded TY2_def]
+
+      from someI_ex[OF t3, folded TY2_def]
+           \<open>\<forall>x v. _ \<longrightarrow> v \<in> Well_Type TY\<close>
+      have t4: \<open>TY2 = TY\<close>
+        using Well_Type_unique prems(9) by blast
+      obtain Vs where t5[simp]: \<open>cb = sem_mk_ntup Vs \<and> fmdom Vs = Fields\<close>
+        using prems(2) prems(7) by presburger
+
+have x1: \<open>\<forall>cb. fmdom cb = Fields \<longrightarrow> fmupd s xa fmempty ## cb\<close>
+  using prems(3) by auto
+have \<open> \<forall>x v. v \<Turnstile> (x \<Ztypecolon> U) \<longrightarrow> (\<exists>vf. v = sem_mk_ntup vf \<and> fmdom vf = Fields \<and> sem_mk_ntup (fmupd s xa vf) \<in> Well_Type TYa)\<close>
+  by (metis V_named_tup_mult V_named_tup_sep_disj fmap_times_fempty(2) fmupd_times_right prems(2) prems(3) prems(6) prems(9) x1)
+
+
+
+
+      have t6: \<open>sem_mk_ntup (fmupd s xa Vs) \<in> Well_Type TYa\<close>
+        by (metis V_named_tup_mult fmap_times_fempty(2) fmupd_times_right prems(3) prems(6) prems(7) prems(8) prems(9) t5)
+      from this[THEN semty_ntup_uniq']
+      obtain Ts' where Ts'[simp]: \<open>TYa = semty_ntup Ts' \<and> fmrel (\<lambda>t v. v \<in> Well_Type t) Ts' (fmupd s xa Vs)\<close>
+        by presburger
+        
+      show ?thesis
+        unfolding TY'_def[symmetric] TY2_def[symmetric] t2 t4
+apply (insert Ts')
+apply (auto simp add: fmrel_iff)
+  thm prems
+
+
 
 let_\<phi>type Named_Tuple_Field
   deriving \<open> Semantic_Type T TY
