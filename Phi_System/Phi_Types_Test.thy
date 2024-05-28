@@ -35,9 +35,9 @@ ML \<open>assert_derived_properties \<^theory> [
   unfolding zip'_def unzip'_def
   by (simp add: zip_eq_conv)*)
 
-thm List.ToA_mapper
+thm List.ToA_mapper_sep
 
-thm List.ToA_mapper[where C\<^sub>R=True and C\<^sub>W=True, simplified]
+thm List.ToA_mapper_sep[where C\<^sub>R=True and C\<^sub>W=True, simplified]
 
 term map2
 

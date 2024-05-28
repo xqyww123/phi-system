@@ -1474,15 +1474,17 @@ lemma
 
 subsubsection \<open>Reflexive\<close>
 
-lemma [\<phi>reason %\<phi>mapToA_refl for \<open>\<m>\<a>\<p> _ : ?T \<mapsto> ?U \<o>\<v>\<e>\<r> _ : ?T \<mapsto> ?U \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
-       \<phi>reason default %\<phi>mapToA_unify for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+lemma \<phi>mapToA_refl
+      [(*\<phi>reason %\<phi>mapToA_refl for \<open>\<m>\<a>\<p> _ : ?T \<mapsto> ?U \<o>\<v>\<e>\<r> _ : ?T \<mapsto> ?U \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,*)
+       \<phi>reason %\<phi>mapToA_refl for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> f : T \<mapsto> U \<o>\<v>\<e>\<r> f : T \<mapsto> U \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> id \<s>\<e>\<t>\<t>\<e>\<r> id \<i>\<n> D \<close>
   unfolding ToA_Mapper_def
   by clarsimp
 
-lemma [\<phi>reason %\<phi>mapToA_refl+1 for \<open>\<m>\<a>\<p> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _
-                                    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>,
-       \<phi>reason default %\<phi>mapToA_unify+1 for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+lemma \<phi>mapToA_refl'
+      [(* \<phi>reason %\<phi>mapToA_refl+1 for \<open>\<m>\<a>\<p> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<o>\<v>\<e>\<r> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _
+                                    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>, *)
+       \<phi>reason %\<phi>mapToA_refl+1 for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> f : T \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> U \<^emph>[False] \<top>\<^sub>\<phi>
     \<o>\<v>\<e>\<r> f : T \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> U \<^emph>[False] \<top>\<^sub>\<phi>
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> id \<s>\<e>\<t>\<t>\<e>\<r> id \<i>\<n> D \<close>

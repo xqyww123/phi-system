@@ -36,7 +36,7 @@ proc test_ptr3:
 
 declare [[\<phi>reasoning_step_limit = 140]]
 
-thm \<phi>MapAt_L.ToA_mapper
+thm \<phi>MapAt_L.ToA_mapper_sep
 
 thm ttt
   

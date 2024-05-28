@@ -2568,11 +2568,12 @@ definition Type_Variant_of_the_Same_Scalar_Mul
 definition Parameter_Variant_of_the_Same_Type :: \<open> 'a \<Rightarrow> 'b \<Rightarrow> bool \<close>
   where \<open> Parameter_Variant_of_the_Same_Type Fa Fb \<longleftrightarrow> True \<close>
   \<comment> \<open>Every parameter together with any types is differentiated\<close>
-(*
-definition Parameter_Variant_of_the_Same_Type1 :: \<open> ('p \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('p2 \<Rightarrow> ('c,'d) \<phi>) \<Rightarrow> bool \<close>
-  where \<open> Parameter_Variant_of_the_Same_Type1 Fa Fb \<longleftrightarrow> True \<close>
+
+definition Parameter_Variant_of_the_Same_TypOpr
+        :: \<open> ('p \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('p2 \<Rightarrow> ('c,'d) \<phi>) \<Rightarrow> bool \<close>
+  where \<open> Parameter_Variant_of_the_Same_TypOpr Fa Fb \<longleftrightarrow> True \<close>
   \<comment> \<open>Every parameter together with any types is differentiated\<close>
-*)
+
 declare [[
   \<phi>reason_default_pattern
       \<open>Type_Variant_of_the_Same_Type_Operator ?Fa ?Fb\<close> \<Rightarrow>
@@ -2590,6 +2591,9 @@ declare [[
   and \<open>Parameter_Variant_of_the_Same_Type ?Fa ?Fb\<close> \<Rightarrow>
       \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close>
       \<open>Parameter_Variant_of_the_Same_Type _ ?Fb\<close>        (100)
+  and \<open>Parameter_Variant_of_the_Same_TypOpr ?Fa ?Fb\<close> \<Rightarrow>
+      \<open>Parameter_Variant_of_the_Same_TypOpr ?Fa _\<close>
+      \<open>Parameter_Variant_of_the_Same_TypOpr _ ?Fb\<close>        (100)
   (*and \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> (100)*)
   
   (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Type_Variant_of_the_Same_Type_Operator _ _\<close> *)
@@ -4510,7 +4514,7 @@ context
         prod_opr_norm[simp] boolean_conversions[simp]
 begin
 
-lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF name F\<^sub>1.ToA_mapper]:
+lemma ToA_mapper_sep_template[\<phi>reason_template default %\<phi>mapToA_derived_TF name F\<^sub>1.ToA_mapper_sep]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[C\<^sub>W] W) (U \<^emph>[C\<^sub>R] R) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_Type (F\<^sub>1\<^sub>4 (T \<^emph>[C\<^sub>W] W)) (F\<^sub>1\<^sub>4' (T' \<^emph>[C\<^sub>W] W'))
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>2\<^sub>3' F\<^sub>1\<^sub>4' (U' \<^emph>[C\<^sub>R] R') (T' \<^emph>[C\<^sub>W] W') Dom' Rng' pred_mapper' func_mapper'
@@ -4560,7 +4564,7 @@ lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF
   \<medium_left_bracket> premises FTF[] and [] and FTF'[] and SH\<^sub>I[] and SH\<^sub>I'[] and SH\<^sub>E[] and SH\<^sub>E'[]
          and [useful] and [useful] and [useful] and [useful] and DM and DiM and Tr
          and t3 and _ and [simp] and [simp]
-    ;; apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I']
+    apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I']
     certified by (insert useful(1), simp add: image_iff, elim bexE, metis the_\<phi>(4)) ;;
   
     apply_rule apply_Functional_Transformation_Functor[where f=s and P=\<open>\<lambda>_. True\<close>, OF FTF']
@@ -4582,8 +4586,8 @@ lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF
                       by (smt (z3) DM a1 a2 a3 subset_iff the_\<phi>(10) the_\<phi>(11) the_\<phi>(5) the_\<phi>(7))
                   qed
                 qed 
-     \<medium_right_bracket> ;; certified by (insert useful(1), simp add: image_iff, elim bexE,
-                        metis the_\<phi>(3) the_\<phi>(5) the_\<phi>(8) the_\<phi>(9)) ;;
+     \<medium_right_bracket> \<semicolon> certified by (insert useful(1), simp add: image_iff, elim bexE,
+                       metis the_\<phi>(3) the_\<phi>(5) the_\<phi>(8) the_\<phi>(9)) ;;
     apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E']
     certified proof -
         obtain y where t1: \<open>y \<in> D\<close> and t2: \<open>x = (m\<^sub>g g \<otimes>\<^sub>f m\<^sub>r r) (uz (func_mapper h (\<lambda>_. True) (z y)))\<close>
@@ -4611,6 +4615,56 @@ lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF
       show ?thesis
         by (metis prems(10) prems(11) prems(14) prems(15) prems(19) prems(8) prems(9) t2)
     qed .
+
+
+
+
+
+lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF name F\<^sub>1.ToA_mapper]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1 F\<^sub>2 T U Dom Rng pred_mapper func_mapper
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_Type (F\<^sub>1 T) (F\<^sub>1' T')
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>2' F\<^sub>1' U' T' Dom' Rng' pred_mapper' func_mapper'
+
+\<Longrightarrow> compositional_mapper m\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) m\<^sub>2 Dm\<^sub>1 g h @tag \<A>_template_reason undefined
+\<Longrightarrow> compositional_mapper (\<lambda>s. func_mapper' s (\<lambda>_. True)) m\<^sub>2 m\<^sub>3 Dm\<^sub>2 s (g o h) @tag \<A>_template_reason undefined
+\<Longrightarrow> domain_by_mapper Dom' m\<^sub>2 Dom (g o h) D\<^sub>d\<^sub>m @tag \<A>_template_reason undefined
+\<Longrightarrow> domain_of_inner_map m\<^sub>3 Dm\<^sub>3 @tag \<A>_template_reason undefined
+
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> \<Union> (Dom ` D)
+
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D.
+      x \<in> Dm\<^sub>1 \<and> x \<in> Dm\<^sub>2 \<and> x \<in> D\<^sub>d\<^sub>m \<and>
+      (\<forall>a \<in> Dm\<^sub>3 x. a \<in> Dom x) \<and>
+      (\<forall>a \<in> Dom x. h a \<in> Rng x) \<and>
+      (let x\<^sub>1 = func_mapper h (\<lambda>_. True) x in
+            (\<forall>a \<in> Dom' (m\<^sub>2 (g o h) x). s a \<in> Rng' (m\<^sub>2 (g o h) x)) ))
+
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> h' : func_mapper h (\<lambda>_. True) @tag \<A>_template_reason undefined
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : func_mapper' s (\<lambda>_. True) @tag \<A>_template_reason undefined
+\<Longrightarrow> \<m>\<a>\<p> m\<^sub>1 g : F\<^sub>2 U \<mapsto> F\<^sub>2' U' \<o>\<v>\<e>\<r> m\<^sub>3 f : F\<^sub>1 T \<mapsto> F\<^sub>1' T'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D\<close>
+
+  unfolding \<r>Guard_def Action_Tag_def compositional_mapper_def
+            domain_of_inner_map_def NO_SIMP_def domain_by_mapper_def
+  \<medium_left_bracket> premises FTF[] and [] and FTF'[] and [useful] and [useful] and [useful] and [useful] and Tr
+         and _ and [simp] and [simp]
+    apply_rule apply_Functional_Transformation_Functor[where U=U and f=h and P=\<open>\<lambda>_. True\<close>, OF FTF]
+    \<medium_left_bracket> apply_rule ToA_Mapper_onward[OF Tr] \<medium_right_bracket>
+  \<medium_right_bracket> apply (rule conjunctionI, rule)
+  \<medium_left_bracket> premises FTF[] and [] and FTF'[] and [useful] and [useful] and [useful] and [useful] and Tr
+         and _ and [simp] and [simp]
+    apply_rule apply_Functional_Transformation_Functor[where f=s and P=\<open>\<lambda>_. True\<close>, OF FTF']
+    \<medium_left_bracket> for a apply_rule ToA_Mapper_backward[OF Tr]
+      certified by (insert \<open>a \<in> Dom' x\<close> \<open>x \<in> m\<^sub>1 g ` func_mapper h (\<lambda>_. True) ` D\<close>,
+                      simp add: image_iff, elim bexE,
+                      insert the_\<phi>(4) the_\<phi>(6) the_\<phi>(8), fastforce)
+    \<medium_right_bracket>
+  \<medium_right_bracket>
+  by (rule conjunctionI, simp, drule ToA_Mapper_f_expn,
+      simp add: Premise_def Simplify_def subset_iff del: split_paired_All)
+
+
 
 
 end

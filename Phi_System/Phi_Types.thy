@@ -40,7 +40,6 @@ local_setup \<open>
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
- 
 
 let_\<phi>type \<phi>None
   deriving Basic
@@ -2166,7 +2165,7 @@ end
 
 translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
-text \<open>TODO: \<phi>Mul_Quant_LenIv.ToA_mapper, requires ToA_mapper_template_\<Lambda> x\<close>
+text \<open>TODO: \<phi>Mul_Quant_LenIv.ToA_mapper_sep, requires ToA_mapper_template_\<Lambda> x\<close>
 
 paragraph \<open>Reasoning\<close>
 

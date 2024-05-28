@@ -1,4 +1,9 @@
-local open Phi_Type in
+local open Phi_Type
+
+val rule1 = @{lemma \<open>Parameter_Variant_of_the_Same_TypOpr Fa Fb\<close>
+                 by (simp add: Parameter_Variant_of_the_Same_TypOpr_def)}
+
+in
 val _ = Theory.setup (Context.theory_map (
   Phi_Type.Defining_Phi_Type.add 100 (fn phi => fn thy =>
     let val ctm0 = Drule.dest_term (#cterm phi)
@@ -58,6 +63,15 @@ val _ = Theory.setup (Context.theory_map (
                            in lemma \<open>Parameter_Variant_of_the_Same_Type Fa Fb\<close>
                                  by (simp add: Parameter_Variant_of_the_Same_Type_def)\<close>
           end
+
+      fun mk_parameter_variant_typopr Fa =
+        separate_tyopr_and_its_typ_param_safe [] (Thm.term_of (Thm.incr_indexes_cterm 1 Fa))
+          |> Seq.map (fn (_,F) =>
+          let val Fa = Thm.cterm_of thy F
+              val Fb = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm Fa + 1) Fa
+           in Drule.infer_instantiate thy [(("Fa",0),Fa), (("Fb",0),Fb)] rule1
+          end
+          ) |> Seq.list_of
 (*
         fun mk_parameter_variant1 ctm =
           map (fn (_,F) =>
@@ -81,6 +95,7 @@ val _ = Theory.setup (Context.theory_map (
                   @ mk_variant_of_type_operator2 ctm
                   @ mk_variant_of_scalar_mul (Thm.term_of ctm)
                   @ [mk_parameter_variant ctm]
+                  @ mk_parameter_variant_typopr ctm
                 (*@ mk_parameter_variant1 ctm
                   @ [mk_parameter_variant ctm]*)
      in thy
