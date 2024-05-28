@@ -48,6 +48,14 @@ definition op_or :: "(VAL \<times> VAL, VAL) proc'"
     Return (\<phi>arg (sem_mk_bool (v \<or> u)))
   )))"
 
+definition op_xor :: "(VAL \<times> VAL, VAL) proc'"
+  where "op_xor =
+    \<phi>M_caseV (\<lambda>va vb.
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool va (\<lambda>v.
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vb (\<lambda>u.
+    Return (\<phi>arg (sem_mk_bool (v \<and> \<not> u \<or> \<not> v \<and> u)))
+  )))"
+
 definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_equal TY =
     \<phi>M_caseV (\<lambda>va vb.
@@ -82,6 +90,7 @@ declare_\<phi>lang_operator
   infix 50 "="
   infix 35 "\<and>"
   infix 30 "\<or>"
+  infix 30 \<oplus> \<comment> \<open>Xor\<close>
   prefix 40 "\<not>"
 
 
@@ -124,6 +133,12 @@ lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
   unfolding op_or_def
   by (cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp)
 
+subsection \<open>Xor\<close>
+
+lemma op_xor[\<phi>overload \<oplus>, \<phi>synthesis 100]:
+  \<open>\<p>\<r>\<o>\<c> op_xor (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> \<not> b \<or> \<not> a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_xor_def
+  by (cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp)
 
 subsection \<open>Equal\<close>
 

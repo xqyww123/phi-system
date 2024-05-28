@@ -201,8 +201,8 @@ proc op_load_mem:
 proc op_store_mem:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
   requires \<open>report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
-       and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
-                   \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)
+       and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)
+                   \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
                  \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
        and \<open>Semantic_Type T TY\<close>
        and \<open>Semantic_Type U TY\<close>
@@ -439,6 +439,7 @@ lemma [\<phi>reason %mapToA_mem_coerce_norm]:
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def .
 
+(*
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
   \<open> \<m>\<a>\<p> g : U \<mapsto> U'
     \<o>\<v>\<e>\<r> f : T \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T' \<^emph>[C\<^sub>W] W'
@@ -456,6 +457,7 @@ lemma [\<phi>reason %mapToA_mem_coerce_norm]:
     \<o>\<v>\<e>\<r> f : T \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def .
+*)
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
   \<open> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U'

@@ -54,7 +54,7 @@ deriving \<open> Abstract_Domain T P
                       \<exists>i<length xb. (k,v1) \<in> set (xe i)
                   \<Longrightarrow> \<exists>i<length xb. (k,v2) \<in> set (xe i)
                   \<Longrightarrow> v1 = v2\<close>,
-                subst choice_iff[symmetric]\<close>) 
+                subst choice_iff[symmetric]\<close>)
 
     and \<open>Functional_Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
               (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>

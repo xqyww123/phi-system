@@ -7,7 +7,7 @@ begin
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
 
-declare [[\<phi>trace_reasoning = 2]]
+
 
   proc qsort:
     input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma>
@@ -64,8 +64,6 @@ thm qsort_def
 
 
 
-declare [[\<phi>trace_reasoning = 2]]
-
   proc qsort_rat:
     input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] \<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l>\<heavy_comma>
             \<v>\<a>\<l> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
@@ -79,35 +77,10 @@ declare [[\<phi>trace_reasoning = 2]]
     if (len \<le> 1) \<medium_left_bracket>
       return
     \<medium_right_bracket> \<medium_left_bracket>
-    
-*(i + (len - 1))
-
-
-
-
-
-
-
-
-
-
-
-
-\<semicolon>  val pivot \<leftarrow> *(i + (len - 1)) \<semicolon>
-
-
-
-
-
-
-
-
-
-
-
+      val pivot \<leftarrow> *(i + (len - 1)) \<semicolon>
       var d \<leftarrow> \<open>0 \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<close> \<semicolon>
       iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
-                           l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)
+                           l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<rat>
                            \<s>\<u>\<b>\<j> l' d.
                              d \<le> n \<and> l <~~> l' \<and>
                              (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
@@ -123,8 +96,8 @@ declare [[\<phi>trace_reasoning = 2]]
           (*comment: else, do nothing*)
         \<medium_right_bracket> \<semicolon>
       \<medium_right_bracket>
-      qsort (i, d) \<semicolon>
-      qsort (i + d, len - d) \<semicolon>
+      qsort_rat (i, d) \<semicolon>
+      qsort_rat (i + d, len - d) \<semicolon>
           
       holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x)\<close>
              and t2: \<open>(\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close>
