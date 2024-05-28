@@ -111,12 +111,12 @@ subsubsection \<open>ToA Mapper\<close>
 
 lemma [\<phi>reason %mapToA_mem_coerce+10]:
   \<open> \<m>\<a>\<p> g : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U) \<^emph>[C\<^sub>R] R
-          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U') \<^emph>[C\<^sub>R] R'
+          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
 \<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] \<lbrace> SYMBOL_VAR(s): U \<rbrace> \<^emph>[C\<^sub>R] R
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty fmempty)] \<lbrace> SYMBOL_VAR(s): U' \<rbrace> \<^emph>[C\<^sub>R] R'
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<lbrace> SYMBOL_VAR(s): U' \<rbrace> \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
   unfolding Mem_Coerce_NTup Guided_Mem_Coercion_def .
@@ -124,7 +124,7 @@ lemma [\<phi>reason %mapToA_mem_coerce+10]:
 
 lemma [\<phi>reason %mapToA_mem_coerce]:
   \<open> \<m>\<a>\<p> g : (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U\<^sub>1 \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup tys] U\<^sub>2) \<^emph>[C\<^sub>R] R
-          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U\<^sub>1' \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup tys] U\<^sub>2') \<^emph>[C\<^sub>R] R'
+          \<mapsto> (AgIdx_S s \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U\<^sub>1' \<^emph> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U\<^sub>2') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D
 
@@ -133,7 +133,7 @@ lemma [\<phi>reason %mapToA_mem_coerce]:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| field\<^sub>2
 
 \<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty tys)] (\<lbrace> SYMBOL_VAR(s): U\<^sub>1 \<rbrace> \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R] R
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[semty_ntup (fmupd s ty tys)] (\<lbrace> SYMBOL_VAR(s): U\<^sub>1' \<rbrace> \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R] R'
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (\<lbrace> SYMBOL_VAR(s): U\<^sub>1' \<rbrace> \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> D \<close>
 

@@ -98,6 +98,8 @@ proc test_mem6b:
 
 declare [[\<phi>reasoning_step_limit = 140]]
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc test_mem7:
   input  \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
   output \<open>(x,2) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<close>
@@ -172,6 +174,8 @@ proc test_mem13:
 \<medium_left_bracket>
   addr[1]
 \<medium_right_bracket> .
+
+declare [[\<phi>trace_reasoning = 2]]
 
 proc test_mem14:
   input  \<open>xs \<Ztypecolon> \<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[3] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> (\<a>\<r>\<r>\<a>\<y>[3] \<a>\<i>\<n>\<t>)\<close>
