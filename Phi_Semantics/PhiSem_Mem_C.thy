@@ -23,8 +23,6 @@ section \<open>Basic \<phi>Types for Semantic Models\<close>
 
 subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
 \<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [81] 80)
   where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option discrete) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -364,16 +362,20 @@ section \<open>Reasoning Setup\<close>
     \<open>rules resolving the memory coercion. Given a target like \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] \<lbrace> a: T, b: U \<rbrace>\<close>,
       the rules reduce it by moving \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> inside, to \<open>a \<^bold>\<rightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph> b \<^bold>\<rightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U \<rbrace>,
       untill atomic types are reached.\<close>\<close>
-  and mapToA_mem_coerce = (%mapToA_mem_coerce_all+5, [%mapToA_mem_coerce_all+5, %mapToA_mem_coerce_all+100])
+  and mapToA_mem_coerce = (%mapToA_mem_coerce_all+5, [%mapToA_mem_coerce_all+5, %mapToA_mem_coerce_all+79])
     \<open>user rules\<close>
   and mapToA_mem_coerce_end = (%mapToA_mem_coerce_all, [%mapToA_mem_coerce_all, %mapToA_mem_coerce_all+4])
         < mapToA_mem_coerce
     \<open>system end\<close>
+  and mapToA_mem_coerce_norm = (%mapToA_mem_coerce_all+80, [%mapToA_mem_coerce_all+80, %mapToA_mem_coerce_all+100])
+        > mapToA_mem_coerce \<open>normalization\<close>
   and ToA_mem_coerce = (%ToA_cut+100, [%ToA_cut+100, %ToA_cut+300])
     \<open>mem_coerce in transformation\<close>
   and ToA_mem_coerce_end = (%ToA_cut+90, [%ToA_cut+90, %ToA_cut+99])
       < ToA_mem_coerce
     \<open>system end\<close>
+
+
 
 declare [[\<phi>reason_default_pattern
       \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> (1000)
@@ -392,17 +394,26 @@ declare [[\<phi>reason_default_pattern
 
 consts \<A>_mem_coerce :: mode
 
-declare Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %mapToA_mem_coerce_end]
-        Guided_Mem_Coercion.elim_reasoning(1)[\<phi>reason %ToA_mem_coerce_end]
+declare Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simplified,
+            OF ToA_Mapper_fallback_remainder, OF Mem_Coercion.ToA_mapper, \<phi>reason %mapToA_mem_coerce_end]
+declare Guided_Mem_Coercion.elim_reasoning(1)[\<phi>reason %ToA_mem_coerce_end]
         Guided_Mem_Coercion.intro_reasoning(2)[\<phi>reason %ToA_mem_coerce_end]
 
-lemma
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U'] U' \<^emph>[C\<^sub>R] R'
+thm ToA_Mapper_fallback_remainder
+thm Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simplified,
+      OF ToA_Mapper_fallback_remainder, OF Mem_Coercion.ToA_mapper]
+
+(*
+lemma [\<phi>reason %mapToA_mem_coerce_norm]:
+  \<open> Semantic_Type T TY\<^sub>U
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<^emph>[C\<^sub>R] R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U'] U' \<^emph>[C\<^sub>R] R'
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  unfolding Guided_Mem_Coercion_def . 
+*)
 
 lemma
   \<open> \<m>\<a>\<p> ?g \<otimes>\<^sub>f ?r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> ?Ta \<^emph>[?C\<^sub>R] ?R \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> ?Tb \<^emph>[?C\<^sub>R] ?R' \<o>\<v>\<e>\<r> ?f : ?T \<mapsto> ?T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> ?h \<s>\<e>\<t>\<t>\<e>\<r> ?s \<i>\<n> ?D \<Longrightarrow>

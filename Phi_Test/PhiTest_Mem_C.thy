@@ -37,8 +37,6 @@ proc test_ptr3:
 declare [[\<phi>reasoning_step_limit = 140]]
 
 thm \<phi>MapAt_L.ToA_mapper_sep
-
-thm ttt
   
 proc test_mem3:
   input \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>

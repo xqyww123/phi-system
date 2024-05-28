@@ -2643,7 +2643,8 @@ setup \<open>
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator2 _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul\<^sub>0 _ _\<close>,
-    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type _ _\<close>
+    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type _ _\<close>,
+    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_TypOpr _ _\<close>
   (*\<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type1 _ _\<close>*)
   ]
 \<close>
@@ -4516,7 +4517,7 @@ begin
 
 lemma ToA_mapper_sep_template[\<phi>reason_template default %\<phi>mapToA_derived_TF name F\<^sub>1.ToA_mapper_sep]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3 (T \<^emph>[C\<^sub>W] W) (U \<^emph>[C\<^sub>R] R) Dom Rng pred_mapper func_mapper
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_Type (F\<^sub>1\<^sub>4 (T \<^emph>[C\<^sub>W] W)) (F\<^sub>1\<^sub>4' (T' \<^emph>[C\<^sub>W] W'))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_TypOpr F\<^sub>1\<^sub>4 F\<^sub>1\<^sub>4'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>2\<^sub>3' F\<^sub>1\<^sub>4' (U' \<^emph>[C\<^sub>R] R') (T' \<^emph>[C\<^sub>W] W') Dom' Rng' pred_mapper' func_mapper'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 C\<^sub>W T W Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F\<^sub>3' F\<^sub>2' F\<^sub>2\<^sub>3' C\<^sub>R U' R' Dz' z'
@@ -4622,7 +4623,7 @@ lemma ToA_mapper_sep_template[\<phi>reason_template default %\<phi>mapToA_derive
 
 lemma ToA_mapper_template[\<phi>reason_template default %\<phi>mapToA_derived_TF name F\<^sub>1.ToA_mapper]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>1 F\<^sub>2 T U Dom Rng pred_mapper func_mapper
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_Type (F\<^sub>1 T) (F\<^sub>1' T')
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Parameter_Variant_of_the_Same_TypOpr F\<^sub>1 F\<^sub>1'
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F\<^sub>2' F\<^sub>1' U' T' Dom' Rng' pred_mapper' func_mapper'
 
 \<Longrightarrow> compositional_mapper m\<^sub>1 (\<lambda>h. func_mapper h (\<lambda>_. True)) m\<^sub>2 Dm\<^sub>1 g h @tag \<A>_template_reason undefined

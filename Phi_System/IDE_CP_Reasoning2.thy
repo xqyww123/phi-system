@@ -525,6 +525,15 @@ setup \<open>Context.theory_map (PLPR_Rule_Gen.Rule_Gen_SS.map (
 
 hide_fact ToA_Mapper_LPR_gen_cong
 
+lemma ToA_Mapper_fallback_remainder:
+  \<open> \<m>\<a>\<p> f : U \<mapsto> U' \<o>\<v>\<e>\<r> g : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> fst ` D
+\<Longrightarrow> \<m>\<a>\<p> f \<otimes>\<^sub>f w : U \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> U' \<^emph>[False] \<top>\<^sub>\<phi>
+    \<o>\<v>\<e>\<r> g \<otimes>\<^sub>f w : T \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> T' \<^emph>[False] \<top>\<^sub>\<phi>
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> apfst h \<s>\<e>\<t>\<t>\<e>\<r> apfst s \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def Transformation_def
+  by auto
+
+
 
 subsubsection \<open>Extracting Implied Facts\<close>
 
@@ -979,9 +988,9 @@ lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _
   unfolding mapToA_cond_def
   by simp
 
-lemma ttt[\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond False _ _
-                                  (\<m>\<a>\<p> _ : _ [False]\<^emph>[_] _ \<mapsto> _ [False]\<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
-                                   \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _)\<close>]:
+lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond False _ _
+                                 (\<m>\<a>\<p> _ : _ [False]\<^emph>[_] _ \<mapsto> _ [False]\<^emph>[_] _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
+                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _)\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
 \<Longrightarrow> mapToA_cond False True C\<^sub>E
    (\<m>\<a>\<p> gg : W [False]\<^emph>[True,C\<^sub>E] (T,E) \<mapsto> W' [False]\<^emph>[True,C\<^sub>E] (T',E')
