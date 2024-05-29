@@ -4,7 +4,7 @@ Phi-System
 φ-System is an experimental certified programming language and also a generic verification platform.
 It aims for reducing the labor effort for obtaining foundationally certified concrete programs (like C).
 
-A neat version for the readme is still in progress and will be updated soon.
+A neat version for the readme is still in progress and will be updated soon. There are also [some materials](https://drive.google.com/drive/folders/1ABUWcxoQK2h7hF9MXRD1NbJ6jU7wDS-4?usp=sharing) working in progress for interesting readers.
 
 <!-- 
 As a quickview to our language:
