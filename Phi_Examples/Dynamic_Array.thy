@@ -71,7 +71,7 @@ proc Max:
 \<medium_right_bracket> .
 
   
-  proc push_dynarr:
+  proc push_dynamic_array:
     input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
     output   \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
   \<medium_left_bracket>

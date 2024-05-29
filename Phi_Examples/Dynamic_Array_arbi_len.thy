@@ -80,7 +80,7 @@ proc push_dynarr:
   val cap \<leftarrow> addr.cap \<semicolon>
   if (cap = len) \<medium_left_bracket>
       val cap' \<leftarrow> Max(cap * 2, 1) \<semicolon>
-      val data' \<leftarrow> calloc_aN (cap') \<open>T\<close> \<semicolon>
+      val data' \<leftarrow> calloc (cap') \<open>T\<close> \<semicolon>
       memcpy_a (data', addr.data, len) \<semicolon>
       mfree (addr.data) \<semicolon>
       addr.data := data' \<semicolon>
