@@ -139,7 +139,6 @@ declare_\<phi>lang_operator
   infixl 40 ">>"
 
 
-
 \<phi>reasoner_group \<phi>synthesis_literal_number = (%\<phi>synthesis_literal, [%\<phi>synthesis_literal, %\<phi>synthesis_literal+10])
                                              in \<phi>synthesis_literal
       \<open>literal number\<close>
@@ -182,6 +181,15 @@ lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
   for x :: int
   unfolding push_bit_int_def .
+
+
+
+\<phi>typeclass \<phi>Order (T)
+  fixes leq[\<phi>overload \<le>]: \<open>\<p>\<r>\<o>\<c> leq(v\<^sub>a,v\<^sub>b) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>b] T \<longmapsto> x \<le> y \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
+
+thm \<phi>Order_def
+
+thm \<phi>Order.leq
 
 
 (*TODO:

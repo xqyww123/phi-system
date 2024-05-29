@@ -32,7 +32,7 @@ deriving \<open> Abstract_Domain T P
        \<Longrightarrow> Abstract_Domain (Hash addr TY T) (\<lambda>f. \<forall>k \<in> dom f. P (the (f k)))\<close>
     notes list_all_length[simp] Let_def[simp] set_eq_iff[simp]
 
-    and \<open>   Object_Equiv T eq
+deriving \<open>   Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Hash addr TY T) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom g. eq (the (f k)) (the (g k))))\<close>
 
     notes case_prod_beta[simp] list_all2_conv_all_nth[\<phi>sledgehammer_simps] list_all_length[\<phi>sledgehammer_simps]
@@ -40,7 +40,7 @@ deriving \<open> Abstract_Domain T P
           (tactic: auto simp: Ball_def Bex_def set_eq_iff,
                    subgoal' for f f' xb buckets tabl_addr \<open>rule exI[where x=\<open>\<lambda>i. map (\<lambda>(k,_). (k, the (f' k))) (buckets i)\<close>]\<close> )
 
-    and \<open>Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
+deriving \<open>Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
                                 (\<lambda>r f g. dom f = dom g \<and> (\<forall>k \<in> dom g. r (the (f k)) (the (g k))))\<close>
 
     notes set_eq_iff [\<phi>sledgehammer_simps] list_all2_conv_all_nth[\<phi>sledgehammer_simps]
@@ -56,9 +56,8 @@ deriving \<open> Abstract_Domain T P
                   \<Longrightarrow> v1 = v2\<close>,
                 subst choice_iff[symmetric]\<close>)
 
-    and \<open>Functional_Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
+deriving \<open>Functional_Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
               (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
-
     and Pointer_Of
 
 declare [[\<phi>trace_reasoning = 1]]
