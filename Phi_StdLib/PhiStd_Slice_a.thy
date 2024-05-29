@@ -40,7 +40,7 @@ proc (nodef) map_2slice_a:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
-proc memcpy_a:
+proc memcpy_a [\<phi>overload memcpy]:
   requires \<open>(\<And>x. Semantic_Type T TY)\<close>
   input  \<open>i\<^sub>a \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr\<^sub>a:LEN\<^sub>a] TY\<heavy_comma> i\<^sub>b \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr\<^sub>b:LEN\<^sub>b] TY\<heavy_comma> len \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma>
           l\<^sub>a \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>a] \<s>\<l>\<i>\<c>\<e>[i\<^sub>a,len] T\<heavy_comma> l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>b] \<s>\<l>\<i>\<c>\<e>[i\<^sub>b,len] T\<close>

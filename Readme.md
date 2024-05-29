@@ -1,8 +1,29 @@
 Phi-System
 --------------
 
-φ-System is an experimental verification platform and also a certified programming language.
-It aims for reducing the effort of verifying concrete imperative programs (like C & Solidity), and, as a programming language writing certified programs which can be compiled to high-performant targets like C, Solidity or LLVM.
+φ-System is an experimental certified programming language and also a generic verification platform.
+It aims for reducing the labor effort for obtaining foundationally certified concrete programs (like C).
+
+A neat version for the readme is still in progress and will be updated soon.
+
+<!-- 
+As a quickview to our language:
+
+
+writing **foundationally certified**, **high-performant** 
+
+It allows,
+1. specifying programs on abstract models, like sets, partial maps, or any algebras defined by users;
+2. generating concret imperative programs in C lang (or other langs like Solidity which we plan to support);
+3. foundationally certifying the functional correctness of the generated programs.
+
+
+
+**foundationally** certified concret imperative programs (like C, Solidity) with high degree of automation for reasoning.
+
+It aims for three goals: 1. foundational verification of minimal trust base, 2. 
+
+reducing the effort of verifying concrete imperative programs (like C & Solidity), and, as a programming language producing certified programs which can be compiled to high-performant targets like C, Solidity or LLVM.
 
 The verification is based on Isabelle and the language is embedded in Isabelle/Isar, enabling users to write and/or verify programs in Isar, enjoying all proof facilities of Isabelle including the famous automated proof search tool Sledgehammer.
 
@@ -68,3 +89,5 @@ Any contributor must agree with releasing their contributions in LGPL-v3.0.
     - Variable, local value, breakable branch & loop, return, arithmetics: done.
     - Memories (OO model, C model): WIP.
     - Blockchain-related: WIP
+
+-->

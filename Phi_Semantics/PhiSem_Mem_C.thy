@@ -289,6 +289,8 @@ proc calloc1:
     
 \<medium_right_bracket> .
 
+\<phi>overloads calloc \<comment> \<open>for allocating multiple elements\<close>
+       and memcpy
  
 proc mfree:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>

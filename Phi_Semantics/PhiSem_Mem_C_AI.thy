@@ -15,7 +15,7 @@ lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
 
 
 
-proc calloc_aN:
+proc calloc_aN [\<phi>overload calloc]:
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
   input \<open>n \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
