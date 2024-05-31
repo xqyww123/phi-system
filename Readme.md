@@ -6,6 +6,8 @@ It aims for reducing the labor effort for obtaining foundationally certified con
 
 A neat version for the readme is still in progress and will be updated soon. There are also [some materials](https://drive.google.com/drive/folders/1ABUWcxoQK2h7hF9MXRD1NbJ6jU7wDS-4?usp=sharing) working in progress for interesting readers.
 
+We are always looking for collaborations!
+
 <!-- 
 As a quickview to our language:
 
