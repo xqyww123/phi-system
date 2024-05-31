@@ -1,4 +1,4 @@
-theory Dynamic_Array
+theory Dynamic_Array_demo
   imports Phi_Semantics.PhiSem_C
           Phi_Semantics.PhiSem_Mem_C_MI
           PhiStd.PhiStd_Slice
@@ -10,19 +10,21 @@ begin
 declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def DynArr :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
-  where \<open>l \<Ztypecolon> DynArr addr T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] (\<t>\<y>\<p>\<e>\<o>\<f> T), len: \<nat>, cap: \<nat> \<rbrace>\<heavy_comma>
+  where \<open>l \<Ztypecolon> DynArr addr T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] (\<t>\<y>\<p>\<e>\<o>\<f> T),
+                                                           len: \<nat>, cap: \<nat> \<rbrace>\<heavy_comma>
                              data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] T
                              \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                   len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
-                                                  take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr\<close>
+                                                  take len data = l \<and> address_to_base a\<^sub>D \<and>
+                                                  address_to_base addr\<close>
 
-  deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
-       and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr T) (list_all2 eq)\<close>
-            (tactic: auto, subgoal' for x xa xb xc \<open>rule exI[where x=\<open>xa @ drop (length xa) xc\<close>]\<close>)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
-         \<Longrightarrow> Transformation_Functor (DynArr addr) (DynArr addr') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
-       (* and Functional_Transformation_Functor *)
-       and Pointer_Of
+deriving \<open>Abstract_Domain T P
+      \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
+     and \<open>Object_Equiv T eq
+      \<Longrightarrow> Object_Equiv (DynArr addr T) (list_all2 eq)\<close>
+         (tactic: auto, subgoal' for t\<^sub>1 l\<^sub>1 t\<^sub>2 l\<^sub>2 \<open>rule exI[where x=\<open>l\<^sub>1 @ drop (length l\<^sub>1) l\<^sub>2\<close>]\<close>)
+     and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U)
+      \<Longrightarrow> Transformation_Functor (DynArr addr) (DynArr addr) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
 
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<s>\<i>\<z>\<e>_\<t>, cap: \<s>\<i>\<z>\<e>_\<t>}\<close>

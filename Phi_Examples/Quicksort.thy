@@ -10,14 +10,24 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
 
 
   proc qsort:
+
     input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma>
+
             \<v>\<a>\<l> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
-            l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)\<close>
+
+            l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)  \<close>
+
+
     premises \<open>i + len \<le> LEN\<close>
+
     output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] \<nat>(\<i>\<n>\<t>)
             \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
+
     is [recursive]
     is [routine]
+
+
+
   \<medium_left_bracket>
     if (len \<le> 1) \<medium_left_bracket>
       return

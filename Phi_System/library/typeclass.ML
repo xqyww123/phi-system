@@ -4,7 +4,7 @@ datatype 'a element = Require of 'a | Routine of 'a
 
 type typeclass = {
     const: cterm,
-    elements : (Attrib.binding * thm (*elim*) ) element list,
+    elements : (Attrib.binding * thm (*elim*)) element list,
     def  : thm,
     intro: thm (*,
     programming: thm *)
@@ -177,16 +177,16 @@ fun define_typeclass ((binding,vars),elements) lthy =
    |-> (fn (const,(_,def)) => fn lthy =>
   let (* make *)
       val const' = Thm.cterm_of lthy const
-   (* val elements'' = map (map_element (Thm.cterm_of lthy o snd)) elements' *)
+      val elements'' = map (map_element (Thm.cterm_of lthy o snd)) elements'
       val def' = def RS' (lthy, @{thm Meson.TruepropI})
       val intro = rule_by_tactic lthy (REPEAT (resolve_tac lthy @{thms' conjI} 1))
                                       (def' RS' (lthy, @{thm' equal_elim_rule2}))
 
       fun next rule = rule RS' (lthy, @{thm' conjunct2}) handle THM _ => rule
       fun this rule = rule RS' (lthy, @{thm' conjunct1}) handle THM _ => rule
-      fun mkb name = Binding.make (name,pos)
-              (* Binding.qualify true (Binding.name_of binding) (Binding.make (name,pos)) *)
-   (* fun mk_interface (attr,name) rule =
+   (*  fun mkb name = Binding.make (name,pos) *)
+      fun mkb name = Binding.qualify true (Binding.name_of binding) (Binding.make (name,pos))
+      fun mk_interface (attr,name) rule =
             (if Binding.is_empty_atts attr
              then (mkb name, [])
              else if Binding.is_empty (fst attr)
@@ -194,7 +194,13 @@ fun define_typeclass ((binding,vars),elements) lthy =
              else apfst (Binding.qualify true (Binding.name_of binding)) attr,
              [([Phi_Conv.rulify lthy rule], [])])
       fun mk_subclass (attr,_) rule =
-            (attr, [([Phi_Conv.rulify lthy rule], [])]) *)
+            (attr, [([Phi_Conv.rulify lthy rule], [])])
+      fun mk_elim [] _ = []
+        | mk_elim (Require _ :: L) rule = mk_elim L (next rule)
+        | mk_elim (Routine name :: L) rule =
+            mk_interface name (this rule) :: mk_elim L (next rule)
+      val procs = mk_elim proc_names (def' RS' (lthy, @{thm' equal_elim_rule1}))
+
       fun mk_interface (attr,name) rule =
             (if Binding.is_empty_atts attr
              then (mkb name, [])
@@ -203,7 +209,7 @@ fun define_typeclass ((binding,vars),elements) lthy =
              else attr
                (* apfst (Binding.qualify true (Binding.name_of binding)) attr *),
              Phi_Conv.rulify lthy rule)
-      fun mk_subclass (attr,_) rule = (attr, Phi_Conv.rulify lthy rule)
+      fun mk_subclass (attr,_) rule = (attr, Phi_Conv.rulify lthy rule) 
       fun mk_elim [] _ = []
         | mk_elim (Require name :: L) rule =
             Require (mk_subclass name (this rule)) :: mk_elim L (next rule)
@@ -224,7 +230,7 @@ fun define_typeclass ((binding,vars),elements) lthy =
           of Const (N, _) =>
               Class.map (Symtab.update_new (N, morphism_typeclass m typeclass))
            | _ => I)
-   (* |> Local_Theory.notes procs |> snd *)
+   |> Local_Theory.notes procs |> snd
    |> Local_Theory.note ((Binding.suffix_name "_def" binding, []), [def]) |> snd
    |> Local_Theory.note ((mkb "intro", []), [intro]) |> snd
   end)
@@ -276,6 +282,7 @@ fun prefix_of_instance instance_thm =
          | NONE => error "The typeclass is not even about a \<phi>-type?!"
   end
 
+(*
 fun install_instance prefix (class : typeclass, instance_thm) lthy =
   let val qualify = case prefix
                       of SOME p => Binding.qualify true p
@@ -288,6 +295,7 @@ fun install_instance prefix (class : typeclass, instance_thm) lthy =
    in lthy
    |> Local_Theory.notes procs
   end
+*)
 
 fun build_instance topmost pos class prop procs lthy =
   let val param_num = length (filter (fn Require _ => true | _ => false) (#elements class)) + 1

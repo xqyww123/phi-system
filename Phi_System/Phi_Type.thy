@@ -9692,18 +9692,6 @@ chapter \<open>Typeclass\<close>
 
 ML_file \<open>library/typeclass.ML\<close>
 
-context
-begin
-end
-
-sublocale
-
-instantiation
-begin
-
-end
-
-
 
 
 end
