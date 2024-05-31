@@ -187,6 +187,8 @@ lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
 \<phi>typeclass \<phi>Order ( T :: \<open>(VAL,'x::order) \<phi>\<close> )
   fixes leq[\<phi>overload \<le>]: \<open>\<p>\<r>\<o>\<c> leq v\<^sub>a v\<^sub>b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>b] T \<longmapsto> x \<le> y \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
 
+ML \<open>@{priority xx}\<close>
+
 
 thm \<phi>Order.leq
 thm \<phi>Order_def

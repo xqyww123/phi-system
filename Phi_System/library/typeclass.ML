@@ -54,16 +54,18 @@ type typeclass = {
     const: cterm,
     elements : (Attrib.binding * thm) element list,
     def  : thm,
-    intro: thm (*,
+    intro: thm, (*,
     programming: thm *)
+    reasoner_group: string
   }
 
 
-fun map_typeclass mctm mthm mele ({const, elements, def, intro} : typeclass) = {
+fun map_typeclass mctm mthm mele ({const, elements, def, intro, reasoner_group} : typeclass) = {
       const = mctm const,
       elements = map (map_element mele) elements,
       def = mthm def,
-      intro = mthm intro
+      intro = mthm intro,
+      reasoner_group = reasoner_group
   } : typeclass
 
 fun morphism_typeclass m =
@@ -185,7 +187,8 @@ fun define_typeclass ((binding,vars),elements) lthy =
       fun next rule = rule RS' (lthy, @{thm' conjunct2}) handle THM _ => rule
       fun this rule = rule RS' (lthy, @{thm' conjunct1}) handle THM _ => rule
    (*  fun mkb name = Binding.make (name,pos) *)
-      fun mkb name = Binding.qualify true (Binding.name_of binding) (Binding.make (name,pos))
+      fun mkb  name = Binding.qualify true (Binding.name_of binding) (Binding.make (name,pos))
+      fun mkqb name = Binding.qualify true (Binding.name_of binding) (Binding.make (name,pos))
       fun mk_interface (attr,name) rule =
             (if Binding.is_empty_atts attr
              then (mkb name, [])
@@ -216,6 +219,13 @@ fun define_typeclass ((binding,vars),elements) lthy =
         | mk_elim (Routine name :: L) rule =
             Routine (mk_interface name (this rule)) :: mk_elim L (next rule)
       val elims = mk_elim proc_names (def' RS' (lthy, @{thm' equal_elim_rule1}))
+
+      val (reasoner_group, lthy) = Reasoner_Group.define (mkqb "all", {
+                base = 100,
+                range = (1, 3000),
+                tasks = [],
+                comment = 
+            })
 
       (* assemble *)
       val typeclass = {
