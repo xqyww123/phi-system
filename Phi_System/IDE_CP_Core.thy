@@ -1020,14 +1020,6 @@ definition \<phi>Application_Conv :: \<open>prop \<Rightarrow> prop \<Rightarrow
 definition \<phi>App_Conv :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>\<phi>App_Conv \<equiv> (\<longrightarrow>)\<close>
 
-lemma \<phi>Application_Conv:
-  \<open> PROP P
-\<Longrightarrow> PROP \<phi>Application_Conv P Q
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> PROP Q\<close>
-  unfolding \<phi>Application_Conv_def .
-
 ML_file \<open>library/system/application.ML\<close>
 
 declare [[\<phi>reason_default_pattern \<open>PROP \<phi>Application ?Apps ?State _\<close> \<Rightarrow> \<open>PROP \<phi>Application ?Apps ?State _\<close> (100) ]]

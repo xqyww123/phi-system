@@ -1,6 +1,6 @@
 theory Phi_Type
   imports IDE_CP_Reasoning2
-  keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" "\<phi>typeclass" :: thy_defn
+  keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" "\<phi>typeclass" "\<phi>instance" :: thy_defn
        and "deriving" "parameter_equality" :: quasi_command
 begin
 
@@ -9691,6 +9691,17 @@ hide_const (open) introduced
 chapter \<open>Typeclass\<close>
 
 ML_file \<open>library/typeclass.ML\<close>
+
+context
+begin
+end
+
+sublocale
+
+instantiation
+begin
+
+end
 
 
 

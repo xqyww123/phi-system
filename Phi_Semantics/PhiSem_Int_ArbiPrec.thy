@@ -496,5 +496,12 @@ proc (nodef) op_ge_anat[\<phi>overload \<ge>]:
 \<medium_left_bracket>
   $y \<le> $x
 \<medium_right_bracket>.
+ 
+declare [[\<phi>trace_reasoning = 2]]
+
+\<phi>instance \<open>\<phi>Order \<nat>\<close>
+  where leq = op_le_anat
+
+thm "\<ge>_\<phi>app"
 
 end
