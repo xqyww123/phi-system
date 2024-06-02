@@ -77,16 +77,20 @@ proc rat_lt [\<phi>overload <]:
   sel (q1.den > 0 \<oplus> q2.den > 0, a > b, a < b)
 \<medium_right_bracket> .
 
-proc rat_le [\<phi>overload \<le>]:
-  input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<v>\<a>\<l> q2 \<Ztypecolon> \<rat>\<close>
-  output \<open>q1 \<le> q2 \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
-\<medium_left_bracket>
-  val q1 \<leftarrow> (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
-  val q2 \<leftarrow> (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
-  val a \<leftarrow> q1.num * q2.den \<semicolon>
-  val b \<leftarrow> q1.den * q2.num \<semicolon>
-  sel (q1.den > 0 \<oplus> q2.den > 0, a \<ge> b, a \<le> b)
-\<medium_right_bracket>  .
+  proc rat_le:
+    input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<v>\<a>\<l> q2 \<Ztypecolon> \<rat>\<close>
+    output \<open>q1 \<le> q2 \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  \<medium_left_bracket>
+    val q1 \<leftarrow> (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
+    val q2 \<leftarrow> (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
+    val a \<leftarrow> q1.num * q2.den \<semicolon>
+    val b \<leftarrow> q1.den * q2.num \<semicolon>
+    sel (q1.den > 0 \<oplus> q2.den > 0, a \<ge> b, a \<le> b)
+  \<medium_right_bracket>  .
+
+  \<phi>instance \<open>Order \<rat>\<close>
+    where leq = rat_le
+
 
 proc rat_gt [\<phi>overload >]:
   input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<v>\<a>\<l> q2 \<Ztypecolon> \<rat>\<close>

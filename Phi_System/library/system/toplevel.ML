@@ -202,6 +202,9 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
                                        |> prep_decls prep_var rawfixes
                                        |> apsnd (Proof_Context.set_mode Proof_Context.mode_schematic)
     val binding = binding |> apsnd (map (Attrib.check_src lthy))
+    val ctxt_parse = Context.proof_map (Procedure_Syntax.set_proc_parse_mode
+                        (Procedure_Syntax.HOL_Quantify, Procedure_Syntax.Lambda_Apps))
+                        ctxt_parse
     val parse_term = prep_term ctxt_parse
     val parse_prop = prep_prop ctxt_parse
 
@@ -238,6 +241,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
                    | SOME A => HOLogic.Trueprop $ (\<^Const>\<open>Action_Tag\<close> $ goal0 $ parse_term A)
 
     val preconds0'1 = map (fn (_,(P,_)) => P) preconds0
+    val (preconds0'1, ctxt_parse) = fold_map Phi_Typeclass.complete preconds0'1 ctxt_parse
     val (arg::ret::throws::goal0::preconds0'1) =
             Syntax.check_terms ctxt_parse (arg::ret::throws::goal0::preconds0'1)
     val preconds0 = map2 (fn (a,(_,b)) => fn c => (a,(c,b))) preconds0 preconds0'1

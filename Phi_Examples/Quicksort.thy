@@ -109,13 +109,13 @@ thm qsort_def
   \<medium_right_bracket> .
 
 declare [[\<phi>infer_requirements]]
-
-
+ 
+ 
   proc qsort_generic:
     input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] (\<t>\<y>\<p>\<e>\<o>\<f> T)\<heavy_comma>
             \<v>\<a>\<l> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
             l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T  \<close>
-    requires \<open>\<phi>Order T LEQ\<close>
+    requires \<open>Order T\<close>
     premises \<open>i + len \<le> LEN\<close>
     output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T
             \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
@@ -144,8 +144,8 @@ declare [[\<phi>infer_requirements]]
           (*comment: else, do nothing*)
         \<medium_right_bracket> \<semicolon>
       \<medium_right_bracket>
-      qsort (i, d) \<semicolon>
-      qsort (i + d, len - d) \<semicolon>
+      qsort_generic (i, d) \<semicolon>
+      qsort_generic (i + d, len - d) \<semicolon>
           
       holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x)\<close>
              and t2: \<open>(\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close>

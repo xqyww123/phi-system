@@ -115,8 +115,8 @@ instead of XML. I'm thinking of the performance of the XML, particularly we have
 
 ML_file \<open>contrib/sml-json/json.sig\<close>
 ML_file \<open>contrib/sml-setmap/map/MONO_MAP.sig\<close>
-ML_file \<open>contrib/sml-setmap/map/OrderMapImpl.sml\<close>
-ML_file \<open>contrib/sml-setmap/map/OrderMap.sml\<close>
+ML_file \<open>contrib/sml-setmap/map/MapImpl.sml\<close>
+ML_file \<open>contrib/sml-setmap/map/Map.sml\<close>
 ML_file \<open>contrib/sml-setmap/map/StringMap.sml\<close>
 ML_file \<open>contrib/sml-json/json.sml\<close> *)
 

@@ -80,6 +80,7 @@ proc test_prime':
   \<medium_right_bracket> \<comment> \<open>Close the top branch\<close>
 \<medium_right_bracket> \<comment> \<open>Close the function body\<close> .
 
+declare [[\<phi>hide_techinicals=false]] 
 
 proc GCD:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>

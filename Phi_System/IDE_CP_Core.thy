@@ -12,7 +12,8 @@ theory IDE_CP_Core
   and ";;" "\<semicolon>" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>lang_parser" :: thy_decl % "ML"
-  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>lang_operator" :: thy_decl
+  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>lang_operator"
+      "\<phi>typeclass" "\<phi>instance" :: thy_defn
 abbrevs
   "!!" = "!!"
   and "<label>" = "\<l>\<a>\<b>\<e>\<l>"
@@ -2153,6 +2154,7 @@ ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
 ML_file \<open>library/system/modifier.ML\<close>
+ML_file \<open>library/typeclass.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 ML_file \<open>library/tools/CoP_simp_supp.ML\<close>
 ML_file \<open>library/system/generic_element_access2.ML\<close>

@@ -59,63 +59,23 @@ val dest_arg_prodT : typ -> typ * typ
 val mk_arg_prodT   : typ * typ -> typ
 val mk_arg_tupleT  : typ list -> typ
 val mk_arg_tuple   : typ list -> term list -> term
+val mk_arg_tuple'  : term list -> term
 val dest_arg_tuple : term -> term list
 val map_argT  : (typ -> typ) -> typ -> typ
+
+
+datatype quantify_mode = No_Quantify | HOL_Quantify
+datatype parameterize_proc = No_Parameterize | Tuple_Pack | Lambda_Apps
+
+val set_proc_parse_mode : quantify_mode * parameterize_proc -> Context.generic -> Context.generic
+val restore_proc_parse_mode : Context.generic -> Context.generic -> Context.generic
+val translate_proc_arg : Context.generic -> term -> term
 
 end
 
 structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
 
 (*** Parser ***)
-
-(*
-Syntax translation during parsing of the pre-condition is simply replacing
-all anonymous values by a name \<a>\<r>\<g>i for the ith value from left to right.
-*)
-fun translate_arg' cnt s ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
-                              $ X $ ( (C2 as Const (\<^const_name>\<open>Val\<close>, _))
-                                       $ Const (\<^const_name>\<open>anonymous\<close>, _)
-                                       $ X2))
-      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
-  | translate_arg' cnt s ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
-                              $ X $ ( (C2 as Const (\<^const_syntax>\<open>Val\<close>, _))
-                                       $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
-                                       $ X2))
-      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
-
-  | translate_arg' cnt s ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
-                              $ X $ ( (C2 as Const (\<^const_name>\<open>Vals\<close>, _))
-                                       $ Const (\<^const_name>\<open>anonymous\<close>, _)
-                                       $ X2))
-      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
-  | translate_arg' cnt s ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
-                              $ X $ ( (C2 as Const (\<^const_syntax>\<open>Vals\<close>, _))
-                                       $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
-                                       $ X2))
-      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
-
-  | translate_arg' cnt s (Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (cnt, Symbol.bump_string s, Free ("\<a>\<r>\<g>" ^ s, dummyT))
-  | translate_arg' cnt s (Const (\<^const_syntax>\<open>anonymous\<close>, _))
-      = (cnt, Symbol.bump_string s, Free ("\<a>\<r>\<g>" ^ s, dummyT))
-  | translate_arg' cnt s (A $ B)
-      = (case translate_arg' cnt  s  A of (cnt',s', A') =>
-         case translate_arg' cnt' s' B of (cnt'',s'', B') =>
-          (cnt'', s'', A' $ B'))
-  | translate_arg' cnt s (Abs (name,ty, X))
-      = (case translate_arg' cnt s X of (cnt',s', X') =>
-           (cnt', s', Abs (name,ty,X')))
-  | translate_arg' cnt s X = (cnt,s, X)
-fun translate_arg X = #3 (translate_arg' 0 "\<a>\<r>\<g>_a" X)
-
-fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = true
-  | need_translate_arg (Const (\<^const_syntax>\<open>anonymous\<close>, _)) = true
-  | need_translate_arg (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
-  | need_translate_arg (Const (\<^const_syntax>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
-  | need_translate_arg (A $ B) = need_translate_arg A orelse need_translate_arg B
-  | need_translate_arg (Abs (_, _, X)) = need_translate_arg X
-  | need_translate_arg _ = false
-
 
 fun is_argT (Type (\<^type_name>\<open>\<phi>arg\<close>, [_])) = true
   | is_argT _ = false
@@ -137,6 +97,11 @@ fun mk_arg_tupleT Ts = mk_argT (HOLogic.mk_tupleT (map dest_argT Ts))
 fun map_argT f (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])) = Type (\<^type_name>\<open>\<phi>arg\<close>, [f T])
   | map_argT _ T = raise TYPE("Not a \<phi>arg type", [T], [])
 
+fun mk_arg_tuple' [] = \<^term>\<open>\<phi>V_none\<close>
+  | mk_arg_tuple' [tm] = tm
+  | mk_arg_tuple' (tm::tms)
+      = Const (\<^const_name>\<open>\<phi>V_pair\<close>, dummyT) $ tm $ mk_arg_tuple' tms
+
 fun mk_arg_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
   | mk_arg_tuple _ [tm] = tm
   | mk_arg_tuple (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])::tys) (tm::tms)
@@ -149,6 +114,139 @@ fun mk_arg_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
 fun dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_none\<close>, _)) = []
   | dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_pair\<close>, _) $ A $ B) = A :: dest_arg_tuple B
   | dest_arg_tuple X = [X]
+
+
+(*
+Syntax translation during parsing of the pre-condition is simply replacing
+all anonymous values by a name \<a>\<r>\<g>i for the ith value from left to right.
+*)
+fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = true
+  | need_translate_arg (Const (\<^const_syntax>\<open>anonymous\<close>, _)) = true
+  | need_translate_arg (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
+  | need_translate_arg (Const (\<^const_syntax>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
+  | need_translate_arg (A $ B) = need_translate_arg A orelse need_translate_arg B
+  | need_translate_arg (Abs (_, _, X)) = need_translate_arg X
+  | need_translate_arg _ = false
+
+fun translate_arg' cnt s ns ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_name>\<open>Val\<close>, _))
+                                       $ Const (\<^const_name>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
+         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+        end
+  | translate_arg' cnt s ns ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_syntax>\<open>Val\<close>, _))
+                                       $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
+         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+        end
+
+  | translate_arg' cnt s ns ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_name>\<open>Vals\<close>, _))
+                                       $ Const (\<^const_name>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
+         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+        end
+  | translate_arg' cnt s ns ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_syntax>\<open>Vals\<close>, _))
+                                       $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
+         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+        end
+
+  | translate_arg' cnt s ns (Const (\<^const_name>\<open>anonymous\<close>, _))
+      = let val s' = Symbol.bump_string s
+         in (cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+        end
+  | translate_arg' cnt s ns (Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = let val s' = Symbol.bump_string s
+         in (cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+        end
+  | translate_arg' cnt s ns (A $ B)
+      = (case translate_arg' cnt  s  ns  A of (cnt',s',ns',A') =>
+         case translate_arg' cnt' s' ns' B of (cnt'',s'',ns'',B') =>
+          (cnt'', s'', ns'', A' $ B'))
+  | translate_arg' cnt s ns (Abs (name,ty, X))
+      = (case translate_arg' cnt s ns X of (cnt',s',ns',X') =>
+           (cnt', s', ns', Abs (name,ty,X')))
+  | translate_arg' cnt s ns X = (cnt,s,ns,X)
+
+fun translate_arg X = #4 (translate_arg' 0 "\<a>\<r>\<g>_a" [] X)
+
+datatype quantify_mode = No_Quantify | HOL_Quantify
+datatype parameterize_proc = No_Parameterize | Tuple_Pack | Lambda_Apps
+
+structure Proc_Parse_Ctxt = Generic_Data (
+  type T = (quantify_mode * parameterize_proc) option
+  val empty = NONE
+  val merge = merge_options
+)
+
+fun set_proc_parse_mode mode = Proc_Parse_Ctxt.put (SOME mode)
+fun restore_proc_parse_mode ctxt = Proc_Parse_Ctxt.put (Proc_Parse_Ctxt.get ctxt)
+
+fun dest_proc_synt ((H as Const(\<^const_syntax>\<open>\<phi>Procedure_no_exception\<close>, _)) $ p $ A $ R) = (H,p,A,R,Term.dummy)
+  | dest_proc_synt ((H as Const(\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, _)) $ p $ A $ R) = (H,p,A,R,Term.dummy)
+  | dest_proc_synt ((H as Const(\<^const_syntax>\<open>\<phi>Procedure\<close>, _)) $ p $ A $ R $ E) = (H,p,A,R,E)
+  | dest_proc_synt ((H as Const(\<^const_name>\<open>\<phi>Procedure\<close>, _)) $ p $ A $ R $ E) = (H,p,A,R,E)
+
+fun mk_proc_synt (H,p,A,R,E) =
+      case H
+        of Const(\<^const_syntax>\<open>\<phi>Procedure_no_exception\<close>, _) => H $ p $ A $ R
+         | Const(\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, _) => H $ p $ A $ R
+         | Const(\<^const_syntax>\<open>\<phi>Procedure\<close>, _) => H $ p $ A $ R $ E
+         | Const(\<^const_name>\<open>\<phi>Procedure\<close>, _)   => H $ p $ A $ R $ E
+
+fun translate_proc_arg' (qmode, pmode) tm =
+  let val (Procedure, proc, Arg, Ret, Err) = dest_proc_synt tm
+      val (_, _, names, Arg') = translate_arg' 0 "\<a>\<r>\<g>_a" [] Arg
+      val proc' = case pmode
+                    of No_Parameterize => proc
+                     | Tuple_Pack => proc $ mk_arg_tuple' (map (fn x => Free(x,dummyT)) (rev names))
+                     | Lambda_Apps => fold_rev (fn N => fn X => X $ Free(N,dummyT) ) names proc
+      val base = mk_proc_synt (Procedure, proc', Arg', Ret, Err)
+      val ret = case qmode
+                  of No_Quantify => base
+                   | HOL_Quantify => base
+                                  |> subst_atomic (map_index (fn (i,name) =>
+                                                        (Free(name,dummyT), Bound i)) names)
+                                  |> fold (fn name => fn X =>
+                                        Const(\<^const_name>\<open>HOL.All\<close>, dummyT) $ Abs (name, dummyT, X)) names
+   in ret
+  end
+
+fun translate_proc_arg ctxt tm =
+  let val (_, _, Arg, _, _) = dest_proc_synt tm
+   in if need_translate_arg Arg
+      then case Proc_Parse_Ctxt.get ctxt
+             of SOME mode => translate_proc_arg' mode tm
+              | NONE => error (let open Pretty 
+                    val pretty = Context.cases Syntax.pretty_term_global Syntax.pretty_term
+                    fun show mode = let val tm' = translate_proc_arg' mode tm
+                                     in try (Syntax.check_term (Context.proof_of ctxt)) tm'
+                                     |> Option.map (fn tm'' => item [pretty ctxt tm''])
+                                    end
+                 in string_of (
+                    chunks([block (text "Short syntax of \<open>\<v>\<a>\<l> T\<close> cannot be used here, because in this context\
+                                       \ I cannot determine whether should the argument values be quantified,\
+                                       \ or whether should I parameterize the procedure term using the argument values."),
+                            block (text "You may clarify your formula by choosing one of the potential parses shown as follows")]
+                         (*@ map_filter I
+                             [show (No_Quantify, No_Parameterize),
+                              show (HOL_Quantify, No_Parameterize),
+                              show (No_Quantify, Tuple_Pack),
+                              show (No_Quantify, Lambda_Apps),
+                              show (HOL_Quantify, Lambda_Apps)]*) )
+                 ) end)
+      else tm
+  end
+
+
+
 
 (* fun mk_arg_prodT []  = \<^typ>\<open>unit \<phi>arg\<close>
   | mk_arg_prodT (Type ("dummy", []) :: _) = dummyT
@@ -324,15 +422,17 @@ The parse translation is invoked once there is an anonymous value in the argumen
 or once the return specification is not a lambda abstraction nor an atom (a variable or a constant)
 *)
 val _ = Theory.setup (Sign.parse_translation [
-    (\<^const_syntax>\<open>\<phi>Procedure\<close>, (fn _ => fn [f,Arg,Ret,E] =>
-        Const (\<^const_name>\<open>\<phi>Procedure\<close>, dummyT) $ f
-          $ (if need_translate_arg Arg then translate_arg Arg else Arg)
+    (\<^const_syntax>\<open>\<phi>Procedure\<close>, (fn ctxt => fn [f,Arg,Ret,E] =>
+        (Const (\<^const_name>\<open>\<phi>Procedure\<close>, dummyT) $ f
+          $ Arg
           $ (if need_translate_ret Ret then translate_ret' Ret else Ret)
-          $ E)),
-    (\<^const_syntax>\<open>\<phi>Procedure_no_exception\<close>, (fn _ => fn [f,Arg,Ret] =>
-        Const (\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, dummyT) $ f
-          $ (if need_translate_arg Arg then translate_arg Arg else Arg)
-          $ (if need_translate_ret Ret then translate_ret' Ret else Ret)))
+          $ E)
+        |> translate_proc_arg (Context.Proof ctxt))),
+    (\<^const_syntax>\<open>\<phi>Procedure_no_exception\<close>, (fn ctxt => fn [f,Arg,Ret] =>
+        (Const (\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, dummyT) $ f
+          $ Arg
+          $ (if need_translate_ret Ret then translate_ret' Ret else Ret))
+        |> translate_proc_arg (Context.Proof ctxt) ))
 ])
 
 

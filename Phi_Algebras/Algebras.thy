@@ -942,7 +942,7 @@ lemma partial_add_implies_diff:
 
 end
 
-paragraph \<open>Ordered\<close>
+paragraph \<open>ed\<close>
 
 class partial_canonically_ordered_ab_semigroup_add = partial_cancel_semigroup_add + order +
   assumes partial_le_iff_add: "a \<le> b \<longleftrightarrow> (\<exists>c. b = a + c \<and> a ##\<^sub>+ c)"
@@ -1777,7 +1777,7 @@ definition inverse_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<c
 instance ..
 end
 
-subsubsection \<open>Order\<close>
+subsubsection \<open>\<close>
 
 instantiation prod :: (ord, ord) ord begin
 definition less_eq_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool\<close>

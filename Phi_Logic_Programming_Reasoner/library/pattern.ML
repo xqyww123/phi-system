@@ -80,7 +80,7 @@ val incr = mapbnd (fn i => i+1);
 fun typ_match thy TU tyenv = Sign.typ_match thy TU tyenv
   handle Type.TYPE_MATCH => raise MATCH;
 
-(* First Order Match *)
+(* First  Match *)
 (*Improved from the system first_order_match, by allowing loose bounds in the object term,
     and regarding them as fixed free variables.*)
 fun first_order_match thy bv_tys (t,u) env =

@@ -6,8 +6,9 @@ type typeclass = {
     const: cterm,
     elements : (Attrib.binding * thm (*elim*)) element list,
     def  : thm,
-    intro: thm (*,
+    intro: thm, (*,
     programming: thm *)
+    reasoner_group: string
   }
 
 (* Basic Oprs *)
@@ -24,6 +25,10 @@ val morphism_typeclass : morphism -> typeclass -> typeclass
 
 val trim_context : typeclass -> typeclass
 val transfer : theory -> typeclass -> typeclass
+
+(* Syntax Tools *)
+
+val complete : term -> Proof.context -> term * Proof.context
 
 (* Commands *)
 
@@ -117,6 +122,33 @@ fun unknown_class ctxt term =
                  text "is not a known \<phi>typeclass.")
       )) end
 
+fun complete instance ctxt =
+  case instance
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
+      let fun strip_comb i (Const ("_type_constraint_", _) $ (X as Const _)) = (X,i)
+            | strip_comb i (X $ _) = strip_comb (i+1) X
+            | strip_comb i X = (X, i)
+          val (H,argN) = strip_comb 0 X
+       in case lookup_class (Context.Proof ctxt) [] H
+           of SOME cls =>
+                let val tyargs = binder_types (fastype_of (Thm.term_of (#const cls)))
+                    val total_num = length (#elements cls)
+                    val anames = map_filter (fn Require _ => NONE
+                                              | Routine ((b,_),_) => SOME (Binding.name_of b))
+                                            (#elements cls)
+                 in if argN + length anames = length tyargs andalso
+                       not (null anames)
+                    then let
+                         val (frees_names, ctxt) = Variable.add_fixes anames ctxt
+                         val frees = map (fn N => Free (N, dummyT)) frees_names
+                      in (HOLogic.Trueprop $ Term.list_comb (X, frees), ctxt)
+                     end
+                    else (instance, ctxt)
+                end
+            | NONE => (instance, ctxt)
+      end
+     | _ => (instance, ctxt)
+
 fun register_instance thm ctxt  =
   let val _ = case Thm.prop_of thm
                 of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
@@ -139,9 +171,13 @@ fun define_typeclass ((binding,vars),elements) lthy =
       val pos = Binding.pos_of binding
       val terms = map (fn Require (_,term) => term
                         | Routine (_,term) => term) elements
-      val (stmt, parse_ctxt) = Proof_Context.read_stmt vars (map (fn x => [(x,[])]) terms) lthy
+      val parse_ctxt = Context.proof_map (
+                          Procedure_Syntax.set_proc_parse_mode
+                              (Procedure_Syntax.No_Quantify, Procedure_Syntax.Lambda_Apps)) lthy
+      val (stmt, parse_ctxt) = Proof_Context.read_stmt vars (map (fn x => [(x,[])]) terms) parse_ctxt
       val proc_vars = map_filter (Option.map Term.dest_Free o proc_of o hd) (#propss stmt)
-      val param_frees = map (Term.dest_Free o #2 o #2) (#vars stmt) @ proc_vars
+      val non_proc_vars = map (Term.dest_Free o #2 o #2) (#vars stmt)
+      val param_frees = non_proc_vars @ proc_vars
       fun close tm =
             Logic.close_prop (subtract (op =) param_frees (Term.add_frees tm [])
                                 |> map (fn (N,Ty) => (N, Free (N,Ty)))) [] tm
@@ -220,26 +256,50 @@ fun define_typeclass ((binding,vars),elements) lthy =
             Routine (mk_interface name (this rule)) :: mk_elim L (next rule)
       val elims = mk_elim proc_names (def' RS' (lthy, @{thm' equal_elim_rule1}))
 
-      val (reasoner_group, lthy) = Reasoner_Group.define (mkqb "all", {
-                base = 100,
-                range = (1, 3000),
+      val (reasoner_group, lthy) = Reasoner_Group.define (mkqb "all") {
+                base = 1000,
+                range = (1000, 1000),
                 tasks = [],
-                comment = 
-            })
+                comment = "\<phi>-typeclass instances of " ^ Binding.name_of binding
+            } lthy
 
       (* assemble *)
       val typeclass = {
           const = const',
           elements = elims,
           def = def,
-          intro = intro
+          intro = intro,
+          reasoner_group = reasoner_group
         }
+
    in lthy
-   |> Local_Theory.declaration {syntax=false, pervasive=false, pos=Binding.pos_of binding} (fn m => 
-        case Term.head_of (Morphism.term m const)
-          of Const (N, _) =>
-              Class.map (Symtab.update_new (N, morphism_typeclass m typeclass))
-           | _ => I)
+   |> Local_Theory.declaration {syntax=false, pervasive=false, pos=Binding.pos_of binding} (
+        fn m => fn ctxt =>
+        let val const = Morphism.term m const
+         in (case Term.head_of const
+         of Const (N, _) =>
+            let val i = maxidx_of_term const + 1
+                val proc_vars = map (apsnd (Morphism.typ m)) proc_vars
+                val non_proc_vars = map (apsnd (Morphism.typ m)) non_proc_vars
+                val common = fold_index (fn (j,(N,T)) => fn X => X $ Var((N,i+j),T)) non_proc_vars const
+                val i = i + length non_proc_vars
+                val src = HOLogic.Trueprop $ (
+                              fold_index (fn (j,(N,T)) => fn X => X $ Var((N,i+j),T)) proc_vars common)
+                val i = i + length proc_vars
+                val tgt = HOLogic.Trueprop $ (
+                              fold_index (fn (j,(N,T)) => fn X => X $ Var((N,i+j),T)) proc_vars common)
+
+                val add_local = Thm.declaration_attribute (fn rule =>
+                        Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_MODE'
+                                              (SOME @{reasoner_group %local}) ([],[]) NONE [rule])
+             in Class.map (Symtab.update_new (N, morphism_typeclass m typeclass)) ctxt
+             |> Phi_Reasoner.Default_Pattern.add [
+                  (100, src, pos, Phi_Reasoner.Default_Pattern.By_Pattern [tgt]) ]
+             |> Premises_Attribute.register_attribute
+                  (true, @{reasoner_group %\<phi>attr}, false, src, [add_local], pos)
+             end
+          | _ => ctxt)
+        end)
    |> Local_Theory.notes procs |> snd
    |> Local_Theory.note ((Binding.suffix_name "_def" binding, []), [def]) |> snd
    |> Local_Theory.note ((mkb "intro", []), [intro]) |> snd
@@ -364,11 +424,14 @@ fun build_instance topmost pos class prop procs lthy =
                         block [str "Procedure", brk 1, Binding.pretty b, brk 1, str "in typeclass",
                                brk 1, str (short_name_of class), brk 1, str "is not given."]
                     ) end))
-      val (sequent, lthy) = reason (#elements class) rule1 lthy
+      val (instance, lthy) = reason (#elements class) rule1 lthy
    in lthy
    |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn _ =>
-          register_instance sequent)
-   |> pair sequent
+          register_instance instance
+       #> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT'
+              (SOME (1000, SOME (#reasoner_group class))) ([],[]) NONE [instance]
+      )
+   |> pair instance
   end
 
 fun instantiate_i add_fixes chk_procs chk_term

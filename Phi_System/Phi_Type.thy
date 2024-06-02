@@ -1,6 +1,6 @@
 theory Phi_Type
   imports IDE_CP_Reasoning2
-  keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" "\<phi>typeclass" "\<phi>instance" :: thy_defn
+  keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" :: thy_defn
        and "deriving" "parameter_equality" :: quasi_command
 begin
 
@@ -9684,13 +9684,6 @@ declare Lifting.pred_prod_beta[\<phi>generation_simp]
 section \<open>Clean-up\<close>
 
 hide_const (open) introduced
-
-
-
-
-chapter \<open>Typeclass\<close>
-
-ML_file \<open>library/typeclass.ML\<close>
 
 
 

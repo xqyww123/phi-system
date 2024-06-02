@@ -371,7 +371,7 @@ val uncertify_tmvars = Vars.map (K Thm.term_of)
 fun uncertify_vars (ty, tm) = (uncertify_tyvars ty, uncertify_tmvars tm)
 
 
-(* Instantiation of Higher Order Variables *)
+(* Instantiation of Higher  Variables *)
 
 fun mk_HO_ins terms (escape,ins0) =
   let

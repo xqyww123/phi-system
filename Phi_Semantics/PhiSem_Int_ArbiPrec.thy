@@ -499,7 +499,7 @@ proc (nodef) op_ge_anat[\<phi>overload \<ge>]:
  
 declare [[\<phi>trace_reasoning = 2]]
 
-\<phi>instance \<open>\<phi>Order \<nat>\<close>
+\<phi>instance \<open>Order \<nat>\<close>
   where leq = op_le_anat
 
 thm "\<ge>_\<phi>app"

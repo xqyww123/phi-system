@@ -61,7 +61,7 @@ instance proof qed (simp add: equal_lcro_intvl_def interval_eq_iff)
 end
 
 
-subsubsection \<open>Order \& Lattice\<close>
+subsubsection \<open> \& Lattice\<close>
 
 instantiation lcro_intvl :: ("preorder") ord begin
 

@@ -50,6 +50,49 @@ val _ = Phi_Toplevel.Finishing_Construction_Hooks.add 100 (fn () =>
 structure Applying_Recursive_Modifier = Hooks (type arg = unit
                                                type state = context_state)
 
+local open Phi_Conv Conv
+  val compact_R = @{lemma' \<open>
+        (P \<Longrightarrow> Q \<Longrightarrow> R \<Longrightarrow> PROP W) \<equiv> (Q \<Longrightarrow> P \<and> R \<Longrightarrow> PROP W)
+    \<close> by (standard, simp_all)}
+  val compact_R' = @{lemma' \<open>
+        (Q \<Longrightarrow> P \<and> R \<Longrightarrow> PROP W) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> R \<Longrightarrow> PROP W)
+    \<close> by (standard, simp_all)}
+  val compact_Q = @{lemma' \<open>
+        (P \<Longrightarrow> Q \<Longrightarrow> R \<Longrightarrow> PROP W) \<equiv> (P \<and> Q \<Longrightarrow> R \<Longrightarrow> PROP W)
+    \<close> by (standard, simp_all)}
+  val compact_Q' = @{lemma' \<open>
+        (P \<and> Q \<Longrightarrow> R \<Longrightarrow> PROP W) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> R \<Longrightarrow> PROP W)
+    \<close> by (standard, simp_all)}
+  val init = @{lemma' \<open>
+        PROP P \<equiv> (True \<Longrightarrow> True \<Longrightarrow> PROP P)
+    \<close> by (simp add: True_implies_equals)}
+  val finalize = @{lemma' \<open>
+        (True \<Longrightarrow> True \<Longrightarrow> PROP P) \<equiv> PROP P
+    \<close> by (simp add: True_implies_equals)}
+in
+(*fun aggregate_imps_obj P ctxt ctm =
+     (case Thm.term_of ctm
+        of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ _ =>
+            implies_conv (iso_atomize_conv ctxt)
+                         (aggregate_imps_obj P ctxt)
+            then_conv rewr_conv (if P A then compact_R else compact_Q)
+         | _ => rewr_conv init) ctm *)
+
+  fun xaggregate_imps_obj [] _ ctm = rewr_conv init ctm
+    | xaggregate_imps_obj (P::Ps) ctxt ctm =
+        (implies_conv (iso_atomize_conv ctxt)
+                      (xaggregate_imps_obj Ps ctxt)
+         then_conv rewr_conv (if P then compact_R else compact_Q)) ctm
+
+  fun xexpand_aggregated_imps_obj [] _ ctm = rewr_conv finalize ctm
+    | xexpand_aggregated_imps_obj (P::Ps) ctxt ctm =
+        (rewr_conv (if P then compact_R' else compact_Q')
+         then_conv implies_conv (iso_rulify_conv ctxt)
+                                (xexpand_aggregated_imps_obj Ps ctxt)) ctm
+
+end
+
+
 fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
   let
     val _ = if is_constructing_recursive_procedure ctxt01
@@ -58,17 +101,9 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
     val (ctxt0,sequent0) = (ctxt01,sequent01)
           |> Applying_Recursive_Modifier.invoke (Context.Proof ctxt01) ()
           |> apfst (Is_Recursive.put true)
-    val sequent = sequent0
-                  (*first pack all premises*)
-              |> Conv.gconv_rule (let open Phi_Conv Conv in
-                   meta_all_body_conv (fn ctxt =>
-                                aggregate_imps_obj (K all_conv) ctxt
-                      then_conv protect_conv
-                    ) ctxt0
-                 end) 1
-    val (_,_,proc01',ctxt) = Phi_Help.fix_leading_antecedent_meta_quantifiers ctxt0 (Thm.prop_of sequent)
+    val (qvars,PPs,proc02,ctxt) = Phi_Help.fix_leading_antecedent_meta_quantifiers ctxt0 (Thm.prop_of sequent0)
 
-    val (_(*Pure.prop*) $ (_ (*imp*) $ (\<^const>\<open>Trueprop\<close> $ PP) $ proc02)) = proc01'
+ (* val (_ (*Pure.imp*) $ (\<^const>\<open>Trueprop\<close> $ PP) $ proc02) = Logic.strip_assums_concl proc01' *)
     val proc0 = case proc02
                   of \<^const>\<open>Trueprop\<close> $ (X as Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _)
                        => X
@@ -100,14 +135,33 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
     val free_outside = the_default Name.context (Phi_Toplevel.free_fixed_outside ctxt)
     val vars = case raw_vars
                  of [] => (*infer the variables*)
-                      map Free (Term.add_frees (Thm.prop_of sequent) []
+                      map Free (Term.add_frees (Thm.prop_of sequent0) []
                                   |> subtract (op =) arg_vars
                                   |> subtract (op =) (fold (Term.add_frees o Thm.term_of)
                                                            (Assumption.all_assms_of ctxt) [])
                                   |> filter_out (Name.is_declared free_outside o fst)
                                   |> filter (fn (_, \<^Type>\<open>TY\<close>) => false
-                                              | _ => true))
+                                              | (_, ty) => not (Phi_Syntax.is_procT ty) ))
                   | _  => prep_vars ctxt raw_vars
+
+    val should_be_quantified =
+          exists_subterm (fn tm as Free _ => member (op =) vars tm
+                           | _ => false)
+    val PPP = map should_be_quantified PPs
+
+    val sequent = sequent0
+                  (*pack all premises*)
+               |> Conv.gconv_rule (let open Phi_Conv Conv in
+                     meta_all_body_conv (fn ctxt =>
+                                  xaggregate_imps_obj PPP ctxt
+                        then_conv implies_concl_conv protect_conv
+                      ) ctxt0
+                   end) 1
+    
+    val (_,_,(_(*prop*) $ (_ (*Pure.imp*) $ (\<^const>\<open>Trueprop\<close> $ PP'b) $ _))) =
+            Phi_Help.leading_antecedent (Thm.prop_of sequent)
+    val PP = subst_bounds (rev qvars, PP'b)
+
     val var_names_ty = Phi_Syntax.mk_name_tylabels
                           (map (Variable.revert_fixed ctxt o Term.term_name) vars)
     val var_tup = Phi_Syntax.mk_named_tag (HOLogic.mk_tuple vars) var_names_ty
@@ -154,14 +208,15 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
     val sequent1 = (rule RS norm_sequent)
                    (*unpack compressed premises*)
                 |> Conv.gconv_rule (let open Phi_Conv Conv in
-                    meta_all_body_conv (fn ctxt =>
-                        implies_conv all_conv (implies_conv (
+                    meta_all_body_conv (fn ctxt => fn ctm =>
+                       (implies_concl_conv (implies_concl_conv (implies_conv (
                             Phi_Syntax.labelled_conv (arg_conv (meta_all_body_conv (
-                                expand_aggregated_imps_obj (K (try_conv Phi_Syntax.elim_labelled (*Labelled_def*)
-                                                              then_conv try_conv (rewr_conv @{thm Technical_def})))
+                                expand_aggregated_imps_obj
+                                      (K (try_conv Phi_Syntax.elim_labelled (*Labelled_def*)
+                                          then_conv try_conv (rewr_conv @{thm Technical_def})))
                             ) ctxt))
-                          ) all_conv)
-                        then_conv expand_aggregated_imps_obj (K all_conv) ctxt
+                          ) all_conv))
+                        then_conv xexpand_aggregated_imps_obj PPP ctxt) ctm
                       ) ctxt
                  end) 1
   in (ctxt0, sequent1)

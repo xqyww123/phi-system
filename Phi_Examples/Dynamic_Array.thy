@@ -2,15 +2,12 @@ theory Dynamic_Array
   imports Phi_Semantics.PhiSem_C
           Phi_Semantics.PhiSem_Mem_C_MI
           PhiStd.PhiStd_Slice
-          Phi_Semantics.PhiSem_Int_ArbiPrec
-          Phi_Semantics.PhiSem_Mem_C_AI
-          PhiStd.PhiStd_Slice_a
 begin
 
 declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def DynArr :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
-  where \<open>l \<Ztypecolon> DynArr addr T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] (\<t>\<y>\<p>\<e>\<o>\<f> T), len: \<nat>, cap: \<nat> \<rbrace>\<heavy_comma>
+  where \<open>l \<Ztypecolon> DynArr addr T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] (\<t>\<y>\<p>\<e>\<o>\<f> T), len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
                              data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] T
                              \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                   len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
@@ -30,7 +27,7 @@ abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {
 
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<close>
-  output   \<open>length l \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
+  output   \<open>length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
 \<medium_left_bracket>
   addr.len
@@ -45,7 +42,7 @@ context
 begin
 
 proc get_dynarr:
-  input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l!i \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
@@ -55,7 +52,7 @@ proc get_dynarr:
 
 
 proc set_dynarr:
-  input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
@@ -64,46 +61,37 @@ proc set_dynarr:
 \<medium_right_bracket> .
 
 proc Max:
-  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
+  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
 \<medium_left_bracket>
   if (x < y) \<medium_left_bracket> y \<medium_right_bracket> \<medium_left_bracket> x \<medium_right_bracket>
 \<medium_right_bracket> .
 
-  
-  proc push_dynamic_array:
-    input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
-    output   \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
-  \<medium_left_bracket>
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
-    val len \<leftarrow> addr.len \<semicolon>
-    val cap \<leftarrow> addr.cap \<semicolon>
-    if (cap = len) \<medium_left_bracket>
-        val cap' \<leftarrow> Max(cap * 2, 1) \<semicolon>
-        val data' \<leftarrow> calloc (cap') \<open>T\<close> \<semicolon>
-        memcpy (data', addr.data , len) \<semicolon>
-        mfree (addr.data) \<semicolon>
-        addr.data := data' \<semicolon>
-        addr.len := addr.len + 1 \<semicolon>
-        addr.cap := cap' \<semicolon>
-        data'[len] := v \<semicolon>
-        \<m>\<a>\<k>\<e>\<s> \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
-    \<medium_right_bracket> \<medium_left_bracket>
-        addr.data[len] := v \<semicolon>
-        addr.len := len + 1 \<semicolon>
-        \<m>\<a>\<k>\<e>\<s> \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
-    \<medium_right_bracket>
-  \<medium_right_bracket> .
-  
 
-
-
-
-
-
-
-
-
+proc push_dynarr:
+  input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  premises \<open>length l \<le> 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
+  output   \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
+\<medium_left_bracket>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
+  val len \<leftarrow> addr.len \<semicolon>
+  val cap \<leftarrow> addr.cap \<semicolon>
+  if (cap = len) \<medium_left_bracket>
+      val cap' \<leftarrow> Max(cap * 2, 1) \<semicolon>
+      val data' \<leftarrow> calloc (cap') \<open>T\<close> \<semicolon>
+      memcpy (data', addr.data , len) \<semicolon>
+      mfree (addr.data) \<semicolon>
+      addr.data := data' \<semicolon>
+      addr.len := addr.len + 1 \<semicolon>
+      addr.cap := cap' \<semicolon>
+      data'[len] := v \<semicolon>
+      \<m>\<a>\<k>\<e>\<s> \<open>l + [v] \<Ztypecolon> DynArr addr _\<close>
+  \<medium_right_bracket> \<medium_left_bracket>
+      addr.data[len] := v \<semicolon>
+      addr.len := len + 1 \<semicolon>
+      \<m>\<a>\<k>\<e>\<s> \<open>l + [v] \<Ztypecolon> DynArr addr _\<close>
+  \<medium_right_bracket>
+\<medium_right_bracket> .
 
 proc concat_dynarr:
   input   \<open>l1 \<Ztypecolon> \<r>\<e>\<f> DynArr addr1 T\<heavy_comma> l2 \<Ztypecolon> \<r>\<e>\<f> DynArr addr2 T\<close>
