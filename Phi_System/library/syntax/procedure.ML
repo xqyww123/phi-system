@@ -57,9 +57,9 @@ val dest_argT : typ -> typ
 val mk_argT : typ -> typ
 val dest_arg_prodT : typ -> typ * typ
 val mk_arg_prodT   : typ * typ -> typ
-val mk_arg_tupleT  : typ list -> typ
-val mk_arg_tuple   : typ list -> term list -> term
-val mk_arg_tuple'  : term list -> term
+val mk_arg_listT  : typ list -> typ
+val mk_arg_list   : typ list -> term list -> term
+val mk_arg_list'  : term list -> term
 val dest_arg_tuple : term -> term list
 val map_argT  : (typ -> typ) -> typ -> typ
 
@@ -92,27 +92,24 @@ fun mk_arg_prodT (Type (\<^type_name>\<open>\<phi>arg\<close>, [T1]), Type (\<^t
       = Type (\<^type_name>\<open>\<phi>arg\<close>, [HOLogic.mk_prodT (T1,T2)])
   | mk_arg_prodT (T1,T2) = raise TYPE("Not a \<phi>arg type", [T1,T2], [])
 
-fun mk_arg_tupleT Ts = mk_argT (HOLogic.mk_tupleT (map dest_argT Ts))
+fun mk_arg_listT Ts = mk_argT (HOLogic.mk_tupleT (map dest_argT Ts))
 
 fun map_argT f (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])) = Type (\<^type_name>\<open>\<phi>arg\<close>, [f T])
   | map_argT _ T = raise TYPE("Not a \<phi>arg type", [T], [])
 
-fun mk_arg_tuple' [] = \<^term>\<open>\<phi>V_none\<close>
-  | mk_arg_tuple' [tm] = tm
-  | mk_arg_tuple' (tm::tms)
-      = Const (\<^const_name>\<open>\<phi>V_pair\<close>, dummyT) $ tm $ mk_arg_tuple' tms
+fun mk_arg_list' [] = \<^Const>\<open>\<phi>V_nil\<close>
+  | mk_arg_list' [tm] = tm
+  | mk_arg_list' (tm::tms)
+      = \<^Const>\<open>\<phi>V_cons\<close> $ tm $ mk_arg_list' tms
 
-fun mk_arg_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
-  | mk_arg_tuple _ [tm] = tm
-  | mk_arg_tuple (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])::tys) (tm::tms)
-      = Const (\<^const_name>\<open>\<phi>V_pair\<close>, Type (\<^type_name>\<open>\<phi>arg\<close>, [fst (HOLogic.dest_prodT T)])
-                                 --> Type (\<^type_name>\<open>\<phi>arg\<close>, [snd (HOLogic.dest_prodT T)])
-                                 --> Type (\<^type_name>\<open>\<phi>arg\<close>, [T]))
-          $ tm $ mk_arg_tuple tys tms
-  | mk_arg_tuple tys tms = raise TYPE ("Not a \<phi>arg type", tys, tms)
+fun mk_arg_list _ [] = \<^Const>\<open>\<phi>V_nil\<close>
+  | mk_arg_list _ [tm] = tm
+  | mk_arg_list (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])::tys) (tm::tms)
+      = \<^Const>\<open>\<phi>V_cons\<close> $ tm $ mk_arg_list tys tms
+  | mk_arg_list tys tms = raise TYPE ("Not a \<phi>arg type", tys, tms)
 
-fun dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_none\<close>, _)) = []
-  | dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_pair\<close>, _) $ A $ B) = A :: dest_arg_tuple B
+fun dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_nil\<close>, _)) = []
+  | dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_cons\<close>, _) $ A $ B) = A :: dest_arg_tuple B
   | dest_arg_tuple X = [X]
 
 
@@ -206,7 +203,7 @@ fun translate_proc_arg' (qmode, pmode) tm =
       val (_, _, names, Arg') = translate_arg' 0 "\<a>\<r>\<g>_a" [] Arg
       val proc' = case pmode
                     of No_Parameterize => proc
-                     | Tuple_Pack => proc $ mk_arg_tuple' (map (fn x => Free(x,dummyT)) (rev names))
+                     | Tuple_Pack => proc $ mk_arg_list' (map (fn x => Free(x,dummyT)) (rev names))
                      | Lambda_Apps => fold_rev (fn N => fn X => X $ Free(N,dummyT) ) names proc
       val base = mk_proc_synt (Procedure, proc', Arg', Ret, Err)
       val ret = case qmode
@@ -258,9 +255,9 @@ fun translate_proc_arg ctxt tm =
 
 fun nth_project [_] 0 term = term
   | nth_project (ty::_::_) 0 term
-      = Const (\<^const_name>\<open>\<phi>V_fst\<close>, ty --> fst (dest_arg_prodT ty)) $ term
+      = \<^Const>\<open>\<phi>V_hd\<close> $ term
   | nth_project (ty::tys::tyss) i term =
-      nth_project (tys::tyss) (i-1) (Const (\<^const_name>\<open>\<phi>V_snd\<close>, ty --> tys) $ term)
+      nth_project (tys::tyss) (i-1) (\<^Const>\<open>\<phi>V_tl\<close> $ term)
   | nth_project _ _ _ = error "Internal bug #bq3 ni8op["
 
 
@@ -367,11 +364,11 @@ fun package_values name _ (SOME []) term =
                                   | L as T'::_ => mk_arg_prodT (T,T') :: L))
               (map ex_fastype_of Vs) []
     val T = if null Tys then \<^typ>\<open>unit \<phi>arg\<close> else hd Tys
-  in (mk_arg_tuple Tys Vs, Abs(name, T, if null Tys then term else #2(map_ret Tys 0 Vs (0,term))))
+  in (mk_arg_list Tys Vs, Abs(name, T, if null Tys then term else #2(map_ret Tys 0 Vs (0,term))))
   end
 
 fun package_values0 name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
-      = (\<^Const>\<open>\<phi>arg zero_ty\<close> $ \<^Const>\<open>unreachable zero_ty\<close>, Abs (name, \<^Type>\<open>\<phi>arg zero_ty\<close>, term))
+      = (\<^Const>\<open>\<phi>arg zero_ty\<close> $ \<^Const>\<open>unreachable\<close>, Abs (name, \<^Type>\<open>\<phi>arg zero_ty\<close>, term))
   | package_values0 name _ R2L Vs0 term = package_values name R2L Vs0 term
 
 

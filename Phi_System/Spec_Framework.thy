@@ -23,21 +23,24 @@ optional_translations (do_notation)
   "_do_then t" <= "_do_bind (_constrain _idtdummy TY) t"
   "_do_cons A (_do_cons B C)" <= "_do_cons (_do_cons A B) C"
 
-syntax "_\<phi>V3" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>3\<^sub>')")
+syntax "_\<phi>V2" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>2\<^sub>')")
+       "_\<phi>V3" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>3\<^sub>')")
        "_\<phi>V4" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>4\<^sub>')")
        "_\<phi>V5" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>5\<^sub>')")
        "_\<phi>V6" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>6\<^sub>')")
        "_\<phi>V7" :: \<open>logic \<Rightarrow> logic\<close> ("_\<^sub>'(\<^sub>7\<^sub>')")
 
 optional_translations (do_notation)
-  "x\<^sub>(\<^sub>2\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>1\<^sub>)"
-  "x\<^sub>(\<^sub>3\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>2\<^sub>)"
-  "x\<^sub>(\<^sub>4\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>3\<^sub>)"
-  "x\<^sub>(\<^sub>5\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>4\<^sub>)"
-  "x\<^sub>(\<^sub>6\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>5\<^sub>)"
-  "x\<^sub>(\<^sub>7\<^sub>)" <= "x\<^sub>(\<^sub>2\<^sub>)\<^sub>(\<^sub>6\<^sub>)"
+  "x\<^sub>(\<^sub>2\<^sub>)" <= "(CONST \<phi>V_tl x)\<^sub>(\<^sub>1\<^sub>)"
+  "x\<^sub>(\<^sub>3\<^sub>)" <= "(CONST \<phi>V_tl x)\<^sub>(\<^sub>2\<^sub>)"
+  "x\<^sub>(\<^sub>4\<^sub>)" <= "(CONST \<phi>V_tl x)\<^sub>(\<^sub>3\<^sub>)"
+  "x\<^sub>(\<^sub>5\<^sub>)" <= "(CONST \<phi>V_tl x)\<^sub>(\<^sub>4\<^sub>)"
+  "x\<^sub>(\<^sub>6\<^sub>)" <= "(CONST \<phi>V_tl x)\<^sub>(\<^sub>5\<^sub>)"
+  "x\<^sub>(\<^sub>7\<^sub>)" <= "(CONST \<phi>V_tl x)\<^sub>(\<^sub>6\<^sub>)"
 
   "x" <= "CONST \<phi>arg x"
+
+term \<open>\<phi>V_hd (\<phi>V_tl (\<phi>V_tl (\<phi>V_tl x)))\<close>
 
 print_translation \<open>[
   (\<^const_syntax>\<open>bind_do\<close>, fn _ => (
@@ -953,9 +956,9 @@ lemma [\<phi>reason 1000]:
 
 section \<open>Specification of Monadic States\<close>
 
-definition StrictState :: "('ret \<phi>arg \<Rightarrow> rassn)
+definition StrictState :: "(VAL list \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
-                          \<Rightarrow> 'ret comp set"
+                          \<Rightarrow> comp set"
   where "StrictState T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Abnormal val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
@@ -963,9 +966,9 @@ definition StrictState :: "('ret \<phi>arg \<Rightarrow> rassn)
                               | AssumptionBroken \<Rightarrow> False
                   }"
 
-definition LooseState  :: "('ret \<phi>arg \<Rightarrow> rassn)
+definition LooseState  :: "(VAL list \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
-                          \<Rightarrow> 'ret comp set"
+                          \<Rightarrow> comp set"
   where  "LooseState T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Abnormal val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
@@ -1083,9 +1086,9 @@ abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> 
 
 section \<open>Specification of Computation\<close>
 
-definition \<phi>Procedure :: "'ret proc
+definition \<phi>Procedure :: " proc
                         \<Rightarrow> assn
-                        \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
+                        \<Rightarrow> (VAL list \<phi>arg \<Rightarrow> assn)
                         \<Rightarrow> (ABNM \<Rightarrow> assn)
                         \<Rightarrow> bool"
   where "\<phi>Procedure f T U E \<longleftrightarrow>

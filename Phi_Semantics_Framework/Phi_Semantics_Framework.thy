@@ -182,7 +182,7 @@ datatype 'a \<phi>arg = \<phi>arg (dest: 'a)
 hide_const (open) dest
 
 
-definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
+definition unreachable :: \<open>VAL list\<close> where \<open>unreachable = undefined\<close>
 
 lemma \<phi>arg_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
 lemma \<phi>arg_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
@@ -195,41 +195,46 @@ next
 qed
 
 
-definition \<open>\<phi>V_none = \<phi>arg ()\<close>
+(* definition \<open>\<phi>V_none = \<phi>arg ()\<close>
 definition \<phi>V_pair ("_\<^bold>, _" [11,10] 10) where \<open>\<phi>V_pair x y = \<phi>arg (\<phi>arg.dest x, \<phi>arg.dest y)\<close>
 definition \<open>\<phi>V_case_prod f x \<equiv> case x of \<phi>arg (a,b) \<Rightarrow> f (\<phi>arg a) (\<phi>arg b)\<close>
 definition \<open>\<phi>V_fst x = map_\<phi>arg fst x\<close>
-definition \<open>\<phi>V_snd x = map_\<phi>arg snd x\<close>
-abbreviation \<open>\<phi>V_nil \<equiv> \<phi>arg []\<close>
-definition \<open>\<phi>V_cons h l = \<phi>arg (\<phi>arg.dest h # \<phi>arg.dest l)\<close>
-definition \<open>\<phi>V_hd l = \<phi>arg (hd (\<phi>arg.dest l))\<close>
-definition \<open>\<phi>V_tl l = \<phi>arg (tl (\<phi>arg.dest l))\<close>
+definition \<open>\<phi>V_snd x = map_\<phi>arg snd x\<close> *)
+definition \<phi>V_nil :: \<open>VAL list \<phi>arg\<close>
+  where \<open>\<phi>V_nil \<equiv> \<phi>arg []\<close>
+definition \<phi>V_cons :: \<open>VAL \<phi>arg \<Rightarrow> VAL list \<phi>arg \<Rightarrow> VAL list \<phi>arg\<close>
+  where \<open>\<phi>V_cons h l = \<phi>arg (\<phi>arg.dest h # \<phi>arg.dest l)\<close>
+definition \<phi>V_hd :: \<open>VAL list \<phi>arg \<Rightarrow> VAL \<phi>arg\<close>
+  where \<open>\<phi>V_hd l = \<phi>arg (hd (\<phi>arg.dest l))\<close>
+definition \<phi>V_tl :: \<open>VAL list \<phi>arg \<Rightarrow> VAL list \<phi>arg\<close>
+  where \<open>\<phi>V_tl l = \<phi>arg (tl (\<phi>arg.dest l))\<close>
 
 lemma \<phi>V_simps[simp]:
-  \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
+(* \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
   \<open>\<phi>V_fst (\<phi>V_pair u y) = u\<close>
   \<open>\<phi>V_snd (\<phi>V_pair x u) = u\<close>
   \<open>\<phi>V_fst (\<phi>arg (xa,xb)) = \<phi>arg xa\<close>
-  \<open>\<phi>V_snd (\<phi>arg (xa,xb)) = \<phi>arg xb\<close>
+  \<open>\<phi>V_snd (\<phi>arg (xa,xb)) = \<phi>arg xb\<close> *)
   \<open>\<phi>V_cons (\<phi>arg h) (\<phi>arg l) = \<phi>arg (h#l)\<close>
   \<open>\<phi>V_hd (\<phi>V_cons hv lv) = hv\<close>
   \<open>\<phi>V_tl (\<phi>V_cons hv lv) = lv\<close>
-  \<open>\<phi>V_case_prod f (\<phi>V_pair a b) = f a b\<close>
-  \<open>\<phi>V_case_prod f = (\<lambda>v. f (\<phi>V_fst v) (\<phi>V_snd v))\<close>
+(* \<open>\<phi>V_case_prod f (\<phi>V_pair a b) = f a b\<close>
+  \<open>\<phi>V_case_prod f = (\<lambda>v. f (\<phi>V_fst v) (\<phi>V_snd v))\<close> *)
 (*  \<open>\<phi>V_case_prod (\<lambda>a b. f2 (\<phi>V_pair a b)) = f2\<close>
   \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b c. f3 (\<phi>V_pair a (\<phi>V_pair b c)))) = f3\<close>
   \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b. \<phi>V_case_prod (\<lambda>c d. f4 (\<phi>V_pair a (\<phi>V_pair b (\<phi>V_pair c d)))))) = f4\<close> *)
-  unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def \<phi>V_case_prod_def
+  unfolding (* \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def*) \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def (*\<phi>V_case_prod_def*)
+ (* apply (cases v, simp)
     apply (cases v, simp)
-    apply (cases v, simp)
-    apply (cases v, simp)
+    apply (cases v, simp) *)
     apply simp apply simp apply simp
-    apply simp apply simp apply simp
-    apply (simp add: fun_eq_iff \<phi>arg_forall) .
+ (* apply simp apply simp apply simp
+    apply (simp add: fun_eq_iff \<phi>arg_forall) *) .
 
 
 paragraph \<open>More auxiliary properties\<close>
 
+(*
 lemma split_paired_All_\<phi>arg:
   "(\<forall>x. P x) \<longleftrightarrow> (\<forall>a b. P (\<phi>V_pair a b))"
   by (metis \<phi>V_simps(1))
@@ -253,7 +258,7 @@ lemma split_paired_Ex_\<phi>arg_unit:
 lemma split_paired_all_\<phi>arg_unit:
   "(\<And>x. PROP P x) \<equiv> PROP P \<phi>V_none"
   unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all \<phi>V_none_def by simp
-
+*)
 
 
 
@@ -273,9 +278,12 @@ end
 
 paragraph \<open>Syntax\<close>
 
+notation (do_notation) \<phi>V_hd ("_\<^sub>'(\<^sub>1\<^sub>')")
+
+(*
 notation (do_notation) \<phi>V_fst ("_\<^sub>'(\<^sub>1\<^sub>')")
                    and \<phi>V_snd ("_\<^sub>'(\<^sub>2\<^sub>')")
-
+*)
 
 subsubsection \<open>Monadic Formalization\<close>
 
@@ -310,8 +318,8 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 
 declare [ [typedef_overloaded] ]
 
-datatype 'ret comp =
-      Success \<open>'ret \<phi>arg\<close> (resource: resource)
+datatype comp =
+      Success \<open>VAL list \<phi>arg\<close> (resource: resource)
     | Abnormal \<open>ABNM\<close> (resource: resource)
     | Invalid
     | AssumptionBroken
@@ -368,10 +376,10 @@ is expressed by returning \<open>Invalid\<close>.
 % TODO: value annotation and slightly-shallow representation.
  \<close>
 
-type_synonym 'ret proc = "resource \<Rightarrow> 'ret comp set"
-type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
+type_synonym proc  = "resource \<Rightarrow> comp set"
+type_synonym proc' = "VAL list \<phi>arg \<Rightarrow> proc"
 
-definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"
+definition bind :: "proc \<Rightarrow> proc' \<Rightarrow> proc"
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
                                            | Abnormal v x \<Rightarrow> {Abnormal v x}
                                            | Invalid \<Rightarrow> {Invalid}
@@ -387,11 +395,8 @@ definition \<open>det_lift f x = {f x}\<close>
 definition Return ("\<r>\<e>\<t>\<u>\<r>\<n>")
   where \<open>Return = det_lift o Success\<close>
 
-definition Nondet :: \<open>'ret proc \<Rightarrow> 'ret proc \<Rightarrow> 'ret proc\<close>
+definition Nondet :: \<open>proc \<Rightarrow> proc \<Rightarrow> proc\<close>
   where \<open>Nondet f g = (\<lambda>res. f res \<union> g res)\<close>
-
-term \<open>f \<bind> Return\<close>
-term \<open>do { x <- (f::'a proc); Return xaa }\<close>
 
 lemma proc_bind_SKIP'[simp]:
   "f \<bind> Return \<equiv> f"
@@ -401,8 +406,9 @@ lemma proc_bind_SKIP'[simp]:
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
   by (clarsimp; metis comp.exhaust)+
 
+(*
 lemma proc_bind_return_none[simp]:
-  "f_nil \<then> Return \<phi>V_none \<equiv> f_nil"
+  "(f_nil \<then> Return \<phi>V_none \<equiv> f_nil"
   for f_nil :: \<open>unit proc\<close>
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def \<phi>V_none_def
   apply (clarsimp)
@@ -412,18 +418,19 @@ lemma proc_bind_return_none[simp]:
     subgoal for z
       apply (cases z; simp add: \<phi>arg_All) .
   apply (rule bexI[where x=y]; clarsimp simp add: \<phi>arg_All) . .
+*)
 
 lemmas proc_bind_SKIP[simp] =
   proc_bind_SKIP'[unfolded Return_def, simplified]
-  proc_bind_return_none[unfolded Return_def, simplified]
+  (*proc_bind_return_none[unfolded Return_def, simplified] *)
 
 lemma proc_bind_assoc[simp]:
-  "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))" for A :: \<open>'a proc\<close>
+  "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))" for A :: proc
   unfolding bind_def fun_eq_iff det_lift_def set_eq_iff
   by clarsimp
 
 
-definition Valid_Proc :: \<open>'ret proc \<Rightarrow> bool\<close>
+definition Valid_Proc :: \<open>proc \<Rightarrow> bool\<close>
   where \<open>Valid_Proc f \<longleftrightarrow> (\<forall>v s s'. Success v s' \<in> f s \<and> s \<in> RES.SPACE \<longrightarrow> s' \<in> RES.SPACE)
                              \<and> (\<forall>e s s'. Abnormal e s' \<in> f s \<and> s \<in> RES.SPACE \<longrightarrow> s' \<in> RES.SPACE)\<close>
 

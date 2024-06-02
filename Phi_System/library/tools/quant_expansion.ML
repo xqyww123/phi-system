@@ -114,6 +114,7 @@ val ExNu_expansion =
   general_expansion @{const_name ExSet} @{thm named_ExSet[folded atomize_eq]}
                     "a" @{thm ExSet_pair[folded atomize_eq]}
 
+(*
 val forall_expansion_arg_encoding =
   general_expansion @{const_name All} @{thm named_forall[folded atomize_eq]}
                     "a" @{thm split_paired_All_\<phi>arg[folded atomize_eq]}
@@ -123,7 +124,7 @@ val exists_expansion_arg_encoding =
 val meta_All_expansion_arg_encoding =
   general_expansion @{const_name Pure.all} @{thm named_All[folded atomize_eq]}
                     "a" @{thm split_paired_all_\<phi>arg[folded atomize_eq]}
-
+*)
 
 fun aux_expansions ctxt = Named_Theorems.get ctxt @{named_theorems named_expansion}
 
