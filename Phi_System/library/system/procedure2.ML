@@ -1,26 +1,30 @@
 signature PHI_PROCEDURE = sig
   include PHI_PROCEDURE
 
-  type interface = {name: Binding.binding, thm: thm}
+  type export_name = string
+  type proc_const_name = string
   (*interfaces introduced in this given theory, excluding others inherited from parent theories*)
-  val interfaces_of : theory -> interface Symtab.table
+  val interfaces_of : theory -> export_name Symtab.table
   (*procedures introduced in this given theory, excluding others inherited from parent theories*)
   val procedures_of : Context.generic -> string list (*names*)
   val compilation_thm_of : theory -> string (*name*) -> thm
-  val add_interface : interface -> theory -> theory
+  val add_interface : export_name * proc_const_name -> theory -> theory
   (* val add_interface_command : (Binding.binding * string) * (string * string)
   * option -> theory -> theory *)
 
 end
 
 structure Phi_Procedure : PHI_PROCEDURE = struct
-open Phi_Envir
+open Phi_Procedure Phi_Envir
+
+type export_name = string
+type proc_const_name = string
 
 (*All interfaces to be exported in *a* theory*)
 structure Interfaces = Theory_Data(
-  type T = interface Symtab.table Symtab.table;
-  val empty = Symtab.empty;
-  val extend = I;
+  type T = export_name Symtab.table Symtab.table
+              (*key: name of exported interface, value: procedure constant name*)
+  val empty = Symtab.empty
   val merge = Symtab.merge (K true)
 )
 
@@ -30,7 +34,7 @@ fun interfaces_of thy =
 fun add_interface intrf thy =
   Interfaces.map (Symtab.map_default
     (Context.theory_long_name thy, Symtab.empty)
-    (Symtab.insert (K false) (Binding.name_of (#name intrf), intrf))) thy
+    (Symtab.insert (K false) intrf)) thy
 
 fun compilation_thm_of thy name =
       Global_Theory.get_thm thy (suffix compilation_suffix name)
@@ -53,6 +57,7 @@ fun add_procedure name ctxt =
     (fn l => name :: l)) ctxt
 
 
+(*
 fun add_interface_command ((name,const),tys) thy =
   let
     val ctxt = Proof_Context.init_global thy
@@ -102,5 +107,6 @@ fun add_interface_command ((name,const),tys) thy =
   in
     add_interface {name = name, thm = thm} thy
   end
+*)
 
 end

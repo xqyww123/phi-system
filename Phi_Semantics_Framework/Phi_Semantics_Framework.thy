@@ -439,7 +439,5 @@ lemma Valid_Proc_bind:
     apply (case_tac x; simp add: Bex_def split_comp_Ex)
     using prems(1) prems(2) apply blast
     using prems(1) by blast .
-  
-
 
 end

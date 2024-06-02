@@ -2,7 +2,7 @@ structure Phi_CG_Emit = struct
 
 type config = {name_space: string}
 fun w s buffer = s :: buffer  ;  fun wi i = w (string_of_int i)
-fun tr_name #"\\" = "__" | tr_name #"<" = "" | tr_name #">" = "" | tr_name c = str c
+fun tr_name #"\\" = "" | tr_name #"<" = "" | tr_name #">" = "_" | tr_name c = str c
 val w' = w o String.translate tr_name
 fun wstr ss buffer = "\"" :: (ss @ ("\"" :: buffer))
 fun w_ty name = w' (String.substring (name, 1, String.size name - 1))
@@ -14,7 +14,7 @@ fun w_const (c:config) name =
     else w "CG_" #> w' name #> w "_gen"
 
 fun gen_typ (Type (name, tys))
-      = w "TCG_" #> w' name #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
+      = w' name #> w "_gen" #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
   | gen_typ (TFree (name, _))   = w_ty name #> w "_t"
   | gen_typ (TVar ((name,i),_)) = w_ty name #> w "_t" #> wi i
 
@@ -36,16 +36,14 @@ fun gen_proc' c (Const ("Pure.eq",_) $ Const (name, _) $ B)
 
 fun gen_proc c = gen_proc' c o Thm.prop_of
 
-
-fun gen_interf c (i:Phi_Procedure.interface) = w "\n#> " #> gen_body 0 c (Thm.prop_of(#thm i))
-
-fun compile thy =
+fun gen_extractor thy =
   let val c = {name_space = Context.theory_name {long=false} thy}
       val gen = w "structure CG_" #> w (Context.theory_name {long=false} thy) #> w " = struct\n"
         #> fold (gen_proc c o Phi_Procedure.compilation_thm_of thy)
               (Phi_Procedure.procedures_of (Context.Theory thy) |> rev)
         #> w "val gen = I"
-        #> fold (compile_interf c o #2) (NuProcedure.interfaces_of thy |> Symtab.dest)
+        #> Symtab.fold (fn (eN, pN) => w " #> CGSys.F " #> wstr [eN] #> w " " #> w_const c pN)
+                       (Phi_Procedure.interfaces_of thy)
         #> w "\nend"
   in String.concat (rev (gen [])) end
 

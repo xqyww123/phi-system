@@ -91,6 +91,7 @@ abbreviation
   \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
         op_routine TYPE('ret::FIX_ARITY_VALs) TYPE('arg::FIX_ARITY_VALs) argtys rettys (F \<f>))\<close>
 
+ML_file \<open>codegen/routine_C.ML\<close>
 
 attribute_setup routine =
   \<open>Scan.succeed (Phi_Modifier.wrap_to_attribute
