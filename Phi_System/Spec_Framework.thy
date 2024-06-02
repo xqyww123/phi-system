@@ -1364,4 +1364,5 @@ structure Assertion_SS_Abnormal = Simpset (
 lemmas [assertion_simps] =
   \<phi>V_simps
 
+
 end

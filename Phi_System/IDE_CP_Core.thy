@@ -2159,6 +2159,25 @@ ML_file \<open>library/system/toplevel.ML\<close>
 ML_file \<open>library/tools/CoP_simp_supp.ML\<close>
 ML_file \<open>library/system/generic_element_access2.ML\<close>
 
+subsubsection \<open>Codegen\<close>
+
+(*
+definition Program_Interface :: \<open>label \<Rightarrow> TY list \<Rightarrow> TY list \<Rightarrow> VAL proc \<Rightarrow> bool\<close>
+  where "Program_Interface _ args rets proc \<longleftrightarrow> True"
+
+lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) proc"
+  unfolding Prog_Interface_def ..
+
+lemma Prog_Interface_func:
+  "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f"
+  unfolding Prog_Interface_def ..
+
+
+ML_file "library/system/procedure2.ML"
+ML_file \<open>library/codegen/emit.ML\<close>
+ML_file \<open>library/codegen/base.ML\<close>
+*)
+
 subsubsection \<open>Setups\<close>
 
 hide_fact "__value_access_0__"

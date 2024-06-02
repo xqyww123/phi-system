@@ -731,20 +731,7 @@ lemma [\<phi>reason %\<phi>br_join_normalize]:
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
-(* TODO!!!
 
- subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
-
-definition Prog_Interface :: " label \<Rightarrow> 'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a::lrep  \<longmapsto> 'b::lrep) \<Rightarrow> bool"
-  where "Prog_Interface _ args rets proc \<longleftrightarrow> True"
-
-lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) proc"
-  unfolding Prog_Interface_def ..
-
-lemma Prog_Interface_func:
-  "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f"
-  unfolding Prog_Interface_def ..
-*)
 
 
 section \<open>Implementation of Synthesis Mechanism\<close>
