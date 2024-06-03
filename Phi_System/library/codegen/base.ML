@@ -1,4 +1,4 @@
-structure Phi_CodeGen = struct
+structure Phi_CG = struct
 
 type ctxt = string list * string option * string list Symtab.table * int
             (*current buffer*)
@@ -6,11 +6,11 @@ type ctxt = string list * string option * string list Symtab.table * int
             (*function table*)
             (*variable counter*)
 
-val serial_c = Synchronized.var "Phi_CodeGen" 1
+val serial_c = Synchronized.var "Phi_CG" 1
 fun serial pr = Synchronized.change_result serial_c (fn i => (pr ^ string_of_int i,i+1))
 fun puts s (out,pf,ftab,vc) = (s@out,pf,ftab,vc); fun put s = puts [s]
 fun puts' s = puts s #> put " " ; fun put' s = put s #> put " "
-fun puts'' s = puts s #> put ";"; fun put'' s = put s #> put ";"
+fun puts'' s = puts s #> put ";\n"; fun put'' s = put s #> put ";\n";
 fun fun_name () =
   let val id = Unsynchronized.ref NONE
    in fn F => case !id of SOME id' => F id'
@@ -19,5 +19,6 @@ fun fun_name () =
 
 fun assign_var (out,pf,ftab,vc) = ("v" ^ string_of_int vc, (out,pf,ftab,vc+1))
 fun var ty F = puts' ty #> assign_var #-> (fn v => puts' [v, "="] #> F #> pair v)
+fun unop opr ty a = var ty (puts'' [opr, a]);  fun binop opr ty a b = var ty (puts'' [a, opr, b])
 
 end

@@ -76,11 +76,15 @@ proc pop_llist:
 
 
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc nth_llist:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> Linked_Lst addr T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  is [recursive]
+  is [routine]
+
+  
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
   if (i = 0) \<medium_left_bracket>

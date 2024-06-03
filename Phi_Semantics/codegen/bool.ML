@@ -1,13 +1,8 @@
-structure CG_PhiSem_Generic_Boolean = struct local open Phi_CodeGen in
+structure CG_PhiSem_Generic_Boolean = struct local open Phi_CG in
 
 val b_o_o_l_ = ["bool"]
-fun op_const_bool v = var ["bool"] (puts'' v)
-fun op_not v = var ["bool"] (puts'' ["!", v])
-fun op_and a b = var ["bool"] (puts'' [a, "&&", b])
-fun op_or a b = var ["bool"] (puts'' [a, "||", b])
-fun op_xor a b = var ["bool"] (puts'' [a, "^", b])
-fun op_equal a b = var ["bool"] (puts'' [a, "==", b])
+val op_const_bool = unop "" ["bool"]; val op_not = unop "!" ["bool"]
+val op_and = binop "&&" ["bool"]; val op_or = binop "||" ["bool"];
+val op_xor = binop "^"  ["bool"]; val op_equal = binop "==" ["bool"];
 
 end end
-
-structure CG_HOL = struct val True = ["True"]; val False = ["False"] end

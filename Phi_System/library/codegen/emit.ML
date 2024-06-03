@@ -3,7 +3,7 @@ structure Phi_CG_Emit = struct
 type config = {name_space: string}
 fun w s buffer = s :: buffer  ;  fun wi i = w (string_of_int i)
 fun tr_name #"\\" = "" | tr_name #"<" = "" | tr_name #">" = "_" | tr_name c = str c
-val w' = w o String.translate tr_name
+val tr_str = String.translate tr_name; val w' = w o tr_str
 fun wstr ss buffer = "\"" :: (ss @ ("\"" :: buffer))
 fun w_ty name = w' (String.substring (name, 1, String.size name - 1))
 fun uniq_id (c:config) b = wstr [string_of_int (length b), ".", (#name_space c)] b
@@ -14,7 +14,7 @@ fun w_const (c:config) name =
     else w "CG_" #> w' name #> w "_gen"
 
 fun gen_typ (Type (name, tys))
-      = w' name #> w "_gen" #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
+      = w' name #> w "_gent" #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
   | gen_typ (TFree (name, _))   = w_ty name #> w "_t"
   | gen_typ (TVar ((name,i),_)) = w_ty name #> w "_t" #> wi i
 

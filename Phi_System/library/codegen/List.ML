@@ -1,0 +1,1 @@
+structure CG_List = struct val Nil = []; val Cons = (::) end

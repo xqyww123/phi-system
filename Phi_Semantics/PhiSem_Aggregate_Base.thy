@@ -157,14 +157,6 @@ lemma [\<phi>reason 1020]:
 
 section \<open>Instructions\<close>
 
-(* definition op_cons_tuple :: "'TY list \<Rightarrow> (VAL list) proc'"
-  where "op_cons_tuple tys = (\<lambda>(vs,res).
-    let N = length tys in
-    if N \<le> length vs \<and> list_all2 (\<lambda>v t. v \<in> Well_Type t) (take N vs) tys
-    then Success (sem_mk_tup (take N vs) # drop N vs, res)
-    else Fail)" *)
-
-
 definition op_get_aggregate :: "aggregate_path \<Rightarrow> TY \<Rightarrow> (VAL, VAL) proc'"
   where "op_get_aggregate idx T = (\<lambda>v.
     \<phi>M_getV T id v (\<lambda>v'.

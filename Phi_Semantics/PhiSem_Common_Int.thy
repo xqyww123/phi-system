@@ -184,12 +184,9 @@ lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
 
 
  
-  \<phi>typeclass Order ( T :: \<open>(VAL,'x::order) \<phi>\<close> )
-    fixes leq[\<phi>overload \<le>]: \<open>\<p>\<r>\<o>\<c> leq \<lbrace> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T \<longmapsto> x \<le> y \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
+\<phi>typeclass Order ( T :: \<open>(VAL,'x::order) \<phi>\<close> )
+  fixes leq[\<phi>overload \<le>]: \<open>\<p>\<r>\<o>\<c> leq \<lbrace> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T \<longmapsto> x \<le> y \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
 
-
-thm Order_def
-typ \<open>'a::preorder\<close>
 
 (*TODO:
 

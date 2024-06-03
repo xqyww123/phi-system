@@ -28,8 +28,6 @@ fun compilation_thm_of ctx tm = compilation_thm ctx (term_name tm,
   Position.none) *)
 
 
-type interface = {name: Binding.binding, thm: thm}
-
 fun norm_def ctxt (m,n,instance) def = let
   val vars = strip_abs_vars (Logic.dest_equals (Thm.concl_of def) |> #2)
   val ty_vars = take m vars

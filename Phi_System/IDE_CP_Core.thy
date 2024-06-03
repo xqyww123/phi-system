@@ -2166,6 +2166,10 @@ ML_file "library/system/procedure2.ML"
 ML_file \<open>library/codegen/emit.ML\<close>
 ML_file \<open>library/codegen/base.ML\<close>
 ML_file \<open>library/codegen/Phi_Semantics_Framework.ML\<close>
+ML_file \<open>library/codegen/List.ML\<close>
+ML_file \<open>library/codegen/misc.ML\<close>
+ML_file \<open>library/codegen/Element_Path.ML\<close>
+
 
 
 subsubsection \<open>Setups\<close>

@@ -87,11 +87,11 @@ proc op_routine:
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>op_routine\<close>, 0))\<close>
 
 
-abbreviation
+definition
   \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
         op_routine TYPE('ret::FIX_ARITY_VALs) TYPE('arg::FIX_ARITY_VALs) argtys rettys (F \<f>))\<close>
 
-ML_file \<open>codegen/routine_C.ML\<close>
+declare op_rec_routine_def[symmetric, procedure_simps]
 
 attribute_setup routine =
   \<open>Scan.succeed (Phi_Modifier.wrap_to_attribute

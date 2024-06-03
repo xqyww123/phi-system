@@ -33,4 +33,7 @@ setup \<open>Context.theory_map (Phi_Hacks.Thy_At_Begin.add 66 (K (
 
 declare One_nat_def[\<phi>sledgehammer_simps] *)
 
+
+ML_file \<open>codegen/C.ML\<close>
+
 end

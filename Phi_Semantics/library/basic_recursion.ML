@@ -141,7 +141,8 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
                                                            (Assumption.all_assms_of ctxt) [])
                                   |> filter_out (Name.is_declared free_outside o fst)
                                   |> filter (fn (_, \<^Type>\<open>TY\<close>) => false
-                                              | (_, ty) => not (Phi_Syntax.is_procT ty) ))
+                                              | (_, ty) => not (Phi_Syntax.is_procT ty) andalso
+                                                           not (Phi_Syntax.is_phi_type_ty ty) ))
                   | _  => prep_vars ctxt raw_vars
 
     val should_be_quantified =
