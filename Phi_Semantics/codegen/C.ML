@@ -15,6 +15,11 @@ structure CG_PhiSem_Void = struct val v_o_i_d_ = ["void"] end
 
 structure CG_PhiSem_CF_Routine = struct local open Phi_CG in
 
-fun op_routine () = ()
+(* fun call name *)
+fun op_rec_routine aG _ ta tb F = fun_name () (new_fun (fn N =>
+  let fun chk1 [x] = x | chk1 [] = ["void"] | chk1 _ = error ("multi-return in "^N)
+      val args = catw ", " (map_index (fn (i,t) => cat t ^" v"^ string_of_int i) ta)
+   in puts (chk1 tb @[" ",N,"(", args, ") {\n"]) #> aG #-> F #> put "}\n" end))
+
 
 end end

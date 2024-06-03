@@ -14,7 +14,7 @@ fun w_const (c:config) name =
     else w "CG_" #> w' name #> w "_gen"
 
 fun gen_typ (Type (name, tys))
-      = w' name #> w "_gent" #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
+      = w' name #> w "_genT" #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
   | gen_typ (TFree (name, _))   = w_ty name #> w "_t"
   | gen_typ (TVar ((name,i),_)) = w_ty name #> w "_t" #> wi i
 

@@ -18,7 +18,6 @@ definition op_routine_basic :: \<open>TY list \<Rightarrow> TY list \<Rightarrow
 lemma "__routine_basic__":
   \<open> \<phi>_Have_Types X TY_ARGs
 \<Longrightarrow> \<phi>_Have_Types Y TY_RETs
-\<Longrightarrow> \<r>Success
 \<Longrightarrow> (\<And>(vs:: 'a::FIX_ARITY_VALs \<phi>arg <named> 'names).
           \<p>\<r>\<o>\<c> F (case_named id vs) \<lbrace> X (case_named id vs) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_routine_basic TY_ARGs TY_RETs F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>

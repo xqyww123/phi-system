@@ -64,7 +64,6 @@ declare [[
 proc op_routine:
   requires Ty_X: \<open>\<phi>_Have_Types X TY_ARGs\<close>
       and  Ty_Y: \<open>\<phi>_Have_Types Y TY_RETs\<close>
-      and  \<open>\<r>Success\<close>
       and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
             return_\<phi>app\<^bold>: TECHNICAL(RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret Y)
             \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs)
@@ -75,7 +74,7 @@ proc op_routine:
   output \<open>Y\<close>
   throws \<open>E\<close>
 \<medium_left_bracket>
-  apply_rule "__routine_basic__"[OF Ty_X Ty_Y \<r>Success_I, where 'names='names,
+  apply_rule "__routine_basic__"[OF Ty_X Ty_Y, where 'names='names,
                                  unfolded named_All, simplified]
   \<medium_left_bracket> for vs 
     op_brk_scope \<medium_left_bracket>  for label_ret
@@ -88,8 +87,8 @@ ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_
 
 
 definition
-  \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
-        op_routine TYPE('ret::FIX_ARITY_VALs) TYPE('arg::FIX_ARITY_VALs) argtys rettys (F \<f>))\<close>
+  \<open>op_rec_routine TYa TYr argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
+        op_routine TYa TYr argtys rettys (F \<f>))\<close>
 
 declare op_rec_routine_def[symmetric, procedure_simps]
 

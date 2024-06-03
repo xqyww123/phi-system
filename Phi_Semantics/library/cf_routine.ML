@@ -73,7 +73,8 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
                         Generic_Variable_Access.Process_of_Argument.put
                            (SOME Generic_Variable_Access.store_value_and_clean)) ctxt0
    in sequent1
-   |> Phi_Reasoner.reason NONE NONE ctxt0
+   |> Phi_Reasoner.reason_using_HHF_assms SOME NONE ctxt0
+   |> Option.mapPartial (Phi_Reasoner.reason_using_HHF_assms SOME NONE ctxt0)
    |> (fn SOME ret => (ctxt', ret)
         | NONE => Phi_Reasoner.error "Fail to apply the routine modifier.")
   end

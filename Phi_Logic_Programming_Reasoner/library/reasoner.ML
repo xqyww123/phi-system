@@ -121,6 +121,7 @@ signature NU_REASONER = sig
              -> handlers option
              -> int option (*N*)
              -> Proof.context -> thm -> thm
+
   val internal_reason_s :
                  handlers option
               -> Proof.context (*the context for accessing reasoner db*)
@@ -158,6 +159,27 @@ signature NU_REASONER = sig
   val run_passes : Position.T -> pass_data -> pass_data
   val add_pass : pass_id * pattern * rule_pass -> Context.generic -> Context.generic
   val del_pass : pass_id * pattern -> Context.generic -> Context.generic
+
+  val using_HHF_assms' :
+                (thm -> ( thm * mode' * priority
+                        * (pattern * priority option) list * pattern list ) option)
+             -> Proof.context -> thm
+             -> (Proof.context -> thm -> thm option)
+             -> thm option
+
+  val using_HHF_assms :
+                (thm -> thm option)
+             -> Proof.context -> thm
+             -> (Proof.context -> thm -> thm option)
+             -> thm option
+
+  val reason_using_HHF_assms' :
+                (thm -> ( thm * mode' * priority
+                        * (pattern * priority option) list * pattern list ) option)
+             -> handlers option
+             -> Proof.context -> thm -> thm option
+  val reason_using_HHF_assms :
+                (thm -> thm option) -> handlers option -> Proof.context -> thm -> thm option
 
   (*
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
@@ -940,6 +962,7 @@ fun reason handlers num ctxt sequent =
 fun reason1 G handlers N ctxt sequent =
   case reason handlers N ctxt sequent of SOME x => x | NONE => error (G ())
 
+
 fun internal_reason_s handlers ctxt seqs =
   let val (ret,seqs') = seqs ctxt
    in (ret, gen_reason' handlers ctxt 0 [[ seqs' ]])
@@ -1292,6 +1315,34 @@ fun del_rules pattern rules ctxt =
                     ctxt
   end
 
+
+(*only the first subgoal*)
+fun using_HHF_assms' sel_prem ctxt0 sequent F =
+  let val (focus, sequent') = Subgoal.focus_prems ctxt0 1 NONE sequent
+      fun sel_prem' rule =
+        case Thm.concl_of rule
+          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) => NONE
+           | _ => sel_prem rule
+      val rules = map_filter sel_prem' (#prems focus)
+      val ctxt = Context.proof_map (
+              add_rules (map (fn (rule, mode, prio, pats, bpats) =>
+                    ([rule], Position.none, mode, SOME (prio, NONE), pats, bpats, NONE)
+                 ) rules) ) ctxt0
+   in F ctxt sequent'
+   |> Option.map (fn sequent'' =>
+        Subgoal.retrofit ctxt ctxt0 (#params focus) (#asms focus) 1 sequent'' sequent
+          |> Seq.hd)
+  end
+
+fun using_HHF_assms P = using_HHF_assms' (fn rule =>
+      Option.map (fn rule' => (rule', NORMAL_MODE', 100, [], []) ) (P rule) )
+
+fun reason_using_HHF_assms' sel_prem handlers ctxt0 sequent =
+  using_HHF_assms' sel_prem ctxt0 sequent (reason handlers (SOME 1))
+
+fun reason_using_HHF_assms P =
+  reason_using_HHF_assms' (fn rule =>
+      Option.map (fn rule' => (rule', NORMAL_MODE', 100, [], []) ) (P rule) )
 
 (** Interfaces **)
 
