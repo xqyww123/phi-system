@@ -10,11 +10,11 @@ fun uniq_id (c:config) b = wstr [string_of_int (length b), ".", (#name_space c)]
 
 fun w_const (c:config) name =
   case String.fields (fn c => c = #".") name of (h::l) =>
-    if h = #name_space c then w' (String.concatWith "_'_" l) #> w "_gen"
-    else w "CG_" #> w' name #> w "_gen"
+    if h = #name_space c then w' (String.concatWith "_'_" l) #> w "_"
+    else w "CG_" #> w' name #> w "_"
 
 fun gen_typ (Type (name, tys))
-      = w' name #> w "_genT" #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
+      = w "CG_" #> w' name #> w "_T" #> fold (fn ty => w " (" #> gen_typ ty #> w ")") tys
   | gen_typ (TFree (name, _))   = w_ty name #> w "_t"
   | gen_typ (TVar ((name,i),_)) = w_ty name #> w "_t" #> wi i
 
@@ -36,17 +36,30 @@ fun gen_proc' c (Const ("Pure.eq",_) $ Const (name, _) $ B)
 
 fun gen_proc c = gen_proc' c o Thm.prop_of
 
-fun gen_extractor thy =
+fun gen_extractor oself thy =
   let val c = {name_space = Context.theory_name {long=false} thy}
+      val tab = Phi_Procedure.interfaces_of thy
+      val CG = w "val _ = Phi_CG.codegen \"" #> w (#name_space c) #> w "\" ("
+        #> Symtab.fold (fn (eN,pN) => w " #> Phi_CG.interf " #> wstr[eN] #> w " " #> w_const c pN) tab #> w ")\n"
       val gen = w "structure CG_" #> w (Context.theory_name {long=false} thy) #> w " = struct\n"
-        #> fold (gen_proc c o Phi_Procedure.compilation_thm_of thy)
-              (Phi_Procedure.procedures_of (Context.Theory thy) |> rev)
-        #> w "val gen = I"
-        #> Symtab.fold (fn (eN, pN) => w " #> CGSys.F " #> wstr [eN] #> w " " #> w_const c pN)
-                       (Phi_Procedure.interfaces_of thy)
-        #> w "\nend"
-  in String.concat (rev (gen [])) end
+        #> oself ? (w "open CG_" #> w (Context.theory_name {long=false} thy) #> w "\n")
+        #> fold (gen_proc c) (Phi_Procedure.procedures_of (Context.Theory thy) |> rev)
+        #> not (Symtab.is_empty tab) ? CG #> w "end\n"
+      val src = String.concat (rev (gen []))
+  in tracing src; src end
 
+val export_code = Attrib.setup_config_bool \<^binding>\<open>\<phi>export_code\<close> (K false)
+
+fun codegen oself thy = let val src = gen_extractor oself thy
+      in ML_Context.expression Position.none (ML_Lex.read src) end
+
+structure Generated = Theory_Data (
+  type T = Symtab.set; val empty = Symtab.empty; val merge = Symtab.merge (K true) )
+
+val _ = Theory.setup (Theory.at_end (fn thy =>
+  let val name = Context.theory_name {long=false} thy
+   in if Config.get_global thy export_code andalso Symtab.defined (Generated.get thy) name
+   then SOME (Context.theory_map (codegen false thy) thy |> Generated.map (Symtab.insert_set name)) else NONE end))
 
 
 end

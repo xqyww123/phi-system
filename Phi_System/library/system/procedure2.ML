@@ -1,60 +1,9 @@
-signature PHI_PROCEDURE = sig
-  include PHI_PROCEDURE
-
-  type export_name = string
-  type proc_const_name = string
-  (*interfaces introduced in this given theory, excluding others inherited from parent theories*)
-  val interfaces_of : theory -> export_name Symtab.table
-  (*procedures introduced in this given theory, excluding others inherited from parent theories*)
-  val procedures_of : Context.generic -> string list (*names*)
-  val compilation_thm_of : theory -> string (*name*) -> thm
-  val add_interface : export_name * proc_const_name -> theory -> theory
-  (* val add_interface_command : (Binding.binding * string) * (string * string)
-  * option -> theory -> theory *)
-
-end
 
 structure Phi_Procedure : PHI_PROCEDURE = struct
 open Phi_Procedure Phi_Envir
 
-type export_name = string
-type proc_const_name = string
-
-(*All interfaces to be exported in *a* theory*)
-structure Interfaces = Theory_Data(
-  type T = export_name Symtab.table Symtab.table
-              (*key: name of exported interface, value: procedure constant name*)
-  val empty = Symtab.empty
-  val merge = Symtab.merge (K true)
-)
-
-fun interfaces_of thy =
-  the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
-
-fun add_interface intrf thy =
-  Interfaces.map (Symtab.map_default
-    (Context.theory_long_name thy, Symtab.empty)
-    (Symtab.insert (K false) intrf)) thy
-
-fun compilation_thm_of thy name =
-      Global_Theory.get_thm thy (suffix compilation_suffix name)
 
 
-(*All interfaces to be exported in one theory*)
-structure Procedures = Generic_Data(
-  type T = string list Symtab.table;
-  val empty = Symtab.empty;
-  val merge = Symtab.merge (K true)
-)
-
-val thy_name_of_ctxt = Context.theory_long_name o Context.the_theory
-
-fun procedures_of ctxt =
-  the_default [] (Symtab.lookup (Procedures.get ctxt) (thy_name_of_ctxt ctxt))
-
-fun add_procedure name ctxt =
-  Procedures.map (Symtab.map_default (thy_name_of_ctxt ctxt, [])
-    (fn l => name :: l)) ctxt
 
 
 (*

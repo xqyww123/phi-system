@@ -14,6 +14,18 @@ signature PHI_PROCEDURE = sig
   val define : bool (*whether to define a new constant*)
         -> Attrib.binding -> local_theory * thm -> local_theory * thm
 
+    type export_name = string
+  type proc_const_name = string
+  (*interfaces introduced in this given theory, excluding others inherited from parent theories*)
+  val interfaces_of : theory -> export_name Symtab.table
+  (*procedures introduced in this given theory, excluding others inherited from parent theories*)
+  val procedures_of : Context.generic -> thm list (*definitions*)
+  val add_interface : export_name * proc_const_name -> theory -> theory
+  (* val add_interface_command : (Binding.binding * string) * (string * string)
+  * option -> theory -> theory *)
+  val add_procedure : thm -> Context.generic -> Context.generic
+
+
 end
 
 structure Phi_Procedure : PHI_PROCEDURE = struct
@@ -26,6 +38,45 @@ val cast_kind = "\<phi>cast"
 (* val compilation_thm = gen_get_thm compilation_suffix
 fun compilation_thm_of ctx tm = compilation_thm ctx (term_name tm,
   Position.none) *)
+
+type export_name = string
+type proc_const_name = string
+
+(*All interfaces to be exported in *a* theory*)
+structure Interfaces = Theory_Data(
+  type T = export_name Symtab.table Symtab.table
+              (*key: name of exported interface, value: procedure constant name*)
+  val empty = Symtab.empty
+  val merge = Symtab.merge (K true)
+)
+
+fun interfaces_of thy =
+  the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
+
+fun add_interface intrf thy =
+  Interfaces.map (Symtab.map_default
+    (Context.theory_long_name thy, Symtab.empty)
+    (Symtab.insert (K false) intrf)) thy
+
+
+(*All interfaces to be exported in one theory*)
+structure Procedures = Generic_Data(
+  type T = thm list Symtab.table;
+  val empty = Symtab.empty;
+  val merge = Symtab.merge (K true)
+)
+
+val thy_name_of_ctxt = Context.theory_long_name o Context.theory_of
+
+fun procedures_of ctxt =
+  the_default [] (Symtab.lookup (Procedures.get ctxt) (thy_name_of_ctxt ctxt))
+
+fun add_procedure thm ctxt =
+  Procedures.map (Symtab.map_default (thy_name_of_ctxt ctxt, [])
+    (fn l => thm :: l)) ctxt
+
+
+
 
 
 fun norm_def ctxt (m,n,instance) def = let
@@ -121,8 +172,8 @@ fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
             |-> (fn (tm,(_,def)) => fn lthy_x =>
                 lthy_x
-                  (* |> Local_Theory.background_theory
-                        (Context.theory_map (add_procedure (Binding.name_of binding))) *)
+                  |> Local_Theory.declaration {syntax=false, pervasive=false, pos=Binding.pos_of binding}
+                        (fn m => add_procedure (Morphism.thm m def))
                   |> rpair (rename lthy_x (norm_def lthy_x arity_ins def) sequent)
                 )
 

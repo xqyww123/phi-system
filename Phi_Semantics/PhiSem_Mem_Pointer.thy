@@ -739,7 +739,6 @@ proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
         \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 
-
 lemma [\<phi>reason %\<phi>synthesis_literal]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_pointer 0)] \<bbbP>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn

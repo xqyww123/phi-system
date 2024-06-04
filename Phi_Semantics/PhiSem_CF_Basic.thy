@@ -198,6 +198,7 @@ proc while:
     \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ;;
   \<medium_right_bracket> .
 
+thm while_\<phi>app
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>while\<close>, 3))\<close>
 
 proc (nodef) refine_while
