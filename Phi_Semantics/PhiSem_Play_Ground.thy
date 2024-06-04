@@ -332,7 +332,7 @@ print_ast_translation \<open>
 \<close>
 *)
 
-thm op_var_scope_def
+
 thm AAA_def
 
 proc
