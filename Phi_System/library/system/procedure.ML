@@ -14,13 +14,12 @@ signature PHI_PROCEDURE = sig
   val define : bool (*whether to define a new constant*)
         -> Attrib.binding -> local_theory * thm -> local_theory * thm
 
-    type export_name = string
-  type proc_const_name = string
+  type export_name = string
   (*interfaces introduced in this given theory, excluding others inherited from parent theories*)
-  val interfaces_of : theory -> export_name Symtab.table
+  val interfaces_of : theory -> term Symtab.table
   (*procedures introduced in this given theory, excluding others inherited from parent theories*)
   val procedures_of : Context.generic -> thm list (*definitions*)
-  val add_interface : export_name * proc_const_name -> theory -> theory
+  val add_interface : export_name * term -> theory -> theory
   (* val add_interface_command : (Binding.binding * string) * (string * string)
   * option -> theory -> theory *)
   val add_procedure : thm -> Context.generic -> Context.generic
@@ -40,26 +39,9 @@ fun compilation_thm_of ctx tm = compilation_thm ctx (term_name tm,
   Position.none) *)
 
 type export_name = string
-type proc_const_name = string
-
-(*All interfaces to be exported in *a* theory*)
-structure Interfaces = Theory_Data(
-  type T = export_name Symtab.table Symtab.table
-              (*key: name of exported interface, value: procedure constant name*)
-  val empty = Symtab.empty
-  val merge = Symtab.merge (K true)
-)
-
-fun interfaces_of thy =
-  the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
-
-fun add_interface intrf thy =
-  Interfaces.map (Symtab.map_default
-    (Context.theory_long_name thy, Symtab.empty)
-    (Symtab.insert (K false) intrf)) thy
 
 
-(*All interfaces to be exported in one theory*)
+(*All procedures to be exported in one theory*)
 structure Procedures = Generic_Data(
   type T = thm list Symtab.table;
   val empty = Symtab.empty;
@@ -92,7 +74,7 @@ fun norm_def ctxt (m,n,instance) def = let
       |> Drule.eta_contraction_rule
   end
 
-fun closure ctxt substT f =
+fun closure precond substT f =
   let
   (*val tvars = Term.add_tvars f []
     val (subst,_) = Term.fold_types Term.declare_typ_names f Name.context
@@ -107,7 +89,15 @@ fun closure ctxt substT f =
     fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit \<phi>arg\<close>, X)))
           = if Term.is_open X then ([i], x) else ([], X)
       | trim (i,x) = ([i],x)
-    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" false NONE f |> trim
+
+    val vals = Procedure_Syntax.collect_vals false precond
+    fun sort [] _ = []
+      | sort (v::vs) xs = if member (op =) xs v then v :: sort vs xs else sort vs xs
+    fun sort' vs xs = let val ret = sort vs xs
+                       in if length ret = length xs then ret else error "BUG 8fd43cf2"
+                      end
+
+    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" false (sort' vals) NONE f |> trim
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
                              | _ => I) f'' []
     fun abst i (Var v) =
@@ -148,11 +138,11 @@ fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
   let
     val ((substT, sequent), lthy) = importT_proc sequent0 lthy0
 
-    val (f,_,_,_) = Thm.concl_of sequent |> Phi_Syntax.dest_procedure
+    val (f,precond,_,_) = Thm.concl_of sequent |> Phi_Syntax.dest_procedure
 
     (*all variables are in the procedure body*)
     (*then f' is the standard form of a definition*)
-    val (arity_ins,f') = closure lthy substT f
+    val (arity_ins,f') = closure precond substT f
                       |> apsnd (Raw_Simplifier.rewrite_term (Proof_Context.theory_of lthy)
                                 @{thms \<phi>V_simps[folded atomize_eq]} [])
 
@@ -188,5 +178,54 @@ fun define' def_const binding stat =
 
 fun define def_const binding (lthy,sequent) =
   define' def_const binding (lthy, simp_monads lthy sequent)
+
+
+(*All interfaces to be exported in *a* theory*)
+structure Interfaces = Theory_Data(
+  type T = term Symtab.table Symtab.table
+              (*key: name of exported interface, value: procedure constant name*)
+  val empty = Symtab.empty
+  val merge = Symtab.merge (K true)
+)
+
+fun interfaces_of thy =
+  the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
+
+fun add_interface intrf thy =
+  Interfaces.map (Symtab.map_default
+    (Context.theory_long_name thy, Symtab.empty)
+    (Symtab.insert (K false) intrf)) thy
+
+fun chk_interf_thm thm =
+  let fun chk LHS =
+        case Term.head_of LHS
+          of C as Const(N,_) => C
+           | _ => raise THM ("Phi_Procedure.add_interface", 0, [thm])
+   in case Thm.concl_of thm
+   of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ LHS $ _ => chk LHS
+    | X => chk (#1 (Phi_Syntax.dest_procedure X))
+  end
+
+(* raise THM ("Phi_Procedure.add_interface", 0, [thm]) *)
+
+val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>export\<close> (
+  Scan.lift (Scan.option Parse.name) --
+  Scan.optional (Scan.lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat1 (Args.term)) []
+  >> (fn (name, args) =>
+    Thm.declaration_attribute (fn thm =>
+      Context.mapping (fn thy => 
+        let val const = chk_interf_thm thm
+            val term = fold (fn arg => fn X => X $ arg) args const
+            val ctm = Thm.global_cterm_of thy term
+            val targs  = Phi_Syntax.dest_procT_params (Thm.typ_of_cterm ctm)
+            val term = case targs
+                         of []  => Abs ("_", \<^Type>\<open>unit\<close>, term)
+                          | [_] => term
+                          |  _  => raise CTERM("require parameters", [ctm])
+            val bname = case name of SOME X => X | _ => Term.term_name const
+         in add_interface (bname, term) thy
+        end) I ))
+) "declare that a \<phi>-procedure shall be exported")
+
 
 end

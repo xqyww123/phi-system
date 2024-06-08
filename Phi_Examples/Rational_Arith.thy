@@ -4,7 +4,7 @@ theory Rational_Arith
 begin
 
 abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t>{num: \<a>\<i>\<n>\<t>, den: \<a>\<i>\<n>\<t>}\<close>
-
+declare [[\<phi>variable_is_typed]]
  
   \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
     where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace>
@@ -20,6 +20,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
   proc rat_add:
     input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<v>\<a>\<l> q2 \<Ztypecolon> \<rat>\<close>
     output \<open>\<v>\<a>\<l> q1 + q2 \<Ztypecolon> \<rat>\<close>
+    is [routine]
   \<medium_left_bracket>  
     val q1 = (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
     val q2 = (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
@@ -32,6 +33,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
   proc rat_sub:
     input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
     output \<open>q1 - q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
+    is [routine]
   \<medium_left_bracket>
     val q1 = (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
     val q2 = (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
@@ -44,6 +46,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
   proc rat_mul:
     input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
     output \<open>q1 * q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
+    is [routine]
   \<medium_left_bracket>  
     val q1 = (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
     val q2 = (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
@@ -57,6 +60,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
     input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<v>\<a>\<l> q2 \<Ztypecolon> \<rat>\<close>
     premises \<open>q2 \<noteq> 0\<close>
     output \<open>\<v>\<a>\<l> q1 / q2 \<Ztypecolon> \<rat>\<close>
+    is [routine]
   \<medium_left_bracket>  
     val q1 \<leftarrow> (q1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
     val q2 \<leftarrow> (q2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>) \<semicolon>
@@ -120,5 +124,13 @@ thm rat_add_def
 thm rat_sub_def
 thm rat_mul_def
 thm rat_div_def
+
+declare rat_add_def [\<phi>export]
+declare rat_sub_def [\<phi>export]
+declare rat_mul_def [\<phi>export]
+declare rat_div_def [\<phi>export]
+
+declare [[\<phi>export_code = C]]
+
 
 end

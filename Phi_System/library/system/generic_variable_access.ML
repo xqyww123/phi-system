@@ -18,6 +18,7 @@ val bind_generic_vars : (xstring (*external name*) * (cterm * evaluation)) list 
 val lookup_bindings : Proof.context -> xstring -> (cterm * evaluation) option
 val is_a_binding : Proof.context -> xstring -> bool
 val under_context : Proof.context -> bool
+val arguments_of : Proof.context -> cterm list
 
 val mode_synthesis : bool Config.T
 
@@ -92,6 +93,8 @@ fun under_context ctxt = is_some (Value_Ctxt.get ctxt)
 
 fun value_context_of ctxt =
   case Value_Ctxt.get ctxt of SOME c => c | _ => bad_ctxt ()
+
+val arguments_of = #1 o value_context_of
 
 fun map_value_context f =
   Value_Ctxt.map (fn SOME x => SOME (f x)

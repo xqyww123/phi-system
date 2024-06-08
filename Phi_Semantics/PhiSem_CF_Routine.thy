@@ -22,8 +22,9 @@ lemma RETURN_FRAME_normal:
 
 lemma RETURN_FRAME_unit:
   \<open> RETURN_FRAME TYPE(unit) label Y
-\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y (\<phi>arg ()) \<longmapsto> 0 \<rbrace>
+\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label \<phi>V_none) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y (\<phi>arg ()) \<longmapsto> 0 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
+  unfolding \<phi>V_none_def
   using op_break_\<phi>app[where S=Y] .
 
 (* TODO: suppress the Frame tailing in the above rules!!!!
@@ -87,8 +88,8 @@ ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_
 
 
 definition
-  \<open>op_rec_routine TYa TYr argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
-        op_routine TYa TYr argtys rettys (F \<f>))\<close>
+  \<open>op_rec_routine TYr TYa argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
+        op_routine TYr TYa argtys rettys (F \<f>))\<close>
 
 declare op_rec_routine_def[symmetric, procedure_simps]
 
@@ -158,6 +159,6 @@ in [
 ] end\<close>
 
 
-
+ML_file \<open>codegen/C/routine.ML\<close>
 
 end

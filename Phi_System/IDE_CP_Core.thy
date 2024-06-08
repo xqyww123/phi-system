@@ -2141,9 +2141,9 @@ ML_file "library/instructions.ML"
 ML_file "library/tools/parse.ML"
 
 ML_file \<open>library/system/post-app-handlers.ML\<close>
-ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys0.ML\<close>
 ML_file \<open>library/system/generic_variable_access.ML\<close>
+ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/opr_stack.ML\<close>
 ML_file \<open>library/system/toplevel0.ML\<close>
@@ -2163,13 +2163,16 @@ subsubsection \<open>Codegen\<close>
 
 
 ML_file \<open>library/codegen/emit.ML\<close>
+ML_file \<open>library/codegen_nonkernel/emit.ML\<close>
+ML_file \<open>library/codegen_nonkernel/base.sig\<close>
 ML_file \<open>library/codegen/base.ML\<close>
-ML_file \<open>library/codegen/Phi_Semantics_Framework.ML\<close>
-ML_file \<open>library/codegen/List.ML\<close>
-ML_file \<open>library/codegen/misc.ML\<close>
-ML_file \<open>library/codegen/Element_Path.ML\<close>
+ML_file \<open>library/codegen/C/Phi_Semantics_Framework.ML\<close>
+ML_file \<open>library/codegen/C/List.ML\<close>
+ML_file \<open>library/codegen/C/misc.ML\<close>
+ML_file \<open>library/codegen/C/Element_Path.ML\<close>
+ML_file \<open>library/codegen_nonkernel/C/base.sig\<close>
+ML_file \<open>library/codegen/C/base.ML\<close>
 
-ML \<open>TextIO.output\<close>
 
 
 subsubsection \<open>Setups\<close>

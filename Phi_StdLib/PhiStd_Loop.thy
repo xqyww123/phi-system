@@ -4,6 +4,7 @@ theory PhiStd_Loop
           Phi_Semantics.PhiSem_Variable
 begin
 
+declare [[\<phi>variable_is_typed]]
 text \<open>Predefined abstractions of Loop statemetns, counted as a part of loop invariants in our statistics\<close>
 
 proc (nodef) iterate:

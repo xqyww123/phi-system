@@ -249,25 +249,25 @@ lemma [\<phi>reason 1200]:
 
 
 definition \<open>
-  parse_eleidx_input_least1_opt TY input_index sem_idx idx reject
-    \<longleftrightarrow> (case TY of Some TY' \<Rightarrow> parse_eleidx_input_least1 TY' input_index sem_idx idx reject
+  parse_eleidx_input_least1_opt TY TY'' input_index sem_idx idx reject
+    \<longleftrightarrow> (case TY of Some TY' \<Rightarrow> parse_eleidx_input_least1 TY' TY'' input_index sem_idx idx reject
                   | None \<Rightarrow> reject = input_index \<and> sem_idx = [] \<and> idx = [])
 \<close>
 
 lemma [\<phi>reason %parse_eleidx_input]:
-  \<open> parse_eleidx_input_least1 TY input_index sem_idx idx reject
-\<Longrightarrow> parse_eleidx_input_least1_opt (Some TY) input_index sem_idx idx reject\<close>
+  \<open> parse_eleidx_input_least1 TY TY' input_index sem_idx idx reject
+\<Longrightarrow> parse_eleidx_input_least1_opt (Some TY) TY' input_index sem_idx idx reject\<close>
   unfolding parse_eleidx_input_least1_opt_def
             parse_eleidx_input_least1_def
   by simp
 
 lemma [\<phi>reason %parse_eleidx_input]: \<comment> \<open>???\<close>
-  \<open> parse_eleidx_input_least1_opt None input [] [] input\<close>
+  \<open> parse_eleidx_input_least1_opt None TY input [] [] input\<close>
   unfolding parse_eleidx_input_least1_opt_def
   by simp
 
 lemma parse_eleidx_input_least1_opt_NIL:
-  \<open> parse_eleidx_input_least1_opt TY [] [] [] [] \<close>
+  \<open> parse_eleidx_input_least1_opt TY (the TY) [] [] [] [] \<close>
   unfolding parse_eleidx_input_least1_opt_def
             parse_eleidx_input_least1_def
             parse_eleidx_input_def
@@ -278,7 +278,7 @@ subsection \<open>Variable Operations\<close>
 proc op_get_var:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<r>[v] T\<close>
   requires [\<phi>reason, unfolded Semantic_Type'_def, useful]: \<open>Semantic_Type' (x \<Ztypecolon> T) TY\<close>
-    and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
+    and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY TY' input_index sem_idx idx reject\<close>
     and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
     and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
   output \<open>f x \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[v] T\<close>
@@ -295,7 +295,7 @@ proc op_get_var:
 
 lemma op_get_var0:
   \<open> Semantic_Type' (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_var v TY [] \<lbrace> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<v>\<a>\<l>[ret] T\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<rbrace> \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_var v TY [] TY \<lbrace> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<v>\<a>\<l>[ret] T\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[v] T \<rbrace> \<close>
   by (rule op_get_var_\<phi>app[where input_index=\<open>[]\<close> and idx=\<open>[]\<close> and reject=\<open>[]\<close> and f=id, simplified];
       simp add: parse_eleidx_input_least1_def
                 parse_eleidx_input_def
@@ -307,7 +307,7 @@ proc op_set_var:
   requires [useful]: \<open>LOCAL_VAR v TY_var\<close>
     and           \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
     and [useful]: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
-    and [useful]: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
+    and [useful]: \<open>parse_eleidx_input_least1_opt TY TY' input_index sem_idx idx reject\<close>
     and AMO:      \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
     and           \<open>Semantic_Type U' UY\<close>
     and [useful]: \<open>pred_option (\<lambda>TY. is_valid_index_of sem_idx TY UY) TY_var\<close>
@@ -341,7 +341,6 @@ proc op_set_var:
         parse_eleidx_input_least1_def
         parse_eleidx_input_def) .
 
-
 lemma op_set_var_0:
   \<open> LOCAL_VAR vari TY_var
 \<Longrightarrow> \<phi>SemType_opt (x \<Ztypecolon> U) TY
@@ -350,7 +349,7 @@ lemma op_set_var_0:
 \<Longrightarrow> pred_option ((=) UY) TY_var
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_var UY vari TY [] v \<lbrace> y \<Ztypecolon> \<v>\<a>\<l>[v] U'\<heavy_comma> x \<Ztypecolon> Var vari U \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<v>\<a>\<r>[vari] U' \<rbrace> \<close>
   by (rule op_set_var_\<phi>app[where f=id and input_index=\<open>[]\<close> and sem_idx=\<open>[]\<close> and idx=\<open>[]\<close>
-                             and reject=\<open>[]\<close> and T=U and T'=U' and U=U and U'=U',
+                             and reject=\<open>[]\<close> and T=U and T'=U' and U=U and U'=U' and TY'=\<open>the TY\<close>,
                             simplified];
       simp add: parse_eleidx_input_least1_opt_NIL
                 \<phi>Aggregate_Mapper_Opt_Nil report_unprocessed_element_index_def
@@ -414,7 +413,7 @@ proc [\<phi>reason 1200]:
   input \<open>X\<close>
   requires Find: \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> Any\<close>
       and  \<open>Semantic_Type T TY\<close>
-      and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY input_index sem_idx idx reject\<close>
+      and [\<phi>reason 10000]: \<open>parse_eleidx_input_least1 TY TY' input_index sem_idx idx reject\<close>
       and [\<phi>reason 10000]: \<open>\<phi>Aggregate_Getter idx T U f\<close>
       and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
   output \<open>\<v>\<a>\<l> f x <val-of> vari <path> input_index \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> x \<Ztypecolon> \<v>\<a>\<r>[vari] T\<heavy_comma> Y\<close>
@@ -447,7 +446,7 @@ proc (nodef) [\<phi>reason 1200]:
        and T1: \<open>LOCAL_VAR vari TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
-       and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
+       and T4: \<open>parse_eleidx_input_least1_opt TY TY' input_index sem_idx idx reject\<close>
        and     \<open>chk_element_index_all_solved reject\<close>
        and T5: \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
        and T6: \<open>Semantic_Type U' UY\<close>
@@ -498,7 +497,7 @@ proc (nodef) "__set_var_rule_":
        and T1: \<open>LOCAL_VAR vari TY_var\<close>
        and T2: \<open>\<phi>SemType_opt (x \<Ztypecolon> T) TY\<close>
        and T3: \<open>pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY) TY_var\<close>
-       and T4: \<open>parse_eleidx_input_least1_opt TY input_index sem_idx idx reject\<close>
+       and T4: \<open>parse_eleidx_input_least1_opt TY TY' input_index sem_idx idx reject\<close>
        and T8: \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
        and T5: \<open>\<phi>Aggregate_Mapper_Opt idx T T' U U' f\<close>
        and T6: \<open>Semantic_Type U' UY\<close>
@@ -571,6 +570,8 @@ proc (nodef) "__set_new_var_noty_rule_":
 ML_file "library/variable.ML"
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
+
+ML_file \<open>codegen/C/var.ML\<close>
 
 end
 

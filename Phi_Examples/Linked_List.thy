@@ -1,5 +1,6 @@
 theory Linked_List
   imports Phi_Semantics.PhiSem_C
+          Phi_Semantics.PhiCG_C
 begin
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
@@ -30,6 +31,7 @@ abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<
 proc init:
   input  Void
   output \<open>[] \<Ztypecolon> \<r>\<e>\<f> Linked_Lst 0 T\<close>
+  is [routine]
 \<medium_left_bracket>
   \<m>\<a>\<k>\<e>\<s>(0) \<open>Linked_Lst _ T\<close> \<semicolon>
   NULL
@@ -46,10 +48,11 @@ proc is_empty:
   
 proc prepend_llist:
   input  \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T z\<close>
+  requires \<open>Semantic_Zero_Val TY T z\<close>
   output \<open>v#l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr' T \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  is [routine]
 \<medium_left_bracket>
-  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T), data: T \<rbrace>\<close> \<semicolon>
+  val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: \<bbbP>\<t>\<r> \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY, data: T \<rbrace>\<close> \<semicolon>
   ret.nxt := addr \<semicolon> 
   ret.data := v \<semicolon>
   \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst _ T\<close> \<semicolon>
@@ -96,6 +99,7 @@ proc hd_llist:
   input  \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<close>
   premises \<open>l \<noteq> []\<close>
   output \<open>hd l \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
+  is [routine]
 \<medium_left_bracket>
   nth_llist (addr, 0)
 \<medium_right_bracket> .
@@ -161,6 +165,7 @@ proc reverse:
   input  \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<close>
   output \<open>rev l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr'  T
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+  is [routine]
 \<medium_left_bracket>
   \<m>\<a>\<k>\<e>\<s>(0) \<open>Linked_Lst 0 T\<close>
   reverse_aux( addr, NULL )
@@ -195,5 +200,20 @@ thm length_of_def
 thm reverse_aux_def
 thm reverse_def
 
+declare init_def              [\<phi>export]
+declare is_empty_def          [\<phi>export]
+thm prepend_llist_def 
+declare prepend_llist_def     [\<phi>export for \<i>\<n>\<t>]
+declare pop_llist_def         [\<phi>export for \<i>\<n>\<t>]
+declare nth_llist_def         [\<phi>export for \<i>\<n>\<t>]
+declare hd_llist_def          [\<phi>export for \<i>\<n>\<t>]
+declare update_nth_llist_def  [\<phi>export for \<i>\<n>\<t>]
+declare length_of_def         [\<phi>export for \<i>\<n>\<t>]
+declare reverse_aux_def       [\<phi>export for \<i>\<n>\<t>]
+declare reverse_def           [\<phi>export for \<i>\<n>\<t>]
+
+
+
+declare [[\<phi>export_code = C]]
 
 end

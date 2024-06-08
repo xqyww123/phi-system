@@ -1,1 +1,0 @@
-structure CG_List = struct structure list = struct val Nil_ = []; fun Cons_ a l = a :: l end end

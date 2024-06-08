@@ -502,6 +502,8 @@ declare [[\<phi>trace_reasoning = 2]]
 \<phi>instance \<open>Order \<nat>\<close>
   where leq = op_le_anat
 
-thm "\<ge>_\<phi>app"
+
+
+ML_file \<open>codegen/C/aint.ML\<close>
 
 end

@@ -26,6 +26,7 @@ val package_values :
         -> bool (*the order for scanning and collecting the values.
                   true for Right-to-Left (the canonical order);
                   false for Left-to-Right*)
+        -> (term list -> term list) (*sort*)
         -> term list option (*values cache.
               If you run package_values by twice in the same context (of variables) and in the same scan order,
               this argument can be set to the return of the previous run to boost the performance.
@@ -39,12 +40,16 @@ val package_values0 :
         -> bool (*the order for scanning and collecting the values.
                   true for Right-to-Left (the canonical order);
                   false for Left-to-Right*)
+        -> (term list -> term list) (*sort*)
         -> term list option (*values cache.
               If you run package_values by twice in the same context (of variables) and in the same scan order,
               this argument can be set to the return of the previous run to boost the performance.
               Set it to None by default*)
         -> term
         -> term (*values*) * term (*lambda abstraction*)
+
+val sort_arguments : term list -> term list
+val collect_vals : bool -> term -> term list
 
 val translate_arg : term -> term
 val translate_ret : term -> term
@@ -357,12 +362,15 @@ fun ex_fastype_of TM =
   let val T = fastype_of TM in if T = dummyT then dummyT_sem else T end
   handle TERM _ => dummyT_sem
 
-fun package_values name _ (SOME []) term =
+fun collect_vals R2L = fst (gen_collect_and_map R2L) []
+
+fun package_values name _ _ (SOME []) term =
       (\<^term>\<open>\<phi>V_none\<close>, Abs(name, \<^typ>\<open>unit \<phi>arg\<close>, term))
-  | package_values name R2L Vs0 term =
+  | package_values name R2L sort Vs0 term =
   let
     val (collect_vals, map_ret) = gen_collect_and_map R2L
     val Vs = case Vs0 of SOME Vs => Vs | NONE => collect_vals [] term
+    val Vs = sort Vs
     val Tys = fold_rev (fn T => (fn [] => [T]
                                   | L as T'::_ => mk_arg_prodT (T,T') :: L))
               (map ex_fastype_of Vs) []
@@ -370,9 +378,25 @@ fun package_values name _ (SOME []) term =
   in (mk_arg_tuple Tys Vs, Abs(name, T, if null Tys then term else #2(map_ret Tys 0 Vs (0,term))))
   end
 
-fun package_values0 name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
+fun package_values0 name zero_ty _ _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
       = (\<^Const>\<open>\<phi>arg zero_ty\<close> $ \<^Const>\<open>unreachable zero_ty\<close>, Abs (name, \<^Type>\<open>\<phi>arg zero_ty\<close>, term))
-  | package_values0 name _ R2L Vs0 term = package_values name R2L Vs0 term
+  | package_values0 name _ R2L sort Vs0 term = package_values name R2L sort Vs0 term
+
+val arg_len = String.size "\<a>\<r>\<g>"
+fun sort_arguments terms =
+  let fun idx tm =
+        let fun err () = raise TERM("not an argument", [tm])
+            val s = case tm of Free(N,_) => N
+                             | Var((N,_),_) => N
+                             | _ => err ()
+         in if String.isPrefix "\<a>\<r>\<g>" s
+            then Value.parse_nat (String.substring (s, arg_len, String.size s - arg_len))
+            else err ()
+        end
+   in map (` idx) terms
+   |> sort (int_ord o apply2 #1)
+   |> map #2
+  end
 
 
 fun translate_ret' (term as (Abs _)) = term
@@ -393,7 +417,7 @@ fun translate_ret' (term as (Abs _)) = term
       =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_constrainAbs", ty) $ B $ Y)
                               | B => Const ("_constrainAbs", ty) $ B $ Y)
   | translate_ret' term =
-      snd (package_values0 "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> false NONE term)
+      snd (package_values0 "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> false I NONE term)
 
 
 (* fun translate_num term =

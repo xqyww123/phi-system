@@ -508,4 +508,7 @@ declare synthesis_construct_aggregate_\<phi>app
              for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
 
 
+ML_file \<open>codegen_nonkernel/C/agg_ntup.sig\<close>
+ML_file \<open>codegen/C/agg_ntup.ML\<close>
+
 end

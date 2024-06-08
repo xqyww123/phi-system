@@ -1,0 +1,111 @@
+\section{Introduction}
+
+The paper presents an automation calculus of φ-SL and it also constitutes a calculus of certified programming.
+
+φ-SL is a .......
+The automation aims for reasoning programs specified by φ-SL and leveraging the implicit data refinement.
+
+To leverage the data refinement effectively, the automatic reasoning on φ-SL is quite different with the conventional automation like the weakest pre-condition transformer,
+\begin{itemize}
+\item Abstractions in φ-SL are too flexible.
+A single procedure can have many different specifications on different abstractions, e.g., an addition operation can be related to natural number addition, finite field addition, or integer addition.
+The abstraction of the output state of a computation step does not determine necessarily the abstraction of the input state of the next step, because abstractions can be transformed freely.
+To verify a composite program containing many computation steps (sub-procedures and instructions), the number of the paths of abstractions that interprets each step can be explosive.
+The automation mechanism may effectively guess the abstraction for each step, maybe from some heuristic distance between abstraction relations. Nonetheless, user inspection and annotations are still necessary.
+
+\item The weakest pre-condition or the strongest post-condition is not the desired output of the automation, because abstraction is intrinsically \emph{inexact} against the complete properties.
+It is a relaxation of the concrete specification
+An ideal output is much \emph{artful} which to the best captures the most significant information and forgets the dispensable.
+
+\item The implicit data refinement in φ-SL is reflected syntactically instead of semantically. Therefore, it can be easily messed up during transformations.
+  The automation must comply with and maintain certain \emph{canonical form} ensuring a clear and direct reflection of an intuitive abstraction.
+  As an instance, existential quantification has an essential significance in φ-SL which represents a set of abstract objects. Thus it has to be processed specially rather than regarded as a usual proposition.
+
+\end{itemize}
+
+The above differences are sufficient to make the automation exotic.
+The calculus presented in the paper adopts a forward manner, because, as mentioned above, it guesses heuristically the aptest abstraction for each computation step. To guess the abstractions, it is preferable to reason forwardly where the output of the previous computation step determines the abstraction of the next step, instead of the backward reasoning where the output determines the input, which is counter-intuitive.
+
+Thanking to the property of the forward reasoning,
+%also as the well-known property that the forward predicate transformer gives a symbolic execution~\cite{Mike_Goden},
+the automation calculus in the paper is itself a calculus for \emph{certified programming}, enabling users to write programs certified against its specification given in φ-SL.
+
+Compared with existing languages for certified programming, including Coq, Agda, Idris and F*, this approach based on a program logic is distinctive, that it is based on and parameterized by formalized semantics of a language $\mathcal{L}$. $\mathcal{L}$ can be a low level imperative language which has considerable performance and therefore realizes high performant certified programming.
+
+However, programming on a low-level language can be exhausting. It is even severer for verification on it.
+Thanking to the data refinement entailed in φ-SL which is able to lift the verification on a concrete program onto an abstract domain, it is also feasible for the certified programming on φ-SL, to lift it onto abstraction.
+That is, the calculus enables certified programming \emph{by abstract specifications} for high-performant imperative languages, realizing \emph{abstraction without regret} by means of the data refinement entailed in φ-SL.
+
+
+
+
+\newpage
+
+
+
+
+*TODO: introduction of the languages for Certified Programming, performance, stateful, effect, resource, ...*
+Comparison with them.
+
+Calculus of Programming (CoP) is a kind of Dynamic Logic for the family of Hoare Logics like φ-SL.
+It converts a HL to a formal system in which a sequent represents an on-going construction of
+a program fragment. Deduction of the sequent is then the process of programming.
+
+φ-System is built over CoP, by providing user interfaces in Isar and automation including φ-Logic
+Programming Reasoners.
+Each statement in the language of φ-System is a segment deduction of the CoP sequent.
+
+The programming at any time, focuses on one sequent.
+A statement deduces the current sequent to the next descendant, and the next descendant then becomes
+the new focus.
+The building of a procedure is always a consecutive sequence of deduction as this.
+A procedure may contain nested procedures, e.g., the loop body in a procedure containing the loop.
+Construction of nested procedure is a nested sequence of deduction suspending the previous deduction
+sequence.
+Therefore, the programming is a push-down automaton, where the state is the current sequent and the
+stack stores sequents of the suspended constructions of outer procedures.
+
+%\subsubsection{Comparison with Hoare Logic}
+%
+%For sure, Hoare triple can also be used to deduce directly as a way of programming.
+%The difference of CoP with the direct deduction of Hoare triple consists of,
+%\begin{itemize}
+%%\item If using the classical shallow embedding of φ-SL, the CoP sequent is able to
+%%  be represented directly the sequent of the base logic, e.g., that of the theorem prover.
+%%  Then the hypotheses $P$ and $S$ are that in the hypotheses in the base logic. 
+%\item For monadic programs, stepwise decomposition is conventionally carried by BIND rule,
+%\begin{prooftree}
+%\AxiomC{$\{P\}e\{v. Q\}$}
+%\AxiomC{$∀v.\;\{Q\} E[v] \{w. R\}$}
+%\RightLabel{(BIND)\quad $E$ is an evaluation context}
+%\BinaryInfC{$\{P\} E[e] \{w.R\}$}
+%\end{prooftree}
+%However, the top-down reading of the rule only allows to construct the monadic program
+%backwardly, form the final instruction to the beginning instruction.
+%There is not an easy way using original triple-based rules to program monads forwardly
+%(really???? I need to ponder more) as the usual programming behavior.
+%
+%\item In a CoP sequent $P \mbar S ⊢ Q$ (elaborated later), where $S$ represents the current construction of the program, the normal execution of $S$ is assumed.
+%  Therefore, the consequence $Q$ of the sequent specifies only on the return state of the normal execution.
+%  Users are able to concentrate on the consecutive normal execution flow while the Hoare
+%  specification is a quadruple $\{P\}C\{Q\}\{E\}$ containing the assertion $E$ of abnormal (exceptional)
+%  states. The deduction of the abnormal specification $E$ is carried out by specific rules
+%  elaborated soon.
+%\end{itemize}
+
+\subsubsection{Comparison with Dependent Typed CPL}
+like Agda, Idris
+TODO
+
+From, performance (we are based on low level semantics)....
+
+\subsubsection{Comparison with Post-hoc Verification}
+
+I wanna prove: programming abstractly, by φ-type.
+
+\emph{A snippet maybe irrelevant:}
+
+
+The paper shall elaborate the calculus in a programming manner, noticing verifying a program can be reprogramming it using the identical statements on the calculus.
+
+

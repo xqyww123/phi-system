@@ -3,6 +3,7 @@ include PHI_SYNTAX
 
   val assn_fictionT : typ
   val is_procT  : typ -> bool
+  val dest_procT_params : typ -> typ list
   val mk_procT  : typ -> typ
   val mk_proc'T : typ -> typ -> typ
 
@@ -44,6 +45,10 @@ open Thm Term HOLogic Phi_Help Phi_Syntax
 fun is_procT (\<^Type>\<open>fun \<^Type>\<open>fun \<^Type>\<open>RES_N\<close> \<^Type>\<open>RES\<close>\<close> \<^Type>\<open>set \<^Type>\<open>comp \<open>_\<close>\<close>\<close>\<close>) = true
   | is_procT (\<^Type>\<open>fun _ T\<close>) = is_procT T
   | is_procT _ = false
+fun dest_procT_params (\<^Type>\<open>fun \<^Type>\<open>fun \<^Type>\<open>RES_N\<close> \<^Type>\<open>RES\<close>\<close> \<^Type>\<open>set \<^Type>\<open>comp \<open>_\<close>\<close>\<close>\<close>) = []
+  | dest_procT_params (\<^Type>\<open>fun a T\<close>) = a :: dest_procT_params T
+  | dest_procT_params t = raise TYPE("not a procedure", [t], [])
+
 fun mk_procT T = \<^typ>\<open>resource\<close> --> \<^Type>\<open>set \<open>\<^Type>\<open>comp T\<close>\<close>\<close>
 fun mk_proc'T T U = \<^Type>\<open>\<phi>arg T\<close> --> mk_procT U
 val assn_fictionT = \<^typ>\<open>assn\<close>

@@ -18,11 +18,14 @@ definition op_sel :: "TY \<Rightarrow> (VAL \<times> VAL \<times> VAL, VAL) proc
 
 subsection \<open>Branch\<close>
 
-definition op_if :: "'ret proc
+definition op_if :: "TY list
+                  \<Rightarrow> 'ret::FIX_ARITY_VALs proc
                   \<Rightarrow> 'ret proc
                   \<Rightarrow> (VAL,'ret) proc'"
-  where "op_if brT brF v =
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool v (\<lambda>c. (if c then brT else brF))"
+  where "op_if TY brT brF v =
+    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool v (\<lambda>c. (if c then brT else brF)) \<bind> (\<lambda>v.
+    \<phi>M_assert (v \<in> Well_Typed_Vals TY) \<then>
+    Return v)"
 
 subsection \<open>While Loop\<close>
 
@@ -110,20 +113,29 @@ lemma branch_\<phi>app:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T )
 \<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F )
 \<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @tag invoke_br_join)
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_if br\<^sub>T br\<^sub>F rawc \<lbrace> C \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool>\<heavy_comma> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E\<^sub>T e \<s>\<u>\<b>\<j> C) + (E\<^sub>F e \<s>\<u>\<b>\<j> \<not> C)) \<close>
-  unfolding op_if_def Premise_def Action_Tag_def
-  by (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool;
-      insert \<phi>CONSEQ view_shift_by_implication view_shift_refl; blast)
+\<Longrightarrow> \<phi>_Have_Types Y\<^sub>T TY
+\<Longrightarrow> \<phi>_Have_Types Y\<^sub>F TY
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_if TY br\<^sub>T br\<^sub>F rawc \<lbrace> C \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool>\<heavy_comma> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E\<^sub>T e \<s>\<u>\<b>\<j> C) + (E\<^sub>F e \<s>\<u>\<b>\<j> \<not> C)) \<close>
+  unfolding op_if_def Premise_def Action_Tag_def \<phi>_Have_Types_def
+  by ((cases rawc; cases C; simp; rule), rule, simp add: \<phi>expns, blast, simp,
+    (insert "_\<phi>cast_proc_return_internal_rule_" \<r>Success_I, blast)[1],
+    rule, simp, blast, simp,
+    (insert "_\<phi>cast_proc_return_internal_rule_" \<r>Success_I, blast)[1])
 
 proc "if":
   requires C: \<open>\<p>\<r>\<o>\<c> cond \<lbrace> X \<longmapsto> \<v>\<a>\<l> C \<Ztypecolon> \<bool>\<heavy_comma> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
       and brT: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T \<close>
       and brF: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F \<close>
       and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @tag invoke_br_join)\<close>
+      and HT1: \<open>\<phi>_Have_Types Y\<^sub>T TY\<close>
+      and HT2: \<open>\<phi>_Have_Types Y\<^sub>F TY\<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
-  \<medium_left_bracket> C branch brT brF BC \<medium_right_bracket> .
+  for Y\<^sub>T :: \<open>'a::FIX_ARITY_VALs \<phi>arg \<Rightarrow> fiction BI\<close>
+  \<medium_left_bracket> C 
+    apply_rule branch[OF _ _ _ HT1 HT2] brT brF BC
+  \<medium_right_bracket> .
 
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>if\<close>, 3))\<close>
 
@@ -313,5 +325,11 @@ optional_translations (do_notation)
   "_if_ C A B" <= "_if_ C A (_do_block B)"
 
   "_fix_point_ f arg B" <= "CONST op_fix_point (\<lambda>f arg. B)"
+
+
+
+ML_file \<open>codegen/C/CF.ML\<close>
+setup \<open>Context.theory_map (Phi_CG_Emit.codegen' {lang="C"} true Symtab.empty @{thms' if_def} \<^theory>)\<close>
+
 
 end

@@ -221,8 +221,15 @@ thm map_dynarr_def
 thm exists_dynarr_def
 thm fold_map_dynarr_def
 
+declare len_dynarr_def [\<phi>export]
+declare get_dynarr_def [\<phi>export]
+declare set_dynarr_def [\<phi>export]
+
+
 
 end
+thm push_dynarr_def
 
-
+declare [[\<phi>export_code = "C"]]
+  
 end

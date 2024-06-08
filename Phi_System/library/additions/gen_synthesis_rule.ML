@@ -58,7 +58,7 @@ fun pack _    f (Abs (N,TY,X)) = Abs (N,TY, f X)
       case Phi_Help.safe_fastype_of term
         of \<^Type>\<open>fun T _\<close> => Abs ("", T, f (term $ Bound 0))
          | _ => if flag
-                then snd (Procedure_Syntax.package_values "" false NONE (f term))
+                then snd (Procedure_Syntax.package_values "" false I NONE (f term))
                 else f term
 
 fun encode_pattern _    No_Pattern = \<^term>\<open>TERM ()\<close>

@@ -39,7 +39,7 @@ fun quantify_args_of_proc_term' record_name proc =
                                         else SOME []
                                         else NONE
                             | _      => NONE
-      val (pack, X') = package_values "" false Vs X
+      val (pack, X') = package_values "" false I Vs X
       fun parameterize_var (Var (v,T))   = Var (v, fastype_of pack --> T) $ Bound 0
         | parameterize_var (X $ Bound i) = parameterize_var X $ Bound (i + 1)
       val f' = if is_Var (Term.head_of f)
@@ -50,11 +50,11 @@ fun quantify_args_of_proc_term' record_name proc =
                               then incr_boundvars 1 F $ Bound 0
                               else incr_boundvars 1 f
                               else incr_boundvars 1 (
-                                      snd (package_values "" false (SOME (dest_arg_tuple pack)) f))
+                                      snd (package_values "" false I (SOME (dest_arg_tuple pack)) f))
                                    $ Bound 0
                             | _      =>
                               incr_boundvars 1 (
-                                snd (package_values "" false (SOME (dest_arg_tuple pack)) f))
+                                snd (package_values "" false I (SOME (dest_arg_tuple pack)) f))
                               $ Bound 0
       val T = fastype_of pack
       val abs1 = Abs ("", T,

@@ -17,6 +17,9 @@ fiction_space aggregate_mem =
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout Null)
   by (standard; simp)
 
+term FIC.aggregate_mem
+thm FIC.aggregate_mem_fic_ax
+
 
 section \<open>Basic \<phi>Types for Semantic Models\<close>
 
@@ -177,21 +180,21 @@ proc op_load_mem:
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
-  $addr semantic_local_value \<p>\<t>\<r>
+  semantic_local_value(addr) \<p>\<t>\<r>
 
   apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
-  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
+  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v \<semicolon>
 
   apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=1
                 and cblk=\<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
                 and blk=\<open>memaddr.blk addr\<close>
-                and idx=\<open>memaddr.index addr\<close>]
+                and idx=\<open>memaddr.index addr\<close>] \<semicolon>
 
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))))\<close>
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] T)\<close>
-
+\<semicolon>
   apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
 
   semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
@@ -558,5 +561,8 @@ lemma [\<phi>reason %generalized_sematic_type_cut]:
 \<Longrightarrow> Generalized_Semantic_Type (Mem_Coercion T) TY \<close>
   unfolding Generalized_Semantic_Type_def ..
 
+
+
+ML_file \<open>codegen/C/mem.ML\<close>
 
 end

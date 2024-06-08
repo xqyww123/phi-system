@@ -115,7 +115,7 @@ lemma address_to_raw_phantom_mem_type_gep_N__arr:
 proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 50]:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY''\<close>
   requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY'' = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
-       and \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
+       and \<open>parse_eleidx_input (\<a>\<r>\<r>\<a>\<y>[any] TY) TY\<^sub>U input_index sem_idx (AgIdx_N si # spec_idx) reject\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
   premises \<open>addr \<noteq> 0\<close>

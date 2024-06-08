@@ -25,7 +25,7 @@ deriving \<open>Abstract_Domain T P
          (tactic: auto, subgoal' for t\<^sub>1 l\<^sub>1 t\<^sub>2 l\<^sub>2 \<open>rule exI[where x=\<open>l\<^sub>1 @ drop (length l\<^sub>1) l\<^sub>2\<close>]\<close>)
      and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U)
       \<Longrightarrow> Transformation_Functor (DynArr addr) (DynArr addr) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
-
+     and Pointer_Of
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<s>\<i>\<z>\<e>_\<t>, cap: \<s>\<i>\<z>\<e>_\<t>}\<close>
 
@@ -109,16 +109,25 @@ proc Max:
 
 proc concat_dynarr:
   input   \<open>l1 \<Ztypecolon> \<r>\<e>\<f> DynArr addr1 T\<heavy_comma> l2 \<Ztypecolon> \<r>\<e>\<f> DynArr addr2 T\<close>
-  premises \<open>length l1 + length l2 < 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
   output  \<open>l1 + l2 \<Ztypecolon> DynArr addr1 T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 T\<close>
 \<medium_left_bracket>
   val len \<leftarrow> len_dynarr (addr2) \<semicolon>
-
-  iterate (0, len) \<open>\<lambda>i. l1 + take i l2 \<Ztypecolon> DynArr addr1 T\<close>
+ 
+  iterate_a (0, len) \<open>\<lambda>i. l1 + take i l2 \<Ztypecolon> DynArr addr1 T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
-    push_dynarr (addr1, get_dynarr (addr2, i))
+    push_dynamic_array (addr1, get_dynarr (addr2, i))
   \<medium_right_bracket>
 \<medium_right_bracket> .
+
+
+
+
+
+
+
+
+
+
 
 
 proc pop_dynarr:

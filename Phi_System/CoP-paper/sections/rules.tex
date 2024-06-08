@@ -1,0 +1,85 @@
+\subsection{Inference Rules of CoP}
+
+\begin{figure}[t]
+\small\begin{center}
+\begin{minipage}{.3\textwidth}
+\begin{prooftree}
+  \AxiomC{$P \mbar \cdot \vdash Q$}
+  \doubleLine\RightLabel{(CoP)}
+  \UnaryInfC{$P \vdash Q$}
+\end{prooftree}
+\end{minipage}%
+\begin{minipage}{.4\textwidth}
+\begin{prooftree}
+\AxiomC{$P \mbar S ⊢ Q$}
+\AxiomC{$Q ⊢ Q'$}
+\RightLabel{(CSQ)}
+\BinaryInfC{$ P \mbar S ⊢ Q'$}
+\end{prooftree}
+\end{minipage}%
+%\begin{minipage}{.5\textwidth}
+%\begin{prooftree}
+%\AxiomC{$P ⊢ P'$}
+%\RightLabel{(wp-CSQ)}
+%\UnaryInfC{$\wpm{C}{P} ⊢ \wpm{C}{P'}$}
+%\end{prooftree}
+%\end{minipage}
+
+\vspace{.5em}
+\begin{minipage}{.5\textwidth}
+\begin{prooftree}
+\AxiomC{$ Γ \mbar S ⊢ P$}
+\AxiomC{$ \vdash A \Longrightarrow \{P\}C\{Q\}$}
+\RightLabel{(APP)}
+\BinaryInfC{$ Γ \mbar S ⊢ A \Longrightarrow \wpm{C}{Q}$}
+\end{prooftree}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+\begin{prooftree}
+\AxiomC{$Γ \mbar S ⊢ \wpm{C}{Q}$}
+\RightLabel{(ACCEPT)*}
+\UnaryInfC{$Γ \mbar S; (C,v) ⊢ Q\,v$}
+\end{prooftree}
+\end{minipage}
+
+  \vspace{.5em}
+\begin{minipage}{.53\textwidth}
+\begin{prooftree}
+\AxiomC{$ P \mbar S; (C_1,v) ⊢ \wpm{C_2}{Q}$}
+\RightLabel{\parbox{3cm}{(ASMBL)\\ \scriptsize variable $v \notin \mathrm{Free}(Q)$}}
+\UnaryInfC{$ P \mbar S ⊢ \wpm{C_1 \bind \lambda v.\;C_2}{Q}$}
+\end{prooftree}
+\end{minipage}%
+\begin{minipage}{.47\textwidth}
+\begin{prooftree}
+  \AxiomC{$P \mbar S \vdash Q'\,r$}
+  \RightLabel{(ASMBL-0)}
+  \UnaryInfC{$P \mbar S \vdash \wpm{\mathrm{return}\;r}{Q'}$}
+\end{prooftree}
+\end{minipage}
+
+\end{center}
+*$v$ is a fresh variable not free in $Γ, S, C, Q$
+\normalsize
+  \caption{Inference rules of CoP}\label{fig:rules}
+\end{figure}
+
+%First, noticing the semantics of $ P \mbar ⋅ ⊢ Q$ is identical to the semantics of BI sequent
+% $P ⊢ Q$, CoP inherits all inference rules from φ-BI on $ P \mbar ⋅ ⊢ Q$, including an axiom $P \mbar ⋅ ⊢ P$.
+%Other rules introduces in CoP are given in \cref{fig:rules}.
+
+The rules are given in \cref{fig:rules}.
+CoP rule converts between φ-BI sequents and CoP sequents when the sequence $S$ is empty.
+
+CSQ rule enables transformation of the post-condition.
+APP rule is \emph{derived} from CSQ rule (cf. the definition \ref{def:HQ}).
+It enables applying a procedure $C$ on an on-going construction.
+%optionally transform assertions $Q,E$ by wp-CSQ rule,
+After solving the antecedent $A$, ACCEPT rule moves $C$ into the procedure sequence in the hypothesis.
+Repeating applying the rules, it is feasible to construct program fragments consisting of sequential statements.
+
+ASMBL rule assembles procedures in the sequence $S$ backwardly into [$C$]-modality.
+%It needs additional help from sequent $\wpm{C_1}{Q'}{E_1}$ to decide the exception specification $E_1$ of $C_1$.
+Initiated by ASMBL-0, repeat application of ASMBL rule assembles the program monad from a sequence $S$ of procedures.
+Eventually, from $P \mbar S \vdash Q$ it deduces $P \mbar \cdot \vdash [C]\{Q\}$ for $C = \seminterp{S}_r$, from which then we have $\{P\}C\{Q\}$.
+

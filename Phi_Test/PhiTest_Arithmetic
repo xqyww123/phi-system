@@ -1,0 +1,21 @@
+int GCD(int v1, int v0) {
+bool v2= v1<v0;
+
+if (v2) {
+int v3= GCD(v1v0)
+return v3;
+} {
+int v4= v1%v0;
+
+bool v5= v4==0;
+
+if (v5) {
+return v0;
+} {
+int v6= GCD(v4v0)
+return v6;
+}
+
+}
+
+}

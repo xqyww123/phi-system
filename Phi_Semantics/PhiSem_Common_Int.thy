@@ -194,4 +194,5 @@ disable the auto evaluation when the exponent is too large!
 
 declare power_numeral[simp del]
 *)
+
 end

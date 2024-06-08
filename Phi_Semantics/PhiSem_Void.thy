@@ -7,4 +7,6 @@ section \<open>Semantics\<close>
 debt_axiomatization \<v>\<o>\<i>\<d> :: TY
   where WT_void  [simp]: \<open>Well_Type \<v>\<o>\<i>\<d> = {} \<close>
 
+ML_file \<open>codegen/C/void.ML\<close>
+
 end

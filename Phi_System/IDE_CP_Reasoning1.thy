@@ -510,8 +510,8 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. S\<heavy_comma> R vs) TYs\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
 
-lemma [\<phi>reason 2000]:
-  \<open> \<phi>_Have_Types (\<lambda>_::unit \<phi>arg. Void) []\<close>
+lemma [\<phi>reason 2000 for \<open>\<phi>_Have_Types (\<lambda>_. ?X) _\<close>]:
+  \<open> \<phi>_Have_Types (\<lambda>_::unit \<phi>arg. X) []\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
 
 lemma [\<phi>reason 1020 except \<open>\<phi>_Have_Types (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:

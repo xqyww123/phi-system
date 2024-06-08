@@ -292,7 +292,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
               #4 (Phi_Syntax.dest_CurrentConstruction_c (Thm.cprop_of sequent))
                  |> Thm.term_of
                  |> Procedure_Syntax.package_values0 "\<r>\<e>\<t>"
-                              (TVar (("ret", Thm.maxidx_of sequent), \<^sort>\<open>type\<close>)) false NONE
+                              (TVar (("ret", Thm.maxidx_of sequent), \<^sort>\<open>type\<close>)) false I NONE
                  |> apply2 (Thm.cterm_of ctxt)
         val idx_delt = 1 + Int.max (Thm.maxidx_of_cterm ins, Thm.maxidx_of_cterm current_nu)
         val return_rule = @{thm \<phi>return}

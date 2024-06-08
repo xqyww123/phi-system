@@ -738,7 +738,7 @@ section \<open>Implementation of Synthesis Mechanism\<close>
 
 subsubsection \<open>Multi-Target\<close>
 
-
+ 
 lemma [\<phi>reason %\<phi>synthesis_split+20]:
   \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
@@ -1647,7 +1647,7 @@ lemma Collect_Return_Values_I: \<open>Collect_Return_Values (S V) S V\<close>
     val \<^const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Collect_Return_Values _\<close> $ S $ Var S' $ Var V')
           = Thm.major_prem_of sequent
     val (V'',S'') = Procedure_Syntax.package_values0
-                            "\<v>\<s>" (TVar (("ret", Thm.maxidx_of sequent),\<^sort>\<open>VALs\<close>)) false NONE S
+                            "\<v>\<s>" (TVar (("ret", Thm.maxidx_of sequent),\<^sort>\<open>VALs\<close>)) false I NONE S
           |> apply2 (Thm.cterm_of ctxt)
    in Drule.infer_instantiate_types ctxt [(S',S''),(V',V'')] sequent
           |> (fn th => @{thm Collect_Return_Values_I} RS th)

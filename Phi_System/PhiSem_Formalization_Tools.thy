@@ -217,7 +217,7 @@ lemma semantic_cons_lval\<^sub>1_\<phi>app:
   unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
   by (cases v; clarsimp simp add: Val.unfold Vals.unfold times_list_def)
 
-
+ 
 proc (nodef) [\<phi>reason %\<phi>synthesis_cut
                   for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (_, _) \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] (List_Item _ \<^emph> _) \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> @tag synthesis\<close>]:
   requires C1: \<open>\<p>\<r>\<o>\<c> C\<^sub>1 \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. x\<^sub>h \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace> @tag synthesis\<close>
@@ -227,7 +227,7 @@ proc (nodef) [\<phi>reason %\<phi>synthesis_cut
   @tag synthesis
 \<medium_left_bracket>
   C1 \<rightarrow> val h \<semicolon>
-  C2 $h semantic_cons_lval
+  C2 $h semantic_cons_lval 
 \<medium_right_bracket> .
 
 
@@ -381,6 +381,6 @@ proc (nodef) try':
 
 
 
-ML_file \<open>library/codegen/formalization_tool.ML\<close>
+ML_file \<open>library/codegen/C/formalization_tool.ML\<close>
 
 end

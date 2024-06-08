@@ -3,7 +3,7 @@ theory PhiSem_Mem_C_Ar_MI \<comment> \<open>AI stands for \<open>machine integer
 begin
 
 section \<open>Pointer Arithmetic\<close>
-
+ 
 proc op_add_ptr[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close>
   premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len\<close>
@@ -23,6 +23,8 @@ proc op_add_ptr[\<phi>overload +]:
                 simp add: add.commute signed_of_int signed_take_bit_int_eq_self)
 \<medium_right_bracket> .
 
+thm op_add_ptr_def
+thm op_add_ptr_\<phi>app
 
 proc op_add_ptr_unsigned[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close>
@@ -48,5 +50,7 @@ declare nat_int_add[iff]
 lemma nat_int_mul[iff]: "nat (int a * int b) = a * b"
   using nat_times_as_int by presburger
   
+
+ML_file \<open>codegen/C/pointer_arith_MI.ML\<close>
 
 end

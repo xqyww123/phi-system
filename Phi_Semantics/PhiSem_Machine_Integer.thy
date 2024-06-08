@@ -485,8 +485,8 @@ definition op_sub :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       Return (\<phi>arg (sem_mk_int (bits, ((2^bits + val_a - val_b) mod 2^bits))))
   )))"
 
-definition op_umul :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
-  where "op_umul bits =
+definition op_mul :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_mul bits =
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) va (\<lambda>val_a.
       \<phi>M_getV (sem_int_T bits) (snd o sem_dest_int) vb (\<lambda>val_b.
@@ -758,16 +758,16 @@ subsubsection \<open>Multiplication\<close>
 
 lemma op_mul_word_\<phi>app[\<phi>synthesis %synthesis_arith for _
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (vx\<^bold>, vy)
+  \<open> \<p>\<r>\<o>\<c> op_mul LENGTH('b::len) (vx\<^bold>, vy)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> Word('b) \<rbrace>\<close>
-  unfolding op_umul_def Premise_def
+  unfolding op_mul_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp add: unat_word_ariths(2))
 
 lemma op_mul_nat_\<phi>app[\<phi>overload *,
                       \<phi>synthesis %synthesis_arith for _
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x * y < 2^LENGTH('b)
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (vx\<^bold>, vy)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_mul LENGTH('b::len) (vx\<^bold>, vy)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_mul_word[where 'b='b] \<medium_right_bracket>
       certified by (simp add: the_\<phi>(3) unat_eq_of_nat) .
@@ -775,7 +775,7 @@ lemma op_mul_nat_\<phi>app[\<phi>overload *,
 lemma op_mul_natR_\<phi>app[\<phi>overload *,
                        \<phi>synthesis %synthesis_arith for _
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (vx\<^bold>, vy)
+  \<open> \<p>\<r>\<o>\<c> op_mul LENGTH('b::len) (vx\<^bold>, vy)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_mul_word[where 'b='b] \<medium_right_bracket>
       certified by (metis of_nat_mult unat_of_nat) .
@@ -784,7 +784,7 @@ lemma op_mul_int_\<phi>app[\<phi>overload *,
                       \<phi>synthesis %synthesis_arith for _
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x * y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (vx\<^bold>, vy)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_mul LENGTH('b::len) (vx\<^bold>, vy)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_mul_word[where 'b='b] \<medium_right_bracket>
       certified by auto_sledgehammer .
@@ -792,7 +792,7 @@ lemma op_mul_int_\<phi>app[\<phi>overload *,
 lemma op_mul_intR_\<phi>app[\<phi>overload *,
                        \<phi>synthesis %synthesis_arith for _
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
-  \<open> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (vx\<^bold>, vy)
+  \<open> \<p>\<r>\<o>\<c> op_mul LENGTH('b::len) (vx\<^bold>, vy)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<int>\<^sup>r('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_mul_word[where 'b='b] \<medium_right_bracket>
       certified by (metis of_int_mult uint_word_of_int)  .
@@ -1111,5 +1111,7 @@ lemma op_upcast_int_\<phi>app:
       certified by (simp add: is_up.rep_eq sint_of_int_eq sint_up_scast the_\<phi>(1) the_\<phi>(3) the_\<phi>lemmata(1)) .
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
+
+ML_file \<open>codegen/C/int.ML\<close>
 
 end
