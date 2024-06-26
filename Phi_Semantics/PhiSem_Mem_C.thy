@@ -13,9 +13,12 @@ subsection \<open>Fiction\<close>
 type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share option\<close> \<comment> \<open>fiction of a single memory object\<close>
 
 fiction_space aggregate_mem =
-  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
+  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I>
+                    \<F>_pointwise (\<lambda>blk.
+                        \<F>_functional (Byte_Rep_of_Val_ins (memblk.layout blk)) (Byte_Rep_of_Val_ins_dom (memblk.layout blk)) \<Zcomp>\<^sub>\<I>
+                        \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout Null)
-  by (standard; simp)
+  by (standard, auto simp add: Byte_Rep_of_Val_ins_def)
 
 term FIC.aggregate_mem
 thm FIC.aggregate_mem_fic_ax
@@ -194,11 +197,17 @@ proc op_load_mem:
 
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))))\<close>
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] T)\<close>
-\<semicolon>
-  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
+  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
-  semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
-  semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+  holds_fact [simp]: \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = TY\<close>
+         and \<open>Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
+
+  semantic_assert \<open>let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
+                    in index_value (memaddr.index addr)
+                        (Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1))) \<in> Well_Type TY\<close>
+  semantic_return \<open>(let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
+                     in index_value (memaddr.index addr)
+                            (Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1)))) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
 
 proc op_store_mem:

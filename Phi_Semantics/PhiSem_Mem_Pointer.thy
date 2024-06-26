@@ -1,5 +1,5 @@
 theory PhiSem_Mem_Pointer
-  imports PhiSem_Mem_C_Base PhiSem_Agg_Void "HOL-Library.Word"
+  imports PhiSem_Mem_C_Base PhiSem_Agg_Void
   keywords
       "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
@@ -607,12 +607,12 @@ paragraph \<open>Install Memory\<close>
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
-type_synonym mem = \<open>memblk \<rightharpoonup> VAL discrete\<close>
+type_synonym mem = \<open>memblk \<rightharpoonup> 8 word list discrete\<close>
 
 setup \<open>Sign.parent_path\<close>
 
 resource_space aggregate_mem =
-  aggregate_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` discrete ` Well_Type (memblk.layout seg))}\<close>
+  aggregate_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` discrete ` Byte_Rep_of_Val ` Well_Type (memblk.layout seg))}\<close>
   (aggregate_mem_resource \<open>memblk.layout\<close>)
   by (standard; simp)
 
