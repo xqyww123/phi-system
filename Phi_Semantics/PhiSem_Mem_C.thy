@@ -13,9 +13,15 @@ subsection \<open>Fiction\<close>
 type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share option\<close> \<comment> \<open>fiction of a single memory object\<close>
 
 fiction_space aggregate_mem =
-  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
+  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I>
+                    \<F>_pointwise (\<lambda>blk.
+                        \<F>_functional (Byte_Rep_of_Val_ins (memblk.layout blk)) (Byte_Rep_of_Val_ins_dom (memblk.layout blk)) \<Zcomp>\<^sub>\<I>
+                        \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout Null)
-  by (standard; simp)
+  by (standard, auto simp add: Byte_Rep_of_Val_ins_def)
+
+term FIC.aggregate_mem
+thm FIC.aggregate_mem_fic_ax
 
 
 section \<open>Basic \<phi>Types for Semantic Models\<close>
@@ -177,25 +183,31 @@ proc op_load_mem:
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
-  $addr semantic_local_value \<p>\<t>\<r>
+  semantic_local_value(addr) \<p>\<t>\<r>
 
   apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
-  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
+  to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v \<semicolon>
 
   apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=1
                 and cblk=\<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
                 and blk=\<open>memaddr.blk addr\<close>
-                and idx=\<open>memaddr.index addr\<close>]
+                and idx=\<open>memaddr.index addr\<close>] \<semicolon>
 
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))))\<close>
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] T)\<close>
+  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
-  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item] 
+  holds_fact [simp]: \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = TY\<close>
+         and \<open>Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
 
-  semantic_assert \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<in> Well_Type TY\<close>
-  semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
+  semantic_assert \<open>let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
+                    in index_value (memaddr.index addr)
+                        (Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1))) \<in> Well_Type TY\<close>
+  semantic_return \<open>(let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
+                     in index_value (memaddr.index addr)
+                            (Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1)))) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
 
 proc op_store_mem:
@@ -289,6 +301,8 @@ proc calloc1:
     
 \<medium_right_bracket> .
 
+\<phi>overloads calloc \<comment> \<open>for allocating multiple elements\<close>
+       and memcpy
  
 proc mfree:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
@@ -555,6 +569,5 @@ lemma [\<phi>reason %generalized_sematic_type_cut]:
   \<open> Generalized_Semantic_Type T TY
 \<Longrightarrow> Generalized_Semantic_Type (Mem_Coercion T) TY \<close>
   unfolding Generalized_Semantic_Type_def ..
-
 
 end
