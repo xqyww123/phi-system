@@ -1,5 +1,5 @@
 theory PhiSem_Mem_Pointer
-  imports PhiSem_Mem_C_Base PhiSem_Agg_Void "HOL-Library.Word"
+  imports PhiSem_Mem_C_Base PhiSem_Agg_Void
   keywords
       "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
@@ -624,12 +624,12 @@ paragraph \<open>Install Memory\<close>
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
-type_synonym mem = \<open>memblk \<rightharpoonup> VAL discrete\<close>
+type_synonym mem = \<open>memblk \<rightharpoonup> 8 word list discrete\<close>
 
 setup \<open>Sign.parent_path\<close>
 
 resource_space aggregate_mem =
-  aggregate_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` discrete ` Well_Type (memblk.layout seg))}\<close>
+  aggregate_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` discrete ` Byte_Rep_of_Val ` Well_Type (memblk.layout seg))}\<close>
   (aggregate_mem_resource \<open>memblk.layout\<close>)
   by (standard; simp)
 
@@ -837,7 +837,6 @@ proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
     sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
         \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr[TY'])\<close>
 \<medium_right_bracket> .
-
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_pointer 0)] TypedPtr TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
@@ -1113,8 +1112,5 @@ declare_\<phi>lang_operator postfix %\<phi>lang_deref "!" \<comment> \<open>dere
      in Phi_Opr_Stack.push_operator cfg (opr, (name,pos), rules) opr_ctxt
     end)
 \<close>
-
-
-
 
 end
