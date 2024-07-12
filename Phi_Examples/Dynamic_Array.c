@@ -25,8 +25,7 @@ size_t max (size_t x, size_t y) {
   if (x < y) return y; else return x;
 }
 
-void push_dynarr (struct DynArr *addr, T v)\
-{
+void push_dynarr (struct DynArr *addr, T v) {
   size_t len = addr -> len;
   size_t cap = addr -> cap;
   if (cap == len) {
@@ -43,8 +42,7 @@ void push_dynarr (struct DynArr *addr, T v)\
   }
 }
 
-T pop_dynarr (struct DynArr *addr)
-{
+T pop_dynarr (struct DynArr *addr) {
   size_t len = addr -> len - 1;
   size_t half_cap = addr -> cap / 2;
   T ret = addr -> data[len];
@@ -59,8 +57,7 @@ T pop_dynarr (struct DynArr *addr)
   return ret;
 }
 
-struct DynArr* new_dynarr ()
-{
+struct DynArr* new_dynarr () {
   struct DynArr* ret = (struct DynArr*) calloc(sizeof(DynArr), 1);
   ret -> data = (T*) calloc(sizeof(T), 0);
   return ret;
@@ -71,8 +68,7 @@ void del_dynarr(struct DynArr* addr) {
   free (addr);
 }
 
-void concat_dynarr (struct DynArr* addr1, struct DynArr* addr2)
-{
+void concat_dynarr (struct DynArr* addr1, struct DynArr* addr2) {
   int len = len_dynarr (addr2);
   for (int i = 0; i < len; ++i) {
     push_dynarr (addr1, get_dynarr (addr2, i));

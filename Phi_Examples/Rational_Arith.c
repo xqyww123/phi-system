@@ -31,3 +31,22 @@ struct Rational rat_div (struct Rational q1, struct Rational q2) {
   };
 }
 
+struct Rational rat_lt (struct Rational q1, struct Rational q2) {
+  int a = q1.num * q2.den;
+  int b = q1.den * q2.num;
+  return (q1.den > 0 != q2.den > 0 ? a > b : a < b) ;
+}
+
+struct Rational rat_le (struct Rational q1, struct Rational q2) {
+  int a = q1.num * q2.den;
+  int b = q1.den * q2.num;
+  return (q1.den > 0 != q2.den > 0 ? a >= b : a <= b) ;
+}
+
+struct Rational rat_gt (struct Rational q1, struct Rational q2) {
+  return rat_lt (q2, q1);
+}
+
+struct Rational rat_ge (struct Rational q1, struct Rational q2) {
+  return rat_le (q2, q1);
+}
