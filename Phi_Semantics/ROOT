@@ -15,7 +15,6 @@ session "Phi_Semantics" = "Phi_System" +
     PhiSem_CF_Breakable
     PhiSem_CF_Routine
     PhiSem_CF_Routine_Basic
-    PhiSem_Generic_Boolean
     PhiSem_Common_Int
     PhiSem_Generic_Boolean
     PhiSem_Int_ArbiPrec
@@ -24,6 +23,7 @@ session "Phi_Semantics" = "Phi_System" +
     PhiSem_Variable
     PhiSem_Real_Abst
     PhiSem_Real_Abst_Int
+    PhiSem_Mem_C
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"
