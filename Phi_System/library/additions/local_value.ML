@@ -1,5 +1,5 @@
 (* FILE: library/additions/local_value.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Anonymous Authors
 
    Access and assignment for local value.
 *)

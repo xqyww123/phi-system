@@ -1,5 +1,5 @@
 (* library/syntax/procedure.ML
-   Author: Qiyuan Xu
+   Author: Anonymous Authors
 
    The syntax parser for procedure specification.
 

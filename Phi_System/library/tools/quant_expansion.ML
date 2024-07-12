@@ -1,5 +1,5 @@
 (* FILE: library/tools/quant_expansion.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Anonymous Authors
 
    Expand compact quantification whose quantifier is a tuple tagged names of each projection
    using named tag type.

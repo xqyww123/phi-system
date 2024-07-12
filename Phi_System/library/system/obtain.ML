@@ -1,5 +1,5 @@
 (* FILE: library/system/obtain.ML
-   AUTHOR: Qiyuan Xu
+   AUTHOR: Anonymous Authors
 
    Existential elimination in the IDE-CP.
 *)

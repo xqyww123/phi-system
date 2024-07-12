@@ -1,10 +1,8 @@
-(*  Author:     Alexander Krauss, TU Muenchen
-    Author:     Christian Sternagel, University of Innsbruck
-    Author:     Qiyuan Xu
+(* Author:     Anonymous Authors
 
 Adhoc overloading of constants based on their types.
 
-Modified by Qiyuan Xu, for disabling term_uncheck which disturbs syntax system of other Isabelle components.
+Modified by Anonymous Authors, for disabling term_uncheck which disturbs syntax system of other Isabelle components.
 *)
 
 signature ADHOC_OVERLOADING =

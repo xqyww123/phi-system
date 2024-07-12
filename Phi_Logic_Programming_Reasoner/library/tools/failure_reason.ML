@@ -1,4 +1,4 @@
-(* AUTHOR: Qiyuan Xu
+(* AUTHOR: Anonymous Authors
    A mechanism collecting potential failures of \<phi>-LPR reasoning.
  *)
 
