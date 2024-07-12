@@ -13,7 +13,6 @@ session "Phi_Semantics" = "Phi_System" +
     PhiSem_CF_Basic
     PhiSem_CF_Break
     PhiSem_CF_Breakable
-    PhiSem_CF_Solidity
     PhiSem_CF_Routine
     PhiSem_CF_Routine_Basic
     PhiSem_Generic_Boolean

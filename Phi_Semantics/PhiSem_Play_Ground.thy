@@ -39,9 +39,6 @@ proc rat_add:
   \<lbrace> $numerator, $denominator \<rbrace>
 \<medium_right_bracket> . 
 
-thm rat_add_def
-
-
 proc test_ptr:
   input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (\<t>\<u>\<p> {\<t>\<u>\<p> {aint}, aint, aint}), \<int> \<rbrace>\<close>
   premises \<open>ptr \<noteq> 0\<close>
@@ -52,8 +49,6 @@ proc test_ptr:
   & $1[b]\<tribullet>$a\<tribullet>0 \<semicolon>
   & $1\<tribullet>$b\<tribullet>2
 \<medium_right_bracket> .
-
-
 
 
 
@@ -181,20 +176,6 @@ proc test_agg3:
   $v
 \<medium_right_bracket> .
 
-
-(*
-proc
-  assumes [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  assumes [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY'\<close>
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> T\<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> U\<close>
-  output \<open>Any\<close>
-  \<medium_left_bracket> $x \<rightarrow> var z
-  ;; $y \<rightarrow> z
- *)
-(*
-int XX(int x) { if 0 < x then x - 1 else 0 }
-*)
-
   
 proc AAA:
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -206,30 +187,14 @@ proc AAA:
   \<medium_right_bracket> .
 
 
-
-
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
   is [routine]
   \<medium_left_bracket>
     if ( 0 < $x ) \<medium_left_bracket> $x - 1 \<medium_right_bracket> \<medium_left_bracket> 0 \<medium_right_bracket>
-    (* the cartouche like \<open>0 < $x\<close> invokes a synthesis proce
-ss \<leftarrow>
-       to make a value satisfying that specification *)
   \<medium_right_bracket> .
 
-(*
-
-
-setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
-           (SOME Generic_Variable_Access.store_value_no_clean))\<close> *)
-
-(* declare [[\<phi>hide_techinicals=false]] *)
-
-declare [[\<phi>hide_techinicals=false]]
-
-(* declare [[\<phi>hide_brk_frame=false, \<phi>easoning]] *)
 
 fun fib :: \<open>nat \<Rightarrow> nat\<close> where
   \<open>fib 0 = 1\<close> | \<open>fib (Suc 0) = 1\<close> | \<open>fib n = fib (n-1) + fib (n-2)\<close>
@@ -250,9 +215,6 @@ proc FIB:
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
-(*
-syntax "_rec_fun_"
-    ("\<r>\<e>\<c>\<u>\<r>\<s>\<i>\<v>\<e>- *)
 
 declare [[\<phi>hide_techinicals, \<phi>display_value_internal_name=false]]
 
@@ -297,12 +259,6 @@ proc
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>.
 
-declare [[\<phi>hide_techinicals=false]]
-
-
-declare [[\<phi>trace_reasoning = 2]]
-
-
 
 proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -324,14 +280,6 @@ proc
 \<medium_right_bracket>.
 
 
-
-
-(*
-print_ast_translation \<open>
-[(\<^syntax_const>\<open>_do_bind\<close>, fn _ => fn L => (@{print} L; hd L))]
-\<close>
-*)
-
 thm op_var_scope_def
 thm AAA_def
 
@@ -342,33 +290,6 @@ proc
     if $b \<medium_left_bracket> \<open>32 \<Ztypecolon> \<nat>(32)\<close> \<medium_right_bracket> \<medium_left_bracket> \<open>24 \<Ztypecolon> \<nat>(16)\<close> \<medium_right_bracket>
   \<medium_right_bracket> .
 
-(*
-proc XXX:
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
-  premises A: \<open>x < 10\<close>
-  output \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
-  is [recursive x]
-  is [recursive x]
-  is [recursive xa]
-  \<medium_left_bracket> premises A and XXX and YYY and ZZZ
-  thm ZZZ
-  ;; $xaa ZZZ XXX YYY
- \<medium_right_bracket> .. .
-
-
-proc YYY2:
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> \<nat>\<close>
-  premises A: \<open>x < y\<close>
-  output \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<heavy_comma> 20 \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  is [recursive x y]
-  is [recursive x y]
-  is [recursive xa ya]
-  is [routine]
-  \<medium_left_bracket> premises A and AAA and BBB and CCC
-    $xaa $yaa CCC AAA BBB \<medium_right_bracket>. .
-
-thm YYY2_def
-*)
 
 
 end

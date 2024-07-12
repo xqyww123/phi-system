@@ -1,3 +1,10 @@
+(* This version ignores arithmetic overflow of the lengths of dynamic arrays.
+   This is required by the refinement of Bucket Hash. Without this simplification,
+   the refinement of Bucket Hash cannot be defined as it is.
+ *)
+
+
+
 theory Dynamic_Array_arbi_len
   imports Phi_Semantics.PhiSem_C
           Phi_Semantics.PhiSem_Mem_C_AI

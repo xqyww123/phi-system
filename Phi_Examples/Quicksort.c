@@ -13,7 +13,7 @@ void qsort (int* l, int len) {
         ++d;
       }
     }
-    qsort (l, d) ;
+    qsort (l, d-1) ;
     qsort (l+d, len-d) ;
   }
 }

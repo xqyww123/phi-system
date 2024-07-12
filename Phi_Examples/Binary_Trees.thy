@@ -193,8 +193,6 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
            (arbitrary: addr')
        and Functional_Transformation_Functor
 
-declare [[ML_print_depth = 100]]
-
 \<phi>type_def Bin_Search_Tree :: \<open>address \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
   where \<open>f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: V \<rbrace>
                                                 \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted_lookup_tree tree \<close>
@@ -233,8 +231,6 @@ lemma rel_tree__AVL_tree_invar:
  
 
 
-declare [[ML_print_depth = 100]]
-
 abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
 abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
@@ -266,8 +262,6 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.
       Anyway, it is an engineering problem due to some bug in our system or Sledgehammer, so we don't
       count this line into our statistics in the paper.\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 context
   fixes K :: \<open>(VAL, 'k::linorder) \<phi>\<close>                  \<comment> \<open>we provide a generic verification\<close>

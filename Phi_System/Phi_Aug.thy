@@ -94,6 +94,12 @@ lemma length_list_upd_map[iff]:
   unfolding list_upd_map_def
   by clarsimp
 
+lemma list_upd_map_more_length[iff]:
+  \<open> length l \<le> n
+\<Longrightarrow> list_upd_map n f l = l \<close>
+  unfolding list_upd_map_def
+  by simp
+
 lemma take_list_upd_map_le[simp]:
   \<open> i \<le> j
 \<Longrightarrow> take j (list_upd_map i f l) = list_upd_map i f (take j l) \<close>
@@ -101,7 +107,7 @@ lemma take_list_upd_map_le[simp]:
   by (metis nth_take order_le_imp_less_or_eq take_update_cancel take_update_swap)
 
 lemma take_list_upd_map_gt[simp]:
-  \<open> j < i
+  \<open> j \<le> i
 \<Longrightarrow> take j (list_upd_map i f l) = take j l \<close>
   unfolding list_upd_map_def
   by simp
