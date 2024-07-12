@@ -55,20 +55,6 @@ begin
     \<medium_right_bracket>
   \<medium_right_bracket> .
 
-
-lemma min_a_b_b[simp]:
-  \<open>min a b = b \<longleftrightarrow> b \<le> a\<close>
-  for a :: \<open>'a :: linorder\<close>
-  unfolding min_def
-  by auto
-
-lemma min_a_b_a[simp]:
-  \<open>min a b = a \<longleftrightarrow> a \<le> b\<close>
-  for a :: \<open>'a :: linorder\<close>
-  unfolding min_def
-  by auto
-
-
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 
 thm qsort_\<phi>app
