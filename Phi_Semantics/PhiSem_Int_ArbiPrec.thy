@@ -45,9 +45,7 @@ subsection \<open>Integer in the normal sense\<close>
 \<phi>type_def \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
   where \<open>x \<Ztypecolon> \<phi>AInt \<equiv> sem_mk_aint x \<Ztypecolon> Itself\<close>
   deriving Basic
-       and \<open>Semantic_Type \<int> \<a>\<i>\<n>\<t>\<close>
        and Semantic_Zero_Val
-       and Inhabited
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<int> = \<a>\<i>\<n>\<t>\<close>
 
 lemma [\<phi>reason 1000]:
@@ -451,7 +449,6 @@ proc (nodef) op_gt_aint[\<phi>overload >]:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
   output \<open>\<v>\<a>\<l> x > y \<Ztypecolon> \<bool>\<close>
 \<medium_left_bracket>
- 
   $y < $x
 \<medium_right_bracket>.
 

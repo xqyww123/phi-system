@@ -130,7 +130,7 @@ subsection \<open>Words\<close>
   where \<open>x \<Ztypecolon> Word _ \<equiv> sem_mk_int (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
   deriving Basic
        and \<open>Object_Equiv (Word ?uu) (=)\<close>
-       and \<open>Semantic_Type (Word TYPE('b)) int('b)\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (Word TYPE('b)) = int('b)\<close>
        and \<open>Semantic_Zero_Val int('b) (Word ?uu) (0::'b::len word)\<close>
        and Inhabited
 
