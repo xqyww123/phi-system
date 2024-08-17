@@ -43,17 +43,19 @@ fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)
 
       fun varifier _ (Trueprop $ (
+              TagC $ (
                 EQ $ (SemTyp as Const(\<^const_name>\<open>SType_Of\<close>, _) $ _) $ TY
-              )) =
+              ) $ Tag)) =
             if is_some (#1 instruction)
             then NONE
-            else SOME ([TY], fn [TY'] => Trueprop $ (EQ $ SemTyp $ TY'))
+            else SOME ([TY], fn [TY'] => Trueprop $ (TagC $ (EQ $ SemTyp $ TY') $ Tag))
         | varifier _ (Trueprop $ (
+              TagC $ (
                 EQ $ (SemTyp as Const(\<^const_name>\<open>SType_Of'\<close>, _) $ _) $ TY
-              )) =
+              ) $ Tag)) =
             if is_some (#1 instruction)
             then NONE
-            else SOME ([TY], fn [TY'] => Trueprop $ (EQ $ SemTyp $ TY'))
+            else SOME ([TY], fn [TY'] => Trueprop $ (TagC $ (EQ $ SemTyp $ TY') $ Tag))
         | varifier _ X = NONE
       fun reasoning phi ctxt sequent =
             default_reasoning true default_reasoning_configure varifier
@@ -71,7 +73,8 @@ fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_SemTy_rule},
-                                      [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
+                                      [(NONE, K (K I), K (pure_PLPR_reasoning 3)),
+                                       (SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       solver, K I, simp)
                                     phi0 instruction thy'
    in case Seq.pull rules

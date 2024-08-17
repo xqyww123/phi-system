@@ -651,7 +651,7 @@ subsection \<open>Physical Pointer\<close>
   deriving Basic
        and \<open>Object_Equiv RawPointer (=)\<close>
        and Functionality
-       and \<open>Semantic_Type RawPointer \<p>\<t>\<r>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> RawPointer = \<p>\<t>\<r>\<close>
        and \<open>Semantic_Zero_Val \<p>\<t>\<r> RawPointer 0\<close>
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
@@ -669,7 +669,7 @@ subsection \<open>Standard Logical Pointer\<close>
   deriving Basic
        and \<open>Object_Equiv Ptr (=)\<close>
        and Functionality
-       and \<open>Semantic_Type Ptr \<p>\<t>\<r>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Ptr = \<p>\<t>\<r>\<close>
        and \<open>Semantic_Zero_Val \<p>\<t>\<r> Ptr 0\<close>
 
 
@@ -716,7 +716,7 @@ subsection \<open>Typed Pointer\<close>
   deriving Basic
        and \<open>Object_Equiv (TypedPtr TY) (=)\<close>
        and Functionality
-       and \<open>Semantic_Type (TypedPtr TY) \<p>\<t>\<r>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (TypedPtr TY) = \<p>\<t>\<r>\<close>
        and \<open>Semantic_Zero_Val \<p>\<t>\<r> (TypedPtr TY) 0\<close>
 
 notation TypedPtr ("Ptr[_]" [10] 1000)
@@ -806,6 +806,25 @@ ML \<open>fun bad_Addr_Of pos =
           (fn _ => fn _ => bad_Addr_Of pos)) s ) \<close>
 
 
+lemma
+  \<open>P (\<t>\<y>\<p>\<e>\<o>\<f> (Ptr[TY]))\<close>
+apply simp
+
+lemma
+  \<open>P (\<t>\<y>\<p>\<e>\<o>\<f> (addr \<Ztypecolon> Ptr[TY]))\<close>
+apply simp
+
+
+
+
+
+
+
+
+
+
+
+
 subsection \<open>GEP\<close>
 
 proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
@@ -817,7 +836,8 @@ proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr_geps addr spec_idx \<Ztypecolon> \<v>\<a>\<l> Ptr[TY']\<close>
 \<medium_left_bracket>
-  $addr semantic_local_value \<p>\<t>\<r>
+  $addr semantic_local_value \<p>\<t>\<r> 
+\<semicolon>
   semantic_return \<open>
     sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
         \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr[TY'])\<close>

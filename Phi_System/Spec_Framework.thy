@@ -236,6 +236,17 @@ lemma SType_Of'_implies_SType_Of:
   by (auto, smt (verit) Satisfiable_def Well_Type_unique tfl_some,
             smt (verit, best) tfl_some)
 
+lemma SType_Of'_implies_SType_Of''':
+  \<open> Abstract_Domain T D
+\<Longrightarrow> Abstract_Domain\<^sub>L T D\<^sub>L
+\<Longrightarrow> (\<And>x. D x \<or> (\<forall>y. \<not> D\<^sub>L y) \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY)
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY\<close>
+  unfolding SType_Of_def SType_Of'_def Inhabited_def Abstract_Domain\<^sub>L_def
+            Action_Tag_def \<r>ESC_def \<r>EIF_def Abstract_Domain_def Satisfiable_def
+  by (auto,
+      smt (verit, ccfv_SIG) Well_Type_unique someI,
+      smt (verit, ccfv_SIG) someI)
+
 lemma SType_Of_not_poison:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Inhabited T \<and> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type (\<t>\<y>\<p>\<e>\<o>\<f> T)) \<close>
   unfolding SType_Of_def Inhabited_def Satisfiable_def
@@ -245,6 +256,7 @@ lemma SType_Of'_not_poison:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> A \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Satisfiable A \<and> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type (\<t>\<y>\<p>\<e>\<o>\<f> A)) \<close>
   unfolding SType_Of'_def Satisfiable_def
   by (auto, smt (verit, best) someI2_ex)
+
 
 (*
 subsubsection \<open>Single Value\<close>
@@ -340,11 +352,11 @@ lemma \<phi>SemType_Itself_brute:
   by (auto, insert Well_Type_unique, blast)
 
 lemma \<phi>sem_type_by_sat:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)
-\<Longrightarrow> Satisfiable S
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ((\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<and> (\<not> Satisfiable S \<longrightarrow> TY = \<p>\<o>\<i>\<s>\<o>\<n>))
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> S = TY @tag \<A>infer \<close>
   unfolding Premise_def \<r>Guard_def SType_Of'_def Satisfiable_def Action_Tag_def
-  by (auto, insert Well_Type_disjoint, blast)
+  by (auto simp: split_ifs, insert Well_Type_unique, blast)
+  
 
 (*
 lemma \<phi>sem_type_brute_EIF':
@@ -458,7 +470,7 @@ lemma [\<phi>reason %cutting]:
   unfolding OR_FAIL_def Premise_def
   by simp
 
-lemma [\<phi>reason %cutting+10 for \<open>Semantic_Type _ ?var\<close>]:
+lemma [\<phi>reason %cutting+10 for \<open>Semantic_Type' _ ?var\<close>]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> TY : \<t>\<y>\<p>\<e>\<o>\<f> A
 \<Longrightarrow> Is_Type_Literal TY \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A))
@@ -470,6 +482,13 @@ lemma [\<phi>reason %cutting]:
   \<open> Semantic_Type A TY'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A) \<open>to be\<close> TY \<open>but actually\<close> TY')
 \<Longrightarrow> Semantic_Type A TY \<close>
+  unfolding OR_FAIL_def Premise_def
+  by simp
+
+lemma [\<phi>reason %cutting]:
+  \<open> Semantic_Type' A TY'
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A) \<open>to be\<close> TY \<open>but actually\<close> TY')
+\<Longrightarrow> Semantic_Type' A TY \<close>
   unfolding OR_FAIL_def Premise_def
   by simp
 

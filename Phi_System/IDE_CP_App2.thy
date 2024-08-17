@@ -13,6 +13,19 @@ subsubsection \<open>Semantic Type\<close>
 context begin
 
 private lemma \<phi>TA_SemTy_rule:
+  \<open> \<r>EIF Ant Ant'
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant \<Longrightarrow> Abstract_Domain T D)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant \<Longrightarrow> Abstract_Domain\<^sub>L T D\<^sub>L)
+\<Longrightarrow> (\<And>x. Ant \<and> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<or> (\<forall>y. \<not> D\<^sub>L y)) \<longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY @tag \<phi>TA_subgoal \<A>infer)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<close>
+  unfolding Action_Tag_def Premise_def
+  by (rule SType_Of'_implies_SType_Of''', auto)
+
+(*
+private lemma \<phi>TA_SemTy_rule:
   \<open> (\<And>x. Ant \<longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY @tag \<phi>TA_subgoal \<A>infer)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -20,6 +33,7 @@ private lemma \<phi>TA_SemTy_rule:
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<close>
   unfolding Action_Tag_def Premise_def
   by (rule SType_Of'_implies_SType_Of, clarsimp)
+*)
 
 private lemma \<phi>TA_SemTy_IH_rewr:
   \<open> Trueprop (Ant \<longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY @tag \<phi>TA_subgoal \<A>infer) \<equiv>

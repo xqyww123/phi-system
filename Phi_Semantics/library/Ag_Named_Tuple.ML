@@ -2,13 +2,13 @@ local
 
 val is_poison_0 = @{lemma
   \<open> semty_ntup (fmupd k \<p>\<o>\<i>\<s>\<o>\<n> Ts) \<equiv> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
-  by (simp add: atomize_eq semty_ntup_eq_position, meson fmranI fmupd_lookup) }
+  by (simp add: atomize_eq semty_ntup_eq_poison, meson fmranI fmupd_lookup) }
 
 val is_poison_N = @{lemma
   \<open> semty_ntup Ts \<equiv> \<p>\<o>\<i>\<s>\<o>\<n>
 \<Longrightarrow> k |\<notin>| fmdom Ts
 \<Longrightarrow> semty_ntup (fmupd k TY Ts) \<equiv> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
-  by (clarsimp simp add: semty_ntup_eq_position atomize_eq,
+  by (clarsimp simp add: semty_ntup_eq_poison atomize_eq,
       metis fmdom_notD fmlookup_ran_iff fmupd_lookup option.distinct(1)) }
 
 fun has_poison (Const(\<^const_name>\<open>fmempty\<close>, _)) = SOME false
