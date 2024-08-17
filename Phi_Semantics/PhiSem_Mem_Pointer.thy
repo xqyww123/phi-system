@@ -166,9 +166,16 @@ abbreviation \<open>type_storable_in_mem T \<equiv> MemObj_Size T < 2^addrspace_
 
 subsubsection \<open>Validity of Mem Block and Addresses\<close>
 
+paragraph \<open>The type of the object that a pointer points to\<close>
+
+definition address_type :: \<open>address \<Rightarrow> TY\<close>
+  where \<open>address_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
+
+adhoc_overloading Type_Of_syntax address_type
+
 definition \<open>Valid_MemBlk seg = (
     case seg of Null \<Rightarrow> True
-              | MemBlk _ ty \<Rightarrow> type_storable_in_mem ty
+              | MemBlk _ ty \<Rightarrow> type_storable_in_mem ty \<and> ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
     )\<close>
 
 lemma Valid_MemBlk_zero[simp]: \<open>Valid_MemBlk Null\<close>
@@ -181,18 +188,26 @@ definition valid_address :: "address \<Rightarrow> bool"
   where "valid_address addr \<longleftrightarrow>
     Valid_MemBlk (memaddr.blk addr) \<and>
     (memaddr.blk addr = Null \<longrightarrow> memaddr.index addr = []) \<and>
-    valid_index (memblk.layout (memaddr.blk addr)) (memaddr.index addr)"
+    valid_index (memblk.layout (memaddr.blk addr)) (memaddr.index addr) \<and>
+    address_type addr \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>"
+
+lemma valid_address_not_poison[simp]:
+  \<open> valid_address addr \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> addr \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  unfolding valid_address_def
+  by auto
 
 lemma valid_rawaddr_nil[simp]:
   \<open>valid_address (memaddr blk []) = Valid_MemBlk blk\<close>
-  unfolding valid_address_def
-  by auto
+  unfolding valid_address_def Valid_MemBlk_def address_type_def
+  by (cases blk; auto)
 
 lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr 0\<close>
   by (simp add: zero_prod_def Valid_MemBlk_def zero_memaddr_def)
 
 lemma valid_address_0[simp]: \<open>valid_address 0\<close>
-  by (simp add: valid_address_def zero_prod_def Valid_MemBlk_def zero_memaddr_def)
+  by (simp add: valid_address_def zero_prod_def Valid_MemBlk_def zero_memaddr_def address_type_def)
+
+
 
 subsubsection \<open>Basic Operations and Properties of Addresses\<close>
 
@@ -210,19 +225,10 @@ lemma index_type_type_storable_in_mem:
   using MemObj_Size_LE_idx_0 order.strict_trans1
   by blast
 
-
-paragraph \<open>The type of the object that a pointer points to\<close>
-
-definition address_type :: \<open>address \<Rightarrow> TY\<close>
-  where \<open>address_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
-
-adhoc_overloading Type_Of_syntax address_type
-
 lemma address_storable_in_mem:
   \<open>valid_address addr \<Longrightarrow> type_storable_in_mem (\<t>\<y>\<p>\<e>\<o>\<f> addr)\<close>
   unfolding valid_address_def Valid_MemBlk_def zero_memaddr_def address_type_def
   by (cases addr; case_tac x1; simp; insert index_type_type_storable_in_mem; blast)
-
 
 
 paragraph \<open>Relation between Logical Address and Physical Address\<close>
@@ -348,7 +354,7 @@ lemma address_to_raw_inj:
      address_to_raw addr1 = address_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
   unfolding address_to_raw_def valid_address_def
   by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def;
-      metis Valid_MemBlk_def add.commute add_leD2 address_type_def index_offset_inj index_offset_upper_bound_0 memaddr.sel(1) memaddr.sel(2) memblk.case(2) memblk.layout(2) nat_less_le order.strict_trans1 phantom_mem_semantic_type_def unat_to_size_t)
+      metis (no_types, lifting) Valid_MemBlk_def add.commute add_leD2 address_type_def bot_nat_0.not_eq_extremum index_offset_inj index_offset_upper_bound_0 memaddr.sel(1) memaddr.sel(2) memblk.case(2) memblk.layout(2) order.strict_trans1 phantom_mem_semantic_type_def unat_to_size_t)
       
 
 
@@ -500,7 +506,8 @@ lemma addr_gep_valid[intro!, simp, \<phi>safe_simp]:
 \<Longrightarrow> valid_address addr
 \<Longrightarrow> valid_address (addr \<tribullet> LOGIC_IDX(i))\<close>
   unfolding valid_address_def zero_memaddr_def addr_gep_def address_type_def
-  by (cases addr; clarsimp simp add: valid_idx_step_void)
+  by (cases addr; clarsimp simp add: valid_idx_step_void;
+      insert valid_idx_not_poison valid_idx_step_void; force)
 
 lemma addr_geps_valid[intro!, simp, \<phi>safe_simp]:
   \<open> valid_index (address_type addr) path
@@ -715,6 +722,8 @@ lemma [\<phi>reason %cutting ]:
 
 
 subsection \<open>Typed Pointer\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def TypedPtr :: "TY \<Rightarrow> (VAL, address) \<phi>"
   where \<open>x \<Ztypecolon> TypedPtr TY \<equiv> x \<Ztypecolon> Ptr \<s>\<u>\<b>\<j> x = 0 \<or> address_type x = TY\<close>

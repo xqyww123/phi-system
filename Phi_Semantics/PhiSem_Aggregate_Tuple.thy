@@ -14,7 +14,7 @@ debt_axiomatization sem_tup_T    :: \<open>TY list \<Rightarrow> TY\<close>
   and   semty_tup_uniq:
             \<open>sem_mk_tup vs \<in> Well_Type TY \<Longrightarrow> \<exists>Ts. TY = sem_tup_T Ts\<close>
 
-  and   zero_tup[simp]: \<open>sem_tup_T Ts \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> Zero (sem_tup_T Ts)     = map_option sem_mk_tup (those (map Zero Ts))\<close>
+  and   zero_tup[simp]: \<open>sem_tup_T Ts \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> Zero (sem_tup_T Ts) = map_option sem_mk_tup (those (map Zero Ts))\<close>
   and   V_tup_sep_disj_R[simp]: \<open>sem_mk_tup l1 ## vl2 \<longleftrightarrow> (\<exists>l2. vl2 = sem_mk_tup l2)\<close>
   and   V_tup_sep_disj_L[simp]: \<open>vl1 ## sem_mk_tup l2 \<longleftrightarrow> (\<exists>l1. vl1 = sem_mk_tup l1)\<close>
   and   V_tup_mult    : \<open>sem_mk_tup l1 * sem_mk_tup l2 = sem_mk_tup (l1 @ l2)\<close>
@@ -153,11 +153,13 @@ definition Tuple_Type_Helper :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY list \<
     (\<forall>x c. c \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>vf. c = sem_mk_tup vf \<and> (\<p>\<o>\<i>\<s>\<o>\<n> \<notin> set Tys \<longrightarrow> list_all2 (\<lambda>t v. v \<in> Well_Type t) Tys vf)))
 )\<close>
 
+subsubsection \<open>\<open>\<t>\<y>\<p>\<e>\<o>\<f>\<close>\<close>
+
 lemma semty_tup_eq_poison_rev[simp]: \<open>\<p>\<o>\<i>\<s>\<o>\<n> = sem_tup_T Ts \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> \<in> set Ts\<close>
   by (metis semty_tup_eq_poison)
   
 
-lemma
+lemma \<t>\<y>\<p>\<e>\<o>\<f>_tup:
   \<open> Tuple_Type_Helper U Tys
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> U \<equiv> sem_tup_T Tys  \<close>
   unfolding Tuple_Type_Helper_def SType_Of_def atomize_eq
@@ -165,7 +167,7 @@ lemma
   apply (smt (verit) SType_Of_not_poison WT_tup mem_Collect_eq someI_ex)
   by (smt (verit) Eps_cong SType_Of_def SType_Of_not_poison WT_tup mem_Collect_eq)
 
-lemma
+lemma Tuple_Type_Helper_0:
   \<open> Tuple_Type_Helper \<lbrace> T \<rbrace> [\<t>\<y>\<p>\<e>\<o>\<f> T] \<close>
   unfolding Tuple_Type_Helper_def Inhabited_def
   apply auto
@@ -186,7 +188,7 @@ lemma
 
 
 
-lemma
+lemma Tuple_Type_Helper_S:
   \<open> Tuple_Type_Helper Ts TYs
 \<Longrightarrow> Tuple_Type_Helper (\<lbrace> T \<rbrace> \<^emph> Ts) (\<t>\<y>\<p>\<e>\<o>\<f> T # TYs)  \<close>
   unfolding Tuple_Type_Helper_def Inhabited_def Satisfiable_def
@@ -251,6 +253,34 @@ lemma
   qed
   using V_tup_mult by blast 
 
+simproc_setup \<t>\<y>\<p>\<e>\<o>\<f>_tup (\<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<lbrace> T \<rbrace> \<^emph> U)\<close> | \<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<lbrace> T \<rbrace>)\<close>) = \<open>
+  fn _ => fn ctxt => fn ctm =>
+    Drule.infer_instantiate ctxt [(("U",0), Thm.dest_arg ctm)] @{thm' \<t>\<y>\<p>\<e>\<o>\<f>_tup}
+      |> REPEAT_DETERM (resolve_tac ctxt @{thms' Tuple_Type_Helper_0 Tuple_Type_Helper_S} 1)
+      |> Seq.pull
+      |> Option.map fst
+\<close>
+
+lemma
+  \<open> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A \<rbrace>) = P (\<t>\<u>\<p> {\<t>\<y>\<p>\<e>\<o>\<f> A}) \<close>
+  by simp
+
+lemma 
+  \<open> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A, B \<rbrace>) = P (\<t>\<u>\<p> {\<t>\<y>\<p>\<e>\<o>\<f> A, \<t>\<y>\<p>\<e>\<o>\<f> B}) \<close>
+  by simp
+
+lemma 
+  \<open> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A, B, C \<rbrace>) = P (\<t>\<u>\<p> {\<t>\<y>\<p>\<e>\<o>\<f> A, \<t>\<y>\<p>\<e>\<o>\<f> B, \<t>\<y>\<p>\<e>\<o>\<f> C}) \<close>
+  by simp
+
+lemma 
+  \<open> \<t>\<y>\<p>\<e>\<o>\<f> B = \<p>\<o>\<i>\<s>\<o>\<n>
+\<Longrightarrow> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A, B, C \<rbrace>) = P \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  by simp
+
+
+subsubsection \<open>Reductions\<close>
+
 
 lemma Empty_Tuple_reduce[simp]:
   \<open>(((),a) \<Ztypecolon> Empty_Tuple \<^emph> \<lbrace> T \<rbrace>) = (a \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
@@ -268,7 +298,9 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   unfolding Semantic_Zero_Val_def
   by (clarsimp simp add: V_tup_mult_cons image_iff, insert V_tup_sep_disj_L, blast)
 
-lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma Tuple_Field_semtys[\<phi>reason add]:
   \<open> Semantic_Type T TY
 \<Longrightarrow> Semantic_Type Ts (sem_tup_T TYs)
 \<Longrightarrow> Semantic_Type (\<lbrace> T \<rbrace> \<^emph> Ts) (sem_tup_T (TY#TYs))\<close>
@@ -294,12 +326,14 @@ text \<open>All the reasoning rules below are for semantic properties.
 subsection \<open>Show validity of an index for a type\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> is_valid_step_idx_of (AgIdx_N 0) (sem_tup_T (Ty # Tys)) Ty \<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N 0) (sem_tup_T (Ty # Tys)) Ty \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> is_valid_step_idx_of (AgIdx_N i) (sem_tup_T Tys) RET
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (sem_tup_T Tys) RET
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N (Suc i)) (sem_tup_T (Ty # Tys)) RET \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)

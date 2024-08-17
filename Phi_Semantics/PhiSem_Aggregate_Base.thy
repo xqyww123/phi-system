@@ -19,6 +19,8 @@ where idx_step_value_welltyp:
            \<open>valid_idx_step T i
         \<Longrightarrow> v \<in> Well_Type T
         \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
+and   valid_idx_not_poison:
+           \<open>valid_idx_step T i \<Longrightarrow> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> idx_step_type i T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
 and   idx_step_mod_value :
            \<open>valid_idx_step T i
         \<Longrightarrow> valid_idx_step T j

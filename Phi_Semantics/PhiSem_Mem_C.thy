@@ -270,6 +270,7 @@ proc calloc1:
   input \<open>Void\<close>
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
        and \<open>Semantic_Zero_Val TY T z\<close>
+  premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
@@ -289,7 +290,7 @@ proc calloc1:
     
 \<medium_right_bracket> .
 
- 
+
 proc mfree:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
   requires \<open>Semantic_Type T TY\<close>

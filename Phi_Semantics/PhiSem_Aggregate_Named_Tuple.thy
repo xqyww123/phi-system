@@ -387,8 +387,12 @@ simproc_setup \<t>\<y>\<p>\<e>\<o>\<f>_ntup (\<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<
 
 ML_file \<open>library/Ag_Named_Tuple2.ML\<close>
 
+lemma fmpred_sing[simp]:
+  \<open>fmpred P (fmupd k v fmempty) \<longleftrightarrow> P k v\<close>
+  by auto
 
 let_\<phi>type Named_Tuple_Field
+  deriving Semantic_Zero_Val
   deriving \<open> Semantic_Zero_Val ty T x
          \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
 

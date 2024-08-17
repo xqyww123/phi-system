@@ -97,7 +97,7 @@ subsubsection \<open>Semantic Zero Value\<close>
 context begin
 
 private lemma \<phi>TA_Semantic_Zero_Val_rule:
-  \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T)))
+  \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longrightarrow> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T))))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT

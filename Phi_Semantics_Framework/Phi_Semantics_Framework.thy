@@ -164,6 +164,10 @@ consts EqCompare :: \<open>VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
 debt_axiomatization Zero :: \<open>TY \<Rightarrow> VAL option\<close>
   where zero_well_typ: "pred_option (\<lambda>v. v \<in> Well_Type T) (Zero T)"
 
+lemma Zero_\<p>\<o>\<i>\<s>\<o>\<n>[simp]:
+  \<open> Zero \<p>\<o>\<i>\<s>\<o>\<n> = None \<close>
+  by (metis Well_Type_poison empty_iff not_None_eq option.pred_inject(2) zero_well_typ)
+  
 
 lemma Well_Type_unique:
   \<open>v \<in> Well_Type ta \<Longrightarrow> v \<in> Well_Type tb \<Longrightarrow> ta = tb\<close>
