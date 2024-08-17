@@ -22,6 +22,10 @@ lemma sem_mk_symbol_inj[simp]:
   \<open>sem_mk_symbol x = sem_mk_symbol y \<longleftrightarrow> x = y\<close>
   by (metis eqcmp_aint)
 
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<s>\<y>\<m>\<b>\<o>\<l> \<close>
+  unfolding Is_Type_Literal_def ..
+
 section \<open>\<phi>-Types\<close>
 
 declare [[\<phi>trace_reasoning = 1]]

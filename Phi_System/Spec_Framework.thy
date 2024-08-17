@@ -248,14 +248,14 @@ lemma SType_Of'_implies_SType_Of''':
       smt (verit, ccfv_SIG) someI)
 
 lemma SType_Of_not_poison:
-  \<open> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Inhabited T \<and> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type (\<t>\<y>\<p>\<e>\<o>\<f> T)) \<close>
+  \<open> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Inhabited T \<and> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
   unfolding SType_Of_def Inhabited_def Satisfiable_def
-  by (auto, smt (verit, best) someI2_ex)
+  by (auto, smt (verit, best) someI2_ex, insert Well_Type_disjoint, blast)
 
 lemma SType_Of'_not_poison:
-  \<open> \<t>\<y>\<p>\<e>\<o>\<f> A \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Satisfiable A \<and> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type (\<t>\<y>\<p>\<e>\<o>\<f> A)) \<close>
+  \<open> \<t>\<y>\<p>\<e>\<o>\<f> A = TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Satisfiable A \<and> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type TY) \<close>
   unfolding SType_Of'_def Satisfiable_def
-  by (auto, smt (verit, best) someI2_ex)
+  by (auto, smt (verit, best) someI2_ex, insert Well_Type_disjoint, blast)
 
 
 (*
@@ -431,6 +431,20 @@ paragraph \<open>Check Type Literal\<close>
 definition \<open>Is_Type_Literal (TY::TY) \<equiv> True\<close>
 
 \<phi>reasoner_group Is_Type_Literal = (1000, [10, 2000]) for \<open>Is_Type_Literal TY\<close> \<open>\<close>
+    and Is_Type_Literal_default = (10, [10, 20]) in Is_Type_Literal \<open>\<close>
+
+declare [[ \<phi>default_reasoner_group \<open>Is_Type_Literal _\<close> : %Is_Type_Literal (100) ]]
+
+lemma Is_Type_Literal_I: \<open>Is_Type_Literal X\<close>
+  unfolding Is_Type_Literal_def ..
+
+\<phi>reasoner_ML Is_Type_Literal_Free default %Is_Type_Literal_default (\<open>Is_Type_Literal _\<close>) = \<open>
+  fn (_,(ctxt,sequent)) =>
+    case Thm.major_prem_of sequent
+      of Trueprop $ (Const(\<^const_name>\<open>Is_Type_Literal\<close>, _) $ (Const(\<^const_name>\<open>SType_Of\<close>, _) $ Free _)) =>
+          Seq.single (ctxt, @{thm' Is_Type_Literal_I} RS sequent)
+       | _ => Seq.empty
+\<close>
 
 paragraph \<open>Unfolding \<open>\<t>\<y>\<p>\<e>\<o>\<f> T\<close>\<close>
 
@@ -438,11 +452,23 @@ paragraph \<open>Unfolding \<open>\<t>\<y>\<p>\<e>\<o>\<f> T\<close>\<close>
                                 \<open>Unfolding \<open>\<t>\<y>\<p>\<e>\<o>\<f> T\<close> exhausitively, with checking the result is not a poison.\<close>
 
 definition Semantic_Type :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
-  where \<open>Semantic_Type T TY \<equiv> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  where \<open>Semantic_Type T TY \<equiv> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
 
 definition Semantic_Type' :: \<open>VAL BI \<Rightarrow> TY \<Rightarrow> bool\<close>
-  where \<open>Semantic_Type' A TY \<equiv> \<t>\<y>\<p>\<e>\<o>\<f> A = TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  where \<open>Semantic_Type' A TY \<equiv> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type TY) \<close>
 
+\<phi>reasoner_group Semantic_Type_all = (100, [10, 2000]) for (\<open>Semantic_Type _ _\<close>, \<open>Semantic_Type' _ _\<close>) \<open>\<close>
+  and Semantic_Type = (1000, [1000,1030]) in Semantic_Type_all \<open>\<close>
+  and Semantic_Type_fallback = (10, [10,20]) in Semantic_Type_all \<open>\<close>
+
+declare [[
+    \<phi>reason_default_pattern \<open>Semantic_Type ?T _\<close> \<Rightarrow> \<open>Semantic_Type ?T ?var\<close> (100)
+                        and \<open>Semantic_Type' ?T _\<close> \<Rightarrow> \<open>Semantic_Type' ?T ?var\<close> (100),
+    \<phi>default_reasoner_group \<open>Semantic_Type _ _\<close> : %Semantic_Type (100),
+    \<phi>default_reasoner_group \<open>Semantic_Type' _ _\<close> : %Semantic_Type (100)
+]]
+
+(*
 lemma Semantic_Type_alt_def:
   \<open> Semantic_Type T TY \<longleftrightarrow> Inhabited T \<and> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
   unfolding Semantic_Type_def
@@ -454,38 +480,32 @@ lemma Semantic_Type'_alt_def:
   unfolding Semantic_Type'_def
   using SType_Of'_not_poison
   by (smt (verit, best) Action_Tag_def Premise_def \<phi>sem_type_by_sat)
+*)
 
-lemma [\<phi>reason %cutting+10 for \<open>Semantic_Type _ ?var\<close>]:
+lemma [\<phi>reason default %Semantic_Type_fallback+10]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> TY : \<t>\<y>\<p>\<e>\<o>\<f> T
 \<Longrightarrow> Is_Type_Literal TY \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))
 \<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Semantic_Type_def Simplify_def Premise_def OR_FAIL_def
-  by simp
+  unfolding Semantic_Type_def Simplify_def Premise_def OR_FAIL_def SType_Of_def
+  by (auto, smt (verit, best) Eps_cong SType_Of_def SType_Of_not_poison, presburger)
 
-lemma [\<phi>reason %cutting]:
+lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type _ _\<close>]:
   \<open> Semantic_Type T TY'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T) \<open>to be\<close> TY \<open>but actually\<close> TY')
 \<Longrightarrow> Semantic_Type T TY \<close>
   unfolding OR_FAIL_def Premise_def
   by simp
 
-lemma [\<phi>reason %cutting+10 for \<open>Semantic_Type' _ ?var\<close>]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> TY : \<t>\<y>\<p>\<e>\<o>\<f> A
-\<Longrightarrow> Is_Type_Literal TY \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A))
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A))
-\<Longrightarrow> Semantic_Type' A TY \<close>
-  unfolding Semantic_Type'_def Simplify_def Premise_def OR_FAIL_def
-  by simp
 
-lemma [\<phi>reason %cutting]:
-  \<open> Semantic_Type A TY'
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A) \<open>to be\<close> TY \<open>but actually\<close> TY')
-\<Longrightarrow> Semantic_Type A TY \<close>
-  unfolding OR_FAIL_def Premise_def
-  by simp
+lemma [\<phi>reason default %Semantic_Type_fallback+10]:
+  \<open> Semantic_Type T TY
+\<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY \<close>
+  unfolding Semantic_Type'_def Semantic_Type_def
+  by auto
 
-lemma [\<phi>reason %cutting]:
+
+lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type' _ _\<close>]:
   \<open> Semantic_Type' A TY'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A) \<open>to be\<close> TY \<open>but actually\<close> TY')
 \<Longrightarrow> Semantic_Type' A TY \<close>
@@ -497,7 +517,7 @@ paragraph \<open>Conversion From Strong to Weak\<close>
 
 (* ML_file \<open>library/spec_framework/semantic_type.ML\<close> *)
 
-*) (*
+*) 
 subsubsection \<open>Multiple Values\<close>
 
 definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>
@@ -507,7 +527,7 @@ definition \<phi>_Have_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \
   where \<open>\<phi>_Have_Types spec TYs = (\<forall>v. Satisfiable (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<Rightarrow> \<open>\<phi>_Have_Types ?S _\<close> (100)]]
-*)
+
 
 (*
 subsubsection \<open>Semantic Typeof\<close>

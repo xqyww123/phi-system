@@ -196,6 +196,8 @@ proc op_load_mem:
   semantic_return \<open>index_value (memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))) (discrete.dest (\<phi>arg.dest \<v>1)) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 1]]
+
 proc op_store_mem:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
   requires \<open>report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
@@ -464,6 +466,7 @@ lemma [\<phi>reason %deriving_pointer_cut]:
   for T :: \<open>(mem_fic,'x) \<phi>\<close>
   unfolding Derive_Pointer_Of_def ..
 
+(*
 lemma [\<phi>reason %generalized_sematic_type_cut]:
   \<open> Generalized_Semantic_Type T TY\<^sub>1
 \<Longrightarrow> Generalized_Semantic_Type U TY\<^sub>2
@@ -475,6 +478,6 @@ lemma [\<phi>reason %generalized_sematic_type_cut]:
   \<open> Generalized_Semantic_Type T TY
 \<Longrightarrow> Generalized_Semantic_Type (Mem_Coercion T) TY \<close>
   unfolding Generalized_Semantic_Type_def ..
-
+*)
 
 end

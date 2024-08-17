@@ -52,6 +52,16 @@ lemma semty_ntup_uniq'2:
         presburger,
         smt (verit, best) option.sel option_rel_Some2) .
 
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal (semty_ntup fmempty) \<close>
+  unfolding Is_Type_Literal_def ..
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal v
+\<Longrightarrow> Is_Type_Literal (semty_ntup fm)
+\<Longrightarrow> Is_Type_Literal (semty_ntup (fmupd k v fm)) \<close>
+  unfolding Is_Type_Literal_def ..
+
 
 subsubsection \<open>Syntax\<close>
 
@@ -314,8 +324,9 @@ lemma Named_Tuple_Types_1:
   apply auto
   using SType_Of_not_poison semty_ntup_eq_poison apply fastforce
   apply (metis Named_Tuple_Field.expansion \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 SType_Of_not_poison semty_ntup_eq_poison)
-  apply (metis Named_Tuple_Field.expansion \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 Semantic_Type_alt_def Semantic_Type_def semty_ntup_eq_poison)
+  apply (metis Named_Tuple_Field.expansion SType_Of_not_poison \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 semty_ntup_eq_poison)
   by (metis SType_Of_not_poison fmempty_transfer fmlookup_ran_iff fmrel_upd fmupd_lookup)
+
 
 lemma Named_Tuple_Types_N:
   \<open> Named_Tuple_Types U Tys
@@ -345,7 +356,7 @@ apply auto
     have t5: \<open>\<t>\<y>\<p>\<e>\<o>\<f> T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
       using prems(1) prems(10) prems(3) semty_ntup_eq_poison semty_ntup_neq_poison by force
     have t6: \<open>\<not> Inhabited T \<or> (\<forall>TY. \<exists>x v. v \<Turnstile> (x \<Ztypecolon> T) \<and> v \<notin> Well_Type TY)\<close>
-      by (metis Semantic_Type_alt_def Semantic_Type_def t5)
+      by (metis SType_Of_not_poison t5)
     then show ?thesis
     proof (rule, meson Inhabited_def Satisfiable_I prems(9))
       assume t7: \<open>\<forall>TY. \<exists>x v. v \<Turnstile> (x \<Ztypecolon> T) \<and> v \<notin> Well_Type TY\<close>
@@ -358,7 +369,7 @@ apply auto
         by (metis \<open>v' \<Turnstile> (x' \<Ztypecolon> T) \<and> v' \<notin> Well_Type t'\<close> finsert_iff fmdom_fmupd fmupd_lookup idx_step_type_tup option.sel t3 t4)
     qed
   qed
-  apply (metis (mono_tags, lifting) SType_Of_not_poison V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right semty_ntup_eq_poison semty_ntup_neq_poison) 
+  apply (metis (no_types, lifting) SType_Of_not_poison V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right semty_ntup_eq_poison semty_ntup_neq_poison)
   using semty_ntup_eq_poison semty_ntup_neq_poison apply force  
   using semty_ntup_eq_poison semty_ntup_neq_poison apply fastforce
   using semty_ntup_eq_poison semty_ntup_neq_poison apply force
@@ -572,7 +583,7 @@ lemma [\<phi>reason %aggregate_access+20]:
           (x \<Ztypecolon> List_Item T)
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def
-            Action_Tag_def Semantic_Type'_alt_def
+            Action_Tag_def Semantic_Type'_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
@@ -582,11 +593,11 @@ lemma [\<phi>reason %aggregate_access]:
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor (s # sR))
           ((x,xs) \<Ztypecolon> List_Item T \<^emph> L)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
-  unfolding \<phi>Aggregate_Constructor_Synth_def Semantic_Type'_alt_def Action_Tag_def
+  unfolding \<phi>Aggregate_Constructor_Synth_def Semantic_Type'_def Action_Tag_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric] times_list_def; rule)
   subgoal premises prems for vs v
-    by (insert prems(2-) 
-               prems(1)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
+    by (insert prems(1,3-) 
+               prems(2)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
                V_named_tup_mult,
         
         rule exI[where x=\<open>sem_mk_ntup (fmupd s v fmempty)\<close>],
@@ -594,8 +605,8 @@ lemma [\<phi>reason %aggregate_access]:
         auto simp: V_named_tup_sep_disj fmrel_fmdom_eq,
         metis fmap_times_fempty(2) fmupd_times_right)
   subgoal premises prems for vs v
-    by (insert prems(2-) 
-               prems(1)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
+    by (insert prems(1,3-) 
+               prems(2)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
                V_named_tup_mult,
         metis fmrel_upd sem_mk_dest_ntup) .
 
@@ -611,7 +622,7 @@ lemma [\<phi>reason %aggregate_access+20]:
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
           (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def
-            Action_Tag_def Semantic_Type'_alt_def
+            Action_Tag_def Semantic_Type'_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
@@ -622,7 +633,7 @@ lemma [\<phi>reason %aggregate_access]:
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
           (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def
-            Action_Tag_def Semantic_Type'_alt_def
+            Action_Tag_def Semantic_Type'_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
   subgoal for vs
     by (rule exI[where x=\<open>sem_mk_ntup (fmupd s (\<phi>arg.dest v) fmempty)\<close>],

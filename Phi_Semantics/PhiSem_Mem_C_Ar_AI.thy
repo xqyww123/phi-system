@@ -15,7 +15,10 @@ proc op_add_ptr_a[\<phi>overload +]:
   semantic_return \<open>
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1) ||+ of_int (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>2)) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY)\<close>
-    certified by (clarsimp simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] useful distrib_right,
+certified proof -
+  have \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> len \<noteq> 0\<close>
+  thm address_to_raw_array_GEP
+  by (clarsimp simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] useful distrib_right,
                   simp add: add.commute)
 
 \<medium_right_bracket> .

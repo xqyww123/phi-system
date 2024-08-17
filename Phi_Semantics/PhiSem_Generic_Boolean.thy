@@ -25,6 +25,9 @@ lemma \<p>\<o>\<i>\<s>\<o>\<n>_neq_\<b>\<o>\<o>\<l>[simp]:
   \<open>\<p>\<o>\<i>\<s>\<o>\<n> \<noteq> \<b>\<o>\<o>\<l>\<close>
   using \<b>\<o>\<o>\<l>_neq_\<p>\<o>\<i>\<s>\<o>\<n> by fastforce
 
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<b>\<o>\<o>\<l> \<close>
+  unfolding Is_Type_Literal_def ..
 
 section \<open>Instructions\<close>
 
@@ -147,8 +150,8 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_equal TY (\<phi>V_pair rawa rawb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[rawa] T\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
   unfolding op_equal_def
   by ((cases rawa; cases rawb; simp, rule, rule),
-      simp add: Semantic_Type'_alt_def subset_iff Premise_def,
-      simp add: Semantic_Type'_alt_def subset_iff Premise_def, rule,
+      simp add: Semantic_Type'_def subset_iff Premise_def,
+      simp add: Semantic_Type'_def subset_iff Premise_def, rule,
       unfold \<phi>Equal_def Premise_def, simp, simp,
       rule, simp)
 

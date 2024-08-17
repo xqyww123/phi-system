@@ -15,6 +15,11 @@ section \<open>Semantics of Pointer\<close>
 subsection \<open>Type\<close>
 
 debt_axiomatization \<p>\<o>\<i>\<n>\<t>\<e>\<r> :: TY ("\<p>\<t>\<r>")
+  where \<p>\<o>\<i>\<n>\<t>\<e>\<r>_isnot_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<p>\<o>\<i>\<n>\<t>\<e>\<r> \<close>
+  unfolding Is_Type_Literal_def ..
 
 subsection \<open>Value\<close>
 
@@ -806,25 +811,6 @@ ML \<open>fun bad_Addr_Of pos =
           (fn _ => fn _ => bad_Addr_Of pos)) s ) \<close>
 
 
-lemma
-  \<open>P (\<t>\<y>\<p>\<e>\<o>\<f> (Ptr[TY]))\<close>
-apply simp
-
-lemma
-  \<open>P (\<t>\<y>\<p>\<e>\<o>\<f> (addr \<Ztypecolon> Ptr[TY]))\<close>
-apply simp
-
-
-
-
-
-
-
-
-
-
-
-
 subsection \<open>GEP\<close>
 
 proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
@@ -836,8 +822,7 @@ proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
   premises \<open>addr \<noteq> 0\<close>
   output \<open>addr_geps addr spec_idx \<Ztypecolon> \<v>\<a>\<l> Ptr[TY']\<close>
 \<medium_left_bracket>
-  $addr semantic_local_value \<p>\<t>\<r> 
-\<semicolon>
+  $addr semantic_local_value \<p>\<t>\<r>
   semantic_return \<open>
     sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
         \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr[TY'])\<close>

@@ -10,7 +10,7 @@ debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<
                 and sem_mk_array   :: \<open>VAL list \<Rightarrow> VAL\<close>
                 and sem_dest_array :: \<open>VAL \<Rightarrow> VAL list\<close>
   where sem_mk_dest_array[simp]: \<open>sem_dest_array (sem_mk_array vs) = vs\<close>
-  and   semty_array_eq_poison: \<open>mk_array_T N T = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> (T = \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0)\<close>
+  and   semty_array_eq_poison[simp]: \<open>\<a>\<r>\<r>\<a>\<y>[N] T = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> (T = \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0)\<close>
   and   WT_arr[simp]:   \<open>Well_Type (\<a>\<r>\<r>\<a>\<y>[n] t) = { sem_mk_array vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
   and   semty_arr_uniq: \<open>sem_mk_array vs \<in> Well_Type TY \<Longrightarrow> \<exists>T. TY = mk_array_T (length vs) T\<close>
   and   zero_arr[simp]: \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> Zero (\<a>\<r>\<r>\<a>\<y>[N] T)  = map_option (\<lambda>z. sem_mk_array (replicate N z)) (Zero T)\<close>
@@ -45,9 +45,11 @@ lemma [simp]:
   using semty_array_eq_poison
   by blast
 
-
-
-
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal T
+\<Longrightarrow> Is_Literal N
+\<Longrightarrow> Is_Type_Literal (\<a>\<r>\<r>\<a>\<y>[N] T) \<close>
+  unfolding Is_Type_Literal_def ..
 
 
 

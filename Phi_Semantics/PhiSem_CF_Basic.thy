@@ -100,7 +100,7 @@ lemma sel_\<phi>app:
     \<longmapsto> (if c then a else b) \<Ztypecolon> \<v>\<a>\<l> (if c then A else B)
     \<rbrace>\<close>
   unfolding op_sel_def
-  by ((cases rawc; cases rawb; cases rawa; cases c; simp add: Semantic_Type'_alt_def subset_iff),
+  by ((cases rawc; cases rawb; cases rawa; cases c; simp add: Semantic_Type'_def subset_iff),
       rule, rule, rule, simp add: \<phi>expns WT_bool, blast, rule, simp add: \<phi>expns WT_bool, rule,
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns WT_bool, rule, rule, rule,
       simp add: \<phi>expns WT_bool, blast, rule, simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns WT_bool,

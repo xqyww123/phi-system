@@ -12,7 +12,7 @@ lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
   using MemObj_Size_int by clarsimp
 
 abbreviation \<open>\<s>\<i>\<z>\<e>_\<t> \<equiv> \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)\<close>
-
+ 
 
 proc calloc:
   requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>

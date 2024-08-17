@@ -15,6 +15,7 @@ debt_axiomatization \<a>\<i>\<n>\<t> :: TY
                 and sem_dest_aint :: \<open>VAL \<Rightarrow> int\<close>
 where sem_mk_dest_aint[simp]: \<open>sem_dest_aint (sem_mk_aint i) = i\<close>
   and WT_aint[simp]: \<open>Well_Type \<a>\<i>\<n>\<t> = { sem_mk_aint i |i. True } \<close>
+  and \<a>\<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<a>\<i>\<n>\<t> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   and can_eqcmp_aint[simp]: "Can_EqCompare res (sem_mk_aint i1) (sem_mk_aint i2)"
   and eqcmp_aint[simp]: "EqCompare (sem_mk_aint i1) (sem_mk_aint i2) \<longleftrightarrow> i1 = i2"
   and  zero_aint[simp]: \<open>Zero \<a>\<i>\<n>\<t>   = Some (sem_mk_aint 0)\<close>
@@ -36,6 +37,11 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open> get_logical_int_from_semantic_int (sem_mk_aint n \<Ztypecolon> Itself) n\<close>
   unfolding get_logical_int_from_semantic_int_def Premise_def
   by simp
+
+lemma [\<phi>reason add]:
+  \<open>Is_Type_Literal \<a>\<i>\<n>\<t>\<close>
+  unfolding Is_Type_Literal_def ..
+
 
 
 section \<open>\<phi>-Types\<close>

@@ -453,7 +453,7 @@ lemma op_get_aggregate:
 \<Longrightarrow> \<phi>Aggregate_Getter spec_idx T U f
 \<Longrightarrow> report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate sem_idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
-  unfolding op_get_aggregate_def Semantic_Type'_alt_def subset_iff \<phi>Aggregate_Getter_def
+  unfolding op_get_aggregate_def Semantic_Type'_def subset_iff \<phi>Aggregate_Getter_def
             parse_eleidx_input_def
             parse_eleidx_input_least1_def
   by (cases rv; simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
@@ -469,7 +469,7 @@ lemma "_op_set_aggregate_":
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY\<^sub>U sem_idx (rv\<^bold>,ru)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> \<lambda>ret. f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l>[ret] T'
         \<s>\<u>\<b>\<j> (TY\<^sub>U' = TY\<^sub>U \<longrightarrow> \<phi>arg.dest ret \<in> Well_Type TY) \<rbrace>\<close>
-  unfolding op_set_aggregate_def Semantic_Type'_alt_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
+  unfolding op_set_aggregate_def Semantic_Type'_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
             parse_eleidx_input_def is_valid_index_of_def
             parse_eleidx_input_least1_def
   by (cases rv; cases ru; simp, rule, rule, simp, rule, simp,

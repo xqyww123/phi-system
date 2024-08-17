@@ -8,7 +8,7 @@ begin
 
 declare One_nat_def[simp del]
 
-declare [[\<phi>reasoning_step_limit = 50]]
+declare [[\<phi>reasoning_step_limit = 70]]
 
 proc test_mem1:
   input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr \<a>\<i>\<n>\<t>\<close>
@@ -16,7 +16,7 @@ proc test_mem1:
   \<medium_left_bracket>
     $addr ! (*BUG!*)
   \<medium_right_bracket> .
-
+ 
 proc test_mem1':
   input \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<nat>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<close>
   premises \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<i>\<n>\<t>\<close>

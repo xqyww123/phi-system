@@ -81,13 +81,14 @@ fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
    of SOME (rule, _) => thy
         |> note_properties_s false phi0 [(name, [rule])]
         |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (
-              fn m => fn lthy => lthy
-                  |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+              fn m => Context.mapping (Simplifier.map_theory_simpset (fn ctxt => ctxt addsimps [Morphism.thm m rule]))
+                                      (fn ctxt => ctxt addsimps [Morphism.thm m rule])
+               (* |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
                   |> Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
                                            (SOME (the_default @{reasoner_group %\<phi>sem_type_infer_derived}
                                                               (#2 instruction)))
                                            ([],[]) NONE [Morphism.thm m rule]
-                  |> Config.restore_generic Phi_Reasoner.trace lthy)
+                  |> Config.restore_generic Phi_Reasoner.trace lthy *) )
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
