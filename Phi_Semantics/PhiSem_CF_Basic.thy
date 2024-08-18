@@ -283,10 +283,10 @@ attribute_setup recursive = \<open>Scan.repeat (Scan.lift Parse.term) >> (fn var
          | SOME b => (
             let
              in if Binding.is_empty b
-            then error "A recursive procedure cannot be anonymous."
-            else if null vars then tracing "You may want to use syntax \<open>recursive vars\<close> to indicate \
-                 \which variables are varied between the recursive callings." else ();
-            PhiSem_Control_Flow.basic_recursive_mod Syntax.read_terms b vars (ctxt,sequent)
+                then error "A recursive procedure cannot be anonymous."
+                else if null vars then tracing "You may want to use syntax \<open>recursive vars\<close> to indicate \
+                     \variables varying throught recursive calls." else ();
+             PhiSem_Control_Flow.basic_recursive_mod Syntax.read_terms b vars (ctxt,sequent)
             end
            )
   ))\<close>

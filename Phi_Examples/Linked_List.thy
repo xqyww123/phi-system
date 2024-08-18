@@ -9,16 +9,18 @@ declare [[\<phi>infer_requirements]]
 abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
 \<phi>type_def Linked_Lst :: \<open>address \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
-  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<s>\<u>\<b>\<j> addr = 0)\<close>
+  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<s>\<u>\<b>\<j> addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
                                       (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: Ptr, data: T \<rbrace>
                                       \<s>\<u>\<b>\<j> nxt. address_to_base addr \<and>
-                                               \<t>\<y>\<p>\<e>\<o>\<f> addr = \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T) )\<close>
+                                               \<t>\<y>\<p>\<e>\<o>\<f> addr = \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T) \<and>
+                                               \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
 
      deriving Basic
-          and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T) (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
-          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
-          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
+          and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T)
+                                      (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0) \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [] \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
+          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = [] \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) (\<lambda>_. addr = 0)\<close>
           and \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
             \<Longrightarrow> Transformation_Functor (Linked_Lst addr) (Linked_Lst addr) T U set (\<lambda>_. UNIV) list_all2\<close>
           and \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
@@ -26,9 +28,10 @@ abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<
                                                    set (\<lambda>x. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f)\<close>
           and Pointer_Of
 
- 
+
 proc init:
   input  Void
+  premises \<open>\<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>[] \<Ztypecolon> \<r>\<e>\<f> Linked_Lst 0 T\<close>
 \<medium_left_bracket>
   \<m>\<a>\<k>\<e>\<s>(0) \<open>Linked_Lst _ T\<close> \<semicolon>
@@ -74,13 +77,14 @@ proc pop_llist:
   ret  
 \<medium_right_bracket> .
 
+thm pop_llist_def
 
 
 proc nth_llist:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> Linked_Lst addr T\<heavy_comma> l!i \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  is [recursive]
+  is [recursive l i addr]
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
   if (i = 0) \<medium_left_bracket>
@@ -105,7 +109,7 @@ proc update_nth_llist:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := y] \<Ztypecolon> Linked_Lst addr T\<close>
-  is [recursive]
+  is [recursive l i addr]
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
   if (i = 0) \<medium_left_bracket>
@@ -121,7 +125,7 @@ proc length_of:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T\<close>
   premises \<open>length l < 2 ^ LENGTH(\<i>\<n>\<t>)\<close>
   output   \<open>length l \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
-  is [recursive]
+  is [recursive l addr]
   is [routine]
 \<medium_left_bracket>
   if (addr = NULL) \<medium_left_bracket>
@@ -141,7 +145,7 @@ proc reverse_aux:
           l' \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr' T\<close>
   output \<open>rev l @ l' \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr'' T
           \<s>\<u>\<b>\<j> addr''. \<top>\<close>
-  is [recursive]
+  is [recursive l l' addr addr']
 \<medium_left_bracket>
   if (addr = NULL) \<medium_left_bracket>
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(0)\<close>

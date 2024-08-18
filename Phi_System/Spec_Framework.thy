@@ -295,7 +295,8 @@ declare [[
 
 \<phi>reasoner_group Semantic_Type_all = (100, [10, 2000]) for (\<open>Semantic_Type _ _\<close>, \<open>Semantic_Type' _ _\<close>) \<open>\<close>
   and Semantic_Type = (1000, [1000,1030]) in Semantic_Type_all \<open>\<close>
-  and Semantic_Type_fallback = (10, [10,20]) in Semantic_Type_all \<open>\<close>
+  and Semantic_Type_default = (50, [30,80]) in Semantic_Type_all \<open>\<close>
+  and Semantic_Type_fallback = (15, [10,20]) in Semantic_Type_all and < Semantic_Type_default \<open>\<close>
 
 declare [[
     \<phi>reason_default_pattern \<open>Semantic_Type ?T _\<close> \<Rightarrow> \<open>Semantic_Type ?T ?var\<close> (100)
@@ -498,15 +499,16 @@ paragraph \<open>Conversion From Strong to Weak\<close>
 
 subsubsection \<open>Reasoning\<close>
 
-lemma [\<phi>reason default %Semantic_Type_fallback+10]:
+lemma [\<phi>reason default %Semantic_Type_fallback+5]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> TY : \<t>\<y>\<p>\<e>\<o>\<f> T
-\<Longrightarrow> Is_Type_Literal TY \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))
+\<comment> \<open>Is_Type_Literal TY \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))\<close>
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T) \<open>: fail to show\<close> (TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>))
 \<Longrightarrow> Semantic_Type T TY \<close>
   unfolding Semantic_Type_def Simplify_def Premise_def OR_FAIL_def
   by (auto, meson SType_Of_not_poison)
 
-lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type _ _\<close>]:
+lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type _ _\<close>
+                                            except \<open>Semantic_Type _ ?var\<close>]:
   \<open> Semantic_Type T TY'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T) \<open>to be\<close> TY \<open>but actually\<close> TY')
 \<Longrightarrow> Semantic_Type T TY \<close>
@@ -514,18 +516,37 @@ lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type _ _
   by simp
 
 
-lemma [\<phi>reason default %Semantic_Type_fallback+10]:
+lemma [\<phi>reason default %Semantic_Type_fallback+5]:
   \<open> Semantic_Type T TY
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY \<close>
   unfolding Semantic_Type'_def Semantic_Type_def
   by auto
 
-lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type' _ _\<close>]:
+lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type' _ _\<close>
+                                            except \<open>Semantic_Type' _ ?var\<close>]:
   \<open> Semantic_Type' A TY'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A) \<open>to be\<close> TY \<open>but actually\<close> TY')
 \<Longrightarrow> Semantic_Type' A TY \<close>
   unfolding OR_FAIL_def Premise_def
   by simp
+
+lemma [\<phi>reason default %Semantic_Type_default]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (v \<in> Well_Type TY)
+\<Longrightarrow> Semantic_Type' (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def Semantic_Type'_def
+  by auto
+
+lemma [\<phi>reason add]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Semantic_Type' A TY)
+\<Longrightarrow> Semantic_Type' (A \<s>\<u>\<b>\<j> P) TY \<close>
+  unfolding Semantic_Type'_def
+  by auto
+
+lemma [\<phi>reason add]:
+  \<open> (\<And>x. Semantic_Type' (A x) TY)
+\<Longrightarrow> Semantic_Type' (\<exists>*x. A x) TY \<close>
+  unfolding Semantic_Type'_def
+  by auto
 
 
 subsubsection \<open>Multiple Values\<close>
@@ -572,7 +593,7 @@ lemma SType_Of_unfold:
 ML_file \<open>library/tools/unfold_typeof.ML\<close>
 *)
 
-(*
+
 subsubsection \<open>Generalized Semantic Typeof --- using Syntax Inference only\<close>
 
 definition Generalized_Semantic_Type :: \<open>'any \<Rightarrow> TY \<Rightarrow> bool\<close>
@@ -599,8 +620,8 @@ lemma Semantic_Type_by_Synt_Sugar:
   unfolding \<r>Guard_def SYNTACTIC_MODE_def by blast
 
 bundle Semantic_Type_by_Synt_Sugar =
-          Semantic_Type_by_Synt_Sugar[\<phi>reason default %\<phi>sem_type_failback]
-*)
+          Semantic_Type_by_Synt_Sugar[\<phi>reason default %Semantic_Type_fallback-5]
+
 
 subsection \<open>Zero Value\<close>
 

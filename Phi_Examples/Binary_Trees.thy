@@ -196,17 +196,19 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
 *)
 
 \<phi>type_def BinTree :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
-  where \<open> (Leaf \<Ztypecolon> BinTree addr T)     = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
+  where \<open> (Leaf \<Ztypecolon> BinTree addr T)     = (Void \<s>\<u>\<b>\<j> addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
       | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BinTree addr T) =
                 (L \<Ztypecolon> BinTree addr\<^sub>L T\<heavy_comma>
                  R \<Ztypecolon> BinTree addr\<^sub>R T\<heavy_comma>
                  (addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> left: Ptr, data: T, right: Ptr \<rbrace> 
-                \<s>\<u>\<b>\<j> addr\<^sub>L addr\<^sub>R. \<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: \<t>\<y>\<p>\<e>\<o>\<f> T, right: \<p>\<t>\<r>} )\<close>
+                \<s>\<u>\<b>\<j> addr\<^sub>L addr\<^sub>R. \<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: \<t>\<y>\<p>\<e>\<o>\<f> T, right: \<p>\<t>\<r>} \<and>
+                                 \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
 
    deriving Basic
-       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (BinTree addr T) (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0)) \<close>
-       and \<open>Identity_Elements\<^sub>E (BinTree addr T) (\<lambda>l. addr = 0 \<and> l = Leaf)\<close>  
-       and \<open>Identity_Elements\<^sub>I (BinTree addr T) (\<lambda>l. l = Leaf) (\<lambda>l. addr = 0)\<close>
+       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (BinTree addr T)
+                                      (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0) \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+       and \<open>Identity_Elements\<^sub>E (BinTree addr T) (\<lambda>l. addr = 0 \<and> l = Leaf \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>  
+       and \<open>Identity_Elements\<^sub>I (BinTree addr T) (\<lambda>l. l = Leaf) (\<lambda>l. addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr
          \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
          \<Longrightarrow> Transformation_Functor (BinTree addr) (BinTree addr') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
@@ -224,10 +226,13 @@ declare [[ML_print_depth = 100]]
 
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
-         \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
+         \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr K V)
+                             (\<lambda>f. \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
             (tactic: clarsimp, subgoal' for tree x y \<open>induct tree arbitrary: x\<close>)
-       and \<open> Identity_Elements\<^sub>E (Bin_Search_Tree addr K V) (\<lambda>l. addr = 0 \<and> l = Map.empty) \<close>
-       and \<open> Identity_Elements\<^sub>I (Bin_Search_Tree addr K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0) \<close>
+       and \<open> Identity_Elements\<^sub>E (Bin_Search_Tree addr K V)
+                                (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+       and \<open> Identity_Elements\<^sub>I (Bin_Search_Tree addr K V)
+                                (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
        and \<open> Object_Equiv V eq
          \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
             (tactic: clarsimp, 
@@ -263,25 +268,29 @@ abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv>
 abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
 
-\<phi>type_def AVL_Tree :: \<open>address \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
-  where \<open>f \<Ztypecolon> AVL_Tree addr TY\<^sub>K TY\<^sub>V K V \<equiv> tree \<Ztypecolon> BinTree addr (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>
-                                     \<s>\<u>\<b>\<j> tree. f = map_option snd o lookup_tree tree
-                                             \<and> sorted_lookup_tree tree \<and> AVL_invar tree \<close>
+\<phi>type_def AVL_Tree :: \<open>address \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
+  where \<open>f \<Ztypecolon> AVL_Tree addr K V \<equiv> tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>
+                             \<s>\<u>\<b>\<j> tree. f = map_option snd o lookup_tree tree
+                                     \<and> sorted_lookup_tree tree \<and> AVL_invar tree
+                                     \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
-         \<Longrightarrow> Abstract_Domain (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f. \<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x))) \<close>
+         \<Longrightarrow> Abstract_Domain (AVL_Tree addr K V)
+                         (\<lambda>f. \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
             (tactic: clarsimp, subgoal' for tree x h y \<open>induct tree arbitrary: x\<close>)
-       and \<open> Identity_Elements\<^sub>E (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. addr = 0 \<and> l = Map.empty) \<close>
-       and \<open> Identity_Elements\<^sub>I (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0) \<close>
+       and \<open> Identity_Elements\<^sub>E (AVL_Tree addr K V)
+                            (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+       and \<open> Identity_Elements\<^sub>I (AVL_Tree addr K V) (\<lambda>l. l = Map.empty)
+                           (\<lambda>l. addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
        and \<open> Object_Equiv V eq
-         \<Longrightarrow> Object_Equiv (AVL_Tree addr TY\<^sub>K TY\<^sub>V K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
+         \<Longrightarrow> Object_Equiv (AVL_Tree addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
             (tactic: clarsimp, 
                      rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,h,_). (k, h, the (g k))) x\<close>],
                      auto simp: fun_eq_iff intro!: rel_tree_self_map)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY\<^sub>K' = TY\<^sub>K \<and> TY\<^sub>V' = TY\<^sub>V \<and> addr' = addr
-         \<Longrightarrow> Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr' TY\<^sub>K' TY\<^sub>V' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-       and \<open> Functional_Transformation_Functor (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) (AVL_Tree addr TY\<^sub>K TY\<^sub>V K) T U ran (\<lambda>_. UNIV)
-                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr
+         \<Longrightarrow> Transformation_Functor (AVL_Tree addr K) (AVL_Tree addr' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
+    (* and \<open> Functional_Transformation_Functor (AVL_Tree addr K) (AVL_Tree addr K) T U ran (\<lambda>_. UNIV)
+                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close> *)
 
 
 

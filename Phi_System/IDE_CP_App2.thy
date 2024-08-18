@@ -14,15 +14,19 @@ context begin
 
 private lemma \<phi>TA_SemTy_rule:
   \<open> \<r>EIF Ant Ant'
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant \<Longrightarrow> Abstract_Domain T D)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant \<Longrightarrow> Abstract_Domain\<^sub>L T D\<^sub>L)
-\<Longrightarrow> (\<And>x. Ant \<and> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<or> (\<forall>y. \<not> D\<^sub>L y)) \<longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY @tag \<phi>TA_subgoal \<A>infer)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain T D)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain\<^sub>L T D\<^sub>L)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Ant' \<longrightarrow> TY = (if Ex D then TY' else \<p>\<o>\<i>\<s>\<o>\<n>) \<and> D\<^sub>L = D)
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY' @tag \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<close>
-  unfolding Action_Tag_def Premise_def
-  by (rule SType_Of'_implies_SType_Of''', auto)
+  unfolding Action_Tag_def Premise_def Abstract_Domain_def \<r>EIF_def Abstract_Domain\<^sub>L_def \<r>ESC_def
+            SType_Of_def Inhabited_def Semantic_Type'_def Semantic_Type_def
+  by (auto,
+      smt (z3) Action_Tag_def Premise_True Satisfiable_def \<phi>SemType_Itself_brute exE_some,
+      meson)
 
 (*
 private lemma \<phi>TA_SemTy_rule:
@@ -36,8 +40,8 @@ private lemma \<phi>TA_SemTy_rule:
 *)
 
 private lemma \<phi>TA_SemTy_IH_rewr:
-  \<open> Trueprop (Ant \<longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY @tag \<phi>TA_subgoal \<A>infer) \<equiv>
-    (Ant @tag \<phi>TA_ANT \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY ) \<close>
+  \<open> Trueprop (Ant \<longrightarrow> PPP @tag \<phi>TA_subgoal undefined) \<equiv>
+    (Ant @tag \<phi>TA_ANT \<Longrightarrow> PPP ) \<close>
   unfolding Action_Tag_def atomize_imp Premise_def
   ..
 

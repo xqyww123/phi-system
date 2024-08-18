@@ -12,14 +12,15 @@ declare [[\<phi>trace_reasoning = 1]]
                              \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                   len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
                                                   take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr \<and>
-                                                  \<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<s>\<i>\<z>\<e>_\<t>, cap: \<s>\<i>\<z>\<e>_\<t>}\<close>
+                                                  \<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<s>\<i>\<z>\<e>_\<t>, cap: \<s>\<i>\<z>\<e>_\<t>} \<and>
+                                                  \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
 
-  deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0)\<close>
+  deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
        and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr T) (list_all2 eq)\<close>
             (tactic: auto, subgoal' for x xa xb xc \<open>rule exI[where x=\<open>xa @ drop (length xa) xc\<close>]\<close>)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
          \<Longrightarrow> Transformation_Functor (DynArr addr) (DynArr addr') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
-       and Functional_Transformation_Functor
+       (*and Functional_Transformation_Functor*)
        and Pointer_Of
 
 
@@ -41,7 +42,6 @@ context
     and zero :: 'x
   assumes [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
 begin
-
 
 
 proc get_dynarr:
@@ -136,6 +136,7 @@ proc pop_dynarr:
 
 proc new_dynarr:
   input  \<open>Void\<close>
+  premises \<open>\<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>[] \<Ztypecolon> \<r>\<e>\<f> DynArr addr T \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
   val ret \<leftarrow> calloc1 \<open>\<lbrace> data: Ptr[\<a>\<r>\<r>\<a>\<y>[0] (\<t>\<y>\<p>\<e>\<o>\<f> T)], len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<close> \<semicolon>
@@ -182,6 +183,7 @@ proc exists_dynarr:
 
 proc fold_map_dynarr:
   input  \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> z0 \<Ztypecolon> \<v>\<a>\<l> U\<close>
+  premises \<open>\<t>\<y>\<p>\<e>\<o>\<f> U \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   requires C: \<open>\<And>x z u v. \<p>\<r>\<o>\<c> C u v \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[u] T\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l>[v] U \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> g x z \<Ztypecolon> \<v>\<a>\<l> U \<rbrace> \<close>
   output \<open>fold g l z0 \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> map f l \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>

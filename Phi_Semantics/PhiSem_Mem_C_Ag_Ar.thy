@@ -171,10 +171,14 @@ lemma valid_address_range_sub:
   by (clarsimp, smt (verit, ccfv_threshold) add.assoc add_lessD1 le_eq_less_or_eq le_iff_add nat_add_left_cancel_less)
 *)
 
+declare [[\<phi>trace_reasoning = 4]]
+
 \<phi>type_def SlicePtr :: \<open>address \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
   where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> address_to_raw (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
                 \<s>\<u>\<b>\<j> i \<le> N \<and> valid_address addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
   deriving Basic
+       and \<open>Abstract_Domain  (SlicePtr addr N TY) (\<lambda>x. x \<le> N \<and> valid_address addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<close>
+       and \<open>Abstract_Domain\<^sub>L (SlicePtr addr N TY) (\<lambda>x. x \<le> N \<and> valid_address addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<close>
        and \<open>Object_Equiv (SlicePtr addr N TY) (=)\<close>
        and Functionality
        and \<open> \<t>\<y>\<p>\<e>\<o>\<f> (SlicePtr addr N TY) = (if \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> valid_address addr then \<p>\<t>\<r> else \<p>\<o>\<i>\<s>\<o>\<n>) \<close>

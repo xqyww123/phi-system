@@ -656,6 +656,7 @@ subsubsection \<open>Syntax\<close>
 
 section \<open>\<phi>-Types for Pointer\<close>
 
+
 subsection \<open>Physical Pointer\<close>
 
 \<phi>type_def RawPointer :: "(VAL, rawaddr) \<phi>"
@@ -675,6 +676,8 @@ subsection \<open>Standard Logical Pointer\<close>
   \<comment> \<open>which always points to the beginning address of a component of a valid memory object.
       cannot point to the end of an allocation block, which is its limitation.
       only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
+
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def Ptr :: "(VAL, address) \<phi>"
   where \<open>x \<Ztypecolon> Ptr \<equiv> sem_mk_pointer (address_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_address x\<close>
@@ -722,8 +725,6 @@ lemma [\<phi>reason %cutting ]:
 
 
 subsection \<open>Typed Pointer\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def TypedPtr :: "TY \<Rightarrow> (VAL, address) \<phi>"
   where \<open>x \<Ztypecolon> TypedPtr TY \<equiv> x \<Ztypecolon> Ptr \<s>\<u>\<b>\<j> x = 0 \<or> address_type x = TY\<close>

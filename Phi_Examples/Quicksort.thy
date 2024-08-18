@@ -6,7 +6,7 @@ begin
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
 
-
+declare [[\<phi>trace_reasoning = 2]]
 
   proc qsort:
     input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma>

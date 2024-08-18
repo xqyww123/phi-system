@@ -38,30 +38,21 @@ fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
             fn _ => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_SemTy_IH_rewr},
             fn ctxt => fn _ => fn ctm =>
-               (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
+               (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
                 Phi_Reasoners.asm_rewrite true (Simplifier.clear_simpset ctxt addsimps (#equations phi0)) then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)
 
       fun varifier _ (Trueprop $ (
-              TagC $ (
-                EQ $ (SemTyp as Const(\<^const_name>\<open>SType_Of\<close>, _) $ _) $ TY
-              ) $ Tag)) =
-            if is_some (#1 instruction)
-            then NONE
-            else SOME ([TY], fn [TY'] => Trueprop $ (TagC $ (EQ $ SemTyp $ TY') $ Tag))
-        | varifier _ (Trueprop $ (
-              TagC $ (
-                EQ $ (SemTyp as Const(\<^const_name>\<open>SType_Of'\<close>, _) $ _) $ TY
-              ) $ Tag)) =
-            if is_some (#1 instruction)
-            then NONE
-            else SOME ([TY], fn [TY'] => Trueprop $ (TagC $ (EQ $ SemTyp $ TY') $ Tag))
+                (SemTyp as Const(\<^const_name>\<open>Semantic_Type'\<close>, _) $ _) $ TY )) =
+            SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
         | varifier _ X = NONE
+
       fun reasoning phi ctxt sequent =
             default_reasoning true default_reasoning_configure varifier
                 (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt sequent
           (*|> Phi_Reasoner.reason1 (fn _ =>
                   "Semantic_Type relies on the property of Abstract_Domain\<^sub>L") NONE (SOME 1) ctxt *)
+
 
       val solver = K NONE
       val simp = if is_some (#1 instruction) then K I
@@ -73,7 +64,7 @@ fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_SemTy_rule},
-                                      [(NONE, K (K I), K (pure_PLPR_reasoning 3)),
+                                      [(NONE, K (K I), K (pure_PLPR_reasoning 4)),
                                        (SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, reasoning)],
                                       solver, K I, simp)
                                     phi0 instruction thy'

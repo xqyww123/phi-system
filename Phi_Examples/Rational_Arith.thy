@@ -13,12 +13,8 @@ declare [[\<phi>trace_reasoning = 1]]
        and \<open>Object_Equiv \<rat> (=)\<close>
        and \<open>Abstract_Domain\<^sub>L \<rat> (\<lambda>_. True)\<close>
        and \<open>Abstract_Domain \<rat> (\<lambda>_. True)\<close>
-
-declare [[\<phi>trace_reasoning = 3]]
-
- let_\<phi>type \<phi>Rational
-       deriving Semantic_Type
-       (* and Inhabited *)
+       and Semantic_Type
+       and Inhabited
 
 
 term \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat>\<close>
