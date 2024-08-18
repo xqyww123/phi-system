@@ -16,13 +16,13 @@ definition op_routine_basic :: \<open>TY list \<Rightarrow> TY list \<Rightarrow
            \<then> Return rets))\<close>
 
 lemma "__routine_basic__":
-  \<open> \<phi>_Have_Types X TY_ARGs
-\<Longrightarrow> \<phi>_Have_Types Y TY_RETs
+  \<open> Semantic_Types X TY_ARGs
+\<Longrightarrow> Semantic_Types Y TY_RETs
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> (\<And>(vs:: 'a::FIX_ARITY_VALs \<phi>arg <named> 'names).
           \<p>\<r>\<o>\<c> F (case_named id vs) \<lbrace> X (case_named id vs) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_routine_basic TY_ARGs TY_RETs F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding op_routine_basic_def \<phi>_Have_Types_def named_All named.case id_apply
+  unfolding op_routine_basic_def Semantic_Types_i_def Semantic_Types_def named_All named.case id_apply
   by (rule \<phi>SEQ, rule \<phi>SEQ, rule \<phi>M_assert, blast, assumption, rule \<phi>SEQ,
       rule \<phi>M_assert, blast, rule \<phi>M_Success')
 

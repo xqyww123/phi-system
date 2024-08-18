@@ -16,8 +16,7 @@ val derv_rule = @{lemma
 }
 
 fun guess_pointer ctxt eqs =
-  let val ctxt = Bundle.includes ["Spec_Framework.Semantic_Type_by_Synt_Sugar"] ctxt
-      fun infer_one eq =
+  let fun infer_one eq =
         let val (LHS, RHS) = Phi_Help.dest_eq_c (Thm.incr_indexes_cterm 1 (Thm.cconcl_of eq))
             val cT =
                 case Thm.term_of LHS

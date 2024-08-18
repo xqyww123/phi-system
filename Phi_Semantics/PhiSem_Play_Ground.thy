@@ -298,10 +298,6 @@ proc
 declare [[\<phi>hide_techinicals=false]]
 
 
-declare [[\<phi>trace_reasoning = 2]]
-
-
-
 proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   premises \<open>x < 10\<close>

@@ -500,12 +500,13 @@ paragraph \<open>Conversion From Strong to Weak\<close>
 subsubsection \<open>Reasoning\<close>
 
 lemma [\<phi>reason default %Semantic_Type_fallback+5]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> TY : \<t>\<y>\<p>\<e>\<o>\<f> T
+  \<open> Abstract_Domain T D
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ex D \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> TY : \<t>\<y>\<p>\<e>\<o>\<f> T)
 \<comment> \<open>Is_Type_Literal TY \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))\<close>
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T) \<open>: fail to show\<close> (TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>))
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (Ex D \<longrightarrow> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T) \<open>: fail to show\<close> (TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>))
 \<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Semantic_Type_def Simplify_def Premise_def OR_FAIL_def
-  by (auto, meson SType_Of_not_poison)
+  unfolding Semantic_Type_def Simplify_def Premise_def OR_FAIL_def Abstract_Domain_def Premise_def
+  by (auto simp add: Satisfiable_def \<r>EIF_def, metis SType_Of_not_poison)
 
 lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type _ _\<close>
                                             except \<open>Semantic_Type _ ?var\<close>]:
@@ -554,11 +555,24 @@ subsubsection \<open>Multiple Values\<close>
 definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>
   where \<open>Well_Typed_Vals TYs = {vs. list_all2 (\<lambda>v T. v \<in> Well_Type T) (to_vals (\<phi>arg.dest vs)) TYs}\<close>
 
-definition \<phi>_Have_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> TY list \<Rightarrow> bool\<close>
-  where \<open>\<phi>_Have_Types spec TYs = (\<forall>v. Satisfiable (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
+definition Semantic_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> TY list \<Rightarrow> bool\<close>
+  where \<open>Semantic_Types spec TYs = (\<forall>v. Satisfiable (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
 
-declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<Rightarrow> \<open>\<phi>_Have_Types ?S _\<close> (100)]]
+definition \<open>Semantic_Types_i = Semantic_Types\<close>
 
+declare [[
+      \<phi>reason_default_pattern \<open>Semantic_Types_i ?S _\<close> \<Rightarrow> \<open>Semantic_Types_i ?S _\<close> (100)
+                          and \<open>Semantic_Types   ?S _\<close> \<Rightarrow> \<open>Semantic_Types   ?S _\<close> (100),
+      \<phi>default_reasoner_group \<open>Semantic_Types   _ _\<close> : %\<phi>sem_type_infer_cut (100),
+      \<phi>default_reasoner_group \<open>Semantic_Types_i _ _\<close> : %\<phi>sem_type_infer_cut (100)
+]]
+
+lemma [\<phi>reason add]:
+  \<open> (\<And>v. S v \<i>\<m>\<p>\<l>\<i>\<e>\<s> P v)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>x. P x) \<longrightarrow> Semantic_Types_i S TYs
+\<Longrightarrow> Semantic_Types S TYs \<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def Premise_def \<r>EIF_def
+  by auto
 
 (*
 subsubsection \<open>Semantic Typeof\<close>
@@ -593,7 +607,7 @@ lemma SType_Of_unfold:
 ML_file \<open>library/tools/unfold_typeof.ML\<close>
 *)
 
-
+(*
 subsubsection \<open>Generalized Semantic Typeof --- using Syntax Inference only\<close>
 
 definition Generalized_Semantic_Type :: \<open>'any \<Rightarrow> TY \<Rightarrow> bool\<close>
@@ -621,7 +635,7 @@ lemma Semantic_Type_by_Synt_Sugar:
 
 bundle Semantic_Type_by_Synt_Sugar =
           Semantic_Type_by_Synt_Sugar[\<phi>reason default %Semantic_Type_fallback-5]
-
+*)
 
 subsection \<open>Zero Value\<close>
 

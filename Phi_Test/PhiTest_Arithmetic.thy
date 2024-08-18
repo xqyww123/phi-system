@@ -7,8 +7,6 @@ theory PhiTest_Arithmetic
     "HOL-Computational_Algebra.Primes"
 begin
 
-declare [[\<phi>trace_reasoning = 2]]
-
 proc test_prime:
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close> \<comment> \<open>\<^term>\<open>prime :: nat => bool\<close> is a predicate checking primes\<close>

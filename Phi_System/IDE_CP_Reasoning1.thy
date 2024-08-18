@@ -493,58 +493,60 @@ end\<close>
 
 subsection \<open>Semantic Type of Multiple Values\<close>
 
-lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
+lemma [\<phi>reason 1200 for \<open>Semantic_Types_i (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
   \<open> Semantic_Type T TY
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs) TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T\<heavy_comma> R (\<phi>V_snd vs)) (TY#TYs)\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. R vs) TYs
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T\<heavy_comma> R (\<phi>V_snd vs)) (TY#TYs)\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def
+            Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
   \<open> Semantic_Type T TY
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[vs] T\<heavy_comma> R) [TY]\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[vs] T\<heavy_comma> R) [TY]\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def
+            Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>_Have_Types R TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. S\<heavy_comma> R vs) TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+  \<open> Semantic_Types_i R TYs
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. S\<heavy_comma> R vs) TYs\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def by clarsimp
 
 lemma [\<phi>reason 2000]:
-  \<open> \<phi>_Have_Types (\<lambda>_::unit \<phi>arg. Void) []\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
+  \<open> Semantic_Types_i (\<lambda>_::unit \<phi>arg. Void) []\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
 
-lemma [\<phi>reason 1020 except \<open>\<phi>_Have_Types (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
-  \<open> \<phi>_Have_Types (\<lambda>vs. R vs\<heavy_comma> Void) TYs
-\<Longrightarrow> \<phi>_Have_Types R TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+lemma [\<phi>reason 1020 except \<open>Semantic_Types_i (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
+  \<open> Semantic_Types_i (\<lambda>vs. R vs\<heavy_comma> Void) TYs
+\<Longrightarrow> Semantic_Types_i R TYs\<close>
+  unfolding Semantic_Types_i_def Well_Typed_Vals_def by clarsimp
 
 lemma [\<phi>reason 1000]:
   \<open> FAIL TEXT(\<open>Fail to infer the semantic type of\<close> R)
-\<Longrightarrow> \<phi>_Have_Types R TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def FAIL_def by clarsimp
+\<Longrightarrow> Semantic_Types_i R TYs\<close>
+  unfolding Semantic_Types_i_def Well_Typed_Vals_def FAIL_def by clarsimp
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>_Have_Types (\<lambda>ret. (exp ret) (v ret)) TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. Let (v ret) (exp ret)) TYs\<close>
+  \<open> Semantic_Types_i (\<lambda>ret. (exp ret) (v ret)) TYs
+\<Longrightarrow> Semantic_Types_i (\<lambda>ret. Let (v ret) (exp ret)) TYs\<close>
   unfolding Let_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>_Have_Types (\<lambda>ret. f ret (fst (x ret)) (snd (x ret))) TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. case_prod (f ret) (x ret)) TYs\<close>
+  \<open> Semantic_Types_i (\<lambda>ret. f ret (fst (x ret)) (snd (x ret))) TYs
+\<Longrightarrow> Semantic_Types_i (\<lambda>ret. case_prod (f ret) (x ret)) TYs\<close>
   by (simp add: case_prod_beta')
 
 lemma [\<phi>reason 1200]:
-  \<open>(\<And>x. \<phi>_Have_Types (\<lambda>ret. (S ret) x) TYs)
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. ExSet (S ret)) TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def Satisfiable_def ExSet_expn
+  \<open>(\<And>x. Semantic_Types_i (\<lambda>ret. (S ret) x) TYs)
+\<Longrightarrow> Semantic_Types_i (\<lambda>ret. ExSet (S ret)) TYs\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def Satisfiable_def ExSet_expn
   by clarsimp blast
 
 lemma [\<phi>reason 1200]:
-  \<open>(\<And>x. \<phi>_Have_Types (\<lambda>ret. S ret) TYs)
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. S ret \<s>\<u>\<b>\<j> P ret) TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def Satisfiable_def Subjection_expn
+  \<open>(\<And>x. Semantic_Types_i (\<lambda>ret. S ret) TYs)
+\<Longrightarrow> Semantic_Types_i (\<lambda>ret. S ret \<s>\<u>\<b>\<j> P ret) TYs\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def Satisfiable_def Subjection_expn
   by clarsimp
 
 

@@ -12,7 +12,7 @@ debt_axiomatization
                                   if i < length vs then Map_of_Val (vs ! i) path' else 1
                            | _ \<Rightarrow> 1)\<close>
   and idx_step_offset_arr:  \<open>ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_offset (\<a>\<r>\<r>\<a>\<y>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
-  and idx_step_offset_arr':  \<open>idx_step_offset (\<a>\<r>\<r>\<a>\<y>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
+  and idx_step_offset_arr':  \<open>idx_step_offset (\<a>\<r>\<r>\<a>\<y>[0] ty) (AgIdx_N j) = 0\<close>
   and MemObj_Size_arr: \<open>\<a>\<r>\<r>\<a>\<y>[N] ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> MemObj_Size (\<a>\<r>\<r>\<a>\<y>[N] ty) = N * MemObj_Size ty\<close>
 
   and array_TY_neq_void: \<open>\<v>\<o>\<i>\<d> \<noteq> \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
@@ -27,7 +27,8 @@ lemma address_to_raw_array_GEP:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> address_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
   unfolding address_to_raw_def addr_gep_def address_type_def
-  by (cases addr; clarsimp simp: idx_step_offset_arr idx_step_offset_arr')
+  by (cases addr; clarsimp simp: idx_step_offset_arr idx_step_offset_arr';
+      metis idx_step_offset_arr idx_step_offset_arr' mult_zero_left of_nat_mult)
 
 lemma address_to_raw_inj_array:
   \<open> valid_address addr
@@ -43,7 +44,7 @@ lemma address_to_raw_inj_array:
     apply (simp add: phantom_mem_semantic_type_def address_to_raw_array_GEP)
     subgoal premises prems for _ BTY proof -
       have t0: \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
-        by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any bot_nat_0.not_eq_extremum idx_step_offset_arr' memobj_size_void mult_eq_0_iff prems(2))
+        by (metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<a>\<r>\<r>\<a>\<y>_0_eq_any not_None_eq option.simps(8) option.simps(9) semty_array_eq_poison zero_arr zero_bool)
       have \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
         using MemObj_Size_LE_idx_0 address_type_def prems(1) prems(5) prems(9) by force
       then have t1: \<open>N * MemObj_Size TY < 2^addrspace_bits\<close>
@@ -54,7 +55,7 @@ lemma address_to_raw_inj_array:
       have t3: \<open>j * MemObj_Size TY < 2^addrspace_bits\<close>
         using mult_le_mono1 order.strict_trans1 prems(4) t1 by blast
       show ?thesis
-        by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any diff_is_0_eq diff_zero idx_step_offset_arr' linorder_not_less memobj_size_void mult_numeral_1 prems(2))
+        by (metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<a>\<r>\<r>\<a>\<y>_0_eq_any not_None_eq option.simps(8) option.simps(9) semty_array_eq_poison zero_arr zero_bool)
     qed . .
 
 
@@ -62,14 +63,15 @@ lemma address_to_raw_array_0th:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> address_to_raw (addr \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr \<close>
   unfolding address_to_raw_def addr_gep_def address_type_def
-  by (auto simp: idx_step_offset_arr idx_step_offset_arr' split: memaddr.split)
+  by (smt (verit, del_insts) Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<a>\<r>\<r>\<a>\<y>_0_eq_any not_None_eq option.simps(8) option.simps(9) semty_array_eq_poison zero_arr zero_bool)
 
 lemma address_to_raw_array_ith:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> phantom_mem_semantic_type TY
 \<Longrightarrow> address_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr \<close>
   unfolding address_to_raw_def addr_gep_def address_type_def
-  by (auto simp: idx_step_offset_arr phantom_mem_semantic_type_def idx_step_offset_arr' split: memaddr.split)
+  by (auto simp: idx_step_offset_arr phantom_mem_semantic_type_def idx_step_offset_arr' split: memaddr.split,
+      metis idx_step_offset_arr idx_step_offset_arr' less_nat_zero_code mult_0_right of_nat_gt_0)
 
 lemma address_to_raw_inj_arr:
     \<open>valid_address addr1 \<Longrightarrow>
@@ -84,13 +86,13 @@ lemma address_to_raw_inj_arr:
     have t1: \<open>address_to_raw (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = address_to_raw (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>)\<close>
       by (metis address_to_raw_array_0th prems(3) prems(4) prems(8) prems(9))
     have t2: \<open>valid_address (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
-      by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any idx_step_offset_arr' memobj_size_void mult_1_class.mult_1_left phantom_mem_semantic_type_def prems(5))
+      by (simp add: prems(1) prems(3) prems(6) prems(8) valid_idx_step_arr)
     have t3: \<open>valid_address (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
-      by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any idx_step_offset_arr' memobj_size_void mult_1_class.mult_1_left phantom_mem_semantic_type_def prems(5))
+      by (simp add: prems(2) prems(4) prems(7) prems(8) valid_idx_step_arr)
     have t4: \<open>address_type (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = address_type (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>)\<close>
       by (simp add: idx_step_type_arr prems(3) prems(4) prems(6) prems(7) prems(8))
     have t5: \<open>addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h> = addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>\<close>
-      by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any idx_step_offset_arr' memobj_size_void mult_1_class.mult_1_left phantom_mem_semantic_type_def prems(5))
+      by (metis Nat.lessE address_type_gep idx_step_type_arr nat.distinct(1) prems(3) prems(5) prems(6) prems(8) rawaddr_to_log t1 t2 t3 t4)
     show ?thesis
       using t5 by blast
   qed .
@@ -171,8 +173,6 @@ lemma valid_address_range_sub:
   by (clarsimp, smt (verit, ccfv_threshold) add.assoc add_lessD1 le_eq_less_or_eq le_iff_add nat_add_left_cancel_less)
 *)
 
-declare [[\<phi>trace_reasoning = 4]]
-
 \<phi>type_def SlicePtr :: \<open>address \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
   where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> address_to_raw (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
                 \<s>\<u>\<b>\<j> i \<le> N \<and> valid_address addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
@@ -189,8 +189,7 @@ notation SlicePtr ("\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _" [20,20,900] 899)
 lemma Ptr_eqcmp[\<phi>reason 1000]:
   \<open>\<phi>Equal (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
   unfolding \<phi>Equal_def
-  by (clarsimp simp: address_to_raw_inj_array,
-      metis \<a>\<r>\<r>\<a>\<y>_0_eq_any idx_step_offset_arr' memobj_size_void mult_1_class.mult_1_left phantom_mem_semantic_type_def)
+  by (clarsimp simp: address_to_raw_inj_array, insert address_to_raw_inj_array, force)
 
 \<phi>reasoner_group slice_ptr_ToA = (%ToA_cut, [%ToA_cut, %ToA_cut+30]) in ToA_cut \<open>\<close>
 
@@ -416,7 +415,7 @@ lemma [\<phi>reason add]:
       apply (simp add: idx_step_offset_arr idx_step_type_arr MemObj_Size_arr
                     Abs_fnat_homs
                del: of_nat_mult of_nat_add)
-      by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any idx_step_offset_arr' memobj_size_void mult_is_0 nat_arith.rule0)
+      by (smt (verit, del_insts) MemObj_Size_arr add.commute add.left_commute comm_semiring_class.distrib div_mod_decomp mult.assoc mult.commute semty_array_eq_poison t00)
 
   qed . qed .
 

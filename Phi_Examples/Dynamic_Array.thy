@@ -37,11 +37,13 @@ proc len_dynarr:
 
 declare [[\<phi>infer_requirements, \<phi>trace_reasoning = 1]]
 
+(*
 context
   fixes T :: \<open>(VAL, 'x) \<phi>\<close>
     and zero :: 'x
   assumes [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
 begin
+*)
 
 
 proc get_dynarr:
@@ -74,6 +76,7 @@ proc Max:
 proc push_dynarr:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>length l \<le> 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
+  requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
   output   \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
@@ -99,6 +102,7 @@ proc push_dynarr:
 proc concat_dynarr:
   input   \<open>l1 \<Ztypecolon> \<r>\<e>\<f> DynArr addr1 T\<heavy_comma> l2 \<Ztypecolon> \<r>\<e>\<f> DynArr addr2 T\<close>
   premises \<open>length l1 + length l2 < 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
+  requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
   output  \<open>l1 + l2 \<Ztypecolon> DynArr addr1 T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 T\<close>
 \<medium_left_bracket>
   val len \<leftarrow> len_dynarr (addr2) \<semicolon>
@@ -112,6 +116,7 @@ proc concat_dynarr:
 proc pop_dynarr:
   input    \<open>l \<Ztypecolon> \<r>\<e>\<f> DynArr addr T\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> T\<close>
   premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
+  requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
   output   \<open>last l \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> butlast l \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
@@ -137,6 +142,7 @@ proc pop_dynarr:
 proc new_dynarr:
   input  \<open>Void\<close>
   premises \<open>\<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  requires \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
   output \<open>[] \<Ztypecolon> \<r>\<e>\<f> DynArr addr T \<s>\<u>\<b>\<j> addr. \<top>\<close>
 \<medium_left_bracket>
   val ret \<leftarrow> calloc1 \<open>\<lbrace> data: Ptr[\<a>\<r>\<r>\<a>\<y>[0] (\<t>\<y>\<p>\<e>\<o>\<f> T)], len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<close> \<semicolon>
@@ -226,9 +232,6 @@ thm del_dynarr_def
 thm map_dynarr_def
 thm exists_dynarr_def
 thm fold_map_dynarr_def
-
-
-end
 
 
 end
