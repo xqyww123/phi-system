@@ -38,10 +38,10 @@ proc calloc:
   have t1: \<open>valid_address (memaddr blk [])\<close>
     unfolding valid_address_def Valid_MemBlk_def
     using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close>) ;;
+    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close> address_type_def; auto_sledgehammer)
+  note address_type_def [\<phi>sledgehammer_simps] \<semicolon>
   
   semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
-
 \<medium_right_bracket> .
 
 

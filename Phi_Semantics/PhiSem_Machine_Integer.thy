@@ -20,8 +20,11 @@ debt_axiomatization sem_int_T :: \<open>nat \<Rightarrow> TY\<close>
 
 definition \<open>mk_int_T = sem_int_T o len0_class.len_of\<close>
 
-lemma \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>mk_int_T b \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
-  unfolding mk_int_T_def by (simp add: \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>')
+lemma \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]:
+  \<open>mk_int_T b \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>\<p>\<o>\<i>\<s>\<o>\<n> \<noteq> mk_int_T b\<close>
+  unfolding mk_int_T_def
+  by (simp_all add: \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>', metis \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>' comp_apply)
 
 syntax "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("int'(_')")
        "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<i>\<n>\<t>'(_')")
@@ -71,6 +74,10 @@ instance by (standard, simp add: \<i>\<n>\<t>_bits_L0 len_of_\<i>\<n>\<t>_def)
 end
 
 abbreviation \<open>\<i>\<n>\<t> \<equiv> \<i>\<n>\<t>(\<i>\<n>\<t>)\<close>
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<i>\<n>\<t>('a) \<close>
+  unfolding Is_Type_Literal_def ..
 
 
 subsubsection \<open>Semantics\<close>

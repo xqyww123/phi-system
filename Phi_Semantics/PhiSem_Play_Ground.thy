@@ -26,8 +26,6 @@ lemma [\<phi>reason add]:
 
 declare One_nat_def [simp del]
 
-thm ":=_\<phi>app"
-
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>

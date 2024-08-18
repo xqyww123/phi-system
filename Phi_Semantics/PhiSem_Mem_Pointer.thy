@@ -822,6 +822,8 @@ ML \<open>fun bad_Addr_Of pos =
 
 subsection \<open>GEP\<close>
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>

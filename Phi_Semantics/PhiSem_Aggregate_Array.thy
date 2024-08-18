@@ -81,7 +81,7 @@ section \<open>\<phi>Type\<close>
 
 lemma semty_Array [simp, \<phi>type_property Array Semantic_Type]:
   \<open>\<t>\<y>\<p>\<e>\<o>\<f> (Array N T) = \<a>\<r>\<r>\<a>\<y>[N] (\<t>\<y>\<p>\<e>\<o>\<f> T)\<close>
-  unfolding SType_Of_def Inhabited_def Satisfiable_def
+  unfolding SType_Of_def Inhabited_def Satisfiable_def Semantic_Type_def
   apply (cases N)
   apply auto
   apply (smt (verit, best) WT_arr Well_Type_unique exE_some less_nat_zero_code list.pred_inject(1) list.size(3) list_all2_conv_all_nth mem_Collect_eq)

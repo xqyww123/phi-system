@@ -23,7 +23,7 @@ fun guess_property phi ctxt =
               end) else ()
 
    in Seq.single ([], HOLogic.Trueprop $ (
-            \<^Const>\<open>HOL.eq \<^Type>\<open>VAL\<close>\<close>
+            \<^Const>\<open>HOL.eq \<^Type>\<open>TY\<close>\<close>
               $ (\<^Const>\<open>SType_Of x_ty\<close> $ T_term)
               $ Var (("TY", 0), \<^Type>\<open>TY\<close>) ),
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)

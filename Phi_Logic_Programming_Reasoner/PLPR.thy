@@ -943,8 +943,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 \<close>
 
 
-(*TODO: change terminology of \<open>Reasoning Goal\<close> to \<open>Reasoning App\<close>, which is more figurative*)
-subsubsection \<open>Reasoning Apps\<close>
+subsubsection \<open>Atomization\<close>
 
 definition \<r>Atomize :: \<open>prop \<Rightarrow> bool \<Rightarrow> prop\<close>
   where \<open>\<r>Atomize P P' \<equiv> (PROP P \<equiv> Trueprop P')\<close>
@@ -1357,8 +1356,8 @@ text \<open>\<phi>-LPR reasoning rules are specially designed for execution of l
   For example, \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> A transforms B with Q\<close> implies \<open>P \<longrightarrow> Satisfiable A \<longrightarrow> Satisfiable B \<and> Q\<close>
 \<close>
 
-definition \<open>\<r>EIF P Q \<longleftrightarrow> (P \<longrightarrow> Q)\<close>
-definition \<open>\<r>ESC Q P \<longleftrightarrow> (Q \<longrightarrow> P)\<close>
+definition \<open>\<r>EIF P Q \<longleftrightarrow> (P \<longrightarrow> Q)\<close> \<comment> \<open>Extracting Implied Facts\<close>
+definition \<open>\<r>ESC Q P \<longleftrightarrow> (Q \<longrightarrow> P)\<close> \<comment> \<open>Extracting Sufficient Conditions\<close>
 
 definition \<A>EIF' :: \<open>prop \<Rightarrow> bool \<Rightarrow> prop\<close> where \<open>\<A>EIF' P Q \<equiv> (PROP P \<Longrightarrow> Q)\<close>
 definition \<A>ESC' :: \<open>bool \<Rightarrow> prop \<Rightarrow> prop\<close> where \<open>\<A>ESC' P Q \<equiv> (P \<Longrightarrow> PROP Q)\<close>

@@ -30,7 +30,6 @@ lemma sem_mk_tup_inj[simp]:
   by (metis sem_dest_mk_tup)
 
 
-
 subsubsection \<open>Syntax\<close>
 
 abbreviation semty_tup_empty ("\<t>\<u>\<p> {}")
@@ -99,6 +98,15 @@ lemma semantic_tuple_constructor_N_no_use:
 \<Longrightarrow> semantic_tuple_constructor N L = semantic_tuple_constructor 0 L \<close>
   by (induct L; auto)
 
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal (\<t>\<u>\<p> {}) \<close> ..
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal H
+\<Longrightarrow> Is_Type_Literal (sem_tup_T L)
+\<Longrightarrow> Is_Type_Literal (sem_tup_T (H#L)) \<close>
+  ..
+
 (* lemma Valid_Type_\<tau>Tuple[simp]:
   \<open>Valid_Type (sem_tup_T Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
   unfolding Satisfiable_def
@@ -143,6 +151,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and Functional_Transformation_Functor
        and Functionality
+       and \<open>Is_Aggregate (Tuple_Field T)\<close>
 
 translations
   "_\<phi>Tuple (_\<phi>tuple_arg (\<phi>_tuple_ X))" \<rightleftharpoons> "CONST Tuple_Field X"
@@ -162,7 +171,7 @@ lemma semty_tup_eq_poison_rev[simp]: \<open>\<p>\<o>\<i>\<s>\<o>\<n> = sem_tup_T
 lemma \<t>\<y>\<p>\<e>\<o>\<f>_tup:
   \<open> Tuple_Type_Helper U Tys
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> U \<equiv> sem_tup_T Tys  \<close>
-  unfolding Tuple_Type_Helper_def SType_Of_def atomize_eq
+  unfolding Tuple_Type_Helper_def SType_Of_def atomize_eq Semantic_Type_def
   apply auto
   apply (smt (verit) SType_Of_not_poison WT_tup mem_Collect_eq someI_ex)
   by (smt (verit) Eps_cong SType_Of_def SType_Of_not_poison WT_tup mem_Collect_eq)
@@ -172,7 +181,7 @@ lemma Tuple_Type_Helper_0:
   unfolding Tuple_Type_Helper_def Inhabited_def
   apply auto
   apply (metis (no_types) SType_Of_not_poison Tuple_Field.expansion typing_inhabited)
-  unfolding SType_Of_def Inhabited_def Satisfiable_def
+  unfolding SType_Of_def Inhabited_def Satisfiable_def Semantic_Type_def
     apply (auto simp: split_ifs)
   subgoal for x P TY by (rule exI[where x=\<open>\<t>\<u>\<p> {TY}\<close>], auto)
   subgoal premises prems for x TY v
@@ -191,9 +200,9 @@ lemma Tuple_Type_Helper_0:
 lemma Tuple_Type_Helper_S:
   \<open> Tuple_Type_Helper Ts TYs
 \<Longrightarrow> Tuple_Type_Helper (\<lbrace> T \<rbrace> \<^emph> Ts) (\<t>\<y>\<p>\<e>\<o>\<f> T # TYs)  \<close>
-  unfolding Tuple_Type_Helper_def Inhabited_def Satisfiable_def
+  unfolding Tuple_Type_Helper_def SType_Of_def Inhabited_def Satisfiable_def Semantic_Type_def
   
-   apply (auto simp: SType_Of_def Inhabited_def Satisfiable_def)
+  apply (auto)
   apply (metis V_tup_sep_disj_L)
   subgoal premises prems for x TY p xa TYa pa xb TYb pb proof -
     obtain TXX where t1: \<open>TY = sem_tup_T TXX\<close>
@@ -542,5 +551,14 @@ declare synthesis_construct_aggregate_\<phi>app
 
 
 hide_fact semantic_tuple_constructor_N_no_use
+
+subsection \<open>Aux\<close>
+
+lemma semty_tup_eq_poison_compute[simp]:
+  \<open> \<t>\<u>\<p> {} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> sem_tup_T (H#L) = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> H = \<p>\<o>\<i>\<s>\<o>\<n> \<or> sem_tup_T L = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  by simp_all blast
+
+declare semty_tup_eq_poison[simp del]
 
 end

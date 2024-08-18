@@ -215,16 +215,22 @@ subsection \<open>Semantic Type\<close>
 
 consts Type_Of_syntax :: \<open>'a \<Rightarrow> TY\<close> ("\<t>\<y>\<p>\<e>\<o>\<f>")
 
+definition Semantic_Type :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
+  where \<open>Semantic_Type T TY \<equiv> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
+
+definition Semantic_Type' :: \<open>VAL BI \<Rightarrow> TY \<Rightarrow> bool\<close>
+  where \<open>Semantic_Type' A TY \<equiv> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type TY) \<close>
+
 definition SType_Of :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY\<close>
   where \<open>SType_Of T = (
-      if Inhabited T \<and> (\<exists>TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)
-      then (@TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)
+      if Inhabited T \<and> (\<exists>TY. Semantic_Type T TY)
+      then (@TY. Semantic_Type T TY)
       else \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
 
 definition SType_Of' :: \<open>VAL BI \<Rightarrow> TY\<close>
   where \<open>SType_Of' A = (
-      if Satisfiable A \<and> (\<exists>TY. \<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type TY)
-      then (@TY. \<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type TY)
+      if Satisfiable A \<and> (\<exists>TY. Semantic_Type' A TY)
+      then (@TY. Semantic_Type' A TY)
       else \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
 
 adhoc_overloading Type_Of_syntax SType_Of SType_Of'
@@ -232,7 +238,7 @@ adhoc_overloading Type_Of_syntax SType_Of SType_Of'
 lemma SType_Of'_implies_SType_Of:
   \<open> (\<And>x. \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY)
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY\<close>
-  unfolding SType_Of_def SType_Of'_def Inhabited_def
+  unfolding SType_Of_def SType_Of'_def Inhabited_def Semantic_Type_def Semantic_Type'_def
   by (auto, smt (verit) Satisfiable_def Well_Type_unique tfl_some,
             smt (verit, best) tfl_some)
 
@@ -243,6 +249,7 @@ lemma SType_Of'_implies_SType_Of''':
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY\<close>
   unfolding SType_Of_def SType_Of'_def Inhabited_def Abstract_Domain\<^sub>L_def
             Action_Tag_def \<r>ESC_def \<r>EIF_def Abstract_Domain_def Satisfiable_def
+            Semantic_Type_def Semantic_Type'_def
   by (auto,
       smt (verit, ccfv_SIG) Well_Type_unique someI,
       smt (verit, ccfv_SIG) someI)
@@ -250,11 +257,12 @@ lemma SType_Of'_implies_SType_Of''':
 lemma SType_Of_not_poison:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Inhabited T \<and> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
   unfolding SType_Of_def Inhabited_def Satisfiable_def
+            Semantic_Type_def Semantic_Type'_def
   by (auto, smt (verit, best) someI2_ex, insert Well_Type_disjoint, blast)
 
 lemma SType_Of'_not_poison:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> A = TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> Satisfiable A \<and> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type TY) \<close>
-  unfolding SType_Of'_def Satisfiable_def
+  unfolding SType_Of'_def Satisfiable_def Semantic_Type_def Semantic_Type'_def
   by (auto, smt (verit, best) someI2_ex, insert Well_Type_disjoint, blast)
 
 
@@ -277,18 +285,30 @@ declare [[
 ]]
 *)
 
-declare [[
-  \<phi>reason_default_pattern \<open>SType_Of ?T = _ @tag \<A>infer\<close>  \<Rightarrow> \<open>SType_Of ?T = _ @tag \<A>infer\<close>  (100)
-                      and \<open>SType_Of' ?T = _ @tag \<A>infer\<close> \<Rightarrow> \<open>SType_Of' ?T = _ @tag \<A>infer\<close> (100)
-]]
-
-\<phi>reasoner_group \<phi>sem_type_infer_all = (100, [1, 2000]) \<open>\<close>
+\<phi>reasoner_group \<phi>sem_type_infer_all = (100, [1, 2000]) for (\<open>SType_Of T = _ @tag \<A>infer\<close>, \<open>SType_Of' T = _ @tag \<A>infer\<close> )\<open>\<close>
             and \<phi>sem_type_infer_fallback = (1, [1, 1]) in \<phi>sem_type_infer_all \<open>\<close>
             and \<phi>sem_type_infer_brute = (10, [10,20]) in \<phi>sem_type_infer_all
                                                      and > \<phi>sem_type_infer_fallback \<open>\<close>
             and \<phi>sem_type_infer_cut = (1000, [1000, 1030]) in \<phi>sem_type_infer_all \<open>\<close>
             and \<phi>sem_type_infer_derived = (50, [50,60]) in \<phi>sem_type_infer_all
                                                        and > \<phi>sem_type_infer_brute \<open>\<close>
+
+\<phi>reasoner_group Semantic_Type_all = (100, [10, 2000]) for (\<open>Semantic_Type _ _\<close>, \<open>Semantic_Type' _ _\<close>) \<open>\<close>
+  and Semantic_Type = (1000, [1000,1030]) in Semantic_Type_all \<open>\<close>
+  and Semantic_Type_fallback = (10, [10,20]) in Semantic_Type_all \<open>\<close>
+
+declare [[
+    \<phi>reason_default_pattern \<open>Semantic_Type ?T _\<close> \<Rightarrow> \<open>Semantic_Type ?T ?var\<close> (100)
+                        and \<open>Semantic_Type' ?T _\<close> \<Rightarrow> \<open>Semantic_Type' ?T ?var\<close> (100),
+    \<phi>default_reasoner_group \<open>Semantic_Type _ _\<close> : %Semantic_Type (100),
+    \<phi>default_reasoner_group \<open>Semantic_Type' _ _\<close> : %Semantic_Type (100),
+
+    \<phi>reason_default_pattern \<open>SType_Of  ?T = _ @tag \<A>infer\<close> \<Rightarrow> \<open>SType_Of  ?T = _ @tag \<A>infer\<close> (100)
+                        and \<open>SType_Of' ?T = _ @tag \<A>infer\<close> \<Rightarrow> \<open>SType_Of' ?T = _ @tag \<A>infer\<close> (100),
+    \<phi>default_reasoner_group \<open>SType_Of  ?T = _ @tag \<A>infer\<close> : %\<phi>sem_type_infer_cut (100),
+    \<phi>default_reasoner_group \<open>SType_Of' ?T = _ @tag \<A>infer\<close> : %\<phi>sem_type_infer_cut (100)
+]]
+
 
 (*
 \<phi>reasoner_group \<phi>sem_type = (100, [0, 3000]) for (\<open>SType_Of T = TY @tag \<A>infer\<close>)
@@ -349,12 +369,14 @@ lemma \<phi>SemType_Itself_brute:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (v \<Ztypecolon> Itself) = TY @tag \<A>infer \<close>
   unfolding SType_Of'_def Inhabited_def Satisfiable_def Premise_def Action_Tag_def
+            Semantic_Type_def Semantic_Type'_def
   by (auto, insert Well_Type_unique, blast)
 
 lemma \<phi>sem_type_by_sat:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ((\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) \<and> (\<not> Satisfiable S \<longrightarrow> TY = \<p>\<o>\<i>\<s>\<o>\<n>))
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> S = TY @tag \<A>infer \<close>
   unfolding Premise_def \<r>Guard_def SType_Of'_def Satisfiable_def Action_Tag_def
+            Semantic_Type_def Semantic_Type'_def
   by (auto simp: split_ifs, insert Well_Type_unique, blast)
   
 
@@ -389,10 +411,10 @@ lemma \<t>\<y>\<p>\<e>\<o>\<f>_plus[simp]:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (T + U) = \<t>\<y>\<p>\<e>\<o>\<f> T \<close>
   for T :: \<open>VAL BI\<close>
-  unfolding SType_Of'_def Inhabited_def Satisfiable_def subset_iff
+  unfolding SType_Of'_def Inhabited_def Satisfiable_def subset_iff Semantic_Type_def Semantic_Type'_def
   using Well_Type_unique by (clarsimp, smt (z3) someI)
 
-lemma [\<phi>reason %\<phi>sem_type_infer_cut]:
+lemma [\<phi>reason add]:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> T = TY\<^sub>1 @tag \<A>infer
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> U = TY\<^sub>2 @tag \<A>infer
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> TY\<^sub>1 = TY\<^sub>2
@@ -406,7 +428,7 @@ lemma \<t>\<y>\<p>\<e>\<o>\<f>_bot[simp]:
   unfolding SType_Of'_def
   by auto
 
-lemma [\<phi>reason %\<phi>sem_type_infer_cut]:
+lemma [\<phi>reason add]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> X = TY @tag \<A>infer
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (X \<s>\<u>\<b>\<j> P) = (if P then TY else \<p>\<o>\<i>\<s>\<o>\<n>) @tag \<A>infer \<close>
   unfolding Action_Tag_def Premise_def
@@ -416,13 +438,13 @@ lemma \<t>\<y>\<p>\<e>\<o>\<f>_\<s>\<u>\<b>\<j>[simp]:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> (X \<s>\<u>\<b>\<j> P) = (if P then \<t>\<y>\<p>\<e>\<o>\<f> X else \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
   by auto
 
-lemma [\<phi>reason %\<phi>sem_type_infer_cut]:
+lemma [\<phi>reason add]:
   \<open> (\<And>x. \<t>\<y>\<p>\<e>\<o>\<f> (X x) = TY @tag \<A>infer)
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (ExSet X) = TY @tag \<A>infer \<close>
-  unfolding Action_Tag_def SType_Of'_def Inhabited_def Satisfiable_def subset_iff
+  unfolding Action_Tag_def SType_Of'_def Inhabited_def Satisfiable_def subset_iff            
   by (auto,
-      smt (verit, del_insts) Well_Type_unique some_equality,
-      metis (mono_tags) SType_Of'_def SType_Of'_not_poison Satisfiable_def)
+      metis (no_types, lifting) ExSet_expn Semantic_Type'_def Well_Type_unique verit_sko_ex',
+      metis ExSet_expn_set Satisfaction_def Semantic_Type'_def tfl_some)
 
 subsubsection \<open>Auxiliary Reasoners\<close>
 
@@ -435,7 +457,7 @@ definition \<open>Is_Type_Literal (TY::TY) \<equiv> True\<close>
 
 declare [[ \<phi>default_reasoner_group \<open>Is_Type_Literal _\<close> : %Is_Type_Literal (100) ]]
 
-lemma Is_Type_Literal_I: \<open>Is_Type_Literal X\<close>
+lemma Is_Type_Literal_I[intro!]: \<open>Is_Type_Literal X\<close>
   unfolding Is_Type_Literal_def ..
 
 \<phi>reasoner_ML Is_Type_Literal_Free default %Is_Type_Literal_default (\<open>Is_Type_Literal _\<close>) = \<open>
@@ -451,23 +473,6 @@ paragraph \<open>Unfolding \<open>\<t>\<y>\<p>\<e>\<o>\<f> T\<close>\<close>
 \<phi>reasoner_group eval_sem_typ = (100, [75, 2000]) > lambda_unify__default
                                 \<open>Unfolding \<open>\<t>\<y>\<p>\<e>\<o>\<f> T\<close> exhausitively, with checking the result is not a poison.\<close>
 
-definition Semantic_Type :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY \<Rightarrow> bool\<close>
-  where \<open>Semantic_Type T TY \<equiv> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
-
-definition Semantic_Type' :: \<open>VAL BI \<Rightarrow> TY \<Rightarrow> bool\<close>
-  where \<open>Semantic_Type' A TY \<equiv> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<in> Well_Type TY) \<close>
-
-\<phi>reasoner_group Semantic_Type_all = (100, [10, 2000]) for (\<open>Semantic_Type _ _\<close>, \<open>Semantic_Type' _ _\<close>) \<open>\<close>
-  and Semantic_Type = (1000, [1000,1030]) in Semantic_Type_all \<open>\<close>
-  and Semantic_Type_fallback = (10, [10,20]) in Semantic_Type_all \<open>\<close>
-
-declare [[
-    \<phi>reason_default_pattern \<open>Semantic_Type ?T _\<close> \<Rightarrow> \<open>Semantic_Type ?T ?var\<close> (100)
-                        and \<open>Semantic_Type' ?T _\<close> \<Rightarrow> \<open>Semantic_Type' ?T ?var\<close> (100),
-    \<phi>default_reasoner_group \<open>Semantic_Type _ _\<close> : %Semantic_Type (100),
-    \<phi>default_reasoner_group \<open>Semantic_Type' _ _\<close> : %Semantic_Type (100)
-]]
-
 (*
 lemma Semantic_Type_alt_def:
   \<open> Semantic_Type T TY \<longleftrightarrow> Inhabited T \<and> (\<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY) \<close>
@@ -482,13 +487,24 @@ lemma Semantic_Type'_alt_def:
   by (smt (verit, best) Action_Tag_def Premise_def \<phi>sem_type_by_sat)
 *)
 
+
+
+(*
+paragraph \<open>Conversion From Strong to Weak\<close>
+
+(* ML_file \<open>library/spec_framework/semantic_type.ML\<close> *)
+
+*) 
+
+subsubsection \<open>Reasoning\<close>
+
 lemma [\<phi>reason default %Semantic_Type_fallback+10]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> TY : \<t>\<y>\<p>\<e>\<o>\<f> T
 \<Longrightarrow> Is_Type_Literal TY \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Fail to evaluate\<close> (\<t>\<y>\<p>\<e>\<o>\<f> T))
 \<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Semantic_Type_def Simplify_def Premise_def OR_FAIL_def SType_Of_def
-  by (auto, smt (verit, best) Eps_cong SType_Of_def SType_Of_not_poison, presburger)
+  unfolding Semantic_Type_def Simplify_def Premise_def OR_FAIL_def
+  by (auto, meson SType_Of_not_poison)
 
 lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type _ _\<close>]:
   \<open> Semantic_Type T TY'
@@ -504,7 +520,6 @@ lemma [\<phi>reason default %Semantic_Type_fallback+10]:
   unfolding Semantic_Type'_def Semantic_Type_def
   by auto
 
-
 lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type' _ _\<close>]:
   \<open> Semantic_Type' A TY'
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY' \<o>\<r> \<f>\<a>\<i>\<l> TEXT(\<open>Expecting\<close> (\<t>\<y>\<p>\<e>\<o>\<f> A) \<open>to be\<close> TY \<open>but actually\<close> TY')
@@ -512,12 +527,7 @@ lemma [\<phi>reason default %Semantic_Type_fallback for \<open>Semantic_Type' _ 
   unfolding OR_FAIL_def Premise_def
   by simp
 
-(*
-paragraph \<open>Conversion From Strong to Weak\<close>
 
-(* ML_file \<open>library/spec_framework/semantic_type.ML\<close> *)
-
-*) 
 subsubsection \<open>Multiple Values\<close>
 
 definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>

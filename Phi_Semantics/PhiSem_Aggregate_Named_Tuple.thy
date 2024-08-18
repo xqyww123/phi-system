@@ -267,7 +267,7 @@ subsubsection \<open>Properties\<close>
 
 lemma \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 [simp, \<phi>type_property Named_Tuple_Field Semantic_Type]:
   \<open> \<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> SYMBOL_VAR(s): T \<rbrace> = \<s>\<t>\<r>\<u>\<c>\<t> {SYMBOL_VAR(s): \<t>\<y>\<p>\<e>\<o>\<f> T} \<close> 
-  unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def
+  unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def Semantic_Type_def
   apply auto
   apply (smt (z3) WT_named_tup Well_Type_unique exE_some fmempty_transfer fmrel_upd mem_Collect_eq)
   apply (metis (mono_tags, lifting) WT_named_tup fmempty_transfer fmrel_upd mem_Collect_eq)
@@ -299,7 +299,7 @@ definition Named_Tuple_Types :: \<open>(VAL, 'x) \<phi> \<Rightarrow> (symbol, T
 lemma \<t>\<y>\<p>\<e>\<o>\<f>_ntup:
   \<open> Named_Tuple_Types T Tys
 \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T \<equiv> semty_ntup Tys \<close>
-  unfolding Named_Tuple_Types_def SType_Of_def atomize_eq
+  unfolding Named_Tuple_Types_def SType_Of_def atomize_eq Semantic_Type_def
   by (auto simp: semty_ntup_eq_poison,
       metis semty_ntup_eq_poison,
       metis semty_ntup_eq_poison,
