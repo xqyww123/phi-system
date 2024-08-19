@@ -79,7 +79,7 @@ lemma refinement_frame':
   subgoal for x r R u v rr a' b'
 
 lemma
-  \<open>Any \<r>\<e>\<f>\<i>\<n>\<e>\<s> Any \<w>.\<r>.\<t> \<F>_it \<i>\<n> D\<close>
+  \<open>Any \<r>\<e>\<f>\<i>\<n>\<e>\<s> Any \<w>.\<r>.\<t> Itself \<i>\<n> D\<close>
   for Any :: \<open>'a::sep_monoid rel\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: subset_iff \<phi>expns Image_def Bex_def Id_on_iff)
@@ -231,7 +231,7 @@ lemma "__getter_rule__":
   by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on ({x} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg v))\<close>
                                        and D = \<open>{x}\<close>],
      assumption,
-     clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExSet_expn,
+     clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExBI_expn,
      simp add: Id_on_iff zero_set_def zero_fun_def,
      assumption,
      simp add: Valid_Transition_def zero_set_def,
@@ -245,7 +245,7 @@ lemma "__setter_rule__":
   by (rule from_fictional_refinement
                   [where Rel=\<open>\<lambda>ret. {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
       assumption,
-      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExSet_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
+      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExBI_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
       simp add: Id_on_iff zero_set_def zero_fun_def,
       assumption,
       simp add: Valid_Transition_def zero_set_def,
@@ -260,7 +260,7 @@ lemma "__allocator_rule__":
         [where Rel=\<open>\<lambda>ret. {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
            and x=\<open>1\<close> and D=\<open>{1}\<close>, unfolded \<phi>_unit],
       assumption,
-      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExSet_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
+      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExBI_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
       simp add: Id_on_iff zero_set_def zero_fun_def,
       assumption,
       simp add: Valid_Transition_def zero_set_def,

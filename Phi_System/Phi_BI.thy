@@ -1,5 +1,5 @@
 (*TODO: lift it to a chapter*)
-section \<open>A Bunched Implications Equipped with Satisfaction\<close>
+chapter \<open>A Bunched Implications Equipped with Satisfaction\<close>
 
 text \<open>It also contains a simplified BI specialized for only necessary constructs required
   by \<^emph>\<open>Multi-Term Form\<close>.
@@ -78,48 +78,269 @@ theory Phi_BI
       and "<TP>" = "\<T>\<P>"
 begin
 
-type_synonym 'a BI = \<open>'a set\<close>
+section \<open>Judgement\<close>
 
-subsection \<open>Satisfaction\<close>
+datatype 'a BI = BI (dest: \<open>'a set\<close>)
+hide_const (open) dest
 
-definition Satisfaction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> (infix "\<Turnstile>" 50) where \<open>(\<Turnstile>) = (\<in>)\<close>
+definition Satisfaction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> (infix "\<Turnstile>" 50)
+  where \<open>(x \<Turnstile> A) \<longleftrightarrow> (x \<in> BI.dest A)\<close>
 
-subsubsection \<open>Basic Rules\<close>
+lemma Satisfaction_BI_red[simp]:
+  \<open> x \<Turnstile> BI S \<longleftrightarrow> x \<in> S \<close>
+  unfolding Satisfaction_def by simp
+
+subsubsection \<open>Basics\<close>
+
+lemma split_BI_all: \<open>(\<forall>x. P x) \<longleftrightarrow> (\<forall>x. P (BI x))\<close> by (metis BI.collapse) 
+lemma split_BI_ex: \<open>(\<exists>x. P x) \<longleftrightarrow> (\<exists>x. P (BI x))\<close> by (metis BI.collapse) 
+
+lemma split_BI_meta_all:
+  \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (BI x)) \<close>
+proof
+  fix x assume \<open>\<And>x. PROP P x\<close> then show \<open>PROP P (BI x)\<close> .
+next
+  fix x assume \<open>\<And>x. PROP P (BI x)\<close> from this[of \<open>BI.dest x\<close>] show \<open>PROP P x\<close> by simp
+qed
+
+subsection \<open>Algebraic Properties of BI\<close>
+
+instantiation BI :: (type) zero begin
+definition zero_BI where "zero_BI = BI {}"
+instance ..
+end
+
+instantiation BI :: (one) one begin
+definition "one_BI = BI {1::'a}"
+instance ..
+end
+
+instantiation BI :: ("{sep_disj,times}") times begin
+definition "times_BI P Q = BI { x * y | x y. x \<Turnstile> P \<and> y \<Turnstile> Q \<and> x ## y }"
+instance ..
+end
+
+instance BI :: ("{sep_disj,times}") mult_zero 
+  by (standard; simp add: zero_BI_def times_BI_def)
+
+instance BI :: ("{sep_magma_1,no_inverse}") no_inverse
+  by (standard; simp add: one_BI_def times_BI_def set_eq_iff split_BI_meta_all;
+      metis (no_types, opaque_lifting) no_inverse sep_magma_1_left sep_magma_1_right)
+
+instantiation BI :: (type) total_sep_disj begin
+definition sep_disj_BI :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close> where [simp]: \<open>sep_disj_BI _ _ = True\<close>
+instance by (standard; simp)
+end
+
+instance BI :: (sep_magma) sep_magma ..
+
+instance BI :: (sep_magma_1) sep_magma_1 proof
+  fix x :: \<open>'a BI\<close>
+  show \<open>1 * x = x\<close> by (cases x; simp add: one_BI_def times_BI_def)
+  show \<open>x * 1 = x\<close> by (cases x; simp add: one_BI_def times_BI_def)
+  show \<open>x ## 1\<close> by simp
+  show \<open>1 ## x\<close> by simp
+qed
+
+instance BI :: (sep_no_inverse) sep_no_inverse
+  by (standard, simp add: one_BI_def times_BI_def set_eq_iff split_BI_meta_all;
+      metis (no_types, opaque_lifting) sep_magma_1_left sep_magma_1_right sep_no_inverse)
+
+instance BI :: (sep_disj_distrib) sep_disj_distrib by (standard; simp)
+
+instance BI :: (sep_semigroup) semigroup_mult
+  apply (standard; clarsimp simp add: times_BI_def algebra_simps set_eq_iff; rule; clarsimp)
+  using sep_disj_multD2 sep_disj_multI2 sep_mult_assoc apply blast
+  by (metis sep_disj_multD1 sep_disj_multI1 sep_mult_assoc)
+
+instance BI :: (sep_monoid) monoid_mult
+  by standard simp_all
+
+instance BI :: (sep_ab_semigroup) ab_semigroup_mult
+  apply (standard; simp add: times_BI_def set_eq_iff)
+  using sep_disj_commute sep_mult_commute by blast
+
+instance BI :: (sep_algebra) comm_monoid_mult
+  by (standard; simp_all add: one_set_def times_set_def)
+
+instantiation BI :: (type) comm_monoid_add begin
+definition \<open>plus_BI x y = BI (BI.dest x \<union> BI.dest y)\<close>
+instance by standard (auto simp add: plus_BI_def zero_BI_def split_BI_meta_all)
+end
+
+instantiation BI :: (type) order begin
+definition less_BI :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
+  where \<open>less_BI A B \<longleftrightarrow> BI.dest A < BI.dest B\<close>
+definition less_eq_BI :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
+  where \<open>less_eq_BI A B \<longleftrightarrow> BI.dest A \<le> BI.dest B\<close>
+
+lemma less_BI[simp]: \<open> BI A < BI B \<longleftrightarrow> A < B \<close> unfolding less_BI_def by simp
+lemma less_eq_BI[simp]: \<open> BI A \<le> BI B \<longleftrightarrow> A \<le> B \<close> unfolding less_eq_BI_def by simp
+
+lemma less_eq_BI_iff: \<open> A \<le> B \<longleftrightarrow> (\<forall>w. w \<Turnstile> A \<longrightarrow> w \<Turnstile> B) \<close>
+  by (cases A; cases B; auto)
+
+instance by (standard; simp add: split_BI_meta_all; blast)
+end
+
+instance BI :: (type) ordered_comm_monoid_add
+  by standard (auto simp add: plus_BI_def zero_BI_def split_BI_meta_all)
+
+lemma plus_BI_S_S [simp]: \<open>S + S = S\<close> for S :: \<open>'a BI\<close> by (simp add: plus_BI_def)
+
+instance BI :: (sep_semigroup) ordered_semiring_0
+  by standard (auto simp add: zero_BI_def plus_BI_def times_BI_def split_BI_meta_all)
+
+instance BI :: (sep_monoid) semiring_1
+  by standard (auto simp add: zero_BI_def one_BI_def plus_BI_def times_BI_def split_BI_meta_all)
+
+instance BI :: (sep_ab_semigroup) ordered_comm_semiring
+  by standard (auto simp add: zero_BI_def plus_BI_def times_BI_def split_BI_meta_all set_eq_iff)
+
+instance BI :: (sep_algebra) comm_semiring_1
+  by standard auto
+
+instantiation BI :: (type) order_top begin
+definition top_BI :: \<open>'a BI\<close> where \<open>top_BI = BI top\<close>
+instance by (standard; simp add: top_BI_def split_BI_meta_all)
+end
+
+instantiation BI :: (type) order_bot begin
+definition bot_BI :: \<open>'a BI\<close> where \<open>bot_BI = BI bot\<close>
+instance by (standard; simp add: bot_BI_def split_BI_meta_all)
+end
+
+notation inf (infixl "\<sqinter>" 70)
+     and sup (infixl "\<squnion>" 65)
+
+instantiation BI :: (type) semilattice_inf begin
+definition inf_BI :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close>
+  where \<open>inf_BI A B = BI (BI.dest A \<inter> BI.dest B)\<close>
+
+lemma inf_BI_red[simp]: \<open>BI A \<sqinter> BI B = BI (A \<sqinter> B)\<close> by (simp add: inf_BI_def)
+
+instance by (standard; simp add: split_BI_meta_all)
+end
+
+instantiation BI :: (type) semilattice_sup begin
+definition sup_BI :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close>
+  where \<open>sup_BI A B = BI (BI.dest A \<union> BI.dest B)\<close>
+
+lemma sup_BI_red[simp]: \<open>BI A \<squnion> BI B = BI (A \<squnion> B)\<close> by (simp add: sup_BI_def)
+
+instance by (standard; simp add: split_BI_meta_all)
+end
+
+instance BI :: (type) lattice by standard
+
+instantiation BI :: (type) complete_lattice begin
+
+definition Inf_BI :: \<open>'a BI set \<Rightarrow> 'a BI\<close>
+  where \<open>Inf_BI S = BI (Inf (BI.dest ` S))\<close>
+definition Sup_BI :: \<open>'a BI set \<Rightarrow> 'a BI\<close>
+  where \<open>Sup_BI S = BI (Sup (BI.dest ` S))\<close>
+
+lemma Inf_BI_expn[iff]:
+  \<open> w \<Turnstile> Inf S \<longleftrightarrow> (\<forall>A\<in>S. w \<Turnstile> A) \<close>
+  unfolding Inf_BI_def by (auto simp: split_BI_meta_all)
+
+lemma Sup_BI_expn[iff]:
+  \<open> w \<Turnstile> Sup S \<longleftrightarrow> (\<exists>A\<in>S. w \<Turnstile> A) \<close>
+  unfolding Sup_BI_def by (auto simp: split_BI_meta_all, meson Satisfaction_BI_red, force)
+
+instance by (
+      (standard; (simp add: split_BI_meta_all less_eq_BI_iff)?),
+      meson Satisfaction_BI_red,
+      metis BI.collapse Satisfaction_def,
+      simp add: Inf_BI_def top_BI_def,
+      simp add: Sup_BI_def bot_BI_def)
+end
+
+
+subsubsection \<open>Basic Operations & Rules\<close>
 
 lemma BI_eq_iff:
   \<open>S = S' \<longleftrightarrow> (\<forall>u. u \<Turnstile> S \<longleftrightarrow> u \<Turnstile> S')\<close>
-  unfolding Satisfaction_def set_eq_iff ..
+  unfolding Satisfaction_def
+  by (cases S, cases S', simp add: set_eq_iff)
+
+definition I_image :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> 'a BI \<Rightarrow> 'b BI\<close>  (infixr "`\<^sub>I" 90)
+  where \<open> f `\<^sub>I A = BI (f ` BI.dest A) \<close>
+
+lemma I_image_red[simp]:
+  \<open> f `\<^sub>I BI A = BI (f ` A) \<close>
+  unfolding I_image_def
+  by simp
+
+lemma I_image_expn[iff, \<phi>expns]:
+  \<open> w \<Turnstile> f `\<^sub>I A \<longleftrightarrow> (\<exists>w'. w = f w' \<and> w' \<Turnstile> A) \<close>
+  by (cases A; simp; blast)
 
 subsubsection \<open>Basic Rewrites\<close>
 
 lemma sep_conj_expn[simp, \<phi>expns]:
   \<open>uv \<Turnstile> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<Turnstile> S \<and> v \<Turnstile> T \<and> u ## v)\<close>
-  unfolding Satisfaction_def
-  using set_mult_expn .
+  unfolding Satisfaction_def times_BI_def
+  by simp
+
+
+
+definition Subjection :: " 'p BI \<Rightarrow> bool \<Rightarrow> 'p BI " (infixl "\<s>\<u>\<b>\<j>" 15)
+  where " (T \<s>\<u>\<b>\<j> P) = BI {p. p \<Turnstile> T \<and> P}"
 
 lemma Subjection_expn[iff, \<phi>expns]:
   \<open>p \<Turnstile> (S \<s>\<u>\<b>\<j> P) \<longleftrightarrow> p \<Turnstile> S \<and> P\<close>
-  unfolding Satisfaction_def using Subjection_expn_set .
+  by (cases S; simp add: Subjection_def)
 
-lemma ExSet_expn[iff, \<phi>expns]:
-  \<open>p \<Turnstile> (ExSet S) \<longleftrightarrow> (\<exists>x. p \<Turnstile> S x)\<close>
-  unfolding Satisfaction_def using ExSet_expn_set .
+(*
+lemma Subjection_Id_on:
+  \<open>Id_on (S \<s>\<u>\<b>\<j> P) = (Id_on S \<s>\<u>\<b>\<j> P)\<close>
+  by (auto simp add: Subjection_expn_set)
+*)
 
+lemma Subjection_image:
+  \<open>f `\<^sub>I (S \<s>\<u>\<b>\<j> P) = (f `\<^sub>I S \<s>\<u>\<b>\<j> P)\<close>
+  unfolding BI_eq_iff
+  by simp blast
+
+definition ExBI :: " ('x \<Rightarrow> 'c BI) \<Rightarrow> 'c BI" (binder "\<exists>*" 14)
+  where "ExBI S = BI {p. (\<exists>c. p \<Turnstile> S c)}"
+notation ExBI (binder "\<exists>\<^sup>s" 14)
+
+lemma ExBI_expn[iff, \<phi>expns]:
+  \<open>p \<Turnstile> (ExBI S) \<longleftrightarrow> (\<exists>x. p \<Turnstile> S x)\<close>
+  by (simp add: ExBI_def Satisfaction_def)
+
+(*
+lemma ExBI_Id_on:
+  \<open>Id_on (\<exists>*x. S x) = (\<exists>*x. Id_on (S x))\<close>
+  by (auto simp add: ExBI_expn_set; blast)
+
+lemma ExI_image:
+  \<open>f ` (\<exists>*c. S c) = (\<exists>*c. f ` S c)\<close>
+  by (auto simp add: ExBI_expn_set image_iff Bex_def; blast)
+*)
+
+(*
 lemma Bottom_expn[iff, \<phi>expns]:
   \<open>\<not> (p \<Turnstile> {})\<close>
   unfolding Satisfaction_def by simp
+*)
 
 lemma Zero_expn[iff, \<phi>expns]:
   \<open>\<not> (p \<Turnstile> 0)\<close>
-  unfolding Satisfaction_def by simp
+  unfolding Satisfaction_def
+  by (simp add: zero_BI_def)
 
 lemma One_expn[iff, \<phi>expns]:
   \<open>v \<Turnstile> 1 \<longleftrightarrow> v = 1\<close>
-  unfolding Satisfaction_def by simp
+  unfolding Satisfaction_def
+  by (simp add: one_BI_def)
 
 lemma Top_expn[iff, \<phi>expns]:
   \<open>v \<Turnstile> top\<close>
-  unfolding Satisfaction_def by simp
+  unfolding Satisfaction_def
+  by (simp add: top_BI_def)
 
 subsubsection \<open>Reasoning Configuration\<close>
 
@@ -127,6 +348,8 @@ subsubsection \<open>Reasoning Configuration\<close>
                                     for (\<open>\<r>EIF _ _\<close>, \<open>\<r>ESC _ _\<close>)
                                      in extract_pure_all and > extract_pure
   \<open>Rules extracting BI properties down to Satisfaction\<close>
+
+section \<open>Connectives\<close>
 
 subsection \<open>\<phi>-Type\<close>
 
@@ -145,7 +368,8 @@ subsubsection \<open>Basic \& Auxiliary Rules\<close>
 
 lemma \<phi>Type_eqI:
   \<open>(\<forall>x p. p \<Turnstile> (x \<Ztypecolon> a) \<longleftrightarrow> p \<Turnstile> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
-  unfolding \<phi>Type_def Satisfaction_def by blast
+  unfolding \<phi>Type_def Satisfaction_def
+  by (metis ext less_BI_def less_eq_BI_def order.order_iff_strict subset_iff subset_not_subset_eq)
 
 lemma \<phi>Type_protect_type_cong:
   \<open> x \<equiv> x'
@@ -627,7 +851,7 @@ lemma \<phi>Type_eqI_Tr:
 \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T)
 \<Longrightarrow> T = U\<close>
   unfolding \<phi>Type_def Transformation_def Satisfaction_def
-  by auto
+  by auto (metis dual_order.eq_iff le_fun_def less_eq_BI_def subset_eq)
 
 lemma \<phi>Type_eqI_BI:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U))
@@ -684,11 +908,12 @@ lemma BI_eq_ToA:
 lemma BI_sub_transformation:
   \<open> S \<le> S' \<longleftrightarrow> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S') \<close>
   unfolding Transformation_def Satisfaction_def subset_iff
-  by blast
+  by (simp add: less_eq_BI_def subset_iff)
 
 lemma BI_sub_iff:
   \<open> S \<le> S' \<longleftrightarrow> (\<forall>u. u \<Turnstile> S \<longrightarrow> u \<Turnstile> S') \<close>
-  unfolding Satisfaction_def subset_iff ..
+  unfolding Satisfaction_def subset_iff
+  by (meson less_eq_BI_def subset_eq)
 
 lemma transformation_protector:
   \<open>A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<equiv> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P\<close> .
@@ -1237,11 +1462,12 @@ abbreviation Bottom_abs ("\<bottom>\<^sub>\<lambda>") where \<open>Bottom_abs \<
 
 lemma bot_eq_BI_bot [\<phi>programming_base_simps, \<phi>programming_simps]:
   \<open>bot = \<bottom>\<^sub>B\<^sub>I\<close>
-  unfolding zero_set_def ..
+  unfolding zero_BI_def bot_BI_def ..
 
 lemma zero_implies_any[simp]:
   \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any\<close>
-  unfolding Transformation_def zero_set_def Satisfaction_def by simp
+  unfolding Transformation_def zero_set_def Satisfaction_def
+  by (cases X; simp add: zero_BI_def)
 
 subsubsection \<open>Rewrites\<close>
 
@@ -1391,7 +1617,8 @@ subsubsection \<open>Basic Rules\<close>
 
 lemma Disjunction_expn[iff, \<phi>expns]:
   \<open>p \<Turnstile> (A + B) \<longleftrightarrow> p \<Turnstile> A \<or> p \<Turnstile> B\<close>
-  unfolding Satisfaction_def by simp
+  unfolding Satisfaction_def
+  by (simp add: plus_BI_def)
 
 lemma Add_Disj_Satisfiable[simp]:
   \<open> Satisfiable (A + B) \<longleftrightarrow> Satisfiable A \<or> Satisfiable B \<close>
@@ -1497,24 +1724,24 @@ hide_fact ToA_disj_target_A' ToA_disj_target_B'
 
 subsection \<open>Existential Quantification\<close>
 
-lemma ExSet_inhabited_E[elim!]:
-  \<open>Satisfiable (ExSet S) \<Longrightarrow> (\<And>x. Satisfiable (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma ExBI_inhabited_E[elim!]:
+  \<open>Satisfiable (ExBI S) \<Longrightarrow> (\<And>x. Satisfiable (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Satisfiable_def
   by simp blast
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<And>x. S x \<i>\<m>\<p>\<l>\<i>\<e>\<s> C x)
-\<Longrightarrow> ExSet S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ex C \<close>
+\<Longrightarrow> ExBI S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ex C \<close>
   unfolding Satisfiable_def \<r>EIF_def
   by (simp; blast)
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<And>x. C x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S x)
-\<Longrightarrow> Ex C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> ExSet S \<close>
+\<Longrightarrow> Ex C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> ExBI S \<close>
   unfolding Satisfiable_def \<r>ESC_def
   by (simp; blast)
 
-lemma ExSet_Satisfiable[simp]:
+lemma ExBI_Satisfiable[simp]:
   \<open> Satisfiable (\<exists>*x. S x) \<longleftrightarrow> (\<exists>x. Satisfiable (S x)) \<close>
   unfolding Satisfiable_def
   by clarsimp blast
@@ -1568,9 +1795,9 @@ parse_translation \<open>[
                   $ Abs (A, T, C ((A,T)::Bs))
                   $ Ac
       fun trans (Const (\<^syntax_const>\<open>_pttrns\<close>, _) $ A $ B) Bs
-            = Const (\<^const_syntax>\<open>ExSet\<close>, dummyT) $ trans_one (Bs,trans B) A
+            = Const (\<^const_syntax>\<open>ExBI\<close>, dummyT) $ trans_one (Bs,trans B) A
         | trans B Bs
-            = Const (\<^const_syntax>\<open>ExSet\<close>, dummyT) $ trans_one (Bs, (fn Bs =>
+            = Const (\<^const_syntax>\<open>ExBI\<close>, dummyT) $ trans_one (Bs, (fn Bs =>
                 case P of(* Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free ("True",_) $ _
                             => subst 0 Bs X
                         |*) Const (\<^const_syntax>\<open>top\<close>, _)
@@ -1581,7 +1808,7 @@ parse_translation \<open>[
 ]\<close>
 
 print_translation \<open>[
-  (\<^const_syntax>\<open>ExSet\<close>, fn ctxt => fn [X] =>
+  (\<^const_syntax>\<open>ExBI\<close>, fn ctxt => fn [X] =>
     let fun subst l Bs (Bound i)
               = if l <= i andalso i-l <= length Bs then List.nth(Bs, i-l) else Bound i
           | subst l Bs (Abs (N,T,X)) = Abs (N,T, subst (l+1) Bs X)
@@ -1593,7 +1820,7 @@ print_translation \<open>[
                 else let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
                       in trans (bound::Vs, bound::Bs) X
                      end
-          | trans (Vs,Bs) (Abs(A,T, Const(\<^const_syntax>\<open>ExSet\<close>, _) $ X))
+          | trans (Vs,Bs) (Abs(A,T, Const(\<^const_syntax>\<open>ExBI\<close>, _) $ X))
               = let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
                     val var = fold (fn v => fn v' => Const(\<^const_syntax>\<open>Pair\<close>,dummyT) $ v $ v')
                                     Vs bound
@@ -1622,8 +1849,8 @@ subsubsection \<open>Semantic Explanation\<close>
 text \<open>Semantically, an existential quantification in BI actually represents union of resources
   matching the existentially quantified assertion, as shown by the following lemma.\<close>
 
-lemma " Union { S x |x. P x } = (S x \<s>\<u>\<b>\<j> x. P x) "
-  by (simp add: set_eq_iff ExSet_def Subjection_def) blast
+lemma " BI (Union { BI.dest (S x) |x. P x }) = (S x \<s>\<u>\<b>\<j> x. P x) "
+  by (simp add: set_eq_iff ExBI_def Subjection_def) (meson Satisfaction_def)
 
 subsubsection \<open>Basic Rules\<close>
 
@@ -1635,12 +1862,12 @@ lemma BI_Ex_comm:
 
 subsubsection \<open>Simplifications\<close>
 
-lemma ExSet_pair: "ExSet T = (\<exists>*a b. T (a,b))"
+lemma ExBI_pair: "ExBI T = (\<exists>*a b. T (a,b))"
   unfolding BI_eq_iff by clarsimp
 
-lemma ExSet_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
-  \<open>ExSet 0 = 0\<close>
-  \<open>ExSet (\<lambda>_. T) = T\<close>
+lemma ExBI_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
+  \<open>ExBI 0 = 0\<close>
+  \<open>ExBI (\<lambda>_. T) = T\<close>
   \<open>((\<exists>*c. X c) \<s>\<u>\<b>\<j> PP) = (\<exists>*c. X c \<s>\<u>\<b>\<j> PP)\<close>
   \<open>(F' y \<s>\<u>\<b>\<j> y. embedded_func f' P' x' y) = (F' (f' x') \<s>\<u>\<b>\<j> P' x')\<close>
 (*  \<open>(\<exists>* x. x = t \<and> P x) = P t\<close>
@@ -1649,7 +1876,7 @@ lemma ExSet_simps[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   unfolding BI_eq_iff embedded_func_def
   by simp_all
 
-lemma ExSet_defined[\<phi>programming_base_simps, simp, \<phi>safe_simp]:
+lemma ExBI_defined[\<phi>programming_base_simps, simp, \<phi>safe_simp]:
   \<comment> \<open>only safe for source side but unsafe for target side, because it could instantiate variables
       of types parameters which could be instantiated arbitrarily?... I am not pretty sure... It is subtle here\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
@@ -1661,15 +1888,15 @@ lemma ExSet_defined[\<phi>programming_base_simps, simp, \<phi>safe_simp]:
 
 lemma Ex_transformation_expn:
   \<open>((\<exists>*x. A x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (\<forall>x. A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)\<close>
-  unfolding Transformation_def ExSet_expn
+  unfolding Transformation_def ExBI_expn
   by blast
 
-lemma ExSet_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
+lemma ExBI_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
   \<open> (\<exists>*x. (case x of (a,b) \<Rightarrow> f a b)) = (\<exists>*a b. f a b) \<close>
   unfolding BI_eq_iff
   by clarsimp
 
-lemma ExSet_subj_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
+lemma ExBI_subj_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
   \<open> (\<exists>* x. A x \<s>\<u>\<b>\<j> (case x of (a,b) \<Rightarrow> P a b)) = (\<exists>* a b. A (a,b) \<s>\<u>\<b>\<j> P a b) \<close>
   unfolding BI_eq_iff
   by clarsimp
@@ -1679,18 +1906,18 @@ lemma ExSet_subj_split_prod[\<phi>programming_base_simps, \<phi>safe_simp]:
 
 paragraph \<open>With Multiplicative Conjunction\<close>
 
-lemma ExSet_times_left [simp, \<phi>programming_base_simps, \<phi>safe_simp]:
+lemma ExBI_times_left [simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   "((\<exists>* c. T c) * R) = (\<exists>* c. T c * R )"
   by (simp add: BI_eq_iff, blast)
 
-lemma ExSet_times_right[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
+lemma ExBI_times_right[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
   "(L * (\<exists>*c. T c)) = (\<exists>* c. L * T c)"
   by (simp add: BI_eq_iff, blast)
 
 
 paragraph \<open>With Additive Disjunction\<close>
 
-lemma ExSet_addisj:
+lemma ExBI_addisj:
   \<open>A + (\<exists>*c. B c) \<equiv> \<exists>*c. A + B c\<close>
   \<open>(\<exists>*c. B c) + A \<equiv> \<exists>*c. B c + A\<close>
   unfolding atomize_eq BI_eq_iff
@@ -1699,24 +1926,24 @@ lemma ExSet_addisj:
 
 subsubsection \<open>Transformation Rules\<close>
 
-lemma ExSet_transformation:
+lemma ExBI_transformation:
   \<open>(\<And>x. S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' x \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> ExSet S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet S' \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> ExBI S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExBI S' \<w>\<i>\<t>\<h> P\<close>
   unfolding Transformation_def by (clarsimp, blast)
 
-lemma ExSet_transformation_I:
+lemma ExBI_transformation_I:
   \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' x \<w>\<i>\<t>\<h> P
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (ExSet S') \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (ExBI S') \<w>\<i>\<t>\<h> P\<close>
   unfolding Transformation_def by (clarsimp, blast)
 
-lemma ExSet_transformation_I_R:
+lemma ExBI_transformation_I_R:
   \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (ExSet S') \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (ExBI S') \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding Transformation_def
   by (cases C; clarsimp, blast)
 
 
-lemma ExSet_additive_disj:
+lemma ExBI_additive_disj:
   \<open>(\<exists>*x. A x + B x) = (\<exists>*x. A x) + (\<exists>*x. B x)\<close>
   unfolding BI_eq_iff by (simp_all add: plus_fun) blast+
 
@@ -1727,33 +1954,33 @@ subsubsection \<open>ToA Reasoning\<close>
 
 lemma skolemize_transformation[\<phi>reason %ToA_fixes_quant]:
   "(\<And>x.  T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P x)
-\<Longrightarrow> ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> Ex P"
+\<Longrightarrow> ExBI T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def by simp fastforce
 
 lemma skolemize_transformation_R[\<phi>reason %ToA_fixes_quant+5]:
   "(\<And>x.  T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x \<w>\<i>\<t>\<h> P x)
-\<Longrightarrow> ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R \<w>\<i>\<t>\<h> Ex P"
+\<Longrightarrow> ExBI T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExBI R \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def REMAINS_def by (cases C; simp; blast)
 
 lemma skolemize_transformation_tR[\<phi>reason %ToA_fixes_quant+5]:
   "(\<And>x.  T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x) \<w>\<i>\<t>\<h> P x)
-\<Longrightarrow> ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R) \<w>\<i>\<t>\<h> Ex P"
+\<Longrightarrow> ExBI T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExBI R) \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def REMAINS_def \<phi>TagA_def
   by (cases C; simp; blast)
 
 lemma [\<phi>reason %ToA_fixes_quant]:
   "(\<And>x. T x * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P x)
-\<Longrightarrow> ExSet T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> Ex P"
+\<Longrightarrow> ExBI T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def by simp fastforce
 
 lemma [\<phi>reason %ToA_fixes_quant+5]:
   "(\<And>x. T x * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x \<w>\<i>\<t>\<h> P x)
-\<Longrightarrow> ExSet T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R \<w>\<i>\<t>\<h> Ex P"
+\<Longrightarrow> ExBI T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExBI R \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def by (cases C; simp; fastforce)
 
 lemma [\<phi>reason %ToA_fixes_quant+5]:
   "(\<And>x. T x * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x) \<w>\<i>\<t>\<h> P x)
-\<Longrightarrow> ExSet T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R) \<w>\<i>\<t>\<h> Ex P"
+\<Longrightarrow> ExBI T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExBI R) \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def \<phi>TagA_def
   by (cases C; simp; fastforce)
 
@@ -1762,45 +1989,41 @@ text \<open>Continued in \ref{supp-ex-conj}\<close>
 
 subsection \<open>Additive Conjunction\<close>
 
-definition Additive_Conj :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close> (infix "\<and>\<^sub>B\<^sub>I" 35)
-  where \<open>Additive_Conj = (\<inter>)\<close>
-
-subsubsection \<open>Basic Rules\<close>
 
 lemma Additive_Conj_expn[iff, \<phi>expns]:
-  \<open>p \<Turnstile> (A \<and>\<^sub>B\<^sub>I B) \<longleftrightarrow> p \<Turnstile> A \<and> p \<Turnstile> B\<close>
-  unfolding Satisfaction_def Additive_Conj_def by simp
+  \<open>p \<Turnstile> (A \<sqinter> B) \<longleftrightarrow> p \<Turnstile> A \<and> p \<Turnstile> B\<close>
+  by (cases A; cases B; simp)
 
 lemma additive_conj_inhabited_E[elim!]:
-  \<open>Satisfiable (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> (Satisfiable A \<Longrightarrow> Satisfiable B \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  \<open>Satisfiable (A \<sqinter> B) \<Longrightarrow> (Satisfiable A \<Longrightarrow> Satisfiable B \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Satisfiable_def
   by simp blast
 
 lemma [\<phi>reason %cutting]:
   \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
 \<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
-\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q\<close>
+\<Longrightarrow> A \<sqinter> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q\<close>
   unfolding Action_Tag_def \<r>EIF_def
   by blast
 
 lemma
   \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
 \<Longrightarrow> Q \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> B
-\<Longrightarrow> P \<and> Q \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A \<and>\<^sub>B\<^sub>I B\<close>
+\<Longrightarrow> P \<and> Q \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A \<sqinter> B\<close>
   unfolding Action_Tag_def Satisfiable_def
   oops
 
 text \<open>There is no sufficiency reasoning for additive conjunction, because the sufficient condition
-  of \<open>A \<and>\<^sub>B\<^sub>I B\<close> cannot be reasoned separately (by considering \<open>A\<close> and \<open>B\<close> separately).\<close>
+  of \<open>A \<sqinter> B\<close> cannot be reasoned separately (by considering \<open>A\<close> and \<open>B\<close> separately).\<close>
 
 
 subsubsection \<open>Simplification\<close>
 
-paragraph \<open>With ExSet\<close>
+paragraph \<open>With ExBI\<close>
 
-lemma ExSet_adconj:
-  \<open>A \<and>\<^sub>B\<^sub>I (\<exists>*c. B c) \<equiv> \<exists>*c. A \<and>\<^sub>B\<^sub>I B c\<close>
-  \<open>(\<exists>*c. B c) \<and>\<^sub>B\<^sub>I A \<equiv> \<exists>*c. B c \<and>\<^sub>B\<^sub>I A\<close>
+lemma ExBI_adconj:
+  \<open>A \<sqinter> (\<exists>*c. B c) \<equiv> \<exists>*c. A \<sqinter> B c\<close>
+  \<open>(\<exists>*c. B c) \<sqinter> A \<equiv> \<exists>*c. B c \<sqinter> A\<close>
   unfolding atomize_eq BI_eq_iff
   by simp+
 
@@ -1832,19 +2055,19 @@ text \<open>Non-pure Additive Conjunction (excludes those are used in pure propo
 lemma [\<phi>reason %ToA_splitting]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P2
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<and>\<^sub>B\<^sub>I B \<w>\<i>\<t>\<h> P1 \<and> P2 \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<sqinter> B \<w>\<i>\<t>\<h> P1 \<and> P2 \<close>
   unfolding Transformation_def
   by simp
 
 lemma NToA_conj_src_A:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> A \<sqinter> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<close>
   unfolding Transformation_def
   by simp blast
 
 lemma NToA_conj_src_B:
   \<open> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> A \<sqinter> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<close>
   unfolding Transformation_def
   by simp blast
 
@@ -1931,8 +2154,8 @@ lemma (in \<phi>empty) [simp]: "(OBJ (S \<s>\<u>\<b>\<j> P)) = (OBJ S \<s>\<u>\<
 subparagraph \<open>With Additive Conjunction\<close>
 
 lemma Subjection_addconj[simp, \<phi>programming_base_simps, \<phi>safe_simp]:
-  \<open>(A \<s>\<u>\<b>\<j> P) \<and>\<^sub>B\<^sub>I B \<equiv> (A \<and>\<^sub>B\<^sub>I B) \<s>\<u>\<b>\<j> P\<close>
-  \<open>B \<and>\<^sub>B\<^sub>I (A \<s>\<u>\<b>\<j> P) \<equiv> (B \<and>\<^sub>B\<^sub>I A) \<s>\<u>\<b>\<j> P\<close>
+  \<open>(A \<s>\<u>\<b>\<j> P) \<sqinter> B \<equiv> (A \<sqinter> B) \<s>\<u>\<b>\<j> P\<close>
+  \<open>B \<sqinter> (A \<s>\<u>\<b>\<j> P) \<equiv> (B \<sqinter> A) \<s>\<u>\<b>\<j> P\<close>
   unfolding atomize_eq BI_eq_iff
   by (clarsimp; blast)+
 
@@ -2148,10 +2371,10 @@ lemma sep_quant_subjection[\<phi>programming_base_simps, \<phi>programming_simps
   unfolding BI_eq_iff
   by (clarify; rule; clarsimp simp add: Mul_Quant_def finite_prod_subjection)
 
-lemma sep_quant_ExSet[\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
+lemma sep_quant_ExBI[\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
   \<open>(\<big_ast>i\<in>I. \<exists>*j. A i j) = (\<exists>*j. \<big_ast>i\<in>I. A i (j i))\<close>
 proof -
-  have t1: \<open>\<And>u. finite I \<Longrightarrow> u \<Turnstile> (\<Prod>i\<in>I. ExSet (A i)) \<longleftrightarrow> (\<exists>x. u \<Turnstile> (\<Prod>i\<in>I. A i (x i)))\<close> (is \<open>\<And>u. _ \<Longrightarrow> ?goal u\<close>)
+  have t1: \<open>\<And>u. finite I \<Longrightarrow> u \<Turnstile> (\<Prod>i\<in>I. ExBI (A i)) \<longleftrightarrow> (\<exists>x. u \<Turnstile> (\<Prod>i\<in>I. A i (x i)))\<close> (is \<open>\<And>u. _ \<Longrightarrow> ?goal u\<close>)
   proof -
     fix u
     assume \<open>finite I\<close>
@@ -2226,7 +2449,7 @@ lemma [\<phi>reason %cutting]:
   \<open> (\<And>i\<in>S. A i \<i>\<m>\<p>\<l>\<i>\<e>\<s> P i)
 \<Longrightarrow> (\<big_ast>i\<in>S. A i) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>i\<in>S. P i) \<close>
   unfolding Mul_Quant_def Action_Tag_def Satisfiable_def meta_Ball_def Premise_def \<r>EIF_def
-  by (clarsimp; metis Satisfaction_def ex_in_conv prod_zero zero_set_iff)
+  by clarsimp (metis dvdE dvd_prodI sep_conj_expn)
 
 
 subsubsection \<open>Transformation\<close>
@@ -2385,17 +2608,21 @@ lemma [\<phi>reason %ToA_normalizing]:
 
 subsection \<open>Universal Quantification\<close>
 
+term inf
+
 definition AllSet :: \<open>('a \<Rightarrow> 'b BI) \<Rightarrow> 'b BI\<close> (binder "\<forall>\<^sub>B\<^sub>I" 10)
-  where \<open>AllSet X = {y. \<forall>x. y \<in> X x}\<close>
+  where \<open>AllSet X = BI {y. \<forall>x. y \<Turnstile> X x}\<close>
 
 lemma AllSet_expn[simp, \<phi>expns]:
   \<open>p \<Turnstile> (\<forall>\<^sub>B\<^sub>Ix. B x) \<longleftrightarrow> (\<forall>x. p \<Turnstile> B x)\<close>
   unfolding AllSet_def Satisfaction_def by simp
 
-lemma AllSet_subset:
-  \<open>A \<subseteq> (\<forall>\<^sub>B\<^sub>I x. B x) \<longleftrightarrow> (\<forall>x. A \<subseteq> B x)\<close>
-  unfolding AllSet_def subset_iff by (rule; clarsimp; blast)
+lemma AllSet_sub:
+  \<open>A \<le> (\<forall>\<^sub>B\<^sub>I x. B x) \<longleftrightarrow> (\<forall>x. A \<le> B x)\<close>
+  unfolding AllSet_def
+  by (cases A; rule; simp add: subset_iff BI_sub_iff)
 
+(*
 lemma AllSet_refl:
   \<open>(\<And>x. refl (B x))
 \<Longrightarrow> refl (\<forall>\<^sub>B\<^sub>I x. B x)\<close>
@@ -2407,6 +2634,7 @@ lemma AllSet_trans:
 \<Longrightarrow> trans (\<forall>\<^sub>B\<^sub>I x. B x)\<close>
   unfolding AllSet_def
   by (smt (verit) mem_Collect_eq transD transI)
+*)
 
 lemma BI_All_comm:
   \<open>(\<forall>\<^sub>B\<^sub>I x y. A x y) = (\<forall>\<^sub>B\<^sub>I y x. A x y)\<close>
@@ -2430,7 +2658,7 @@ subsection \<open>Supplementary Connective\<close>
 subsubsection \<open>World Shift\<close> \<comment> \<open>Functional refinement in assertion-level, functional counterpart of \<open>\<Zcomp>\<close>\<close>
 
 definition World_Shift :: \<open>('c \<Rightarrow> 'd) \<Rightarrow> 'c BI \<Rightarrow> 'd BI\<close> ("\<Psi>[_]" [10] 1000)
-  where \<open>(\<Psi>[\<psi>] S) = {\<psi> u |u. u \<Turnstile> S}\<close>
+  where \<open>(\<Psi>[\<psi>] S) = BI {\<psi> u |u. u \<Turnstile> S}\<close>
   \<comment> \<open>applying a function \<open>\<psi>\<close> (usually a homomorphism) to the concrete objects (namely Kripke world)
       characterized by an assertion.\<close>
 
@@ -2444,10 +2672,6 @@ lemma World_Shift_expn[\<phi>expns, simp]:
   unfolding World_Shift_def Satisfaction_def
   by clarsimp
 
-lemma World_Shift_expn'[\<phi>expns, simp]:
-  \<open>p \<in> \<Psi>[\<psi>] S \<longleftrightarrow> (\<exists>u. p = \<psi> u \<and> u \<Turnstile> S)\<close>
-  unfolding World_Shift_def Satisfaction_def
-  by clarsimp
 
 text \<open>The motivation of such modality is it is used later in Domainoid Extraction\<close>
 
@@ -2465,7 +2689,7 @@ lemma \<Psi>_0:
   by clarsimp
 
 lemma
-  \<open> \<Psi>[\<psi>] (A \<and>\<^sub>B\<^sub>I B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<Psi>[\<psi>] A \<and>\<^sub>B\<^sub>I \<Psi>[\<psi>] B) \<close>
+  \<open> \<Psi>[\<psi>] (A \<sqinter> B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<Psi>[\<psi>] A \<sqinter> \<Psi>[\<psi>] B) \<close>
   unfolding Transformation_def
   by (clarsimp; blast)
 
@@ -2497,7 +2721,7 @@ lemma \<Psi>_Additive_Disj:
   unfolding BI_eq_iff
   by (clarsimp; metis)
 
-lemma \<Psi>_ExSet:
+lemma \<Psi>_ExBI:
   \<open>\<Psi>[d] (\<exists>*c. S c) = (\<exists>*c. \<Psi>[d] (S c))\<close>
   unfolding BI_eq_iff
   by (clarsimp; metis)
@@ -2512,11 +2736,15 @@ section \<open>Basic \<phi>-Types \& Embedding of Logic Connectives\<close>
 
 subsection \<open>Identity \<phi>-Type\<close>
 
-definition Itself :: " ('a,'a) \<phi> " where "Itself x = {x}"
+definition Itself :: " ('a,'a) \<phi> " where "Itself x = BI {x}"
 
 lemma Itself_expn[\<phi>expns, iff]:
   "p \<Turnstile> (x \<Ztypecolon> Itself) \<longleftrightarrow> p = x"
   unfolding \<phi>Type_def Itself_def Satisfaction_def by auto
+
+lemma Itself_expn'[\<phi>expns, iff]:
+  "p \<Turnstile> (Itself x) \<longleftrightarrow> p = x"
+  unfolding Itself_def Satisfaction_def by auto
 
 lemma Itself_inhabited_E[elim!]:
   \<open> Satisfiable (x \<Ztypecolon> Itself) \<Longrightarrow> C \<Longrightarrow> C \<close> .
@@ -2584,12 +2812,12 @@ lemma [\<phi>reason %abstract_from_raw_cut]:
 
 subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 
-definition \<phi>Any :: \<open>('c, 'x) \<phi>\<close> ("\<top>\<^sub>\<phi>") where \<open>\<top>\<^sub>\<phi> = (\<lambda>_. UNIV)\<close>
+definition \<phi>Any :: \<open>('c, 'x) \<phi>\<close> ("\<top>\<^sub>\<phi>") where \<open>\<top>\<^sub>\<phi> = (\<lambda>_. \<top>)\<close>
 
 setup \<open>Sign.mandatory_path "\<phi>Any"\<close>
 
 lemma unfold [\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp]:
-  \<open>(x \<Ztypecolon> \<top>\<^sub>\<phi>) = UNIV\<close>
+  \<open>(x \<Ztypecolon> \<top>\<^sub>\<phi>) = \<top>\<close>
   unfolding \<phi>Any_def \<phi>Type_def ..
 
 lemma expansion[simp]:
@@ -2791,7 +3019,7 @@ paragraph \<open>Separation Extraction\<close>
 
 text \<open>see \<section>\<open>Technical \<phi>-Types required in Reasoning Transformation/Separation Extraction of \<open>\<phi>\<close>Prod\<close>\<close>
 
-lemma Structural_Extract_\<phi>Prod_a [\<phi>reason %ToA_cut except \<open>(_ :: ?'a::sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+lemma Structural_Extract_\<phi>Prod_a [\<phi>reason %ToA_cut except \<open>(_ :: ?'a::sep_semigroup BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
       \<comment> \<open>merely the rule for non-semigroup algebras.
           for others, see \<section>\<open>Technical \<phi>-Types required in Reasoning Transformation/Separation Extraction of \<open>\<phi>\<close>Prod\<close>\<close>
   \<open> fst a \<Ztypecolon> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>
@@ -2844,11 +3072,11 @@ text \<open>see \<section>\<open>Reasoning/Supplementary Transformations/Type-em
 subsection \<open>Embedding of Empty\<close>
 
 definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circle>")
-  where \<open>\<phi>None = (\<lambda>x. { 1 }) \<close>
+  where \<open>\<phi>None = (\<lambda>x. 1) \<close>
 
 lemma \<phi>None_expn[\<phi>expns, simp]:
   \<open>p \<Turnstile> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
-  unfolding \<phi>None_def \<phi>Type_def Satisfaction_def
+  unfolding \<phi>None_def \<phi>Type_def
   by simp
 
 lemma \<phi>None_inhabited[elim!]:
@@ -2929,11 +3157,11 @@ lemma [\<phi>reason 1000]:
 subsection \<open>Injection into Unital Algebra\<close>
 
 definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
-  where \<open>\<black_circle> T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+  where \<open>\<black_circle> T = (\<lambda>x. Some `\<^sub>I (x \<Ztypecolon> T))\<close>
 
 lemma \<phi>Some_expn[simp, \<phi>expns]:
   \<open>p \<Turnstile> (x \<Ztypecolon> \<black_circle> T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def \<phi>Some_def Satisfaction_def
+  unfolding \<phi>Type_def \<phi>Some_def
   by simp
 
 subsubsection \<open>Rewrites\<close>
@@ -2990,7 +3218,7 @@ lemma \<phi>Some_\<phi>None_freeobj:
   \<open> x \<Ztypecolon> T \<^emph> \<circle>\<^sub>\<x> \<equiv> fst x \<Ztypecolon> T\<close>
   \<open> y \<Ztypecolon> \<circle>\<^sub>\<x> \<^emph> T \<equiv> snd y \<Ztypecolon> T\<close>
   \<open> x' \<Ztypecolon> \<circle>\<^sub>\<x> \<^emph> (\<circle>\<^sub>\<x> :: ('v::sep_magma_1, 'x) \<phi>) \<equiv> 1\<close>
-  for T :: \<open>'b \<Rightarrow> 'a::sep_magma_1 set\<close>
+  for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
   unfolding atomize_eq BI_eq_iff
   by ((rule \<phi>Type_eqI)?; clarsimp)+
 
@@ -4179,24 +4407,24 @@ lemma (*The above rule is local complete*)
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open>(\<And>x. Identity_Element\<^sub>I (A x) (P x))
-\<Longrightarrow> Identity_Element\<^sub>I (ExSet A) (Ex P)\<close>
+\<Longrightarrow> Identity_Element\<^sub>I (ExBI A) (Ex P)\<close>
   unfolding Identity_Element\<^sub>I_def
-  by (metis ExSet_expn Transformation_def)
+  by (metis ExBI_expn Transformation_def)
 
 lemma (*The above rule is local complete*)
-  \<open>Identity_Element\<^sub>I (ExSet A) P \<Longrightarrow> Identity_Element\<^sub>I (A x) P\<close>
+  \<open>Identity_Element\<^sub>I (ExBI A) P \<Longrightarrow> Identity_Element\<^sub>I (A x) P\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp; blast)
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Element\<^sub>E (A x)
-\<Longrightarrow> Identity_Element\<^sub>E (ExSet A)\<close>
+\<Longrightarrow> Identity_Element\<^sub>E (ExBI A)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp; blast)
 
 lemma (*The above rule is not local complete*)
-  \<open>Identity_Element\<^sub>E (ExSet A) \<Longrightarrow> \<exists>x. Identity_Element\<^sub>E (A x)\<close>
-  unfolding Identity_Element\<^sub>E_def Transformation_def ExSet_expn
+  \<open>Identity_Element\<^sub>E (ExBI A) \<Longrightarrow> \<exists>x. Identity_Element\<^sub>E (A x)\<close>
+  unfolding Identity_Element\<^sub>E_def Transformation_def ExBI_expn
   by clarsimp
 
 lemma [\<phi>reason %identity_element_cut]:
@@ -4297,23 +4525,23 @@ lemma [\<phi>reason %identity_element_cut]:
 lemma [\<phi>reason %identity_element_cut]: 
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> Identity_Element\<^sub>E B
-\<Longrightarrow> Identity_Element\<^sub>E (A \<and>\<^sub>B\<^sub>I B) \<close>
+\<Longrightarrow> Identity_Element\<^sub>E (A \<sqinter> B) \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp)
 
 lemma (*the above rule is local complete*)
-  \<open> Identity_Element\<^sub>E (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
+  \<open> Identity_Element\<^sub>E (A \<sqinter> B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp)
 
 lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Element\<^sub>I A P \<or> Identity_Element\<^sub>I B Q
-\<Longrightarrow> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) (P \<or> Q)\<close>
+\<Longrightarrow> Identity_Element\<^sub>I (A \<sqinter> B) (P \<or> Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp, blast)
 
 lemma (*the above rule is not local complete*)
-  \<open> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) True \<Longrightarrow> Identity_Element\<^sub>I A True \<or> Identity_Element\<^sub>I B True \<close>
+  \<open> Identity_Element\<^sub>I (A \<sqinter> B) True \<Longrightarrow> Identity_Element\<^sub>I A True \<or> Identity_Element\<^sub>I B True \<close>
   oops
   (* Auto Quickcheck found a counterexample:
   A = {a\<^sub>3}
@@ -4563,7 +4791,7 @@ lemma [\<phi>reason %object_equiv_cut]:
 
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> (\<And>a. Object_Equiv (\<lambda>x. S x a) (R a))
-\<Longrightarrow> Object_Equiv (\<lambda>x. ExSet (S x)) (\<lambda>x y. \<forall>a. R a x y) \<close>
+\<Longrightarrow> Object_Equiv (\<lambda>x. ExBI (S x)) (\<lambda>x y. \<forall>a. R a x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
   by (clarsimp; blast)
 
@@ -4576,7 +4804,7 @@ lemma [\<phi>reason %object_equiv_cut]:
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> Object_Equiv S1 R1
 \<Longrightarrow> Object_Equiv S2 R2
-\<Longrightarrow> Object_Equiv (\<lambda>x. S1 x \<and>\<^sub>B\<^sub>I S2 x) (\<lambda>x y. R1 x y \<and> R2 x y) \<close>
+\<Longrightarrow> Object_Equiv (\<lambda>x. S1 x \<sqinter> S2 x) (\<lambda>x y. R1 x y \<and> R2 x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
   by clarsimp
 
@@ -4627,7 +4855,7 @@ lemma
 lemma
   \<open> Object_Equiv S1 R1
 \<Longrightarrow> Object_Equiv S2 R2
-\<Longrightarrow> Object_Equiv (\<lambda>x. {p. p \<Turnstile> S1 x \<longrightarrow> p \<Turnstile> S2 x}) (\<lambda>x y. R1 y x \<and> R2 x y) \<close>
+\<Longrightarrow> Object_Equiv (\<lambda>x. BI {p. p \<Turnstile> S1 x \<longrightarrow> p \<Turnstile> S2 x}) (\<lambda>x y. R1 y x \<and> R2 x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
   by (clarsimp simp add: Satisfaction_def)
 
@@ -4663,13 +4891,13 @@ lemma Object_Equiv_Mul_Quant[\<phi>reason %object_equiv_cut]:
 \<Longrightarrow> Object_Equiv (\<lambda>x. \<big_ast>i\<in>S. A x i) (\<lambda>x y. \<forall>i. eq i x y)\<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
             meta_Ball_def Premise_def Mul_Quant_def
-  proof (clarsimp, unfold Satisfaction_def)
+  proof (clarsimp)
     fix x y v
-    assume prems: \<open>(\<And>x. x \<in> S \<Longrightarrow> \<forall>xa y. eq x xa y \<longrightarrow> (\<forall>v. v \<in> A xa x \<longrightarrow> v \<in> A y x))\<close>
+    assume prems: \<open>(\<And>x. x \<in> S \<Longrightarrow> \<forall>xa y. eq x xa y \<longrightarrow> (\<forall>v. v \<Turnstile> A xa x \<longrightarrow> v \<Turnstile> A y x))\<close>
                   \<open>\<forall>i. eq i x y\<close>
-                  \<open>v \<in> prod (A x) S\<close>
+                  \<open>v \<Turnstile> prod (A x) S\<close>
        and \<open>finite S\<close>
-    show \<open>v \<in> prod (A y) S\<close>
+    show \<open>v \<Turnstile> prod (A y) S\<close>
       by (insert prems;
           induct arbitrary: x y v rule: finite_induct[OF \<open>finite S\<close>];
           clarsimp simp add: set_mult_expn;
@@ -4724,7 +4952,7 @@ lemma [\<phi>reason %\<A>_map_each_item]:
 lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @tag \<A>_map_each_item \<A>
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @tag \<A>_map_each_item \<A>
-\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<and>\<^sub>B\<^sub>I Y \<w>\<i>\<t>\<h> P \<and> Q @tag \<A>_map_each_item \<A>\<close>
+\<Longrightarrow> A \<sqinter> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<sqinter> Y \<w>\<i>\<t>\<h> P \<and> Q @tag \<A>_map_each_item \<A>\<close>
   unfolding Action_Tag_def Transformation_def
   by simp blast
 
@@ -4737,9 +4965,9 @@ lemma [\<phi>reason %\<A>_map_each_item]:
 
 lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @tag \<A>_map_each_item A)
-\<Longrightarrow> ExSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet Y \<w>\<i>\<t>\<h> P @tag \<A>_map_each_item A\<close>
+\<Longrightarrow> ExBI X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExBI Y \<w>\<i>\<t>\<h> P @tag \<A>_map_each_item A\<close>
   unfolding Action_Tag_def
-  using ExSet_transformation .
+  using ExBI_transformation .
 
 lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @tag \<A>_map_each_item A)
@@ -4825,7 +5053,7 @@ structure Assertion_SS_Source = Simpset (
 )
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS_Source.map (fn ctxt =>
-      ctxt addsimps @{thms' ExSet_defined}
+      ctxt addsimps @{thms' ExBI_defined}
         |> Simplifier.add_cong @{thm' Subjection_cong}
     )))
 
@@ -4854,9 +5082,9 @@ lemmas [assertion_simps] =
   Subjection_Subjection Subjection_Zero Subjection_True Subjection_Flase
   Subjection_times Subjection_addconj
 
-  ExSet_simps ExSet_split_prod ExSet_subj_split_prod
+  ExBI_simps ExBI_split_prod ExBI_subj_split_prod
 
-  sep_quant_subjection sep_quant_ExSet
+  sep_quant_subjection sep_quant_ExBI
 
   \<phi>Prod_expn'' \<phi>Prod_expn'
   REMAINS_simp(2)
@@ -4868,7 +5096,7 @@ lemmas [assertion_simps] =
   fst_conv snd_conv
 
 lemmas [assertion_simps_source] =
-  ExSet_times_left ExSet_times_right ExSet_adconj ExSet_addisj
+  ExBI_times_left ExBI_times_right ExBI_adconj ExBI_addisj
 
   REMAINS_simp(1)
 
@@ -4878,15 +5106,15 @@ lemmas [assertion_simps_target] =
   sep_quant_sep[symmetric]
 
 lemmas [\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp] =
-  add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
+  add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
   zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
   distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
   mult.assoc[where 'a=\<open>'a::sep_semigroup BI\<close>]
 
 lemmas [\<phi>programming_base_simps] =
-  mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
-  mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>] mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
+  mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
+  mult_1_right[where 'a=\<open>'a::sep_magma_1 BI\<close>] mult_1_left[where 'a=\<open>'a::sep_magma_1 BI\<close>]
   zero_fun
 
   HOL.simp_thms
@@ -4897,45 +5125,45 @@ lemmas [\<phi>programming_base_simps] =
 
 ML_file \<open>library/reasoning/quantifier.ML\<close>
 
-simproc_setup defined_ExSet ( \<open>ExSet A\<close> ) = \<open>K BI_Quantifiers.defined_Ex\<close>
+simproc_setup defined_ExBI ( \<open>ExBI A\<close> ) = \<open>K BI_Quantifiers.defined_Ex\<close>
 
 setup \<open>Context.theory_map (Phi_Programming_Simp_Hook.add 100 (fn () => fn ctxt =>
-    ctxt delsimprocs [@{simproc defined_ExSet}]
-         delsimps @{thms' ExSet_defined}))
+    ctxt delsimprocs [@{simproc defined_ExBI}]
+         delsimps @{thms' ExBI_defined}))
 \<close>
 
 (*
 setup \<open>Context.theory_map (Simplifier.map_ss(fn ctxt =>
-    ctxt delsimprocs [@{simproc defined_ExSet}]))\<close>
+    ctxt delsimprocs [@{simproc defined_ExBI}]))\<close>
 
-attribute_setup simproc_defined_ExSet = \<open>
+attribute_setup simproc_defined_ExBI = \<open>
   Scan.lift (Args.$$$ "true" >> K true || Args.$$$ "false" >> K false || Scan.succeed true)
 >> (fn flag =>
     Thm.declaration_attribute (fn _ => Simplifier.map_ss(fn ctxt =>
-      if flag then ctxt addsimprocs [@{simproc defined_ExSet}]
-              else ctxt delsimprocs [@{simproc defined_ExSet}])))
+      if flag then ctxt addsimprocs [@{simproc defined_ExBI}]
+              else ctxt delsimprocs [@{simproc defined_ExBI}])))
 \<close>
 *)
 
 (*
-simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
+simproc_setup defined_ExBI ( \<open>ExBI A\<close> )
   = \<open>fn _ => fn ctxt => fn ctm =>
       case Thm.term_of ctm
-        of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Subjection\<close>, _) $ assn $ P) =>
-      let val Const(\<^const_name>\<open>ExSet\<close>, _) $ X = Thm.term_of ctm
+        of Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Subjection\<close>, _) $ assn $ P) =>
+      let val Const(\<^const_name>\<open>ExBI\<close>, _) $ X = Thm.term_of ctm
           val chk_bound_only_objs = Phi_Syntax.forall_item_of_assertion (
                   fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) => not (Term.is_dependent T)
                    | X => not (Term.is_dependent X)
                 )
           val rule = case P
                        of Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _ =>
-                            SOME @{thm' ExSet_defined(1)}
+                            SOME @{thm' ExBI_defined(1)}
                         | Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0 =>
-                            SOME @{thm' ExSet_defined(2)}
+                            SOME @{thm' ExBI_defined(2)}
                         | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _ =>
-                            SOME @{thm' ExSet_defined(3)}
+                            SOME @{thm' ExBI_defined(3)}
                         | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Bound 0) $ _ =>
-                            SOME @{thm' ExSet_defined(4)}
+                            SOME @{thm' ExBI_defined(4)}
                         | _ => NONE
        in if chk_bound_only_objs assn
        then Option.mapPartial (fn rule' => try (Conv.rewr_conv rule') ctm) rule
@@ -4946,11 +5174,11 @@ simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
 
 setup \<open>Context.theory_map (
   Assertion_SS_Source.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExSet}] ) #>
+    ctxt addsimprocs [@{simproc defined_ExBI}] ) #>
   Assertion_SS.map (fn ctxt =>
     ctxt addsimprocs [@{simproc Funcomp_Lambda}]) #>
   Phi_Safe_Simps.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExSet}, @{simproc Funcomp_Lambda}]))\<close>
+    ctxt addsimprocs [@{simproc defined_ExBI}, @{simproc Funcomp_Lambda}]))\<close>
 
 
 subsubsection \<open>Reasoners\<close>
@@ -4981,13 +5209,13 @@ fun conv_transformation_by_assertion_ss ctxt =
 fun skolemize_transformation ctxt th =
   let fun skolem th =
        (case Phi_Syntax.dest_transformation (Thm.major_prem_of th)
-          of (Const(\<^const_name>\<open>ExSet\<close>, _) $ _,
+          of (Const(\<^const_name>\<open>ExBI\<close>, _) $ _,
               Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _), _) =>
               skolem (@{thm' skolemize_transformation_tR} RS th)
-           | (Const(\<^const_name>\<open>ExSet\<close>, _) $ _,
+           | (Const(\<^const_name>\<open>ExBI\<close>, _) $ _,
               Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _, _) =>
               skolem (@{thm' skolemize_transformation_R} RS th)
-           | (Const(\<^const_name>\<open>ExSet\<close>, _) $ _, _, _) =>
+           | (Const(\<^const_name>\<open>ExBI\<close>, _) $ _, _, _) =>
               skolem (@{thm' skolemize_transformation} RS th)
            | _ => th)
    in th
@@ -5162,7 +5390,7 @@ private lemma \<A>simp_chk_no_need:
 private lemma \<A>simp_chk_no_need':
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @tag \<A>simp_if_need direction Any\<close>
   unfolding Action_Tag_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 private lemma \<A>simp_chk_go:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag \<A>simp' direction M
@@ -5211,7 +5439,7 @@ private lemma \<A>simp_chk_no_need_transitive:
 private lemma \<A>simp_chk_no_need'_transitive:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @tag \<A>transitive_simp_if_need direction Any\<close>
   unfolding Action_Tag_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 \<phi>reasoner_ML \<A>simp_if_need %cutting (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<A>simp_if_need _ _\<close>) = \<open>
 fn (_, (ctxt,sequent)) => Seq.make (fn () =>
@@ -5222,7 +5450,7 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
                                            | Const(\<^const_name>\<open>False\<close>, _) => false
                                            | _ => raise TERM ("The direction of \<A>simp_if_need must be a literal", [direction_term])
       val (Y, ex_bound) =
-            case Y' of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (N, Ty,
+            case Y' of Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (N, Ty,
                           Const(\<^const_name>\<open>Subjection\<close>, _) $ (Y as Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _)
                          => (Y, SOME (N,Ty))
                      | _ => (Y', NONE)
@@ -5245,7 +5473,7 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
                                            | Const(\<^const_name>\<open>False\<close>, _) => false
                                            | _ => raise TERM ("The direction of \<A>simp_if_need must be a literal", [direction_term])
       val (Y, ex_bound) =
-            case Y' of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (N, Ty,
+            case Y' of Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (N, Ty,
                           Const(\<^const_name>\<open>Subjection\<close>, _) $ (Y as Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _)
                          => (Y, SOME (N, Ty))
                      | _ => (Y', NONE)
@@ -5272,7 +5500,7 @@ lemma [\<phi>reason default ! %\<phi>simp_system_fallback+1
                for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _ @tag \<A>simp' _ False\<close>]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @tag \<A>simp' direction False\<close>
   unfolding Action_Tag_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 lemma [\<phi>reason default ! %\<phi>simp_system_fallback
                for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<A>simp' _ False\<close>]:
@@ -5598,7 +5826,7 @@ lemma [\<phi>reason default %ToA_falling_latice+3]:
 \<Longrightarrow> SE_tail1 Cw Cr A P1 r R     w W R3 P
 \<Longrightarrow> (x \<Ztypecolon> T) * A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>1 \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
   for A :: \<open>'a::sep_monoid BI\<close>
-  unfolding SE_tail1_def Action_Tag_def Simplify_def Action_Tag_def
+  unfolding SE_tail1_def Action_Tag_def Simplify_def Action_Tag_def 
   by ((cases Cw; cases Cr;
        clarsimp simp: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<phi>Prod_expn' \<phi>Prod_expn'' mult.assoc[symmetric]),
        metis mult.assoc transformation_left_frame transformation_right_frame transformation_trans,
@@ -5610,7 +5838,7 @@ lemma [\<phi>reason default %ToA_falling_latice+3]:
 \<Longrightarrow> if C\<^sub>R then Identity_Element\<^sub>I (snd y \<Ztypecolon> R) Q else Q = True
 \<Longrightarrow> SE_tail_Rw C\<^sub>W A w W P2
 \<Longrightarrow> (x \<Ztypecolon> T) * A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<w>\<i>\<t>\<h> P2 \<and> Q \<and> P1 @tag \<T>\<P> \<close>
-  for A :: \<open>'a :: sep_magma_1 set\<close>
+  for A :: \<open>'a :: sep_magma_1 BI\<close>
   unfolding Action_Tag_def \<phi>Prod_expn' Identity_Element\<^sub>I_def Premise_def
             Transformation_def Try_def Ant_Seq_def SE_tail_Rw_def
   by (cases C\<^sub>W; cases C\<^sub>R; clarsimp; fastforce)
@@ -5660,7 +5888,7 @@ lemma [\<phi>reason default %ToA_falling_latice+2 except \<open>(_ :: ?'a::sep_m
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] (\<not> C\<^sub>R \<and> C\<^sub>W)
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> P2
 \<Longrightarrow> (x \<Ztypecolon> T) * A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<w>\<i>\<t>\<h> P2 \<and> P1 @tag \<T>\<P> \<close>
-  for A :: \<open>'a :: sep_magma set\<close>
+  for A :: \<open>'a :: sep_magma BI\<close>
   unfolding Action_Tag_def \<phi>Prod_expn' Identity_Element\<^sub>I_def Premise_def
             Transformation_def Try_def Identity_Element\<^sub>E_def Ant_Seq_def
   by (cases C\<^sub>W; cases C\<^sub>R; clarsimp; blast)
@@ -5832,7 +6060,7 @@ fun apply_refl_by_unifying (refl, exintro', Gx, Gy) ctxt thm =
       | SOME exintro => let
       val N_bads = length bads
       val N_bnos = length bnos
-      val (argTys, \<^Type>\<open>set \<open>TY\<close>\<close>) = Term.strip_type (snd V)
+      val (argTys, \<^Type>\<open>BI \<open>TY\<close>\<close>) = Term.strip_type (snd V)
       val insts' = List.tabulate (N, fn i =>
             let val bi = find_index (fn k => k = i) bads
                 val ci = find_index (fn k => k = i) bnos
@@ -5845,7 +6073,7 @@ fun apply_refl_by_unifying (refl, exintro', Gx, Gy) ctxt thm =
       val Y'1 = subst_bounds (insts', X)
       val Y'2 = fold_rev (fn j => fn TM =>
                   let val (name,T) = List.nth (vs, N-1-j)
-                   in \<^Const>\<open>ExSet \<open>T\<close> \<open>TY\<close>\<close> $ Abs (name, T, TM)
+                   in \<^Const>\<open>ExBI \<open>T\<close> \<open>TY\<close>\<close> $ Abs (name, T, TM)
                   end) bads Y'1
       val Y'3 = fold_rev (fn (_, Bound j) => (fn TM =>
                             let val (name,T) = List.nth (vs, N-1-j)
@@ -5864,21 +6092,21 @@ fun apply_refl_by_unifying (refl, exintro', Gx, Gy) ctxt thm =
 \<phi>reasoner_ML transformation_refl_var %ToA_assigning_var (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>) = \<open>
   fn (_, (ctxt,thm)) => Seq.map (pair ctxt) (apply_refl_by_unifying (
           @{thm' transformation_refl[THEN Action_Tag_I[where A=\<T>\<P>]]},
-          SOME @{thm' ExSet_transformation_I[THEN Action_Tag_I[where A=\<T>\<P>], OF Action_Tag_D[where A=\<T>\<P>]]},
+          SOME @{thm' ExBI_transformation_I[THEN Action_Tag_I[where A=\<T>\<P>], OF Action_Tag_D[where A=\<T>\<P>]]},
           I, I
       ) ctxt thm) \<close>
 
 \<phi>reasoner_ML transformation_refl_var_R %ToA_assigning_var (\<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>) = \<open>
   fn (_, (ctxt,thm)) => Seq.map (pair ctxt) (apply_refl_by_unifying (
           @{thm' transformation_refl_assigning_remainder[THEN Action_Tag_I[where A=\<T>\<P>]]},
-          SOME @{thm' ExSet_transformation_I_R[THEN Action_Tag_I[where A=\<T>\<P>], OF Action_Tag_D[where A=\<T>\<P>]]},
+          SOME @{thm' ExBI_transformation_I_R[THEN Action_Tag_I[where A=\<T>\<P>], OF Action_Tag_D[where A=\<T>\<P>]]},
           (fn _ $ A $ R => A), (fn _ (*REMAINS*) $ A $ _ $ _ => A)
       ) ctxt thm) \<close>
 
 \<phi>reasoner_ML transformation_refl_var_R' %ToA_assigning_var+1 (\<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>) = \<open>
   fn (_, (ctxt,thm)) => Seq.map (pair ctxt) (apply_refl_by_unifying (
           @{thm' transformation_refl_with_remainder[THEN Action_Tag_I[where A=\<T>\<P>]]},
-          SOME @{thm' ExSet_transformation_I_R[THEN Action_Tag_I[where A=\<T>\<P>], OF Action_Tag_D[where A=\<T>\<P>]]},
+          SOME @{thm' ExBI_transformation_I_R[THEN Action_Tag_I[where A=\<T>\<P>], OF Action_Tag_D[where A=\<T>\<P>]]},
           I, (fn _ (*REMAINS*) $ A $ _ $ _ => A)
       ) ctxt thm) \<close>
 
@@ -6220,7 +6448,7 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
 
       fun insert_tag_src ctxt ctm =
         case Thm.term_of ctm
-          of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+          of Const(\<^const_name>\<open>ExBI\<close>, _) $ _ =>
               Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag_src ctxt) ctxt) ctm
            | Const(\<^const_name>\<open>AllSet\<close>, _) $ _ =>
               Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (_, ctxt) => insert_tag_src ctxt) ctxt) ctm
@@ -6549,7 +6777,7 @@ val SE_entry_point_b = SE_entry_point (
 *)
 
 lemma ToA_splitting_source_no_remainder_first
-      [no_atp, \<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
+      [no_atp, \<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup BI) \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
   " C = False \<and>\<^sub>\<r> (A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>) \<or>\<^sub>c\<^sub>u\<^sub>t
     (C,P) = (True, P1 \<and> P2) \<and>\<^sub>\<r> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1 @tag \<T>\<P>) \<and>\<^sub>\<r>
     (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P2 @tag \<T>\<P>))
@@ -6577,8 +6805,8 @@ subsubsection \<open>Supplementary for Ex \& Conj \label{supp-ex-conj}\<close>
 
 ML \<open>fun ToA_ex_intro_reasoning (ctxt,sequent) =
   let val (_, X'', _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
-      fun parse (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) = (false, ty, X)
-        | parse (Const(\<^const_name>\<open>REMAINS\<close>, _) $ (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) $ _ $ _)
+      fun parse (Const(\<^const_name>\<open>ExBI\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) = (false, ty, X)
+        | parse (Const(\<^const_name>\<open>REMAINS\<close>, _) $ (Const(\<^const_name>\<open>ExBI\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) $ _ $ _)
             = (true, ty, X)
         | parse X = parse (Envir.beta_eta_contract X)
       val (has_focus, _, X'1) = parse X''
@@ -6588,27 +6816,27 @@ ML \<open>fun ToA_ex_intro_reasoning (ctxt,sequent) =
                                       | A => not (Term.loose_bvar1 (A, lv)))) []
       val rule0 = if has_focus
                   then if ex_var_is_in_obj_only X
-                  then @{thm' ExSet_transformation_I_R[where x=\<open>id c\<close> for c,
+                  then @{thm' ExBI_transformation_I_R[where x=\<open>id c\<close> for c,
                                       OF Action_Tag_D[where A=\<open>\<T>\<P>\<close>], THEN Action_Tag_I[where A=\<open>\<T>\<P>\<close>]]}
-                  else @{thm' ExSet_transformation_I_R[
+                  else @{thm' ExBI_transformation_I_R[
                                       OF Action_Tag_D[where A=\<open>\<T>\<P>\<close>], THEN Action_Tag_I[where A=\<open>\<T>\<P>\<close>]]}
                   else if ex_var_is_in_obj_only X
-                  then @{thm' ExSet_transformation_I[where x=\<open>id c\<close> for c,
+                  then @{thm' ExBI_transformation_I[where x=\<open>id c\<close> for c,
                                       OF Action_Tag_D[where A=\<open>\<T>\<P>\<close>], THEN Action_Tag_I[where A=\<open>\<T>\<P>\<close>]]}
-                  else @{thm' ExSet_transformation_I[
+                  else @{thm' ExBI_transformation_I[
                                       OF Action_Tag_D[where A=\<open>\<T>\<P>\<close>], THEN Action_Tag_I[where A=\<open>\<T>\<P>\<close>]]}
    in SOME ((ctxt, rule0 RS sequent), Seq.empty)
   end\<close>
 
-\<phi>reasoner_ML ToA_ex_intro default ! %ToA_inst_qunat ( \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>
-                                                    | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close> )
+\<phi>reasoner_ML ToA_ex_intro default ! %ToA_inst_qunat ( \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExBI _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>
+                                                    | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExBI _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close> )
   = \<open>fn stat => Seq.make (fn () => ToA_ex_intro_reasoning (snd stat))\<close>
 
 (*diverges to 3 branches, left branch, right branch, and instantiating the Ex in the domain if any. *)
-\<phi>reasoner_ML NToA_conj_src ! %ToA_branches  (\<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+\<phi>reasoner_ML NToA_conj_src ! %ToA_branches  (\<open>_ \<sqinter> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val tail = (case Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
-                    of (_, Const(\<^const_name>\<open>ExSet\<close>, _) $ X, _) =>
-                            if Term.exists_Const (fn (\<^const_name>\<open>Additive_Conj\<close>, _) => true
+                    of (_, Const(\<^const_name>\<open>ExBI\<close>, _) $ X, _) =>
+                            if Term.exists_Const (fn (\<^const_name>\<open>inf\<close>, _) => true
                                                    | _ => false) X
                             then Seq.make (fn () => ToA_ex_intro_reasoning (ctxt,sequent))
                             else Seq.empty

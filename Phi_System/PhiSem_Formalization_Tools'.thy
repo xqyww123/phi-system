@@ -152,7 +152,7 @@ lemma \<phi>Comp_Sat_subj:
   by (clarsimp simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Res_Sat_ex[iff]:
-  \<open>(\<s>\<t>\<a>\<t>\<e> s \<i>\<s> ExSet S) \<longleftrightarrow> (\<exists>x. \<s>\<t>\<a>\<t>\<e> s \<i>\<s> S x)\<close>
+  \<open>(\<s>\<t>\<a>\<t>\<e> s \<i>\<s> ExBI S) \<longleftrightarrow> (\<exists>x. \<s>\<t>\<a>\<t>\<e> s \<i>\<s> S x)\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def by (simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Res_Sat_ex_ret:
@@ -230,8 +230,8 @@ lemma \<phi>Res_Sat_expn_R:
 
 
 lemma \<phi>Res_Sat_expn_impEx:
-  \<open>((\<s>\<t>\<a>\<t>\<e> s \<i>\<s> (ExSet A)) \<longrightarrow> P) \<longleftrightarrow> (\<forall>a. (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> A a) \<longrightarrow> P)\<close>
-  by (simp add: ExSet_def \<phi>Res_Sat_def \<phi>Res_Spec_def)
+  \<open>((\<s>\<t>\<a>\<t>\<e> s \<i>\<s> (ExBI A)) \<longrightarrow> P) \<longleftrightarrow> (\<forall>a. (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> A a) \<longrightarrow> P)\<close>
+  by (simp add: ExBI_def \<phi>Res_Sat_def \<phi>Res_Spec_def)
 
 lemma \<phi>Res_Sat_expn_impSubj:
   \<open>((\<s>\<t>\<a>\<t>\<e> s \<i>\<s> A \<s>\<u>\<b>\<j> B) \<longrightarrow> P) \<longleftrightarrow> (B \<longrightarrow> (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> A) \<longrightarrow> P)\<close>
@@ -277,10 +277,10 @@ lemma basic_fiction_\<I>:
   by (rule Interp_inverse) (clarsimp simp add: Interpretation_def one_set_def)
 
 
-lemma \<F>_itself_expn[\<phi>expns]:
+lemma Itselfself_expn[\<phi>expns]:
   \<open>R2 ## x
-\<Longrightarrow> \<phi>Res_Spec (\<I> (basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it) (R2 * x))
-  = \<phi>Res_Spec (\<I> (basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it) R2 * {mk x})\<close>
+\<Longrightarrow> \<phi>Res_Spec (\<I> (basic_fiction \<Zcomp>\<^sub>\<I> Itself) (R2 * x))
+  = \<phi>Res_Spec (\<I> (basic_fiction \<Zcomp>\<^sub>\<I> Itself) R2 * {mk x})\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: \<phi>expns basic_fiction_\<I> prj.homo_mult interp_comp_\<I>)
   apply (rule; clarify)
@@ -595,12 +595,12 @@ subsubsection \<open>Itself Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> Itself\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and Fic :: "'T fiction_entry"
 begin
 
-sublocale basic_fiction where I = \<open>\<F>_it\<close> ..
+sublocale basic_fiction where I = \<open>Itself\<close> ..
 
 lemma sep_disj_fiction:
   \<open> r \<in> FIC.SPACE
@@ -886,7 +886,7 @@ subsubsection \<open>Itself Fiction\<close>
 
 locale identity_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> Itself\<close>
 for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val option) fiction_entry"
 begin

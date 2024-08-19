@@ -138,7 +138,7 @@ private lemma from_fictional_refinement':
   
   apply (auto simp add: Image_iff subset_iff Bex_def
           INTERP_SPEC_subj INTERP_SPEC_ex set_mult_expn INTERP_SPEC
-          Subjection_expn_set ExSet_expn_set Transition_of'_def
+          Subjection_expn_set ExBI_expn_set Transition_of'_def
           LooseState_def split_sum_all INTERP_RES_def interp_split R.\<r>_valid_split'
           R.inj.sep_orthogonal inj.sep_orthogonal prj.homo_mult eval_stat_forall
           split: eval_stat.split)
@@ -196,7 +196,7 @@ lemma "__getter_rule__":
   by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on ({x} \<s>\<u>\<b>\<j> v. ret = Normal (\<phi>arg v) \<and> P v)\<close>
                                        and D = \<open>{x}\<close>],
      assumption,
-     clarsimp simp add: set_eq_iff Subjection_expn_set Id_on_iff ExSet_expn_set fun_eq_iff,
+     clarsimp simp add: set_eq_iff Subjection_expn_set Id_on_iff ExBI_expn_set fun_eq_iff,
      simp add: Id_on_iff zero_set_def zero_fun_def,
      assumption,
      simp add: Valid_Transition_def zero_set_def,
@@ -369,8 +369,8 @@ lemma "__allocate_rule_2__":
         OF R.allocator_refinement[THEN refinement_frame[where R=UNIV]]],
       assumption,
       assumption,
-      unfold ExSet_times_left Subjection_times,
-      rule refinement_ExSet,
+      unfold ExBI_times_left Subjection_times,
+      rule refinement_ExBI,
       rule refinement_subjection,
       blast,
       auto simp add: set_mult_expn)
@@ -458,7 +458,7 @@ lemma setter_refinement:
 
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at k (F o the)\<close>]])
   unfolding Fictional_Forward_Simulation_def
-  apply (clarsimp simp add: set_mult_expn Subjection_expn_set ExSet_expn_set
+  apply (clarsimp simp add: set_mult_expn Subjection_expn_set ExBI_expn_set
             prj.homo_mult \<r>_valid_split' inj.sep_orthogonal[simplified])
   subgoal premises prems for r R x' u v
   proof -
@@ -543,7 +543,7 @@ proof -
       rule R.getter_valid,
       rule sep_refinement_stepwise,
       rule R.getter_refinement[where S=S, THEN refinement_frame[where R=UNIV]],
-      unfold Subjection_Id_on Subjection_times ExSet_Id_on ExSet_times_left,
+      unfold Subjection_Id_on Subjection_times ExBI_Id_on ExBI_times_left,
       rule refinement_existential[OF refinement_subjection[OF constant_refinement]],
       simp,
       rule \<F>_pointwise_projection[where D'=\<open>{x}\<close> and D=\<open>Some ` S\<close>, simplified],
@@ -562,8 +562,8 @@ subgoal premises prems proof -
   have t1: \<open>(pairself (fun_upd 1 k) ` {(Some v, f v)} \<s>\<u>\<b>\<j> v. ret = Normal \<phi>V_none \<and> v \<in> V \<and> v \<in> RP k)  * Id_on UNIV
          = ((pairself (fun_upd 1 k) ` ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k )) * Id_on UNIV \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none)\<close>
     for ret
-    by (unfold Subjection_Id_on Subjection_times ExSet_Id_on ExSet_times_right ExSet_image
-                  Subjection_image; simp add: set_eq_iff Subjection_expn_set ExSet_expn_set; blast)
+    by (unfold Subjection_Id_on Subjection_times ExBI_Id_on ExBI_times_right ExI_image
+                  Subjection_image; simp add: set_eq_iff Subjection_expn_set ExBI_expn_set; blast)
   show ?thesis
     by (unfold prems(1),
       insert prems(2-),
@@ -587,14 +587,14 @@ subsection \<open>Pointwise Fiction\<close>
 
 locale pointwise_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res P
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
-+  homo_one \<open>\<F>_pointwise (\<lambda>_::'key. \<F>_it::'val discrete option \<Rightarrow> 'val discrete option set)\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. Itself)\<close>
++  homo_one \<open>\<F>_pointwise (\<lambda>_::'key. Itself::'val discrete option \<Rightarrow> 'val discrete option set)\<close>
 for Res :: "('key \<Rightarrow> 'val discrete option) resource_entry"
 and P   :: \<open>'key \<Rightarrow> 'val discrete set\<close>
 and Fic :: "('key \<Rightarrow> 'val discrete option) fiction_entry"
 begin
 
-sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambda>_. \<F>_it\<close> Fic P ..
+sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambda>_. Itself\<close> Fic P ..
 
 lemma setter_rule:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
@@ -609,8 +609,8 @@ proof -
         rule "_setter_rule_2_"[where k=k and k'=k and f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
                 simplified, unfolded refinement_source_subjection,
                 OF impI,
-                OF \<F>_it_refinement
-                   \<F>_it_refinement_projection[where S=S and S'=S for S, simplified],
+                OF Itself_refinement
+                   Itself_refinement_projection[where S=S and S'=S for S, simplified],
                 simplified],
         rule prems)
 qed .
@@ -626,11 +626,11 @@ lemma getter_rule:
   thm "_getter_rule_2_"[where S=\<open>{u}\<close>, simplified singleton_iff, simplified]
   by (rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified singleton_iff, simplified],
       assumption,
-      rule \<F>_it_refinement_projection,
+      rule Itself_refinement_projection,
       simp)
 
 lemmas allocate_rule = "__allocate_rule_2__"
-                            [OF \<F>_pointwise_refinement[where I=\<open>\<lambda>_. \<F>_it\<close>, OF \<F>_it_refinement, where u2=1, simplified]
+                            [OF \<F>_pointwise_refinement[where I=\<open>\<lambda>_. Itself\<close>, OF Itself_refinement, where u2=1, simplified]
                                 Premise_D[where mode=default]
                                 Premise_D[where mode=default]]
 

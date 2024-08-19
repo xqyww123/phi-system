@@ -28,7 +28,7 @@ hide_fact RES.\<phi>CF_break_res_ax
 subsection \<open>Fiction of Scope Frames\<close>
 
 fiction_space \<phi>CF_break =
-  brk_frame :: \<open>RES.brk_frame.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
+  brk_frame :: \<open>RES.brk_frame.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. Itself)\<close>
                (pointwise_fiction_for_partial_mapping_resource RES.brk_frame \<open>\<lambda>_::nat. UNIV :: VAL list option discrete set\<close>)
   by (standard; simp add: set_eq_iff)
 
@@ -243,7 +243,7 @@ lemma [\<phi>reason 3000]:
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
-  unfolding BI_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_additive_disj
+  unfolding BI_eq_iff Brking_Frame_def plus_fun_def distrib_right ExBI_additive_disj
   by clarsimp blast
 
 

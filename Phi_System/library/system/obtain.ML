@@ -105,7 +105,7 @@ fun auto_choose stat =
     val sequent = Phi_Envir.the_state_sequent stat
     val mode = Phi_Working_Mode.mode1 ctxt
     val var_names = #spec_of mode (Thm.concl_of sequent)
-          |> Phi_Help.strip_binder_vars @{const_name ExSet}
+          |> Phi_Help.strip_binder_vars @{const_name ExBI}
           |> map (Name.clean o fst)
     val (var_names', _) =
       fold_map Name.variant var_names (Variable.names_of (Proof.context_of stat))

@@ -2423,8 +2423,8 @@ fun phi_synthesis_parser (oprs, (ctxt, sequent)) F (raw_term, pos) cfg =
 )\<close>
 
 \<phi>lang_parser existential_elimination (%\<phi>parser_unique, %\<phi>lang_expr) ["\<exists>"]
-                                    ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>
-                                    | \<open>ToA_Construction ?s (ExSet ?S)\<close> )
+                                    ( \<open>CurrentConstruction ?mode ?blk ?H (ExBI ?T)\<close>
+                                    | \<open>ToA_Construction ?s (ExBI ?S)\<close> )
   \<open>fn s => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) >> (fn insts => fn _ =>
       apsnd (Phi_CP_IDE.proof_state_call (NuObtain.choose insts)) s)\<close>
 
@@ -2569,7 +2569,7 @@ end)) end
        not (can \<^keyword>\<open>\<exists>\<close> (#toks arg))
     then let val mode = Phi_Working_Mode.mode1 ctxt
       in case #spec_of mode (Thm.concl_of sequent)
-           of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+           of Const (\<^const_name>\<open>ExBI\<close>, _) $ _ =>
                 raise Phi_CP_IDE.Post_App.ReEntry (arg, Phi_CP_IDE.proof_state_call NuObtain.auto_choose (ctxt,sequent))
             | _ => (ctxt,sequent)
      end

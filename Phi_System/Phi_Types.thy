@@ -589,7 +589,7 @@ declare [[\<phi>trace_reasoning = 0]]
 text \<open>Read it as 'the abstract object is certain element in the set'
 
 Together with the \<^const>\<open>SubjectionTY\<close>, \<^const>\<open>\<phi>Dependent_Sum\<close> and \<^const>\<open>Set_Abst\<close> embed
-  BI connective \<open>\<and>\<close> (\<^const>\<open>Subjection\<close>) and \<open>\<exists>\<close> (\<^const>\<open>ExSet\<close>) into \<phi>-types. The embedding of \<open>\<exists>\<close>
+  BI connective \<open>\<and>\<close> (\<^const>\<open>Subjection\<close>) and \<open>\<exists>\<close> (\<^const>\<open>ExBI\<close>) into \<phi>-types. The embedding of \<open>\<exists>\<close>
   is in an algebraic way having good properties like the \<Sigma>-Homomorphism and \<S>-Homomorphism introduced below.
 
 The system reduces the three \<phi>-types actively just like how it reduces BI \<open>\<exists>\<close> and \<open>\<and>\<close>.
@@ -683,7 +683,7 @@ val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
   lhss = [\<^pattern>\<open>_ \<Ztypecolon> _ \<s>\<u>\<b>\<j> x. \<top>\<close>],
   proc = fn _ => fn ctxt => fn ctm =>
     case Thm.term_of ctm
-      of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => (
+      of Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => (
           case T
             of Const(\<^const_name>\<open>SubjectionTY\<close>, _) $ T $ P => (
                   case P
@@ -1196,7 +1196,7 @@ subsection \<open>Embedding Additive Conjunction\<close>
 (* declare False_def[symmetric, simp] *)
 
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
-  where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
+  where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<sqinter> (snd x \<Ztypecolon> U))\<close>
   deriving Basic
        and \<open>  Abstract_Domain T P
           \<Longrightarrow> Abstract_Domain U Q
@@ -1218,7 +1218,7 @@ subsubsection \<open>Rules\<close>
 declare \<phi>Inter_def[embed_into_\<phi>type del]
 
 lemma \<phi>Inter_embedding[embed_into_\<phi>type]:
-  \<open>(x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (y \<Ztypecolon> U) \<equiv> (x, y) \<Ztypecolon> T \<and>\<^sub>\<phi> U\<close>
+  \<open>(x \<Ztypecolon> T) \<sqinter> (y \<Ztypecolon> U) \<equiv> (x, y) \<Ztypecolon> T \<and>\<^sub>\<phi> U\<close>
   unfolding atomize_eq BI_eq_iff
   by simp
 

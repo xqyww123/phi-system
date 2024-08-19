@@ -168,7 +168,7 @@ fun force_rule_pass rule ctxt =
         | get_pat (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =
               if RULES.direction then T else
               bad_rule "\nThe target of the backward-transformation should be in \<open>y : Y subj y. r y\<close> form."
-        | get_pat (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
+        | get_pat (Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (_, _,
               Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _)) =
               if RULES.direction
               then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
@@ -239,7 +239,7 @@ structure Phi_CoP_Simp = Phi_CoP_Simp_GEN (
   val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' True _\<close>
 
   fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
-    | select_trans_rule (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = select_trans_rule X
+    | select_trans_rule (Const(\<^const_name>\<open>ExBI\<close>, _) $ X) = select_trans_rule X
     | select_trans_rule (Abs (_, _, X)) = select_trans_rule X
     | select_trans_rule (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = select_trans_rule X
     | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = @{thm' \<A>simp_trans'}

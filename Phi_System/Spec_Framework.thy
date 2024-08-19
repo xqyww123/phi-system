@@ -441,11 +441,11 @@ lemma \<t>\<y>\<p>\<e>\<o>\<f>_\<s>\<u>\<b>\<j>[simp]:
 
 lemma [\<phi>reason add]:
   \<open> (\<And>x. \<t>\<y>\<p>\<e>\<o>\<f> (X x) = TY @tag \<A>infer)
-\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (ExSet X) = TY @tag \<A>infer \<close>
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (ExBI X) = TY @tag \<A>infer \<close>
   unfolding Action_Tag_def SType_Of'_def Inhabited_def Satisfiable_def subset_iff            
   by (auto,
-      metis (no_types, lifting) ExSet_expn Semantic_Type'_def Well_Type_unique verit_sko_ex',
-      metis ExSet_expn_set Satisfaction_def Semantic_Type'_def tfl_some)
+      metis (no_types, lifting) ExBI_expn Semantic_Type'_def Well_Type_unique verit_sko_ex',
+      metis ExBI_expn_set Satisfaction_def Semantic_Type'_def tfl_some)
 
 subsubsection \<open>Auxiliary Reasoners\<close>
 
@@ -825,7 +825,7 @@ lemma [\<phi>reason %\<phi>functionality]:
 lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional A
 \<Longrightarrow> Is_Functional B
-\<Longrightarrow> Is_Functional (A \<and>\<^sub>B\<^sub>I B) \<close>
+\<Longrightarrow> Is_Functional (A \<sqinter> B) \<close>
   unfolding Is_Functional_def
   by simp
 
@@ -999,19 +999,19 @@ lemma \<comment> \<open>The above rule is reversible\<close>
 
 lemma [\<phi>reason %carrier_set_cut]:
   \<open> (\<And>x. Within_Carrier_Set (A x))
-\<Longrightarrow> Within_Carrier_Set (ExSet A) \<close>
+\<Longrightarrow> Within_Carrier_Set (ExBI A) \<close>
   unfolding Within_Carrier_Set_def
   by clarsimp
 
 lemma \<comment> \<open>The above rule is reversible\<close>
-  \<open> Within_Carrier_Set (ExSet A) \<Longrightarrow> Within_Carrier_Set (A x) \<close>
+  \<open> Within_Carrier_Set (ExBI A) \<Longrightarrow> Within_Carrier_Set (A x) \<close>
   unfolding Within_Carrier_Set_def
   by clarsimp blast
 
 lemma [\<phi>reason %carrier_set_cut]:
   \<open> Within_Carrier_Set A
 \<Longrightarrow> Within_Carrier_Set B
-\<Longrightarrow> Within_Carrier_Set (A \<and>\<^sub>B\<^sub>I B)\<close>
+\<Longrightarrow> Within_Carrier_Set (A \<sqinter> B)\<close>
   unfolding Within_Carrier_Set_def
   by clarsimp
 
@@ -1019,7 +1019,7 @@ lemma [\<phi>reason %carrier_set_cut]:
 text \<open>The above rule is also not reversible. Essentially the rules for conjunctive connectives are not
   reversible due to the same reason as \<open>*\<close>. \<close>
 
-lemma \<open> Within_Carrier_Set (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> Within_Carrier_Set A \<and> Within_Carrier_Set B \<close>
+lemma \<open> Within_Carrier_Set (A \<sqinter> B) \<Longrightarrow> Within_Carrier_Set A \<and> Within_Carrier_Set B \<close>
   oops
 
 lemma [\<phi>reason %carrier_set_cut]:
@@ -1098,7 +1098,7 @@ lemma [\<phi>reason no explorative backtrack 0]:
 lemma [\<phi>reason 1200]:
   \<open> Sep_Functional A
 \<Longrightarrow> Sep_Functional B
-\<Longrightarrow> Sep_Functional (A \<and>\<^sub>B\<^sub>I B) \<close>
+\<Longrightarrow> Sep_Functional (A \<sqinter> B) \<close>
   unfolding Sep_Functional_def
   by simp
 
@@ -1175,14 +1175,14 @@ lemma [\<phi>reason 1000]:
 
 lemma [\<phi>reason 1000]:
   \<open> (\<And>x. Sep_Reflexive (A x))
-\<Longrightarrow> Sep_Reflexive (ExSet A) \<close>
+\<Longrightarrow> Sep_Reflexive (ExBI A) \<close>
   unfolding Sep_Reflexive_def
   by clarsimp
 
 lemma [\<phi>reason 1000]:
   \<open> Sep_Reflexive A
 \<Longrightarrow> Sep_Reflexive B
-\<Longrightarrow> Sep_Reflexive (A \<and>\<^sub>B\<^sub>I B) \<close>
+\<Longrightarrow> Sep_Reflexive (A \<sqinter> B) \<close>
   unfolding Sep_Reflexive_def
   by clarsimp
 
@@ -1316,8 +1316,8 @@ lemma  INTERP_SPEC_subj[\<phi>expns]:
   unfolding INTERP_SPEC_def by (simp add: set_eq_iff Subjection_expn_set, blast)
 
 lemma  INTERP_SPEC_ex[\<phi>expns]:
-  \<open> INTERP_SPEC (ExSet S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
-  unfolding INTERP_SPEC_def by (simp add: set_eq_iff ExSet_expn_set, blast)
+  \<open> INTERP_SPEC (ExBI S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
+  unfolding INTERP_SPEC_def by (simp add: set_eq_iff ExBI_expn_set, blast)
 
 abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [17,16] 16)
   where \<open>COMMA \<equiv> (*)\<close>
@@ -1567,9 +1567,9 @@ lemma norm_precond_conj:
 lemmas norm_precond_conj_metaeq[unfolded atomize_eq[symmetric]] = norm_precond_conj
 
 lemma norm_precond_ex:
-  "(\<p>\<r>\<o>\<c> f \<lbrace> ExSet X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (\<forall>x. \<p>\<r>\<o>\<c> f \<lbrace> X x \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)"
+  "(\<p>\<r>\<o>\<c> f \<lbrace> ExBI X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (\<forall>x. \<p>\<r>\<o>\<c> f \<lbrace> X x \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)"
   unfolding \<phi>Procedure_def
-  by (simp add: INTERP_SPEC_ex ExSet_expn_set) blast
+  by (simp add: INTERP_SPEC_ex ExBI_expn_set) blast
 
 
 ML_file \<open>library/syntax/syntax0.ML\<close>

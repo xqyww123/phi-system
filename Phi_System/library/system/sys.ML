@@ -163,11 +163,11 @@ fun set_param raw_term (ctxt,sequent) =
                         |> Syntax.check_term ctxt_parse
                         |> Variable.expand_binds ctxt_parse
     fun has_multiple_ex_quantification X
-      = case X of (Const(\<^const_name>\<open>ExSet\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExSet\<close>, _) $ _))))
+      = case X of (Const(\<^const_name>\<open>ExBI\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExBI\<close>, _) $ _))))
                     => true
                 | _ => false
     fun has_only_one_ex_quantification X =
-          case X of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ => not (has_multiple_ex_quantification X)
+          case X of Const(\<^const_name>\<open>ExBI\<close>, _) $ _ => not (has_multiple_ex_quantification X)
                   | _ => false
   in
     if has_only_one_ex_quantification goal
@@ -175,7 +175,7 @@ fun set_param raw_term (ctxt,sequent) =
       case term
         of SP as \<^Const_>\<open>Subjection \<open>ty\<close>\<close> $ _ $ _ =>
             let val sequent' = set_param' ctxt_parse
-                                    (\<^Const>\<open>ExSet \<^typ>\<open>unit\<close> \<open>ty\<close>\<close> $ Abs ("", \<^typ>\<open>unit\<close>, SP)) sequent
+                                    (\<^Const>\<open>ExBI \<^typ>\<open>unit\<close> \<open>ty\<close>\<close> $ Abs ("", \<^typ>\<open>unit\<close>, SP)) sequent
                             |> Conv.fconv_rule (
                                   Phi_Conv.pure_imp_antecedents_conv (
                                     Conv.try_conv (Conv.rewr_conv @{thm unit_all_eq1})))
@@ -187,7 +187,7 @@ fun set_param raw_term (ctxt,sequent) =
                           addsimps QuantExpansion.aux_expansions ctxt
                           addsimprocs [QuantExpansion.named_forall,
                                        QuantExpansion.named_ex,
-                                       QuantExpansion.named_ExSet,
+                                       QuantExpansion.named_ExBI,
                                        QuantExpansion.named_metaAll]
             in (ctxt, set_param' ctxt_parse term' sequent
                         |> QuantExpansion.named_predicate_expansion sctxt

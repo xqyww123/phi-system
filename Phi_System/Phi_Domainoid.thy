@@ -373,15 +373,15 @@ lemma [\<phi>reason %BI_approx_cut]:
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> (\<And>c. \<Psi>[\<psi>] (S c) \<le> S' c)
-\<Longrightarrow> \<Psi>[\<psi>] (ExSet S) \<le> ExSet S'\<close>
-  unfolding \<Psi>_ExSet BI_sub_transformation
-  by (simp add: ExSet_transformation)
+\<Longrightarrow> \<Psi>[\<psi>] (ExBI S) \<le> ExBI S'\<close>
+  unfolding \<Psi>_ExBI BI_sub_transformation
+  by (simp add: ExBI_transformation)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> (\<And>c. S' c \<le> \<Psi>[\<psi>] (S c))
-\<Longrightarrow> ExSet S' \<le> \<Psi>[\<psi>] (ExSet S)\<close>
-  unfolding \<Psi>_ExSet BI_sub_transformation
-  by (simp add: ExSet_transformation)
+\<Longrightarrow> ExBI S' \<le> \<Psi>[\<psi>] (ExBI S)\<close>
+  unfolding \<Psi>_ExBI BI_sub_transformation
+  by (simp add: ExBI_transformation)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> ((\<Psi>[\<psi>] S) \<s>\<u>\<b>\<j> P) \<le> S'

@@ -305,7 +305,7 @@ fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Con
   | is_local_value _ = false
 
 fun values_number ret (Const (@{const_name Subjection}, _) $ T) = values_number ret T
-  | values_number ret (Const (@{const_name ExSet}, _) $ T) = values_number ret T
+  | values_number ret (Const (@{const_name ExBI}, _) $ T) = values_number ret T
   | values_number ret (Abs (_, _, T)) = values_number ret T
   | values_number ret (Const (\<^const_name>\<open>times\<close>, _) $ X $ L)
       = values_number (if is_local_value X then ret+1 else ret) L
@@ -336,8 +336,8 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
         case Phi_Syntax.dest_transformation (Thm.major_prem_of thm)
           of (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ ,_,_)
                 => gen_rule num (@{thm Subjection_transformation} RS thm)
-           | (Const (\<^const_name>\<open>ExSet\<close>, _) $ _ $ _ ,_,_)
-                => gen_rule num (@{thm ExSet_transformation} RS thm)
+           | (Const (\<^const_name>\<open>ExBI\<close>, _) $ _ $ _ ,_,_)
+                => gen_rule num (@{thm ExBI_transformation} RS thm)
            | (Const (\<^const_name>\<open>times\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm) $ _ ,_,_)
                 => (case extr_rule tm
                       of SOME (remove_rule, no_remove_rule) =>

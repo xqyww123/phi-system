@@ -7547,14 +7547,14 @@ lemma [\<phi>reason default %\<phi>TA_guesser_default]:
   \<open> Guess_Property PC False T A a p c
 \<Longrightarrow> Guess_Property PC False T (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) a p (\<lambda>x. P x \<and> c x) \<close>
   \<open> (\<And>c. Guess_Property PC False T (\<lambda>x. A' x c) (a' c) (p' c) (cond c))
-\<Longrightarrow> Guess_Property PC False T (\<lambda>x. ExSet (A' x)) (All a') (\<lambda>x. \<forall>c. p' c x) (\<lambda>x. \<exists>c. cond c x)\<close>
+\<Longrightarrow> Guess_Property PC False T (\<lambda>x. ExBI (A' x)) (All a') (\<lambda>x. \<forall>c. p' c x) (\<lambda>x. \<exists>c. cond c x)\<close>
   unfolding Guess_Property_def ..
 
 lemma [\<phi>reason default %\<phi>TA_guesser_default]:
   \<open> Guess_Property PC True T A a p c
 \<Longrightarrow> Guess_Property PC True T (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) a (\<lambda>x. P x \<and> p x) c \<close>
   \<open> (\<And>c. Guess_Property PC True T (\<lambda>x. A' x c) (a' c) (c' c) (cond c))
-\<Longrightarrow> Guess_Property PC True T (\<lambda>x. ExSet (A' x)) (Ex a') (\<lambda>x. \<exists>c. c' c x) (\<lambda>x. \<forall>c. cond c x) \<close>
+\<Longrightarrow> Guess_Property PC True T (\<lambda>x. ExBI (A' x)) (Ex a') (\<lambda>x. \<exists>c. c' c x) (\<lambda>x. \<forall>c. cond c x) \<close>
   unfolding Guess_Property_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:

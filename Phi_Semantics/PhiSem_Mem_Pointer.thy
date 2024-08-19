@@ -1066,7 +1066,7 @@ lemma [\<phi>reason %deriving_pointer_cut]:
   \<open> Derive_Pointer_Of A ptr\<^sub>A
 \<Longrightarrow> Derive_Pointer_Of B ptr\<^sub>B
 \<Longrightarrow> \<A>merge_option ptr\<^sub>A ptr\<^sub>B ptr
-\<Longrightarrow> Derive_Pointer_Of (A \<and>\<^sub>B\<^sub>I B) ptr \<close>
+\<Longrightarrow> Derive_Pointer_Of (A \<sqinter> B) ptr \<close>
   unfolding Derive_Pointer_Of_def ..
 
 lemma [\<phi>reason %deriving_pointer_cut]:

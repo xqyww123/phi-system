@@ -79,9 +79,9 @@ fun printer_translation' ctxt tab mode (Abs (N,T,X))
       = H $ printer_translation' ctxt tab mode S $ P
   | printer_translation' ctxt tab mode ((H as Const (\<^const_syntax>\<open>Subjection\<close>, _)) $ S $ P)
       = H $ printer_translation' ctxt tab mode S $ P
-  | printer_translation' ctxt tab mode ((H as \<^Const_>\<open>ExSet _ _\<close>) $ S)
+  | printer_translation' ctxt tab mode ((H as \<^Const_>\<open>ExBI _ _\<close>) $ S)
       = H $ printer_translation' ctxt tab mode S
-  | printer_translation' ctxt tab mode ((H as Const (\<^const_syntax>\<open>ExSet\<close>, _)) $ S)
+  | printer_translation' ctxt tab mode ((H as Const (\<^const_syntax>\<open>ExBI\<close>, _)) $ S)
       = H $ printer_translation' ctxt tab mode S
   | printer_translation' ctxt tab mode S =
       strip_separations S
@@ -93,8 +93,8 @@ fun need_translation' ctxt tab mode (Abs (_,_,X)) = need_translation' ctxt tab m
       = need_translation' ctxt tab mode S
   | need_translation' ctxt tab mode (Const (\<^const_syntax>\<open>Subjection\<close>, _) $ S $ _)
       = need_translation' ctxt tab mode S
-  | need_translation' ctxt tab mode (\<^Const_>\<open>ExSet _ _\<close> $ S) = need_translation' ctxt tab mode S
-  | need_translation' ctxt tab mode (Const (\<^const_syntax>\<open>ExSet\<close>, _) $ S) = need_translation' ctxt tab mode S
+  | need_translation' ctxt tab mode (\<^Const_>\<open>ExBI _ _\<close> $ S) = need_translation' ctxt tab mode S
+  | need_translation' ctxt tab mode (Const (\<^const_syntax>\<open>ExBI\<close>, _) $ S) = need_translation' ctxt tab mode S
   | need_translation' ctxt tab mode (Const (\<^const_name>\<open>times\<close>, _) $ X $ Y)
       = need_tr_item ctxt tab mode  Y orelse need_translation' ctxt tab mode  X
   | need_translation' ctxt tab mode  (Const (\<^const_syntax>\<open>COMMA\<close>, _) $ X $ Y)

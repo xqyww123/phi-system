@@ -1,12 +1,12 @@
 theory Phi_Fiction
-  imports Phi_Algebra_Set Unital_Homo
+  imports Phi_System.Phi_BI Unital_Homo
 begin
 
 section \<open>Interpretation of Fictional Separation\<close>
 
 subsection \<open>Algebraic Structure\<close>
 
-subsubsection \<open>Auxiliary Helper\<close>
+subsubsection \<open>Auxiliary\<close>
 
 definition \<open>pairself f = (\<lambda>(x,y). (f x, f y))\<close>
 
@@ -18,6 +18,38 @@ lemma pairself_image_Id_on[simp]:
   \<open>pairself f ` Id_on S = Id_on (f ` S)\<close>
   by (clarsimp simp add: set_eq_iff Id_on_iff image_iff Bex_def; blast)
 
+definition BI_Image :: \<open>('a \<times> 'b) BI \<Rightarrow> 'a BI \<Rightarrow> 'b BI\<close>  (infixr "``\<^sub>I" 90)
+  where "r ``\<^sub>I s = BI (BI.dest r `` BI.dest s)"
+
+lemma BI_Image_expn[iff]:
+  \<open> w \<Turnstile> r ``\<^sub>I s \<longleftrightarrow> (\<exists>w'. (w',w) \<Turnstile> r \<and> w' \<Turnstile> s) \<close>
+  unfolding BI_Image_def
+  by (meson ImageE Satisfaction_BI_red Satisfaction_def rev_ImageI)
+
+definition BI_Id_on :: "'a BI \<Rightarrow> ('a \<times> 'a) BI"
+  where "BI_Id_on A = BI (Id_on (BI.dest A))"
+
+lemma BI_Id_on_expn[iff]:
+  \<open> (a,b) \<Turnstile> BI_Id_on A \<longleftrightarrow> a = b \<and> a \<Turnstile> A \<close>
+  unfolding BI_Id_on_def
+  by (cases A; auto)
+
+definition i_relcomp :: \<open>('a \<times> 'b) BI \<Rightarrow> ('b \<times> 'c) BI \<Rightarrow> ('a \<times> 'c) BI\<close> (infixr "O\<^sub>I" 75)
+  where \<open> A O\<^sub>I B = BI (BI.dest A O BI.dest B) \<close>
+
+lemma i_relcomp_expn[iff]:
+  \<open> (a,c) \<Turnstile> R O\<^sub>I S \<longleftrightarrow> (\<exists>b. (a,b) \<Turnstile> R \<and> (b,c) \<Turnstile> S) \<close>
+  unfolding i_relcomp_def
+  by (cases R; cases S; simp; blast)
+
+definition BI_Monad_Comb :: \<open>'a BI BI \<Rightarrow> 'a BI\<close>
+  where \<open>BI_Monad_Comb S = Sup (BI.dest S)\<close>
+
+lemma BI_Monad_Comb_expn[iff]:
+  \<open> w \<Turnstile> BI_Monad_Comb S \<longleftrightarrow> (\<exists>m. m \<Turnstile> S \<and> w \<Turnstile> m) \<close>
+  unfolding BI_Monad_Comb_def
+  by (cases S; auto)
+
 
 subsubsection \<open>Fictional Interpretation\<close>
 
@@ -26,9 +58,8 @@ text \<open>
   maps a fictional resource to a set of concrete resource.
   The interpretation can be any map to set that preserves \<open>1\<close>, the unit of the separation algebra.\<close>
 
-
-type_synonym 'a spec = \<open>'a set\<close>
-type_synonym ('a,'b) interp = \<open>'a \<Rightarrow> 'b spec\<close>
+type_synonym 'a BI_rel = \<open>('a \<times> 'a) BI\<close>
+type_synonym 'a spec = \<open>'a BI\<close>
 type_synonym ('a,'b) unital_homo_interp = \<open>('a, 'b spec) unital_homo\<close>
 
 (*
@@ -38,10 +69,10 @@ definition \<I>\<^sub>r\<^sub>e\<^sub>l :: \<open>('a::one,'b::one) interp \<Rig
 
 subsubsection \<open>Fictional Refinement\<close>
 
-definition Fictional_Forward_Simulation :: \<open>'c rel \<Rightarrow> 'a rel \<Rightarrow> ('a::sep_magma,'c::sep_magma) interp \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+definition Fictional_Forward_Simulation :: \<open>'c BI_rel \<Rightarrow> 'a BI_rel \<Rightarrow> ('c::sep_magma, 'a::sep_magma) \<phi> \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
       ("_/ \<r>\<e>\<f>\<i>\<n>\<e>\<s> _/ \<w>.\<r>.\<t> _/ \<i>\<n> _" [11,11,11] 10)
   where \<open>(F \<r>\<e>\<f>\<i>\<n>\<e>\<s> G \<w>.\<r>.\<t> T \<i>\<n> D)
-    \<longleftrightarrow> (\<forall>x r R. F `` (T (x * r) * R \<s>\<u>\<b>\<j> x ## r \<and> x \<in> D) \<subseteq> { y'. \<exists>y. y' \<in> T (y * r) * R \<and> y ## r \<and> (x,y) \<in> G})\<close>
+    \<longleftrightarrow> (\<forall>x r R. F ``\<^sub>I (T (x * r) * R \<s>\<u>\<b>\<j> x ## r \<and> x \<Turnstile> D) \<le> BI { y'. \<exists>y. y' \<Turnstile> T (y * r) * R \<and> y ## r \<and> (x,y) \<Turnstile> G})\<close>
 
 text \<open>We use relation directly here but doesn't mean we cannot model return value or threw exceptions.
 They can parameterize the relation, as we don't need to (it is not designed to) abstract the values.
@@ -51,57 +82,57 @@ We only relate resources in different abstractions.
 \<close>
 
 lemma empty_refines_any[simp]:
-  \<open>{} \<r>\<e>\<f>\<i>\<n>\<e>\<s> Any \<w>.\<r>.\<t> I \<i>\<n> D\<close>
-  unfolding Fictional_Forward_Simulation_def
+  \<open>0 \<r>\<e>\<f>\<i>\<n>\<e>\<s> Any \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+  unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
   by simp
 
 lemma refinement_sub_domain:
-  \<open> D' \<subseteq> D
+  \<open> D' \<le> D
 \<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
 \<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D'\<close>
-  unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: Subjection_expn_set subset_iff Image_def Bex_def Id_on_iff, blast)
+  unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
+  by (clarsimp simp add: subset_iff Image_def Bex_def Id_on_iff, blast)
 
 lemma refinement_sub_fun:
-  \<open> A' \<subseteq> A
+  \<open> A' \<le> A
 \<Longrightarrow> A  \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
 \<Longrightarrow> A' \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
-  unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: Subjection_expn_set subset_iff Image_def Bex_def Id_on_iff; blast)
+  unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
+  by (clarsimp simp add: subset_iff Image_def Bex_def Id_on_iff; blast)
 
 lemma refinement_sub_fun_right:
-  \<open> B \<subseteq> B'
+  \<open> B \<le> B'
 \<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
 \<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B' \<w>.\<r>.\<t> I \<i>\<n> D\<close>
-  unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: Subjection_expn_set subset_iff Image_def Bex_def Id_on_iff; blast)
+  unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
+  by (clarsimp simp add: subset_iff Image_def Bex_def Id_on_iff; blast)
 
 lemma refinement_frame:
   \<open> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
-\<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B * Id_on R \<w>.\<r>.\<t> I \<i>\<n> D * R\<close>
-  for B :: \<open>'b::sep_semigroup rel\<close>
-  unfolding Fictional_Forward_Simulation_def
-  apply (clarsimp simp add: subset_iff Subjection_expn_set set_mult_expn Image_def Bex_def Id_on_iff)
-  by (smt (z3) sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc')
+\<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B * BI_Id_on R \<w>.\<r>.\<t> I \<i>\<n> D * R\<close>
+  for B :: \<open>'b::sep_semigroup BI_rel\<close>
+  unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
+  by (clarsimp simp add: subset_iff set_mult_expn Image_def Bex_def Id_on_iff,
+      smt (z3) sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc')
 
 lemma sep_refinement_horizontal_stepwise:
   \<open> A1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B1 \<w>.\<r>.\<t> I \<i>\<n> D
 \<Longrightarrow> A2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B2 \<w>.\<r>.\<t> I \<i>\<n> D'
-\<Longrightarrow> (B1 `` D \<subseteq> D')
-\<Longrightarrow> A1 O A2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B1 O B2 \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+\<Longrightarrow> (B1 ``\<^sub>I D \<le> D')
+\<Longrightarrow> A1 O\<^sub>I A2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B1 O\<^sub>I B2 \<w>.\<r>.\<t> I \<i>\<n> D\<close>
   unfolding Fictional_Forward_Simulation_def
-  apply (clarsimp simp add: set_mult_expn Subjection_expn_set subset_iff Image_def Bex_def)
-  subgoal premises prems for x r R u v y z
+  apply (clarsimp simp add: less_eq_BI_iff Bex_def)
+  subgoal premises prems for x r R z y u v
   proof -
-    have \<open>\<exists>xa. (\<exists>u v. xa = u * v \<and> u \<in> I (x * r) \<and> v \<in> R \<and> u ## v) \<and> x ## r \<and> x \<in> D \<and> (xa, y) \<in> A1\<close>
-      using prems(10) prems(4) prems(5) prems(6) prems(8) prems(9) by blast
+    have \<open>\<exists>w'. (w', y) \<Turnstile> A1 \<and> (\<exists>u v. w' = u * v \<and> u \<Turnstile> I (x * r) \<and> v \<Turnstile> R \<and> u ## v) \<and> x ## r \<and> x \<Turnstile> D\<close>
+      using prems(10) prems(4) prems(6) prems(7) prems(8) prems(9) by blast
     note prems(1)[THEN spec[where x=x], THEN spec[where x=r], THEN spec[where x=R], THEN spec[where x=y],
           THEN mp, OF this]
     then show ?thesis
       apply clarsimp
       subgoal premises prems2 for y' u' v'
       proof -
-        have \<open>(\<exists>x. (\<exists>u v. x = u * v \<and> u \<in> I (y' * r) \<and> v \<in> R \<and> u ## v) \<and> y' ## r \<and> y' \<in> D' \<and> (x, z) \<in> A2)\<close>
+        have \<open>\<exists>w'. (w', z) \<Turnstile> A2 \<and> (\<exists>u v. w' = u * v \<and> u \<Turnstile> I (y' * r) \<and> v \<Turnstile> R \<and> u ## v) \<and> y' ## r \<and> y' \<Turnstile> D'\<close>
           using prems(3) prems(5) prems(7) prems2(1) prems2(2) prems2(3) prems2(4) prems2(5) prems2(6) by blast
         note prems(2)[THEN spec[where x=y'], THEN spec[where x=r], THEN spec[where x=R], THEN spec[where x=z],
           THEN mp, OF this]
@@ -112,77 +143,76 @@ lemma sep_refinement_horizontal_stepwise:
   qed .
 
 lemma constant_refinement:
-  \<open>Id_on A * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on B \<w>.\<r>.\<t> I \<i>\<n> B\<close>
+  \<open>BI_Id_on A * BI_Id_on top \<r>\<e>\<f>\<i>\<n>\<e>\<s> BI_Id_on B \<w>.\<r>.\<t> I \<i>\<n> B\<close>
   unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: subset_iff Id_on_iff set_mult_expn Subjection_expn_set times_fun; blast)
+  by (clarsimp simp add: less_eq_BI_iff Id_on_iff set_mult_expn times_fun; blast)
 
 lemma refinement_subjection:
   \<open> (P \<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D)
 \<Longrightarrow> P \<longrightarrow> Q
 \<Longrightarrow> A \<s>\<u>\<b>\<j> P \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<s>\<u>\<b>\<j> Q \<w>.\<r>.\<t> I \<i>\<n> D\<close>
-  unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: Subjection_expn_set subset_iff Image_def Bex_def Id_on_iff)
+  unfolding Fictional_Forward_Simulation_def 
+  by (clarsimp simp add: less_eq_BI_iff Image_def Bex_def) blast
 
 lemma refinement_existential:
   \<open> (\<And>x. A x \<r>\<e>\<f>\<i>\<n>\<e>\<s> B x \<w>.\<r>.\<t> I \<i>\<n> D)
-\<Longrightarrow> ExSet A \<r>\<e>\<f>\<i>\<n>\<e>\<s> ExSet B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+\<Longrightarrow> ExBI A \<r>\<e>\<f>\<i>\<n>\<e>\<s> ExBI B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
   unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: Subjection_expn_set ExSet_expn_set subset_iff Image_def Bex_def Id_on_iff; blast)
+  by (clarsimp simp add: less_eq_BI_iff Image_def Bex_def Id_on_iff; blast)
 
 lemma refinement_source_subjection:
   \<open>(A \<s>\<u>\<b>\<j> P \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D) \<longleftrightarrow> (P \<longrightarrow> (A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D))\<close>
   unfolding Fictional_Forward_Simulation_def
-  by (auto simp add: Subjection_expn_set subset_iff Image_def Bex_def Id_on_iff set_mult_expn; blast)
+  by (auto simp add: less_eq_BI_iff Image_def Bex_def Id_on_iff set_mult_expn; blast)
 
-lemma refinement_ExSet:
+lemma refinement_ExBI:
   \<open> (\<And>v. A v \<r>\<e>\<f>\<i>\<n>\<e>\<s> B v \<w>.\<r>.\<t> I \<i>\<n> D)
-\<Longrightarrow> ExSet A \<r>\<e>\<f>\<i>\<n>\<e>\<s> ExSet B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+\<Longrightarrow> ExBI A \<r>\<e>\<f>\<i>\<n>\<e>\<s> ExBI B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
   unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: ExSet_expn_set subset_iff Image_def Bex_def Id_on_iff, blast)
+  by (clarsimp simp add: less_eq_BI_iff Image_def Bex_def Id_on_iff, blast)
 
 
-definition refinement_projection :: \<open>('abstract::sep_magma \<Rightarrow> 'concrete set) \<Rightarrow> 'abstract spec \<Rightarrow> 'concrete spec\<close>
-  where \<open>refinement_projection I D = \<Union> (I ` (D * UNIV))\<close>
+
+definition refinement_projection :: \<open>('abstract::sep_magma \<Rightarrow> 'concrete BI) \<Rightarrow> 'abstract spec \<Rightarrow> 'concrete spec\<close>
+  where \<open>refinement_projection I D = BI_Monad_Comb (I `\<^sub>I (D * top))\<close>
 
 lemma refinement_projection_mono:
-  \<open> D \<subseteq> D'
-\<Longrightarrow> refinement_projection I D \<subseteq> refinement_projection I D'\<close>
+  \<open> D \<le> D'
+\<Longrightarrow> refinement_projection I D \<le> refinement_projection I D'\<close>
   unfolding refinement_projection_def
-  by (clarsimp simp add: set_mult_expn Bex_def; blast)
+  by (clarsimp simp add: less_eq_BI_iff set_mult_expn Bex_def; blast)
 
-lemma UNIV_times_idem:
-  \<open>UNIV * UNIV = (UNIV :: 'a::sep_magma_1 set)\<close>
-  unfolding set_eq_iff
-  by (clarsimp simp add: set_mult_expn, metis mult_1_class.mult_1_right sep_magma_1_left)
+lemma BI_top_times_idem:
+  \<open>top * top = (top :: 'a::sep_magma_1 BI)\<close>
+  unfolding BI_eq_iff
+  by (clarsimp, metis mult_1_class.mult_1_right sep_magma_1_left)
 
 lemma refinement_projection_UNIV_times_D[simp]:
-  \<open> refinement_projection I (D * UNIV) = refinement_projection I D \<close>
-  for D :: \<open>'a::sep_monoid set\<close>
-  unfolding refinement_projection_def mult.assoc UNIV_times_idem ..
+  \<open> refinement_projection I (D * top) \<le> refinement_projection I D \<close>
+  for D :: \<open>'a::sep_monoid BI\<close>
+  unfolding refinement_projection_def mult.assoc BI_top_times_idem ..
 
 subsection \<open>Instances\<close>
 
 subsubsection \<open>Itself\<close>
 
-definition [simp]: "\<F>_it x = {x}"
-
-lemma \<F>_it_refinement_projection:
-  \<open> S \<subseteq> S'
-\<Longrightarrow> refinement_projection \<F>_it S \<subseteq> S' * UNIV\<close>
+lemma Itself_refinement_projection:
+  \<open> S \<le> S'
+\<Longrightarrow> refinement_projection Itself S \<le> S' * top\<close>
   unfolding refinement_projection_def
-  by (clarsimp simp add: set_mult_expn)
+  by (clarsimp simp add: less_eq_BI_iff) blast
 
-lemma \<F>_it_refinement:
-  \<open>{(u,v)} * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(u,v)} \<w>.\<r>.\<t> \<F>_it \<i>\<n> {u}\<close>
+lemma Itself_refinement:
+  \<open>((u,v) \<Ztypecolon> Itself) * BI_Id_on top \<r>\<e>\<f>\<i>\<n>\<e>\<s> (u,v) \<Ztypecolon> Itself \<w>.\<r>.\<t> Itself \<i>\<n> (u \<Ztypecolon> Itself)\<close>
   for u :: \<open>'a::{sep_cancel,sep_semigroup}\<close>
   unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: Subjection_expn_set set_mult_expn,
+  by (clarsimp simp add: less_eq_BI_iff,
       metis sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
 
 
 subsubsection \<open>Composition\<close>
 
-definition interp_comp :: \<open>('b::one,'c::one) interp \<Rightarrow> ('a::one,'b) interp \<Rightarrow> ('a,'c) interp\<close> (infixr "\<Zcomp>\<^sub>\<I>" 55)
+definition interp_comp :: \<open>('c::one,'b::one) \<phi> \<Rightarrow> ('b,'a::one) \<phi> \<Rightarrow> ('c,'a) \<phi>\<close> (infixr "\<Zcomp>\<^sub>\<I>" 55)
   where [simp]: \<open>(I1 \<Zcomp>\<^sub>\<I> I2) x = \<Union>(I1 ` I2 x)\<close>
 
 lemma interp_comp_assoc:
@@ -193,8 +223,8 @@ lemma interp_comp_homo_one[simp]:
   \<open>homo_one Ia \<Longrightarrow> homo_one Ib \<Longrightarrow> homo_one (Ia \<Zcomp>\<^sub>\<I> Ib)\<close>
   unfolding homo_one_def by (simp add: set_eq_iff)
 
-lemma \<F>_it_comp[simp]:
-  \<open>\<F>_it \<Zcomp>\<^sub>\<I> I = I\<close> \<open>I \<Zcomp>\<^sub>\<I> \<F>_it = I\<close>
+lemma Itself_comp[simp]:
+  \<open>Itself \<Zcomp>\<^sub>\<I> I = I\<close> \<open>I \<Zcomp>\<^sub>\<I> Itself = I\<close>
   by (simp add: fun_eq_iff)+
 
 lemma sep_refinement_stepwise:
@@ -301,8 +331,8 @@ lemma \<F>_pointwise_\<I>[simp]:
   unfolding \<F>_pointwise_def
   by (rule Interp_inverse) (auto simp add: Interpretation_def one_fun_def fun_eq_iff)
 
-lemma \<F>_pointwise_\<F>_it:
-  \<open>\<F>_pointwise \<F>_it = \<F>_it\<close>
+lemma \<F>_pointwise_Itself:
+  \<open>\<F>_pointwise Itself = Itself\<close>
   by (rule interp_eq_I; simp add: fun_eq_iff set_eq_iff) *)
 
 definition [simp]: "\<F>_pointwise I f = {g. \<forall>x. g x \<in> (I x) (f x)}"
@@ -312,8 +342,8 @@ lemma \<F>_pointwise_homo_one[simp, locale_intro]:
 \<Longrightarrow> homo_one (\<F>_pointwise I)\<close>
   unfolding homo_one_def by (simp add: set_eq_iff) fastforce
 
-lemma \<F>_pointwise_\<F>_it:
-  \<open>\<F>_pointwise (\<lambda>_. \<F>_it) = \<F>_it\<close>
+lemma \<F>_pointwise_Itself:
+  \<open>\<F>_pointwise (\<lambda>_. Itself) = Itself\<close>
   by (simp add: fun_eq_iff set_eq_iff)
 
 lemma \<F>_pointwise_projection:

@@ -956,7 +956,7 @@ text \<open>
       PendingConstruction, ToA_Construction, Argument tag
 \<^item> 12: View_Shift, Transformation
 \<^item> 13: Remains
-\<^item> 14: ExSet
+\<^item> 14: ExBI
 \<^item> 15: Comma, Subjection
 \<^item> 16: Struct Tag, SYNTHESIS
 \<^item> 18: Assertion_Matches

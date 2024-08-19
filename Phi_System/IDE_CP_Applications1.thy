@@ -280,7 +280,7 @@ lemma [\<phi>reason 1010]:
 
 lemma [\<phi>reason 1010]:
   \<open> (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y x \<w>\<i>\<t>\<h> P @tag \<A>_simple_MTF A)
-\<Longrightarrow> ExSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet Y \<w>\<i>\<t>\<h> P @tag \<A>_simple_MTF A\<close>
+\<Longrightarrow> ExBI X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExBI Y \<w>\<i>\<t>\<h> P @tag \<A>_simple_MTF A\<close>
   unfolding Action_Tag_def Transformation_def
   by (simp, blast)
 
@@ -294,7 +294,7 @@ lemma [\<phi>reason 1010]:
 
 lemma [\<phi>reason 1010]:
   \<open> (\<And>x. X x \<s>\<h>\<i>\<f>\<t>\<s> Y x \<w>\<i>\<t>\<h> P @tag \<A>_simple_MTF A)
-\<Longrightarrow> ExSet X \<s>\<h>\<i>\<f>\<t>\<s> ExSet Y \<w>\<i>\<t>\<h> P @tag \<A>_simple_MTF A\<close>
+\<Longrightarrow> ExBI X \<s>\<h>\<i>\<f>\<t>\<s> ExBI Y \<w>\<i>\<t>\<h> P @tag \<A>_simple_MTF A\<close>
   unfolding Action_Tag_def View_Shift_def
   by (clarsimp simp add: INTERP_SPEC_ex, metis)
 
@@ -763,7 +763,7 @@ subsubsection \<open>Termination\<close>
 lemma ToA_trivial:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @tag to any\<close>
   unfolding Action_Tag_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 lemma [\<phi>reason no explorative backtrack %To_ToA_fail for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to _\<close>]:
   \<open> TRACE_FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> T)
@@ -774,12 +774,12 @@ lemma [\<phi>reason default %To_ToA_system_fallback]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P @tag to U\<close>
   unfolding Action_Tag_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 lemma [\<phi>reason %To_ToA_success]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @tag to T\<close>
   unfolding Action_Tag_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 
 subsubsection \<open>Special Forms\<close>
@@ -812,7 +812,7 @@ consts \<A>NO_CHANGE :: \<open>('a,'b) \<phi>\<close> ("\<n>\<o>-\<c>\<h>\<a>\<n
 lemma [\<phi>reason %To_ToA_cut]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @tag to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e> \<close>
   unfolding Action_Tag_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 lemma [\<phi>reason !10]:
   \<open>x \<Ztypecolon> \<circle>\<^sub>\<x> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<circle>\<^sub>\<x> \<s>\<u>\<b>\<j> y. True @tag to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>\<close>
@@ -1736,7 +1736,7 @@ text \<open>Syntax:
 lemma [\<phi>reason %To_ToA_cut]:
   \<open> x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<^emph>\<^sub>\<A> U \<s>\<u>\<b>\<j> x'. x' = x @tag to \<s>\<p>\<l>\<i>\<t> \<close>
   unfolding Action_Tag_def Transformation_def Bubbling_def
-  by (simp add: ExSet_defined)
+  by (simp add: ExBI_defined)
 
 
 subsection \<open>Duplicate \& Shrink\<close>

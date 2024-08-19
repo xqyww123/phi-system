@@ -263,7 +263,7 @@ lemma map_tree_refinement_modify:
     \<i>\<n> { push_map idx a }\<close>
   for a :: \<open>'a list \<Rightarrow> VAL discrete option\<close>
   unfolding Fictional_Forward_Simulation_def the_subtree_def
-  apply (clarsimp simp add: Subjection_expn_set set_mult_expn ExSet_expn_set)
+  apply (clarsimp simp add: Subjection_expn_set set_mult_expn ExBI_expn_set)
   subgoal premises prems for r R a' u x
   proof -
     have t1: \<open>dom x \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
@@ -384,10 +384,10 @@ lemma fiction_Map_of_Val_ins_refinement:
   apply (subst fiction_Map_of_Val_ins_comp_id_simp[symmetric])
   apply (rule sep_refinement_stepwise[
             OF refinement_frame[where R = UNIV, OF Map_of_Val_ins.\<F>_functional_refinement_complex[simplified]]])
-  apply (simp add: ExSet_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff split_option_all
+  apply (simp add: ExBI_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff split_option_all
                    split_discrete_all index_mod_value_welltyp)
   apply (simp add: frame_preserving_relation_def split_option_all split_discrete_all
-                   ExSet_expn_set Subjection_expn_set)
+                   ExBI_expn_set Subjection_expn_set)
   apply (simp add: Sep_Closed_def)
   subgoal premises prems proof -
     have t1: \<open>A \<subseteq> A' \<Longrightarrow> A * B \<subseteq> A' * B\<close> for A A' B
@@ -396,8 +396,8 @@ lemma fiction_Map_of_Val_ins_refinement:
             ({(Some u, (Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))) u)} \<s>\<u>\<b>\<j> u.
              u \<in> discrete ` {a. index_value idx a = u_idx} \<and> u \<in> discrete ` Well_Type TY)
         \<subseteq> ({(a, a ++ (idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j> a. dom a = Dom_of_TY TY)\<close>
-      apply (clarsimp simp add: set_eq_iff ExSet_image Subjection_image;
-             auto simp add: \<open>\<forall>x\<in>_. _\<close> ExSet_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff)
+      apply (clarsimp simp add: set_eq_iff ExI_image Subjection_image;
+             auto simp add: \<open>\<forall>x\<in>_. _\<close> ExBI_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff)
       apply (metis Map_of_Val_mod map_option_funcomp_map_add homo_one_map_option prems(1) prems(2) push_map_homo)
       using Map_of_Val_dom apply blast
       using Map_of_Val_dom by blast
@@ -419,7 +419,7 @@ lemma fiction_Map_of_Val_ins_refinement:
   qed
   subgoal premises prems proof -
     have t1: \<open> Domain ({(a u, b u)} \<s>\<u>\<b>\<j> u. P u) = { a u |u. P u }\<close> for a b P
-      unfolding set_eq_iff Domain_unfold by (clarsimp simp add: ExSet_expn_set Subjection_expn_set)
+      unfolding set_eq_iff Domain_unfold by (clarsimp simp add: ExBI_expn_set Subjection_expn_set)
     have t2: \<open>{Some u |u. u \<in> discrete ` {a. index_value idx a = u_idx} \<and> u \<in> discrete ` Well_Type TY}
                 = Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>
       by (clarsimp simp add: set_eq_iff image_iff Bex_def; blast)
@@ -516,7 +516,7 @@ lemma getter_rule:
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (discrete x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
   unfolding Premise_def
   by (rule "_getter_rule_2_"[OF _ fiction_Map_of_Val_ins_perm_projection_half,
-                                simplified split_discrete_ExSet inj_image_mem_iff inj_discrete];
+                                simplified split_discrete_ExBI inj_image_mem_iff inj_discrete];
       simp)
 
 context notes mul_carrier_option_def[simp] option.pred_True[simp] begin

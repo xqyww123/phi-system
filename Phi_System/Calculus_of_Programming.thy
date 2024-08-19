@@ -237,8 +237,8 @@ lemmas \<phi>apply_implication_pending_E =
 
 lemma \<phi>ex_quantify_E:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> (E ret)
-\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. ExSet (\<lambda>x. E x e))\<close>
-  using \<phi>apply_implication_pending_E[OF _ ExSet_transformation_I[OF transformation_refl]] .
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. ExBI (\<lambda>x. E x e))\<close>
+  using \<phi>apply_implication_pending_E[OF _ ExBI_transformation_I[OF transformation_refl]] .
 
 lemma \<phi>apply_implication_impl:
   \<open> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(s) \<i>\<s> S
@@ -373,7 +373,7 @@ paragraph \<open>Fixing Existentially Quantified Variable\<close>
 lemma \<phi>ExTyp_strip:
   "(CurrentConstruction mode p H (\<exists>*c. T c)) \<equiv> (\<exists>c. CurrentConstruction mode p H (T c))"
   unfolding CurrentConstruction_def atomize_eq
-  by (simp_all add: INTERP_SPEC_ex split_paired_all Subjection_expn_set ExSet_expn_set)
+  by (simp_all add: INTERP_SPEC_ex split_paired_all Subjection_expn_set ExBI_expn_set)
 
 lemma \<phi>ExTyp_strip_imp:
   \<open>ToA_Construction s (\<exists>*c. T c) \<equiv> (\<exists>c. ToA_Construction s (T c))\<close>
@@ -382,31 +382,31 @@ lemma \<phi>ExTyp_strip_imp:
 paragraph \<open>Introducing Existential Quantification\<close>
 
 lemma introduce_Ex:
-  \<open>CurrentConstruction mode blk H (S x) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S)\<close>
-  using \<phi>apply_implication[OF _ ExSet_transformation_I[OF transformation_refl], THEN conjunct1] .
+  \<open>CurrentConstruction mode blk H (S x) \<Longrightarrow> CurrentConstruction mode blk H (ExBI S)\<close>
+  using \<phi>apply_implication[OF _ ExBI_transformation_I[OF transformation_refl], THEN conjunct1] .
 
 lemma introduce_Ex_subj:
-  \<open>CurrentConstruction mode blk H (S x \<s>\<u>\<b>\<j> Q) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S \<s>\<u>\<b>\<j> Q)\<close>
+  \<open>CurrentConstruction mode blk H (S x \<s>\<u>\<b>\<j> Q) \<Longrightarrow> CurrentConstruction mode blk H (ExBI S \<s>\<u>\<b>\<j> Q)\<close>
   by (metis Subjection_True Subjection_cong introduce_Ex)
 
 lemma introduce_Ex_pending:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. Q x v) \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. \<exists>*x. Q x v) \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  using \<phi>apply_implication_pending[OF _ ExSet_transformation_I[OF transformation_refl]] .
+  using \<phi>apply_implication_pending[OF _ ExBI_transformation_I[OF transformation_refl]] .
 
 lemma introduce_Ex_pending_E:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. E x v)
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. \<exists>*x. E x v)\<close>
-  using \<phi>apply_implication_pending_E[OF _ ExSet_transformation_I[OF transformation_refl]] .
+  using \<phi>apply_implication_pending_E[OF _ ExBI_transformation_I[OF transformation_refl]] .
 
 lemma introduce_Ex_ToA:
   \<open> ToA_Construction s (S x)
-\<Longrightarrow> ToA_Construction s (ExSet S) \<close>
+\<Longrightarrow> ToA_Construction s (ExBI S) \<close>
   using \<phi>ExTyp_strip_imp by fastforce
 
 lemma introduce_Ex_ToA_subj:
   \<open> ToA_Construction s (S x \<s>\<u>\<b>\<j> Q)
-\<Longrightarrow> ToA_Construction s (ExSet S \<s>\<u>\<b>\<j> Q) \<close>
+\<Longrightarrow> ToA_Construction s (ExBI S \<s>\<u>\<b>\<j> Q) \<close>
   by (metis (full_types) Subjection_Flase Subjection_True introduce_Ex_ToA)
 
 lemma introduce_Ex_ToA_subj_P:

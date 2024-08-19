@@ -46,7 +46,7 @@ subsubsection \<open>Fiction\<close>
 
 
 fiction_space \<phi>var =
-  Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
+  Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. Itself)\<close>
             (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
   by (standard; simp add: set_eq_iff)
 

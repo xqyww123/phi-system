@@ -80,7 +80,7 @@ fun cong raw_cong ctx cterm =
     SINGLE (ALLGOALS (SOLVED' (Simplifier.asm_simp_tac ctx))) cong |> chk_simplified
   end handle Pattern.MATCH => NONE
 
-(* the version preserving name of the qualifier, useful for @{term ExSet}. *)
+(* the version preserving name of the qualifier, useful for @{term ExBI}. *)
 fun cong_qualifier cong_rule ctx cterm =
   let
     fun norm_name name th =

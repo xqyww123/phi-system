@@ -31,7 +31,7 @@ fun guess_property (phi:phi_type) ctxt =
               \<^Const>\<open>Action_Tag\<close>
                 $ (\<^Const>\<open>Transformation model_ty\<close>
                     $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T'_term)
-                    $ (\<^Const>\<open>ExSet model_ty model_ty\<close> $ Abs ("y", model_ty,
+                    $ (\<^Const>\<open>ExBI model_ty model_ty\<close> $ Abs ("y", model_ty,
                           \<^Const>\<open>Subjection model_ty\<close>
                             $ (\<^Const>\<open>\<phi>Type model_ty model_ty\<close> $ Bound 0 $ \<^Const>\<open>Itself model_ty\<close>)
                             $ (r_term $ Bound 1 $ Bound 0)))
@@ -204,7 +204,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) (phi0 : 
                   | extract (\<^Const>\<open>Action_Tag\<close>
                               $ (\<^Const>\<open>Transformation _\<close>
                                   $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T)
-                                  $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close>
+                                  $ (\<^Const>\<open>ExBI _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close>
                                         $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ itself')
                                         $ _)))
                                   $ _)
@@ -221,7 +221,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) (phi0 : 
              in (Term.fastype_of (Term.head_of T), NONE :: parse_inst_params_from_phi_term T, hint')
             end
       fun extract_oprs_from_hint (\<^Const>\<open>Transformation _\<close> $ _
-                                  $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close> $ _ $ r)))
+                                  $ (\<^Const>\<open>ExBI _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close> $ _ $ r)))
                                   $ _) = [r]
         | extract_oprs_from_hint _ = []
 
@@ -242,7 +242,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) (phi0 : 
     (*fun simp (_, ctxt) rule = rule
          |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_all_conv (fn (_, ctxt) =>
               Phi_Conv.action_tag_conv (Phi_Syntax.transformation_conv Conv.all_conv
-                (Phi_Syntax.ExSet_conv (fn (bvar, ctxtxx) =>
+                (Phi_Syntax.ExBI_conv (fn (bvar, ctxtxx) =>
                   let val turn_bvar_eq = Drule.infer_instantiate ctxtxx [(("b",0),bvar)] @{thm' HOL.eq_commute}
                    in Phi_Syntax.Subjection_conv Conv.all_conv (
                         Simplifier.rewrite (ctxtxx addsimps [turn_bvar_eq, @{thm special_Ex_def}]
@@ -255,7 +255,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) (phi0 : 
     (*val solver = if not (is_some instruction) andalso not (#is_recursive phi0)
                    then predicate_infer true
                             (fn _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _, \<^Const>\<open>Action_Tag\<close> $
-                                 (\<^Const>\<open>Transformation _\<close> $ _ $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _,
+                                 (\<^Const>\<open>Transformation _\<close> $ _ $ (\<^Const>\<open>ExBI _ _\<close> $ Abs (_, _,
                                          \<^Const>\<open>Subjection _\<close> $ _ $ (Var v $ Bound _ $ Bound _) ))
                                      $ _)
                                  $ _)) => v)
@@ -266,7 +266,7 @@ fun gen_trans_to_raw_abst (_,name) (instruction : deriving_instruction) (phi0 : 
             case Thm.concl_of sequent
               of _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _, \<^Const>\<open>Action_Tag\<close> $
                      (\<^Const>\<open>Transformation _\<close> $ _
-                         $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _,
+                         $ (\<^Const>\<open>ExBI _ _\<close> $ Abs (_, _,
                              \<^Const>\<open>Subjection _\<close> $ _ $ X ))
                          $ _)
                      $ _))

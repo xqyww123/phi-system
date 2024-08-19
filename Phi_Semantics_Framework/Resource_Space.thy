@@ -7,7 +7,7 @@ section \<open>Framework for Modular Formalization of Resources \& Fictional Res
 text \<open>Algebras used in the formalization are given in~\cite{Algebras}.\<close>
 
 theory Resource_Space
-  imports "Phi_Algebras.Phi_Fiction" "Phi_Statespace.StateFun"
+  imports "Phi_Algebras.Phi_Fiction" "Phi_Statespace.StateFun" Phi_Algebras.Phi_Algebra_Set
 begin
 
 

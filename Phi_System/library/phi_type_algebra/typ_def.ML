@@ -458,7 +458,7 @@ fun mk_ind_dest_ToA ctxt phi gen_prop =
 fun def_contains_satisfaction phi =
   let val contains_sat = Term.exists_subterm (fn Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
                                                | _ => false)
-      fun phi_contains_sat (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = phi_contains_sat X
+      fun phi_contains_sat (Const(\<^const_name>\<open>ExBI\<close>, _) $ X) = phi_contains_sat X
         | phi_contains_sat (Abs(_,_,X)) = phi_contains_sat X
         | phi_contains_sat (Const(\<^const_name>\<open>Subjection\<close>, _) $ A $ P) = contains_sat P orelse phi_contains_sat A
         | phi_contains_sat _ = false
