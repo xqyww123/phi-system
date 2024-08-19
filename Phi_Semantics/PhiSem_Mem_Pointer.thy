@@ -995,21 +995,22 @@ definition Pointer_Of :: \<open>('c,'x) \<phi> \<Rightarrow> 'v assertion \<Righ
 definition Derive_Pointer_Of :: \<open>'assertion_or_\<phi>type::{} \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>
   where \<open>Derive_Pointer_Of assn ptr \<equiv> True\<close>
 
+\<phi>reasoner_group deriving_pointer = (100, [1,3000])
+      \<open>Infer the pointer assertion from a given \<phi>-type\<close>
+  and deriving_pointer_cut = (1000, [1000,1030]) in deriving_pointer \<open>cutting\<close>
+  and deriving_pointer_derived = (30, [20,50]) in deriving_pointer \<open>\<close>
+  and deriving_pointer_fallback = (5, [5,10]) in deriving_pointer \<open>fallback\<close>
+
+declare [[ \<phi>reason_default_pattern
+    \<open>Derive_Pointer_Of ?X _\<close> \<Rightarrow> \<open>Derive_Pointer_Of ?X _\<close> (100)
+]]
+
 ML_file \<open>library/reasoning/pointer_of.ML\<close>
 
 \<phi>property_deriver Pointer_Of 100 for ( \<open>Pointer_Of _ _\<close> ) = \<open> pointer_of_deriver \<close>
 
 
 subsubsection \<open>Reasoning Rules\<close>
-
-\<phi>reasoner_group deriving_pointer = (100, [1,3000])
-      \<open>Infer the pointer assertion from a given \<phi>-type\<close>
-  and deriving_pointer_cut = (1000, [1000,1030]) in deriving_pointer \<open>cutting\<close>
-  and deriving_pointer_fallback = (5, [5,10]) in deriving_pointer \<open>fallback\<close>
-
-declare [[ \<phi>reason_default_pattern
-    \<open>Derive_Pointer_Of ?X _\<close> \<Rightarrow> \<open>Derive_Pointer_Of ?X _\<close> (100)
-]]
 
 definition \<A>merge_option :: \<open>VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>
   where \<open>\<A>merge_option _ _ _ \<equiv> True\<close>

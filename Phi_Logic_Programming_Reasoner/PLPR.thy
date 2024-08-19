@@ -184,6 +184,7 @@ type_synonym mode = action
 text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
 
 consts default :: mode
+       \<c>\<h>\<a>\<n>\<g>\<e>\<d> :: \<open>mode \<Rightarrow> mode\<close>
        MODE_GUARD :: mode \<comment> \<open>necessary condition for exploring a search branch, may instantiating the
                               goal but never instantiating the contextual premises\<close>
        NO_INST :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>") \<comment> \<open>prohibiting instantiation\<close>
@@ -191,6 +192,7 @@ consts default :: mode
        MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*deprecated!*)
        MODE_SAFE :: mode ("\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
        MODE_NO_INST_SAFE :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
+
 
 
 subsubsection \<open>Annotations for Proof Obligations\<close>
@@ -1083,8 +1085,6 @@ ML \<open>val bool_ss = Simplifier.simpset_of (Proof_Context.init_global (Thy_In
          | _ => NONE
   end)
 \<close>
-
-
 
 subsection \<open>General Rules\<close>
 
@@ -2125,6 +2125,12 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 \<phi>reasoner_ML \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] x : y\<close> %cutting (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ?X' : ?X\<close>)
   = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) Phi_Safe_Simps.equip {fix_vars=true})
     o snd\<close>
+
+lemma [\<phi>reason %cutting]:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] X : Y
+\<Longrightarrow> NO_LAMBDA_CONVERTIBLE X Y
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<c>\<h>\<a>\<n>\<g>\<e>\<d> mode] X : Y \<close>
+  unfolding Simplify_def by simp
 
 
 subsubsection \<open>Augmenting Refined Local Conditions\<close>

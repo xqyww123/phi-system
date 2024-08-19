@@ -217,6 +217,7 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
          \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
          \<Longrightarrow> Functional_Transformation_Functor (BinTree addr) (BinTree addr') T U
                 Tree.tree.set_tree (\<lambda>x. UNIV) (\<lambda>f. Tree.tree.pred_tree) (\<lambda>f P. Tree.tree.map_tree f)\<close>
+       and Pointer_Of
 
 declare [[ML_print_depth = 100]]
   
@@ -243,7 +244,7 @@ declare [[ML_print_depth = 100]]
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
          \<Longrightarrow> Functional_Transformation_Functor (Bin_Search_Tree addr K) (Bin_Search_Tree addr' K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
-
+       and Pointer_Of
 
 primrec AVL_invar
   where \<open>AVL_invar \<langle>\<rangle> \<longleftrightarrow> True\<close>
@@ -287,11 +288,12 @@ abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
             (tactic: clarsimp, 
                      rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,h,_). (k, h, the (g k))) x\<close>],
                      auto simp: fun_eq_iff intro!: rel_tree_self_map)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr
+         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
          \<Longrightarrow> Transformation_Functor (AVL_Tree addr K) (AVL_Tree addr' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
     (* and \<open> Functional_Transformation_Functor (AVL_Tree addr K) (AVL_Tree addr K) T U ran (\<lambda>_. UNIV)
                                                (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close> *)
-
+       and Pointer_Of
 
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
@@ -310,15 +312,12 @@ context
     and zero\<^sub>V :: 'v
   assumes cmp: \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> CMP u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 < k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
       and eq : \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> Eq u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 = k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>  
-      (*and [\<phi>reason add]: \<open>Semantic_Type K TY\<^sub>K\<close>  \<comment> \<open>specify the semantic type of K\<close>
-      and [\<phi>reason add]: \<open>Semantic_Type V TY\<^sub>V\<close>*)
       and [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> K) K zero\<^sub>K\<close>  \<comment> \<open>specify the semantic zero value of K\<close>
       and [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> V) V zero\<^sub>V\<close>
 begin
 
 proc lookup_bintree:
-  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
-            tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<close>
+  input    \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>k \<in> dom (lookup_tree tree) \<and> sorted_lookup_tree tree\<close>
   output   \<open>tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
             the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
@@ -348,7 +347,7 @@ proc lookup_bintree:
 \<medium_right_bracket> .
 
 proc (nodef) lookup_bst:
-  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
+  input    \<open>f \<Ztypecolon> \<r>\<e>\<f> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>k \<in> dom f\<close>
   output   \<open>the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
   unfolding Bin_Search_Tree.unfold
@@ -358,8 +357,7 @@ proc (nodef) lookup_bst:
 
 
 proc defined_bintree:
-  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
-            tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<close>
+  input    \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   premises \<open>sorted_lookup_tree tree\<close>
   output   \<open>k \<in> dom (lookup_tree tree) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma>
             tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<close>
@@ -393,7 +391,7 @@ proc defined_bintree:
 
 
 proc (nodef) defined_bst:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
+  input  \<open>f \<Ztypecolon> \<r>\<e>\<f> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
   output \<open>k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
   unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
@@ -401,20 +399,10 @@ proc (nodef) defined_bst:
 \<medium_right_bracket> .
 
 
-(*
-abbreviation \<open>Bst_Node \<equiv> \<lbrace>
-                            left: \<bbbP>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V),
-                            data: \<lbrace> k: K, v: V \<rbrace>,
-                            right: \<bbbP>\<t>\<r> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V)
-                          \<rbrace> \<close>  *)
-
 proc insert_bintree:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<heavy_comma>
-          tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace> \<close>
+  input  \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
   output \<open>insert_tree k v tree \<Ztypecolon> BinTree addr' \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> Ptr
-          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+          addr' \<Ztypecolon> \<v>\<a>\<l> Ptr \<s>\<u>\<b>\<j> addr'. \<top>\<close>
   is [recursive]
   is [routine]
 \<medium_left_bracket>
@@ -451,13 +439,9 @@ proc insert_bintree:
 
 
 proc (nodef) insert_bst:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
-          v \<Ztypecolon> \<v>\<a>\<l> V\<heavy_comma>
-          f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
+  input  \<open>f \<Ztypecolon> \<r>\<e>\<f> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> Bin_Search_Tree addr' K V\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> Ptr
-          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+          addr' \<Ztypecolon> \<v>\<a>\<l> Ptr \<s>\<u>\<b>\<j> addr'. \<top>\<close>
   unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
   insert_bintree (addr, k, v)
@@ -473,8 +457,7 @@ proc Max:
 
 
 proc height_of:
-  input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma>
-            tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
+  input    \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
   premises \<open>AVL_invar tree\<close>
   output   \<open>tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
             height tree \<Ztypecolon> \<v>\<a>\<l> \<nat> \<close>
@@ -493,8 +476,7 @@ proc height_of:
 
 
 proc maintain_i:
-  input    \<open>\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<Ztypecolon> BinTree a\<^sub>D \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
-            a\<^sub>D \<Ztypecolon> \<v>\<a>\<l> Ptr\<close>
+  input    \<open>\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<Ztypecolon> \<r>\<e>\<f> BinTree a\<^sub>D \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
 
   premises \<open>sorted_lookup_tree (\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle>) \<and>
             AVL_invar B \<and> AVL_invar E \<and>
@@ -630,10 +612,8 @@ abbreviation \<open>Avl_Node \<equiv> \<lbrace>
                           \<rbrace> \<close>
 
 proc insert_avl_i:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
-          v \<Ztypecolon> \<v>\<a>\<l> V\<heavy_comma>
-          tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
+  input  \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
+          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
 
   premises \<open>sorted_lookup_tree tree \<and> AVL_invar tree \<close>
 
@@ -686,8 +666,7 @@ proc insert_avl_i:
 
 
 proc (nodef) insert_avl:
-  input  \<open>f \<Ztypecolon> AVL_Tree addr K V\<heavy_comma>
-          addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma>
+  input  \<open>f \<Ztypecolon> \<r>\<e>\<f> AVL_Tree addr K V\<heavy_comma>
           k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
           v \<Ztypecolon> \<v>\<a>\<l> V\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> AVL_Tree addr' K V\<heavy_comma>

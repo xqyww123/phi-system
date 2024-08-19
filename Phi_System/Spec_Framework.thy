@@ -642,17 +642,19 @@ subsection \<open>Zero Value\<close>
 definition Semantic_Zero_Val :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where "Semantic_Zero_Val ty T x \<longleftrightarrow> (ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longrightarrow> (\<exists>v. Zero ty = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)))"
 
-declare [[\<phi>reason_default_pattern \<open>Semantic_Zero_Val _ ?T _\<close> \<Rightarrow> \<open>Semantic_Zero_Val _ ?T _\<close> (100) ]]
+declare [[\<phi>reason_default_pattern \<open>Semantic_Zero_Val _ ?T _\<close> \<Rightarrow> \<open>Semantic_Zero_Val _ ?T ?varz\<close> (100) ]]
 
 \<phi>reasoner_group semantic_zero_val_all = (100, [0, 3000]) for \<open>Semantic_Zero_Val TY T x\<close>
     \<open>giving the semantic zero value on the abstraction side\<close>
   and semantic_zero_val_fail = (0, [0,0]) in semantic_zero_val_all
     \<open>failure\<close>
-  and semantic_zero_val_brute = (1, [1,1]) in semantic_zero_val_all and > semantic_zero_val_fail
+  and semantic_zero_val_fallback = (10, [1,20]) in semantic_zero_val_all and > semantic_zero_val_fail
     \<open>reducing to semantic level, only used in deriving rules\<close>
-  and semantic_zero_val_cut = (1000, [1000, 1000]) in semantic_zero_val_all and > semantic_zero_val_brute
+  and semantic_zero_val_cut = (1000, [1000, 1000]) in semantic_zero_val_all
     \<open>cutting rules\<close>
-  and semantic_zero_val_derived = (50, [50,50]) in semantic_zero_val_all and < semantic_zero_val_cut
+  and semantic_zero_val_derived = (50, [50,50]) in semantic_zero_val_all
+                                               and < semantic_zero_val_cut
+                                               and > semantic_zero_val_fallback
     \<open>derived rules\<close>
 
 subsubsection \<open>Basic Rules\<close>
@@ -683,6 +685,24 @@ lemma Semantic_Zero_Val_EIF_sat:
 
 bundle Semantic_Zero_Val_EIF_brute = (*Semantic_Zero_Val_brute[\<phi>reason default %semantic_zero_val_brute]*)
                                      Semantic_Zero_Val_EIF_sat[\<phi>reason %extract_pure+10]
+
+(*
+lemma [\<phi>reason %semantic_zero_val_fallback for \<open>Semantic_Zero_Val _ _ _\<close>
+                                        except \<open>Semantic_Zero_Val ?var _ _\<close> ]:
+  \<open> Semantic_Zero_Val TY' U z
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = TY'
+\<Longrightarrow> Semantic_Zero_Val TY  U z \<close>
+  unfolding Premise_def
+  by simp
+*)
+
+lemma [\<phi>reason %semantic_zero_val_cut for \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> (_ :: (VAL,_) \<phi>)) _ _\<close> ]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<c>\<h>\<a>\<n>\<g>\<e>\<d> default] TY : \<t>\<y>\<p>\<e>\<o>\<f> T
+\<Longrightarrow> Semantic_Zero_Val TY U z
+\<Longrightarrow> Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) U z \<close>
+  for T :: \<open>(VAL,'x) \<phi>\<close>
+  unfolding \<r>Guard_def Simplify_def
+  by simp
 
 
 subsection \<open>Equality\<close>
