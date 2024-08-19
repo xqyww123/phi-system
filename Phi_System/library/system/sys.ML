@@ -41,13 +41,13 @@ val cast = Phi_Working_Mode.cast
 val cast_exception = Phi_Working_Mode.cast_exception
 
 val conv_E_thms =
-  @{thms add_0_right[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
-         add_0_right[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
-         add_0_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
-         add_0_left[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
+  @{thms add_0_right[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
+         add_0_right[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma BI\<close>, folded atomize_eq]
+         add_0_left[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
+         add_0_left[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma BI\<close>, folded atomize_eq]
          zero_fun[folded atomize_eq]
-         mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
-         mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+         mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
+         mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
    }
 
 fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =

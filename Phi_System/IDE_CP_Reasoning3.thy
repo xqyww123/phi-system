@@ -435,7 +435,7 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
 \<Longrightarrow> if C\<^sub>R then (If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join) \<and>\<^sub>\<r> (Z' = Z * Z\<^sub>R)
           else Identity_Element\<^sub>I (snd x \<Ztypecolon> T\<^sub>R) Any \<and>\<^sub>\<r> Z' = Z
 \<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z' @tag br_join \<close>
-  for Z' :: \<open>'c::sep_magma_1 set\<close>
+  for Z' :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
             Orelse_shortcut_def Ant_Seq_def Identity_Element\<^sub>I_def
   by ((cases P; cases C\<^sub>R; clarsimp), blast, force, blast)
@@ -689,13 +689,13 @@ subsubsection \<open>Unfold\<close>
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L (N * (R1 * R2)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (N * R1 * R2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for N :: \<open>'a::sep_semigroup set\<close>
+  for N :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P (L1 * (L2 * L3)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (L1 * L2 * L3) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_semigroup set\<close>
+  for R :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
 
@@ -704,31 +704,31 @@ subsubsection \<open>Eliminate Void Hole\<close>
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (R * 1) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L (R' * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (R' * 1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (L * 1) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (1 * L) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 (* TODO!!!

@@ -188,7 +188,7 @@ val named_ex =
 
 val named_ExBI =
   Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>)
-    {lhss = [\<^term>\<open>ExBI (P :: 'a <named> 'names \<Rightarrow> 'b set)\<close>],
+    {lhss = [\<^term>\<open>ExBI (P :: 'a <named> 'names \<Rightarrow> 'b BI)\<close>],
      proc = K (simproc_of (K ExNu_expansion))}
 
 val named_metaAll =

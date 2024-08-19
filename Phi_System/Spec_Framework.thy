@@ -74,9 +74,9 @@ unspecified_type FIC
 unspecified_type FIC_N
 
 type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
-type_synonym 'a assertion = \<open>'a set\<close>
-type_synonym assn = \<open>fiction set\<close>
-type_synonym rassn = \<open>resource set\<close>
+type_synonym 'a assertion = \<open>'a BI\<close>
+type_synonym assn = \<open>fiction BI\<close>
+type_synonym rassn = \<open>resource BI\<close>
 type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Resource_Space.kind"
 
 setup \<open>Sign.mandatory_path "FIC"\<close>
@@ -99,29 +99,36 @@ consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) unital_homo_inter
 
 interpretation FIC: fictional_space FIC.DOMAIN INTERPRET .
 
-definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> FIC.INTERP fic"
+definition "INTERP_RES fic \<equiv> BI_lift RES.SPACE \<sqinter> FIC.INTERP fic \<s>\<u>\<b>\<j> fic \<in> FIC.SPACE"
   \<comment> \<open>Interpret a fiction\<close>
 
 lemma In_INTERP_RES:
-  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> r \<in> FIC.INTERP fic\<close>
-  unfolding INTERP_RES_def by simp
+  \<open>r \<Turnstile> INTERP_RES fic \<longleftrightarrow> r \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> r \<Turnstile> FIC.INTERP fic\<close>
+  unfolding INTERP_RES_def by simp blast
 
 definition INTERP_SPEC :: \<open>assn \<Rightarrow> rassn\<close>
   \<comment> \<open>Interpret a fictional specification\<close>
-  where "INTERP_SPEC T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
+  where "INTERP_SPEC T = BI_Monad_Comb (INTERP_RES `\<^sub>I T)"
 
 lemma INTERP_SPEC:
-  \<open>res \<in> INTERP_SPEC T \<longleftrightarrow> (\<exists>fic. fic \<Turnstile> T \<and> res \<in> INTERP_RES fic)\<close>
-  unfolding INTERP_SPEC_def Satisfaction_def
-  by simp
+  \<open>res \<Turnstile> INTERP_SPEC T \<longleftrightarrow> (\<exists>fic. fic \<Turnstile> T \<and> res \<Turnstile> INTERP_RES fic)\<close>
+  unfolding INTERP_SPEC_def
+  by simp blast
 
-lemma INTERP_SPEC_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_SPEC A \<subseteq> INTERP_SPEC B\<close>
-  unfolding INTERP_SPEC_def subset_iff by simp blast
+lemma INTERP_SPEC_sub[intro, simp]: \<open>A \<le> B \<Longrightarrow> INTERP_SPEC A \<le> INTERP_SPEC B\<close>
+  unfolding INTERP_SPEC_def less_eq_BI_iff by simp blast
 
 lemma INTERP_SPEC_plus[iff]:
   \<open>INTERP_SPEC (A + B) = INTERP_SPEC A + INTERP_SPEC B\<close>
-  unfolding INTERP_SPEC_def plus_set_def by simp blast
+  unfolding BI_eq_iff
+  by (simp add: INTERP_SPEC) blast
 
+lemma INTERP_SPEC_0[iff]:
+  \<open> INTERP_SPEC 0 = 0 \<close>
+  unfolding BI_eq_iff
+  by (simp add: INTERP_SPEC)
+
+(*
 lemma INTERP_SPEC_empty[intro, simp]:
   \<open>S = {} \<Longrightarrow> INTERP_SPEC S = {}\<close>
   unfolding INTERP_SPEC_def set_eq_iff by simp
@@ -130,6 +137,7 @@ lemma INTERP_SPEC_0[simp]:
   \<open>INTERP_SPEC 0  = 0\<close>
   \<open>INTERP_SPEC {} = {}\<close>
   unfolding INTERP_SPEC_def zero_set_def by simp+
+*)
 
 ML_file \<open>library/spec_framework/fiction_space.ML\<close>
 ML_file \<open>library/spec_framework/fiction_space_more.ML\<close>
@@ -445,7 +453,7 @@ lemma [\<phi>reason add]:
   unfolding Action_Tag_def SType_Of'_def Inhabited_def Satisfiable_def subset_iff            
   by (auto,
       metis (no_types, lifting) ExBI_expn Semantic_Type'_def Well_Type_unique verit_sko_ex',
-      metis ExBI_expn_set Satisfaction_def Semantic_Type'_def tfl_some)
+      metis ExBI_expn Satisfaction_def Semantic_Type'_def tfl_some)
 
 subsubsection \<open>Auxiliary Reasoners\<close>
 
@@ -884,7 +892,7 @@ qed
 
 subsection \<open>Carrier Set of Separation Algebra\<close>
 
-definition Within_Carrier_Set :: \<open>'c::sep_carrier set \<Rightarrow> bool\<close>
+definition Within_Carrier_Set :: \<open>'c::sep_carrier BI \<Rightarrow> bool\<close>
   where \<open>Within_Carrier_Set A \<longleftrightarrow> (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v)\<close>
 
 definition Carrier_Set :: \<open>('c::sep_carrier,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
@@ -1034,7 +1042,7 @@ lemma [\<phi>reason %carrier_set_cut]:
   by simp
 
 lemma [\<phi>reason %carrier_set_cut]:
-  \<open> Within_Carrier_Set (1 :: 'a::sep_carrier_1 set) \<close>
+  \<open> Within_Carrier_Set (1 :: 'a::sep_carrier_1 BI) \<close>
   unfolding Within_Carrier_Set_def
   by simp
 
@@ -1128,7 +1136,7 @@ proof clarsimp
   *)
 
 
-
+(*
 subsection \<open>Injective\<close>
 
 lemma is_singleton_I''[\<phi>reason 1000]:
@@ -1141,7 +1149,7 @@ lemma is_singleton_I''[\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
   by (rule is_singleton_I''; simp add: Is_Functional_def)
-
+*)
 
 subsection \<open>Reflexive Separation\<close>
 
@@ -1197,112 +1205,114 @@ section \<open>Specification of Monadic States\<close>
 
 definition StrictState :: "('ret \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
-                          \<Rightarrow> 'ret comp set"
-  where "StrictState T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
-                              | Abnormal val x \<Rightarrow> x \<in> E val
-                              | Invalid \<Rightarrow> False
-                              | NonTerm \<Rightarrow> False
-                              | AssumptionBroken \<Rightarrow> False
+                          \<Rightarrow> 'ret comp BI"
+  where "StrictState T E = BI {s. case s of Success val x \<Rightarrow> x \<Turnstile> T val
+                                    | Abnormal val x \<Rightarrow> x \<Turnstile> E val
+                                    | Invalid \<Rightarrow> False
+                                    | NonTerm \<Rightarrow> False
+                                    | AssumptionBroken \<Rightarrow> False
                   }"
 
 definition LooseState  :: "('ret \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
-                          \<Rightarrow> 'ret comp set"
-  where  "LooseState T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
-                              | Abnormal val x \<Rightarrow> x \<in> E val
-                              | Invalid \<Rightarrow> False
-                              | NonTerm \<Rightarrow> True
-                              | AssumptionBroken \<Rightarrow> True
+                          \<Rightarrow> 'ret comp BI"
+  where  "LooseState T E = BI {s. case s of Success val x \<Rightarrow> x \<Turnstile> T val
+                                    | Abnormal val x \<Rightarrow> x \<Turnstile> E val
+                                    | Invalid \<Rightarrow> False
+                                    | NonTerm \<Rightarrow> True
+                                    | AssumptionBroken \<Rightarrow> True
                   }"
 
 lemma StrictState_expn[iff]:
-        "Success vs x \<in> StrictState T E \<equiv> x \<in> T vs"
-        "Abnormal v x \<in> StrictState T E \<equiv> x \<in> E v"
-        "\<not> (Invalid \<in> StrictState T E)"
-        "\<not> (NonTerm \<in> StrictState T E)"
-        "\<not> (AssumptionBroken \<in> StrictState T E)"
-        "\<not> {Invalid} \<subseteq> StrictState T E"
-        "\<not> {NonTerm} \<subseteq> StrictState T E"
-        "\<not> {AssumptionBroken} \<subseteq> StrictState T E"
+        "Success vs x \<Turnstile> StrictState T E \<equiv> x \<Turnstile> T vs"
+        "Abnormal v x \<Turnstile> StrictState T E \<equiv> x \<Turnstile> E v"
+        "\<not> (Invalid \<Turnstile> StrictState T E)"
+        "\<not> (NonTerm \<Turnstile> StrictState T E)"
+        "\<not> (AssumptionBroken \<Turnstile> StrictState T E)"
+        "\<not> Itself Invalid \<le> StrictState T E"
+        "\<not> Itself NonTerm \<le> StrictState T E"
+        "\<not> Itself AssumptionBroken \<le> StrictState T E"
   and LooseState_expn[iff]:
-        "Success vs x \<in> LooseState T E \<equiv> x \<in> T vs"
-        "Abnormal v x \<in> LooseState T E \<equiv> x \<in> E v"
-        "\<not> (Invalid \<in> LooseState T E)"
-        "(NonTerm \<in> LooseState T E)"
-        "(AssumptionBroken \<in> LooseState T E)"
-        "\<not> {Invalid} \<subseteq> LooseState T E"
-        "{NonTerm} \<subseteq> LooseState T E"
-        "{AssumptionBroken} \<subseteq> LooseState T E"
-  by (simp_all add: StrictState_def LooseState_def)
+        "Success vs x \<Turnstile> LooseState T E \<equiv> x \<Turnstile> T vs"
+        "Abnormal v x \<Turnstile> LooseState T E \<equiv> x \<Turnstile> E v"
+        "\<not> (Invalid \<Turnstile> LooseState T E)"
+        "(NonTerm \<Turnstile> LooseState T E)"
+        "(AssumptionBroken \<Turnstile> LooseState T E)"
+        "\<not> Itself Invalid \<le> LooseState T E"
+        "Itself NonTerm \<le> LooseState T E"
+        "Itself AssumptionBroken \<le> LooseState T E"
+  by (simp_all add: StrictState_def LooseState_def less_eq_BI_iff)
 
 lemma LooseState_expn' :
-    "x \<in> LooseState T E \<longleftrightarrow> x = NonTerm
+    "x \<Turnstile> LooseState T E \<longleftrightarrow> x = NonTerm
                  \<or> x = AssumptionBroken
-                 \<or> (\<exists>x' v. x = Success v x' \<and> x' \<in> T v)
-                 \<or> (\<exists>x' v. x = Abnormal v x' \<and> x' \<in> E v)"
+                 \<or> (\<exists>x' v. x = Success v x' \<and> x' \<Turnstile> T v)
+                 \<or> (\<exists>x' v. x = Abnormal v x' \<and> x' \<Turnstile> E v)"
   by (cases x) simp_all
 
 lemma StrictState_elim[elim]:
-    "s \<in> StrictState T E
-\<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<in> T v \<Longrightarrow> C)
-\<Longrightarrow> (\<And>x v. s = Abnormal v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
+    "s \<Turnstile> StrictState T E
+\<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<Turnstile> T v \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x v. s = Abnormal v x \<Longrightarrow> x \<Turnstile> E v \<Longrightarrow> C)
 \<Longrightarrow> C" by (cases s) auto
 
 lemma StrictState_intro[intro]:
-    " x \<in> T v \<Longrightarrow> Success v x \<in> StrictState T E"
-    " x \<in> E a \<Longrightarrow> Abnormal a x \<in> StrictState T E"
+    " x \<Turnstile> T v \<Longrightarrow> Success v x \<Turnstile> StrictState T E"
+    " x \<Turnstile> E a \<Longrightarrow> Abnormal a x \<Turnstile> StrictState T E"
   by simp_all
 
 lemma LooseState_E[elim]:
-    "s \<in> LooseState T E
-\<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<in> T v \<Longrightarrow> C)
-\<Longrightarrow> (\<And>x v. s = Abnormal v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
+    "s \<Turnstile> LooseState T E
+\<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<Turnstile> T v \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x v. s = Abnormal v x \<Longrightarrow> x \<Turnstile> E v \<Longrightarrow> C)
 \<Longrightarrow> (s = NonTerm \<Longrightarrow> C)
 \<Longrightarrow> (s = AssumptionBroken \<Longrightarrow> C)
 \<Longrightarrow> C"
   by (cases s) auto
 
 lemma LooseState_I[intro]:
-  "x \<in> T v \<Longrightarrow> Success v x \<in> LooseState T E"
-  "x \<in> E a \<Longrightarrow> Abnormal a x \<in> LooseState T E"
-  "NonTerm \<in> LooseState T E"
-  "AssumptionBroken \<in> LooseState T E"
+  "x \<Turnstile> T v \<Longrightarrow> Success v x \<Turnstile> LooseState T E"
+  "x \<Turnstile> E a \<Longrightarrow> Abnormal a x \<Turnstile> LooseState T E"
+  "NonTerm \<Turnstile> LooseState T E"
+  "AssumptionBroken \<Turnstile> LooseState T E" (*XXXXXXXXX TODO ERR*)
   by simp_all
 
 lemma LooseState_upgrade:
-  "s \<in> LooseState T E \<Longrightarrow> s \<noteq> AssumptionBroken \<Longrightarrow> s \<noteq> NonTerm \<Longrightarrow> s \<in> StrictState T E"
+  "s \<Turnstile> LooseState T E \<Longrightarrow> s \<noteq> AssumptionBroken \<Longrightarrow> s \<noteq> NonTerm \<Longrightarrow> s \<Turnstile> StrictState T E"
   by (cases s) auto
 
-lemma StrictState_degrade: "s \<in> StrictState T E \<Longrightarrow> s \<in> LooseState T E" by (cases s) auto
+lemma StrictState_degrade: "s \<Turnstile> StrictState T E \<Longrightarrow> s \<Turnstile> LooseState T E" by (cases s) auto
 
 lemma LooseState_introByStrict:
-  "(s \<noteq> AssumptionBroken \<Longrightarrow> s \<noteq> NonTerm \<Longrightarrow> s \<in> StrictState T E) \<Longrightarrow> s \<in> LooseState T E"
+  "(s \<noteq> AssumptionBroken \<Longrightarrow> s \<noteq> NonTerm \<Longrightarrow> s \<Turnstile> StrictState T E) \<Longrightarrow> s \<Turnstile> LooseState T E"
   by (cases s) auto
 
 lemma StrictState_subset:
-  \<open>(\<And>v. A v \<subseteq> A' v) \<Longrightarrow> (\<And>v. E v \<subseteq> E' v) \<Longrightarrow> StrictState A E \<subseteq> StrictState A' E'\<close>
-  unfolding subset_iff StrictState_def by simp
+  \<open>(\<And>v. A v \<le> A' v) \<Longrightarrow> (\<And>v. E v \<le> E' v) \<Longrightarrow> StrictState A E \<le> StrictState A' E'\<close>
+  unfolding less_eq_BI_iff StrictState_def by simp
 
 lemma StrictState_subset'[intro]:
-  \<open>(\<And>v. \<forall>s. s \<in> A v \<longrightarrow> s \<in> A' v) \<Longrightarrow> (\<And>v. \<forall>s. s \<in> E v \<longrightarrow> s \<in> E' v) \<Longrightarrow> s \<in> StrictState A E \<Longrightarrow> s \<in> StrictState A' E'\<close>
+  \<open>(\<And>v. \<forall>s. s \<Turnstile> A v \<longrightarrow> s \<Turnstile> A' v) \<Longrightarrow> (\<And>v. \<forall>s. s \<Turnstile> E v \<longrightarrow> s \<Turnstile> E' v) \<Longrightarrow> s \<Turnstile> StrictState A E \<Longrightarrow> s \<Turnstile> StrictState A' E'\<close>
   unfolding StrictState_def by (cases s; simp)
 
 lemma LooseState_subset:
-  \<open>(\<And>v. A v \<subseteq> A' v) \<Longrightarrow> (\<And>v. E v \<subseteq> E' v) \<Longrightarrow> LooseState A E \<subseteq> LooseState A' E'\<close>
-  unfolding subset_iff LooseState_def by simp
+  \<open>(\<And>v. A v \<le> A' v) \<Longrightarrow> (\<And>v. E v \<le> E' v) \<Longrightarrow> LooseState A E \<le> LooseState A' E'\<close>
+  unfolding less_eq_BI_iff LooseState_def by simp
+
 lemma LooseState_subset'[intro]:
-  \<open>(\<And>v. \<forall>s. s \<in> A v \<longrightarrow> s \<in> A' v) \<Longrightarrow> (\<And>v. \<forall>s. s \<in> E v \<longrightarrow> s \<in> E' v) \<Longrightarrow> s \<in> LooseState A E \<Longrightarrow> s \<in> LooseState A' E'\<close>
+  \<open>(\<And>v. \<forall>s. s \<Turnstile> A v \<longrightarrow> s \<Turnstile> A' v) \<Longrightarrow> (\<And>v. \<forall>s. s \<Turnstile> E v \<longrightarrow> s \<Turnstile> E' v) \<Longrightarrow> s \<Turnstile> LooseState A E \<Longrightarrow> s \<Turnstile> LooseState A' E'\<close>
   unfolding LooseState_def by (cases s; simp)
 
 
 lemma LooseState_plus[iff]:
 (*  \<open>LooseState (A + B) E   = LooseState A E + LooseState B E\<close> *)
   \<open>LooseState X (\<lambda>v. EA v + EB v) = LooseState X EA + LooseState X EB\<close>
-  unfolding set_eq_iff LooseState_def by simp_all
+  unfolding BI_eq_iff LooseState_def by simp_all
+
 lemma StrictState_plus[iff]:
 (*  \<open>StrictState (A + B) E   = StrictState A E  + StrictState B E\<close> *)
   \<open>StrictState X (\<lambda>v. EA v + EB v) = StrictState X EA + StrictState X EB\<close>
-  unfolding set_eq_iff StrictState_def by simp_all
+  unfolding BI_eq_iff StrictState_def by simp_all
 
 abbreviation \<open>Void \<equiv> (1::assn)\<close>
 
@@ -1313,11 +1323,11 @@ declare INTERP_SPEC[\<phi>expns]
 
 lemma  INTERP_SPEC_subj[\<phi>expns]:
   \<open> INTERP_SPEC (S \<s>\<u>\<b>\<j> P) = (INTERP_SPEC S \<s>\<u>\<b>\<j> P) \<close>
-  unfolding INTERP_SPEC_def by (simp add: set_eq_iff Subjection_expn_set, blast)
+  unfolding INTERP_SPEC_def by (simp add: BI_eq_iff, blast)
 
 lemma  INTERP_SPEC_ex[\<phi>expns]:
   \<open> INTERP_SPEC (ExBI S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
-  unfolding INTERP_SPEC_def by (simp add: set_eq_iff ExBI_expn_set, blast)
+  unfolding INTERP_SPEC_def by (simp add: BI_eq_iff, blast)
 
 abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [17,16] 16)
   where \<open>COMMA \<equiv> (*)\<close>
@@ -1331,7 +1341,8 @@ definition \<phi>Procedure :: "'ret proc
                         \<Rightarrow> (ABNM \<Rightarrow> assn)
                         \<Rightarrow> bool"
   where "\<phi>Procedure f T U E \<longleftrightarrow>
-    (\<forall>comp R. comp \<in> INTERP_SPEC (T * R) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC (U v * R)) (\<lambda>v. INTERP_SPEC (E v * R)))"
+    (\<forall>comp R. comp \<Turnstile> INTERP_SPEC (T * R) \<longrightarrow>
+        BI_lift (f comp) \<le> LooseState (\<lambda>v. INTERP_SPEC (U v * R)) (\<lambda>v. INTERP_SPEC (E v * R)))"
 
 abbreviation \<phi>Procedure_no_exception
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
@@ -1351,11 +1362,12 @@ translations
 
 lemma \<phi>Procedure_alt:
   \<open>\<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> U \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_SPEC (T * {r}) \<longrightarrow> f comp \<subseteq> LooseState (\<lambda>v. INTERP_SPEC (U v * {r})) (\<lambda>v. INTERP_SPEC (E v * {r})))\<close>
+\<longleftrightarrow> (\<forall>comp r. comp \<Turnstile> INTERP_SPEC (T * Itself r)
+        \<longrightarrow> BI_lift (f comp) \<le> LooseState (\<lambda>v. INTERP_SPEC (U v * Itself r)) (\<lambda>v. INTERP_SPEC (E v * Itself r)))\<close>
   apply rule
   apply ((unfold \<phi>Procedure_def)[1], blast)
   unfolding \<phi>Procedure_def INTERP_SPEC subset_iff
-  apply (clarsimp simp add: times_set_def split_comp_All INTERP_SPEC_def Satisfaction_def)
+  apply (clarsimp simp add: less_eq_BI_iff times_set_def split_comp_All INTERP_SPEC_def)
   by fastforce
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
@@ -1400,8 +1412,8 @@ lemma View_Shift_imply_P:
 lemma view_shift_by_implication[intro?, \<phi>reason 10]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
 \<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def View_Shift_def INTERP_SPEC_def Satisfaction_def
-  by (clarsimp simp add: set_mult_expn) blast
+  unfolding Transformation_def View_Shift_def INTERP_SPEC_def
+  by clarsimp blast
 
 lemma view_shift_0[simp]:
   \<open> 0 \<s>\<h>\<i>\<f>\<t>\<s> X \<w>\<i>\<t>\<h> any \<close>
@@ -1470,23 +1482,24 @@ section \<open>Hoare Rules \& SL Rules\<close>
 subsection \<open>Fundamental Rules\<close>
 
 lemma \<phi>SKIP[simp,intro!]: "\<p>\<r>\<o>\<c> det_lift (Success v) \<lbrace> T v \<longmapsto> T \<rbrace>"
-  unfolding \<phi>Procedure_def det_lift_def by clarsimp
+  unfolding \<phi>Procedure_def det_lift_def less_eq_BI_iff by clarsimp
 
 lemma \<phi>SEQ:
    "\<p>\<r>\<o>\<c> f \<lbrace> A \<longmapsto> B \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> (\<And>vs. \<p>\<r>\<o>\<c> g vs \<lbrace> B vs \<longmapsto> C \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f \<bind> (\<lambda>v. g v)) \<lbrace> A \<longmapsto> C \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
-  unfolding \<phi>Procedure_def bind_def apply (clarsimp simp add: subset_iff)
+  unfolding \<phi>Procedure_def bind_def apply (clarsimp simp add: less_eq_BI_iff)
   subgoal for comp R x s
     apply (cases s; clarsimp; cases x; clarsimp; blast) . .
 
 lemma \<phi>frame:
   " \<p>\<r>\<o>\<c> f \<lbrace> A \<longmapsto> B \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A * R \<longmapsto> \<lambda>ret. B ret * R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>ex. E ex * R) "
-  unfolding \<phi>Procedure_def subset_iff
+  unfolding \<phi>Procedure_def less_eq_BI_iff
   apply clarify subgoal premises prems for comp R' s
     using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R * R'\<close>],
-          simplified mult.assoc[symmetric], THEN mp, OF prems(2)] prems(3) by presburger .
+          simplified mult.assoc[symmetric], THEN mp, OF prems(2)] prems(3)
+    by blast .
 
 lemma \<phi>Satisfiable:
   \<open>(Satisfiable X \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
@@ -1515,9 +1528,8 @@ lemma \<phi>CONSEQ:
 \<Longrightarrow> (\<And>ret. B ret \<s>\<h>\<i>\<f>\<t>\<s> B' ret \<w>\<i>\<t>\<h> Any2)
 \<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<w>\<i>\<t>\<h> Any3)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A' \<longmapsto> B' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' "
-  unfolding \<phi>Procedure_def View_Shift_def subset_iff Satisfaction_def
-  apply clarsimp
-  by (smt (verit, del_insts) LooseState_expn')
+  unfolding \<phi>Procedure_def View_Shift_def less_eq_BI_iff
+  by (clarsimp, smt (verit, del_insts) LooseState_expn')
 
 subsection \<open>Helper Rules\<close>
 
@@ -1562,14 +1574,14 @@ subsubsection \<open>Normalization in Precondition\<close>
 lemma norm_precond_conj:
   "(\<p>\<r>\<o>\<c> f \<lbrace> T \<s>\<u>\<b>\<j> P \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (P \<longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )"
   unfolding \<phi>Procedure_def
-  by (simp add: INTERP_SPEC_subj Subjection_expn_set) blast
+  by (simp add: INTERP_SPEC_subj) blast
 
 lemmas norm_precond_conj_metaeq[unfolded atomize_eq[symmetric]] = norm_precond_conj
 
 lemma norm_precond_ex:
   "(\<p>\<r>\<o>\<c> f \<lbrace> ExBI X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (\<forall>x. \<p>\<r>\<o>\<c> f \<lbrace> X x \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)"
   unfolding \<phi>Procedure_def
-  by (simp add: INTERP_SPEC_ex ExBI_expn_set) blast
+  by (simp add: INTERP_SPEC_ex) blast
 
 
 ML_file \<open>library/syntax/syntax0.ML\<close>

@@ -437,7 +437,7 @@ hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes
 
 subsubsection \<open>Reasoning Goals Embedded in BI Assertion\<close>
 
-definition Subj_Reasoning :: \<open> 'p set \<Rightarrow> bool \<Rightarrow> 'p set \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
+definition Subj_Reasoning :: \<open> 'p BI \<Rightarrow> bool \<Rightarrow> 'p BI \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
   where \<open>Subj_Reasoning \<equiv> Subjection\<close>
 
 lemma [\<phi>reason 1000]:

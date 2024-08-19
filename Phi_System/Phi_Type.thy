@@ -3379,7 +3379,7 @@ lemma [\<phi>reason_template default %ToA_derived_red ]:
   \<open> Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y  @tag \<T>\<P>)
 \<Longrightarrow> NO_SIMP ((x \<Ztypecolon> F zero) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag \<T>\<P>) \<close>
-  for R :: \<open>'c::sep_magma_1 set\<close>
+  for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Action_Tag_def
   using transformation_bi_frame
   by fastforce
@@ -3390,7 +3390,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 \<Longrightarrow> NO_MATCH zero zero' @tag \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag \<T>\<P>)
 \<Longrightarrow> NO_SIMP ((x \<Ztypecolon> F zero') * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag \<T>\<P>) \<close>
-  for R :: \<open>'c::sep_magma_1 set\<close>
+  for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   using transformation_bi_frame
   by fastforce
@@ -3431,7 +3431,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Closed_Semimodule_Zero F zero
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>) \<close>
-  for R :: \<open>'c::sep_magma_1 set\<close>
+  for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def
   by simp
 
@@ -3441,7 +3441,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 \<Longrightarrow> NO_MATCH zero zero' @tag \<A>_template_reason None
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F zero' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>) \<close>
-  for R :: \<open>'c::sep_magma_1 set\<close>
+  for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def Simplify_def Action_Tag_def
   by simp
 
@@ -3954,8 +3954,8 @@ lemma ToA_mapper_MOne_tgt
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : T\<^sub>1 \<^emph>[C\<^sub>R] R \<mapsto> U\<^sub>1 \<^emph>[C\<^sub>R] R
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : F' a \<^emph>[C\<^sub>W] W \<mapsto> G' b \<^emph>[C\<^sub>W] W
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> apfst I\<^sub>1 o h \<s>\<e>\<t>\<t>\<e>\<r> s o apfst E\<^sub>1 \<i>\<n> D \<close>
-  for F :: \<open>'a::plus \<Rightarrow> 'b \<Rightarrow> 'c::sep_magma set\<close>
-  and T\<^sub>1 :: \<open>'b2 \<Rightarrow> 'c set\<close>
+  for F :: \<open>'a::plus \<Rightarrow> 'b \<Rightarrow> 'c::sep_magma BI\<close>
+  and T\<^sub>1 :: \<open>'b2 \<Rightarrow> 'c BI\<close>
   unfolding \<r>Guard_def
   including prevent_eliminate_IE_\<phi>Cond_Unital
   apply (simp add: ToA_Mapper_\<phi>Some_rewr_origin conj_imp_eq_imp_imp;

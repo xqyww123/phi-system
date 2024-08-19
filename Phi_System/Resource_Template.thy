@@ -1,5 +1,5 @@
 theory Resource_Template
-  imports PhiSem_Formalization_Tools Phi_Semantics_Framework.Phi_SemFrame_ex
+  imports PhiSem_Formalization_Tools Phi_Semantics_Framework.Phi_SemFrame_ex Phi_Fictions
 begin
 
 
@@ -30,11 +30,11 @@ lemma get_res_valid_raw: (*TODO: deprecated?*)
   unfolding RES.SPACE_def
   by (simp, metis in_DOMAIN proj_inj)
 
-definition [simp]: \<open>basic_fiction x = { 1(Res #= x) }\<close>
+definition [simp]: \<open>basic_fiction x = Itself (1(Res #= x))\<close>
 
 lemma basic_fiction_homo_one[simp]:
   \<open>homo_one basic_fiction\<close>
-  unfolding homo_one_def basic_fiction_def by (simp add: set_eq_iff)
+  unfolding homo_one_def basic_fiction_def by (simp add: BI_eq_iff)
 
 subsubsection \<open>Getter\<close>
 
@@ -89,10 +89,10 @@ subsection \<open>Fiction Base\<close>
 
 locale basic_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp> I\<close>
 +  homo_one \<open>I\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and I :: "('U::sep_algebra, 'T) interp"
+and I :: "('T, 'U::sep_algebra) \<phi>"
 and Fic :: "'U fiction_entry"
 begin
 
@@ -125,12 +125,9 @@ subsubsection \<open>Fictional Refinement\<close>
 
 context begin
 
-private lemma sat_sing_eq[simp]: \<open>u \<Turnstile> {v} \<longleftrightarrow> u = v\<close>
-          unfolding Satisfaction_def by simp
-
 private lemma from_fictional_refinement':
   \<open> Valid_Proc f
-\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction \<Zcomp>\<^sub>\<I> I \<i>\<n> D)
+\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction \<Zcomp> I \<i>\<n> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))\<close>
@@ -184,8 +181,6 @@ lemma from_fictional_refinement:
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE\<close>
   using from_fictional_refinement' by blast
-
-declare sat_sing_eq[simp del]
 
 end
 

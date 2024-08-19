@@ -220,13 +220,13 @@ lemma [\<phi>reason 2000 for \<open>
 subsubsection \<open>Synthesis\<close>
 
 lemma [\<phi>reason %\<phi>synthesis_parse for
-  \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> VAL set)) (?X::?'ret \<Rightarrow> assn)\<close>
+  \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> VAL BI)) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason %\<phi>synthesis_parse for
-  \<open>Synthesis_Parse (MAKE _ (?T::?'a \<Rightarrow> VAL set)) (?X::?'ret \<Rightarrow> assn)\<close>
+  \<open>Synthesis_Parse (MAKE _ (?T::?'a \<Rightarrow> VAL BI)) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse (MAKE n T) (\<lambda>v. x \<Ztypecolon> MAKE n (Val v T))\<close>
   unfolding Synthesis_Parse_def ..
@@ -364,7 +364,7 @@ lemma [OF \<phi>arg_val_varify_type,
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x \<Ztypecolon> Val ret T\<heavy_comma> R \<rbrace>))\<close>
   unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
-  by (cases raw; simp add: Val.unfold)
+  by (cases raw; simp add: Val.unfold less_eq_BI_iff)
 
 
 subsubsection \<open>Assignment\<close>
@@ -395,7 +395,7 @@ lemma "__set_value_rule__":
   \<open> (\<phi>arg.dest (v <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
 \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_def Value_of_def
-  by (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set)
+  by (clarsimp simp add: Val.unfold INTERP_SPEC_subj less_eq_BI_iff)
 
 lemma "__fast_assign_val__":
   \<open> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> P

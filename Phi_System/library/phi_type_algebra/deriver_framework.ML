@@ -529,7 +529,7 @@ val _ = Theory.setup (Context.theory_map (
               sep_quant_sing sep_quant_empty sep_quant_subjection sep_quant_ExBI
 
 
-              add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
+              add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
               zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
               plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
               distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]

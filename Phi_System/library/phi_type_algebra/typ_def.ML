@@ -416,7 +416,7 @@ val raw_term_name = fst o raw_term_name_typ o Term.head_of
 
 fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 =
   let val typ = Term.fastype_of (#term phi)
-      fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
+      fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>BI a\<close>\<close>\<close> = (args, x, a)
         | parse_typ args \<^Type>\<open>fun a r\<close> = parse_typ (a::args) r
         | parse_typ _ _ = error "Internal bug"
       val (rev_arg_tys, x_ty, _) = parse_typ [] typ
@@ -433,7 +433,7 @@ fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 =
 
 fun mk_ind_dest_ToA ctxt phi gen_prop =
   let val typ = Term.fastype_of (#term phi)
-      fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
+      fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>BI a\<close>\<close>\<close> = (args, x, a)
         | parse_typ args \<^Type>\<open>fun a r\<close> = parse_typ (a::args) r
         | parse_typ _ _ = error "Internal bug"
       val (rev_arg_tys, x_ty, _) = parse_typ [] typ
@@ -1701,7 +1701,7 @@ local open Function_Lib
 open Function_Common
 open Function_Fun
 
-fun is_phi_type \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>\<close> = true
+fun is_phi_type \<^Type>\<open>fun _ \<open>\<^Type>\<open>BI _\<close>\<close>\<close> = true
   | is_phi_type \<^Type>\<open>fun _ T\<close> = is_phi_type T
   | is_phi_type _ = false
 

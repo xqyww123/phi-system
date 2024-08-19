@@ -95,8 +95,8 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
       val T = Free (T_name, subst_ty [(element_ty, fst target)] (Term.fastype_of T_term))
       val U = Free (U_name, subst_ty [(element_ty, snd target)] (Term.fastype_of T_term))
       val SH = (case (Term.fastype_of Fa, Term.fastype_of Fb)
-                  of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
-                      \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
+                  of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>BI b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>BI d\<close>\<close>\<close>,
+                      \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>BI _\<close>\<close>\<close>) =>
                     (if flag
                      then \<^Const>\<open>Separation_Homo\<^sub>I a b c d e f x_ty\<close>
                        $ Fa $ Fb $ F_term $ T $ U

@@ -814,10 +814,24 @@ lemma [\<phi>reason 1000]:
  
 subsection \<open>Vertical Composition\<close>
 
+
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving \<open>Carrier_Set T P \<Longrightarrow> Carrier_Set (T \<Zcomp> U) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> U) \<longrightarrow> P v)\<close>
 
+declare \<phi>Composition.expansion[unfolded \<phi>Type_def, iff]
+
+lemma \<phi>Composition_assoc:
+  \<open>((I1 \<Zcomp> I2) \<Zcomp> I3) = (I1 \<Zcomp> (I2 \<Zcomp> I3))\<close>
+  by (rule \<phi>Type_eqI, simp , blast)
+
+lemma interp_comp_homo_one[simp]:
+  \<open>homo_one Ia \<Longrightarrow> homo_one Ib \<Longrightarrow> homo_one (Ia \<Zcomp> Ib)\<close>
+  unfolding homo_one_def by (simp add: BI_eq_iff)
+
+lemma Itself_comp[simp]:
+  \<open>(Itself \<Zcomp> I) = I\<close> \<open>(I \<Zcomp> Itself) = I\<close>
+  by (simp add: BI_eq_iff fun_eq_iff)+
 
 text \<open>
   We do not use deriver here.
@@ -924,7 +938,7 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
-    by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. {x}\<close>], THEN spec[where x=\<open>\<lambda>_. {y}\<close>], simplified]
+    by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. Itself x\<close>], THEN spec[where x=\<open>\<lambda>_. Itself y\<close>], simplified]
                prems(1,3-5),
         auto simp add: Satisfaction_def) .
   
@@ -941,8 +955,8 @@ lemma (*The above rule is reversible*)
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def Satisfaction_def)
   subgoal premises prems for x y v
-    by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {x}\<close>], THEN spec[where x=\<open>\<lambda>_. {y}\<close>], simplified]
-               prems(2-3), blast) .
+    by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. Itself x\<close>], THEN spec[where x=\<open>\<lambda>_. Itself y\<close>], simplified]
+               prems(2-3), metis Itself_expn' Satisfaction_def) .
 
 
 
@@ -1382,9 +1396,9 @@ lemma \<comment> \<open>The rule of \<open>\<phi>Fun'.\<phi>Inter_Comm\<^sub>I\<
   unfolding Transformation_def inj_def
   apply clarsimp
   subgoal premises prems for x y
-    by (insert prems(1)[of _ \<open>\<lambda>_. {x}\<close> _ \<open>\<lambda>_. {y}\<close>]
+    by (insert prems(1)[of _ \<open>\<lambda>_. Itself x\<close> _ \<open>\<lambda>_. Itself y\<close>]
                prems(2-),
-        clarsimp simp add: \<phi>Type_def Satisfaction_def) .
+        clarsimp simp add: \<phi>Type_def) .
 
 
 

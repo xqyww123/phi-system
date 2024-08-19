@@ -186,7 +186,7 @@ lemma interp_comp_\<I>[simp]:
   unfolding interp_comp_def
   by (rule Interp_inverse)  (simp add: Interpretation_def one_set_def)
 
-lemma interp_comp_assoc:
+lemma \<phi>Composition_assoc:
   \<open>(I1 \<Zcomp>\<^sub>\<I> I2) \<Zcomp>\<^sub>\<I> I3 = I1 \<Zcomp>\<^sub>\<I> (I2 \<Zcomp>\<^sub>\<I> I3)\<close>
   by (subst \<I>_inject[symmetric]; simp)
 

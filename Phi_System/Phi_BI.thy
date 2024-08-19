@@ -90,7 +90,7 @@ lemma Satisfaction_BI_red[simp]:
   \<open> x \<Turnstile> BI S \<longleftrightarrow> x \<in> S \<close>
   unfolding Satisfaction_def by simp
 
-subsubsection \<open>Basics\<close>
+subsubsection \<open>Bootstrap Basics\<close>
 
 lemma split_BI_all: \<open>(\<forall>x. P x) \<longleftrightarrow> (\<forall>x. P (BI x))\<close> by (metis BI.collapse) 
 lemma split_BI_ex: \<open>(\<exists>x. P x) \<longleftrightarrow> (\<exists>x. P (BI x))\<close> by (metis BI.collapse) 
@@ -256,6 +256,7 @@ instance by (
       simp add: Sup_BI_def bot_BI_def)
 end
 
+subsection \<open>Basics\<close>
 
 subsubsection \<open>Basic Operations & Rules\<close>
 
@@ -282,8 +283,6 @@ lemma sep_conj_expn[simp, \<phi>expns]:
   \<open>uv \<Turnstile> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<Turnstile> S \<and> v \<Turnstile> T \<and> u ## v)\<close>
   unfolding Satisfaction_def times_BI_def
   by simp
-
-
 
 definition Subjection :: " 'p BI \<Rightarrow> bool \<Rightarrow> 'p BI " (infixl "\<s>\<u>\<b>\<j>" 15)
   where " (T \<s>\<u>\<b>\<j> P) = BI {p. p \<Turnstile> T \<and> P}"
@@ -342,7 +341,17 @@ lemma Top_expn[iff, \<phi>expns]:
   unfolding Satisfaction_def
   by (simp add: top_BI_def)
 
-subsubsection \<open>Reasoning Configuration\<close>
+subsubsection \<open>Lift\<close>
+
+definition BI_lift :: \<open>'a set \<Rightarrow> 'a BI\<close>
+  where \<open>BI_lift S = BI S\<close>
+
+lemma BI_lift_expn[iff]:
+  \<open> w \<Turnstile> BI_lift S \<longleftrightarrow> w \<in> S \<close>
+  unfolding BI_lift_def by simp
+
+
+subsection \<open>Reasoning Configuration\<close>
 
 \<phi>reasoner_group extract_pure_sat = (%extract_pure+100, [%extract_pure+100, %extract_pure+130])
                                     for (\<open>\<r>EIF _ _\<close>, \<open>\<r>ESC _ _\<close>)
@@ -2810,6 +2819,26 @@ lemma [\<phi>reason %abstract_from_raw_cut]:
   unfolding Transformation_def Premise_def
   by (clarsimp; blast)
 
+(*
+subsection \<open>Composition\<close>
+
+definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
+  where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
+
+setup \<open>Sign.mandatory_path "\<phi>Composition"\<close>
+
+lemma unfold:
+  \<open>(x \<Ztypecolon> T \<Zcomp> U) = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
+  unfolding \<phi>Composition_def \<phi>Type_def ..
+
+lemma expansion[iff]:
+  \<open>w \<Turnstile> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>m. w \<Turnstile> (m \<Ztypecolon> T) \<and> m \<Turnstile> (x \<Ztypecolon> U)) \<close>
+  unfolding \<phi>Composition.unfold
+  by simp
+
+setup \<open>Sign.parent_path\<close>
+*)
+
 subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 
 definition \<phi>Any :: \<open>('c, 'x) \<phi>\<close> ("\<top>\<^sub>\<phi>") where \<open>\<top>\<^sub>\<phi> = (\<lambda>_. \<top>)\<close>
@@ -2820,7 +2849,7 @@ lemma unfold [\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_
   \<open>(x \<Ztypecolon> \<top>\<^sub>\<phi>) = \<top>\<close>
   unfolding \<phi>Any_def \<phi>Type_def ..
 
-lemma expansion[simp]:
+lemma expansion[iff]:
   \<open>p \<Turnstile> (x \<Ztypecolon> \<top>\<^sub>\<phi>) \<longleftrightarrow> True\<close>
   unfolding \<phi>Any.unfold
   by simp
