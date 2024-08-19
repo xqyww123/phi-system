@@ -19,8 +19,14 @@ proc op_add_ptr[\<phi>overload +]:
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.scast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY)\<close>
-  certified by (insert useful, auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>] distrib_right,
-                simp add: add.commute signed_of_int signed_take_bit_int_eq_self)
+  certified proof -
+    have t1: \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0) \<close>
+      by auto_sledgehammer
+    show ?thesis
+      by (insert useful, auto simp: address_to_raw_array_GEP[OF t1] distrib_right,
+                  simp add: add.commute signed_of_int signed_take_bit_int_eq_self;
+                  auto_sledgehammer)
+  qed
 \<medium_right_bracket> .
 
 
@@ -36,9 +42,14 @@ proc op_add_ptr_unsigned[\<phi>overload +]:
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.ucast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (i + j \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY)\<close>
-  certified by (insert useful,
-                auto simp: address_to_raw_array_GEP[OF \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY\<close>]
-                           distrib_right ucast_of_nat_small, simp add: add.commute)
+  certified proof -
+    have t1: \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> i + j = 0) \<close>
+      by auto_sledgehammer
+    show ?thesis
+      by (insert useful,
+                  auto simp: address_to_raw_array_GEP[OF t1]
+                             distrib_right ucast_of_nat_small; auto_sledgehammer)
+    qed
 \<medium_right_bracket> .
 
 

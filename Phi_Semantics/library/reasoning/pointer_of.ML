@@ -15,9 +15,13 @@ val derv_rule = @{lemma
   by this
 }
 
+val Derive_Pointer_Of_I = @{lemma
+  \<open>Derive_Pointer_Of (x \<Ztypecolon> T) (Some ptr)\<close>
+  by (simp add: Derive_Pointer_Of_def)
+}
+
 fun guess_pointer ctxt eqs =
-  let val ctxt = Bundle.includes ["Spec_Framework.Semantic_Type_by_Synt_Sugar"] ctxt
-      fun infer_one eq =
+  let fun infer_one eq =
         let val (LHS, RHS) = Phi_Help.dest_eq_c (Thm.incr_indexes_cterm 1 (Thm.cconcl_of eq))
             val cT =
                 case Thm.term_of LHS
@@ -94,11 +98,19 @@ fun pointer_of_deriver (_, pos) intrs (phityp : phi_type) lthy =
                  in block ([str "Inferred: ", Syntax.pretty_term lthy (
                                   \<^Const>\<open>Pointer_Of xty mty c_ty\<close> $ T $ ptr)])
                 end)
+
+      val rule = Derive_Pointer_Of_I
+              |> Drule.infer_instantiate lthy [(("T",0), Thm.cterm_of lthy T),
+                                               (("ptr",0), Thm.cterm_of lthy ptr)]
+
    in lthy
    |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m =>
         Phi_Pointer_Of.add [
           (10, Morphism.term m T, pos, Phi_Pointer_Of.By_Pattern [Morphism.term m ptr])
-        ])
+        ]
+     #> Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE'
+                               (SOME @{reasoner_group %deriving_pointer_derived})
+                               ([],[]) NONE [Morphism.thm m rule] )
   end
 
 open Phi_Type

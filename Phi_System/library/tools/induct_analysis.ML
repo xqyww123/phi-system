@@ -49,7 +49,7 @@ val case_synt = Scan.lift (Args.mode Induct.no_simpN) --
 end
 
 fun case_analysis_phityp (ctxt,sequent) =
-      Phi_Apply.apply [@{thm' "_cases_app_rule_"}] ctxt sequent
+      Phi_Apply.apply1 [@{thm' "_cases_app_rule_"}] ctxt sequent
 
 fun case_analysis_system (no_simp, (insts, opt_rule)) (ctxt,sequent) =
   let val mode = Phi_Working_Mode.mode1 ctxt

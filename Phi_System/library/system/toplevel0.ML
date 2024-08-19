@@ -227,7 +227,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     stat
       |> Proof.map_context (fn ctxt =>
          ctxt |> Context_Position.set_visible false
-              |> (fn ctxt => ctxt addsimprocs [Semantic_Type_Tools.unfold_typeof_simproc])
+              (* |> (fn ctxt => ctxt addsimprocs [Semantic_Type_Tools.unfold_typeof_simproc]) *)
               |> Context_Position.restore_visible ctxt
               |> Config.put phi_allow_source_object_to_be_not_variable true)
       |> Proof.internal_goal (print_results int) Proof_Context.mode_pattern true
@@ -353,7 +353,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Thm.pretty_thm ctxt' sequent',
                     Pretty.block (Pretty.here \<^here>)
                   ]))
-                val result = Phi_Apply.apply [sequent'] ctxt' goal'
+                val result = Phi_Apply.apply1 [sequent'] ctxt' goal'
                           |> Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxt'
                 val _ = PLPR_Statistics.stop_recording_a_semantic_operation ctxt'
               in result end

@@ -11,6 +11,7 @@ debt_axiomatization \<b>\<o>\<o>\<l>          :: TY
                 and sem_mk_bool   :: \<open>bool \<Rightarrow> VAL\<close>
                 and sem_dest_bool :: \<open>VAL \<Rightarrow> bool\<close>
   where sem_mk_dest_bool[simp]: \<open>sem_dest_bool (sem_mk_bool b) = b\<close>
+    and \<b>\<o>\<o>\<l>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<b>\<o>\<o>\<l> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
     and can_eq_bool: \<open>Can_EqCompare res (sem_mk_bool x1) (sem_mk_bool x2)\<close>
     and eq_bool:     \<open>EqCompare (sem_mk_bool x1) (sem_mk_bool x2) = (x1 = x2)\<close>
     and zero_bool[simp]: \<open>Zero \<b>\<o>\<o>\<l> = Some (sem_mk_bool False)\<close>
@@ -19,7 +20,14 @@ debt_axiomatization \<b>\<o>\<o>\<l>          :: TY
 lemma sem_mk_bool_inj[simp]:
   \<open>sem_mk_bool x = sem_mk_bool y \<equiv> x = y\<close>
   by (smt (verit, del_insts) sem_mk_dest_bool)
-  
+
+lemma \<p>\<o>\<i>\<s>\<o>\<n>_neq_\<b>\<o>\<o>\<l>[simp]:
+  \<open>\<p>\<o>\<i>\<s>\<o>\<n> \<noteq> \<b>\<o>\<o>\<l>\<close>
+  using \<b>\<o>\<o>\<l>_neq_\<p>\<o>\<i>\<s>\<o>\<n> by fastforce
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<b>\<o>\<o>\<l> \<close>
+  unfolding Is_Type_Literal_def ..
 
 section \<open>Instructions\<close>
 
@@ -67,16 +75,14 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
 
 
 section \<open>\<phi>-Type\<close>
-
+ 
 \<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
   where \<open>x \<Ztypecolon> \<bool> \<equiv> sem_mk_bool x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type \<bool> \<b>\<o>\<o>\<l>\<close>
        and \<open>Semantic_Zero_Val \<b>\<o>\<o>\<l> \<bool> False\<close>
        and Inhabited
- 
-term \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<bool>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<bool> = \<b>\<o>\<o>\<l>\<close>
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)" (*TODO: auto derive!*)
@@ -156,10 +162,10 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_equal TY (\<phi>V_pair rawa rawb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[rawa] T\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
   unfolding op_equal_def
   by ((cases rawa; cases rawb; simp, rule, rule),
+      simp add: Semantic_Type'_def subset_iff Premise_def,
       simp add: Semantic_Type'_def subset_iff Premise_def, rule,
-      simp add: Semantic_Type'_def subset_iff Premise_def, rule,
-      unfold \<phi>Equal_def Premise_def, simp,
-      rule \<phi>M_Success', rule, simp)
+      unfold \<phi>Equal_def Premise_def, simp, simp,
+      rule, simp)
 
 declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]
 declare op_equal_\<phi>app[where eq=\<open>(\<lambda>x y. x mod N = y mod N)\<close> for N, \<phi>synthesis 100]

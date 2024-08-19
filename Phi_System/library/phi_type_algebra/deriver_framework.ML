@@ -1599,7 +1599,7 @@ fun instantiate_ToA (pure_info,ctxt) ToA =
                                      in [(ToA1, NONE), (ToA2, NONE)]
                                     end)
           val _ = if null insts 
-                  then Phi_Reasoners.report_failure_reason1 ctxt (let open Pretty in [
+                  then Phi_Reasoners.report_failure_reason1 ctxt 2 (let open Pretty in [
                           fn () => chunks [para "I fail to derive any instantiation of the induction-hypothetic reasoning rule",
                                            indent 2 (Thm.pretty_thm ctxt ToA),
                                            para "because I fail to derive its premise",
@@ -2037,7 +2037,7 @@ fun chk_unfolded bads ctxt (phi : phi_type) term =
                 not (null bads) andalso exists_Const (member (op =) bads o fst) T
             | _ => false
           ) term
-      then Phi_Reasoners.report_failure_reason1 ctxt (let open Pretty in [fn () => 
+      then Phi_Reasoners.report_failure_reason1 ctxt 2 (let open Pretty in [fn () => 
               chunks [str "The phi-type is not unfolded by simplification and inductive destruction.",
                       Syntax.pretty_term ctxt term]
             ] end)

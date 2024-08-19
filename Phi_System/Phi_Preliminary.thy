@@ -317,6 +317,8 @@ attribute_setup ML_attribute = \<open>
 
 subsection \<open>Helper Objects\<close>
 
+consts \<A>infer :: action
+
 subsubsection \<open>Unspecified value\<close>
 
 consts unspec :: 'a

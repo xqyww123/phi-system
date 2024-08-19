@@ -13,18 +13,42 @@ subsubsection \<open>Semantic Type\<close>
 context begin
 
 private lemma \<phi>TA_SemTy_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<phi>TA_subgoal undefined)
+  \<open> \<r>EIF Ant Ant'
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain T D)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ant' \<Longrightarrow> Abstract_Domain\<^sub>L T D\<^sub>L)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Ant' \<longrightarrow> TY = (if Ex D then TY' else \<p>\<o>\<i>\<s>\<o>\<n>) \<and> D\<^sub>L = D)
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY' @tag \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
-\<Longrightarrow> Semantic_Type T TY \<close>
-  unfolding Action_Tag_def Semantic_Type'_def Semantic_Type_def Ant_Seq_def
-            Abstract_Domain\<^sub>L_def \<r>ESC_def Satisfiable_def Premise_def Inhabited_def
-  by clarsimp
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<close>
+  unfolding Action_Tag_def Premise_def Abstract_Domain_def \<r>EIF_def Abstract_Domain\<^sub>L_def \<r>ESC_def
+            SType_Of_def Inhabited_def Semantic_Type'_def Semantic_Type_def
+  by (auto,
+      smt (z3) Action_Tag_def Premise_True Satisfiable_def \<phi>SemType_Itself_brute exE_some,
+      meson)
+
+(*
+private lemma \<phi>TA_SemTy_rule:
+  \<open> (\<And>x. Ant \<longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY @tag \<phi>TA_subgoal \<A>infer)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<close>
+  unfolding Action_Tag_def Premise_def
+  by (rule SType_Of'_implies_SType_Of, clarsimp)
+*)
+
+private lemma \<phi>TA_SemTy_IH_rewr:
+  \<open> Trueprop (Ant \<longrightarrow> PPP @tag \<phi>TA_subgoal undefined) \<equiv>
+    (Ant @tag \<phi>TA_ANT \<Longrightarrow> PPP ) \<close>
+  unfolding Action_Tag_def atomize_imp Premise_def
+  ..
 
 private lemma \<phi>TA_SemTy_cong:
   \<open> TY \<equiv> TY'
-\<Longrightarrow> Semantic_Type T TY \<equiv> Semantic_Type T TY' \<close>
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T = TY \<equiv> \<t>\<y>\<p>\<e>\<o>\<f> T = TY' \<close>
+  for T :: \<open>(VAL,'x) \<phi>\<close>
   by simp
 
 
@@ -32,10 +56,44 @@ ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
 
 end
 
-\<phi>property_deriver Semantic_Type 120 for (\<open>Semantic_Type _ _\<close>)
+\<phi>property_deriver Semantic_Type 120 for (\<open>SType_Of _ = _\<close>)
     = \<open> Phi_Type_Derivers.semantic_type \<close> 
 
 ML_file \<open>library/additions/infer_semantic_type_prem.ML\<close>
+
+
+(*
+subsubsection \<open>Semantic Type Rewrites\<close>
+
+context begin
+
+private lemma styp_of_derv_rule':
+  \<open> Abstract_Domain\<^sub>L T D\<^sub>L
+\<Longrightarrow> Abstract_Domain T D
+\<Longrightarrow> Semantic_Type T TY
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ((\<exists>x. D\<^sub>L x) = (\<exists>x. D x) \<and>
+            ((\<exists>x. D x) \<longrightarrow> TY' = TY) \<and>
+            ((\<forall>x. \<not> D x) \<longrightarrow> TY' = \<p>\<o>\<i>\<s>\<o>\<n>))
+\<Longrightarrow> SType_Of T = TY' \<close>
+  unfolding Abstract_Domain\<^sub>L_def Abstract_Domain_def \<r>ESC_def \<r>EIF_def
+            Premise_def SType_Of_def Inhabited_def 
+  by (auto, metis Satisfiable_def Semantic_Type_def Well_Type_unique some_equality,
+            simp add: Satisfiable_def Semantic_Type_def)
+
+private lemma styp_of_derv_rule:
+  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> SType_Of T = TY')
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
+\<Longrightarrow> SType_Of T = TY' \<close> .
+
+ML_file \<open>library/phi_type_algebra/SType_Of.ML\<close>
+
+end
+
+\<phi>property_deriver SType_Of 150 for (\<open>SType_Of _ = _\<close>)
+    = \<open> Phi_Type_Derivers.STyp_Of \<close> 
+*)
 
 
 subsubsection \<open>Semantic Zero Value\<close>
@@ -43,7 +101,7 @@ subsubsection \<open>Semantic Zero Value\<close>
 context begin
 
 private lemma \<phi>TA_Semantic_Zero_Val_rule:
-  \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T)))
+  \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longrightarrow> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T))))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
@@ -379,14 +437,15 @@ lemma [\<phi>reason %\<phi>programming_method]:
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show the value abstraction\<close> S \<open>has semantic type\<close> TY
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>some representation of \<phi>-types whose semantic type is know so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semantic_Type T TY)) M D
-                             ((\<And>x. Semantic_Type' (A x) TY) &&& PROP R) F\<close>
-  unfolding \<phi>Programming_Method_def ToA_Construction_def Semantic_Type_def Transformation_def
-            Semantic_Type'_def
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<t>\<y>\<p>\<e>\<o>\<f> T = TY)) M D
+                             ((\<And>x. \<t>\<y>\<p>\<e>\<o>\<f> (A x) = TY @tag \<A>infer) &&& PROP R) F\<close>
+  unfolding \<phi>Programming_Method_def ToA_Construction_def Transformation_def Action_Tag_def
+  sorry 
+(*
   apply (simp add: subset_iff conjunction_imp, rule)
   subgoal premises prems
     by (insert prems(3) prems(1)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>], blast) .
-
+*)
 
 subsubsection \<open>Zero Value\<close>
 

@@ -6,6 +6,8 @@ It intends to give a rich way with term quotations to represent and report
 
 theory PLPR_error_msg
   imports Main
+  abbrevs "<or>" = "\<o>\<r>"
+      and "<fail>" = "\<f>\<a>\<i>\<l>"
 begin
 
 section \<open>Error Reporting\<close>
@@ -154,6 +156,9 @@ text \<open>Fail ends the current search branch but does not terminate
 definition FAIL :: \<open>text \<Rightarrow> bool\<close> where \<open>FAIL x \<longleftrightarrow> False\<close>
 
 definition FAIL' :: \<open>text \<Rightarrow> prop\<close> where \<open>FAIL' x \<equiv> (\<And>P. PROP P)\<close>
+
+definition OR_FAIL :: \<open>bool \<Rightarrow> text \<Rightarrow> bool\<close> (infix "\<o>\<r> \<f>\<a>\<i>\<l>" 10)
+    where \<open>OR_FAIL P text \<longleftrightarrow> P\<close>
 
 subsubsection \<open>Traced Fail\<close>
 

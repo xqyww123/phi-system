@@ -645,7 +645,7 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
             |> Context_Position.set_visible false
             |> open_proof_ctxt bundles
             |> Config.put under_deriving_ctxt true
-            |> Phi_Reasoners.report_failure_reason []
+            |> Phi_Reasoners.report_failure_reason 2 []
    in thy
    |> Local_Theory.map_contexts (fn i => if i >= level - 1 then setup else I)
    |> pair dervs

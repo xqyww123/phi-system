@@ -62,8 +62,8 @@ declare [[
 (* RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret *)
 
 proc op_routine:
-  requires Ty_X: \<open>\<phi>_Have_Types X TY_ARGs\<close>
-      and  Ty_Y: \<open>\<phi>_Have_Types Y TY_RETs\<close>
+  requires Ty_X: \<open>Semantic_Types X TY_ARGs\<close>
+      and  Ty_Y: \<open>Semantic_Types Y TY_RETs\<close>
       and  \<open>\<r>Success\<close>
       and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
             return_\<phi>app\<^bold>: TECHNICAL(RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret Y)

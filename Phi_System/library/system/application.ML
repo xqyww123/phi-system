@@ -20,6 +20,7 @@ an additional obligation antecedent at the last of the antecedent list,
 storing proof obligations generated during NToA, no matter whether the obligations are trivial.*)
   val try_apply : thm list (*applied rules*) -> Proof.context -> thm (*sequent*) -> thm option
   val apply : thm list (*rules to be applied*) -> Proof.context -> thm (*sequent*) -> thm
+  val apply1 : thm list -> Proof.context -> thm -> thm
 
 (*
   (*Advanced Modus Pones using logic programming about antecedent \<^term>\<open>\<phi>Application_Conv\<close>
@@ -89,6 +90,21 @@ fun apply applications ctxt sequent =
   case try_apply applications ctxt sequent
     of SOME stat' => stat'
      | NONE => raise THM ("Application Fail", 0, sequent::applications)
+
+fun apply1 applications ctxt sequent =
+  let val ctxt = Phi_Reasoners.setup_failure_reason_environ [] ctxt
+   in case try_apply applications ctxt sequent
+   of SOME stat' => stat'
+    | NONE => error (let open Pretty in string_of (
+                chunks (
+                 [block (text "Application Fail"),
+                  block (text "State sequent: " @ [Thm.pretty_thm ctxt sequent]),
+                  block (text "Applicants:")] @
+                  map (fn app => item [Thm.pretty_thm ctxt app]) applications @
+                  Phi_Reasoners.failure_reasons_of' ctxt
+                  )
+            ) end)
+  end
 
 (*
 fun comp_no_flatten_matched (th, n) i rule =

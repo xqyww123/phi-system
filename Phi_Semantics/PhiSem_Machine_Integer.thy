@@ -16,8 +16,15 @@ section \<open>Models\<close>
 subsubsection \<open>Type\<close>
 
 debt_axiomatization sem_int_T :: \<open>nat \<Rightarrow> TY\<close>
+  where \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>': \<open>sem_int_T b \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
 
 definition \<open>mk_int_T = sem_int_T o len0_class.len_of\<close>
+
+lemma \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]:
+  \<open>mk_int_T b \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>\<p>\<o>\<i>\<s>\<o>\<n> \<noteq> mk_int_T b\<close>
+  unfolding mk_int_T_def
+  by (simp_all add: \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>', metis \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>' comp_apply)
 
 syntax "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("int'(_')")
        "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<i>\<n>\<t>'(_')")
@@ -67,6 +74,10 @@ instance by (standard, simp add: \<i>\<n>\<t>_bits_L0 len_of_\<i>\<n>\<t>_def)
 end
 
 abbreviation \<open>\<i>\<n>\<t> \<equiv> \<i>\<n>\<t>(\<i>\<n>\<t>)\<close>
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<i>\<n>\<t>('a) \<close>
+  unfolding Is_Type_Literal_def ..
 
 
 subsubsection \<open>Semantics\<close>
@@ -130,7 +141,7 @@ subsection \<open>Words\<close>
   where \<open>x \<Ztypecolon> Word _ \<equiv> sem_mk_int (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
   deriving Basic
        and \<open>Object_Equiv (Word ?uu) (=)\<close>
-       and \<open>Semantic_Type (Word TYPE('b)) int('b)\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (Word TYPE('b)) = int('b)\<close>
        and \<open>Semantic_Zero_Val int('b) (Word ?uu) (0::'b::len word)\<close>
        and Inhabited
 
@@ -154,6 +165,7 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Equal_def by (simp add: word_unat_eq_iff)
 
 
+
 subsection \<open>Natural Numbers\<close>
 
 subsubsection \<open>Rounded Natural Number\<close>
@@ -162,7 +174,7 @@ subsubsection \<open>Rounded Natural Number\<close>
   where \<open>x \<Ztypecolon> \<phi>RoundedNat _ \<equiv> ((of_nat x :: 'b word) \<Ztypecolon> Word('b))\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>RoundedNat (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
-       and Semantic_Type
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<phi>RoundedNat (TYPE('a))) = \<i>\<n>\<t>('a)\<close>
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedNat TYPE('b)) 0\<close>
        and Inhabited
 
@@ -230,7 +242,7 @@ declare [[\<phi>reason_default_pattern
       \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<phi>Nat _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>    (200) ]]
 
 let_\<phi>type \<phi>Nat
-  deriving Semantic_Type
+  deriving \<open> \<t>\<y>\<p>\<e>\<o>\<f> \<nat>('b) = \<i>\<n>\<t>('b) \<close>
        and \<open>Semantic_Zero_Val int('b) \<nat>('b) 0\<close>
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
@@ -299,7 +311,7 @@ subsubsection \<open>Integer\<close>
                               \<s>\<u>\<b>\<j> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)})\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>Int uu) (=)\<close>
-       and Semantic_Type
+       and \<open> \<t>\<y>\<p>\<e>\<o>\<f>(\<phi>Int TYPE('a)) = \<i>\<n>\<t>('a) \<close>
        and Inhabited
 
 syntax \<phi>Int_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<int>'(_')")
@@ -327,8 +339,6 @@ lemma \<phi>Int_expn[simp, \<phi>expns]:
       smt (verit, ccfv_SIG) diff_less le_less len_gt_0 lessI of_int_add power_increasing_iff unat_eq_nat_uint word_arith_wis(7) word_of_int_2p_len word_of_int_inverse)
 
 hide_fact \<phi>Int.expansion
-
-thm \<phi>Int.elim
 
 lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Word(_) \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
   " Threshold_Cost 7
@@ -412,7 +422,7 @@ subsubsection \<open>Rounded Natural Number\<close>
   where \<open>x \<Ztypecolon> \<phi>RoundedInt _ \<equiv> ((of_int x :: 'b word) \<Ztypecolon> Word('b))\<close>
   deriving Basic
        and \<open>Object_Equiv (\<phi>RoundedInt (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
-       and Semantic_Type
+       and \<open> \<t>\<y>\<p>\<e>\<o>\<f>(\<phi>RoundedInt TYPE('a)) = \<i>\<n>\<t>('a) \<close>
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedInt TYPE('b)) 0\<close>
        and Inhabited
 

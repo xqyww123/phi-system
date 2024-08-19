@@ -76,7 +76,9 @@ fun get_unprocessed_element_index ctxt =
 
 
 fun error_unprocessed_element_index ctxt idx =
-  error (Pretty.string_of (Pretty.block (
+  error (let open Pretty in
+    string_of (chunks (
+      block (
             Pretty.str "Fail to access element " ::
             flat (Library.separate [Pretty.str "."] (map single (
                 HOLogic.dest_list (Thm.term_of idx)
@@ -88,6 +90,8 @@ fun error_unprocessed_element_index ctxt idx =
                                 of SOME (x, _) => x
                                  | _ => term) o
                   snd o HOLogic.dest_prod))))
-        )))
+        ) :: Phi_Reasoners.failure_reasons_of' ctxt
+     ))
+  end)
 
 end

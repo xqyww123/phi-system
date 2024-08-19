@@ -22,17 +22,20 @@ lemma sem_mk_symbol_inj[simp]:
   \<open>sem_mk_symbol x = sem_mk_symbol y \<longleftrightarrow> x = y\<close>
   by (metis eqcmp_aint)
 
-section \<open>\<phi>-Types\<close>
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<s>\<y>\<m>\<b>\<o>\<l> \<close>
+  unfolding Is_Type_Literal_def ..
 
-declare [[\<phi>trace_reasoning = 1]]
+section \<open>\<phi>-Types\<close>
 
 \<phi>type_def Symbol :: "(VAL, symbol) \<phi>"
   where \<open>s \<Ztypecolon> Symbol \<equiv> sem_mk_symbol s \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type Symbol \<s>\<y>\<m>\<b>\<o>\<l>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Symbol = \<s>\<y>\<m>\<b>\<o>\<l>\<close>
        and \<open>Semantic_Zero_Val \<s>\<y>\<m>\<b>\<o>\<l> Symbol SYMBOL(zero)\<close>
        and Inhabited
+
 
 lemma [\<phi>reason 1000]:
   "\<phi>Equal Symbol (\<lambda>x y. True) (=)"

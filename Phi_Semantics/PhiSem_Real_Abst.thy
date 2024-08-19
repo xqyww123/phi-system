@@ -27,7 +27,7 @@ section \<open>\<phi>-Types\<close>
   where \<open>x \<Ztypecolon> \<phi>AReal \<equiv> sem_mk_areal x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
-       and \<open>Semantic_Type \<real> \<a>\<r>\<e>\<a>\<l>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<real> = \<a>\<r>\<e>\<a>\<l>\<close>
        and \<open>Semantic_Zero_Val \<a>\<r>\<e>\<a>\<l> \<real> 0\<close>
        and Inhabited
 

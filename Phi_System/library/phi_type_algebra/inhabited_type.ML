@@ -73,7 +73,7 @@ fun gen_inhabited_type (_, name) instruction (phi0 : phi_type) thy =
               fn m => fn lthy => lthy
                   |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
                   |> Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
-                                        (SOME (the_default @{reasoner_group %\<phi>sem_type_derived}
+                                        (SOME (the_default @{reasoner_group %inhabited_derived}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule]
                   |> Config.restore_generic Phi_Reasoner.trace lthy)

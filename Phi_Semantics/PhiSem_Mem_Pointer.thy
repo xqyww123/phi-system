@@ -15,6 +15,11 @@ section \<open>Semantics of Pointer\<close>
 subsection \<open>Type\<close>
 
 debt_axiomatization \<p>\<o>\<i>\<n>\<t>\<e>\<r> :: TY ("\<p>\<t>\<r>")
+  where \<p>\<o>\<i>\<n>\<t>\<e>\<r>_isnot_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal \<p>\<o>\<i>\<n>\<t>\<e>\<r> \<close>
+  unfolding Is_Type_Literal_def ..
 
 subsection \<open>Value\<close>
 
@@ -161,9 +166,16 @@ abbreviation \<open>type_storable_in_mem T \<equiv> MemObj_Size T < 2^addrspace_
 
 subsubsection \<open>Validity of Mem Block and Addresses\<close>
 
+paragraph \<open>The type of the object that a pointer points to\<close>
+
+definition address_type :: \<open>address \<Rightarrow> TY\<close>
+  where \<open>address_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
+
+adhoc_overloading Type_Of_syntax address_type
+
 definition \<open>Valid_MemBlk seg = (
     case seg of Null \<Rightarrow> True
-              | MemBlk _ ty \<Rightarrow> type_storable_in_mem ty
+              | MemBlk _ ty \<Rightarrow> type_storable_in_mem ty \<and> ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
     )\<close>
 
 lemma Valid_MemBlk_zero[simp]: \<open>Valid_MemBlk Null\<close>
@@ -176,18 +188,26 @@ definition valid_address :: "address \<Rightarrow> bool"
   where "valid_address addr \<longleftrightarrow>
     Valid_MemBlk (memaddr.blk addr) \<and>
     (memaddr.blk addr = Null \<longrightarrow> memaddr.index addr = []) \<and>
-    valid_index (memblk.layout (memaddr.blk addr)) (memaddr.index addr)"
+    valid_index (memblk.layout (memaddr.blk addr)) (memaddr.index addr) \<and>
+    address_type addr \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>"
+
+lemma valid_address_not_poison[simp]:
+  \<open> valid_address addr \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> addr \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  unfolding valid_address_def
+  by auto
 
 lemma valid_rawaddr_nil[simp]:
   \<open>valid_address (memaddr blk []) = Valid_MemBlk blk\<close>
-  unfolding valid_address_def
-  by auto
+  unfolding valid_address_def Valid_MemBlk_def address_type_def
+  by (cases blk; auto)
 
 lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr 0\<close>
   by (simp add: zero_prod_def Valid_MemBlk_def zero_memaddr_def)
 
 lemma valid_address_0[simp]: \<open>valid_address 0\<close>
-  by (simp add: valid_address_def zero_prod_def Valid_MemBlk_def zero_memaddr_def)
+  by (simp add: valid_address_def zero_prod_def Valid_MemBlk_def zero_memaddr_def address_type_def)
+
+
 
 subsubsection \<open>Basic Operations and Properties of Addresses\<close>
 
@@ -205,19 +225,10 @@ lemma index_type_type_storable_in_mem:
   using MemObj_Size_LE_idx_0 order.strict_trans1
   by blast
 
-
-paragraph \<open>The type of the object that a pointer points to\<close>
-
-definition address_type :: \<open>address \<Rightarrow> TY\<close>
-  where \<open>address_type addr \<equiv> index_type (memaddr.index addr) (memblk.layout (memaddr.blk addr))\<close>
-
-adhoc_overloading Type_Of_syntax address_type
-
 lemma address_storable_in_mem:
   \<open>valid_address addr \<Longrightarrow> type_storable_in_mem (\<t>\<y>\<p>\<e>\<o>\<f> addr)\<close>
   unfolding valid_address_def Valid_MemBlk_def zero_memaddr_def address_type_def
   by (cases addr; case_tac x1; simp; insert index_type_type_storable_in_mem; blast)
-
 
 
 paragraph \<open>Relation between Logical Address and Physical Address\<close>
@@ -343,7 +354,7 @@ lemma address_to_raw_inj:
      address_to_raw addr1 = address_to_raw addr2 \<longrightarrow> addr1 = addr2\<close>
   unfolding address_to_raw_def valid_address_def
   by (cases addr1; cases addr2; simp; case_tac x1; case_tac x1a; simp add: phantom_mem_semantic_type_def;
-      metis Valid_MemBlk_def add.commute add_leD2 address_type_def index_offset_inj index_offset_upper_bound_0 memaddr.sel(1) memaddr.sel(2) memblk.case(2) memblk.layout(2) nat_less_le order.strict_trans1 phantom_mem_semantic_type_def unat_to_size_t)
+      metis (no_types, lifting) Valid_MemBlk_def add.commute add_leD2 address_type_def bot_nat_0.not_eq_extremum index_offset_inj index_offset_upper_bound_0 memaddr.sel(1) memaddr.sel(2) memblk.case(2) memblk.layout(2) order.strict_trans1 phantom_mem_semantic_type_def unat_to_size_t)
       
 
 
@@ -486,12 +497,17 @@ lemma address_type_gep[iff, \<phi>safe_simp]:
   \<open>address_type (addr \<tribullet> LOGIC_IDX(x)) = idx_step_type x (address_type addr)\<close>
   unfolding addr_gep_def address_type_def by (cases addr; simp)
 
+lemma address_type_geps[iff, \<phi>safe_simp]:
+  \<open>address_type (addr_geps addr idx) = index_type idx (address_type addr)\<close>
+  unfolding addr_geps_def address_type_def by (cases addr; simp)
+
 lemma addr_gep_valid[intro!, simp, \<phi>safe_simp]:
   \<open> valid_idx_step (address_type addr) i
 \<Longrightarrow> valid_address addr
 \<Longrightarrow> valid_address (addr \<tribullet> LOGIC_IDX(i))\<close>
   unfolding valid_address_def zero_memaddr_def addr_gep_def address_type_def
-  by (cases addr; clarsimp simp add: valid_idx_step_void)
+  by (cases addr; clarsimp simp add: valid_idx_step_void;
+      insert valid_idx_not_poison valid_idx_step_void; force)
 
 lemma addr_geps_valid[intro!, simp, \<phi>safe_simp]:
   \<open> valid_index (address_type addr) path
@@ -535,6 +551,7 @@ lemma [\<phi>reason %chk_sem_ele_idx]:
   unfolding valid_address_def Premise_def is_valid_index_of_def address_type_def
   by clarsimp
 
+(*
 paragraph \<open>\<open>\<t>\<y>\<p>\<e>\<o>\<f> address\<close>\<close>
 
 declare [[\<phi>reason_default_pattern
@@ -577,7 +594,7 @@ setup \<open>Context.theory_map (Phi_Sys.Lemmata_Processors.add 100 (fn pos =>
                  |> map (fn rule =>
                       ([rule], pos, Phi_Reasoner.NORMAL_MODE', SOME @{reasoner_group %local},
                        [], [], NONE) )
-        val input = filter_out is_rule_of_address_type input
+        val remaining_input = filter_out is_rule_of_address_type input
         fun chk (Const(\<^const_name>\<open>address_type\<close>, _) $ _) = true
           | chk (X $ Y) = chk X orelse chk Y
           | chk (Abs (_, _, X)) = chk X
@@ -594,12 +611,12 @@ setup \<open>Context.theory_map (Phi_Sys.Lemmata_Processors.add 100 (fn pos =>
                       ]
                    end)
               else ()
-        val _ = List.app chk' input
+        val _ = List.app chk' remaining_input
      in {input=input, lemmata=lemmata, useful=useful, rules=rules, ctxt=ctxt}
     end
 ))\<close>
 
-
+*)
 
 subsubsection \<open>Install Semantics\<close>
 
@@ -639,6 +656,7 @@ subsubsection \<open>Syntax\<close>
 
 section \<open>\<phi>-Types for Pointer\<close>
 
+
 subsection \<open>Physical Pointer\<close>
 
 \<phi>type_def RawPointer :: "(VAL, rawaddr) \<phi>"
@@ -646,7 +664,7 @@ subsection \<open>Physical Pointer\<close>
   deriving Basic
        and \<open>Object_Equiv RawPointer (=)\<close>
        and Functionality
-       and \<open>Semantic_Type RawPointer \<p>\<t>\<r>\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> RawPointer = \<p>\<t>\<r>\<close>
        and \<open>Semantic_Zero_Val \<p>\<t>\<r> RawPointer 0\<close>
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
@@ -659,48 +677,129 @@ subsection \<open>Standard Logical Pointer\<close>
       cannot point to the end of an allocation block, which is its limitation.
       only has GEP (Get-Element-Pointer) but no shift arithmetic (+ and -) \<close>
 
-\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, address) \<phi>" ("\<bbbP>\<t>\<r> _" [900] 899)
-  where \<open>x \<Ztypecolon> Ptr TY \<equiv> sem_mk_pointer (address_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_address x \<and> (x = 0 \<or> address_type x = TY)\<close>
+declare [[\<phi>trace_reasoning = 1]]
+
+\<phi>type_def Ptr :: "(VAL, address) \<phi>"
+  where \<open>x \<Ztypecolon> Ptr \<equiv> sem_mk_pointer (address_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_address x\<close>
   deriving Basic
-       and \<open>Object_Equiv (Ptr TY) (=)\<close>
+       and \<open>Object_Equiv Ptr (=)\<close>
        and Functionality
-       and \<open>Semantic_Type (Ptr TY) \<p>\<t>\<r>\<close>
-       and \<open>Semantic_Zero_Val \<p>\<t>\<r> (Ptr TY) 0\<close>
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Ptr = \<p>\<t>\<r>\<close>
+       and \<open>Semantic_Zero_Val \<p>\<t>\<r> Ptr 0\<close>
 
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
-    "\<phi>Equal (Ptr TY) (\<lambda>x y. x = 0 \<or> y = 0 \<or> memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
+    "\<phi>Equal Ptr (\<lambda>x y. x = 0 \<or> y = 0 \<or>
+          memaddr.blk x = memaddr.blk y \<and>
+          \<t>\<y>\<p>\<e>\<o>\<f> x = \<t>\<y>\<p>\<e>\<o>\<f> y \<and>
+          \<not> phantom_mem_semantic_type (\<t>\<y>\<p>\<e>\<o>\<f> y)) (=)"
   unfolding \<phi>Equal_def
-  by simp (metis address_to_raw_0 address_to_raw_MemBlk address_to_raw_inj memaddr.expand memaddr_blk_zero valid_address_def zero_list_def zero_memaddr_def)  
+  by simp (metis address_to_raw_0 address_to_raw_MemBlk address_to_raw_inj memaddr.expand memaddr_blk_zero valid_address_def)  
 
 
 lemma Ptr_to_Raw_Pointer[\<phi>reason %ToA_cut]:
   \<open> Threshold_Cost 9
-\<Longrightarrow> x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> address_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_address x \<and> (x = 0 \<or> address_type x = TY) \<close>
+\<Longrightarrow> x \<Ztypecolon> Ptr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> address_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_address x \<close>
   \<medium_left_bracket>
      to \<open>OPEN _ _\<close>
      \<open>address_to_raw x \<Ztypecolon> MAKE _ RawPointer\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:
-  \<open>x \<Ztypecolon> \<bbbP>\<t>\<r> TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = address_to_raw x \<and> valid_address x \<and> (x = 0 \<or> address_type x = TY) @tag to RawPointer\<close>
+  \<open>x \<Ztypecolon> Ptr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer \<s>\<u>\<b>\<j> y. y = address_to_raw x \<and> valid_address x @tag to RawPointer\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
-lemma Raw_Pointer_to_Ptr[\<phi>reason %ToA_cut]:
+lemma [\<phi>reason %ToA_cut]:
   \<open> Threshold_Cost 9
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y \<and> (y = 0 \<or> address_type y = TY)
-\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<bbbP>\<t>\<r> TY \<close>
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ptr \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
-    \<open>y \<Ztypecolon> MAKE _ (\<bbbP>\<t>\<r> TY)\<close>
+    \<open>y \<Ztypecolon> MAKE _ Ptr\<close>
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y \<and> (y = 0 \<or> address_type y = TY)
-\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> \<bbbP>\<t>\<r> TY \<s>\<u>\<b>\<j> a. a = y  @tag to (\<bbbP>\<t>\<r> TY)\<close>
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> Ptr \<s>\<u>\<b>\<j> a. a = y  @tag to Ptr\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 
+subsection \<open>Typed Pointer\<close>
+
+\<phi>type_def TypedPtr :: "TY \<Rightarrow> (VAL, address) \<phi>"
+  where \<open>x \<Ztypecolon> TypedPtr TY \<equiv> x \<Ztypecolon> Ptr \<s>\<u>\<b>\<j> x = 0 \<or> address_type x = TY\<close>
+  deriving Basic
+       and \<open>Object_Equiv (TypedPtr TY) (=)\<close>
+       and Functionality
+       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (TypedPtr TY) = \<p>\<t>\<r>\<close>
+       and \<open>Semantic_Zero_Val \<p>\<t>\<r> (TypedPtr TY) 0\<close>
+
+notation TypedPtr ("Ptr[_]" [10] 1000)
+
+lemma TypedPtr_eqcmp[\<phi>reason 1000]:
+    "\<phi>Equal Ptr[TY] (\<lambda>x y. x = 0 \<or> y = 0 \<or> memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
+  unfolding \<phi>Equal_def
+  by simp (metis address_to_raw_0 address_to_raw_MemBlk address_to_raw_inj memaddr.expand memaddr_blk_zero valid_address_def)  
+
+subsubsection \<open>Conversions\<close>
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> Threshold_Cost 1
+\<Longrightarrow> x \<Ztypecolon> Ptr[TY] \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Ptr \<w>\<i>\<t>\<h> x = 0 \<or> address_type x = TY \<close>
+  \<medium_left_bracket>
+     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> x \<Ztypecolon> Ptr[TY] \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ptr \<s>\<u>\<b>\<j> y. y = x \<and> (y = 0 \<or> address_type y = TY) @tag to Ptr \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = 0 \<or> address_type x = TY
+\<Longrightarrow> x \<Ztypecolon> Ptr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Ptr[TY] \<close>
+  \<medium_left_bracket>
+     \<open>MAKE _ (TypedPtr TY)\<close>
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut for \<open>_ \<Ztypecolon> Ptr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> TypedPtr ?var \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
+  \<open> FAIL TEXT(\<open>the type of\<close> x \<open>is unknown\<close>)
+\<Longrightarrow> x \<Ztypecolon> Ptr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Ptr[TY] \<close>
+  unfolding FAIL_def
+  by blast
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = 0 \<or> address_type x = TY
+\<Longrightarrow> x \<Ztypecolon> Ptr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ptr[TY] \<s>\<u>\<b>\<j> y. y = x @tag to (TypedPtr TY) \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> Threshold_Cost 9
+\<Longrightarrow> x \<Ztypecolon> Ptr[TY] \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> address_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_address x \<and> (x = 0 \<or> address_type x = TY) \<close>
+  \<medium_left_bracket>
+     to Ptr
+     to RawPointer
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> x \<Ztypecolon> Ptr[TY] \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> RawPointer
+    \<s>\<u>\<b>\<j> y. y = address_to_raw x \<and> valid_address x \<and> (x = 0 \<or> address_type x = TY)
+    @tag to RawPointer \<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> Threshold_Cost 8
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (y = 0 \<or> address_type y = TY)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ptr[TY] \<close>
+  \<medium_left_bracket>
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
+    \<open>y \<Ztypecolon> MAKE _ Ptr[TY]\<close>
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason %ToA_cut ]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> address_to_raw y = x \<and> valid_address y \<and> (y = 0 \<or> address_type y = TY)
+\<Longrightarrow> x \<Ztypecolon> RawPointer \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> a \<Ztypecolon> Ptr[TY] \<s>\<u>\<b>\<j> a. a = y @tag to (TypedPtr TY)\<close>
+  \<medium_left_bracket> \<medium_right_bracket> .
 
 
 section \<open>Primitive Instructions \& Programming INterface\<close>
@@ -729,31 +828,31 @@ proc op_get_element_pointer[\<phi>overload \<tribullet> 30]:
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr[TY]\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr_geps addr spec_idx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr_geps addr spec_idx \<Ztypecolon> \<v>\<a>\<l> Ptr[TY']\<close>
 \<medium_left_bracket>
   $addr semantic_local_value \<p>\<t>\<r>
   semantic_return \<open>
     sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
-        \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr TY')\<close>
+        \<Turnstile> (addr_geps addr spec_idx \<Ztypecolon> Ptr[TY'])\<close>
 \<medium_right_bracket> .
 
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_pointer 0)] \<bbbP>\<t>\<r> TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_pointer 0)] TypedPtr TY \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
   for X :: assn
   \<medium_left_bracket>
-    semantic_literal \<open>sem_mk_pointer 0 \<Turnstile> (0 \<Ztypecolon> \<bbbP>\<t>\<r> TY)\<close>
+    semantic_literal \<open>sem_mk_pointer 0 \<Turnstile> (0 \<Ztypecolon> TypedPtr TY)\<close>
     certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 
 proc NULL:
   input  Void
-  output \<open>0 \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> TY\<close>
+  output \<open>0 \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<close>
 \<medium_left_bracket>
-  \<open>0 \<Ztypecolon> \<bbbP>\<t>\<r> TY\<close>
+  \<open>0 \<Ztypecolon> TypedPtr TY\<close>
 \<medium_right_bracket> .
 
 
@@ -896,21 +995,22 @@ definition Pointer_Of :: \<open>('c,'x) \<phi> \<Rightarrow> 'v assertion \<Righ
 definition Derive_Pointer_Of :: \<open>'assertion_or_\<phi>type::{} \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>
   where \<open>Derive_Pointer_Of assn ptr \<equiv> True\<close>
 
+\<phi>reasoner_group deriving_pointer = (100, [1,3000])
+      \<open>Infer the pointer assertion from a given \<phi>-type\<close>
+  and deriving_pointer_cut = (1000, [1000,1030]) in deriving_pointer \<open>cutting\<close>
+  and deriving_pointer_derived = (30, [20,50]) in deriving_pointer \<open>\<close>
+  and deriving_pointer_fallback = (5, [5,10]) in deriving_pointer \<open>fallback\<close>
+
+declare [[ \<phi>reason_default_pattern
+    \<open>Derive_Pointer_Of ?X _\<close> \<Rightarrow> \<open>Derive_Pointer_Of ?X _\<close> (100)
+]]
+
 ML_file \<open>library/reasoning/pointer_of.ML\<close>
 
 \<phi>property_deriver Pointer_Of 100 for ( \<open>Pointer_Of _ _\<close> ) = \<open> pointer_of_deriver \<close>
 
 
 subsubsection \<open>Reasoning Rules\<close>
-
-\<phi>reasoner_group deriving_pointer = (100, [1,3000])
-      \<open>Infer the pointer assertion from a given \<phi>-type\<close>
-  and deriving_pointer_cut = (1000, [1000,1030]) in deriving_pointer \<open>cutting\<close>
-  and deriving_pointer_fallback = (5, [5,10]) in deriving_pointer \<open>fallback\<close>
-
-declare [[ \<phi>reason_default_pattern
-    \<open>Derive_Pointer_Of ?X _\<close> \<Rightarrow> \<open>Derive_Pointer_Of ?X _\<close> (100)
-]]
 
 definition \<A>merge_option :: \<open>VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>
   where \<open>\<A>merge_option _ _ _ \<equiv> True\<close>

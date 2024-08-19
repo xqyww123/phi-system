@@ -5,7 +5,7 @@ begin
 
 proc binary_search_array:
   input  \<open>arr \<Ztypecolon> \<m>\<e>\<m>[ptr] \<bbbA>\<r>\<r>\<a>\<y>[cap] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
-          ptr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] \<i>\<n>\<t>\<heavy_comma> lower \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
+          ptr \<Ztypecolon> \<v>\<a>\<l> Ptr[\<a>\<r>\<r>\<a>\<y>[cap] \<i>\<n>\<t>]\<heavy_comma> lower \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   premises \<open>arr ! upper \<le> k\<close> and \<open>lower < upper\<close> and \<open>upper < cap\<close> and \<open>sorted arr\<close>
   output \<open>arr \<Ztypecolon> \<m>\<e>\<m>[ptr] \<bbbA>\<r>\<r>\<a>\<y>[cap] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
           (LEAST i. lower \<le> i \<and> i \<le> upper \<and> arr!i \<le> k) \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>

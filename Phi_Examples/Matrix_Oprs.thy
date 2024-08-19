@@ -20,7 +20,7 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
 lemmas [\<phi>sledgehammer_simps] = mat_to_list_def list_eq_iff_nth_eq list_all2_conv_all_nth zero_mat_def
 
 proc zero_mat:
-  input    \<open>a \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M N\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+  input    \<open>a \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M N]\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             m \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a i j m n\<close>
   premises \<open>i + m \<le> M \<and> j + n \<le> N \<and> M < 2 ^ addrspace_bits \<and> N < 2 ^ addrspace_bits\<close>
@@ -40,7 +40,7 @@ proc new_mat:
   requires \<open>\<p>\<a>\<r>\<a>\<m> M\<close>
   requires \<open>\<p>\<a>\<r>\<a>\<m> N\<close>
   input    \<open>Void\<close>
-  output   \<open>a \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M N\<heavy_comma>
+  output   \<open>a \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M N]\<heavy_comma>
             0\<^sub>m M N \<Ztypecolon> MatSlice a 0 0 M N
             \<s>\<u>\<b>\<j> a. address_to_base a\<close>
   unfolding MatSlice.unfold
@@ -50,7 +50,7 @@ proc new_mat:
 
 
 proc del_mat:
-  input    \<open>a \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M N\<heavy_comma> x \<Ztypecolon> MatSlice a i j m n\<close>
+  input    \<open>a \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M N]\<heavy_comma> x \<Ztypecolon> MatSlice a i j m n\<close>
   premises \<open>m = M \<and> n = N \<and> i = 0 \<and> j = 0 \<and> address_to_base a\<close>
   output   \<open>Void\<close>
   unfolding MatSlice.unfold
@@ -60,8 +60,8 @@ proc del_mat:
 
 
 proc copy_mat:
-  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
-            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             m \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
             y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
@@ -82,8 +82,8 @@ proc copy_mat:
 
 
 proc add_mat:
-  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
-            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             m \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
             y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
@@ -104,8 +104,8 @@ proc add_mat:
 
 
 proc sub_mat:
-  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M\<^sub>x N\<^sub>x\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
-            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> M\<^sub>y N\<^sub>y\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             m \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
             y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
@@ -150,16 +150,17 @@ lemma merge_4mat:
 end
 
 
+declare [[linarith_split_limit = 20]]
 
 context
   fixes N :: nat
 begin
  
 proc strassen:
-  input    \<open>a\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
-            a\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
-            a\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
-            a\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> N N\<heavy_comma> i\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>A \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>A \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+            a\<^sub>B \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>B \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+            a\<^sub>C \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>C \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
+            a\<^sub>D \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> j\<^sub>D \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             n \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma>
             A \<Ztypecolon> MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n)\<heavy_comma>
             B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<heavy_comma>
@@ -316,8 +317,8 @@ proc strassen:
 end
 
 proc strassen_mul:
-  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<heavy_comma>
-            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<m>\<a>\<t> (2^n) (2^n)\<heavy_comma>
+  input    \<open>a\<^sub>x \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> (2^n) (2^n)]\<heavy_comma>
+            a\<^sub>y \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> (2^n) (2^n)]\<heavy_comma>
             A \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
             B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n)\<close>
   premises \<open>n < addrspace_bits\<close>

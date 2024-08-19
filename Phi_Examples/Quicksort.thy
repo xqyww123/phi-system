@@ -7,8 +7,6 @@ begin
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
 
-
-
   proc qsort:
     input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma>
             \<v>\<a>\<l> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>

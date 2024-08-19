@@ -189,6 +189,11 @@ declare [[
   > extract_pure_fallback and < extract_pure
   \<open>Entry points towards \<open>Abstract_Domain\<close> and \<open>Abstract_Domain\<^sub>L\<close> \<close>
 
+\<phi>reasoner_group inhabited_all = (100, [10, 3000]) for (\<open>Inhabited T\<close>) \<open>\<close>
+  and inhabited = (1000, [1000, 1030]) in inhabited_all \<open>\<close>
+  and inhabited_derived = (40, [30,50]) in inhabited_all and < inhabited \<open>\<close>
+  and inhabited_default = (10, [10,20]) in inhabited_all and < inhabited_derived \<open>\<close>
+
 subsubsection \<open>Basic Rules\<close>
 
 lemma Satisfiable_I:
@@ -386,7 +391,7 @@ lemma [\<phi>reason default %extract_pure_phity]:
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by blast
 
-lemma [\<phi>reason default %extract_pure_phity]:
+lemma [\<phi>reason default %inhabited_default]:
   \<open> Abstract_Domain\<^sub>L T D
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<exists>x. D x)
 \<Longrightarrow> Inhabited T \<close>
