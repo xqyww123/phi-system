@@ -142,15 +142,15 @@ fun guess_property_TF phi0 ctxt =
 
       val (TF_head, parameter) =
             (case (Term.fastype_of F, Term.fastype_of F', Ts, Us)
-               of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
-                   \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>,
+               of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>BI b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>BI d\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>BI _\<close>\<close>\<close>,
                    [T], [U]) =>
                   (\<^Const>\<open>Transformation_Functor a b c d e f\<close> $ F $ F' $ T $ U, NONE)
-                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>set f\<close>\<close>\<close>\<close>,
-                   \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>set _\<close>\<close>\<close>\<close>,
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>BI b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>BI d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>BI f\<close>\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>BI _\<close>\<close>\<close>\<close>,
                    [T1,T2], [U1,U2]) =>
                   (\<^Const>\<open>Transformation_BiFunctor a b c d e f g h i\<close> $ F $ F' $ T1 $ T2 $ U1 $ U2, NONE)
-                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>fun b \<^Type>\<open>set c\<close>\<close>\<close> \<^Type>\<open>fun d \<^Type>\<open>set e\<close>\<close>\<close>,
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>fun b \<^Type>\<open>BI c\<close>\<close>\<close> \<^Type>\<open>fun d \<^Type>\<open>BI e\<close>\<close>\<close>,
                    \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>fun f _\<close>\<close> \<^Type>\<open>fun g _\<close>\<close>,
                    [T], [U]) =>
                   (\<^Const>\<open>Transformation_Functor\<^sub>\<Lambda> a b c d e f g\<close> $ F $ F' $ T $ U, SOME a)
@@ -334,21 +334,21 @@ fun guess_property_FTF phi ctxt =
 
       val (FTF_head, parameter) =
              case (Term.fastype_of F, Term.fastype_of F', Ts, Us)
-               of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
-                   \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>,
+               of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>BI b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>BI d\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>BI _\<close>\<close>\<close>,
                    [T], [U]) =>
                   (\<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F $ F' $ T $ U
                       $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
                       $ Var(("R",0), c --> \<^Type>\<open>set e\<close>), NONE)
-                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>set f\<close>\<close>\<close>\<close>,
-                   \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>set _\<close>\<close>\<close>\<close>,
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>BI b\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun c \<^Type>\<open>BI d\<close>\<close> \<^Type>\<open>fun e \<^Type>\<open>BI f\<close>\<close>\<close>\<close>,
+                   \<^Type>\<open>fun \<^Type>\<open>fun g \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun h \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun i \<^Type>\<open>BI _\<close>\<close>\<close>\<close>,
                    [T1,T2], [U1,U2]) =>
                   (\<^Const>\<open>Functional_Transformation_BiFunctor a b c d e f g h i\<close> $ F $ F' $ T1 $ T2 $ U1 $ U2
                       $ Var(("D\<^sub>1",0), e --> \<^Type>\<open>set a\<close>)
                       $ Var(("D\<^sub>2",0), e --> \<^Type>\<open>set c\<close>)
                       $ Var(("R\<^sub>1",0), e --> \<^Type>\<open>set g\<close>)
                       $ Var(("R\<^sub>2",0), e --> \<^Type>\<open>set h\<close>), NONE)
-                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>fun b \<^Type>\<open>set c\<close>\<close>\<close> \<^Type>\<open>fun d \<^Type>\<open>set e\<close>\<close>\<close>,
+                | (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>fun b \<^Type>\<open>BI c\<close>\<close>\<close> \<^Type>\<open>fun d \<^Type>\<open>BI e\<close>\<close>\<close>,
                    \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>fun f _\<close>\<close> \<^Type>\<open>fun g _\<close>\<close>,
                    [T], [U]) =>
                   (\<^Const>\<open>Functional_Transformation_Functor\<^sub>\<Lambda> a b c d e f g\<close> $ F $ F' $ T $ U, SOME a)
@@ -390,11 +390,11 @@ fun guess_property_FTF phi0 ctxt0 =
       val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
 
       val FTF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
-                        of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
-                            \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
+                        of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>BI b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>BI d\<close>\<close>\<close>,
+                            \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>BI _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>BI _\<close>\<close>\<close>) =>
                            \<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F_term $ F'_term $ T_term $ U_term
-                              $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
-                              $ Var(("R",0), c --> \<^Type>\<open>set e\<close>)
+                              $ Var(("D",0), c --> \<^Type>\<open>BI a\<close>)
+                              $ Var(("R",0), c --> \<^Type>\<open>BI e\<close>)
                          | _ => error "BUG")
       val target_ty = Term_Subst.instantiateT_frees inst_ty
    in guess_func_mapper target_ty ctxt x_ty element_ty

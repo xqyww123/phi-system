@@ -6,7 +6,7 @@ text \<open>Based on the basic routine module, we provide the version that suppo
 
 declare [[\<phi>hide_techinicals = false]]
 
-definition RETURN_FRAME :: \<open>'rets::FIX_ARITY_VALs itself \<Rightarrow> RES.brk_label \<Rightarrow> ('rets \<phi>arg \<Rightarrow> fiction set) \<Rightarrow> bool\<close>
+definition RETURN_FRAME :: \<open>'rets::FIX_ARITY_VALs itself \<Rightarrow> RES.brk_label \<Rightarrow> ('rets \<phi>arg \<Rightarrow> fiction BI) \<Rightarrow> bool\<close>
   where \<open>RETURN_FRAME _ label Y \<longleftrightarrow> True\<close>
 
 lemma RETURN_FRAME_I:

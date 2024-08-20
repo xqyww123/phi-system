@@ -507,9 +507,9 @@ fun case_split_simproc rule (simproc_name, name) ctxt0 =
 val _ = Theory.setup (Context.theory_map (
 
   Expansion.map (fn ctxt =>
-    (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
+    (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExBI_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
-                       \<^simproc>\<open>Funcomp_Lambda\<close>, (*\<^simproc>\<open>defined_ExSet\<close>,*)
+                       \<^simproc>\<open>Funcomp_Lambda\<close>, (*\<^simproc>\<open>defined_ExBI\<close>,*)
                        case_split_simproc @{thm' split_paired_all[folded atomize_eq]} ("split_paired_all-case_split", \<^const_name>\<open>case_prod\<close>) ctxt,
                        case_split_simproc @{thm' split_paired_All[folded atomize_eq]} ("split_paired_All-case_split", \<^const_name>\<open>case_prod\<close>) ctxt
                       ])
@@ -518,18 +518,18 @@ val _ = Theory.setup (Context.theory_map (
               HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
               prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
 
-              ExSet_simps ExSet_split_prod ExSet_subj_split_prod
-              ExSet_times_left ExSet_times_right
+              ExBI_simps ExBI_split_prod ExBI_subj_split_prod
+              ExBI_times_left ExBI_times_right
               Subjection_Subjection Subjection_True Subjection_Flase Subjection_Zero
               Subjection_addconj Subjection_times
 
               \<phi>Prod_expn' \<phi>Prod_expn'' REMAINS_simp LeftCond_single_Cond_const_red
               \<phi>Cond_Unital_Ins_unfold_simp \<phi>Cond_Unital_Ins_BI_unfold_simp \<phi>Cond_Item_simp BiCond_single_Cond_const_red
 
-              sep_quant_sing sep_quant_empty sep_quant_subjection sep_quant_ExSet
+              sep_quant_sing sep_quant_empty sep_quant_subjection sep_quant_ExBI
 
 
-              add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
+              add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
               zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
               plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
               distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]

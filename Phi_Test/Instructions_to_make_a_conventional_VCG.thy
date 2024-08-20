@@ -17,10 +17,10 @@ is some normal state specified by \<open>S\<close> or some abnormal state by \<o
 In this dance, from \<^const>\<open>CurrentConstruction\<close>, by applying some function the state sequent goes to
 \<^const>\<open>PendingConstruction\<close>. Phi_Sys.accept_proc in \<^file>\<open>../Phi_System/library/system/sys.ML\<close> transfers
 the state from \<^const>\<open>PendingConstruction\<close> to \<^const>\<open>CurrentConstruction\<close> by assuming the newly
-applied function will terminate and not break any assumptions, using \<^const>\<open>CodeBlock\<close> structure.
+applied function will terminate and not break any assumptions, using \<^const>\<open>Code\<close> structure.
 
 Specifically, from \<open>\<Gamma> \<turnstile> PendingConstruction f s R S E\<close>, Phi_Sys.accept_proc deduces
-\<open>\<Gamma>, CodeBlock s s' f ret \<turnstile> CurrentConstruction mode s' R (S ret)\<close>. On this new state \<open>s'\<close>, you can
+\<open>\<Gamma>, Code s s' f ret \<turnstile> CurrentConstruction mode s' R (S ret)\<close>. On this new state \<open>s'\<close>, you can
 continue applying new functions.
 
 General Elimination mechanism (see Isabelle's initial paper for this concept) is used here.

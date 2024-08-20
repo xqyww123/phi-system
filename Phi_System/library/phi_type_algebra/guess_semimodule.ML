@@ -28,7 +28,7 @@ fun parse_semimodule_phityp' ty =
                         end)
       val (x_ele_ty0, s_ty0, T_model_ty) =
             case reversed_argtys'
-              of (\<^Type>\<open>fun x_ele_ty \<^Type>\<open>set T_model_ty\<close>\<close> :: s_ty :: _) => (SOME x_ele_ty, s_ty, SOME T_model_ty)
+              of (\<^Type>\<open>fun x_ele_ty \<^Type>\<open>BI T_model_ty\<close>\<close> :: s_ty :: _) => (SOME x_ele_ty, s_ty, SOME T_model_ty)
                | (s_ty :: _) => (NONE, s_ty, NONE)
                | _ => err_parse ()
    in (s_ty0, x_ele_ty0, x_ty0, T_model_ty, model_ty0)

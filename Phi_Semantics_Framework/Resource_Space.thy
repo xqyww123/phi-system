@@ -7,7 +7,7 @@ section \<open>Framework for Modular Formalization of Resources \& Fictional Res
 text \<open>Algebras used in the formalization are given in~\cite{Algebras}.\<close>
 
 theory Resource_Space
-  imports "Phi_Algebras.Phi_Fiction" "Phi_Statespace.StateFun"
+  imports "Phi_Algebras.Phi_Fiction" "Phi_Statespace.StateFun" Phi_Algebras.Phi_Algebra_Set
 begin
 
 
@@ -296,7 +296,7 @@ locale fiction_kind =
   for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_homo_set\<close>
   and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) unital_homo_interp"
   and FK :: "('FNAME,'FREP,'T::sep_algebra) kind"
-+ fixes I :: "('T,'RES) interp"
++ fixes I :: "('RES, 'T) \<phi>"
 assumes interpret_reduct: "INTERPRET (kind.name FK) = Unital_Homo (I o kind.project FK)"
   and   univ_domain[simp]: "kind.domain FK = sep_homo_set UNIV"
 begin
@@ -332,13 +332,13 @@ lemma interp_split:
     INTERP f = I (project (f name)) * INTERP (clean f)
   \<and> I (project (f name)) ## INTERP (clean f) "
   unfolding INTERP_def SPACE_def
-  by (subst \<F>_FP_homo_split[where ?f = f and ?k = name],
-      simp_all add: interpret_reduct prj.homo_one_axioms)
+  by (simp_all add: interpret_reduct,
+      smt (verit, del_insts) Diff_empty Diff_insert0 comp_def dom1_def homo_one.homo_one homo_one_comp interpret_reduct mem_Collect_eq mult_1_class.mult_1_left prj.homo_one_axioms prod.remove unital_homo_inverse)
 
 lemma Fic_Space_mm[simp]: "mk x ## f \<Longrightarrow> mk x * f \<in> SPACE \<longleftrightarrow> f \<in> SPACE"
   unfolding SPACE_def finite_dom1_mult1
-  apply clarsimp
-  by (smt (verit, ccfv_threshold) Fic_Space_m SPACE_def SPACE_mult_homo finite_dom1_mult1 mem_Collect_eq)
+  by (clarsimp,
+      smt (verit, ccfv_threshold) Fic_Space_m SPACE_def SPACE_mult_homo finite_dom1_mult1 mem_Collect_eq)
 
 end
 

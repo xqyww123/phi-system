@@ -23,7 +23,7 @@ end
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Phi_Syntax
 
-fun dest_BI_ty (\<^Type>\<open>set ty\<close>) = ty
+fun dest_BI_ty (\<^Type>\<open>BI ty\<close>) = ty
   | dest_BI_ty ty = raise TYPE ("Not of a type of BI assertion", [ty], [])
 
 val dest_transformation   =
@@ -37,7 +37,7 @@ val dest_transformation_c =
 fun dest_transformation_typ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_transformation_typ X
   | dest_transformation_typ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = dest_transformation_typ X
   | dest_transformation_typ (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ X) = dest_transformation_typ X
-  | dest_transformation_typ (Const(\<^const_name>\<open>Transformation\<close>, \<^Type>\<open>fun \<^Type>\<open>set a\<close> _\<close>) $ _ $ _ $ _) = a
+  | dest_transformation_typ (Const(\<^const_name>\<open>Transformation\<close>, \<^Type>\<open>fun \<^Type>\<open>BI a\<close> _\<close>) $ _ $ _ $ _) = a
   | dest_transformation_typ X = raise TERM ("dest_transformation_typ", [X])
 
 fun is_intro_transformation rule =

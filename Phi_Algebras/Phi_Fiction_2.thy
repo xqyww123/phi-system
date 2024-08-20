@@ -142,32 +142,32 @@ lemma refinement_subjection:
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: Subjection_expn subset_iff Image_def Bex_def Id_on_iff)
 
-lemma refinement_ExSet:
+lemma refinement_ExBI:
   \<open> (\<And>v. A v \<r>\<e>\<f>\<i>\<n>\<e>\<s> B v \<w>.\<r>.\<t> I \<i>\<n> D)
-\<Longrightarrow> ExSet A \<r>\<e>\<f>\<i>\<n>\<e>\<s> ExSet B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+\<Longrightarrow> ExBI A \<r>\<e>\<f>\<i>\<n>\<e>\<s> ExBI B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
   unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: ExSet_expn subset_iff Image_def Bex_def Id_on_iff, blast)
+  by (clarsimp simp add: ExBI_expn subset_iff Image_def Bex_def Id_on_iff, blast)
 
 
 subsection \<open>Instances\<close>
 
 subsubsection \<open>Itself\<close>
 
-definition [simp]: "\<F>_it' x = {x}"
+definition [simp]: "Itself' x = {x}"
 
-definition "\<F>_it = Interp \<F>_it'"
+definition "Itself = Interp Itself'"
 
-lemma \<F>_it_\<I>[simp]: "\<I> \<F>_it = \<F>_it'"
-  unfolding \<F>_it_def
+lemma Itself_\<I>[simp]: "\<I> Itself = Itself'"
+  unfolding Itself_def
   by (rule Interp_inverse) (simp add: Interpretation_def one_set_def)
 
-lemma \<F>_it_refinement_projection:
-  \<open>refinement_projection \<F>_it S \<subseteq> UNIV * S\<close>
+lemma Itself_refinement_projection:
+  \<open>refinement_projection Itself S \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
   by (clarsimp simp add: set_mult_expn)
 
-lemma \<F>_it_refinement:
-  \<open>Id_on UNIV * {(u,v)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(u,v)} \<w>.\<r>.\<t> \<F>_it \<i>\<n> {u}\<close>
+lemma Itself_refinement:
+  \<open>Id_on UNIV * {(u,v)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(u,v)} \<w>.\<r>.\<t> Itself \<i>\<n> {u}\<close>
   for u :: \<open>'a::{sep_cancel,sep_monoid}\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: Subjection_expn set_mult_expn,
@@ -186,12 +186,12 @@ lemma interp_comp_\<I>[simp]:
   unfolding interp_comp_def
   by (rule Interp_inverse)  (simp add: Interpretation_def one_set_def)
 
-lemma interp_comp_assoc:
+lemma \<phi>Composition_assoc:
   \<open>(I1 \<Zcomp>\<^sub>\<I> I2) \<Zcomp>\<^sub>\<I> I3 = I1 \<Zcomp>\<^sub>\<I> (I2 \<Zcomp>\<^sub>\<I> I3)\<close>
   by (subst \<I>_inject[symmetric]; simp)
 
-lemma \<F>_it_comp[simp]:
-  \<open>\<F>_it ;\<^sub>\<I> I = I\<close> \<open>I ;\<^sub>\<I> \<F>_it = I\<close>
+lemma Itself_comp[simp]:
+  \<open>Itself ;\<^sub>\<I> I = I\<close> \<open>I ;\<^sub>\<I> Itself = I\<close>
   by (subst \<I>_inject[symmetric], simp)+
 
 lemma sep_refinement_stepwise:
@@ -278,8 +278,8 @@ lemma \<F>_pointwise_\<I>[simp]:
   unfolding \<F>_pointwise_def
   by (rule Interp_inverse) (auto simp add: Interpretation_def one_fun_def fun_eq_iff)
 
-lemma \<F>_pointwise_\<F>_it:
-  \<open>\<F>_pointwise \<F>_it = \<F>_it\<close>
+lemma \<F>_pointwise_Itself:
+  \<open>\<F>_pointwise Itself = Itself\<close>
   by (rule interp_eq_I; simp add: fun_eq_iff set_eq_iff)
 
 definition "\<F>_pointwise' I = Interp (\<lambda>f. {g. \<forall>x. g x \<in> \<I> (I x) (f x) })"

@@ -331,7 +331,7 @@ fun swap_normalization_guard (ctxt, sequent) =
                         if direction
                         then snd (Phi_Syntax.dest_phi_type_assertion X)
                         else case Y
-                          of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
+                          of Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (_, _,
                                 Const(\<^const_name>\<open>Subjection\<close>, _) $ Y' $ _)
                                => snd (Phi_Syntax.dest_phi_type_assertion Y')
                            | _ => snd (Phi_Syntax.dest_phi_type_assertion Y )

@@ -26,7 +26,7 @@ signature QUANT_EXPANSION = sig
   val named_forall : simproc
   val named_ex     : simproc
   val named_metaAll: simproc
-  val named_ExSet  : simproc
+  val named_ExBI  : simproc
 
   (* convert a multi-variable lambda expression (\<lambda>x y z. F x y z) to a single-variable lambda
   expression of a tuple, (\<lambda>pack. F (fst pack) (fst (snd pack)) (snd (snd pack))).
@@ -111,8 +111,8 @@ val meta_All_expansion =
   general_expansion @{const_name Pure.all} @{thm named_All[folded atomize_eq]}
                     "a" @{thm split_paired_all[folded atomize_eq]}
 val ExNu_expansion =
-  general_expansion @{const_name ExSet} @{thm named_ExSet[folded atomize_eq]}
-                    "a" @{thm ExSet_pair[folded atomize_eq]}
+  general_expansion @{const_name ExBI} @{thm named_ExBI[folded atomize_eq]}
+                    "a" @{thm ExBI_pair[folded atomize_eq]}
 
 val forall_expansion_arg_encoding =
   general_expansion @{const_name All} @{thm named_forall[folded atomize_eq]}
@@ -181,14 +181,14 @@ val named_forall =
      proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => forall_expansion_arg_encoding
                                                     | _ => forall_expansion))}
 val named_ex =
-  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExSet\<close>)
+  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>)
     {lhss = [\<^term>\<open>Ex (P :: 'a <named> 'names \<Rightarrow> bool)\<close>],
      proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => exists_expansion_arg_encoding
                                                     | _ => exists_expansion))}
 
-val named_ExSet =
-  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExSet\<close>)
-    {lhss = [\<^term>\<open>ExSet (P :: 'a <named> 'names \<Rightarrow> 'b set)\<close>],
+val named_ExBI =
+  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>)
+    {lhss = [\<^term>\<open>ExBI (P :: 'a <named> 'names \<Rightarrow> 'b BI)\<close>],
      proc = K (simproc_of (K ExNu_expansion))}
 
 val named_metaAll =

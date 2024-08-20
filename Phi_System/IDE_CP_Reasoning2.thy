@@ -1507,7 +1507,7 @@ lemma [\<phi>reason %\<phi>mapToA_fallbacks]:
   \<open> \<m>\<a>\<p> f \<otimes>\<^sub>f g : U \<^emph>[True] T \<mapsto> U' \<^emph>[True] T'
     \<o>\<v>\<e>\<r> g \<otimes>\<^sub>f f : T \<^emph>[True] U \<mapsto> T' \<^emph>[True] U'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> prod.swap \<s>\<e>\<t>\<t>\<e>\<r> prod.swap \<i>\<n> D \<close>
-  for T :: \<open>'b \<Rightarrow> 'e::sep_ab_semigroup set\<close>
+  for T :: \<open>'b \<Rightarrow> 'e::sep_ab_semigroup BI\<close>
   unfolding ToA_Mapper_def Transformation_def
   by (auto; insert sep_disj_commuteI sep_mult_commute; blast)
 

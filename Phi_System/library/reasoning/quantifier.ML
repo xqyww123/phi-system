@@ -34,7 +34,7 @@ fun skolemize_conv ctxt ctm =
 (*
 fun lift_Boolean_Ex_to_BI_Ex ctxt ctm =
   case Thm.term_of ctm
-    of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs _ =>
+    of Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs _ =>
         Conv.arg_conv (Conv.abs_conv (lift_Boolean_Ex_to_BI_Ex o snd) ctxt) ctm
      | Const(\<^const_name>\<open>Subjection\<close>, _) $  *)
 
@@ -62,11 +62,11 @@ fun quick_check quantifier =
    in qchk ~1
   end
 
-val ExSet_boolean_Ex_lift = @{lemma
+val ExBI_boolean_Ex_lift = @{lemma
         \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y)) \<equiv> (A x \<s>\<u>\<b>\<j> x y. P x y) \<close>
         by (unfold BI_eq_iff atomize_eq, clarsimp)}
 
-val ExSet_boolean_Ex_lift' = @{lemma
+val ExBI_boolean_Ex_lift' = @{lemma
         \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y) \<and> Q x) \<equiv> (A x \<s>\<u>\<b>\<j> x y. P x y \<and> Q x) \<close>
         by (unfold BI_eq_iff atomize_eq, clarsimp)}
 
@@ -74,9 +74,9 @@ fun sink_Ex_quantifier C =
   let fun conv ctxt ctm =
        (  Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
           Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt)
-        else_conv (Conv.rewr_conv ExSet_boolean_Ex_lift' then_conv
+        else_conv (Conv.rewr_conv ExBI_boolean_Ex_lift' then_conv
                    conv ctxt)
-        else_conv (Conv.rewr_conv ExSet_boolean_Ex_lift then_conv
+        else_conv (Conv.rewr_conv ExBI_boolean_Ex_lift then_conv
                    conv ctxt)
         else_conv C ctxt) ctm
    in conv
@@ -87,9 +87,9 @@ fun defined_Ex_direct ctm =
     of Const _ (*Ex*) $ Abs (_, _, Const _ (*Subj*) $ _ $ X) =>
         (case X
            of Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _ =>
-                Conv.rewr_conv @{thm' ExSet_defined(1)[folded atomize_eq]} ctm
+                Conv.rewr_conv @{thm' ExBI_defined(1)[folded atomize_eq]} ctm
             | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) $ _ =>
-                Conv.rewr_conv @{thm' ExSet_defined(3)[folded atomize_eq]} ctm
+                Conv.rewr_conv @{thm' ExBI_defined(3)[folded atomize_eq]} ctm
             | _ => error "BI.defined_Ex")
      | _ => error "BI.defined_Ex"
 
@@ -116,12 +116,12 @@ val apply_conv =
                        (qchkB (lv+1) X)
         | qchkB _ _ = NONE
 
-      fun qchk lv (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ P)) =
+      fun qchk lv (Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ P)) =
             Option.map (fn C => fn ctxt =>
                             Conv.arg_conv (Conv.abs_conv (fn (_,ctxt) => Conv.arg_conv (C ctxt)) ctxt) then_conv
                             sink_Ex_quantifier (K defined_Ex_direct) ctxt)
                        (qchkB (lv+1) P)
-        | qchk lv (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, X)) =
+        | qchk lv (Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (_, _, X)) =
             Option.map (fn C => fn ctxt =>
                                 Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
                                 Conv.arg_conv (Phi_Conv.abs_conv_eta (C o snd) ctxt))
@@ -173,7 +173,7 @@ fun move_conj qvar =
 
 fun defined_Ex ctxt ctm =
   let exception NO_CONV
-   in if quick_check \<^const_name>\<open>ExSet\<close> (Thm.term_of ctm)
+   in if quick_check \<^const_name>\<open>ExBI\<close> (Thm.term_of ctm)
       then Option.map (fn cv => cv ctxt ctm)
                       (apply_conv (Thm.term_of ctm))
       else NONE
@@ -182,7 +182,7 @@ fun defined_Ex ctxt ctm =
 (*
 fun defined_Ex ctxt ctm =
   let exception NO_CONV
-   in if quick_check \<^const_name>\<open>ExSet\<close> (Thm.term_of ctm)
+   in if quick_check \<^const_name>\<open>ExBI\<close> (Thm.term_of ctm)
       then SOME (sink_Ex_quantifier (fn ctxt => fn ctm => 
               ((fn ctm =>
                 Conv.arg_conv (Phi_Conv.abs_conv_eta (fn (qvar, _) =>
@@ -278,7 +278,7 @@ structure Q1 = Quantifier1 (
   val mp   = @{thm' mp}
   val uncurry = @{thm' uncurry}
 
-  val exI = @{lemma' \<open>nominal0 \<Turnstile> S x \<Longrightarrow> nominal0 \<Turnstile> (ExSet S)\<close>
+  val exI = @{lemma' \<open>nominal0 \<Turnstile> S x \<Longrightarrow> nominal0 \<Turnstile> (ExBI S)\<close>
                   by (simp, blast)}
 )
 

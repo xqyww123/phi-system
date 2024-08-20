@@ -117,12 +117,9 @@ lemma split_Byte_Rep_ExSet:
   \<open> (\<And>x. P x \<Longrightarrow> x \<in> Byte_Rep_of_TY TY)
 \<Longrightarrow> (A x \<s>\<u>\<b>\<j> x. P x) =
     (A (Byte_Rep_of_Val v) \<s>\<u>\<b>\<j> v. P (Byte_Rep_of_Val v)) \<close>
-  unfolding set_eq_iff ExSet_expn_set split_discrete_ex Subjection_expn_set
+  unfolding BI_eq_iff split_discrete_ex
   by (auto simp: image_iff Bex_def)
 
-lemma
-  \<open>Byte_Rep_of_Val v \<in> Byte_Rep_of_TY TY \<longrightarrow> v \<in> Well_Type TY\<close>
-  apply (auto simp: image_iff) oops
 
 debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> aggregate_path \<rightharpoonup> VAL\<close>
                 and Dom_of_TY :: \<open>TY \<Rightarrow> aggregate_path set\<close>
@@ -327,34 +324,34 @@ interpretation Byte_Rep_of_Val_ins: cancl_sep_orthogonal_monoid \<open>Byte_Rep_
 lemma map_tree_refinement_modify:
   \<open> dom a = dom b \<and> dom b \<subseteq> D
 \<Longrightarrow> (\<And>r. r ## push_map idx a \<and> r ## push_map idx b \<and> r * push_map idx a \<in> S \<Longrightarrow> r * push_map idx b \<in> S)
-\<Longrightarrow> ({(a, a ++ push_map idx b)} \<s>\<u>\<b>\<j> a. dom a = D) * Id_on UNIV
+\<Longrightarrow> (\<exists>\<^sup>sa. {(a, a ++ push_map idx b)} \<s>\<u>\<b>\<j>\<s> dom a = D) * Id_on UNIV
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> { (push_map idx a, push_map idx b)}
     \<w>.\<r>.\<t> \<F>_functional id S
     \<i>\<n> { push_map idx a }\<close>
   for a :: \<open>'a list \<Rightarrow> VAL discrete option\<close>
   unfolding Fictional_Forward_Simulation_def the_subtree_def
-  apply (clarsimp simp add: Subjection_expn_set set_mult_expn ExSet_expn_set)
+  apply (clarsimp simp add: set_mult_expn)
   subgoal premises prems for r R a' u x
   proof -
     have t1: \<open>dom x \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
-      using disjoint_iff prems(10) sep_disj_partial_map_disjoint by fastforce
+      using disjoint_iff prems(12) sep_disj_partial_map_disjoint by fastforce
     have t2: \<open>dom r \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
-      by (metis dom1_dom inf_sup_aci(1) prems(2) prems(4) push_map_dom_eq sep_disj_dom1_disj_disjoint)
+      by (metis Int_commute prems(2) prems(5) push_map_dom_eq sep_disj_partial_map_disjoint)
     have t3: \<open>dom u \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
-      by (metis Int_commute prems(11) prems(2) push_map_dom_eq sep_disj_partial_map_disjoint)
+      by (metis inf_commute prems(2) prems(9) push_map_dom_eq sep_disj_partial_map_disjoint)
     have t4: \<open>idx \<tribullet>\<^sub>m b ## u\<close>
       using sep_disj_partial_map_disjoint t3 by blast
     have t5: \<open>idx \<tribullet>\<^sub>m b ## r\<close>
       using sep_disj_partial_map_disjoint t2 by blast
     have t6: \<open>dom a' \<inter> dom x = {}\<close>
-      by (meson prems(9) sep_disj_partial_map_disjoint)
+      by (meson prems(11) sep_disj_partial_map_disjoint)
     show ?thesis
       apply (simp add: t5, rule exI[where x=u], simp add: t4 prems)
-      by (metis map_add_subsumed_dom mult.commute prems(1) prems(2) prems(4) prems(6) prems(7) push_map_distrib_map_add sep_disj_commute subset_refl t1 t2 t3 t5 times_fun_map_add_right)
+      by (metis dual_order.refl map_add_subsumed_dom mult.commute prems(1) prems(2) prems(5) prems(6) prems(7) push_map_distrib_map_add sep_disj_commute t1 t2 t3 t5 times_fun_map_add_right)
   qed .
 
 lemma fiction_Map_of_Val_ins_comp_id_simp:
-  \<open>(\<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY) \<Zcomp>\<^sub>\<I>
+  \<open>(\<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY) \<Zcomp>
     \<F>_functional id (Map_of_Val_ins ` Map_of_Val_ins_dom TY))
   = \<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY)\<close>
   by (rule \<F>_functional_comp[where f=id, simplified, symmetric]; clarsimp)
@@ -438,8 +435,8 @@ lemma fiction_Map_of_Val_ins_refinement:
 \<Longrightarrow> v \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> (\<forall>x \<in> Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x )
-\<Longrightarrow> ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
-          \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
+\<Longrightarrow> (\<exists>\<^sup>su. {(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
+          \<s>\<u>\<b>\<j>\<s> u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
             \<and> u \<in> discrete ` Well_Type TY) * Id_on UNIV
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
@@ -448,20 +445,19 @@ lemma fiction_Map_of_Val_ins_refinement:
   apply (subst fiction_Map_of_Val_ins_comp_id_simp[symmetric])
   apply (rule sep_refinement_stepwise[
             OF refinement_frame[where R = UNIV, OF Map_of_Val_ins.\<F>_functional_refinement_complex[simplified]]])
-  apply (simp add: ExSet_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff split_option_all
+  apply (simp add: split_discrete_ex inj_image_mem_iff split_option_all
                    split_discrete_all index_mod_value_welltyp)
-  apply (simp add: frame_preserving_relation_def split_option_all split_discrete_all
-                   ExSet_expn_set Subjection_expn_set)
+  apply (simp add: frame_preserving_relation_def split_option_all split_discrete_all)
   apply (simp add: Sep_Closed_def)
   subgoal premises prems proof -
     have t1: \<open>A \<subseteq> A' \<Longrightarrow> A * B \<subseteq> A' * B\<close> for A A' B
       by (clarsimp simp add: subset_iff set_mult_expn; blast)
     have \<open>pairself Map_of_Val_ins `
-            ({(Some u, (Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))) u)} \<s>\<u>\<b>\<j> u.
+            (\<exists>\<^sup>su. {(Some u, (Some \<circ> map_discrete (index_mod_value cidx (\<lambda>_. v))) u)} \<s>\<u>\<b>\<j>\<s>
              u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} \<and> u \<in> discrete ` Well_Type TY)
-        \<subseteq> ({(a, a ++ (idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j> a. dom a = Dom_of_TY TY)\<close>
+        \<subseteq> (\<exists>\<^sup>sa. {(a, a ++ (idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j>\<s> dom a = Dom_of_TY TY)\<close>
       apply (clarsimp simp add: set_eq_iff ExSet_image Subjection_image;
-             auto simp add: \<open>\<forall>x\<in>_. _\<close> ExSet_expn_set Subjection_expn_set split_discrete_ex inj_image_mem_iff)
+             auto simp add: \<open>\<forall>x\<in>_. _\<close> split_discrete_ex inj_image_mem_iff)
       apply (metis Map_of_Val_mod map_option_funcomp_map_add homo_one_map_option prems(1) prems(2) push_map_homo)
       using Map_of_Val_dom apply blast
       using Map_of_Val_dom by blast
@@ -482,8 +478,9 @@ lemma fiction_Map_of_Val_ins_refinement:
       by (smt (verit, ccfv_threshold) index_mod_value_welltyp prems(1) prems(2) prems(3) sep_disj_commuteI sep_mult_commute sep_no_inverse t4 val_map_mod_index_value)
   qed
   subgoal premises prems proof -
-    have t1: \<open> Domain ({(a u, b u)} \<s>\<u>\<b>\<j> u. P u) = { a u |u. P u }\<close> for a b P
-      unfolding set_eq_iff Domain_unfold by (clarsimp simp add: ExSet_expn_set Subjection_expn_set)
+
+    have t1: \<open> Domain (\<exists>\<^sup>su. {(a u, b u)} \<s>\<u>\<b>\<j>\<s> P u) = { a u |u. P u }\<close> for a b P
+      unfolding set_eq_iff Domain_unfold by (clarsimp)
     have t2: \<open>{Some u |u. u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} \<and> u \<in> discrete ` Well_Type TY}
                 = Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>
       by (clarsimp simp add: set_eq_iff image_iff Bex_def; blast)
@@ -499,8 +496,8 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
 \<Longrightarrow> v \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> \<forall>x\<in>Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x
-\<Longrightarrow> ({(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
-          \<s>\<u>\<b>\<j> u. u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
+\<Longrightarrow> (\<exists>\<^sup>su. {(Some u, (Some o map_discrete (index_mod_value cidx (\<lambda>_. v))) u)}
+          \<s>\<u>\<b>\<j>\<s> u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
             \<and> u \<in> discrete ` Well_Type TY) * Id_on UNIV
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
@@ -542,34 +539,34 @@ lemma fiction_Map_of_Val_perm_partial_refinement_BYTE:
 \<Longrightarrow> v \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> \<forall>x\<in>Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x
-\<Longrightarrow> ({(Some u, (Some o map_discrete (map_Rep_Byte TY (index_mod_value cidx (\<lambda>_. v)))) u)}
-          \<s>\<u>\<b>\<j> u. u \<in> discrete ` Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
+\<Longrightarrow> (\<exists>\<^sup>su. {(Some u, (Some o map_discrete (map_Rep_Byte TY (index_mod_value cidx (\<lambda>_. v)))) u)}
+          \<s>\<u>\<b>\<j>\<s> u \<in> discrete ` Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
             \<and> u \<in> discrete ` Byte_Rep_of_Val ` Well_Type TY) * Id_on UNIV
     \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
-    \<w>.\<r>.\<t> (\<F>_functional (Byte_Rep_of_Val_ins TY) (Byte_Rep_of_Val_ins_dom TY) \<Zcomp>\<^sub>\<I>
+    \<w>.\<r>.\<t> (\<F>_functional (Byte_Rep_of_Val_ins TY) (Byte_Rep_of_Val_ins_dom TY) \<Zcomp>
           \<F>_functional((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY))
     \<i>\<n> {to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}\<close>
   subgoal premises prems proof -
 
-    have simp1: \<open>(A u \<s>\<u>\<b>\<j> u.
+    have simp1: \<open>(\<exists>\<^sup>su. A u \<s>\<u>\<b>\<j>\<s>
         u \<in> discrete ` Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} \<and> u \<in> discrete ` Byte_Rep_of_TY TY)
-      = (A (discrete (Byte_Rep_of_Val a)) \<s>\<u>\<b>\<j> a. index_value idx a = u_idx \<and> a \<in> Well_Type TY)\<close>
+      = (\<exists>\<^sup>sa. A (discrete (Byte_Rep_of_Val a)) \<s>\<u>\<b>\<j>\<s> index_value idx a = u_idx \<and> a \<in> Well_Type TY)\<close>
       for A
-      unfolding Byte_Rep_of_Val_ins_def BI_eq_iff
+      unfolding Byte_Rep_of_Val_ins_def
       by (auto simp: image_iff)
 
-    have simp2: \<open>(A u \<s>\<u>\<b>\<j> u.
+    have simp2: \<open>(\<exists>\<^sup>su. A u \<s>\<u>\<b>\<j>\<s>
         u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} \<and> u \<in> discrete ` Well_Type TY)
-      = (A (discrete a) \<s>\<u>\<b>\<j> a. index_value idx a = u_idx \<and> a \<in> Well_Type TY)\<close>
+      = (\<exists>\<^sup>sa. A (discrete a) \<s>\<u>\<b>\<j>\<s> index_value idx a = u_idx \<and> a \<in> Well_Type TY)\<close>
       for A
       unfolding Byte_Rep_of_Val_ins_def BI_eq_iff
       by (auto simp: image_iff)
 
     have t1[simp]:
-      \<open>Domain ({(x a, y a)} \<s>\<u>\<b>\<j> a. P a) = ({(x a)} \<s>\<u>\<b>\<j> a. P a)\<close> for x y P
+      \<open>Domain (\<exists>\<^sup>sa. {(x a, y a)} \<s>\<u>\<b>\<j>\<s> P a) = (\<exists>\<^sup>sa. {(x a)} \<s>\<u>\<b>\<j>\<s> P a)\<close> for x y P
       unfolding set_eq_iff
-      by (auto simp add: ExSet_expn_set Subjection_expn_set, rule DomainI, auto simp add: ExSet_expn_set Subjection_expn_set)
+      by auto
 
     have simp3[simp]:
          \<open>a \<in> Well_Type TY
@@ -578,13 +575,13 @@ lemma fiction_Map_of_Val_perm_partial_refinement_BYTE:
       by (simp add: index_mod_value_welltyp map_Rep_Byte_def prems(1) prems(2) prems(4))
       
 
-    note [cong] = Subjection_cong
+    note [cong] = SubjectionSet_cong
 
-    note [simp] = ExSet_image Subjection_image
-
+    note [simp] = ExSet_image SubjectionSet_image
+note Byte_Rep_of_Val_ins.\<F>_functional_refinement_complex
     note t11 = refinement_frame[where R = UNIV, OF Byte_Rep_of_Val_ins.\<F>_functional_refinement_complex,
-        where R4=\<open>{(Some (discrete (Byte_Rep_of_Val a)), Some (discrete (map_Rep_Byte TY (index_mod_value cidx (\<lambda>_. v)) (Byte_Rep_of_Val a))))}
-                  \<s>\<u>\<b>\<j> a. index_value idx a = u_idx \<and> a \<in> Well_Type TY\<close>
+        where R4=\<open>\<exists>\<^sup>sa. {(Some (discrete (Byte_Rep_of_Val a)), Some (discrete (map_Rep_Byte TY (index_mod_value cidx (\<lambda>_. v)) (Byte_Rep_of_Val a))))}
+                  \<s>\<u>\<b>\<j>\<s> index_value idx a = u_idx \<and> a \<in> Well_Type TY\<close>
           and TY4 = TY,
        simplified]
 
@@ -599,21 +596,21 @@ lemma fiction_Map_of_Val_perm_partial_refinement_BYTE:
     apply (assumption)
     apply (simp add: simp1 simp2)
     apply (rule t11)
-    apply (clarsimp simp: ExSet_expn_set Subjection_expn_set)
+    apply (clarsimp simp: )
           using index_mod_value_welltyp map_Rep_Byte_def apply force
-    apply (clarsimp simp: frame_preserving_relation_def ExSet_expn_set Subjection_expn_set)
+    apply (clarsimp simp: frame_preserving_relation_def)
     apply (simp add: Sep_Closed_def \<F>_functional_comp)
     apply (rule subset_trans[OF fiction_Map_of_Val_ins_perm_projection])
     apply blast
     apply blast
-    by (clarsimp simp: set_mult_expn ExSet_expn_set Subjection_expn_set)
+    by (clarsimp simp: set_mult_expn)
 qed .
 
 lemma fiction_Map_of_Val_ins_perm_projection_BYTE:
   \<open> valid_index TY idx
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> refinement_projection
-      (\<F>_functional (Byte_Rep_of_Val_ins TY) (Byte_Rep_of_Val_ins_dom TY) \<Zcomp>\<^sub>\<I>
+      (\<F>_functional (Byte_Rep_of_Val_ins TY) (Byte_Rep_of_Val_ins_dom TY) \<Zcomp>
        \<F>_functional ((\<circ>) to_share o Map_of_Val_ins) (Map_of_Val_ins_dom TY))
       { to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) }
     \<subseteq> Some ` discrete ` Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY } * UNIV \<close>
@@ -658,7 +655,7 @@ lemma fiction_Map_of_Val_ins_perm_projection_half_BYTE:
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> 0 < n
 \<Longrightarrow> refinement_projection
-     (\<F>_functional (Byte_Rep_of_Val_ins TY) (Byte_Rep_of_Val_ins_dom TY) \<Zcomp>\<^sub>\<I>
+     (\<F>_functional (Byte_Rep_of_Val_ins TY) (Byte_Rep_of_Val_ins_dom TY) \<Zcomp>
       \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY))
       { n \<odivr> (to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) }
    \<subseteq> Some ` discrete ` Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} * UNIV\<close>
@@ -686,6 +683,8 @@ qed .
 
 end
 
+lemma split_discrete_ExBI: \<open>(\<exists>*x. P x) = (\<exists>*x. P (discrete x))\<close>
+  unfolding BI_eq_iff by (simp add: split_discrete_ex)
 
 locale aggregate_mem_resource =
   partial_map_resource Res \<open>\<lambda>blk. discrete ` Byte_Rep_of_Val ` Well_Type (typ_of_blk blk)\<close>
@@ -694,7 +693,7 @@ locale aggregate_mem_resource =
 
 locale perm_aggregate_mem_fiction =
   pointwise_base_fiction_for_partial_mapping_resource
-      Res \<open>\<lambda>blk. \<F>_functional (Byte_Rep_of_Val_ins (typ_of_blk blk)) (Byte_Rep_of_Val_ins_dom (typ_of_blk blk)) \<Zcomp>\<^sub>\<I>
+      Res \<open>\<lambda>blk. \<F>_functional (Byte_Rep_of_Val_ins (typ_of_blk blk)) (Byte_Rep_of_Val_ins_dom (typ_of_blk blk)) \<Zcomp>
                  \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (typ_of_blk blk))\<close>
       Fic \<open>\<lambda>blk. discrete ` Byte_Rep_of_Val ` Well_Type (typ_of_blk blk)\<close>
   for Res :: "('blk \<Rightarrow> 8 word list discrete option) resource_entry"
@@ -722,15 +721,16 @@ lemma getter_rule:
       (A x \<s>\<u>\<b>\<j> x. B x \<and> x \<in> Byte_Rep_of_TY (typ_of_blk blk) \<and> x \<in> Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type (typ_of_blk cblk)})
     = (A (Byte_Rep_of_Val v) \<s>\<u>\<b>\<j> v. B (Byte_Rep_of_Val v) \<and> v \<in> Well_Type (typ_of_blk blk) \<and> index_value idx v = u_idx) \<close>
   for A B C ret TY S
-  unfolding set_eq_iff ExSet_expn_set split_discrete_ex Subjection_expn_set
+  unfolding BI_eq_iff split_discrete_ex
   by (auto simp: image_iff Bex_def)
 
   show ?thesis
     by (rule "_getter_rule_2_"[OF _ fiction_Map_of_Val_ins_perm_projection_half_BYTE,
               where k=cblk and k'=blk and idx1=idx and u_idx1=u_idx,
-              simplified split_discrete_ExSet inj_image_mem_iff inj_discrete simp1],
+              simplified split_discrete_ExBI inj_image_mem_iff inj_discrete simp1],
         insert prems, simp+)
 qed .
+
 
 context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
 

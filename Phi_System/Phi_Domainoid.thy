@@ -329,7 +329,7 @@ lemma [\<phi>reason %BI_approx_cut]:
 \<Longrightarrow> B' \<le> \<Psi>[\<psi>] B
 \<Longrightarrow> A' * B' \<le> \<Psi>[\<psi>] (A * B)\<close>
   unfolding \<Psi>_Multiplicative_Conj
-  by (meson dual_order.trans times_set_subset(1) times_set_subset(2))
+  by (metis BI_sub_transformation transformation_bi_frame)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> closed_homo_sep \<psi>
@@ -337,7 +337,7 @@ lemma [\<phi>reason %BI_approx_cut]:
 \<Longrightarrow> \<Psi>[\<psi>] B \<le> B'
 \<Longrightarrow> \<Psi>[\<psi>] (A * B) \<le> A' * B'\<close>
   unfolding \<Psi>_Multiplicative_Conj
-  by (meson dual_order.trans times_set_subset(1) times_set_subset(2))
+  by (metis BI_sub_transformation transformation_bi_frame)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> closed_homo_sep \<psi>
@@ -361,27 +361,27 @@ lemma [\<phi>reason %BI_approx_cut]:
   \<open> A' \<le> \<Psi>[\<psi>] A
 \<Longrightarrow> B' \<le> \<Psi>[\<psi>] B
 \<Longrightarrow> A' + B' \<le> \<Psi>[\<psi>] (A + B) \<close>
-  unfolding \<Psi>_Additive_Disj
+  unfolding \<Psi>_Additive_Disj less_eq_BI_iff
   by (clarsimp; fastforce)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> \<Psi>[\<psi>] A \<le> A'
 \<Longrightarrow> \<Psi>[\<psi>] B \<le> B'
 \<Longrightarrow> \<Psi>[\<psi>] (A + B) \<le> A' + B' \<close>
-  unfolding \<Psi>_Additive_Disj
+  unfolding \<Psi>_Additive_Disj less_eq_BI_iff
   by (clarsimp; fastforce)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> (\<And>c. \<Psi>[\<psi>] (S c) \<le> S' c)
-\<Longrightarrow> \<Psi>[\<psi>] (ExSet S) \<le> ExSet S'\<close>
-  unfolding \<Psi>_ExSet BI_sub_transformation
-  by (simp add: ExSet_transformation)
+\<Longrightarrow> \<Psi>[\<psi>] (ExBI S) \<le> ExBI S'\<close>
+  unfolding \<Psi>_ExBI BI_sub_transformation
+  by (simp add: ExBI_transformation)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> (\<And>c. S' c \<le> \<Psi>[\<psi>] (S c))
-\<Longrightarrow> ExSet S' \<le> \<Psi>[\<psi>] (ExSet S)\<close>
-  unfolding \<Psi>_ExSet BI_sub_transformation
-  by (simp add: ExSet_transformation)
+\<Longrightarrow> ExBI S' \<le> \<Psi>[\<psi>] (ExBI S)\<close>
+  unfolding \<Psi>_ExBI BI_sub_transformation
+  by (simp add: ExBI_transformation)
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> ((\<Psi>[\<psi>] S) \<s>\<u>\<b>\<j> P) \<le> S'
@@ -415,7 +415,7 @@ lemma [\<phi>reason 1000]:
 
 lemma \<comment> \<open>The above rule is reversible for any domainoid extraction \<open>d\<close>\<close>
   \<open> domainoid TYPE('c::sep_magma) d
-\<Longrightarrow> Satisfiable (A * B) \<longleftrightarrow> (\<exists>a b. a \<in> \<Psi>[d] A \<and> b \<in> \<Psi>[d] B \<and> a ## b)\<close>
+\<Longrightarrow> Satisfiable (A * B) \<longleftrightarrow> (\<exists>a b. a \<Turnstile> \<Psi>[d] A \<and> b \<Turnstile> \<Psi>[d] B \<and> a ## b)\<close>
   unfolding Satisfiable_def
   by (clarsimp simp add: domainoid_def closed_homo_sep_def closed_homo_sep_disj_def; blast)
 

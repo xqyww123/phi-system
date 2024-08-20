@@ -135,7 +135,7 @@ lemma "__DoWhile__rule_\<phi>app":
   " \<p>\<r>\<o>\<c> body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> (\<exists>*x'. \<v>\<a>\<l> P x' \<Ztypecolon> \<bool>\<heavy_comma> X x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_do_while body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> X x' \<s>\<u>\<b>\<j> x'. \<not> P x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E "
   unfolding op_do_while_def \<phi>Procedure_def
-  apply (simp add: subset_iff LooseState_expn')
+  apply (simp add: less_eq_BI_iff LooseState_expn')
   apply (rule allI impI conjI)+
   subgoal for comp R s
   apply (rotate_tac 2)
@@ -143,7 +143,7 @@ lemma "__DoWhile__rule_\<phi>app":
            clarsimp simp add: times_list_def INTERP_SPEC)
     apply fastforce
     subgoal premises prems for res f s s'' c u v proof -
-      have t1: \<open>\<exists>uu. (\<exists>x. (\<exists>u v. uu = u * v \<and> u \<Turnstile> X x \<and> v \<Turnstile> R \<and> u ## v) \<and> P x) \<and> s \<in> INTERP_RES uu\<close>
+      have t1: \<open>\<exists>uu. (\<exists>x. (\<exists>u v. uu = u * v \<and> u \<Turnstile> X x \<and> v \<Turnstile> R \<and> u ## v) \<and> P x) \<and> s \<Turnstile> INTERP_RES uu\<close>
         using prems(5) prems(6) prems(7) prems(8) prems(9) by blast
       show ?thesis
         by (insert \<open>\<forall>_ _. (\<exists>_. _) \<longrightarrow> _\<close>[THEN spec[where x=s], THEN spec[where x=R], THEN mp, OF t1]
@@ -201,7 +201,7 @@ proc while:
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>while\<close>, 3))\<close>
 
 proc (nodef) refine_while
-  [unfolded \<phi>Type_def[where T=\<open>X::'a \<Rightarrow> (FIC_N \<Rightarrow> FIC) set\<close>]]:
+  [unfolded \<phi>Type_def[where T=\<open>X::'a \<Rightarrow> (FIC_N \<Rightarrow> FIC) BI\<close>]]:
   requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> Transition: f x)\<close>
     and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<w>\<i>\<t>\<h> Any"
     and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x\<heavy_comma> \<v>\<a>\<l> cond x \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
@@ -236,15 +236,15 @@ lemma "__op_recursion_simp__":
                       \<Longrightarrow> \<p>\<r>\<o>\<c> F g v' \<lbrace> X x' v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x' )
 \<Longrightarrow> \<forall>x v. \<p>\<r>\<o>\<c> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x"
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all
-  apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
+  apply (clarsimp simp add: SemRec_deterministic2 less_eq_BI_iff del: subsetI)
 
-  subgoal for x v comp a R
+  subgoal for x v comp a R w
     apply (rotate_tac 1) apply (induct rule: SemRec.induct)
 
     subgoal premises prems for F v res y
-      using prems(3)[of \<open>\<lambda>_ _. {AssumptionBroken}\<close> x v, simplified, THEN spec[where x=res],
-                     THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
-    by simp .
+      using prems(4)[of \<open>\<lambda>_ _. {AssumptionBroken}\<close> x v, simplified, THEN spec[where x=res],
+                     THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] prems(3) by blast
+    by (smt (z3) comp_apply) .
 
 text \<open>Instead, we use a variant of the above rule which in addition annotates the names
   of the values.\<close>
@@ -263,16 +263,17 @@ lemma "__op_recursion__":
 )"
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all \<phi>arg_forall \<phi>arg_All Technical_def
             Pure.prop_def
-  apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
+  apply (clarsimp simp add: SemRec_deterministic2 less_eq_BI_iff del: subsetI)
 
-  subgoal for comp a R
+  subgoal for comp a R w
     apply (rotate_tac 2) apply (induct rule: SemRec.induct)
 
     subgoal premises prems for F v res y
-      using prems(3)[OF prems(4),
+      using prems(4)[OF prems(5),
                      of \<open>\<lambda>_ _. {AssumptionBroken}\<close> v, simplified, THEN spec[where x=res],
-                     THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
-    by simp .
+                     THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)]
+            prems(3) by blast
+    by (smt (z3) comp_apply) .
 
 ML_file \<open>library/basic_recursion.ML\<close>
 

@@ -41,13 +41,13 @@ val cast = Phi_Working_Mode.cast
 val cast_exception = Phi_Working_Mode.cast_exception
 
 val conv_E_thms =
-  @{thms add_0_right[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
-         add_0_right[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
-         add_0_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
-         add_0_left[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
+  @{thms add_0_right[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
+         add_0_right[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma BI\<close>, folded atomize_eq]
+         add_0_left[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
+         add_0_left[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma BI\<close>, folded atomize_eq]
          zero_fun[folded atomize_eq]
-         mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
-         mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+         mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
+         mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>, folded atomize_eq]
    }
 
 fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
@@ -73,7 +73,7 @@ fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
                              (Conv.repeat_conv (Conv.rewrs_conv conv_E_thms))))
   end
 
-structure CodeBlock_Idx = Proof_Data (
+structure Code_Idx = Proof_Data (
   type T = int
   val init = K 0
 )
@@ -107,18 +107,18 @@ fun accept_proc' (ctxt,sequent) =
             \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
         = Phi_Help.leading_antecedent' rule
 
-    val blk_idx = CodeBlock_Idx.get ctxt
+    val blk_idx = Code_Idx.get ctxt
     val (ret_name, ctxt'1) = Generic_Variable_Access.assign_anony_local_val (SOME ret_ty) ctxt
     val ([s_name], ctxt') = Proof_Context.add_fixes [
                                    (Binding.name ("\<s>" ^ string_of_int blk_idx), NONE, NoSyn)] ctxt'1
-                         |> apsnd (CodeBlock_Idx.map (fn i => i+1))
+                         |> apsnd (Code_Idx.map (fn i => i+1))
     val codeblk_cterm =
           Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name, \<^typ>\<open>resource\<close>)], codeblk_term)
               |> Thm.cterm_of ctxt
     val param_cterms = (Free (s_name, \<^typ>\<open>resource\<close>), Free (ret_name, ret_ty))
               |> apply2 (Thm.cterm_of ctxt)
 
-    val (_,_,f,_) = Phi_Syntax.dest_CodeBlock_c codeblk_cterm
+    val (_,_,f,_) = Phi_Syntax.dest_Code_c codeblk_cterm
     val _ = if Thm.maxidx_of_cterm f <> ~1
             then error (Pretty.string_of (Pretty.chunks [
                     Pretty.str "The pending procedure to be accepted has schematic variable(s)!",
@@ -163,11 +163,11 @@ fun set_param raw_term (ctxt,sequent) =
                         |> Syntax.check_term ctxt_parse
                         |> Variable.expand_binds ctxt_parse
     fun has_multiple_ex_quantification X
-      = case X of (Const(\<^const_name>\<open>ExSet\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExSet\<close>, _) $ _))))
+      = case X of (Const(\<^const_name>\<open>ExBI\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExBI\<close>, _) $ _))))
                     => true
                 | _ => false
     fun has_only_one_ex_quantification X =
-          case X of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ => not (has_multiple_ex_quantification X)
+          case X of Const(\<^const_name>\<open>ExBI\<close>, _) $ _ => not (has_multiple_ex_quantification X)
                   | _ => false
   in
     if has_only_one_ex_quantification goal
@@ -175,7 +175,7 @@ fun set_param raw_term (ctxt,sequent) =
       case term
         of SP as \<^Const_>\<open>Subjection \<open>ty\<close>\<close> $ _ $ _ =>
             let val sequent' = set_param' ctxt_parse
-                                    (\<^Const>\<open>ExSet \<^typ>\<open>unit\<close> \<open>ty\<close>\<close> $ Abs ("", \<^typ>\<open>unit\<close>, SP)) sequent
+                                    (\<^Const>\<open>ExBI \<^typ>\<open>unit\<close> \<open>ty\<close>\<close> $ Abs ("", \<^typ>\<open>unit\<close>, SP)) sequent
                             |> Conv.fconv_rule (
                                   Phi_Conv.pure_imp_antecedents_conv (
                                     Conv.try_conv (Conv.rewr_conv @{thm unit_all_eq1})))
@@ -187,7 +187,7 @@ fun set_param raw_term (ctxt,sequent) =
                           addsimps QuantExpansion.aux_expansions ctxt
                           addsimprocs [QuantExpansion.named_forall,
                                        QuantExpansion.named_ex,
-                                       QuantExpansion.named_ExSet,
+                                       QuantExpansion.named_ExBI,
                                        QuantExpansion.named_metaAll]
             in (ctxt, set_param' ctxt_parse term' sequent
                         |> QuantExpansion.named_predicate_expansion sctxt

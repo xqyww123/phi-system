@@ -228,7 +228,7 @@ proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
 next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
 qed
 
-lemma named_ExSet: "(\<exists>*c. T c) = (\<exists>*c. T (tag c) )" by (clarsimp simp add: named_exists BI_eq_iff)
+lemma named_ExBI: "(\<exists>*c. T c) = (\<exists>*c. T (tag c) )" by (clarsimp simp add: named_exists BI_eq_iff)
 
 
 subsubsection \<open>Expansion of Quantification\<close>
@@ -261,7 +261,7 @@ simproc_setup named_ex_expansion ("Ex (P :: 'a <named> 'names \<Rightarrow> bool
           (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => QuantExpansion.exists_expansion_arg_encoding
             | _ => QuantExpansion.exists_expansion))\<close>
 
-simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow> 'b BI)") =
+simproc_setup named_exSet_expansion ("ExBI (P :: 'a <named> 'names \<Rightarrow> 'b BI)") =
   \<open>K (QuantExpansion.simproc_of (K QuantExpansion.ExNu_expansion))\<close>
 
 simproc_setup named_metaAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
@@ -350,7 +350,7 @@ named_theorems frame_var_rewrs \<open>Rewriting rules to normalize after inserti
 
 declare mult.assoc[symmetric, frame_var_rewrs]
   Subjection_times[frame_var_rewrs]
-  ExSet_times_right[frame_var_rewrs]
+  ExBI_times_right[frame_var_rewrs]
 
 consts frame_var_rewrs :: mode
 
@@ -437,7 +437,7 @@ hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes
 
 subsubsection \<open>Reasoning Goals Embedded in BI Assertion\<close>
 
-definition Subj_Reasoning :: \<open> 'p set \<Rightarrow> bool \<Rightarrow> 'p set \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
+definition Subj_Reasoning :: \<open> 'p BI \<Rightarrow> bool \<Rightarrow> 'p BI \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
   where \<open>Subj_Reasoning \<equiv> Subjection\<close>
 
 lemma [\<phi>reason 1000]:
@@ -539,8 +539,8 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>x. Semantic_Types_i (\<lambda>ret. (S ret) x) TYs)
-\<Longrightarrow> Semantic_Types_i (\<lambda>ret. ExSet (S ret)) TYs\<close>
-  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def Satisfiable_def ExSet_expn
+\<Longrightarrow> Semantic_Types_i (\<lambda>ret. ExBI (S ret)) TYs\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def Satisfiable_def ExBI_expn
   by clarsimp blast
 
 lemma [\<phi>reason 1200]:
@@ -572,13 +572,13 @@ declare [[\<phi>reason_default_pattern \<open>Remove_Values ?X _\<close> \<Right
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>c. Remove_Values (T c) (T' c))
-\<Longrightarrow> Remove_Values (ExSet T) (ExSet T')\<close>
+\<Longrightarrow> Remove_Values (ExBI T) (ExBI T')\<close>
   unfolding Remove_Values_def Transformation_def
   by simp blast
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>c. Remove_Values (T c * R) (T' c * R'))
-\<Longrightarrow> Remove_Values (ExSet T * R) (ExSet T' * R')\<close>
+\<Longrightarrow> Remove_Values (ExBI T * R) (ExBI T' * R')\<close>
   unfolding Remove_Values_def Transformation_def
   by simp blast
 

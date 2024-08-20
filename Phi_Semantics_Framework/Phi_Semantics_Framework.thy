@@ -320,9 +320,9 @@ declare [ [typedef_overloaded] ]
 datatype 'ret comp =
       Success \<open>'ret \<phi>arg\<close> (resource: resource)
     | Abnormal \<open>ABNM\<close> (resource: resource)
-    | Invalid
+    | Invalid (*TODO: rename to Stuck*)
     | AssumptionBroken
-    | NonTerm
+    | NonTerm (*TODO: rename to NonTerminating*)
 
 declare [ [typedef_overloaded = false] ]
 

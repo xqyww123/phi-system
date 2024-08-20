@@ -22,8 +22,8 @@ include PHI_SYNTAX
   val dest_ToA_Construction    : term  -> term * term
   val dest_ToA_Construction_c  : cterm -> cterm * cterm
 
-  val dest_CodeBlock   : term -> term * term * term * term
-  val dest_CodeBlock_c : cterm -> cterm * cterm * cterm * cterm
+  val dest_Code   : term -> term * term * term * term
+  val dest_Code_c : cterm -> cterm * cterm * cterm * cterm
 
   val dest_satisfaction : term -> term * term
   val dest_satisfaction_c : cterm -> cterm * cterm
@@ -72,8 +72,8 @@ fun pending_construction_abnm_conv C =
        | _ => raise CTERM ("pending_construction_abnm_conv", [ctm])
      )
 
-val dest_CodeBlock   = perhaps (try dest_Trueprop)   #> dest_quadop   \<^const_name>\<open>CodeBlock\<close>
-val dest_CodeBlock_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c \<^const_name>\<open>CodeBlock\<close>
+val dest_Code   = perhaps (try dest_Trueprop)   #> dest_quadop   \<^const_name>\<open>Calculus_of_Programming.Code\<close>
+val dest_Code_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c \<^const_name>\<open>Calculus_of_Programming.Code\<close>
 
 fun is_construction_mode mode tm =
   case try dest_CurrentConstruction tm

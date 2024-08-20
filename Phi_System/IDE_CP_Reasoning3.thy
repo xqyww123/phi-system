@@ -392,8 +392,8 @@ text \<open>The merging recognizes two existential quantifier are identical if t
 \<phi>reasoner_ML Merge_Existential_imp %\<phi>br_join_ex+20 (\<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X\<close>) = \<open>
   fn (_, (ctxt,sequent)) =>
     let
-      val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
-                                           $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))), _, _)
+      val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExBI\<close>, _) $ Abs (exa,tya,_))
+                                           $ (Const (\<^const_name>\<open>ExBI\<close>, _) $ Abs (exb,tyb,_))), _, _)
           = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
       val sequent' = if exa = exb andalso tya = tyb
                      then @{thm Conv_Merge_Ex_both_imp} RS sequent
@@ -435,7 +435,7 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
 \<Longrightarrow> if C\<^sub>R then (If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join) \<and>\<^sub>\<r> (Z' = Z * Z\<^sub>R)
           else Identity_Element\<^sub>I (snd x \<Ztypecolon> T\<^sub>R) Any \<and>\<^sub>\<r> Z' = Z
 \<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z' @tag br_join \<close>
-  for Z' :: \<open>'c::sep_magma_1 set\<close>
+  for Z' :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
             Orelse_shortcut_def Ant_Seq_def Identity_Element\<^sub>I_def
   by ((cases P; cases C\<^sub>R; clarsimp), blast, force, blast)
@@ -689,13 +689,13 @@ subsubsection \<open>Unfold\<close>
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L (N * (R1 * R2)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (N * R1 * R2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for N :: \<open>'a::sep_semigroup set\<close>
+  for N :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P (L1 * (L2 * L3)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (L1 * L2 * L3) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_semigroup set\<close>
+  for R :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
 
@@ -704,31 +704,31 @@ subsubsection \<open>Eliminate Void Hole\<close>
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (R * 1) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L (R' * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P L (R' * 1 * R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (L * 1) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason %\<phi>br_join_normalize]:
   " If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (1 * L) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join"
-  for R :: \<open>'a::sep_magma_1 set\<close>
+  for R :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
 (* TODO!!!
@@ -757,7 +757,7 @@ lemma [\<phi>reason %\<phi>synthesis_split+20]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<bind> (\<lambda>v1. f2 \<bind> (\<lambda>v2. Return (\<phi>V_pair v1 v2))))
          \<lbrace> R1 \<longmapsto> \<lambda>ret. A (\<phi>V_fst ret)\<heavy_comma> B (\<phi>V_snd ret) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (E2 e\<heavy_comma> ExSet A)) @tag synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (E2 e\<heavy_comma> ExBI A)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
     F1 F2 \<open>A \<v>0\<close>
   \<medium_right_bracket> .
@@ -766,7 +766,7 @@ lemma [\<phi>reason %\<phi>synthesis_split]:
   \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<bind> (\<lambda>v. f2 \<then> Return v)) \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<heavy_comma> B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @tag synthesis\<close>
+    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExBI A \<heavy_comma> E2 e)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
     F1 F2
   \<medium_right_bracket> .
@@ -1091,7 +1091,7 @@ lemma Gen_Synthesis_Rule_transformation_00:
                      \We assume the synthesis target is the first item.\n\
                      \You should use \<open> Target \<r>\<e>\<m>\<a>\<i>\<n>\<s> Residue \<close> to annotate the target."
         fun chk_target (Abs (_,_,tm)) = chk_target tm
-          | chk_target (Const (\<^const_name>\<open>ExSet\<close>, _) $ _)
+          | chk_target (Const (\<^const_name>\<open>ExBI\<close>, _) $ _)
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
@@ -1165,7 +1165,7 @@ lemma Gen_Synthesis_Rule_VS_00:
                      \We assume the synthesis target is the last item.\n\
                      \You should use \<open> Target \<r>\<e>\<m>\<a>\<i>\<n>\<s> Residue \<close> to annotate the target."
         fun chk_target (Abs (_,_,tm)) = chk_target tm
-          | chk_target (Const (\<^const_name>\<open>ExSet\<close>, _) $ _)
+          | chk_target (Const (\<^const_name>\<open>ExBI\<close>, _) $ _)
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
@@ -1202,7 +1202,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut for \<open>PROP Gen_Synthesis_
   \<comment> \<open>Gen_Synthesis_Rule_step_value\<close>
   \<open> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> (f \<bind> (\<lambda>v. F (\<phi>V_pair v vs)))
-                                 \<lbrace> Xr vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E1 e\<heavy_comma> ExSet Xr) + EF e)))
+                                 \<lbrace> Xr vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E1 e\<heavy_comma> ExBI Xr) + EF e)))
             ((\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis) &&& PROP Ant)
             Result
 \<Longrightarrow> PROP Gen_Synthesis_Rule
@@ -1245,7 +1245,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut]: \<comment> \<open>Gen_Synthe
 
 lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut+10]:
   \<open> PROP Gen_Synthesis_Rule
-            (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> (f \<then> F v) \<lbrace> Xr v \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E1 e\<heavy_comma> ExSet Xr) + EF e)))
+            (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> (f \<then> F v) \<lbrace> Xr v \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E1 e\<heavy_comma> ExBI Xr) + EF e)))
             (\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis &&& PROP Ant)
             Result
 \<Longrightarrow> PROP Gen_Synthesis_Rule
@@ -1342,7 +1342,7 @@ private lemma Gen_Synthesis_Rule_start_proc_having_target:
           | dest_proc tm = Phi_Syntax.dest_procedure tm
         val (_,X,Y,_) = dest_proc (Thm.major_prem_of sequent)
         fun chk_target (Abs (_,_,tm)) = chk_target tm
-          | chk_target (Const (\<^const_name>\<open>ExSet\<close>, _) $ _)
+          | chk_target (Const (\<^const_name>\<open>ExBI\<close>, _) $ _)
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."

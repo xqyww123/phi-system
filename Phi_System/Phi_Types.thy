@@ -589,7 +589,7 @@ declare [[\<phi>trace_reasoning = 0]]
 text \<open>Read it as 'the abstract object is certain element in the set'
 
 Together with the \<^const>\<open>SubjectionTY\<close>, \<^const>\<open>\<phi>Dependent_Sum\<close> and \<^const>\<open>Set_Abst\<close> embed
-  BI connective \<open>\<and>\<close> (\<^const>\<open>Subjection\<close>) and \<open>\<exists>\<close> (\<^const>\<open>ExSet\<close>) into \<phi>-types. The embedding of \<open>\<exists>\<close>
+  BI connective \<open>\<and>\<close> (\<^const>\<open>Subjection\<close>) and \<open>\<exists>\<close> (\<^const>\<open>ExBI\<close>) into \<phi>-types. The embedding of \<open>\<exists>\<close>
   is in an algebraic way having good properties like the \<Sigma>-Homomorphism and \<S>-Homomorphism introduced below.
 
 The system reduces the three \<phi>-types actively just like how it reduces BI \<open>\<exists>\<close> and \<open>\<and>\<close>.
@@ -683,7 +683,7 @@ val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
   lhss = [\<^pattern>\<open>_ \<Ztypecolon> _ \<s>\<u>\<b>\<j> x. \<top>\<close>],
   proc = fn _ => fn ctxt => fn ctm =>
     case Thm.term_of ctm
-      of Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => (
+      of Const(\<^const_name>\<open>ExBI\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => (
           case T
             of Const(\<^const_name>\<open>SubjectionTY\<close>, _) $ T $ P => (
                   case P
@@ -814,10 +814,24 @@ lemma [\<phi>reason 1000]:
  
 subsection \<open>Vertical Composition\<close>
 
+
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving \<open>Carrier_Set T P \<Longrightarrow> Carrier_Set (T \<Zcomp> U) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> U) \<longrightarrow> P v)\<close>
 
+declare \<phi>Composition.expansion[unfolded \<phi>Type_def, iff]
+
+lemma \<phi>Composition_assoc:
+  \<open>((I1 \<Zcomp> I2) \<Zcomp> I3) = (I1 \<Zcomp> (I2 \<Zcomp> I3))\<close>
+  by (rule \<phi>Type_eqI, simp , blast)
+
+lemma interp_comp_homo_one[simp]:
+  \<open>homo_one Ia \<Longrightarrow> homo_one Ib \<Longrightarrow> homo_one (Ia \<Zcomp> Ib)\<close>
+  unfolding homo_one_def by (simp add: BI_eq_iff)
+
+lemma Itself_comp[simp]:
+  \<open>(Itself \<Zcomp> I) = I\<close> \<open>(I \<Zcomp> Itself) = I\<close>
+  by (simp add: BI_eq_iff fun_eq_iff)+
 
 text \<open>
   We do not use deriver here.
@@ -924,9 +938,9 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
-    by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. {x}\<close>], THEN spec[where x=\<open>\<lambda>_. {y}\<close>], simplified]
+    by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. Itself x\<close>], THEN spec[where x=\<open>\<lambda>_. Itself y\<close>], simplified]
                prems(1,3-5),
-        auto simp add: Satisfaction_def) .
+        auto) .
   
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
@@ -939,10 +953,10 @@ lemma (*The above rule is reversible*)
   \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
   unfolding Separation_Homo\<^sub>E_def Object_Sep_Homo\<^sub>E_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
-  apply (simp add: \<phi>Type_def Satisfaction_def)
+  apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y v
-    by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {x}\<close>], THEN spec[where x=\<open>\<lambda>_. {y}\<close>], simplified]
-               prems(2-3), blast) .
+    by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. Itself x\<close>], THEN spec[where x=\<open>\<lambda>_. Itself y\<close>], simplified]
+               prems(2-3), metis Itself_expn' Satisfaction_def) .
 
 
 
@@ -1196,7 +1210,7 @@ subsection \<open>Embedding Additive Conjunction\<close>
 (* declare False_def[symmetric, simp] *)
 
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
-  where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
+  where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<sqinter> (snd x \<Ztypecolon> U))\<close>
   deriving Basic
        and \<open>  Abstract_Domain T P
           \<Longrightarrow> Abstract_Domain U Q
@@ -1218,7 +1232,7 @@ subsubsection \<open>Rules\<close>
 declare \<phi>Inter_def[embed_into_\<phi>type del]
 
 lemma \<phi>Inter_embedding[embed_into_\<phi>type]:
-  \<open>(x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (y \<Ztypecolon> U) \<equiv> (x, y) \<Ztypecolon> T \<and>\<^sub>\<phi> U\<close>
+  \<open>(x \<Ztypecolon> T) \<sqinter> (y \<Ztypecolon> U) \<equiv> (x, y) \<Ztypecolon> T \<and>\<^sub>\<phi> U\<close>
   unfolding atomize_eq BI_eq_iff
   by simp
 
@@ -1382,9 +1396,9 @@ lemma \<comment> \<open>The rule of \<open>\<phi>Fun'.\<phi>Inter_Comm\<^sub>I\<
   unfolding Transformation_def inj_def
   apply clarsimp
   subgoal premises prems for x y
-    by (insert prems(1)[of _ \<open>\<lambda>_. {x}\<close> _ \<open>\<lambda>_. {y}\<close>]
+    by (insert prems(1)[of _ \<open>\<lambda>_. Itself x\<close> _ \<open>\<lambda>_. Itself y\<close>]
                prems(2-),
-        clarsimp simp add: \<phi>Type_def Satisfaction_def) .
+        clarsimp simp add: \<phi>Type_def) .
 
 
 

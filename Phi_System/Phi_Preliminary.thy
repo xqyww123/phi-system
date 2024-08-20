@@ -867,21 +867,6 @@ lemma Membership_E_Inhabitance:
 
 
 
-subsubsection \<open>Supplementary of Meta-Ball\<close>
-
-lemma [\<phi>reason %meta_ball]:
-  \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
-\<Longrightarrow> (\<And>x \<in> S \<s>\<u>\<b>\<j> Q. PROP P x)\<close>
-  unfolding meta_Ball_def Premise_def Subjection_expn_set
-  by (clarsimp simp add: atomize_conj[symmetric] conjunction_imp norm_hhf_eq)
-
-lemma [\<phi>reason %meta_ball]:
-  \<open> (Q \<Longrightarrow> \<forall>x \<in> S. P x)
-\<Longrightarrow> (\<forall>x \<in> S \<s>\<u>\<b>\<j> Q. P x)\<close>
-  unfolding Ball_def Subjection_expn_set
-  by simp
-
-
 
 
 subsection \<open>Very Early Mechanism\<close>
@@ -956,7 +941,7 @@ text \<open>
       PendingConstruction, ToA_Construction, Argument tag
 \<^item> 12: View_Shift, Transformation
 \<^item> 13: Remains
-\<^item> 14: ExSet
+\<^item> 14: ExBI
 \<^item> 15: Comma, Subjection
 \<^item> 16: Struct Tag, SYNTHESIS
 \<^item> 18: Assertion_Matches

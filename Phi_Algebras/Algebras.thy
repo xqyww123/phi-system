@@ -1,7 +1,7 @@
 theory Algebras
-  imports Phi_Spec_Pre HOL.Rat
-    "Phi_Document.Base" "HOL-Library.Product_Plus"
-    "HOL-Library.Finite_Map"
+  imports
+    "HOL-Library.Product_Plus"
+    "HOL-Library.Finite_Map" HOL.Rat "Phi_Document.Base"
 begin
 
 setup \<open>
@@ -37,7 +37,7 @@ locale simple_homo_mul =
       and simple_homo_mul_dom[simp]: \<open>1 \<in> D\<close>
 begin
 
-sublocale homo_one by (standard; simp)
+sublocale homo_one by (standard, insert simple_homo_mul_dom, blast)
 
 end
 
@@ -78,7 +78,7 @@ class mult_1 = times + one +
       and mult_1_right[simp]: "x * 1 = x"
 
 subclass (in monoid_mult) mult_1
-  by (standard; simp)
+  by (standard; insert local.mult_1_left local.mult_1_right; blast)
 
 (* TODO
 class add_left_neutral = plus +
@@ -2498,9 +2498,8 @@ lemma times_set_subset[intro, simp]:
   \<open>B \<subseteq> B' \<Longrightarrow> B * A \<subseteq> B' * A\<close>
   unfolding subset_iff times_set_def by simp_all blast+
 
-instantiation set :: ("{sep_disj,times}") mult_zero begin
-instance by (standard; simp add: zero_set_def times_set_def)
-end
+instance set :: ("{sep_disj,times}") mult_zero 
+  by (standard; simp add: zero_set_def times_set_def)
 
 instance set :: ("{sep_magma_1,no_inverse}") no_inverse
   apply (standard, simp add: one_set_def times_set_def set_eq_iff)
@@ -3241,8 +3240,6 @@ hide_const (open) dest
 
 lemma split_discrete_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (discrete x))\<close> by (metis discrete.exhaust)
 lemma split_discrete_ex : \<open>Ex P \<longleftrightarrow> (\<exists>x. P (discrete x))\<close> by (metis discrete.exhaust)
-lemma split_discrete_ExSet: \<open>ExSet P = (\<exists>*x. P (discrete x))\<close>
-  unfolding set_eq_iff ExSet_expn_set split_discrete_ex by simp
 lemma split_discrete_meta_all: \<open>Pure.all P \<equiv> (\<And>x. PROP P (discrete x))\<close>
 proof
   fix x

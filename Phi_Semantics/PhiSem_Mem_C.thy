@@ -13,12 +13,12 @@ subsection \<open>Fiction\<close>
 type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share option\<close> \<comment> \<open>fiction of a single memory object\<close>
 
 fiction_space aggregate_mem =
-  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I>
+  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>
                     \<F>_pointwise (\<lambda>blk.
-                        \<F>_functional (Byte_Rep_of_Val_ins (memblk.layout blk)) (Byte_Rep_of_Val_ins_dom (memblk.layout blk)) \<Zcomp>\<^sub>\<I>
+                        \<F>_functional (Byte_Rep_of_Val_ins (memblk.layout blk)) (Byte_Rep_of_Val_ins_dom (memblk.layout blk)) \<Zcomp>
                         \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout Null)
-  by (standard, auto simp add: Byte_Rep_of_Val_ins_def)
+  by (standard, auto simp add: Byte_Rep_of_Val_ins_def BI_eq_iff)
 
 term FIC.aggregate_mem
 thm FIC.aggregate_mem_fic_ax

@@ -375,7 +375,7 @@ val end_block_cmd = gen_finish_proc (fn ctxt =>
             let val term = Syntax.read_term ctxt subj
                 val i = Term.maxidx_of_term term + 1
              in \<^Const>\<open>Subjection \<open>TVar(("'x", i), [])\<close>\<close>
-                  $ Var(("X",i),\<^Type>\<open>set \<open>TVar(("'x", i), [])\<close>\<close>)
+                  $ Var(("X",i),\<^Type>\<open>BI \<open>TVar(("'x", i), [])\<close>\<close>)
                   $ term
             end
      )) Proof.local_qed

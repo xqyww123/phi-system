@@ -18,7 +18,7 @@ fun conv_def_to_equation ctxt def =
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
          Const(\<^const_name>\<open>HOL.eq\<close>, \<^Type>\<open>fun Ty _\<close>) $ LHS $ RHS) =>
        (case Ty
-          of \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>\<close> =>
+          of \<^Type>\<open>fun _ \<open>\<^Type>\<open>BI _\<close>\<close>\<close> =>
               let val concl = Thm.dest_arg (Thm.cconcl_of def)
                   val T = Thm.dest_arg1 concl
                   val U = Thm.dest_arg  concl
@@ -45,7 +45,7 @@ fun conv_def_to_equation ctxt def =
                |> Seq.hd
                |> Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.arg_conv prod_beta))
               end
-           | \<^Type>\<open>set _\<close> => (
+           | \<^Type>\<open>BI _\<close> => (
                 case LHS of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => def
                           | _ $ _ => Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                         HOLogic.Trueprop_conv (HOLogic.eq_conv

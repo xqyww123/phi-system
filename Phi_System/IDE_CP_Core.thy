@@ -783,7 +783,7 @@ lemma Synthesis_Proc_fallback_VS
   [\<phi>reason default %\<phi>synthesis_fallback for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>v. ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]:
   \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @tag synthesis\<close>
-  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def Satisfaction_def
+  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def less_eq_BI_iff
   by simp
 
 lemma [\<phi>reason default %\<phi>synthesis_fallback]:
@@ -1801,7 +1801,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P)"
-  for S' :: \<open>'c::sep_magma set\<close>
+  for S' :: \<open>'c::sep_magma BI\<close>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication_impl transformation_right_frame)
 
@@ -1812,7 +1812,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA+20]:
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T'))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T))"
-  for S' :: \<open>'c::sep_magma set\<close>
+  for S' :: \<open>'c::sep_magma BI\<close>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication_impl transformation_left_frame)
 
@@ -1823,7 +1823,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> T) \<and> P)"
-  for S' :: \<open>'c::type set\<close>
+  for S' :: \<open>'c::type BI\<close>
   unfolding \<phi>Application_def Action_Tag_def ToA_Construction_def Transformation_def
   by metis
 
@@ -1833,7 +1833,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T))"
-  for S' :: \<open>'c::type set\<close>
+  for S' :: \<open>'c::type BI\<close>
   unfolding \<phi>Application_def Action_Tag_def ToA_Construction_def Transformation_def
   by metis
   
@@ -2423,8 +2423,8 @@ fun phi_synthesis_parser (oprs, (ctxt, sequent)) F (raw_term, pos) cfg =
 )\<close>
 
 \<phi>lang_parser existential_elimination (%\<phi>parser_unique, %\<phi>lang_expr) ["\<exists>"]
-                                    ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>
-                                    | \<open>ToA_Construction ?s (ExSet ?S)\<close> )
+                                    ( \<open>CurrentConstruction ?mode ?blk ?H (ExBI ?T)\<close>
+                                    | \<open>ToA_Construction ?s (ExBI ?S)\<close> )
   \<open>fn s => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) >> (fn insts => fn _ =>
       apsnd (Phi_CP_IDE.proof_state_call (NuObtain.choose insts)) s)\<close>
 
@@ -2569,7 +2569,7 @@ end)) end
        not (can \<^keyword>\<open>\<exists>\<close> (#toks arg))
     then let val mode = Phi_Working_Mode.mode1 ctxt
       in case #spec_of mode (Thm.concl_of sequent)
-           of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+           of Const (\<^const_name>\<open>ExBI\<close>, _) $ _ =>
                 raise Phi_CP_IDE.Post_App.ReEntry (arg, Phi_CP_IDE.proof_state_call NuObtain.auto_choose (ctxt,sequent))
             | _ => (ctxt,sequent)
      end

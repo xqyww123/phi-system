@@ -385,8 +385,6 @@ simproc_setup \<t>\<y>\<p>\<e>\<o>\<f>_ntup (\<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<
       |> Option.map fst
 \<close>
 
-ML_file \<open>library/Ag_Named_Tuple2.ML\<close>
-
 lemma fmpred_sing[simp]:
   \<open>fmpred P (fmupd k v fmempty) \<longleftrightarrow> P k v\<close>
   by auto

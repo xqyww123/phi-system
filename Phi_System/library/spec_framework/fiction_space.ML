@@ -50,7 +50,7 @@ fun read_arg ctxt resT raw_T env =
   let
     val ctxt' = fold (Variable.declare_typ o TFree) env ctxt;
     val TM0 = Syntax.parse_term ctxt' raw_T
-    val chk = Syntax.check_term ctxt' o Type.constraint \<^Type>\<open>fun dummyT \<^Type>\<open>set resT\<close>\<close>
+    val chk = Syntax.check_term ctxt' o Type.constraint \<^Type>\<open>fun dummyT \<^Type>\<open>BI resT\<close>\<close>
     val T = chk TM0
     val env' = Term.add_tfrees T env;
   in (T, env') end;
@@ -60,7 +60,7 @@ fun cert_arg ctxt resT raw_TM env =
     val thy = Proof_Context.theory_of ctxt;
     val chk = Sign.certify_term thy
             o Syntax.check_term ctxt
-            o Type.constraint \<^Type>\<open>fun dummyT \<^Type>\<open>set resT\<close>\<close>
+            o Type.constraint \<^Type>\<open>fun dummyT \<^Type>\<open>BI resT\<close>\<close>
     val (Tm,Ty,_) = chk raw_TM
     val _ = Type.no_tvars Ty
       handle TYPE (msg, _, _) => error msg;
@@ -79,7 +79,7 @@ val nameT = TFree (NAME_N, \<^sort>\<open>type\<close>);
 
 fun space_locale_args resT repT =
   let val domainT = nameT --> \<^Type>\<open>sep_homo_set repT\<close>
-      val INTERP_T = nameT --> \<^Type>\<open>unital_homo repT \<^Type>\<open>set resT\<close>\<close>
+      val INTERP_T = nameT --> \<^Type>\<open>unital_homo repT \<^Type>\<open>BI resT\<close>\<close>
    in [(DOMAIN_N, domainT), (INTERPRET_N, INTERP_T)]
   end
 

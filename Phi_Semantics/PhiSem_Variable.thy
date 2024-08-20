@@ -46,9 +46,9 @@ subsubsection \<open>Fiction\<close>
 
 
 fiction_space \<phi>var =
-  Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
+  Var :: \<open>RES.Var.basic_fiction \<Zcomp> \<F>_pointwise (\<lambda>_. Itself)\<close>
             (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
-  by (standard; simp add: set_eq_iff)
+  by (standard; simp add: BI_eq_iff)
 
 
 section \<open>\<phi>-Types\<close>
@@ -225,7 +225,7 @@ lemma [\<phi>reason 1180]:
   by (clarsimp simp add: \<phi>Type_Mapping_def \<phi>Some_expn split: option.split)
 
 definition \<open>\<phi>SemType_opt S TY \<longleftrightarrow> (case TY of Some TY' \<Rightarrow> (\<forall>p. Some p \<Turnstile> S \<longrightarrow> p \<in> Well_Type TY')
-                                            | _ \<Rightarrow> S = {None}) \<close>
+                                            | _ \<Rightarrow> S = 1) \<close>
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>SemType_opt ?S _\<close> \<Rightarrow> \<open>\<phi>SemType_opt ?S _\<close> (100) ]]
 
@@ -286,7 +286,7 @@ proc op_get_var:
   to Itself
   unfold Var.unfold
   FIC.Var.getter_rule
-  semantic_assert \<open>discrete.dest (\<phi>arg.dest \<v>0) \<Turnstile> Some ` Well_Type TY\<close>
+  semantic_assert \<open>discrete.dest (\<phi>arg.dest \<v>0) \<in> Some ` Well_Type TY\<close>
   semantic_return \<open>the (discrete.dest (\<phi>arg.dest \<v>0)) \<Turnstile> (x \<Ztypecolon> T)\<close>
    \<open>MAKE _(\<v>\<a>\<r>[v] Itself)\<close>
   apply_rule op_get_aggregate[where input_index=input_index and sem_idx=sem_idx and spec_idx=idx

@@ -37,15 +37,15 @@ open Generic_Element_Access
 fun gen_mk_element_index_input f args =
   let val raw_path' = map (fn rule =>
             HOLogic.mk_prod (Phi_Syntax.dest_satisfaction (Thm.prop_of (f rule)))) args
-   in HOLogic.mk_list \<^typ>\<open>VAL \<times> VAL set\<close> raw_path'
+   in HOLogic.mk_list \<^typ>\<open>VAL \<times> VAL BI\<close> raw_path'
   end
 
-val prod_VAL_VALset = \<^cterm>\<open>Pair :: VAL \<Rightarrow> VAL set \<Rightarrow> VAL \<times> VAL set\<close>
+val prod_VAL_VALset = \<^cterm>\<open>Pair :: VAL \<Rightarrow> VAL BI \<Rightarrow> VAL \<times> VAL BI\<close>
 fun mk_list_c ts =
   let
-    val Nil = \<^cterm>\<open>Nil :: (VAL \<times> VAL set) list\<close>
+    val Nil = \<^cterm>\<open>Nil :: (VAL \<times> VAL BI) list\<close>
     fun Cons t u = Thm.apply
-      (Thm.apply \<^cterm>\<open>Cons :: (VAL \<times> VAL set) \<Rightarrow> (VAL \<times> VAL set) list \<Rightarrow> (VAL \<times> VAL set) list\<close> t) u
+      (Thm.apply \<^cterm>\<open>Cons :: (VAL \<times> VAL BI) \<Rightarrow> (VAL \<times> VAL BI) list \<Rightarrow> (VAL \<times> VAL BI) list\<close> t) u
   in fold_rev Cons ts Nil end;
 
 fun gen_mk_element_index_input_c f args =
