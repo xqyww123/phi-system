@@ -1,4 +1,4 @@
-theory Fiction_Refinement
+theory Fiction_Refinemen
   imports PhiSem_Formalization_Tools Phi_Semantics_Framework.Phi_SemFrame_ex
   abbrevs "<refines>" = "\<r>\<e>\<f>\<i>\<n>\<e>\<s>"
       and "<w.r.t>" = "\<w>.\<r>.\<t>"

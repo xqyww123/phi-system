@@ -90,6 +90,10 @@ lemma Satisfaction_BI_red[simp]:
   \<open> x \<Turnstile> BI S \<longleftrightarrow> x \<in> S \<close>
   unfolding Satisfaction_def by simp
 
+lemma In_BI_dest[iff]:
+  \<open> x \<in> BI.dest S \<longleftrightarrow> x \<Turnstile> S \<close>
+  by (cases S; simp)
+
 subsubsection \<open>Bootstrap Basics\<close>
 
 lemma split_BI_all: \<open>(\<forall>x. P x) \<longleftrightarrow> (\<forall>x. P (BI x))\<close> by (metis BI.collapse) 
@@ -246,7 +250,8 @@ lemma Inf_BI_expn[iff]:
 
 lemma Sup_BI_expn[iff]:
   \<open> w \<Turnstile> Sup S \<longleftrightarrow> (\<exists>A\<in>S. w \<Turnstile> A) \<close>
-  unfolding Sup_BI_def by (auto simp: split_BI_meta_all, meson Satisfaction_BI_red, force)
+  unfolding Sup_BI_def
+  by (auto simp: split_BI_meta_all)
 
 instance by (
       (standard; (simp add: split_BI_meta_all less_eq_BI_iff)?),
@@ -304,18 +309,17 @@ lemma Subjection_image:
 
 definition ExBI :: " ('x \<Rightarrow> 'c BI) \<Rightarrow> 'c BI" (binder "\<exists>*" 14)
   where "ExBI S = BI {p. (\<exists>c. p \<Turnstile> S c)}"
-notation ExBI (binder "\<exists>\<^sup>s" 14)
 
 lemma ExBI_expn[iff, \<phi>expns]:
   \<open>p \<Turnstile> (ExBI S) \<longleftrightarrow> (\<exists>x. p \<Turnstile> S x)\<close>
-  by (simp add: ExBI_def Satisfaction_def)
+  by (simp add: ExBI_def)
 
 (*
 lemma ExBI_Id_on:
   \<open>Id_on (\<exists>*x. S x) = (\<exists>*x. Id_on (S x))\<close>
   by (auto simp add: ExBI_expn_set; blast)
 
-lemma ExI_image:
+lemma ExSet_image:
   \<open>f ` (\<exists>*c. S c) = (\<exists>*c. f ` S c)\<close>
   by (auto simp add: ExBI_expn_set image_iff Bex_def; blast)
 *)
@@ -859,8 +863,8 @@ lemma \<phi>Type_eqI_Tr:
   \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U)
 \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T)
 \<Longrightarrow> T = U\<close>
-  unfolding \<phi>Type_def Transformation_def Satisfaction_def
-  by auto (metis dual_order.eq_iff le_fun_def less_eq_BI_def subset_eq)
+  unfolding \<phi>Type_def Transformation_def
+  by auto (meson BI_eq_iff ext)
 
 lemma \<phi>Type_eqI_BI:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U))
@@ -4886,7 +4890,7 @@ lemma
 \<Longrightarrow> Object_Equiv S2 R2
 \<Longrightarrow> Object_Equiv (\<lambda>x. BI {p. p \<Turnstile> S1 x \<longrightarrow> p \<Turnstile> S2 x}) (\<lambda>x y. R1 y x \<and> R2 x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
-  by (clarsimp simp add: Satisfaction_def)
+  by clarsimp
 
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Object_Equiv A Ea)

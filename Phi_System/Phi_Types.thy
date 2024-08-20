@@ -940,7 +940,7 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
   subgoal premises prems for x y u v
     by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. Itself x\<close>], THEN spec[where x=\<open>\<lambda>_. Itself y\<close>], simplified]
                prems(1,3-5),
-        auto simp add: Satisfaction_def) .
+        auto) .
   
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
@@ -953,7 +953,7 @@ lemma (*The above rule is reversible*)
   \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
   unfolding Separation_Homo\<^sub>E_def Object_Sep_Homo\<^sub>E_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
-  apply (simp add: \<phi>Type_def Satisfaction_def)
+  apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y v
     by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. Itself x\<close>], THEN spec[where x=\<open>\<lambda>_. Itself y\<close>], simplified]
                prems(2-3), metis Itself_expn' Satisfaction_def) .

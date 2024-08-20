@@ -1326,7 +1326,7 @@ lemma  INTERP_SPEC_subj[\<phi>expns]:
   unfolding INTERP_SPEC_def by (simp add: BI_eq_iff, blast)
 
 lemma  INTERP_SPEC_ex[\<phi>expns]:
-  \<open> INTERP_SPEC (ExBI S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
+  \<open> INTERP_SPEC (ExBI S) = (\<exists>* x. INTERP_SPEC (S x)) \<close>
   unfolding INTERP_SPEC_def by (simp add: BI_eq_iff, blast)
 
 abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [17,16] 16)

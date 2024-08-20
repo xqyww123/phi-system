@@ -256,7 +256,7 @@ subsection \<open>Drop & Duplicate Value\<close>
 lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @tag action_dup\<close>]:
   \<open>x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @tag action_dup\<close>
   unfolding Transformation_def Action_Tag_def
-  by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def less_eq_BI_iff)
+  by (clarsimp simp add: Val.unfold INTERP_SPEC less_eq_BI_iff)
 
 lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T\<heavy_comma> ?R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @tag action_drop\<close>]:
   \<open>x \<Ztypecolon> Val raw T\<heavy_comma> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @tag action_drop\<close>

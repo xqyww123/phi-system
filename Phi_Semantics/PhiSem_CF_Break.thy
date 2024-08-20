@@ -28,9 +28,9 @@ hide_fact RES.\<phi>CF_break_res_ax
 subsection \<open>Fiction of Scope Frames\<close>
 
 fiction_space \<phi>CF_break =
-  brk_frame :: \<open>RES.brk_frame.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. Itself)\<close>
+  brk_frame :: \<open>RES.brk_frame.basic_fiction \<Zcomp> \<F>_pointwise (\<lambda>_. Itself)\<close>
                (pointwise_fiction_for_partial_mapping_resource RES.brk_frame \<open>\<lambda>_::nat. UNIV :: VAL list option discrete set\<close>)
-  by (standard; simp add: set_eq_iff)
+  by (standard; simp add: BI_eq_iff)
 
 hide_fact FIC.\<phi>CF_break_fic_ax
 

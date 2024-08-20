@@ -73,7 +73,7 @@ fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
                              (Conv.repeat_conv (Conv.rewrs_conv conv_E_thms))))
   end
 
-structure CodeBlock_Idx = Proof_Data (
+structure Code_Idx = Proof_Data (
   type T = int
   val init = K 0
 )
@@ -107,18 +107,18 @@ fun accept_proc' (ctxt,sequent) =
             \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
         = Phi_Help.leading_antecedent' rule
 
-    val blk_idx = CodeBlock_Idx.get ctxt
+    val blk_idx = Code_Idx.get ctxt
     val (ret_name, ctxt'1) = Generic_Variable_Access.assign_anony_local_val (SOME ret_ty) ctxt
     val ([s_name], ctxt') = Proof_Context.add_fixes [
                                    (Binding.name ("\<s>" ^ string_of_int blk_idx), NONE, NoSyn)] ctxt'1
-                         |> apsnd (CodeBlock_Idx.map (fn i => i+1))
+                         |> apsnd (Code_Idx.map (fn i => i+1))
     val codeblk_cterm =
           Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name, \<^typ>\<open>resource\<close>)], codeblk_term)
               |> Thm.cterm_of ctxt
     val param_cterms = (Free (s_name, \<^typ>\<open>resource\<close>), Free (ret_name, ret_ty))
               |> apply2 (Thm.cterm_of ctxt)
 
-    val (_,_,f,_) = Phi_Syntax.dest_CodeBlock_c codeblk_cterm
+    val (_,_,f,_) = Phi_Syntax.dest_Code_c codeblk_cterm
     val _ = if Thm.maxidx_of_cterm f <> ~1
             then error (Pretty.string_of (Pretty.chunks [
                     Pretty.str "The pending procedure to be accepted has schematic variable(s)!",

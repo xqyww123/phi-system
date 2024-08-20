@@ -3240,8 +3240,6 @@ hide_const (open) dest
 
 lemma split_discrete_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (discrete x))\<close> by (metis discrete.exhaust)
 lemma split_discrete_ex : \<open>Ex P \<longleftrightarrow> (\<exists>x. P (discrete x))\<close> by (metis discrete.exhaust)
-lemma split_discrete_ExBI: \<open>ExBI P = (\<exists>*x. P (discrete x))\<close>
-  unfolding set_eq_iff ExBI_expn_set split_discrete_ex by simp
 lemma split_discrete_meta_all: \<open>Pure.all P \<equiv> (\<And>x. PROP P (discrete x))\<close>
 proof
   fix x

@@ -13,11 +13,11 @@ section \<open>Implementing CoP Sequent\<close>
 text \<open>CoP sequent \<open>P | S |- Q\<close> for \<open>S = (C\<^sub>1,v\<^sub>1); \<cdots> ; (C\<^sub>n,v\<^sub>n)\<close> is implemented as
 \begin{align*}
 & \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> s\<^sub>0 [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> P\<close>, \\
-& \<open>CodeBlock s\<^sub>0 s\<^sub>1 C\<^sub>1 v\<^sub>1,\<close>         \\
+& \<open>Code s\<^sub>0 s\<^sub>1 C\<^sub>1 v\<^sub>1,\<close>         \\
 &     \qquad \<open>\<cdots>\<close>                 \\
-& \<open>CodeBlock s\<^sub>i\<^sub>-\<^sub>1 s\<^sub>i C\<^sub>i v\<^sub>i,\<close>       \\
+& \<open>Code s\<^sub>i\<^sub>-\<^sub>1 s\<^sub>i C\<^sub>i v\<^sub>i,\<close>       \\
 &     \qquad \<open>\<cdots>\<close>                 \\
-& \<open>CodeBlock s\<^sub>n\<^sub>-\<^sub>1 s\<^sub>n C\<^sub>n v\<^sub>n\<close>        \\
+& \<open>Code s\<^sub>n\<^sub>-\<^sub>1 s\<^sub>n C\<^sub>n v\<^sub>n\<close>        \\
 \<open>\<turnstile>\<close> \;&\; \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> s\<^sub>n [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q\<close>
 \end{align*}
 where \<open>s\<^sub>0\<close> denotes the initial state before execution and \<open>s\<^sub>i, v\<^sub>i\<close> denote
@@ -72,7 +72,7 @@ translations
   "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: S" <= "CONST View_Shift_CurrentConstruction s R S"
   "\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> f \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S \<t>\<h>\<r>\<o>\<w>\<s> E" <= "CONST PendingConstruction f s R S E"
 
-definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
+definition \<open>Code s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Satisfiable T"
   unfolding CurrentConstruction_def Satisfiable_def
@@ -109,9 +109,9 @@ lemma \<phi>apply_proc:
   by (simp add: mult.commute)
 
 lemma
-  \<open> (\<exists>s' x. CodeBlock s  s'  f x \<and> CodeBlock s' s'' (g x) y)
-\<longleftrightarrow> CodeBlock s  s'' (f \<bind> g) y\<close>
-  unfolding CodeBlock_def bind_def
+  \<open> (\<exists>s' x. Code s  s'  f x \<and> Code s' s'' (g x) y)
+\<longleftrightarrow> Code s  s'' (f \<bind> g) y\<close>
+  unfolding Code_def bind_def
   apply (rule; clarsimp)
   apply blast
   by (case_tac x; clarsimp; blast)
@@ -123,9 +123,9 @@ lemma
 
 lemma \<phi>assemble_proc:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E1
-\<Longrightarrow> (\<And>s' ret. CodeBlock s s' f ret \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (g ret) \<o>\<n> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E2)
+\<Longrightarrow> (\<And>s' ret. Code s s' f ret \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (g ret) \<o>\<n> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E2)
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<bind> g) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E1 + E2\<close>
-  unfolding CurrentConstruction_def PendingConstruction_def bind_def less_eq_BI_iff CodeBlock_def
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def less_eq_BI_iff Code_def
   apply clarsimp subgoal for s s'
   by (cases s; simp; cases s'; simp add: split_comp_All ring_distribs plus_fun) .
 
@@ -134,9 +134,9 @@ lemma \<phi>assemble_proc:
 
 lemma \<phi>accept_proc:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> CodeBlock s s' f ret
+\<Longrightarrow> Code s s' f ret
 \<Longrightarrow> \<c>\<u>\<r>\<r>\<e>\<n>\<t> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T ret\<close>
-  unfolding PendingConstruction_def bind_def less_eq_BI_iff CurrentConstruction_def CodeBlock_def
+  unfolding PendingConstruction_def bind_def less_eq_BI_iff CurrentConstruction_def Code_def
   by blast
 
 lemma \<phi>accept_proc_optimize_return_v:
@@ -437,5 +437,7 @@ declare \<phi>M_Success[where X=1, simplified, intro!]
 lemma \<phi>M_Success'[intro!]:
   \<open> \<p>\<r>\<o>\<c> Return vs \<lbrace> X vs \<longmapsto> X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding Return_def \<phi>Procedure_def det_lift_def less_eq_BI_iff by clarsimp
+
+hide_const (open) Code
 
 end

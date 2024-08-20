@@ -352,11 +352,11 @@ definition \<phi>Aggregate_Mapper :: \<open>aggregate_path \<Rightarrow> (VAL,'a
   where \<open>\<phi>Aggregate_Mapper idx T T' U U' f
     \<longleftrightarrow> (\<forall>g g'. \<phi>Type_Mapping U U' g' g \<longrightarrow> \<phi>Type_Mapping T T' (f g') (index_mod_value idx g)) \<close>
 
-definition \<phi>Aggregate_Constructor_Synth :: \<open>(VAL list \<Rightarrow> VAL) \<Rightarrow> VAL list set \<Rightarrow> TY \<Rightarrow> VAL set \<Rightarrow> bool\<close>
+definition \<phi>Aggregate_Constructor_Synth :: \<open>(VAL list \<Rightarrow> VAL) \<Rightarrow> VAL list BI \<Rightarrow> TY \<Rightarrow> VAL BI \<Rightarrow> bool\<close>
   where \<open>\<phi>Aggregate_Constructor_Synth constructor Args TY Spec
     \<longleftrightarrow> (\<forall>args. args \<Turnstile> Args \<longrightarrow> constructor args \<Turnstile> Spec \<and> constructor args \<in> Well_Type TY)\<close>
 
-definition \<phi>Aggregate_Constructor :: \<open>(VAL list \<Rightarrow> VAL) \<Rightarrow> VAL \<phi>arg list \<Rightarrow> TY \<Rightarrow> VAL set \<Rightarrow> bool\<close>
+definition \<phi>Aggregate_Constructor :: \<open>(VAL list \<Rightarrow> VAL) \<Rightarrow> VAL \<phi>arg list \<Rightarrow> TY \<Rightarrow> VAL BI \<Rightarrow> bool\<close>
   where \<open>\<phi>Aggregate_Constructor constructor args TY Spec
     \<longleftrightarrow> constructor (map \<phi>arg.dest args) \<Turnstile> Spec \<and> constructor (map \<phi>arg.dest args) \<in> Well_Type TY\<close>
 
