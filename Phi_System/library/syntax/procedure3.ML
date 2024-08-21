@@ -26,8 +26,11 @@ fun quantify_args_of_proc_term' record_name proc =
         | is_argT' T = is_argT T
       fun is_args Vs =
           is_argT' (fastype_of Vs) andalso
-          (case try dest_arg_list Vs of SOME vs =>
-                  forall (fn Free _ => true | Var _ => true | _ => false) vs
+          (case try dest_arg_list Vs
+             of SOME (vs, VA) =>
+                  forall (fn Free _ => true | Var _ => true | _ => false) vs andalso
+                  (case VA of NONE => true
+                            | SOME (Free _) => true | SOME (Var _) => true | _ => false )
               | _ => false)
       fun is_Free_or_Const (Const _) = true
         | is_Free_or_Const (Free _) = true
@@ -36,10 +39,10 @@ fun quantify_args_of_proc_term' record_name proc =
                else case f of F $ Vs => if is_Free_or_Const (head_of F)
                                         then if is_args Vs
                                         then SOME (dest_arg_list Vs)
-                                        else SOME []
+                                        else SOME ([], NONE)
                                         else NONE
                             | _      => NONE
-      val (pack, X') = package_values "" false Vs X
+      val (pack, X', cache) = package_values "" false Vs X
       fun parameterize_var (Var (v,T))   = Var (v, fastype_of pack --> T) $ Bound 0
         | parameterize_var (X $ Bound i) = parameterize_var X $ Bound (i + 1)
       val f' = if is_Var (Term.head_of f)
@@ -50,11 +53,11 @@ fun quantify_args_of_proc_term' record_name proc =
                               then incr_boundvars 1 F $ Bound 0
                               else incr_boundvars 1 f
                               else incr_boundvars 1 (
-                                      snd (package_values "" false (SOME (dest_arg_list pack)) f))
+                                      #2 (package_values "" false (SOME cache) f))
                                    $ Bound 0
                             | _      =>
                               incr_boundvars 1 (
-                                snd (package_values "" false (SOME (dest_arg_list pack)) f))
+                                #2 (package_values "" false (SOME cache) f))
                               $ Bound 0
       val T = fastype_of pack
       val abs1 = Abs ("", T,
@@ -62,10 +65,10 @@ fun quantify_args_of_proc_term' record_name proc =
       val (T2,abs2) =
             if record_name
             then let
-             val names = dest_arg_list pack
-                      |> map (fn Free (N,_) => N
+             val names = map (fn Free (N,_) => N
                                | Var ((N,i),_) => if i = 0 then N else N ^ string_of_int i
                                | _ => error "Internal error #2dc7cd58-8e36-4124-b760-a49e5f2abe1c")
+                         (#1 cache @ the_list (#2 cache))
              val T2 = Phi_Syntax.mk_namedT T names
               in (T2, Const (\<^const_name>\<open>case_named\<close>, (T --> HOLogic.boolT) --> T2 --> HOLogic.boolT)
                         $ abs1)
@@ -106,7 +109,7 @@ fun rule_of_package_arguement ctxt proc =
   let val packed = quantify_args_of_proc_term false proc
                 |> Thm.cterm_of ctxt
       fun expand_quant ctxt c = let open Conv Phi_Conv in
-            try_conv (rewr_conv @{thm split_paired_all_\<phi>arg[folded atomize_eq]}
+            try_conv (rewr_conv xxx (*@{thm split_paired_all_\<phi>arg[folded atomize_eq]}*)
                       then_conv meta_all_conv (expand_quant o snd) ctxt)
           end c
       val ctxt' = Simplifier.init_simpset @{thms \<phi>V_simps[folded atomize_eq]} ctxt

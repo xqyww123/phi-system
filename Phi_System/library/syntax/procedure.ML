@@ -29,25 +29,26 @@ val package_values :
         -> bool (*the order for scanning and collecting the values.
                   true for Right-to-Left (the canonical order);
                   false for Left-to-Right*)
-        -> term list option (*values cache.
+        -> (term list * term option) option (*values cache.
               If you run package_values by twice in the same context (of variables) and in the same scan order,
               this argument can be set to the return of the previous run to boost the performance.
               Set it to None by default*)
         -> term
-        -> term (*values*) * term (*lambda abstraction*)
+        -> term (*value assemble*) * term (*lambda abstraction*)
+         * (term list * term option) (*cache*)
 
 val package_values0 :
        string (*name of the lambda variable*)
-        -> typ (*type of the return when the spec is 0*)
         -> bool (*the order for scanning and collecting the values.
                   true for Right-to-Left (the canonical order);
                   false for Left-to-Right*)
-        -> term list option (*values cache.
+        -> (term list * term option) option (*values cache.
               If you run package_values by twice in the same context (of variables) and in the same scan order,
               this argument can be set to the return of the previous run to boost the performance.
               Set it to None by default*)
         -> term
-        -> term (*values*) * term (*lambda abstraction*)
+        -> term (*value assemble*) * term (*lambda abstraction*)
+         * (term list * term option) (*cache*)
 
 val translate_arg : term -> term
 val translate_ret : term -> term
@@ -61,9 +62,9 @@ val mk_argT : typ -> typ
 (*val dest_arg_prodT : typ -> typ * typ
 val mk_arg_prodT   : typ * typ -> typ
 val mk_arg_listT  : typ list -> typ*)
-val mk_arg_list   : typ list -> term list -> term
+val mk_arg_list   : term list * term option -> term
 val mk_arg_list'  : term list -> term
-val dest_arg_list : term -> term list
+val dest_arg_list : term -> term list (*arguments*) * term option (*the argument of variable length*)
 val map_argT  : (typ -> typ) -> typ -> typ
 
 
@@ -110,16 +111,19 @@ fun mk_arg_list' [] = \<^Const>\<open>\<phi>V_nil\<close>
   | mk_arg_list' (tm::tms)
       = \<^Const>\<open>\<phi>V_cons\<close> $ tm $ mk_arg_list' tms
 
-fun mk_arg_list [] = \<^Const>\<open>\<phi>V_nil\<close>
-  (*| mk_arg_list [tm] =
-      *)
-  | mk_arg_list (tm::tms)
-      = \<^Const>\<open>\<phi>V_cons\<close> $ tm $ mk_arg_list tms
-  | mk_arg_list tms = raise TYPE ("Not a \<phi>arg type", [], tms)
+fun mk_arg_list ([], NONE) = \<^Const>\<open>\<phi>V_nil\<close>
+  | mk_arg_list ([], SOME tm) = tm
+  | mk_arg_list (tm::tms, tl)
+      = \<^Const>\<open>\<phi>V_cons\<close> $ tm $ mk_arg_list (tms, tl)
 
-fun dest_arg_list (Const (\<^const_name>\<open>\<phi>V_nil\<close>, _)) = []
-  | dest_arg_list (Const (\<^const_name>\<open>\<phi>V_cons\<close>, _) $ A $ B) = A :: dest_arg_list B
-  | dest_arg_list X = [X]
+fun dest_arg_list tm =
+  let fun dest_args (Const (\<^const_name>\<open>\<phi>V_cons\<close>, _) $ A $ B) = A :: dest_args B
+        | dest_args _ = []
+      fun tailof (Const (\<^const_name>\<open>\<phi>V_cons\<close>, _) $ _ $ B) = tailof B
+        | tailof (Const (\<^const_name>\<open>\<phi>V_nil\<close>, _)) = NONE
+        | tailof X = SOME X
+   in (dest_args tm, tailof tm)
+  end
 
 
 (*
@@ -348,29 +352,40 @@ fun map_ret i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
   | map_ret i VS (j, v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close> _\<close>) $ _)
       = (j, mk_projection VS i v)
   | map_ret i VS (j, v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close> _\<close>) $ _)
-      = (j, mk_projection VS i v)
+      = (j, last_prj (length VS) (Bound i))
   | map_ret i VS (j, v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ _))
       = (j, mk_projection VS i v)
-  | map_ret i VS (j, v as Free (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
+  | map_ret i VS (j, v as Const ("_constrain", _) $ _ $ (
+          Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ (Const (\<^type_syntax>\<open>list\<close>, _) $ Const(\<^type_syntax>\<open>VAL\<close>, _))))
+      = (j, last_prj (length VS) (Bound i))
+
+  | map_ret i VS (j, v as Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>))
       = (j, mk_projection VS i v)
-  | map_ret i VS (j, v as Var (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
+  | map_ret i VS (j, v as Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>))
       = (j, mk_projection VS i v)
+  | map_ret i VS (j, v as Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>))
+      = (j, mk_projection VS i v)
+  | map_ret i VS (j, v as Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>))
+      = (j, mk_projection VS i v)
+
   | map_ret i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
       = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
   | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
       = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ Const (\<^const_name>\<open>anonymouss\<close>, _))
+      = (j + 1, h $ last_prj (length VS) (Bound i))
+  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ Const (\<^const_syntax>\<open>anonymouss\<close>, _))
+      = (j + 1, h $ last_prj (length VS) (Bound i))
+
   | map_ret i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
       = (j, h $ mk_projection VS i v)
   | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
       = (j, h $ mk_projection VS i v)
   | map_ret i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ v)
-      = (j, h $ mk_projection VS i v)
+      = (j, h $ last_prj (length VS) (Bound i))
   | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ v)
-      = (j, h $ mk_projection VS i v)
+      = (j, h $ last_prj (length VS) (Bound i))
+
   | map_ret i VS (j, (h as Const (\<^const_name>\<open>\<phi>Type\<close>, _)) $ A $ B)
       = (case map_ret i VS (j, B) of (j',B') => (j', h $ A $ B'))
   | map_ret i VS (j, Abs (name,ty,X))
@@ -390,31 +405,37 @@ fun ex_fastype_of TM =
   let val T = fastype_of TM in if T = dummyT then dummyT_sem else T end
   handle TERM _ => dummyT_sem
 
-fun package_values name _ (SOME []) term =
-      (\<^term>\<open>\<phi>V_nil\<close>, Abs(name, val_list_T, term))
+fun package_values name _ (SOME ([], NONE)) term =
+      (\<^term>\<open>\<phi>V_nil\<close>, Abs(name, val_list_T, term), ([], NONE))
   | package_values name R2L Vs0 term =
   let
     val (collect_vals, map_ret) = gen_collect_and_map R2L
-    val Vs = case Vs0 of SOME Vs => Vs | NONE => collect_vals [] term
+    val Vs = case Vs0 of SOME Vs => Vs | NONE => collect_vals ([],NONE) term
     (*val Tys = fold_rev (fn T => (fn [] => [T]
                                   | L as T'::_ => mk_arg_prodT (T,T') :: L))
               (map ex_fastype_of Vs) []
     val T = if null Tys then \<^typ>\<open>unit \<phi>arg\<close> else hd Tys*)
-  in (mk_arg_list Vs, Abs(name, val_list_T, if null Vs then term else #2(map_ret 0 Vs (0,term))))
+  in (mk_arg_list Vs,
+      Abs(name, val_list_T,
+          if null (#1 Vs) andalso #2 Vs = NONE
+          then term else #2(map_ret 0 (#1 Vs) (0,term))),
+      Vs)
   end
 
-fun package_values0 name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
-      = (\<^Const>\<open>\<phi>arg zero_ty\<close> $ \<^Const>\<open>unreachable\<close>, Abs (name, \<^Type>\<open>\<phi>arg zero_ty\<close>, term))
-  | package_values0 name _ R2L Vs0 term = package_values name R2L Vs0 term
+fun package_values0 name _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
+      = ( \<^Const>\<open>\<phi>arg \<open>\<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>\<close> $ \<^Const>\<open>unreachable\<close>,
+          Abs (name, val_list_T, term),
+          ([], NONE) )
+  | package_values0 name R2L Vs0 term = package_values name R2L Vs0 term
 
 
 fun translate_ret' (term as (Abs _)) = term
   | translate_ret' (term as (Var _)) = term
   | translate_ret' (term as (Free _)) = term
   | translate_ret' (tm as Const (\<^const_abbrev>\<open>Void\<close>, _))
-      = Abs ("", \<^typ>\<open>unit \<phi>arg\<close>, tm)
+      = Abs ("", val_list_T, tm)
   | translate_ret' (tm as Const (\<^const_name>\<open>one_class.one\<close>, _))
-      = Abs ("", \<^typ>\<open>unit \<phi>arg\<close>, tm)
+      = Abs ("", val_list_T, tm)
   | translate_ret' (term as (Const _)) = term
   | translate_ret' (Const ("_constrain", ty) $ X $ Y)
       =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_constrain", ty) $ B $ Y)
@@ -426,7 +447,7 @@ fun translate_ret' (term as (Abs _)) = term
       =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_constrainAbs", ty) $ B $ Y)
                               | B => Const ("_constrainAbs", ty) $ B $ Y)
   | translate_ret' term =
-      snd (package_values0 "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> false NONE term)
+      #2 (package_values0 "\<r>\<e>\<t>" false NONE term)
 
 
 (* fun translate_num term =
