@@ -22,6 +22,9 @@ storing proof obligations generated during NToA, no matter whether the obligatio
   val apply : thm list (*rules to be applied*) -> Proof.context -> thm (*sequent*) -> thm
   val apply1 : thm list -> Proof.context -> thm -> thm
 
+  val application_conv : thm
+  val app_conv : thm
+
 (*
   (*Advanced Modus Pones using logic programming about antecedent \<^term>\<open>\<phi>Application_Conv\<close>
     where the inferences relate to various conversions of applied rules.
@@ -61,8 +64,22 @@ fun mk_app_reasoning_normal app sequent =
 fun prep_sequent sequent = prep_sequent (@{thm' allI} RS sequent)
                            handle THM _ => sequent
 
+val application_conv = @{lemma' \<open>
+    PROP P
+\<Longrightarrow> PROP \<phi>Application_Conv P Q
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP Q
+  \<close> by (unfold \<phi>Application_Conv_def) }
+
+val app_conv = @{lemma' \<open>
+    P
+\<Longrightarrow> \<phi>App_Conv P Q
+\<Longrightarrow> Q
+  \<close> by (unfold \<phi>App_Conv_def, blast) }
+
 fun mk_app_reasoning_RS ctxt app sequent =
-  (app RS' (ctxt, @{thm' \<phi>Application_Conv}))
+  (app RS' (ctxt, application_conv))
     |> Thm.permute_prems 0 (Thm.nprems_of app)
     |> (fn th => th RS prep_sequent sequent)
 

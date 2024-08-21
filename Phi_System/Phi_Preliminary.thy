@@ -115,8 +115,8 @@ instead of XML. I'm thinking of the performance of the XML, particularly we have
 
 ML_file \<open>contrib/sml-json/json.sig\<close>
 ML_file \<open>contrib/sml-setmap/map/MONO_MAP.sig\<close>
-ML_file \<open>contrib/sml-setmap/map/OrderMapImpl.sml\<close>
-ML_file \<open>contrib/sml-setmap/map/OrderMap.sml\<close>
+ML_file \<open>contrib/sml-setmap/map/MapImpl.sml\<close>
+ML_file \<open>contrib/sml-setmap/map/Map.sml\<close>
 ML_file \<open>contrib/sml-setmap/map/StringMap.sml\<close>
 ML_file \<open>contrib/sml-json/json.sml\<close> *)
 
@@ -759,6 +759,89 @@ lemma rot_apS_rot_eq_apS_rot_S_comp'[no_atp, prod_opr_norm]:
   unfolding fun_eq_iff
   by simp_all
 *)
+
+subsection \<open>Length-restricted Quantification\<close>
+
+definition Lall :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Lall N P \<longleftrightarrow> (\<forall>x. length x = N \<longrightarrow> P x)\<close>
+
+definition Lex :: "nat \<Rightarrow> ('a list \<Rightarrow> bool) \<Rightarrow> bool"
+  where "Lex N P \<longleftrightarrow> (\<exists>x. length x = N \<and> P x)"
+
+definition LAll :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> prop) \<Rightarrow> prop\<close>
+  where \<open>LAll N P \<equiv> (\<And>x. length x \<equiv> N \<Longrightarrow> PROP P x)\<close>
+
+subsubsection \<open>Syntax\<close>
+
+syntax
+  "_Lall"       :: "pttrn \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<forall>(_/[_])./ _)" [0, 0, 10] 10)
+  "_LAll"       :: "pttrn \<Rightarrow> nat \<Rightarrow> prop \<Rightarrow> prop"      ("(3\<And>(_/[_])./ _)" [0, 0, 10] 10)
+  "_Lex"        :: "pttrn \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<exists>(_/[_])./ _)" [0, 0, 10] 10)
+
+translations
+  "\<forall>x[A]. P" \<rightleftharpoons> "CONST Lall A (\<lambda>x. P)"
+  ("prop") "\<And>x[A]. PROP P" \<rightleftharpoons> ("prop") "PROP CONST LAll A (\<lambda>x. P)"
+  "\<exists>x[A]. P" \<rightleftharpoons> "CONST Lex  A (\<lambda>x. P)"
+
+print_translation \<open>
+ [Syntax_Trans.preserve_binder_abs2_tr' \<^const_syntax>\<open>Lall\<close> \<^syntax_const>\<open>_Lall\<close>,
+  Syntax_Trans.preserve_binder_abs2_tr' \<^const_syntax>\<open>Lex\<close> \<^syntax_const>\<open>_Lex\<close>,
+  Syntax_Trans.preserve_binder_abs2_tr' \<^const_syntax>\<open>LAll\<close> \<^syntax_const>\<open>_LAll\<close>]
+\<close> \<comment> \<open>to avoid eta-contraction of body\<close>
+
+subsubsection \<open>Split & Reduce\<close>
+
+lemma legnthed_All_zero:
+  \<open> (\<forall>l[0]. P l) \<longleftrightarrow> P [] \<close>
+  unfolding Lall_def
+  by auto
+
+lemma legnthed_all_zero:
+  \<open> (\<And>l[0]. PROP P l) \<equiv> P [] \<close>
+  unfolding LAll_def
+  proof
+    assume A: \<open>(\<And>x. length x \<equiv> 0 \<Longrightarrow> PROP P x)\<close>
+    show \<open>PROP P []\<close> by (rule A[of \<open>[]\<close>], simp)
+  next
+    fix x :: \<open>'a list\<close>
+    assume A: \<open>PROP P []\<close>
+       and B[unfolded atomize_eq]: \<open>length x \<equiv> 0\<close>
+    have C: \<open>x = []\<close> using B by auto 
+    show \<open>PROP P x\<close> by (simp add: C, rule A)
+  qed
+
+lemma legnthed_Ex_zero:
+  \<open>(\<exists>l[0]. P l) \<longleftrightarrow> P []\<close>
+  unfolding Lex_def
+  by auto
+
+lemma split_legnthed_All:
+  \<open> (\<forall>l[Suc N]. P l) \<longleftrightarrow> (\<forall>h. \<forall>l[N]. P (h#l)) \<close>
+  unfolding Lall_def
+  by auto (metis Suc_length_conv)
+
+lemma split_legnthed_all:
+  \<open> (\<And>l[Suc N]. PROP P l) \<equiv> (\<And>h. \<And>l[N]. PROP P (h#l)) \<close>
+  unfolding LAll_def
+  proof
+    fix h :: \<open>'a\<close> and x :: \<open>'a list\<close>
+    assume A: \<open>(\<And>x. length x \<equiv> Suc N \<Longrightarrow> PROP P x)\<close>
+       and B: \<open>length x \<equiv> N\<close>
+    show \<open>PROP P (h # x)\<close> by (rule A[of \<open>h # x\<close>], simp add: B)
+  next
+    fix x :: \<open>'a list\<close>
+    assume A: \<open>\<And>h x. length x \<equiv> N \<Longrightarrow> PROP P (h # x)\<close>
+       and B: \<open>length x \<equiv> Suc N\<close>
+    from B[unfolded atomize_eq] have [simp]: \<open>hd x # tl x = x\<close> by (cases x; simp)
+    show \<open>PROP P x\<close>
+       by (rule A[of \<open>tl x\<close> \<open>hd x\<close>, simplified]; simp add: atomize_eq B)
+  qed
+
+lemma split_legnthed_Ex:
+  \<open> (\<exists>l[Suc N]. P l) \<longleftrightarrow> (\<exists>h. \<exists>l[N]. P (h#l)) \<close>
+  unfolding Lex_def
+  by (auto, metis Suc_length_conv, force)
+
 
 subsection \<open>Helper Conversion\<close>
 

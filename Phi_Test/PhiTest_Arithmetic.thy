@@ -45,16 +45,12 @@ thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
 proc test_prime':
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close>
-  is [routine] (*If you don't add this attribute telling the program you are building is a routine,
-                 then the program is just a program fragment and you cannot use \<open>return\<close> *)
+  is [routine]
 \<medium_left_bracket>
   if \<open>$x \<le> 1\<close> \<medium_left_bracket>
     return (False)
-  \<medium_right_bracket>
-  \<medium_left_bracket>
-    \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v ;;
-    (* In the previous example, the loop iterates from 2 to x, here we apply an optimization
-       where the loop only needs to iterate to sqrt(x). *)
+  \<medium_right_bracket> \<medium_left_bracket>
+    \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v \<semicolon>
     while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i.
           Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
           Guard: (i * i \<le> x) \<and>
@@ -84,6 +80,7 @@ proc test_prime':
   \<medium_right_bracket> \<comment> \<open>Close the top branch\<close>
 \<medium_right_bracket> \<comment> \<open>Close the function body\<close> .
 
+declare [[\<phi>hide_techinicals=false]] 
 
 proc GCD:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>

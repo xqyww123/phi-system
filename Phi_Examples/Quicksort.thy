@@ -170,4 +170,51 @@ declare [[\<phi>infer_requirements]]
   \<medium_right_bracket> .
 *)
 
+ 
+  proc qsort_generic:
+    input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] (\<t>\<y>\<p>\<e>\<o>\<f> T)\<heavy_comma>
+            \<v>\<a>\<l> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+            l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T  \<close>
+    requires \<open>Order T\<close>
+    premises \<open>i + len \<le> LEN\<close>
+    output \<open>l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T
+            \<s>\<u>\<b>\<j> l'. l <~~> l' \<and> sorted l'\<close>
+    is [recursive]
+    is [routine]
+  \<medium_left_bracket>
+    if (len \<le> 1) \<medium_left_bracket>
+      return
+    \<medium_right_bracket> \<medium_left_bracket>
+      val pivot \<leftarrow> *(i + (len - 1)) \<semicolon>
+      var d \<leftarrow> 0 \<semicolon>
+      iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<v>\<a>\<r>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+                           l' \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T
+                           \<s>\<u>\<b>\<j> l' d.
+                             d \<le> n \<and> l <~~> l' \<and>
+                             (\<forall>k<d. l' ! k \<le> ?pivot) \<and>
+                             (\<forall>k<n-d. ?pivot < l' ! (d + k)) \<close> 
+      \<medium_left_bracket>
+        for n \<rightarrow> val n \<semicolon>
+        *(i + n) \<rightarrow> val x \<semicolon>
+        if (x \<le> pivot) \<medium_left_bracket>
+          (i + n) := *(i + d) \<semicolon>
+          (i + d) := x \<semicolon>
+          d \<leftarrow> d + 1
+        \<medium_right_bracket> \<medium_left_bracket>
+          (*comment: else, do nothing*)
+        \<medium_right_bracket> \<semicolon>
+      \<medium_right_bracket>
+      qsort_generic (i, d) \<semicolon>
+      qsort_generic (i + d, len - d) \<semicolon>
+          
+      holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). l ! (len - 1) < x)\<close>
+             and t2: \<open>(\<forall>x\<in>set (take d l'). x \<le> l ! (len - 1))\<close>
+             and t3[simp]: \<open>set l'b = set (drop d l')\<close>
+             and t4[simp]: \<open>set l'a = set (take d l')\<close> \<semicolon>
+  
+      return
+    \<medium_right_bracket>
+  \<medium_right_bracket> .
+
+
 end

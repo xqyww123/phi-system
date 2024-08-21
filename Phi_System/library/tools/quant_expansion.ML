@@ -9,19 +9,21 @@ signature QUANT_EXPANSION = sig
   val mk_cases_named : string list -> term -> term
   val simproc_of : (typ -> string list -> Proof.context -> conv)
                 -> Proof.context -> cterm -> thm option
+  val simproc_of': (typ -> string list option -> Proof.context -> conv)
+                -> Proof.context -> cterm -> thm option
 
   (*Expand name-tagged quantification like
       `\<forall>(x::'t1 \<times> 't2 \<times> 't3 <named> 'name1 \<times> 'name2 \<times> 'name3). P x`
     into `\<forall>name1::'t1  name2::'t2  name3::'t3.  P (name1,name2,name3)`*)
-  val forall_expansion : string list -> Proof.context -> conv
-  val meta_All_expansion : string list -> Proof.context -> conv
-  val exists_expansion : string list -> Proof.context -> conv
-  val ExNu_expansion : string list -> Proof.context -> conv
+  val forall_expansion : string list option -> Proof.context -> conv
+  val meta_All_expansion : string list option -> Proof.context -> conv
+  val exists_expansion : string list option -> Proof.context -> conv
+  val ExNu_expansion : string list option -> Proof.context -> conv
   val aux_expansions : Proof.context -> thm list
 
-  val forall_expansion_arg_encoding : string list -> Proof.context -> conv
-  val meta_All_expansion_arg_encoding : string list -> Proof.context -> conv
-  val exists_expansion_arg_encoding : string list -> Proof.context -> conv
+  val forall_expansion_arg_encoding : string list option -> Proof.context -> conv
+  val meta_All_expansion_arg_encoding : string list option -> Proof.context -> conv
+  val exists_expansion_arg_encoding : string list option -> Proof.context -> conv
 
   val named_forall : simproc
   val named_ex     : simproc
@@ -34,8 +36,8 @@ signature QUANT_EXPANSION = sig
     by using \<^typ>\<open>T <named> 'x \<times> 'y \<times> 'z\<close>*)
   val aggregate_vars_lambda : int -> term -> string list (*names*) * term
   val aggregate_vars_quantification : int -> term -> string list (*names*) * term
-  val aggregate_vars_lambda_arg_encoding : int -> term -> string list (*names*) * term
-  val aggregate_vars_quantification_arg_encoding : int -> term -> string list (*names*) * term
+(*val aggregate_vars_lambda_arg_encoding : int -> term -> string list (*names*) * term
+  val aggregate_vars_quantification_arg_encoding : int -> term -> string list (*names*) * term *)
 
   (* For any schematic variable \<open>?P :: ?'t1 \<times> ?'t2 \<times> \<dots> <named> ?'name1 \<times> ?'name2 \<times> ...\<close>
      instantiate ?P to \<open>\<lambda>x. case x of tag (t1, t2, ...) \<Rightarrow> ?P t1 t2 \<dots>\<close>*)
@@ -82,11 +84,13 @@ fun (cv1 my_then_conv cv2) ct =
     else Thm.transitive eq1 eq2
   end
 
-fun general_expansion binder tag_rule N0 quant_rule names ctxt =
+fun general_expansion binder tag_rule N0 quant_rule final names =
   let open Conv
-      fun expn [] _ ct = all_conv ct
+      val final_cv = (case final of SOME final' => rewr_conv final'
+                                  | NONE => all_conv)
+      fun expn [] _ ct = final_cv ct
         | expn [N] _ ct =
-            let val ret = all_conv ct
+            let val ret = final_cv ct
              in case Thm.prop_of ret
                   of eq $ LHS $ (Const (B,T) $ Abs (_, T2, X)) =>
                       if B = binder
@@ -96,33 +100,46 @@ fun general_expansion binder tag_rule N0 quant_rule names ctxt =
         | expn (N::L) ctxt' ct =
            (rewr_conv (set_name (N0,N) quant_rule)
             my_then_conv Phi_Conv.quant_conv binder (expn L o snd) ctxt') ct
-   in rewr_conv tag_rule
-      my_then_conv expn names ctxt
+   in fn ctxt =>
+      Conv.try_conv (rewr_conv tag_rule) my_then_conv
+      (fn ct => let
+           val names = case names
+                  of SOME names => names
+                   | NONE => let
+                       val Const _ $ abst = Thm.term_of ct
+                       val Type ("fun", [Type (@{type_name named}, [T, names_ty]), _])  = fastype_of abst
+                       val names = dest_name_tylabels names_ty 
+                    in names end
+        in expn names ctxt ct 
+       end)
   end
 
 
 val forall_expansion =
   general_expansion @{const_name All} @{thm named_forall[folded atomize_eq]}
-                    "a" @{thm split_paired_All[folded atomize_eq]}
+                    "a" @{thm split_paired_All[folded atomize_eq]} NONE
 val exists_expansion =
   general_expansion @{const_name Ex} @{thm named_exists[folded atomize_eq]}
-                    "a" @{thm split_paired_Ex[folded atomize_eq]}
+                    "a" @{thm split_paired_Ex[folded atomize_eq]} NONE
 val meta_All_expansion =
   general_expansion @{const_name Pure.all} @{thm named_All[folded atomize_eq]}
-                    "a" @{thm split_paired_all[folded atomize_eq]}
+                    "a" @{thm split_paired_all[folded atomize_eq]} NONE
 val ExNu_expansion =
   general_expansion @{const_name ExBI} @{thm named_ExBI[folded atomize_eq]}
-                    "a" @{thm ExBI_pair[folded atomize_eq]}
+                    "a" @{thm ExBI_pair[folded atomize_eq]} NONE
+
 
 val forall_expansion_arg_encoding =
   general_expansion @{const_name All} @{thm named_forall[folded atomize_eq]}
-                    "a" @{thm split_paired_All_\<phi>arg[folded atomize_eq]}
+                    "h" @{thm split_legnthed_All} (SOME @{thm legnthed_All_zero})
+
 val exists_expansion_arg_encoding =
   general_expansion @{const_name Ex} @{thm named_exists[folded atomize_eq]}
-                    "a" @{thm split_paired_Ex_\<phi>arg[folded atomize_eq]}
+                    "h" @{thm split_legnthed_Ex} (SOME @{thm legnthed_Ex_zero})
+
 val meta_All_expansion_arg_encoding =
   general_expansion @{const_name Pure.all} @{thm named_All[folded atomize_eq]}
-                    "a" @{thm split_paired_all_\<phi>arg[folded atomize_eq]}
+                    "h" @{thm split_legnthed_all} (SOME @{thm legnthed_all_zero})
 
 
 fun aux_expansions ctxt = Named_Theorems.get ctxt @{named_theorems named_expansion}
@@ -175,27 +192,36 @@ fun simproc_of expn ctxt cterm =
     SOME (expn T names ctxt cterm)
   end
 
+fun simproc_of' expn ctxt cterm =
+  let
+    val Const _ $ abst = Thm.term_of cterm
+    val Type ("fun", [Type (@{type_name named}, [T, names_ty]), _])  = fastype_of abst
+    val names = dest_name_tylabels names_ty
+  in
+    SOME (expn T (SOME names) ctxt cterm)
+  end
+
 val named_forall =
   Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_forall\<close>)
     {lhss = [\<^term>\<open>All (P :: 'a <named> 'names \<Rightarrow> bool)\<close>],
-     proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => forall_expansion_arg_encoding
+     proc = K (simproc_of' (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => forall_expansion_arg_encoding
                                                     | _ => forall_expansion))}
 val named_ex =
   Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>)
     {lhss = [\<^term>\<open>Ex (P :: 'a <named> 'names \<Rightarrow> bool)\<close>],
-     proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => exists_expansion_arg_encoding
+     proc = K (simproc_of' (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => exists_expansion_arg_encoding
                                                     | _ => exists_expansion))}
 
 val named_ExBI =
   Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>)
     {lhss = [\<^term>\<open>ExBI (P :: 'a <named> 'names \<Rightarrow> 'b BI)\<close>],
-     proc = K (simproc_of (K ExNu_expansion))}
+     proc = K (simproc_of' (K ExNu_expansion))}
 
 val named_metaAll =
   Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_metaAll\<close>)
     {lhss = [\<^term>\<open>Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)\<close>],
-     proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => meta_All_expansion_arg_encoding
-                            | _ => meta_All_expansion))}
+     proc = K (simproc_of' (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => meta_All_expansion_arg_encoding
+                             | _ => meta_All_expansion))}
 
 
 (*
@@ -236,6 +262,7 @@ fun strip_quant_tys _ 0 _ = []
 fun lambda_body 0 X = X
   | lambda_body N (Abs (_,_,X)) = lambda_body (N-1) X
   | lambda_body N X = if N <= 0 then X else raise Subscript
+
 fun quant_body _ 0 X = X
   | quant_body H N (H' $ (X' as Abs (_,_,X))) =
       if H = gname H' then quant_body H (N-1) X
@@ -291,9 +318,11 @@ end
 val (aggregate_vars_lambda, aggregate_vars_quantification) =
   GEN (HOLogic.mk_prodT, HOLogic.dest_prodT, \<^const_name>\<open>eoq__fst\<close>, \<^const_name>\<open>eoq__snd\<close>)
 
+(*
 val (aggregate_vars_lambda_arg_encoding,
      aggregate_vars_quantification_arg_encoding) =
-  GEN (Procedure_Syntax.mk_arg_prodT, Procedure_Syntax.dest_arg_prodT,
-       \<^const_name>\<open>\<phi>V_fst\<close>, \<^const_name>\<open>\<phi>V_snd\<close>)
+  GEN (K \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>, Procedure_Syntax.dest_arg_prodT,
+       "", "")
+*)
 
 end

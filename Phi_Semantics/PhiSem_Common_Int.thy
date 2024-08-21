@@ -183,14 +183,13 @@ lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
   unfolding push_bit_int_def .
 
 
+ 
+  \<phi>typeclass Order ( T :: \<open>(VAL,'x::order) \<phi>\<close> )
+    fixes leq[\<phi>overload \<le>]: \<open>\<p>\<r>\<o>\<c> leq \<lbrace> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> T \<longmapsto> x \<le> y \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
 
-\<phi>typeclass \<phi>Order (T)
-  fixes leq[\<phi>overload \<le>]: \<open>\<p>\<r>\<o>\<c> leq(v\<^sub>a,v\<^sub>b) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>b] T \<longmapsto> x \<le> y \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
 
-thm \<phi>Order_def
-
-thm \<phi>Order.leq
-
+thm Order_def
+typ \<open>'a::preorder\<close>
 
 (*TODO:
 

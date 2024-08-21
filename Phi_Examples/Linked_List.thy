@@ -134,7 +134,7 @@ proc length_of:
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
     addr.nxt \<rightarrow> val t1 \<semicolon>
     val ret \<leftarrow> length_of (addr.nxt) + 1 \<semicolon>
-    \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr T\<close> \<semicolon> (* 1: call the second constructor *)
+    \<m>\<a>\<k>\<e>\<s>(1) \<open>Linked_Lst addr T\<close> \<semicolon>
     return (ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .

@@ -26,7 +26,7 @@ fun quantify_args_of_proc_term' record_name proc =
         | is_argT' T = is_argT T
       fun is_args Vs =
           is_argT' (fastype_of Vs) andalso
-          (case try dest_arg_tuple Vs of SOME vs =>
+          (case try dest_arg_list Vs of SOME vs =>
                   forall (fn Free _ => true | Var _ => true | _ => false) vs
               | _ => false)
       fun is_Free_or_Const (Const _) = true
@@ -35,7 +35,7 @@ fun quantify_args_of_proc_term' record_name proc =
       val Vs = if is_Var (Term.head_of f) then NONE
                else case f of F $ Vs => if is_Free_or_Const (head_of F)
                                         then if is_args Vs
-                                        then SOME (dest_arg_tuple Vs)
+                                        then SOME (dest_arg_list Vs)
                                         else SOME []
                                         else NONE
                             | _      => NONE
@@ -50,11 +50,11 @@ fun quantify_args_of_proc_term' record_name proc =
                               then incr_boundvars 1 F $ Bound 0
                               else incr_boundvars 1 f
                               else incr_boundvars 1 (
-                                      snd (package_values "" false (SOME (dest_arg_tuple pack)) f))
+                                      snd (package_values "" false (SOME (dest_arg_list pack)) f))
                                    $ Bound 0
                             | _      =>
                               incr_boundvars 1 (
-                                snd (package_values "" false (SOME (dest_arg_tuple pack)) f))
+                                snd (package_values "" false (SOME (dest_arg_list pack)) f))
                               $ Bound 0
       val T = fastype_of pack
       val abs1 = Abs ("", T,
@@ -62,7 +62,7 @@ fun quantify_args_of_proc_term' record_name proc =
       val (T2,abs2) =
             if record_name
             then let
-             val names = dest_arg_tuple pack
+             val names = dest_arg_list pack
                       |> map (fn Free (N,_) => N
                                | Var ((N,i),_) => if i = 0 then N else N ^ string_of_int i
                                | _ => error "Internal error #2dc7cd58-8e36-4124-b760-a49e5f2abe1c")

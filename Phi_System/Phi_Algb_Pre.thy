@@ -326,7 +326,7 @@ lemma [\<phi>reason %\<A>_partial_add_success]:
   by simp
 
 
-paragraph \<open>Cancellative and Canonically Ordered Commutative Partial Monoid\<close>
+paragraph \<open>Cancellative and Canonically ed Commutative Partial Monoid\<close>
 
 text \<open>The rules do not conflict with those for groups because a canonically ordered monoid can never
   be a group.\<close>
@@ -692,7 +692,7 @@ lemma [\<phi>reason %partial_add_overlaps_direct_success]:
   unfolding partial_add_overlaps_def
   by blast
 
-paragraph \<open>Cancellative and Canonically Ordered Commutative Partial Monoid\<close>
+paragraph \<open>Cancellative and Canonically ed Commutative Partial Monoid\<close>
 
 lemma [\<phi>reason %partial_add_overlaps_cancl]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<or> b \<le> a

@@ -54,17 +54,17 @@ abbreviation View_Shift_CurrentConstruction ("(2\<v>\<i>\<e>\<w> _ [_] \<i>\<s>/
 consts Programming_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("(2\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>:/ (\<open>consistent=true\<close>_))" [11] 10)
 consts View_Shift_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("(2\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>:/ _)" [11] 10)
 
-definition PendingConstruction :: " 'ret proc
+definition PendingConstruction :: "  proc
                                   \<Rightarrow> resource
                                   \<Rightarrow> assn
-                                  \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
+                                  \<Rightarrow> (VAL list \<phi>arg \<Rightarrow> assn)
                                   \<Rightarrow> (ABNM \<Rightarrow> assn)
                                   \<Rightarrow> bool "
     ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> _ \<o>\<n> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,1000,1000,11,11] 10)
     where "PendingConstruction f s R S E \<longleftrightarrow>
               BI_lift (f s) \<le> LooseState (\<lambda>ret. INTERP_SPEC (S ret * R)) (\<lambda>ex. INTERP_SPEC (E ex * R))"
 
-consts PendingConstruction_syntax :: \<open>'ret proc \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn) \<Rightarrow> (ABNM \<Rightarrow> assn) \<Rightarrow> bool\<close>
+consts PendingConstruction_syntax :: \<open> proc \<Rightarrow> (VAL list \<phi>arg \<Rightarrow> assn) \<Rightarrow> (ABNM \<Rightarrow> assn) \<Rightarrow> bool \<close>
   ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> _/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,11,11] 10)
 
 translations
@@ -161,6 +161,7 @@ lemma \<phi>return_when_unreachable:
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 *)
+(*
 lemma \<phi>return_additional_unit:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<bind> (\<lambda>v. Return (\<phi>V_pair v \<phi>V_none))) \<o>\<n> s [R]
@@ -168,6 +169,7 @@ lemma \<phi>return_additional_unit:
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def \<phi>V_pair_def
     \<phi>V_fst_def \<phi>V_snd_def det_lift_def less_eq_BI_iff
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
+*)
 
 lemma \<phi>return:
   " \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T'

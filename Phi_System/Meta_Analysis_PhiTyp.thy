@@ -28,11 +28,11 @@ In the latter \<open>r\<close>, the \<open>x\<close> is transformed to one of th
 \<open>x\<close> can be transformed to any of \<open>y \<in> \<Union>\<^sub>i{f\<^sub>i(x)}\<close> arbitrarily.
 \<close>
 
-definition Transformation_Order :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
-  where \<open>Transformation_Order T U = (\<lambda>x y. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U)\<close>
+definition Transformation_ :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  where \<open>Transformation_ T U = (\<lambda>x y. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U)\<close>
 
 definition Complete_Transformation :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool\<close>
-  where \<open>Complete_Transformation T U f \<longleftrightarrow> f OO Transformation_Order U U = Transformation_Order T U\<close>
+  where \<open>Complete_Transformation T U f \<longleftrightarrow> f OO Transformation_ U U = Transformation_ T U\<close>
 
 definition family_decode \<comment> \<open>Decoding a family of transformation maps (represented in a set) to a relation
                              characterizing which targets are covered from each source\<close>
@@ -42,15 +42,15 @@ definition Complete_Transformation'
   where \<open>Complete_Transformation' T U fs \<longleftrightarrow> Complete_Transformation T U (family_decode fs)\<close>
 
 
-lemma Transformation_Order_id:
-  \<open>Transformation_Order T U OO Transformation_Order U U = Transformation_Order T U\<close>
-  \<open>Transformation_Order T T OO Transformation_Order T U = Transformation_Order T U\<close>
-  unfolding Transformation_Order_def fun_eq_iff relcompp.simps Transformation_def
+lemma Transformation__id:
+  \<open>Transformation_ T U OO Transformation_ U U = Transformation_ T U\<close>
+  \<open>Transformation_ T T OO Transformation_ T U = Transformation_ T U\<close>
+  unfolding Transformation__def fun_eq_iff relcompp.simps Transformation_def
   by clarsimp blast+
 
 lemma
-  \<open>Transformation_Order S T OO Transformation_Order T U \<le> Transformation_Order S U \<close>
-  unfolding Transformation_Order_def fun_eq_iff relcompp.simps Transformation_def
+  \<open>Transformation_ S T OO Transformation_ T U \<le> Transformation_ S U \<close>
+  unfolding Transformation__def fun_eq_iff relcompp.simps Transformation_def
   by clarsimp
 
 lemma exists_family_for_any_decoding:
@@ -63,7 +63,7 @@ lemma exists_family_for_any_decoding:
 lemma Existence_of_Complete_Transformation:
   \<open>\<exists>f. Complete_Transformation T U f\<close>
   unfolding Complete_Transformation_def
-  by (rule exI[where x=\<open>Transformation_Order T U\<close>]; simp add: Transformation_Order_id)
+  by (rule exI[where x=\<open>Transformation_ T U\<close>]; simp add: Transformation__id)
 
 theorem Existence_of_Complete_Transformation':
   \<open>\<exists>fs. Complete_Transformation' T U fs\<close>
@@ -76,9 +76,9 @@ section \<open>Analysis Properties\<close>
 
 subsection \<open>Object_Equiv\<close>
 
-lemma \<comment>\<open>\<open>Object_Equiv\<close> gives lower approximation of the \<open>Transformation_Order T T\<close>\<close>
-  \<open>Object_Equiv T eq \<Longrightarrow> eq \<le> Transformation_Order T T\<close>
-  unfolding Object_Equiv_def Transformation_Order_def
+lemma \<comment>\<open>\<open>Object_Equiv\<close> gives lower approximation of the \<open>Transformation_ T T\<close>\<close>
+  \<open>Object_Equiv T eq \<Longrightarrow> eq \<le> Transformation_ T T\<close>
+  unfolding Object_Equiv_def Transformation__def
   by clarsimp
 
 subsection \<open>Transformation Functor\<close>

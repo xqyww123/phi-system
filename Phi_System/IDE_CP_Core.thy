@@ -12,7 +12,8 @@ theory IDE_CP_Core
   and ";;" "\<semicolon>" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>lang_parser" :: thy_decl % "ML"
-  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>lang_operator" :: thy_decl
+  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>lang_operator"
+      "\<phi>typeclass" "\<phi>instance" :: thy_defn
 abbrevs
   "!!" = "!!"
   and "<label>" = "\<l>\<a>\<b>\<e>\<l>"
@@ -1019,14 +1020,6 @@ definition \<phi>Application_Conv :: \<open>prop \<Rightarrow> prop \<Rightarrow
 
 definition \<phi>App_Conv :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>\<phi>App_Conv \<equiv> (\<longrightarrow>)\<close>
-
-lemma \<phi>Application_Conv:
-  \<open> PROP P
-\<Longrightarrow> PROP \<phi>Application_Conv P Q
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> PROP Q\<close>
-  unfolding \<phi>Application_Conv_def .
 
 ML_file \<open>library/system/application.ML\<close>
 
@@ -2161,9 +2154,29 @@ ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
 ML_file \<open>library/system/modifier.ML\<close>
+ML_file \<open>library/typeclass.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 ML_file \<open>library/tools/CoP_simp_supp.ML\<close>
 ML_file \<open>library/system/generic_element_access2.ML\<close>
+
+subsubsection \<open>Codegen\<close>
+
+(*
+definition Program_Interface :: \<open>label \<Rightarrow> TY list \<Rightarrow> TY list \<Rightarrow> VAL proc \<Rightarrow> bool\<close>
+  where "Program_Interface _ args rets proc \<longleftrightarrow> True"
+
+lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) proc"
+  unfolding Prog_Interface_def ..
+
+lemma Prog_Interface_func:
+  "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f"
+  unfolding Prog_Interface_def ..
+
+
+ML_file "library/system/procedure2.ML"
+ML_file \<open>library/codegen/emit.ML\<close>
+ML_file \<open>library/codegen/base.ML\<close>
+*)
 
 subsubsection \<open>Setups\<close>
 

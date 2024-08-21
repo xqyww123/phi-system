@@ -252,20 +252,20 @@ hide_fact  eoq__fst eoq__snd
 hide_const eoq__fst eoq__snd
 
 simproc_setup named_forall_expansion ("All (P :: 'a <named> 'names \<Rightarrow> bool)") =
-  \<open>K (QuantExpansion.simproc_of
+  \<open>K (QuantExpansion.simproc_of'
           (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => QuantExpansion.forall_expansion_arg_encoding
             | _ => QuantExpansion.forall_expansion))\<close>
 
 simproc_setup named_ex_expansion ("Ex (P :: 'a <named> 'names \<Rightarrow> bool)") =
-  \<open>K (QuantExpansion.simproc_of
+  \<open>K (QuantExpansion.simproc_of'
           (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => QuantExpansion.exists_expansion_arg_encoding
             | _ => QuantExpansion.exists_expansion))\<close>
 
 simproc_setup named_exSet_expansion ("ExBI (P :: 'a <named> 'names \<Rightarrow> 'b BI)") =
-  \<open>K (QuantExpansion.simproc_of (K QuantExpansion.ExNu_expansion))\<close>
+  \<open>K (QuantExpansion.simproc_of' (K QuantExpansion.ExNu_expansion))\<close>
 
 simproc_setup named_metaAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
-  \<open>K (QuantExpansion.simproc_of
+  \<open>K (QuantExpansion.simproc_of'
           (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => QuantExpansion.meta_All_expansion_arg_encoding
             | _ => QuantExpansion.meta_All_expansion))\<close>
 

@@ -47,7 +47,7 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
     val (_,X,Y,_) = Phi_Syntax.dest_procedure proc0
     val (v,X') = Procedure_Syntax.package_values "" false NONE X
 
-    val sem_args  = Procedure_Syntax.dest_arg_tuple v
+    val sem_args  = Procedure_Syntax.dest_arg_list v
     val names = map (Variable.revert_fixed ctxt o Term.term_name) sem_args
     val names_ty  = Thm.ctyp_of ctxt (Phi_Syntax.mk_name_tylabels names)
 
