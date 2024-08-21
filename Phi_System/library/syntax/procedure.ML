@@ -94,13 +94,11 @@ fun dest_arg_prodT (Type (\<^type_name>\<open>\<phi>arg\<close>, [Type (\<^type_
       = (Type (\<^type_name>\<open>\<phi>arg\<close>, [A]), Type (\<^type_name>\<open>\<phi>arg\<close>, [B]))
   | dest_arg_prodT (Type ("dummy", [])) = (dummyT,dummyT)
   | dest_arg_prodT T = raise TYPE("Not a \<phi>arg type", [T], [])
-*)
 
 fun mk_arg_prodT (Type (\<^type_name>\<open>\<phi>arg\<close>, [T1]), Type (\<^type_name>\<open>\<phi>arg\<close>, [T2]))
       = Type (\<^type_name>\<open>\<phi>arg\<close>, [HOLogic.mk_prodT (T1,T2)])
   | mk_arg_prodT (T1,T2) = raise TYPE("Not a \<phi>arg type", [T1,T2], [])
 
-(*
 fun mk_arg_listT Ts = mk_argT (HOLogic.mk_tupleT (map dest_argT Ts))
 *)
 
@@ -113,6 +111,8 @@ fun mk_arg_list' [] = \<^Const>\<open>\<phi>V_nil\<close>
       = \<^Const>\<open>\<phi>V_cons\<close> $ tm $ mk_arg_list' tms
 
 fun mk_arg_list [] = \<^Const>\<open>\<phi>V_nil\<close>
+  (*| mk_arg_list [tm] =
+      *)
   | mk_arg_list (tm::tms)
       = \<^Const>\<open>\<phi>V_cons\<close> $ tm $ mk_arg_list tms
   | mk_arg_list tms = raise TYPE ("Not a \<phi>arg type", [], tms)
@@ -134,54 +134,70 @@ fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = tru
   | need_translate_arg (Abs (_, _, X)) = need_translate_arg X
   | need_translate_arg _ = false
 
-fun translate_arg' cnt s ns ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
+fun error_varlen_once () = error "the argument of variable length can only occur once"
+fun set_VARLEN NONE vl = SOME vl
+  | set_VARLEN (SOME _) _ = error_varlen_once ()
+
+fun translate_arg' meet cnt s ns ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
                               $ X $ ( (C2 as Const (\<^const_name>\<open>Val\<close>, _))
                                        $ Const (\<^const_name>\<open>anonymous\<close>, _)
                                        $ X2))
       = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
-         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+         in (meet, cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
         end
-  | translate_arg' cnt s ns ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
+  | translate_arg' meet cnt s ns ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
                               $ X $ ( (C2 as Const (\<^const_syntax>\<open>Val\<close>, _))
                                        $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
                                        $ X2))
       = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
-         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+         in (meet, cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
         end
 
-  | translate_arg' cnt s ns ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
+  | translate_arg' meet cnt s ns ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
                               $ X $ ( (C2 as Const (\<^const_name>\<open>Vals\<close>, _))
-                                       $ Const (\<^const_name>\<open>anonymous\<close>, _)
+                                       $ Const (\<^const_name>\<open>anonymouss\<close>, _)
                                        $ X2))
-      = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
-         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+      = let val _ = if meet then error_varlen_once () else ()
+            val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
+         in (true, cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
         end
-  | translate_arg' cnt s ns ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
+  | translate_arg' meet cnt s ns ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
                               $ X $ ( (C2 as Const (\<^const_syntax>\<open>Vals\<close>, _))
-                                       $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
+                                       $ Const (\<^const_syntax>\<open>anonymouss\<close>, _)
                                        $ X2))
-      = let val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
-         in (cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
+      = let val _ = if meet then error_varlen_once () else ()
+            val name = "\<a>\<r>\<g>" ^ (string_of_int (cnt+1))
+         in (true, cnt+1, s, name :: ns, C1 $ X $ (C2 $ Free (name, dummyT) $ X2))
         end
 
-  | translate_arg' cnt s ns (Const (\<^const_name>\<open>anonymous\<close>, _))
+  | translate_arg' meet cnt s ns (Const (\<^const_name>\<open>anonymous\<close>, _))
       = let val s' = Symbol.bump_string s
-         in (cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+         in (meet, cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
         end
-  | translate_arg' cnt s ns (Const (\<^const_syntax>\<open>anonymous\<close>, _))
+  | translate_arg' meet cnt s ns (Const (\<^const_syntax>\<open>anonymous\<close>, _))
       = let val s' = Symbol.bump_string s
-         in (cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+         in (meet, cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
         end
-  | translate_arg' cnt s ns (A $ B)
-      = (case translate_arg' cnt  s  ns  A of (cnt',s',ns',A') =>
-         case translate_arg' cnt' s' ns' B of (cnt'',s'',ns'',B') =>
-          (cnt'', s'', ns'', A' $ B'))
-  | translate_arg' cnt s ns (Abs (name,ty, X))
-      = (case translate_arg' cnt s ns X of (cnt',s',ns',X') =>
-           (cnt', s', ns', Abs (name,ty,X')))
-  | translate_arg' cnt s ns X = (cnt,s,ns,X)
+  | translate_arg' meet cnt s ns (Const (\<^const_name>\<open>anonymous\<close>, _))
+      = let val _ = if meet then error_varlen_once () else ()
+            val s' = Symbol.bump_string s
+         in (true, cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+        end
+  | translate_arg' meet cnt s ns (Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = let val _ = if meet then error_varlen_once () else ()
+            val s' = Symbol.bump_string s
+         in (true, cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+        end
+  | translate_arg' meet cnt s ns (A $ B)
+      = (case translate_arg' meet cnt  s  ns  A of (meet, cnt',s',ns',A') =>
+         case translate_arg' meet cnt' s' ns' B of (meet, cnt'',s'',ns'',B') =>
+          (meet, cnt'', s'', ns'', A' $ B'))
+  | translate_arg' meet cnt s ns (Abs (name,ty, X))
+      = (case translate_arg' meet cnt s ns X of (meet, cnt',s',ns',X') =>
+           (meet, cnt', s', ns', Abs (name,ty,X')))
+  | translate_arg' meet cnt s ns X = (meet, cnt,s,ns,X)
 
-fun translate_arg X = #4 (translate_arg' 0 "\<a>\<r>\<g>_a" [] X)
+fun translate_arg X = #5 (translate_arg' false 0 "\<a>\<r>\<g>_a" [] X)
 
 datatype quantify_mode = No_Quantify | HOL_Quantify
 datatype parameterize_proc = No_Parameterize | Tuple_Pack | Lambda_Apps
@@ -209,7 +225,7 @@ fun mk_proc_synt (H,p,A,R,E) =
 
 fun translate_proc_arg' (qmode, pmode) tm =
   let val (Procedure, proc, Arg, Ret, Err) = dest_proc_synt tm
-      val (_, _, names, Arg') = translate_arg' 0 "\<a>\<r>\<g>_a" [] Arg
+      val (_, _, _, names, Arg') = translate_arg' false 0 "\<a>\<r>\<g>_a" [] Arg
       val proc' = case pmode
                     of No_Parameterize => proc
                      | Tuple_Pack => proc $ mk_arg_list' (map (fn x => Free(x,dummyT)) (rev names))
@@ -262,37 +278,42 @@ fun translate_proc_arg ctxt tm =
           Type (\<^type_name>\<open>\<phi>arg\<close>, [HOLogic.mk_arg_prodT (T,Ts')]))
   | mk_arg_prodT T = raise TYPE("bug #g4389h", T, []) *)
 
-fun nth_project [_] 0 term = term
-  | nth_project (ty::_::_) 0 term
-      = \<^Const>\<open>\<phi>V_hd\<close> $ term
-  | nth_project (ty::tys::tyss) i term =
-      nth_project (tys::tyss) (i-1) (\<^Const>\<open>\<phi>V_tl\<close> $ term)
-  | nth_project _ _ _ = error "Internal bug #bq3 ni8op["
+fun nth_project 0 term = \<^Const>\<open>\<phi>V_hd\<close> $ term
+  | nth_project i term = nth_project (i-1) (\<^Const>\<open>\<phi>V_tl\<close> $ term)
+fun last_prj 0 term = \<^Const>\<open>\<phi>V_tl\<close> $ term
+  | last_prj i term = last_prj (i-1) (\<^Const>\<open>\<phi>V_tl\<close> $ term)
 
 
 fun gen_collect_and_map R2L (*whether in an order from right to left or reversely*) =
 let
 
-fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous\<close>, _)) = v::Vs
-  | collect_vals Vs (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)) = v::Vs
-  | collect_vals Vs (v as Free (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _))) = insert (op = ) v Vs
-  | collect_vals Vs (v as Var (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))  = insert (op = ) v Vs
-  | collect_vals Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>\<phi>arg\<close>, _),_])) $ _)
-      = insert (op = ) v Vs
-  | collect_vals Vs (v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ _))
-      = insert (op = ) v Vs
-  | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous\<close>, _)))
-      = v::Vs
-  | collect_vals Vs (Const (\<^const_syntax>\<open>Val\<close>, _) $ (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)))
-      = v::Vs
-  | collect_vals Vs (Const (\<^const_name>\<open>Vals\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous\<close>, _)))
-      = v::Vs
-  | collect_vals Vs (Const (\<^const_syntax>\<open>Vals\<close>, _) $ (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)))
-      = v::Vs
-  | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
-  | collect_vals Vs (Const (\<^const_syntax>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
-  | collect_vals Vs (Const (\<^const_name>\<open>Vals\<close>, _) $ v) = insert (op = ) v Vs
-  | collect_vals Vs (Const (\<^const_syntax>\<open>Vals\<close>, _) $ v) = insert (op = ) v Vs
+fun collect_vals (Vs,VL) (v as Const (\<^const_name>\<open>anonymous\<close>, _)) = (v::Vs,VL)
+  | collect_vals (Vs,VL) (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)) = (v::Vs,VL)
+  | collect_vals (Vs,VL) (v as Const (\<^const_name>\<open>anonymouss\<close>, _)) = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (v as Const (\<^const_syntax>\<open>anonymouss\<close>, _)) = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (v as Free (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _))) = (insert (op = ) v Vs,VL)
+  | collect_vals (Vs,VL) (v as Var (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))  = (insert (op = ) v Vs,VL)
+  | collect_vals (Vs,VL) (v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close> _\<close>) $ _)
+      = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close> _\<close>) $ _)
+      = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ Const(\<^type_syntax>\<open>VAL\<close>, _)))
+      = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $
+                                  (Const(\<^type_syntax>\<open>list\<close>, _) $ Const(\<^type_syntax>\<open>VAL\<close>, _)) ))
+      = (Vs, set_VARLEN VL v)
+(*| collect_vals (Vs,VL) (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous\<close>, _)))
+      = (v::Vs, VL)
+  | collect_vals (Vs,VL) (Const (\<^const_syntax>\<open>Val\<close>, _) $ (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)))
+      = (v::Vs, VL)
+  | collect_vals (Vs,VL) (Const (\<^const_name>\<open>Vals\<close>, _) $ (v as Const (\<^const_name>\<open>anonymouss\<close>, _)))
+      = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (Const (\<^const_syntax>\<open>Vals\<close>, _) $ (v as Const (\<^const_syntax>\<open>anonymouss\<close>, _)))
+      = (Vs, set_VARLEN VL v)*)
+  | collect_vals (Vs,VL) (Const (\<^const_name>\<open>Val\<close>, _) $ v) = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (Const (\<^const_syntax>\<open>Val\<close>, _) $ v) = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (Const (\<^const_name>\<open>Vals\<close>, _) $ v) = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (Const (\<^const_syntax>\<open>Vals\<close>, _) $ v) = (Vs, set_VARLEN VL v)
   | collect_vals Vs (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = collect_vals Vs X
   | collect_vals Vs (Abs (_,_,X)) = collect_vals Vs X
   | collect_vals Vs (X $ Y) =
@@ -309,53 +330,59 @@ fun jth_index_of_annoy j ans (Const (\<^const_name>\<open>anonymous\<close>, _) 
       = jth_index_of_annoy j (ans+1) L
   | jth_index_of_annoy _ _ [] = raise Fail "Procedure_Syntax: Insufficient values"
 
-fun mk_projection Tys VS i v =
+fun mk_projection VS i v =
   let val ret = find_index (fn x => x = v) VS
    in if ret = ~1 then v
-      else nth_project Tys ret (Bound i)
+      else nth_project ret (Bound i)
   end
 
-fun map_ret Tys i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (j + 1, nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret Tys i VS (j, Const (\<^const_syntax>\<open>anonymous\<close>, _))
-      = (j + 1, nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret Tys i VS (j, v as Const ("_type_constraint_",
-                                      Type("fun", [Type(\<^type_name>\<open>\<phi>arg\<close>, _),_])) $ _)
-      = (j, mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ _))
-      = (j, mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, v as Free (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
-      = (j, mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, v as Var (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
-      = (j, mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
-      = (j, h $ mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
-      = (j, h $ mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ v)
-      = (j, h $ mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ v)
-      = (j, h $ mk_projection Tys VS i v)
-  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>\<phi>Type\<close>, _)) $ A $ B)
-      = (case map_ret Tys i VS (j, B) of (j',B') => (j', h $ A $ B'))
-  | map_ret Tys i VS (j, Abs (name,ty,X))
-      = (case map_ret Tys (i+1) VS (j, X) of (j',X') => (j', Abs (name, ty,X')))
-  | map_ret Tys i VS (j, X $ Y)
+fun map_ret i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
+      = (j + 1, nth_project (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret i VS (j, Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = (j + 1, nth_project (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret i VS (j, Const (\<^const_name>\<open>anonymouss\<close>, _))
+      = (j + 1, last_prj (length VS) (Bound i))
+  | map_ret i VS (j, Const (\<^const_syntax>\<open>anonymouss\<close>, _))
+      = (j + 1, last_prj (length VS) (Bound i))
+
+  | map_ret i VS (j, v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close> _\<close>) $ _)
+      = (j, mk_projection VS i v)
+  | map_ret i VS (j, v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close> _\<close>) $ _)
+      = (j, mk_projection VS i v)
+  | map_ret i VS (j, v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ _))
+      = (j, mk_projection VS i v)
+  | map_ret i VS (j, v as Free (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
+      = (j, mk_projection VS i v)
+  | map_ret i VS (j, v as Var (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
+      = (j, mk_projection VS i v)
+  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
+      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
+      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
+  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
+      = (j, h $ mk_projection VS i v)
+  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
+      = (j, h $ mk_projection VS i v)
+  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ v)
+      = (j, h $ mk_projection VS i v)
+  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ v)
+      = (j, h $ mk_projection VS i v)
+  | map_ret i VS (j, (h as Const (\<^const_name>\<open>\<phi>Type\<close>, _)) $ A $ B)
+      = (case map_ret i VS (j, B) of (j',B') => (j', h $ A $ B'))
+  | map_ret i VS (j, Abs (name,ty,X))
+      = (case map_ret (i+1) VS (j, X) of (j',X') => (j', Abs (name, ty,X')))
+  | map_ret i VS (j, X $ Y)
       = if R2L
-        then (case map_ret Tys i VS (j,Y) of (j',Y') =>
-                (case map_ret Tys i VS (j',X) of (j'',X') => (j'', X' $ Y')))
-        else (case map_ret Tys i VS (j,X) of (j',X') =>
-                (case map_ret Tys i VS (j',Y) of (j'',Y') => (j'', X' $ Y')))
-  | map_ret _ i _ (j,Bound a) = (j, Bound (if i <= a then a+1 else a))
-  | map_ret _ _ _ jVX = jVX
+        then (case map_ret i VS (j,Y) of (j',Y') =>
+                (case map_ret i VS (j',X) of (j'',X') => (j'', X' $ Y')))
+        else (case map_ret i VS (j,X) of (j',X') =>
+                (case map_ret i VS (j',Y) of (j'',Y') => (j'', X' $ Y')))
+  | map_ret i _ (j,Bound a) = (j, Bound (if i <= a then a+1 else a))
+  | map_ret _ _ jVX = jVX
 in (collect_vals, map_ret) end
 
 val dummyT_sem = Type (\<^type_name>\<open>\<phi>arg\<close>, [dummyT])
@@ -369,11 +396,11 @@ fun package_values name _ (SOME []) term =
   let
     val (collect_vals, map_ret) = gen_collect_and_map R2L
     val Vs = case Vs0 of SOME Vs => Vs | NONE => collect_vals [] term
-    val Tys = fold_rev (fn T => (fn [] => [T]
+    (*val Tys = fold_rev (fn T => (fn [] => [T]
                                   | L as T'::_ => mk_arg_prodT (T,T') :: L))
               (map ex_fastype_of Vs) []
-    val T = if null Tys then \<^typ>\<open>unit \<phi>arg\<close> else hd Tys
-  in (mk_arg_list Vs, Abs(name, T, if null Tys then term else #2(map_ret Tys 0 Vs (0,term))))
+    val T = if null Tys then \<^typ>\<open>unit \<phi>arg\<close> else hd Tys*)
+  in (mk_arg_list Vs, Abs(name, val_list_T, if null Vs then term else #2(map_ret 0 Vs (0,term))))
   end
 
 fun package_values0 name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))

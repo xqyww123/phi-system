@@ -196,7 +196,8 @@ lemma Vals_inh_rewr:
 
 paragraph \<open>Syntax\<close>
 
-consts anonymous :: 'a
+consts anonymous  :: VAL
+       anonymouss :: \<open>VAL list\<close>
 
 syntax val_syntax  :: "logic \<Rightarrow> logic" ("\<v>\<a>\<l> _"  [22] 21)
        vals_syntax :: "logic \<Rightarrow> logic" ("\<v>\<a>\<l>\<s> _" [22] 21)
@@ -204,8 +205,8 @@ syntax val_syntax  :: "logic \<Rightarrow> logic" ("\<v>\<a>\<l> _"  [22] 21)
 translations
   "\<v>\<a>\<l> x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Val (CONST anonymous) T"
   "\<v>\<a>\<l> T" => "CONST Val (CONST anonymous) T"
-  "\<v>\<a>\<l>\<s> x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Vals (CONST anonymous) T"
-  "\<v>\<a>\<l>\<s> T" => "CONST Vals (CONST anonymous) T"
+  "\<v>\<a>\<l>\<s> x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Vals (CONST anonymouss) T"
+  "\<v>\<a>\<l>\<s> T" => "CONST Vals (CONST anonymouss) T"
 
 ML_file \<open>library/syntax/value.ML\<close>
 
