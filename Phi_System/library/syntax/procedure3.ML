@@ -11,7 +11,7 @@ val quantify_args_of_proc_term_meta : bool (*whether to record the names in the 
 
 (* \<p>\<r>\<o>\<c> f ?a ?b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 --------------------------------------------------------------------------------------
-   \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
+   \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_hd pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_tl pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 *)
 val package_argument : Proof.context -> thm -> thm
 
@@ -103,14 +103,15 @@ fun quantify_args_of_proc_term record_name (Const (\<^const_name>\<open>Trueprop
 
 (*
     (\<And>a b. \<p>\<r>\<o>\<c> f a b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE ) \<Longrightarrow>
-    (\<forall>a. \<p>\<r>\<o>\<c> f a \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE )
+    (\<forall>a. \<p>\<r>\<o>\<c> f a \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_hd a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_tl a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE )
 *)
 fun rule_of_package_arguement ctxt proc =
   let val packed = quantify_args_of_proc_term false proc
                 |> Thm.cterm_of ctxt
       fun expand_quant ctxt c = let open Conv Phi_Conv in
-            try_conv (rewr_conv xxx (*@{thm split_paired_all_\<phi>arg[folded atomize_eq]}*)
-                      then_conv meta_all_conv (expand_quant o snd) ctxt)
+            (rewr_conv @{thm split_legnthed_all}
+             then_conv meta_all_conv (expand_quant o snd) ctxt)
+            else_conv rewr_conv @{thm legnthed_all_zero}
           end c
       val ctxt' = Simplifier.init_simpset @{thms \<phi>V_simps[folded atomize_eq]} ctxt
    in packed

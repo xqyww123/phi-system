@@ -291,9 +291,8 @@ fun vcg_before_assembling goal (ctxt,sequent) =
         val (ins,current_nu) =
               #4 (Phi_Syntax.dest_CurrentConstruction_c (Thm.cprop_of sequent))
                  |> Thm.term_of
-                 |> Procedure_Syntax.package_values0 "\<r>\<e>\<t>"
-                              (TVar (("ret", Thm.maxidx_of sequent), \<^sort>\<open>type\<close>)) false NONE
-                 |> apply2 (Thm.cterm_of ctxt)
+                 |> Procedure_Syntax.package_values0 "\<r>\<e>\<t>" false NONE
+                 |> (fn (a,b,_) => (Thm.cterm_of ctxt a, Thm.cterm_of ctxt b))
         val idx_delt = 1 + Int.max (Thm.maxidx_of_cterm ins, Thm.maxidx_of_cterm current_nu)
         val return_rule = @{thm \<phi>return}
                        |> Thm.incr_indexes idx_delt
@@ -309,7 +308,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
         end
       else sequent
     val desired_nu = #4 (Phi_Syntax.dest_PendingConstruction_c goal)
-    val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
+  (*  val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
     val idx = Term.maxidx_of_typ desired_arg_T + 1
     val current_phi = #4 (Phi_Syntax.dest_PendingConstruction_c (Thm.cprop_of sequent'))
@@ -317,7 +316,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
     val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
                           |> incr_idx_T idx
-    val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
+  val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
                                                 (current_arg_T, desired_arg_T)) Envir.init
                     then sequent'
                     else if can (Pattern.unify_types (Context.Proof ctxt)
@@ -327,8 +326,8 @@ fun vcg_before_assembling goal (ctxt,sequent) =
                     else error ("Current block expects returning "^
                             Syntax.string_of_typ ctxt desired_arg_T^
                             " but it actually returns "^
-                            Syntax.string_of_typ ctxt current_arg_T)
-   in (ctxt, vcg_by_cast desired_nu ctxt sequent'')
+                            Syntax.string_of_typ ctxt current_arg_T)*)
+   in (ctxt, vcg_by_cast desired_nu ctxt sequent')
   end
 
 in

@@ -338,9 +338,9 @@ lemma [\<phi>reason %ToA_access_to_local_value for
 ]:
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path \<E>\<I>\<H>\<O>\<O>\<K>_none
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return [raw]\<^sub>v \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_hd ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding Action_Tag_def
-  by (cases raw; simp add: \<phi>M_Success)
+  by (cases raw; simp add: \<phi>M_Success \<phi>V_nil_def)
 
 lemma \<phi>arg_val_varify_type:
   \<open> \<phi>arg.dest raw \<Turnstile> (x  \<Ztypecolon> T)
@@ -360,9 +360,9 @@ lemma [\<phi>reason %ToA_access_to_local_value for
   by blast
 
 lemma [OF \<phi>arg_val_varify_type,
-       \<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> Val ret ?T\<heavy_comma> ?R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))\<close>]:
+       \<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> \<v>\<a>\<l>[ret\<^sub>(\<^sub>1\<^sub>)] ?T\<heavy_comma> ?R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))\<close>]:
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
-\<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x \<Ztypecolon> Val ret T\<heavy_comma> R \<rbrace>))\<close>
+\<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<p>\<r>\<o>\<c> Return [raw]\<^sub>v \<lbrace> R \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<v>\<a>\<l>[ret\<^sub>(\<^sub>1\<^sub>)] T\<heavy_comma> R \<rbrace>))\<close>
   unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
   by (cases raw; simp add: Val.unfold less_eq_BI_iff)
 
@@ -384,11 +384,9 @@ lemma [OF \<phi>arg_val_varify_type,
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path \<E>\<I>\<H>\<O>\<O>\<K>_none
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return [raw]\<^sub>v \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret\<^sub>(\<^sub>1\<^sub>)] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding Action_Tag_def
-  by (cases raw; simp add: \<phi>M_Success)
-
-
+  by (cases raw; simp add: \<phi>M_Success \<phi>V_nil_def)
 
 
 lemma "__set_value_rule__":
@@ -419,10 +417,10 @@ translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph
 
 subsection \<open>MAKE Abstraction for Values\<close>
 
-lemma [\<phi>reason %\<phi>synthesis_cut for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?y \<Ztypecolon> MAKE ?n (\<v>\<a>\<l>[ret] ?U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @tag synthesis\<close>]:
+lemma [\<phi>reason %\<phi>synthesis_cut for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?y \<Ztypecolon> MAKE ?n (\<v>\<a>\<l>[ret\<^sub>(\<^sub>1\<^sub>)] ?U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @tag synthesis\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE n U \<w>\<i>\<t>\<h> any
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return v \<lbrace> X \<longmapsto> \<lambda>ret. y \<Ztypecolon> MAKE n (\<v>\<a>\<l>[ret] U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return [v]\<^sub>v \<lbrace> X \<longmapsto> \<lambda>ret. y \<Ztypecolon> MAKE n (\<v>\<a>\<l>[ret\<^sub>(\<^sub>1\<^sub>)] U) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @tag synthesis\<close>
   unfolding MAKE_def
   \<medium_left_bracket> premises X[] and T[]
     X T
@@ -440,7 +438,7 @@ lemma [\<phi>reason %\<phi>programming_method]:
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<t>\<y>\<p>\<e>\<o>\<f> T = TY)) M D
                              ((\<And>x. \<t>\<y>\<p>\<e>\<o>\<f> (A x) = TY @tag \<A>infer) &&& PROP R) F\<close>
   unfolding \<phi>Programming_Method_def ToA_Construction_def Transformation_def Action_Tag_def
-  sorry 
+  sorry
 (*
   apply (simp add: subset_iff conjunction_imp, rule)
   subgoal premises prems

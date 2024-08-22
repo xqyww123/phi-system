@@ -760,6 +760,9 @@ lemma rot_apS_rot_eq_apS_rot_S_comp'[no_atp, prod_opr_norm]:
   by simp_all
 *)
 
+
+
+(* GOOD DO NOT REMOVE
 subsection \<open>Length-restricted Quantification\<close>
 
 definition Lall :: \<open>nat \<Rightarrow> ('a list \<Rightarrow> bool) \<Rightarrow> bool\<close>
@@ -810,6 +813,7 @@ lemma legnthed_all_zero:
     show \<open>PROP P x\<close> by (simp add: C, rule A)
   qed
 
+
 lemma legnthed_Ex_zero:
   \<open>(\<exists>l[0]. P l) \<longleftrightarrow> P []\<close>
   unfolding Lex_def
@@ -841,7 +845,7 @@ lemma split_legnthed_Ex:
   \<open> (\<exists>l[Suc N]. P l) \<longleftrightarrow> (\<exists>h. \<exists>l[N]. P (h#l)) \<close>
   unfolding Lex_def
   by (auto, metis Suc_length_conv, force)
-
+*)
 
 subsection \<open>Helper Conversion\<close>
 

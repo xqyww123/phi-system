@@ -1,10 +1,13 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
+  val val_T : typ
+  val val_list_T : typ
+
   val assn_fictionT : typ
   val is_procT  : typ -> bool
-  val mk_procT  : typ -> typ
-  val mk_proc'T : typ -> typ -> typ
+  val procT  : typ
+  val proc'T : typ
 
   val is_construction_mode: term -> term -> bool
   val dest_CurrentConstruction   :  term -> term * term * term * term
@@ -41,11 +44,14 @@ end
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Thm Term HOLogic Phi_Help Phi_Syntax
 
-fun is_procT (\<^Type>\<open>fun \<^Type>\<open>fun \<^Type>\<open>RES_N\<close> \<^Type>\<open>RES\<close>\<close> \<^Type>\<open>set \<^Type>\<open>comp \<open>_\<close>\<close>\<close>\<close>) = true
+val val_T = Procedure_Syntax.val_T
+val val_list_T = Procedure_Syntax.val_list_T
+
+fun is_procT (\<^Type>\<open>fun \<^Type>\<open>fun \<^Type>\<open>RES_N\<close> \<^Type>\<open>RES\<close>\<close> \<^Type>\<open>set \<^Type>\<open>comp\<close>\<close>\<close>) = true
   | is_procT (\<^Type>\<open>fun _ T\<close>) = is_procT T
   | is_procT _ = false
-fun mk_procT T = \<^typ>\<open>resource\<close> --> \<^Type>\<open>set \<open>\<^Type>\<open>comp T\<close>\<close>\<close>
-fun mk_proc'T T U = \<^Type>\<open>\<phi>arg T\<close> --> mk_procT U
+val procT = \<^typ>\<open>resource\<close> --> \<^Type>\<open>set \<open>\<^Type>\<open>comp\<close>\<close>\<close>
+val proc'T = val_list_T --> procT
 val assn_fictionT = \<^typ>\<open>assn\<close>
 
 val dest_CurrentConstruction   =
@@ -133,7 +139,7 @@ fun semantic_operations (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = 
             (fn bvs => (fn Const(\<^const_name>\<open>bind\<close>, _) => I
                          | Const(\<^const_name>\<open>Return\<close>, _) => I
                          | Const(\<^const_name>\<open>Nondet\<close>, _) => I
-                         | Const(\<^const_name>\<open>\<phi>V_case_prod\<close>, _) => I
+                         | Const(\<^const_name>\<open>\<phi>V_case\<close>, _) => I
                          | Const(N, T) => (fn L =>
                               case Symtab.lookup soprs N
                                 of SOME w => if 0 < w then (N,w) :: L else L

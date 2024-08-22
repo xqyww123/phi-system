@@ -43,6 +43,7 @@ text \<open>The semantic value is a separation magma. It is nothing related to t
 
 subsubsection \<open>Deep Representation of Aggregated Values\<close>
 
+(*
 class VAL =
   fixes to_val   :: \<open>'a \<Rightarrow> VAL\<close>
     and from_val :: \<open>VAL \<Rightarrow> 'a\<close>
@@ -98,7 +99,7 @@ definition to_vals_list :: \<open>'a list \<Rightarrow> VAL list\<close> where \
 definition from_vals_list :: \<open>VAL list \<Rightarrow> 'a list\<close> where \<open>from_vals_list = map from_val\<close>
 instance by standard (induct_tac x; simp add: to_vals_list_def from_vals_list_def)
 end
-
+*)
 
 
 subsection \<open>Resource\<close>
@@ -179,6 +180,8 @@ abbreviation \<open>Valid_Type T \<equiv> Satisfiable (Well_Type T)\<close>*)
 
 subsection \<open>Formalization of Computation\<close>
 
+
+
 subsubsection \<open>Explicit Annotation of Semantic Arguments and Returns\<close>
 
 text \<open>Arguments and Returns are wrapped by \<phi>arg type.
@@ -207,7 +210,8 @@ definition \<phi>V_pair ("_\<^bold>, _" [11,10] 10) where \<open>\<phi>V_pair x 
 definition \<open>\<phi>V_case_prod f x \<equiv> case x of \<phi>arg (a,b) \<Rightarrow> f (\<phi>arg a) (\<phi>arg b)\<close>
 definition \<open>\<phi>V_fst x = map_\<phi>arg fst x\<close>
 definition \<open>\<phi>V_snd x = map_\<phi>arg snd x\<close> *)
-definition \<phi>V_nil :: \<open>VAL list \<phi>arg\<close>
+definition \<open>\<phi>V_case f x \<equiv> case x of \<phi>arg (h#L) \<Rightarrow> f (\<phi>arg h) (\<phi>arg L)\<close>
+definition \<phi>V_nil :: \<open>VAL list \<phi>arg\<close> ("[]\<^sub>v")
   where \<open>\<phi>V_nil \<equiv> \<phi>arg []\<close>
 definition \<phi>V_cons :: \<open>VAL \<phi>arg \<Rightarrow> VAL list \<phi>arg \<Rightarrow> VAL list \<phi>arg\<close>
   where \<open>\<phi>V_cons h l = \<phi>arg (\<phi>arg.dest h # \<phi>arg.dest l)\<close>
@@ -215,6 +219,12 @@ definition \<phi>V_hd :: \<open>VAL list \<phi>arg \<Rightarrow> VAL \<phi>arg\<
   where \<open>\<phi>V_hd l = \<phi>arg (hd (\<phi>arg.dest l))\<close>
 definition \<phi>V_tl :: \<open>VAL list \<phi>arg \<Rightarrow> VAL list \<phi>arg\<close>
   where \<open>\<phi>V_tl l = \<phi>arg (tl (\<phi>arg.dest l))\<close>
+
+syntax "_V_list" :: "args => 'a list \<phi>arg"    ("[(_)]\<^sub>v")
+
+translations
+  "[x, xs]\<^sub>v" == "CONST \<phi>V_cons x [xs]\<^sub>v"
+  "[x]\<^sub>v" == "CONST \<phi>V_cons x []\<^sub>v"
 
 lemma \<phi>V_simps[simp]:
 (* \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
@@ -225,16 +235,20 @@ lemma \<phi>V_simps[simp]:
   \<open>\<phi>V_cons (\<phi>arg h) (\<phi>arg l) = \<phi>arg (h#l)\<close>
   \<open>\<phi>V_hd (\<phi>V_cons hv lv) = hv\<close>
   \<open>\<phi>V_tl (\<phi>V_cons hv lv) = lv\<close>
+  \<open>\<phi>V_hd (\<phi>arg l') = \<phi>arg (hd l')\<close>
+  \<open>\<phi>V_tl (\<phi>arg l') = \<phi>arg (tl l')\<close>
+  \<open>\<phi>V_case f (\<phi>V_cons hv lv) = f hv lv\<close>
 (* \<open>\<phi>V_case_prod f (\<phi>V_pair a b) = f a b\<close>
   \<open>\<phi>V_case_prod f = (\<lambda>v. f (\<phi>V_fst v) (\<phi>V_snd v))\<close> *)
+  (*\<open>\<phi>V_case (\<lambda>a b. f2 (\<phi>V_cons a b)) = f2\<close>*)
 (*  \<open>\<phi>V_case_prod (\<lambda>a b. f2 (\<phi>V_pair a b)) = f2\<close>
   \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b c. f3 (\<phi>V_pair a (\<phi>V_pair b c)))) = f3\<close>
   \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b. \<phi>V_case_prod (\<lambda>c d. f4 (\<phi>V_pair a (\<phi>V_pair b (\<phi>V_pair c d)))))) = f4\<close> *)
-  unfolding (* \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def*) \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def (*\<phi>V_case_prod_def*)
+  unfolding (* \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def*) \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def \<phi>V_case_def (*\<phi>V_case_prod_def*)
  (* apply (cases v, simp)
     apply (cases v, simp)
     apply (cases v, simp) *)
-    apply simp apply simp apply simp
+    apply (simp_all add: fun_eq_iff \<phi>arg_forall)
  (* apply simp apply simp apply simp
     apply (simp add: fun_eq_iff \<phi>arg_forall) *) .
 
@@ -293,6 +307,90 @@ notation (do_notation) \<phi>V_hd ("_\<^sub>'(\<^sub>1\<^sub>')")
 notation (do_notation) \<phi>V_fst ("_\<^sub>'(\<^sub>1\<^sub>')")
                    and \<phi>V_snd ("_\<^sub>'(\<^sub>2\<^sub>')")
 *)
+
+subsubsection \<open>Length-restricted Quantification\<close>
+
+definition \<phi>Lall :: \<open>nat \<Rightarrow> (VAL list \<phi>arg \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>\<phi>Lall N P \<longleftrightarrow> (\<forall>x. length (\<phi>arg.dest x) = N \<longrightarrow> P x)\<close>
+
+definition \<phi>Lex :: "nat \<Rightarrow> (VAL list \<phi>arg \<Rightarrow> bool) \<Rightarrow> bool"
+  where "\<phi>Lex N P \<longleftrightarrow> (\<exists>x. length (\<phi>arg.dest x) = N \<and> P x)"
+
+definition \<phi>LAll :: \<open>nat \<Rightarrow> (VAL list \<phi>arg \<Rightarrow> prop) \<Rightarrow> prop\<close>
+  where \<open>\<phi>LAll N P \<equiv> (\<And>x. length (\<phi>arg.dest x) \<equiv> N \<Longrightarrow> PROP P x)\<close>
+
+paragraph \<open>Syntax\<close>
+
+syntax
+  "_Lall"       :: "pttrn \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<forall>(_/[_])./ _)" [0, 0, 10] 10)
+  "_LAll"       :: "pttrn \<Rightarrow> nat \<Rightarrow> prop \<Rightarrow> prop"      ("(3\<And>(_/[_])./ _)" [0, 0, 10] 10)
+  "_Lex"        :: "pttrn \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<exists>(_/[_])./ _)" [0, 0, 10] 10)
+
+translations
+  "\<forall>x[A]. P" \<rightleftharpoons> "CONST \<phi>Lall A (\<lambda>x. P)"
+  ("prop") "\<And>x[A]. PROP P" \<rightleftharpoons> ("prop") "PROP CONST \<phi>LAll A (\<lambda>x. P)"
+  "\<exists>x[A]. P" \<rightleftharpoons> "CONST \<phi>Lex  A (\<lambda>x. P)"
+
+print_translation \<open>
+ [Syntax_Trans.preserve_binder_abs2_tr' \<^const_syntax>\<open>\<phi>Lall\<close> \<^syntax_const>\<open>_Lall\<close>,
+  Syntax_Trans.preserve_binder_abs2_tr' \<^const_syntax>\<open>\<phi>Lex\<close> \<^syntax_const>\<open>_Lex\<close>,
+  Syntax_Trans.preserve_binder_abs2_tr' \<^const_syntax>\<open>\<phi>LAll\<close> \<^syntax_const>\<open>_LAll\<close>]
+\<close> \<comment> \<open>to avoid eta-contraction of body\<close>
+
+paragraph \<open>Split & Reduce\<close>
+
+lemma legnthed_All_zero:
+  \<open> (\<forall>l[0]. P l) \<longleftrightarrow> P \<phi>V_nil \<close>
+  unfolding \<phi>Lall_def
+  by (auto simp: \<phi>arg_forall \<phi>V_nil_def)
+
+lemma legnthed_all_zero:
+  \<open> (\<And>l[0]. PROP P l) \<equiv> P \<phi>V_nil \<close>
+  unfolding \<phi>LAll_def \<phi>arg_All \<phi>V_nil_def
+  proof (simp, rule)
+    assume A: \<open>(\<And>x. length x \<equiv> 0 \<Longrightarrow> PROP P (\<phi>arg x))\<close>
+    show \<open>PROP P (\<phi>arg [])\<close> by (rule A[of \<open>[]\<close>], simp)
+  next
+    fix x :: \<open>VAL list\<close>
+    assume A: \<open>PROP P (\<phi>arg [])\<close>
+       and B[unfolded atomize_eq]: \<open>length x \<equiv> 0\<close>
+    have C: \<open>x = []\<close> using B by auto 
+    show \<open>PROP P (\<phi>arg x)\<close> by (simp add: C, rule A)
+  qed
+
+
+lemma legnthed_Ex_zero:
+  \<open>(\<exists>l[0]. P l) \<longleftrightarrow> P \<phi>V_nil\<close>
+  unfolding \<phi>Lex_def
+  by (auto simp: \<phi>arg_exists \<phi>V_nil_def)
+
+lemma split_legnthed_All:
+  \<open> (\<forall>l[Suc N]. P l) \<longleftrightarrow> (\<forall>h. \<forall>l[N]. P (\<phi>V_cons h l)) \<close>
+  unfolding \<phi>Lall_def
+  by (auto simp: \<phi>arg_forall \<phi>V_cons_def) (metis length_Suc_conv)
+
+lemma split_legnthed_all:
+  \<open> (\<And>l[Suc N]. PROP P l) \<equiv> (\<And>h. \<And>l[N]. PROP P (\<phi>V_cons h l)) \<close>
+  unfolding \<phi>LAll_def \<phi>arg_All
+  proof (simp, rule)
+    fix h :: \<open>VAL\<close> and x :: \<open>VAL list\<close>
+    assume A: \<open>(\<And>x. length x \<equiv> Suc N \<Longrightarrow> PROP P (\<phi>arg x))\<close>
+       and B: \<open>length x \<equiv> N\<close>
+    show \<open>PROP P (\<phi>arg (h # x))\<close> by (rule A[of \<open>h # x\<close>], simp add: B)
+  next
+    fix x :: \<open>VAL list\<close>
+    assume A: \<open>\<And>h x. length x \<equiv> N \<Longrightarrow> PROP P (\<phi>arg (h # x))\<close>
+       and B: \<open>length x \<equiv> Suc N\<close>
+    from B[unfolded atomize_eq] have [simp]: \<open>hd x # tl x = x\<close> by (cases x; simp)
+    show \<open>PROP P (\<phi>arg x)\<close>
+       by (rule A[of \<open>tl x\<close> \<open>hd x\<close>, simplified]; simp add: atomize_eq B)
+  qed
+
+lemma split_legnthed_Ex:
+  \<open> (\<exists>l[Suc N]. P l) \<longleftrightarrow> (\<exists>h. \<exists>l[N]. P (\<phi>V_cons h l)) \<close>
+  unfolding \<phi>Lex_def
+  by (auto simp: \<phi>arg_exists \<phi>V_cons_def, metis Suc_length_conv, force)
+
 
 subsubsection \<open>Monadic Formalization\<close>
 
@@ -417,17 +515,17 @@ lemma proc_bind_SKIP'[simp]:
 
 (*
 lemma proc_bind_return_none[simp]:
-  "(f_nil \<then> Return \<phi>V_none \<equiv> f_nil"
-  for f_nil :: \<open>unit proc\<close>
-  unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def \<phi>V_none_def
+  "f_nil \<then> Return \<phi>V_nil \<equiv> f_nil"
+  for f_nil :: proc
+  unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def \<phi>V_nil_def
   apply (clarsimp)
   subgoal for x y
   apply rule
     apply clarsimp
     subgoal for z
       apply (cases z; simp add: \<phi>arg_All) .
-  apply (rule bexI[where x=y]; clarsimp simp add: \<phi>arg_All) . .
-*)
+  apply (rule bexI[where x=y]; clarsimp simp add: \<phi>arg_All) . .*)
+
 
 lemmas proc_bind_SKIP[simp] =
   proc_bind_SKIP'[unfolded Return_def, simplified]

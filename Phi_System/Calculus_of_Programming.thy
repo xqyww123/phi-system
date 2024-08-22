@@ -186,7 +186,7 @@ lemma \<phi>reassemble_proc_final:
 
 lemma "\<phi>__Return_rule__":
   \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_::unit \<phi>arg. Y \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_. Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def Return_def View_Shift_def less_eq_BI_iff det_lift_def
   by clarsimp
 
@@ -328,9 +328,7 @@ setup \<open>Context.theory_map (Proc_Monad_SS.map (
 
 consts procedure_ss :: mode
 
-lemmas [procedure_simps] =
-            proc_bind_SKIP proc_bind_SKIP'
-            proc_bind_assoc proc_bind_return_none \<phi>V_simps
+lemmas [procedure_simps] = proc_bind_SKIP proc_bind_SKIP' proc_bind_assoc \<phi>V_simps
 
 \<phi>reasoner_ML procedure_equivalence 1200 (\<open>Premise procedure_ss ?P\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=false}) o snd\<close>
@@ -420,17 +418,16 @@ lemma introduce_Ex_ToA_subj_P:
 
 paragraph \<open>Return\<close>
 
-
 lemma \<phi>M_Success[intro!]: (*deprecated?*)
   \<open> v \<Turnstile> (y \<Ztypecolon> T)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. y \<Ztypecolon> Val u T\<heavy_comma> X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg [v]) \<lbrace> X \<longmapsto> \<lambda>u. y \<Ztypecolon> Val (\<phi>V_hd u) T\<heavy_comma> X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val_def \<phi>Type_def less_eq_BI_iff)
 
 lemma \<phi>M_Success_P:
   \<open> v \<Turnstile> (y \<Ztypecolon> T)
 \<Longrightarrow> P (\<phi>arg v)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. y \<Ztypecolon> Val u T\<heavy_comma> X \<s>\<u>\<b>\<j> P u \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg [v]) \<lbrace> X \<longmapsto> \<lambda>u. y \<Ztypecolon> Val (\<phi>V_hd u) T\<heavy_comma> X \<s>\<u>\<b>\<j> P (\<phi>V_hd u) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val_def \<phi>Type_def INTERP_SPEC_subj less_eq_BI_iff)
 

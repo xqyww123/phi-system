@@ -564,11 +564,12 @@ lemma [\<phi>reason add]:
 
 subsubsection \<open>Multiple Values\<close>
 
-definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>
-  where \<open>Well_Typed_Vals TYs = {vs. list_all2 (\<lambda>v T. v \<in> Well_Type T) (to_vals (\<phi>arg.dest vs)) TYs}\<close>
+definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> VAL list \<phi>arg set\<close>
+  where \<open>Well_Typed_Vals TYs = {vs. list_all2 (\<lambda>v T. v \<in> Well_Type T) (\<phi>arg.dest vs) TYs}\<close>
 
-definition Semantic_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> TY list \<Rightarrow> bool\<close>
-  where \<open>Semantic_Types spec TYs = (\<forall>v. Satisfiable (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
+definition Semantic_Types :: \<open>(VAL list \<phi>arg \<Rightarrow> assn) \<Rightarrow> TY list \<Rightarrow> bool\<close>
+  where \<open>Semantic_Types spec TYs = (\<forall>v.
+            length (\<phi>arg.dest v) = length TYs \<longrightarrow> Satisfiable (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
 
 definition \<open>Semantic_Types_i = Semantic_Types\<close>
 

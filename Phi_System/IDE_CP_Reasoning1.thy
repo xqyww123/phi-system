@@ -493,20 +493,22 @@ end\<close>
 
 subsection \<open>Semantic Type of Multiple Values\<close>
 
-lemma [\<phi>reason 1200 for \<open>Semantic_Types_i (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
+lemma [\<phi>reason 1200 for \<open>Semantic_Types_i (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_hd vs] ?T\<heavy_comma> ?R vs) _\<close>]:
   \<open> Semantic_Type T TY
 \<Longrightarrow> Semantic_Types_i (\<lambda>vs. R vs) TYs
-\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T\<heavy_comma> R (\<phi>V_snd vs)) (TY#TYs)\<close>
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_hd vs] T\<heavy_comma> R (\<phi>V_tl vs)) (TY#TYs)\<close>
   unfolding Semantic_Types_i_def Semantic_Types_def
             Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
-  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
+  by (clarsimp simp add: Val_inh_rewr list_all2_Cons2,
+      metis Suc_length_conv \<phi>V_hd_def \<phi>V_tl_def \<phi>arg.sel list.sel(1) list.sel(3))
 
 lemma [\<phi>reason 1200]:
   \<open> Semantic_Type T TY
-\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[vs] T\<heavy_comma> R) [TY]\<close>
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_hd vs] T\<heavy_comma> R) [TY]\<close>
   unfolding Semantic_Types_i_def Semantic_Types_def
             Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
-  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
+  by (clarsimp simp add: Val_inh_rewr,
+      metis \<phi>V_hd_def \<phi>arg.sel length_0_conv length_Suc_conv list.ctr_transfer(1) list.rel_intros(2) list.sel(1))
 
 lemma [\<phi>reason 1200]:
   \<open> Semantic_Types_i R TYs
@@ -514,8 +516,8 @@ lemma [\<phi>reason 1200]:
   unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def by clarsimp
 
 lemma [\<phi>reason 2000]:
-  \<open> Semantic_Types_i (\<lambda>_::unit \<phi>arg. Void) []\<close>
-  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
+  \<open> Semantic_Types_i (\<lambda>_. Void) []\<close>
+  unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def by clarsimp
 
 lemma [\<phi>reason 1020 except \<open>Semantic_Types_i (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
   \<open> Semantic_Types_i (\<lambda>vs. R vs\<heavy_comma> Void) TYs

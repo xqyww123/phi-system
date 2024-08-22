@@ -1619,7 +1619,7 @@ paragraph \<open>Setup Synthesis Module\<close>
 
 lemma [\<phi>reason default %\<phi>synthesis_cut for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>v. ?x \<Ztypecolon> MAKE ?i ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]:
   \<open> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. x \<Ztypecolon> MAKE i T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @tag synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_nil \<lbrace> S1 \<longmapsto> \<lambda>v. x \<Ztypecolon> MAKE i T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @tag synthesis\<close>
   unfolding MAKE_def Action_Tag_def
   using \<phi>__Return_rule__ view_shift_by_implication by blast
 

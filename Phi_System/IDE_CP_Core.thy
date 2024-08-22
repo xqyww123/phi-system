@@ -41,7 +41,6 @@ named_theorems \<phi>lemmata \<open>Contextual facts during the programming. The
 subsubsection \<open>Syntax \& Prelude ML\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
-ML_file \<open>library/syntax/procedure2.ML\<close>
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
 
@@ -783,7 +782,7 @@ text \<open>On programming mode, the synthesis operation always tries to find a 
 lemma Synthesis_Proc_fallback_VS
   [\<phi>reason default %\<phi>synthesis_fallback for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>v. ?X \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]:
   \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @tag synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_nil \<lbrace> S1 \<longmapsto> \<lambda>v. X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @tag synthesis\<close>
   unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def less_eq_BI_iff
   by simp
 
@@ -1174,16 +1173,25 @@ proof -
 qed
 
 lemma [\<phi>reason %\<phi>application+100]:
-  \<open> PROP \<phi>Application (\<And>a. PROP App (\<phi>V_pair x a)) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application (\<And>x. PROP App x) State (PROP Result)\<close>
+  \<open> PROP \<phi>Application (\<And>a[N]. PROP App (\<phi>V_cons x a)) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (\<And>x[Suc N]. PROP App x) State (PROP Result)\<close>
   unfolding \<phi>Application_def
 proof -
-  assume p1: \<open>PROP State \<Longrightarrow> (\<And>a. PROP App (x\<^bold>, a)) \<Longrightarrow> PROP Result\<close>
+  assume p1: \<open>PROP State \<Longrightarrow> \<And>a[N]. PROP App (\<phi>V_cons x a) \<Longrightarrow> PROP Result\<close>
      and p2: \<open>PROP State\<close>
-     and p3: \<open>\<And>x. PROP App x\<close>
+     and p3[unfolded split_legnthed_all]: \<open>\<And>x[Suc N]. PROP App x\<close>
+
+  ML_prf \<open>Context.>> (Context.map_proof (
+      Proof_Context.note_thms "" ((\<^binding>\<open>tt\<close>,[]), [([Thm.forall_elim_vars 1 @{thm p3}],[])]) #> #2)) \<close>
+
   show \<open>PROP Result\<close>
-    by (rule p1, rule p2, rule p3)
+    by (rule p1, rule p2, rule tt)
 qed
+
+lemma [\<phi>reason %\<phi>application+100]:
+  \<open> PROP \<phi>Application (PROP App \<phi>V_nil) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (\<And>x[0]. PROP App x) State (PROP Result)\<close>
+  unfolding \<phi>Application_def legnthed_all_zero .
 
 (*
 lemma [\<phi>reason %\<phi>application+100]:
@@ -1199,10 +1207,10 @@ lemma [\<phi>reason %\<phi>application]:
   subgoal premises p by (rule p(1), rule p(2), rule p(3)[THEN spec[where x=x]]) .
 
 lemma [\<phi>reason %\<phi>application+100]:
-  \<open> PROP \<phi>Application (Trueprop (\<forall>a. App (\<phi>V_pair x a))) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
-  unfolding \<phi>Application_def
-  subgoal premises p by (rule p(1), rule p(2), rule, rule p(3)[THEN spec]) .
+  \<open> PROP \<phi>Application (Trueprop (\<forall>l[N]. App (\<phi>V_cons x l))) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Trueprop (\<forall>l[Suc N]. App l)) State (PROP Result)\<close>
+  unfolding \<phi>Application_def split_legnthed_All
+  subgoal premises p by (rule p(1), rule p(2), rule p(3)[THEN spec]) .
 
 
 
@@ -1705,6 +1713,32 @@ lemma [\<phi>reason %\<phi>app_conv for \<open>
 \<Longrightarrow> \<phi>App_Conv (PendingConstruction f s R S E) (PendingConstruction f' s R S' E') \<close>
   unfolding \<phi>App_Conv_def Simple_HO_Unification_def Action_Tag_def
   using \<phi>apply_implication_pending \<phi>apply_implication_pending_E by blast
+
+lemma PendingConstruction_f_return_nil:
+  \<open> PendingConstruction (f \<then> Return []\<^sub>v) s R (\<lambda>_. S) E = PendingConstruction f s R (\<lambda>_. S) E \<close>
+  unfolding PendingConstruction_def LooseState_def bind_def Return_def det_lift_def
+  by ((clarsimp simp: less_eq_BI_iff; rule+),
+      metis comp.distinct(1) comp.distinct(5) comp.inject(1) comp.simps(10),
+      blast,
+      smt (verit, ccfv_threshold) comp.exhaust)
+
+lemma [\<phi>reason %\<phi>app_conv+50
+    except \<open> \<phi>App_Conv (PendingConstruction _ _ _ _ _) (PendingConstruction ?var _ _ _ _) \<close>
+           \<open> \<phi>App_Conv (PendingConstruction (_ \<then> Return []\<^sub>v) _ _ _ _) (PendingConstruction _ _ _ _ _) \<close>
+]:
+  \<open> \<phi>App_Conv (PendingConstruction (f \<then> Return []\<^sub>v) s R (\<lambda>_. S) E) (PendingConstruction f' s R S' E')
+\<Longrightarrow> \<phi>App_Conv (PendingConstruction f s R (\<lambda>_. S) E) (PendingConstruction f' s R S' E') \<close>
+  for f :: "proc"
+  unfolding \<phi>App_Conv_def PendingConstruction_f_return_nil .
+
+lemma [\<phi>reason %\<phi>app_conv+50
+    except \<open> \<phi>App_Conv (PendingConstruction ?var _ _ _ _) (PendingConstruction _ _ _ _ _) \<close>
+           \<open> \<phi>App_Conv (PendingConstruction _ _ _ _ _) (PendingConstruction (_ \<then> Return []\<^sub>v) _ _ _ _) \<close>
+]:
+  \<open> \<phi>App_Conv (PendingConstruction f s R S E) (PendingConstruction (f' \<then> Return []\<^sub>v) s R (\<lambda>_. S') E')
+\<Longrightarrow> \<phi>App_Conv (PendingConstruction f s R S E) (PendingConstruction f' s R (\<lambda>_. S') E') \<close>
+  for f :: "proc"
+  unfolding \<phi>App_Conv_def PendingConstruction_f_return_nil .
 
 
 subsubsection \<open>Applying on View Shift Construction\<close>

@@ -182,12 +182,12 @@ fun translate_arg' meet cnt s ns ( (C1 as Const (\<^const_name>\<open>\<phi>Type
       = let val s' = Symbol.bump_string s
          in (meet, cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
         end
-  | translate_arg' meet cnt s ns (Const (\<^const_name>\<open>anonymous\<close>, _))
+  | translate_arg' meet cnt s ns (Const (\<^const_name>\<open>anonymouss\<close>, _))
       = let val _ = if meet then error_varlen_once () else ()
             val s' = Symbol.bump_string s
          in (true, cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
         end
-  | translate_arg' meet cnt s ns (Const (\<^const_syntax>\<open>anonymous\<close>, _))
+  | translate_arg' meet cnt s ns (Const (\<^const_syntax>\<open>anonymouss\<close>, _))
       = let val _ = if meet then error_varlen_once () else ()
             val s' = Symbol.bump_string s
          in (true, cnt, s', s'::ns, Free ("\<a>\<r>\<g>" ^ s, dummyT))
@@ -219,6 +219,7 @@ fun dest_proc_synt ((H as Const(\<^const_syntax>\<open>\<phi>Procedure_no_except
   | dest_proc_synt ((H as Const(\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, _)) $ p $ A $ R) = (H,p,A,R,Term.dummy)
   | dest_proc_synt ((H as Const(\<^const_syntax>\<open>\<phi>Procedure\<close>, _)) $ p $ A $ R $ E) = (H,p,A,R,E)
   | dest_proc_synt ((H as Const(\<^const_name>\<open>\<phi>Procedure\<close>, _)) $ p $ A $ R $ E) = (H,p,A,R,E)
+  | dest_proc_synt TM = raise TERM("dest_proc_synt", [TM])
 
 fun mk_proc_synt (H,p,A,R,E) =
       case H
@@ -226,6 +227,7 @@ fun mk_proc_synt (H,p,A,R,E) =
          | Const(\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, _) => H $ p $ A $ R
          | Const(\<^const_syntax>\<open>\<phi>Procedure\<close>, _) => H $ p $ A $ R $ E
          | Const(\<^const_name>\<open>\<phi>Procedure\<close>, _)   => H $ p $ A $ R $ E
+         | TM => raise TERM("mk_proc_synt", [TM])
 
 fun translate_proc_arg' (qmode, pmode) tm =
   let val (Procedure, proc, Arg, Ret, Err) = dest_proc_synt tm
@@ -251,11 +253,11 @@ fun translate_proc_arg ctxt tm =
       then case Proc_Parse_Ctxt.get ctxt
              of SOME mode => translate_proc_arg' mode tm
               | NONE => error (let open Pretty 
-                    val pretty = Context.cases Syntax.pretty_term_global Syntax.pretty_term
+                  (*val pretty = Context.cases Syntax.pretty_term_global Syntax.pretty_term
                     fun show mode = let val tm' = translate_proc_arg' mode tm
                                      in try (Syntax.check_term (Context.proof_of ctxt)) tm'
                                      |> Option.map (fn tm'' => item [pretty ctxt tm''])
-                                    end
+                                    end*)
                  in string_of (
                     chunks([block (text "Short syntax of \<open>\<v>\<a>\<l> T\<close> cannot be used here, because in this context\
                                        \ I cannot determine whether should the argument values be quantified,\
@@ -284,7 +286,7 @@ fun translate_proc_arg ctxt tm =
 
 fun nth_project 0 term = \<^Const>\<open>\<phi>V_hd\<close> $ term
   | nth_project i term = nth_project (i-1) (\<^Const>\<open>\<phi>V_tl\<close> $ term)
-fun last_prj 0 term = \<^Const>\<open>\<phi>V_tl\<close> $ term
+fun last_prj 0 term = term
   | last_prj i term = last_prj (i-1) (\<^Const>\<open>\<phi>V_tl\<close> $ term)
 
 
@@ -295,8 +297,14 @@ fun collect_vals (Vs,VL) (v as Const (\<^const_name>\<open>anonymous\<close>, _)
   | collect_vals (Vs,VL) (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)) = (v::Vs,VL)
   | collect_vals (Vs,VL) (v as Const (\<^const_name>\<open>anonymouss\<close>, _)) = (Vs, set_VARLEN VL v)
   | collect_vals (Vs,VL) (v as Const (\<^const_syntax>\<open>anonymouss\<close>, _)) = (Vs, set_VARLEN VL v)
-  | collect_vals (Vs,VL) (v as Free (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _))) = (insert (op = ) v Vs,VL)
-  | collect_vals (Vs,VL) (v as Var (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))  = (insert (op = ) v Vs,VL)
+  | collect_vals (Vs,VL) (v as Const (\<^const_name>\<open>\<phi>V_hd\<close>, _) $ _) = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (v as Const (\<^const_syntax>\<open>\<phi>V_hd\<close>, _) $ _) = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (v as Const (\<^const_name>\<open>\<phi>V_tl\<close>, _) $ _) = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (v as Const (\<^const_syntax>\<open>\<phi>V_tl\<close>, _) $ _) = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (v as Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>)) = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (v as Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>)) = (Vs, set_VARLEN VL v)
+  | collect_vals (Vs,VL) (v as Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>)) = (insert (op = ) v Vs, VL)
+  | collect_vals (Vs,VL) (v as Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>)) = (Vs, set_VARLEN VL v)
   | collect_vals (Vs,VL) (v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close> _\<close>) $ _)
       = (insert (op = ) v Vs, VL)
   | collect_vals (Vs,VL) (v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close> _\<close>) $ _)
@@ -318,6 +326,7 @@ fun collect_vals (Vs,VL) (v as Const (\<^const_name>\<open>anonymous\<close>, _)
   | collect_vals (Vs,VL) (Const (\<^const_syntax>\<open>Val\<close>, _) $ v) = (insert (op = ) v Vs, VL)
   | collect_vals (Vs,VL) (Const (\<^const_name>\<open>Vals\<close>, _) $ v) = (Vs, set_VARLEN VL v)
   | collect_vals (Vs,VL) (Const (\<^const_syntax>\<open>Vals\<close>, _) $ v) = (Vs, set_VARLEN VL v)
+  | collect_vals Vs (Const(\<^const_name>\<open>Subjection\<close>, _) $ A $ _) = collect_vals Vs A
   | collect_vals Vs (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = collect_vals Vs X
   | collect_vals Vs (Abs (_,_,X)) = collect_vals Vs X
   | collect_vals Vs (X $ Y) =
@@ -340,70 +349,94 @@ fun mk_projection VS i v =
       else nth_project ret (Bound i)
   end
 
-fun map_ret i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (j + 1, nth_project (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret i VS (j, Const (\<^const_syntax>\<open>anonymous\<close>, _))
-      = (j + 1, nth_project (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret i VS (j, Const (\<^const_name>\<open>anonymouss\<close>, _))
-      = (j + 1, last_prj (length VS) (Bound i))
-  | map_ret i VS (j, Const (\<^const_syntax>\<open>anonymouss\<close>, _))
-      = (j + 1, last_prj (length VS) (Bound i))
+fun map_ret' VS term =
+  let val j = Unsynchronized.ref 0
+      fun incr () = let val ret = !j in j := ret + 1; ret end
 
-  | map_ret i VS (j, v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close> _\<close>) $ _)
-      = (j, mk_projection VS i v)
-  | map_ret i VS (j, v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close> _\<close>) $ _)
-      = (j, last_prj (length VS) (Bound i))
-  | map_ret i VS (j, v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ _))
-      = (j, mk_projection VS i v)
-  | map_ret i VS (j, v as Const ("_constrain", _) $ _ $ (
+fun map_ret i VS (Const (\<^const_name>\<open>anonymous\<close>, _))
+      = SOME (nth_project (jth_index_of_annoy (incr()) 0 VS) (Bound i))
+  | map_ret i VS (Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = SOME (nth_project (jth_index_of_annoy (incr()) 0 VS) (Bound i))
+  | map_ret i VS (Const (\<^const_name>\<open>anonymouss\<close>, _))
+      = SOME (last_prj (length VS) (Bound i))
+  | map_ret i VS (Const (\<^const_syntax>\<open>anonymouss\<close>, _))
+      = SOME (last_prj (length VS) (Bound i))
+
+  | map_ret i VS (v as Const (\<^const_name>\<open>\<phi>V_hd\<close>, _) $ _)
+      = SOME (mk_projection VS i v)
+  | map_ret i VS (v as Const (\<^const_syntax>\<open>\<phi>V_hd\<close>, _) $ _)
+      = SOME (mk_projection VS i v)
+  | map_ret i VS (v as Const (\<^const_name>\<open>\<phi>V_tl\<close>, _) $ _)
+      = SOME (mk_projection VS i v)
+  | map_ret i VS (v as Const (\<^const_syntax>\<open>\<phi>V_tl\<close>, _) $ _)
+      = SOME (mk_projection VS i v)
+
+  | map_ret i VS (v as Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>))
+      = SOME (mk_projection VS i v)
+  | map_ret i VS (v as Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>))
+      = SOME (mk_projection VS i v)
+  | map_ret i VS (Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>))
+      = SOME (last_prj (length VS) (Bound i))
+  | map_ret i VS (Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>))
+      = SOME (last_prj (length VS) (Bound i))
+
+  | map_ret i VS (v as Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close> _\<close>) $ _)
+      = SOME (mk_projection VS i v)
+  | map_ret i VS (Const ("_type_constraint_", \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close> _\<close>) $ _)
+      = SOME (last_prj (length VS) (Bound i))
+  | map_ret i VS (v as Const ("_constrain", _) $ _ $ (
+          Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ Const(\<^type_syntax>\<open>VAL\<close>, _)))
+      = SOME (mk_projection VS i v)
+  | map_ret i VS (Const ("_constrain", _) $ _ $ (
           Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ (Const (\<^type_syntax>\<open>list\<close>, _) $ Const(\<^type_syntax>\<open>VAL\<close>, _))))
-      = (j, last_prj (length VS) (Bound i))
+      = SOME (last_prj (length VS) (Bound i))
 
-  | map_ret i VS (j, v as Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>))
-      = (j, mk_projection VS i v)
-  | map_ret i VS (j, v as Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>VAL\<close>\<close>))
-      = (j, mk_projection VS i v)
-  | map_ret i VS (j, v as Free (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>))
-      = (j, mk_projection VS i v)
-  | map_ret i VS (j, v as Var (_, \<^Type>\<open>\<phi>arg \<^Type>\<open>list \<^Type>\<open>VAL\<close>\<close>\<close>))
-      = (j, mk_projection VS i v)
+  | map_ret i VS ((h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
+      = SOME (h $ nth_project (jth_index_of_annoy (incr()) 0 VS) (Bound i))
+  | map_ret i VS ((h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
+      = SOME (h $ nth_project (jth_index_of_annoy (incr()) 0 VS) (Bound i))
+  | map_ret i VS ((h as Const (\<^const_name>\<open>Vals\<close>, _)) $ Const (\<^const_name>\<open>anonymouss\<close>, _))
+      = SOME (h $ last_prj (length VS) (Bound i))
+  | map_ret i VS ((h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ Const (\<^const_syntax>\<open>anonymouss\<close>, _))
+      = SOME (h $ last_prj (length VS) (Bound i))
 
-  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
-      = (j + 1, h $ nth_project (jth_index_of_annoy j 0 VS) (Bound i))
-  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ Const (\<^const_name>\<open>anonymouss\<close>, _))
-      = (j + 1, h $ last_prj (length VS) (Bound i))
-  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ Const (\<^const_syntax>\<open>anonymouss\<close>, _))
-      = (j + 1, h $ last_prj (length VS) (Bound i))
+  | map_ret i VS ((h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
+      = SOME (h $ mk_projection VS i v)
+  | map_ret i VS ((h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
+      = SOME (h $ mk_projection VS i v)
+  | map_ret i VS ((h as Const (\<^const_name>\<open>Vals\<close>, _)) $ _)
+      = SOME (h $ last_prj (length VS) (Bound i))
+  | map_ret i VS ((h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ _)
+      = SOME (h $ last_prj (length VS) (Bound i))
 
-  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
-      = (j, h $ mk_projection VS i v)
-  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
-      = (j, h $ mk_projection VS i v)
-  | map_ret i VS (j, (h as Const (\<^const_name>\<open>Vals\<close>, _)) $ v)
-      = (j, h $ last_prj (length VS) (Bound i))
-  | map_ret i VS (j, (h as Const (\<^const_syntax>\<open>Vals\<close>, _)) $ v)
-      = (j, h $ last_prj (length VS) (Bound i))
+  | map_ret i VS ((h as Const (\<^const_name>\<open>Subjection\<close>, _)) $ A $ B)
+      = map_ret i VS A |> Option.map (fn A' => h $ A' $ B)
+  | map_ret i VS ((h as Const (\<^const_name>\<open>\<phi>Type\<close>, _)) $ A $ B)
+      = map_ret i VS B |> Option.map (fn B' => (h $ A $ B'))
+  | map_ret i VS (Abs (name,ty,X))
+      = map_ret (i+1) VS X |> Option.map (fn X' => Abs (name, ty,X'))
+  | map_ret i VS (X $ Y)
+      = (case if R2L
+              then let val Y' =  map_ret i VS Y
+                       val X' =  map_ret i VS X
+                    in (X',Y')
+                   end
+              else let val X' =  map_ret i VS X
+                       val Y' =  map_ret i VS Y
+                    in (X',Y')
+                   end
+           of (NONE,NONE) => NONE
+            | (X',Y') => SOME (the_default X X' $ the_default Y Y'))
+  | map_ret i _ (Bound a) = if i <= a then SOME (Bound (a+1)) else NONE
+  | map_ret _ _ _ = NONE
+in the_default term (map_ret 0 VS term)
+end
+in (collect_vals, map_ret') end
 
-  | map_ret i VS (j, (h as Const (\<^const_name>\<open>\<phi>Type\<close>, _)) $ A $ B)
-      = (case map_ret i VS (j, B) of (j',B') => (j', h $ A $ B'))
-  | map_ret i VS (j, Abs (name,ty,X))
-      = (case map_ret (i+1) VS (j, X) of (j',X') => (j', Abs (name, ty,X')))
-  | map_ret i VS (j, X $ Y)
-      = if R2L
-        then (case map_ret i VS (j,Y) of (j',Y') =>
-                (case map_ret i VS (j',X) of (j'',X') => (j'', X' $ Y')))
-        else (case map_ret i VS (j,X) of (j',X') =>
-                (case map_ret i VS (j',Y) of (j'',Y') => (j'', X' $ Y')))
-  | map_ret i _ (j,Bound a) = (j, Bound (if i <= a then a+1 else a))
-  | map_ret _ _ jVX = jVX
-in (collect_vals, map_ret) end
-
-val dummyT_sem = Type (\<^type_name>\<open>\<phi>arg\<close>, [dummyT])
+(*val dummyT_sem = Type (\<^type_name>\<open>\<phi>arg\<close>, [dummyT])
 fun ex_fastype_of TM =
   let val T = fastype_of TM in if T = dummyT then dummyT_sem else T end
-  handle TERM _ => dummyT_sem
+  handle TERM _ => dummyT_sem*)
 
 fun package_values name _ (SOME ([], NONE)) term =
       (\<^term>\<open>\<phi>V_nil\<close>, Abs(name, val_list_T, term), ([], NONE))
@@ -418,7 +451,7 @@ fun package_values name _ (SOME ([], NONE)) term =
   in (mk_arg_list Vs,
       Abs(name, val_list_T,
           if null (#1 Vs) andalso #2 Vs = NONE
-          then term else #2(map_ret 0 (#1 Vs) (0,term))),
+          then term else map_ret (#1 Vs) term),
       Vs)
   end
 

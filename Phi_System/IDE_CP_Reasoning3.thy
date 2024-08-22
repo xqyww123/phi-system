@@ -738,15 +738,15 @@ section \<open>Implementation of Synthesis Mechanism\<close>
 
 subsubsection \<open>Multi-Target\<close>
 
-
+ 
 lemma [\<phi>reason %\<phi>synthesis_split+20]:
-  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A (ret\<^sub>(\<^sub>1\<^sub>)) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<bind> (\<lambda>v1. f2 \<bind> (\<lambda>v2. Return (\<phi>V_pair v1 v2))))
-         \<lbrace> R1 \<longmapsto> \<lambda>ret. A (\<phi>V_fst ret)\<heavy_comma> B (\<phi>V_snd ret) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
+\<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<bind> (\<lambda>v1. f2 \<bind> (\<lambda>v2. Return (\<phi>V_cons (v1\<^sub>(\<^sub>1\<^sub>)) v2))))
+         \<lbrace> R1 \<longmapsto> \<lambda>ret. A (ret\<^sub>(\<^sub>1\<^sub>))\<heavy_comma> B (\<phi>V_tl ret) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (E2 e\<heavy_comma> ExBI A)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
-    F1 F2 \<open>A \<v>0\<close>
+    F1 F2 \<open>A (\<v>0\<^sub>(\<^sub>1\<^sub>))\<close>
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %\<phi>synthesis_split]:
@@ -768,8 +768,8 @@ lemma [\<phi>reason %\<phi>synthesis_split+10]:
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %\<phi>synthesis_split+20]:
-  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret::unit \<phi>arg. A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret::unit \<phi>arg. B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
+  \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f2 \<lbrace> R2 \<longmapsto> \<lambda>ret. B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @tag synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<then> f2) \<lbrace> R1 \<longmapsto> \<lambda>ret. A \<heavy_comma> B \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (A \<heavy_comma> E2 e)) @tag synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
@@ -1184,22 +1184,26 @@ subsection \<open>Procedure Application - General Methods\<close>
   and \<phi>synthesis_gen_by_overloading = (2500, [2500,2510]) in \<phi>synthesis_gen_proc and > \<phi>synthesis_gen_proc_normalize \<open>\<close>
 
 
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut for \<open>PROP Gen_Synthesis_Rule
       (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> _ \<lbrace> ?X v\<heavy_comma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<longmapsto> ?Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) _ _\<close>]:
   \<comment> \<open>Gen_Synthesis_Rule_step_value\<close>
   \<open> PROP Gen_Synthesis_Rule
-            (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> (f \<bind> (\<lambda>v. F (\<phi>V_pair v vs)))
+            (Trueprop (\<forall>vs[N]. \<p>\<r>\<o>\<c> (f \<bind> (\<lambda>v. F (\<phi>V_cons (\<phi>V_hd v) vs)))
                                  \<lbrace> Xr vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E1 e\<heavy_comma> ExBI Xr) + EF e)))
-            ((\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis) &&& PROP Ant)
+            ((\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. X (\<phi>V_hd ret) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @tag synthesis) &&& PROP Ant)
             Result
 \<Longrightarrow> PROP Gen_Synthesis_Rule
-            (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X (\<phi>V_fst vs)\<heavy_comma> Xr (\<phi>V_snd vs) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EF))
+            (Trueprop (\<forall>vs[Suc N]. \<p>\<r>\<o>\<c> F vs \<lbrace> X (\<phi>V_hd vs)\<heavy_comma> Xr (\<phi>V_tl vs) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EF))
             Ant Result \<close>
   unfolding Gen_Synthesis_Rule_def conjunction_imp REMAINS_simp
-  subgoal premises prems apply (rule prems(1))
+  subgoal premises prems apply (rule prems(1), unfold \<phi>Lall_def)
   \<medium_left_bracket> premises f and A
     f
-    apply_rule prems(2)[OF A]
+thm prems(2)[OF A]
+note [[\<phi>trace_reasoning = 2]]
+    \<semicolon> apply_rule prems(2)[OF A]
   \<medium_right_bracket>. .
 
 lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut]: \<comment> \<open>Gen_Synthesis_Rule_step_value the last\<close>
