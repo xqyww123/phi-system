@@ -28,11 +28,12 @@ subsubsection \<open>Formalization Definitions\<close>
 paragraph \<open>Base Representation for Logical and Physical Addresses\<close>
 
 declare [[typedef_overloaded]]
-datatype memblk = Null | MemBlk nat \<comment> \<open>id\<close> TY
+datatype memblk = Null | MemBlk nat TY
 
 setup \<open>Sign.mandatory_path "memblk"\<close>
 
 definition \<open>layout blk = (case blk of Null \<Rightarrow> \<v>\<o>\<i>\<d> | MemBlk _ TY \<Rightarrow> TY)\<close>
+
 
 lemma layout[simp]:
   \<open>memblk.layout Null = \<v>\<o>\<i>\<d>\<close>

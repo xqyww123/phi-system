@@ -6,6 +6,18 @@ section \<open>Semantics Base\<close>
 
 subsection \<open>Type Classes for Common Reasoning Strategies\<close>
 
+
+\<phi>type_def Uninit_Val :: \<open>TY \<Rightarrow> (VAL, unit) \<phi>\<close> ("\<top>[_]")
+  where \<open>x \<Ztypecolon> \<top>[TY] \<equiv> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<in> Well_Type TY\<close>
+  deriving Basic
+
+(*
+term x
+
+lemma
+  \<open>\<exists>c. c \<in> Well_Type TY \<longleftrightarrow> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+*)
+
 (*
 definition Atomic_SemTyp :: \<open>TY \<Rightarrow> bool\<close>
   where \<open>Atomic_SemTyp TY \<equiv> True\<close>
