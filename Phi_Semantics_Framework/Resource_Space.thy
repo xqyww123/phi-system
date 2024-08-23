@@ -128,6 +128,8 @@ abbreviation "get r \<equiv> project (r name)"
 abbreviation "updt g r \<equiv> r(name := inject (g (get r)))"
   \<comment> \<open>\<open>updt g r\<close> updates the model of resource kind \<open>k\<close> by using function \<open>g\<close>\<close>
 
+abbreviation "updts g r \<equiv> {r(name := inject v) |v. v \<in> g (get r)}"
+
 abbreviation "mk x \<equiv> 1(name := inject x)"
   \<comment> \<open>\<open>mk x\<close> makes a compound resource that only has the resource modelled by \<open>x\<close> of kind \<open>K\<close>\<close>
 

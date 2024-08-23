@@ -74,9 +74,9 @@ fun sink_Ex_quantifier C =
   let fun conv ctxt ctm =
        (  Conv.rewr_conv @{thm' BI_Ex_comm[folded atomize_eq]} then_conv
           Conv.arg_conv (Phi_Conv.abs_conv_eta (conv o snd) ctxt)
-        else_conv (Conv.rewr_conv ExBI_boolean_Ex_lift' then_conv
+        else_conv ((fn ctm => Conv.rewr_conv ExBI_boolean_Ex_lift' ctm) then_conv
                    conv ctxt)
-        else_conv (Conv.rewr_conv ExBI_boolean_Ex_lift then_conv
+        else_conv ((fn ctm => Conv.rewr_conv ExBI_boolean_Ex_lift ctm) then_conv
                    conv ctxt)
         else_conv C ctxt) ctm
    in conv
@@ -93,6 +93,16 @@ fun defined_Ex_direct ctm =
             | _ => error "BI.defined_Ex")
      | _ => error "BI.defined_Ex"
 
+fun move_ex_L C ctxt ctm =
+  ((Conv.rewr_conv @{thm' ex_simps(1)[symmetric, folded atomize_eq]}
+    then_conv Conv.arg_conv (Conv.abs_conv (fn (_, ctxt) => move_ex_L C ctxt) ctxt))
+   else_conv C ctxt) ctm
+
+fun move_ex_R C ctxt ctm =
+  ((Conv.rewr_conv @{thm' ex_simps(2)[symmetric, folded atomize_eq]}
+    then_conv Conv.arg_conv (Conv.abs_conv (fn (_, ctxt) => move_ex_R C ctxt) ctxt))
+   else_conv C ctxt) ctm
+
 val apply_conv =
   let fun qchkB lv (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound i $ _) =
             if i = lv then SOME (K Conv.all_conv) else NONE
@@ -103,16 +113,18 @@ val apply_conv =
             (case qchkB lv A
                of SOME cv => SOME (fn ctxt =>
                           Conv.arg1_conv (cv ctxt) then_conv
-                          Conv.try_conv (Conv.rewr_conv @{thm' conj_assoc[folded atomize_eq]}))
+                          move_ex_L (fn _ => Conv.try_conv (
+                            Conv.rewr_conv @{thm' conj_assoc[folded atomize_eq]})) ctxt)
                 | _ => (case qchkB lv B
                of SOME cv => SOME (fn ctxt =>
                           Conv.arg_conv (cv ctxt) then_conv
-                          (Conv.rewr_conv @{thm' conj_left_commute[folded atomize_eq]} else_conv
-                           Conv.rewr_conv @{thm' conj_commute[folded atomize_eq]}))
+                          move_ex_R (fn _ =>
+                            (Conv.rewr_conv @{thm' conj_left_commute[folded atomize_eq]} else_conv
+                             Conv.rewr_conv @{thm' conj_commute[folded atomize_eq]})) ctxt)
                 | _ => NONE))
         | qchkB lv (Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ Abs (_, _, X)) =
-            Option.map (fn C => fn ctxt => fn ctmxx =>
-                          Conv.arg_conv (fn ctm => Conv.abs_conv (C o snd) ctxt ctm) ctmxx)
+            Option.map (fn C => fn ctxt =>
+                          Conv.arg_conv (Conv.abs_conv (C o snd) ctxt))
                        (qchkB (lv+1) X)
         | qchkB _ _ = NONE
 

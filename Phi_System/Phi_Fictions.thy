@@ -2,6 +2,16 @@ theory Phi_Fictions
   imports Phi_Types
 begin
 
+lemma pairself_set_ex[simp]:
+  \<open> pairself f ` { (a x, b x) |x. P x} = { (f (a x), f (b x)) |x. P x } \<close>
+  unfolding set_eq_iff
+  by (auto simp: image_iff)
+
+lemma defined_set_ex[simp]:
+  \<open> { f u' |u'. \<exists>u. u' = g u \<and> P u} = { f (g u) |u. P u } \<close>
+  unfolding set_eq_iff
+  by auto
+
 definition refinement_projection :: \<open>('abstract::sep_magma \<Rightarrow> 'concrete BI) \<Rightarrow> 'abstract set \<Rightarrow> 'concrete set\<close>
   where \<open>refinement_projection I D = Sup ((BI.dest o I) ` (D * top))\<close>
 
@@ -350,6 +360,15 @@ lemma \<F>_functional_refinement:
   apply (auto simp add: set_mult_expn sep_orthogonal)
   apply (metis (no_types, lifting) homo_mult sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
   by (metis sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI2 sep_mult_assoc)
+
+lemma \<F>_functional_refinement':
+  \<open> a \<in> D \<and> B \<subseteq> D
+\<Longrightarrow> \<F>_functional_condition D
+\<Longrightarrow> {(a, b) |b. b\<in>B} * Id_on UNIV \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(a,b) |b. b\<in>B} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` {a} \<close>
+  unfolding Fictional_Forward_Simulation_def \<F>_functional_condition_def
+  by (auto simp add: set_mult_expn sep_orthogonal,
+      smt (verit) homo_mult sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc subsetD)
+
 
 end
 

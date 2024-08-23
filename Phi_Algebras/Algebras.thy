@@ -2679,7 +2679,6 @@ lemma share_1_fupdt[simp]:
   for v :: \<open>'b::share_one\<close>
   by simp
 
-
 subsubsection \<open>dom1: Domain except one\<close>
 
 definition "dom1 f = {x. f x \<noteq> 1}"
@@ -3281,6 +3280,17 @@ instance discrete :: (type) ab_semigroup_mult
 instance discrete :: (type) strict_positive_sep_magma
   by (standard; case_tac a; case_tac b; simp)
 
+
+lemma cancl_sep_orthogonal_monoid__map_option_discrete:
+  \<open> inj_on (map_option f) D
+\<Longrightarrow> None \<in> D
+\<Longrightarrow> cancl_sep_orthogonal_monoid (map_option f) D\<close>
+  for f :: \<open>'a discrete \<Rightarrow> 'b discrete\<close>
+  by (standard,
+      (case_tac x; case_tac y; simp),
+      (case_tac a; case_tac b; simp),
+      (case_tac b; case_tac a; case_tac c; auto simp add: inj_on_def; force),
+      simp)
 
 subsection \<open>Agreement\<close>
 

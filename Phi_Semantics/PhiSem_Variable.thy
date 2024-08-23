@@ -327,11 +327,11 @@ proc op_set_var:
                   parse_eleidx_input_least1_def
                   parse_eleidx_input_def
                   is_valid_index_of_def
-                  LOCAL_VAR_def) ;;
+                  LOCAL_VAR_def) \<semicolon>
 
   apply_rule FIC.Var.setter_rule[
-    where u=\<open>Some (discrete (Some (index_mode_value_opt sem_idx (\<lambda>_. \<phi>arg.dest \<a>\<r>\<g>1)
-                                (discrete.dest (\<phi>arg.dest \<v>1)))))\<close>]
+    where U=\<open>{Some (discrete (Some (index_mode_value_opt sem_idx (\<lambda>_. \<phi>arg.dest \<a>\<r>\<g>1)
+                                (discrete.dest (\<phi>arg.dest \<v>1)))))}\<close>]
   \<open>MAKE _ (\<v>\<a>\<r>[v] Itself)\<close>
 
   \<medium_right_bracket> certified
@@ -366,7 +366,7 @@ proc op_free_var:
 \<medium_left_bracket>
   to Itself
   unfold Var.unfold
-  apply_rule FIC.Var.setter_rule[where u=\<open>None\<close> and k=\<open>vari\<close>]
+  apply_rule FIC.Var.setter_rule[where U=\<open>{None}\<close> and k=\<open>vari\<close>]
 \<medium_right_bracket> .
 
 
@@ -379,8 +379,8 @@ proc op_var_scope:
   output \<open>Y\<close>
   throws  E
   \<medium_left_bracket>
-    note LOCAL_VAR_def[\<phi>sledgehammer_simps]\<semicolon>
-    apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. LOCAL_VAR v TY)\<close> and u=\<open>Some (discrete None)\<close>]
+    note LOCAL_VAR_def[\<phi>sledgehammer_simps] \<semicolon>
+    apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. LOCAL_VAR v TY)\<close> and U=\<open>\<lambda>_. {Some (discrete None)}\<close>]
     \<exists>v \<open>() \<Ztypecolon> MAKE _ (Var v \<circle>)\<close>
     try'' \<medium_left_bracket>
         apply_rule BLK[of \<open>\<phi>arg.dest \<v>0\<close>, unfolded atomize_eq, OF Premise_D[where mode=default], simplified]
