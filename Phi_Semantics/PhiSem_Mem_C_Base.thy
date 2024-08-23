@@ -356,47 +356,30 @@ context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
 
 lemma allocate_rule:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>r. finite (dom r) \<longrightarrow> (\<exists>blk. blk \<notin> dom r \<and> typ_of_blk blk = TY \<and> blk \<noteq> null_blk))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry (\<lambda>blk. typ_of_blk blk = TY \<and> blk \<noteq> null_blk) (\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U k})
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v\<in>U. v \<in> Well_Type TY)
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry (\<lambda>blk. typ_of_blk blk = TY \<and> blk \<noteq> null_blk) (\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U })
       \<lbrace> Void \<longmapsto> \<lambda>ret. 1(blk := to_share \<circ> (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself
-                  \<s>\<u>\<b>\<j> blk v. ret = \<phi>arg blk \<and> v \<in> U blk \<and> typ_of_blk blk = TY \<and> blk \<noteq> null_blk  \<rbrace> \<close>
+                  \<s>\<u>\<b>\<j> blk v. ret = \<phi>arg blk \<and> v \<in> U \<and> typ_of_blk blk = TY \<and> blk \<noteq> null_blk  \<rbrace> \<close>
   unfolding Premise_def
   subgoal premises prems proof-
 
   note pointwise_set_UNIV[simp] \<F>_functional_condition_Map_of_Val_ins_dom[simp]
 
-  have t1[simp]: \<open>Val_of_Rep_Byte TY (Byte_Rep_of_Val v) = v\<close>
+  have t1[simp]: \<open>v \<in> U \<Longrightarrow> Val_of_Rep_Byte TY (Byte_Rep_of_Val v) = v\<close> for v
     using prems(2) by auto
+  have [simp]:
+       \<open>{(1, to_share \<circ> (map_option discrete \<circ> Map_of_Val (Val_of_Rep_Byte TY (Byte_Rep_of_Val v)))) |v. v \<in> U}
+      = {(1, to_share \<circ> (map_option discrete \<circ> Map_of_Val v)) |v. v \<in> U}\<close>
+    by force
 
-thm sep_refinement_stepwise[
+  note rule = sep_refinement_stepwise[
         OF refinement_frame[OF Byte_Rep_of_Val_ins.\<F>_functional_refinement'[simplified]]
            sep_refinement_stepwise[
                     OF refinement_frame[OF Map_of_Val_ins.\<F>_functional_refinement'[simplified]]
                        pointwise_to_share.\<F>_functional_refinement'[where B=\<open>Map_of_Val_ins ` B\<close> for B, unfolded defined_set_in_image]
                        pointwise_to_share.\<F>_functional_projection,
-                    where B5=\<open>Byte_Rep_of_Val_ins TY ` B\<close> for B, unfolded defined_set_in_image],
-        where a34=\<open>None\<close> and B21=\<open>{Some (discrete (Byte_Rep_of_Val v)) |v. v \<in> U k}\<close>,
-        simplified]
-
-thm pointwise_to_share.\<F>_functional_projection
-thm pointwise_to_share.\<F>_functional_refinement'[where B=\<open>Map_of_Val_ins ` B\<close> for B, unfolded defined_set_in_image]
-
-thm sep_refinement_stepwise[
-         OF refinement_frame[OF Byte_Rep_of_Val_ins.\<F>_functional_refinement[simplified]]
-            sep_refinement_stepwise[
-                    OF refinement_frame[OF Map_of_Val_ins.\<F>_functional_refinement[simplified]]
-                       pointwise_to_share.\<F>_functional_refinement
-                       pointwise_to_share.\<F>_functional_projection],
-        where a16=\<open>None\<close> and b16=\<open>Some (discrete (Byte_Rep_of_Val v))\<close> and TY16=TY,
-        simplified]
-
-  note rule = sep_refinement_stepwise[
-        OF refinement_frame[OF Byte_Rep_of_Val_ins.\<F>_functional_refinement[simplified]]
-           sep_refinement_stepwise[
-                    OF refinement_frame[OF Map_of_Val_ins.\<F>_functional_refinement[simplified]]
-                       pointwise_to_share.\<F>_functional_refinement
-                       pointwise_to_share.\<F>_functional_projection],
-        where a16=\<open>None\<close> and b16=\<open>Some (discrete (Byte_Rep_of_Val v))\<close> and TY16=TY,
+                    where B6=\<open>Byte_Rep_of_Val_ins TY ` B\<close> for B, unfolded defined_set_in_image],
+        where a35=\<open>None\<close> and B22=\<open>{Some (discrete (Byte_Rep_of_Val v)) |v. v \<in> U}\<close>,
         simplified,
         OF _ _ _ refinement_projections_stepwise_UNIV_paired[
             OF Map_of_Val_ins.\<F>_functional_projection
@@ -405,29 +388,16 @@ thm sep_refinement_stepwise[
             simplified]]
 
   show ?thesis
-thm "__allocate_rule_3__"[
-      where U =\<open>\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U k }\<close>
-        and U'=\<open>\<lambda>k. {to_share \<circ> (map_option discrete \<circ> Map_of_Val v) |v. v \<in> U k}\<close> , simplified]
-
-apply (rule "__allocate_rule_3__"[
-      where U =\<open>\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U k }\<close>
-        and U'=\<open>\<lambda>k. {to_share \<circ> (map_option discrete \<circ> Map_of_Val v) |v. v \<in> U k}\<close> , simplified])
-apply (unfold \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified, simp]
-             one_option_def)
-apply (simp)
-thm rule
-
-apply (rule "__allocate_rule_3__"[where U=\<open>\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U k }\<close> for U, simplified])
-
-thm \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified, simp]
-apply (rule "__allocate_rule_3__")
-    by (unfold \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified, simp]
-             one_option_def,
+    by (rule "__allocate_rule_3__"[
+          where U =\<open>\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U }\<close>
+            and U'=\<open>\<lambda>k. {to_share \<circ> (map_option discrete \<circ> Map_of_Val v) |v. v \<in> U}\<close> , simplified],
+        unfold \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified, simp]
+               one_option_def,
         simp, rule rule,
-        simp add: prems(2),
+        simp add: subset_iff, insert Byte_Rep_of_Val_ins_dom_eval(2) prems(2), blast,
         simp add: \<F>_functional_condition_Byte_Rep_of_Val_ins_dom,
-        simp add: prems(2),
-        simp add: R.in_invariant inj_image_mem_iff prems(2),
+        simp add: subset_iff, force,
+        simp add: R.in_invariant inj_image_mem_iff, force,
         clarsimp simp add: R.in_invariant Ball_def dom1_dom, metis dom_map_option_comp prems(1))
 qed .
 
@@ -437,18 +407,18 @@ lemma setter_rule:
       \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (index_type idx (typ_of_blk blk))
       \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
       \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>Well_Type (typ_of_blk blk). index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x)
-      \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at cblk (Some \<circ> map_discrete (map_Rep_Byte (typ_of_blk cblk) (index_mod_value cidx (\<lambda>_. v))) \<circ> the))
+      \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_atS cblk (\<lambda>h. {Some (map_discrete (map_Rep_Byte (typ_of_blk cblk) (index_mod_value cidx (\<lambda>_. v))) (the h))}))
             \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
               \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   unfolding Premise_def
-
-  by (simp only: EQ[unfolded Premise_def],
-      rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_discrete (map_Rep_Byte (typ_of_blk blk) (index_mod_value cidx (\<lambda>_. v)))\<close>
+  by (simp add: EQ[unfolded Premise_def],
+      rule "_setter_rule_2_"[where f=\<open>\<lambda>h. {Some (map_discrete (map_Rep_Byte (typ_of_blk blk) (index_mod_value cidx (\<lambda>_. v))) h)}\<close>
                         and V=\<open>discrete ` Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type (typ_of_blk blk)}\<close>
-                        and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)\<close>
+                        and F=\<open>\<lambda>_. {to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)}\<close>
                         for idx cidx v u_idx,
-                      OF _ fiction_Map_of_Val_perm_partial_refinement_BYTE
-                           fiction_Map_of_Val_ins_perm_projection_BYTE],
+                      simplified,
+                      OF _ fiction_Map_of_Val_perm_partial_refinement_BYTE[simplified]
+                           fiction_Map_of_Val_ins_perm_projection_BYTE[simplified]],
       simp,
       assumption,
       assumption,
@@ -459,10 +429,9 @@ lemma setter_rule:
       clarsimp simp add: split_discrete_meta_all inj_image_mem_iff index_mod_value_welltyp image_iff Bex_def,
       metis Val_of_Rep_Byte_inj index_mod_value_welltyp map_Rep_Byte_def)
 
-
 lemma deallocate_rule:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (typ_of_blk blk)
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at blk Map.empty)
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_atS blk (\<lambda>_. {None}))
       \<lbrace> 1(blk := to_share \<circ> (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<longmapsto>
         \<lambda>\<r>\<e>\<t>. 1 \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   unfolding Premise_def
@@ -485,8 +454,9 @@ proof -
           simplified]
 
   show ?thesis
-    apply (rule "_setter_rule_2_"[where f=\<open>\<lambda>_. None\<close> and V=\<open>{discrete v}\<close> and F=\<open>\<lambda>_. 1\<close> for v, simplified],
-        simp,
+apply simp
+apply (rule "_setter_rule_2_"[where f=\<open>\<lambda>_. {None}\<close> and V=\<open>{discrete v}\<close> and F=\<open>\<lambda>_. 1\<close> for v, simplified])
+apply (simp,
         unfold refinement_source_subjection, rule impI,
         rule sep_refinement_stepwise [
             OF refinement_frame[OF Byte_Rep_of_Val_ins.\<F>_functional_refinement[simplified]]

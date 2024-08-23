@@ -290,7 +290,7 @@ proc calloc1:
   unfolding address_to_base_def
 \<medium_left_bracket>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
-  apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and v=\<open>the (Zero TY)\<close>]
+  apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and U=\<open>{the (Zero TY)}\<close>]
 
   \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
   \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] T)\<close>
