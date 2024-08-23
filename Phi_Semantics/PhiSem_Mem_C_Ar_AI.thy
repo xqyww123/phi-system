@@ -19,9 +19,9 @@ certified proof -
   have t1: \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0)\<close>
     by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any the_\<phi>lemmata(2) the_\<phi>lemmata(3) valid_array_pointer_not_poison)
   show ?thesis
-    by (clarsimp simp: address_to_raw_array_GEP[OF t1] useful distrib_right,
+    by (clarsimp simp: memaddr_to_raw_array_GEP[OF t1] useful distrib_right,
                  simp add: add.commute,
-        metis address_to_raw_array_GEP le_zero_eq local.t1 mem_shift_shift of_nat_mult the_\<phi>lemmata(1))
+        metis memaddr_to_raw_array_GEP le_zero_eq local.t1 mem_shift_shift of_nat_mult the_\<phi>lemmata(1))
   qed
 \<medium_right_bracket> .
 

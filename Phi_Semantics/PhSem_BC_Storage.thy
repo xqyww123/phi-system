@@ -4,13 +4,23 @@ begin
 
 section \<open>Semantics\<close>
 
-datatype contract = Null | MemBlk nat TY
+declare [[typedef_overloaded]]
 
+datatype contract = Null | Contract nat TY
 
-locale BC_storage =
-  partial_map_resource Res \<open>\<lambda>blk. discrete ` Well_Type (typ_of_blk blk)\<close>
-  for Res :: "('blk \<Rightarrow> VAL discrete option) resource_entry"
-  and typ_of_blk :: \<open>'blk \<Rightarrow> TY\<close>
+declare [[typedef_overloaded = false]]
+
+setup \<open>Sign.mandatory_path "RES"\<close>
+
+type_synonym storage = \<open>contract \<rightharpoonup> VAL discrete\<close>
+
+setup \<open>Sign.parent_path\<close>
+
+resource_space aggregate_mem =
+  aggregate_mem :: \<open>{h::RES.storage. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` discrete ` Well_Type (block.layout seg))}\<close>
+  (MoV_res Byte_Rep_of_Val \<open>block.layout\<close>)
+  by (standard; simp)
+
 
 
 end

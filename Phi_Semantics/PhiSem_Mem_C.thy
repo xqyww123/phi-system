@@ -15,13 +15,10 @@ type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share op
 fiction_space aggregate_mem =
   aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>
                     \<F>_pointwise (\<lambda>blk.
-                        \<F>_functional (Byte.Rep_of_Val_ins (memblk.layout blk)) (Byte.Rep_of_Val_ins_dom (memblk.layout blk)) \<Zcomp>
-                        \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
-     (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout Null)
-  by (standard, auto simp add: Byte.Rep_of_Val_ins_def BI_eq_iff)
-
-term FIC.aggregate_mem
-thm FIC.aggregate_mem_fic_ax
+                        \<F>_functional (Mem.Rep_of_Val_ins (block.layout blk)) (Mem.Rep_of_Val_ins_dom (block.layout blk)) \<Zcomp>
+                        \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (block.layout blk)))\<close>
+     (perm_MoV_fiction RES.aggregate_mem Byte_Rep_of_Val block.layout Null)
+  by (standard, auto simp add: Mem.Rep_of_Val_ins_def BI_eq_iff)
 
 
 section \<open>Basic \<phi>Types for Semantic Models\<close>
@@ -43,12 +40,12 @@ thm Mem_Coercion.ToA_mapper
 
 subsection \<open>Memory Object\<close>
 
-\<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
-  where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
+\<phi>type_def Block :: \<open>block \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
+  where \<open>x \<Ztypecolon> Block blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
   deriving Sep_Functor_1
 
 \<phi>type_def Mem :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
-  where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
+  where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
   deriving Sep_Functor_1
 
 declare Mem.intro_reasoning[\<phi>reason default]
@@ -168,9 +165,9 @@ section \<open>Instructions & Their Specifications\<close>
 
 subsection \<open>Auxiliary\<close>
 
-definition \<open>address_to_base addr \<equiv> memaddr.index addr = 0\<close>
+definition \<open>address_to_base addr \<equiv> addr.index addr = 0\<close>
   \<comment> \<open>\<open>addr\<close> points to the base of an allocation block\<close>
-  \<comment> \<open>wraps and prevents the rewrite \<open>memaddr.index addr = 0\<close>,
+  \<comment> \<open>wraps and prevents the rewrite \<open>addr.index addr = 0\<close>,
       as \<open>address_to_base addr\<close> should be treated as an atom\<close>
 
 subsection \<open>Main\<close>
@@ -191,23 +188,23 @@ proc op_load_mem:
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v \<semicolon>
 
   apply_rule FIC.aggregate_mem.getter_rule[where u_idx=v and n=1
-                and cblk=\<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
-                and blk=\<open>memaddr.blk addr\<close>
-                and idx=\<open>memaddr.index addr\<close>] \<semicolon>
+                and cblk=\<open>addr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+                and blk=\<open>addr.blk addr\<close>
+                and idx=\<open>addr.index addr\<close>] \<semicolon>
 
-  \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))))\<close>
+  \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))))\<close>
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] T)\<close>
   apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
   holds_fact [simp]: \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = TY\<close>
-         and \<open>Byte.Val_of_Rep (memblk.layout (memaddr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
+         and \<open>Mem.Val_of_Rep (block.layout (addr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
 
   semantic_assert \<open>let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
-                    in index_value (memaddr.index addr)
-                        (Byte.Val_of_Rep (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1))) \<in> Well_Type TY\<close>
+                    in index_value (addr.index addr)
+                        (Mem.Val_of_Rep (block.layout (addr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1))) \<in> Well_Type TY\<close>
   semantic_return \<open>(let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
-                     in index_value (memaddr.index addr)
-                            (Byte.Val_of_Rep (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1)))) \<Turnstile> (x \<Ztypecolon> T)\<close>
+                     in index_value (addr.index addr)
+                            (Mem.Val_of_Rep (block.layout (addr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1)))) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
 
 declare [[\<phi>trace_reasoning = 1]]
@@ -233,13 +230,13 @@ proc op_store_mem:
   $y semantic_local_value \<open>TY\<close>
 
   apply_rule FIC.aggregate_mem.setter_rule[
-        where u_idx=v and idx=\<open>memaddr.index addr\<close>
+        where u_idx=v and idx=\<open>addr.index addr\<close>
           and v=\<open>\<phi>arg.dest \<a>\<r>\<g>2\<close>
-          and blk=\<open>memaddr.blk addr\<close>
-          and cblk = \<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
-          and cidx = \<open>memaddr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
+          and blk=\<open>addr.blk addr\<close>
+          and cblk = \<open>addr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
+          and cidx = \<open>addr.index (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
 
-  \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U))))\<close>
+  \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U))))\<close>
   \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] U)\<close>
   
   apply_rule ToA_Subst_backward[OF Map, unfolded Remains_\<phi>Cond_Item]
@@ -293,14 +290,14 @@ proc calloc1:
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and U=\<open>{the (Zero TY)}\<close>]
 
   \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
-  \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] T)\<close>
+  \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[Addr blk 0] T)\<close>
 
   semantic_assumption \<open>type_storable_in_mem TY\<close>
 
-  have t1: \<open>valid_address (memaddr blk [])\<close>
-    by (insert \<phi>; auto simp add: Valid_MemBlk_def split: memblk.split) \<semicolon>
+  have t1: \<open>valid_memaddr (Addr blk [])\<close>
+    by (insert \<phi>; auto simp add: Valid_MemBlk_def split: block.split) \<semicolon>
 
-  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr TY)\<close>
+  semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr TY)\<close>
     
 \<medium_right_bracket> .
 
@@ -320,7 +317,7 @@ proc mfree:
   $addr semantic_local_value \<p>\<t>\<r>
 
   apply_rule FIC.aggregate_mem.deallocate_rule
-             [where v=v and blk=\<open>memaddr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>]
+             [where v=v and blk=\<open>addr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>]
 
 \<medium_right_bracket> .
 
@@ -491,29 +488,29 @@ thm Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simp
 
 subsection \<open>Auxiliary Simplification\<close>
 
-subsubsection \<open>Converting \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk a] ((memaddr.index a @ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
-                          \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk a] (memaddr.index a \<^bold>\<rightarrow>\<^sub>@ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
+subsubsection \<open>Converting \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk a] ((addr.index a @ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
+                          \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk a] (addr.index a \<^bold>\<rightarrow>\<^sub>@ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
                       to \<open>\<m>\<e>\<m>[a \<tribullet> i\<^sup>\<t>\<^sup>\<h>] \<dots>\<close>\<close>
 
 lemma MemBlk_\<phi>MapAt_L_assoc[no_atp, \<phi>programming_simps, \<phi>programming_base_simps]:
   \<open> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (a \<^bold>\<rightarrow>\<^sub>@ b \<^bold>\<rightarrow>\<^sub>@ T) = \<m>\<e>\<m>-\<b>\<l>\<k>[blk] ((a @ b) \<^bold>\<rightarrow>\<^sub>@ T) \<close>
   by (simp add: \<phi>MapAt_L.scalar_assoc[simplified times_list_def])
 
-simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (idx \<^bold>\<rightarrow>\<^sub>@ T)\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
+simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (idx \<^bold>\<rightarrow>\<^sub>@ T)\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
   case Thm.term_of ctm
-    of Const(\<^const_name>\<open>MemBlk\<close>, _) $ (Const(\<^const_name>\<open>memaddr.blk\<close>, _) $ a0)
+    of Const(\<^const_name>\<open>Block\<close>, _) $ (Const(\<^const_name>\<open>addr.blk\<close>, _) $ a0)
                                     $ (Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, _) $ idx $ _) =>
         let fun quick_chk (Const(\<^const_name>\<open>List.append\<close>, _) $ L $ _) = quick_chk L
               | quick_chk (Const(\<^const_name>\<open>list.Cons\<close>, _) $ _ $ L) = quick_chk L
               | quick_chk (Const(\<^const_name>\<open>list.Nil\<close>, _)) = true
-              | quick_chk (Const(\<^const_name>\<open>memaddr.index\<close>, _) $ a1) = a0 aconv a1
+              | quick_chk (Const(\<^const_name>\<open>addr.index\<close>, _) $ a1) = a0 aconv a1
          in if quick_chk idx then
         let fun parse_idx ctmx (Const(\<^const_name>\<open>List.append\<close>, _) $ L $ R)
                   = parse_idx (Thm.dest_arg1 ctmx) L @ parse_idx (Thm.dest_arg ctmx) R
               | parse_idx ctmx (Const(\<^const_name>\<open>list.Cons\<close>, _) $ _ $ L)
                   = Thm.dest_arg1 ctmx :: parse_idx (Thm.dest_arg ctmx) L
               | parse_idx _ (Const(\<^const_name>\<open>list.Nil\<close>, _)) = []
-              | parse_idx ctmx (Const(\<^const_name>\<open>memaddr.index\<close>, _) $ a1) =
+              | parse_idx ctmx (Const(\<^const_name>\<open>addr.index\<close>, _) $ a1) =
                     if a0 aconv a1 then [] else raise Match
             val cidx = Thm.dest_arg1 (Thm.dest_arg ctm)
             val cT = Thm.dest_arg (Thm.dest_arg ctm)
@@ -522,8 +519,8 @@ simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[memadd
             val caddr'= fold (fn i => fn a => Thm.apply (Thm.apply \<^cterm>\<open>addr_gep\<close> a) i) idxs
                              (Thm.dest_arg cblk)
             val rule = \<^instantiate>\<open>blk=cblk and idx=cidx and addr=caddr' and T=cT and 'a=\<open>Thm.dest_ctyp0 (Thm.ctyp_of_cterm cT)\<close>
-                                in lemma \<open>memaddr.blk addr = blk
-                                      \<Longrightarrow> memaddr.index addr = idx
+                                in lemma \<open>addr.blk addr = blk
+                                      \<Longrightarrow> addr.index addr = idx
                                       \<Longrightarrow> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (idx \<^bold>\<rightarrow>\<^sub>@ T) \<equiv> \<m>\<e>\<m>[addr] T\<close>
                                       by (simp add: Mem_def)\<close>
          in SOME rule

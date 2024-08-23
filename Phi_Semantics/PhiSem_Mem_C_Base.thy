@@ -97,13 +97,7 @@ the value bound to the node contains the entire data, so actually meaningless fo
 being a tree enabling separation of aggregate structures.
 \<close>
 
-debt_axiomatization Byte_Rep_of_Val :: \<open>VAL \<Rightarrow> 8 word list\<close>
-  where Byte_Rep_of_Val_inj': \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> Byte_Rep_of_Val Va = Byte_Rep_of_Val Vb \<Longrightarrow> Va = Vb\<close>
-
-interpretation Byte: MoV Byte_Rep_of_Val
-  by (standard, rule Byte_Rep_of_Val_inj', assumption, assumption, assumption)
-
-
+(*
 locale aggregate_mem_resource =
   partial_map_resource Res \<open>\<lambda>blk. discrete ` Byte_Rep_of_Val ` Well_Type (typ_of_blk blk)\<close>
   for Res :: "('blk \<Rightarrow> 8 word list discrete option) resource_entry"
@@ -281,5 +275,6 @@ qed .
 end
 
 end
+*)
 
 end

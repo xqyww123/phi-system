@@ -23,7 +23,7 @@ lemma [iff]: "addr_allocated (h(k \<mapsto> v)) addr \<longleftrightarrow> k = M
   and [iff]: "addr_allocated (h(k := None)) addr \<longleftrightarrow> k \<noteq> MemAddress addr \<and> addr_allocated h addr"
   unfolding addr_allocated_def by auto
 
-definition MemAddrState :: "heap \<Rightarrow> nat memaddr \<Rightarrow> 'b::lrep set \<Rightarrow> bool"
+definition MemAddrState :: "heap \<Rightarrow> nat addr \<Rightarrow> 'b::lrep set \<Rightarrow> bool"
   where "MemAddrState h addr S \<longleftrightarrow> addr_allocated h addr \<and> shallowize (the (h (MemAddress addr))) \<in> S"
 adhoc_overloading ResourceState MemAddrState
 

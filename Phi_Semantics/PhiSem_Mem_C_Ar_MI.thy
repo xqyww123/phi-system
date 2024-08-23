@@ -23,7 +23,7 @@ proc op_add_ptr[\<phi>overload +]:
     have t1: \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0) \<close>
       by auto_sledgehammer
     show ?thesis
-      by (insert useful, auto simp: address_to_raw_array_GEP[OF t1] distrib_right,
+      by (insert useful, auto simp: memaddr_to_raw_array_GEP[OF t1] distrib_right,
                   simp add: add.commute signed_of_int signed_take_bit_int_eq_self;
                   auto_sledgehammer)
   qed
@@ -47,7 +47,7 @@ proc op_add_ptr_unsigned[\<phi>overload +]:
       by auto_sledgehammer
     show ?thesis
       by (insert useful,
-                  auto simp: address_to_raw_array_GEP[OF t1]
+                  auto simp: memaddr_to_raw_array_GEP[OF t1]
                              distrib_right ucast_of_nat_small; auto_sledgehammer)
     qed
 \<medium_right_bracket> .

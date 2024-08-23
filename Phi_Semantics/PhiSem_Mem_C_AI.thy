@@ -29,19 +29,19 @@ proc calloc_aN:
   semantic_local_value($n) \<open>\<a>\<i>\<n>\<t>\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<a>\<r>\<r>\<a>\<y>[nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
-                                               and v=\<open>sem_mk_array (replicate (nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))\<close>]
+                                               and U=\<open>{sem_mk_array (replicate (nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))}\<close>]
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
 
   \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
-  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (Array n T))\<close>
+  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[Addr blk 0] (Array n T))\<close>
 
-  have t1: \<open>valid_address (memaddr blk [])\<close>
-    unfolding valid_address_def Valid_MemBlk_def
-    using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close> address_type_def the_\<phi>(7)) \<semicolon>
+  have t1: \<open>valid_memaddr (Addr blk [])\<close>
+    unfolding valid_memaddr_def Valid_MemBlk_def
+    using \<open>block.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
+    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close> address_type_def the_\<phi>(8)) \<semicolon>
   
-  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
+  semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
 
 \<medium_right_bracket> .
 
@@ -64,20 +64,20 @@ proc calloc_aN2:
 
   apply_rule FIC.aggregate_mem.allocate_rule
             [where TY=\<open>\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY\<close>
-               and v=\<open>sem_mk_array (replicate (nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1)))
-                                   (sem_mk_array (replicate (nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>2))) (the (Zero TY)))))\<close>]
+               and U=\<open>{sem_mk_array (replicate (nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1)))
+                                    (sem_mk_array (replicate (nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>2))) (the (Zero TY)))))}\<close>]
 
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1))] \<a>\<r>\<r>\<a>\<y>[nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>2))] TY)\<close>
 
   \<open>replicate n (replicate m z) \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n (Array m T)))))\<close>
-  \<open>replicate n (replicate m z) \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] (Array n (Array m T)))\<close>
+  \<open>replicate n (replicate m z) \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[Addr blk 0] (Array n (Array m T)))\<close>
 
-  have t1: \<open>valid_address (memaddr blk [])\<close>
-    unfolding valid_address_def Valid_MemBlk_def
-    using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY\<close>
-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY)\<close> address_type_def the_\<phi>(8)) \<semicolon>
+  have t1: \<open>valid_memaddr (Addr blk [])\<close>
+    unfolding valid_memaddr_def Valid_MemBlk_def
+    using \<open>block.layout blk = \<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY\<close>
+    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY)\<close> address_type_def the_\<phi>(9)) \<semicolon>
   
-  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>3) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY))\<close>
+  semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>3) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] \<a>\<r>\<r>\<a>\<y>[m] TY))\<close>
 
 \<medium_right_bracket> .
 

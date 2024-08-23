@@ -18,30 +18,30 @@ debt_axiomatization
   and array_TY_neq_void: \<open>\<v>\<o>\<i>\<d> \<noteq> \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
 
 lemma valid_array_pointer_not_poison:
-  \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> valid_address addr \<Longrightarrow> False\<close>
-  unfolding valid_address_def
+  \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> valid_memaddr addr \<Longrightarrow> False\<close>
+  unfolding valid_memaddr_def
   by (clarsimp,
       metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<a>\<r>\<r>\<a>\<y>_0_eq_any not_None_eq option.simps(8) option.simps(9) semty_array_eq_poison zero_arr zero_bool)
 
-lemma address_to_raw_array_GEP:
+lemma memaddr_to_raw_array_GEP:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
-\<Longrightarrow> address_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
-  unfolding address_to_raw_def addr_gep_def address_type_def
+\<Longrightarrow> memaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
+  unfolding memaddr_to_raw_def addr_gep_def address_type_def
   by (cases addr; clarsimp simp: idx_step_offset_arr idx_step_offset_arr';
       metis idx_step_offset_arr idx_step_offset_arr' mult_zero_left of_nat_mult)
 
-lemma address_to_raw_inj_array:
-  \<open> valid_address addr
+lemma memaddr_to_raw_inj_array:
+  \<open> valid_memaddr addr
 \<Longrightarrow> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> i \<le> N \<and> j \<le> N
 \<Longrightarrow> \<not> phantom_mem_semantic_type TY
-\<Longrightarrow> address_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = address_to_raw (addr \<tribullet> (j)\<^sup>\<t>\<^sup>\<h>) \<longleftrightarrow> i = j \<close>
-  unfolding valid_address_def Valid_MemBlk_def
+\<Longrightarrow> memaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw (addr \<tribullet> (j)\<^sup>\<t>\<^sup>\<h>) \<longleftrightarrow> i = j \<close>
+  unfolding valid_memaddr_def Valid_MemBlk_def
   apply (clarsimp; cases addr; clarsimp)
   subgoal for blk idx
     apply (cases \<open>blk\<close>; clarsimp simp: array_TY_neq_void)
      apply (simp add: address_type_def array_TY_neq_void)
-    apply (simp add: phantom_mem_semantic_type_def address_to_raw_array_GEP)
+    apply (simp add: phantom_mem_semantic_type_def memaddr_to_raw_array_GEP)
     subgoal premises prems for _ BTY proof -
       have t0: \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
         by (metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<a>\<r>\<r>\<a>\<y>_0_eq_any not_None_eq option.simps(8) option.simps(9) semty_array_eq_poison zero_arr zero_bool)
@@ -59,35 +59,35 @@ lemma address_to_raw_inj_array:
     qed . .
 
 
-lemma address_to_raw_array_0th:
+lemma memaddr_to_raw_array_0th:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
-\<Longrightarrow> address_to_raw (addr \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr \<close>
-  unfolding address_to_raw_def addr_gep_def address_type_def
+\<Longrightarrow> memaddr_to_raw (addr \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw addr \<close>
+  unfolding memaddr_to_raw_def addr_gep_def address_type_def
   by (smt (verit, del_insts) Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<a>\<r>\<r>\<a>\<y>_0_eq_any not_None_eq option.simps(8) option.simps(9) semty_array_eq_poison zero_arr zero_bool)
 
-lemma address_to_raw_array_ith:
+lemma memaddr_to_raw_array_ith:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> phantom_mem_semantic_type TY
-\<Longrightarrow> address_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = address_to_raw addr \<close>
-  unfolding address_to_raw_def addr_gep_def address_type_def
-  by (auto simp: idx_step_offset_arr phantom_mem_semantic_type_def idx_step_offset_arr' split: memaddr.split,
+\<Longrightarrow> memaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw addr \<close>
+  unfolding memaddr_to_raw_def addr_gep_def address_type_def
+  by (auto simp: idx_step_offset_arr phantom_mem_semantic_type_def idx_step_offset_arr' split: addr.split,
       metis idx_step_offset_arr idx_step_offset_arr' less_nat_zero_code mult_0_right of_nat_gt_0)
 
-lemma address_to_raw_inj_arr:
-    \<open>valid_address addr1 \<Longrightarrow>
-     valid_address addr2 \<Longrightarrow>
+lemma memaddr_to_raw_inj_arr:
+    \<open>valid_memaddr addr1 \<Longrightarrow>
+     valid_memaddr addr2 \<Longrightarrow>
      address_type addr1 = \<a>\<r>\<r>\<a>\<y>[N] TY \<Longrightarrow>
      address_type addr2 = \<a>\<r>\<r>\<a>\<y>[M] TY \<Longrightarrow>
      \<not> phantom_mem_semantic_type TY \<Longrightarrow>
      0 < N \<Longrightarrow> 0 < M \<Longrightarrow> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow>
-     address_to_raw addr1 = address_to_raw addr2 \<Longrightarrow>
+     memaddr_to_raw addr1 = memaddr_to_raw addr2 \<Longrightarrow>
      addr1 = addr2 \<close>
   subgoal premises prems proof -
-    have t1: \<open>address_to_raw (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = address_to_raw (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>)\<close>
-      by (metis address_to_raw_array_0th prems(3) prems(4) prems(8) prems(9))
-    have t2: \<open>valid_address (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
+    have t1: \<open>memaddr_to_raw (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>)\<close>
+      by (metis memaddr_to_raw_array_0th prems(3) prems(4) prems(8) prems(9))
+    have t2: \<open>valid_memaddr (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
       by (simp add: prems(1) prems(3) prems(6) prems(8) valid_idx_step_arr)
-    have t3: \<open>valid_address (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
+    have t3: \<open>valid_memaddr (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) \<close>
       by (simp add: prems(2) prems(4) prems(7) prems(8) valid_idx_step_arr)
     have t4: \<open>address_type (addr1 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = address_type (addr2 \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>)\<close>
       by (simp add: idx_step_type_arr prems(3) prems(4) prems(6) prems(7) prems(8))
@@ -97,37 +97,37 @@ lemma address_to_raw_inj_arr:
       using t5 by blast
   qed .
 
-definition \<open>rawaddr_to_log_arr T raddr = (@laddr. address_to_raw laddr = raddr \<and> (\<exists>N. 0 < N \<and> address_type laddr = \<a>\<r>\<r>\<a>\<y>[N] T) \<and> valid_address laddr)\<close>
+definition \<open>rawaddr_to_log_arr T raddr = (@laddr. memaddr_to_raw laddr = raddr \<and> (\<exists>N. 0 < N \<and> address_type laddr = \<a>\<r>\<r>\<a>\<y>[N] T) \<and> valid_memaddr laddr)\<close>
 
 
 
 lemma rawaddr_arr_to_log[simp]:
-  \<open> valid_address addr
+  \<open> valid_memaddr addr
 \<Longrightarrow> \<not> phantom_mem_semantic_type (address_type addr)
 \<Longrightarrow> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
-\<Longrightarrow> rawaddr_to_log_arr TY (address_to_raw addr) = addr\<close>
+\<Longrightarrow> rawaddr_to_log_arr TY (memaddr_to_raw addr) = addr\<close>
   unfolding rawaddr_to_log_arr_def
-  by (rule some_equality, auto simp: MemObj_Size_arr phantom_mem_semantic_type_def address_to_raw_inj_arr,
+  by (rule some_equality, auto simp: MemObj_Size_arr phantom_mem_semantic_type_def memaddr_to_raw_inj_arr,
       metis MemObj_Size_arr bot_nat_0.not_eq_extremum mult_0 semty_array_eq_poison,
-      metis MemObj_Size_arr address_to_raw_inj address_to_raw_inj_arr less_numeral_extra(3) nat_0_less_mult_iff phantom_mem_semantic_type_def semty_array_eq_poison)
+      metis MemObj_Size_arr memaddr_to_raw_inj memaddr_to_raw_inj_arr less_numeral_extra(3) nat_0_less_mult_iff phantom_mem_semantic_type_def semty_array_eq_poison)
 
 
-lemma address_to_raw_arr[iff]:
-  \<open> (\<exists>laddr. address_to_raw laddr = addr \<and> (\<exists>N. 0 < N \<and> address_type laddr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<and> valid_address laddr)
-\<Longrightarrow> address_to_raw (rawaddr_to_log_arr TY addr) = addr \<and>
+lemma memaddr_to_raw_arr[iff]:
+  \<open> (\<exists>laddr. memaddr_to_raw laddr = addr \<and> (\<exists>N. 0 < N \<and> address_type laddr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<and> valid_memaddr laddr)
+\<Longrightarrow> memaddr_to_raw (rawaddr_to_log_arr TY addr) = addr \<and>
     (\<exists>N. 0 < N \<and> address_type (rawaddr_to_log_arr TY addr) = \<a>\<r>\<r>\<a>\<y>[N] TY) \<and>
-    valid_address (rawaddr_to_log_arr TY addr)\<close>
+    valid_memaddr (rawaddr_to_log_arr TY addr)\<close>
   unfolding rawaddr_to_log_arr_def
   by (elim exE; rule someI; blast)
 
 
-lemma address_to_raw_phantom_mem_type_gep_N__arr:
+lemma memaddr_to_raw_phantom_mem_type_gep_N__arr:
   \<open> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0
 \<Longrightarrow> phantom_mem_semantic_type TY
 \<Longrightarrow> valid_index TY path
-\<Longrightarrow> address_to_raw (addr_geps addr (AgIdx_N i # path)) = address_to_raw addr\<close>
-  by (auto simp: address_to_raw_array_ith idx_step_type_arr address_to_raw_phantom_mem_type_gep_N,
-      insert address_to_raw_array_ith, blast)
+\<Longrightarrow> memaddr_to_raw (addr_geps addr (AgIdx_N i # path)) = memaddr_to_raw addr\<close>
+  by (auto simp: memaddr_to_raw_array_ith idx_step_type_arr memaddr_to_raw_phantom_mem_type_gep_N,
+      insert memaddr_to_raw_array_ith, blast)
 
 
 
@@ -143,11 +143,11 @@ proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 50]:
   $addr semantic_local_value \<p>\<t>\<r> ;;
   have t1: \<open>0 < any\<close>
     by (insert \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
-               \<open>valid_address addr\<close> parse_eleidx_input_def that(1) valid_idx_step_arr,
+               \<open>valid_memaddr addr\<close> parse_eleidx_input_def that(1) valid_idx_step_arr,
         cases addr, auto_sledgehammer) ;;
     holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N \<semicolon>
   semantic_return \<open>
-    sem_mk_pointer (address_to_raw (addr_geps (rawaddr_to_log_arr TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
+    sem_mk_pointer (memaddr_to_raw (addr_geps (rawaddr_to_log_arr TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
       \<Turnstile> (addr_geps addr (AgIdx_N si # spec_idx) \<Ztypecolon> TypedPtr TY')\<close>
 \<medium_right_bracket> .
 
@@ -162,26 +162,26 @@ subsection \<open>Slice Pointer\<close>
       only points to elements in an array.\<close>
 
 (*
-definition \<open>valid_address_range TY addr N \<longleftrightarrow>
-    valid_address addr \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
+definition \<open>valid_memaddr_range TY addr N \<longleftrightarrow>
+    valid_memaddr addr \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
 
-lemma valid_address_range_sub:
+lemma valid_memaddr_range_sub:
   \<open> base \<le> base' \<and> base'+len' \<le> base+len
-\<Longrightarrow> valid_address_range TY addr base  len
-\<Longrightarrow> valid_address_range TY addr base' len'\<close>
-  unfolding valid_address_range_def
+\<Longrightarrow> valid_memaddr_range TY addr base  len
+\<Longrightarrow> valid_memaddr_range TY addr base' len'\<close>
+  unfolding valid_memaddr_range_def
   by (clarsimp, smt (verit, ccfv_threshold) add.assoc add_lessD1 le_eq_less_or_eq le_iff_add nat_add_left_cancel_less)
 *)
 
 \<phi>type_def SlicePtr :: \<open>address \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
-  where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> address_to_raw (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
-                \<s>\<u>\<b>\<j> i \<le> N \<and> valid_address addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
+  where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> memaddr_to_raw (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
+                \<s>\<u>\<b>\<j> i \<le> N \<and> valid_memaddr addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
   deriving Basic
-       and \<open>Abstract_Domain  (SlicePtr addr N TY) (\<lambda>x. x \<le> N \<and> valid_address addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<close>
-       and \<open>Abstract_Domain\<^sub>L (SlicePtr addr N TY) (\<lambda>x. x \<le> N \<and> valid_address addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<close>
+       and \<open>Abstract_Domain  (SlicePtr addr N TY) (\<lambda>x. x \<le> N \<and> valid_memaddr addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<close>
+       and \<open>Abstract_Domain\<^sub>L (SlicePtr addr N TY) (\<lambda>x. x \<le> N \<and> valid_memaddr addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY) \<close>
        and \<open>Object_Equiv (SlicePtr addr N TY) (=)\<close>
        and Functionality
-       and \<open> \<t>\<y>\<p>\<e>\<o>\<f> (SlicePtr addr N TY) = (if \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> valid_address addr then \<p>\<t>\<r> else \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+       and \<open> \<t>\<y>\<p>\<e>\<o>\<f> (SlicePtr addr N TY) = (if \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY \<and> valid_memaddr addr then \<p>\<t>\<r> else \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
 
 notation SlicePtr ("\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _" [20,20,900] 899)
 
@@ -189,7 +189,7 @@ notation SlicePtr ("\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _" [20,20,900] 899)
 lemma Ptr_eqcmp[\<phi>reason 1000]:
   \<open>\<phi>Equal (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
   unfolding \<phi>Equal_def
-  by (clarsimp simp: address_to_raw_inj_array, insert address_to_raw_inj_array, force)
+  by (clarsimp simp: memaddr_to_raw_inj_array, insert memaddr_to_raw_inj_array, force)
 
 \<phi>reasoner_group slice_ptr_ToA = (%ToA_cut, [%ToA_cut, %ToA_cut+30]) in ToA_cut \<open>\<close>
 
@@ -374,9 +374,9 @@ lemma [\<phi>reason add]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i+n < N \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY
 \<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> (i+n)\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def
-            address_to_raw_def addr_gep_def address_type_def
+            memaddr_to_raw_def addr_gep_def address_type_def
   by (cases addr; clarsimp, rule,
-      simp add: valid_address_def valid_idx_step_arr,
+      simp add: valid_memaddr_def valid_idx_step_arr,
       simp add: address_type_def idx_step_type_arr valid_idx_step_arr,
       metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<a>\<r>\<r>\<a>\<y>_0_eq_any not_None_eq option.simps(8) option.simps(9) semty_array_eq_poison zero_arr zero_bool)
 
@@ -391,9 +391,9 @@ lemma [\<phi>reason add]:
       by (metis Zero_not_Suc address_type_gep semty_array_eq_poison tmp(2) tmp(5) tmp(6) valid_array_pointer_not_poison)
     show ?thesis
       apply (insert t00 tmp)
-  unfolding address_to_raw_def addr_gep_def address_type_def
+  unfolding memaddr_to_raw_def addr_gep_def address_type_def
   apply (cases addr; clarsimp, rule;
-        clarsimp simp: valid_address_def valid_idx_step_arr idx_step_type_arr
+        clarsimp simp: valid_memaddr_def valid_idx_step_arr idx_step_type_arr
                        valid_index_tail[where idx=\<open>idx@[j]\<close> for idx j, simplified]
                        idx_step_offset_arr index_offset_tail[where idx=\<open>idx@[j]\<close> for idx j, simplified])
   subgoal premises prems for blk idx proof -

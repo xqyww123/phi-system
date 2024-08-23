@@ -20,7 +20,7 @@ proc calloc:
   requires \<open>Semantic_Zero_Val TY T z\<close>
   premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>replicate n z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY)
-          \<s>\<u>\<b>\<j> addr. memaddr.index addr = 0\<close>
+          \<s>\<u>\<b>\<j> addr. addr.index addr = 0\<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] \<semicolon>
@@ -33,15 +33,15 @@ proc calloc:
   semantic_assumption \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))] TY)\<close>
 
   \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (Array n T))))\<close>
-  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[memaddr blk 0] Array n T)\<close>
+  \<open>replicate n z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[Addr blk 0] Array n T)\<close>
 
-  have t1: \<open>valid_address (memaddr blk [])\<close>
-    unfolding valid_address_def Valid_MemBlk_def
-    using \<open>memblk.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
+  have t1: \<open>valid_memaddr (Addr blk [])\<close>
+    unfolding valid_memaddr_def Valid_MemBlk_def
+    using \<open>block.layout blk = \<a>\<r>\<r>\<a>\<y>[n] TY\<close>
     by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<a>\<r>\<r>\<a>\<y>[n] TY)\<close> address_type_def; auto_sledgehammer)
   note address_type_def [\<phi>sledgehammer_simps] \<semicolon>
   
-  semantic_return \<open>sem_mk_pointer (memaddr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (memaddr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
+  semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[n] TY))\<close>
 \<medium_right_bracket> .
 
 

@@ -47,22 +47,22 @@ datatype segidx = Null | Segment nat \<comment> \<open>nonce\<close> (layout: TY
 
 hide_const (open) layout
 
-datatype 'index memaddr = memaddr (segment: segidx) (index: 'index ) (infixl "|:" 60)
+datatype 'index addr = addr (segment: segidx) (index: 'index ) (infixl "|:" 60)
 
 declare [ [typedef_overloaded = false] ]
 
-declare memaddr.sel[iff]
+declare addr.sel[iff]
 hide_const (open) segment index
 
-type_synonym address = \<open>nat list memaddr\<close> (* the index of address is non empty *)
-type_synonym rawaddr = \<open>\<s>\<i>\<z>\<e>_\<t> memaddr\<close>
+type_synonym address = \<open>nat list addr\<close> (* the index of address is non empty *)
+type_synonym rawaddr = \<open>\<s>\<i>\<z>\<e>_\<t> addr\<close>
 
 instantiation segidx :: zero begin
 definition [simp]: "zero_segidx = Null"
 instance ..
 end
 
-instantiation memaddr :: (zero) zero begin
+instantiation addr :: (zero) zero begin
 definition "zero_memaddr = (0 |: 0)"
 instance ..
 end
@@ -93,17 +93,17 @@ lemma segidx_infinite_TY:
   using inj_def by fastforce
 
 
-abbreviation shift_addr :: "'idx memaddr \<Rightarrow> ('idx::monoid_add) \<Rightarrow> 'idx memaddr" (infixl "||+" 60)
+abbreviation shift_addr :: "'idx addr \<Rightarrow> ('idx::monoid_add) \<Rightarrow> 'idx addr" (infixl "||+" 60)
   where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) addr"
 
 lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" by (cases a) (simp add: add.assoc)
 
 lemma memaddr_segment_shift[simp]:
-  \<open>memaddr.segment (a ||+ i) = memaddr.segment a\<close>
+  \<open>addr.segment (a ||+ i) = addr.segment a\<close>
   by (cases a, simp)
 
 lemma memaddr_index_shift[simp]:
-  \<open>memaddr.index (a ||+ i) = memaddr.index a + i\<close>
+  \<open>addr.index (a ||+ i) = addr.index a + i\<close>
   by (cases a, simp)
 
 lemma mem_shift_add_cancel[simp]:
