@@ -1,5 +1,5 @@
 theory PhSm_Addr
-  imports PhiSem_Void
+  imports PhiSem_Agg_Void
 begin
 
 declare [[typedef_overloaded]]
@@ -16,27 +16,83 @@ lemma layout[simp]:
 
 setup \<open>Sign.parent_path\<close>
 
-datatype 'index gen_addr = addr (blk: block) (index: 'index)
-  \<comment> \<open>generic address\<close>
+(*TODO: rename: block, offset*)
+datatype 'index addr = Addr (blk: block) (index: 'index)
 declare [[typedef_overloaded = false]]
 
-declare gen_addr.sel[iff, \<phi>safe_simp]
+declare addr.sel[iff, \<phi>safe_simp]
 hide_const (open) blk index
 
-lemma split_memaddr_all: \<open>All P \<longleftrightarrow> (\<forall>blk ofs. P (addr blk ofs))\<close> by (metis gen_addr.exhaust) 
-lemma split_memaddr_ex : \<open>Ex P  \<longleftrightarrow> (\<exists>blk ofs. P (addr blk ofs))\<close> by (metis gen_addr.exhaust) 
+lemma split_memaddr_all: \<open>All P \<longleftrightarrow> (\<forall>blk ofs. P (Addr blk ofs))\<close> by (metis addr.exhaust) 
+lemma split_memaddr_ex : \<open>Ex P  \<longleftrightarrow> (\<exists>blk ofs. P (Addr blk ofs))\<close> by (metis addr.exhaust) 
 lemma split_memaddr_meta_all:
-  \<open>(\<And>x. PROP P x) \<equiv> (\<And>blk ofs. PROP P (addr blk ofs))\<close>
+  \<open>(\<And>x. PROP P x) \<equiv> (\<And>blk ofs. PROP P (Addr blk ofs))\<close>
 proof
   fix blk ofs
   assume \<open>\<And>x. PROP P x\<close>
-  then show \<open>PROP P (addr blk ofs)\<close> .
+  then show \<open>PROP P (Addr blk ofs)\<close> .
 next
   fix x
-  assume \<open>\<And>blk ofs. PROP P (addr blk ofs)\<close>
-  note this[of \<open>gen_addr.blk x\<close> \<open>gen_addr.index x\<close>, simplified]
+  assume \<open>\<And>blk ofs. PROP P (Addr blk ofs)\<close>
+  note this[of \<open>addr.blk x\<close> \<open>addr.index x\<close>, simplified]
   then show \<open>PROP P x\<close> .
 qed
+
+type_synonym address = "aggregate_path addr" \<comment> \<open>Logical address\<close>
+
+subsubsection \<open>Algebraic Properties\<close>
+
+instantiation block :: zero begin
+definition [simp]: "zero_block = Null"
+instance ..
+end
+
+instantiation addr :: (zero) zero begin
+definition "zero_addr = (Addr 0 0)"
+instance ..
+end
+
+lemma memaddr_blk_zero[simp]:
+  \<open>addr.blk 0 = Null\<close>
+  unfolding zero_addr_def by simp
+
+lemma memaddr_idx_zero[simp]:
+  \<open>addr.index 0 = 0\<close>
+  unfolding zero_addr_def by simp
+
+paragraph \<open>Freshness\<close>
+
+lemma infinite_UNIV_int [simp]: "infinite (UNIV::int set)"
+proof
+  assume "finite (UNIV::int set)"
+  moreover have "inj (\<lambda>i::int. 2 * i)"
+    by (rule injI) simp
+  ultimately have "surj (\<lambda>i::int. 2 * i)"
+    by (rule finite_UNIV_inj_surj)
+  thm finite_UNIV_inj_surj
+  then obtain i :: int where "1 = 2 * i" by (rule surjE)
+  then show False by presburger
+qed
+
+lemma block_infinite[simp]:
+  \<open>infinite (UNIV :: block set)\<close>
+  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>(UNIV :: block set)\<close>
+        and f = \<open>\<lambda>n. Block n undefined\<close>]
+  by (meson infinite_UNIV_char_0 injI block.inject top_greatest)
+
+lemma block_infinite_TY:
+  \<open>infinite {a. block.layout a = TY}\<close>
+  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>{a. block.layout a = TY}\<close>
+        and f = \<open>\<lambda>n. Block n TY\<close>]
+  using inj_def by fastforce
+
+subsection \<open>Address Type\<close>
+
+definition address_type :: \<open>address \<Rightarrow> TY\<close>
+  where \<open>address_type addr \<equiv> index_type (addr.index addr) (block.layout (addr.blk addr))\<close>
+
+adhoc_overloading Type_Of_syntax address_type
+
 
 
 end
