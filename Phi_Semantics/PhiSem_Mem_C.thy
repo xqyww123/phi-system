@@ -15,10 +15,10 @@ type_synonym mem_fic = \<open>aggregate_path \<Rightarrow> VAL discrete share op
 fiction_space aggregate_mem =
   aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>
                     \<F>_pointwise (\<lambda>blk.
-                        \<F>_functional (Byte_Rep_of_Val_ins (memblk.layout blk)) (Byte_Rep_of_Val_ins_dom (memblk.layout blk)) \<Zcomp>
+                        \<F>_functional (Byte.Rep_of_Val_ins (memblk.layout blk)) (Byte.Rep_of_Val_ins_dom (memblk.layout blk)) \<Zcomp>
                         \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
      (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout Null)
-  by (standard, auto simp add: Byte_Rep_of_Val_ins_def BI_eq_iff)
+  by (standard, auto simp add: Byte.Rep_of_Val_ins_def BI_eq_iff)
 
 term FIC.aggregate_mem
 thm FIC.aggregate_mem_fic_ax
@@ -200,14 +200,14 @@ proc op_load_mem:
   apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item]
 
   holds_fact [simp]: \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = TY\<close>
-         and \<open>Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
+         and \<open>Byte.Val_of_Rep (memblk.layout (memaddr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
 
   semantic_assert \<open>let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
                     in index_value (memaddr.index addr)
-                        (Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1))) \<in> Well_Type TY\<close>
+                        (Byte.Val_of_Rep (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1))) \<in> Well_Type TY\<close>
   semantic_return \<open>(let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
                      in index_value (memaddr.index addr)
-                            (Val_of_Rep_Byte (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1)))) \<Turnstile> (x \<Ztypecolon> T)\<close>
+                            (Byte.Val_of_Rep (memblk.layout (memaddr.blk addr)) (discrete.dest (\<phi>arg.dest \<v>1)))) \<Turnstile> (x \<Ztypecolon> T)\<close>
 \<medium_right_bracket> .
 
 declare [[\<phi>trace_reasoning = 1]]

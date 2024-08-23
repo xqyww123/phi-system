@@ -321,5 +321,205 @@ lemma fiction_Map_of_Val_ins_perm_projection_half:
 
 end
 
+lemma split_discrete_ExBI: \<open>(\<exists>*x. P x) = (\<exists>*x. P (discrete x))\<close>
+  unfolding BI_eq_iff by (simp add: split_discrete_ex)
+
+lemma defined_set_in_image[simp]:
+  \<open> { f u' |u'. u' \<in> h ` S} = { f (h u) |u. u \<in> S } \<close>
+  unfolding set_eq_iff
+  by auto
+
+
+locale MoV =
+  fixes   Rep_of_Val :: \<open>VAL \<Rightarrow> 'Rep\<close>
+  assumes Rep_of_Val_inj: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> Rep_of_Val Va = Rep_of_Val Vb \<Longrightarrow> Va = Vb\<close>
+begin
+
+definition Val_of_Rep :: \<open>TY \<Rightarrow> 'Rep \<Rightarrow> VAL\<close>
+  where \<open>Val_of_Rep TY rep = (@v. Rep_of_Val v = rep \<and> v \<in> Well_Type TY)\<close>
+
+definition map_Rep :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> VAL) \<Rightarrow> 'Rep \<Rightarrow> 'Rep\<close>
+  where \<open>map_Rep TY f x = Rep_of_Val (f (Val_of_Rep TY x))\<close>
+
+lemma Val_of_Rep_inj[simp]:
+  \<open> v \<in> Well_Type TY
+\<Longrightarrow> Val_of_Rep TY (Rep_of_Val v) = v\<close>
+  unfolding Val_of_Rep_def
+  using Rep_of_Val_inj by blast
+
+abbreviation Rep_of_TY
+  where \<open>Rep_of_TY TY \<equiv> Rep_of_Val ` Well_Type TY\<close>
+
+lemma split_Byte_Rep_ExSet:
+  \<open> (\<And>x. P x \<Longrightarrow> x \<in> Rep_of_TY TY)
+\<Longrightarrow> (A x \<s>\<u>\<b>\<j> x. P x) =
+    (A (Rep_of_Val v) \<s>\<u>\<b>\<j> v. P (Rep_of_Val v)) \<close>
+  unfolding BI_eq_iff split_discrete_ex
+  by (auto simp: image_iff Bex_def)
+
+definition Rep_of_Val_ins
+  where \<open>Rep_of_Val_ins TY = map_option (map_discrete (Val_of_Rep TY))\<close>
+
+definition Rep_of_Val_ins_dom
+  where \<open>Rep_of_Val_ins_dom TY = {x. pred_option (\<lambda>x'. discrete.dest x' \<in> Rep_of_TY TY) x}\<close>
+
+lemma Rep_of_Val_ins_eval[simp]:
+  \<open>Rep_of_Val_ins TY (Some (discrete u)) = (Some (discrete (Val_of_Rep TY u)))\<close>
+  \<open>Rep_of_Val_ins TY None = None\<close>
+  unfolding Rep_of_Val_ins_def by simp+
+
+lemma Rep_of_Val_ins_dom_eval[simp]:
+  \<open> None \<in> Rep_of_Val_ins_dom TY \<close>
+  \<open>Some (discrete x) \<in> Rep_of_Val_ins_dom TY \<longleftrightarrow> x \<in> Rep_of_TY TY\<close>
+  unfolding Rep_of_Val_ins_dom_def by simp+
+
+lemma \<F>_functional_condition_Rep_of_Val_ins_dom:
+  \<open>\<F>_functional_condition (Rep_of_Val_ins_dom TY)\<close>
+  unfolding \<F>_functional_condition_def Rep_of_Val_ins_dom_def
+  by(clarsimp; case_tac r; case_tac x; case_tac y; simp)
+
+sublocale Rep_of_Val_ins: cancl_sep_orthogonal_monoid \<open>Rep_of_Val_ins TY\<close> \<open>Rep_of_Val_ins_dom TY\<close>
+  unfolding Rep_of_Val_ins_def Rep_of_Val_ins_dom_def
+  by (rule cancl_sep_orthogonal_monoid__map_option_discrete,
+      simp add: inj_on_def split_discrete_all split_option_all, force,
+      simp)
+
+
+context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
+
+lemma fiction_Map_of_Val_perm_partial_refinement_BYTE:
+  \<open> valid_index TY idx
+\<Longrightarrow> v \<in> Well_Type (index_type idx TY)
+\<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
+\<Longrightarrow> \<forall>x\<in>Well_Type TY. index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x
+\<Longrightarrow> (\<exists>\<^sup>su. {(Some u, (Some o map_discrete (map_Rep TY (index_mod_value cidx (\<lambda>_. v)))) u)}
+          \<s>\<u>\<b>\<j>\<s> u \<in> discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
+            \<and> u \<in> discrete ` Rep_of_Val ` Well_Type TY) * Id_on UNIV
+    \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
+            to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
+    \<w>.\<r>.\<t> (\<F>_functional (Rep_of_Val_ins TY) (Rep_of_Val_ins_dom TY) \<Zcomp>
+          \<F>_functional((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY))
+    \<i>\<n> {to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}\<close>
+  subgoal premises prems proof -
+
+    have simp1: \<open>(\<exists>\<^sup>su. A u \<s>\<u>\<b>\<j>\<s>
+        u \<in> discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} \<and> u \<in> discrete ` Rep_of_TY TY)
+      = (\<exists>\<^sup>sa. A (discrete (Rep_of_Val a)) \<s>\<u>\<b>\<j>\<s> index_value idx a = u_idx \<and> a \<in> Well_Type TY)\<close>
+      for A
+      unfolding Rep_of_Val_ins_def
+      by (auto simp: image_iff)
+
+    have simp2: \<open>(\<exists>\<^sup>su. A u \<s>\<u>\<b>\<j>\<s>
+        u \<in> discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} \<and> u \<in> discrete ` Well_Type TY)
+      = (\<exists>\<^sup>sa. A (discrete a) \<s>\<u>\<b>\<j>\<s> index_value idx a = u_idx \<and> a \<in> Well_Type TY)\<close>
+      for A
+      unfolding Rep_of_Val_ins_def BI_eq_iff
+      by (auto simp: image_iff)
+
+    have t1[simp]:
+      \<open>Domain (\<exists>\<^sup>sa. {(x a, y a)} \<s>\<u>\<b>\<j>\<s> P a) = (\<exists>\<^sup>sa. {(x a)} \<s>\<u>\<b>\<j>\<s> P a)\<close> for x y P
+      unfolding set_eq_iff
+      by auto
+
+    have simp3[simp]:
+         \<open>a \<in> Well_Type TY
+       \<Longrightarrow> Val_of_Rep TY (map_Rep TY (index_mod_value cidx (\<lambda>_. v)) (Rep_of_Val a))
+         = index_mod_value idx (\<lambda>_. v) a \<close> for a
+      by (simp add: index_mod_value_welltyp map_Rep_def prems(1) prems(2) prems(4))
+      
+
+    note [cong] = SubjectionSet_cong
+
+    note [simp] = ExSet_image SubjectionSet_image
+
+    note t11 = refinement_frame[where R = UNIV, OF Rep_of_Val_ins.\<F>_functional_refinement_complex,
+        where R4=\<open>\<exists>\<^sup>sa. {(Some (discrete (Rep_of_Val a)), Some (discrete (map_Rep TY (index_mod_value cidx (\<lambda>_. v)) (Rep_of_Val a))))}
+                  \<s>\<u>\<b>\<j>\<s> index_value idx a = u_idx \<and> a \<in> Well_Type TY\<close>
+          and TY4 = TY,
+       simplified]
+
+    show ?thesis
+    apply (insert prems,
+          rule sep_refinement_stepwise)
+    prefer 2
+    apply (rule fiction_Map_of_Val_perm_partial_refinement)
+    apply (assumption)
+    apply (assumption)
+    apply (assumption)
+    apply (assumption)
+    apply (simp add: simp1 simp2)
+    apply (rule t11)
+    apply (clarsimp simp: )
+          using index_mod_value_welltyp map_Rep_def apply force
+    apply (clarsimp simp: frame_preserving_relation_def)
+    apply (simp add: Sep_Closed_def \<F>_functional_comp)
+    apply (rule subset_trans[OF fiction_Map_of_Val_ins_perm_projection])
+    apply blast
+    apply blast
+    by (clarsimp simp: set_mult_expn)
+qed .
+
+lemma fiction_Map_of_Val_ins_perm_projection_BYTE:
+  \<open> valid_index TY idx
+\<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
+\<Longrightarrow> refinement_projection
+      (\<F>_functional (Rep_of_Val_ins TY) (Rep_of_Val_ins_dom TY) \<Zcomp>
+       \<F>_functional ((\<circ>) to_share o Map_of_Val_ins) (Map_of_Val_ins_dom TY))
+      { to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx) }
+    \<subseteq> Some ` discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY } * UNIV \<close>
+subgoal premises prems proof -
+  have t1:
+       \<open>Rep_of_Val_ins TY ` Some ` discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}
+      = Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>
+    for TY
+    by (auto simp add: image_iff)
+  show ?thesis
+  apply (rule refinement_projections_stepwise_UNIV_paired)
+  prefer 2
+  apply (rule fiction_Map_of_Val_ins_perm_projection, insert prems)
+  apply (assumption)
+  apply (assumption)
+  apply (rule Rep_of_Val_ins.\<F>_functional_projection[
+          where S=\<open>Some ` discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>
+            and TY=TY,
+          simplified t1])
+  apply (clarsimp) .
+qed .
+
+lemma fiction_Map_of_Val_ins_perm_projection_half_BYTE:
+  \<open> valid_index TY idx
+\<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
+\<Longrightarrow> 0 < n
+\<Longrightarrow> refinement_projection
+     (\<F>_functional (Rep_of_Val_ins TY) (Rep_of_Val_ins_dom TY) \<Zcomp>
+      \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY))
+      { n \<odivr> (to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) }
+   \<subseteq> Some ` discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY} * UNIV\<close>
+  subgoal premises prems proof -
+  
+  have t1:
+      \<open>(Rep_of_Val_ins TY ` Some ` discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY})
+     = (Some ` discrete ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY})\<close>
+      unfolding Rep_of_Val_ins_def set_eq_iff
+      by (auto simp: image_iff)
+
+ show ?thesis
+  by (insert prems,
+      rule refinement_projections_stepwise_UNIV_paired,
+      rule Rep_of_Val_ins.\<F>_functional_projection
+        [where S=\<open>Some ` discrete ` Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>,
+          where TY=TY,
+          simplified t1],
+      ((auto simp: Rep_of_Val_ins_dom_def)[1]),
+      rule fiction_Map_of_Val_ins_perm_projection_half,
+      assumption,
+      assumption,
+      assumption)
+qed .
+
+end
+
+end
+
 
 end
