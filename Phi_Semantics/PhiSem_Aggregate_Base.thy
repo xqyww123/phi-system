@@ -15,7 +15,7 @@ debt_axiomatization
     and idx_step_value :: \<open>aggregate_index \<Rightarrow> VAL \<Rightarrow> VAL\<close>
     and idx_step_mod_value :: \<open>aggregate_index \<Rightarrow> (VAL \<Rightarrow> VAL) \<Rightarrow> VAL \<Rightarrow> VAL\<close>
     and type_measure :: \<open>TY \<Rightarrow> nat\<close>
-where idx_step_value_welltyp:
+where welltyp_subject_idx_step:
            \<open>valid_idx_step T i
         \<Longrightarrow> v \<in> Well_Type T
         \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
@@ -89,7 +89,7 @@ lemma valid_index_cons: \<open>valid_index T [i] \<longleftrightarrow> valid_idx
 lemma index_value_welltyp:
   \<open>valid_index T idx \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> index_value idx v \<in> Well_Type (index_type idx T)\<close>
   apply (induct idx arbitrary: v T; simp)
-  using idx_step_value_welltyp
+  using welltyp_subject_idx_step
   by blast
 
 lemma index_type_measure:
@@ -107,7 +107,7 @@ lemma index_mod_value_welltyp:
 \<Longrightarrow> f (index_value idx v) \<in> Well_Type (index_type idx T)
 \<Longrightarrow> index_mod_value idx f v \<in> Well_Type T\<close>
   apply (induct idx arbitrary: T v; simp)
-  using idx_step_mod_value_welltyp idx_step_value_welltyp by blast
+  using idx_step_mod_value_welltyp welltyp_subject_idx_step by blast
 
 lemma index_type_idem:
   \<open>valid_index T idx \<Longrightarrow> index_type idx T = T \<longleftrightarrow> idx = []\<close>
@@ -120,7 +120,7 @@ lemma index_mod_value_unchanged:
 \<Longrightarrow> u \<in> Well_Type T
 \<Longrightarrow> f (index_value idx u) = (index_value idx u)
 \<Longrightarrow> index_mod_value idx f u = u \<close>
-  by (induct idx arbitrary: T u f; clarsimp simp add: idx_step_mod_value_unchanged idx_step_value_welltyp)
+  by (induct idx arbitrary: T u f; clarsimp simp add: idx_step_mod_value_unchanged welltyp_subject_idx_step)
   
 
 subsection \<open>Semantics of aggregate path\<close>

@@ -174,7 +174,7 @@ fixes \<M> :: \<open>('TY,'VAL) \<M>\<close>
     and   idx_step_type_arr  : \<open>i \<le> N \<Longrightarrow> \<M>.idx_step_type \<M> i (\<tau>Array N T) = T\<close>
     and   valid_idx_step_tup : \<open>\<M>.valid_idx_step \<M> (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
     and   valid_idx_step_arr : \<open>\<M>.valid_idx_step \<M> (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
-    and   idx_step_value_welltyp: \<open>\<M>.valid_idx_step \<M> T i \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> \<M>.idx_step_value \<M> i v \<in> Well_Type (\<M>.idx_step_type \<M> i T)\<close>
+    and   welltyp_subject_idx_step: \<open>\<M>.valid_idx_step \<M> T i \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> \<M>.idx_step_value \<M> i v \<in> Well_Type (\<M>.idx_step_type \<M> i T)\<close>
     and   idx_step_value_tup : \<open>\<M>.idx_step_value \<M> i (sem_mk_tup vs)   = vs!i\<close>
     and   idx_step_value_arr : \<open>\<M>.idx_step_value \<M> i (V_array.mk (T,vs)) = vs!i\<close>
     and   idx_step_mod_value : \<open>\<M>.valid_idx_step \<M> T i

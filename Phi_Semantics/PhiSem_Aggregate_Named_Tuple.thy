@@ -52,17 +52,6 @@ lemma semty_ntup_uniq'2:
         presburger,
         smt (verit, best) option.sel option_rel_Some2) .
 
-lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal (semty_ntup fmempty) \<close>
-  unfolding Is_Type_Literal_def ..
-
-lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal v
-\<Longrightarrow> Is_Type_Literal (semty_ntup fm)
-\<Longrightarrow> Is_Type_Literal (semty_ntup (fmupd k v fm)) \<close>
-  unfolding Is_Type_Literal_def ..
-
-
 subsubsection \<open>Syntax\<close>
 
 abbreviation "semty_ntup_empty" ("\<s>\<t>\<r>\<u>\<c>\<t> {}")
@@ -116,7 +105,17 @@ print_translation \<open>[
 ]\<close>
 
 subsubsection \<open>Basic Properties\<close>
-  
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal (semty_ntup fmempty) \<close>
+  unfolding Is_Type_Literal_def ..
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal v
+\<Longrightarrow> Is_Type_Literal (semty_ntup fm)
+\<Longrightarrow> Is_Type_Literal (semty_ntup (fmupd k v fm)) \<close>
+  unfolding Is_Type_Literal_def ..
+
 lemma sem_mk_ntup_inj[simp]:
   \<open> sem_mk_ntup f1 = sem_mk_ntup f2 \<longleftrightarrow> f1 = f2 \<close>
   by (smt (verit) sem_mk_dest_ntup)

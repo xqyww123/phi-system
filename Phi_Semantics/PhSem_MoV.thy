@@ -17,7 +17,7 @@ debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> aggregate_path \<righ
 
 lemma Map_of_Val_pull:
   \<open>valid_index T idx \<Longrightarrow> V \<in> Well_Type T \<Longrightarrow> pull_map idx (Map_of_Val V) = Map_of_Val (index_value idx V)\<close>
-  by (induct idx arbitrary: V T; simp; metis Map_of_Val_pull_step idx_step_value_welltyp pull_map_cons)
+  by (induct idx arbitrary: V T; simp; metis Map_of_Val_pull_step welltyp_subject_idx_step pull_map_cons)
 
 lemma Dom_of_TY:
   \<open>valid_index T idx \<Longrightarrow> Dom_of_TY (index_type idx T) \<subseteq> Dom_of_TY T\<close>
@@ -35,7 +35,7 @@ lemma Map_of_Val_mod:
 \<Longrightarrow> Map_of_Val (index_mod_value idx (\<lambda>_. u) v) = Map_of_Val v ++ push_map idx (Map_of_Val u)\<close>
   apply (induct idx arbitrary: u v T; simp)
   using Map_of_Val_dom map_add_subsumed_dom apply (metis order_refl)
-  by clarify (simp add: idx_step_value_welltyp Map_of_Val_mod_step  push_map_distrib_map_add
+  by clarify (simp add: welltyp_subject_idx_step Map_of_Val_mod_step  push_map_distrib_map_add
                         Map_of_Val_pull_step[symmetric] push_pull_map map_add_subsumed2
                         push_map_push_map)
 
