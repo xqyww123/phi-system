@@ -123,23 +123,33 @@ fun is_Var X =
     of (Var _, args) => forall (fn Bound _ => true | _ => false) args
      | _ => false
 
+val add_TP  = @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close> , symmetric]}
+val add_TP' = @{thm' Action_Tag_def[where A=\<open>\<T>\<P>'\<close>, symmetric]}
+val nondet_ToA_lift  = @{thm' nondet_ToA_lift }
+val nondet_ToA_lift' = @{thm' nondet_ToA_lift'}
+
 fun conv_ToR_add_tag ctm =
-  let datatype kind = ProdTy | Ty | Var | Oth
+  let datatype kind = SProd | ProdTy | Ty | Var | Oth
       fun cond_Ty (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _) = ProdTy
+        | cond_Ty (Const(\<^const_name>\<open>NC\<phi>P\<close>, _) $ _ $ _ $ _) = SProd
         | cond_Ty _ = Ty
       fun dest_ty (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ U) = cond_Ty U
         | dest_ty X = if is_Var X then Var else Oth
       val (X,Y,_) = dest_transformation (Thm.term_of ctm)
    in case (dest_ty X, dest_ty Y)
-   of (ProdTy, ProdTy) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>'\<close>, symmetric]} ctm
-    | (Var, ProdTy) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>'\<close>, symmetric]} ctm
-    | (ProdTy, Var) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>'\<close>, symmetric]} ctm
-    | (Oth, _) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
-    | (_, Oth) => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
-    | (Ty, Ty)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
-    | (Ty, Var)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
-    | (Var, Ty)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
-    | (Var, Var)  => Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<T>\<P>\<close>, symmetric]} ctm
+   of (ProdTy, SProd) => Conv.rewr_conv add_TP' ctm
+    | (ProdTy, ProdTy) => (error "XQY temporary error!";
+        (Conv.rewr_conv nondet_ToA_lift' then_conv Conv.rewr_conv add_TP') ctm)
+    | (Var, SProd) => Conv.rewr_conv add_TP' ctm
+    | (Var, ProdTy) => (error "XQY temporary error!";
+        (Conv.rewr_conv nondet_ToA_lift' then_conv Conv.rewr_conv add_TP') ctm)
+    | (ProdTy, Var) => Conv.rewr_conv add_TP' ctm
+    | (Oth, _) => Conv.rewr_conv add_TP ctm
+    | (_, Oth) => Conv.rewr_conv add_TP ctm
+    | (Ty, Ty)  => Conv.rewr_conv add_TP ctm
+    | (Ty, Var)  => Conv.rewr_conv add_TP ctm
+    | (Var, Ty)  => Conv.rewr_conv add_TP ctm
+    | (Var, Var)  => Conv.rewr_conv add_TP ctm
     | _ => err ctm
   end
 

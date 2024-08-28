@@ -345,6 +345,12 @@ lemma Top_expn[iff, \<phi>expns]:
   unfolding Satisfaction_def
   by (simp add: top_BI_def)
 
+lemma split_paired_ExBI:
+  \<open> (\<exists>*x. P x) = (\<exists>*a b. P (a,b)) \<close>
+  unfolding BI_eq_iff
+  by simp
+
+
 subsubsection \<open>Lift\<close>
 
 definition BI_lift :: \<open>'a set \<Rightarrow> 'a BI\<close>
@@ -362,7 +368,7 @@ subsection \<open>Reasoning Configuration\<close>
                                      in extract_pure_all and > extract_pure
   \<open>Rules extracting BI properties down to Satisfaction\<close>
 
-section \<open>Connectives\<close>
+section \<open>Basic Constructs\<close>
 
 subsection \<open>\<phi>-Type\<close>
 
@@ -872,6 +878,11 @@ lemma \<phi>Type_eqI_BI:
   unfolding \<phi>Type_def fun_eq_iff
   by blast
 
+lemma \<phi>Type_eq_iff:
+  \<open> T = U \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U)) \<close>
+  unfolding \<phi>Type_def fun_eq_iff
+  by blast
+
 lemma transformation_refl[simp]:
   "A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A" unfolding Transformation_def by fast
 
@@ -931,7 +942,7 @@ lemma BI_sub_iff:
 lemma transformation_protector:
   \<open>A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<equiv> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P\<close> .
 
-subsubsection \<open>Forms of Reasoning\<close>
+subsubsection \<open>Sequents for Reasoning\<close>
 
 consts \<T>\<P>  :: action \<comment> \<open>Transformation Problem, x : T --> f(x) : U, or between assertions, can be abductive
                          but never bi-abductive.\<close>
@@ -990,6 +1001,8 @@ In this way, designers of \<phi>-types only require to provide two forms of rule
 \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close> and \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R\<close>
 \<close>
 
+paragraph \<open>Clause \<open>\<r>\<e>\<m>\<a>\<i>\<n>\<s>\<close>\<close>
+
 definition REMAINS :: \<open> 'a::sep_magma BI \<Rightarrow> bool \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<close> ("_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _" [14,10,14] 13)
   where \<open>(X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<equiv> if C then X * R else X\<close>
   \<comment> \<open>The \<open>C\<close> should be a variable sending to the later reasoning which decides if the transformation
@@ -1027,10 +1040,96 @@ lemma REMAINS_simp[simp, \<phi>safe_simp]:
   unfolding REMAINS_def
   by simp_all
 
+lemma REMAINS_expn[\<phi>expns]:
+  \<open> p \<Turnstile> (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<longleftrightarrow> (if C then p \<Turnstile> A * R else p \<Turnstile> A) \<close>
+  unfolding REMAINS_def
+  by simp
+
 text \<open>In reasoning, the \<open>P,R,W\<close> in any goal are always OUT-arguments.\<close>
+
+paragraph \<open>Clause \<open>\<S>\<close>\<close>
+
+definition Set_Typ :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
+  where \<open>\<S> T s \<equiv> (\<exists>*x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> x \<in> s)\<close>
+
+no_notation (ASCII) disj  (infixr "|" 30)
+
+abbreviation Sing_Constr :: \<open>'a \<Rightarrow> bool \<Rightarrow> 'a set\<close> ("{ _ | _ }")
+  where \<open>{ x | P } \<equiv> {a. a = x \<and> P}\<close>
+
+
+setup \<open>Sign.mandatory_path "Set_Typ"\<close>
+
+lemma unfold:
+  \<open>(s \<Ztypecolon> \<S> T) = (\<exists>*x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> x \<in> s)\<close>
+  unfolding Set_Typ_def \<phi>Type_def ..
+
+lemma expansion[simp]:
+  \<open>p \<Turnstile> (s \<Ztypecolon> \<S> T) \<longleftrightarrow> (\<exists>x\<in>s. p \<Turnstile> (x \<Ztypecolon> T))\<close>
+  unfolding Set_Typ.unfold
+  by simp blast
+
+lemma sing[simp]:
+  \<open> ({b} \<Ztypecolon> \<S> S) = (b \<Ztypecolon> S) \<close>
+  unfolding BI_eq_iff
+  by simp
+
+lemma sing_cond[simp]:
+  \<open> ({b | P} \<Ztypecolon> \<S> S) = (b \<Ztypecolon> S \<s>\<u>\<b>\<j> P) \<close>
+  unfolding BI_eq_iff
+  by simp blast
+
+lemma \<S>_prod:
+  \<open> (s\<^sub>1 \<Ztypecolon> \<S> A) * (s\<^sub>2 \<Ztypecolon> \<S> B) = (s\<^sub>1 \<times> s\<^sub>2 \<Ztypecolon> \<S> (A \<^emph> B)) \<close>
+  unfolding BI_eq_iff
+  by auto
+
+lemma trans:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>*x. B x \<s>\<u>\<b>\<j> P x)
+\<Longrightarrow> (\<And>x. P x \<Longrightarrow> B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C x)
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>*x. C x \<s>\<u>\<b>\<j> P x) \<close>
+  by (smt (verit, del_insts) ExBI_expn Subjection_expn Transformation_def)
+
+setup \<open>Sign.parent_path\<close>
+
+
+paragraph \<open>Clause \<open>\<^emph>{ }\<close>\<close>
+
+definition NC\<phi>P :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,('x \<times> 'y) set) \<phi> \<close> ("_ \<^emph>{_}/ _" [71,20,70] 70)
+    \<comment> \<open>Nondeterministic Conditional Product of \<phi>Type\<close>
+  where \<open>(T \<^emph>{C} U) \<equiv> \<S> (T \<^emph>[C] U)\<close>
+
+setup \<open>Sign.mandatory_path "NC\<phi>P"\<close>
+
+lemma expansion[simp]:
+  \<open> p \<Turnstile> (s \<Ztypecolon> T \<^emph>{C} U) \<longleftrightarrow> p \<Turnstile> (s \<Ztypecolon> \<S>(T \<^emph>[C] U)) \<close>
+  unfolding NC\<phi>P_def ..
+
+lemma red[simp]:
+  \<open> T \<^emph>{True} U  \<equiv> \<S> (T \<^emph> U) \<close>
+  \<open> x \<Ztypecolon> T \<^emph>{False} U \<equiv> fst ` x \<Ztypecolon> \<S> T \<close>
+  by (simp_all add: atomize_eq BI_eq_iff \<phi>Type_eq_iff)
+
+setup \<open>Sign.parent_path\<close>
+
+
+
+paragraph \<open>Patterns of Transformation Rules\<close>
 
 ML \<open>val phi_allow_source_object_to_be_not_variable =
           Config.declare_bool ("phi_allow_source_object_to_be_not_variable", \<^here>) (K false)\<close>
+
+lemma nondet_ToA_lift:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+ \<equiv> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {y | P} \<Ztypecolon> \<S> U \<close>
+  unfolding Transformation_def atomize_eq
+  by auto
+
+lemma nondet_ToA_lift':
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P
+ \<equiv> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {y | P} \<Ztypecolon> U \<^emph>{C} R \<close>
+  unfolding Transformation_def atomize_eq
+  by auto
 
 ML_file \<open>library/syntax/transformation.ML\<close>
 
@@ -1078,15 +1177,17 @@ declare [[
                       (?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<^emph>[?Cr] ?R \<w>\<i>\<t>\<h> ?P @tag \<T>\<P>))\<close> (71)
   
 
-  and \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
-   \<Rightarrow> \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>  _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> (40)
-  and \<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
-   \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> (40)
-  and \<open>(?var_x, _) \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
-   \<Rightarrow> \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?U \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> (50)
-  and \<open>?var_x \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
-   \<Rightarrow> \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?U \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> (50)
+  and \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y @tag \<T>\<P>'\<close>
+   \<Rightarrow> \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>  _ @tag \<T>\<P>'\<close> (40)
+  and \<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>{_} _ @tag \<T>\<P>'\<close>
+   \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>{_} _ @tag \<T>\<P>'\<close> (40)
+  and \<open>(?var_x, _) \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>{_} _ @tag \<T>\<P>'\<close>
+   \<Rightarrow> \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?U \<^emph>{_} _ @tag \<T>\<P>'\<close> (50)
+  and \<open>?var_x \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?U \<^emph>{_} _ @tag \<T>\<P>'\<close>
+   \<Rightarrow> \<open>_ \<Ztypecolon> ?T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?U \<^emph>{_} _ @tag \<T>\<P>'\<close> (50)
 ]]
+
+
 (*
 declare [[
   \<phi>reason_default_pattern_ML \<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> _ @tag ?A\<close>
@@ -1114,10 +1215,7 @@ declare [[
 ]]
 *)
 
-lemma REMAINS_expn[\<phi>expns]:
-  \<open> p \<Turnstile> (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<longleftrightarrow> (if C then p \<Turnstile> A * R else p \<Turnstile> A) \<close>
-  unfolding REMAINS_def
-  by simp
+
 
 subsubsection \<open>Allocation of Priorities\<close>
 
@@ -1178,9 +1276,12 @@ subsubsection \<open>Allocation of Priorities\<close>
                     \<open>default group for user rules\<close>
 
 declare [[
-  \<phi>default_reasoner_group \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close> : %ToA_user (10)
-                      and \<open>?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close> : %ToA_elim_intro (100)
-                      and \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close> : %ToA_elim_intro (100)
+  \<phi>default_reasoner_group \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> : %ToA_user (10)
+                      and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> : %ToA_user (10)
+                      and \<open>?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>  : %ToA_elim_intro (100)
+                      and \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>  : %ToA_elim_intro (100)
+                      and \<open>?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> : %ToA_elim_intro (100)
+                      and \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> : %ToA_elim_intro (100)
 ]]
 
 paragraph \<open>Bottom Groups\<close>
@@ -1372,6 +1473,8 @@ lemma [\<phi>reason 1000]:
   unfolding Generate_Implication_Reasoning_def Transformation_def Satisfiable_def \<r>EIF_def
   by blast
 
+
+section \<open>Connectives\<close>
 
 subsection \<open>Top\<close>
 
@@ -2900,7 +3003,7 @@ TODO: make such annotation syntax.
 
 lemma [\<phi>reason %ToA_top+1]:
   \<open> May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((), unspec) \<Ztypecolon> \<top>\<^sub>\<phi> \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {((), unspec)} \<Ztypecolon> \<top>\<^sub>\<phi> \<^emph>{False} \<top>\<^sub>\<phi> \<close>
   unfolding Transformation_def
   by clarsimp
 
@@ -2961,7 +3064,7 @@ paragraph \<open>Separation Extraction\<close>
 
 lemma [\<phi>reason %ToA_top]:
   \<open> May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> \<bottom>\<^sub>\<phi> \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (any, unspec) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+\<Longrightarrow> x \<Ztypecolon> \<bottom>\<^sub>\<phi> \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(any, unspec)} \<Ztypecolon> U \<^emph>{False} \<top>\<^sub>\<phi> \<close>
   unfolding Transformation_def
   by clarsimp
 
@@ -3056,8 +3159,8 @@ text \<open>see \<section>\<open>Technical \<phi>-Types required in Reasoning Tr
 lemma Structural_Extract_\<phi>Prod_a [\<phi>reason %ToA_cut except \<open>(_ :: ?'a::sep_semigroup BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
       \<comment> \<open>merely the rule for non-semigroup algebras.
           for others, see \<section>\<open>Technical \<phi>-Types required in Reasoning Transformation/Separation Extraction of \<open>\<phi>\<close>Prod\<close>\<close>
-  \<open> fst a \<Ztypecolon> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>
-\<Longrightarrow> a \<Ztypecolon> A \<^emph>[True] X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((b, snd a), unspec) \<Ztypecolon> (Y \<^emph> X) \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+  \<open> fst a \<Ztypecolon> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> bb \<Ztypecolon> \<S> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> a \<Ztypecolon> A \<^emph>[True] X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {((b, snd a), unspec) |b. b \<in> bb \<and> P} \<Ztypecolon> (Y \<^emph> X) \<^emph>{False} \<top>\<^sub>\<phi> @tag \<T>\<P>' \<close>
   unfolding Action_Tag_def Transformation_def
   by clarsimp blast
 
@@ -3085,6 +3188,7 @@ lemma [\<phi>reason %extract_pure]:
 
 paragraph \<open>Frame Rules\<close>
 
+(*TODO! 0828*)
 lemma transformation_right_frame_conditioned_ty:
   \<open>(\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = fst x \<Longrightarrow> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(a) \<Ztypecolon> U \<w>\<i>\<t>\<h> P(a))
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[C] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P(fst x) \<close>
@@ -3213,6 +3317,11 @@ lemma \<phi>Some_eq_term_strip:
 
 subsubsection \<open>Transformation Rules\<close>
 
+lemma \<S>_\<phi>Some_swap:
+  \<open> \<S> (\<black_circle> T) \<equiv> \<black_circle> (\<S> T) \<close>
+  unfolding atomize_eq BI_eq_iff \<phi>Type_eq_iff
+  by simp blast
+
 lemma \<phi>Some_transformation_strip:
   \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P \<equiv> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
   unfolding atomize_eq Transformation_def
@@ -3224,9 +3333,9 @@ lemma [\<phi>reason %ToA_cut]:
   unfolding \<phi>Some_transformation_strip .
 
 lemma [\<phi>reason %ToA_cut]:
-  \<open> x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph>[Cw] \<black_circle> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph>[Cr] \<black_circle> R \<w>\<i>\<t>\<h> P\<close>
-  by (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip)
+  \<open> x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>{Cr} R
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph>[Cw] \<black_circle> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph>{Cr} \<black_circle> R\<close>
+  by (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<S>_\<phi>Some_swap)
 
 subsubsection \<open>Properties\<close> \<comment> \<open>Some properties have to be given early before derivers ready\<close>
 
@@ -3255,6 +3364,8 @@ lemma \<phi>Some_\<phi>None_freeobj:
   for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
   unfolding atomize_eq BI_eq_iff
   by ((rule \<phi>Type_eqI)?; clarsimp)+
+
+
 
 subsubsection \<open>Conditioned Product at Left\<close>
 
@@ -3388,10 +3499,14 @@ lemma [\<phi>reason %ToA_cut]:
   by (simp add: \<phi>Cond_Unital_trans_rewr)
 
 lemma [\<phi>reason %ToA_cut]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[C] T \<^emph>[Cw] \<half_blkcirc>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[C] U \<^emph>[Cr] \<half_blkcirc>[C] R \<w>\<i>\<t>\<h> C \<longrightarrow> P\<close>
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>{Cr} R)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<not> C \<longrightarrow> y \<noteq> {})
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[C] T \<^emph>[Cw] \<half_blkcirc>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[C] U \<^emph>{Cr} \<half_blkcirc>[C] R\<close>
   unfolding Premise_def
-  by (cases Cw; cases Cr; clarsimp simp add: \<phi>Cond_Unital_Prod \<phi>Cond_Unital_trans_rewr)
+  by (cases Cw; cases Cr; cases C;
+      clarsimp simp: \<phi>Cond_Unital_Prod \<phi>Cond_Unital_trans_rewr \<phi>Some_\<phi>Prod
+                     \<S>_\<phi>Some_swap \<phi>Some_transformation_strip;
+      auto simp: Transformation_def)
 
 paragraph \<open>Normalization\<close>
 
@@ -3418,12 +3533,12 @@ lemma [\<phi>reason %ToA_red]:
   by simp
 
 lemma [\<phi>reason %ToA_red]:
-  \<open> x \<Ztypecolon> \<black_circle> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  \<open> x \<Ztypecolon> \<black_circle> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[True] T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<close>
   by simp
 
 lemma [\<phi>reason %ToA_success]:
-  \<open> x \<Ztypecolon> (\<half_blkcirc>[False] T \<^emph>[True] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, unspec) \<Ztypecolon> (U \<^emph>[False] \<top>\<^sub>\<phi>) \<close>
+  \<open> x \<Ztypecolon> (\<half_blkcirc>[False] T \<^emph>[True] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(snd x, unspec)} \<Ztypecolon> (U \<^emph>{False} \<top>\<^sub>\<phi>) \<close>
   unfolding Action_Tag_def
   by (cases x; simp add: \<phi>Prod_expn')
 
@@ -3450,13 +3565,13 @@ lemma [\<phi>reason %ToA_red]:
   by simp
  
 lemma [\<phi>reason %ToA_red]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[True] U \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph>{C} R
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[True] U \<^emph>{C} R \<close>
   by simp
 
 lemma [\<phi>reason %ToA_success]:
   \<open> May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (unspec, fst x) \<Ztypecolon> \<half_blkcirc>[False] U \<^emph>[True] T \<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(unspec, fst x)} \<Ztypecolon> \<half_blkcirc>[False] U \<^emph>{True} T \<close>
   by (clarsimp simp add: \<phi>Some_\<phi>None_freeobj)
 
 
@@ -3856,20 +3971,40 @@ subsubsection \<open>Separation Extraction of \<open>\<phi>\<close>Prod\<close>
 text \<open>Using the technical auxiliaries, we can give the separation extraction for \<open>\<phi>Prod\<close>\<close>
 
 lemma Structural_Extract_\<phi>Prod_right_i[\<phi>reason %ToA_cut]:
-  \<open> (fst a, wy) \<Ztypecolon> A \<^emph>[Cy] WY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Y \<^emph>[Cb] B \<w>\<i>\<t>\<h> P1 @tag \<T>\<P>'
-\<Longrightarrow> if Cb then ((snd b, wx) \<Ztypecolon> B \<^emph>[Cx] WX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> c \<Ztypecolon> X \<^emph>[Cr] R \<w>\<i>\<t>\<h> P2 @tag \<T>\<P>')
+  \<open> (fst a, wy) \<Ztypecolon> A \<^emph>[Cy] WY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> bb \<Ztypecolon> Y \<^emph>{Cb} B @tag \<T>\<P>'
+\<Longrightarrow> if Cb then (\<forall>b\<in>bb. (snd b, wx) \<Ztypecolon> B \<^emph>[Cx] WX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> cc b \<Ztypecolon> X \<^emph>{Cr} R @tag \<T>\<P>')
           else (Cx, Cr, WX, c, P2) = (True, False, X, (wx, unspec), True)
 \<Longrightarrow> (snd a \<Ztypecolon> \<half_blkcirc>[Cw] W) = ((wy, wx) \<Ztypecolon> \<half_blkcirc>[Cy] WY \<^emph> \<half_blkcirc>[Cx] WX) @tag \<A>merge
-\<Longrightarrow> a \<Ztypecolon> A \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((fst b, fst c), snd c) \<Ztypecolon> (Y \<^emph> X) \<^emph>[Cr] R \<w>\<i>\<t>\<h> (P1 \<and> P2) @tag \<T>\<P>'\<close>
+\<Longrightarrow> a \<Ztypecolon> A \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {((fst b, fst c), snd c) |b c. b \<in> bb \<and> c \<in> cc b} \<Ztypecolon> (Y \<^emph> X) \<^emph>{Cr} R @tag \<T>\<P>'\<close>
   for A :: \<open>('a::sep_semigroup,'b) \<phi>\<close>
   unfolding Action_Tag_def Try_def
   apply (cases Cb; simp add: cond_prod_transformation_rewr;
          clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
-  subgoal premises prems
-    by (insert prems(1)[THEN transformation_right_frame, where R=\<open>wx \<Ztypecolon> \<half_blkcirc>[Cx] WX\<close>]
-               prems(2)[THEN transformation_left_frame, where R=\<open>fst b \<Ztypecolon> \<black_circle> Y\<close>],
-        simp add: mult.assoc transformation_trans)
-  by (metis (no_types, lifting) mult.assoc transformation_right_frame)
+  subgoal premises prems proof -
+    have t1: \<open>(fst a \<Ztypecolon> \<black_circle> A) * (wy \<Ztypecolon> \<half_blkcirc>[Cy] WY) * (wx \<Ztypecolon> \<half_blkcirc>[Cx] WX) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (bb \<Ztypecolon> \<black_circle> \<S> (Y \<^emph> B)) * (wx \<Ztypecolon> \<half_blkcirc>[Cx] WX)\<close>
+      using prems(1) transformation_right_frame by blast
+    have t2: \<open>(fst a \<Ztypecolon> \<black_circle> A) * (wy \<Ztypecolon> \<half_blkcirc>[Cy] WY) * (wx \<Ztypecolon> \<half_blkcirc>[Cx] WX) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (b \<Ztypecolon> \<black_circle> (Y \<^emph> B)) * (wx \<Ztypecolon> \<half_blkcirc>[Cx] WX) \<s>\<u>\<b>\<j> b. b \<in> bb\<close>
+      by (insert t1, simp add: Set_Typ.unfold \<S>_\<phi>Some_swap[symmetric])
+    have t3: \<open>(fst a \<Ztypecolon> \<black_circle> A) * (wy \<Ztypecolon> \<half_blkcirc>[Cy] WY) * (wx \<Ztypecolon> \<half_blkcirc>[Cx] WX) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst b \<Ztypecolon> \<black_circle> Y) * (cc b \<Ztypecolon> \<black_circle> (X \<^emph>{Cr} R)) \<s>\<u>\<b>\<j> b. b \<in> bb\<close>
+      by (rule Set_Typ.trans, rule t2,
+          smt (verit) \<phi>Prod_expn' \<phi>Some_\<phi>Prod mult.assoc prems(2) prod.collapse transformation_left_frame)
+    have t4: \<open>((fst b \<Ztypecolon> \<black_circle> Y) * (cc b \<Ztypecolon> \<black_circle> (X \<^emph>{Cr} R)) \<s>\<u>\<b>\<j> b. b \<in> bb)
+        = ({uu. \<exists>a b aa ba. uu = ((a, aa), ba) \<and> (a, b) \<in> bb \<and> (aa, ba) \<in> cc (a, b)} \<Ztypecolon> \<black_circle> ((Y \<^emph> X) \<^emph>{Cr} R))\<close>
+      unfolding BI_eq_iff
+      apply auto
+      apply blast
+      using sep_disj_multD1 sep_disj_multI1 sep_mult_assoc' apply blast
+      using sep_disj_multD1 sep_disj_multI1 sep_mult_assoc' apply blast
+      apply (metis fst_conv sep_disj_option(1) times_option(1))
+      apply (metis (no_types, lifting) prod.collapse prod.inject sep_disj_multD2 sep_disj_multI2 sep_disj_option(1) sep_mult_assoc times_option(1))
+      apply (cases Cr; simp)
+      apply (metis fst_eqD sep_disj_multD2 sep_disj_multI2 sep_disj_option(1) sep_mult_assoc snd_eqD times_option(1))
+      by (metis fst_eqD sep_disj_option(1) times_option(1))
+
+    show ?thesis
+      by (metis (no_types, lifting) mult.assoc t3 t4)
+  qed
+  apply (simp add: Set_Typ.unfold \<S>_\<phi>Some_swap[symmetric] image_iff) sorry
 
 (* TODO!
 lemma [\<phi>reason 1201]:
@@ -3886,21 +4021,22 @@ lemma [\<phi>reason 1201]:
   using Structural_Extract_\<phi>Prod_right_i .*)
 
 lemma Structural_Extract_\<phi>Prod_left_i [\<phi>reason %ToA_cut]:
-  \<open> (fst (fst x), fst wr) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> Y \<^emph>[Cra] Rt \<w>\<i>\<t>\<h> P1 @tag \<T>\<P>'
-\<Longrightarrow> if Cw then ((snd (fst x), snd x) \<Ztypecolon> U \<^emph>[Cw2] W2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> wr \<Ztypecolon> W \<^emph>[Crb] Ru \<w>\<i>\<t>\<h> P2 @tag \<T>\<P>')
-          else (Cw2, Crb, Ru, wr, P2) = (False, True, U, (unspec, snd (fst x)), True)
-\<Longrightarrow> ((snd yr, snd wr) \<Ztypecolon> \<half_blkcirc>[Cra] Rt \<^emph> \<half_blkcirc>[Crb] Ru) = (r \<Ztypecolon> \<half_blkcirc>[Cr] R) @tag \<A>merge
-\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[Cw2] W2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst yr, r) \<Ztypecolon> Y \<^emph>[Cr] R \<w>\<i>\<t>\<h> P1 \<and> P2 @tag \<T>\<P>' \<close>
+  \<open> (\<And>wr. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> wr \<in> wrS \<Longrightarrow> (fst (fst x), fst wr) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yrS wr \<Ztypecolon> Y \<^emph>{Cra} Rt)
+\<Longrightarrow> if Cw then ((snd (fst x), snd x) \<Ztypecolon> U \<^emph>[Cw2] W2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> wrS \<Ztypecolon> W \<^emph>{Crb} Ru)
+          else (Cw2, Crb, Ru, wrS, P2) = (False, True, U, {(unspec, snd (fst x))}, True)
+\<Longrightarrow> (\<And>syr swr. ((syr, swr) \<Ztypecolon> \<half_blkcirc>[Cra] Rt \<^emph> \<half_blkcirc>[Crb] Ru) = (r syr swr \<Ztypecolon> \<half_blkcirc>[Cr] R) @tag \<A>merge)
+\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[Cw2] W2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(fst yr, r (snd yr) (snd wr)) |wr yr. wr \<in> wrS \<and> yr \<in> yrS wr} \<Ztypecolon> Y \<^emph>{Cr} R @tag \<T>\<P>' \<close>
   for T :: \<open>('a::sep_semigroup,'b) \<phi>\<close>
   unfolding Action_Tag_def Try_def
   apply (cases Cw; simp add: cond_prod_transformation_rewr;
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
+         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some) sorry (*
   subgoal premises prems
     by (insert prems(1)[THEN transformation_right_frame, where R=\<open>snd wr \<Ztypecolon> \<half_blkcirc>[Crb] Ru\<close>]
                prems(2)[THEN transformation_left_frame, where R=\<open>fst (fst x) \<Ztypecolon> \<black_circle> T\<close>],
         simp add: mult.assoc[symmetric] prems(3)[symmetric],
         smt (z3) Transformation_def)
   by (metis (no_types, lifting) mult.assoc transformation_right_frame)
+*)
 
 
 (* TODO
@@ -4938,7 +5074,7 @@ lemma Object_Equiv_Mul_Quant[\<phi>reason %object_equiv_cut]:
           metis)
   qed
 
-section \<open>Reasoning\<close>
+section \<open>Reasoning about Transformations\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax0.ML\<close>
 
@@ -5647,21 +5783,22 @@ subsubsection \<open>From \<open>\<T>\<P>'\<close> to \<open>\<T>\<P>\<close>\<c
 lemma [\<phi>reason default %ToA_falling_latice+3]:
   \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @tag \<T>\<P>
 \<Longrightarrow> May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, unspec) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(y, unspec) | P} \<Ztypecolon> U \<^emph>{False} \<top>\<^sub>\<phi> @tag \<T>\<P>' \<close>
   unfolding \<r>Guard_def Action_Tag_def
   by simp
 
 lemma [\<phi>reason default %ToA_falling_latice+2]:
-  \<open> x \<Ztypecolon> X \<^emph>[True] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> prod.swap x \<Ztypecolon> Y \<^emph>[True] X @tag \<T>\<P>' \<close>
+  \<open> x \<Ztypecolon> X \<^emph>[True] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {prod.swap x} \<Ztypecolon> Y \<^emph>{True} X @tag \<T>\<P>' \<close>
   for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
-  unfolding Action_Tag_def Cond_\<phi>Prod_def \<phi>Prod_def \<phi>Type_def Transformation_def
-  by (cases x; simp add: mult.commute)
+  unfolding Action_Tag_def Cond_\<phi>Prod_def \<phi>Prod_def Transformation_def
+  apply (cases x; simp add: mult.commute; simp add: \<phi>Type_def)
+  using sep_disj_commuteI sep_mult_commute by blast
 
 lemma [\<phi>reason default %ToA_falling_latice+1]:
   \<open> \<g>\<u>\<a>\<r>\<d> Push_Envir_Var prove_obligations_in_time True \<and>\<^sub>\<r>
          Identity_Element\<^sub>I (fst x \<Ztypecolon> T) P \<and>\<^sub>\<r>
          Pop_Envir_Var prove_obligations_in_time
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, unspec) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P @tag \<T>\<P>'\<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(snd x, unspec) | P} \<Ztypecolon> U \<^emph>{False} \<top>\<^sub>\<phi> @tag \<T>\<P>'\<close>
   for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
   \<comment> \<open>the transformation from T to U fails, and the algebra is non-commutative, nor any methods of a higher priority,
       so \<open>T\<close> or \<open>U\<close> can only be identity if the reasoning can continue\<close>
@@ -5670,7 +5807,7 @@ lemma [\<phi>reason default %ToA_falling_latice+1]:
 
 lemma [\<phi>reason default %ToA_falling_latice]:
   \<open> Identity_Element\<^sub>E (one \<Ztypecolon> U)
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (one, fst x) \<Ztypecolon> U \<^emph>[True] T @tag \<T>\<P>'\<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(one, fst x)} \<Ztypecolon> U \<^emph>{True} T @tag \<T>\<P>'\<close>
   for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
   unfolding \<r>Guard_def Ant_Seq_def Identity_Element\<^sub>E_def Transformation_def Premise_def Action_Tag_def
   by (clarsimp; force)
@@ -6019,39 +6156,39 @@ lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<t>\<r>\<a>\<n>\<s>\
   by simp
 
 lemma transformation_refl_assigning_W [\<phi>reason %ToA_assigning_var]:
-  \<open>x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi>\<close>
+  \<open>x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(x, unspec)} \<Ztypecolon> (T \<^emph> U) \<^emph>{False} \<top>\<^sub>\<phi>\<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
-  \<open> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph> _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+  \<open> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {(x, unspec)} \<Ztypecolon> (T \<^emph> U) \<^emph>{False} \<top>\<^sub>\<phi> \<close>
   unfolding Premise_def \<r>Guard_def Action_Tag_def
   by simp
 
 lemma transformation_refl_assigning_R [\<phi>reason %ToA_assigning_var]:
   \<open> May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst x \<Ztypecolon> T \<^emph>[True] U \<close>
+\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {fst x} \<Ztypecolon> T \<^emph>{True} U \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+lemma [\<phi>reason default %ToA_unified_refl for \<open>_ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> \<comment> \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> T = T' \<Longrightarrow>\<close>
     May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst x \<Ztypecolon> T \<^emph>[True] U \<close>
+\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {fst x} \<Ztypecolon> T \<^emph>{True} U \<close>
   unfolding Premise_def \<r>Guard_def Action_Tag_def
   by simp
 
 lemma transformation_refl_with_WR [\<phi>reason %ToA_assigning_var+1]:
         \<comment> \<open>Higher than \<open>transformation_refl\<close> to set the condition variable Cr\<close>
   \<open> May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> T \<^emph>{False} \<top>\<^sub>\<phi> \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason default %ToA_unified_refl+1 for \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+lemma [\<phi>reason default %ToA_unified_refl+1 for \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> \<comment> \<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> T = T' \<Longrightarrow>\<close>
     May_Assign (snd x) unspec
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi>\<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> T \<^emph>{False} \<top>\<^sub>\<phi>\<close>
   unfolding Action_Tag_def
   by simp
 
@@ -6060,6 +6197,7 @@ lemma ToA_refls_by_T_eq:
   \<open> T = T'
 \<Longrightarrow> May_Assign (snd x\<^sub>2) unspec
 \<Longrightarrow> x\<^sub>2 \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x\<^sub>2 \<Ztypecolon> T' \<^emph>[False] \<top>\<^sub>\<phi> \<close>
+
   \<open> T = T'
 \<Longrightarrow> (x \<Ztypecolon> T) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<close>
   \<open> T = T'
@@ -6148,10 +6286,10 @@ fun apply_refl_by_unifying (refl, exintro', Gx, Gy) ctxt thm =
 text \<open>Here, we assign the semantics of schematic variables occurring in targets and sources to be,
   a wild-card for any single separation item.\<close>
 
-declare transformation_refl_assigning_W [\<phi>reason %ToA_assigning_var for \<open>_ \<Ztypecolon> ?var \<^emph>[True] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]
-        transformation_refl_assigning_R [\<phi>reason %ToA_assigning_var for \<open>_ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?var \<^emph>[True] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]
-        transformation_refl_with_WR [\<phi>reason %ToA_assigning_var+1 for \<open>_ \<Ztypecolon> ?var \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
-                                                                      \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?var \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]
+declare transformation_refl_assigning_W [\<phi>reason %ToA_assigning_var for \<open>_ \<Ztypecolon> ?var \<^emph>[True] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph> _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]
+        transformation_refl_assigning_R [\<phi>reason %ToA_assigning_var for \<open>_ \<Ztypecolon> (_ \<^emph> _) \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?var \<^emph>{True} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]
+        transformation_refl_with_WR [\<phi>reason %ToA_assigning_var+1 for \<open>_ \<Ztypecolon> ?var \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
+                                                                      \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?var \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]
 (*
 lemma [\<phi>reason 4100 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?var_U \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
                         \<open>_ \<Ztypecolon> ?var_T \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
@@ -7030,15 +7168,15 @@ lemma NToA_cond_source_B[\<phi>reason %ToA_red]:
 
 lemma NToA_cond_source_A_ty[\<phi>reason %ToA_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] C
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> (if C then T else U) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X
+\<Longrightarrow> x \<Ztypecolon> (if C then T else U) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
   by (simp add: Transformation_def distrib_left)
 
 lemma NToA_cond_source_B_ty[\<phi>reason %ToA_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] \<not> C
-\<Longrightarrow> x \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> (if C then T else U) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> x \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X
+\<Longrightarrow> x \<Ztypecolon> (if C then T else U) \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
   by (simp add: Transformation_def distrib_left)
 
@@ -7075,15 +7213,15 @@ lemma NToA_cond_target_B'[\<phi>reason %ToA_red]:
 
 lemma NToA_cond_target_A_ty[\<phi>reason %ToA_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] C
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (if C then T else U) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<^emph>{C\<^sub>R} R
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (if C then T else U) \<^emph>{C\<^sub>R} R \<close>
   unfolding Premise_def \<r>Guard_def
   by simp
 
 lemma NToA_cond_target_B_ty[\<phi>reason %ToA_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] \<not> C
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (if C then T else U) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>{C\<^sub>R} R
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (if C then T else U) \<^emph>{C\<^sub>R} R \<close>
   unfolding Premise_def \<r>Guard_def
   by simp
 
@@ -7101,9 +7239,9 @@ lemma [\<phi>reason %ToA_red for \<open>If (id ?var) _ _ \<t>\<r>\<a>\<n>\<s>\<f
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> If (id ?var) _ _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
-  \<open> x \<Ztypecolon> If C T U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
-\<Longrightarrow> x \<Ztypecolon> If (id C) T U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>'\<close>
+lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> If (id ?var) _ _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @tag \<T>\<P>'\<close>]:
+  \<open> x \<Ztypecolon> If C T U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag \<T>\<P>'
+\<Longrightarrow> x \<Ztypecolon> If (id C) T U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag \<T>\<P>'\<close>
   unfolding Action_Tag_def
   by simp
 
@@ -7112,9 +7250,9 @@ lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If (id C) A B \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
   by simp
 
-lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (If (id ?var) _ _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (If C A B) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (If (id C) A B) \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (If (id ?var) _ _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (If C A B) \<^emph>{C\<^sub>R} R @tag \<T>\<P>'
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (If (id C) A B) \<^emph>{C\<^sub>R} R @tag \<T>\<P>' \<close>
   by simp
 
 subparagraph \<open>Source\<close>
@@ -7145,7 +7283,7 @@ declare [[\<phi>reason ! %ToA_branches NToA_cond_target_B' NToA_cond_target_A'
 hide_fact NToA_cond_target_A' NToA_cond_target_B'
 
 declare [[\<phi>reason ! %ToA_branches NToA_cond_target_A_ty NToA_cond_target_B_ty
-            for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (if ?var then _ else _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> ]]
+            for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (if ?var then _ else _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close> ]]
 
 hide_fact NToA_cond_target_A_ty NToA_cond_target_B_ty
 
@@ -7183,12 +7321,13 @@ lemma ToA_cond_branch_src_R:
 *)
 
 lemma [\<phi>reason %ToA_splitting_If]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> (x \<Ztypecolon> T\<^sub>a \<^emph>[C\<^sub>W\<^sub>a] W\<^sub>a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> U \<^emph>[Ca] Ra \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> (x \<Ztypecolon> T\<^sub>b \<^emph>[C\<^sub>W\<^sub>b] W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>[Cb] Rb \<w>\<i>\<t>\<h> Q  @tag \<T>\<P>'))
-\<Longrightarrow> x \<Ztypecolon> (If C T\<^sub>a T\<^sub>b) \<^emph>[If C C\<^sub>W\<^sub>a C\<^sub>W\<^sub>b] (If C W\<^sub>a W\<^sub>b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If C y\<^sub>a y\<^sub>b \<Ztypecolon> U \<^emph>[If C Ca Cb] If C Ra Rb \<w>\<i>\<t>\<h> If C P Q @tag \<T>\<P>' \<close>
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> (x \<Ztypecolon> T\<^sub>a \<^emph>[C\<^sub>W\<^sub>a] W\<^sub>a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> U \<^emph>{Ca} Ra @tag \<T>\<P>'))
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> (x \<Ztypecolon> T\<^sub>b \<^emph>[C\<^sub>W\<^sub>b] W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>{Cb} Rb  @tag \<T>\<P>'))
+\<Longrightarrow> x \<Ztypecolon> (If C T\<^sub>a T\<^sub>b) \<^emph>[If C C\<^sub>W\<^sub>a C\<^sub>W\<^sub>b] (If C W\<^sub>a W\<^sub>b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If C y\<^sub>a y\<^sub>b \<Ztypecolon> U \<^emph>{If C Ca Cb} If C Ra Rb @tag \<T>\<P>' \<close>
   unfolding Try_def
   by (cases C; simp add: Premise_def Orelse_shortcut_def)
-  
+
+
 ML \<open>
 fun reasoner_ToA_conditioned_subgoals_If ctxt'N (vars,Y,RHS) =
   let val (C, Ya, Yb) = Phi_Help.dest_triop_c \<^const_name>\<open>If\<close> RHS
@@ -7257,10 +7396,10 @@ lemma [\<phi>reason %ToA_splitting_If+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then A else B) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] If C Ra Rb \<w>\<i>\<t>\<h> If C P Q \<close>
   by (cases C; simp add: Premise_def Orelse_shortcut_def)*)
 
-lemma [\<phi>reason %ToA_splitting_If except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (if ?var then _ else _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> T \<^emph>[Ca] Ra \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>[Cb] Rb \<w>\<i>\<t>\<h> Q @tag \<T>\<P>'))
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then y\<^sub>a else y\<^sub>b) \<Ztypecolon> (if C then T else U) \<^emph>[If C Ca Cb] If C Ra Rb \<w>\<i>\<t>\<h> If C P Q @tag \<T>\<P>' \<close>
+lemma [\<phi>reason %ToA_splitting_If except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (if ?var then _ else _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> T \<^emph>{Ca} Ra @tag \<T>\<P>'))
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>{Cb} Rb @tag \<T>\<P>'))
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then y\<^sub>a else y\<^sub>b) \<Ztypecolon> (if C then T else U) \<^emph>{If C Ca Cb} If C Ra Rb @tag \<T>\<P>' \<close>
   unfolding Try_def Premise_def Orelse_shortcut_def
   by (cases C; simp)
 
@@ -7481,8 +7620,8 @@ subparagraph \<open>Source\<close>
 
 lemma ToA_CR\<phi>_src_A [\<phi>reason %ToA_red]:
   " \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] CC
-\<Longrightarrow> x \<Ztypecolon> (T1 \<^emph> T2) \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
-\<Longrightarrow> x \<Ztypecolon> (T1 \<^emph>[CC] T2) \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P  @tag \<T>\<P>'"
+\<Longrightarrow> x \<Ztypecolon> (T1 \<^emph> T2) \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag \<T>\<P>'
+\<Longrightarrow> x \<Ztypecolon> (T1 \<^emph>[CC] T2) \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag \<T>\<P>'"
   unfolding Transformation_def split_paired_All \<r>Guard_def Premise_def
   by simp
 
@@ -7498,18 +7637,18 @@ subparagraph \<open>Target\<close>
 
 lemma ToA_CR\<phi>_target_A [\<phi>reason %ToA_red]:
   " \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] CC
-\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (U \<^emph> R) \<^emph>[C] R2 \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
-\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (U \<^emph>[CC] R) \<^emph>[C] R2 \<w>\<i>\<t>\<h> P @tag \<T>\<P>'"
+\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (U \<^emph> R) \<^emph>{C} R2 @tag \<T>\<P>'
+\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (U \<^emph>[CC] R) \<^emph>{C} R2 @tag \<T>\<P>'"
   unfolding \<r>Guard_def Premise_def
   by simp
 
-lemma ToA_CR\<phi>_target_B [\<phi>reason %ToA_red+10 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[False] _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
-                                                 \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[?var] _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+lemma ToA_CR\<phi>_target_B [\<phi>reason %ToA_red+10 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[False] _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
+                                                 \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[?var] _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   " \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] \<not> CC
-\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C] R2 \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
-\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((fst y, unspec), snd y) \<Ztypecolon> (U \<^emph>[CC] R) \<^emph>[C] R2 \<w>\<i>\<t>\<h> P @tag \<T>\<P>'"
+\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yy \<Ztypecolon> U \<^emph>{C} R2 @tag \<T>\<P>'
+\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {((fst y, unspec), snd y) |y. y\<in>yy} \<Ztypecolon> (U \<^emph>[CC] R) \<^emph>{C} R2 @tag \<T>\<P>'"
   unfolding \<r>Guard_def Premise_def
-  by (cases C; simp add: \<phi>Prod_expn' \<phi>Prod_expn'')
+  by (cases C; simp add: \<phi>Prod_expn' \<phi>Prod_expn'' Set_Typ.unfold split_paired_ExBI image_iff Bex_def)
 
 paragraph \<open>Case Split\<close>
 
@@ -7517,10 +7656,10 @@ subparagraph \<open>Source\<close>
 
 lemma [\<phi>reason %ToA_splitting]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>a,P,Cwa,W\<^sub>a,C\<^sub>R\<^sub>a,R\<^sub>a,y\<^sub>a) = (unspec, False, True, \<bottom>\<^sub>\<phi>, True, \<bottom>\<^sub>\<phi>, unspec) \<or>\<^sub>c\<^sub>u\<^sub>t
-                      (x \<Ztypecolon> (T1 \<^emph> T2) \<^emph>[Cwa] W\<^sub>a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> U \<^emph>[C\<^sub>R\<^sub>a] R\<^sub>a \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
+                      (x \<Ztypecolon> (T1 \<^emph> T2) \<^emph>[Cwa] W\<^sub>a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> U \<^emph>{C\<^sub>R\<^sub>a} R\<^sub>a @tag \<T>\<P>'))
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>b,Q,Cwb,W\<^sub>b,C\<^sub>R\<^sub>b,R\<^sub>b,y\<^sub>b) = (unspec, False, True, \<bottom>\<^sub>\<phi>, True, \<bottom>\<^sub>\<phi>, unspec) \<or>\<^sub>c\<^sub>u\<^sub>t
-                      (apfst fst x \<Ztypecolon> T1 \<^emph>[Cwb] W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>[C\<^sub>R\<^sub>b] R\<^sub>b \<w>\<i>\<t>\<h> Q @tag \<T>\<P>'))
-\<Longrightarrow> x \<Ztypecolon> (T1 \<^emph>[C] T2) \<^emph>[If C Cwa Cwb] If C W\<^sub>a W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If C y\<^sub>a y\<^sub>b \<Ztypecolon> U \<^emph>[If C C\<^sub>R\<^sub>a C\<^sub>R\<^sub>b] If C R\<^sub>a R\<^sub>b \<w>\<i>\<t>\<h> If C P Q @tag \<T>\<P>' \<close>
+                      (apfst fst x \<Ztypecolon> T1 \<^emph>[Cwb] W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>{C\<^sub>R\<^sub>b} R\<^sub>b @tag \<T>\<P>'))
+\<Longrightarrow> x \<Ztypecolon> (T1 \<^emph>[C] T2) \<^emph>[If C Cwa Cwb] If C W\<^sub>a W\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If C y\<^sub>a y\<^sub>b \<Ztypecolon> U \<^emph>{If C C\<^sub>R\<^sub>a C\<^sub>R\<^sub>b} If C R\<^sub>a R\<^sub>b @tag \<T>\<P>' \<close>
   unfolding Orelse_shortcut_def Premise_def Ant_Seq_def
   by (cases C; simp ; cases Cwb; simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
 
@@ -7567,14 +7706,15 @@ lemma ToA_cond_septy_src_R':
 
 subparagraph \<open>Target\<close>
 
-lemma [\<phi>reason %ToA_splitting except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[?var] _) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+lemma [\<phi>reason %ToA_splitting except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[?var] _) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>a,CCa,RRa,P) = (unspec,True,\<bottom>\<^sub>\<phi>,False) \<or>\<^sub>c\<^sub>u\<^sub>t
-                     (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a \<Ztypecolon> (U \<^emph> R) \<^emph>[CCa] RRa \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
+                     (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a\<^sub>s \<Ztypecolon> (U \<^emph> R) \<^emph>{CCa} RRa @tag \<T>\<P>'))
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False \<and>\<^sub>\<r> (y\<^sub>b,CCb,RRb,Q) = (unspec,True,\<bottom>\<^sub>\<phi>,False) \<or>\<^sub>c\<^sub>u\<^sub>t
-                     (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b \<Ztypecolon> U \<^emph>[CCb] RRb \<w>\<i>\<t>\<h> Q @tag \<T>\<P>'))
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then y\<^sub>a else apfst (\<lambda>x. (x, unspec)) y\<^sub>b) \<Ztypecolon> (U \<^emph>[C] R) \<^emph>[If C CCa CCb] If C RRa RRb \<w>\<i>\<t>\<h> If C P Q @tag \<T>\<P>'\<close>
+                     (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b\<^sub>s \<Ztypecolon> U \<^emph>{CCb} RRb @tag \<T>\<P>'))
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then y\<^sub>a\<^sub>s else apfst (\<lambda>x. (x, unspec)) ` y\<^sub>b\<^sub>s) \<Ztypecolon> (U \<^emph>[C] R) \<^emph>{If C CCa CCb} If C RRa RRb @tag \<T>\<P>'\<close>
   unfolding Ant_Seq_def Orelse_shortcut_def Premise_def
-  by (cases C; simp; cases CCb; simp add: \<phi>Prod_expn' \<phi>Prod_expn'')
+  by (cases C; simp; cases CCb; cases CCa;
+      simp add: \<phi>Prod_expn' \<phi>Prod_expn'' Set_Typ.unfold image_iff Bex_def split_paired_ExBI)
 
 (*
 lemma [\<phi>reason %ToA_splitting+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<^emph>[_] _) \<^emph>[True] _ \<w>\<i>\<t>\<h> _\<close>
@@ -7619,8 +7759,8 @@ lemma ToA_case_sum_target_L'[\<phi>reason %ToA_red]:
   by simp
 
 lemma ToA_case_sum_target_L_ty[\<phi>reason %ToA_red]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<^sub>a c \<^emph>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> case_sum U\<^sub>a U\<^sub>b (Inl c) \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<^sub>a c \<^emph>{C} R
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> case_sum U\<^sub>a U\<^sub>b (Inl c) \<^emph>{C} R \<close>
   by simp
 
 lemma ToA_case_sum_target_R[\<phi>reason %ToA_red]:
@@ -7634,8 +7774,8 @@ lemma ToA_case_sum_target_R'[\<phi>reason %ToA_red]:
   by simp
 
 lemma ToA_case_sum_target_R_ty[\<phi>reason %ToA_red]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<^sub>b c \<^emph>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> case_sum U\<^sub>a U\<^sub>b (Inr c) \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<^sub>b c \<^emph>{C} R
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> case_sum U\<^sub>a U\<^sub>b (Inr c) \<^emph>{C} R \<close>
   by simp
 
 lemma [\<phi>reason %ToA_red]: \<comment> \<open>This form can occur when reducing \<open>y \<Ztypecolon> (T +\<^sub>\<phi> U) \<^emph>[C] R\<close>\<close>
@@ -7688,11 +7828,11 @@ lemma [\<phi>reason %ToA_splitting except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum A B x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[case_sum Ca Cb x] case_sum Ra Rb x \<w>\<i>\<t>\<h> case_sum P Q x @tag \<T>\<P> \<close>
   by (cases x; simp add: Simplify_def)
 
-lemma [\<phi>reason %ToA_splitting+1 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (case_sum _ _ ?var) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
-  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> (xx, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a a \<Ztypecolon> U\<^sub>a a \<^emph>[C\<^sub>a a] R\<^sub>a a \<w>\<i>\<t>\<h> P\<^sub>a a @tag \<T>\<P>')
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> (xx, w\<^sub>b b) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>b b] W\<^sub>b b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b b \<Ztypecolon> U\<^sub>b b \<^emph>[C\<^sub>b b] R\<^sub>b b \<w>\<i>\<t>\<h> P\<^sub>b b @tag \<T>\<P>')
+lemma [\<phi>reason %ToA_splitting+1 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (case_sum _ _ ?var) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> (xx, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a a \<Ztypecolon> U\<^sub>a a \<^emph>{C\<^sub>a a} R\<^sub>a a @tag \<T>\<P>')
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> (xx, w\<^sub>b b) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>b b] W\<^sub>b b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b b \<Ztypecolon> U\<^sub>b b \<^emph>{C\<^sub>b b} R\<^sub>b b @tag \<T>\<P>')
 \<Longrightarrow> (xx, case_sum w\<^sub>a w\<^sub>b x) \<Ztypecolon> T \<^emph>[case_sum C\<^sub>W\<^sub>a C\<^sub>W\<^sub>b x] (case_sum W\<^sub>a W\<^sub>b x)
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum y\<^sub>a y\<^sub>b x \<Ztypecolon> (case_sum U\<^sub>a U\<^sub>b x) \<^emph>[case_sum C\<^sub>a C\<^sub>b x] (case_sum R\<^sub>a R\<^sub>b x) \<w>\<i>\<t>\<h> case_sum P\<^sub>a P\<^sub>b x @tag \<T>\<P>' \<close>
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum y\<^sub>a y\<^sub>b x \<Ztypecolon> (case_sum U\<^sub>a U\<^sub>b x) \<^emph>{case_sum C\<^sub>a C\<^sub>b x} (case_sum R\<^sub>a R\<^sub>b x) @tag \<T>\<P>' \<close>
   unfolding Premise_def Try_def
   by (cases x; simp)
 
@@ -7714,13 +7854,13 @@ lemma (*TODO-0918*)
   sorry
 *)
 
-lemma [\<phi>reason %ToA_splitting except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (case_sum _ _ ?var) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
-  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> (fst xx, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a a \<Ztypecolon> U\<^sub>a a \<^emph>[C\<^sub>a a] R\<^sub>a a \<w>\<i>\<t>\<h> P\<^sub>a a @tag \<T>\<P>')
-\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> (fst xx, w\<^sub>b b) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>b b] W\<^sub>b b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b b \<Ztypecolon> U\<^sub>b b \<^emph>[C\<^sub>b b] R\<^sub>b b \<w>\<i>\<t>\<h> P\<^sub>b b @tag \<T>\<P>')
+lemma [\<phi>reason %ToA_splitting except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (case_sum _ _ ?var) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> (fst xx, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>a a] W\<^sub>a a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>a a \<Ztypecolon> U\<^sub>a a \<^emph>{C\<^sub>a a} R\<^sub>a a @tag \<T>\<P>')
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> (fst xx, w\<^sub>b b) \<Ztypecolon> T \<^emph>[C\<^sub>W\<^sub>b b] W\<^sub>b b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y\<^sub>b b \<Ztypecolon> U\<^sub>b b \<^emph>{C\<^sub>b b} R\<^sub>b b @tag \<T>\<P>')
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S\<^sub>a \<or> S\<^sub>b
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> snd xx = case_sum w\<^sub>a w\<^sub>b x
 \<Longrightarrow> xx \<Ztypecolon> T \<^emph>[case_sum C\<^sub>W\<^sub>a C\<^sub>W\<^sub>b x] (case_sum W\<^sub>a W\<^sub>b x)
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum y\<^sub>a y\<^sub>b x \<Ztypecolon> (case_sum U\<^sub>a U\<^sub>b x) \<^emph>[case_sum C\<^sub>a C\<^sub>b x] (case_sum R\<^sub>a R\<^sub>b x) \<w>\<i>\<t>\<h> case_sum P\<^sub>a P\<^sub>b x @tag \<T>\<P>' \<close>
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum y\<^sub>a y\<^sub>b x \<Ztypecolon> (case_sum U\<^sub>a U\<^sub>b x) \<^emph>{case_sum C\<^sub>a C\<^sub>b x} (case_sum R\<^sub>a R\<^sub>b x) @tag \<T>\<P>' \<close>
   unfolding Premise_def Try_def
   by (cases x; cases xx; simp)
 
@@ -7877,8 +8017,8 @@ lemma [\<phi>reason %ToA_red]:
   by simp
 
 lemma [\<phi>reason %ToA_red]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (case_sum A B var) \<^emph>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (case_sum A B (id var)) \<^emph>[C] R \<w>\<i>\<t>\<h> P\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (case_sum A B var) \<^emph>{C} R
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (case_sum A B (id var)) \<^emph>{C} R \<close>
   by simp
 
 subparagraph \<open>Major Reasoning\<close>
@@ -7889,7 +8029,7 @@ declare [[
     \<phi>reason ! %ToA_branches ToA_case_sum_target_L' ToA_case_sum_target_R'
         for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum _ _ ?var \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>,
     \<phi>reason ! %ToA_branches ToA_case_sum_target_L_ty ToA_case_sum_target_R_ty
-        for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (case_sum _ _ ?var) \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
+        for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (case_sum _ _ ?var) \<^emph>{_} _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
 ]]
 
 (*TODO: the source part!*)

@@ -273,6 +273,24 @@ lemmas [\<phi>safe_simp] =
 declare rel_fun_eq[iff]
 
 
+subsubsection \<open>Set\<close>
+
+lemma image_ex_set0[simp]:
+  \<open> f ` {x. x = y \<and> P} = {x. x = f y \<and> P} \<close>
+  unfolding set_eq_iff
+  by (simp add: image_iff, blast)
+
+lemma image_ex_set1[simp]:
+  \<open> f ` { g a |a. P a } = { f (g a) |a. P a } \<close>
+  unfolding set_eq_iff
+  by (simp add: image_iff, blast)
+
+lemma image_ex_set2[simp]:
+  \<open> f ` { g a b |a b. P a b } = { f (g a b) |a b. P a b } \<close>
+  unfolding set_eq_iff
+  by (simp add: image_iff, blast)
+
+
 subsection \<open>Helper Attributes \& Tactics\<close>
 
 attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.optional Parse.int 0) >>
