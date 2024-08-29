@@ -3,6 +3,8 @@
 \<fish_eye>         code: 0x0025C9  font: PhiSymbols  group: punctuation
 \<black_circle>     code: 0x0025CF  font: PhiSymbols  group: punctuation
 \<half_blkcirc>     code: 0x0025D2  font: PhiSymbols  group: punctuation
+\<OLstar>           code: 0x00272E  font: PhiSymbols  group: operator
+\<OTast>            code: 0x00273C  font: PhiSymbols  group: operator
 
 \<heavy_comma>     code: 0x00275F   font: PhiSymbols  group: punctuation abbrev: ,,
 \<big_ast>         code: 0x002731   font: PhiSymbols  group: operator    abbrev: <**>
