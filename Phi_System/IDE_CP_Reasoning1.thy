@@ -403,10 +403,8 @@ lemma \<phi>IntroFrameVar'_Yes:
   let val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
           Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
       val suppressed = case S
-                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ C $ R =>
-                              Term.is_Var (Term.head_of R) andalso
-                              (case C of Const(\<^const_name>\<open>True\<close>, _) => true
-                                       | _ => Term.is_Var (Term.head_of C))
+                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ R =>
+                              Term.is_Var (Term.head_of R)
                           | _ => (case Phi_Syntax.rightmost_sep S
                          of (\<^const>\<open>TAIL\<close> $ _) => true
                           | RR => Term.is_Var (Term.head_of RR))
@@ -420,10 +418,8 @@ lemma \<phi>IntroFrameVar'_Yes:
   let val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
           Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
       val suppressed = case S
-                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ C $ R =>
-                              Term.is_Var (Term.head_of R) andalso
-                              (case C of Const(\<^const_name>\<open>True\<close>, _) => true
-                                       | _ => Term.is_Var (Term.head_of C))
+                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ R =>
+                              Term.is_Var (Term.head_of R)
                           | _ => (case Phi_Syntax.rightmost_sep S
                          of (\<^const>\<open>TAIL\<close> $ _) => true
                           | RR => Term.is_Var (Term.head_of RR))

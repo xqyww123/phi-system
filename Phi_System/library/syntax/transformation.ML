@@ -125,7 +125,7 @@ fun is_Var X =
 
 fun conv_ToR_add_tag ctm =
   let datatype kind = ProdTy | Ty | Var | Oth
-      fun cond_Ty (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _) = ProdTy
+      fun cond_Ty (Const(\<^const_name>\<open>\<phi>Prod'\<close>, _) $ _ $ _) = ProdTy
         | cond_Ty _ = Ty
       fun dest_ty (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ U) = cond_Ty U
         | dest_ty X = if is_Var X then Var else Oth
@@ -165,8 +165,9 @@ fun chk_ToR_prop term = let
                                              else err' term
         fun scan (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>\<close>, _)) = (set 1; scan' X)
           | scan (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>'\<close>, _)) = (set 2; scan' X)
+          | scan (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<A>clean\<close>, _)) = scan' X
           | scan (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) =
-              error "The use of transformation must be tagged in any transformation rule.\n\
+              error "The use of transformation must be tagged in a transformation rule.\n\
                     \You can disable this check by \
                     \\<open>setup \<open>Config.put_global (Phi_Syntax.enable_auto_chk_and_conv) false\<close>\<close>.\n\
                     \if you are sure about what you are doing."

@@ -288,7 +288,7 @@ lemma [\<phi>reason %Val_ToA except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m
     if \<open>fn (_, sequent) =>
           case #2 (Phi_Syntax.dest_transformation (
                   Logic.strip_assums_concl (Phi_Help.leading_antecedent' sequent)))
-            of Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ _ =>
+            of Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ =>
                   not (Phi_Syntax.is_BI_connective X)
        \<close> ]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P @tag \<T>\<P>
