@@ -1095,7 +1095,7 @@ lemma Gen_Synthesis_Rule_transformation_00:
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
-          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _)
+          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _)
               = @{thm' Gen_Synthesis_Rule_transformation_00} RS sequent
           | chk_target (Const (\<^const_name>\<open>times\<close>, _) $ (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _) $ _)
               = (warn () ;
@@ -1105,7 +1105,7 @@ lemma Gen_Synthesis_Rule_transformation_00:
               = if has_R then @{thm' Gen_Synthesis_Rule_transformation_01} RS sequent
                          else (warn (); @{thm' Gen_Synthesis_Rule_transformation_12} RS sequent)
           | chk_target _ = @{thm Gen_Synthesis_Rule_transformation_11} RS sequent
-    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ => NONE
+    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ => NONE
           | _ => SOME ((ctxt, chk_target Y), Seq.empty)
     end)\<close>
 
@@ -1169,7 +1169,7 @@ lemma Gen_Synthesis_Rule_VS_00:
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
-          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _)
+          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _)
               = @{thm' Gen_Synthesis_Rule_VS_00} RS sequent
           | chk_target (Const (\<^const_name>\<open>times\<close>, _) $ (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _) $ _)
               = (warn () ;
@@ -1179,7 +1179,7 @@ lemma Gen_Synthesis_Rule_VS_00:
               = if has_R then @{thm' Gen_Synthesis_Rule_VS_01} RS sequent
                          else (warn (); @{thm' Gen_Synthesis_Rule_VS_12} RS sequent)
           | chk_target _ = @{thm Gen_Synthesis_Rule_VS_11} RS sequent
-    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ => NONE
+    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ => NONE
           | _ => SOME ((ctxt, chk_target Y), Seq.empty)
     end)\<close>
 
@@ -1346,7 +1346,7 @@ private lemma Gen_Synthesis_Rule_start_proc_having_target:
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
-          | chk_target (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _)
+          | chk_target (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _)
               = @{thm Gen_Synthesis_Rule_start_proc_having_target}
           | chk_target (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _)
               = (warning "You have multiple separated items and it is unclear which one is \
@@ -1357,7 +1357,7 @@ private lemma Gen_Synthesis_Rule_start_proc_having_target:
                  @{thm Gen_Synthesis_Rule_start_proc_focus_the_last})
           | chk_target _ = @{thm Gen_Synthesis_Rule_start_proc}
      in case X
-          of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ => NONE
+          of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ => NONE
            | _ => SOME ((ctxt, (chk_target Y) RS sequent), Seq.empty)
     end)\<close>
 

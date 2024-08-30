@@ -5208,6 +5208,7 @@ lemmas [\<phi>programming_base_simps, \<phi>programming_simps, \<phi>safe_simp] 
   plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
   distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
   mult.assoc[where 'a=\<open>'a::sep_semigroup BI\<close>]
+  REMAINS_def
 
 lemmas [\<phi>programming_base_simps] =
   mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
@@ -5216,7 +5217,6 @@ lemmas [\<phi>programming_base_simps] =
 
   HOL.simp_thms
 
-  REMAINS_def
   HOL.if_True HOL.if_False
 
 
