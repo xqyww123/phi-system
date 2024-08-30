@@ -254,19 +254,21 @@ lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>equation\<^sub>2\<^
 
 paragraph \<open>Reduce 3-1 equation on commutative algebra\<close>
 
+(*
 lemma [\<phi>reason default %\<A>_partial_add_default]:
   \<open> equation\<^sub>2\<^sub>1 a b d
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond True False a b d undefined d \<close>
   for a :: \<open>'a::partial_ab_semigroup_add\<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def equation\<^sub>2\<^sub>1_def
   by simp
+*)
 
-lemma [\<phi>reason default %\<A>_partial_add_default+1]:
+lemma [\<phi>reason default %\<A>_partial_add_default]:
   \<open> equation\<^sub>2\<^sub>1 b c d
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond False True undefined b b c d \<close>
-  for a :: \<open>'a::ab_semigroup_add\<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def equation\<^sub>2\<^sub>1_def
   by simp
+
 
 
 paragraph \<open>Error Check\<close>
@@ -508,6 +510,7 @@ lemma [\<phi>reason %\<A>_partial_add__len_intvl_set']:
       smt (z3) linorder_le_less_linear order.trans order_less_le_trans shift_by_nat_assoc shift_by_nat_ord,
       metis (no_types, lifting) not_le_imp_less order.strict_trans2 order_less_asym shift_by_nat_assoc shift_by_nat_ord)
 
+
 subparagraph \<open>EIF\<close>
 
 lemma dabc_equation__len_intvl_D:
@@ -640,6 +643,7 @@ lemma [\<phi>reason default %partial_add_overlaps_default]:
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding Action_Tag_def partial_add_overlaps_def
   by blast
+
 
 lemma [\<phi>reason default %partial_add_overlaps_default]:
   \<open> dabc_equation d a b c

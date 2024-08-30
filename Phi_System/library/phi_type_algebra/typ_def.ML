@@ -982,8 +982,8 @@ val rule_refl1 = @{lemma \<open>
 
 val rule_refl_WR = @{lemma \<open>
         T \<equiv> T'
-    \<Longrightarrow> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T' \<^emph> U) \<^emph>[False] \<top>\<^sub>\<phi> @tag \<T>\<P>'
-  \<close> by (simp add: Action_Tag_def transformation_refl) }
+    \<Longrightarrow> x \<Ztypecolon> T \<OTast> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T' \<^emph> U) \<OTast> \<circle> @tag \<T>\<P>'
+  \<close> by (simp add: Action_Tag_def transformation_refl \<phi>Prod'_def \<phi>Prod_expn') }
 
 fun gen_refl_Tr term ctxt cong =
   if Thm.no_prems cong
@@ -1015,11 +1015,9 @@ fun gen_refl_Tr term ctxt cong =
        mk_pat x T x U \<^Const>\<open>\<T>\<P>\<close>,
        cong RS' (ctxt, rule_refl1)) ::
       ( [(@{reasoner_group %ToA_derv_unify_refl},
-          mk_pat \<^Type>\<open>prod x a\<close> (\<^Const>\<open>Cond_\<phi>Prod x m_ty a\<close> $ T
-                                    $ Var(("C\<^sub>W",idx),\<^Type>\<open>bool\<close>)
+          mk_pat \<^Type>\<open>prod x a\<close> (\<^Const>\<open>\<phi>Prod' x m_ty a\<close> $ T
                                     $ Var(("W",idx), Phi_Syntax.mk_phi_type_ty (m_ty, a)))
-                \<^Type>\<open>prod x b\<close> (\<^Const>\<open>Cond_\<phi>Prod x m_ty b\<close> $ U
-                                    $ Var(("C\<^sub>R",idx),\<^Type>\<open>bool\<close>)
+                \<^Type>\<open>prod x b\<close> (\<^Const>\<open>\<phi>Prod' x m_ty b\<close> $ U
                                     $ Var(("R",idx), Phi_Syntax.mk_phi_type_ty (m_ty, b)))
                 \<^Const>\<open>\<T>\<P>'\<close>,
          cong RS' (ctxt, rule_refl_WR))]

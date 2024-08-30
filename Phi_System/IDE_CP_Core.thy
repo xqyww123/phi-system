@@ -1030,8 +1030,6 @@ lemma \<phi>Application_Conv:
 
 ML_file \<open>library/system/application.ML\<close>
 
-declare [[\<phi>reason_default_pattern \<open>PROP \<phi>Application ?Apps ?State _\<close> \<Rightarrow> \<open>PROP \<phi>Application ?Apps ?State _\<close> (100) ]]
-
 \<phi>reasoner_group \<phi>application_all = (1000, [10,3000]) for (\<open>PROP \<phi>Application Apps State Result\<close>)
     \<open>describs how to apply \<open>Apps\<close> over \<open>State\<close>\<close>
   and \<phi>application_traverse_apps = (70, [70,70]) in \<phi>application_all
@@ -1052,6 +1050,12 @@ declare [[\<phi>reason_default_pattern \<open>PROP \<phi>Application ?Apps ?Stat
     \<open>derived rules\<close>
   and \<phi>app_conv_failure = (0, [0,0]) in \<phi>app_conv_all and < \<phi>app_conv_derived
     \<open>failures\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>PROP \<phi>Application ?Apps ?State _\<close> \<Rightarrow> \<open>PROP \<phi>Application ?Apps ?State _\<close> (100),
+  \<phi>default_reasoner_group \<open>PROP \<phi>Application _ _ _\<close> : %\<phi>application (100)
+]]
+
 
 subsubsection \<open>Common Rules of Application Methods\<close>
 
