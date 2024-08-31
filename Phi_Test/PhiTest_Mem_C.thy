@@ -130,7 +130,7 @@ proc test_mem8:
   addr.d.e := \<open>2 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 140]]
+declare [[\<phi>reasoning_step_limit = 180]]
 
 lemmas ttt = synthesis_construct_aggregate_\<phi>app [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U]
 
@@ -200,7 +200,6 @@ proc test_mem14:
 \<medium_left_bracket>
   addr[1] := \<open>2 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
-
 
 
 proc test_mem15:

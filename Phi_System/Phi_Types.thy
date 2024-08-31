@@ -2361,6 +2361,7 @@ lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
                   \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks'] times_list_def
                   append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil] .
 
+(*
 thm \<phi>Mul_Quant_Tree.module_mapper\<^sub>a\<^sub>_\<^sub>d\<^sub>\<epsilon>
         [where U=\<open>ks \<^bold>\<rightarrow>\<^sub>@ U\<close> and fa=fa and j=j and Ua=\<open>ks' \<^bold>\<rightarrow>\<^sub>@ U'\<close>,
          unfolded \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
@@ -2401,6 +2402,6 @@ lemma [\<phi>reason default %\<phi>mapToA_derived_module_SDistri
          unfolded \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks]
                   \<phi>MapAt_L.scalar_assoc[where s=\<open>[fa j]\<close> and t=ks'] times_list_def
                   append_Cons[where x=\<open>(fa j)\<close>] List.append.append_Nil] .
-
+*)
 
 end
