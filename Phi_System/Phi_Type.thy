@@ -298,6 +298,9 @@ definition separatable_module_zip
                  (if flag then dabc_equation d a b c else dabc_equation b c d a) \<longrightarrow>
                  (uz' d a o z' b c o f\<^sub>b \<otimes>\<^sub>f f\<^sub>c o uz b c o z d a) x = (f\<^sub>d \<otimes>\<^sub>f f\<^sub>a) x)\<close>
 
+definition module_mapper\<^sub>1\<^sub>\<epsilon>
+  where \<open>module_mapper\<^sub>1\<^sub>\<epsilon> \<epsilon> e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D f f'
+            \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> i\<^sub>\<epsilon> (f (e\<^sub>\<epsilon> x)) = f' x \<and> D\<^sub>\<epsilon>\<^sub>E x \<and> D\<^sub>\<epsilon>\<^sub>I (f (e\<^sub>\<epsilon> x)) ) \<close>
 
 definition module_mapper\<^sub>2\<^sub>2
   where \<open>module_mapper\<^sub>2\<^sub>2 flag d a b c sp' jn' sp jn D\<^sub>s\<^sub>p' D\<^sub>j\<^sub>n' D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D\<^sub>M f\<^sub>c f\<^sub>b f\<^sub>a f\<^sub>d \<longleftrightarrow>
@@ -677,6 +680,14 @@ lemma [\<phi>reason default %module_mapper_default]:
   by clarsimp fastforce
 
 lemma [\<phi>reason default %module_mapper_default]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<epsilon> = d\<epsilon>
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>\<epsilon> \<epsilon> e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D f f'
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C False False c \<epsilon> d\<epsilon> d sp jn e\<^sub>\<epsilon> i\<^sub>\<epsilon> D\<^sub>\<epsilon>\<^sub>E D\<^sub>\<epsilon>\<^sub>I D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>c f f\<^sub>d f'
+                    (\<lambda>x. (unspec, e\<^sub>\<epsilon> x, unspec)) \<close>
+  unfolding module_mapper\<^sub>3\<^sub>\<epsilon>\<^sub>C_def module_mapper\<^sub>1\<^sub>\<epsilon>_def \<r>Guard_def Premise_def
+  by simp
+
+lemma [\<phi>reason default %module_mapper_default]:
   \<open> module_mapper\<^sub>1\<^sub>3 d a c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g
 \<Longrightarrow> module_mapper\<^sub>1\<^sub>3\<^sub>C True True d a da c sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n D f\<^sub>d f\<^sub>a f\<^sub>c f g \<close>
   unfolding module_mapper\<^sub>1\<^sub>3\<^sub>C_def module_mapper\<^sub>1\<^sub>3_def
@@ -716,6 +727,12 @@ lemma [\<phi>reason default %module_mapper_default]:
   unfolding module_mapper\<^sub>3\<^sub>1\<^sub>C_def module_mapper\<^sub>2\<^sub>1\<^sub>R_def
   by clarsimp fastforce
 
+lemma [\<phi>reason default %module_mapper_default]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> b = db
+\<Longrightarrow> module_mapper\<^sub>3\<^sub>1\<^sub>C False False c b db d sp jn D\<^sub>s\<^sub>p D\<^sub>j\<^sub>n (\<lambda>_. True) f\<^sub>c f f\<^sub>d f
+                    (\<lambda>x. (unspec, x, unspec))\<close>
+  unfolding module_mapper\<^sub>3\<^sub>1\<^sub>C_def module_mapper\<^sub>2\<^sub>1\<^sub>R_def
+  by clarsimp
 
 
 paragraph \<open>Instances\<close>
@@ -782,6 +799,14 @@ lemma [\<phi>reason add]:
 *)
 
 subparagraph \<open>List\<close>
+
+lemma [\<phi>reason for \<open>
+          module_mapper\<^sub>1\<^sub>\<epsilon> ?\<epsilon> hd (\<lambda>x. [x]) (\<lambda>l. length l = _) (\<lambda>_. True) _ _ _ \<close>]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> one = 1 
+\<Longrightarrow> module_mapper\<^sub>1\<^sub>\<epsilon> one' hd (\<lambda>x. [x]) (\<lambda>l. length l = one) (\<lambda>_. True) (\<lambda>l. length l = 1) f (map f) \<close>
+  unfolding module_mapper\<^sub>1\<^sub>\<epsilon>_def \<r>Guard_def Premise_def
+  by (simp, metis Suc_length_conv length_0_conv length_map list.map_sel(1) list.sel(1))
+
 
 lemma [\<phi>reason for
           \<open>module_mapper\<^sub>2\<^sub>\<epsilon>\<^sub>R ?c \<lbrakk>?j : _\<rwpar>
@@ -6239,7 +6264,6 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
 
 
 
-
 (*
 lemma SE_Module_SDistr_a_bc_ToA_mapper
       [\<phi>reason_template default %\<phi>mapToA_derived_module_SDistri name F\<^sub>1.module_mapper\<^sub>a\<^sub>_\<^sub>b\<^sub>c]:
@@ -6261,6 +6285,7 @@ lemma SE_Module_SDistr_a_bc_ToA_mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. D\<^sub>G (fst x))
 \<Longrightarrow> (\<And>A x. \<r>Comm_Mul A (x \<Ztypecolon> W))
 \<Longrightarrow> (\<And>A x. \<r>Comm_Mul A (x \<Ztypecolon> W'))
+
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f f\<^sub>c : F\<^sub>3 b \<OTast> R\<^sub>G \<OTast> F\<^sub>1 c \<mapsto> F\<^sub>3' b' \<OTast> R\<^sub>G' \<OTast> F\<^sub>1' c'
     \<o>\<v>\<e>\<r> f' \<otimes>\<^sub>f w : F\<^sub>1 a \<OTast> W \<mapsto> F\<^sub>1' a' \<OTast> W'

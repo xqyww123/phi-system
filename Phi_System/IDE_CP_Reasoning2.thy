@@ -625,6 +625,10 @@ lemma [\<phi>reason add]:
   unfolding mapToA_assign_id_def list_upd_map_def fun_eq_iff
   by clarsimp
 
+lemma [\<phi>reason add]:
+  \<open> mapToA_assign_id f
+\<Longrightarrow> mapToA_assign_id (map f) \<close>
+  unfolding mapToA_assign_id_def by simp
 
 
 subsubsection \<open>Unify Assertion\<close>
