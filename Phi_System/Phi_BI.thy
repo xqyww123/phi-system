@@ -5006,6 +5006,12 @@ lemma [\<phi>reason %object_equiv_cut]:
   by simp
 
 lemma [\<phi>reason %object_equiv_cut]:
+  \<open> Object_Equiv T eq
+\<Longrightarrow> Object_Equiv (\<black_circle> T) eq \<close>
+  unfolding Object_Equiv_def Transformation_def
+  by auto
+
+lemma [\<phi>reason %object_equiv_cut]:
   \<open> (\<And>a. Object_Equiv (\<lambda>x. S x a) (R a))
 \<Longrightarrow> Object_Equiv (\<lambda>x. ExBI (S x)) (\<lambda>x y. \<forall>a. R a x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
@@ -6227,14 +6233,14 @@ lemma (*ToA_splitting_source_no_remainder_first*)
   by clarsimp (metis One_expn mult_1_class.mult_1_right sep_magma_1_left)
 *)
 
-lemma [\<phi>reason default %ToA_falling_latice+1]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
+lemma [\<phi>reason default %ToA_falling_latice+2]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> P @tag \<T>\<P>
 \<Longrightarrow> X * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> X * R' \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
   for Y :: \<open>'c::sep_algebra BI\<close>
   unfolding Action_Tag_def REMAINS_def
   by (simp add: mult.left_commute transformation_left_frame)
 
-lemma [\<phi>reason default %ToA_falling_latice]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>, nor a abelian semigroup\<close>
+lemma [\<phi>reason default %ToA_falling_latice+1]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>, nor a abelian semigroup\<close>
   \<open> Identity_Element\<^sub>E (var_y \<Ztypecolon> U)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var_y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag \<T>\<P> \<close>
   for X :: \<open>'c::sep_magma_1 BI\<close>
@@ -6259,6 +6265,84 @@ lemma [\<phi>reason %ToA_clean for \<open>_ * 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>
   for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Action_Tag_def
   by simp
+
+subsubsection \<open>For Non-Unital Algeras\<close>
+
+lemma closed_homo_sep_Some:
+  \<open> closed_homo_sep Some \<close>
+  unfolding closed_homo_sep_def closed_homo_sep_disj_def homo_sep_def homo_sep_mult_def homo_sep_disj_def
+  by simp
+
+lemma [\<phi>reason default %ToA_falling_latice
+               for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>
+                   \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>
+               except \<open>(_ :: ?'a::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close> ]:
+  \<open> \<Psi>[Some] X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  unfolding Transformation_def Action_Tag_def
+  by auto
+
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> \<Psi>[Some] (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  unfolding Transformation_def Action_Tag_def
+  by (auto simp: split_option_all)
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (x \<Ztypecolon> \<black_circle> T) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> \<Psi>[Some] (x \<Ztypecolon> T) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  unfolding Transformation_def Action_Tag_def
+  by (auto simp: split_option_all)
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<black_circle> T \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] (x \<Ztypecolon> T) \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  unfolding Transformation_def Action_Tag_def
+  by (auto simp: split_option_all)
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<black_circle> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] (x \<Ztypecolon> T) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  unfolding Transformation_def Action_Tag_def
+  by (auto simp: split_option_all)
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> \<Psi>[Some] X * \<Psi>[Some] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> \<Psi>[Some] (X * Y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  for X :: \<open>'a::sep_magma BI\<close>
+  by (simp add: \<Psi>_Multiplicative_Conj[OF closed_homo_sep_Some])
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> \<Psi>[Some] X * \<Psi>[Some] Y * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> \<Psi>[Some] (X * Y) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  for X :: \<open>'a::sep_magma BI\<close>
+  by (simp add: \<Psi>_Multiplicative_Conj[OF closed_homo_sep_Some])
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] Y1 * \<Psi>[Some] Y2 \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] (Y1 * Y2) \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  for Y1 :: \<open>'a::sep_magma BI\<close>
+  by (simp add: \<Psi>_Multiplicative_Conj[OF closed_homo_sep_Some])
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] Y1 * \<Psi>[Some] Y2 * R \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] (Y1 * Y2) * R \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  for Y1 :: \<open>'a::sep_magma BI\<close>
+  by (simp add: \<Psi>_Multiplicative_Conj[OF closed_homo_sep_Some])
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] Y1 * \<Psi>[Some] Y2 \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] (Y1 * Y2) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
+  for Y1 :: \<open>'a::sep_magma BI\<close>
+  by (simp add: \<Psi>_Multiplicative_Conj[OF closed_homo_sep_Some])
+
+
+
+
+
+
+
 
 
 subsection \<open>Essential Reasoning Procedures\<close>

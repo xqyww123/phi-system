@@ -1415,10 +1415,7 @@ lemma homo_sep_Some[simp, \<phi>reason %algb_cut]:
   unfolding homo_sep_def homo_sep_mult_def homo_sep_disj_def
   by simp
 
-lemma closed_homo_sep_Some[simp, \<phi>reason %algb_cut]:
-  \<open> closed_homo_sep Some \<close>
-  unfolding closed_homo_sep_def closed_homo_sep_disj_def
-  by simp
+declare closed_homo_sep_Some[simp, \<phi>reason %algb_cut]
 
 
 subsubsection \<open>Share\<close>

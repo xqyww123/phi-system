@@ -523,8 +523,7 @@ val _ = Theory.setup (Context.theory_map (
               Subjection_Subjection Subjection_True Subjection_Flase Subjection_Zero
               Subjection_addconj Subjection_times
 
-              \<phi>Prod_expn' \<phi>Prod_expn'' REMAINS_simp LeftCond_single_Cond_const_red
-              \<phi>Cond_Unital_Ins_unfold_simp \<phi>Cond_Unital_Ins_BI_unfold_simp \<phi>Cond_Item_simp BiCond_single_Cond_const_red
+              \<phi>Prod_expn' \<phi>Prod_expn'' REMAINS_def
 
               sep_quant_sing sep_quant_empty sep_quant_subjection sep_quant_ExBI
 
