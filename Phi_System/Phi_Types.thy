@@ -945,7 +945,7 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
 \<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x)\<close>
-  for B :: \<open>('d::sep_magma,'e::sep_magma) \<phi>\<close>
+  for B :: \<open>('d::sep_magma_1,'e::sep_magma) \<phi>\<close>
   unfolding Separation_Homo\<^sub>E_def Transformation_def Object_Sep_Homo\<^sub>E_def
   by (clarsimp simp add: set_mult_expn; blast)
 
@@ -1335,7 +1335,6 @@ declare \<phi>Fun'.\<phi>Sum\<^sub>I[\<phi>reason add]
         \<phi>Fun'.\<phi>Sum\<^sub>E[\<phi>reason add]
         \<phi>Fun'.\<phi>Inter\<^sub>I[\<phi>reason add]
 
-
 subsubsection \<open>Reasoning Rules\<close>
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
@@ -1417,26 +1416,17 @@ local_setup \<open>
   \<comment> \<open>Setup an alternative definition in the language of \<phi>-types so that we can apply
       derivers over these bootstrap \<phi>-types\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 let_\<phi>type \<phi>Some
-  deriving Functional_Transformation_Functor
-and Basic
+  deriving Sep_Functor_1
        and Carrier_Set
        and Functionality
        and \<open>Identity_Elements\<^sub>I (\<black_circle> T) (\<lambda>_. False) (\<lambda>_. False)\<close>
        and \<open>Identity_Elements\<^sub>E (\<black_circle> T) (\<lambda>_. False)\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
-let_\<phi>type \<phi>Some
-  deriving Separation_Homo
-
-(*
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<Longrightarrow> Some c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> T\<close>
        and \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::('c, 'c) \<phi>) \<s>\<u>\<b>\<j> y. r x y @tag to (Itself::('c, 'c) \<phi>))
          \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::('c option, 'c option) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = Some x \<and> r x' x) @tag to (Itself::('c option, 'c option) \<phi>) \<close>
-*)
+
 
 text \<open>For technical reasons, the \<open>\<phi>Some\<close> is defined and used before the setup of the derivation system.
   Therefore some of its rules are handcrafted. However, the rules could all be derived automatically
@@ -1860,7 +1850,7 @@ term \<open>Identity_Elements\<^sub>E (\<half_blkcirc> T) (\<lambda>x. x = None)
 subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
-
+    
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
@@ -1877,6 +1867,7 @@ subsubsection \<open>By Key\<close>
        and \<open>?c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T \<Longrightarrow> 1(?k := ?c) \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T\<close>
        and \<open> (\<And>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'c::one,?'c) \<phi>) \<s>\<u>\<b>\<j> y. ?r x y @tag to (Itself::(?'c,?'c) \<phi>))
          \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = 1(?k := x) \<and> ?r x' x) @tag to (Itself::(?'a \<Rightarrow> ?'c, ?'a \<Rightarrow> ?'c) \<phi>)\<close>
+
 
 \<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. [] \<^bold>\<rightarrow> T\<close>
 
@@ -1918,6 +1909,15 @@ subsection \<open>Permission Sharing\<close>
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Sep_Functor_1
        and Functionality
+
+term 1
+
+declare [[\<phi>trace_reasoning = 3]]
+
+let_\<phi>type \<phi>Share
+  deriving Semimodule_SDistr_Homo\<^sub>S
+
+(*
        and Semimodule_no0
        and Carrier_Set
        and Commutativity_Deriver
@@ -1930,7 +1930,7 @@ subsection \<open>Permission Sharing\<close>
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-
+*)
 declare [[\<phi>ToA_assoc_normalization \<open>?n \<odiv> ?m \<odiv> ?T\<close> (100)]]
 
 declare \<phi>Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]

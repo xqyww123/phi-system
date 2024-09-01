@@ -381,11 +381,12 @@ type guess_property =
 
 fun lift_types_sort thy typ_sorts =
   Phi_Help.lift_types_sort thy typ_sorts
-  handle Phi_Help.LIFT_FAIL (ty, sort) => raise Automation_Fail (let open Pretty in fn () =>
-    [paragraph (text "Fail to constrain type " @
-                [brk 1, Syntax.pretty_typ_global thy ty, brk 1] @
-                text "by sort" @
-                [brk 1, Syntax.pretty_sort_global thy sort])]
+  handle Phi_Help.LIFT_FAIL ty_sorts => raise Automation_Fail (let open Pretty in fn () =>
+    map (fn (ty, sort) =>
+      paragraph (text "Fail to constrain type " @
+                  [brk 1, Syntax.pretty_typ_global thy ty, brk 1] @
+                  text "by sort" @
+                  [brk 1, Syntax.pretty_sort_global thy sort])) ty_sorts
     end)
 
 fun parse_inst_params_from_phi_term phity =

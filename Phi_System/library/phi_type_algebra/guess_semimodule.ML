@@ -223,7 +223,7 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework true (NONE,
         end)
 
 
-fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework false ( SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
+fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework false ( SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma_1\<close>),
       fn (s_ty, _, x_ty, _, model_ty, idx, F_term, eta_F_term, _, ctxt) =>
            (\<^Const>\<open>Trueprop\<close> $ (
               (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty model_ty x_ty\<close>

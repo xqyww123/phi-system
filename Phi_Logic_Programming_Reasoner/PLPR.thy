@@ -438,6 +438,9 @@ lemma meta_case_prod_simp[iff]:
   \<open>meta_case_prod f (x,y) \<equiv> f x y\<close>
   unfolding meta_case_prod_def by simp
 
+lemma meta_case_prod_simp'[iff]:
+  \<open>meta_case_prod f x \<equiv> f (fst x) (snd x)\<close>
+  unfolding meta_case_prod_def .
 
 
 subsubsection \<open>ML Libraries - II\<close>

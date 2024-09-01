@@ -18,7 +18,7 @@ include PHI_HELP
   val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
   val lift_types_sort : theory -> (typ * sort) list -> typ TVars.table
 
-  exception LIFT_FAIL of typ * sort
+  exception LIFT_FAIL of (typ * sort) list
 
   val add_expected_sort_red : (class (*A*) * class (*B*) * sort (*C*)) list -> theory -> theory
         (*register that C is the expected stronger intersection of A and B. *)
@@ -76,22 +76,39 @@ fun get_refined_sort_of_lifting_T thy =
     )
   end
 
-exception LIFT_FAIL of typ * sort
+exception LIFT_FAIL of (typ * sort) list
 
-fun gen_lift_type_sort thy (ty,sort) (env00,idx) =
-  if Sign.of_sort thy (ty, sort)
-  then (env00,idx)
-  else let val var_a = TVar(("a", idx+1), sort)
-           val (env'1, idx'1) = Sign.typ_unify thy (ty, var_a) (env00, idx+1)
-           val target = Envir.norm_type env'1 var_a
-        in (Sign.typ_match thy (ty, target) env00, idx'1)
-       end
-       handle Type.TUNIFY => raise LIFT_FAIL (ty, sort)
+fun gen_lift_type_sorts thy ty_sorts (env00,idx) =
+  let 
+   in if forall (Sign.of_sort thy) ty_sorts
+      then (env00,idx)
+      else let val tys = map fst ty_sorts ---> \<^Type>\<open>unit\<close>
+               val var_a = map_index (fn (i,(_,sort)) => TVar(("a", idx+1+i), sort)) ty_sorts ---> \<^Type>\<open>unit\<close>
+               val (env'1, idx'1) = Sign.typ_unify thy (tys, var_a) (env00, idx + length ty_sorts)
+               val target = Envir.norm_type env'1 var_a
+            in (Sign.typ_match thy (tys, target) env00, idx'1)
+           end
+           handle Type.TUNIFY => raise LIFT_FAIL ty_sorts
+  end
+
+(*
+fun gen_lift_type_sort thy (ty0,sort) (env00,idx) =
+  let val ty = Envir.subst_type env00 ty0
+   in if Sign.of_sort thy (ty, sort)
+      then (env00,idx)
+      else let val var_a = TVar(("a", idx+1), sort)
+               val (env'1, idx'1) = Sign.typ_unify thy (ty, var_a) (env00, idx+1)
+               val target = Envir.norm_type env'1 var_a
+            in (Sign.typ_match thy (ty0, target) env00, idx'1)
+           end
+           handle Type.TUNIFY => raise LIFT_FAIL (ty, sort)
+  end
+*)
 
 fun raw_lift_type_sort thy (ty,sort) env00 =
   let val idx = Vartab.fold (fn ((_,i1), (_,ty)) => Term.maxidx_typ ty o curry Int.max i1) env00
                             (Term.maxidx_of_typ ty) + 1
-   in fst (gen_lift_type_sort thy (ty,sort) (env00, idx))
+   in fst (gen_lift_type_sorts thy [(ty,sort)] (env00, idx))
   end
 
 (*
@@ -104,9 +121,7 @@ fun lift_type_sort thy (ty,sort) =
 
 fun raw_lift_types_sort thy ty_sorts =
   let val idx = Term.maxidx_of_typs (map fst ty_sorts)
-   in fold (fn (T,S) => fn (env,idx) =>
-        gen_lift_type_sort thy (Envir.subst_type env T, S) (env,idx)
-      ) ty_sorts (Vartab.empty, idx)
+   in gen_lift_type_sorts thy ty_sorts (Vartab.empty, idx)
         |> fst
         |> subst_tyenv
   end

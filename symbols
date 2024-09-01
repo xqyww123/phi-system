@@ -2,6 +2,7 @@
 \<tribullet>        code: 0x002023  font: PhiSymbols  group: operator
 \<fish_eye>         code: 0x0025C9  font: PhiSymbols  group: punctuation
 \<black_circle>     code: 0x0025CF  font: PhiSymbols  group: punctuation
+\<half_bc2>         code: 0x0025D1  font: PhiSymbols  group: punctuation
 \<half_blkcirc>     code: 0x0025D2  font: PhiSymbols  group: punctuation
 \<OLstar>           code: 0x00272E  font: PhiSymbols  group: operator
 \<OTast>            code: 0x00273C  font: PhiSymbols  group: operator
