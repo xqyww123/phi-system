@@ -185,13 +185,14 @@ fun chk_ToR_prop term = let
                                        else raise TERM ("Bad \<T>\<P>' request", [X])
                      | tm as Var _ => if SOME tm = source_val then ()
                                        else raise TERM ("Bad \<T>\<P>' request", [X])
-                     | _ => raise TERM ("Bad \<T>\<P>' request", [X]))
+                     | _ => raise TERM ("Bad \<T>\<P>' request", [X, term]))
           | chk_TP'_src X =
                 if SOME X = source_val then ()
                                        else raise TERM ("Bad \<T>\<P>' request", [X])
         fun scan C (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>\<close>, _)) = scan (set C TP) X
           | scan C (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>'\<close>, _)) = scan (set C TP') X
           | scan C (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<A>clean\<close>, _)) = scan (set C CLEAN) X
+          | scan _ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = ()
           | scan C (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ _ $ _) = (
               case C
                 of (concl,SOME TP') => (if concl then () else chk_TP'_src X)
@@ -227,7 +228,19 @@ val _ = Theory.setup (Context.theory_map (
                  val _ = List.app (chk_ToR_prop o Thm.prop_of) rules'
            in (rules', prio, pats, guard, ctxt)
           end
-        else (rules, prio, pats, guard, ctxt) ) (*
+        else (rules, prio, pats, guard, ctxt) )
+
+#> Phi_Reasoner.add_pass (Free("Add ToR tag auto", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>,
+    fn _ => fn data as (rules, _, _, _, _) => (
+        List.app (chk_ToR_prop o Thm.prop_of) rules ;
+        data ))
+
+#> Phi_Reasoner.add_pass (Free("Add ToR tag auto", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>,
+    fn _ => fn data as (rules, _, _, _, _) => (
+        List.app (chk_ToR_prop o Thm.prop_of) rules ;
+        data ))
+
+ (*
 #>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
           \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>, pass_pattern_of_intro_ToR)
 #>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),

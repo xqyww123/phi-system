@@ -515,7 +515,7 @@ val _ = Theory.setup (Context.theory_map (
                        case_split_simproc @{thm' split_paired_All[folded atomize_eq]} ("split_paired_All-case_split", \<^const_name>\<open>case_prod\<close>) ctxt
                       ])
           addsimps @{thms'
-              \<phi>Any.unfold \<phi>Bot.unfold \<phi>None_itself_is_one \<phi>None_freeobj_expn
+              \<phi>Any.unfold \<phi>Bot.unfold \<phi>None_itself_is_one
               HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
               prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
 
