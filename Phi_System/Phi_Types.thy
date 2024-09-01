@@ -378,27 +378,40 @@ lemma \<phi>\<s>\<u>\<b>\<j>_over_\<Sigma>[\<phi>programming_simps]:
 
 subsubsection \<open>ToA Reasoning\<close>
 
+lemma [\<phi>reason add]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @clean
+\<Longrightarrow> (a, x) \<Ztypecolon> \<Sigma> (\<lambda>_. T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @clean \<close> 
+  by simp
+
+lemma [\<phi>reason add]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U @clean
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (a,y) \<Ztypecolon> \<Sigma> (\<lambda>_. U) @clean \<close>
+  by simp
+
 lemma [\<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>
                         \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((_, _), _) \<Ztypecolon> \<Sigma> _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T a \<OTast> R a \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
-\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((a, fst y), (a, snd y)) \<Ztypecolon> \<Sigma> T \<OTast> \<Sigma> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+\<Longrightarrow> (a, snd y) \<Ztypecolon> \<Sigma> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> r' \<Ztypecolon> R' @clean
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((a, fst y), r') \<Ztypecolon> \<Sigma> T \<OTast> R' \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
   unfolding Transformation_def Action_Tag_def \<phi>Prod'_def
-  by clarsimp
+  by clarsimp blast
 
 lemma [\<phi>reason 1100 for \<open>_ \<Ztypecolon> \<Sigma> _ \<OTast> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> PROP Reduce_HO_trivial_variable (Trueprop (
-      (snd (fst x), snd (snd x)) \<Ztypecolon> T (fst (fst x)) \<OTast> W (fst (fst x)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst (snd x) = fst (fst x)
-\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<OTast> \<Sigma> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>'\<close>
+      (snd x, snd w) \<Ztypecolon> T (fst x) \<OTast> W (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst w = fst x
+\<Longrightarrow> w' \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> \<Sigma> W @clean
+\<Longrightarrow> (x,w') \<Ztypecolon> \<Sigma> T \<OTast> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>'\<close>
   unfolding Premise_def Transformation_def Reduce_HO_trivial_variable_def Action_Tag_def \<phi>Prod'_def
-  by clarsimp
+  by clarsimp blast
 
 lemma [\<phi>reason 1010 for \<open>((_,_),_) \<Ztypecolon> \<Sigma> _ \<OTast> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> PROP Reduce_HO_trivial_variable (Trueprop (
       (b, w) \<Ztypecolon> T a \<OTast> W a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
-\<Longrightarrow> ((a, b), a, w) \<Ztypecolon> \<Sigma> T \<OTast> \<Sigma> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+\<Longrightarrow> w' \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (a,w) \<Ztypecolon> \<Sigma> W @clean
+\<Longrightarrow> ((a, b), w') \<Ztypecolon> \<Sigma> T \<OTast> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
   unfolding Premise_def Transformation_def Reduce_HO_trivial_variable_def Action_Tag_def \<phi>Prod'_def
-  by clarsimp
+  by clarsimp blast
 
 
 declare \<phi>Dependent_Sum.intro_reasoning(1)
@@ -1417,6 +1430,15 @@ local_setup \<open>
       derivers over these bootstrap \<phi>-types\<close>
 
 let_\<phi>type \<phi>Some
+  deriving Basic
+
+(*
+declare [[\<phi>trace_reasoning = 3]]
+
+let_\<phi>type \<phi>Some
+  deriving Separation_Homo\<^sub>I
+*)
+let_\<phi>type \<phi>Some
   deriving Sep_Functor_1
        and Carrier_Set
        and Functionality
@@ -1910,15 +1932,11 @@ subsection \<open>Permission Sharing\<close>
   deriving Sep_Functor_1
        and Functionality
 
-term 1
-
-declare [[\<phi>trace_reasoning = 3]]
-
-let_\<phi>type \<phi>Share
-  deriving Semimodule_SDistr_Homo\<^sub>S
-
-(*
        and Semimodule_no0
+       and \<open>Functionality (T::('c::share_semimodule, 'x) \<phi>) Dx
+        \<Longrightarrow> Carrier_Set T D\<^sub>C
+        \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>\<s>. \<s> \<odiv> T) ((<) 0) (\<lambda>s t xy. 0 < s + t \<longrightarrow> Dx xy \<and> D\<^sub>C xy) (\<lambda>_ _ x. (x, x))\<close>
+
        and Carrier_Set
        and Commutativity_Deriver
        and \<phi>Fun'.Comm
@@ -1930,7 +1948,8 @@ let_\<phi>type \<phi>Share
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] ((\<odiv>) n) ((\<odiv>) n) T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-*)
+
+
 declare [[\<phi>ToA_assoc_normalization \<open>?n \<odiv> ?m \<odiv> ?T\<close> (100)]]
 
 declare \<phi>Share.\<Sigma>\<^sub>I[where c=fst, simplified, \<phi>reason add]
@@ -1996,6 +2015,8 @@ section \<open>Derivatives\<close>
 
 subsection \<open>Parameterized FMQ\<close>
 
+declare [[\<phi>trace_reasoning = 3]]
+
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
   deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
@@ -2012,7 +2033,16 @@ subsection \<open>Parameterized FMQ\<close>
         \<Longrightarrow> Functional_Transformation_Functor\<^sub>\<Lambda> (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>p x. x ` I) (\<lambda>_ _. UNIV)
                                          (\<lambda>_ P x. \<forall>i\<in>I. P i (x i)) (\<lambda>f _ x i. f i (x i))\<close>
            \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
-       and Sep_Functor_1
+ 
+term 1
+
+term \<open>\<big_ast>\<^sup>\<phi>\<^sub>0 I\<close>
+
+
+let_\<phi>type \<phi>Mul_Quant\<^sub>\<Lambda>
+  deriving \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
+
+      (*and Sep_Functor_1
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
        and Semimodule_NonAssoc 
@@ -2022,7 +2052,7 @@ subsection \<open>Parameterized FMQ\<close>
        and \<open>Semimodule_SDistr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
        and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
-
+*)
 lemma \<phi>Mul_Quant\<^sub>\<Lambda>_cong[cong]:
   \<open> (\<And>i. i \<in> I \<Longrightarrow> T i = U i)
 \<Longrightarrow> \<big_ast>\<^sup>\<phi> I T = \<big_ast>\<^sup>\<phi> I U \<close>
