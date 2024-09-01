@@ -48,14 +48,14 @@ proc new_mat:
   calloc1 \<open>\<bbbA>\<r>\<r>\<a>\<y>[M] \<bbbA>\<r>\<r>\<a>\<y>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
 \<medium_right_bracket> .
 
-
 proc del_mat:
   input    \<open>a \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M N]\<heavy_comma> x \<Ztypecolon> MatSlice a i j m n\<close>
   premises \<open>m = M \<and> n = N \<and> i = 0 \<and> j = 0 \<and> address_to_base a\<close>
   output   \<open>Void\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-  mfree (a)
+  mfree (a) certified by (auto simp add: \<phi>,
+              rule exI[where x=\<open>\<lambda>(a,b) (aa, ba). aa\<close>], auto_sledgehammer)
 \<medium_right_bracket> .
 
 
