@@ -3761,22 +3761,7 @@ definition [iff, \<phi>safe_simp]: \<open>introduced X \<equiv> X\<close>
 
 subparagraph \<open>arith_eval\<close>
 
-lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>equation\<^sub>2\<^sub>1 (introduced _) _ _\<close>]:
-  \<open> equation\<^sub>2\<^sub>1 a b X
-\<Longrightarrow> equation\<^sub>2\<^sub>1 (introduced a) b X \<close>
-  by simp
 
-lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>equation\<^sub>2\<^sub>1 _ (introduced _) _\<close>]:
-  \<open> equation\<^sub>2\<^sub>1 a b X
-\<Longrightarrow> equation\<^sub>2\<^sub>1 a (introduced b) X \<close>
-  by simp
-
-lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>equation\<^sub>2\<^sub>1 _ _ (introduced _)\<close>]:
-  \<open> equation\<^sub>2\<^sub>1 a b X
-\<Longrightarrow> equation\<^sub>2\<^sub>1 a b (introduced X) \<close>
-  by simp
-
-(*
 lemma [\<phi>reason %\<A>_partial_add_normalizing]:
   \<open> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c a b ab c X
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c a (introduced b) ab c X \<close>
@@ -3786,17 +3771,7 @@ lemma [\<phi>reason %\<A>_partial_add_normalizing]:
   \<open> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c a b ab c X
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond C\<^sub>d C\<^sub>c a b ab c (introduced X) \<close>
   by simp
-*)
 
-lemma [\<phi>reason %\<A>_partial_add_normalizing]:
-  \<open> equation\<^sub>3\<^sub>1 a b c X
-\<Longrightarrow> equation\<^sub>3\<^sub>1 a (introduced b) c X \<close>
-  by simp
-
-lemma [\<phi>reason %\<A>_partial_add_normalizing]:
-  \<open> equation\<^sub>3\<^sub>1 a b c X
-\<Longrightarrow> equation\<^sub>3\<^sub>1 a b c (introduced X) \<close>
-  by simp
 
 lemma [\<phi>reason %partial_add_overlaps_norm]:
   \<open> partial_add_overlaps a b
@@ -9242,7 +9217,7 @@ bundle \<phi>TA_MD =
 
 private lemma \<phi>TA_MD\<^sub>Z_rule:
   \<open> (\<And>s t x r z. Ant
-         \<Longrightarrow> equation\<^sub>2\<^sub>1 s t r
+         \<Longrightarrow> equation\<^sub>3\<^sub>1_cond False True unspec s s t r
          \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> Dx s t x \<and> zi s t x = z
          \<Longrightarrow> (x \<Ztypecolon> NO_SIMP \<phi>Prod (OPEN undefined (F s)) (OPEN undefined (F t))
              \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE undefined (F r))
@@ -9252,12 +9227,12 @@ private lemma \<phi>TA_MD\<^sub>Z_rule:
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F Ds Dx zi \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def
-            OPEN_def MAKE_def NO_SIMP_def equation\<^sub>2\<^sub>1_def
+            OPEN_def MAKE_def NO_SIMP_def equation\<^sub>3\<^sub>1_cond_def
   by clarsimp
 
 private lemma \<phi>TA_MD\<^sub>U_rule:
   \<open> (\<And>s t r x. Ant
-         \<Longrightarrow> equation\<^sub>2\<^sub>1 s t r
+         \<Longrightarrow> equation\<^sub>3\<^sub>1_cond False True unspec s s t r
          \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> Dx s t x
          \<Longrightarrow> (x \<Ztypecolon> OPEN undefined (F r)
              \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> NO_SIMP \<phi>Prod (MAKE undefined (F s)) (MAKE undefined (F t)))
@@ -9267,7 +9242,7 @@ private lemma \<phi>TA_MD\<^sub>U_rule:
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S F Ds Dx uz \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>S_def Action_Tag_def Premise_def Transformation_def
-            OPEN_def MAKE_def NO_SIMP_def equation\<^sub>2\<^sub>1_def
+            OPEN_def MAKE_def NO_SIMP_def equation\<^sub>3\<^sub>1_cond_def
   by clarsimp
 
 private lemma \<phi>TA_MD\<^sub>U_cong:
@@ -9290,7 +9265,7 @@ private lemma \<phi>TA_MD\<^sub>Z_rewr_IH:
   \<open> Trueprop (Ant \<longrightarrow> C2 \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> OPEN undefined U\<^sub>1 \<^emph> OPEN undefined U\<^sub>2
                              \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE undefined T \<w>\<i>\<t>\<h> P) @tag A)
  \<equiv> (Ant @tag \<phi>TA_ANT \<Longrightarrow> C2 \<Longrightarrow> C \<Longrightarrow> x \<Ztypecolon> U\<^sub>1 \<^emph> U\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi>TA_IND_TARGET T \<w>\<i>\<t>\<h> P @tag \<phi>TA_ToA_elim) \<close>
-  unfolding Action_Tag_def atomize_imp \<phi>TA_IND_TARGET_def OPEN_def MAKE_def equation\<^sub>2\<^sub>1_def .
+  unfolding Action_Tag_def atomize_imp \<phi>TA_IND_TARGET_def OPEN_def MAKE_def .
 
 private lemma \<phi>TA_MD\<^sub>U_rewr_IH:
   \<open> Trueprop (Ant \<longrightarrow> C2 \<longrightarrow> C \<longrightarrow> (x \<Ztypecolon> OPEN undefined T
