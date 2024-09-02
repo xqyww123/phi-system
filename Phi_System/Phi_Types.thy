@@ -448,9 +448,6 @@ declare \<phi>Dependent_Sum.intro_reasoning(1)
 declare [[\<phi>chk_source_val]]
 
 
-lemma
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<close>
-
 
 subsubsection \<open>Quasi Functor Properties\<close>
 
@@ -1456,7 +1453,6 @@ let_\<phi>type \<phi>Some
        and Functionality
        and \<open>Identity_Elements\<^sub>I (\<black_circle> T) (\<lambda>_. False) (\<lambda>_. False)\<close>
        and \<open>Identity_Elements\<^sub>E (\<black_circle> T) (\<lambda>_. False)\<close>
-
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<Longrightarrow> Some c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> T\<close>
        and \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::('c, 'c) \<phi>) \<s>\<u>\<b>\<j> y. r x y @tag to (Itself::('c, 'c) \<phi>))
          \<Longrightarrow> \<forall>x'. x' \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself::('c option, 'c option) \<phi>) \<s>\<u>\<b>\<j> y. (\<exists>x. y = Some x \<and> r x' x) @tag to (Itself::('c option, 'c option) \<phi>) \<close>
@@ -2142,22 +2138,19 @@ lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_src:
 \<Longrightarrow> x \<Ztypecolon> T \<OTast> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<big_ast>\<^sup>\<phi> I U \<OTast> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
   unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp \<phi>Prod'_def 
   apply (simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric])
-  \<medium_left_bracket> premises Tr and _ and _ and C[] 
-    \<semicolon>
-    Tr
+  \<medium_left_bracket> premises Tr and _ and _ and C
+    C Tr
   \<medium_right_bracket> .
 
 lemma \<phi>Mul_Quant\<^sub>\<Lambda>_wrap_module_tgt:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I \<longrightarrow> ((fst x i, snd x) \<Ztypecolon> T i \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I \<longrightarrow> ((fst x i, snd x) \<Ztypecolon> T i \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<OTast> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
                       \<comment> \<open>BUG!: must exclude trivial success!\<close>
        \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] i \<in> I
-\<Longrightarrow> ((snd y, fst x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>R] R \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sup>\<phi> (I - {i}) T) = (r \<Ztypecolon> \<half_blkcirc>[C\<^sub>R'] R') @tag \<A>merge
-\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> U \<^emph>[C\<^sub>R'] R' \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
-  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
-  apply (simp add: cond_prod_transformation_rewr,
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
-  \<medium_left_bracket> premises Tr and _ and XX[THEN eq_left_frame, simp]
-    Tr
+\<Longrightarrow> (snd y, fst x) \<Ztypecolon> R \<^emph> \<big_ast>\<^sup>\<phi> (I - {i}) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> r \<Ztypecolon> R' @clean
+\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> U \<OTast> R' \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp \<phi>Prod'_def
+  \<medium_left_bracket> premises Tr and _ and C
+    Tr C
   \<medium_right_bracket> .
 
 
@@ -2237,36 +2230,35 @@ text \<open>TODO: \<phi>Mul_Quant_LenIv.ToA_mapper_sep, requires ToA_mapper_temp
 paragraph \<open>Reasoning\<close>
 
 lemma \<phi>Mul_Quant_LenIv_wrap_module_src:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y \<and> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow>
-              ((fst x, w) \<Ztypecolon> T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U i \<^emph>[C\<^sub>R] R i \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y \<and> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
+          \<longrightarrow> ((fst x, w) \<Ztypecolon> T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U i \<OTast> R i \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
        \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length y' = len_intvl.len iv \<and> y' ! (i - len_intvl.start iv) = fst y
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
                                  i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
-\<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W) = ((w, take len y', drop (len+1) y') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] W \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j:len\<rwpar> U) \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j':len'\<rwpar> U)) @tag \<A>merge
-\<Longrightarrow> x \<Ztypecolon> T \<^emph>[C\<^sub>W'] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv U \<^emph>[C\<^sub>R] R i \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
-  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
-  apply (simp add: cond_prod_transformation_rewr,
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
-  \<medium_left_bracket> premises Tr and _ and _ and _ and []
+\<Longrightarrow> snd x \<Ztypecolon> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (w, take len y', drop (len+1) y') \<Ztypecolon> W \<^emph> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j:len\<rwpar> U \<^emph> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j':len'\<rwpar> U @clean
+\<Longrightarrow> x \<Ztypecolon> T \<OTast> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd y) \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv U \<OTast> R i \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp \<phi>Prod'_def
+  \<medium_left_bracket> premises Tr and _ and _ and _ and C[]
+    C
     Tr
   \<medium_right_bracket> certified by (insert \<phi>, auto simp add: nth_append nth_Cons'; auto_sledgehammer) .
 
 lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv \<longrightarrow>
-              ((fst x ! (i - len_intvl.start iv), snd x) \<Ztypecolon> T i \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
+  \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
+          \<longrightarrow> ((fst x ! (i - len_intvl.start iv), snd x) \<Ztypecolon> T i \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<OTast> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
        \<and>\<^sub>\<r> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
                                  i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
-\<Longrightarrow> ((snd y, take len (fst x), drop (len+1) (fst x)) \<Ztypecolon> \<half_blkcirc>[C\<^sub>R] R \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j:len\<rwpar> T) \<^emph> \<half_blkcirc>[True] (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j':len'\<rwpar> T)) = (r \<Ztypecolon> \<half_blkcirc>[C\<^sub>R'] R') @tag \<A>merge
-\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> U \<^emph>[C\<^sub>R'] R' \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
-  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp Simplify_def
-  apply (simp add: cond_prod_transformation_rewr,
-         simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
-  \<medium_left_bracket> premises Tr and _ and _  and xx[THEN eq_left_frame, simp]
+\<Longrightarrow> (snd y, take len (fst x), drop (len+1) (fst x)) \<Ztypecolon> R \<^emph> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j:len\<rwpar> T \<^emph> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>j':len'\<rwpar> T
+      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> r \<Ztypecolon> R' @clean
+\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> U \<OTast> R' \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp Simplify_def \<phi>Prod'_def
+  \<medium_left_bracket> premises Tr and _ and _  and C
     note hd_drop_conv_nth[simp] \<phi>Some_\<phi>Prod[symmetric, simp] \<phi>Prod_expn'[simp]
     \<semicolon> Tr
       unfold One_nat_def
+      C
   \<medium_right_bracket> .
 
 declare \<phi>Mul_Quant_LenIv.wrap_module_src[\<phi>reason del]
@@ -2312,7 +2304,6 @@ lemma [\<phi>reason add]:
 \<phi>type_def \<phi>Mul_Quant_Tree :: \<open>(nat \<Rightarrow> 'k) \<Rightarrow> nat len_intvl \<Rightarrow> ('k list \<Rightarrow> 'c, 'a) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'c::sep_algebra, 'a list) \<phi> \<close> ("\<big_ast>\<^sub>\<bbbT>")
   where \<open>l \<Ztypecolon> \<phi>Mul_Quant_Tree f iv T \<equiv> l \<Ztypecolon> \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv (\<lambda>i. f i \<^bold>\<rightarrow>\<^sub># T)\<close>
   deriving Sep_Functor_1
-       and Semimodule_NonAssoc
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all P x) \<close>
        and \<open>Object_Equiv T eq
@@ -2321,6 +2312,17 @@ lemma [\<phi>reason add]:
         \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Mul_Quant_Tree f iv T) (list_all T\<^sub>D) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>P x) \<close>
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
+
+term 1
+
+declare [[\<phi>trace_reasoning = 3]]
+
+let_\<phi>type  \<phi>Mul_Quant_Tree
+  deriving Semimodule_SDistr_Homo\<^sub>S
+
+term 1
+       and Semimodule_NonAssoc
+       
        and \<open>Semimodule_One\<^sub>I (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
 
@@ -2331,15 +2333,15 @@ lemma [\<phi>reason add]:
 
 lemma \<phi>Mul_Quant_Tree_wrap_module_src[\<phi>reason default %\<phi>Mul_Quant_Tree_wrap_module]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
-       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y \<longrightarrow>
-              (?\<^sub>Z[C\<^sub>W] (\<lambda>x. x) (\<lambda>f. f) (fst x, w) \<Ztypecolon> ks \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[C\<^sub>R] R \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
+       \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y' ! (i - len_intvl.start iv) = fst y
+            \<longrightarrow> (?\<^sub>Z[C\<^sub>W] (\<lambda>x. x) (\<lambda>f. f) (fst x, w) \<Ztypecolon> ks \<^bold>\<rightarrow>\<^sub>@ T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<OTast> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>'))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length y' = len_intvl.len iv \<and> y' ! (i - len_intvl.start iv) = fst y
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] (j, len, j', len') : (len_intvl.start iv, i - len_intvl.start iv,
                                  i + 1, len_intvl.start iv + len_intvl.len iv - i - 1)
 \<Longrightarrow> ((snd x) \<Ztypecolon> \<half_blkcirc>[C\<^sub>W'] W') = (
         (w, take len y', drop (len+1) y') \<Ztypecolon> \<half_blkcirc>[C\<^sub>W] (f i \<^bold>\<rightarrow>\<^sub># W) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j:len\<rwpar> U) \<^emph> \<half_blkcirc>[True] (\<phi>Mul_Quant_Tree f \<lbrakk>j':len'\<rwpar> U)) @tag \<A>merge
-\<Longrightarrow> x \<Ztypecolon> (f i # ks) \<^bold>\<rightarrow>\<^sub>@ T \<^emph>[C\<^sub>W'] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd (?\<^sub>U\<^sub>Z[C\<^sub>R] (\<lambda>x. x) (\<lambda>f. f) y)) \<Ztypecolon> \<phi>Mul_Quant_Tree f iv U \<^emph>[C\<^sub>R] f i \<^bold>\<rightarrow>\<^sub># R \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
-  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp
+\<Longrightarrow> x \<Ztypecolon> (f i # ks) \<^bold>\<rightarrow>\<^sub>@ T \<OTast> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y', snd (?\<^sub>U\<^sub>Z[C\<^sub>R] (\<lambda>x. x) (\<lambda>f. f) y)) \<Ztypecolon> \<phi>Mul_Quant_Tree f iv U \<OTast> f i \<^bold>\<rightarrow>\<^sub># R \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
+  unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp \<phi>Prod'_def
   apply (simp add: cond_prod_transformation_rewr,
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
   \<medium_left_bracket> premises _ and Tr and _ and _ and []
