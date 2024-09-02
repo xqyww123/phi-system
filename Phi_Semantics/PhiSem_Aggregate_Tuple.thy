@@ -134,6 +134,7 @@ subsection \<open>Empty Tuple\<close>
 \<phi>type_def Empty_Tuple :: \<open>(VAL, unit) \<phi>\<close>
   where \<open>x \<Ztypecolon> Empty_Tuple \<equiv> sem_mk_tup [] \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Empty_Tuple = \<t>\<u>\<p> {}\<close>
        and \<open>Semantic_Zero_Val (sem_tup_T []) Empty_Tuple ()\<close>
@@ -149,6 +150,7 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def Tuple_Field :: "(VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
   where \<open>Tuple_Field T \<equiv> (\<lambda>v. sem_mk_tup [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functional_Transformation_Functor
        and Functionality
        and \<open>Is_Aggregate (Tuple_Field T)\<close>

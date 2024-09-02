@@ -218,6 +218,7 @@ subsection \<open>Empty Tuple\<close>
 \<phi>type_def Empty_Named_Tuple :: \<open>(VAL, unit) \<phi>\<close>
   where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> sem_mk_ntup fmempty \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        (*and \<open>Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close> *)
        and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
@@ -233,6 +234,7 @@ subsection \<open>Field\<close>
 \<phi>type_def Named_Tuple_Field :: "symbol \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
   where \<open>Named_Tuple_Field s T \<equiv> (\<lambda>v. sem_mk_ntup (fmupd s v fmempty)) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functional_Transformation_Functor
        and Functionality
        and \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>

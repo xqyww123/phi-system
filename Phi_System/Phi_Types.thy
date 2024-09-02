@@ -41,8 +41,11 @@ local_setup \<open>
        \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 let_\<phi>type \<phi>None
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Identity_Elements
        and Abstraction_to_Raw
@@ -57,7 +60,9 @@ local_setup \<open>
        \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
 
-let_\<phi>type \<phi>Any deriving Basic
+let_\<phi>type \<phi>Any
+  deriving Basic
+       and Abstract_Domain\<^sub>L
 
 
 subsection \<open>Embedding of \<open>\<bottom>\<close>\<close>
@@ -90,6 +95,8 @@ local_setup \<open>
          \<^here>, Phi_Type.Derivings.empty, [], NONE)
    #> snd \<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 let_\<phi>type \<phi>Prod
   deriving Basic
        and Functional_Transformation_Functor
@@ -98,7 +105,6 @@ let_\<phi>type \<phi>Prod
           \<Longrightarrow> Object_Equiv U eq
           \<Longrightarrow> Object_Equiv (T \<^emph> U) (\<lambda>x y. er (fst x) (fst y) \<and> eq (snd x) (snd y))\<close>
 
-
 subsection \<open>Func\<close>
  
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
@@ -106,6 +112,7 @@ subsection \<open>Func\<close>
   deriving \<open>Identity_Elements\<^sub>E (\<phi>Fun f) (\<lambda>x. f x = 1)\<close>
        and \<open>Identity_Elements\<^sub>I (\<phi>Fun f) (\<lambda>x. f x = 1) (\<lambda>_. True)\<close>
        and Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Abstraction_to_Raw
        and \<open>?f ?xa \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?xa \<Ztypecolon> \<phi>Fun ?f\<close>
@@ -134,6 +141,7 @@ subsection \<open>Embedding of Subjection\<close>
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Sep_Functor_1
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Carrier_Set
 
@@ -574,15 +582,16 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def Set_Abst :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
    
-  deriving Sep_Functor_1 \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
-       and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
-       and \<open>Functional_Transformation_Functor Set_Abst Set_Abst T U
-                      (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
-       and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
-       and Carrier_Set
-       and Open_Abstraction_to_Raw
-       and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
-       and \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @tag to Itself)
+ deriving Sep_Functor_1 \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
+      and Abstract_Domain\<^sub>L
+      and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
+      and \<open>Functional_Transformation_Functor Set_Abst Set_Abst T U
+                     (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
+      and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
+      and Carrier_Set
+      and Open_Abstraction_to_Raw
+      and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
+      and \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @tag to Itself)
         \<Longrightarrow> \<forall>s. (s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>x. r x y \<and> x \<in> s) @tag to Itself)\<close>
 
 
@@ -1186,6 +1195,7 @@ text \<open>Depreciated! Use \<open>\<phi>Sum\<close> instead!\<close>
 \<phi>type_def \<phi>Union :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<or>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<or>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U))\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Identity_Elements
        and \<open>(c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) \<and> y = unspec \<or>\<^sub>c\<^sub>u\<^sub>t
             (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U) \<and> x = unspec
@@ -1212,9 +1222,6 @@ subsection \<open>Embedding Additive Conjunction\<close>
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<sqinter> (snd x \<Ztypecolon> U))\<close>
   deriving Basic
-       and \<open>  Abstract_Domain T P
-          \<Longrightarrow> Abstract_Domain U Q
-          \<Longrightarrow> Abstract_Domain (T \<and>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y)\<close>
        and Object_Equiv
        and Identity_Elements
        and Functional_Transformation_Functor
@@ -1290,6 +1297,7 @@ declare [[\<phi>trace_reasoning = 0]]
           extract_mul_carrier
           Identity_Element_sat
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
          \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>_. True) (\<lambda>x. Satisfiable (x \<Ztypecolon> T)) \<close>
            (%identity_elements_of_\<phi>Fun+40)
@@ -1419,6 +1427,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 let_\<phi>type \<phi>Some
   deriving Sep_Functor
+       and Abstract_Domain\<^sub>L
        and Carrier_Set
        and Functionality
        and \<open>Identity_Elements\<^sub>I (\<black_circle> T) (\<lambda>_. False) (\<lambda>_. False)\<close>
@@ -1436,6 +1445,7 @@ text \<open>For technical reasons, the \<open>\<phi>Some\<close> is defined and 
 \<phi>type_def \<phi>Some' :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close>
   where \<open>\<phi>Some' T \<equiv> Some \<Zcomp>\<^sub>f T\<close>
   deriving Sep_Functor
+       and Abstract_Domain\<^sub>L
        and Carrier_Set
        and Functionality
        and \<open>Identity_Elements\<^sub>I (\<phi>Some' T) (\<lambda>_. False) (\<lambda>_. False)\<close>
@@ -1454,7 +1464,8 @@ subsection \<open>Domainoid\<close>
       even if just an upper or lower approximation. Due to this, here
       we introduce a differentiated syntax to emphasize the intention of extracting domainoid,
       on which specific reasoning procedures can be given to reduce the expression further.\<close>
- deriving Sep_Functor 
+ deriving Sep_Functor
+      and Abstract_Domain\<^sub>L
       and \<open> constant_1 \<delta> \<and>\<^sub>\<r> (D,P) = (\<lambda>_. True, \<lambda>_. True) \<or>\<^sub>c\<^sub>u\<^sub>t
             homo_one \<delta> \<and>\<^sub>\<r> Identity_Elements\<^sub>I T D P
         \<Longrightarrow> Identity_Elements\<^sub>I (\<DD>[\<delta>] T) D P \<close>
@@ -1581,6 +1592,7 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
          \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
@@ -1769,6 +1781,7 @@ subsubsection \<open>List Item\<close>
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Functional_Transformation_Functor
        and Carrier_Set
@@ -1790,6 +1803,7 @@ subsubsection \<open>Empty List\<close>
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Identity_Elements
        and Abstraction_to_Raw
@@ -1854,6 +1868,7 @@ subsubsection \<open>By Key\<close>
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Commutativity_Deriver
        and \<phi>Fun'.Comm
@@ -1876,6 +1891,7 @@ subsubsection \<open>By List of Keys\<close>
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Sep_Functor_1
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Semimodule_NonDistr_no0
        and Commutativity_Deriver
@@ -1907,6 +1923,7 @@ subsection \<open>Permission Sharing\<close>
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Sep_Functor_1
+       and Abstract_Domain\<^sub>L
        and Functionality
        and Semimodule_no0
        and Carrier_Set
@@ -1944,6 +1961,7 @@ subsection \<open>Injection from partial map to permissioned partial map\<close>
 \<phi>type_def To_Share
   where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
+       and Abstract_Domain\<^sub>L
        and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U (\<lambda>x. x) \<close>
        and \<open>Separation_Disj\<^sub>\<phi> to_share Dx T U
         \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
@@ -1972,6 +1990,7 @@ subsection \<open>Injection into Discrete Algebra\<close>
 \<phi>type_def Discrete :: \<open>('c, 'a) \<phi> \<Rightarrow> ('c discrete, 'a) \<phi>\<close>
   where \<open>Discrete T = (discrete \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Carrier_Set (Discrete T) (\<lambda>_. True)\<close>
        and Functionality 
        and Functional_Transformation_Functor

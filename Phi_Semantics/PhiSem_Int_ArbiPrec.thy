@@ -51,6 +51,7 @@ subsection \<open>Integer in the normal sense\<close>
 \<phi>type_def \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
   where \<open>x \<Ztypecolon> \<phi>AInt \<equiv> sem_mk_aint x \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Semantic_Zero_Val
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<int> = \<a>\<i>\<n>\<t>\<close>
 
@@ -75,6 +76,7 @@ subsection \<open>Natural Nmber\<close>
 \<phi>type_def \<phi>ANat ("\<nat>")
   where \<open>n \<Ztypecolon> \<nat> \<equiv> of_nat n \<Ztypecolon> \<int>\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Semantic_Type
        and Semantic_Zero_Val
        and Inhabited

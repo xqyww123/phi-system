@@ -26,6 +26,7 @@ section \<open>\<phi>-Types\<close>
 \<phi>type_def \<phi>AReal :: "(VAL, real) \<phi>" ("\<real>")
   where \<open>x \<Ztypecolon> \<phi>AReal \<equiv> sem_mk_areal x \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<real> = \<a>\<r>\<e>\<a>\<l>\<close>
        and \<open>Semantic_Zero_Val \<a>\<r>\<e>\<a>\<l> \<real> 0\<close>
