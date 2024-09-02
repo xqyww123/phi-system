@@ -8105,8 +8105,7 @@ end
   Phi_Type_Derivers.abstract_domain_L
 \<close>
 
-\<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> )
-  requires Abstract_Domain\<^sub>L ? = \<open>
+\<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> )  = \<open>
   Phi_Type_Derivers.abstract_domain
 \<close>
 

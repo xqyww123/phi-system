@@ -173,6 +173,7 @@ ML \<open>assert_derived_properties \<^theory> [
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Itself)\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Make_Abstraction_from_Raw
        and Functionality
 

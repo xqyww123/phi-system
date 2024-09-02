@@ -140,6 +140,7 @@ subsection \<open>Words\<close>
 \<phi>type_def Word :: \<open>'b itself \<Rightarrow> (VAL, 'b::len word) \<phi>\<close>
   where \<open>x \<Ztypecolon> Word _ \<equiv> sem_mk_int (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (Word ?uu) (=)\<close>
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (Word TYPE('b)) = int('b)\<close>
        and \<open>Semantic_Zero_Val int('b) (Word ?uu) (0::'b::len word)\<close>
@@ -173,6 +174,7 @@ subsubsection \<open>Rounded Natural Number\<close>
 \<phi>type_def \<phi>RoundedNat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>RoundedNat _ \<equiv> ((of_nat x :: 'b word) \<Ztypecolon> Word('b))\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (\<phi>RoundedNat (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<phi>RoundedNat (TYPE('a))) = \<i>\<n>\<t>('a)\<close>
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedNat TYPE('b)) 0\<close>
@@ -223,6 +225,7 @@ subsubsection \<open>Natural Number\<close>
 \<phi>type_def \<phi>Nat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>Nat _ \<equiv> (x \<Ztypecolon> \<nat>\<^sup>r('b) \<s>\<u>\<b>\<j> x \<in> {0..< 2 ^ LENGTH('b)})\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (\<phi>Nat uu) (=)\<close>
        and Inhabited
 
@@ -310,6 +313,7 @@ subsubsection \<open>Integer\<close>
   where \<open>x \<Ztypecolon> \<phi>Int _ \<equiv> ((of_int x :: 'b word) \<Ztypecolon> Word('b)
                               \<s>\<u>\<b>\<j> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)})\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (\<phi>Int uu) (=)\<close>
        and \<open> \<t>\<y>\<p>\<e>\<o>\<f>(\<phi>Int TYPE('a)) = \<i>\<n>\<t>('a) \<close>
        and Inhabited
@@ -421,6 +425,7 @@ subsubsection \<open>Rounded Natural Number\<close>
 \<phi>type_def \<phi>RoundedInt :: "'b::len itself \<Rightarrow> (VAL, int) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>RoundedInt _ \<equiv> ((of_int x :: 'b word) \<Ztypecolon> Word('b))\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (\<phi>RoundedInt (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
        and \<open> \<t>\<y>\<p>\<e>\<o>\<f>(\<phi>RoundedInt TYPE('a)) = \<i>\<n>\<t>('a) \<close>
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedInt TYPE('b)) 0\<close>

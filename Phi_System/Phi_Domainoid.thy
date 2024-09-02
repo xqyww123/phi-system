@@ -407,9 +407,10 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> domainoid TYPE('c::sep_magma) \<delta>
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Satisfiable A) \<Longrightarrow> A' \<le> \<Psi>[domainoid_tag \<delta>] A) \<comment>\<open>expand \<open>\<Psi>[d] A, \<Psi>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Satisfiable B) \<Longrightarrow> B' \<le> \<Psi>[domainoid_tag \<delta>] B)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<Turnstile> A' \<and> b \<Turnstile> B' \<and> a ## b))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<Turnstile> A' \<and> b \<Turnstile> B' \<and> a ## b))
 \<Longrightarrow> Pa \<and> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A * B\<close>
-  unfolding Satisfiable_def BI_sub_iff Premise_def \<r>EIF_def \<r>ESC_def domainoid_def domainoid_tag_def
+  unfolding Satisfiable_def BI_sub_iff Premise_def \<r>EIF_def \<r>ESC_def
+            domainoid_def domainoid_tag_def \<r>Guard_def
   by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; blast)
 
 

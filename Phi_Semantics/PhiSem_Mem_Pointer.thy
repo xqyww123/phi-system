@@ -575,6 +575,7 @@ subsection \<open>Physical Pointer\<close>
 \<phi>type_def RawPointer :: "(VAL, rawaddr) \<phi>"
   where \<open>x \<Ztypecolon> RawPointer \<equiv> (sem_mk_pointer x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_rawaddr x)\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv RawPointer (=)\<close>
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> RawPointer = \<p>\<t>\<r>\<close>
@@ -595,6 +596,7 @@ declare [[\<phi>trace_reasoning = 1]]
 \<phi>type_def Ptr :: "(VAL, address) \<phi>"
   where \<open>x \<Ztypecolon> Ptr \<equiv> sem_mk_pointer (memaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_memaddr x\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv Ptr (=)\<close>
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Ptr = \<p>\<t>\<r>\<close>
@@ -642,6 +644,7 @@ subsection \<open>Typed Pointer\<close>
 \<phi>type_def TypedPtr :: "TY \<Rightarrow> (VAL, address) \<phi>"
   where \<open>x \<Ztypecolon> TypedPtr TY \<equiv> x \<Ztypecolon> Ptr \<s>\<u>\<b>\<j> x = 0 \<or> address_type x = TY\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (TypedPtr TY) (=)\<close>
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (TypedPtr TY) = \<p>\<t>\<r>\<close>

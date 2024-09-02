@@ -31,6 +31,7 @@ section \<open>\<phi>-Types\<close>
 \<phi>type_def Symbol :: "(VAL, symbol) \<phi>"
   where \<open>s \<Ztypecolon> Symbol \<equiv> sem_mk_symbol s \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Symbol = \<s>\<y>\<m>\<b>\<o>\<l>\<close>
        and \<open>Semantic_Zero_Val \<s>\<y>\<m>\<b>\<o>\<l> Symbol SYMBOL(zero)\<close>

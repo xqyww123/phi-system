@@ -13,6 +13,7 @@ begin
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
   where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv \<rat> (=)\<close>
 
 thm \<phi>Rational.intro_reasoning
