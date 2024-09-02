@@ -17,6 +17,7 @@ include PHI_SYNTAX
 
 
   val enable_auto_chk_and_conv : bool Config.T
+  val chk_source_val : bool Config.T
 
 end
 

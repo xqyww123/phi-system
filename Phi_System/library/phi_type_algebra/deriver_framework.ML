@@ -1977,6 +1977,7 @@ fun reasoning ctxt0 sequent0 =
                         #> has_mutating_params phi ? varify_phi_type_parameter ctxt))
 
       val ctxt'' = ctxt
+            |> Config.put Phi_Syntax.chk_source_val false
             |> Context.proof_map (Phi_Reasoner.add_rules (
                   map (fn (rule, group) =>
                             ([rule], Position.none, Phi_Reasoner.TO_BE_OVERRIDE',

@@ -113,10 +113,12 @@ fun gen_constr_from_raw (_,name) instruction (phi0 : phi_type) thy =
         |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (
               fn m => fn lthy => lthy
                |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+               |> Config.put_generic Phi_Syntax.chk_source_val false
                |> Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE'
                                         (SOME (the_default @{reasoner_group %derived_abstract_from_raw}
                                                            (#2 instruction)))
                                         ([],[]) NONE [Morphism.thm m rule]
+               |> Config.restore_generic Phi_Syntax.chk_source_val lthy
                |> Config.restore_generic Phi_Reasoner.trace lthy)
         |> note_properties_s false phi0 [(name, [rule])]
         |> pair [rule]
