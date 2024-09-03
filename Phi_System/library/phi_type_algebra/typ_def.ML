@@ -1547,15 +1547,9 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
 
       val make_abstraction = if no_auto then [] else
                               gen_from_eqs @{thm' \<phi>make_abstraction_infer} I tagged_eqs
-                           @ (gen_from_eqs @{thm' \<phi>make_abstraction'R_infer} I tagged_eqs
-                              handle THM _ => [])
-                           @ (gen_from_tagged_eq_in_type (K I) (K I) @{thm' \<phi>make_abstraction'Rt_infer}
-                                    |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
       val make_abstraction_sp = if no_auto then [] else
                                  gen_from_eqs_set_idx @{thm' \<phi>make_abstraction_specified} I tagged_eqs
-                              @ (gen_from_eqs_set_idx @{thm' \<phi>make_abstraction'R_specified} I tagged_eqs
-                                 handle THM _ => [])
-                              @ (gen_from_tagged_eq_in_type_set_idx @{thm' \<phi>make_abstraction'Rt_specified}
+                               @ (gen_from_tagged_eq_in_type_set_idx @{thm' \<phi>make_abstraction'bi}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
     (*val make_Identity_Element_E = if no_auto then [] else
                                     (gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
@@ -1597,8 +1591,8 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
              |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
              |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %To_ToA_derived_OPEN+5} open_abstraction_sp
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived-10} make_abstraction
-             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction_sp
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_Make-10} make_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %ToA_Make} make_abstraction_sp
            (*|> not (null make_Identity_Element_E) ?
                 add_rules Phi_Reasoner.TO_BE_OVERRIDE' @{reasoner_group %derived_identity_element} make_Identity_Element_E *)
              |> Config.put_generic phi_allow_source_object_to_be_not_variable true
