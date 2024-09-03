@@ -1243,6 +1243,11 @@ lemma [\<phi>reason %ToA_clean_fallback for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o
   unfolding Action_Tag_def
   by simp
 
+lemma [\<phi>reason %ToA_clean_fallback-1 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @clean\<close>]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T @clean \<close>
+  unfolding Action_Tag_def Premise_def
+  by simp
 
 paragraph \<open>Bottom Groups\<close>
 
