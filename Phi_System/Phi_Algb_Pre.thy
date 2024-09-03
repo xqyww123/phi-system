@@ -469,28 +469,6 @@ declare [[\<phi>reason_default_pattern \<open>partial_add_overlaps ?a ?b\<close>
 
 subsubsection \<open>Default Implementation falling back to solving the equations\<close>
 
-paragraph \<open>Commutative Additive Group\<close>
-
-lemma [\<phi>reason default %partial_add_overlaps_default,
-       \<phi>reason default %partial_add_overlaps_default_comm
-       for \<open>partial_add_overlaps (_::_::ab_semigroup_add) _\<close>
-           \<open>partial_add_overlaps (_::_::partial_ab_semigroup_add) _\<close>]:
-  \<open> equation\<^sub>2\<^sub>1 d a b
-\<Longrightarrow> partial_add_overlaps a b \<close>
-  unfolding Action_Tag_def partial_add_overlaps_def
-  by blast
-
-lemma [\<phi>reason default %partial_add_overlaps_default,
-       \<phi>reason default %partial_add_overlaps_default_comm
-       for \<open>partial_add_overlaps (_::_::ab_semigroup_add) _\<close>
-           \<open>partial_add_overlaps (_::_::partial_ab_semigroup_add) _\<close>]:
-  \<open> equation\<^sub>2\<^sub>1 d b a
-\<Longrightarrow> partial_add_overlaps a b \<close>
-  unfolding Action_Tag_def partial_add_overlaps_def
-  by blast
-
-paragraph \<open>None_Commutative Additive Group\<close>
-
 (*
 lemma [\<phi>reason default %partial_add_overlaps_default]:
   \<open> id b + id c = id a @tag \<A>arith_eq

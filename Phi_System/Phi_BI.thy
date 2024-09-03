@@ -3944,6 +3944,12 @@ lemma [\<phi>reason add]:
 \<Longrightarrow> (a,b) \<Ztypecolon> T \<^emph> \<half_blkcirc>[False] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> W @clean \<close>
   by (cases x; simp add: \<phi>Prod_expn')+
 
+
+lemma [\<phi>reason %ToA_clean_fallback for \<open>\<Psi>[Some] _ * \<Psi>[Some] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] _ \<w>\<i>\<t>\<h> _ @clean\<close>]:
+  \<open> \<Psi>[Some] X * \<Psi>[Some] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] (X * Y) @clean \<close>
+  unfolding Action_Tag_def
+  using Transformation_def by fastforce
+
 (*
 consts \<A>merge :: action
 

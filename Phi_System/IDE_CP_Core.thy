@@ -832,8 +832,8 @@ lemma [\<phi>reason %interp_\<phi>synthesis
 
 paragraph \<open>Construction on ToA\<close>
 
-lemma [\<phi>reason %interp_\<phi>synthesis
-    for \<open>PROP DoSynthesis ?X (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S1)) ?RET\<close>
+lemma [\<phi>reason %interp_\<phi>synthesis+10
+    for \<open>PROP DoSynthesis ?X (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> (?S1::?'c::sep_magma_1 BI))) ?RET\<close>
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<w>\<i>\<t>\<h> P
@@ -845,6 +845,22 @@ lemma [\<phi>reason %interp_\<phi>synthesis
       (Trueprop ((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> X'' * S2) \<and> P))"
   unfolding REMAINS_def Action_Tag_def DoSynthesis_def Simplify_def
   by (meson \<phi>apply_implication_impl)
+
+
+lemma [\<phi>reason %interp_\<phi>synthesis
+    for \<open>PROP DoSynthesis ?X (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S1)) ?RET\<close>
+]:
+  " \<r>CALL Synthesis_Parse X X'
+\<Longrightarrow> \<Psi>[Some] S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] X' \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<Psi>[Some] X' * S2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<Psi>[Some] RET @clean
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] RET' : RET
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP DoSynthesis X
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S1))
+      (Trueprop ((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> RET') \<and> P))"
+  unfolding REMAINS_def Action_Tag_def DoSynthesis_def Simplify_def
+  by (smt (verit) ToA_Construction_def Transformation_def World_Shift_expn option.inject)
 
 
 paragraph \<open>Solving an antecedent by Synthesis\<close>

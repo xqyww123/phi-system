@@ -1434,6 +1434,7 @@ declare [[
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
   and ToA_make_\<phi>type_derived = (80, [70, 80]) in ToA_make_\<phi>type
       \<open>Derived rules\<close>
+  and ToA_make_red = (%ToA_red+30, [%ToA_red+30,%ToA_red+30]) in ToA_red \<open>\<close>
 
 ML_file \<open>library/syntax/make_and_open.ML\<close>
 
@@ -1458,37 +1459,37 @@ paragraph \<open>Reductions in Source\<close>
 
 text \<open>\<open>MAKE\<close> tag in source is senseless\<close>
 
-lemma [\<phi>reason %ToA_red]:
+lemma [\<phi>reason %ToA_make_red]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> MAKE i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding MAKE_def
   by simp
 
-lemma [\<phi>reason %ToA_red]:
+lemma [\<phi>reason %ToA_make_red]:
   \<open> x \<Ztypecolon> T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> MAKE i T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding MAKE_def
   by simp
 
-lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE undefined _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
+lemma [\<phi>reason %ToA_make_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE undefined _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE some T \<w>\<i>\<t>\<h> P @tag \<T>\<P>
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE undefined T \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
   unfolding MAKE_def
   by simp
 
-lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE undefined _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+lemma [\<phi>reason %ToA_make_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE undefined _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE some T \<OTast> W \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE undefined T \<OTast> W \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
   unfolding MAKE_def
   by simp
 
-lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE (Suc 0) _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
+lemma [\<phi>reason %ToA_make_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE (Suc 0) _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE 1 T \<w>\<i>\<t>\<h> P @tag \<T>\<P>
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (Suc 0) T \<w>\<i>\<t>\<h> P @tag \<T>\<P> \<close>
   unfolding MAKE_def
   by simp
 
-lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE (Suc 0) _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
+lemma [\<phi>reason %ToA_make_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE (Suc 0) _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE 1 T \<OTast> W \<w>\<i>\<t>\<h> P @tag \<T>\<P>'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (Suc 0) T \<OTast> W \<w>\<i>\<t>\<h> P @tag \<T>\<P>' \<close>
   unfolding MAKE_def

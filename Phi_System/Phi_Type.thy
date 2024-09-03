@@ -9406,7 +9406,7 @@ text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules 
   If so, activate deriver \<open>SE_Trim_Empty\<close>.
 \<close>
 
-lemma [\<phi>reason_template name F.\<phi>None [assertion_simps, simp]]:
+lemma [\<phi>reason_template name F.\<phi>None [unfolded Premise_def, assertion_simps, simp]]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> TERM (Identity_Elements\<^sub>I (F \<circle>))
 \<Longrightarrow> Identity_Elements\<^sub>I (F \<circle>) D\<^sub>I P\<^sub>I @tag \<A>_template_reason undefined

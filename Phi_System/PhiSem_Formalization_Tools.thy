@@ -244,7 +244,7 @@ proc (nodef) [\<phi>reason %\<phi>synthesis_cut
 lemma [\<phi>reason %\<phi>synthesis_cut
            for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. () \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] \<circle> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> @tag synthesis\<close>]:
   \<open> \<p>\<r>\<o>\<c> Return \<phi>V_nil \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. () \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] \<circle> \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>0 \<rbrace> \<close>
-  unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
+  unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def REMAINS_def
   by (clarsimp simp add: Val.unfold Vals.unfold times_list_def less_eq_BI_iff)
 
 
