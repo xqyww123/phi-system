@@ -37,7 +37,7 @@ ML \<open>assert_derived_properties \<^theory> [
 
 thm List.ToA_mapper_sep
 
-thm List.ToA_mapper_sep[where C\<^sub>R=True and C\<^sub>W=True, simplified]
+thm List.ToA_mapper_sep[simplified]
 
 term map2
 

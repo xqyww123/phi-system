@@ -2542,127 +2542,49 @@ text \<open>No \<open>Object_Equiv\<close> is used and we use \<open>(=)\<close>
   \<open>Object_Equiv\<close>, so there is no need to apply \<open>Object_Equiv\<close> any more.\<close>
 
 lemma \<phi>open_abstraction_infer:
-  \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
+  \<open> (x \<Ztypecolon> T) = R
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x' = x
-\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @tag to (OPEN i T) \<close>
+\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R @tag OPEN var \<T>\<P> \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
   by simp
 
 lemma \<phi>open_abstraction_specified:
-  \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
+  \<open> (x \<Ztypecolon> T) = R
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x' = x
-\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @tag to (OPEN i T) \<close>
+\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R @tag OPEN i \<T>\<P> \<close>
   unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
   by simp
 
-
-lemma \<phi>open_abstraction_ToA_infer:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
-\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def
+lemma \<phi>open_abstraction_ty:
+  \<open> (x \<Ztypecolon> T) = (y \<Ztypecolon> U)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x' = x
+\<Longrightarrow> x' \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U @tag OPEN i \<T>\<P>' \<close>
+  unfolding Action_Tag_def Simplify_def \<r>Guard_def Premise_def
   by simp
-
-lemma \<phi>open_abstraction_ToA_specified:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
-\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN i T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def
-  by simp
-
-lemma \<phi>open_abstraction_ToA_R_infer:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
-\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * (x \<Ztypecolon> OPEN i T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def
-  by simp
-
-lemma \<phi>open_abstraction_ToA_R_specified:
-  \<open> (x' \<Ztypecolon> T) = U
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
-\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * (x \<Ztypecolon> OPEN i T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def
-  by simp
-
-lemma \<phi>open_abstraction_ToA_W_infer:
-  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'
-\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN i T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def \<r>Guard_def \<phi>Prod'_def
-  by (cases x; clarsimp simp add: \<phi>Prod_expn')
-
-lemma \<phi>open_abstraction_ToA_W_specified:
-  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x = x'
-\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN i T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def Premise_def Orelse_shortcut_def \<phi>Prod'_def
-  by (cases x; clarsimp simp add: \<phi>Prod_expn')
-
-
-
-
 
 lemma \<phi>make_abstraction_infer:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
-            Orelse_shortcut_def
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T @tag MAKE var \<T>\<P> \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def \<r>Guard_def Ant_Seq_def
+            Orelse_shortcut_def Action_Tag_def
   by clarsimp
 
 lemma \<phi>make_abstraction_specified:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
-            Orelse_shortcut_def
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T @tag MAKE i \<T>\<P> \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def \<r>Guard_def Ant_Seq_def
+            Orelse_shortcut_def Action_Tag_def
   by clarsimp
 
-lemma \<phi>make_abstraction'R_infer:
-  \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x'
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
-            Orelse_shortcut_def
-  by (clarsimp; blast)
 
-lemma \<phi>make_abstraction'R_specified:
-  \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE i T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
-            Orelse_shortcut_def
-  by (clarsimp; blast)
-
-lemma \<phi>make_abstraction'Rt_infer:
-  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<OTast> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y, snd x) = y'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<OTast> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
-            Orelse_shortcut_def MAKE_def \<phi>Prod'_def
-  by (clarsimp; blast)
-
-lemma \<phi>make_abstraction'Rt_specified:
-  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x = x'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<OTast> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y, snd x) = y'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE i T \<OTast> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
-            Orelse_shortcut_def \<phi>Prod'_def
-  by (clarsimp; blast)
+lemma \<phi>make_abstraction_ty:
+  \<open> (x \<Ztypecolon> T) = (y \<Ztypecolon> U)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y' = y
+\<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T @tag MAKE i \<T>\<P>' \<close>
+  unfolding Action_Tag_def Premise_def
+  by simp
 
 
 (*

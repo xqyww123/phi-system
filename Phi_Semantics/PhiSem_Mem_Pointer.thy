@@ -617,7 +617,8 @@ lemma Ptr_to_Raw_Pointer[\<phi>reason %ToA_cut]:
 \<Longrightarrow> x \<Ztypecolon> Ptr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> memaddr_to_raw x \<Ztypecolon> RawPointer \<w>\<i>\<t>\<h> valid_memaddr x \<close>
   \<medium_left_bracket>
      to \<open>OPEN _ _\<close>
-     \<open>memaddr_to_raw x \<Ztypecolon> MAKE _ RawPointer\<close> certified by auto_sledgehammer
+    note [[\<phi>trace_reasoning = 2]]
+    \<semicolon>    \<open>memaddr_to_raw x \<Ztypecolon> MAKE _ RawPointer\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %cutting ]:

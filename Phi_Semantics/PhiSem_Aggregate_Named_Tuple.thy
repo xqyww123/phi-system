@@ -237,7 +237,7 @@ subsection \<open>Field\<close>
        and Functional_Transformation_Functor
        and Functionality
        and \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
-       and Separation_Homo
+       (*and Separation_Homo*)
        and Inhabited
 
 subsubsection \<open>Syntax\<close>

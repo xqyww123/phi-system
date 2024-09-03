@@ -272,7 +272,7 @@ fun conv_items_of_assertion C =
            | Const(\<^const_name>\<open>inf\<close>, _) $ _ $ _ =>
                 Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
            | Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ =>
-                Conv.combination_conv (Conv.arg1_conv (conv ctxt)) (conv ctxt) ctm
+                Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) ctm
            | Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>BI _\<close>) => Conv.all_conv ctm
            | Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>BI _\<close>) => Conv.all_conv ctm
            | Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>BI _\<close>) => Conv.all_conv ctm
