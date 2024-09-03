@@ -2344,6 +2344,7 @@ lemma \<phi>Mul_Quant_Tree_wrap_module_src[\<phi>reason default %\<phi>Mul_Quant
   unfolding Action_Tag_def \<r>Guard_def Ant_Seq_imp \<phi>Prod'_def
   \<medium_left_bracket> premises _ and Tr and _ and _ and C[]
     note Tr' = Tr
+thm \<phi>MapAt_L.scalar_partial_functor
 thm \<phi>MapAt_L.scalar_partial_functor[
           unfolded Action_Tag_def \<phi>Prod'_def,
           where t'=\<open>[]\<close> and s=\<open>[f i]\<close>, simplified,

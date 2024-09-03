@@ -1238,12 +1238,12 @@ declare [[
   \<phi>default_reasoner_group \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @clean\<close> : %ToA_clean (20)
 ]]
 
-lemma [\<phi>reason %ToA_clean_fallback for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @clean\<close>]:
+lemma [\<phi>reason default %ToA_clean_fallback for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @clean\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @clean \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason %ToA_clean_fallback-1 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @clean\<close>]:
+lemma [\<phi>reason default %ToA_clean_fallback-10 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @clean\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T @clean \<close>
   unfolding Action_Tag_def Premise_def
@@ -3798,12 +3798,12 @@ declare [[
   \<phi>default_reasoner_group \<open>(_,_) \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @clean\<close> : %ToA_clean+10 (30)
 ]]
 
-lemma [\<phi>reason %ToA_clean_fallback-5 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_,_) \<Ztypecolon> _ @clean\<close>]:
+lemma [\<phi>reason default %ToA_clean_fallback-5 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_,_) \<Ztypecolon> _ @clean\<close>]:
   \<open> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T @clean
 \<Longrightarrow> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y) \<Ztypecolon> T @clean \<close>
   by simp
 
-lemma [\<phi>reason %ToA_clean_fallback-5 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_,_,_) \<Ztypecolon> _ @clean\<close>]:
+lemma [\<phi>reason default %ToA_clean_fallback-5 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_,_,_) \<Ztypecolon> _ @clean\<close>]:
   \<open> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T @clean
 \<Longrightarrow> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, fst (snd y), snd (snd y)) \<Ztypecolon> T @clean \<close>
   by simp
