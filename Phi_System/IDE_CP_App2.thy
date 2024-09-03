@@ -245,6 +245,7 @@ lemma [\<phi>reason %To_ToA_fallback]:
   unfolding Action_Tag_def Transformation_def
   by clarsimp
 
+
 subsubsection \<open>Short-cut of ToA\<close>
 
 text \<open>We can assume the name bindings of values are lambda-equivalent. \<close>

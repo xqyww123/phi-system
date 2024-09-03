@@ -10,6 +10,8 @@ theory PhiSem_Play_Ground
     PhiSem_Mem_Pointer
 begin
 
+declare [[\<phi>trace_reasoning = 2]]
+
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
   where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
   deriving Basic
@@ -27,12 +29,14 @@ lemma [\<phi>reason add]:
 
 declare One_nat_def [simp del]
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>  
   val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close>
-  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close>
+  \<semicolon>  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close>
   val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1]
   val denominator \<leftarrow> $q1[1] * $q2[1] \<semicolon>  
   \<lbrace> $numerator, $denominator \<rbrace>
