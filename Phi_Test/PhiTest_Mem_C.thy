@@ -44,8 +44,7 @@ proc test_ptr3:
 
 declare [[\<phi>reasoning_step_limit = 160]]
 
-thm \<phi>MapAt_L.ToA_mapper_sep
-  
+
 proc test_mem3:
   input \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<close>
   premises \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
@@ -89,7 +88,9 @@ proc test_mem6:
   addr.d.f.j
 \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 260]]
+declare [[\<phi>reasoning_step_limit = 200]]
+
+declare [[\<phi>trace_reasoning = 2]]
 
 proc test_mem6a:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>

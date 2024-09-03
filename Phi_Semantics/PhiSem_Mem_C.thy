@@ -43,6 +43,38 @@ subsection \<open>Memory Object\<close>
 \<phi>type_def Block :: \<open>block \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
   where \<open>x \<Ztypecolon> Block blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
   deriving Sep_Functor_1
+thm Block.ToA_mapper_sep
+thm Block.Functional_Transformation_Functor
+lemma t1:
+  \<open>Parameter_Variant_of_the_Same_TypOpr A B\<close>
+  unfolding Parameter_Variant_of_the_Same_TypOpr_def ..
+
+thm ToA_mapper_sep_template[unfolded \<r>Guard_def,
+      OF Block.Functional_Transformation_Functor
+         t1
+         Block.Functional_Transformation_Functor]
+
+thm ToA_mapper_sep_template[unfolded \<r>Guard_def,
+      OF Block.Functional_Transformation_Functor
+         t1
+         Block.Functional_Transformation_Functor
+         Block.Separation_Homo\<^sub>I_Cond Block.Separation_Homo\<^sub>I_Cond
+         Block.Separation_Homo\<^sub>E_Cond Block.Separation_Homo\<^sub>E_Cond]
+thm Block.Separation_Homo\<^sub>I_Cond
+thm Block.Separation_Homo\<^sub>E_Cond
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \<phi>type_def Mem :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
   where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
