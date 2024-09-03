@@ -2,7 +2,7 @@ theory PhiSem_CF_Breakable
   imports PhiSem_CF_Break PhiSem_CF_Basic
 begin
 
-declare [[\<phi>hide_techinicals=false]]
+(*declare [[\<phi>hide_techinicals=false]]*)
 
 text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<open>continue\<close> now, the termination condition of a loop is not
   necessarily the negative of the loop guard. Therefore here we need 3 assertions, invariance,
@@ -40,13 +40,10 @@ proc while:
       \<medium_left_bracket> op_brk_scope \<medium_left_bracket> for lc 
           apply_rule B[where lb1=lb]
           apply_rule op_break[THEN Technical_I, THEN Labelled_I]
-          apply_rule op_break[THEN Technical_I, THEN Labelled_I]
-        
-        note [[\<phi>trace_reasoning = 2]]
-        \<semicolon>
-        \<medium_right_bracket> for \<open>TECHNICAL Brk_Frame lc\<heavy_comma> (TECHNICAL Brk_Frame lb\<heavy_comma> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x')\<close> ;;
-      \<medium_right_bracket> ;;
-    \<medium_right_bracket> for \<open>(R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> TECHNICAL Brk_Frame lb\<close> ;;
+          apply_rule op_break[THEN Technical_I, THEN Labelled_I] \<semicolon>
+        \<medium_right_bracket> for \<open>TECHNICAL Brk_Frame lc\<heavy_comma> (TECHNICAL Brk_Frame lb\<heavy_comma> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x')\<close> \<semicolon>
+      \<medium_right_bracket> \<semicolon>
+    \<medium_right_bracket> for \<open>(R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> TECHNICAL Brk_Frame lb\<close> \<semicolon>
   \<medium_right_bracket>.
 
 hide_const (open) PhiSem_CF_Basic.while

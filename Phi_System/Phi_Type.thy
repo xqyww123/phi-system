@@ -2485,9 +2485,9 @@ lemma \<phi>elim_reasoning_transformation:
 
 lemma \<phi>elim'SEi_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
-\<Longrightarrow> (y x, w) \<Ztypecolon> U x \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> (x,w) \<Ztypecolon> T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  by (simp add: \<phi>Prod_expn' \<phi>Prod'_def)
+\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U (fst x) \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> T \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by (cases x; simp add: \<phi>Prod_expn' \<phi>Prod'_def)
 
 
 lemma \<phi>intro_ToA_Mapper_template:

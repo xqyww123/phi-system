@@ -2317,13 +2317,13 @@ lemma [\<phi>reason %ToA_subj+10]: (*THINK: add Q in P, is good or not?*)
 
 lemma [\<phi>reason %ToA_subj+20]:
   "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>)
-\<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<and> Q @tag \<T>\<P>"
+\<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P @tag \<T>\<P>"
   unfolding Transformation_def Premise_def Action_Tag_def
   by simp blast
 
 lemma [\<phi>reason %ToA_subj+20]:
   "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<w>\<i>\<t>\<h> P @tag \<T>\<P>)
-\<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<w>\<i>\<t>\<h> P \<and> Q @tag \<T>\<P>"
+\<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<s>\<u>\<b>\<j> Q) \<w>\<i>\<t>\<h> P @tag \<T>\<P>"
   unfolding Transformation_def Premise_def \<phi>TagA_def Action_Tag_def
   by simp blast
 
@@ -2335,13 +2335,13 @@ lemma [\<phi>reason %ToA_subj+10]:
 
 lemma [\<phi>reason %ToA_subj+20]:
   "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<T>\<P>)
-\<Longrightarrow> (T \<s>\<u>\<b>\<j> Q) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<and> Q @tag \<T>\<P>"
+\<Longrightarrow> (T \<s>\<u>\<b>\<j> Q) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P @tag \<T>\<P>"
   unfolding Transformation_def Premise_def Action_Tag_def
   by simp blast
 
 lemma [\<phi>reason %ToA_subj+20]:
   "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (T * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<w>\<i>\<t>\<h> P @tag \<T>\<P>)
-\<Longrightarrow> (T \<s>\<u>\<b>\<j> Q) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<w>\<i>\<t>\<h> P \<and> Q @tag \<T>\<P>"
+\<Longrightarrow> (T \<s>\<u>\<b>\<j> Q) * W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<phi>TagA mode (U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<s>\<u>\<b>\<j> Q) \<w>\<i>\<t>\<h> P @tag \<T>\<P>"
   unfolding Transformation_def Premise_def \<phi>TagA_def Action_Tag_def
   by simp blast
 
@@ -2361,6 +2361,13 @@ lemma [\<phi>reason %cutting]:
 \<Longrightarrow> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> B
 \<Longrightarrow> X * Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<and> B\<close>
   unfolding \<r>EIF_def
+  using set_mult_inhabited by blast
+
+lemma [\<phi>reason %cutting]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
+\<Longrightarrow> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> B
+\<Longrightarrow> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<and> B\<close>
+  unfolding \<r>EIF_def REMAINS_def
   using set_mult_inhabited by blast
 
 lemma
@@ -5735,10 +5742,10 @@ fun skolemize_transformation ctxt th =
   let fun skolem th =
        (case Phi_Syntax.dest_transformation (Thm.major_prem_of th)
           of (Const(\<^const_name>\<open>ExBI\<close>, _) $ _,
-              Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _), _) =>
+              Const(\<^const_name>\<open>\<phi>TagA\<close>, _) $ _ $ (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _), _) =>
               skolem (@{thm' skolemize_transformation_tR} RS th)
            | (Const(\<^const_name>\<open>ExBI\<close>, _) $ _,
-              Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ , _) =>
+              Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ , _) =>
               skolem (@{thm' skolemize_transformation_R} RS th)
            | (Const(\<^const_name>\<open>ExBI\<close>, _) $ _, _, _) =>
               skolem (@{thm' skolemize_transformation} RS th)

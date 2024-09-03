@@ -48,6 +48,7 @@ subsection \<open>Memory Object\<close>
   where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
   deriving Sep_Functor_1
 
+
 declare Mem.intro_reasoning[\<phi>reason default]
         Mem.elim_reasoning [\<phi>reason default]
         Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
@@ -174,7 +175,7 @@ subsection \<open>Main\<close>
 
 proc op_load_mem:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> state\<close>
-  requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+  requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<close>
        and \<open>Semantic_Type' (x \<Ztypecolon> T) TY\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state\<close>
   unfolding Guided_Mem_Coercion_def
@@ -182,7 +183,7 @@ proc op_load_mem:
 \<medium_left_bracket>
   semantic_local_value(addr) \<p>\<t>\<r>
 
-  apply_rule ToA_Extract_onward[OF Extr, unfolded Remains_\<phi>Cond_Item]
+  apply_rule ToA_Extract_onward[OF Extr]
 
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v \<semicolon>
@@ -194,7 +195,7 @@ proc op_load_mem:
 
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))))\<close>
   \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] T)\<close>
-  apply_rule ToA_Extract_backward[OF Extr, unfolded Remains_\<phi>Cond_Item]
+  apply_rule ToA_Extract_backward[OF Extr]
 
   holds_fact [simp]: \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = TY\<close>
          and \<open>Mem.Val_of_Rep (block.layout (addr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
@@ -214,14 +215,14 @@ proc op_store_mem:
   requires \<open>report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
        and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)
                    \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
-                 \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+                 \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<close>
        and \<open>Semantic_Type T TY\<close>
        and \<open>Semantic_Type U TY\<close>
   output \<open>\<lambda>_::unit \<phi>arg. State'\<close>
   including \<phi>sem_type_sat_EIF
   unfolding Guided_Mem_Coercion_def
 \<medium_left_bracket>
-  apply_rule ToA_Subst_onward[OF Map, unfolded Remains_\<phi>Cond_Item]
+  apply_rule ToA_Subst_onward[OF Map]
 
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
@@ -239,12 +240,12 @@ proc op_store_mem:
   \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.index addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U))))\<close>
   \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] U)\<close>
   
-  apply_rule ToA_Subst_backward[OF Map, unfolded Remains_\<phi>Cond_Item]
+  apply_rule ToA_Subst_backward[OF Map]
 \<medium_right_bracket> .
 
 lemma op_load_mem_triangle_opr_\<phi>app[\<phi>overload \<tribullet> 10]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = \<p>\<t>\<r>
-\<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R
+\<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_load_mem TY v \<lbrace> addr \<Ztypecolon> \<v>\<a>\<l>[v] TypedPtr TY\<heavy_comma> state \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state \<rbrace>\<close>
@@ -391,19 +392,20 @@ section \<open>Reasoning Setup\<close>
 
 
 
-declare [[\<phi>reason_default_pattern
+declare [[
+  \<phi>reason_default_pattern
       \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> (1000)
-  and \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> (1000)
+  and \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> (1000)
   and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ \<close> (1000)
-  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> (1000)
-  and \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<^emph>[_] _
-       \<o>\<v>\<e>\<r> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
-      \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<^emph>[_] _
-       \<o>\<v>\<e>\<r> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
-  and \<open>\<m>\<a>\<p> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
-       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
-      \<open>\<m>\<a>\<p> _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
-       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
+  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> (1000)
+  and \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
+       \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
+      \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
+       \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
+  and \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
+      \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
 ]]
 
 consts \<A>_mem_coerce :: mode
@@ -421,11 +423,11 @@ thm ToA_Mapper_fallback_remainder
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
   \<open> Semantic_Type T TY
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<OTast> W \<mapsto> T' \<OTast> W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R'
-    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<OTast> W \<mapsto> T' \<OTast> W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def . 
 
@@ -433,22 +435,22 @@ thm Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simp
       OF ToA_Mapper_fallback_remainder, OF Mem_Coercion.ToA_mapper]
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm
-        for \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<^emph>[_] _
-             \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _ \<^emph>[_] _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<^emph>[_] _
+        for \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
+             \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
              \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>]:
   \<comment> \<open>This rule assumes \<open>Semantic_Type\<close> reduces \<open>TY\<close> to the normal form!\<close>
   \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> fst ` D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<^emph>[False] \<top>\<^sub>\<phi>
-    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<^emph>[False] \<top>\<^sub>\<phi> \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T' \<^emph>[False] \<top>\<^sub>\<phi>
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U \<OTast> \<circle> \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<OTast> \<circle>
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<OTast> \<circle> \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T' \<OTast> \<circle>
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> apfst h \<s>\<e>\<t>\<t>\<e>\<r> apfst s \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def
   by (rule ToA_Mapper_fallback_remainder, rule Mem_Coercion.ToA_mapper)
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<^emph>[C\<^sub>R] R'
+  \<open> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<mapsto> T'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U' \<^emph>[C\<^sub>R] R'
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U' \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<mapsto> T'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   unfolding Guided_Mem_Coercion_def .
