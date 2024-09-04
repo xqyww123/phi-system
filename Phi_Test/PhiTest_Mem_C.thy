@@ -88,7 +88,7 @@ proc test_mem6:
   addr.d.f.j
 \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 500]]
+declare [[\<phi>reasoning_step_limit = 275]]
 
 
 proc test_mem6a:
@@ -99,16 +99,6 @@ proc test_mem6a:
 \<medium_left_bracket>
   addr.d
 \<medium_right_bracket> .
-
-
-
-
-
-
-
-
-
-
 
 
 

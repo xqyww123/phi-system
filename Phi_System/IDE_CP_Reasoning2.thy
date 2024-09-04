@@ -339,6 +339,14 @@ definition ToA_Mapper :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_mag
             (\<forall>y \<in> g ` h ` domain. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s y \<Ztypecolon> T') \<and>
             (\<forall>x \<in> domain. f x = s (g (h x)))\<close>
 
+definition ToA_Mapper_Clean :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_magma, 'a) \<phi> \<Rightarrow> ('c,'b) \<phi>
+                       \<Rightarrow> ('x \<Rightarrow> 'y) \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'y) \<phi> \<Rightarrow> ('x \<Rightarrow> 'a) \<Rightarrow> ('b \<Rightarrow> 'y) \<Rightarrow> bool\<close>
+                          ("\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> (_ :/ _ \<mapsto>/ _)/ \<o>\<v>\<e>\<r> (_ :/ _ \<mapsto>/ _)/ \<w>\<i>\<t>\<h> (\<g>\<e>\<t>\<t>\<e>\<r> _/ \<s>\<e>\<t>\<t>\<e>\<r> _)" [21,21,21,21,21,21,21,21] 18)
+  where \<open>\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<equiv>
+            (\<forall>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U) \<and>
+            (\<forall>y. y \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s y \<Ztypecolon> T') \<and>
+            (\<forall>x. f x = s (g (h x)))\<close>
+
 lemma ToA_Mapper_rev_def[no_atp]:
   \<open>(\<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> domain) \<longleftrightarrow>
       (\<forall>x \<in> domain. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U) \<and>
@@ -447,10 +455,18 @@ declare [[
   and \<open>\<s>\<u>\<b>\<s>\<t> ?redex \<f>\<o>\<r> ?residue \<f>\<r>\<o>\<m> ?Src \<t>\<o> ?Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> ?R\<close> \<Rightarrow>
       \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<s>\<u>\<b>\<s>\<t> ?redex \<f>\<o>\<r> ?residue \<f>\<r>\<o>\<m> ?Src \<t>\<o> ?Ret \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> ?R))\<close> (0)
   and \<open>\<m>\<a>\<p> ?g : ?U \<mapsto> ?U' \<o>\<v>\<e>\<r> ?f : ?T \<mapsto> ?T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> ?h \<s>\<e>\<t>\<t>\<e>\<r> ?s \<i>\<n> ?D\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<m>\<a>\<p> ?g : ?U \<mapsto> ?U' \<o>\<v>\<e>\<r> ?f : ?T \<mapsto> ?T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> ?h \<s>\<e>\<t>\<t>\<e>\<r> ?s \<i>\<n> ?D))\<close> (0),
+      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<m>\<a>\<p> ?g : ?U \<mapsto> ?U' \<o>\<v>\<e>\<r> ?f : ?T \<mapsto> ?T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> ?h \<s>\<e>\<t>\<t>\<e>\<r> ?s \<i>\<n> ?D))\<close> (0)
+
+  and \<open>\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> ?f : ?T \<mapsto> ?U \<o>\<v>\<e>\<r> ?g : ?X \<mapsto> ?Y \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> ?h \<s>\<e>\<t>\<t>\<e>\<r> ?s\<close>
+   \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> ?f : ?T \<mapsto> ?U \<o>\<v>\<e>\<r> ?g : ?X \<mapsto> ?Y \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> ?h \<s>\<e>\<t>\<t>\<e>\<r> ?s))\<close> (10)
+  and \<open>\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> _ : ?W1 \<^emph> ?W2 \<mapsto> ?W1' \<^emph> ?W2' \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _\<close>
+   \<Rightarrow> \<open>\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> _ : ?W1 \<^emph> ?W2 \<mapsto> ?W1' \<^emph> ?W2' \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _\<close> (100)
+  and \<open>\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : ?A \<^emph> ?B \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _\<close>
+   \<Rightarrow> \<open>\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : ?A \<^emph> ?B \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _\<close> (100),
 
   \<phi>default_reasoner_group
       \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> : %\<phi>mapToA_mapper (100)
+
 (*  and \<open>\<g>\<e>\<t>\<t>\<e>\<r> _ : _ \<mapsto> _  \<i>\<n> _ \<w>\<i>\<t>\<h> \<s>\<e>\<t>\<t>\<e>\<r> _\<close> : %\<phi>mapToA_getter (100) *)
 ]]
 
@@ -522,6 +538,31 @@ lemma ToA_Mapper_cong:
  \<equiv> \<m>\<a>\<p> g' : U' \<mapsto> U\<^sub>1' \<o>\<v>\<e>\<r> f' : T' \<mapsto> T\<^sub>1' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h' \<s>\<e>\<t>\<t>\<e>\<r> s' \<i>\<n> D'\<close>
   unfolding ToA_Mapper_def atomize_eq
   by (clarsimp simp add: image_iff Bex_def; rule; clarsimp; metis)
+
+lemma ToA_MapperC_onward:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> h x \<Ztypecolon> U\<close>
+  unfolding ToA_Mapper_Clean_def Premise_def
+  by (clarsimp simp add: \<phi>Prod_expn'')
+
+lemma ToA_MapperC_backward:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> x \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s x \<Ztypecolon> T'\<close>
+  unfolding ToA_Mapper_Clean_def Premise_def
+  by (clarsimp simp add: \<phi>Prod_expn'')
+
+lemma ToA_MapperC_f_expn:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> \<forall>x. f x = s (g (h x)) \<close>
+  unfolding ToA_Mapper_Clean_def
+  by clarsimp
+
+lemma ToA_MapperC_f_expn_rev[no_atp]:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> \<forall>x. s (g (h x)) = f x \<close>
+  unfolding ToA_Mapper_Clean_def
+  by clarsimp
+
 
 lemma ToA_Mapper_\<phi>Some_rewr_origin[no_atp]:
   \<open> NO_MATCH (\<black_circle> UUU) U
@@ -1302,31 +1343,34 @@ lemma \<phi>mapToA_split_goal_Ty[
   \<open> split_map g g\<^sub>1 g\<^sub>2
 \<Longrightarrow> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 : U\<^sub>1 \<OTast> R\<^sub>1 \<OTast> W\<^sub>2 \<OTast> E \<mapsto> U\<^sub>1' \<OTast> R\<^sub>1' \<OTast> W\<^sub>2' \<OTast> E'
     \<o>\<v>\<e>\<r> f\<^sub>1 \<otimes>\<^sub>f w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2 \<otimes>\<^sub>f e : T \<OTast> W\<^sub>1 \<OTast> W\<^sub>2 \<OTast> E \<mapsto> T' \<OTast> W\<^sub>1' \<OTast> W\<^sub>2' \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>1 \<i>\<n> (\<lambda>(x,(w\<^sub>1,w\<^sub>2),e). (x,w\<^sub>1,w\<^sub>2,e)) ` D
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>1 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>1 \<i>\<n> (\<lambda>(x,w,e). case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow> (x,w\<^sub>1,w\<^sub>2,e)) ` D
 \<Longrightarrow> \<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r\<^sub>2 : U\<^sub>2 \<OTast> R \<OTast> E \<mapsto> U\<^sub>2' \<OTast> R' \<OTast> E' \<comment> \<open>goto, \<section>\<open>Conditioned Targets\<close>\<close>
     \<o>\<v>\<e>\<r> f\<^sub>2 : R\<^sub>1 \<OTast> W\<^sub>2 \<OTast> E \<mapsto> R\<^sub>1' \<OTast> W\<^sub>2' \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> (\<lambda>(x,(w\<^sub>1,w\<^sub>2),e). snd (h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e))) ` D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>2: (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<OTast> E \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R' \<OTast> E'
-    \<o>\<v>\<e>\<r> f\<^sub>1 \<otimes>\<^sub>f (w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2) \<otimes>\<^sub>f e : T \<OTast> W\<^sub>1 \<^emph> W\<^sub>2 \<OTast> E \<mapsto> T' \<OTast> W\<^sub>1' \<^emph> W\<^sub>2' \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,(w\<^sub>1,w\<^sub>2),e). case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow>
-                               case h\<^sub>2 r\<^sub>1 of (y\<^sub>2,r,e) \<Rightarrow> ((y\<^sub>1,y\<^sub>2),r,e))
-        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>((y\<^sub>1,y\<^sub>2),r). case s\<^sub>1 (y\<^sub>1, s\<^sub>2 (y\<^sub>2,r)) of (x,w\<^sub>1,w\<^sub>2,e) \<Rightarrow> (x,(w\<^sub>1,w\<^sub>2),e))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> (\<lambda>(x,w,e). case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow> snd (h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e))) ` D
+\<Longrightarrow> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2 : W\<^sub>1 \<^emph> W\<^sub>2 \<mapsto> W\<^sub>1' \<^emph> W\<^sub>2' \<o>\<v>\<e>\<r> ww : W \<mapsto> W' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>C \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>C
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>2 : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<OTast> E \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R' \<OTast> E'
+    \<o>\<v>\<e>\<r> f\<^sub>1 \<otimes>\<^sub>f ww \<otimes>\<^sub>f e : T \<OTast> W \<OTast> E \<mapsto> T' \<OTast> W' \<OTast> E'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,w,e). case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow>
+                         case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow>
+                         case h\<^sub>2 r\<^sub>1 of (y\<^sub>2,r,e) \<Rightarrow> ((y\<^sub>1,y\<^sub>2),r,e))
+        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>((y\<^sub>1,y\<^sub>2),r). case s\<^sub>1 (y\<^sub>1, s\<^sub>2 (y\<^sub>2,r)) of (x,w\<^sub>1,w\<^sub>2,e) \<Rightarrow> (x,s\<^sub>C (w\<^sub>1,w\<^sub>2),e))
     \<i>\<n> D \<close>
   for T :: \<open>('e::sep_monoid, 'f) \<phi>\<close>
 
   unfolding conj_imp_eq_imp_imp Action_Tag_def split_map_def
   apply (simp add: \<phi>Some_\<phi>Prod[symmetric] \<phi>Prod'_def)
-  \<medium_left_bracket> premises [] and MP\<^sub>1 and MP\<^sub>2
-    apply_rule ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>case x of (x,(w\<^sub>1,w\<^sub>2),e) \<Rightarrow> (x,w\<^sub>1,w\<^sub>2,e)\<close>]
-    certified by (clarsimp simp add: image_iff split: prod.split, insert the_\<phi>(5), blast) \<semicolon>
+  \<medium_left_bracket> premises [] and MP\<^sub>1 and MP\<^sub>2 and CC
+    apply_rule ToA_MapperC_onward[OF CC, THEN transformation_left_frame]
+    apply_rule ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>case x of (x,w,e) \<Rightarrow> case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow> (x,w\<^sub>1,w\<^sub>2,e)\<close>]
+      certified by (clarsimp simp add: image_iff split: prod.split, metis Pair_inject the_\<phi>(5)) \<semicolon>
   
     apply_rule ToA_Mapper_onward[OF MP\<^sub>2,
-        where x=\<open>(case x of (x,(w\<^sub>1,w\<^sub>2),e) \<Rightarrow> case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow> r\<^sub>1)\<close>,
+        where x=\<open>(case x of (x,w,e) \<Rightarrow> case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow> case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow> r\<^sub>1)\<close>,
         THEN transformation_left_frame, simplified]
     certified by (insert the_\<phi>(5), clarsimp simp add: image_iff split: prod.split, force)
   \<medium_right_bracket> certified by (clarsimp simp add: image_iff split: prod.split)
     apply (rule conjunctionI, rule, rule conjunctionI)
-  \<medium_left_bracket> premises [] and MP\<^sub>1 and MP\<^sub>2
+  \<medium_left_bracket> premises [] and MP\<^sub>1 and MP\<^sub>2 and CC
     apply_rule ToA_Mapper_backward[OF MP\<^sub>2,
         where x=\<open>case x of ((y\<^sub>1,y\<^sub>2),r) \<Rightarrow> (y\<^sub>2,r)\<close>,
         THEN transformation_left_frame, simplified]
@@ -1334,14 +1378,20 @@ lemma \<phi>mapToA_split_goal_Ty[
 
     apply_rule ToA_Mapper_backward[OF MP\<^sub>1, where x=\<open>case x of ((y\<^sub>1,y\<^sub>2),r) \<Rightarrow> (y\<^sub>1,s\<^sub>2 (y\<^sub>2,r))\<close>]
     certified by (insert useful(1) ToA_Mapper_f_expn[OF MP\<^sub>2],
-                clarsimp simp add: image_iff case_prod_beta prod.map_beta, force)
-      
+                clarsimp simp add: image_iff case_prod_beta prod.map_beta, force) \<semicolon>
+
+    apply_rule ToA_MapperC_backward[OF CC, THEN transformation_left_frame]
+      certified by (instantiate \<open>(x,y)\<close> for x y, clarsimp simp add: image_iff case_prod_beta prod.map_beta)
+
   \<medium_right_bracket> certified by (insert useful(1), clarsimp simp add: image_iff case_prod_beta prod.map_beta)
-    apply (drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn, simp, rule)
+    apply (drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn, drule ToA_MapperC_f_expn, simp, rule)
   subgoal premises prems for y
-      by (insert prems(2,3)[THEN bspec[OF _ prems(4)]],
-          cases y, clarsimp, case_tac \<open>h\<^sub>1 (a, aa, b, c)\<close>, simp, case_tac \<open>h\<^sub>2 (ba, ca, d)\<close>, simp,
-          case_tac \<open>s\<^sub>1 (g\<^sub>1 ab, s\<^sub>2 (g\<^sub>2 ac, r\<^sub>2 (bb, cb)))\<close>, simp) .
+      apply (insert prems(2,3)[THEN bspec[OF _ prems(5)]])
+      apply (cases y, clarsimp)
+apply (case_tac \<open>h\<^sub>C b\<close>, simp)
+apply ( case_tac \<open>h\<^sub>1 (a, aa, ba, c)\<close>, simp)
+apply (case_tac \<open>h\<^sub>2 (bb, ca, d)\<close>, simp)
+apply (case_tac \<open>s\<^sub>1 (g\<^sub>1 ab, s\<^sub>2 (g\<^sub>2 ac, r\<^sub>2 (bc, cb)))\<close>, insert prems(4), simp) . .
 
 declare ToA_mapper_intro_Ext
         [OF _ _ \<phi>mapToA_split_goal_Ty, \<phi>reasoned 2,
@@ -1408,41 +1458,54 @@ lemma \<phi>mapToA_split_source
 \<Longrightarrow> \<m>\<a>\<p> w\<^sub>1 : W\<^sub>1 \<OTast> R\<^sub>2 \<OTast> E \<mapsto> W\<^sub>1' \<OTast> R\<^sub>2' \<OTast> E'
     \<o>\<v>\<e>\<r> f\<^sub>2 \<otimes>\<^sub>f w\<^sub>2 : T\<^sub>2 \<OTast> W \<OTast> E \<mapsto> T\<^sub>2' \<OTast> W' \<OTast> E'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>2 \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>2 \<i>\<n> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). (x\<^sub>2, w\<^sub>2e)) ` D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f (r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2) \<otimes>\<^sub>f e : U \<OTast> R\<^sub>1 \<^emph> R\<^sub>2 \<OTast> E \<mapsto> U' \<OTast> R\<^sub>1' \<^emph> R\<^sub>2' \<OTast> E'
+\<Longrightarrow> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> rr : R \<mapsto> R' \<o>\<v>\<e>\<r> r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 : R\<^sub>1 \<^emph> R\<^sub>2 \<mapsto> R\<^sub>1' \<^emph> R\<^sub>2' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h\<^sub>C \<s>\<e>\<t>\<t>\<e>\<r> s\<^sub>C
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f rr \<otimes>\<^sub>f e : U \<OTast> R \<OTast> E \<mapsto> U' \<OTast> R' \<OTast> E'
     \<o>\<v>\<e>\<r> (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f w\<^sub>2 : (T\<^sub>1 \<^emph> T\<^sub>2) \<OTast> W \<OTast> E \<mapsto> (T\<^sub>1' \<^emph> T\<^sub>2') \<OTast> W' \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). case h\<^sub>1 (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e)) of (y,r\<^sub>1,r\<^sub>2,e) \<Rightarrow> (y,(r\<^sub>1,r\<^sub>2),e))
-         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y,(r\<^sub>1,r\<^sub>2),e). case s\<^sub>1 (y,r\<^sub>1,r\<^sub>2,e) of (x\<^sub>1,w\<^sub>2e) \<Rightarrow>
-                               case s\<^sub>2 w\<^sub>2e of (x\<^sub>2,we) \<Rightarrow> ((x\<^sub>1,x\<^sub>2),we))
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). case h\<^sub>1 (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e)) of (y,r\<^sub>1,r\<^sub>2,e) \<Rightarrow> (y,h\<^sub>C (r\<^sub>1,r\<^sub>2),e))
+         \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(y,r,e). case s\<^sub>C r of (r\<^sub>1,r\<^sub>2) \<Rightarrow>
+                          case s\<^sub>1 (y,r\<^sub>1,r\<^sub>2,e) of (x\<^sub>1,w\<^sub>2e) \<Rightarrow>
+                          case s\<^sub>2 w\<^sub>2e of (x\<^sub>2,we) \<Rightarrow> ((x\<^sub>1,x\<^sub>2),we))
       \<i>\<n> D \<close>
   for U :: \<open>('i::sep_monoid, 'a) \<phi>\<close>
 
   unfolding conj_imp_eq_imp_imp Action_Tag_def
   apply (simp add: \<phi>Some_\<phi>Prod[symmetric] \<phi>Prod'_def)
-  \<medium_left_bracket> premises MP\<^sub>1 and MP\<^sub>2
+  \<medium_left_bracket> premises MP\<^sub>1 and MP\<^sub>2 and CC
     apply_rule ToA_Mapper_onward[OF MP\<^sub>2, where x=\<open>case x of ((x\<^sub>1,x\<^sub>2),w\<^sub>2e) \<Rightarrow> (x\<^sub>2, w\<^sub>2e)\<close>, THEN transformation_left_frame, simplified]
     certified by (clarsimp split: prod.split simp: image_iff, insert the_\<phi>(5), force) \<semicolon>
     apply_rule ToA_Mapper_onward[OF MP\<^sub>1, where x=\<open>case x of ((x\<^sub>1,x\<^sub>2),w\<^sub>2e) \<Rightarrow> (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e))\<close>]
-    certified by (clarsimp split: prod.split simp: image_iff, insert the_\<phi>(5), force)
+    certified by (clarsimp split: prod.split simp: image_iff, insert the_\<phi>(5), force) \<semicolon>
+    apply_rule ToA_MapperC_onward[OF CC, THEN transformation_left_frame]
+      certified by (instantiate \<open>(x,y)\<close> for x y, auto, auto_sledgehammer)
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
     apply (rule conjunctionI, rule, rule conjunctionI)
-  \<medium_left_bracket> premises MP\<^sub>1 and MP\<^sub>2
-    apply_rule ToA_Mapper_backward[OF MP\<^sub>1, where x=\<open>case x of (y,(r\<^sub>1,r\<^sub>2),e) \<Rightarrow> (y,r\<^sub>1,r\<^sub>2,e)\<close>]
+  \<medium_left_bracket> premises MP\<^sub>1 and MP\<^sub>2 and CC
+    apply_rule ToA_MapperC_backward[OF CC, THEN transformation_left_frame] 
+    apply_rule ToA_Mapper_backward[OF MP\<^sub>1, where x=\<open>case x of (y,r,e) \<Rightarrow> case s\<^sub>C r of (r\<^sub>1,r\<^sub>2) \<Rightarrow> (y,r\<^sub>1,r\<^sub>2,e)\<close>]
     certified apply (insert useful(1), clarsimp split: prod.split simp add: image_iff)
       subgoal premises prems
-        by (rule bexI[OF _ prems(1)], insert prems, clarsimp split: prod.split simp add: prod.map_beta) . \<semicolon>
+        by (rule bexI[OF _ prems(1)], insert prems ToA_MapperC_f_expn_rev[OF CC],
+            clarsimp split: prod.split simp add: prod.map_beta) . \<semicolon>
 
     apply_rule ToA_Mapper_backward[OF MP\<^sub>2,
-        where x=\<open>case x of (y,(r\<^sub>1,r\<^sub>2),e) \<Rightarrow> case s\<^sub>1 (y,r\<^sub>1,r\<^sub>2,e) of (x\<^sub>1,w\<^sub>2e) \<Rightarrow> w\<^sub>2e\<close>,
+        where x=\<open>case x of (y,r,e) \<Rightarrow> case s\<^sub>C r of (r\<^sub>1,r\<^sub>2) \<Rightarrow> case s\<^sub>1 (y,r\<^sub>1,r\<^sub>2,e) of (x\<^sub>1,w\<^sub>2e) \<Rightarrow> w\<^sub>2e\<close>,
         THEN transformation_left_frame, simplified]
     certified apply (insert useful(1) ToA_Mapper_f_expn[OF MP\<^sub>1],
           clarsimp split: prod.split simp add: image_iff)
-      subgoal premises prems for a b aa ba x1 ab bb bc x1a ac ad bd
-        by (rule bexI[OF _ prems(2)],
+      subgoal premises prems for a b aa ba x1 ab bb x1a x2 x1b ac ad bc
+        apply (rule bexI[OF _ prems(2)],
             insert prems(1)[THEN bspec[OF _ prems(2)]] prems(3-),
             clarsimp split: prod.split,
-            case_tac \<open>h\<^sub>1 (a, h\<^sub>2 (b, aa, ba))\<close>, simp) .
+            cases \<open>h\<^sub>1 (a, h\<^sub>2 (b, aa, ba))\<close>, simp)
+        subgoal premises prems2 for ae bd c d proof -
+          from ToA_MapperC_f_expn[OF CC]
+          have [simp]: \<open>x1a = r\<^sub>1 bd \<and> x2 = r\<^sub>2 c \<close>
+             by (metis fst_conv prems2(4) prems2(5) prod.map_beta snd_conv)
+          show ?thesis
+             by (insert prems2, simp)
+        qed . .
   \<medium_right_bracket> certified by (clarsimp split: prod.split)
-    apply(drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn,
+    apply(drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn, drule ToA_MapperC_f_expn_rev,
           clarsimp split: prod.split)
   subgoal premises prems
       by (insert prems(1,2)[THEN bspec[OF _ \<open>_ \<in> D\<close>]],
@@ -1456,6 +1519,55 @@ declare ToA_mapper_intro_Ext
            \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]
 
 end
+
+lemma [\<phi>reason default %\<phi>mapToA_clean_default
+           for \<open>\<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _\<close> ]:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> g : T \<mapsto> U \<o>\<v>\<e>\<r> g : T \<mapsto> U \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>x. x) \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>x. x) \<close>
+  unfolding ToA_Mapper_Clean_def
+  by simp
+  
+
+lemma [\<phi>reason %\<phi>mapToA_clean]:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> w\<^sub>2 : W\<^sub>2 \<mapsto> W\<^sub>2'
+    \<o>\<v>\<e>\<r> ww : W \<mapsto> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> any \<otimes>\<^sub>f w\<^sub>2 : \<circle> \<^emph> W\<^sub>2 \<mapsto> \<circle> \<^emph> W\<^sub>2'
+    \<o>\<v>\<e>\<r> ww : W \<mapsto> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>x. (unspec, h x)) \<s>\<e>\<t>\<t>\<e>\<r> s o snd \<close>
+  for W :: \<open>('c::sep_magma_1,'x) \<phi>\<close>
+  unfolding ToA_Mapper_Clean_def
+  by (simp add: \<phi>Prod_expn')
+  
+lemma [\<phi>reason %\<phi>mapToA_clean]:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> w\<^sub>1 : W\<^sub>1 \<mapsto> W\<^sub>1'
+    \<o>\<v>\<e>\<r> ww : W \<mapsto> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> w\<^sub>1 \<otimes>\<^sub>f any : W\<^sub>1 \<^emph> \<circle> \<mapsto> W\<^sub>1' \<^emph> \<circle>
+    \<o>\<v>\<e>\<r> ww : W \<mapsto> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>x. (h x, unspec)) \<s>\<e>\<t>\<t>\<e>\<r> s o fst \<close>
+  for W :: \<open>('c::sep_magma_1,'x) \<phi>\<close>
+  unfolding ToA_Mapper_Clean_def
+  by (simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason %\<phi>mapToA_clean]:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> rr : R \<mapsto> R' \<o>\<v>\<e>\<r> r\<^sub>2 : R\<^sub>2 \<mapsto> R\<^sub>2' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> rr : R \<mapsto> R' \<o>\<v>\<e>\<r> any \<otimes>\<^sub>f r\<^sub>2 : \<circle> \<^emph> R\<^sub>2 \<mapsto> \<circle> \<^emph> R\<^sub>2' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h o snd \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>x. ((), s x)) \<close>
+  for R :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
+  unfolding ToA_Mapper_Clean_def
+  by (simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason %\<phi>mapToA_clean]:
+  \<open> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> rr : R \<mapsto> R' \<o>\<v>\<e>\<r> r\<^sub>1 : R\<^sub>1 \<mapsto> R\<^sub>1' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s
+\<Longrightarrow> \<c>\<l>\<e>\<a>\<n> \<m>\<a>\<p> rr : R \<mapsto> R' \<o>\<v>\<e>\<r> r\<^sub>1 \<otimes>\<^sub>f any : R\<^sub>1 \<^emph> \<circle> \<mapsto> R\<^sub>1' \<^emph> \<circle> \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h o fst \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>x. (s x, ())) \<close>
+  for R :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
+  unfolding ToA_Mapper_Clean_def
+  by (simp add: \<phi>Prod_expn')
+
+
+
+
+
+
 
 paragraph \<open>Assertion Level\<close>
 
@@ -1607,7 +1719,7 @@ lemma
 
 *)
 
-lemma [\<phi>reason %\<phi>mapToA_clean_default for \<open>\<g>\<e>\<t> _ \<f>\<r>\<o>\<m> _ @clean\<close>]:
+lemma [\<phi>reason default %\<phi>mapToA_clean_default for \<open>\<g>\<e>\<t> _ \<f>\<r>\<o>\<m> _ @clean\<close>]:
   \<open> \<g>\<e>\<t> R \<f>\<r>\<o>\<m> R @clean \<close>
   unfolding Action_Tag_def ToA_Extract_def
   by simp
@@ -1648,7 +1760,7 @@ lemma [\<phi>reason %\<phi>mapToA_clean]:
   unfolding Action_Tag_def ToA_Extract_def
   by simp
 
-lemma [\<phi>reason %\<phi>mapToA_clean_default for \<open>\<s>\<u>\<b>\<s>\<t> _ \<f>\<o>\<r> _ \<f>\<r>\<o>\<m> _ \<t>\<o> _ @clean\<close>]:
+lemma [\<phi>reason default %\<phi>mapToA_clean_default for \<open>\<s>\<u>\<b>\<s>\<t> _ \<f>\<o>\<r> _ \<f>\<r>\<o>\<m> _ \<t>\<o> _ @clean\<close>]:
   \<open> \<s>\<u>\<b>\<s>\<t> X \<f>\<o>\<r> Y \<f>\<r>\<o>\<m> Y \<t>\<o> X @clean \<close>
   unfolding Action_Tag_def ToA_Subst_def
   by simp
