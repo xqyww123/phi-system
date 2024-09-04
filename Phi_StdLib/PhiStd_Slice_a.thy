@@ -14,7 +14,9 @@ proc (nodef) map_slice_a:
   output \<open>map_index f l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T\<heavy_comma> X\<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
 \<medium_left_bracket>
-  note \<open>length l = len\<close> [simp] ;;
+  note \<open>length l = len\<close> [simp] 
+note [[\<phi>trace_reasoning = 2]]
+\<semicolon>
   map_list_loop_a ($len) \<open>\<lambda>j. \<m>\<e>\<m>[addr \<tribullet> (i+j)\<^sup>\<t>\<^sup>\<h>] T\<close> \<medium_left_bracket> for j
     body
   \<medium_right_bracket>

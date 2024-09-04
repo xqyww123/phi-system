@@ -86,6 +86,8 @@ declare Mem.intro_reasoning[\<phi>reason default]
         Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
         Mem.elim_map [where \<phi> =\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
 
+thm Mem.elim_map[where \<phi> =\<open>\<lambda>x. x\<close>, simplified]
+
 thm Mem.intro_reasoning
 thm Mem.intro_map[where \<phi>'=\<open>\<lambda>x. x\<close>, simplified]
 

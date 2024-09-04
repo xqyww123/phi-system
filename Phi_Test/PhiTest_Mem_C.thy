@@ -88,9 +88,8 @@ proc test_mem6:
   addr.d.f.j
 \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 200]]
+declare [[\<phi>reasoning_step_limit = 500]]
 
-declare [[\<phi>trace_reasoning = 2]]
 
 proc test_mem6a:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
@@ -100,6 +99,18 @@ proc test_mem6a:
 \<medium_left_bracket>
   addr.d
 \<medium_right_bracket> .
+
+
+
+
+
+
+
+
+
+
+
+
 
 proc test_mem6b:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>

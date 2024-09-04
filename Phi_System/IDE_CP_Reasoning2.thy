@@ -361,7 +361,8 @@ subsection \<open>Conventions\<close>
       \<open>initializaton\<close>
   and \<phi>mapToA_refl = (3800, [3800, 3849]) in \<phi>mapToA_all
       \<open>reflexive\<close>
-  and \<phi>mapToA_norm = (2600, [2600,2899]) in \<phi>mapToA_all
+  and \<phi>mapToA_sys_norm = (2900, [2900, 3000]) in \<phi>mapToA_all \<open>\<close>
+  and \<phi>mapToA_norm = (2600, [2600,2899]) in \<phi>mapToA_all and < \<phi>mapToA_sys_norm
       \<open>normalizations like removing empty slots\<close>
   and \<phi>mapToA_varify_maps = (2650, [2650,2699]) in \<phi>mapToA_all
       \<open>varify the mapping functions\<close>
@@ -878,7 +879,7 @@ context
         ToA_splitting_source_has_remainder_first[\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]*)
 begin
 
-lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (\<circle> \<^emph> _) \<OTast> _ \<mapsto> (\<circle> \<^emph> _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<circle> \<^emph> _) \<OTast> _ \<mapsto> (\<circle> \<^emph> _) \<OTast> _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r : U\<^sub>2 \<OTast> R \<mapsto> U\<^sub>2' \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
@@ -902,7 +903,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (\<circle> \<
       by (insert ToA_Mapper_f_expn[OF prems(1), THEN bspec[OF _ prems(2)]],
           clarsimp split: prod.split) .
 
-lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r : U\<^sub>2 \<OTast> R \<mapsto> U\<^sub>2' \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
@@ -926,7 +927,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkci
       by (insert ToA_Mapper_f_expn[OF prems(1), THEN bspec[OF _ prems(2)]],
           clarsimp split: prod.split) .
 
-lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
@@ -937,8 +938,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkci
   by simp
 
 
-
-lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<circle>) \<OTast> _ \<mapsto> (_ \<^emph> \<circle>) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<circle>) \<OTast> _ \<mapsto> (_ \<^emph> \<circle>) \<OTast> _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f r : U\<^sub>1 \<OTast> R \<mapsto> U\<^sub>1' \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
@@ -963,7 +963,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \
           clarsimp split: prod.split) .
 
 
-lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f r : U\<^sub>1 \<OTast> R \<mapsto> U\<^sub>1' \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
@@ -988,7 +988,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \
           clarsimp split: prod.split) .
 
 
-lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _
                                   \<o>\<v>\<e>\<r> _ : _ \<mapsto> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
     \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
@@ -1000,41 +1000,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \
 
 end
 
-lemma [\<phi>reason %\<phi>mapToA_aux for \<open>\<m>\<a>\<p> _ : \<circle> \<OTast> _ \<OTast> _ \<mapsto> \<circle> \<OTast> _ \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
-                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
-\<Longrightarrow> \<m>\<a>\<p> gg : \<circle> \<OTast> T \<OTast> E \<mapsto> \<circle> \<OTast> T' \<OTast> E'
-    \<o>\<v>\<e>\<r> ff : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,_,e). (unspec,x,e))
-        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(_,x,e). (x,unspec,e))
-      \<i>\<n> D \<close>
-  unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
-  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
-
-
-lemma [\<phi>reason %\<phi>mapToA_aux for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<mapsto> \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
-                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
-\<Longrightarrow> \<m>\<a>\<p> gg : \<half_blkcirc>[False] U \<OTast> T \<OTast> E \<mapsto> \<half_blkcirc>[False] U' \<OTast> T' \<OTast> E'
-    \<o>\<v>\<e>\<r> ff : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,_,e). (unspec,x,e))
-        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(_,x,e). (x,unspec,e))
-      \<i>\<n> D \<close>
-  unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
-  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
-
-lemma [\<phi>reason %\<phi>mapToA_aux for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[True] _ \<OTast> _ \<OTast> _ \<mapsto> \<half_blkcirc>[True] _ \<OTast> _ \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
-                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
-  \<open> \<m>\<a>\<p> g : U \<OTast> T \<OTast> E \<mapsto> U' \<OTast> T' \<OTast> E'
-    \<o>\<v>\<e>\<r> f : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g : \<half_blkcirc>[True] U \<OTast> T \<OTast> E \<mapsto> \<half_blkcirc>[True] U' \<OTast> T' \<OTast> E'
-    \<o>\<v>\<e>\<r> f : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
-  by simp
-
-
-lemma [\<phi>reason %\<phi>mapToA_norm
+lemma [\<phi>reason %\<phi>mapToA_sys_norm
         for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
              \<o>\<v>\<e>\<r> _ : (\<circle> \<^emph> _ ) \<OTast> _ \<mapsto> _
              \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
@@ -1065,7 +1031,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm
         auto simp: Simplify_def Premise_def split: prod.split)
 
 
-lemma [\<phi>reason %\<phi>mapToA_norm
+lemma [\<phi>reason %\<phi>mapToA_sys_norm
         for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
              \<o>\<v>\<e>\<r> _ : (\<half_blkcirc>[False] _ \<^emph> _ ) \<OTast> _ \<mapsto> _
              \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
@@ -1095,8 +1061,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm
     by (rule conjunctionI, rule, drule ToA_Mapper_f_expn,
         auto simp: Simplify_def Premise_def split: prod.split)
 
-
-lemma [\<phi>reason %\<phi>mapToA_norm
+lemma [\<phi>reason %\<phi>mapToA_sys_norm
         for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
              \<o>\<v>\<e>\<r> _ : (\<half_blkcirc>[True] _ \<^emph> _ ) \<OTast> _ \<mapsto> _
              \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
@@ -1107,6 +1072,82 @@ lemma [\<phi>reason %\<phi>mapToA_norm
     \<o>\<v>\<e>\<r> f : (\<half_blkcirc>[True] T\<^sub>1 \<^emph> T\<^sub>2 ) \<OTast> W \<mapsto> (\<half_blkcirc>[True] T\<^sub>1' \<^emph> T\<^sub>2') \<OTast> W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
   by simp
+
+
+
+
+
+
+lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<m>\<a>\<p> _ : \<circle> \<OTast> _ \<OTast> _ \<mapsto> \<circle> \<OTast> _ \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
+                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
+\<Longrightarrow> \<m>\<a>\<p> gg : \<circle> \<OTast> T \<OTast> E \<mapsto> \<circle> \<OTast> T' \<OTast> E'
+    \<o>\<v>\<e>\<r> ff : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,_,e). (unspec,x,e))
+        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(_,x,e). (x,unspec,e))
+      \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
+  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
+
+lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<mapsto> \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
+                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
+\<Longrightarrow> \<m>\<a>\<p> gg : \<half_blkcirc>[False] U \<OTast> T \<OTast> E \<mapsto> \<half_blkcirc>[False] U' \<OTast> T' \<OTast> E'
+    \<o>\<v>\<e>\<r> ff : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,_,e). (unspec,x,e))
+        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(_,x,e). (x,unspec,e))
+      \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
+  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
+
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<circle> \<OTast> _ \<mapsto> \<circle> \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec))
+\<Longrightarrow> \<m>\<a>\<p> gg : \<circle> \<OTast> T \<mapsto> \<circle> \<OTast> T'
+    \<o>\<v>\<e>\<r> ff : T \<OTast> \<circle> \<mapsto> T' \<OTast> \<circle>
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,_). (unspec,x))
+        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(_,x). (x,unspec))
+      \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
+  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
+
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[False] U _ \<OTast> _ \<mapsto> \<half_blkcirc>[False] U _ \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec))
+\<Longrightarrow> \<m>\<a>\<p> gg : \<half_blkcirc>[False] U \<OTast> T \<mapsto> \<half_blkcirc>[False] U' \<OTast> T'
+    \<o>\<v>\<e>\<r> ff : T \<OTast> \<circle> \<mapsto> T' \<OTast> \<circle>
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,_). (unspec,x))
+        \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(_,x). (x,unspec))
+      \<i>\<n> D \<close>
+  unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
+  by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
+
+
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[True] _ \<OTast> _ \<mapsto> \<half_blkcirc>[True] _ \<OTast> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _
+                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+    \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<m>\<a>\<p> g : \<half_blkcirc>[True] U \<OTast> R \<mapsto> \<half_blkcirc>[True] U' \<OTast> R'
+    \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  by simp
+
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<o>\<v>\<e>\<r> _ : \<half_blkcirc>[True]  _ \<OTast> _ \<mapsto> _
+                                  \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
+  \<open> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+    \<o>\<v>\<e>\<r> f : T \<OTast> W \<mapsto> T' \<OTast> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+\<Longrightarrow> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+    \<o>\<v>\<e>\<r> f : \<half_blkcirc>[True] T \<OTast> W \<mapsto> \<half_blkcirc>[True] T' \<OTast> W'
+    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  by simp
+
+
+
+
+
+
 
 (*
 lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _ (\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ [True]\<^emph>[_] _ \<mapsto> _ [True]\<^emph>[_] _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _)\<close>]:
@@ -1138,7 +1179,7 @@ lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _
 
 
 (*
-lemma [\<phi>reason %\<phi>mapToA_norm
+lemma [\<phi>reason %\<phi>mapToA_sys_norm
            for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
                 \<o>\<v>\<e>\<r> _ : (_ [True]\<^emph> _ ) \<^emph>[_] _ \<mapsto> (_ [True]\<^emph> _) \<^emph>[_] _
                 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
@@ -1772,7 +1813,7 @@ lemma [\<phi>reason %ToAmap_assign_empty_src]:
 *)
 
 (*
-lemma [\<phi>reason %\<phi>mapToA_norm
+lemma [\<phi>reason %\<phi>mapToA_sys_norm
            for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f _ : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
                 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>]:
   \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<o>\<v>\<e>\<r> f : T \<mapsto> T'
@@ -1782,7 +1823,7 @@ lemma [\<phi>reason %\<phi>mapToA_norm
   for T :: \<open>('c::sep_magma_1,'x) \<phi>\<close>
   unfolding \<phi>Prod'_def .*)
 
-lemma [\<phi>reason %\<phi>mapToA_norm
+lemma [\<phi>reason %\<phi>mapToA_sys_norm
            for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<mapsto> _
                 \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>
            except \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
