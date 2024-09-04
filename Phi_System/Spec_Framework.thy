@@ -747,6 +747,7 @@ declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightar
   and \<phi>functionality_brute = (2, [2,2]) in \<phi>functionality_all and < \<phi>functional_to_functionality
     \<open>reducing to concrete semantics, and only used in deriving rules\<close>
 
+
 subsubsection \<open>Basic Rules\<close>
 
 (*deprecated*)
@@ -1136,20 +1137,6 @@ proof clarsimp
   *)
 
 
-(*
-subsection \<open>Injective\<close>
-
-lemma is_singleton_I''[\<phi>reason 1000]:
-  \<open> Satisfiable A
-\<Longrightarrow> Is_Functional A
-\<Longrightarrow> is_singleton A\<close>
-  unfolding Satisfaction_def Satisfiable_def Is_Functional_def
-  by (metis empty_iff is_singletonI')
-  
-lemma [\<phi>reason 1000]:
-  \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
-  by (rule is_singleton_I''; simp add: Is_Functional_def)
-*)
 
 subsection \<open>Reflexive Separation\<close>
 

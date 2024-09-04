@@ -107,6 +107,7 @@ let_\<phi>type \<phi>Prod
           \<Longrightarrow> Object_Equiv U eq
           \<Longrightarrow> Object_Equiv (T \<^emph> U) (\<lambda>x y. er (fst x) (fst y) \<and> eq (snd x) (snd y))\<close>
 
+
 subsection \<open>Func\<close>
  
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
@@ -1938,6 +1939,105 @@ abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow
 
 abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>[\<^sub>]" 75)
   where \<open>\<phi>MapAt_Lnil key T \<equiv> \<phi>MapAt_L [key] (\<phi>MapAt [] T)\<close>
+
+
+
+subsubsection \<open>Function Abstraction\<close>
+
+\<phi>type_def \<phi>Map :: \<open>('k,'x) \<phi> \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('k \<Rightarrow> 'v, 'x \<Rightarrow> 'y) \<phi>\<close>
+  where \<open>f \<Ztypecolon> \<phi>Map K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<longrightarrow> g k \<Turnstile> (f x \<Ztypecolon> V)) \<close>
+  deriving \<open> Object_Equiv V eq
+         \<Longrightarrow> Object_Equiv (\<phi>Map K V) (rel_fun (=) eq) \<close>
+
+       and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
+            Abstract_Domain  V P\<^sub>V \<Longrightarrow>
+            Abstract_Domain (\<phi>Map K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<close>
+
+term 1
+
+term range
+term rel_fun
+
+term \<open>Transformation_Functor (\<phi>Map K) (\<phi>Map K) V V' range (\<lambda>_. UNIV) (rel_fun (=))\<close>
+
+lemma
+  \<open> \<forall>g x. \<exists>a. (a \<in> range x \<longrightarrow> (\<forall>v. \<exists>x. v \<Turnstile> (a \<Ztypecolon> V) \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> V') \<and> g a x)) \<longrightarrow>
+           (\<forall>xa. \<exists>uu k xb. (k \<Turnstile> (xb \<Ztypecolon> K) \<longrightarrow> xa k \<Turnstile> (x xb \<Ztypecolon> V)) \<longrightarrow> (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<longrightarrow> xa k \<Turnstile> (uu x \<Ztypecolon> V')) \<and> rel_fun (=) g x uu)\<close>
+  unfolding Object_Equiv_def Transformation_def rel_fun_def
+  apply clarsimp 
+  subgoal premises prems for g f xa
+  proof -
+    obtain h where t1: \<open>a \<in> range f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v) \<close> for a v
+      using prems(1) by metis
+    show ?thesis
+      thm prems
+
+    apply (rule exI)
+    apply auto
+
+    apply (rule exI[where x=\<open>\<lambda>a. @x. xa (@k. k \<Turnstile> (a \<Ztypecolon> K)) \<Turnstile> (x \<Ztypecolon> V') \<and> g (f a) x\<close>])
+    apply auto
+    subgoal premises prems for k x proof -
+      have t1: \<open>\<exists>k. k \<Turnstile> (x \<Ztypecolon> K)\<close>
+        using prems(3) by blast
+      have t2: \<open>\<exists>uu. xa (SOME k. k \<Turnstile> (x \<Ztypecolon> K)) \<Turnstile> (uu \<Ztypecolon> V') \<and> g (f x) uu\<close>
+        by (metis UNIV_I image_eqI prems(1) prems(2) prems(3) tfl_some)
+      show ?thesis
+  sorry
+
+
+let_\<phi>type \<phi>Map
+  deriving \<open>Transformation_Functor (\<phi>Map K) (\<phi>Map K) V V' range (\<lambda>_. UNIV) (rel_fun (=))\<close>
+(tactic: clarsimp; tactic \<open>all_tac o @{print}\<close>; subgoal' for g x xa \<open>rule exI[where x=\<open>\<lambda>a. @x. v \<Turnstile> (x \<Ztypecolon> V') \<and> g a x\<close>]\<close>) 
+
+
+(*
+term is_singleton
+
+lemma \<open>Object_Equiv K ek \<Longrightarrow>
+      Abstract_Domain K P\<^sub>K \<Longrightarrow>
+      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
+      Abstract_Domain\<^sub>L (\<phi>Map K V) (\<lambda>f. (\<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<and> (\<forall>a b. ek a b \<or> ek b a \<longrightarrow> f a = f b)) \<close>
+  unfolding Abstract_Domain_def Abstract_Domain\<^sub>L_def Object_Equiv_def
+            \<r>EIF_def \<r>ESC_def Transformation_def Satisfiable_def
+  apply clarsimp
+  apply (subst choice_iff[symmetric])
+  apply clarsimp
+  subgoal premises prems for f v proof -    
+    obtain h where t1: \<open>P\<^sub>V x \<Longrightarrow> h x \<Turnstile> (x \<Ztypecolon> V)\<close> for x
+      by (metis prems(2))
+    show ?thesis
+      apply (rule exI[where x=\<open>h (f (@x. v \<Turnstile> (x \<Ztypecolon> K)))\<close>], clarsimp)
+      subgoal premises t2 for x proof -
+        let ?x = \<open>@x. v \<Turnstile> (x \<Ztypecolon> K)\<close> 
+        have t3: \<open>v \<Turnstile> (?x \<Ztypecolon> K)\<close>
+          by (meson t2 tfl_some)
+        have t4: \<open>P\<^sub>K ?x\<close>
+          using prems(1) t3 by blast
+        have t5: \<open>h (f ?x) \<Turnstile> (f ?x \<Ztypecolon> V)\<close>
+          using prems(5) t1 t4 by blast
+        
+
+        thm prems
+        thm t2
+*)
+
+term \<open>Object_Equiv K ek \<Longrightarrow>
+      Abstract_Domain K P\<^sub>K \<Longrightarrow>
+      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
+      Abstract_Domain\<^sub>L (\<phi>Map K V) (\<lambda>f. (\<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<and> (\<forall>a b. ek a b \<or> ek b a \<longrightarrow> f a = f b)) \<close>
+
+lemma
+  \<open>  \<forall>x. Satisfiable (x \<Ztypecolon> K) \<longrightarrow> P\<^sub>K x \<Longrightarrow>
+       \<forall>x. P\<^sub>V x \<longrightarrow> Satisfiable (x \<Ztypecolon> V) \<Longrightarrow> \<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (x k) \<Longrightarrow> \<exists>xa. \<forall>k xb. k \<Turnstile> (xb \<Ztypecolon> K) \<longrightarrow> xa k \<Turnstile> (x xb \<Ztypecolon> V) \<close>
+  unfolding Satisfiable_def
+  apply (subst choice_iff[symmetric])
+  apply clarify
+  thm choice_iff[symmetric]
+
+
+
+
 
 
 

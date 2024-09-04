@@ -68,15 +68,14 @@ section \<open>\<phi>Type\<close>
        and Transformation_Functor
            (tactic: clarsimp ; subgoal' for g x xb \<open>induct x arbitrary: xb xa N Na; auto simp add: list_all2_Cons2\<close>)
        and Functional_Transformation_Functor
-       and \<open>Functionality T D
-        \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all D l)\<close>
-           notes list_all2_conv_all_nth[simp] list_all_length[simp]
        and \<open>Is_Aggregate (Array N T)\<close>
     (* and \<open>Semantic_Type T TY \<Longrightarrow> Semantic_Type (Array N T) (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
        and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp] *)
        and Inhabited
+       and \<open>Functionality T D \<Longrightarrow> Functionality (\<bbbA>\<r>\<r>\<a>\<y>[N] T) (list_all D)\<close>
+           notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
 
 lemma semty_Array [simp, \<phi>type_property Array Semantic_Type]:

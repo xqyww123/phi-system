@@ -418,6 +418,8 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
         auto simp add: fmlookup_dom_iff sep_disj_fmap.rep_eq,
         metis (no_types, lifting) fmap_times_fempty(2) fmempty_lookup fmlookup_dom_iff fmlookup_map fmmap_empty fmupd_times_right option.distinct(1)) .
 
+
+
 section \<open>Reasoning\<close>
 
 text \<open>All the reasoning rules below are for semantic properties.

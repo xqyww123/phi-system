@@ -69,9 +69,21 @@ thm rel_funE
             Object_Equiv (MapVal K V) (rel_map eq\<^sub>V) \<close>
      notes rel_fun_def[simp]
 
+(*
+let_\<phi>type MapVal
+  deriving \<open>Abstract_Domain K P\<^sub>K \<Longrightarrow>
+      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
+      Abstract_Domain\<^sub>L (MapVal K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> pred_option P\<^sub>V (f k)) \<close>
+*)
+
 term \<open>Object_Equiv K eq\<^sub>K \<Longrightarrow>
             Object_Equiv V eq\<^sub>V \<Longrightarrow>
             Object_Equiv (MapVal K V) (rel_fun eq\<^sub>K (rel_option eq\<^sub>V)) \<close>
+
+term \<open> Functionality K P\<^sub>K
+    \<Longrightarrow> Functionality V P\<^sub>V
+    \<Longrightarrow> Functionality (MapVal K V) P\<^sub>K \<close>
+
 term rel_option
 term \<open>(rel_fun (=) (rel_option eq\<^sub>V))\<close>
 

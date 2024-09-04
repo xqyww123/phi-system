@@ -54,6 +54,7 @@ subsection \<open>Integer in the normal sense\<close>
        and Abstract_Domain\<^sub>L
        and Semantic_Zero_Val
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<int> = \<a>\<i>\<n>\<t>\<close>
+       and Functionality
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
@@ -73,7 +74,7 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
 
 subsection \<open>Natural Nmber\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>ANat ("\<nat>")
   where \<open>n \<Ztypecolon> \<nat> \<equiv> of_nat n \<Ztypecolon> \<int>\<close>
@@ -83,6 +84,7 @@ declare [[\<phi>trace_reasoning = 2]]
        and Semantic_Zero_Val
        and Inhabited
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<nat> = \<a>\<i>\<n>\<t>\<close>
+       and Functionality
 
 
 declare [[

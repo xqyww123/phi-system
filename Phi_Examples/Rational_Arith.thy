@@ -15,7 +15,6 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
        and Semantic_Type
        and Inhabited
 
-
   proc rat_add:
     input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<v>\<a>\<l> q2 \<Ztypecolon> \<rat>\<close>
     output \<open>\<v>\<a>\<l> q1 + q2 \<Ztypecolon> \<rat>\<close>
