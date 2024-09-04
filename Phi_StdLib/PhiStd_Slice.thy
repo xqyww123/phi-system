@@ -1,4 +1,4 @@
-theory PhiStd_Slic e \<comment> \<open>'a' for arbitary precision interger\<close>
+theory PhiStd_Slice \<comment> \<open>'a' for arbitary precision interger\<close>
   imports PhiStd_Loop
           Phi_Semantics.PhiSem_Mem_C_Ar_MI
 begin

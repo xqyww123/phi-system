@@ -54,8 +54,9 @@ proc del_mat:
   output   \<open>Void\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-  mfree (a) certified by (auto simp add: \<phi>,
-              rule exI[where x=\<open>\<lambda>(a,b) (aa, ba). aa\<close>], auto_sledgehammer)
+  note [[\<phi>trace_reasoning = 2]]
+
+\<semicolon> mfree (a) certified by (instantiate \<open>\<lambda>(a,b) (aa, ba). aa\<close>, auto_sledgehammer)
 \<medium_right_bracket> .
 
 

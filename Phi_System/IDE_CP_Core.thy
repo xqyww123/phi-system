@@ -2536,7 +2536,7 @@ setup \<open>Context.theory_map (
                 of Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) =>
                       SOME (conv_sequent (fn ctxt =>
                         Phi_Syntax.procedure_conv Conv.all_conv
-                          (rewr_objects ctxt) (rewr_objects ctxt) (rewr_objects ctxt)))
+                          (Simplifier.rewrite ctxt) (rewr_objects ctxt) (rewr_objects ctxt)))
                  | Const(\<^const_name>\<open>View_Shift\<close>, _) =>
                       SOME (conv_sequent (fn ctxt =>
                         Phi_Syntax.view_shift_conv (rewr_objects ctxt) (rewr_objects ctxt) Conv.all_conv))

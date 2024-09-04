@@ -14,9 +14,7 @@ proc (nodef) map_slice_a:
   output \<open>map_index f l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T\<heavy_comma> X\<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
 \<medium_left_bracket>
-  note \<open>length l = len\<close> [simp] 
-note [[\<phi>trace_reasoning = 2]]
-\<semicolon>
+  note \<open>length l = len\<close> [simp] \<semicolon>
   map_list_loop_a ($len) \<open>\<lambda>j. \<m>\<e>\<m>[addr \<tribullet> (i+j)\<^sup>\<t>\<^sup>\<h>] T\<close> \<medium_left_bracket> for j
     body
   \<medium_right_bracket>
@@ -36,11 +34,12 @@ proc (nodef) map_2slice_a:
   for T\<^sub>a :: \<open>(mem_fic, 'a) \<phi>\<close>
   and T\<^sub>b :: \<open>(mem_fic, 'b) \<phi>\<close>
 \<medium_left_bracket>
-  note \<open>length l\<^sub>a = len\<close> [simp] \<open>length l\<^sub>b = len\<close> [simp] ;;
+  note \<open>length l\<^sub>a = len\<close> [simp] \<open>length l\<^sub>b = len\<close> [simp] \<semicolon>
   map_2list_loop_a ($len) \<open>(\<lambda>j. \<m>\<e>\<m>[addr\<^sub>a \<tribullet> (i\<^sub>a+j)\<^sup>\<t>\<^sup>\<h>] T\<^sub>a, \<lambda>j. \<m>\<e>\<m>[addr\<^sub>b \<tribullet> (i\<^sub>b+j)\<^sup>\<t>\<^sup>\<h>] T\<^sub>b)\<close> \<medium_left_bracket>
     body 
   \<medium_right_bracket>
 \<medium_right_bracket> .
+
 
 proc memcpy_a:
   requires \<open>(\<And>x. Semantic_Type T TY)\<close>
@@ -50,7 +49,7 @@ proc memcpy_a:
   output \<open>l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>a] \<s>\<l>\<i>\<c>\<e>[i\<^sub>a,len] T\<heavy_comma> l\<^sub>b \<Ztypecolon> \<m>\<e>\<m>[addr\<^sub>b] \<s>\<l>\<i>\<c>\<e>[i\<^sub>b,len] T\<close>
   for T :: \<open>(VAL, 'x) \<phi>\<close>
 \<medium_left_bracket>
-  map_2slice_a ($len) \<medium_left_bracket> \<rightarrow> val k \<semicolon>
+  map_2slice_a ($len) \<medium_left_bracket> \<rightarrow> val k 
      $i\<^sub>a + $k := ($i\<^sub>b + $k) !
   \<medium_right_bracket>
 \<medium_right_bracket> .

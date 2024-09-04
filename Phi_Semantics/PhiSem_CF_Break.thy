@@ -387,7 +387,7 @@ proc
   \<medium_left_bracket>
       op_brk_scope \<medium_left_bracket> for l1
       op_brk_scope \<medium_left_bracket> for l2
-        ;; apply_rule "op_break"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>] ($y)
+        apply_rule "op_break"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>] ($y)
       \<medium_right_bracket>
       assert \<open>\<bottom>\<^sub>B\<^sub>I\<close> (*this place is unreachable!*)
     \<medium_right_bracket>
