@@ -11,7 +11,22 @@ proc binary_search_array:
           (LEAST i. lower \<le> i \<and> i \<le> upper \<and> arr!i \<le> k) \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<i>\<n>\<t>)\<close>
   is [routine]
 \<medium_left_bracket>
-  if (ptr[lower] \<le> k) \<medium_left_bracket>
+
+note [[\<phi>trace_reasoning = 2]]
+
+\<semicolon> ptr[lower]
+
+
+
+
+
+
+
+
+
+
+
+\<semicolon>  if (ptr[lower] \<le> k) \<medium_left_bracket>
     return (lower)
   \<medium_right_bracket> \<medium_left_bracket>
     (lower, upper) \<rightarrow> var l, u
