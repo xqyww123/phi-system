@@ -17,6 +17,7 @@ include PHI_SYNTAX
 
 
   val enable_auto_chk_and_conv : bool Config.T
+  val chk_source_val : bool Config.T
 
 end
 
@@ -74,6 +75,7 @@ fun pass_ensures_elim_transformation _ (rules, (mode, priority), (pattern, excep
    in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
   end
 
+(*
 fun pass_pattern_of_intro_ToR _ (data as (rules, (mode, priority), (pattern, except), guard, ctxt)) =
   case (rules, pattern)
     of ([rule], []) =>
@@ -81,7 +83,7 @@ fun pass_pattern_of_intro_ToR _ (data as (rules, (mode, priority), (pattern, exc
         then let val i = Thm.maxidx_of rule + 1
                  fun var N = Var((N,i),TVar((N,i),[]))
                  val pattern = case Thm.concl_of rule
-                                 of Trueprop $ (Tag $ (Trans $ X $ Y $ P) $ A) =>
+                                 of Trueprop $ (Tag $ (Trans $ _ $ Y $ _) $ A) =>
                                     [(Trueprop $ (Tag $ (Trans $ var "X" $ Y $ var "P") $ A), NONE)]
                                   | _ => []
               in (rules, (mode, priority), (pattern, except), guard, ctxt)
@@ -103,6 +105,7 @@ fun pass_pattern_of_elim_ToR _ (data as (rules, (mode, priority), (pattern, exce
              end
         else data
      | _ => data
+*)
 
 fun transformation_conv C_s C_t C_p ctm = (
   dest_transformation_c ctm;
@@ -114,6 +117,7 @@ fun transformation_conv C_s C_t C_p ctm = (
 (** Auto Classify Transformation Rules **)
 
 val enable_auto_chk_and_conv = Config.declare_bool ("enable_auto_chk_and_conv_\<phi>ToR", \<^here>) (K true)
+val chk_source_val = Attrib.setup_config_bool \<^binding>\<open>\<phi>chk_source_val\<close> (K true)
 
 fun err ctm = raise CTERM("Fail to classify the Transformation rule automatically into \<T>\<P>, \<T>\<P>'", [ctm])
 fun err' tm = raise TERM("Fail to classify the Transformation rule automatically into \<T>\<P>, \<T>\<P>'", [tm])
@@ -125,7 +129,7 @@ fun is_Var X =
 
 fun conv_ToR_add_tag ctm =
   let datatype kind = ProdTy | Ty | Var | Oth
-      fun cond_Ty (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _) = ProdTy
+      fun cond_Ty (Const(\<^const_name>\<open>\<phi>Prod'\<close>, _) $ _ $ _) = ProdTy
         | cond_Ty _ = Ty
       fun dest_ty (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ U) = cond_Ty U
         | dest_ty X = if is_Var X then Var else Oth
@@ -158,43 +162,83 @@ fun conv_ToR_add_tag' ctm =
         else err ctm
     end
 
-fun chk_ToR_prop term = let
-        val last = Unsynchronized.ref NONE
-        fun set v = case !last of NONE => last := SOME v
-                                | SOME v' => if v = v' then ()
-                                             else err' term
-        fun scan (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>\<close>, _)) = (set 1; scan' X)
-          | scan (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>'\<close>, _)) = (set 2; scan' X)
-          | scan (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) =
-              error "The use of transformation must be tagged in any transformation rule.\n\
+fun chk_ToR_prop ctxt term = let
+        datatype TP_mode = TP | TP' | CLEAN
+
+        fun err_not_var () = raise TERM ("The source value of a transformation rule must be a variable", [term])
+        fun source_val (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = source_val X
+          | source_val (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = source_val X
+          | source_val (Abs (_,_,X)) = source_val X
+          | source_val (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = source_val X
+          | source_val (Const(\<^const_name>\<open>Transformation\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) $ _ $ _) =
+              (case x of Free _ => ()
+                       | Var _  => ()
+                       | _ => err_not_var ())
+          | source_val (A $ B) = (source_val A ; source_val B)
+          | source_val _ = ()
+        val _ = if Config.get_generic ctxt chk_source_val then source_val term else ()
+
+        fun set (concl,NONE) X = (concl,SOME X)
+          | set (_,SOME _) _ = err' term
+        
+        fun scan C (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>\<close>, _)) = scan (set C TP) X
+          | scan C (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<T>\<P>'\<close>, _)) = scan (set C TP') X
+          | scan C (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<A>clean\<close>, _)) = scan (set C CLEAN) X
+          | scan _ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ _) = ()
+          | scan C (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) = (
+              case C
+                of (_,SOME TP') => ()
+                 | (_,SOME TP) => ()
+                 | (_,SOME CLEAN) => ()
+                 | (_,NONE) =>
+              error "The use of transformation must be tagged in a transformation rule.\n\
                     \You can disable this check by \
                     \\<open>setup \<open>Config.put_global (Phi_Syntax.enable_auto_chk_and_conv) false\<close>\<close>.\n\
-                    \if you are sure about what you are doing."
-          | scan (X $ Y) = (scan X ; scan Y)
-          | scan (Abs (_, _, X)) = scan X
-          | scan _ = ()
-        and scan' (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) = ()
-          | scan' X = scan X
-   in scan term
+                    \if you are sure about what you are doing." )
+          | scan (concl,C) (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ B) = (scan (false,C) A; scan (concl,C) B)
+          | scan C (X $ Y) = (scan C X ; scan C Y)
+          | scan C (Abs (_, _, X)) = scan C X
+          | scan _ _ = ()
+   in scan (true,NONE) term
   end
 
 fun ToR_rule_add_tag ctxt th =
   Conv.fconv_rule (Phi_Conv.hhf_conv (Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv conv_ToR_add_tag')))
                                      (K (HOLogic.Trueprop_conv conv_ToR_add_tag')) ctxt) th
-  |> (fn th => (chk_ToR_prop (Thm.prop_of th) ; th))
+  |> (fn th => (chk_ToR_prop (Context.Proof ctxt) (Thm.prop_of th) ; th))
 
 val _ = Theory.setup (Context.theory_map (
   Phi_Reasoner.add_pass (Free("Add ToR tag auto", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>,
     fn _ => fn (rules, prio, pats, guard, ctxt) =>
         if Config.get_generic ctxt enable_auto_chk_and_conv
-        then(List.app (chk_ToR_prop o fst) (fst pats)
-           ; List.app chk_ToR_prop (snd pats)
-           ; (map (fn rule =>
-                if Thm.is_dummy rule
-                then rule
-                else ToR_rule_add_tag (Context.proof_of ctxt) rule) rules,
-             prio, pats, guard, ctxt))
-        else (rules, prio, pats, guard, ctxt) ) (*
+        then let val _ = List.app (chk_ToR_prop ctxt o fst) (fst pats)
+                 val _ = List.app (chk_ToR_prop ctxt) (snd pats)
+                 val rules' = map (fn rule =>
+                        if Thm.is_dummy rule
+                        then rule
+                        else ToR_rule_add_tag (Context.proof_of ctxt) rule) rules
+                 val _ = List.app (chk_ToR_prop ctxt o Thm.prop_of) rules'
+           in (rules', prio, pats, guard, ctxt)
+          end
+        else (rules, prio, pats, guard, ctxt) )
+
+#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>,
+    fn _ => fn data as (rules, _, _, _, ctxt) => (
+        List.app (chk_ToR_prop ctxt o Thm.prop_of) rules ;
+        data ))
+
+#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>,
+    fn _ => fn data as (rules, _, _, _, ctxt) => (
+        List.app (chk_ToR_prop ctxt o Thm.prop_of) rules ;
+        data ))
+
+(*
+#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @clean\<close>,
+    fn _ => fn data as (rules, _, _, _, ctxt) => (
+        List.app (chk_ToR_prop ctxt o Thm.prop_of) rules ;
+        data )) *)
+
+ (*
 #>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
           \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>, pass_pattern_of_intro_ToR)
 #>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),

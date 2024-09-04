@@ -123,6 +123,7 @@ subsubsection \<open>\<phi>-Type\<close>
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
   deriving Sep_Functor_1
+       and Abstract_Domain\<^sub>L
        and \<open>Gen_Br_Join \<phi> \<phi> \<phi> P True\<close>
 
 lemma \<phi>_unit: \<comment> \<open>this lemma is not used for SL reasoning, but building of fictional disjointness\<close>

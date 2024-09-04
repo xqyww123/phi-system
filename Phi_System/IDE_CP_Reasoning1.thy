@@ -87,14 +87,6 @@ Note, the argument here means any \<phi>-Type in the pre-condition, not necessar
     \<phi>-BI specification and so possibly not able to be applied any more.
 \<close>
 
-(*
-declare [[\<phi>reason_default_pattern
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close>    (110)
-  and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ *  \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ *  \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close>    (120)
-]]
-*)
 
 subsubsection \<open>Beta-reduction Hint for \<phi>-Type\<close>
 
@@ -155,13 +147,13 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<A>
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @tag \<A> \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<A>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<A> \<close>
   by simp
 
 
@@ -391,22 +383,21 @@ lemma \<phi>IntroFrameVar'_No:
   unfolding \<phi>IntroFrameVar'_def by simp
 
 lemma \<phi>IntroFrameVar_Yes:
-  "\<phi>IntroFrameVar (if C then Some R else None) (S \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) S (T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) T"
+  "\<phi>IntroFrameVar (Some R) (S \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) S (T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) T"
   unfolding \<phi>IntroFrameVar_def REMAINS_def by simp
 
 lemma \<phi>IntroFrameVar'_Yes:
-  " \<phi>IntroFrameVar' R (S \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R) S (\<lambda>ret. T ret * R) T (\<lambda>ex. E ex * R) E"
+  " \<phi>IntroFrameVar' R (S \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) S (\<lambda>ret. T ret * R) T (\<lambda>ex. E ex * R) E"
   unfolding \<phi>IntroFrameVar'_def REMAINS_def by simp
 
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
 \<open>fn (_, (ctxt, sequent)) =>
-  let val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
+  let val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, \<^Type>\<open>fun \<^Type>\<open>option TY\<close> _\<close>) $ _ $ _ $ S $ _ $ _) =
           Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-      val suppressed = case S
-                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ C $ R =>
-                              Term.is_Var (Term.head_of R) andalso
-                              (case C of Const(\<^const_name>\<open>True\<close>, _) => true
-                                       | _ => Term.is_Var (Term.head_of C))
+      val suppressed = not (Sign.of_sort (Proof_Context.theory_of ctxt) (TY, \<^sort>\<open>sep_magma_1\<close>))
+                orelse case S
+                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ R =>
+                              Term.is_Var (Term.head_of R)
                           | _ => (case Phi_Syntax.rightmost_sep S
                          of (\<^const>\<open>TAIL\<close> $ _) => true
                           | RR => Term.is_Var (Term.head_of RR))
@@ -420,10 +411,8 @@ lemma \<phi>IntroFrameVar'_Yes:
   let val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
           Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
       val suppressed = case S
-                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ C $ R =>
-                              Term.is_Var (Term.head_of R) andalso
-                              (case C of Const(\<^const_name>\<open>True\<close>, _) => true
-                                       | _ => Term.is_Var (Term.head_of C))
+                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ R =>
+                              Term.is_Var (Term.head_of R)
                           | _ => (case Phi_Syntax.rightmost_sep S
                          of (\<^const>\<open>TAIL\<close> $ _) => true
                           | RR => Term.is_Var (Term.head_of RR))
@@ -597,9 +586,9 @@ lemma [\<phi>reason 1200]:
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values A A'
 \<Longrightarrow> Remove_Values B B'
-\<Longrightarrow> Remove_Values (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B) (A' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B')\<close>
-  unfolding REMAINS_def Remove_Values_def Transformation_def
-  by (cases C; simp; blast)
+\<Longrightarrow> Remove_Values (A \<r>\<e>\<m>\<a>\<i>\<n>\<s> B) (A' \<r>\<e>\<m>\<a>\<i>\<n>\<s> B')\<close>
+  unfolding REMAINS_def Remove_Values_def Transformation_def REMAINS_def
+  by (simp; blast)
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values A A'

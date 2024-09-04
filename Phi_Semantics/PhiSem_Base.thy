@@ -10,6 +10,7 @@ subsection \<open>Type Classes for Common Reasoning Strategies\<close>
 \<phi>type_def Uninit_Val :: \<open>TY \<Rightarrow> (VAL, unit) \<phi>\<close> ("\<top>[_]")
   where \<open>x \<Ztypecolon> \<top>[TY] \<equiv> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<in> Well_Type TY\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
 
 (*
 term x

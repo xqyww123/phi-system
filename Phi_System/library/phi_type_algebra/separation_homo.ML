@@ -70,7 +70,7 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
               Term_Subst.instantiateT instTy ele_model0
             )
 
-      val inst  = lift_types_sort thy [(model_ty'1, \<^sort>\<open>sep_magma\<close>), (ele_model'1, \<^sort>\<open>sep_magma\<close>)]
+      val inst  = lift_types_sort thy [(model_ty'1, \<^sort>\<open>sep_magma_1\<close>), (ele_model'1, \<^sort>\<open>sep_magma_1\<close>)]
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
 
       val phi = instantiate_phi (inst',Vars.empty) phi'1

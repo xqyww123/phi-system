@@ -51,6 +51,7 @@ subsection \<open>Integer in the normal sense\<close>
 \<phi>type_def \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
   where \<open>x \<Ztypecolon> \<phi>AInt \<equiv> sem_mk_aint x \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Semantic_Zero_Val
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<int> = \<a>\<i>\<n>\<t>\<close>
 
@@ -72,9 +73,12 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
 
 subsection \<open>Natural Nmber\<close>
 
+declare [[\<phi>trace_reasoning = 2]]
+
 \<phi>type_def \<phi>ANat ("\<nat>")
   where \<open>n \<Ztypecolon> \<nat> \<equiv> of_nat n \<Ztypecolon> \<int>\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Semantic_Type
        and Semantic_Zero_Val
        and Inhabited
@@ -87,12 +91,12 @@ declare [[
  ]]
 
 
-lemma t1[\<phi>reason %ToA_num_conv_cut, \<phi>synthesis %\<phi>synthesis_transformation]:
+lemma [\<phi>reason %ToA_num_conv_cut, \<phi>synthesis %\<phi>synthesis_transformation]:
   " Threshold_Cost 4
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
 \<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat>"
   \<medium_left_bracket>
-    \<open>nat x \<Ztypecolon> MAKE _ \<nat>\<close> 
+    \<open>nat x \<Ztypecolon> MAKE 0 \<nat>\<close>
   \<medium_right_bracket>.
 
 lemma [\<phi>reason %ToA_num_conv_cut]:

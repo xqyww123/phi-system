@@ -41,9 +41,9 @@ proc while:
           apply_rule B[where lb1=lb]
           apply_rule op_break[THEN Technical_I, THEN Labelled_I]
           apply_rule op_break[THEN Technical_I, THEN Labelled_I] \<semicolon>
-        \<medium_right_bracket> for \<open>TECHNICAL Brk_Frame lc\<heavy_comma> (TECHNICAL Brk_Frame lb\<heavy_comma> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x')\<close> ;;
-      \<medium_right_bracket> ;;
-    \<medium_right_bracket> for \<open>(R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> TECHNICAL Brk_Frame lb\<close> ;;
+        \<medium_right_bracket> for \<open>TECHNICAL Brk_Frame lc\<heavy_comma> (TECHNICAL Brk_Frame lb\<heavy_comma> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x')\<close> \<semicolon>
+      \<medium_right_bracket> \<semicolon>
+    \<medium_right_bracket> for \<open>(R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> TECHNICAL Brk_Frame lb\<close> \<semicolon>
   \<medium_right_bracket>.
 
 hide_const (open) PhiSem_CF_Basic.while

@@ -175,25 +175,27 @@ text \<open>Covered by ToA-refl:
 
 lemma [\<phi>reason %ToA_brk_frame+10]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> l = l'
-\<Longrightarrow> TECHNICAL Brk_Frame l \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brk_Frame l' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] \<top> \<close>
-  unfolding Premise_def \<r>Guard_def
+\<Longrightarrow> TECHNICAL Brk_Frame l \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brk_Frame l' \<r>\<e>\<m>\<a>\<i>\<n>\<s> 1 \<close>
+  unfolding Premise_def \<r>Guard_def REMAINS_def
   by simp
 
 lemma [\<phi>reason %ToA_brk_frame+10]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> l = l'
 \<Longrightarrow> TECHNICAL Brk_Frame l\<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brk_Frame l' \<r>\<e>\<m>\<a>\<i>\<n>\<s> X \<close>
-  unfolding Premise_def \<r>Guard_def
+  unfolding Premise_def \<r>Guard_def REMAINS_def
   by simp
 
 lemma [\<phi>reason %ToA_brk_frame]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> TECHNICAL Brk_Frame l\<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> TECHNICAL Brk_Frame l\<heavy_comma> R \<w>\<i>\<t>\<h> P \<close>
-  by (simp, metis (no_types, opaque_lifting) mult.assoc mult.commute transformation_right_frame)
+  unfolding REMAINS_def
+  by (metis (no_types, opaque_lifting) mult.assoc mult.commute transformation_right_frame)
 
 lemma [\<phi>reason %ToA_brk_frame]:
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brk_Frame l \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X\<heavy_comma> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brk_Frame l \<r>\<e>\<m>\<a>\<i>\<n>\<s> X\<heavy_comma> R' \<w>\<i>\<t>\<h> P \<close>
-  by (simp, metis mult.assoc mult.commute transformation_left_frame)
+  unfolding REMAINS_def
+  by (metis mult.assoc mult.commute transformation_left_frame)
 
 
 subsection \<open>sift brking frame\<close>
@@ -237,7 +239,7 @@ lemma [\<phi>reason %entry_of_sift_brking_frame]:
 lemma [\<phi>reason 3000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E \<w>\<i>\<t>\<h> P @tag \<T>\<P>
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E \<r>\<e>\<m>\<a>\<i>\<n>\<s> 1 \<w>\<i>\<t>\<h> P @tag \<T>\<P>\<close>
-  unfolding Action_Tag_def
+  unfolding Action_Tag_def REMAINS_def
   by simp
 
 
@@ -334,7 +336,7 @@ lemma [\<phi>reason 2200]:
   (*The priority must override Void Padding*)
   \<open> (\<And>v. S v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R v \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> Brking_Frame l S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> Brking_Frame l R \<w>\<i>\<t>\<h> P\<close>
-  unfolding Brking_Frame_def REMAINS_simp
+  unfolding Brking_Frame_def REMAINS_def
   \<medium_left_bracket> premises X
     apply_rule X[THEN transformation_right_frame]
   \<medium_right_bracket> .
@@ -343,7 +345,7 @@ lemma [\<phi>reason 2201]:
   (*The priority must override Void Padding*)
   \<open> (\<And>v. S v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R v \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> TECHNICAL Brking_Frame l S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> TECHNICAL Brking_Frame l R \<w>\<i>\<t>\<h> P\<close>
-  unfolding Brking_Frame_def Technical_def REMAINS_simp
+  unfolding Brking_Frame_def Technical_def REMAINS_def
   \<medium_left_bracket> premises X
     apply_rule X[THEN transformation_right_frame]
   \<medium_right_bracket>.
@@ -383,9 +385,9 @@ proc
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   output \<open>y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   \<medium_left_bracket>
-    op_brk_scope \<medium_left_bracket> for l1
+      op_brk_scope \<medium_left_bracket> for l1
       op_brk_scope \<medium_left_bracket> for l2
-        ;; apply_rule "op_break"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>] ($y)
+        apply_rule "op_break"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>] ($y)
       \<medium_right_bracket>
       assert \<open>\<bottom>\<^sub>B\<^sub>I\<close> (*this place is unreachable!*)
     \<medium_right_bracket>

@@ -177,7 +177,7 @@ setup \<open>Context.theory_map (
           let val T_names =
                      fold ((fn Const(\<^const_name>\<open>REMAINS\<close>, _) $ (
                                   Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _
-                                    $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ T)) $ _ $ _ =>
+                                    $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ T)) $ _ =>
                                  (case Term.head_of T
                                     of Const(N, _) => insert (op =) N
                                      | _ => I)

@@ -46,13 +46,11 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, d
       fun dest_Tr tm =
         case (if split_source then #2 else #1)
              (Phi_Syntax.dest_transformation (strip (Logic.strip_assums_concl tm)))
-          of Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ \<^Const>\<open>True\<close> $ _
-               => error "True_Rem" (*(Y, \<^Const>\<open>True\<close>, True_Rem)*)
-           | Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ C $ _
-               => (Y, C, Has_Rem)
-           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _)
+          of Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ _
+               => (Y, Has_Rem)
+           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>\<phi>Prod'\<close>, _) $ _ $ _)
                => error "BAD CONFIGURATION"
-           | Y => (Y, Term.dummy, No_Rem)
+           | Y => (Y, No_Rem)
 
       fun mk_inst base abst (X $ _) = mk_inst base (abst+1) X
         | mk_inst base abst (Var (N,ty)) =
@@ -75,7 +73,7 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, d
           (mk_quick_rule rule, mk_quick_rule ruleR(*, mk_quick_rule ruleRT*))
 
    in fn (ctxt,sequent) => Seq.make (fn () =>
-  let val (Y, _, has_rem) = dest_Tr (Thm.major_prem_of sequent)
+  let val (Y, has_rem) = dest_Tr (Thm.major_prem_of sequent)
       val no_var = false (*has_no_var Y*) (*BUG: this short cut has problem, so disabled, may re-enable it after fixing*)
       val rule' = if no_var
                   then case has_rem of No_Rem => quick_rule | Has_Rem => quick_ruleR (*| True_Rem => quick_ruleRT*)

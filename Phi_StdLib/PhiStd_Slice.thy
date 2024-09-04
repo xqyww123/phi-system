@@ -13,7 +13,7 @@ proc (nodef) map_slice:
   input  \<open>len \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T\<heavy_comma> X\<close>
   output \<open>map_index f l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,len] T\<heavy_comma> X\<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
-\<medium_left_bracket>
+\<medium_left_bracket> 
   note \<open>length l = len\<close> [simp] ;;
   map_list_loop ($len) \<open>\<lambda>j. \<m>\<e>\<m>[addr \<tribullet> (i+j)\<^sup>\<t>\<^sup>\<h>] T\<close> \<medium_left_bracket> for j
     body

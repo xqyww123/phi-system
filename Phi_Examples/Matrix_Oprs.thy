@@ -48,14 +48,13 @@ proc new_mat:
   calloc1 \<open>\<bbbA>\<r>\<r>\<a>\<y>[M] \<bbbA>\<r>\<r>\<a>\<y>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
 \<medium_right_bracket> .
 
-
 proc del_mat:
   input    \<open>a \<Ztypecolon> \<v>\<a>\<l> Ptr[\<m>\<a>\<t> M N]\<heavy_comma> x \<Ztypecolon> MatSlice a i j m n\<close>
   premises \<open>m = M \<and> n = N \<and> i = 0 \<and> j = 0 \<and> address_to_base a\<close>
   output   \<open>Void\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-  mfree (a)
+  mfree (a) certified by (auto simp: \<phi>, rule exI[where x=\<open>\<lambda>(a,b) (aa, ba). aa\<close>], auto_sledgehammer)
 \<medium_right_bracket> .
 
 
@@ -183,7 +182,7 @@ proc strassen:
   if (n = 0)
   \<medium_left_bracket>
     \<open>MatSlice a\<^sub>A _ _ _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
-    \<open>MatSlice a\<^sub>B _ _ _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n> \<semicolon>
+    \<open>MatSlice a\<^sub>B _ _ _ _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>  \<semicolon>
 
     a\<^sub>A[i\<^sub>A, j\<^sub>A] := a\<^sub>A[i\<^sub>A, j\<^sub>A] * a\<^sub>B[i\<^sub>B, j\<^sub>B] \<semicolon>
       

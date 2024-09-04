@@ -325,6 +325,33 @@ lemma [\<phi>reason %\<phi>br_join_red_zero]:
   unfolding Action_Tag_def Transformation_def
   by (simp add: zero_set_def)
 
+subsubsection \<open>One\<close>
+
+lemma [\<phi>reason %\<phi>br_join_red_zero]:
+  \<open> Identity_Element\<^sub>I A Any
+\<Longrightarrow> If P A 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @tag br_join\<close>
+  unfolding Identity_Element\<^sub>I_def Action_Tag_def
+  by (cases P; simp add: transformation_weaken)
+
+lemma [\<phi>reason %\<phi>br_join_red_zero]:
+  \<open> Identity_Element\<^sub>I A Any
+\<Longrightarrow> If P 1 A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @tag br_join\<close>
+  unfolding Identity_Element\<^sub>I_def Action_Tag_def
+  by (cases P; simp add: transformation_weaken)
+
+lemma [\<phi>reason %\<phi>br_join_red_zero]:
+  \<open> Identity_Element\<^sub>I A Any
+\<Longrightarrow> If P A (x \<Ztypecolon> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @tag br_join\<close>
+  unfolding Identity_Element\<^sub>I_def Action_Tag_def
+  by (cases P; simp add: transformation_weaken)
+
+lemma [\<phi>reason %\<phi>br_join_red_zero]:
+  \<open> Identity_Element\<^sub>I A Any
+\<Longrightarrow> If P (x \<Ztypecolon> \<circle>) A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @tag br_join\<close>
+  unfolding Identity_Element\<^sub>I_def Action_Tag_def
+  by (cases P; simp add: transformation_weaken)
+
+
 
 subsubsection \<open>Subjection\<close>
 
@@ -429,27 +456,16 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
 
 lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
-\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R @tag \<T>\<P>'
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
+\<Longrightarrow> (y, w) \<Ztypecolon> U \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<OTast> U'\<^sub>R @tag \<T>\<P>'
+\<Longrightarrow> Identity_Element\<^sub>E (w \<Ztypecolon> W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
 \<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
-\<Longrightarrow> if C\<^sub>R then (If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join) \<and>\<^sub>\<r> (Z' = Z * Z\<^sub>R)
-          else Identity_Element\<^sub>I (snd x \<Ztypecolon> T\<^sub>R) Any \<and>\<^sub>\<r> Z' = Z
+\<Longrightarrow> If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join
+\<Longrightarrow> Z * Z\<^sub>R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z' @clean
 \<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z' @tag br_join \<close>
   for Z' :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
-            Orelse_shortcut_def Ant_Seq_def Identity_Element\<^sub>I_def
-  by ((cases P; cases C\<^sub>R; clarsimp), blast, force, blast)
-
-lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
-  \<open> Identifier_of T identifier T'
-\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R @tag \<T>\<P>'
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<and> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
-\<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @tag br_join
-\<Longrightarrow> If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @tag br_join
-\<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z * Z\<^sub>R @tag br_join \<close>
-  unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
-            Orelse_shortcut_def
-  by (cases P; clarsimp; blast)
+            Orelse_shortcut_def Ant_Seq_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def \<phi>Prod'_def
+  by ((cases P; clarsimp), blast, metis mult_1_class.mult_1_right sep_magma_1_left)
 
 
 lemma Br_join_atom_assertion[no_atp]:
@@ -458,9 +474,8 @@ lemma Br_join_atom_assertion[no_atp]:
 \<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @tag br_join
 \<Longrightarrow> If P (A * L) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A * X @tag br_join \<close>
   unfolding Action_Tag_def
-  by ((cases P; simp),
-      insert transformation_left_frame, blast,
-      insert mk_elim_transformation transformation_right_frame, blast)
+  by ((cases P; simp), simp add: transformation_left_frame,
+      metis REMAINS_def mk_elim_transformation transformation_left_frame)
 
 lemma Br_join_atom_assertion'[no_atp]:
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A
@@ -471,7 +486,7 @@ lemma Br_join_atom_assertion'[no_atp]:
 
 
 
-subsubsection \<open>Join Two \<phi>-Types\<close>
+subsubsection \<open>Joapplyin Two \<phi>-Types\<close>
 
 \<phi>reasoner_group br_join_fallback = (20, [11,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @tag br_join\<close> 
                                                   in \<phi>br_join_all and > \<phi>br_join_fail
@@ -1006,8 +1021,8 @@ paragraph \<open>Passes\<close>
 
 lemma [\<phi>reason %synthesis_gen_mode_pass]:
   \<open> synthesis_gen_mode A M
-\<Longrightarrow> synthesis_gen_mode (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) M \<close>
-  unfolding synthesis_gen_mode_def ..
+\<Longrightarrow> synthesis_gen_mode (A \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) M \<close>
+  unfolding synthesis_gen_mode_def REMAINS_def ..
 
 subsection \<open>ToA\<close>
 
@@ -1039,7 +1054,7 @@ lemma Gen_Synthesis_Rule_transformation_12:
       Ant
       (PROP Ant \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y' \<w>\<i>\<t>\<h> P @tag mode) \<close>
   for X :: assn
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def Simplify_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def Simplify_def REMAINS_def
   by (simp; rule transformation_right_frame[where U=\<open>Y * Yr\<close>, simplified mult.assoc]; simp)
 
 lemma Gen_Synthesis_Rule_transformation_11:
@@ -1049,8 +1064,8 @@ lemma Gen_Synthesis_Rule_transformation_11:
       Ant
       (PROP Ant \<Longrightarrow> X * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag mode) \<close>
   for X :: assn
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by (simp, rule transformation_right_frame, simp)
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def REMAINS_def
+  by (rule transformation_right_frame, simp)
 
 lemma Gen_Synthesis_Rule_transformation_01:
   \<open> synthesis_gen_mode Y mode
@@ -1059,7 +1074,7 @@ lemma Gen_Synthesis_Rule_transformation_01:
       Ant
       (PROP Ant \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag mode) \<close>
   for X :: assn
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def REMAINS_def
   by simp
 
 lemma Gen_Synthesis_Rule_transformation_00:
@@ -1095,7 +1110,7 @@ lemma Gen_Synthesis_Rule_transformation_00:
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
-          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _)
+          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _)
               = @{thm' Gen_Synthesis_Rule_transformation_00} RS sequent
           | chk_target (Const (\<^const_name>\<open>times\<close>, _) $ (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _) $ _)
               = (warn () ;
@@ -1105,7 +1120,7 @@ lemma Gen_Synthesis_Rule_transformation_00:
               = if has_R then @{thm' Gen_Synthesis_Rule_transformation_01} RS sequent
                          else (warn (); @{thm' Gen_Synthesis_Rule_transformation_12} RS sequent)
           | chk_target _ = @{thm Gen_Synthesis_Rule_transformation_11} RS sequent
-    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ => NONE
+    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ => NONE
           | _ => SOME ((ctxt, chk_target Y), Seq.empty)
     end)\<close>
 
@@ -1120,7 +1135,7 @@ lemma Gen_Synthesis_Rule_VS_12:
       (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y * Yr \<w>\<i>\<t>\<h> P))
       Ant
       (PROP Ant \<Longrightarrow> X' \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y' \<w>\<i>\<t>\<h> P @tag mode) \<close>
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def Simplify_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def Simplify_def REMAINS_def
   by (simp; rule \<phi>view_shift_intro_frame[where U=\<open>Y * Yr\<close>, unfolded mult.assoc]; simp)
 
 lemma Gen_Synthesis_Rule_VS_11:
@@ -1129,15 +1144,15 @@ lemma Gen_Synthesis_Rule_VS_11:
       (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P))
       Ant
       (PROP Ant \<Longrightarrow> X * R \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag mode) \<close>
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by (simp, rule \<phi>view_shift_intro_frame, simp)
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def REMAINS_def
+  by (rule \<phi>view_shift_intro_frame, simp)
 
 lemma Gen_Synthesis_Rule_VS_01:
   \<open> PROP Gen_Synthesis_Rule
       (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y * R \<w>\<i>\<t>\<h> P))
       Ant
       (PROP Ant \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag synthesis) \<close>
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def REMAINS_def
   by simp
 
 lemma Gen_Synthesis_Rule_VS_00:
@@ -1169,7 +1184,7 @@ lemma Gen_Synthesis_Rule_VS_00:
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
-          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _)
+          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _)
               = @{thm' Gen_Synthesis_Rule_VS_00} RS sequent
           | chk_target (Const (\<^const_name>\<open>times\<close>, _) $ (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _) $ _)
               = (warn () ;
@@ -1179,7 +1194,7 @@ lemma Gen_Synthesis_Rule_VS_00:
               = if has_R then @{thm' Gen_Synthesis_Rule_VS_01} RS sequent
                          else (warn (); @{thm' Gen_Synthesis_Rule_VS_12} RS sequent)
           | chk_target _ = @{thm Gen_Synthesis_Rule_VS_11} RS sequent
-    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ => NONE
+    in case X of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ => NONE
           | _ => SOME ((ctxt, chk_target Y), Seq.empty)
     end)\<close>
 
@@ -1208,7 +1223,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut for \<open>PROP Gen_Synthesis_
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X (\<phi>V_fst vs)\<heavy_comma> Xr (\<phi>V_snd vs) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EF))
             Ant Result \<close>
-  unfolding Gen_Synthesis_Rule_def conjunction_imp REMAINS_simp
+  unfolding Gen_Synthesis_Rule_def conjunction_imp REMAINS_def
   subgoal premises prems apply (rule prems(1))
   \<medium_left_bracket> premises f and A
     f
@@ -1237,7 +1252,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut]: \<comment> \<open>Gen_Synthe
       (Trueprop (\<forall>_::unit \<phi>arg. \<p>\<r>\<o>\<c> F \<lbrace> Void \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
       Ant
       (PROP Ant \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' @tag synthesis) \<close>
-  unfolding Gen_Synthesis_Rule_def Remove_Values_def Simplify_def Action_Tag_def
+  unfolding Gen_Synthesis_Rule_def Remove_Values_def Simplify_def Action_Tag_def REMAINS_def
   subgoal premises P
     apply (unfold P(2))
     using P(3)[OF P(4), THEN spec, THEN \<phi>CONSEQ'E[OF view_shift_by_implication, OF P(1)],
@@ -1275,7 +1290,7 @@ lemma [\<phi>reason %\<phi>synthesis_gen_proc_normalize]:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> (X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> Rx vs) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
             Ant Result\<close>
-  unfolding Gen_Synthesis_Rule_def by simp
+  unfolding Gen_Synthesis_Rule_def REMAINS_def by simp
 
 (* TODO: SMORPH
 lemma [\<phi>reason 2000]:
@@ -1309,7 +1324,7 @@ private lemma Gen_Synthesis_Rule_start_proc:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
             Ant Result\<close>
-  unfolding Gen_Synthesis_Rule_def
+  unfolding Gen_Synthesis_Rule_def REMAINS_def
   by (simp add: \<phi>frame)
 
 private lemma Gen_Synthesis_Rule_start_proc_focus_the_last:
@@ -1319,7 +1334,7 @@ private lemma Gen_Synthesis_Rule_start_proc_focus_the_last:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> Yr ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
             Ant Result\<close>
-  unfolding Gen_Synthesis_Rule_def
+  unfolding Gen_Synthesis_Rule_def REMAINS_def
   by (simp add: \<phi>frame mult.assoc[symmetric])
 
 private lemma Gen_Synthesis_Rule_start_proc_having_target:
@@ -1329,7 +1344,7 @@ private lemma Gen_Synthesis_Rule_start_proc_having_target:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
             Ant Result\<close>
-  unfolding Gen_Synthesis_Rule_def
+  unfolding Gen_Synthesis_Rule_def REMAINS_def
   by (simp add: \<phi>frame)
 
 \<phi>reasoner_ML Gen_Synthesis_Rule_init_for_proc %\<phi>synthesis_gen_proc_init
@@ -1346,7 +1361,7 @@ private lemma Gen_Synthesis_Rule_start_proc_having_target:
               = error ("Exisential quantification has not been supported in synthesis.")
           | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
               = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
-          | chk_target (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _)
+          | chk_target (Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _)
               = @{thm Gen_Synthesis_Rule_start_proc_having_target}
           | chk_target (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _)
               = (warning "You have multiple separated items and it is unclear which one is \
@@ -1357,7 +1372,7 @@ private lemma Gen_Synthesis_Rule_start_proc_having_target:
                  @{thm Gen_Synthesis_Rule_start_proc_focus_the_last})
           | chk_target _ = @{thm Gen_Synthesis_Rule_start_proc}
      in case X
-          of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ => NONE
+          of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ => NONE
            | _ => SOME ((ctxt, (chk_target Y) RS sequent), Seq.empty)
     end)\<close>
 
@@ -1401,8 +1416,8 @@ lemma make_synthesis_rule':
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<heavy_comma> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
            @tag synthesis)\<close>
-  unfolding REMAINS_simp
-  using make_synthesis_rule[unfolded REMAINS_simp, where Y = \<open>\<lambda>v. Y v\<heavy_comma> R\<close>, unfolded mult.assoc] .
+  unfolding REMAINS_def
+  using make_synthesis_rule[unfolded REMAINS_def, where Y = \<open>\<lambda>v. Y v\<heavy_comma> R\<close>, unfolded mult.assoc] .
 
 
 
@@ -1607,8 +1622,8 @@ lemma make_overloaded_synthesis_rule':
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<heavy_comma> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
            @tag overloaded_synthesis)\<close>
-  unfolding REMAINS_simp
-  using make_overloaded_synthesis_rule[unfolded REMAINS_simp, where Y = \<open>\<lambda>v. Y v\<heavy_comma> R\<close>, unfolded mult.assoc] .
+  unfolding REMAINS_def
+  using make_overloaded_synthesis_rule[unfolded REMAINS_def, where Y = \<open>\<lambda>v. Y v\<heavy_comma> R\<close>, unfolded mult.assoc] .
 
 
 

@@ -37,7 +37,7 @@ fun gen_MDz is_zip (_, name) instruction (phi : phi_type) thy =
             ((fn (ths1,ths2,rules,ctxt) =>
                 let fun set_group (th, gp) =
                       case Thm.concl_of th
-                        of _ $ (Const(\<^const_name>\<open>equation\<^sub>2\<^sub>1\<close>, _) $ _ $ _ $ _)
+                        of _ $ (Const(\<^const_name>\<open>equation\<^sub>3\<^sub>1_cond\<close>, _) $ _ $ _ $ _ $ _ $ _ $ _ $ _)
                              => (th, SOME @{reasoner_group %\<A>_partial_add_local})
                          | _ => (th, gp)
                  in (ths1,ths2,map set_group rules,ctxt)

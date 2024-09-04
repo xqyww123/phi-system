@@ -229,13 +229,15 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
          ctxt |> Context_Position.set_visible false
               (* |> (fn ctxt => ctxt addsimprocs [Semantic_Type_Tools.unfold_typeof_simproc]) *)
               |> Context_Position.restore_visible ctxt
-              |> Config.put phi_allow_source_object_to_be_not_variable true)
+              |> Config.put phi_allow_source_object_to_be_not_variable true
+              |> Config.put Phi_Syntax.chk_source_val false)
       |> Proof.internal_goal (print_results int) Proof_Context.mode_pattern true
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)
           [(Binding.empty_atts, [(goal',[])])] |> #2
       |> Proof.map_context (fn ctxt => ctxt
             |> Proof_Context.set_mode Proof_Context.mode_default
+            |> Config.restore Phi_Syntax.chk_source_val (Proof.context_of stat)
             |> Config.restore phi_allow_source_object_to_be_not_variable (Proof.context_of stat)
             |> Phi_ID.step_in
             |> Phi_Opr_Stack.initialize_opr_stack)

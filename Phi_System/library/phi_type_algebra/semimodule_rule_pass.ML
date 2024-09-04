@@ -8,11 +8,7 @@ val phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar =
                   SOME ty
               | Const(\<^const_name>\<open>dabc_equation\<close>, \<^Type>\<open>fun ty _\<close>) $ _ $ _ $ _ $ _ =>
                   SOME ty
-              | Const(\<^const_name>\<open>equation\<^sub>3\<^sub>1\<close>, \<^Type>\<open>fun ty _\<close>) $ _ $ _ $ _ $ _ =>
-                  SOME ty
               | Const(\<^const_name>\<open>equation\<^sub>3\<^sub>1_cond\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>fun ty _\<close>\<close>\<close>) $ _ $ _ $ _ $ _ $ _ $ _ $ _ =>
-                  SOME ty
-              | Const(\<^const_name>\<open>equation\<^sub>2\<^sub>1\<close>, \<^Type>\<open>fun ty _\<close>) $ _ $ _ $ _ =>
                   SOME ty
               | _ => NONE
            ) rule

@@ -52,17 +52,6 @@ lemma semty_ntup_uniq'2:
         presburger,
         smt (verit, best) option.sel option_rel_Some2) .
 
-lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal (semty_ntup fmempty) \<close>
-  unfolding Is_Type_Literal_def ..
-
-lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal v
-\<Longrightarrow> Is_Type_Literal (semty_ntup fm)
-\<Longrightarrow> Is_Type_Literal (semty_ntup (fmupd k v fm)) \<close>
-  unfolding Is_Type_Literal_def ..
-
-
 subsubsection \<open>Syntax\<close>
 
 abbreviation "semty_ntup_empty" ("\<s>\<t>\<r>\<u>\<c>\<t> {}")
@@ -116,7 +105,17 @@ print_translation \<open>[
 ]\<close>
 
 subsubsection \<open>Basic Properties\<close>
-  
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal (semty_ntup fmempty) \<close>
+  unfolding Is_Type_Literal_def ..
+
+lemma [\<phi>reason add]:
+  \<open> Is_Type_Literal v
+\<Longrightarrow> Is_Type_Literal (semty_ntup fm)
+\<Longrightarrow> Is_Type_Literal (semty_ntup (fmupd k v fm)) \<close>
+  unfolding Is_Type_Literal_def ..
+
 lemma sem_mk_ntup_inj[simp]:
   \<open> sem_mk_ntup f1 = sem_mk_ntup f2 \<longleftrightarrow> f1 = f2 \<close>
   by (smt (verit) sem_mk_dest_ntup)
@@ -218,6 +217,7 @@ subsection \<open>Empty Tuple\<close>
 \<phi>type_def Empty_Named_Tuple :: \<open>(VAL, unit) \<phi>\<close>
   where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> sem_mk_ntup fmempty \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        (*and \<open>Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close> *)
        and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
@@ -233,10 +233,11 @@ subsection \<open>Field\<close>
 \<phi>type_def Named_Tuple_Field :: "symbol \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
   where \<open>Named_Tuple_Field s T \<equiv> (\<lambda>v. sem_mk_ntup (fmupd s v fmempty)) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functional_Transformation_Functor
        and Functionality
        and \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
-       and Separation_Homo
+       (*and Separation_Homo*)
        and Inhabited
 
 subsubsection \<open>Syntax\<close>

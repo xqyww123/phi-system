@@ -861,16 +861,16 @@ lemma [\<phi>reason %\<phi>functionality]:
 
 lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional A
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Is_Functional B)
-\<Longrightarrow> Is_Functional (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B)\<close>
+\<Longrightarrow> Is_Functional B
+\<Longrightarrow> Is_Functional (A \<r>\<e>\<m>\<a>\<i>\<n>\<s> B)\<close>
   unfolding Is_Functional_def set_eq_iff REMAINS_def
   by (simp add: set_mult_expn, blast)
 
 lemma [\<phi>reason %\<phi>functionality]:
   \<open> Functionality T p\<^sub>T
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Functionality U p\<^sub>U)
-\<Longrightarrow> Functionality (T \<^emph>[C] U) (\<lambda>(x,y). p\<^sub>T x \<and> (C \<longrightarrow> p\<^sub>U y))\<close>
-  unfolding Functionality_def
+\<Longrightarrow> Functionality U p\<^sub>U
+\<Longrightarrow> Functionality (T \<OTast> U) (\<lambda>(x,y). p\<^sub>T x \<and> p\<^sub>U y)\<close>
+  unfolding Functionality_def \<phi>Prod'_def
   by clarsimp blast
 
 lemma [\<phi>reason %\<phi>functionality]:
@@ -1396,8 +1396,8 @@ abbreviation Simple_View_Shift
 declare [[\<phi>reason_default_pattern
     \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> _\<close> (10)
 and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _\<close> (20)
-and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> (20)
-and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> (30)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> (20)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> (30)
 ]]
 
 subsection \<open>Basic Rules\<close>
@@ -1460,21 +1460,6 @@ lemma \<phi>view_shift_intro_frame:
 lemma \<phi>view_shift_intro_frame_R:
   "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> R * U' \<s>\<h>\<i>\<f>\<t>\<s> R * U \<w>\<i>\<t>\<h> P "
   by (metis \<phi>frame_view mult.commute)
-
-subsection \<open>Basic Rules\<close>
-
-subsubsection \<open>When the conditional boolean is fixed\<close>
-
-lemma [\<phi>reason %ToA_normalizing for \<open>_ \<s>\<h>\<i>\<f>\<t>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] _ \<w>\<i>\<t>\<h> _\<close> ]:
-  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> if C\<^sub>R then R = R' else R = 1
-\<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R  \<w>\<i>\<t>\<h> P \<close>
-  by (cases C\<^sub>R; simp)
-
-lemma [\<phi>reason %ToA_normalizing for \<open>_ \<s>\<h>\<i>\<f>\<t>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] _ \<w>\<i>\<t>\<h> _\<close> ]:
-  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] \<top> \<w>\<i>\<t>\<h> P \<close>
-  by simp
 
 
 section \<open>Hoare Rules \& SL Rules\<close>

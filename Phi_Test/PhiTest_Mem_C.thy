@@ -44,8 +44,7 @@ proc test_ptr3:
 
 declare [[\<phi>reasoning_step_limit = 160]]
 
-thm \<phi>MapAt_L.ToA_mapper_sep
-  
+
 proc test_mem3:
   input \<open>(x,y) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, b: \<nat> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<close>
   premises \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {c: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>}\<close>
@@ -89,7 +88,8 @@ proc test_mem6:
   addr.d.f.j
 \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 260]]
+declare [[\<phi>reasoning_step_limit = 275]]
+
 
 proc test_mem6a:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
@@ -99,6 +99,8 @@ proc test_mem6a:
 \<medium_left_bracket>
   addr.d
 \<medium_right_bracket> .
+
+
 
 proc test_mem6b:
   input \<open>(x,(y,z,(g,h,i,j))) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>, f: \<lbrace> g: \<nat>, h: \<nat>, i: \<nat>, j: \<nat> \<rbrace> \<rbrace> \<rbrace>\<heavy_comma>
@@ -130,7 +132,7 @@ proc test_mem8:
   addr.d.e := \<open>2 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
-declare [[\<phi>reasoning_step_limit = 140]]
+declare [[\<phi>reasoning_step_limit = 180]]
 
 lemmas ttt = synthesis_construct_aggregate_\<phi>app [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U]
 
@@ -200,7 +202,6 @@ proc test_mem14:
 \<medium_left_bracket>
   addr[1] := \<open>2 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
-
 
 
 proc test_mem15:

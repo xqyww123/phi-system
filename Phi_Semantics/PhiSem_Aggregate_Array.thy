@@ -151,6 +151,7 @@ let_\<phi>type Array
   deriving \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
+(*
 lemma Separation_Homo\<^sub>I_Array[\<phi>reason add]:
   \<open>Separation_Homo\<^sub>I (Array n) (Array n) (Array n) T U {(x,y). length x = length y} (\<lambda>(x,y). zip x y)\<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def
@@ -166,7 +167,7 @@ lemma Separation_Homo\<^sub>E_Array[\<phi>reason add]:
     by (rule exI[where x=\<open>sem_mk_array (map f1 [0..<length z])\<close>],
         rule exI[where x=\<open>sem_mk_array (map f2 [0..<length z])\<close>],
         auto simp add: nth_equalityI list_all2_conv_all_nth) .
-
+*)
 
 
 section \<open>Reasoning\<close>

@@ -79,6 +79,7 @@ section \<open>\<phi>-Type\<close>
 \<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
   where \<open>x \<Ztypecolon> \<bool> \<equiv> sem_mk_bool x \<Ztypecolon> Itself\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Functionality
        and \<open>Semantic_Zero_Val \<b>\<o>\<o>\<l> \<bool> False\<close>
        and Inhabited

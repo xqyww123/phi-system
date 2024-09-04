@@ -197,14 +197,16 @@ fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\
     in the fast_inst below.
 *)
 
-fun is_var' x =
+fun is_var' vars x =
   case Term.strip_comb x
-    of (Var _, args) => forall (fn Bound _ => true | _ => false) args
+    of (Var (v,_), args) => forall (fn Bound _ => true | _ => false) args andalso
+                            not (member (op =) vars v)
      | _ => false
 
 fun fast_inst can_inst th =
-  case (can_inst, PLPR_Syntax.may_dest_premise_tag (major_prem_of th))
-    of (_, Const (\<^const_name>\<open>True\<close>, _)) =>
+  let val vars = fold (Term.add_var_names) (Logic.strip_assums_hyp (hd (Thm.prems_of th))) []
+   in case (can_inst, PLPR_Syntax.may_dest_premise_tag (major_prem_of th))
+   of (_, Const (\<^const_name>\<open>True\<close>, _)) =>
             SOME (@{thm' Premise_True} RS th, Seq.empty)
      | (true, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ X) =>
          (SOME (Thm.instantiate (TVars.empty, mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th,
@@ -213,7 +215,7 @@ fun fast_inst can_inst th =
      | (true, Const(\<^const_name>\<open>HOL.conj\<close>, _)
                     $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y)
                     $ _) =>
-         if is_var' X orelse is_var' Y
+         if is_var' vars X orelse is_var' vars Y
          then (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
                      by (simp add: Premise_def)} RS th, Seq.empty)
                handle THM _ => NONE)
@@ -225,7 +227,7 @@ fun fast_inst can_inst th =
      | (true, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) =>
          (*solves the equation by unification once single resolution*)
          (*TODO, BUG: ant \<open>fst (fst x, undefined) = fst ?x\<close> results in single unification \<open>x <- (fst x, undefined)\<close>*)
-         if is_var' X orelse is_var' Y
+         if is_var' vars X orelse is_var' vars Y
          then (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
                handle THM _ => NONE)
          else NONE
@@ -234,6 +236,7 @@ fun fast_inst can_inst th =
           then SOME (@{thm' Premise_True} RS th, Seq.empty)
           else NONE
      | _ => NONE
+  end
 
 (*slow but powerfull and flexible*)
 fun LPR_inst ctxt th = ( (*TODO: strengthen fast_inst*)
