@@ -1951,8 +1951,8 @@ declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<rightharpoonup> 'y) \<phi>\<close>
   where \<open>f \<Ztypecolon> \<phi>MapTree D K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g.
-                dom f = D \<and> (\<forall>k\<in>D. Satisfiable (k \<Ztypecolon> K)) \<and>
-                (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<longrightarrow> push_map [k] g \<Turnstile> (the (f x) \<Ztypecolon> V)) \<close>
+                dom f \<subseteq> D \<and>
+                (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> dom f \<longrightarrow> push_map [k] g \<Turnstile> (the (f x) \<Ztypecolon> V)) \<close>
   deriving \<open> Object_Equiv V eq
          \<Longrightarrow> Object_Equiv (\<phi>MapTree D K V) (rel_map eq) \<close>
 
@@ -1960,38 +1960,136 @@ declare [[\<phi>trace_reasoning = 1]]
             Abstract_Domain  V P\<^sub>V \<Longrightarrow>
             Abstract_Domain (\<phi>MapTree D K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<and> k \<in> dom f \<longrightarrow> P\<^sub>V (the (f k))) \<close>
 
+text \<open>Interesting, relational functor \<^const>\<open>Transformation_Functor\<close> is (generally) stronger than
+  the functional functor \<^const>\<open>Functional_Transformation_Functor\<close>.
+  It is actually the combination of \<^const>\<open>Functional_Transformation_Functor\<close> and the
+  Commutativity of \<^const>\<open>Set_Abst\<close> over functors. I thought most of functors are also relational
+  functors but here, \<^const>\<open>\<phi>MapTree\<close> is an exception.
+
+  \<^term>\<open>\<phi>MapTree D K V\<close> is not relationally functorial over \<^term>\<open>V\<close> unless (as a suffcient condition)
+  \<^term>\<open>K\<close> is functional. Here is an example demonstrating this.
+  Consider a relational transformation
+    \<^prop>\<open>v \<Ztypecolon> V \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> V' \<s>\<u>\<b>\<j> v'. v' \<in> {v\<^sub>1, v\<^sub>2}\<close>
+  that non-determistically sends \<^term>\<open>v \<Ztypecolon> V\<close> to either \<^term>\<open>v\<^sub>1 \<Ztypecolon> V'\<close> or \<^term>\<open>v\<^sub>2 \<Ztypecolon> V'\<close>.
+
+  Consider \<^term>\<open>g \<Turnstile> (f \<Ztypecolon> \<phi>MapTree D K V)\<close> and assume \<^term>\<open>k \<Ztypecolon> K\<close> cannot distinguish \<open>k\<^sub>1, k\<^sub>2\<close>, i.e.,
+  \<open>k\<^sub>1 \<Turnstile> (k \<Ztypecolon> K)\<close>, \<open>k\<^sub>2 \<Turnstile> (k \<Ztypecolon> K)\<close>, both \<open>k\<^sub>1,k\<^sub>2\<close> are abstracted to the same abstraction \<^term>\<open>k\<close>.
+  \<^prop>\<open>g \<Turnstile> (f \<Ztypecolon> \<phi>MapTree D K V)\<close> requires that the \<^term>\<open>f k \<Ztypecolon> V\<close> also cannot distinguish \<open>g k\<^sub>1, g k\<^sub>2\<close>
+  even when they could be different. \<open>f k\<close> must be an abstraction of both \<open>g k\<^sub>1, g k\<^sub>2\<close>.
+
+  Now, assume the abstraction relation \<open>V\<close> is transformed to \<open>V'\<close>. Under \<open>V'\<close>, \<open>g k\<^sub>1, g k\<^sub>2\<close>
+  may not keep indistinguishable --- \<open>g k\<^sub>1, g k\<^sub>2\<close> may have disjoint abstractions under \<open>V'\<close> and may not
+  have a common abstraction.
+
+  When \<open>v \<Ztypecolon> V\<close> is transformed to \<open>V'\<close>, we could use a set \<open>{v\<^sub>1,v\<^sub>2}\<close>
+  to non-deterministically specify all possible choices. However, here we cannot similarly use the same
+  way because for set \<open>S\<close>, any element \<open>f \<in> S\<close>, \<open>g \<Turnstile> (f \<Ztypecolon> \<phi>MapTree D K V')\<close> always requires
+  \<open>g k\<^sub>1, g k\<^sub>2\<close> to have a common abstraction \<open>f k\<close>, whereas we've said above,
+  \<open>g k\<^sub>1, g k\<^sub>2\<close> may not have a common abstraction under \<open>V'\<close>.
+\<close>
+
+
+
 setup \<open>Sign.mandatory_path "\<phi>MapTree"\<close>
 
 lemma Transformation_Functor [\<phi>reason add]:
-      \<open> Functionality K (\<lambda>k. k \<in> D)
+      \<open> Abstract_Domain\<^sub>L K (\<lambda>k. k \<in> D)
+    \<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
     \<Longrightarrow> Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' ran (\<lambda>_. UNIV) rel_map\<close>
   unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
+            Abstract_Domain\<^sub>L_def \<r>ESC_def
   apply (clarsimp simp: Satisfiable_def)
   subgoal premises prems for f g v proof -
   
     obtain h where t1: \<open>a\<in>ran f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v)\<close> for a v
-      using prems(2) by metis
+      using prems(3) by metis
     have t2: \<open>\<exists>r. \<forall>x k. k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<longrightarrow> r x = k\<close>
-      by (subst choice_iff[symmetric], clarify, metis prems(1) prems(3))
+      by (subst choice_iff[symmetric], clarify, metis prems(2) prems(5))
     obtain r where t3: \<open>k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<Longrightarrow> r x = k\<close> for x k
       using t2 by blast
-      show ?thesis
-        by (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) ([r k] \<tribullet>\<^sub>m v)) else None\<close>], auto,
-            meson domD option.distinct(1),
-            metis domI option.sel prems(3) prems(5) ranI t1 t3,
-            metis domI option.sel prems(3) prems(4) prems(5) ranI t1 t3)
-    qed .
+    show ?thesis
+      apply (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) ([r k] \<tribullet>\<^sub>m v)) else None\<close>], auto)
+      apply (meson in_mono option.distinct(1) prems(4))
+      apply (metis in_mono option.distinct(1) option.sel prems(4) prems(5) ranI t1 t3)
+      apply (simp add: domIff)
+      by (metis domI in_mono option.sel prems(1) prems(4) prems(5) ranI t1 t3)
+  qed .
 
 
-
-lemma  Functional_Transformation_Functor [\<phi>reason add]:
-  \<open>Functional_Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' ran (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f _ g. map_option f o g)\<close>
-  unfolding Functional_Transformation_Functor_def Transformation_def
-  by (auto, metis domI option.sel ranI)
-
-
+lemma Functional_Transformation_Functor [\<phi>reason add]:
+  \<open>Fun_CV_TrFunctor (\<phi>MapTree D) (\<phi>MapTree D') K V K' V' dom ran (\<lambda>_. D') (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>h f _ _ g. map_option f o g o h)\<close>
+  unfolding Fun_CV_TrFunctor_def Transformation_def
+  by (auto, blast, metis domI option.sel ranI)
 
 setup \<open>Sign.parent_path\<close>
+
+term \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K)
+          V\<^sub>1 V\<^sub>2  \<close>
+
+lemma
+  \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U {(x, y). rel_map (\<lambda>x y. True) x y} (\<lambda>x. zip_option \<circ> zip_fun x)  \<close>
+  unfolding Separation_Homo\<^sub>I_def Transformation_def zip_fun_def BNF_Def.convol_def
+  by ((auto; case_tac \<open>x xa\<close>; case_tac \<open>y xa\<close>; simp), blast,
+      metis domI option.sel push_map_distrib_sep_mult push_map_sep_disj)
+
+lemma
+  \<open> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U (\<lambda>x. unzip_fun (unzip_option \<circ> x)) \<close>
+  unfolding Separation_Homo\<^sub>E_def Transformation_def
+  apply auto
+  nitpick
+
+
+
+  sorry
+
+
+definition \<open>Injective T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> T x \<and> v \<Turnstile> T y \<longrightarrow> r x y )\<close>
+
+lemma
+  \<open> Injective (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2)
+\<Longrightarrow> Injective (\<lambda>x. ExBI (A x)) r \<close>
+  unfolding Injective_def
+  by auto blast
+
+lemma
+  \<open> Injective A (\<lambda>x y. P x \<and> P y \<longrightarrow> r x y)
+\<Longrightarrow> Injective (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) r \<close>
+  unfolding Injective_def
+  by auto
+
+lemma
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. r x x)
+\<Longrightarrow> Injective (\<lambda>x. x \<Ztypecolon> Itself) r \<close>
+  unfolding Injective_def Premise_def
+  by simp
+
+lemma
+  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> (\<forall>a b. r a b))
+\<Longrightarrow> Injective (\<lambda>x. A) r \<close>
+  unfolding Injective_def Premise_def \<r>EIF_def Satisfiable_def
+  by simp blast
+
+
+lemma
+  \<open> Injective A
+\<Longrightarrow> Injective B
+\<Longrightarrow> Injective (\<lambda>x. A x * B x) \<close>
+  for A :: \<open>'x \<Rightarrow> 'c::sep_magma BI\<close>
+  unfolding Injective_def
+  apply auto
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \<phi>type_def \<phi>MMmap :: \<open>('k,'x) \<phi> \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('k \<Rightarrow> 'v, 'x \<Rightarrow> 'y) \<phi>\<close>

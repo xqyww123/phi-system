@@ -998,15 +998,15 @@ lemma infer_FTF\<^sub>\<Lambda>_from_FT\<^sub>\<Lambda>:
 paragraph \<open>(Contravariant, Variant) Bi-Functor\<close>
 
 definition \<open>CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper \<longleftrightarrow>
-  (\<forall>x g\<^sub>1 g\<^sub>2. (\<forall>a \<in> D\<^sub>1 x. a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b) \<longrightarrow>
+  (\<forall>x g\<^sub>1 g\<^sub>2. (\<forall>a. (a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 b a)) \<longrightarrow>
             (\<forall>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b) \<longrightarrow>
-            (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x) \<longrightarrow>
+            (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x) \<longrightarrow>
             (x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y))\<close>
 
 definition \<open>Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper \<longleftrightarrow>
-    (\<forall>x f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2. (\<forall>a \<in> D\<^sub>1 x. a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
+    (\<forall>x f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2. (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> (a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a))
                 \<longrightarrow> (\<forall>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
-                \<longrightarrow> (\<forall>a. a \<in> D\<^sub>1 x \<longrightarrow> f\<^sub>1 a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+                \<longrightarrow> (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
                 \<longrightarrow> (x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x))\<close>
 
 
@@ -1730,7 +1730,7 @@ lemma CV_TrFunctor_sub_dom:
 \<Longrightarrow> CV_TrFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
 \<Longrightarrow> CV_TrFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1' D\<^sub>2' R\<^sub>1 R\<^sub>2 mapper\<close>
   unfolding CV_TrFunctor_def
-  by (clarsimp simp add: subset_iff; blast)
+  by (clarsimp simp add: subset_iff; smt)
 
 lemma Transformation_BiFunctor_sub_rng:
   \<open> (\<And>x. R\<^sub>1' x \<subseteq> R\<^sub>1 x)
@@ -1758,9 +1758,9 @@ lemma apply_Transformation_BiFunctor:
 
 lemma apply_CV_TrFunctor:
   \<open> CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
-\<Longrightarrow> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>1 x \<Longrightarrow> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b)
+\<Longrightarrow> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<exists>b. g\<^sub>1 a b \<and> b \<in> D\<^sub>1 x) \<Longrightarrow> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b)
 \<Longrightarrow> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>2 x \<Longrightarrow> a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. b \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y \<close>
   unfolding CV_TrFunctor_def Premise_def
   by simp
@@ -1777,9 +1777,9 @@ lemma apply_Functional_Transformation_BiFunctor:
 
 lemma apply_Functional_CV_BiFunctor:
   \<open> Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper
-\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. \<u>\<s>\<e>\<r> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f\<^sub>1 a \<in> D\<^sub>1 x \<Longrightarrow> \<u>\<s>\<e>\<r> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
 \<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. \<u>\<s>\<e>\<r> a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D\<^sub>1 x \<longrightarrow> f\<^sub>1 a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x\<close>
   unfolding meta_Ball_def Argument_def Premise_def
             Fun_CV_TrFunctor_def Transformation_Functor_def
@@ -2979,9 +2979,9 @@ lemma bitransformation[\<phi>reason_template name Fa.bitransformation []]:
 
 lemma CV_bitransformation[\<phi>reason_template name Fa.bitransformation []]:
   \<open> \<g>\<u>\<a>\<r>\<d> CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
-\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b)
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>b. g\<^sub>1 a b \<and> b \<in> D\<^sub>1 x) \<Longrightarrow> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b)
 \<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. b \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2  \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y\<close>
   unfolding meta_Ball_def Premise_def \<r>Guard_def CV_TrFunctor_def Transformation_def
   by clarsimp
@@ -3033,21 +3033,22 @@ lemma [no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor nam
   using apply_Functional_Transformation_BiFunctor[unfolded Argument_def,
             where func_mapper=func_mapper and pred_mapper=pred_mapper] .
 
-
 lemma [\<phi>reason_template name Fa.\<A>backward_simp_bi [\<phi>transformation_based_backward_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>1 x. (a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @tag \<A>backward_simp))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>b. g\<^sub>1 a b \<and> b \<in> D\<^sub>1 x)
+            \<longrightarrow> (a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @tag \<A>backward_simp))
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>2 x. (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @tag \<A>backward_simp))
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. b \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @tag \<A>_backward_transitive_simp \<close>
-  unfolding Action_Tag_def Premise_def \<r>Guard_def
-  using CV_bitransformation[unfolded atomize_Ball \<r>Guard_def Premise_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
+  unfolding Action_Tag_def Premise_def \<r>Guard_def atomize_imp
+  using CV_bitransformation[unfolded atomize_Ball atomize_imp atomize_all \<r>Guard_def Premise_def,
+            where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and R\<^sub>1=R\<^sub>1 and R\<^sub>2=R\<^sub>2 and mapper=mapper] .
 
 lemma [no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name Fa.functional_transformation]:
   \<open> \<g>\<u>\<a>\<r>\<d> Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper
-\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a @tag \<T>\<P> )
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f\<^sub>1 a \<in> D\<^sub>1 x \<Longrightarrow> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a @tag \<T>\<P> )
 \<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a @tag \<T>\<P> )
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D\<^sub>1 x \<longrightarrow> f\<^sub>1 a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x @tag \<T>\<P> \<close>
   unfolding \<r>Guard_def Action_Tag_def
   using apply_Functional_CV_BiFunctor[unfolded Argument_def,
@@ -4128,7 +4129,8 @@ lemma [\<phi>reason_template default %derived_SE_functor name F\<^sub>1.separati
             Dom1 Dom2 Rng1 Rng2 pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I\<^sub>2_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 Cw T\<^sub>1 T\<^sub>2 W\<^sub>1 W\<^sub>2 Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E\<^sub>2_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 Cr U\<^sub>1 U\<^sub>2 R\<^sub>1 R\<^sub>2 Du uz
-\<Longrightarrow> (\<And>a \<in> Dom1 (z x). a \<Ztypecolon> U\<^sub>1 \<OTast> R\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<OTast> W\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a @tag \<T>\<P>' )
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f\<^sub>1 a \<in> Dom1 (z x)
+        \<Longrightarrow> a \<Ztypecolon> U\<^sub>1 \<OTast> R\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<OTast> W\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a @tag \<T>\<P>' )
 \<Longrightarrow> (\<And>a \<in> Dom2 (z x). a \<Ztypecolon> T\<^sub>2 \<OTast> W\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<OTast> R\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a @tag \<T>\<P>' )
 \<Longrightarrow> SE_Has_or_Not\<^sub>2 Cw W\<^sub>1 W\<^sub>2 F\<^sub>4 FW
 \<Longrightarrow> SE_Has_or_Not\<^sub>2 Cr R\<^sub>1 R\<^sub>2 F\<^sub>2 FR
@@ -4136,7 +4138,7 @@ lemma [\<phi>reason_template default %derived_SE_functor name F\<^sub>1.separati
         (uz (func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x)),
          (y = uz (func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x)) \<longrightarrow>
               x \<in> Dz
-              \<and> (\<forall>a. a \<in> Dom1 (z x) \<longrightarrow> f\<^sub>1 a \<in> Rng1 (z x))
+              \<and> (\<forall>a. f\<^sub>1 a \<in> Dom1 (z x) \<longrightarrow> a \<in> Rng1 (z x))
               \<and> (\<forall>a. a \<in> Dom2 (z x) \<longrightarrow> f\<^sub>2 a \<in> Rng2 (z x))
               \<and> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x) \<in> Du),
          pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x))
@@ -4145,9 +4147,9 @@ lemma [\<phi>reason_template default %derived_SE_functor name F\<^sub>1.separati
   unfolding \<r>Guard_def SE_Has_or_Not\<^sub>2_alt_def \<phi>Prod'_def
   \<medium_left_bracket> premises FTF[] and SH\<^sub>I[] and SH\<^sub>E[] and Tr1 and Tr2 and [simp] and [simp]
     apply_rule apply_Separation_Homo\<^sub>I\<^sub>2_Cond[where Fu=F\<^sub>4 and Ft=F\<^sub>1, OF SH\<^sub>I, simplified]
-    apply_rule apply_Functional_CV_BiFunctor[where P\<^sub>1=P\<^sub>1 and P\<^sub>2=P\<^sub>2, OF FTF, simplified]
+    apply_rule apply_Functional_CV_BiFunctor[where f\<^sub>1=f\<^sub>1 and P\<^sub>1=P\<^sub>1 and P\<^sub>2=P\<^sub>2, OF FTF, simplified]
     \<medium_left_bracket> Tr1 \<medium_right_bracket>
-    \<medium_left_bracket> Tr2 \<medium_right_bracket> 
+    \<medium_left_bracket> Tr2 \<medium_right_bracket>
     apply_rule apply_Separation_Homo\<^sub>E\<^sub>2_Cond[OF SH\<^sub>E, simplified]
   \<medium_right_bracket> .
 
@@ -8096,6 +8098,20 @@ setup \<open> Context.theory_map(
 lemma rel_fun__const_True[simp]:
   \<open>rel_fun (=) (\<lambda>x y. True) = (\<lambda>x y. True)\<close>
   by (simp add: fun_eq_iff rel_fun_def)
+
+subsubsection \<open>Option\<close>
+
+setup \<open> Context.theory_map(
+  let val (a, b) = (\<^typ>\<open>'a\<close>, \<^typ>\<open>'b\<close>)
+   in BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>option\<close>, {
+        deads = [], lives = [a], lives'= [b],
+        zip = \<^Const>\<open>zip_option a b\<close>,
+        unzip = \<^Const>\<open>unzip_option a b\<close>,
+        zip_simps = @{thms' zip_option_simps unzip_option_simps unzip_zip_option zip_option_prj}
+  }) end)
+\<close>
+
+
 
 subsubsection \<open>Production\<close>
 
