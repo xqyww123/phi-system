@@ -1944,21 +1944,91 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsubsection \<open>Function Abstraction\<close>
 
-\<phi>type_def \<phi>Map :: \<open>('k,'x) \<phi> \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('k \<Rightarrow> 'v, 'x \<Rightarrow> 'y) \<phi>\<close>
-  where \<open>f \<Ztypecolon> \<phi>Map K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<longrightarrow> g k \<Turnstile> (f x \<Ztypecolon> V)) \<close>
+term \<open>rel_fun (=) (rel_option x)\<close>
+term Map.empty
+
+declare [[\<phi>trace_reasoning = 1]]
+
+\<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<rightharpoonup> 'y) \<phi>\<close>
+  where \<open>f \<Ztypecolon> \<phi>MapTree D K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g.
+                dom f = D \<and> (\<forall>k\<in>D. Satisfiable (k \<Ztypecolon> K)) \<and>
+                (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<longrightarrow> push_map [k] g \<Turnstile> (the (f x) \<Ztypecolon> V)) \<close>
   deriving \<open> Object_Equiv V eq
-         \<Longrightarrow> Object_Equiv (\<phi>Map K V) (rel_fun (=) eq) \<close>
+         \<Longrightarrow> Object_Equiv (\<phi>MapTree D K V) (rel_map eq) \<close>
 
        and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
             Abstract_Domain  V P\<^sub>V \<Longrightarrow>
-            Abstract_Domain (\<phi>Map K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<close>
+            Abstract_Domain (\<phi>MapTree D K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<and> k \<in> dom f \<longrightarrow> P\<^sub>V (the (f k))) \<close>
+
+setup \<open>Sign.mandatory_path "\<phi>MapTree"\<close>
+
+lemma Transformation_Functor [\<phi>reason add]:
+      \<open> Functionality K (\<lambda>k. k \<in> D)
+    \<Longrightarrow> Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' ran (\<lambda>_. UNIV) rel_map\<close>
+  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
+  apply (clarsimp simp: Satisfiable_def)
+  subgoal premises prems for f g v proof -
+  
+    obtain h where t1: \<open>a\<in>ran f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v)\<close> for a v
+      using prems(2) by metis
+    have t2: \<open>\<exists>r. \<forall>x k. k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<longrightarrow> r x = k\<close>
+      by (subst choice_iff[symmetric], clarify, metis prems(1) prems(3))
+    obtain r where t3: \<open>k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<Longrightarrow> r x = k\<close> for x k
+      using t2 by blast
+      show ?thesis
+        by (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) ([r k] \<tribullet>\<^sub>m v)) else None\<close>], auto,
+            meson domD option.distinct(1),
+            metis domI option.sel prems(3) prems(5) ranI t1 t3,
+            metis domI option.sel prems(3) prems(4) prems(5) ranI t1 t3)
+    qed .
+
+
+
+lemma  Functional_Transformation_Functor [\<phi>reason add]:
+  \<open>Functional_Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' ran (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f _ g. map_option f o g)\<close>
+  unfolding Functional_Transformation_Functor_def Transformation_def
+  by (auto, metis domI option.sel ranI)
+
+
+
+setup \<open>Sign.parent_path\<close>
+
+
+\<phi>type_def \<phi>MMmap :: \<open>('k,'x) \<phi> \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('k \<Rightarrow> 'v, 'x \<Rightarrow> 'y) \<phi>\<close>
+  where \<open>f \<Ztypecolon> \<phi>MMmap K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<longrightarrow> g k \<Turnstile> (f x \<Ztypecolon> V)) \<close>
+  deriving \<open> Object_Equiv V eq
+         \<Longrightarrow> Object_Equiv (\<phi>MMmap K V) (rel_fun (=) eq) \<close>
+
+       and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
+            Abstract_Domain  V P\<^sub>V \<Longrightarrow>
+            Abstract_Domain (\<phi>MMmap K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<close>
 
 term 1
 
 term range
 term rel_fun
 
-term \<open>Transformation_Functor (\<phi>Map K) (\<phi>Map K) V V' range (\<lambda>_. UNIV) (rel_fun (=))\<close>
+lemma \<open> Transformation_Functor (\<phi>MMmap K) (\<phi>MMmap K) V V' range (\<lambda>_. UNIV) (\<lambda>_ _ _. True)\<close>
+  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def
+  apply clarsimp
+apply (subst all_comm)
+apply (subst choice_iff[symmetric])
+apply clarsimp
+nitpick
+
+  
+
+lemma \<open> Functionality K (\<lambda>_. True)
+    \<Longrightarrow> Transformation_Functor (\<phi>MMmap K) (\<phi>MMmap K) V V' range (\<lambda>_. UNIV) (rel_fun (=))\<close>
+  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def
+  apply clarsimp
+nitpick
+
+
+
+lemma \<open>Functional_Transformation_Functor (\<phi>Map K) (\<phi>Map K) V V' range (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f _ g. f o g)\<close>
+  unfolding Functional_Transformation_Functor_def Transformation_def
+  apply clarsimp
 
 lemma
   \<open> \<forall>g x. \<exists>a. (a \<in> range x \<longrightarrow> (\<forall>v. \<exists>x. v \<Turnstile> (a \<Ztypecolon> V) \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> V') \<and> g a x)) \<longrightarrow>
