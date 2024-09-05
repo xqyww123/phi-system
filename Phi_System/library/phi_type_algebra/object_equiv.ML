@@ -20,10 +20,18 @@ fun conv_hol_imps_to_metas_if_has Cant Cconcl ctm =
           (Conv.implies_conv Cant (conv_hol_imps_to_metas_if_has Cant Cconcl)) ctm
      | _ => Cconcl ctm
 
+val atomize_imp_tag = @{lemma
+      \<open> Trueprop (A \<longrightarrow> B @tag C) \<equiv> (A \<Longrightarrow> B @tag C) \<close>
+      by (simp add: Action_Tag_def atomize_imp)}
+
 fun conv_hol_imp_to_meta_if_has Cant ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
           (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
+           Conv.arg1_conv (HOLogic.Trueprop_conv Cant)) ctm
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _)
+              $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) $ _ ) =>
+          (Conv.rewr_conv atomize_imp_tag then_conv
            Conv.arg1_conv (HOLogic.Trueprop_conv Cant)) ctm
      | _ => Conv.all_conv ctm
 

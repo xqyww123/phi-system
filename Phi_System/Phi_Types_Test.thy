@@ -27,7 +27,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor List List ?T ?U set (\<lambda>_. UNIV) list_all2  \<close>),
   (@{thm' List.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor List List ?T ?U set (\<lambda>_. UNIV) (\<lambda>f. list_all) (\<lambda>f P. map f) \<close>),
   (@{thm' List.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I List List List ?Ta ?U {(x, y). length x = length y} (case_prod zip) \<close>),
-  (@{thm' List.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List List List ?Ta ?U list.unzip \<close>)
+  (@{thm' List.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List List List ?Ta ?U UNIV list.unzip \<close>)
 ]\<close>
 
 (*lemma [simp]:
@@ -160,7 +160,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List3.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor List3 List3 ?T ?U (\<lambda>a. Set.bind (set a) set) (\<lambda>_. UNIV) (\<lambda>a. list_all2 (list_all2 a)) \<close>),
   (@{thm' List3.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor List3 List3 ?T ?U (\<lambda>a. Set.bind (set a) set) (\<lambda>_. UNIV) (\<lambda>f a. list_all (list_all a)) (\<lambda>f P. map (map f)) \<close>),
   (@{thm' List3.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I List3 List3 List3 ?Ta ?U {(x, y). list_all2 (\<lambda>x y. length x = length y) x y} (\<lambda>x. map (case_prod zip) (case_prod zip x)) \<close>),
-  (@{thm' List3.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List3 List3 List3 ?Ta ?U (\<lambda>x. (map (map fst) x, map (map snd) x)) \<close>)
+  (@{thm' List3.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E List3 List3 List3 ?Ta ?U UNIV (\<lambda>x. (map (map fst) x, map (map snd) x)) \<close>)
 ]\<close>
 
 (* BOSS:

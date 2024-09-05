@@ -140,7 +140,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding of Subjection\<close>
-
+ 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Sep_Functor_1
@@ -367,7 +367,7 @@ lemma \<phi>Dependent_Sum_SH\<^sub>I[\<phi>type_property \<phi>Dependent_Sum Sep
   by clarsimp
 
 lemma \<phi>Dependent_Sum_SH\<^sub>E[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>E]:
-  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> \<Sigma> T U (\<lambda>x. ((fst x, fst (snd x)), (fst x, snd (snd x)))) \<close>
+  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> \<Sigma> T U UNIV (\<lambda>x. ((fst x, fst (snd x)), (fst x, snd (snd x)))) \<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Transformation_def
   by clarsimp
 
@@ -976,13 +976,13 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
   
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
-\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x)\<close>
+\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U UNIV (\<lambda>x. x)\<close>
   for B :: \<open>('d::sep_magma_1,'e::sep_magma) \<phi>\<close>
   unfolding Separation_Homo\<^sub>E_def Transformation_def Object_Sep_Homo\<^sub>E_def
   by (clarsimp simp add: set_mult_expn; blast)
 
 lemma (*The above rule is reversible*)
-  \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
+  \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U UNIV (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
   unfolding Separation_Homo\<^sub>E_def Object_Sep_Homo\<^sub>E_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
@@ -1345,7 +1345,7 @@ declare [[\<phi>trace_reasoning = 0]]
            (%identity_elements_of_\<phi>Fun)
        and Functionality
        and Functional_Transformation_Functor
-       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
+       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U UNIV (\<lambda>x. x)\<close>
        and \<open>\<g>\<u>\<a>\<r>\<d> homo_mul_carrier f
         \<Longrightarrow> Carrier_Set U P
         \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
@@ -1643,7 +1643,7 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
              Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx T U
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
        and \<open> homo_sep (\<psi> s)
-         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
+         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U UNIV (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
@@ -2023,6 +2023,7 @@ lemma Functional_Transformation_Functor [\<phi>reason add]:
 
 setup \<open>Sign.parent_path\<close>
 
+(*
 term \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K)
           V\<^sub>1 V\<^sub>2  \<close>
 
@@ -2032,44 +2033,46 @@ lemma
   by ((auto; case_tac \<open>x xa\<close>; case_tac \<open>y xa\<close>; simp), blast,
       metis domI option.sel push_map_distrib_sep_mult push_map_sep_disj)
 
-lemma
-  \<open> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U (\<lambda>x. unzip_fun (unzip_option \<circ> x)) \<close>
-  unfolding Separation_Homo\<^sub>E_def Transformation_def
-  apply auto
-  nitpick
+
 
 
 
   sorry
 
 
-definition \<open>Injective T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> T x \<and> v \<Turnstile> T y \<longrightarrow> r x y )\<close>
+definition \<open>Equiv_Class T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> T x \<and> v \<Turnstile> T y \<longrightarrow> r x y )\<close>
 
 lemma
-  \<open> Injective (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2)
-\<Longrightarrow> Injective (\<lambda>x. ExBI (A x)) r \<close>
-  unfolding Injective_def
+  \<open> Equiv_Class (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2)
+\<Longrightarrow> Equiv_Class (\<lambda>x. ExBI (A x)) r \<close>
+  unfolding Equiv_Class_def
   by auto blast
 
 lemma
-  \<open> Injective A (\<lambda>x y. P x \<and> P y \<longrightarrow> r x y)
-\<Longrightarrow> Injective (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) r \<close>
-  unfolding Injective_def
+  \<open> Equiv_Class A (\<lambda>x y. P x \<and> P y \<longrightarrow> r x y)
+\<Longrightarrow> Equiv_Class (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) r \<close>
+  unfolding Equiv_Class_def
   by auto
 
 lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. r x x)
-\<Longrightarrow> Injective (\<lambda>x. x \<Ztypecolon> Itself) r \<close>
-  unfolding Injective_def Premise_def
+\<Longrightarrow> Equiv_Class (\<lambda>x. x \<Ztypecolon> Itself) r \<close>
+  unfolding Equiv_Class_def Premise_def
   by simp
 
 lemma
   \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> (\<forall>a b. r a b))
-\<Longrightarrow> Injective (\<lambda>x. A) r \<close>
-  unfolding Injective_def Premise_def \<r>EIF_def Satisfiable_def
+\<Longrightarrow> Equiv_Class (\<lambda>x. A) r \<close>
+  unfolding Equiv_Class_def Premise_def \<r>EIF_def Satisfiable_def
   by simp blast
 
+
+lemma
+  \<open> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U (\<lambda>x. unzip_fun (unzip_option \<circ> x)) \<close>
+  unfolding Separation_Homo\<^sub>E_def Transformation_def
+  apply auto
+  nitpick
 
 lemma
   \<open> Injective A
@@ -2079,6 +2082,7 @@ lemma
   unfolding Injective_def
   apply auto
 
+*)
 
 
 
@@ -2087,8 +2091,7 @@ lemma
 
 
 
-
-
+(*
 
 
 
@@ -2157,7 +2160,7 @@ lemma
 let_\<phi>type \<phi>Map
   deriving \<open>Transformation_Functor (\<phi>Map K) (\<phi>Map K) V V' range (\<lambda>_. UNIV) (rel_fun (=))\<close>
 (tactic: clarsimp; tactic \<open>all_tac o @{print}\<close>; subgoal' for g x xa \<open>rule exI[where x=\<open>\<lambda>a. @x. v \<Turnstile> (x \<Ztypecolon> V') \<and> g a x\<close>]\<close>) 
-
+*)
 
 (*
 term is_singleton
@@ -2189,7 +2192,7 @@ lemma \<open>Object_Equiv K ek \<Longrightarrow>
         thm prems
         thm t2
 *)
-
+(*
 term \<open>Object_Equiv K ek \<Longrightarrow>
       Abstract_Domain K P\<^sub>K \<Longrightarrow>
       Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
@@ -2203,7 +2206,7 @@ lemma
   apply clarify
   thm choice_iff[symmetric]
 
-
+*)
 
 
 
@@ -2261,7 +2264,7 @@ subsection \<open>Injection from partial map to permissioned partial map\<close>
   where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
        and Abstract_Domain\<^sub>L
-       and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U (\<lambda>x. x) \<close>
+       and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U UNIV (\<lambda>x. x) \<close>
        and \<open>Separation_Disj\<^sub>\<phi> to_share Dx T U
         \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
        and Functionality
@@ -2322,7 +2325,7 @@ subsection \<open>Parameterized FMQ\<close>
            \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
        and Sep_Functor_1
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV unzip_fun\<close>
        and Semimodule_NonAssoc 
        and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
        and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
@@ -2478,7 +2481,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>(\<And>i. Functionality (T i) (P i))
         \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.len iv. P (len_intvl.start iv + i) (x ! i))\<close>
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U {(x, y). length x = length y} (case_prod zip)\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U list.unzip\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U UNIV list.unzip\<close>
        and \<open> Semimodule_Zero (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) \<lbrakk>i : 0\<rwpar> \<close>
        and \<open> Semimodule_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>
        and \<open> Semimodule_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True) \<close>

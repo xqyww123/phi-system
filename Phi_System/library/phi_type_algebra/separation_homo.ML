@@ -103,7 +103,8 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
                        $ (\<^Const>\<open>Collect \<^Type>\<open>prod c f\<close>\<close> $ (\<^Const>\<open>case_prod c f \<^Type>\<open>bool\<close>\<close> $ dom))
                        $ zip
                      else \<^Const>\<open>Separation_Homo\<^sub>E a b c d e f x_ty\<close>
-                       $ Fa $ Fb $ F_term $ T $ U $ zip)
+                       $ Fa $ Fb $ F_term $ T $ U
+                       $ \<^Const>\<open>top \<^Type>\<open>set x_ty\<close>\<close> $ zip)
                    | _ => error "Internal bug")
 
    in Seq.single ([], HOLogic.Trueprop $ SH, NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
@@ -129,13 +130,13 @@ fun gen_SH is_intro (_,name) instruction (phi0 : phi_type) thy =
   let (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
-             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
              | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
-             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F)
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ u) = [D,u]
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ u) = [D,u]
         | extract_oprs_from_hint _ = []
 
       val parameterized =
@@ -161,12 +162,13 @@ fun gen_SH is_intro (_,name) instruction (phi0 : phi_type) thy =
                 ) ctxt)
             )
       val ind_conv_u = default_ind_conv (
-            fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}),
-            fn ctxt => fn _ =>
+            fn ctxt => fn _ => fn ctm =>
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}) ctm,
+            fn ctxt => fn _ => fn ctm =>
              (Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1}) then_conv
               (@{print} o Phi_Reasoners.asm_rewrite true (equip_expansion ctxt)) then_conv
-              Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
+              Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                (conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]}))) ctm
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u
 
