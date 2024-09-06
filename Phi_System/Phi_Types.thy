@@ -1944,11 +1944,70 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsubsection \<open>Function Abstraction\<close>
 
+definition \<open>Equiv_Class T D r \<longleftrightarrow> (\<forall>v x y. x \<in> D \<and> y \<in> D \<and> v \<Turnstile> T x \<and> v \<Turnstile> T y \<longrightarrow> r x y )\<close>
+
+abbreviation \<open>Injective_on T D \<equiv> Equiv_Class T D (=)\<close>
+
+definition concretize :: \<open>('c,'x) \<phi> \<Rightarrow> 'x \<Rightarrow> 'c\<close>
+  where \<open>concretize T = (\<lambda>x. @c. c \<Turnstile> (x \<Ztypecolon> T))\<close>
+
+lemma concretize_SAT:
+  \<open> Satisfiable (x \<Ztypecolon> T)
+\<Longrightarrow> concretize T x \<Turnstile> (x \<Ztypecolon> T) \<close>
+  unfolding concretize_def Satisfiable_def
+  by (meson someI_ex)
+  
+
+lemma concretize_inj:
+  \<open> Injective_on T D
+\<Longrightarrow> Abstract_Domain\<^sub>L T (\<lambda>x. x \<in> D)
+\<Longrightarrow> inj_on (concretize T) D \<close>
+  unfolding inj_on_def Equiv_Class_def concretize_def Abstract_Domain\<^sub>L_def \<r>ESC_def Satisfiable_def
+            \<phi>Type_def
+  by (auto, metis someI)
+
+lemma functional_concretize:
+  \<open> Functionality T ((=) x)
+\<Longrightarrow> v \<Turnstile> (x \<Ztypecolon> T)
+\<Longrightarrow> v = concretize T x \<close>
+  unfolding concretize_def \<phi>Type_def Functionality_def
+  by (simp add: some_equality)
+
+lemma concretize_eq:
+  \<open> Abstract_Domain\<^sub>L T ((=) x)
+\<Longrightarrow> Functionality U ((=) y)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U
+\<Longrightarrow> concretize T x = concretize U y \<close>
+  unfolding Transformation_def Abstract_Domain\<^sub>L_def \<r>ESC_def
+  by (simp add: concretize_SAT functional_concretize)
+
+
+
+
+
+
+
+
+term inv_into
+
+
+
+\<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<rightharpoonup> 'y) \<phi>\<close>
+  where \<open>f \<Ztypecolon> \<phi>MapTree D K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g.
+                dom f \<subseteq> D \<and>
+                (\<forall>k. k \<in> dom f \<longrightarrow> pull_map [concretize K k] g \<Turnstile> (the (f k) \<Ztypecolon> V)) \<close>
+  deriving \<open> Object_Equiv V eq
+         \<Longrightarrow> Object_Equiv (\<phi>MapTree D K V) (rel_map eq) \<close>
+    and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
+            Abstract_Domain  V P\<^sub>V \<Longrightarrow>
+            Abstract_Domain (\<phi>MapTree D K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<and> k \<in> dom f \<longrightarrow> P\<^sub>V (the (f k))) \<close>
+
 term \<open>rel_fun (=) (rel_option x)\<close>
 term Map.empty
 
 declare [[\<phi>trace_reasoning = 1]]
 
+(*
 \<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<rightharpoonup> 'y) \<phi>\<close>
   where \<open>f \<Ztypecolon> \<phi>MapTree D K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g.
                 dom f \<subseteq> D \<and>
@@ -1959,6 +2018,7 @@ declare [[\<phi>trace_reasoning = 1]]
        and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
             Abstract_Domain  V P\<^sub>V \<Longrightarrow>
             Abstract_Domain (\<phi>MapTree D K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<and> k \<in> dom f \<longrightarrow> P\<^sub>V (the (f k))) \<close>
+*)
 
 text \<open>Interesting, relational functor \<^const>\<open>Transformation_Functor\<close> is (generally) stronger than
   the functional functor \<^const>\<open>Functional_Transformation_Functor\<close>.
@@ -1993,8 +2053,8 @@ text \<open>Interesting, relational functor \<^const>\<open>Transformation_Funct
 setup \<open>Sign.mandatory_path "\<phi>MapTree"\<close>
 
 lemma Transformation_Functor [\<phi>reason add]:
-      \<open> Abstract_Domain\<^sub>L K (\<lambda>k. k \<in> D)
-    \<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
+      \<open> Injective_on T D
+    \<Longrightarrow> Abstract_Domain\<^sub>L T (\<lambda>x. x \<in> D)
     \<Longrightarrow> Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' ran (\<lambda>_. UNIV) rel_map\<close>
   unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
             Abstract_Domain\<^sub>L_def \<r>ESC_def
@@ -2003,44 +2063,38 @@ lemma Transformation_Functor [\<phi>reason add]:
   
     obtain h where t1: \<open>a\<in>ran f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v)\<close> for a v
       using prems(3) by metis
-    have t2: \<open>\<exists>r. \<forall>x k. k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<longrightarrow> r x = k\<close>
-      by (subst choice_iff[symmetric], clarify, metis prems(2) prems(5))
-    obtain r where t3: \<open>k \<Turnstile> (x \<Ztypecolon> K) \<and> x \<in> D \<Longrightarrow> r x = k\<close> for x k
-      using t2 by blast
     show ?thesis
-      apply (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) ([r k] \<tribullet>\<^sub>m v)) else None\<close>], auto)
+      apply (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) (pull_map [concretize K k] v)) else None\<close>], auto)
       apply (meson in_mono option.distinct(1) prems(4))
-      apply (metis in_mono option.distinct(1) option.sel prems(4) prems(5) ranI t1 t3)
+      apply (metis option.distinct(1) option.sel prems(5) ranI t1)
       apply (simp add: domIff)
-      by (metis domI in_mono option.sel prems(1) prems(4) prems(5) ranI t1 t3)
+      by (metis domI option.sel prems(5) ranI t1)
   qed .
 
 
 lemma Functional_Transformation_Functor [\<phi>reason add]:
-  \<open>Fun_CV_TrFunctor (\<phi>MapTree D) (\<phi>MapTree D') K V K' V' dom ran (\<lambda>_. D') (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>h f _ _ g. map_option f o g o h)\<close>
+  \<open> Abstract_Domain\<^sub>L K' (\<lambda>k. k \<in> D')
+\<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
+\<Longrightarrow> Fun_CV_TrFunctor (\<phi>MapTree D) (\<phi>MapTree D') K V K' V' dom ran (\<lambda>_. D') (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>h f _ _ g. map_option f o g o h)\<close>
   unfolding Fun_CV_TrFunctor_def Transformation_def
-  by (auto, blast, metis domI option.sel ranI)
+  by (auto, blast,
+      smt (verit, best) Abstract_Domain\<^sub>L_def Functionality_def Satisfiable_def \<r>ESC_def concretize_SAT domI option.sel ranI subset_iff)
+
 
 setup \<open>Sign.parent_path\<close>
 
-(*
+
 term \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K)
           V\<^sub>1 V\<^sub>2  \<close>
 
 lemma
   \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U {(x, y). rel_map (\<lambda>x y. True) x y} (\<lambda>x. zip_option \<circ> zip_fun x)  \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def zip_fun_def BNF_Def.convol_def
-  by ((auto; case_tac \<open>x xa\<close>; case_tac \<open>y xa\<close>; simp), blast,
-      metis domI option.sel push_map_distrib_sep_mult push_map_sep_disj)
+  apply (auto)
+  using domIff apply fastforce
+  by (smt (verit, best) case_prodI domIff fst_conv option.distinct(1) option.rel_sel option.sel pull_map_homo_mult pull_map_sep_disj snd_conv unzip_option_simps(2) unzip_zip_option zip_option_simps(2) zip_option_simps(3))
 
 
-
-
-
-  sorry
-
-
-definition \<open>Equiv_Class T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> T x \<and> v \<Turnstile> T y \<longrightarrow> r x y )\<close>
 
 lemma
   \<open> Equiv_Class (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2)
@@ -2067,22 +2121,79 @@ lemma
   unfolding Equiv_Class_def Premise_def \<r>EIF_def Satisfiable_def
   by simp blast
 
+lemma push_map_mult_ex:
+  \<open>h \<tribullet>\<^sub>m a = b * c \<Longrightarrow> b ## c \<Longrightarrow> (\<exists>b' c'. b = h \<tribullet>\<^sub>m b' \<and> c = h \<tribullet>\<^sub>m c' \<and> a = b' * c' \<and> b' ## c')\<close>
+  for a :: \<open>'k list \<Rightarrow> 'v::sep_no_inverse\<close>
+  unfolding fun_eq_iff push_map_def times_fun
+apply auto
+  apply (rule exI[where x=\<open>\<lambda>k. b (h @ k)\<close>], auto simp add: push_map_def)
+  apply (metis append_take_drop_id)
+  apply (metis sep_disj_fun sep_no_inverse)
+  apply (rule exI[where x=\<open>\<lambda>k. c (h @ k)\<close>], auto simp add: push_map_def)
+  apply (metis append_take_drop_id)
+  apply (metis sep_disj_fun_def sep_no_inverse)
+  apply (metis append_eq_conv_conj)
+  using sep_disj_fun_def by blast
+
+
+lemma push_map_mult_same_head[simp]:
+  \<open> h \<tribullet>\<^sub>m a = h \<tribullet>\<^sub>m b * h \<tribullet>\<^sub>m c \<longleftrightarrow> a = b * c \<close>
+  for a :: \<open>'k list \<Rightarrow> 'v::mult_1\<close>
+  unfolding fun_eq_iff push_map_def times_fun
+  by (auto, metis append_eq_conv_conj)
+
 
 lemma
-  \<open> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U (\<lambda>x. unzip_fun (unzip_option \<circ> x)) \<close>
+  \<open> Injective_on K D
+\<Longrightarrow> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U
+          UNIV (\<lambda>x. unzip_fun (unzip_option \<circ> x)) \<close>
+  for T :: \<open>'c \<Rightarrow> ('b list \<Rightarrow> 'd::sep_no_inverse) BI\<close>
   unfolding Separation_Homo\<^sub>E_def Transformation_def
-  apply auto
-  nitpick
+  apply (auto simp: subset_iff)
+  subgoal premises prems for z v proof -
+    have t1[simp]: \<open>k \<in> dom z \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
+      by (simp add: concretize_inj prems(1) prems(2) prems(3))
+    obtain g1 g2 where t2: \<open>k \<in> dom z \<Longrightarrow>
+            pull_map [concretize K k] v = g1 k * g2 k \<and> g2 k \<Turnstile> (snd (the (z k)) \<Ztypecolon> U) \<and> g1 k \<Turnstile> (fst (the (z k)) \<Ztypecolon> T) \<and> g1 k ## g2 k \<close> for k
+      using prems(4) by metis
 
-lemma
-  \<open> Injective A
-\<Longrightarrow> Injective B
-\<Longrightarrow> Injective (\<lambda>x. A x * B x) \<close>
-  for A :: \<open>'x \<Rightarrow> 'c::sep_magma BI\<close>
-  unfolding Injective_def
-  apply auto
+    have fuck: \<open>(\<lambda>x. If C (A x) (B x)) = If C A B\<close> for A B C
+      by auto
 
-*)
+    note domIff[iff del]
+    show ?thesis
+      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> dom z)
+                                    then g1 (inv_into D (concretize K) (hd ks)) (tl ks)
+                                    else v ks \<close>])
+      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> dom z)
+                                    then g2 (inv_into D (concretize K) (hd ks)) (tl ks)
+                                    else 1\<close>])
+      apply (auto simp: pull_map_def )
+
+      apply (auto simp add: fun_eq_iff times_fun)[1]
+      subgoal premises prems for x k proof -
+        have t4: \<open> pull_map [concretize K k] v = g1 k * g2 k\<close>
+          using prems(3) t2 by blast
+        have t5: \<open>concretize K k # tl x = x\<close>
+          using hd_Cons_tl prems(1) prems(2) by fastforce
+          show ?thesis
+            by (insert t4, auto simp: pull_map_def fun_eq_iff times_fun, metis t5)
+      qed
+      apply (simp add: domIff prems(3))
+      apply (subst fuck; auto)[1]
+      apply (metis comp_apply domIff option.map_sel snd_conv t1 t2 unzip_option_simps(1))
+      apply (simp add: domIff)
+      apply (simp add: domIff prems(3))
+      apply (subst fuck; auto)[1]
+      apply (metis comp_apply domIff option.map_sel option.simps(8) t1 t2 zip_option_prj(1))
+      apply (simp add: domIff)
+      
+      apply (simp add: sep_disj_fun_def)
+      using sep_disj_fun_def t2 by force
+qed .
+
+
 
 
 

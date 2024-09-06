@@ -762,6 +762,12 @@ lemma Functionality_premise_extraction:
   unfolding Functionality_def atomize_eq
   by blast
 
+lemma Functionality_sub:
+  \<open> (\<forall>x. P' x \<longrightarrow> P x)
+\<Longrightarrow> Functionality T P
+\<Longrightarrow> Functionality T P' \<close>
+  unfolding Functionality_def
+  by auto
 
 (* lemma Is_Functional_alt:
   \<open>Is_Functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>

@@ -600,6 +600,20 @@ lemma [\<phi>reason %extract_pure_all]:
 
 subsubsection \<open>Basic Rules\<close>
 
+lemma Abstract_Domain_sub:
+  \<open> (\<forall>x. D x \<longrightarrow> D' x)
+\<Longrightarrow> Abstract_Domain T D
+\<Longrightarrow> Abstract_Domain T D' \<close>
+  unfolding Abstract_Domain_def \<r>EIF_def
+  by auto
+
+lemma Abstract_Domain\<^sub>L_sub:
+  \<open> (\<forall>x. D' x \<longrightarrow> D x)
+\<Longrightarrow> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> Abstract_Domain\<^sub>L T D' \<close>
+  unfolding Abstract_Domain\<^sub>L_def \<r>ESC_def
+  by auto
+
 lemma [\<phi>reason default %extract_pure_phity]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D x\<close>
