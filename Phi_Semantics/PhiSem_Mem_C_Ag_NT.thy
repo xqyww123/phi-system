@@ -104,7 +104,7 @@ lemma Mem_Coerce_NTup_Comb:
     apply (rule exI[where x=\<open>b * a\<close>])
     apply (insert prems(1,4-), auto simp: V_named_tup_mult Map_of_Val_ntup fmdom_notD
         fun_eq_iff times_fun sep_disj_fun_def split: list.split aggregate_index'.split)
-    by (metis (no_types, lifting) V_named_tup_mult V_named_tup_sep_disj disjoint_iff_fnot_equal fmdom_notD one_option_def sep_disj_fmap.rep_eq sep_magma_1_left sep_magma_1_right) .
+    by (metis V_named_tup_mult V_named_tup_sep_disj bot_fset.rep_eq fmdom'_alt_def inf_fset.rep_eq) .
 
 
 subsubsection \<open>ToA Mapper\<close>

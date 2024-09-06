@@ -199,4 +199,20 @@ lemma [\<phi>reason %aggregate_access]:
 
 
 
+
+term list_all2
+
+lemma
+  \<open> Equiv_Class T r
+\<Longrightarrow> Equiv_Class (Array N T) (list_all2 r) \<close>
+  unfolding Equiv_Class_alt_def
+  by (auto, metis list_all2_conv_all_nth)
+
+
+
+
+
+
+
+
 end
