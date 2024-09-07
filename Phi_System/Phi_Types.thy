@@ -2007,18 +2007,17 @@ term inv_into
 
 
 
-\<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<rightharpoonup> 'y) \<phi>\<close>
+\<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<Rightarrow> 'y) \<phi>\<close>
   where \<open>f \<Ztypecolon> \<phi>MapTree D K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g.
-                dom f = D \<and>
-                (\<forall>k. k \<in> D \<longrightarrow> pull_map [concretize K k] g \<Turnstile> (the (f k) \<Ztypecolon> V)) \<and>
+                (\<forall>k. k \<in> D \<longrightarrow> pull_map [concretize K k] g \<Turnstile> (f k \<Ztypecolon> V)) \<and>
                 g [] = 1 \<and>
                 (\<forall>k' l. (\<forall>k\<in>D. k' \<noteq> concretize K k) \<longrightarrow> g (k'#l) = 1 ) \<close>
 
   deriving \<open> Object_Equiv V eq
-         \<Longrightarrow> Object_Equiv (\<phi>MapTree D K V) (rel_map eq) \<close>
+         \<Longrightarrow> Object_Equiv (\<phi>MapTree D K V) (\<lambda>f g. \<forall>k\<in>D. eq (f k) (g k)) \<close>
     and \<open> Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
             Abstract_Domain  V P\<^sub>V \<Longrightarrow>
-            Abstract_Domain (\<phi>MapTree D K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<and> k \<in> dom f \<longrightarrow> P\<^sub>V (the (f k))) \<close>
+            Abstract_Domain (\<phi>MapTree D K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<and> k \<in> D\<longrightarrow> P\<^sub>V (f k)) \<close>
 
 term \<open>rel_fun (=) (rel_option x)\<close>
 term Map.empty
@@ -2071,44 +2070,27 @@ text \<open>Interesting, relational functor \<^const>\<open>Transformation_Funct
 setup \<open>Sign.mandatory_path "\<phi>MapTree"\<close>
 
 lemma Transformation_Functor [\<phi>reason add]:
-      \<open> Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' ran (\<lambda>_. UNIV) rel_map\<close>
+      \<open> Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' (\<lambda>f. f ` D) (\<lambda>_. UNIV) (\<lambda>r f g. \<forall>k\<in>D. r (f k) (g k))\<close>
   unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
             Abstract_Domain\<^sub>L_def \<r>ESC_def
   apply (clarsimp simp: Satisfiable_def)
   subgoal premises prems for f g v proof -
-  
-    obtain h where t1: \<open>a\<in>ran f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v)\<close> for a v
+    obtain h where t1: \<open>a\<in>D \<Longrightarrow> v \<Turnstile> (f a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g (f a) (h a v)\<close> for a v
       using prems(1) by metis
     show ?thesis
-      apply (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) (pull_map [concretize K k] v)) else None\<close>], auto)
-      apply (meson domD option.distinct(1))
-      apply (metis domI option.sel prems(3) ranI t1)
-      by (metis domI option.sel prems(3) ranI t1)
+      apply (rule exI[where x=\<open>\<lambda>k. h k (pull_map [concretize K k] v)\<close>], auto)
+      using prems(2) t1 apply blast
+      using prems(2) t1 by blast
   qed .
-
-lemma
-  \<open> f ` A = B \<longleftrightarrow> (\<forall>a. a \<in> A \<longrightarrow> f a \<in> B) \<and> (\<forall>b. b \<in> B \<longrightarrow> (\<exists>a\<in>A. b = f a )) \<close>
-  apply (auto simp: ) .
-
-lemma
-  \<open>bij_betw f D' D \<longrightarrow> (\<forall>a. a \<in> D' \<longrightarrow> f a \<in> D) \<and> inj_on f D' \<close>
-  unfolding bij_betw_def
-  apply auto .
-
-lemma
-  \<open> bij_betw f A B \<longrightarrow> f  \<close>
-
-  term Map.empty
 
 lemma Functional_Transformation_Functor [\<phi>reason add]:
   \<open> Abstract_Domain\<^sub>L K' (\<lambda>k. k \<in> D')
 \<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
-\<Longrightarrow> Fun_CV_TrFunctor (\<phi>MapTree D) (\<phi>MapTree D') K V K' V' dom ran
+\<Longrightarrow> Fun_CV_TrFunctor (\<phi>MapTree D) (\<phi>MapTree D') K V K' V' (\<lambda>_. D) (\<lambda>f. f ` D)
                      (\<lambda>f _.  bij_betw f D' D)
-                     (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>f\<^sub>1 f\<^sub>2 _ _ g. (map_option f\<^sub>2 o g o f\<^sub>1) |` D' )\<close>
+                     (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>f\<^sub>1 f\<^sub>2 _ _ g. f\<^sub>2 o g o f\<^sub>1 )\<close>
   unfolding Fun_CV_TrFunctor_def Transformation_def
   apply (auto simp: Ball_def)
-  apply (meson bij_betwE domIff option.exhaust_sel)
   apply (smt (verit, del_insts) Abstract_Domain\<^sub>L_def Extact_sufficient_conditions_Iden Functionality_sub Transformation_def bij_betw_def concretize_eq domIff image_eqI option.exhaust_sel option.map_sel ranI)
   by (smt (verit, del_insts) Abstract_Domain\<^sub>L_def Functionality_def Satisfiable_def \<r>ESC_def bij_betw_iff_bijections concretize_SAT)
 
@@ -2121,11 +2103,20 @@ term \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<
           V\<^sub>1 V\<^sub>2  \<close>
 
 lemma
-  \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U {(x, y). rel_map (\<lambda>x y. True) x y} (\<lambda>x. zip_option \<circ> zip_fun x)  \<close>
+  \<open>rel_map (\<lambda>x y. True) x y \<longleftrightarrow> dom x = dom y\<close>
+  unfolding rel_fun_def
+  apply auto
+  apply (metis option.exhaust_sel option.rel_distinct(2))
+  apply (metis option.exhaust_sel option.rel_distinct(1))
+  by (metis domIff option.rel_sel)
+
+lemma
+  \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U UNIV zip_fun  \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def zip_fun_def BNF_Def.convol_def
   apply (auto)
-  apply (metis domD domI zip_option_simps(1))
-  by (metis (no_types, lifting) domD domI fst_conv option.sel pull_map_homo_mult pull_map_sep_disj snd_eqD zip_option_simps(1))
+  apply (meson pull_map_homo_mult pull_map_sep_disj)
+  apply (simp add: times_fun_def)
+  by (simp add: times_fun_def)
 
 
 
@@ -2220,16 +2211,15 @@ lemma push_map_mult_same_head[simp]:
 lemma
   \<open> Injective_on K D
 \<Longrightarrow> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
-\<Longrightarrow> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U
-          UNIV (\<lambda>x. unzip_fun (unzip_option \<circ> x)) \<close>
+\<Longrightarrow> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U UNIV unzip_fun \<close>
   for T :: \<open>'c \<Rightarrow> ('b list \<Rightarrow> 'd::sep_no_inverse) BI\<close>
   unfolding Separation_Homo\<^sub>E_def Transformation_def
   apply (auto simp: subset_iff)
   subgoal premises prems for z v proof -
-    have t1[simp]: \<open>k \<in> dom z \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
+    have t1[simp]: \<open>k \<in> D \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
       by (simp add: concretize_inj prems(1) prems(2) prems(4))
-    obtain g1 g2 where t2: \<open>k \<in> dom z \<Longrightarrow>
-            pull_map [concretize K k] v = g1 k * g2 k \<and> g2 k \<Turnstile> (snd (the (z k)) \<Ztypecolon> U) \<and> g1 k \<Turnstile> (fst (the (z k)) \<Ztypecolon> T) \<and> g1 k ## g2 k \<close> for k
+    obtain g1 g2 where t2: \<open>k \<in> D \<Longrightarrow>
+            pull_map [concretize K k] v = g1 k * g2 k \<and> g2 k \<Turnstile> (snd (z k) \<Ztypecolon> U) \<and> g1 k \<Turnstile> (fst (z k) \<Ztypecolon> T) \<and> g1 k ## g2 k \<close> for k
       using prems(3) by metis
 
     have fuck: \<open>(\<lambda>x. If C (A x) (B x)) = If C A B\<close> for A B C
@@ -2237,10 +2227,10 @@ lemma
 
     note domIff[iff del]
     show ?thesis
-      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> dom z)
+      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> D)
                                     then g1 (inv_into D (concretize K) (hd ks)) (tl ks)
                                     else v ks \<close>])
-      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> dom z)
+      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> D)
                                     then g2 (inv_into D (concretize K) (hd ks)) (tl ks)
                                     else 1\<close>])
       apply (auto simp: pull_map_def )
@@ -2254,18 +2244,13 @@ lemma
           show ?thesis
             by (insert t4, auto simp: pull_map_def fun_eq_iff times_fun, metis t5)
         qed
-      apply (simp add: domIff)
-      apply (simp add: domIff)
       apply (subst fuck; auto)[1]
       apply (metis comp_apply domIff option.map_sel snd_conv t1 t2 unzip_option_simps(1))
-      apply (simp add: domIff)
-      apply (simp add: domIff prems(3))
       apply (subst fuck; auto)[1]
       apply (metis comp_apply domIff option.map_sel option.simps(8) t1 t2 zip_option_prj(1))
-      apply (simp add: domIff)
-      
-      apply (simp add: sep_disj_fun_def)
-      by (metis domI sep_disj_fun t1 t2)
+        apply (simp add: prems(4))
+        using prems(5) apply blast
+        using sep_disj_fun_def t2 by force
 qed .
 
 
