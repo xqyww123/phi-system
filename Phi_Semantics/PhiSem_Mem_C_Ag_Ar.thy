@@ -251,8 +251,6 @@ subsection \<open>Reasoning\<close>
 
 subsubsection \<open>Mem Coerce\<close>
 
-text \<open>The following lemma cannot be automated because it is tightly related to the semantics\<close>
-
 lemma split_mem_coerce_array':
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> length l = Suc n
 \<Longrightarrow> (l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<bbbA>\<r>\<r>\<a>\<y>[Suc n] T) = (last l \<Ztypecolon> AG_IDX(n\<^sup>\<t>\<^sup>\<h>) \<^bold>\<rightarrow>\<^sub># \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) * (take n l \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> \<bbbA>\<r>\<r>\<a>\<y>[n] T)\<close>

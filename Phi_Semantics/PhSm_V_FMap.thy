@@ -57,7 +57,7 @@ thm rel_funE
 
 \<phi>type_def MapVal :: "(VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<rightharpoonup> 'v) \<phi>"
   where \<open>f \<Ztypecolon> MapVal K V \<equiv> \<m>\<a>\<p>_rep f' \<Ztypecolon> Itself
-        \<s>\<u>\<b>\<j> f'. (\<forall>k' k. k' \<Turnstile> (k \<Ztypecolon> K) \<longrightarrow> rel_option (\<lambda>v' v. v' \<Turnstile> (v \<Ztypecolon> V)) (fmlookup f' k') (f k)) \<close>
+        \<s>\<u>\<b>\<j> f'. (\<forall>k. rel_option (\<lambda>v' v. v' \<Turnstile> (v \<Ztypecolon> V)) (fmlookup f' (concretize K k)) (f k)) \<close>
   deriving Basic
        and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
             Abstract_Domain  V P\<^sub>V \<Longrightarrow>
@@ -68,6 +68,28 @@ thm rel_funE
        and \<open>Object_Equiv V eq\<^sub>V \<Longrightarrow>
             Object_Equiv (MapVal K V) (rel_map eq\<^sub>V) \<close>
      notes rel_fun_def[simp]
+
+
+lemma Transformation_Functor [\<phi>reason add]:
+      \<open> Transformation_Functor (MapVal K) (MapVal K) V V' ran (\<lambda>_. UNIV) rel_map\<close>
+  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
+            Abstract_Domain\<^sub>L_def \<r>ESC_def rel_fun_def
+  apply (clarsimp simp: Satisfiable_def)
+ subgoal premises prems for f g v proof -
+  
+    obtain h where t1: \<open>a\<in>ran f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v)\<close> for a v
+      using prems(1) by metis
+    thm prems
+    show ?thesis
+      by (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) (the (fmlookup v (concretize K k)))) else None\<close>], auto,
+          metis is_none_simps(2) option.sel prems(2) ranI rel_option_unfold t1,
+          metis option.exhaust_sel option.rel_distinct(2) prems(2),
+          metis option.distinct(1) option.rel_sel option.sel prems(2) ranI t1)
+  qed .
+
+
+
+
 
 (*
 let_\<phi>type MapVal

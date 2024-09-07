@@ -1003,10 +1003,10 @@ definition \<open>CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<
             (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x) \<longrightarrow>
             (x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y))\<close>
 
-definition \<open>Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper \<longleftrightarrow>
+definition \<open>Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 FC\<^sub>1 R\<^sub>2 pred_mapper func_mapper \<longleftrightarrow>
     (\<forall>x f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2. (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> (a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a))
                 \<longrightarrow> (\<forall>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
-                \<longrightarrow> (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+                \<longrightarrow> FC\<^sub>1 f\<^sub>1 x \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
                 \<longrightarrow> (x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x))\<close>
 
 
@@ -1778,10 +1778,10 @@ lemma apply_Functional_Transformation_BiFunctor:
   by clarsimp
 
 lemma apply_Functional_CV_BiFunctor:
-  \<open> Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper
+  \<open> Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 FC\<^sub>1 R\<^sub>2 pred_mapper func_mapper
 \<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f\<^sub>1 a \<in> D\<^sub>1 x \<Longrightarrow> \<u>\<s>\<e>\<r> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
 \<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. \<u>\<s>\<e>\<r> a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> FC\<^sub>1 f\<^sub>1 x \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x\<close>
   unfolding meta_Ball_def Argument_def Premise_def
             Fun_CV_TrFunctor_def Transformation_Functor_def
@@ -3054,10 +3054,10 @@ lemma [\<phi>reason_template name Fa.\<A>backward_simp_bi [\<phi>transformation_
 *)
 
 lemma [no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name Fa.functional_transformation]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper
+  \<open> \<g>\<u>\<a>\<r>\<d> Fun_CV_TrFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 FC\<^sub>1 R\<^sub>2 pred_mapper func_mapper
 \<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f\<^sub>1 a \<in> D\<^sub>1 x \<Longrightarrow> a \<Ztypecolon> U\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> T\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a @tag \<T>\<P> )
 \<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a @tag \<T>\<P> )
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. f\<^sub>1 a \<in> D\<^sub>1 x \<longrightarrow> a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> FC\<^sub>1 f\<^sub>1 x \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x @tag \<T>\<P> \<close>
   unfolding \<r>Guard_def Action_Tag_def
   using apply_Functional_CV_BiFunctor[unfolded Argument_def,
@@ -4123,7 +4123,7 @@ lemma [\<phi>reason_template default %derived_SE_functor name F\<^sub>1.separati
 
   \<open> \<g>\<u>\<a>\<r>\<d> Fun_CV_TrFunctor F\<^sub>1\<^sub>4 F\<^sub>2\<^sub>3
             (T\<^sub>1 \<^emph> \<half_blkcirc>[Cw] W\<^sub>1) (T\<^sub>2 \<^emph> \<half_blkcirc>[Cw] W\<^sub>2) (U\<^sub>1 \<^emph> \<half_blkcirc>[Cr] R\<^sub>1) (U\<^sub>2 \<^emph> \<half_blkcirc>[Cr] R\<^sub>2)
-            Dom1 Dom2 Rng1 Rng2 pred_mapper func_mapper
+            Dom1 Dom2 FC\<^sub>1 Rng2 pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I\<^sub>2_Cond F\<^sub>1 F\<^sub>4 F\<^sub>1\<^sub>4 Cw T\<^sub>1 T\<^sub>2 W\<^sub>1 W\<^sub>2 Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E\<^sub>2_Cond F\<^sub>3 F\<^sub>2 F\<^sub>2\<^sub>3 Cr U\<^sub>1 U\<^sub>2 R\<^sub>1 R\<^sub>2 Du uz
 \<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f\<^sub>1 a \<in> Dom1 (z x)
@@ -4135,7 +4135,7 @@ lemma [\<phi>reason_template default %derived_SE_functor name F\<^sub>1.separati
         (uz (func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x)),
          (y = uz (func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x)) \<longrightarrow>
               x \<in> Dz
-              \<and> (\<forall>a. f\<^sub>1 a \<in> Dom1 (z x) \<longrightarrow> a \<in> Rng1 (z x))
+              \<and> FC\<^sub>1 f\<^sub>1 (z x)
               \<and> (\<forall>a. a \<in> Dom2 (z x) \<longrightarrow> f\<^sub>2 a \<in> Rng2 (z x))
               \<and> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x) \<in> Du),
          pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 (z x))
