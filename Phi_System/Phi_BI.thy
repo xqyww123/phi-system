@@ -3950,6 +3950,94 @@ lemma Object_Equiv_Mul_Quant[\<phi>reason %object_equiv_cut]:
           metis)
   qed
 
+
+subsection \<open>Equivalent Class\<close>
+
+definition \<open>Equiv_Class T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> T x \<and> v \<Turnstile> T y \<longrightarrow> r x y )\<close>
+
+lemma Equiv_Class_alt_def:
+  \<open> Equiv_Class T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> T) \<longrightarrow> r x y) \<close>
+  unfolding \<phi>Type_def Equiv_Class_def
+  by simp
+
+definition \<open>Injective_on T D \<longleftrightarrow> Equiv_Class T (\<lambda>x y. x \<in> D \<and> y \<in> D \<longrightarrow> x = y)\<close>
+
+\<phi>reasoner_group Equiv_Class_all = (100, [10,3000]) \<open>\<close>
+  and Equiv_Class = (1000, [1000,1030]) in Equiv_Class_all \<open>\<close>
+  and Equiv_Class_default = (25, [10,50]) in Equiv_Class_all and < Equiv_Class \<open>\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>Equiv_Class ?T ?var\<close> \<Rightarrow> \<open>Equiv_Class ?T _\<close> (100)
+                      and \<open>Equiv_Class ?T _\<close> \<Rightarrow> \<open>Equiv_Class ?T ?var\<close> (80),
+  \<phi>default_reasoner_group \<open>Equiv_Class _ _\<close> : %Equiv_Class (100)
+]]
+
+lemma [\<phi>reason add]:
+  \<open> Equiv_Class (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2)
+\<Longrightarrow> Equiv_Class (\<lambda>x. ExBI (A x)) r \<close>
+  unfolding Equiv_Class_def
+  by auto blast
+
+lemma (*the above rule is the strongest*)
+  \<open> Equiv_Class (\<lambda>x. ExBI (A x)) r
+\<Longrightarrow> Equiv_Class (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2) \<close>
+  unfolding Equiv_Class_def
+  by auto
+
+lemma [\<phi>reason add]:
+  \<open> Equiv_Class A (\<lambda>x y. P x \<and> P y \<longrightarrow> r x y)
+\<Longrightarrow> Equiv_Class (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) r \<close>
+  unfolding Equiv_Class_def
+  by auto
+
+lemma (*the above rule is the strongest*)
+  \<open> Equiv_Class (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) r
+\<Longrightarrow> Equiv_Class A (\<lambda>x y. P x \<and> P y \<longrightarrow> r x y) \<close>
+  unfolding Equiv_Class_def
+  by auto
+
+lemma [\<phi>reason add]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. r x x)
+\<Longrightarrow> Equiv_Class Itself r \<close>
+  unfolding Equiv_Class_def Premise_def
+  by simp
+
+lemma [\<phi>reason %Equiv_Class_default except \<open>Equiv_Class _ ?var\<close> ]:
+  \<open> Equiv_Class T r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. r x y \<longrightarrow> r' x y)
+\<Longrightarrow> Equiv_Class T r' \<close>
+  unfolding Premise_def Equiv_Class_def
+  by auto
+
+lemma [\<phi>reason add]:
+  \<open> Equiv_Class T (\<lambda>x y. \<forall>x' y'. x = f x' \<and> y = f y' \<longrightarrow> r x' y')
+\<Longrightarrow> Equiv_Class (\<lambda>x. f x \<Ztypecolon> T) r \<close>
+  unfolding Equiv_Class_def \<phi>Type_def
+  by auto
+
+lemma (*the above rule is the strongest*)
+  \<open> Equiv_Class (\<lambda>x. f x \<Ztypecolon> T) r
+\<Longrightarrow> Equiv_Class T (\<lambda>x y. \<forall>x' y'. x = f x' \<and> y = f y' \<longrightarrow> r x' y') \<close>
+  unfolding Equiv_Class_def \<phi>Type_def
+  by auto
+
+lemma [\<phi>reason add]:
+  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> (\<forall>a b. r a b))
+\<Longrightarrow> Equiv_Class (\<lambda>x. A) r \<close>
+  unfolding Equiv_Class_def Premise_def \<r>EIF_def Satisfiable_def
+  by simp blast
+
+lemma (*the above rule is the strongest*)
+  \<open> Equiv_Class (\<lambda>x. A) r
+\<Longrightarrow> Satisfiable A
+\<Longrightarrow> \<forall>a b. r a b \<close>
+  unfolding Equiv_Class_def Satisfiable_def
+  by auto
+
+
+
+
 section \<open>Reasoning\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax0.ML\<close>

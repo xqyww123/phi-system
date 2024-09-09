@@ -20,17 +20,10 @@ declare [[\<phi>trace_reasoning = 1]]
             (tactic: auto, subgoal' for x xa xb xc \<open>rule exI[where x=\<open>xa @ drop (length xa) xc\<close>]\<close>)
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
          \<Longrightarrow> Transformation_Functor (DynArr addr) (DynArr addr') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
-       (*and Functional_Transformation_Functor*)
        and Pointer_Of
 
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<s>\<i>\<z>\<e>_\<t>, cap: \<s>\<i>\<z>\<e>_\<t>}\<close>
-
-term \<open>data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] (T :: (VAL,'x) \<phi>)\<close>
-
-term \<open>x \<Ztypecolon> \<v>\<a>\<l>[a] T\<close>
-
-
 
 
 
@@ -47,16 +40,6 @@ proc len_dynarr:
 \<medium_left_bracket>
   addr.len
 \<medium_right_bracket> .
-
-declare [[\<phi>infer_requirements, \<phi>trace_reasoning = 1]]
-
-(*
-context
-  fixes T :: \<open>(VAL, 'x) \<phi>\<close>
-    and zero :: 'x
-  assumes [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> T) T zero\<close>
-begin
-*)
 
 
 proc get_dynarr:

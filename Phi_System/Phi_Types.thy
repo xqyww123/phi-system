@@ -1944,25 +1944,6 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 subsubsection \<open>Function Abstraction\<close>
 
-definition \<open>Equiv_Class T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> T x \<and> v \<Turnstile> T y \<longrightarrow> r x y )\<close>
-
-lemma Equiv_Class_alt_def:
-  \<open> Equiv_Class T r \<longleftrightarrow> (\<forall>v x y. v \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> T) \<longrightarrow> r x y) \<close>
-  unfolding \<phi>Type_def Equiv_Class_def
-  by simp
-
-definition \<open>Injective_on T D \<longleftrightarrow> Equiv_Class T (\<lambda>x y. x \<in> D \<and> y \<in> D \<longrightarrow> x = y)\<close>
-
-\<phi>reasoner_group Equiv_Class_all = (100, [10,3000]) \<open>\<close>
-  and Equiv_Class = (1000, [1000,1030]) in Equiv_Class_all \<open>\<close>
-  and Equiv_Class_default = (25, [10,50]) in Equiv_Class_all and < Equiv_Class \<open>\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>Equiv_Class ?T ?var\<close> \<Rightarrow> \<open>Equiv_Class ?T _\<close> (100)
-                      and \<open>Equiv_Class ?T _\<close> \<Rightarrow> \<open>Equiv_Class ?T ?var\<close> (80),
-  \<phi>default_reasoner_group \<open>Equiv_Class _ _\<close> : %Equiv_Class (100)
-]]
-
 definition concretize :: \<open>('c,'x) \<phi> \<Rightarrow> 'x \<Rightarrow> 'c\<close>
   where \<open>concretize T = (\<lambda>x. @c. c \<Turnstile> (x \<Ztypecolon> T))\<close>
 
@@ -2119,73 +2100,6 @@ lemma
   by (simp add: times_fun_def)
 
 
-
-lemma [\<phi>reason add]:
-  \<open> Equiv_Class (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2)
-\<Longrightarrow> Equiv_Class (\<lambda>x. ExBI (A x)) r \<close>
-  unfolding Equiv_Class_def
-  by auto blast
-
-lemma (*the above rule is the strongest*)
-  \<open> Equiv_Class (\<lambda>x. ExBI (A x)) r
-\<Longrightarrow> Equiv_Class (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2) \<close>
-  unfolding Equiv_Class_def
-  by auto
-
-
-lemma [\<phi>reason add]:
-  \<open> Equiv_Class A (\<lambda>x y. P x \<and> P y \<longrightarrow> r x y)
-\<Longrightarrow> Equiv_Class (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) r \<close>
-  unfolding Equiv_Class_def
-  by auto
-
-lemma (*the above rule is the strongest*)
-  \<open> Equiv_Class (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) r
-\<Longrightarrow> Equiv_Class A (\<lambda>x y. P x \<and> P y \<longrightarrow> r x y) \<close>
-  unfolding Equiv_Class_def
-  by auto
-
-lemma  [\<phi>reason add]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. r x x)
-\<Longrightarrow> Equiv_Class Itself r \<close>
-  unfolding Equiv_Class_def Premise_def
-  by simp
-
-lemma (*default*)
-  \<open> Equiv_Class T r
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. r x y \<longrightarrow> r' x y)
-\<Longrightarrow> Equiv_Class T r' \<close>
-  unfolding Premise_def Equiv_Class_def
-  by auto
-
-
-lemma [\<phi>reason add]:
-  \<open> Equiv_Class T (\<lambda>x y. \<forall>x' y'. x = f x' \<and> y = f y' \<longrightarrow> r x' y')
-\<Longrightarrow> Equiv_Class (\<lambda>x. f x \<Ztypecolon> T) r \<close>
-  unfolding Equiv_Class_def \<phi>Type_def
-  by auto
-
-lemma (*the above rule is the strongest*)
-  \<open> Equiv_Class (\<lambda>x. f x \<Ztypecolon> T) r
-\<Longrightarrow> Equiv_Class T (\<lambda>x y. \<forall>x' y'. x = f x' \<and> y = f y' \<longrightarrow> r x' y') \<close>
-  unfolding Equiv_Class_def \<phi>Type_def
-  by auto
-
-lemma [\<phi>reason add]:
-  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> (\<forall>a b. r a b))
-\<Longrightarrow> Equiv_Class (\<lambda>x. A) r \<close>
-  unfolding Equiv_Class_def Premise_def \<r>EIF_def Satisfiable_def
-  by simp blast
-
-lemma (*the above rule is the strongest*)
-  \<open> Equiv_Class (\<lambda>x. A) r
-\<Longrightarrow> Satisfiable A
-\<Longrightarrow> \<forall>a b. r a b \<close>
-  unfolding Equiv_Class_def Satisfiable_def
-  by auto
-
-
 lemma push_map_mult_ex:
   \<open>h \<tribullet>\<^sub>m a = b * c \<Longrightarrow> b ## c \<Longrightarrow> (\<exists>b' c'. b = h \<tribullet>\<^sub>m b' \<and> c = h \<tribullet>\<^sub>m c' \<and> a = b' * c' \<and> b' ## c')\<close>
   for a :: \<open>'k list \<Rightarrow> 'v::sep_no_inverse\<close>
@@ -2254,27 +2168,107 @@ lemma
 qed .
 
 
-term \<open>Map.empty\<close>
 
 lemma
   \<open> Injective_on K D
 \<Longrightarrow> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>D. \<phi>MapTree D K V) (\<lambda>_. True)
-                            (\<lambda>s t _. s \<inter> t = {} \<and> s \<subseteq> D \<and> t \<subseteq> D) (\<lambda>s t f. (f |` s, f |` t)) \<close>
+                            (\<lambda>s t _. s \<inter> t = {} \<and> s \<subseteq> D \<and> t \<subseteq> D) (\<lambda>s t f. (f, f)) \<close>
+  for V :: \<open>('b list \<Rightarrow> 'd::sep_magma_1, 'c option) \<phi>\<close>
   unfolding Semimodule_SDistr_Homo\<^sub>S_def Transformation_def
   apply auto
   subgoal premises prems for s t z v proof -
     have t1[simp]: \<open>k \<in> D \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
       by (meson concretize_inj in_mono inv_into_f_f plus_set_in_iff prems(1) prems(2) prems(4) prems(5) prems(6))
-    term \<open>concretize K ` s\<close>
+    have fuck: \<open>(\<lambda>x. If C (A x) (B x)) = If C A B\<close> for A B C by auto
+    have t2: \<open>k \<in> t \<Longrightarrow> inv_into D (concretize K) (concretize K k) \<in> t\<close> for k
+      using prems(5) by force
+    have [simp]:
+      \<open>k \<in> t \<Longrightarrow> pull_map [concretize K k] (\<lambda>ks. if ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> t then v ks else 1) = pull_map [concretize K k] v \<close> for k
+      unfolding pull_map_def fun_eq_iff
+      by (auto, insert t2, blast)
+    have [simp]:
+      \<open>k \<in> s \<Longrightarrow> pull_map [concretize K k] (\<lambda>ks. if ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> s then v ks else 1) = pull_map [concretize K k] v \<close> for k
+      unfolding pull_map_def fun_eq_iff
+      by (auto, metis prems(4) subsetD t1)
+
     show ?thesis
       apply (rule exI[where x=\<open>\<lambda>ks. if (ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> s)
-                                    then v (tl ks) else 1 \<close>])
+                                    then v ks else 1 \<close>])
+      apply (rule exI[where x=\<open>\<lambda>ks. if (ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> t)
+                                    then v ks else 1 \<close>])
+      apply (auto simp: times_fun fun_eq_iff )
+      using prems(3) apply blast
+      apply (simp add: prems(7))
+      using prems(7) apply auto[1]
+      apply (simp add: prems(7))
+      apply (metis (full_types) Un_iff in_mono list.collapse plus_set_def prems(4) prems(5) prems(7) prems(8) t1)
+      using prems(6) apply blast
+      apply (metis in_mono plus_set_in_iff prems(4) prems(8) t1)
+      using prems(6) apply blast
+      apply (metis Int_iff empty_iff plus_set_in_iff prems(3) prems(8) t2)
+      using prems(3) sep_disj_fun_def by fastforce
+  qed .
 
 
-  
+term Map.empty
 
+(*
+definition fun_add :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> 'b)\<close> ("_ [_]++ _" [100,20,101] 100)
+  where \<open>f [D]++ g = (\<lambda>k. if k \<in> D then f k else g k) \<close>
 
+lemma
+  \<open>(f [D]++ g) k = (if k \<in> D then f k else g k)\<close>
+  unfolding fun_add_def
+*)
+setup \<open>Sign.mandatory_path "\<phi>MapTree"\<close>
+
+lemma expansion':
+  \<open> p \<Turnstile> (x \<Ztypecolon> \<phi>MapTree D K V) \<longleftrightarrow>
+      (\<forall>k. k \<in> D \<longrightarrow> pull_map [concretize K k] p \<Turnstile> (x k \<Ztypecolon> V))
+          \<and> p [] = 1 \<and> (\<forall>k'. (\<forall>k\<in>D. k' \<noteq> concretize K k) \<longrightarrow> pull_map [k'] p = 1) \<close>
+  by (auto simp: pull_map_def fun_eq_iff)
+
+setup \<open>Sign.parent_path\<close>
+
+lemma
+  \<open> Injective_on K D
+\<Longrightarrow> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>D. \<phi>MapTree D K V) (\<lambda>_. True)
+                            (\<lambda>s t _. s \<inter> t = {} \<and> s \<subseteq> D \<and> t \<subseteq> D)
+                            (\<lambda>_ t (f,g). f \<oplus>\<^sub>f[t] g ) \<close>
+  for V :: \<open>('b list \<Rightarrow> 'd::sep_magma_1, 'c option) \<phi>\<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_def Transformation_def
+  by (auto simp: pull_map_homo_mult \<phi>MapTree.expansion' simp del: \<phi>MapTree.expansion,
+      smt (verit, ccfv_SIG) Abstract_Domain\<^sub>L_def concretize_inj disjoint_iff in_mono inv_into_f_f mult_1_class.mult_1_left,
+      metis (mono_tags, lifting) concretize_inj in_mono inj_on_def mult_1_class.mult_1_right,
+      metis mult_1_class.mult_1_right times_fun_def)
+
+term 1
+
+term \<phi>Prod
+
+\<phi>type_def \<phi>Product :: \<open>('c1, 'x1) \<phi> \<Rightarrow> ('c2, 'x2) \<phi> \<Rightarrow> ('c1 \<times> 'c2, 'x1 \<times> 'x2) \<phi>\<close> (infixr "\<times>\<^sub>\<phi>" 70)
+  where \<open>x \<Ztypecolon> T \<times>\<^sub>\<phi> U \<equiv> (c,d) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> c d. c \<Turnstile> (fst x \<Ztypecolon> T) \<and> d \<Turnstile> (snd x \<Ztypecolon> U)\<close>
+
+  deriving \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain U Q
+        \<Longrightarrow> Abstract_Domain (T \<times>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y) \<close>
+
+       and \<open>Object_Equiv T eq1
+        \<Longrightarrow> Object_Equiv U eq2
+        \<Longrightarrow> Object_Equiv (T \<times>\<^sub>\<phi> U) (rel_prod eq1 eq2) \<close>
+
+       and \<open>Abstract_Domain\<^sub>L T P
+        \<Longrightarrow> Abstract_Domain\<^sub>L U Q
+        \<Longrightarrow> Abstract_Domain\<^sub>L (T \<times>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y) \<close>
+
+       and \<open> Transformation_BiFunctor (\<times>\<^sub>\<phi>) (\<times>\<^sub>\<phi>) T U T' U'
+                  (\<lambda>x. {fst x}) (\<lambda>x. {snd x}) (\<lambda>_. UNIV) (\<lambda>_. UNIV) rel_prod \<close>
+
+       and \<open> Functional_Transformation_BiFunctor (\<times>\<^sub>\<phi>) (\<times>\<^sub>\<phi>) T U T' U'
+                  (\<lambda>x. {fst x}) (\<lambda>x. {snd x}) (\<lambda>_. UNIV) (\<lambda>_. UNIV)
+                  (\<lambda>_ _. pred_prod) (\<lambda>f g _ _. f \<otimes>\<^sub>f g) \<close>
 
 
 (*

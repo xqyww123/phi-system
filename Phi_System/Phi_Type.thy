@@ -5762,14 +5762,14 @@ lemma [\<phi>reason_template default %To_ToA_derived]:
 
 section \<open>Property Derivers\<close>
 
-subsubsection \<open>Extension of BNF-FP\<close>
+subsection \<open>Extension of BNF-FP\<close>
 
 ML_file \<open>library/phi_type_algebra/tools/BNF_fp_sugar_more.ML\<close>
 ML_file \<open>library/phi_type_algebra/tools/extended_BNF_info.ML\<close>
 
 
 
-subsubsection \<open>Deriver Framework\<close>
+subsection \<open>Deriver Framework\<close>
 
 consts \<phi>TA_subgoal :: \<open>action \<Rightarrow> action\<close>
        \<phi>TA_ANT :: action \<comment> \<open>Antecedent in the outcome\<close>
@@ -5889,7 +5889,7 @@ consts \<phi>deriver_expansion :: mode
         Phi_Type_Derivers.equip_expansion_ss0 {fix_vars=true}) o snd\<close>
 
 
-subsubsection \<open>Extending Property Guessers\<close>
+subsection \<open>Extending Property Guessers\<close>
 
 text \<open>When derivers provide gussers of specific strategies typically based on the logic types of the
   abstract domain, boolean constraints implies inside can in addition augment the guessing.
@@ -5986,7 +5986,7 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
   unfolding Guess_Property_def ..
 
 
-subsubsection \<open>Simplify Result\<close>
+subsection \<open>Simplify Result\<close>
 
 definition Simplify_Result :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> where \<open>Simplify_Result P Q \<equiv> (PROP P \<Longrightarrow> PROP Q)\<close>
 
@@ -6012,7 +6012,7 @@ lemma
 
 
 
-subsubsection \<open>Warn if the Def contains Sat\<close>
+subsection \<open>Warn if the Def contains Sat\<close>
 
 \<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn (quiet, _) => fn [] => fn phi => fn thy => (
   if Phi_Syntax.is_nonnull_Type_Opr (Term.fastype_of (#term phi)) andalso
@@ -6025,7 +6025,8 @@ subsubsection \<open>Warn if the Def contains Sat\<close>
   thy
 )\<close>
 
-subsubsection \<open>Meta Deriver for Pure Syntactical Properties\<close>
+
+subsection \<open>Meta Deriver for Pure Syntactical Properties\<close>
 
 ML_file \<open>library/phi_type_algebra/gen_pure_synt_rules.ML\<close>
 
@@ -6036,7 +6037,7 @@ ML_file \<open>library/phi_type_algebra/gen_pure_synt_rules.ML\<close>
            SOME (@{reasoner_group %Semimodule_No_SDistr})) \<close>
 
 
-subsubsection \<open>Abstract Domain\<close>
+subsection \<open>Abstract Domain\<close>
 
 context begin
 
@@ -6099,7 +6100,7 @@ end
 
 
 
-subsubsection \<open>Identity Element Intro \& Elim\<close>
+subsection \<open>Identity Element Intro \& Elim\<close>
 
 context begin
 
@@ -6167,7 +6168,7 @@ end
 paragraph \<open>Guessing Antecedents\<close>
 
 
-subsubsection \<open>Object Equivalence\<close>
+subsection \<open>Object Equivalence\<close>
 
 context begin
 
@@ -6255,7 +6256,7 @@ end
   = \<open>Phi_Type_Derivers.object_equiv\<close>
 
 
-subsubsection \<open>Functionality\<close>
+subsection \<open>Functionality\<close>
 
 context begin
 
@@ -6288,7 +6289,7 @@ end
     = \<open> Phi_Type_Derivers.is_functional \<close>
 
 
-subsubsection \<open>Carrier Set\<close>
+subsection \<open>Carrier Set\<close>
 
 context begin
 
@@ -6324,7 +6325,7 @@ end
   requires Object_Equiv and Abstract_Domain and Carrier_Set ?
 
 
-subsubsection \<open>Type Inhabitance\<close>
+subsection \<open>Type Inhabitance\<close>
 
 context begin
 
@@ -6344,7 +6345,25 @@ end
 
 
 
-subsubsection \<open>Transformation Functor\<close>
+subsection \<open>Equivalent Class\<close>
+
+context begin
+
+private lemma \<phi>TA_EC_rule:
+  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Equiv_Class T r)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @tag \<phi>TA_ANT
+\<Longrightarrow> Equiv_Class T r \<close> .
+
+ML_file \<open>library/phi_type_algebra/equiv_class.ML\<close>
+
+end
+
+
+
+
+subsection \<open>Transformation Functor\<close>
 
 context begin
 
@@ -6458,7 +6477,7 @@ private lemma \<phi>TA_TF\<^sub>\<Lambda>_rewr_pre:
   unfolding Action_Tag_def atomize_imp atomize_all .
 
 
-subsubsection \<open>Functional Transformation Functor\<close>
+subsection \<open>Functional Transformation Functor\<close>
 
 paragraph \<open>Functor\<close>
 
@@ -6558,7 +6577,7 @@ end
     = \<open>Phi_Type_Derivers.functional_transformation_functor\<close>
 
 
-subsubsection \<open>Separation Homo\<close>
+subsection \<open>Separation Homo\<close>
 
 text \<open>Note, as an instance of Commutativity of Type Operators, the names of \<open>introduction rule\<close>
   and \<open>elimination rule\<close> are just reversed. It is intentional, because I really think those names
@@ -6713,7 +6732,7 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
        and Identity_Element_Properties
 
 
-subsubsection \<open>Congruence in Function Definition\<close>
+subsection \<open>Congruence in Function Definition\<close>
 
 (*TODO: re-implement by template*)
 
@@ -6747,7 +6766,7 @@ lemma function_congruence_template:
 ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 *)
 
-subsubsection \<open>Configuration for guessing default Semimodule properties\<close>
+subsection \<open>Configuration for guessing default Semimodule properties\<close>
 
 definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c::one itself \<Rightarrow> 'a itself
                               \<Rightarrow> ('s \<Rightarrow> ('c,'a) \<phi>)
@@ -7073,7 +7092,7 @@ paragraph \<open>ML Library\<close>
 ML_file \<open>library/phi_type_algebra/guess_semimodule.ML\<close>
 
 
-subsubsection \<open>Semimodule Scalar Zero\<close>
+subsection \<open>Semimodule Scalar Zero\<close>
 
 context begin
 
@@ -7123,7 +7142,7 @@ end
     = \<open>Phi_Type_Derivers.closed_semimodule_zero\<close>
 
 
-subsubsection \<open>Semimodule Scalar Identity\<close>
+subsection \<open>Semimodule Scalar Identity\<close>
 
 context begin
 
@@ -7163,7 +7182,7 @@ end
   requires Semimodule_One\<^sub>I and Semimodule_One\<^sub>E
 
 
-subsubsection \<open>Semimodule Scalar Associative\<close>
+subsection \<open>Semimodule Scalar Associative\<close>
 
 text \<open>\<phi>-type embedding of separation quantifier \<open>x \<Ztypecolon> \<big_ast>[i\<in>I] T\<close> is a recursive example of this.
 
@@ -7224,7 +7243,7 @@ end
   requires Semimodule_NonDistr_no0 and Semimodule_Zero
 
 
-subsubsection \<open>Semimodule Scalar Distributivity - Zip\<close>
+subsection \<open>Semimodule Scalar Distributivity - Zip\<close>
 
 context begin
 
@@ -7331,7 +7350,7 @@ declare Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, \<p
 *)
 
 
-subsubsection \<open>Construct Abstraction from Concrete Representation (by Itself)\<close>
+subsection \<open>Construct Abstraction from Concrete Representation (by Itself)\<close>
 
 (*Designed only for primitives, so can be buggy for advanced and particularly recursive \<phi>-types*)
 
@@ -7360,7 +7379,7 @@ end
 
 
 
-subsubsection \<open>Destruct Abstraction down to Concrete Representation (by Itself)\<close>
+subsection \<open>Destruct Abstraction down to Concrete Representation (by Itself)\<close>
 
 (*Designed only for primitives, so can be buggy for advanced and particularly recursive \<phi>-types*)
 
@@ -7398,7 +7417,7 @@ end
   requires Open_Abstraction_to_Raw and Make_Abstraction_from_Raw
 
 
-subsubsection \<open>Trim Empty Generated during Separation Extraction\<close>
+subsection \<open>Trim Empty Generated during Separation Extraction\<close>
 
 (*TODO: reform.*)
 
@@ -7478,7 +7497,7 @@ lemmas [\<phi>reason_template default 40 pass: \<open>(Phi_Type_Derivers.SE_Trim
           derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
 *)
 
-subsubsection \<open>Meta Deriver for \<phi>-Type Operator Commutativity\<close>
+subsection \<open>Meta Deriver for \<phi>-Type Operator Commutativity\<close>
 
 paragraph \<open>Guess Property\<close>
 

@@ -40,6 +40,7 @@ fun conv_hol_imp_to_meta_if_has Cant ctm =
 
 local
 
+(*
 fun need_infer sequent =
   case Thm.concl_of sequent
     of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var _) => true
@@ -96,6 +97,7 @@ fun infer_equiv ctxt sequent =
             |> Thm.cterm_of ctxt
    in Thm.instantiate (TVars.empty, Vars.make [(var, eq)]) sequent
   end
+*)
 
 (*if the \<phi>-type is recursive, guess the reachability relation from the relation operator of the BNF,
   or else, leave it as a schematic variable because we can infer it from the proof obligation later.
@@ -174,7 +176,6 @@ fun gen_obj_equal' (_,name) instruction (phi0 : phi_type) thy0 =
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
-      val _ = conv_chk_unfolded
       val equip_expansion = equip_expansion_ss phi0
     (*val phitm = Thm.cterm_of ctxt0 (#term phi0)
       val OE_IND_I = Drule.infer_instantiate ctxt0 [(("T",0), phitm)]
