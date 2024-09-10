@@ -75,8 +75,8 @@ fun Guess_Scalar_Assoc is_intro (phi : phi_type) ctxt =
                        val \<^Type>\<open>fun ss' \<^Type>\<open>fun st' \<^Type>\<open>fun as_t' ast'\<close>\<close>\<close> = Term.fastype_of f
                        val \<^Type>\<open>fun _ \<^Type>\<open>fun \<^Type>\<open>fun a' \<open>Type(_, [c'])\<close>\<close> \<^Type>\<open>fun at' _\<close>\<close>\<close> = Term.fastype_of Ft
                        val \<^Type>\<open>fun sc' _\<close> = Term.fastype_of Fc
-                       val head = if is_intro then \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>I ss' at' c' as_t' st' a' sc' ast'\<close>
-                                              else \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>E ss' at' c' as_t' st' a' sc' ast'\<close>
+                       val head = if is_intro then \<^Const>\<open>Module_Assoc\<^sub>I ss' at' c' as_t' st' a' sc' ast'\<close>
+                                              else \<^Const>\<open>Module_Assoc\<^sub>E ss' at' c' as_t' st' a' sc' ast'\<close>
                        val prop = HOLogic.Trueprop $ (head $ Fs $ Ft $ Fc $ T $ Ds $ Dt $ Dx $ smul $ f)
                     in Seq.single (ants, prop,
                                    NONE :: parse_inst_params_from_phi_term (Fc $ Term.dummy $ T),
@@ -96,8 +96,8 @@ fun guess_property is_intro (phi0 : phi_type) ctxt =
       val Dx = Free(Dx_name, x_ty --> HOLogic.boolT)
       val AD = \<^Const>\<open>Abstract_Domain\<^sub>M\<^sub>C x_ty model_ty\<close> $ T_term $ Dx*)
       val Ds = infer_the_default_scalar_domain ctxt (s_ty, x_ty, model_ty)
-   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (xxxx (*(if is_intro then \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>I s_ty x_ty model_ty\<close>
-                                                      else \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>E s_ty x_ty model_ty\<close>)*)
+   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (xxxx (*(if is_intro then \<^Const>\<open>Module_Assoc\<^sub>I s_ty x_ty model_ty\<close>
+                                                      else \<^Const>\<open>Module_Assoc\<^sub>E s_ty x_ty model_ty\<close>)*)
                                             $ F_term $ T_term $ Ds (* $ Dx *)),
                   NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
   end
@@ -105,8 +105,8 @@ fun guess_property is_intro (phi0 : phi_type) ctxt =
 
 fun gen_MS is_intro (_, name) instruction (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<^sub>I\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
-             | (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<^sub>E\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
+            fn (Const(\<^const_name>\<open>Module_Assoc\<^sub>I\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
+             | (Const(\<^const_name>\<open>Module_Assoc\<^sub>E\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
           )
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
@@ -159,9 +159,9 @@ fun gen_MS is_intro (_, name) instruction (phi0 : phi_type) thy =
   end
 
 val semimodule_assoc_I = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Scalar_Assoc\<^sub>I") (gen_MS true)
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Module_Assoc\<^sub>I") (gen_MS true)
 
 val semimodule_assoc_E = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Scalar_Assoc\<^sub>E") (gen_MS false)
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Module_Assoc\<^sub>E") (gen_MS false)
 
 end

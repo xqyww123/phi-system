@@ -3962,6 +3962,30 @@ lemma Equiv_Class_alt_def:
 
 definition \<open>Injective_on T D \<longleftrightarrow> Equiv_Class T (\<lambda>x y. x \<in> D \<and> y \<in> D \<longrightarrow> x = y)\<close>
 
+
+subsubsection \<open>Properties\<close>
+
+definition concretize :: \<open>('c,'x) \<phi> \<Rightarrow> 'x \<Rightarrow> 'c\<close>
+  where \<open>concretize T = (\<lambda>x. @c. c \<Turnstile> (x \<Ztypecolon> T))\<close>
+
+lemma concretize_SAT:
+  \<open> Satisfiable (x \<Ztypecolon> T)
+\<Longrightarrow> concretize T x \<Turnstile> (x \<Ztypecolon> T) \<close>
+  unfolding concretize_def Satisfiable_def
+  by (meson someI_ex)
+  
+lemma concretize_inj:
+  \<open> Injective_on T D
+\<Longrightarrow> Abstract_Domain\<^sub>L T (\<lambda>x. x \<in> D)
+\<Longrightarrow> inj_on (concretize T) D \<close>
+  unfolding inj_on_def Equiv_Class_def concretize_def Abstract_Domain\<^sub>L_def \<r>ESC_def Satisfiable_def
+            \<phi>Type_def Injective_on_def
+  by (auto, metis someI)
+
+
+
+subsubsection \<open>Reasoning Configures\<close>
+
 \<phi>reasoner_group Equiv_Class_all = (100, [10,3000]) \<open>\<close>
   and Equiv_Class = (1000, [1000,1030]) in Equiv_Class_all \<open>\<close>
   and Equiv_Class_default = (25, [10,50]) in Equiv_Class_all and < Equiv_Class \<open>\<close>
@@ -3972,6 +3996,9 @@ declare [[
                       and \<open>Equiv_Class ?T _\<close> \<Rightarrow> \<open>Equiv_Class ?T ?var\<close> (80),
   \<phi>default_reasoner_group \<open>Equiv_Class _ _\<close> : %Equiv_Class (100)
 ]]
+
+
+subsubsection \<open>Reasoning Rules\<close>
 
 lemma [\<phi>reason %Equiv_Class]:
   \<open> Equiv_Class T (\<lambda>x y. x \<in> D \<and> y \<in> D \<longrightarrow> x = y)

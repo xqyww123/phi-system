@@ -216,17 +216,17 @@ val _ = Theory.setup (Context.theory_map (
               TERM(?G' (?F'\<^sub>T ?T) (?F'\<^sub>U ?U)) &&& TERM(?G') &&& TERM(?F'\<^sub>T) &&& TERM(?T) &&& TERM(?F'\<^sub>U) &&& TERM(?U)
                                            &&& TERM(?F) &&& TERM(?G) &&& TERM(?T) &&& TERM(?U) \<close>)]
 #>fold (register_assoc_tyoprs_rule_pass DA_INTRO)
-    [([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+    [([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fs ?s (?Ft ?t ?T)) &&& TERM(?Fc (?smul ?s ?t))
                                        &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>),
-     ([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+     ([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>\<Lambda>\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fs ?s (\<lambda>p. ?Ft ?t (?T p))) &&& TERM(?Fc (?smul ?s ?t))
                 &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>)]
 #>fold (register_assoc_tyoprs_rule_pass DA_ELIM)
-    [([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+    [([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fc (?smul ?s ?t) ?T) &&& TERM(?Fs ?s (?Ft ?t ?T))
                                          &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>),
-     ([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+     ([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>\<Lambda>\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fc (?smul ?s ?t) ?T) &&& TERM(?Fs ?s (\<lambda>p\<^sub>s. ?Ft ?t (\<lambda>p\<^sub>t. ?T (p\<^sub>s, p\<^sub>t))))
                                          &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>)]
 ))

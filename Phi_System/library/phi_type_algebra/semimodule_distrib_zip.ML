@@ -21,14 +21,14 @@ val TA_common_rewr_imp23' = @{lemma
 
 fun gen_MDz is_zip (_, name) instruction (phi : phi_type) thy =
   let val parse_hint = parse_hint (
-              fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ _ $ _ $ _) =>
+              fn (Const(\<^const_name>\<open>Module_Distr_Homo\<^sub>Z\<close>, _) $ F1 $ _ $ _ $ _) =>
                     F1 $ Term.dummy
-               | (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>S\<close>, _) $ F1 $ _ $ _ $ _) =>
+               | (Const(\<^const_name>\<open>Module_Distr_Homo\<^sub>S\<close>, _) $ F1 $ _ $ _ $ _) =>
                     F1 $ Term.dummy
                )
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ _ $ Ds $ Dx $ zi)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Module_Distr_Homo\<^sub>Z\<close>, _) $ _ $ Ds $ Dx $ zi)
             = [Ds, Dx, zi]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>S\<close>, _) $ _ $ Ds $ Dx $ uz)
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Module_Distr_Homo\<^sub>S\<close>, _) $ _ $ Ds $ Dx $ uz)
             = [Ds, Dx, uz]
         | extract_oprs_from_hint _ = []
 
@@ -105,8 +105,8 @@ fun gen_MDz is_zip (_, name) instruction (phi : phi_type) thy =
   end
 
 val semimodule_distrib_zip = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_SDistr_Homo\<^sub>Z") (gen_MDz true)
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Module_Distr_Homo\<^sub>Z") (gen_MDz true)
 val semimodule_distrib_unzip = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_SDistr_Homo\<^sub>S") (gen_MDz false)
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Module_Distr_Homo\<^sub>S") (gen_MDz false)
 
 end

@@ -1,6 +1,6 @@
 (*the pass adds an excluding-pattern to prevent applying the rule on any scalar algebra of
   partial_ab_semigroup_add *)
-val phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar =
+val phi_TA_Module_Distrib_rule_pass_no_comm_scalar =
   (PLPR_Template_Properties.no_rule_generation_pass,
    fn _ => fn (data as ([rule], mode_prio, (pats, except), guard, ctxt)) =>
      (case PLPR_Syntax.find_premise (

@@ -18,8 +18,8 @@ val TA_common_rewr_imp2_noact = @{lemma
 
 fun gen_MI is_intro (_, name) instruction (phi : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn (Const(\<^const_name>\<open>Semimodule_One\<^sub>I\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F
-             | (Const(\<^const_name>\<open>Semimodule_One\<^sub>E\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F )
+            fn (Const(\<^const_name>\<open>Module_One\<^sub>I\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F
+             | (Const(\<^const_name>\<open>Module_One\<^sub>E\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F )
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
         default_reasoning false default_reasoning_configure (K (K NONE))
@@ -58,8 +58,8 @@ fun gen_MI is_intro (_, name) instruction (phi : phi_type) thy =
         |> pair [rule']
   end
 
-val semimodule_identity_I = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_One\<^sub>I") (gen_MI true)
-val semimodule_identity_E = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_One\<^sub>E") (gen_MI false)
+val semimodule_identity_I = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Module_One\<^sub>I") (gen_MI true)
+val semimodule_identity_E = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Module_One\<^sub>E") (gen_MI false)
 
 
 end

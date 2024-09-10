@@ -750,6 +750,22 @@ declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightar
 
 subsubsection \<open>Basic Rules\<close>
 
+lemma functional_concretize:
+  \<open> Functionality T ((=) x)
+\<Longrightarrow> v \<Turnstile> (x \<Ztypecolon> T)
+\<Longrightarrow> v = concretize T x \<close>
+  unfolding concretize_def \<phi>Type_def Functionality_def
+  by (simp add: some_equality)
+
+lemma concretize_eq:
+  \<open> Abstract_Domain\<^sub>L T ((=) x)
+\<Longrightarrow> Functionality U ((=) y)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U
+\<Longrightarrow> concretize T x = concretize U y \<close>
+  unfolding Transformation_def Abstract_Domain\<^sub>L_def \<r>ESC_def
+  by (simp add: concretize_SAT functional_concretize)
+
+
 (*deprecated*)
 lemma Is_Functional_premise_extraction:
   \<open>Is_Functional S \<equiv> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) \<and> True\<close>

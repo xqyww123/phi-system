@@ -6,7 +6,7 @@ section \<open>Pointer Arithmetic\<close>
 
 proc op_add_ptr_a[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
-  premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len\<close>
+  premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>nat (int i + j) \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<close>
 \<medium_left_bracket>
   $i semantic_local_value \<p>\<t>\<r>
@@ -17,7 +17,7 @@ proc op_add_ptr_a[\<phi>overload +]:
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY)\<close>
 certified proof -
   have t1: \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0)\<close>
-    by (metis \<a>\<r>\<r>\<a>\<y>_0_eq_any the_\<phi>lemmata(2) the_\<phi>lemmata(3) valid_array_pointer_not_poison)
+    using the_\<phi>(7) the_\<phi>(8) the_\<phi>lemmata(3) by fastforce
   show ?thesis
     by (clarsimp simp: memaddr_to_raw_array_GEP[OF t1] useful distrib_right,
                  simp add: add.commute,
