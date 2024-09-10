@@ -36,6 +36,7 @@ section \<open>\<phi>-Types\<close>
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Symbol = \<s>\<y>\<m>\<b>\<o>\<l>\<close>
        and \<open>Semantic_Zero_Val \<s>\<y>\<m>\<b>\<o>\<l> Symbol SYMBOL(zero)\<close>
        and Inhabited
+       and Equiv_Class
 
 
 lemma [\<phi>reason 1000]:

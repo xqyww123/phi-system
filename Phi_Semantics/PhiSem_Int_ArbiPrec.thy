@@ -55,6 +55,8 @@ subsection \<open>Integer in the normal sense\<close>
        and Semantic_Zero_Val
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<int> = \<a>\<i>\<n>\<t>\<close>
        and Functionality
+       and Equiv_Class
+
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
@@ -85,6 +87,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Inhabited
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<nat> = \<a>\<i>\<n>\<t>\<close>
        and Functionality
+       and Equiv_Class
 
 
 declare [[

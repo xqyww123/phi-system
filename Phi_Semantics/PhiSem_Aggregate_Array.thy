@@ -13,7 +13,9 @@ debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<
   and   semty_array_eq_poison[simp]: \<open>\<a>\<r>\<r>\<a>\<y>[N] T = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> (T = \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0)\<close>
   and   WT_arr[simp]:   \<open>Well_Type (\<a>\<r>\<r>\<a>\<y>[n] t) = { sem_mk_array vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
   and   semty_arr_uniq: \<open>sem_mk_array vs \<in> Well_Type TY \<Longrightarrow> \<exists>T. TY = mk_array_T (length vs) T\<close>
-  and   zero_arr[simp]: \<open>\<a>\<r>\<r>\<a>\<y>[N] T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> Zero (\<a>\<r>\<r>\<a>\<y>[N] T)  = map_option (\<lambda>z. sem_mk_array (replicate N z)) (Zero T)\<close>
+  and   zero_arr[simp]: \<open>\<a>\<r>\<r>\<a>\<y>[N] T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow>
+            Zero (\<a>\<r>\<r>\<a>\<y>[N] T) = (if N = 0 then Some (sem_mk_array [])
+                                         else map_option (\<lambda>z. sem_mk_array (replicate N z)) (Zero T))\<close>
   and   idx_step_type_arr [eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_type (AgIdx_N i) (\<a>\<r>\<r>\<a>\<y>[N] T) = T\<close>
   and   valid_idx_step_arr[eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> valid_idx_step (\<a>\<r>\<r>\<a>\<y>[N] T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
   and   idx_step_value_arr[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (sem_mk_array vs) = vs!i\<close>
@@ -197,18 +199,11 @@ lemma [\<phi>reason %aggregate_access]:
   by (clarsimp simp add: idx_step_mod_value_arr list_all2_conv_all_nth nth_list_update)
 
 
-
-
-
-term list_all2
-
-lemma
+lemma [\<phi>reason add]:
   \<open> Equiv_Class T r
 \<Longrightarrow> Equiv_Class (Array N T) (list_all2 r) \<close>
   unfolding Equiv_Class_alt_def
   by (auto, metis list_all2_conv_all_nth)
-
-
 
 
 

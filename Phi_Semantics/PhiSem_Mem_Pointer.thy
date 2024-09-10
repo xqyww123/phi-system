@@ -580,6 +580,9 @@ subsection \<open>Physical Pointer\<close>
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> RawPointer = \<p>\<t>\<r>\<close>
        and \<open>Semantic_Zero_Val \<p>\<t>\<r> RawPointer 0\<close>
+       and Equiv_Class
+
+
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
   "\<phi>Equal RawPointer (\<lambda>x y. x = 0 \<or> y = 0 \<or> addr.blk x = addr.blk y) (=)"
@@ -601,7 +604,10 @@ declare [[\<phi>trace_reasoning = 1]]
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Ptr = \<p>\<t>\<r>\<close>
        and \<open>Semantic_Zero_Val \<p>\<t>\<r> Ptr 0\<close>
-
+       and \<open>Equiv_Class Ptr (\<lambda>x y.
+            (x = 0 \<or> y = 0 \<or>
+                 address_type x = address_type y \<and>
+               \<not> phantom_mem_semantic_type (address_type x)) \<longrightarrow> x = y)\<close>
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
     "\<phi>Equal Ptr (\<lambda>x y. x = 0 \<or> y = 0 \<or>
@@ -650,6 +656,10 @@ subsection \<open>Typed Pointer\<close>
        and Functionality
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> (TypedPtr TY) = \<p>\<t>\<r>\<close>
        and \<open>Semantic_Zero_Val \<p>\<t>\<r> (TypedPtr TY) 0\<close>
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> phantom_mem_semantic_type TY
+         \<Longrightarrow> Equiv_Class (TypedPtr TY) (=)\<close>
+
+
 
 notation TypedPtr ("Ptr[_]" [10] 1000)
 

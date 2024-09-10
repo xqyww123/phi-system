@@ -202,7 +202,7 @@ val deriving_framework :
     conversion on them.
 *)
 
-val default_ind_inst : (term list (*fixed bounded params*) -> term option list) -> ind_inst
+val default_ind_inst : (term list (*fixed bound params*) -> term option list) -> ind_inst
 
 val default_ind_conv : (Proof.context -> Phi_Type.phi_type -> conv) (*converting induction hypotheses*) *
                        (Proof.context -> Phi_Type.phi_type -> conv) (*converting subgoals of the induction*)

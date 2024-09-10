@@ -6350,17 +6350,19 @@ subsection \<open>Equivalent Class\<close>
 context begin
 
 private lemma \<phi>TA_EC_rule:
-  \<open> (Ant @tag \<phi>TA_ANT \<Longrightarrow> Equiv_Class T r)
+  \<open> (Ant \<Longrightarrow> Equiv_Class (\<lambda>x. x \<Ztypecolon> OPEN undefined T) r @tag \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT
-\<Longrightarrow> Equiv_Class T r \<close> .
+\<Longrightarrow> Equiv_Class T r \<close>
+  unfolding Action_Tag_def OPEN_def \<phi>Type_def .
 
 ML_file \<open>library/phi_type_algebra/equiv_class.ML\<close>
 
 end
 
-
+\<phi>property_deriver Equiv_Class 100 for (\<open>Equiv_Class _ _\<close>)
+    = \<open> Phi_Type_Derivers.equiv_class \<close> 
 
 
 subsection \<open>Transformation Functor\<close>

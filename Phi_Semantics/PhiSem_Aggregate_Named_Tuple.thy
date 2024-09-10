@@ -518,7 +518,7 @@ lemma V_named_tup_sep_disj_R':
 
 
 
-lemma
+lemma [\<phi>reason add]:
   \<open> Is_Named_Tuple Ts fields
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
 \<Longrightarrow> Equiv_Class T r\<^sub>1
@@ -529,7 +529,7 @@ lemma
   apply (metis fmdom'_alt_def fmupd_lookup fmupd_times_right option.sel)
   by (metis fmap_times_fempty(2) fmdom'_alt_def fmdrop_fmupd_same fmdrop_idle fmupd_times_right)
 
-lemma
+lemma [\<phi>reason add]:
   \<open> Equiv_Class T r
 \<Longrightarrow> Equiv_Class \<lbrace> SYMBOL_VAR(s): T \<rbrace> r \<close>
   unfolding Equiv_Class_alt_def

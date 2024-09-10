@@ -3965,12 +3965,19 @@ definition \<open>Injective_on T D \<longleftrightarrow> Equiv_Class T (\<lambda
 \<phi>reasoner_group Equiv_Class_all = (100, [10,3000]) \<open>\<close>
   and Equiv_Class = (1000, [1000,1030]) in Equiv_Class_all \<open>\<close>
   and Equiv_Class_default = (25, [10,50]) in Equiv_Class_all and < Equiv_Class \<open>\<close>
+  and Equiv_Class_derived = (75, [70, 80]) in Equiv_Class_all and < Equiv_Class and > Equiv_Class_default \<open>\<close>
 
 declare [[
   \<phi>reason_default_pattern \<open>Equiv_Class ?T ?var\<close> \<Rightarrow> \<open>Equiv_Class ?T _\<close> (100)
                       and \<open>Equiv_Class ?T _\<close> \<Rightarrow> \<open>Equiv_Class ?T ?var\<close> (80),
   \<phi>default_reasoner_group \<open>Equiv_Class _ _\<close> : %Equiv_Class (100)
 ]]
+
+lemma [\<phi>reason %Equiv_Class]:
+  \<open> Equiv_Class T (\<lambda>x y. x \<in> D \<and> y \<in> D \<longrightarrow> x = y)
+\<Longrightarrow> Injective_on T D \<close>
+  unfolding Injective_on_def
+  by simp
 
 lemma [\<phi>reason add]:
   \<open> Equiv_Class (\<lambda>x. A (fst x) (snd x)) (\<lambda>(x\<^sub>1,_) (x\<^sub>2,_). r x\<^sub>1 x\<^sub>2)
