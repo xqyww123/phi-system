@@ -14,7 +14,6 @@ debt_axiomatization
   and idx_step_offset_arr:  \<open>ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_offset (\<a>\<r>\<r>\<a>\<y>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
   and idx_step_offset_arr':  \<open>idx_step_offset (\<a>\<r>\<r>\<a>\<y>[0] ty) (AgIdx_N j) = 0\<close>
   and MemObj_Size_arr: \<open>\<a>\<r>\<r>\<a>\<y>[N] ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> MemObj_Size (\<a>\<r>\<r>\<a>\<y>[N] ty) = N * MemObj_Size ty\<close>
-
   and array_TY_neq_void: \<open>\<v>\<o>\<i>\<d> \<noteq> \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
 
 
@@ -158,18 +157,6 @@ subsection \<open>Slice Pointer\<close>
       has GEP and shift arithmetic.
       only points to elements in an array.\<close>
 
-(*
-definition \<open>valid_memaddr_range TY addr N \<longleftrightarrow>
-    valid_memaddr addr \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
-
-lemma valid_memaddr_range_sub:
-  \<open> base \<le> base' \<and> base'+len' \<le> base+len
-\<Longrightarrow> valid_memaddr_range TY addr base  len
-\<Longrightarrow> valid_memaddr_range TY addr base' len'\<close>
-  unfolding valid_memaddr_range_def
-  by (clarsimp, smt (verit, ccfv_threshold) add.assoc add_lessD1 le_eq_less_or_eq le_iff_add nat_add_left_cancel_less)
-*)
-
 \<phi>type_def SlicePtr :: \<open>address \<Rightarrow> nat \<Rightarrow> TY \<Rightarrow> (VAL, nat) \<phi>\<close>
   where \<open>i \<Ztypecolon> SlicePtr addr N TY \<equiv> memaddr_to_raw (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) \<Ztypecolon> RawPointer
                 \<s>\<u>\<b>\<j> i \<le> N \<and> valid_memaddr addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<a>\<r>\<r>\<a>\<y>[N] TY\<close>
@@ -232,8 +219,6 @@ section \<open>Array in Memory\<close>
 
 subsection \<open>Syntax\<close>
 
-term \<open>\<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[n] T\<close>
-
 setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 110 (
     fn ((ctxt,i), f, Const(\<^const_syntax>\<open>Array\<close>, _) $ n $ T) =>
@@ -244,7 +229,6 @@ setup \<open>Context.theory_map (
      | X => NONE)
 )\<close>
 
-term \<open>\<m>\<e>\<m>[addr] \<bbbA>\<r>\<r>\<a>\<y>[n] (T::(VAL,'x) \<phi>)\<close>
 
 subsection \<open>Reasoning\<close>
 

@@ -47,44 +47,35 @@ lemma \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>_red[simp]:
 
 section \<open>\<phi>Type\<close>
 
-term fset
-term \<open> k' \<Turnstile> (k \<Ztypecolon> K) \<longrightarrow> P \<close>
-term rel_option
-term Map.empty
 
-term rel_fun
-thm rel_funE
-
-\<phi>type_def MapVal :: "(VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<rightharpoonup> 'v) \<phi>"
-  where \<open>f \<Ztypecolon> MapVal K V \<equiv> \<m>\<a>\<p>_rep f' \<Ztypecolon> Itself
-        \<s>\<u>\<b>\<j> f'. (\<forall>k. rel_option (\<lambda>v' v. v' \<Turnstile> (v \<Ztypecolon> V)) (fmlookup f' (concretize K k)) (f k)) \<close>
-  deriving Basic
-       and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
+\<phi>type_def MapVal :: "'k set \<Rightarrow> (VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<Rightarrow> 'v) \<phi>"
+  where \<open>f \<Ztypecolon> MapVal D K V \<equiv> \<m>\<a>\<p>_rep f' \<Ztypecolon> Itself
+        \<s>\<u>\<b>\<j> f'. fmdom' f' = concretize K ` D \<and>
+                (\<forall>k\<in>D. the (fmlookup f' (concretize K k)) \<Turnstile> (f k \<Ztypecolon> V)) \<close>
+  deriving \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
             Abstract_Domain  V P\<^sub>V \<Longrightarrow>
-            Abstract_Domain (MapVal K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> pred_option P\<^sub>V (f k)) \<close>
-     (*and \<open>Abstract_Domain K P\<^sub>K \<Longrightarrow>
-      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
-      Abstract_Domain\<^sub>L (MapVal K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> pred_option P\<^sub>V (f k)) \<close>*)
-       and \<open>Object_Equiv V eq\<^sub>V \<Longrightarrow>
-            Object_Equiv (MapVal K V) (rel_map eq\<^sub>V) \<close>
-     notes rel_fun_def[simp]
+            Abstract_Domain (MapVal D K V) (\<lambda>f. \<forall>k\<in>D. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<close>
+       and \<open>Object_Equiv V eq \<Longrightarrow>
+            Object_Equiv (MapVal D K V) (rel_fun (\<lambda>x y. x = y \<and> x \<in> D \<and> y \<in> D) eq) \<close>
+
 
 
 lemma Transformation_Functor [\<phi>reason add]:
-      \<open> Transformation_Functor (MapVal K) (MapVal K) V V' ran (\<lambda>_. UNIV) rel_map\<close>
+      \<open> Transformation_Functor (MapVal D K) (MapVal D K) V V' (\<lambda>f. f ` D) (\<lambda>_. UNIV)
+                               (rel_fun (\<lambda>x y. x = y \<and> x \<in> D \<and> y \<in> D)) \<close>
   unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
             Abstract_Domain\<^sub>L_def \<r>ESC_def rel_fun_def
   apply (clarsimp simp: Satisfiable_def)
  subgoal premises prems for f g v proof -
   
-    obtain h where t1: \<open>a\<in>ran f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v)\<close> for a v
+    obtain h where t1: \<open>a\<in>D \<Longrightarrow> v \<Turnstile> (f a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g (f a) (h a v)\<close> for a v
       using prems(1) by metis
-    thm prems
     show ?thesis
-      by (rule exI[where x=\<open>\<lambda>k. if k \<in> dom f then Some (h (the (f k)) (the (fmlookup v (concretize K k)))) else None\<close>], auto,
-          metis is_none_simps(2) option.sel prems(2) ranI rel_option_unfold t1,
-          metis option.exhaust_sel option.rel_distinct(2) prems(2),
-          metis option.distinct(1) option.rel_sel option.sel prems(2) ranI t1)
+      
+      apply (rule exI[where x=\<open>\<lambda>k. h k (the (fmlookup v (concretize K k)))\<close>], auto)
+      using prems(3) t1 apply blast
+      by (simp add: prems(3) t1)
+
   qed .
 
 

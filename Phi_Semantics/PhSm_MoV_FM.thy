@@ -1,11 +1,8 @@
 theory PhSm_MoV_FM
-  imports PhSem_MoV PhSm_V_FMap
+  imports PhiSem_Mem_C PhSm_V_FMap
 begin
 
 section \<open>Semantics\<close>
-
-term AgIdx_N
-term fmlookup
 
 debt_axiomatization
       Map_of_Val_fm: \<open>Map_of_Val (\<m>\<a>\<p>_rep vs) =
@@ -23,19 +20,122 @@ debt_axiomatization
        and Transformation_Functor
        and Functional_Transformation_Functor
 
-abbreviation BC_Map :: \<open>(mem_fic,'x) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close>
 
-term 1
-term fmadd
-term fun_upd
-(*
-\<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<rightharpoonup> 'y) \<phi>\<close>
-  where \<open>f \<Ztypecolon> \<phi>MapTree D K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g.
-                dom f \<subseteq> D \<and>
-                (\<forall>k. k \<in> dom f \<longrightarrow> pull_map [concretize K k] g \<Turnstile> (the (f k) \<Ztypecolon> V)) \<close>
-*)
+abbreviation BC_Map :: \<open>(VAL,'a) \<phi> \<Rightarrow> 'a set \<Rightarrow> (aggregate_path \<Rightarrow> 'c, 'b) \<phi> \<Rightarrow> (aggregate_path \<Rightarrow> 'c::one, 'a \<Rightarrow> 'b) \<phi> \<close>
+                       ("_ \<equiv>[_]\<Rrightarrow> _" [76,20,75] 75)
+  where \<open>BC_Map K D V \<equiv> \<phi>MapTree D (ValIdx K) V\<close>
+
+term \<open> (f \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> MapVal D K V) \<close>
+term \<open> (f \<Ztypecolon> K \<equiv>[D]\<Rrightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V) \<close>
 
 
+declare [[ML_debugger]]
+
+setup \<open>Context.theory_map ( Phi_Mem_Printer.add 110 (
+    fn (ctxt, f, Const(\<^const_syntax>\<open>Phi_Types.\<phi>MapTree\<close>, _)
+          $ D
+          $ (Const(\<^const_syntax>\<open>ValIdx\<close>, _) $ K)
+          $ V) =>
+        SOME (Const(\<^const_syntax>\<open>MapVal\<close>, dummyT) $ D $ K $ f ctxt V)
+     | _ => NONE
+  )
+)\<close>
+
+setup \<open>Context.theory_map ( Phi_Mem_Parser.add 110 (
+    fn (ctxt, f, Const(\<^const_syntax>\<open>MapVal\<close>, _) $ D $ K $ V) =>
+        SOME (Const(\<^const_syntax>\<open>\<phi>MapTree\<close>, dummyT)
+                $ D $ (Const(\<^const_syntax>\<open>ValIdx\<close>, dummyT) $ K) $ f (@{print} ctxt) V)
+     | X => (@{print} X; NONE)
+  )
+)\<close>
+
+term \<open>\<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> MapVal D K V)\<close>
+term \<open>\<m>\<e>\<m>[addr] (\<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V))\<close>
+
+term \<open>\<m>\<e>\<m>[addr] MapVal D K V\<close>
+ML \<open>@{term \<open>\<m>\<e>\<m>[addr] MapVal D K V\<close>}\<close>
+
+
+
+
+lemma pull_map_map_option:
+  \<open>pull_map idx (map_option g \<circ> f) = (map_option g \<circ> pull_map idx f)\<close>
+  unfolding fun_eq_iff
+  by (simp add: pull_map_def)
+
+lemma map_option_o_eq_inj:
+  \<open> inj f
+\<Longrightarrow> map_option f o g = map_option f o g' \<longleftrightarrow> g = g'\<close>
+  by (meson fun.inj_map injD option.inj_map)
+  
+lemma pull_map__Map_of_Val_\<m>\<a>\<p>__in_dom:
+  \<open> k \<in> fmdom' f
+\<Longrightarrow> pull_map [AgIdx_V k] (Map_of_Val (\<m>\<a>\<p>_rep f)) = Map_of_Val (the (fmlookup f k))\<close>
+  unfolding Map_of_Val_fm fun_eq_iff pull_map_def
+  by (auto, meson fmdom'_notI option.case_eq_if)
+
+
+lemma Map_of_Val_\<m>\<a>\<p>_Nil:
+  \<open> Map_of_Val (\<m>\<a>\<p>_rep xa) [] = 1 \<close>
+  unfolding Map_of_Val_fm fun_eq_iff
+  by auto
+
+lemma to_share_inj [simp]:
+  \<open>to_share x = to_share y \<longleftrightarrow> x = y\<close>
+  by (metis strip_share_Share)
+
+lemma map_option_inj:
+  \<open> inj f
+\<Longrightarrow> map_option f x = map_option f y \<longleftrightarrow> x = y \<close>
+  by (meson injD option.inj_map)
+
+lemma mem_coerce_MapVal:
+  \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Injective_on K D
+\<Longrightarrow> finite D
+\<Longrightarrow> (f \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> MapVal D K V) = (f \<Ztypecolon> K \<equiv>[D]\<Rrightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V) \<close>
+subgoal premises prems proof -
+  have t1: \<open> k \<in> D \<Longrightarrow> concretize (ValIdx K) k = AgIdx_V (concretize K k) \<close> for k
+    by (smt (verit, best) Abstract_Domain\<^sub>L_def Functionality_def ValIdx.Abstract_Domain\<^sub>L ValIdx.expansion \<r>ESC_def concretize_SAT prems)
+  show ?thesis
+  unfolding BI_eq_iff
+  apply (auto simp: pull_map_to_share comp_assoc pull_map_map_option map_option_o_eq_inj
+                    pull_map__Map_of_Val_\<m>\<a>\<p>__in_dom t1 Map_of_Val_\<m>\<a>\<p>_Nil)
+  apply (clarsimp simp add: Map_of_Val_fm split: aggregate_index'.split option.split)
+   apply (metis fmdom'I imageE)
+  subgoal premises prems2 for u proof -
+    obtain v where t2: \<open>k \<in> D \<Longrightarrow> pull_map [AgIdx_V (concretize K k)] u = to_share \<circ> (map_option discrete \<circ> Map_of_Val (v k)) \<and> v k \<Turnstile> (f k \<Ztypecolon> V)\<close> for k
+      using prems2(1) by metis
+    let ?g = \<open>\<lambda>k. if (\<exists>k'\<in>D. k = concretize K k') then Some (v (inv_into D (concretize K) k)) else None\<close>
+
+    have t3: \<open>{a. \<exists>k'\<in>D. a = concretize K k'} \<subseteq> concretize K ` D\<close>
+      unfolding set_eq_iff
+      by (auto simp: image_iff Bex_def)
+
+    have t4[simp]: \<open>fmlookup (Abs_fmap ?g) = ?g\<close>
+      by (rule fmap.Abs_fmap_inverse, auto simp: dom_def prems(4))
+
+    have t5: \<open>k \<in> D \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
+      by (simp add: concretize_inj prems(1) prems(3))
+
+    show ?thesis
+      apply (rule exI[where x=\<open>\<m>\<a>\<p>_rep (Abs_fmap ?g)\<close>])
+      apply (auto simp: fun_eq_iff Map_of_Val_fm split: list.split aggregate_index'.split)
+      apply (simp add: prems2(2))
+      using prems2(3) apply blast
+      using prems2(3) apply blast
+      subgoal premises prem3 for x22 k'
+        by (insert t2[OF prem3], auto simp: pull_map_def fun_eq_iff map_option_inj t5 prem3)
+      apply (simp add: prems2(3))
+      apply (metis (no_types, lifting) fmdom'_notI image_iff t4)
+      apply (metis (no_types, lifting) domIff fmdom'.rep_eq option.distinct(1) t4)
+      by (metis t2 t5)
+  qed .
+qed .
+
+
+subsection \<open>ToA Mapper\<close>
 
 
 
@@ -48,9 +148,6 @@ term fun_upd
 
 
 
-
-lemma
-  \<open>  \<close>
 
 
 

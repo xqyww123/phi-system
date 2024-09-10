@@ -27,7 +27,7 @@ certified proof -
 
 proc (nodef) op_add_ptr_aN[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  premises \<open>i + j \<le> len\<close>
+  premises \<open>i + j \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>i + j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<close>
 \<medium_left_bracket>
   $i + $j

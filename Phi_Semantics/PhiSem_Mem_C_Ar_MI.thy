@@ -6,7 +6,7 @@ section \<open>Pointer Arithmetic\<close>
 
 proc op_add_ptr[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close>
-  premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len\<close>
+  premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>nat (int i + j) \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<close>
 \<medium_left_bracket>
   $i semantic_local_value \<p>\<t>\<r>
@@ -32,7 +32,7 @@ proc op_add_ptr[\<phi>overload +]:
 
 proc op_add_ptr_unsigned[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close>
-  premises \<open>i + j \<le> len\<close>
+  premises \<open>i + j \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   output \<open>i + j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY\<close>
 \<medium_left_bracket>
   $i semantic_local_value \<p>\<t>\<r>
