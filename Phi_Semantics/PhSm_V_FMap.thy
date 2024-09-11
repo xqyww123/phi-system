@@ -1,7 +1,7 @@
 chapter \<open>Value model of Finite Map\<close>
 
 theory PhSm_V_FMap
-  imports PhiSem_Aggregate_Base
+  imports PhSm_Ag_Base
   abbrevs "<map>" = "\<m>\<a>\<p>"
 begin
 

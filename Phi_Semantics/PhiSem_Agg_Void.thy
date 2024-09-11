@@ -1,5 +1,5 @@
 theory PhiSem_Agg_Void
-  imports PhiSem_Aggregate_Base PhiSem_Void
+  imports PhSm_Ag_Base PhiSem_Void
 begin
 
 debt_axiomatization

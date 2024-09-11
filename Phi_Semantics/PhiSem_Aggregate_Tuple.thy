@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate_Tuple
-  imports PhiSem_Aggregate_Base
+  imports PhSm_Ag_Base
   abbrevs "<tup>" = "\<t>\<u>\<p>"
 begin
 

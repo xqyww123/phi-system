@@ -1,4 +1,4 @@
-theory PhiSem_Aggregate_Base
+theory PhSm_Ag_Base
   imports PhiSem_Common_Int PhiSem_Symbol
   keywords "\<lbrace>" "\<rbrace>" "\<tribullet>" :: quasi_command
   abbrevs "|>"  = "\<tribullet>"

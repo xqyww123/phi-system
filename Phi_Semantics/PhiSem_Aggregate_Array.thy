@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate_Array
-  imports PhiSem_Aggregate_Base
+  imports PhSm_Ag_Base
   abbrevs "<Array>" = "\<bbbA>\<r>\<r>\<a>\<y>"
       and "<array>" = "\<a>\<r>\<r>\<a>\<y>"
 begin

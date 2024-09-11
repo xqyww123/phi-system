@@ -5,7 +5,7 @@ If the formalization is untyped, variables in the formalization can be assigned 
 You can set the flag \<phi>variable_is_typed to indicate whether the formalization of variables is typed.\<close>
 
 theory PhiSem_Variable
-  imports Phi_System.Resource_Template PhiSem_Aggregate_Base
+  imports Phi_System.Resource_Template PhSm_Ag_Base
   abbrevs "<var>" = "\<v>\<a>\<r>"
       and "<uninited>" = "\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d>"
       and "<may>" = "\<m>\<a>\<y>"

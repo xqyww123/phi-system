@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate_Named_Tuple
-  imports PhiSem_Aggregate_Base
+  imports PhSm_Ag_Base
   abbrevs "<struct>" = "\<s>\<t>\<r>\<u>\<c>\<t>"
 begin
 
