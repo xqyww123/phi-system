@@ -58,6 +58,11 @@ section \<open>\<phi>Type\<close>
        and \<open>Object_Equiv V eq \<Longrightarrow>
             Object_Equiv (MapVal D K V) (rel_fun (\<lambda>x y. x = y \<and> x \<in> D \<and> y \<in> D) eq) \<close>
 
+consts MapVal_synt :: "(VAL, 'k) \<phi> \<Rightarrow> 'k set \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<Rightarrow> 'v) \<phi>"
+                      ("_ \<equiv>[_]\<Rrightarrow> _" [76,20,75] 75)
+
+translations "K \<equiv>[D]\<Rrightarrow> V" == "CONST MapVal D K V"
+
 
 
 lemma Transformation_Functor [\<phi>reason add]:
@@ -78,31 +83,19 @@ lemma Transformation_Functor [\<phi>reason add]:
 
   qed .
 
+lemma Functional_Transformation_Functor [\<phi>reason add]:
+  \<open> Abstract_Domain\<^sub>L K' (\<lambda>k. k \<in> D')
+\<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
+\<Longrightarrow> Fun_CV_TrFunctor (MapVal D) (MapVal D') K V K' V' (\<lambda>_. D) (\<lambda>f. f ` D)
+                     (\<lambda>f _.  bij_betw f D' D)
+                     (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>f\<^sub>1 f\<^sub>2 _ _ g. f\<^sub>2 o g o f\<^sub>1 )\<close>
+  unfolding Fun_CV_TrFunctor_def Transformation_def
+  apply (auto simp: Ball_def)
+  apply (smt (verit, best) Abstract_Domain\<^sub>L_def Functionality_def \<r>ESC_def bij_betw_imp_surj_on concretize_SAT image_iff typing_inhabited)
+  apply (smt (verit, best) Abstract_Domain\<^sub>L_def Functionality_def \<r>ESC_def bij_betw_imp_surj_on concretize_SAT image_eqI typing_inhabited)
+  by (smt (verit, del_insts) Abstract_Domain\<^sub>L_def Functionality_def \<r>ESC_def bij_betw_apply concretize_SAT image_eqI typing_inhabited)
 
 
-
-
-(*
-let_\<phi>type MapVal
-  deriving \<open>Abstract_Domain K P\<^sub>K \<Longrightarrow>
-      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
-      Abstract_Domain\<^sub>L (MapVal K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> pred_option P\<^sub>V (f k)) \<close>
-*)
-
-term \<open>Object_Equiv K eq\<^sub>K \<Longrightarrow>
-            Object_Equiv V eq\<^sub>V \<Longrightarrow>
-            Object_Equiv (MapVal K V) (rel_fun eq\<^sub>K (rel_option eq\<^sub>V)) \<close>
-
-term \<open> Functionality K P\<^sub>K
-    \<Longrightarrow> Functionality V P\<^sub>V
-    \<Longrightarrow> Functionality (MapVal K V) P\<^sub>K \<close>
-
-term rel_option
-term \<open>(rel_fun (=) (rel_option eq\<^sub>V))\<close>
-
-term \<open>Abstract_Domain K P\<^sub>K \<Longrightarrow>
-      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
-      Abstract_Domain\<^sub>L (MapVal K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> pred_option P\<^sub>V (f k)) \<close>
 
 
 

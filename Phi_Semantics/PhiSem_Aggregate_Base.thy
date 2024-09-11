@@ -51,6 +51,8 @@ text \<open>We first formalize the behavior of indexing one-step inside one leve
     such as the size of the term. It helps induction over the indexing. 
 \<close>
 
+ML_file \<open>library/ag_semantics.ML\<close>
+
 abbreviation \<open>index_value \<equiv> fold idx_step_value\<close> (*TODO: rename \<rightarrow> get_element_of_value*)
 abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>  (* get_element_of_type *)
 abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close> (* modify_value_element *)
@@ -445,6 +447,21 @@ ML_file \<open>syntax/index_param.ML\<close>
       Phi_Sys.set_param term (ctxt, @{thm Index_Param_Tag_Swap} RS sequent))\<close>
 *)
 
+subsection \<open>Size Less or Equal\<close>
+
+definition Size_LEQ :: \<open>TY \<Rightarrow> TY \<Rightarrow> bool\<close> where \<open>Size_LEQ _ _ = True\<close>
+
+\<phi>reasoner_ML Size_LEQ %cutting (\<open>Size_LEQ _ _\<close>) = \<open>
+  fn (_, (ctxt,sequent)) => let
+       val rule = @{lemma \<open>Size_LEQ A B\<close> by (simp add: Size_LEQ_def)}
+       val (bvtys, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Size_LEQ\<close> $ A $ B))
+            = Phi_Help.strip_meta_hhf_bvtys (Phi_Help.leading_antecedent' sequent)
+    in if Ag_Semantics.size bvtys A <= Ag_Semantics.size bvtys B
+       then Seq.single (ctxt, rule RS' (ctxt, sequent))
+       else Seq.empty
+   end\<close>
+
+hide_const (open) Size_LEQ
 
 section \<open>First-level Abstraction of Instructions\<close>
 
