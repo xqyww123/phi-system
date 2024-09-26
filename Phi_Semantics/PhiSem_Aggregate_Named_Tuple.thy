@@ -53,6 +53,20 @@ lemma semty_ntup_uniq'2:
         presburger,
         smt (verit, best) option.sel option_rel_Some2) .
 
+lemma has_Zero_semty_ntup1 [simp]:
+  \<open> s |\<notin>| fmdom vs
+\<Longrightarrow> has_Zero (semty_ntup (fmupd s v vs)) \<longleftrightarrow> has_Zero v \<and> has_Zero (semty_ntup vs) \<close>
+  unfolding has_Zero_def
+  by (auto, smt (verit, best) fmdom_notI fmpredD fmpred_alt_def fmupd_lookup option.exhaust_sel)
+
+lemma has_Zero_semty_ntup0 [simp]:
+  \<open> has_Zero (semty_ntup fmempty) \<close>
+  unfolding has_Zero_def
+  by auto
+
+
+
+
 subsubsection \<open>Syntax\<close>
 
 abbreviation "semty_ntup_empty" ("\<s>\<t>\<r>\<u>\<c>\<t> {}")

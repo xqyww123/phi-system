@@ -2009,10 +2009,11 @@ lemma Transformation_Functor [\<phi>reason add]:
 lemma Functional_Transformation_Functor [\<phi>reason add]:
   \<open> Abstract_Domain\<^sub>L K' (\<lambda>k. k \<in> D')
 \<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite D'
 \<Longrightarrow> Fun_CV_TrFunctor (\<phi>MapTree D) (\<phi>MapTree D') K V K' V' (\<lambda>_. D) (\<lambda>f. f ` D)
                      (\<lambda>f _.  bij_betw f D' D)
                      (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>f\<^sub>1 f\<^sub>2 _ _ g. f\<^sub>2 o g o f\<^sub>1 )\<close>
-  unfolding Fun_CV_TrFunctor_def Transformation_def
+  unfolding Fun_CV_TrFunctor_def Transformation_def Premise_def
   apply (auto simp: Ball_def)
   apply (smt (verit, del_insts) Abstract_Domain\<^sub>L_def Extact_sufficient_conditions_Iden Functionality_sub Transformation_def bij_betw_def concretize_eq domIff image_eqI option.exhaust_sel option.map_sel ranI)
   by (smt (verit, del_insts) Abstract_Domain\<^sub>L_def Functionality_def Satisfiable_def \<r>ESC_def bij_betw_iff_bijections concretize_SAT)
@@ -2067,9 +2068,9 @@ lemma Separation_Homo\<^sub>E [\<phi>reason add]:
       apply (metis comp_apply domIff option.map_sel snd_conv t1 t2 unzip_option_simps(1))
       apply (subst fuck; auto)[1]
       apply (metis comp_apply domIff option.map_sel option.simps(8) t1 t2 zip_option_prj(1))
-        apply (simp add: prems(4))
-        using prems(5) apply blast
-        using sep_disj_fun_def t2 by force
+      apply (simp add: prems(4))
+      using prems(5) apply blast
+      using sep_disj_fun_def t2 by force
 qed .
 
 
@@ -2106,10 +2107,10 @@ lemma Module_Distr_Homo\<^sub>S [\<phi>reason add]:
       apply (simp add: prems(7))
       using prems(7) apply auto[1]
       apply (simp add: prems(7))
-      apply (metis (full_types) Un_iff in_mono list.collapse plus_set_def prems(4) prems(5) prems(7) prems(8) t1)
-      using prems(6) apply blast
+      apply (metis list.collapse plus_set_in_iff prems(4) prems(7) prems(8) subsetD t1 t2)
+      using prems(6) apply force
       apply (metis in_mono plus_set_in_iff prems(4) prems(8) t1)
-      using prems(6) apply blast
+      using prems(6) apply presburger
       apply (metis Int_iff empty_iff plus_set_in_iff prems(3) prems(8) t2)
       using prems(3) sep_disj_fun_def by fastforce
   qed .

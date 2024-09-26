@@ -1639,6 +1639,12 @@ lemma homo_share_map_option[simp]:
   unfolding homo_share_def
   by (clarsimp simp add: split_option_all share_option_def)
 
+lemma homo_mult_map_option:
+  \<open> homo_mult f
+\<Longrightarrow> homo_mult (map_option f) \<close>
+  unfolding homo_mult_def
+  by (clarify; case_tac x; case_tac y; auto)
+
 subsection \<open>Product\<close>
 
 subsubsection \<open>Auxiliary\<close>
@@ -3291,6 +3297,7 @@ lemma cancl_sep_orthogonal_monoid__map_option_discrete:
       (case_tac a; case_tac b; simp),
       (case_tac b; case_tac a; case_tac c; auto simp add: inj_on_def; force),
       simp)
+
 
 subsection \<open>Agreement\<close>
 

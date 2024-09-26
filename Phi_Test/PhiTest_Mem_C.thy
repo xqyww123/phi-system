@@ -42,7 +42,7 @@ proc test_ptr3:
 
 
 
-declare [[\<phi>reasoning_step_limit = 160]]
+declare [[\<phi>reasoning_step_limit = 170]]
 
 
 proc test_mem3:
@@ -61,6 +61,7 @@ proc test_mem4:
   addr.d.e
 \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 2]]
 
 proc test_mem4a:
   input \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<close>

@@ -53,6 +53,11 @@ lemma [\<phi>reason add]:
 \<Longrightarrow> Is_Type_Literal (\<a>\<r>\<r>\<a>\<y>[N] T) \<close>
   unfolding Is_Type_Literal_def ..
 
+lemma has_Zero_array[simp]:
+  \<open> has_Zero (\<a>\<r>\<r>\<a>\<y>[N] T) \<longleftrightarrow> N = 0 \<or> has_Zero T \<close>
+  unfolding has_Zero_def
+  by (cases \<open>\<a>\<r>\<r>\<a>\<y>[N] T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; clarsimp)
+
 
 
 section \<open>\<phi>Type\<close>

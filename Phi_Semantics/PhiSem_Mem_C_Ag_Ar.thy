@@ -201,7 +201,13 @@ lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<
   \<medium_left_bracket>
     to RawPointer
     note idx_step_type_arr[simp] ;;
-    \<open>i \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY')\<close> certified by auto_sledgehammer
+    \<open>i \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY')\<close> certified
+        using \<phi> apply auto
+          apply (metis addr_gep_not_eq_zero address_type_def array_TY_neq_void block.layout(1) fold_simps(1) memaddr_blk_zero valid_memaddr_0 valid_memaddr_def)
+          apply (metis addr_gep_not_eq_zero valid_memaddr_0)
+        apply (simp add: valid_memaddr_def address_type_def valid_idx_step_arr)
+          using valid_idx_step_arr apply force
+          by (simp add: valid_memaddr_def)
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[_] _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
@@ -223,7 +229,7 @@ setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 110 (
     fn ((ctxt,i), f, Const(\<^const_syntax>\<open>Array\<close>, _) $ n $ T) =>
         SOME (Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, dummyT)
-                $ \<^Const>\<open>AgIdx_N \<^Type>\<open>VAL\<close>\<close>
+                $ \<^Const>\<open>AgIdx_N \<^Type>\<open>sVAL\<close>\<close>
                 $ (\<^Const>\<open>Len_Intvl \<^Type>\<open>nat\<close>\<close> $ HOLogic.zero $ n)
                 $ f (ctxt,0) T)
      | X => NONE)

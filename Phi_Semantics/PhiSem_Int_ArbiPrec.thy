@@ -42,6 +42,11 @@ lemma [\<phi>reason add]:
   \<open>Is_Type_Literal \<a>\<i>\<n>\<t>\<close>
   unfolding Is_Type_Literal_def ..
 
+lemma has_Zero_\<a>\<i>\<n>\<t>[simp]:
+  \<open> has_Zero \<a>\<i>\<n>\<t> \<close>
+  unfolding has_Zero_def
+  by simp
+
 
 
 section \<open>\<phi>-Types\<close>

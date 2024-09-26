@@ -4,11 +4,24 @@ begin
 
 section \<open>Path of Elements in an Aggregate Structure\<close>
 
+unspecified_type sVAL \<comment> \<open>small Value\<close>
+
+debt_axiomatization sVAL_emb :: \<open>sVAL \<Rightarrow> VAL\<close>  \<comment> \<open>embedding small value\<close>
+                and is_sTY   :: \<open>TY \<Rightarrow> bool\<close>   \<comment> \<open>is small type\<close>
+  where sVAL_emb_inj: \<open>sVAL_emb x = sVAL_emb y \<longleftrightarrow> x = y\<close>
+    and is_sTY: \<open>is_sTY T \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> v \<in> range sVAL_emb\<close>
+    and is_sTY_poison: \<open>is_sTY \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+
+lemma inj_sVAL_emb:
+  \<open>inj sVAL_emb\<close>
+  by (meson injI sVAL_emb_inj)
+
+
 datatype 'val aggregate_index' = AgIdx_N nat | AgIdx_S symbol | AgIdx_V 'val
 
 declare aggregate_index'.simps[\<phi>safe_simp]
 
-type_synonym aggregate_index = \<open>VAL aggregate_index'\<close>
+type_synonym aggregate_index = \<open>sVAL aggregate_index'\<close>
 type_synonym aggregate_path = \<open>aggregate_index list\<close>
 
 nonterminal "\<phi>_ag_idx_"

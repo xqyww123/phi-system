@@ -29,6 +29,23 @@ lemma sem_mk_tup_inj[simp]:
   \<open>sem_mk_tup vs1 = sem_mk_tup vs2 \<longleftrightarrow> vs1 = vs2\<close>
   by (metis sem_dest_mk_tup)
 
+lemma has_Zero_tup0 [simp]:
+  \<open> has_Zero (sem_tup_T []) \<close>
+  unfolding has_Zero_def
+  by auto
+
+lemma has_Zero_tup1 [simp]:
+  \<open> has_Zero (sem_tup_T (T # Ts)) \<longleftrightarrow> has_Zero T \<and> has_Zero (sem_tup_T Ts) \<close>
+  unfolding has_Zero_def
+  by ((cases \<open>sem_tup_T (T # Ts) = \<p>\<o>\<i>\<s>\<o>\<n>\<close> ; auto),
+      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> list.set_intros(1) option.distinct(1) semty_tup_eq_poison,
+      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> list.set_intros(1) option.distinct(1) semty_tup_eq_poison,
+      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> list.set_intros(2) option.discI semty_tup_eq_poison,
+      metis list.set_intros(2) semty_tup_eq_poison,
+      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> option.distinct(1) semty_tup_eq_poison,
+      (insert option.simps(4), fastforce)[1],
+      metis option.case_eq_if option.exhaust option.simps(8))
+
 
 subsubsection \<open>Syntax\<close>
 

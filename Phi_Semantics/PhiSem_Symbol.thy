@@ -26,6 +26,13 @@ lemma [\<phi>reason add]:
   \<open> Is_Type_Literal \<s>\<y>\<m>\<b>\<o>\<l> \<close>
   unfolding Is_Type_Literal_def ..
 
+lemma has_Zero_\<s>\<y>\<m>\<b>\<o>\<l>[simp]:
+  \<open> has_Zero \<s>\<y>\<m>\<b>\<o>\<l> \<close>
+  unfolding has_Zero_def
+  by simp
+
+
+
 section \<open>\<phi>-Types\<close>
 
 \<phi>type_def Symbol :: "(VAL, symbol) \<phi>"

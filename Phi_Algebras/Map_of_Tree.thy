@@ -4,6 +4,8 @@ begin
 
 section \<open>Map Representation of a Tree\<close>
 
+type_synonym ('k,'v) tree = \<open>'k list \<Rightarrow> 'v\<close>
+
 text \<open>This section presents a representation of tree using the mapping from path to value,
     of type \<^typ>\<open>'key list \<Rightarrow> 'val\<close>.
   It implements the hierarchical algebra and supports for permission algebra.
