@@ -1231,6 +1231,10 @@ lemma [\<phi>reason %\<phi>application+100]:
   unfolding \<phi>Application_def
   subgoal premises p by (rule p(1), rule p(2), rule, rule p(3)[THEN spec]) .
 
+lemma [\<phi>reason %\<phi>application]:
+  \<open> PROP \<phi>Application (Trueprop (X = Y)) S (PROP R)
+\<Longrightarrow> PROP \<phi>Application (X \<equiv> Y) S (PROP R) \<close>
+  unfolding atomize_eq .
 
 
 

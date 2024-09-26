@@ -9,9 +9,6 @@ section \<open>Semantics\<close>
 
 
 
-
-term map_option
-
 debt_axiomatization \<m>\<a>\<p> :: \<open>TY \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<m>\<a>\<p> [_,_]")
                 and \<m>\<a>\<p>_rep  :: \<open>(sVAL \<Rightarrow> VAL) \<Rightarrow> VAL\<close>
   where \<m>\<a>\<p>_rep_inj [simp] : \<open>\<m>\<a>\<p>_rep vsT = \<m>\<a>\<p>_rep vsT' \<longleftrightarrow> vsT = vsT'\<close>
@@ -109,40 +106,37 @@ proof -
         by (metis option.pred_inject(2) zero_well_typ) .
 qed
 
-thm \<m>\<a>\<p>_WT_uniq
-thm prems
- 
-thm prems
+
+lemma MapVal_zero [\<phi>reason add]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> T\<^sub>K = \<t>\<y>\<p>\<e>\<o>\<f> K \<and> T\<^sub>V = \<t>\<y>\<p>\<e>\<o>\<f> V
+\<Longrightarrow> Semantic_Zero_Val T\<^sub>V V z
+\<Longrightarrow> Semantic_Zero_Val (\<m>\<a>\<p> [T\<^sub>K, T\<^sub>V]) (MapVal K V) (\<lambda>_. z) \<close>
+  unfolding Semantic_Zero_Val_def Premise_def
+  by (auto simp: \<m>\<a>\<p>_zero)
 
 
-thm SType_Of_not_poison[where T=K and TY=\<open>\<t>\<y>\<p>\<e>\<o>\<f> K\<close>, simplified]
-    apply (metis \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>
-
-
-term \<open>\<t>\<y>\<p>\<e>\<o>\<f> (MapVal K V) = \<m>\<a>\<p>[\<t>\<y>\<p>\<e>\<o>\<f> K, \<t>\<y>\<p>\<e>\<o>\<f> V]\<close>
-
-(*
-consts MapVal_synt :: "(VAL, 'k) \<phi> \<Rightarrow> 'k set \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<Rightarrow> 'v) \<phi>"
-                      ("_ \<equiv>[_]\<Rrightarrow> _" [76,20,75] 75)
-
-translations "K \<equiv>[D]\<Rrightarrow> V" == "CONST MapVal D K V"
-*)
 
 lemma Transformation_Functor [\<phi>reason add]:
-      \<open> Abstract_Domain\<^sub>L K D
+      \<open> Functionality K (\<lambda>x. True)
+    \<Longrightarrow> Abstract_Domain\<^sub>L K D
     \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<t>\<y>\<p>\<e>\<o>\<f> V = \<t>\<y>\<p>\<e>\<o>\<f> V'
     \<Longrightarrow> Transformation_Functor (MapVal K) (MapVal K) V V' range (\<lambda>_. UNIV)
                                (rel_fun (\<lambda>x y. x = y \<and> D x \<and> D y)) \<close>
-  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
-            Abstract_Domain\<^sub>L_def \<r>ESC_def rel_fun_def Premise_def
+  unfolding Transformation_Functor_def Transformation_def rel_fun_def Premise_def
   apply (clarsimp simp: Satisfiable_def)
- subgoal premises prems for f g v proof -
-  thm prems
+  subgoal premises prems for f g v proof -
+
     obtain h where t1: \<open>v \<Turnstile> (f a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g (f a) (h a v)\<close> for a v
-      using prems(3) by metis
+      using prems(4) by metis
+
+    have t2: \<open>sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<Longrightarrow> concretize K k = sVAL_emb kk\<close> for k kk
+      by (metis Functionality_def Satisfiable_I concretize_SAT prems(1))
+
     show ?thesis
-      by (rule exI[where x=\<open>\<lambda>k. h k (case fmlookup v (concretize K k) of Some v \<Rightarrow> v | None \<Rightarrow> the (Zero (\<t>\<y>\<p>\<e>\<o>\<f> V)))\<close>],
-          auto split: option.split, insert prems(1,2,5) t1; fastforce)
+      by (rule exI[where x=\<open>\<lambda>k. h k (v (inv sVAL_emb (concretize K k)))\<close>],
+          auto simp add: inj_sVAL_emb prems(8) t1 t2,
+          insert prems(2,5,6,8), clarsimp simp: Abstract_Domain\<^sub>L_def \<r>ESC_def,
+          metis concretize_SAT f_inv_into_f is_sTY_typeof t1)
   qed .
 
 (*
