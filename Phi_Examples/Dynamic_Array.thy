@@ -4,6 +4,12 @@ theory Dynamic_Array
           PhiStd.PhiStd_Slice
 begin
 
+\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
+
+declare [[collect_reasoner_statistics DynArr start,
+         \<phi>LPR_collect_statistics derivation start]]
+
+
 \<phi>type_def DynArr :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
                                 data \<Ztypecolon> \<m>\<e>\<m>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] T
@@ -18,8 +24,19 @@ begin
          \<Longrightarrow> Transformation_Functor (DynArr addr TY) (DynArr addr' TY') T U (\<lambda>_. UNIV) (\<lambda>_. UNIV) list_all2\<close>
        and Functional_Transformation_Functor
 
+declare [[collect_reasoner_statistics DynArr stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
+
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>), cap: \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)}\<close>
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
+
 
 
 proc len_dynarr:
@@ -191,6 +208,10 @@ proc fold_map_dynarr:
   zz
 \<medium_right_bracket> .
 
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics = false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 

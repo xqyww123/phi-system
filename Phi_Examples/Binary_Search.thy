@@ -2,6 +2,10 @@ theory Binary_Search
   imports Phi_Semantics.PhiSem_C
 begin
 
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
 
 proc binary_search_array:
   input  \<open>arr \<Ztypecolon> \<m>\<e>\<m>[ptr] \<bbbA>\<r>\<r>\<a>\<y>[cap] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
@@ -54,6 +58,11 @@ proc generalized_binary_search:
     return (u)
   \<medium_right_bracket>
 \<medium_right_bracket>.
+
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 

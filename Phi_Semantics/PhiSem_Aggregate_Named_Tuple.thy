@@ -168,6 +168,11 @@ subsection \<open>Empty Tuple\<close>
 
 subsection \<open>Field\<close>
 
+\<phi>reasoner_group Field = (100,[0,9999]) \<open>storing derived reasoning rules of Field\<close>
+
+declare [[collect_reasoner_statistics Field start,
+          \<phi>LPR_collect_statistics derivation start]]
+
 \<phi>type_def Named_Tuple_Field :: "symbol \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
   where \<open>Named_Tuple_Field s T \<equiv> (\<lambda>v. sem_mk_ntup (fmupd s v fmempty)) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -176,6 +181,13 @@ subsection \<open>Field\<close>
        and \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
        and Separation_Homo
        and Inhabited
+
+declare [[collect_reasoner_statistics Field stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Field})) "derivation"\<close>
+
+
 
 subsubsection \<open>Syntax\<close>
 

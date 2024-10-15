@@ -6,6 +6,7 @@ begin
 
 text \<open>Predefined abstractions of Loop statemetns, counted as a part of loop invariants in our statistics\<close>
  
+declare [[\<phi>LPR_collect_statistics program start]]
 
 proc (nodef) iterate_a:
   requires \<open>\<p>\<a>\<r>\<a>\<m> X\<close>
@@ -110,6 +111,6 @@ proc (nodef) map_2list_loop_a:
 \<medium_right_bracket> certified unfolding list_eq_iff_nth_eq by auto_sledgehammer  .
 
 
-
+declare [[\<phi>LPR_collect_statistics program stop]]
 
 end

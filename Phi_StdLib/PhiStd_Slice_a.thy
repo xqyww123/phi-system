@@ -5,6 +5,8 @@ begin
 
 text \<open>Predefined abstractions of Loop statemetns, counted as a part of loop invariants in our statistics\<close>
 
+declare [[\<phi>LPR_collect_statistics program start]]
+
 proc (nodef) map_slice_a:
   requires body: \<open>\<And>k v. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k < length l
                      \<Longrightarrow> \<p>\<r>\<o>\<c> Body v \<lbrace> k \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>\<heavy_comma> l ! k \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> (i+k)\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma> X
@@ -53,5 +55,6 @@ proc memcpy_a:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+declare [[\<phi>LPR_collect_statistics program stop]]
 
 end

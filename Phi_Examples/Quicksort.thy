@@ -5,6 +5,11 @@ theory Quicksort
           Rational_Arith
 begin
 
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
+
   proc qsort:
     input  \<open>\<v>\<a>\<l> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] \<i>\<n>\<t>\<heavy_comma>
             \<v>\<a>\<l> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
@@ -54,6 +59,11 @@ begin
       return
     \<medium_right_bracket>
   \<medium_right_bracket> .
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = true,
+          \<phi>async_proof = true]]
 
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 

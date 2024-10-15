@@ -44,16 +44,25 @@ hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields
 
 subsubsection \<open>Fiction\<close>
 
+declare [[collect_reasoner_statistics Resource_Space start,
+          \<phi>LPR_collect_statistics derivation start]]
 
 fiction_space \<phi>var =
   Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
             (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option discrete set)\<close>)
   by (standard; simp add: set_eq_iff)
 
+declare [[collect_reasoner_statistics Resource_Space stop,
+          \<phi>LPR_collect_statistics derivation stop]]
 
 section \<open>\<phi>-Types\<close>
 
 subsection \<open>Variable\<close>
+
+\<phi>reasoner_group Var = (100,[0,9999]) \<open>derived reasoning rules of Var\<close>
+
+declare [[collect_reasoner_statistics Var start,
+          \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def Var :: \<open>varname \<Rightarrow> (VAL option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Var vname T \<equiv> (FIC.Var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Discrete T)))\<close>
@@ -61,6 +70,11 @@ subsection \<open>Variable\<close>
        and Functional_Transformation_Functor
        and \<open>Gen_Br_Join (Var v) (Var v) (Var v) P True \<close>
        and \<open>Identifier_of (Var v T) v (Var v T')\<close>
+
+declare [[collect_reasoner_statistics Var stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Var})) "derivation"\<close>
 
 
 abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>

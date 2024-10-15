@@ -29,27 +29,48 @@ section \<open>Basic \<phi>Types for Semantic Models\<close>
 
 subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
+\<phi>reasoner_group Mem_Coercion = (100,[0,9999]) \<open>derived reasoning rules of Mem_Coercion\<close>
+
+declare [[collect_reasoner_statistics Mem_Coercion start,
+          \<phi>LPR_collect_statistics derivation start]]
+
 \<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [81] 80)
   where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option discrete) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
   deriving Basic
        and Functional_Transformation_Functor
        and Commutativity_Deriver
 
-thm Mem_Coercion.ToA_mapper
-
 \<phi>type_def Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,81] 80)
   where \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<equiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<close>
 
+declare [[collect_reasoner_statistics Mem_Coercion stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Mem_Coercion})) "derivation"\<close>
+
+
 
 subsection \<open>Memory Object\<close>
+
+\<phi>reasoner_group MemBlk = (100,[0,9999]) \<open>derived reasoning rules of MemBlk\<close>
+
+declare [[collect_reasoner_statistics MemBlk start,
+          \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def MemBlk :: \<open>memblk \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
   where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
   deriving Sep_Functor_1
 
+declare [[collect_reasoner_statistics MemBlk stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %MemBlk})) "derivation"\<close>
+
+
 \<phi>type_def Mem :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
   where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[memaddr.blk addr] (memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
   deriving Sep_Functor_1
+
 
 declare Mem.intro_reasoning[\<phi>reason default]
         Mem.elim_reasoning [\<phi>reason default]

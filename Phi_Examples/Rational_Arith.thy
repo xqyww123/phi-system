@@ -5,6 +5,11 @@ begin
 
 abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t>{num: \<a>\<i>\<n>\<t>, den: \<a>\<i>\<n>\<t>}\<close>
 
+\<phi>reasoner_group \<phi>Rational = (100,[0,9999]) \<open>derived reasoning rules of Linked_Lst\<close>
+
+declare [[recording_timing_of_semantic_operation = true,
+         \<phi>LPR_collect_statistics derivation start,
+         collect_reasoner_statistics \<phi>Rational start]]
  
   \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
     where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace>
@@ -15,6 +20,16 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
          and \<open>Abstract_Domain \<rat> (\<lambda>_. True)\<close>
          and Semantic_Type
          and Inhabited
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Rational})) "derivation"\<close>
+
+
+declare [[collect_reasoner_statistics \<phi>Rational stop,
+          \<phi>LPR_collect_statistics derivation stop,
+          \<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          \<phi>async_proof = false]]
+
 
 
   proc rat_add:
@@ -103,6 +118,12 @@ proc rat_ge [\<phi>overload >]:
 \<medium_right_bracket> .
 
 
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics = false,
+          \<phi>async_proof,
+          recording_timing_of_semantic_operation = false]]
+
+
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 
 thm rat_add_\<phi>app
@@ -116,5 +137,6 @@ thm rat_add_def
 thm rat_sub_def
 thm rat_mul_def
 thm rat_div_def
+
 
 end

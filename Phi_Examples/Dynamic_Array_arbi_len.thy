@@ -12,6 +12,10 @@ theory Dynamic_Array_arbi_len
           Phi_Semantics.PhiSem_Int_ArbiPrec
 begin
 
+\<phi>reasoner_group DynArr = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
+
+declare [[collect_reasoner_statistics DynArr start,
+         \<phi>LPR_collect_statistics derivation start]]
 
 \<phi>type_def DynArr :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
   where \<open>l \<Ztypecolon> DynArr addr TY T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> data: \<bbbP>\<t>\<r> \<a>\<r>\<r>\<a>\<y>[cap] TY, len: \<nat>, cap: \<nat> \<rbrace>\<heavy_comma>
@@ -29,6 +33,15 @@ begin
 
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<a>\<i>\<n>\<t>, cap: \<a>\<i>\<n>\<t>}\<close>
 
+declare [[collect_reasoner_statistics DynArr stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
 
 proc len_dynarr:
   input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<d>\<y>\<n>\<a>\<r>\<r>\<heavy_comma> l \<Ztypecolon> DynArr addr TY T\<close>
@@ -203,6 +216,12 @@ proc fold_map_dynarr:
                   insert \<open>i < length l\<close>, induct i, auto simp add: take_Suc_conv_app_nth) \<semicolon>
   $zz
 \<medium_right_bracket> .
+
+
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics = false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 

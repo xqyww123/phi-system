@@ -7,6 +7,12 @@ begin
 
 abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<i>\<n>\<t>\<close>
  
+\<phi>reasoner_group MatSlice = (100,[0,9999]) \<open>derived reasoning rules of MatSlice\<close>
+
+declare [[collect_reasoner_statistics MatSlice start,
+         \<phi>LPR_collect_statistics derivation start]]
+
+
 \<phi>type_def MatSlice :: \<open>address \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
@@ -14,6 +20,16 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
        and \<open>Object_Equiv (MatSlice addr i j m n) (=)\<close>
        and Basic
+
+
+declare [[collect_reasoner_statistics MatSlice stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
 
 
 
@@ -355,5 +371,10 @@ thm add_mat_def
 thm sub_mat_def
 thm strassen_def
 thm strassen_mul_def
+
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 end

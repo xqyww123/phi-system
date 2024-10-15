@@ -16,6 +16,11 @@ abbreviation \<open>hash (x::nat) n \<equiv> x mod n\<close>
 
 abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {tabl: \<p>\<t>\<r>, N: \<s>\<i>\<z>\<e>_\<t>} \<close>
 
+\<phi>reasoner_group Hash = (100,[0,9999]) \<open>derived reasoning rules of DynArr\<close>
+
+declare [[collect_reasoner_statistics Hash start,
+         \<phi>LPR_collect_statistics derivation start]]
+
 
 \<phi>type_def Hash :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, nat \<rightharpoonup> 'x) \<phi>\<close>
   where \<open>f \<Ztypecolon> Hash addr TY T \<equiv> 
@@ -59,6 +64,16 @@ deriving \<open>Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lamb
 deriving \<open>Functional_Transformation_Functor (Hash addr TY) (Hash addr TY) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
               (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
 
+declare [[collect_reasoner_statistics Hash stop,
+         \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Hash})) "derivation"\<close>
+
+
+declare [[\<phi>LPR_collect_statistics program start,
+          collecting_subgoal_statistics,
+          recording_timing_of_semantic_operation,
+          \<phi>async_proof = false]]
 
 proc calc_hash:
   input  \<open>k \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<heavy_comma> N \<Ztypecolon> \<v>\<a>\<l> \<nat>(\<s>\<i>\<z>\<e>_\<t>)\<close>
@@ -294,6 +309,10 @@ proc rehash:
   ret
 \<medium_right_bracket> .
 
+declare [[\<phi>LPR_collect_statistics program stop,
+          collecting_subgoal_statistics=false,
+          recording_timing_of_semantic_operation = false,
+          \<phi>async_proof = true]]
 
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 
