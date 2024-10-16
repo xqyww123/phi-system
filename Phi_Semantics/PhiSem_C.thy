@@ -52,7 +52,8 @@ ML \<open>fun filter_out (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) =
       val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
           (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
         |> filter (fn (th, i) => i > 0 andalso not (filter_out (Thm.concl_of th)))
-   in (length statistics, Integer.sum (map snd statistics))
+      val (R,R') = (length statistics, Integer.sum (map snd statistics))
+   in Output.writeln ("R = " ^ string_of_int R ^ ", R' = " ^ string_of_int R')
   end
 \<close>
 
