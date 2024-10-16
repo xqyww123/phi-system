@@ -35,7 +35,7 @@ declare [[auto_sledgehammer_params = "try0 = false"]]
 declare [[collect_reasoner_statistics Linked_Lst stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Linked_Lst})) "derivation"\<close>
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics]]
@@ -206,17 +206,6 @@ declare [[\<phi>LPR_collect_statistics program stop,
           recording_timing_of_semantic_operation = false,
           \<phi>async_proof = true]]
 
-
-ML \<open>fun report_utilization statistic_groups reasoner_groups =
-  let open Pretty
-      val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
-          (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
-        |> filter (fn (_, i) => i > 0)
-   in (length statistics, Integer.sum (map snd statistics))
-  end
-\<close>
-
-
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 
 thm init_\<phi>app
@@ -242,5 +231,7 @@ thm update_nth_llist_def
 thm length_of_def
 thm reverse_aux_def
 thm reverse_def
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 end

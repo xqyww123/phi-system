@@ -237,73 +237,7 @@ declare [[collect_reasoner_statistics Bin_Search_Tree start,
 declare [[collect_reasoner_statistics Bin_Search_Tree stop,
          \<phi>LPR_collect_statistics derivation stop]]
 
-ML \<open>
-  fun filter_out (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = filter_out X
-    | filter_out (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ X) = filter_out X
-    | filter_out (Const(\<^const_name>\<open>to\<close>, _) $ X) = filter_out X
-    | filter_out (Const(\<^const_name>\<open>OPEN\<close>, _) $ _ $ _) = true
-    | filter_out (Const(\<^const_name>\<open>MAKE\<close>, _) $ _ $ _) = true
-    | filter_out (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = filter_out X
-    | filter_out (Abs (_, _, X)) = filter_out X
-    | filter_out (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = filter_out X
-    | filter_out (Const(\<^const_name>\<open>Identifier_of\<close>, _) $ _ $ _ $ _) = true
-    | filter_out _ = false
-
-  fun report_utilization statistic_groups reasoner_groups =
-  let open Pretty
-   in writeln (chunks (map (fn sgroup =>
-        chunks [str sgroup,
-                block (separate ", " (
-                  map (fn rgroup => 
-                    block [str (the (snd rgroup)), str ": ",
-                           str (string_of_int (
-                        Phi_Reasoner.utilization_of_group_in_all_theories
-                            (Context.Theory \<^theory>) (the (snd rgroup)) [sgroup]
-                          |> filter (fn (th, i) => i > 0)
-                          |> length
-                      ))]) reasoner_groups)) ]
-      ) statistic_groups))
-  end
-
-  val counters = [transformation_counter]
-  fun report_transformation_performance () =
-    File_Stream.open_output (fn out =>
-      List.app (fn (cnter, data) =>
-                  if member pointer_eq counters cnter
-                  then List.app (fn (num_opr, steps, _) =>
-                          let open File_Stream
-                           in output out (string_of_int num_opr) ;
-                              output out ", " ;
-                              output out (string_of_int steps) ;
-                              output out "\n"
-                          end ) data
-                  else ())
-               (PLPR_Statistics.get_subgoal_statistics ())
-      )
-      (Path.make ["Phi_Examples", "transformation-opr-step.csv"])
-
-  fun report_timing () =
-    File_Stream.open_output (fn out =>
-        let val timing = PLPR_Statistics.timing_of_semantic_operations ()
-         in List.app (fn {total, reasoning, proof_evaluation, proof_search} =>
-                          let open File_Stream
-                           in output out (string_of_int (Time.toMicroseconds reasoning)) ;
-                              output out ", " ;
-                              output out (string_of_int (Time.toMicroseconds proof_evaluation)) ;
-                              output out ", " ;
-                              output out (string_of_int (Time.toMilliseconds proof_search)) ;
-                              output out ", " ;
-                              output out (string_of_int (Time.toMilliseconds total)) ;
-                              output out "\n"
-                          end ) timing
-        end
-      ) (Path.make ["Phi_Examples", "timing.csv"])
-\<close>
-
-ML \<open>report_utilization ["program", "derivation"]
-       [ @{reasoner_group %Bin_Search_Tree} ] \<close>
-
-(* ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Bin_Search_Tree})) "derivation"\<close> *)
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Bin_Search_Tree})) "derivation"\<close>
 
 
 
@@ -354,13 +288,15 @@ declare [[collect_reasoner_statistics AVL_Tree start,
 declare [[collect_reasoner_statistics AVL_Tree stop,
          \<phi>LPR_collect_statistics derivation stop]]
 
-(* ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %AVL_Tree})) "derivation"\<close> *)
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %AVL_Tree})) "derivation"\<close>
 
 declare [[auto_sledgehammer_params = "try0 = false"]]
   \<comment> \<open>For some reason I don't know, Sledgehammer fails silently (with throwing an Interrupt exception)
       when \<open>try0\<close> --- reconstructing proofs using classical tactics --- is enabled.
       Anyway, it is an engineering problem due to some bug in our system or Sledgehammer, so we don't
       count this line into our statistics in the paper.\<close>
+
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
@@ -419,9 +355,10 @@ proc (nodef) lookup_bst:
   input    \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<close>
   premises \<open>k \<in> dom f\<close>
   output   \<open>the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<close>
-  unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
   lookup_bintree (addr, k)
+  \<m>\<a>\<k>\<e>\<s> \<open>Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 
@@ -463,9 +400,10 @@ proc defined_bintree:
 proc (nodef) defined_bst:
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<close>
   output \<open>k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<close>
-  unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
   defined_bintree (addr, k)
+  \<m>\<a>\<k>\<e>\<s> \<open>Bin_Search_Tree addr TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 
@@ -527,9 +465,9 @@ proc (nodef) insert_bst:
           addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
 \<medium_left_bracket>
-  to \<open>OPEN _ _\<close>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<o>\<p>\<e>\<n>
   insert_bintree (addr, k, v)
-  \<open>f(k \<mapsto> v) \<Ztypecolon> MAKE _ (Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V)\<close>
+  \<m>\<a>\<k>\<e>\<s> \<open>Bin_Search_Tree addr' TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 
@@ -579,7 +517,7 @@ proc maintain_i:
 
 \<medium_left_bracket>
 
-  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>OPEN 1 _\<close> \<exists>a\<^sub>B, a\<^sub>E \<semicolon>                                                 (*for reasoning, \<Omega>*)
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>B, a\<^sub>E \<semicolon>                                                 (*for reasoning, \<Omega>*)
 
   val B \<leftarrow> a\<^sub>D.left \<semicolon>
   val E \<leftarrow> a\<^sub>D.right \<semicolon>
@@ -762,9 +700,10 @@ proc (nodef) insert_avl:
   output \<open>f(k \<mapsto> v) \<Ztypecolon> AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V\<heavy_comma>
           addr' \<Ztypecolon> \<v>\<a>\<l> \<bbbP>\<t>\<r> \<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V
           \<s>\<u>\<b>\<j> addr'. \<top>\<close>
-  unfolding AVL_Tree.unfold
 \<medium_left_bracket>
+  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>\<close>
   insert_avl_i (addr, k, v)
+  \<m>\<a>\<k>\<e>\<s> \<open>AVL_Tree addr' TY\<^sub>K TY\<^sub>V K V\<close>
 \<medium_right_bracket> .
 
 declare [[\<phi>LPR_collect_statistics program stop,
@@ -797,5 +736,7 @@ thm maintain_i_def
 thm insert_avl_i_def
 
 end
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 end

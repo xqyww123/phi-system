@@ -25,13 +25,14 @@ declare [[collect_reasoner_statistics MatSlice start,
 declare [[collect_reasoner_statistics MatSlice stop,
          \<phi>LPR_collect_statistics derivation stop]]
 
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %MatSlice})) "derivation"\<close>
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
           \<phi>async_proof = false]]
 
-
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
 
 lemmas [\<phi>sledgehammer_simps] = mat_to_list_def list_eq_iff_nth_eq list_all2_conv_all_nth zero_mat_def
 
@@ -376,5 +377,7 @@ declare [[\<phi>LPR_collect_statistics program stop,
           collecting_subgoal_statistics=false,
           recording_timing_of_semantic_operation = false,
           \<phi>async_proof = true]]
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 end

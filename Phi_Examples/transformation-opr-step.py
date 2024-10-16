@@ -31,7 +31,7 @@ plt.scatter(X, Y, color='grey', alpha=0.2, edgecolors='none')
 plt.xticks([0,25,50,75,100], ['0','25','50','75', 'operators'])
 ax = plt.gca()
 #ax.xaxis.get_majorticklabels()[3].set_horizontalalignment("right")
-plt.yticks([0,50,100,150,200,250], ['0','50','100','150','200','250\napps'])
+plt.yticks([0,100,200,300,380], ['0','100','200','300','380\napps'])
 
 plt.legend(framealpha=0.1)
 plt.show()

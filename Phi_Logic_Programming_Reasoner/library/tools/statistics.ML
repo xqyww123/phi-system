@@ -167,7 +167,8 @@ fun count_subgoal ctxt =
     if Thm.no_prems st
     then NONE
     else case Net.match_term (Synchronized.value subgoal_statistics) (Thm.major_prem_of st)
-           |> map_filter (fn (collector, data_set) => Option.map (rpair data_set) (collector st))
+           |> map_filter (fn (collector, data_set) =>
+                  Option.map (fn i => (if i = 0 then () else (); rpair data_set i)) (collector st))
       of [] => NONE
        | L => SOME (fn (steps, time) =>
                 List.app (fn (size, data_set) =>

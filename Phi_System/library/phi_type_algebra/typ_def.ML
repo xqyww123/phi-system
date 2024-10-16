@@ -640,8 +640,6 @@ fun derive_properties (dervs:derivings, bundles) phityp (thy:local_theory) =
   let val level = Local_Theory.level thy
       val dervs = complete_deriver_dependences (Context.Proof thy) dervs
       fun setup ctxt = ctxt
-            |> Context.proof_map (
-                  Phi_Reasoner.start_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))
             |> Context_Position.set_visible false
             |> open_proof_ctxt bundles
             |> Config.put under_deriving_ctxt true
@@ -1576,11 +1574,10 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
             is_impredicative = false
           } : phi_type
    in thy
-   |> Context.proof_map (
-        Phi_Reasoner.start_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))
    |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m => fn ctxt =>
         let val phi = morphism_phi_type m (phi_trim_context phi_type)
          in ctxt
+         |> Phi_Reasoner.start_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules}))
          |> Phi_Types.map (Net.insert_term (phi_typ_term_equiv (Context.theory_of ctxt))
                                            (term, phi))
         end)
@@ -1626,7 +1623,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
        |> Defining_Phi_Type.invoke (Context.Proof thy') phi_type
        |> derive_properties (dervs, bundles) phi_type
        |> Context_Position.restore_visible thy
- ) |> Context.proof_map (
+ ) |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn _ =>
         Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules}))
  ) |> pair phi_type
   end
@@ -1750,7 +1747,12 @@ fun let_phityp_deriving_cmd (((raw_const_name, pos), raw_bundles), raw_derv) thy
       val phi = case get_type_info (Context.Proof thy) term
                   of SOME phi => phi
                    | NONE => error ("No \<phi>-type named "^ Syntax.string_of_term thy term ^ " found")
-   in derive_properties (prep_deriving_and_bundles raw_bundles raw_derv thy) phi thy
+   in thy
+   |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn _ =>
+          Phi_Reasoner.start_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))
+   |> derive_properties (prep_deriving_and_bundles raw_bundles raw_derv thy) phi
+   |> Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn _ =>
+          Phi_Reasoner.stop_collecting_reasoners (the (snd @{reasoner_group %all_derived_rules})))
   end
 
 val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config

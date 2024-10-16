@@ -69,6 +69,7 @@ declare [[collect_reasoner_statistics Hash stop,
 
 ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Hash})) "derivation"\<close>
 
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
@@ -343,5 +344,7 @@ thm entries_of_hash_def
 thm rehash_def
 
 end
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 end

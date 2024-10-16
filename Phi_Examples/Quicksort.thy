@@ -5,6 +5,8 @@ theory Quicksort
           Rational_Arith
 begin
 
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
+
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
@@ -72,5 +74,7 @@ thm qsort_\<phi>app
 text \<open>Semantic Representations of the Programs: \<close>
   
 thm qsort_def
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 end

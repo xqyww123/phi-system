@@ -953,6 +953,11 @@ subsection \<open>Finite Multiplicative Quantification\<close>
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
 
+\<phi>reasoner_group \<phi>Mul_Quant = (100,[0,9999]) \<open>derived reasoning rules of \<phi>Mul_Quant_Tree\<close>
+
+declare [[collect_reasoner_statistics \<phi>Mul_Quant start,
+          \<phi>LPR_collect_statistics derivation start]]
+
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>\<^sub>0")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi>\<^sub>0 I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
   deriving Basic
@@ -966,6 +971,11 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Semimodule_One
        and Closed_Semimodule_Zero
        and Carrier_Set
+
+declare [[collect_reasoner_statistics \<phi>Mul_Quant stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Mul_Quant})) "derivation"\<close>
 
 
 subsubsection \<open>Syntax\<close>
@@ -1421,6 +1431,7 @@ let_\<phi>type \<phi>Some
 declare [[collect_reasoner_statistics \<phi>Some stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Some})) "derivation"\<close>
 
 text \<open>For technical reasons, the \<open>\<phi>Some\<close> is defined and used before the setup of the derivation system.
   Therefore some of its rules are handcrafted. However, the rules could all be derived automatically
@@ -2010,6 +2021,11 @@ section \<open>Derivatives\<close>
 
 subsection \<open>Parameterized FMQ\<close>
 
+
+
+declare [[collect_reasoner_statistics \<phi>Mul_Quant start,
+          \<phi>LPR_collect_statistics derivation start]]
+
 \<phi>type_def \<phi>Mul_Quant\<^sub>\<Lambda> :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<equiv> (i, x i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>I] (\<Sigma> T)\<close>
   deriving \<open>(\<And>p. Object_Equiv (T p) (eq p))
@@ -2036,6 +2052,11 @@ subsection \<open>Parameterized FMQ\<close>
        and \<open>Semimodule_SDistr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
        and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
        and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
+
+declare [[collect_reasoner_statistics \<phi>Mul_Quant stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Mul_Quant})) "derivation"\<close>
 
 lemma \<phi>Mul_Quant\<^sub>\<Lambda>_cong[cong]:
   \<open> (\<And>i. i \<in> I \<Longrightarrow> T i = U i)
@@ -2147,6 +2168,10 @@ subsection \<open>From FMQ\<close>
 
 subsubsection \<open>Interval in Length Representation\<close>
 
+declare [[collect_reasoner_statistics \<phi>Mul_Quant start,
+          \<phi>LPR_collect_statistics derivation start]]
+
+
 context begin
 
 private lemma list_all2_single_length_1[simp]:
@@ -2200,6 +2225,11 @@ declare [[\<phi>trace_reasoning = 0]]
 declare list_all2_single_length_1[simp del]
 
 end
+
+declare [[collect_reasoner_statistics \<phi>Mul_Quant stop,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Mul_Quant})) "derivation"\<close>
 
 translations "\<big_ast> \<lbrakk>i:len\<rwpar> T" == "\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> \<lbrakk>i:len\<rwpar> T"
 
@@ -2302,6 +2332,8 @@ declare [[collect_reasoner_statistics \<phi>Mul_Quant_Tree start,
 
 declare [[collect_reasoner_statistics \<phi>Mul_Quant_Tree stop,
           \<phi>LPR_collect_statistics derivation stop]]
+
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %\<phi>Mul_Quant_Tree})) "derivation"\<close>
 
 \<phi>reasoner_group \<phi>Mul_Quant_Tree_wrap_module
               = (25, [25,26]) < derived_SE_inj_to_module

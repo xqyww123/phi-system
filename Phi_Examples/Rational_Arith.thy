@@ -25,8 +25,11 @@ ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (sn
 
 
 declare [[collect_reasoner_statistics \<phi>Rational stop,
-          \<phi>LPR_collect_statistics derivation stop,
-          \<phi>LPR_collect_statistics program start,
+          \<phi>LPR_collect_statistics derivation stop]]
+
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
+
+declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           \<phi>async_proof = false]]
 
@@ -123,6 +126,29 @@ declare [[\<phi>LPR_collect_statistics program stop,
           \<phi>async_proof,
           recording_timing_of_semantic_operation = false]]
 
+ML \<open>fun filter_out (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>to\<close>, _) $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>OPEN\<close>, _) $ _ $ _) = true
+    | filter_out (Const(\<^const_name>\<open>MAKE\<close>, _) $ _ $ _) = true
+    | filter_out (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = filter_out X
+    | filter_out (Abs (_, _, X)) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>Identifier_of\<close>, _) $ _ $ _ $ _) = true
+    | filter_out (Const(\<^const_name>\<open>Semantic_Type\<close>, _) $ _ $ _) = true
+    | filter_out (Const(\<^const_name>\<open>Is_Aggregate\<close>, _) $ _) = true
+    | filter_out _ = false
+
+  fun report_utilization statistic_groups reasoner_groups =
+  let open Pretty
+      val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
+          (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
+        |> filter (fn (th, i) => i > 0 andalso not (filter_out (Thm.concl_of th)))
+   in (length statistics, Integer.sum (map snd statistics))
+  end
+\<close>
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 

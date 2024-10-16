@@ -1,0 +1,26 @@
+column R
+Record, 20
+Variable, 6
+Ref, 6
+Quantifier Star, 19
+Array Slice, 25
+Linked List, 9
+Dynamic Array, 7
+Binary Tree, 10
+Search Tree, 5
+Lookup AVL, 5
+Bucket Hash, 7
+
+column R'
+Record, 25
+Variable, 0
+Ref, 2
+Quantifier Star, 38
+Array Slice, 4
+Linked List, 5
+Dynamic Array, 4
+Binary Tree, 8
+Search Tree, 0
+Lookup AVL, 0
+Bucket Hash, 0
+

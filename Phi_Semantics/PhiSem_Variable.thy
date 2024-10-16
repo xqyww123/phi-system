@@ -55,6 +55,9 @@ fiction_space \<phi>var =
 declare [[collect_reasoner_statistics Resource_Space stop,
           \<phi>LPR_collect_statistics derivation stop]]
 
+ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %Resource_Space})) "derivation"\<close>
+
+
 section \<open>\<phi>-Types\<close>
 
 subsection \<open>Variable\<close>

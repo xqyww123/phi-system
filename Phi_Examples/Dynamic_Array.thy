@@ -29,8 +29,9 @@ declare [[collect_reasoner_statistics DynArr stop,
 
 ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
 
-
 abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {data: \<p>\<t>\<r>, len: \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>), cap: \<i>\<n>\<t>(\<s>\<i>\<z>\<e>_\<t>)}\<close>
+
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
 
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
@@ -213,6 +214,7 @@ declare [[\<phi>LPR_collect_statistics program stop,
           recording_timing_of_semantic_operation = false,
           \<phi>async_proof = true]]
 
+
 text \<open>The Conclusions of above Certification is the following Specification Theorems\<close>
 
 thm len_dynarr_\<phi>app
@@ -244,5 +246,6 @@ thm fold_map_dynarr_def
 
 end
 
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 end

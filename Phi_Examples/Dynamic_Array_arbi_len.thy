@@ -38,6 +38,8 @@ declare [[collect_reasoner_statistics DynArr stop,
 
 ML \<open>Phi_Reasoner.clear_utilization_statistics_of_group \<^theory> (the (snd @{reasoner_group %DynArr})) "derivation"\<close>
 
+(* ML \<open>PLPR_Statistics.reset_utilization_statistics_all ()\<close> *)
+
 declare [[\<phi>LPR_collect_statistics program start,
           collecting_subgoal_statistics,
           recording_timing_of_semantic_operation,
@@ -251,7 +253,8 @@ thm map_dynarr_def
 thm exists_dynarr_def
 thm fold_map_dynarr_def
 
-
 end
+
+ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
 
 end

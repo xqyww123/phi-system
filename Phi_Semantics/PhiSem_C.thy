@@ -33,4 +33,28 @@ setup \<open>Context.theory_map (Phi_Hacks.Thy_At_Begin.add 66 (K (
 
 declare One_nat_def[\<phi>sledgehammer_simps] *)
 
+
+
+ML \<open>fun filter_out (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>to\<close>, _) $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>OPEN\<close>, _) $ _ $ _) = true
+    | filter_out (Const(\<^const_name>\<open>MAKE\<close>, _) $ _ $ _) = true
+    | filter_out (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = filter_out X
+    | filter_out (Abs (_, _, X)) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = filter_out X
+    | filter_out (Const(\<^const_name>\<open>Identifier_of\<close>, _) $ _ $ _ $ _) = true
+    | filter_out (Const(\<^const_name>\<open>Semantic_Type\<close>, _) $ _ $ _) = true
+    | filter_out _ = false
+
+  fun report_utilization statistic_groups reasoner_groups =
+  let open Pretty
+      val statistics = Phi_Reasoner.utilization_of_groups_in_all_theories
+          (Context.Theory \<^theory>) (map (the o snd) reasoner_groups) statistic_groups
+        |> filter (fn (th, i) => i > 0 andalso not (filter_out (Thm.concl_of th)))
+   in (length statistics, Integer.sum (map snd statistics))
+  end
+\<close>
+
+
 end

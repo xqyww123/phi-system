@@ -387,7 +387,17 @@ fun number_of_typ_operators_in_assertion bvtys term =
       fold_items_of_assertion' (fn bvtys =>
         fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) =>
             (fn S => S + number_of_typ_operators bvtys T)
-          | _ => I) bvtys term 0
+          | X => let fun xxx X =
+                    fold (fn tm => fn N =>
+                    let fun chk bvtys (Abs (_,T,X)) = chk (T::bvtys) X
+                          | chk bvtys tm =
+                             (case Term.fastype_of1 (bvtys, tm)
+                                of \<^Type>\<open>set _\<close> => N + number_of_typ_operators_in_assertion bvtys tm
+                                 | _ => xxx tm N)
+                     in chk bvtys tm
+                    end
+                  ) (snd (Term.strip_comb X))
+            in xxx X end) bvtys term 0
 
 local
 fun head_is_phi (X $ _) = head_is_phi X
