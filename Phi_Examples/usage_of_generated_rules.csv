@@ -12,10 +12,10 @@ Lookup AVL, 5
 Bucket Hash, 7
 
 column R'
-Record, 4
+Record, 25
 Variable, 0
 Ref, 2
-Quantifier Star, 9
+Quantifier Star, 38
 Array Slice, 4
 Linked List, 5
 Dynamic Array, 4
