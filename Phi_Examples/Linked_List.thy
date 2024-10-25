@@ -2,6 +2,8 @@ theory Linked_List
   imports Phi_Semantics.PhiSem_C
 begin
 
+ML \<open> PLPR_Statistics.reset_timing_of_semantic_operations () \<close>
+
 abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
 \<phi>reasoner_group Linked_Lst = (100,[0,9999]) \<open>derived reasoning rules of Linked_Lst\<close>
@@ -233,5 +235,12 @@ thm reverse_aux_def
 thm reverse_def
 
 ML \<open>report_utilization ["program"] [@{reasoner_group %all_derived_rules} ] \<close>
+
+ML \<open>  fun report_timing () =
+        let val timing = PLPR_Statistics.timing_of_semantic_operations ()
+         in fold (fn {total, reasoning, proof_evaluation, proof_search} => fn X =>
+                          X + Time.toMicroseconds reasoning)) ) timing 0
+        end\<close>
+
 
 end
