@@ -23,25 +23,26 @@ debt_axiomatization
 
 
 
-abbreviation BC_Map :: \<open>(VAL,'a) \<phi> \<Rightarrow> 'a set \<Rightarrow> (aggregate_path \<Rightarrow> 'c, 'b) \<phi> \<Rightarrow> (aggregate_path \<Rightarrow> 'c::one, 'a \<Rightarrow> 'b) \<phi> \<close>
+abbreviation VMapSlice :: \<open>(VAL,'a) \<phi> \<Rightarrow> 'a set \<Rightarrow> (aggregate_path \<Rightarrow> 'c, 'b) \<phi> \<Rightarrow> (aggregate_path \<Rightarrow> 'c::one, 'a \<Rightarrow> 'b) \<phi> \<close>
                        ("_ \<equiv>[_]\<Rrightarrow> _" [76,20,75] 75)
-  where \<open>BC_Map K D V \<equiv> \<phi>MapTree D (ValIdx K) V\<close>
-
-term \<open> (f \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> MapVal K V) \<close>
-term \<open> (f \<Ztypecolon> K \<equiv>[D]\<Rrightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V) \<close>
+  where \<open>VMapSlice K D V \<equiv> \<phi>MapTree D (ValIdx K) V\<close>
 
 
+term \<open> f \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> VMap K D V \<close>
+term \<open> f \<Ztypecolon> K \<equiv>[D]\<Rrightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V \<close>
+term \<open> f \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (K \<equiv>\<Rrightarrow> V) \<close>
+term \<open> f \<Ztypecolon> K \<equiv>\<Rrightarrow> V \<close>
 
 setup \<open>Context.theory_map ( Phi_Mem_Printer.add 110 (
-    fn (ctxt, f, Const(\<^const_syntax>\<open>BC_Map\<close>, _) $ D $ K $ V) =>
-        SOME (Const(\<^const_syntax>\<open>BC_Map\<close>, dummyT) $ D $ K $ f ctxt V)
+    fn (ctxt, f, Const(\<^const_syntax>\<open>VMapSlice\<close>, _) $ D $ K $ V) =>
+        SOME (Const(\<^const_syntax>\<open>VMapSlice\<close>, dummyT) $ D $ K $ f ctxt V)
      | _ => NONE
   )
 )\<close>
 
 setup \<open>Context.theory_map ( Phi_Mem_Parser.add 110 (
-    fn (ctxt, f, Const(\<^const_syntax>\<open>BC_Map\<close>, _) $ D $ K $ V) =>
-        SOME (Const(\<^const_syntax>\<open>BC_Map\<close>, dummyT) $ D $ K $ f ctxt V)
+    fn (ctxt, f, Const(\<^const_syntax>\<open>VMapSlice\<close>, _) $ D $ K $ V) =>
+        SOME (Const(\<^const_syntax>\<open>VMapSlice\<close>, dummyT) $ D $ K $ f ctxt V)
      | X => NONE
   )
 )\<close>
@@ -51,28 +52,30 @@ setup \<open>Context.theory_map ( Phi_Mem_Parser.add 110 (
 
 text \<open>Intuitively, \<open>\<phi>VM_Type D K V\<close> specifies the domain\<close>
 
-definition \<phi>VM_Type :: \<open>(VAL,'x) \<phi> \<Rightarrow> TY \<Rightarrow> (mem_fic, unit) \<phi>\<close>
+\<phi>type_def \<phi>VM_Type :: \<open>(VAL,'x) \<phi> \<Rightarrow> 'x set \<Rightarrow> TY \<Rightarrow> (mem_fic, unit) \<phi>\<close>
                        ("\<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a>''")
-     where \<open>\<phi>VM_Type K V unit \<equiv> case_list 1 (\<lambda>k'.
+     where \<open>unit \<Ztypecolon> \<phi>VM_Type K D V \<equiv> case_list 1 (\<lambda>k'.
                 case k' of AgIdx_V k \<Rightarrow>
-                      (if (\<exists>k. k' = concretize (ValIdx K) k) then 1
+                      (if (\<exists>k. k' = concretize (ValIdx K) k \<and> k \<in> D) then 1
                        else (to_share o map_option discrete o Map_of_Val (the (Zero V))))
                    | _ \<Rightarrow> 1) \<Ztypecolon> Itself
                 \<s>\<u>\<b>\<j> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and>
                     \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and>
                     is_sTY (\<t>\<y>\<p>\<e>\<o>\<f> K) \<close>
 
-abbreviation \<phi>VM_Type' :: \<open>(VAL,'x) \<phi> \<Rightarrow> TY \<Rightarrow> mem_fic BI\<close> ("\<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a>")
-  where \<open>\<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a> K V \<equiv> () \<Ztypecolon> \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a>' K V\<close>
+declare \<phi>VM_Type.expansion[simp del]
 
+abbreviation \<phi>VM_Type' :: \<open>(VAL,'x) \<phi> \<Rightarrow> 'x set \<Rightarrow> TY \<Rightarrow> mem_fic BI\<close> ("\<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a>")
+  where \<open>\<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a> K D V \<equiv> () \<Ztypecolon> \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a>' K D V\<close>
+(*
 setup \<open>Sign.mandatory_path "\<phi>VM_Type"\<close>
 
 lemma unfold[no_atp]:
-  \<open> (() \<Ztypecolon> \<phi>VM_Type K V) = \<phi>VM_Type K V () \<close>
+  \<open> (() \<Ztypecolon> \<phi>VM_Type K D V) = \<phi>VM_Type K D V () \<close>
   unfolding \<phi>Type_def ..
 
 setup \<open>Sign.parent_path\<close>
-
+*)
 
 
 
@@ -110,32 +113,34 @@ lemma pull_map__case_list[simp]:
 
 
 
-lemma mem_coerce_MapVal:
-  \<open> Abstract_Domain\<^sub>L K (\<lambda>x. True)
-\<Longrightarrow> Functionality K (\<lambda>x. True)
-\<Longrightarrow> Injective_on K UNIV
+lemma mem_coerce_VMap:
+  \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Injective_on K D
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<t>\<y>\<p>\<e>\<o>\<f> V = TY\<^sub>V
-\<Longrightarrow> f \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> MapVal K V \<equiv> (f \<Ztypecolon> \<phi>MapTree UNIV (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V)) * \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a> K TY\<^sub>V \<close>
+\<Longrightarrow> f \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> VMap K D V \<equiv> (f \<Ztypecolon> \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V)) * \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a> K D TY\<^sub>V \<close>
   unfolding atomize_eq BI_eq_iff Semantic_Zero_Val_def Premise_def
   apply (clarify)
   subgoal premises prems for u proof -
 
-    have t01: \<open>inj (concretize K)\<close>
+    thm prems
+    have t01: \<open>inj_on (concretize K) D\<close>
       by (simp add: concretize_inj prems(1) prems(3))
 
-    have t02[simp]: \<open>concretize K a = concretize K b \<longleftrightarrow> a = b\<close> for a b
-      by (meson injD t01)
+    have t02[simp]: \<open>a \<in> D \<Longrightarrow> b \<in> D \<Longrightarrow> concretize K a = concretize K b \<longleftrightarrow> a = b\<close> for a b
+      by (meson inj_onD t01)
 
-    have t03: \<open>v = concretize K x \<longleftrightarrow> v \<Turnstile> (x \<Ztypecolon> K)\<close> for x v
+    have t03: \<open>x \<in> D \<Longrightarrow> v = concretize K x \<longleftrightarrow> v \<Turnstile> (x \<Ztypecolon> K)\<close> for x v
       by (metis Abstract_Domain\<^sub>L_def Functionality_def \<r>ESC_def concretize_SAT prems(1) prems(2))
 
     have [simp]: \<open>\<t>\<y>\<p>\<e>\<o>\<f> V = TY\<^sub>V\<close> using prems(4) by fastforce
 
-    have t1: \<open> concretize (ValIdx K) k = AgIdx_V (inv sVAL_emb (concretize K k)) \<close> for k
+    have t1: \<open>k \<in> D \<Longrightarrow> concretize (ValIdx K) k = AgIdx_V (inv sVAL_emb (concretize K k)) \<close> for k
       by (metis Abstract_Domain\<^sub>L_def ValIdx.Abstract_Domain\<^sub>L ValIdx.expansion \<r>ESC_def comp_apply concretize_SAT prems(1) t03)
 
-    let ?M1 = \<open>\<lambda>g k. if (\<exists>kk. sVAL_emb k = concretize K kk) then Map_of_Val (g k) else 1\<close>
-    let ?M2 = \<open>\<lambda>g k. if (\<exists>kk. sVAL_emb k = concretize K kk) then 1 else Map_of_Val (g k)\<close>
+
+    let ?M1 = \<open>\<lambda>g k. if (\<exists>kk. sVAL_emb k = concretize K kk \<and> kk \<in> D) then Map_of_Val (g k) else 1\<close>
+    let ?M2 = \<open>\<lambda>g k. if (\<exists>kk. sVAL_emb k = concretize K kk \<and> kk \<in> D) then 1 else Map_of_Val (g k)\<close>
 
     have Map_of_Val__\<m>\<a>\<p>_rep__split:
       \<open> Map_of_Val (\<m>\<a>\<p>_rep g) =
@@ -154,6 +159,7 @@ lemma mem_coerce_MapVal:
     unfolding Map_of_Val__\<m>\<a>\<p>_rep__split fun_eq_iff
     by (clarify; case_tac x; auto split: aggregate_index'.split option.split simp: times_fun prems(4))
 
+  note rev_conj_cong[cong]
 (*
     have t3[simp]: \<open>sVAL_emb (inv sVAL_emb (concretize K k)) = concretize K k\<close> for k
       by (meson Semantic_Type_def f_inv_into_f is_sTY prems(4) prems(5) t03)
@@ -170,27 +176,31 @@ lemma mem_coerce_MapVal:
           auto simp: pull_map_to_share comp_assoc pull_map_map_option map_option_o_eq_inj
                      t2 t1 Map_of_Val_\<m>\<a>\<p>_Nil sep_disj_fun_def
                split: option.split aggregate_index'.split list.split)
-        apply (metis f_inv_into_f is_sTY_typeof t03)
+        apply (metis (no_types, lifting) f_inv_into_f is_sTY_typeof t03)
         apply (meson f_inv_into_f is_sTY_typeof t03)
         apply (metis inj_sVAL_emb inv_f_f)
         apply ((insert t03, auto simp: \<phi>VM_Type.unfold \<phi>VM_Type_def fun_eq_iff t1 inj_sVAL_emb inv_f_f
                                 split: option.split list.split aggregate_index'.split)[1])
         apply (metis inj_sVAL_emb inv_f_f)
-        by (metis f_inv_into_f is_sTY_typeof)
+        by (metis (mono_tags, opaque_lifting) f_inv_into_f is_sTY_typeof)
 
   apply (auto simp add: \<phi>VM_Type.unfold \<phi>VM_Type_def)
   subgoal premises prems2 for u'
   proof -
-      obtain v where x2: \<open>pull_map [AgIdx_V (inv sVAL_emb (concretize K k))] u' = to_share \<circ> (map_option discrete \<circ> Map_of_Val (v k)) \<and> v k \<Turnstile> (f k \<Ztypecolon> V)\<close> for k
+    obtain v where x2: \<open>k \<in> D \<Longrightarrow>
+              pull_map [AgIdx_V (inv sVAL_emb (concretize K k))] u'
+            = to_share \<circ> (map_option discrete \<circ> Map_of_Val (v k)) \<and> v k \<Turnstile> (f k \<Ztypecolon> V)\<close> for k
         using prems2(2) by metis
-      let ?g = \<open>\<lambda>k. if (\<exists>k'. k = concretize K k') then v (inv (concretize K) k) else the (Zero TY\<^sub>V)\<close>
+      let ?g = \<open>\<lambda>k. if (\<exists>k'. k = concretize K k' \<and> k' \<in> D)
+                    then v (inv_into D (concretize K) k)
+                    else the (Zero TY\<^sub>V)\<close>
   
       have x3: \<open>{a. \<exists>k'. a = concretize K k'} \<subseteq> concretize K ` UNIV\<close>
         unfolding set_eq_iff
         by (auto simp: image_iff Bex_def)
-    
-      have x5: \<open>inv (concretize K) (concretize K k) = k\<close> for k
-        by (simp add: concretize_inj prems(1) prems(3))
+
+      have x5: \<open>k \<in> D \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
+        by (simp add: concretize_inj[OF prems(3) prems(1)])
   
       show ?thesis
         apply (rule exI[where x=\<open>\<m>\<a>\<p>_rep (?g o sVAL_emb)\<close>],
@@ -199,8 +209,10 @@ lemma mem_coerce_MapVal:
         apply (metis append.simps(1) append.simps(2) comp_apply inj_sVAL_emb inv_f_f pull_map_def x2)
         apply (metis inj_sVAL_emb inv_f_f)
         apply (meson f_inv_into_f is_sTY_typeof prems2(7) prems2(8) t03)
-        apply (rule exI[where x=\<open>\<lambda>xa. if (\<exists>k'. sVAL_emb xa = concretize K k') then v (inv (concretize K) (sVAL_emb xa)) else the (Zero TY\<^sub>V)\<close>],
-            auto)
+        apply (metis aggregate_index'.inject(3) prems2(4) times_option(3))
+        apply (rule exI[where x=\<open>\<lambda>xa. if (\<exists>k'. sVAL_emb xa = concretize K k' \<and> k' \<in> D)
+                                      then v (inv_into D (concretize K) (sVAL_emb xa))
+                                      else the (Zero TY\<^sub>V)\<close>],   auto)
         apply (metis t03 x2 x5)
         using t03 apply blast
         using t03 by blast
@@ -211,22 +223,20 @@ lemma mem_coerce_MapVal:
 subsection \<open>ToA Mapper\<close>
 
 
-lemma [\<phi>reason %mapToA_mem_coerce,
-       unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %mapToA_mem_coerce]:
+lemma MVT_mapper_tgt:
 
-  \<open> Abstract_Domain\<^sub>L K (\<lambda>x. True)
-\<Longrightarrow> Functionality K (\<lambda>x. True)
-\<Longrightarrow> Injective_on K UNIV
+  \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Injective_on K D
 
-\<Longrightarrow> \<m>\<a>\<p> g : \<phi>MapTree UNIV (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYU] V) \<OTast> R
-         \<mapsto> \<phi>MapTree UNIV (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V') \<OTast> R'
+\<Longrightarrow> \<m>\<a>\<p> g : \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYU] V) \<OTast> R
+         \<mapsto> \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V') \<OTast> R'
     \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> (\<lambda>(x,_,w). (x,w)) ` DD
 
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (MapVal K V) \<OTast> R
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (MapVal K V') \<OTast> R'
-    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f id \<otimes>\<^sub>f w : T \<OTast> \<phi>VM_Type K (\<t>\<y>\<p>\<e>\<o>\<f> V) \<^emph> W \<mapsto> T' \<OTast> \<phi>VM_Type K (\<t>\<y>\<p>\<e>\<o>\<f> V') \<^emph> W'
+\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (VMap K D V) \<OTast> R
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (VMap K D V') \<OTast> R'
+    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f id \<otimes>\<^sub>f w : T \<OTast> \<phi>VM_Type K D (\<t>\<y>\<p>\<e>\<o>\<f> V) \<^emph> W \<mapsto> T' \<OTast> \<phi>VM_Type K D (\<t>\<y>\<p>\<e>\<o>\<f> V') \<^emph> W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter o (\<lambda>(x,_,w). (x,w))
          \<s>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,w). (x,(),w)) o setter \<i>\<n> DD \<close>
 
@@ -234,101 +244,94 @@ lemma [\<phi>reason %mapToA_mem_coerce,
   \<medium_left_bracket> premises AD[] and FC[] and IJ[] and TR[]
     apply_rule ToA_Mapper_onward[OF TR, where x=\<open>case x of (x,_,w) \<Rightarrow> (x,w)\<close>]
     certified by (cases x; auto_sledgehammer)
-  \<semicolon> apply_rule mem_coerce_MapVal[OF AD FC IJ, symmetric]
+  \<semicolon> apply_rule mem_coerce_VMap[OF AD FC IJ, symmetric]
   \<medium_right_bracket> apply (rule conjunctionI, rule)
   \<medium_left_bracket> premises AD[] and FC[] and IJ[] and TR[]
-    apply_rule mem_coerce_MapVal[OF AD FC IJ]
+    apply_rule mem_coerce_VMap[OF AD FC IJ]
     apply_rule ToA_Mapper_backward[OF TR, where x=x]
     certified by auto_sledgehammer
   \<medium_right_bracket> certified by auto_sledgehammer
   by (rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, auto)
 
 
-lemma [\<phi>reason %mapToA_mem_coerce,
-       unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %mapToA_mem_coerce]:
+lemma MVT_mapper_src:
 
-  \<open> Abstract_Domain\<^sub>L K (\<lambda>x. True)
-\<Longrightarrow> Functionality K (\<lambda>x. True)
-\<Longrightarrow> Injective_on K UNIV
+  \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Injective_on K D
 
 \<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R'
-    \<o>\<v>\<e>\<r> f : \<phi>MapTree UNIV (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) \<OTast> W
-          \<mapsto> \<phi>MapTree UNIV (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V') \<OTast> W'
+    \<o>\<v>\<e>\<r> f : \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) \<OTast> W
+          \<mapsto> \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> V') \<OTast> W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> getter \<s>\<e>\<t>\<t>\<e>\<r> setter \<i>\<n> DD
 
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f id \<otimes>\<^sub>f r : U \<OTast> \<phi>VM_Type K (\<t>\<y>\<p>\<e>\<o>\<f> V) \<^emph> R \<mapsto> U' \<OTast> \<phi>VM_Type K (\<t>\<y>\<p>\<e>\<o>\<f> V') \<^emph> R'
-    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYV]] (MapVal K V) \<OTast> W
-          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (MapVal K V') \<OTast> W'
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f id \<otimes>\<^sub>f r : U \<OTast> \<phi>VM_Type K D (\<t>\<y>\<p>\<e>\<o>\<f> V) \<^emph> R \<mapsto> U' \<OTast> \<phi>VM_Type K D (\<t>\<y>\<p>\<e>\<o>\<f> V') \<^emph> R'
+    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYV]] (VMap K D V) \<OTast> W
+          \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> (VMap K D V') \<OTast> W'
     \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> (\<lambda>(x,w). (x,(),w)) o getter
         \<s>\<e>\<t>\<t>\<e>\<r> setter o (\<lambda>(x,_,w). (x,w))
       \<i>\<n> DD \<close>
 
   unfolding \<phi>Prod'_def Guided_Mem_Coercion_def
   \<medium_left_bracket> premises AD[] and FC[] and IJ[] and TR[]
-    apply_rule mem_coerce_MapVal[OF AD FC IJ]
+    apply_rule mem_coerce_VMap[OF AD FC IJ]
     apply_rule ToA_Mapper_onward[OF TR, where x=x]
   \<medium_right_bracket> certified by auto_sledgehammer
   apply (rule conjunctionI, rule)
   \<medium_left_bracket> premises AD[] and FC[] and IJ[] and TR[]
     apply_rule ToA_Mapper_backward[OF TR, where x=\<open>case x of (x,_,w) \<Rightarrow> (x,w)\<close>]
     certified by (cases x; auto_sledgehammer)
-  \<semicolon> apply_rule mem_coerce_MapVal[OF AD FC IJ, symmetric]
+  \<semicolon> apply_rule mem_coerce_VMap[OF AD FC IJ, symmetric]
   \<medium_right_bracket>
   by (rule conjunctionI, rule, drule ToA_Mapper_f_expn_rev, auto_sledgehammer)
 
 
 subsubsection \<open>Transformation\<close>
 
-lemma [\<phi>reason %ToA_mem_coerce,
-       unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %ToA_mem_coerce]:
+lemma MVT_Tr_src:
 
   \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Injective_on K D
 
-\<Longrightarrow> (x \<Ztypecolon> \<phi>MapTree UNIV (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V)) * \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a> K V  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (MapVal K V) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> (x \<Ztypecolon> K \<equiv>[D]\<Rrightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) * \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a> K D (\<t>\<y>\<p>\<e>\<o>\<f> V) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (K \<equiv>(D)\<Rrightarrow> V) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
 
-  unfolding Guided_Mem_Coercion_def mem_coerce_MapVal .
+  unfolding Guided_Mem_Coercion_def
+  by (simp add: mem_coerce_VMap[where V=V and TY\<^sub>V = \<open>\<t>\<y>\<p>\<e>\<o>\<f> V\<close>, simplified])
 
-lemma [\<phi>reason %ToA_mem_coerce,
-       unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %ToA_mem_coerce]:
+lemma MVT_biTr_src:
+
   \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Injective_on K D
 
-\<Longrightarrow> x \<Ztypecolon> \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (MapVal D K V) \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding Guided_Mem_Coercion_def mem_coerce_MapVal .
+\<Longrightarrow> ((fst x, ()), snd x) \<Ztypecolon> K \<equiv>[D]\<Rrightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V \<^emph> \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a>' K D (\<t>\<y>\<p>\<e>\<o>\<f> V) \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (K \<equiv>(D)\<Rrightarrow> V) \<OTast> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
 
-lemma [\<phi>reason %ToA_mem_coerce,
-       unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %ToA_mem_coerce]:
+  unfolding Guided_Mem_Coercion_def \<phi>Prod'_def
+  by (simp add: mem_coerce_VMap[where V=V and TY\<^sub>V = \<open>\<t>\<y>\<p>\<e>\<o>\<f> V\<close>, simplified] \<phi>Prod_expn'' \<phi>Prod_expn')
+
+lemma MVT_Tr_tgt:
   \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Injective_on K D
 
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (MapVal D K V) \<w>\<i>\<t>\<h> P \<close>
-  unfolding Guided_Mem_Coercion_def mem_coerce_MapVal .
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> K \<equiv>[D]\<Rrightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) * \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a> K D (\<t>\<y>\<p>\<e>\<o>\<f> V) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (K \<equiv>(D)\<Rrightarrow> V) \<w>\<i>\<t>\<h> P \<close>
 
-lemma [\<phi>reason %ToA_mem_coerce,
-       unfolded Guided_Mem_Coercion_def,
-       \<phi>reason %ToA_mem_coerce]:
+  unfolding Guided_Mem_Coercion_def
+  by (simp add: mem_coerce_VMap[where V=V and TY\<^sub>V = \<open>\<t>\<y>\<p>\<e>\<o>\<f> V\<close>, simplified])
+
+lemma MVT_biTr_tgt:
   \<open> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Functionality K (\<lambda>x. x \<in> D)
 \<Longrightarrow> Injective_on K D
 
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) \<OTast> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (MapVal D K V) \<OTast> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Guided_Mem_Coercion_def mem_coerce_MapVal .
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>MapTree D (ValIdx K) (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TYV] V) \<^emph> \<k>\<v>-\<s>\<c>\<h>\<e>\<m>\<a>' K D (\<t>\<y>\<p>\<e>\<o>\<f> V) \<OTast> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst (fst x), snd x) \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[\<m>\<a>\<p>[TYK,TYU]] (VMap K D V) \<OTast> R \<w>\<i>\<t>\<h> P \<close>
 
-
-
-
-
+  unfolding Guided_Mem_Coercion_def \<phi>Prod'_def
+  by (simp add: mem_coerce_VMap[where V=V and TY\<^sub>V = \<open>\<t>\<y>\<p>\<e>\<o>\<f> V\<close>, simplified] \<phi>Prod_expn'' \<phi>Prod_expn')
 
 end

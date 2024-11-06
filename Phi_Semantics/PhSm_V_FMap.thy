@@ -53,19 +53,22 @@ lemma is_sTY_typeof:
 
 section \<open>\<phi>Type\<close>
 
-\<phi>type_def MapVal :: "(VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<Rightarrow> 'v) \<phi>"
-                    ("_ \<equiv>\<Rrightarrow> _" [76,75] 75)
-  where \<open>f \<Ztypecolon> MapVal K V \<equiv> \<m>\<a>\<p>_rep f' \<Ztypecolon> Itself
+\<phi>type_def VMap :: "(VAL, 'k) \<phi> \<Rightarrow> 'k set \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<Rightarrow> 'v) \<phi>"
+                    ("_ \<equiv>'(_')\<Rrightarrow> _" [76,20,75] 75)
+  where \<open>f \<Ztypecolon> VMap K D V \<equiv> \<m>\<a>\<p>_rep f' \<Ztypecolon> Itself
         \<s>\<u>\<b>\<j> f'. is_sTY (\<t>\<y>\<p>\<e>\<o>\<f> K) \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
-               \<and> (\<forall>kk k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K)     \<longrightarrow> f' kk \<Turnstile> (f k \<Ztypecolon> V))
-               \<and> (\<forall>kk. (\<nexists>k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K)) \<longrightarrow> f' kk = the (Zero (\<t>\<y>\<p>\<e>\<o>\<f> V))) \<close>
+               \<and> (\<forall>kk k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<and> k \<in> D     \<longrightarrow> f' kk \<Turnstile> (f k \<Ztypecolon> V))
+               \<and> (\<forall>kk. (\<nexists>k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<and> k \<in> D) \<longrightarrow> f' kk = the (Zero (\<t>\<y>\<p>\<e>\<o>\<f> V))) \<close>
   deriving \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
             Abstract_Domain  V P\<^sub>V \<Longrightarrow>
-            Abstract_Domain (MapVal K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<close>
+            Abstract_Domain (VMap K D V) (\<lambda>f. \<forall>k\<in>D. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<close>
        and \<open>Abstract_Domain K D \<Longrightarrow>
             Object_Equiv V eq \<Longrightarrow>
-            Object_Equiv (MapVal K V) (rel_fun (\<lambda>x y. x = y \<and> D x \<and> D y) eq) \<close>
+            Object_Equiv (VMap K DD V) (rel_fun (\<lambda>x y. x = y \<and> D x \<and> D y) eq) \<close>
 
+abbreviation Total_VMap :: "(VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<Rightarrow> 'v) \<phi>"
+                            ("_ \<equiv>\<Rrightarrow> _" [76,75] 75)
+  where \<open>K \<equiv>\<Rrightarrow> V \<equiv> K \<equiv>(UNIV)\<Rrightarrow> V\<close>
 
 lemma has_Zero_\<m>\<a>\<p> [simp]:
   \<open> has_Zero (\<m>\<a>\<p>[K, V]) \<longleftrightarrow> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> is_sTY K \<and> has_Zero V \<close>
@@ -74,9 +77,9 @@ lemma has_Zero_\<m>\<a>\<p> [simp]:
       metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>)
 
 
-lemma \<t>\<y>\<p>\<e>\<o>\<f>_MapVal [simp]:
+lemma \<t>\<y>\<p>\<e>\<o>\<f>_VMap [simp]:
   \<open> has_Zero (\<t>\<y>\<p>\<e>\<o>\<f> V)
-\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (MapVal K V) = \<m>\<a>\<p>[\<t>\<y>\<p>\<e>\<o>\<f> K, \<t>\<y>\<p>\<e>\<o>\<f> V]\<close>
+\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (VMap K D V) = \<m>\<a>\<p>[\<t>\<y>\<p>\<e>\<o>\<f> K, \<t>\<y>\<p>\<e>\<o>\<f> V]\<close>
 proof -
 
   have t1: \<open>(\<p>\<o>\<i>\<s>\<o>\<n> = \<m>\<a>\<p> [T,U]) = (T = \<p>\<o>\<i>\<s>\<o>\<n> \<or> U = \<p>\<o>\<i>\<s>\<o>\<n> \<or> \<not> is_sTY T)\<close> for T U
@@ -86,8 +89,8 @@ proof -
     by (metis SType_Of_not_poison)
 
   show \<open> has_Zero (\<t>\<y>\<p>\<e>\<o>\<f> V)
-    \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (MapVal K V) = \<m>\<a>\<p>[\<t>\<y>\<p>\<e>\<o>\<f> K, \<t>\<y>\<p>\<e>\<o>\<f> V]\<close>
-    unfolding SType_Of_def[where T=\<open>MapVal K V\<close>] Inhabited_def
+    \<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> (VMap K D V) = \<m>\<a>\<p>[\<t>\<y>\<p>\<e>\<o>\<f> K, \<t>\<y>\<p>\<e>\<o>\<f> V]\<close>
+    unfolding SType_Of_def[where T=\<open>VMap K D V\<close>] Inhabited_def
     apply (auto simp: Satisfiable_def,
            rule some1_equality, rule, assumption,
            (unfold Semantic_Type_def; clarsimp; cases \<open>\<t>\<y>\<p>\<e>\<o>\<f> K = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; cases \<open>\<t>\<y>\<p>\<e>\<o>\<f> V = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; simp; metis Well_Type_unique),
@@ -97,7 +100,7 @@ proof -
            metis \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>,
            clarsimp simp: t1 t2 has_Zero_def Inhabited_def Satisfiable_def)
     subgoal premises prems for y x p xa pa
-      by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. xa\<close>], THEN spec[where x=\<open>\<lambda>kk. if (\<exists>k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K)) then pa else y\<close>], simplified],
+      by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. xa\<close>], THEN spec[where x=\<open>\<lambda>kk. if (\<exists>k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<and> k \<in> D) then pa else y\<close>], simplified],
           auto simp: prems(6) split: if_split_asm)
     apply (clarsimp simp: t1 t2 has_Zero_def Inhabited_def Satisfiable_def Semantic_Type_def)
     subgoal premises prems for y x p xa pa
@@ -107,21 +110,21 @@ proof -
 qed
 
 
-lemma MapVal_zero [\<phi>reason add]:
+lemma VMap_zero [\<phi>reason add]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> T\<^sub>K = \<t>\<y>\<p>\<e>\<o>\<f> K \<and> T\<^sub>V = \<t>\<y>\<p>\<e>\<o>\<f> V
 \<Longrightarrow> Semantic_Zero_Val T\<^sub>V V z
-\<Longrightarrow> Semantic_Zero_Val (\<m>\<a>\<p> [T\<^sub>K, T\<^sub>V]) (MapVal K V) (\<lambda>_. z) \<close>
+\<Longrightarrow> Semantic_Zero_Val (\<m>\<a>\<p> [T\<^sub>K, T\<^sub>V]) (VMap K D V) (\<lambda>_. z) \<close>
   unfolding Semantic_Zero_Val_def Premise_def
   by (auto simp: \<m>\<a>\<p>_zero)
 
 
 
 lemma Transformation_Functor [\<phi>reason add]:
-      \<open> Functionality K (\<lambda>x. True)
+      \<open> Functionality K (\<lambda>x. x \<in> DD)
     \<Longrightarrow> Abstract_Domain\<^sub>L K D
     \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<t>\<y>\<p>\<e>\<o>\<f> V = \<t>\<y>\<p>\<e>\<o>\<f> V'
-    \<Longrightarrow> Transformation_Functor (MapVal K) (MapVal K) V V' range (\<lambda>_. UNIV)
-                               (rel_fun (\<lambda>x y. x = y \<and> D x \<and> D y)) \<close>
+    \<Longrightarrow> Transformation_Functor (VMap K DD) (VMap K DD) V V' range (\<lambda>_. UNIV)
+                               (rel_fun (\<lambda>x y. x = y \<and> D x \<and> D y \<and> x \<in> DD \<and> y \<in> DD)) \<close>
   unfolding Transformation_Functor_def Transformation_def rel_fun_def Premise_def
   apply (clarsimp simp: Satisfiable_def)
   subgoal premises prems for f g v proof -
@@ -129,7 +132,7 @@ lemma Transformation_Functor [\<phi>reason add]:
     obtain h where t1: \<open>v \<Turnstile> (f a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g (f a) (h a v)\<close> for a v
       using prems(4) by metis
 
-    have t2: \<open>sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<Longrightarrow> concretize K k = sVAL_emb kk\<close> for k kk
+    have t2: \<open>k \<in> DD \<Longrightarrow> sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<Longrightarrow> concretize K k = sVAL_emb kk\<close> for k kk
       by (metis Functionality_def Satisfiable_I concretize_SAT prems(1))
 
     show ?thesis
@@ -143,7 +146,7 @@ lemma Transformation_Functor [\<phi>reason add]:
 lemma Functional_Transformation_Functor [\<phi>reason add]:
   \<open> Abstract_Domain\<^sub>L K' (\<lambda>k. k \<in> D')
 \<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
-\<Longrightarrow> Fun_CV_TrFunctor (MapVal D) (MapVal D') K V K' V' (\<lambda>_. D) (\<lambda>f. f ` D)
+\<Longrightarrow> Fun_CV_TrFunctor (VMap D) (VMap D') K V K' V' (\<lambda>_. D) (\<lambda>f. f ` D)
                      (\<lambda>f _.  bij_betw f D' D)
                      (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>f\<^sub>1 f\<^sub>2 _ _ g. f\<^sub>2 o g o f\<^sub>1 )\<close>
   unfolding Fun_CV_TrFunctor_def Transformation_def

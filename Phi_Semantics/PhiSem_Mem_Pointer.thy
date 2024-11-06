@@ -560,6 +560,9 @@ where sem_dest_mk_pointer[simp]:
         \<open>Can_EqCompare res (sem_mk_pointer rp1) (sem_mk_pointer rp2)
            \<longleftrightarrow> (addr.blk rp1 = addr.blk rp2) \<or> (rp1 = 0) \<or> (rp2 = 0) \<or>
                (In_Mem res (addr.blk rp1) \<and> In_Mem res (addr.blk rp2))\<close>
+        (*TODO: should determine whether the addresses are within the allocation boundary
+                If so, our memory model should very largely resemble Compcert*)
+
   and eqcmp_ptr[simp]: "EqCompare (sem_mk_pointer rp1) (sem_mk_pointer rp2) \<longleftrightarrow> rp1 = rp2"
   and zero_ptr[simp]: \<open>Zero \<p>\<t>\<r> = Some (sem_mk_pointer 0)\<close>
   and WT_ptr[simp]: \<open>Well_Type \<p>\<t>\<r> = { sem_mk_pointer addr |addr. valid_rawaddr addr }\<close>
