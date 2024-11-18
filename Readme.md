@@ -8,6 +8,13 @@ A neat version for the readme is still in progress and will be updated soon. We 
 
 We are always looking for collaborations!
 
+### Publication
+
+Qiyuan Xu, David Sanán, Zhé Hóu, Xiaokun Luan, Conrad Watt, and Yang Liu. 2025. Generically Automating
+Separation Logic by Functors, Homomorphisms and Modules. Proc. ACM Program. Lang. 9, POPL, Article 67
+(January 2025), 40 pages. https://doi.org/10.1145/3704903
+
+
 <!-- 
 As a quickview to our language:
 
