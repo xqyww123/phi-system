@@ -1,5 +1,6 @@
 theory PhSem_BC_Storage
   imports PhSem_MoV PhSm_Addr
+  abbrevs "<storage>" = "\<s>\<t>\<o>\<r>\<a>\<g>\<e>"
 begin
 
 section \<open>Semantics\<close>
@@ -27,10 +28,10 @@ fiction_space storage =
      (perm_MoV_fiction RES.storage \<open>id :: VAL \<Rightarrow> VAL\<close> block.layout Null)
   by (standard, auto simp add: MovI.Rep_of_Val_ins_def BI_eq_iff)
 
-
-\<phi>type_def Contract :: \<open>contract \<Rightarrow> (contract_state,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<c>\<o>\<n>\<t>\<r>\<a>\<c>\<t>[_]")
-  where \<open>x \<Ztypecolon> Contract contract T \<equiv> x \<Ztypecolon> FIC.storage.\<phi> (contract \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> contract \<noteq> Null\<close>
+\<phi>type_def Storage :: \<open>contract \<Rightarrow> (contract_state,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<s>\<t>\<o>\<r>\<a>\<g>\<e>[_]")
+  where \<open>x \<Ztypecolon> Storage contract T \<equiv> x \<Ztypecolon> FIC.storage.\<phi> (contract \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> contract \<noteq> Null\<close>
   deriving Sep_Functor_1
 
+text \<open>\<s>\<t>\<o>\<r>\<a>\<g>\<e>\<close>
 
 end

@@ -94,8 +94,8 @@ abbreviation valid_rawaddr :: \<open>rawaddr \<Rightarrow> bool\<close>
 definition valid_memaddr :: "address \<Rightarrow> bool"
   where "valid_memaddr addr \<longleftrightarrow>
     Valid_MemBlk (addr.blk addr) \<and>
-    (addr.blk addr = Null \<longrightarrow> addr.index addr = []) \<and>
-    valid_index (block.layout (addr.blk addr)) (addr.index addr) \<and>
+    (addr.blk addr = Null \<longrightarrow> addr.offset addr = []) \<and>
+    valid_index (block.layout (addr.blk addr)) (addr.offset addr) \<and>
     address_type addr \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>"
 
 lemma valid_memaddr_not_poison[simp]:
@@ -292,14 +292,14 @@ lemma address_type__rawaddr_to_log__address_type[simp]:
 lemma dereference_pointer_type:
   \<open> valid_memaddr addr
 \<Longrightarrow> c \<in> Well_Type (block.layout (addr.blk addr))
-\<Longrightarrow> index_value (addr.index (rawaddr_to_log (address_type addr) (memaddr_to_raw addr))) c \<in> Well_Type (address_type addr) \<close>
+\<Longrightarrow> index_value (addr.offset (rawaddr_to_log (address_type addr) (memaddr_to_raw addr))) c \<in> Well_Type (address_type addr) \<close>
   by (metis memaddr_to_raw memaddr_to_raw_MemBlk address_type_def index_value_welltyp valid_memaddr_def)
 
 lemma dereference_pointer_value:
   \<open> valid_memaddr addr
 \<Longrightarrow> c \<in> Well_Type (block.layout (addr.blk addr))
-\<Longrightarrow> index_value (addr.index (rawaddr_to_log (address_type addr) (memaddr_to_raw addr))) c
-  = index_value (addr.index addr) c \<close>
+\<Longrightarrow> index_value (addr.offset (rawaddr_to_log (address_type addr) (memaddr_to_raw addr))) c
+  = index_value (addr.offset addr) c \<close>
   by (cases \<open>phantom_mem_semantic_type (address_type addr)\<close>,
       insert address_type_def dereference_pointer_type index_value_welltyp phantom_mem_semantic_type_single_value valid_memaddr_def,
       force, metis rawaddr_to_log)
@@ -308,8 +308,8 @@ lemma dereference_pointer_update:
   \<open> valid_memaddr addr
 \<Longrightarrow> u \<in> Well_Type (block.layout (addr.blk addr))
 \<Longrightarrow> v \<in> Well_Type (address_type addr)
-\<Longrightarrow> index_mod_value (addr.index (rawaddr_to_log (address_type addr) (memaddr_to_raw addr))) (\<lambda>_. v) u
-  = index_mod_value (addr.index addr) (\<lambda>_. v) u \<close>
+\<Longrightarrow> index_mod_value (addr.offset (rawaddr_to_log (address_type addr) (memaddr_to_raw addr))) (\<lambda>_. v) u
+  = index_mod_value (addr.offset addr) (\<lambda>_. v) u \<close>
   by (cases \<open>phantom_mem_semantic_type (address_type addr)\<close>,
       metis dereference_pointer_type dereference_pointer_value index_mod_value_unchanged memaddr_to_raw memaddr_to_raw_MemBlk phantom_mem_semantic_type_single_value valid_memaddr_def,
       simp)
@@ -327,8 +327,8 @@ lemma memaddr_MemBlk_shift[simp]:
   \<open>addr.blk (a +\<^sub>a i) = addr.blk a\<close>
   by (cases a, simp)
 
-lemma memaddr_index_shift[simp]:
-  \<open>addr.index (a +\<^sub>a i) = i + addr.index a\<close>
+lemma memaddr_offset_shift[simp]:
+  \<open>addr.offset (a +\<^sub>a i) = i + addr.offset a\<close>
   by (cases a, simp)
 
 lemma mem_shift_add_cancel[simp]:
@@ -376,11 +376,11 @@ lemma addr_geps_memblk[iff, \<phi>safe_simp]:
   unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_path[iff, \<phi>safe_simp]:
-  \<open>addr.index (addr \<tribullet> LOGIC_IDX(i)) = addr.index addr @ [i]\<close>
+  \<open>addr.offset (addr \<tribullet> LOGIC_IDX(i)) = addr.offset addr @ [i]\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
 lemma addr_geps_path[iff, \<phi>safe_simp]:
-  \<open>addr.index (addr_geps addr path) = addr.index addr @ path\<close>
+  \<open>addr.offset (addr_geps addr path) = addr.offset addr @ path\<close>
   unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_eq[iff, \<phi>safe_simp]:
@@ -454,7 +454,7 @@ subsubsection \<open>Reasoning Configuration\<close>
 lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr = addr'
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> valid_memaddr addr
-\<Longrightarrow> is_valid_index_of (addr.index addr) (block.layout (addr.blk addr')) (address_type addr)\<close>
+\<Longrightarrow> is_valid_index_of (addr.offset addr) (block.layout (addr.blk addr')) (address_type addr)\<close>
   unfolding valid_memaddr_def Premise_def is_valid_index_of_def address_type_def
   by clarsimp
 
@@ -789,107 +789,107 @@ section \<open>Reasoning Configuration\<close>
 
 subsection \<open>common_multiplicator of path\<close>
 
-lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) (addr.index (addr _ _)) _ _\<close>]:
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) (addr.offset (addr _ _)) _ _\<close>]:
   \<open> common_multiplicator_2 (@) pa pb pc
-\<Longrightarrow> common_multiplicator_2 (@) (addr.index (Addr a pa)) pb pc \<close>
+\<Longrightarrow> common_multiplicator_2 (@) (addr.offset (Addr a pa)) pb pc \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
-lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ (addr.index (addr _ _)) _\<close>]:
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ (addr.offset (addr _ _)) _\<close>]:
   \<open> common_multiplicator_2 (@) pa pb pc
-\<Longrightarrow> common_multiplicator_2 (@) pa (addr.index (Addr a pb)) pc \<close>
+\<Longrightarrow> common_multiplicator_2 (@) pa (addr.offset (Addr a pb)) pc \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
-lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ _ (addr.index (addr _ _))\<close>]:
+lemma [\<phi>reason %common_multiplicator_2_list for \<open>common_multiplicator_2 (@) _ _ (addr.offset (addr _ _))\<close>]:
   \<open> common_multiplicator_2 (@) pa pb pc
-\<Longrightarrow> common_multiplicator_2 (@) pa pb (addr.index (Addr a pc)) \<close>
+\<Longrightarrow> common_multiplicator_2 (@) pa pb (addr.offset (Addr a pc)) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ _ (addr.index (_ \<tribullet> LOGIC_IDX(_)))\<close>]:
-  \<open> common_multiplicator_2 (@) a b (addr.index c @ [i])
-\<Longrightarrow> common_multiplicator_2 (@) a b (addr.index (c \<tribullet> LOGIC_IDX(i))) \<close>
+           for \<open>common_multiplicator_2 (@) _ _ (addr.offset (_ \<tribullet> LOGIC_IDX(_)))\<close>]:
+  \<open> common_multiplicator_2 (@) a b (addr.offset c @ [i])
+\<Longrightarrow> common_multiplicator_2 (@) a b (addr.offset (c \<tribullet> LOGIC_IDX(i))) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ _ (addr.index (_ \<tribullet> LOGIC_IDX(_)) @ _)\<close>]:
-  \<open> common_multiplicator_2 (@) a b (addr.index c @ [i] @ cr)
-\<Longrightarrow> common_multiplicator_2 (@) a b (addr.index (c \<tribullet> LOGIC_IDX(i)) @ cr) \<close>
+           for \<open>common_multiplicator_2 (@) _ _ (addr.offset (_ \<tribullet> LOGIC_IDX(_)) @ _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b (addr.offset c @ [i] @ cr)
+\<Longrightarrow> common_multiplicator_2 (@) a b (addr.offset (c \<tribullet> LOGIC_IDX(i)) @ cr) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ (addr.index (_ \<tribullet> LOGIC_IDX(_))) _\<close>]:
-  \<open> common_multiplicator_2 (@) a (addr.index b @ [i]) c
-\<Longrightarrow> common_multiplicator_2 (@) a (addr.index (b \<tribullet> LOGIC_IDX(i))) c \<close>
+           for \<open>common_multiplicator_2 (@) _ (addr.offset (_ \<tribullet> LOGIC_IDX(_))) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (addr.offset b @ [i]) c
+\<Longrightarrow> common_multiplicator_2 (@) a (addr.offset (b \<tribullet> LOGIC_IDX(i))) c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ (addr.index (_ \<tribullet> LOGIC_IDX(_)) @ _) _\<close>]:
-  \<open> common_multiplicator_2 (@) a (addr.index b @ [i] @ br) c
-\<Longrightarrow> common_multiplicator_2 (@) a (addr.index (b \<tribullet> LOGIC_IDX(i)) @ br) c \<close>
+           for \<open>common_multiplicator_2 (@) _ (addr.offset (_ \<tribullet> LOGIC_IDX(_)) @ _) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (addr.offset b @ [i] @ br) c
+\<Longrightarrow> common_multiplicator_2 (@) a (addr.offset (b \<tribullet> LOGIC_IDX(i)) @ br) c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) (addr.index (_ \<tribullet> LOGIC_IDX(_))) _ _\<close>]:
-  \<open> common_multiplicator_2 (@) (addr.index a @ [i]) b c
-\<Longrightarrow> common_multiplicator_2 (@) (addr.index (a \<tribullet> LOGIC_IDX(i))) b c \<close>
+           for \<open>common_multiplicator_2 (@) (addr.offset (_ \<tribullet> LOGIC_IDX(_))) _ _\<close>]:
+  \<open> common_multiplicator_2 (@) (addr.offset a @ [i]) b c
+\<Longrightarrow> common_multiplicator_2 (@) (addr.offset (a \<tribullet> LOGIC_IDX(i))) b c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) (addr.index (_ \<tribullet> LOGIC_IDX(_)) @ _) _ _ \<close>]:
-  \<open> common_multiplicator_2 (@) (addr.index a @ [i] @ ar) b c
-\<Longrightarrow> common_multiplicator_2 (@) (addr.index (a \<tribullet> LOGIC_IDX(i)) @ ar) b c \<close>
+           for \<open>common_multiplicator_2 (@) (addr.offset (_ \<tribullet> LOGIC_IDX(_)) @ _) _ _ \<close>]:
+  \<open> common_multiplicator_2 (@) (addr.offset a @ [i] @ ar) b c
+\<Longrightarrow> common_multiplicator_2 (@) (addr.offset (a \<tribullet> LOGIC_IDX(i)) @ ar) b c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ _ (addr.index (addr_geps _ _))\<close>]:
-  \<open> common_multiplicator_2 (@) a b (addr.index c @ i)
-\<Longrightarrow> common_multiplicator_2 (@) a b (addr.index (addr_geps c i)) \<close>
+           for \<open>common_multiplicator_2 (@) _ _ (addr.offset (addr_geps _ _))\<close>]:
+  \<open> common_multiplicator_2 (@) a b (addr.offset c @ i)
+\<Longrightarrow> common_multiplicator_2 (@) a b (addr.offset (addr_geps c i)) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ _ (addr.index (addr_geps _ _) @ _)\<close>]:
-  \<open> common_multiplicator_2 (@) a b (addr.index c @ i @ cr)
-\<Longrightarrow> common_multiplicator_2 (@) a b (addr.index (addr_geps c i) @ cr) \<close>
+           for \<open>common_multiplicator_2 (@) _ _ (addr.offset (addr_geps _ _) @ _)\<close>]:
+  \<open> common_multiplicator_2 (@) a b (addr.offset c @ i @ cr)
+\<Longrightarrow> common_multiplicator_2 (@) a b (addr.offset (addr_geps c i) @ cr) \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ (addr.index (addr_geps _ _)) _\<close>]:
-  \<open> common_multiplicator_2 (@) a (addr.index b @ i) c
-\<Longrightarrow> common_multiplicator_2 (@) a (addr.index (addr_geps b i)) c \<close>
+           for \<open>common_multiplicator_2 (@) _ (addr.offset (addr_geps _ _)) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (addr.offset b @ i) c
+\<Longrightarrow> common_multiplicator_2 (@) a (addr.offset (addr_geps b i)) c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) _ (addr.index (addr_geps _ _) @ _) _\<close>]:
-  \<open> common_multiplicator_2 (@) a (addr.index b @ i @ br) c
-\<Longrightarrow> common_multiplicator_2 (@) a (addr.index (addr_geps b i) @ br) c \<close>
+           for \<open>common_multiplicator_2 (@) _ (addr.offset (addr_geps _ _) @ _) _\<close>]:
+  \<open> common_multiplicator_2 (@) a (addr.offset b @ i @ br) c
+\<Longrightarrow> common_multiplicator_2 (@) a (addr.offset (addr_geps b i) @ br) c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) (addr.index (addr_geps _ _)) _ _\<close>]:
-  \<open> common_multiplicator_2 (@) (addr.index a @ i) b c
-\<Longrightarrow> common_multiplicator_2 (@) (addr.index (addr_geps a i)) b c \<close>
+           for \<open>common_multiplicator_2 (@) (addr.offset (addr_geps _ _)) _ _\<close>]:
+  \<open> common_multiplicator_2 (@) (addr.offset a @ i) b c
+\<Longrightarrow> common_multiplicator_2 (@) (addr.offset (addr_geps a i)) b c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list
-           for \<open>common_multiplicator_2 (@) (addr.index (addr_geps _ _) @ _) _ _ \<close>]:
-  \<open> common_multiplicator_2 (@) (addr.index a @ i @ ar) b c
-\<Longrightarrow> common_multiplicator_2 (@) (addr.index (addr_geps a i) @ ar) b c \<close>
+           for \<open>common_multiplicator_2 (@) (addr.offset (addr_geps _ _) @ _) _ _ \<close>]:
+  \<open> common_multiplicator_2 (@) (addr.offset a @ i @ ar) b c
+\<Longrightarrow> common_multiplicator_2 (@) (addr.offset (addr_geps a i) @ ar) b c \<close>
   unfolding common_multiplicator_2_def
   by clarsimp
 

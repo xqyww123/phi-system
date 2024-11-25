@@ -7,8 +7,6 @@ begin
 
 section \<open>Semantics\<close>
 
-
-
 debt_axiomatization \<m>\<a>\<p> :: \<open>TY \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<m>\<a>\<p> [_,_]")
                 and \<m>\<a>\<p>_rep  :: \<open>(sVAL \<Rightarrow> VAL) \<Rightarrow> VAL\<close>
   where \<m>\<a>\<p>_rep_inj [simp] : \<open>\<m>\<a>\<p>_rep vsT = \<m>\<a>\<p>_rep vsT' \<longleftrightarrow> vsT = vsT'\<close>
