@@ -334,4 +334,15 @@ lemma MVT_biTr_tgt:
   unfolding Guided_Mem_Coercion_def \<phi>Prod'_def
   by (simp add: mem_coerce_VMap[where V=V and TY\<^sub>V = \<open>\<t>\<y>\<p>\<e>\<o>\<f> V\<close>, simplified] \<phi>Prod_expn'' \<phi>Prod_expn')
 
+term 1
+
+locale AA
+begin
+
+attribute_setup AAA = \<open>\<close>
+term
+
+end
+
+
 end
