@@ -12,7 +12,7 @@
 <h1>Theory BNF_Fixpoint_Base</h1>
 </div>
 
-<pre class="source"><span class="comment1"><span>(</span><span>*</span><span>  Title:      HOL/BNF_Fixpoint_Base.thy
+<pre class="source"><span class="comment1"><span>(*  Title:      HOL/BNF_Fixpoint_Base.thy
     Author:     Lorenz Panny, TU Muenchen
     Author:     Dmitriy Traytel, TU Muenchen
     Author:     Jasmin Blanchette, TU Muenchen
@@ -20,9 +20,9 @@
     Copyright   2012, 2013, 2014
 
 Shared fixpoint operations on bounded natural functors.
-</span><span>*</span><span>)</span></span><span>
+*)</span></span><span>
 
-</span><span class="keyword1"><span class="command"><span>section</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>Shared Fixpoint Operations on Bounded Natural Functors</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>section</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹Shared Fixpoint Operations on Bounded Natural Functors›</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span>theory</span></span></span><span> </span><a href="BNF_Fixpoint_Base.html"><span>BNF_Fixpoint_Base</span></a><span>
 </span><span class="keyword2"><span class="keyword"><span>imports</span></span></span><span> </span><a href="BNF_Composition.html"><span>BNF_Composition</span></a><span> </span><a href="Basic_BNFs.html"><span>Basic_BNFs</span></a><span>
@@ -301,13 +301,13 @@ Shared fixpoint operations on bounded natural functors.
 </span><span class="keyword1"><span class="command"><span>lemma</span></span></span><span> </span><span class="entity_def" id="BNF_Fixpoint_Base.Let_const|fact"><span class="entity_def" id="BNF_Fixpoint_Base.Let_const|thm"><span>Let_const</span></span></span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>"</span><a class="entity_ref" href="HOL.html#HOL.Let|const"><span>Let</span></a><span> </span><span class="free"><span>x</span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>λ</span></span><span class="main"><span class="bound"><span>_</span></span></span><span class="main"><span>.</span></span><span> </span><span class="free"><span>c</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><a class="entity_ref" href="HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><span class="free"><span>c</span></span><span>"</span></span></span><span>
   </span><span class="keyword1"><span class="command"><span>unfolding</span></span></span><span> </span><a class="entity_ref" href="HOL.html#HOL.Let_def|fact"><span>Let_def</span></a><span> </span><span class="keyword1"><span class="command"><span>..</span></span></span><span>
 
-</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_util_tactics.ML.html"><span>‹</span><span>Tools/BNF/bnf_fp_util_tactics.ML</span><span>›</span></a></span><span>
-</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_util.ML.html"><span>‹</span><span>Tools/BNF/bnf_fp_util.ML</span><span>›</span></a></span><span>
-</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_def_sugar_tactics.ML.html"><span>‹</span><span>Tools/BNF/bnf_fp_def_sugar_tactics.ML</span><span>›</span></a></span><span>
-</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_def_sugar.ML.html"><span>‹</span><span>Tools/BNF/bnf_fp_def_sugar.ML</span><span>›</span></a></span><span>
-</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_n2m_tactics.ML.html"><span>‹</span><span>Tools/BNF/bnf_fp_n2m_tactics.ML</span><span>›</span></a></span><span>
-</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_n2m.ML.html"><span>‹</span><span>Tools/BNF/bnf_fp_n2m.ML</span><span>›</span></a></span><span>
-</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_n2m_sugar.ML.html"><span>‹</span><span>Tools/BNF/bnf_fp_n2m_sugar.ML</span><span>›</span></a></span><span>
+</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_util_tactics.ML.html"><span>‹Tools/BNF/bnf_fp_util_tactics.ML›</span></a></span><span>
+</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_util.ML.html"><span>‹Tools/BNF/bnf_fp_util.ML›</span></a></span><span>
+</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_def_sugar_tactics.ML.html"><span>‹Tools/BNF/bnf_fp_def_sugar_tactics.ML›</span></a></span><span>
+</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_def_sugar.ML.html"><span>‹Tools/BNF/bnf_fp_def_sugar.ML›</span></a></span><span>
+</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_n2m_tactics.ML.html"><span>‹Tools/BNF/bnf_fp_n2m_tactics.ML›</span></a></span><span>
+</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_n2m.ML.html"><span>‹Tools/BNF/bnf_fp_n2m.ML›</span></a></span><span>
+</span><span class="keyword1"><span class="command"><span>ML_file</span></span></span><span> </span><span class="quoted"><a href="ISABELLE_HOME/src/HOL/Tools/BNF/bnf_fp_n2m_sugar.ML.html"><span>‹Tools/BNF/bnf_fp_n2m_sugar.ML›</span></a></span><span>
 
 </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
 </span></pre>

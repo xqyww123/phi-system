@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><link rel="stylesheet" type="text/css" href="isabelle.css"/>
+<title>File ‹library/syntax/with_IN_arg.ML›</title>
+</head>
+
+
+<body>
+<div class="head">
+<h1>File ‹library/syntax/with_IN_arg.ML›</h1>
+</div>
+
+<pre class="source"><span class="comment1"><span>(*signature PLPR_SYNTAX = sig
+include PLPR_SYNTAX
+
+val dest_with_IN_arg : term -&gt; indexname list * term
+val elim_with_IN_arg : thm -&gt; indexname list * thm
+
+(* (*must be beta-eta normalized*)
+val minimal_pattern_implied_by_IN_arg : indexname list -&gt; term -&gt; term
+*)
+
+end
+
+structure PLPR_Syntax : PLPR_SYNTAX = struct
+open PLPR_Syntax
+
+fun dest_with_IN_arg tm =
+  let fun dest ret (Const(<span class="hidden">\&lt;^</span><span class="control">const_name</span><span class="hidden">&gt;</span>‹With_IN_Arg›, _) $ P $ X) =
+            (case X of Var v =&gt; dest (fst v :: ret) P
+                     | _ =&gt; raise TERM ("An IN-argument must be a schematic variable", [tm]))
+        | dest ret P = (ret, P)
+   in dest [] tm
+  end
+
+fun elim_with_IN_arg thm =
+  let val (inargs, _) = dest_with_IN_arg (Thm.concl_of thm)
+   in (inargs, fold (fn _ =&gt; fn th =&gt; @{thm' With_IN_Arg_I} RS th) inargs thm)
+  end
+
+(* I dunno if we will enable this feature, it is not good and not really useful
+(*must be beta-eta normalized*)
+fun minimal_pattern_implied_by_IN_arg inargs term =
+  let val idx = Unsynchronized.ref (Term.maxidx_of_term term)
+      fun gen_var (btys, tm) = (idx := !idx + 1; Var (("_", !idx), Term.fastype_of1 (btys, tm)))
+      exception Not_Occur
+      fun gen btys tm = gen' btys tm handle Not_Occur =&gt; gen_var (btys, tm)
+      and gen' btys (X as _ $ _) =
+           (case Term.strip_comb X
+              of (Var v, _) =&gt; if member (op =) inargs (fst v) then X else raise Not_Occur
+               | (H, args) =&gt; let val args' = map (gen btys) args
+                               in if exists (fn Var v =&gt; member (op =) inargs (fst v)
+                                              | _ =&gt; true) args'
+                                  then Term.list_comb (H, args')
+                                  else gen_var (btys, X)
+                              end)
+        | gen' btys (Abs (_, ty, X)) = gen' (ty :: btys) X
+        | gen' _ (Var v) = if member (op =) inargs (fst v) then Var v else raise Not_Occur
+   in ()
+  end*)
+
+end*)</span></span></pre>
+</body>
+
+</html>

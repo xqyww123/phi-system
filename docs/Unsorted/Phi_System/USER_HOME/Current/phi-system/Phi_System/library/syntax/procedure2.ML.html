@@ -93,9 +93,9 @@ fun printer_translation' ctxt tab mode (Abs (N,T,X))
       = H $ printer_translation' ctxt tab mode S $ P
   | printer_translation' ctxt tab mode ((H as Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹Subjection›, _)) $ S $ P)
       = H $ printer_translation' ctxt tab mode S $ P
-  | printer_translation' ctxt tab mode ((H as <span class="hidden">\&lt;^</span><span class="control">Const_</span><span class="hidden">&gt;</span>‹ExSet _ _›) $ S)
+  | printer_translation' ctxt tab mode ((H as <span class="hidden">\&lt;^</span><span class="control">Const_</span><span class="hidden">&gt;</span>‹ExBI _ _›) $ S)
       = H $ printer_translation' ctxt tab mode S
-  | printer_translation' ctxt tab mode ((H as Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹ExSet›, _)) $ S)
+  | printer_translation' ctxt tab mode ((H as Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹ExBI›, _)) $ S)
       = H $ printer_translation' ctxt tab mode S
   | printer_translation' ctxt tab mode S =
       strip_separations S
@@ -107,8 +107,8 @@ fun need_translation' ctxt tab mode (Abs (_,_,X)) = need_translation' ctxt tab m
       = need_translation' ctxt tab mode S
   | need_translation' ctxt tab mode (Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹Subjection›, _) $ S $ _)
       = need_translation' ctxt tab mode S
-  | need_translation' ctxt tab mode (<span class="hidden">\&lt;^</span><span class="control">Const_</span><span class="hidden">&gt;</span>‹ExSet _ _› $ S) = need_translation' ctxt tab mode S
-  | need_translation' ctxt tab mode (Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹ExSet›, _) $ S) = need_translation' ctxt tab mode S
+  | need_translation' ctxt tab mode (<span class="hidden">\&lt;^</span><span class="control">Const_</span><span class="hidden">&gt;</span>‹ExBI _ _› $ S) = need_translation' ctxt tab mode S
+  | need_translation' ctxt tab mode (Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹ExBI›, _) $ S) = need_translation' ctxt tab mode S
   | need_translation' ctxt tab mode (Const (<span class="hidden">\&lt;^</span><span class="control">const_name</span><span class="hidden">&gt;</span>‹times›, _) $ X $ Y)
       = need_tr_item ctxt tab mode  Y orelse need_translation' ctxt tab mode  X
   | need_translation' ctxt tab mode  (Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹COMMA›, _) $ X $ Y)
@@ -140,14 +140,14 @@ val _ = Theory.setup (Sign.typed_print_translation [
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.View_Shift [S,T] (fn [S',T'] =&gt;
               Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹Simple_View_Shift›, Type("",[])) $ S' $ T'))),
-    (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹Imply›, (fn ctxt =&gt; fn TY =&gt; fn [S,T,P] =&gt;
+    (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹Transformation›, (fn ctxt =&gt; fn TY =&gt; fn [S,T,P] =&gt;
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.Implication [S,T] (fn [S',T'] =&gt;
-              Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹Imply›, Type("",[])) $ S' $ T' $ P))),
-    (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹SimpleImply›, (fn ctxt =&gt; fn TY =&gt; fn [S,T] =&gt;
+              Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹Transformation›, Type("",[])) $ S' $ T' $ P))),
+    (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹SimpleTransformation›, (fn ctxt =&gt; fn TY =&gt; fn [S,T] =&gt;
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.Implication [S,T] (fn [S',T'] =&gt;
-              Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹SimpleImply›, Type("",[])) $ S' $ T'))),
+              Const (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹SimpleTransformation›, Type("",[])) $ S' $ T'))),
     (<span class="hidden">\&lt;^</span><span class="control">const_syntax</span><span class="hidden">&gt;</span>‹CurrentConstruction›, (fn ctxt =&gt; fn TY =&gt; fn [m,s,R,S] =&gt;
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.Construction [S] (fn [S'] =&gt;

@@ -33,6 +33,9 @@ ML_file "ML/ml_init.ML";
 ML_file "ML/ml_system.ML";
 
 ML_file "General/basics.ML";
+ML_file "General/string.ML";
+ML_file "General/vector.ML";
+ML_file "General/array.ML";
 ML_file "General/symbol_explode.ML";
 
 ML_file "Concurrent/multithreading.ML";
@@ -52,8 +55,10 @@ subsection "Library of general tools";
 
 ML_file "library.ML";
 ML_file "General/print_mode.ML";
+ML_file "General/integer.ML";
 ML_file "General/alist.ML";
 ML_file "General/table.ML";
+ML_file "General/set.ML";
 
 ML_file "General/random.ML";
 ML_file "General/value.ML";
@@ -77,7 +82,6 @@ section "Bootstrap phase 2: towards ML within Isar context";
 
 subsection "Library of general tools";
 
-ML_file "General/integer.ML";
 ML_file "General/stack.ML";
 ML_file "General/queue.ML";
 ML_file "General/heap.ML";
@@ -85,6 +89,7 @@ ML_file "General/same.ML";
 ML_file "General/ord_list.ML";
 ML_file "General/balanced_tree.ML";
 ML_file "General/linear_set.ML";
+ML_file "General/change_table.ML";
 ML_file "General/buffer.ML";
 ML_file "General/pretty.ML";
 ML_file "General/rat.ML";
@@ -109,7 +114,6 @@ ML_file "PIDE/protocol_message.ML";
 ML_file "PIDE/document_id.ML";
 ML_file "General/socket_io.ML";
 
-ML_file "General/change_table.ML";
 ML_file "General/graph.ML";
 
 ML_file "System/options.ML";
@@ -325,9 +329,9 @@ ML_file "Thy/document_output.ML";
 ML_file "Thy/document_antiquotations.ML";
 ML_file "General/graph_display.ML";
 ML_file "pure_syn.ML";
+ML_file "PIDE/resources.ML";
 ML_file "PIDE/command.ML";
 ML_file "PIDE/query_operation.ML";
-ML_file "PIDE/resources.ML";
 ML_file "Thy/thy_info.ML";
 ML_file "thm_deps.ML";
 ML_file "Thy/export_theory.ML";
@@ -362,6 +366,8 @@ subsection "Miscellaneous tools and packages for Pure Isabelle";
 
 ML_file "General/base64.ML";
 ML_file "General/xz.ML";
+ML_file "General/zstd.ML";
+ML_file "Tools/prismjs.ML";
 ML_file "Tools/build.ML";
 ML_file "Tools/named_thms.ML";
 ML_file "Tools/print_operation.ML";
@@ -378,7 +384,6 @@ ML_file "Tools/doc.ML";
 ML_file "Tools/jedit.ML";
 ML_file "Tools/ghc.ML";
 ML_file "Tools/generated_files.ML";
-
 </span></pre>
 </body>
 

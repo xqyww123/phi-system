@@ -65,14 +65,14 @@ either side is a proper subterm of the other.
 *)</span></span><span>
 </span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>get_ctors</span></span><span> </span><span class="entity"><span>T_names</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>sugar</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>BNF_FP_Def_Sugar.fp_sugar</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=</span></span><span>
   </span><span class="entity"><span>sugar</span></span><span>
-  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>fp_ctr_sugar</span><span>
-  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>ctr_defs</span><span>
+  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>fp_ctr_sugar
+  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>ctr_defs
   </span><span>|&gt;</span><span> </span><span>map</span><span> </span><span class="main"><span>(</span></span><span>Thm.concl_of</span><span> </span><span>#&gt;</span><span> </span><span>Logic.dest_equals</span><span> </span><span>#&gt;</span><span> </span><span>fst</span><span> </span><span>#&gt;</span><span> </span><span class="entity"><span>mk_ctor</span></span><span> </span><span class="entity"><span>T_names</span></span><span class="main"><span>)</span></span><span>
 
 </span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>get_mutuals</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>sugar</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>BNF_FP_Def_Sugar.fp_sugar</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=</span></span><span>
   </span><span class="entity"><span>sugar</span></span><span>
-  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>fp_res</span><span>
-  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>Ts</span><span>
+  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>fp_res
+  </span><span>|&gt;</span><span> </span><span class="main"><span>#</span></span><span>Ts
   </span><span>|&gt;</span><span> </span><span>map</span><span> </span><span class="main"><span>(</span></span><span>dest_Type</span><span> </span><span>#&gt;</span><span> </span><span>fst</span><span class="main"><span>)</span></span><span>
 
 </span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>get_ctors_mutuals</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="entity"><span>sugar</span></span><span> </span><span class="main"><span>=</span></span><span>

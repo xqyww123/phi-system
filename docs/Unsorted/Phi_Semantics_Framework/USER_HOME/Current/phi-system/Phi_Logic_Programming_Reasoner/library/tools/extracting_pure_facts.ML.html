@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><link rel="stylesheet" type="text/css" href="isabelle.css"/>
+<title>File ‹library/tools/extracting_pure_facts.ML›</title>
+</head>
+
+
+<body>
+<div class="head">
+<h1>File ‹library/tools/extracting_pure_facts.ML›</h1>
+</div>
+
+<pre class="source"><span class="keyword1"><span class="keyword"><span>signature</span></span></span><span> </span><span class="entity"><span>PHI_REASONERS</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>sig</span></span></span><span>
+</span><span class="keyword1"><span class="keyword"><span>include</span></span></span><span> </span><span class="entity"><span>PHI_REASONERS</span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> extract_implied_fact </span><span class="main"><span>:</span></span><span> </span><span class="main"><span>{</span></span><span>wrap_all</span><span class="main"><span>:</span></span><span> </span><span>bool</span><span class="main"><span>}</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>Proof.context</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span>thm</span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span>thm</span><span> </span><span>list</span><span> </span><span>option</span><span>
+</span><span class="comment1"><span>(*val implied_fact_extraction : Phi_Reasoners.pattern -&gt; Phi_Reasoners.extraction*)</span></span><span>
+</span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> is_generating_extraction_rule </span><span class="main"><span>:</span></span><span> </span><span>bool</span><span> </span><span>Config.T</span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> </span><span class="entity"><span>Inhabitance_SS</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>Simpset</span></span><span> </span><span class="main"><span>(</span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>initial_ss</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>Simpset_Configure.Empty_SS</span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>binding</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>SOME</span><span> </span><span class="antiquoted"><span class="entity"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">binding</span><span class="hidden">&gt;</span></span></span><span>‹</span><span class="entity_def" id="PLPR.inhabitance_simp|attribute"><span class="entity_def" id="PLPR.inhabitance_simp|fact"><span>inhabitance_simp</span></span></span><span>›</span></span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>comment</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_quoted"><span>"Rules simplifying local facts implied from φ-type specifications"</span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>attribute</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>NONE</span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>post_merging</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>I</span><span>
+</span><span class="main"><span>)</span></span><span>
+
+
+</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> </span><span class="entity"><span>Phi_Reasoners</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>PHI_REASONERS</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>struct</span></span></span><span>
+</span><span class="keyword3"><span class="keyword"><span>open</span></span></span><span> </span><span>Phi_Reasoners</span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>is_generating_extraction_rule</span></span><span> </span><span class="main"><span>=</span></span><span>
+      </span><span class="entity"><span>Attrib.setup_config_bool</span></span><span> </span><span class="antiquoted"><span class="entity"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">binding</span><span class="hidden">&gt;</span></span></span><span>‹</span><span class="entity_def" id="PLPR.\&lt;phi&gt;is_generating_extraction_rule|attribute"><span>φis_generating_extraction_rule</span></span><span>›</span></span></span><span> </span><span class="main"><span>(</span></span><span>K</span><span> </span><span>false</span><span class="main"><span>)</span></span><span>
+
+</span><span class="comment1"><span>(*structure Data = Generic_Data
+(
+  type T = thm Item_Net.T;
+  val empty = Thm.item_net;
+  val merge = Item_Net.merge;
+);
+
+val member = Item_Net.member o Data.get o Context.Proof;
+
+val content = Item_Net.content o Data.get;
+val get = content o Context.Proof;
+
+fun extract_elim_rule ctxt thm =
+  if Phi_Syntax.is_elim_rule (Thm.prop_of thm)
+  then thm
+  else Phi_Reasoners.extract_elim_rule ctxt (get ctxt) thm
+
+fun add_thm thm ctxt =
+  Data.map (Item_Net.update (extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
+
+fun del_thm thm ctxt =
+  Data.map (Item_Net.remove (extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
+
+
+)
+*)</span></span><span>
+</span><span class="comment1"><span>(*sequent should be in shape ‹(Satisfiable X ⟹ C) ⟹ C›.
+  returns all facts implied in the inhabitance. *)</span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>Do_Extract_Implied_Facts</span></span><span> </span><span class="main"><span>=</span></span><span>
+      </span><span class="antiquoted"><span class="entity"><span class="antiquote"><span>@{</span></span><span class="operator"><span>lemma'</span></span><span> </span><span class="quoted"><span>‹ </span><span class="free"><span>P</span></span><span>
+             </span><span class="main"><span>⟹</span></span><span> </span><a class="entity_ref" href="../../../../../../Phi_Logic_Programming_Reasoner.PLPR.html#PLPR.\&lt;r&gt;EIF|const"><span>𝗋EIF</span></a><span> </span><span class="free"><span>P</span></span><span> </span><span class="free"><span>C</span></span><span>
+             </span><span class="main"><span>⟹</span></span><span> </span><span class="free"><span>C</span></span><span>›</span></span><span>
+            </span><span class="quasi_keyword"><span>by</span></span><span> </span><span class="main"><span>(</span></span><span class="operator"><span>unfold</span></span><span> </span><a class="entity_ref" href="../../../../../../Phi_Logic_Programming_Reasoner.PLPR.html#PLPR.\&lt;r&gt;EIF_def|fact"><span>𝗋EIF_def</span></a><span class="main"><span class="keyword3"><span>,</span></span></span><span> </span><a class="entity_ref" href="../../../../../../../../HOL/HOL/ISABELLE_HOME/src/Provers/blast.ML.html#HOL.blast|method"><span class="operator"><span>blast</span></span></a><span class="main"><span>)</span></span><span class="antiquote"><span>}</span></span></span></span><span>
+
+</span><span class="comment1"><span>(*wrap_all: wrap generated schematic variables by HOL.All*)</span></span><span>
+</span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>extract_implied_fact</span></span><span> </span><span class="main"><span>{</span></span><span class="entity"><span>wrap_all</span></span><span class="main"><span>}</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="entity"><span>statement0</span></span><span> </span><span class="main"><span>=</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>case</span></span></span><span> </span><span>try</span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>Phi_Conv.atomize</span></span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>statement0</span></span><span>
+    </span><span class="keyword2"><span class="keyword"><span>of</span></span></span><span> </span><span>SOME</span><span> </span><span class="entity"><span>statement</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span> </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>case</span></span></span><span> </span><span>Thm.prop_of</span><span> </span><span class="entity"><span>statement</span></span><span>
+                </span><span class="keyword2"><span class="keyword"><span>of</span></span></span><span> </span><span class="antiquoted"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span></span></span><span>‹</span><a class="entity_ref" href="../../../../../../../../HOL/HOL/HOL.html#HOL.Trueprop|const"><span>Trueprop</span></a><span>›</span></span><span> </span><span>$</span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>)</span></span><span>
+                 </span><span class="main"><span>|</span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span>error</span><span> </span><span class="inner_quoted"><span>"extract_implied_fact: must be a statement in the object logic"</span></span><span>
+      </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>Phi_Reasoner.info_pretty</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="inner_numeral"><span>2</span></span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span>Pretty.chunks</span><span> </span><span class="main"><span>[</span></span><span>
+              </span><span>Pretty.str</span><span> </span><span class="inner_quoted"><span>"Extracting implied pure facts from:"</span></span><span class="main"><span>,</span></span><span>
+              </span><span>Syntax.pretty_term</span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.prop_of</span><span> </span><span class="entity"><span>statement</span></span><span class="main"><span>)</span></span><span>
+          </span><span class="main"><span>]</span></span><span class="main"><span>)</span></span><span>
+   </span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>statement</span></span><span> </span><span class="entity"><span>RS'</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>ctxt</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>Do_Extract_Implied_Facts</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+   </span><span>|&gt;</span><span> </span><span class="entity"><span>Phi_Reasoner.reason</span></span><span> </span><span>NONE</span><span> </span><span class="main"><span>(</span></span><span>SOME</span><span> </span><span class="inner_numeral"><span>1</span></span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>ctxt</span></span><span>
+   </span><span>|&gt;</span><span> </span><span>Option.map</span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>th</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+        </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span> </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>ths</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>PLPR_Syntax.elim_ant_sequence_or_HOL_conj</span></span><span> </span><span class="entity"><span>th</span></span><span>
+            </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>simp</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>Simplifier.full_simplify</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>Inhabitance_SS.enhance</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span>addsimps</span><span> </span><span class="entity"><span>Useful_Thms.get</span></span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span>
+                    </span><span>#&gt;</span><span> </span><span class="entity"><span>PLPR_Syntax.elim_ant_sequence_or_HOL_conj</span></span><span>
+            </span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>holall_intr_vars</span></span><span> </span><span class="entity"><span>th</span></span><span> </span><span class="main"><span>=</span></span><span>
+              </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span> </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>vars</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Cterms.build</span><span> </span><span class="main"><span>(</span></span><span>Cterms.add_vars</span><span> </span><span class="entity"><span>th</span></span><span class="main"><span>)</span></span><span>
+               </span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span> </span><span>fold_rev</span><span> </span><span class="main"><span>(</span></span><span>Conv.fconv_rule</span><span> </span><span class="main"><span>(</span></span><span>Conv.rewr_conv</span><span> </span><span class="antiquoted"><span class="entity"><span class="antiquote"><span>@{</span></span><span class="operator"><span>thm'</span></span><span> </span><a class="entity_ref" href="../../../../../../../../HOL/HOL/HOL.html#HOL.atomize_all|fact"><span>atomize_all</span></a><span class="antiquote"><span>}</span></span></span></span><span class="main"><span>)</span></span><span> </span><span>oo</span><span> </span><span>Thm.forall_intr</span><span class="main"><span>)</span></span><span>
+                           </span><span class="main"><span>(</span></span><span>Cterms.list_set</span><span> </span><span class="entity"><span>vars</span></span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>th</span></span><span>
+              </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
+         </span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span> </span><span class="keyword2"><span class="keyword"><span>if</span></span></span><span> </span><span class="entity"><span>wrap_all</span></span><span>
+            </span><span class="keyword2"><span class="keyword"><span>then</span></span></span><span> </span><span>maps</span><span> </span><span class="main"><span>(</span></span><span> </span><span class="entity"><span>holall_intr_vars</span></span><span>
+                     </span><span>#&gt;</span><span> </span><span class="entity"><span>simp</span></span><span> </span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>ths</span></span><span>
+            </span><span class="keyword2"><span class="keyword"><span>else</span></span></span><span> </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span> </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>(</span></span><span class="main"><span>_</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>ths'</span></span><span class="main"><span>)</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>ctxt'</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Variable.import</span><span> </span><span>false</span><span> </span><span class="entity"><span>ths</span></span><span> </span><span class="entity"><span>ctxt</span></span><span>
+                  </span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span> </span><span>maps</span><span> </span><span class="entity"><span>simp</span></span><span> </span><span class="entity"><span>ths'</span></span><span>
+                  </span><span>|&gt;</span><span> </span><span>Variable.export</span><span> </span><span class="entity"><span>ctxt'</span></span><span> </span><span class="entity"><span>ctxt</span></span><span>
+                 </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
+        </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span class="main"><span>)</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
+    </span><span class="main"><span>|</span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span>NONE</span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>is_extraction_rule</span></span><span> </span><span class="main"><span>(</span></span><span class="antiquoted"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span></span></span><span>‹</span><a class="entity_ref" href="../../../../../../../../HOL/HOL/HOL.html#HOL.Trueprop|const"><span>Trueprop</span></a><span>›</span></span><span> </span><span>$</span><span> </span><span class="main"><span>(</span></span><span class="antiquoted"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span></span></span><span>‹</span><a class="entity_ref" href="../../../../../../Phi_Logic_Programming_Reasoner.PLPR.html#PLPR.\&lt;r&gt;EIF|const"><span>𝗋EIF</span></a><span>›</span></span><span> </span><span>$</span><span> </span><span class="main"><span>_</span></span><span> </span><span>$</span><span> </span><span class="main"><span>_</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+    </span><span class="main"><span>=</span></span><span> </span><span>true</span><span>
+</span><span class="comment1"><span>(*| is_extraction_rule (<span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Trueprop› $ (
+      <span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹HOL.implies› $ (<span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Satisfiable _› $ _) $ _))
+    = true*)</span></span><span>
+  </span><span class="main"><span>|</span></span><span> </span><span class="entity"><span>is_extraction_rule</span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>false</span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>generate_extraction_rule</span></span><span> </span><span class="entity"><span>ctxt0</span></span><span> </span><span class="entity"><span>thm0</span></span><span> </span><span class="main"><span>=</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>if</span></span></span><span> </span><span class="entity"><span>is_extraction_rule</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.concl_of</span><span> </span><span class="entity"><span>thm0</span></span><span class="main"><span>)</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>then</span></span></span><span> </span><span class="entity"><span>thm0</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>else</span></span></span><span> </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span>
+    </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>(</span></span><span class="main"><span>_</span></span><span class="main"><span>,</span></span><span class="main"><span>[</span></span><span class="entity"><span>thm</span></span><span class="main"><span>]</span></span><span class="main"><span>)</span></span><span class="main"><span>,</span></span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Variable.import</span><span> </span><span>true</span><span> </span><span class="main"><span>[</span></span><span class="entity"><span>thm0</span></span><span class="main"><span>]</span></span><span> </span><span class="entity"><span>ctxt0</span></span><span>
+    </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>Phi_Reasoner.info_pretty</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="inner_numeral"><span>1</span></span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span>Pretty.chunks</span><span> </span><span class="main"><span>[</span></span><span>
+              </span><span>Pretty.str</span><span> </span><span class="inner_quoted"><span>"Generating inhabitance rule from:"</span></span><span class="main"><span>,</span></span><span>
+              </span><span>Syntax.pretty_term</span><span> </span><span class="entity"><span>ctxt0</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.prop_of</span><span> </span><span class="entity"><span>thm0</span></span><span class="main"><span>)</span></span><span>
+          </span><span class="main"><span>]</span></span><span class="main"><span>)</span></span><span>
+    </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>n</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Thm.nprems_of</span><span> </span><span class="entity"><span>thm</span></span><span>
+    </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>state</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>thm</span></span><span> </span><span>RS</span><span> </span><span class="antiquoted"><span class="entity"><span class="antiquote"><span>@{</span></span><span class="operator"><span>thm</span></span><span> </span><a class="entity_ref" href="../../../../../../Phi_Logic_Programming_Reasoner.PLPR.html#PLPR.Do_Generate_Implication_Reasoning|fact"><span>Do_Generate_Implication_Reasoning</span></a><span class="antiquote"><span>}</span></span></span></span><span class="main"><span>)</span></span><span>
+              </span><span>|&gt;</span><span> </span><span>Thm.permute_prems</span><span> </span><span class="inner_numeral"><span>0</span></span><span> </span><span class="entity"><span>n</span></span><span>
+              </span><span>|&gt;</span><span> </span><span>Thm.permute_prems</span><span> </span><span class="inner_numeral"><span>2</span></span><span> </span><span class="main"><span>(</span></span><span>~</span><span class="entity"><span>n</span></span><span class="main"><span>)</span></span><span>
+   </span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span> </span><span class="entity"><span>Phi_Reasoner.reason1</span></span><span> </span><span class="main"><span>(</span></span><span>K</span><span> </span><span class="inner_quoted"><span>"Fail to extract inhabitance rule"</span></span><span class="main"><span>)</span></span><span> </span><span>NONE</span><span> </span><span>NONE</span><span>
+                           </span><span class="main"><span>(</span></span><span>Config.put</span><span> </span><span class="entity"><span>is_generating_extraction_rule</span></span><span> </span><span>true</span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span>
+                           </span><span class="entity"><span>state</span></span><span>
+   </span><span>|&gt;</span><span> </span><span>Conv.fconv_rule</span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>Phi_Conv.hhf_concl_conv</span></span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+        </span><span class="entity"><span>HOLogic.Trueprop_conv</span></span><span> </span><span class="main"><span>(</span></span><span>Conv.arg_conv</span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>Simplifier.rewrite</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>Inhabitance_SS.enhance</span></span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span>
+   </span><span>|&gt;</span><span> </span><span>singleton</span><span> </span><span class="main"><span>(</span></span><span>Variable.export</span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="entity"><span>ctxt0</span></span><span class="main"><span>)</span></span><span>
+   </span><span>|&gt;</span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>rule</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="main"><span>(</span></span><span>
+      </span><span class="entity"><span>Phi_Reasoner.info_pretty</span></span><span> </span><span class="entity"><span>ctxt0</span></span><span> </span><span class="inner_numeral"><span>0</span></span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span>Pretty.chunks</span><span> </span><span class="main"><span>[</span></span><span>
+              </span><span>Pretty.str</span><span> </span><span class="inner_quoted"><span>"Obtain inhabitance rule:"</span></span><span class="main"><span>,</span></span><span>
+              </span><span>Syntax.pretty_term</span><span> </span><span class="entity"><span>ctxt0</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.prop_of</span><span> </span><span class="entity"><span>rule</span></span><span class="main"><span>)</span></span><span>
+          </span><span class="main"><span>]</span></span><span class="main"><span>)</span></span><span class="main"><span>;</span></span><span>
+      </span><span class="entity"><span>rule</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
+
+
+</span><span class="comment1"><span>(*
+val add = Thm.declaration_attribute (fn rule =&gt;
+      Phi_Reasoner.add_rule )
+val del = Thm.declaration_attribute del_thm; *)</span></span><span>
+
+
+</span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Theory.setup</span><span> </span><span class="main"><span>(</span></span><span>
+</span><span class="entity"><span>Attrib.setup</span></span><span> </span><span class="antiquoted"><span class="entity"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">binding</span><span class="hidden">&gt;</span></span></span><span>‹</span><span class="entity_def" id="PLPR.\&lt;phi&gt;inhabitance_rule|attribute"><span>φinhabitance_rule</span></span><span>›</span></span></span><span>
+            </span><span class="main"><span>(</span></span><span class="entity"><span>Phi_Reasoner.attr_rule_syntax</span></span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>rules</span></span><span class="main"><span>,</span></span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+                </span><span class="main"><span>(</span></span><span>map</span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>generate_extraction_rule</span></span><span> </span><span class="main"><span>(</span></span><span>Context.proof_of</span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>rules</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+    </span><span class="inner_quoted"><span>"declare the rule to be an inhabited rule in φ-System so that we can extract pure facts\
+    \ from a φ-BI assertion. Ideally the rule should be in a General Elimination form, but we\
+    \ can recognize most of rules having a meaning of destruction (like an implication ‹X ⟶ Y›\
+    \ may saying the inhabitance of X implies that of Y) so we can infer the inhabited rule from\
+    \ them."</span></span><span>
+</span><span class="main"><span>)</span></span><span>
+
+</span><span class="comment1"><span>(*
+val _ = Theory.setup (
+  Attrib.setup <span class="hidden">\&lt;^</span><span class="control">binding</span><span class="hidden">&gt;</span>‹φinhabitance_rule› (Attrib.add_del add del)
+    
+) *)</span></span><span>
+
+</span><span class="comment1"><span>(*fun implied_fact_extraction pattern =
+  let fun extr ctxt ctm =
+        let val sequent = <span class="hidden">\&lt;^</span><span class="control">instantiate</span><span class="hidden">&gt;</span>‹P=ctm in
+                                  lemma ‹⋀C. P ⟶ C @tag 𝒜EIF ⟹ P ≡ C ∧ P›
+                                     by (unfold Action_Tag_def atomize_eq, blast)›
+            val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ =&gt; Pretty.chunks [
+                    Pretty.str "Extracting implied pure facts from:",
+                    Syntax.pretty_term ctxt (Thm.term_of ctm)
+                ])
+         in Phi_Reasoner.reason NONE NONE ctxt sequent
+        end
+   in Phi_Reasoners.Extract_Fun (pattern, extr)
+  end
+*)</span></span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>end</span></span></span></pre>
+</body>
+
+</html>

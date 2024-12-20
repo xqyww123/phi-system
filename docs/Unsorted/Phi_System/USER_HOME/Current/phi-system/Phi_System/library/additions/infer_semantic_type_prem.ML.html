@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><link rel="stylesheet" type="text/css" href="isabelle.css"/>
+<title>File ‹library/additions/infer_semantic_type_prem.ML›</title>
+</head>
+
+
+<body>
+<div class="head">
+<h1>File ‹library/additions/infer_semantic_type_prem.ML›</h1>
+</div>
+
+<pre class="source"><span class="keyword2"><span class="keyword"><span>local</span></span></span><span>
+
+</span><span class="comment1"><span>(*
+fun sem_rule_expr' bvtys0 T_term0 ctxt =
+  let val (rev_args, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of1 (bvtys0,T_term0))
+      val M = length rev_args
+      val T_term = fold_index (fn (i,_) =&gt; fn X =&gt; X $ Bound (M-1-i)) rev_args
+                      (Term.incr_boundvars M T_term0)
+      val bvtys = rev_args @ bvtys0
+
+      val T_params = Phi_Syntax.typ_parameter_of_phi_ty bvtys T_term
+      val N = length T_params
+      val ([TY_name], ctxt) = Variable.variant_fixes ["TY"] ctxt
+      val TY_ty = fold (fn _ =&gt; fn X =&gt; <span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span>‹TY› --&gt; X) T_params <span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span>‹TY›
+      val TY = Free(TY_name, TY_ty)
+            |&gt; fold_index (fn (i,_) =&gt; fn X =&gt; X $ Bound (N - 1 - i)) T_params
+
+      val T_term = Term.incr_boundvars N T_term
+      val bvtys = List.tabulate (N, K <span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span>‹TY›) @ bvtys
+      val T_params = Phi_Syntax.typ_parameter_of_phi_ty bvtys T_term
+
+      val rule = HOLogic.Trueprop $ (<span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Semantic_Type x_ty› $ T_term $ TY)
+              |&gt; fold_rev (fn (j,((rev_args, x, _), T'h)) =&gt; fn XX =&gt;
+                  let val arity = length rev_args
+                      val T' = fold_index (fn (i,_) =&gt; fn X =&gt; X $ Bound (arity - 1 - i)) rev_args T'h
+                   in HOLogic.Trueprop $ (<span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Semantic_Type x› $ T' $ Bound j)
+                   |&gt; fold (fn ty =&gt; fn X =&gt; <span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Pure.all ty› $ Abs("A", ty, X)) rev_args
+                   |&gt; (fn X =&gt; <span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Pure.imp› $ X $ XX)
+                  end
+                ) (map_index I T_params)
+              |&gt; fold_index (fn (i,_) =&gt; fn X =&gt;
+                    <span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Pure.all <span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span>‹TY›› $ Abs ("TY⇩" ^ string_of_int i, <span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span>‹TY›, X) ) T_params
+              |&gt; fold_index (fn (i,ty) =&gt; fn X =&gt;
+                    <span class="hidden">\&lt;^</span><span class="control">Const</span><span class="hidden">&gt;</span>‹Pure.all ty› $ Abs ("T⇩" ^ string_of_int (M-1-i), ty, X) ) rev_args
+   in (rule, ctxt)
+  end
+
+fun get_name (Free (N,_)) = SOME N
+  | get_name (X $ _) = get_name X
+  | get_name _ = NONE
+
+fun existing_sematic_types (Const(<span class="hidden">\&lt;^</span><span class="control">const_name</span><span class="hidden">&gt;</span>‹Trueprop›, _) $ X) = existing_sematic_types X
+  | existing_sematic_types (Const(<span class="hidden">\&lt;^</span><span class="control">const_name</span><span class="hidden">&gt;</span>‹Pure.imp›, _) $ _ $ X) = existing_sematic_types X
+  | existing_sematic_types (Const(<span class="hidden">\&lt;^</span><span class="control">const_name</span><span class="hidden">&gt;</span>‹Pure.all›, _) $ X) = existing_sematic_types X
+  | existing_sematic_types (Abs (_, _, X)) = existing_sematic_types X
+  | existing_sematic_types (Const(<span class="hidden">\&lt;^</span><span class="control">const_name</span><span class="hidden">&gt;</span>‹Semantic_Type›, _) $ X $ _) = get_name X
+  | existing_sematic_types (Const(<span class="hidden">\&lt;^</span><span class="control">const_name</span><span class="hidden">&gt;</span>‹Inhabited›, _) $ X) = get_name X
+  | existing_sematic_types _ = NONE
+
+fun is_val_T ty =
+  case try dest_parameterized_phi_ty ty
+    of SOME (_, _, <span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span>‹VAL›) =&gt; true
+     | _ =&gt; false
+
+fun is_val_Tm ex (Free (N, ty)) = not (member (op = ) ex N) andalso is_val_T ty
+  | is_val_Tm _  _ = false
+*)</span></span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span>
+
+</span><span class="comment1"><span>(*
+val _ = Theory.setup (Context.theory_map (
+  Phi_Toplevel.Infer_Requirements.add 100 (fn spec =&gt; fn {parse_ctxt, new_requirements} =&gt;
+    let val annotated_typs = ( map_filter (existing_sematic_types o #1 o #2)
+                                          (#existing_requirements spec)
+                             @ map_filter (existing_sematic_types o Thm.term_of)
+                                          (Assumption.all_assms_of parse_ctxt)
+                             @ map_filter (existing_sematic_types o Thm.prop_of)
+                                          (Assumption.all_prems_of parse_ctxt))
+                          |&gt; distinct (op =)
+        val (prems,_,ctxt) = 
+            Phi_Help.fold_aterms' (fn bvs =&gt; fn T =&gt; fn (prems,visited,ctxt) =&gt;
+                    if is_val_Tm visited T
+                    then let
+                         val (sprem,ctxt) = sem_rule_expr' bvs T ctxt
+                         val iprem = Phi_Type_Derivers.inh_rule_expr bvs T
+                       in (((Binding.empty, []), (sprem, [])) ::
+                           ((Binding.empty, []), (iprem, [])) ::
+                            prems,
+                          Term.term_name T :: visited,
+                          ctxt)
+                      end
+                    else (prems,visited,ctxt)
+                ) [] (#arg spec) ([],annotated_typs,parse_ctxt)
+     in {parse_ctxt = ctxt,
+         new_requirements = prems @ new_requirements}
+    end
+    )
+))
+*)</span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Theory.setup</span><span> </span><span class="main"><span>(</span></span><span>Context.theory_map</span><span> </span><span class="main"><span>(</span></span><span>
+  </span><span class="entity"><span>Phi_Type.Deriving_Hooks.add</span></span><span> </span><span class="inner_numeral"><span>100</span></span><span> </span><span class="main"><span>(</span></span><span>
+    </span><span class="entity"><span>Phi_Type.suggest_property_should_be_derived</span></span><span>
+      </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>phi</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+          </span><span class="keyword2"><span class="keyword"><span>case</span></span></span><span> </span><span class="entity"><span>Phi_Syntax.dest_phi_type_ty'</span></span><span> </span><span class="main"><span>(</span></span><span>fastype_of</span><span> </span><span class="main"><span>(</span></span><span class="main"><span>#</span></span><span>term </span><span class="entity"><span>phi</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+            </span><span class="keyword2"><span class="keyword"><span>of</span></span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>_</span></span><span class="main"><span>,</span></span><span> </span><span class="antiquoted"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span></span></span><span>‹</span><a class="entity_ref" href="../../../../../../../Phi_Semantics_Framework/Phi_Semantics_Framework.html#Phi_Semantics_Framework.VAL|type"><span>VAL</span></a><span>›</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+                 </span><span>SOME</span><span> </span><span class="main"><span>(</span></span><span class="main"><span>#</span></span><span class="inner_numeral"><span>1</span></span><span> </span><span class="antiquoted"><span class="entity"><span class="antiquote"><span>@{</span></span><span class="operator"><span>φderiver</span></span><span> </span><span>Semantic_Type</span><span class="antiquote"><span>}</span></span></span></span><span class="main"><span>,</span></span><span> </span><span class="inner_quoted"><span>"Semantic_Type"</span></span><span class="main"><span>)</span></span><span>
+             </span><span class="main"><span>|</span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span>NONE</span><span class="main"><span>)</span></span><span>
+      </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+          </span><span class="entity"><span>Phi_Reasoner.warn_pretty</span></span><span> </span><span class="main"><span>(</span></span><span>Context.Proof</span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span> </span><span class="inner_numeral"><span>0</span></span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span> </span><span class="keyword3"><span class="keyword"><span>open</span></span></span><span> </span><span>Pretty</span><span> </span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span>
+              </span><span>block</span><span> </span><span class="main"><span>(</span></span><span>text</span><span> </span><span class="inner_quoted"><span>"property ‹Semantic_Type› is highly recommended to be derived on this φ-type"</span></span><span class="main"><span>)</span></span><span>
+            </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+</span><span>#&gt;</span><span> </span><span class="entity"><span>Phi_Type.Deriving_Hooks.add</span></span><span> </span><span class="inner_numeral"><span>101</span></span><span> </span><span class="main"><span>(</span></span><span>
+    </span><span class="entity"><span>Phi_Type.suggest_property_should_be_derived</span></span><span>
+      </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>phi</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+          </span><span class="keyword2"><span class="keyword"><span>case</span></span></span><span> </span><span class="entity"><span>Phi_Syntax.dest_phi_type_ty'</span></span><span> </span><span class="main"><span>(</span></span><span>fastype_of</span><span> </span><span class="main"><span>(</span></span><span class="main"><span>#</span></span><span>term </span><span class="entity"><span>phi</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+            </span><span class="keyword2"><span class="keyword"><span>of</span></span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>_</span></span><span class="main"><span>,</span></span><span> </span><span class="antiquoted"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">Type</span><span class="hidden">&gt;</span></span></span><span>‹</span><a class="entity_ref" href="../../../../../../../Phi_Semantics_Framework/Phi_Semantics_Framework.html#Phi_Semantics_Framework.VAL|type"><span>VAL</span></a><span>›</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+                 </span><span>SOME</span><span> </span><span class="main"><span>(</span></span><span class="main"><span>#</span></span><span class="inner_numeral"><span>1</span></span><span> </span><span class="antiquoted"><span class="entity"><span class="antiquote"><span>@{</span></span><span class="operator"><span>φderiver</span></span><span> </span><span>Inhabited</span><span class="antiquote"><span>}</span></span></span></span><span class="main"><span>,</span></span><span> </span><span class="inner_quoted"><span>"Inhabited"</span></span><span class="main"><span>)</span></span><span>
+             </span><span class="main"><span>|</span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span>NONE</span><span class="main"><span>)</span></span><span>
+      </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+          </span><span class="entity"><span>Phi_Reasoner.warn_pretty</span></span><span> </span><span class="main"><span>(</span></span><span>Context.Proof</span><span> </span><span class="entity"><span>ctxt</span></span><span class="main"><span>)</span></span><span> </span><span class="inner_numeral"><span>0</span></span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=&gt;</span></span><span> </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span> </span><span class="keyword3"><span class="keyword"><span>open</span></span></span><span> </span><span>Pretty</span><span> </span><span class="keyword2"><span class="keyword"><span>in</span></span></span><span>
+              </span><span>block</span><span> </span><span class="main"><span>(</span></span><span>text</span><span> </span><span class="inner_quoted"><span>"property ‹Inhabited› is highly recommended to be derived on this φ-type"</span></span><span class="main"><span>)</span></span><span>
+            </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+</span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>end</span></span></span></pre>
+</body>
+
+</html>

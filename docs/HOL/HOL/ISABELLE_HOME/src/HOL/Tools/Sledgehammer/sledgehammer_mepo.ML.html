@@ -27,24 +27,24 @@ Sledgehammer's iterative relevance filter (MePo = Meng-Paulson).
   </span><span class="keyword1"><span class="keyword"><span>type</span></span></span><span> </span><span class="entity"><span>params</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>Sledgehammer_Prover.params</span></span><span>
 
   </span><span class="keyword1"><span class="keyword"><span>type</span></span></span><span> </span><span class="entity"><span>relevance_fudge</span></span><span> </span><span class="main"><span>=</span></span><span>
-    </span><span class="main"><span>{</span></span><span>local_const_multiplier</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>worse_irrel_freq</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>higher_order_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>abs_rel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>abs_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>theory_const_rel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>theory_const_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>chained_const_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>intro_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>elim_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>simp_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>local_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>assum_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>chained_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>max_imperfect</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>max_imperfect_exp</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>threshold_divisor</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-     </span><span>ridiculous_threshold</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>}</span></span><span>
+    </span><span class="main"><span>{</span></span><span>local_const_multiplier </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     worse_irrel_freq </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     higher_order_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     abs_rel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     abs_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     theory_const_rel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     theory_const_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     chained_const_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     intro_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     elim_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     simp_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     local_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     assum_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     chained_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     max_imperfect </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     max_imperfect_exp </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     threshold_divisor </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+     ridiculous_threshold </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>}</span></span><span>
 
   </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> trace </span><span class="main"><span>:</span></span><span> </span><span>bool</span><span> </span><span>Config.T</span><span>
   </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> pseudo_abs_name </span><span class="main"><span>:</span></span><span> </span><span>string</span><span>
@@ -70,45 +70,45 @@ Sledgehammer's iterative relevance filter (MePo = Meng-Paulson).
 </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>theory_const_suffix</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Long_Name.separator</span><span> </span><span>^</span><span> </span><span class="inner_quoted"><span>" 1"</span></span><span>
 
 </span><span class="keyword1"><span class="keyword"><span>type</span></span></span><span> </span><span class="entity"><span>relevance_fudge</span></span><span> </span><span class="main"><span>=</span></span><span>
-  </span><span class="main"><span>{</span></span><span>local_const_multiplier</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>worse_irrel_freq</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>higher_order_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>abs_rel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>abs_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>theory_const_rel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>theory_const_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>chained_const_irrel_weight</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>intro_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>elim_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>simp_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>local_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>assum_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>chained_bonus</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>max_imperfect</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>max_imperfect_exp</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>threshold_divisor</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
-   </span><span>ridiculous_threshold</span><span> </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>}</span></span><span>
+  </span><span class="main"><span>{</span></span><span>local_const_multiplier </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   worse_irrel_freq </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   higher_order_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   abs_rel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   abs_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   theory_const_rel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   theory_const_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   chained_const_irrel_weight </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   intro_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   elim_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   simp_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   local_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   assum_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   chained_bonus </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   max_imperfect </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   max_imperfect_exp </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   threshold_divisor </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>,</span></span><span>
+   ridiculous_threshold </span><span class="main"><span>:</span></span><span> </span><span>real</span><span class="main"><span>}</span></span><span>
 
 </span><span class="comment1"><span>(* FUDGE *)</span></span><span>
 </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>default_relevance_fudge</span></span><span> </span><span class="main"><span>=</span></span><span>
-  </span><span class="main"><span>{</span></span><span>local_const_multiplier</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.5</span></span><span class="main"><span>,</span></span><span>
-   </span><span>worse_irrel_freq</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>100.0</span></span><span class="main"><span>,</span></span><span>
-   </span><span>higher_order_irrel_weight</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.05</span></span><span class="main"><span>,</span></span><span>
-   </span><span>abs_rel_weight</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.5</span></span><span class="main"><span>,</span></span><span>
-   </span><span>abs_irrel_weight</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>2.0</span></span><span class="main"><span>,</span></span><span>
-   </span><span>theory_const_rel_weight</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.5</span></span><span class="main"><span>,</span></span><span>
-   </span><span>theory_const_irrel_weight</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.25</span></span><span class="main"><span>,</span></span><span>
-   </span><span>chained_const_irrel_weight</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.25</span></span><span class="main"><span>,</span></span><span>
-   </span><span>intro_bonus</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.15</span></span><span class="main"><span>,</span></span><span>
-   </span><span>elim_bonus</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.15</span></span><span class="main"><span>,</span></span><span>
-   </span><span>simp_bonus</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.15</span></span><span class="main"><span>,</span></span><span>
-   </span><span>local_bonus</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.55</span></span><span class="main"><span>,</span></span><span>
-   </span><span>assum_bonus</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.05</span></span><span class="main"><span>,</span></span><span>
-   </span><span>chained_bonus</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.5</span></span><span class="main"><span>,</span></span><span>
-   </span><span>max_imperfect</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>11.5</span></span><span class="main"><span>,</span></span><span>
-   </span><span>max_imperfect_exp</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.0</span></span><span class="main"><span>,</span></span><span>
-   </span><span>threshold_divisor</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>2.0</span></span><span class="main"><span>,</span></span><span>
-   </span><span>ridiculous_threshold</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.1</span></span><span class="main"><span>}</span></span><span>
+  </span><span class="main"><span>{</span></span><span>local_const_multiplier </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.5</span></span><span class="main"><span>,</span></span><span>
+   worse_irrel_freq </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>100.0</span></span><span class="main"><span>,</span></span><span>
+   higher_order_irrel_weight </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.05</span></span><span class="main"><span>,</span></span><span>
+   abs_rel_weight </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.5</span></span><span class="main"><span>,</span></span><span>
+   abs_irrel_weight </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>2.0</span></span><span class="main"><span>,</span></span><span>
+   theory_const_rel_weight </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.5</span></span><span class="main"><span>,</span></span><span>
+   theory_const_irrel_weight </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.25</span></span><span class="main"><span>,</span></span><span>
+   chained_const_irrel_weight </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.25</span></span><span class="main"><span>,</span></span><span>
+   intro_bonus </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.15</span></span><span class="main"><span>,</span></span><span>
+   elim_bonus </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.15</span></span><span class="main"><span>,</span></span><span>
+   simp_bonus </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.15</span></span><span class="main"><span>,</span></span><span>
+   local_bonus </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.55</span></span><span class="main"><span>,</span></span><span>
+   assum_bonus </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.05</span></span><span class="main"><span>,</span></span><span>
+   chained_bonus </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.5</span></span><span class="main"><span>,</span></span><span>
+   max_imperfect </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>11.5</span></span><span class="main"><span>,</span></span><span>
+   max_imperfect_exp </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>1.0</span></span><span class="main"><span>,</span></span><span>
+   threshold_divisor </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>2.0</span></span><span class="main"><span>,</span></span><span>
+   ridiculous_threshold </span><span class="main"><span>=</span></span><span> </span><span class="inner_numeral"><span>0.1</span></span><span class="main"><span>}</span></span><span>
 
 </span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>order_of_type</span></span><span> </span><span class="main"><span>(</span></span><span>Type</span><span> </span><span class="main"><span>(</span></span><span class="antiquoted"><span class="operator"><span><span class="hidden">\&lt;^</span><span class="control">type_name</span><span class="hidden">&gt;</span></span></span><span>‹</span><span>fun</span><span>›</span></span><span class="main"><span>,</span></span><span> </span><span class="main"><span>[</span></span><span class="entity"><span>T1</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>T2</span></span><span class="main"><span>]</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>=</span></span><span>
     </span><span>Int.max</span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>order_of_type</span></span><span> </span><span class="entity"><span>T1</span></span><span> </span><span>+</span><span> </span><span class="inner_numeral"><span>1</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>order_of_type</span></span><span> </span><span class="entity"><span>T2</span></span><span class="main"><span>)</span></span><span>
@@ -234,7 +234,7 @@ Sledgehammer's iterative relevance filter (MePo = Meng-Paulson).
     </span><span class="entity"><span>t</span></span><span>
 
 </span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>theory_const_prop_of</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span class="entity"><span>th</span></span><span> </span><span class="main"><span>=</span></span><span>
-  </span><span class="entity"><span>theory_constify</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.theory_name</span><span> </span><span class="entity"><span>th</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.prop_of</span><span> </span><span class="entity"><span>th</span></span><span class="main"><span>)</span></span><span>
+  </span><span class="entity"><span>theory_constify</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.theory_base_name</span><span> </span><span class="entity"><span>th</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>(</span></span><span>Thm.prop_of</span><span> </span><span class="entity"><span>th</span></span><span class="main"><span>)</span></span><span>
 
 </span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>pair_consts_fact</span></span><span> </span><span class="entity"><span>thy</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span class="entity"><span>fact</span></span><span> </span><span class="main"><span>=</span></span><span>
   </span><span class="main"><span>(</span></span><span class="keyword2"><span class="keyword"><span>case</span></span></span><span> </span><span class="entity"><span>fact</span></span><span> </span><span>|&gt;</span><span> </span><span>snd</span><span> </span><span>|&gt;</span><span> </span><span class="entity"><span>theory_const_prop_of</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span>|&gt;</span><span> </span><span class="entity"><span>pconsts_in_fact</span></span><span> </span><span class="entity"><span>thy</span></span><span> </span><span class="keyword2"><span class="keyword"><span>of</span></span></span><span>
@@ -546,7 +546,7 @@ Sledgehammer's iterative relevance filter (MePo = Meng-Paulson).
       </span><span class="inner_quoted"><span>"Total relevant: "</span></span><span> </span><span>^</span><span> </span><span>string_of_int</span><span> </span><span class="main"><span>(</span></span><span>length</span><span> </span><span class="entity"><span>accepts</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
   </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
 
-</span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>mepo_suggested_facts</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>{</span></span><span>fact_thresholds</span><span> </span><span class="main"><span>=</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>thres0</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>thres1</span></span><span class="main"><span>)</span></span><span class="main"><span>,</span></span><span> </span><span class="main"><span>...</span></span><span class="main"><span>}</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>params</span></span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>max_facts</span></span><span> </span><span class="entity"><span>fudge</span></span><span>
+</span><span class="keyword1"><span class="keyword"><span>fun</span></span></span><span> </span><span class="entity"><span>mepo_suggested_facts</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>{</span></span><span>fact_thresholds </span><span class="main"><span>=</span></span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>thres0</span></span><span class="main"><span>,</span></span><span> </span><span class="entity"><span>thres1</span></span><span class="main"><span>)</span></span><span class="main"><span>,</span></span><span> </span><span class="main"><span>...</span></span><span class="main"><span>}</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>params</span></span><span class="main"><span>)</span></span><span> </span><span class="entity"><span>max_facts</span></span><span> </span><span class="entity"><span>fudge</span></span><span>
     </span><span class="entity"><span>hyp_ts</span></span><span> </span><span class="entity"><span>concl_t</span></span><span> </span><span class="entity"><span>facts</span></span><span> </span><span class="main"><span>=</span></span><span>
   </span><span class="keyword2"><span class="keyword"><span>let</span></span></span><span>
     </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>thy</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Proof_Context.theory_of</span><span> </span><span class="entity"><span>ctxt</span></span><span>
@@ -560,7 +560,7 @@ Sledgehammer's iterative relevance filter (MePo = Meng-Paulson).
        </span><span class="main"><span>[</span></span><span class="main"><span>]</span></span><span>
      </span><span class="keyword2"><span class="keyword"><span>else</span></span></span><span>
        </span><span class="entity"><span>relevance_filter</span></span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="entity"><span>thres0</span></span><span> </span><span class="entity"><span>decay</span></span><span> </span><span class="entity"><span>max_facts</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span class="entity"><span>facts</span></span><span> </span><span class="entity"><span>hyp_ts</span></span><span>
-         </span><span class="main"><span>(</span></span><span class="entity"><span>concl_t</span></span><span> </span><span>|&gt;</span><span> </span><span class="entity"><span>theory_constify</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span class="main"><span>(</span></span><span>Context.theory_name</span><span> </span><span class="entity"><span>thy</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+         </span><span class="main"><span>(</span></span><span class="entity"><span>concl_t</span></span><span> </span><span>|&gt;</span><span> </span><span class="entity"><span>theory_constify</span></span><span> </span><span class="entity"><span>fudge</span></span><span> </span><span class="main"><span>(</span></span><span>Context.theory_base_name</span><span> </span><span class="entity"><span>thy</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
     </span><span>|&gt;</span><span> </span><span>map</span><span> </span><span class="entity"><span>fact_of_lazy_fact</span></span><span>
   </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
 

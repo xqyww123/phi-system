@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><link rel="stylesheet" type="text/css" href="isabelle.css"/>
+<title>File ‹library/tools/thy_hacks.ML›</title>
+</head>
+
+
+<body>
+<div class="head">
+<h1>File ‹library/tools/thy_hacks.ML›</h1>
+</div>
+
+<pre class="source"><span class="keyword1"><span class="keyword"><span>signature</span></span></span><span> </span><span class="entity"><span>PHI_HACKS</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>sig</span></span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> Thy_At_Begin </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>HOOKS</span></span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> </span><span class="entity"><span>Phi_Hacks</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>PHI_HACKS</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>struct</span></span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>type</span></span></span><span> </span><span class="entity"><span>thy_at_begin</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>theory</span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span>theory</span><span> </span><span>option</span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> </span><span class="entity"><span>Thy_At_Begin</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="entity"><span>Hooks</span></span><span> </span><span class="main"><span>(</span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>type</span></span></span><span> </span><span class="entity"><span>arg</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>unit</span><span>
+  </span><span class="keyword1"><span class="keyword"><span>type</span></span></span><span> </span><span class="entity"><span>state</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>theory</span><span>
+</span><span class="main"><span>)</span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> </span><span class="entity"><span>Thy_At_Begin_Version</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Theory_Data</span><span> </span><span class="main"><span>(</span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>type</span></span></span><span> </span><span class="entity"><span>T</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>string</span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>empty</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="inner_quoted"><span>""</span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>merge</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>K</span><span> </span><span class="inner_quoted"><span>""</span></span><span>
+</span><span class="main"><span>)</span></span><span>
+
+</span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Theory.setup</span><span> </span><span class="main"><span>(</span></span><span>Theory.at_begin</span><span> </span><span class="main"><span>(</span></span><span class="keyword1"><span class="keyword"><span>fn</span></span></span><span> </span><span class="entity"><span>thy</span></span><span> </span><span class="main"><span>=&gt;</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>if</span></span></span><span> </span><span>Thy_At_Begin_Version.get</span><span> </span><span class="entity"><span>thy</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Context.theory_long_name</span><span> </span><span class="entity"><span>thy</span></span><span>
+     </span><span class="keyword1"><span class="keyword"><span>orelse</span></span></span><span> </span><span class="entity"><span>Thy_At_Begin.is_empty</span></span><span> </span><span class="main"><span>(</span></span><span>Context.Theory</span><span> </span><span class="entity"><span>thy</span></span><span class="main"><span>)</span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>then</span></span></span><span> </span><span>NONE</span><span>
+  </span><span class="keyword2"><span class="keyword"><span>else</span></span></span><span> </span><span>SOME</span><span> </span><span class="main"><span>(</span></span><span class="entity"><span>thy</span></span><span> </span><span>|&gt;</span><span> </span><span>Thy_At_Begin_Version.put</span><span> </span><span class="main"><span>(</span></span><span>Context.theory_long_name</span><span> </span><span class="entity"><span>thy</span></span><span class="main"><span>)</span></span><span>
+                 </span><span>|&gt;</span><span> </span><span class="entity"><span>Thy_At_Begin.invoke</span></span><span> </span><span class="main"><span>(</span></span><span>Context.Theory</span><span> </span><span class="entity"><span>thy</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>end</span></span></span></pre>
+</body>
+
+</html>

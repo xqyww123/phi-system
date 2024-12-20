@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><link rel="stylesheet" type="text/css" href="isabelle.css"/>
+<title>Theory Quicksort</title>
+</head>
+
+
+<body>
+<div class="head">
+<h1>Theory Quicksort</h1>
+</div>
+
+<pre class="source"><span class="keyword1"><span class="command"><span>theory</span></span></span><span> </span><a href="Quicksort.html"><span>Quicksort</span></a><span>
+  </span><span class="keyword2"><span class="keyword"><span>imports</span></span></span><span> </span><a href="Phi_Semantics.PhiSem_C.html"><span>Phi_Semantics.PhiSem_C</span></a><span>
+          </span><span class="quoted"><span>"</span><a href="HOL-Combinatorics.List_Permutation.html"><span>HOL-Combinatorics.List_Permutation</span></a><span>"</span></span><span>
+          </span><a href="../PhiStd/PhiStd_Loop.html"><span>PhiStd.PhiStd_Loop</span></a><span>
+          </span><a href="Rational_Arith.html"><span>Rational_Arith</span></a><span>
+</span><span class="keyword2"><span class="keyword"><span>begin</span></span></span><span>
+
+  </span><span class="keyword1"><span class="command"><span>proc</span></span></span><span> </span><span class="entity_def" id="Quicksort.qsort_\&lt;phi&gt;app|fact"><span class="entity_def" id="Quicksort.qsort_def|fact"><span class="entity_def" id="Quicksort.qsort_\&lt;phi&gt;app|thm"><span class="entity_def" id="Quicksort.qsort_def|thm"><span class="entity_def" id="Quicksort.qsort_def|axiom"><span class="entity_def" id="Quicksort.qsort|const"><span>qsort</span></span></span></span></span></span></span><span class="main"><span>:</span></span><span>
+    </span><span class="keyword2"><span class="keyword"><span>input</span></span></span><span>  </span><span class="quoted"><span class="quoted"><span>‹</span><span class="keyword1"><span>𝗏𝖺𝗅</span></span><span> </span><span class="free"><span>l</span></span><span> </span><span class="main"><a class="entity_ref" href="../Phi_Semantics_Framework/Phi_BI.Phi_BI.html#Phi_BI.\&lt;phi&gt;Type|const"><span>⦂</span></a></span><span> </span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C_Ag_Ar.html#PhiSem_Mem_C_Ag_Ar.SlicePtr|const"><span>𝖺𝗋𝗋𝖺𝗒-𝗌𝗅𝗂𝖼𝖾[</span></a></span><span class="free"><span>addr</span></span><span>:</span><span class="free"><span>i</span></span><span>:</span><span class="free"><span>len</span></span><span class="main"><span class="main"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C_Ag_Ar.html#PhiSem_Mem_C_Ag_Ar.SlicePtr|const"><span>]</span></a></span><span> </span><span class="main"><span>ℕ(</span></span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer.html#PhiSem_Machine_Integer.\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;|type"><span>𝗂𝗇𝗍</span></a><span class="main"><span>)</span></span><span class="main"><a class="entity_ref" href="../Phi_System/Spec_Framework.html#Spec_Framework.COMMA|const"><span>,</span></a></span><span>
+            </span><span class="keyword1"><span>𝗏𝖺𝗅</span></span><span> </span><span class="free"><span>len</span></span><span> </span><span class="main"><a class="entity_ref" href="../Phi_Semantics_Framework/Phi_BI.Phi_BI.html#Phi_BI.\&lt;phi&gt;Type|const"><span>⦂</span></a></span><span> </span><span class="main"><span>ℕ(</span></span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer.html#PhiSem_Machine_Integer.\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;|type"><span>𝗂𝗇𝗍</span></a><span class="main"><span>)</span></span><span><span> ›</span></span></span><span>
+    </span><span class="keyword2"><span class="keyword"><span>output</span></span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><span class="bound"><span>l'</span></span><span> </span><span class="main"><a class="entity_ref" href="../Phi_Semantics_Framework/Phi_BI.Phi_BI.html#Phi_BI.\&lt;phi&gt;Type|const"><span>⦂</span></a></span><span> </span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Slice_synt|const"><span>𝖺𝗋𝗋𝖺𝗒-𝗌𝗅𝗂𝖼𝖾[</span></a></span><span class="free"><span>addr</span></span><span class="main"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Slice_synt|const"><span>:</span></a></span><span class="free"><span>i</span></span><span class="main"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Slice_synt|const"><span>:</span></a></span><span class="free"><span>len</span></span><span class="main"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Slice_synt|const"><span>]</span></a></span><span> </span><span class="main"><span>ℕ(</span></span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer.html#PhiSem_Machine_Integer.\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;|type"><span>𝗂𝗇𝗍</span></a><span class="main"><span>)</span></span><span>
+            </span><span class="keyword1"><span>𝗌𝗎𝖻𝗃</span></span><span> </span><span class="bound"><span>l'</span></span><span class="main"><span>.</span></span><span> </span><span class="main"><a class="entity_ref" href="HOL-Combinatorics.List_Permutation.html#List_Permutation.perm|const"><span>perm</span></a></span><span> </span><span class="free"><span>l</span></span><span> </span><span class="bound"><span>l'</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.conj|const"><span>∧</span></a></span><span> </span><a class="entity_ref" href="../../HOL/HOL/List.html#List.linorder_class.sorted|const"><span>sorted</span></a><span> </span><span class="bound"><span>l'</span></span><span>›</span></span></span><span>
+    </span><span class="keyword2"><span class="keyword"><span>is</span></span></span><span> </span><span class="main"><span>[</span></span><a class="entity_ref" href="../Phi_Semantics/PhiSem_CF_Basic.html#PhiSem_CF_Basic.recursive|attribute"><span class="operator"><span>recursive</span></span></a><span class="main"><span>]</span></span><span>
+    </span><span class="keyword2"><span class="keyword"><span>is</span></span></span><span> </span><span class="main"><span>[</span></span><a class="entity_ref" href="../Phi_Semantics/PhiSem_CF_Routine.html#PhiSem_CF_Routine.routine|attribute"><span class="operator"><span>routine</span></span></a><span class="main"><span>]</span></span><span>
+  </span><span class="keyword1"><span class="command"><span class="entity_def" id="offset_578..579">❴</span></span></span><span>
+    </span><span class="keyword2"><span class="keyword"><a class="entity_ref" href="../Phi_Semantics/PhiSem_CF_Basic.html#PhiSem_CF_Basic.if_\&lt;phi&gt;app|fact"><span>if</span></a></span></span><span> </span><span class="main"><span>(</span></span><span>len </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.\&lt;le&gt;_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>≤</span></span></span></a><span> </span><span class="quoted"><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span></span><span class="main"><span>)</span></span><span> </span><span class="keyword1"><span class="command"><span>❴</span></span></span><span>
+      </span><a class="entity_ref" href="Quicksort.html#offset_578..579"><span>return</span></a><span>
+    </span><span class="keyword1"><span class="command"><span>❵</span></span></span><span> </span><span class="keyword1"><span class="command"><span>❴</span></span></span><span>
+      </span><span class="keyword2"><span class="keyword"><span>val</span></span></span><span> </span><span class="skolem"><span>pivot</span></span><span> </span><span class="main"><span>←</span></span><span> </span><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.!_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>*</span></span></span></a><span class="main"><span>(</span></span><span>l </span><span class="main"><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.+_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>+</span></span></span></a></span><span> </span><span class="main"><span>(</span></span><span>len </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.-_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>-</span></span></span></a><span> </span><span class="quoted"><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span> </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+      </span><span class="keyword2"><span class="keyword"><span>var</span></span></span><span> </span><span class="skolem"><span>d</span></span><span> </span><span class="main"><span>←</span></span><span> </span><span class="quoted"><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.zero_class.zero|const"><span>0</span></a></span></span><span> </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+      </span><a class="entity_ref" href="../PhiStd/PhiStd_Loop.html#PhiStd_Loop.iterate_\&lt;phi&gt;app|fact"><span>iterate</span></a><span> </span><span class="main"><span>(</span></span><span class="quoted"><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.zero_class.zero|const"><span>0</span></a></span></span><span class="main"><span>,</span></span><span>len</span><span class="main"><span>)</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><span class="main"><span>λ</span></span><span class="bound"><span>n</span></span><span class="main"><span>.</span></span><span> </span><span class="bound"><span>d</span></span><span>  </span><span class="main"><a class="entity_ref" href="../Phi_Semantics_Framework/Phi_BI.Phi_BI.html#Phi_BI.\&lt;phi&gt;Type|const"><span>⦂</span></a></span><span> </span><span class="keyword1"><span>𝗏𝖺𝗋[</span></span><span>d</span><span class="main"><span>]</span></span><span> </span><span class="main"><span>ℕ(</span></span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer.html#PhiSem_Machine_Integer.\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;|type"><span>𝗂𝗇𝗍</span></a><span class="main"><span>)</span></span><span class="main"><a class="entity_ref" href="../Phi_System/Spec_Framework.html#Spec_Framework.COMMA|const"><span>,</span></a></span><span>
+                           </span><span class="bound"><span>l'</span></span><span> </span><span class="main"><a class="entity_ref" href="../Phi_Semantics_Framework/Phi_BI.Phi_BI.html#Phi_BI.\&lt;phi&gt;Type|const"><span>⦂</span></a></span><span> </span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Mem_synt|const"><span>𝗆𝖾𝗆[</span></a></span><span class="skolem"><span>addr</span></span><span class="main"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Mem_synt|const"><span>]</span></a></span><span> </span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Slice_synt|const"><span>𝗌𝗅𝗂𝖼𝖾[</span></a></span><span class="skolem"><span>i</span></span><span class="main"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Slice_synt|const"><span>,</span></a></span><span class="skolem"><span>len</span></span><span class="main"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html#PhiSem_Mem_C.Slice_synt|const"><span>]</span></a></span><span> </span><span class="main"><span>ℕ(</span></span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer.html#PhiSem_Machine_Integer.\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;|type"><span>𝗂𝗇𝗍</span></a><span class="main"><span>)</span></span><span>
+                   </span><span class="keyword1"><span>𝗌𝗎𝖻𝗃</span></span><span> </span><span class="bound"><span>l'</span></span><span> </span><span class="bound"><span>d</span></span><span class="main"><span>.</span></span><span>
+                     </span><span class="bound"><span>d</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Orderings.html#Orderings.ord_class.less_eq|const"><span>≤</span></a></span><span> </span><span class="bound"><span>n</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.conj|const"><span>∧</span></a></span><span> </span><span class="main"><a class="entity_ref" href="HOL-Combinatorics.List_Permutation.html#List_Permutation.perm|const"><span>prem</span></a></span><span> </span><span class="skolem"><span>l</span></span><span> </span><span class="bound"><span>l'</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.conj|const"><span>∧</span></a></span><span>
+                     </span><span class="main"><span>(</span></span><span class="keyword1"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.If|const"><span>if</span></a></span><span> </span><span class="bound"><span>n</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><a class="entity_ref" href="../../HOL/HOL/List.html#List.length|const"><span>length</span></a><span> </span><span class="bound"><span>l'</span></span><span> </span><span class="keyword1"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.If|const"><span>then</span></a></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.zero_class.zero|const"><span>0</span></a></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Orderings.html#Orderings.ord_class.less|const"><span>&lt;</span></a></span><span class="bound"><span>d</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.conj|const"><span>∧</span></a></span><span> </span><span class="bound"><span>l'</span></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/List.html#List.nth|const"><span>!</span></a></span><span class="main"><span>(</span></span><span class="bound"><span>d</span></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.minus_class.minus|const"><span>-</span></a></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span><span class="main"><span>)</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><span class="var"><span>?pivot</span></span><span>
+                                       </span><span class="keyword1"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.If|const"><span>else</span></a></span><span> </span><a class="entity_ref" href="../../HOL/HOL/List.html#List.last|const"><span>last</span></a><span> </span><span class="bound"><span>l'</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><span class="var"><span>?pivot</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.conj|const"><span>∧</span></a></span><span>
+                     </span><span class="main"><span>(</span></span><span class="main"><span>∀</span></span><span class="bound"><span class="bound"><span>k</span></span></span><span class="main"><span>&lt;</span></span><span class="bound"><span>d</span></span><span class="main"><span>.</span></span><span> </span><span class="bound"><span>l'</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/List.html#List.nth|const"><span>!</span></a></span><span> </span><span class="bound"><span>k</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Orderings.html#Orderings.ord_class.less_eq|const"><span>≤</span></a></span><span> </span><span class="var"><span>?pivot</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.conj|const"><span>∧</span></a></span><span>
+                     </span><span class="main"><span>(</span></span><span class="main"><span>∀</span></span><span class="bound"><span class="bound"><span>k</span></span></span><span class="main"><span>&lt;</span></span><span class="bound"><span>n</span></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.minus_class.minus|const"><span>-</span></a></span><span class="bound"><span>d</span></span><span class="main"><span>.</span></span><span> </span><span class="var"><span>?pivot</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Orderings.html#Orderings.ord_class.less|const"><span>&lt;</span></a></span><span> </span><span class="bound"><span>l'</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/List.html#List.nth|const"><span>!</span></a></span><span> </span><span class="main"><span>(</span></span><span class="bound"><span>d</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.plus_class.plus|const"><span>+</span></a></span><span> </span><span class="bound"><span>k</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>)</span></span><span> ›</span></span></span><span> 
+      </span><span class="keyword1"><span class="command"><span>❴</span></span></span><span>
+        </span><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.!_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>*</span></span></span></a><span class="main"><span>(</span></span><span>l </span><span class="main"><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.+_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>+</span></span></span></a></span><span> n</span><span class="main"><span>)</span></span><span> </span><span class="main"><span>→</span></span><span> </span><span class="keyword2"><span class="keyword"><span>val</span></span></span><span> </span><span class="skolem"><span>x</span></span><span> </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+        </span><span class="keyword2"><span class="keyword"><a class="entity_ref" href="../Phi_Semantics/PhiSem_CF_Basic.html#PhiSem_CF_Basic.if_\&lt;phi&gt;app|fact"><span>if</span></a></span></span><span> </span><span class="main"><span>(</span></span><span>x </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.\&lt;le&gt;_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>≤</span></span></span></a><span> pivot</span><span class="main"><span>)</span></span><span> </span><span class="keyword1"><span class="command"><span>❴</span></span></span><span>
+          </span><span class="main"><span>(</span></span><span>l </span><span class="main"><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.+_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>+</span></span></span></a></span><span> n</span><span class="main"><span>)</span></span><span> </span><span class="main"><span>:=</span></span><span> </span><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.!_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>*</span></span></span></a><span class="main"><span>(</span></span><span>l </span><span class="main"><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.+_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>+</span></span></span></a></span><span> d</span><span class="main"><span>)</span></span><span> </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+          </span><span class="main"><span>(</span></span><span>l </span><span class="main"><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.+_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>+</span></span></span></a></span><span> d</span><span class="main"><span>)</span></span><span> </span><span class="main"><span>:=</span></span><span> x </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+          d </span><span class="main"><span>←</span></span><span> d </span><span class="main"><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.+_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>+</span></span></span></a></span><span> </span><span class="quoted"><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span></span><span>
+        </span><span class="keyword1"><span class="command"><span>❵</span></span></span><span> </span><span class="keyword1"><span class="command"><span>❴</span></span></span><span>
+          </span><span class="comment1"><span>(*comment: else, do nothing*)</span></span><span>
+        </span><span class="keyword1"><span class="command"><span>❵</span></span></span><span>
+      </span><span class="keyword1"><span class="command"><span>❵</span></span></span><span> 
+
+      </span><span class="keyword2"><span class="keyword"><span>holds_fact</span></span></span><span> </span><span>t5</span><span class="main"><span>[</span></span><span class="operator"><span>simp</span></span><span class="main"><span>]</span></span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><span class="skolem"><span>d</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.minus_class.minus|const"><span>-</span></a></span><span> </span><span class="main"><span>(</span></span><span class="skolem"><span>d</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.minus_class.minus|const"><span>-</span></a></span><span> </span><a class="entity_ref" href="../../HOL/HOL/Nat.html#Nat.Suc|const"><span>Suc</span></a><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.zero_class.zero|const"><span>0</span></a></span><span class="main"><span>)</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span><span>›</span></span></span><span> </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+
+      </span><a class="entity_ref" href="Quicksort.html#offset_578..579"><span>qsort</span></a><span> </span><span class="main"><span>(</span></span><span>l</span><span class="main"><span>,</span></span><span> d</span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.-_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>-</span></span></span></a><span class="quoted"><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span></span><span class="main"><span>)</span></span><span> </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+      </span><a class="entity_ref" href="Quicksort.html#offset_578..579"><span>qsort</span></a><span> </span><span class="main"><span>(</span></span><span>l </span><span class="main"><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.+_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>+</span></span></span></a></span><span> d</span><span class="main"><span>,</span></span><span> len </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Common_Int.html#PhiSem_Common_Int.-_\&lt;phi&gt;app|fact"><span class="dynamic"><span class="dynamic"><span>-</span></span></span></a><span> d</span><span class="main"><span>)</span></span><span> </span><span class="keyword1"><span class="command"><span>；</span></span></span><span>
+          
+      </span><span class="keyword2"><span class="keyword"><span>holds_fact</span></span></span><span> </span><span>t1</span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><span class="main"><span>(</span></span><span class="main"><span>∀</span></span><span class="bound"><span>x</span></span><span class="main"><span>∈</span></span><a class="entity_ref" href="../../HOL/HOL/List.html#List.list.set|const"><span>set</span></a><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="../../HOL/HOL/List.html#List.drop|const"><span>drop</span></a><span> </span><span class="skolem"><span>d</span></span><span> </span><span class="skolem"><span>l'</span></span><span class="main"><span>)</span></span><span class="main"><span>.</span></span><span> </span><span class="var"><span>?pivot</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Orderings.html#Orderings.ord_class.less|const"><span>&lt;</span></a></span><span> </span><span class="bound"><span>x</span></span><span class="main"><span>)</span></span><span>›</span></span></span><span>
+             </span><span class="keyword2"><span class="keyword"><span>and</span></span></span><span> </span><span>t2</span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><span class="main"><span>(</span></span><span class="main"><span>∀</span></span><span class="bound"><span>x</span></span><span class="main"><span>∈</span></span><a class="entity_ref" href="../../HOL/HOL/List.html#List.list.set|const"><span>set</span></a><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="../../HOL/HOL/List.html#List.take|const"><span>take</span></a><span> </span><span class="main"><span>(</span></span><span class="skolem"><span>d</span></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.minus_class.minus|const"><span>-</span></a></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span><span class="main"><span>)</span></span><span> </span><span class="skolem"><span>l'</span></span><span class="main"><span>)</span></span><span class="main"><span>.</span></span><span> </span><span class="bound"><span>x</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Orderings.html#Orderings.ord_class.less_eq|const"><span>≤</span></a></span><span> </span><span class="var"><span>?pivot</span></span><span class="main"><span>)</span></span><span>›</span></span></span><span>
+             </span><span class="keyword2"><span class="keyword"><span>and</span></span></span><span> </span><span>t3</span><span class="main"><span>[</span></span><span class="operator"><span>simp</span></span><span class="main"><span>]</span></span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><a class="entity_ref" href="../../HOL/HOL/List.html#List.list.set|const"><span>set</span></a><span> </span><span class="skolem"><span>l'b</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><a class="entity_ref" href="../../HOL/HOL/List.html#List.list.set|const"><span>set</span></a><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="../../HOL/HOL/List.html#List.drop|const"><span>drop</span></a><span> </span><span class="skolem"><span>d</span></span><span> </span><span class="skolem"><span>l'</span></span><span class="main"><span>)</span></span><span>›</span></span></span><span>
+             </span><span class="keyword2"><span class="keyword"><span>and</span></span></span><span> </span><span>t4</span><span class="main"><span>[</span></span><span class="operator"><span>simp</span></span><span class="main"><span>]</span></span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><a class="entity_ref" href="../../HOL/HOL/List.html#List.list.set|const"><span>set</span></a><span> </span><span class="skolem"><span>l'a</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><a class="entity_ref" href="../../HOL/HOL/List.html#List.list.set|const"><span>set</span></a><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="../../HOL/HOL/List.html#List.take|const"><span>take</span></a><span> </span><span class="main"><span>(</span></span><span class="skolem"><span>d</span></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.minus_class.minus|const"><span>-</span></a></span><span class="main"><a class="entity_ref" href="../../HOL/HOL/Groups.html#Groups.one_class.one|const"><span>1</span></a></span><span class="main"><span>)</span></span><span> </span><span class="skolem"><span>l'</span></span><span class="main"><span>)</span></span><span>›</span></span></span><span>  
+             
+      </span><a class="entity_ref" href="Quicksort.html#offset_578..579"><span>return</span></a><span>
+    </span><span class="keyword1"><span class="command"><span>❵</span></span></span><span>
+  </span><span class="keyword1"><span class="command"><span>❵</span></span></span><span> </span><span class="keyword1"><span class="command"><span>.</span></span></span><span>
+
+
+</span><span class="keyword1"><span class="command"><span>text</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹The Conclusions of above Certification is the following Specification Theorems›</span></span></span><span>
+
+</span><span class="keyword1"><span class="command"><span>thm</span></span></span><span> </span><a class="entity_ref" href="Quicksort.html#Quicksort.qsort_\&lt;phi&gt;app|fact"><span>qsort_φapp</span></a><span>
+
+</span><span class="keyword1"><span class="command"><span>text</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹Semantic Representations of the Programs: ›</span></span></span><span>
+  
+</span><span class="keyword1"><span class="command"><span>thm</span></span></span><span> </span><a class="entity_ref" href="Quicksort.html#Quicksort.qsort_def|fact"><span>qsort_def</span></a><span>
+</span><span class="comment1"><span>(*
+
+
+  proc qsort_rat:
+    input  ‹𝗏𝖺𝗅 i ⦂ 𝗌𝗅𝗂𝖼𝖾-𝗉𝗍𝗋[addr:LEN] 𝗋𝖺𝗍𝗂𝗈𝗇𝖺𝗅,
+            𝗏𝖺𝗅 len ⦂ ℕ(𝗂𝗇𝗍),
+            l ⦂ 𝗆𝖾𝗆[addr] 𝗌𝗅𝗂𝖼𝖾[i,len] ℚ›
+    premises ‹i + len ≤ LEN›
+    output ‹l' ⦂ 𝗆𝖾𝗆[addr] 𝗌𝗅𝗂𝖼𝖾[i,len] ℚ
+            𝗌𝗎𝖻𝗃 l'. l &lt;~~&gt; l' ∧ sorted l'›
+    is [recursive]
+    is [routine]
+  ❴
+    if (len ≤ 1) ❴
+      return
+    ❵ ❴
+      val pivot ← *(i + (len - 1)) ；
+      var d ← ‹0 ⦂ ℕ(𝗂𝗇𝗍)› ；
+      iterate (0,len) ‹λn. d  ⦂ 𝗏𝖺𝗋[d] ℕ(𝗂𝗇𝗍),
+                           l' ⦂ 𝗆𝖾𝗆[addr] 𝗌𝗅𝗂𝖼𝖾[i,len] ℚ
+                     𝗌𝗎𝖻𝗃 l' d.
+                       d ≤ n ∧ l &lt;~~&gt; l' ∧
+                       (if n = length l' then 0&lt;d ∧ l'!(d-1) = ?pivot
+                                         else last l' = ?pivot) ∧
+                       (∀k&lt;d. l' ! k ≤ ?pivot) ∧
+                       (∀k&lt;n-d. ?pivot &lt; l' ! (d + k)) › 
+      ❴
+        for n → val n ；
+        *(i + n) → val x ；
+        if (x ≤ pivot) ❴
+          (i + n) := *(i + d) ；
+          (i + d) := x ；
+          d ← d + 1
+        ❵ ❴
+          (*comment: else, do nothing*)
+        ❵ ；
+      ❵
+      qsort_rat (i, d-1) ；
+      qsort_rat (i + d, len - d) ；
+          
+      holds_fact t1: ‹(∀x∈set (drop d l'). l ! (len - 1) &lt; x)›
+             and t2: ‹(∀x∈set (take (d-1) l'). x ≤ l ! (len - 1))›
+             and t3[simp]: ‹set l'b = set (drop d l')›
+             and t4[simp]: ‹set l'a = set (take (d-1) l')›
+             and t5[simp]: ‹d - (d - Suc 0) = 1›
+      note [simp] = sorted_simps sorted_wrt_append ；  
+
+      return
+    ❵
+  ❵ .
+
+declare [[φinfer_requirements]]
+ 
+ 
+  proc qsort_generic:
+    input  ‹𝗏𝖺𝗅 i ⦂ 𝗌𝗅𝗂𝖼𝖾-𝗉𝗍𝗋[addr:LEN] (𝗍𝗒𝗉𝖾𝗈𝖿 T)❟
+            𝗏𝖺𝗅 len ⦂ ℕ(𝗂𝗇𝗍)❟
+            l ⦂ 𝗆𝖾𝗆[addr] 𝗌𝗅𝗂𝖼𝖾[i,len] T  ›
+    requires ‹Order T›
+    premises ‹i + len ≤ LEN›
+    output ‹l' ⦂ 𝗆𝖾𝗆[addr] 𝗌𝗅𝗂𝖼𝖾[i,len] T
+            𝗌𝗎𝖻𝗃 l'. l &lt;~~&gt; l' ∧ sorted l'›
+    is [recursive]
+    is [routine]
+  ❴
+    if (len ≤ 1) ❴
+      return
+    ❵ ❴
+      val pivot ← *(i + (len - 1)) ；
+      var d ← 0 ；
+      iterate (0,len) ‹λn. d  ⦂ 𝗏𝖺𝗋[d] ℕ(𝗂𝗇𝗍)❟
+                           l' ⦂ 𝗆𝖾𝗆[addr] 𝗌𝗅𝗂𝖼𝖾[i,len] T
+                           𝗌𝗎𝖻𝗃 l' d.
+                             d ≤ n ∧ l &lt;~~&gt; l' ∧
+                             (∀k&lt;d. l' ! k ≤ ?pivot) ∧
+                             (∀k&lt;n-d. ?pivot &lt; l' ! (d + k)) › 
+      ❴
+        for n → val n ；
+        *(i + n) → val x ；
+        if (x ≤ pivot) ❴
+          (i + n) := *(i + d) ；
+          (i + d) := x ；
+          d ← d + 1
+        ❵ ❴
+          (*comment: else, do nothing*)
+        ❵ ；
+      ❵
+      qsort_generic (i, d) ；
+      qsort_generic (i + d, len - d) ；
+          
+      holds_fact t1: ‹(∀x∈set (drop d l'). l ! (len - 1) &lt; x)›
+             and t2: ‹(∀x∈set (take d l'). x ≤ l ! (len - 1))›
+             and t3[simp]: ‹set l'b = set (drop d l')›
+             and t4[simp]: ‹set l'a = set (take d l')› ；
+  
+      return
+    ❵
+  ❵ .
+*)</span></span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
+</span></pre>
+</body>
+
+</html>

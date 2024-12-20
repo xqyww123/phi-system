@@ -12,29 +12,29 @@
 <h1>Theory Phi_Statespace.StateFun</h1>
 </div>
 
-<pre class="source"><span class="comment1"><span>(</span><span>*</span><span>  Title:      HOL/Statespace/StateFun.thy
-    Author:     Norbert Schirmer, TU Muenchen
-</span><span>*</span><span>)</span></span><span>
+<pre class="source"><span class="comment1"><span>(*  Title:      HOL/Statespace/StateFun.thy
+    
+*)</span></span><span>
 
-</span><span class="keyword1"><span class="command"><span>section</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>State Space Representation as Function \label{sec:StateFun}</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>section</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹State Space Representation as Function \label{sec:StateFun}›</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span>theory</span></span></span><span> </span><a href="Phi_Statespace.StateFun.html"><span>StateFun</span></a><span> </span><span class="keyword2"><span class="keyword"><span>imports</span></span></span><span> </span><a href="Phi_Statespace.DistinctTreeProver.html"><span>DistinctTreeProver</span></a><span>
 </span><span class="keyword2"><span class="keyword"><span>begin</span></span></span><span>
 
 
-</span><span class="keyword1"><span class="command"><span>text</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>The state space is represented as a function from names to
-</span><span>values. We neither fix the type of names nor the type of values. We
-</span><span>define lookup and update functions and provide simprocs that simplify
-</span><span>expressions containing these, similar to HOL-records.
-</span><span>
-</span><span>The lookup and update function get constructor/destructor functions as
-</span><span>parameters. These are used to embed various HOL-types into the
-</span><span>abstract value type. Conceptually the abstract value type is a sum of
-</span><span>all types that we attempt to store in the state space.
-</span><span>
-</span><span>The update is actually generalized to a map function. The map supplies
-</span><span>better compositionality, especially if you think of nested state
-</span><span>spaces.</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>text</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹The state space is represented as a function from names to
+values. We neither fix the type of names nor the type of values. We
+define lookup and update functions and provide simprocs that simplify
+expressions containing these, similar to HOL-records.
+
+The lookup and update function get constructor/destructor functions as
+parameters. These are used to embed various HOL-types into the
+abstract value type. Conceptually the abstract value type is a sum of
+all types that we attempt to store in the state space.
+
+The update is actually generalized to a map function. The map supplies
+better compositionality, especially if you think of nested state
+spaces.›</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span class="entity_def" id="StateFun.K_statefun_def|fact"><span class="entity_def" id="StateFun.K_statefun_def|thm"><span class="entity_def" id="StateFun.K_statefun_def_raw|axiom"><span>definition</span></span></span></span></span></span><span> </span><span class="entity"><span class="entity_def" id="StateFun.K_statefun|const"><span>K_statefun</span></span></span><span> </span><span class="main"><span>::</span></span><span> </span><span class="quoted"><span class="quoted"><span>"</span><span class="tfree"><span>'a</span></span><span> </span><span class="main"><span>⇒</span></span><span> </span><span class="tfree"><span>'b</span></span><span> </span><span class="main"><span>⇒</span></span><span> </span><span class="tfree"><span>'a</span></span><span>"</span></span></span><span> </span><span class="keyword2"><span class="keyword"><span>where</span></span></span><span> </span><span class="quoted"><span class="quoted"><span>"</span><span class="free"><span>K_statefun</span></span><span> </span><span class="free"><span class="bound"><span class="entity"><span>c</span></span></span></span><span> </span><span class="free"><span class="bound"><span class="entity"><span>x</span></span></span></span><span> </span><span class="main"><span>≡</span></span><span> </span><span class="free"><span class="bound"><span class="entity"><span>c</span></span></span></span><span>"</span></span></span><span>
 
@@ -109,11 +109,11 @@
 
 </span><span class="keyword1"><span class="command"><span>lemmas</span></span></span><span> </span><span class="entity_def" id="StateFun.meta_ext|fact"><span class="entity_def" id="StateFun.meta_ext|thm"><span>meta_ext</span></span></span><span> </span><span class="main"><span>=</span></span><span> </span><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq_reflection|fact"><span>eq_reflection</span></a><span> </span><span class="main"><span>[</span></span><span class="operator"><span>OF</span></span><span> </span><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.ext|fact"><span>ext</span></a><span class="main"><span>]</span></span><span>
 
-</span><span class="comment1"><span>(</span><span>*</span><span> This lemma only works if the store is welltyped:
+</span><span class="comment1"><span>(* This lemma only works if the store is welltyped:
     "∃x.  s ''n'' = (c x)"
    or in general when c (d x) = x,
      (for example: c=id and d=id)
- </span><span>*</span><span>)</span></span><span>
+ *)</span></span><span>
 </span><span class="keyword1"><span class="command"><span>lemma</span></span></span><span> </span><span class="quoted"><span class="quoted"><span>"</span><a class="entity_ref" href="Phi_Statespace.StateFun.html#StateFun.update|const"><span>update</span></a><span> </span><span class="free"><span>d</span></span><span> </span><span class="free"><span>c</span></span><span> </span><span class="free"><span>n</span></span><span> </span><span class="main"><span>(</span></span><span class="free"><span>K_statespace</span></span><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="Phi_Statespace.StateFun.html#StateFun.lookup|const"><span>lookup</span></a><span> </span><span class="free"><span>d</span></span><span> </span><span class="free"><span>n</span></span><span> </span><span class="free"><span>s</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span> </span><span class="free"><span>s</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><span class="free"><span>s</span></span><span>"</span></span></span><span>
   </span><span class="keyword1"><span class="command"><span class="improper"><span class="command"><span>apply</span></span></span></span></span><span> </span><span class="main"><span>(</span></span><span class="operator"><span>simp</span></span><span> </span><span class="quasi_keyword"><span>add</span></span><span class="main"><span class="main"><span>:</span></span></span><span> </span><a class="entity_ref" href="Phi_Statespace.StateFun.html#StateFun.update_def|fact"><span>update_def</span></a><span> </span><a class="entity_ref" href="Phi_Statespace.StateFun.html#StateFun.lookup_def|fact"><span>lookup_def</span></a><span class="main"><span>)</span></span><span>
   </span><span class="keyword1"><span class="command"><span class="improper"><span class="command"><span>apply</span></span></span></span></span><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="../../HOL/HOL/ISABELLE_HOME/src/Provers/classical.ML.html#HOL.rule|method"><span class="operator"><span>rule</span></span></a><span> </span><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.ext|fact"><span>ext</span></a><span class="main"><span>)</span></span><span>

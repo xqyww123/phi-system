@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><link rel="stylesheet" type="text/css" href="isabelle.css"/>
+<title>Theory Phi_Semantics.PhiSem_C</title>
+</head>
+
+
+<body>
+<div class="head">
+<h1>Theory Phi_Semantics.PhiSem_C</h1>
+</div>
+
+<pre class="source"><span class="keyword1"><span class="command"><span>theory</span></span></span><span> </span><a href="Phi_Semantics.PhiSem_C.html"><span>PhiSem_C</span></a><span>
+  </span><span class="keyword2"><span class="keyword"><span>imports</span></span></span><span> </span><a href="../PhiStd/Phi_Semantics.PhiSem_Mem_C.html"><span>PhiSem_Mem_C</span></a><span>
+          </span><a href="Phi_Semantics.PhiSem_Mem_C_Ag_NT.html"><span>PhiSem_Mem_C_Ag_NT</span></a><span>
+          </span><a href="../PhiStd/Phi_Semantics.PhiSem_Mem_C_Ag_Ar.html"><span>PhiSem_Mem_C_Ag_Ar</span></a><span>
+          </span><a href="../Phi_Semantics/PhiSem_CF_Routine.html"><span>PhiSem_CF_Routine</span></a><span>
+          </span><a href="../Phi_Semantics/PhiSem_CF_Breakable.html"><span>PhiSem_CF_Breakable</span></a><span>
+          </span><a href="../Phi_Semantics/PhiSem_Variable.html"><span>PhiSem_Variable</span></a><span>
+          </span><a href="../Phi_Semantics/PhiSem_Machine_Integer.html"><span>PhiSem_Machine_Integer</span></a><span>
+          </span><a href="../Phi_Semantics/PhiSem_Machine_Integer_Boolean.html"><span>PhiSem_Machine_Integer_Boolean</span></a><span>
+          </span><a href="../PhiStd/Phi_Semantics.PhiSem_Mem_C_Ar_MI.html"><span>PhiSem_Mem_C_Ar_MI</span></a><span>
+</span><span class="keyword2"><span class="keyword"><span>begin</span></span></span><span>
+
+</span><span class="keyword1"><span class="command"><span>debt_axiomatization</span></span></span><span>
+  </span><span class="keyword2"><span class="keyword"><span>where</span></span></span><span> </span><span class="entity_def" id="PhiSem_C.\&lt;p&gt;\&lt;t&gt;\&lt;r&gt;_neq_\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;&apos;|fact"><span class="entity_def" id="PhiSem_C.\&lt;p&gt;\&lt;t&gt;\&lt;r&gt;_neq_\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;&apos;|thm"><span>𝗉𝗍𝗋_neq_𝗂𝗇𝗍'</span></span></span><span>  </span><span class="main"><span>[</span></span><span class="operator"><span>simp</span></span><span class="main"><span>]</span></span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.\&lt;p&gt;\&lt;o&gt;\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;\&lt;e&gt;\&lt;r&gt;|const"><span>𝗉𝗍𝗋</span></a></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.not_equal|const"><span>≠</span></a></span><span> </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer.html#PhiSem_Machine_Integer.sem_int_T|const"><span>sem_int_T</span></a><span> </span><span class="free"><span>n</span></span><span>›</span></span></span><span>
+    </span><span class="keyword2"><span class="keyword"><span>and</span></span></span><span> </span><span class="entity_def" id="PhiSem_C.\&lt;p&gt;\&lt;t&gt;\&lt;r&gt;_neq_\&lt;s&gt;\&lt;t&gt;\&lt;r&gt;\&lt;u&gt;\&lt;c&gt;\&lt;t&gt;|fact"><span class="entity_def" id="PhiSem_C.\&lt;p&gt;\&lt;t&gt;\&lt;r&gt;_neq_\&lt;s&gt;\&lt;t&gt;\&lt;r&gt;\&lt;u&gt;\&lt;c&gt;\&lt;t&gt;|thm"><span>𝗉𝗍𝗋_neq_𝗌𝗍𝗋𝗎𝖼𝗍</span></span></span><span> </span><span class="main"><span>[</span></span><span class="operator"><span>simp</span></span><span class="main"><span>]</span></span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>‹</span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.\&lt;p&gt;\&lt;o&gt;\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;\&lt;e&gt;\&lt;r&gt;|const"><span>𝗉𝗍𝗋</span></a></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.not_equal|const"><span>≠</span></a></span><span> </span><a class="entity_ref" href="Phi_Semantics.PhiSem_Aggregate_Named_Tuple.html#PhiSem_Aggregate_Named_Tuple.semty_ntup|const"><span>semty_ntup</span></a><span> </span><span class="free"><span>f</span></span><span>›</span></span></span><span>
+
+
+</span><span class="keyword1"><span class="command"><span>lemma</span></span></span><span> </span><span class="entity_def" id="PhiSem_C.TY_neqs|fact"><span class="entity_def" id="PhiSem_C.TY_neqs(5)|thm"><span class="entity_def" id="PhiSem_C.TY_neqs(4)|thm"><span class="entity_def" id="PhiSem_C.TY_neqs(3)|thm"><span class="entity_def" id="PhiSem_C.TY_neqs(2)|thm"><span class="entity_def" id="PhiSem_C.TY_neqs(1)|thm"><span>TY_neqs</span></span></span></span></span></span></span><span class="main"><span>[</span></span><span class="operator"><span>simp</span></span><span class="main"><span>]</span></span><span class="main"><span>:</span></span><span>
+  </span><span class="quoted"><span class="quoted"><span>‹</span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.\&lt;p&gt;\&lt;o&gt;\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;\&lt;e&gt;\&lt;r&gt;|const"><span>𝗉𝗍𝗋</span></a></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.not_equal|const"><span>≠</span></a></span><span> </span><span class="keyword1"><span>𝗂𝗇𝗍(</span></span><span class="tfree"><span>'n</span></span><span class="main"><span>)</span></span><span>›</span></span></span><span>         </span><span class="quoted"><span class="quoted"><span>‹</span><span class="keyword1"><span>𝗂𝗇𝗍(</span></span><span class="tfree"><span>'n</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.not_equal|const"><span>≠</span></a></span><span> </span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.\&lt;p&gt;\&lt;o&gt;\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;\&lt;e&gt;\&lt;r&gt;|const"><span>𝗉𝗍𝗋</span></a></span><span>›</span></span></span><span>
+  </span><span class="quoted"><span class="quoted"><span>‹</span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.\&lt;p&gt;\&lt;o&gt;\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;\&lt;e&gt;\&lt;r&gt;|const"><span>𝗉𝗍𝗋</span></a></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.not_equal|const"><span>≠</span></a></span><span> </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Generic_Boolean.html#PhiSem_Generic_Boolean.\&lt;b&gt;\&lt;o&gt;\&lt;o&gt;\&lt;l&gt;|const"><span>𝖻𝗈𝗈𝗅</span></a><span>›</span></span></span><span>            </span><span class="quoted"><span class="quoted"><span>‹</span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Generic_Boolean.html#PhiSem_Generic_Boolean.\&lt;b&gt;\&lt;o&gt;\&lt;o&gt;\&lt;l&gt;|const"><span>𝖻𝗈𝗈𝗅</span></a><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.not_equal|const"><span>≠</span></a></span><span> </span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.\&lt;p&gt;\&lt;o&gt;\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;\&lt;e&gt;\&lt;r&gt;|const"><span>𝗉𝗍𝗋</span></a></span><span>›</span></span></span><span>
+  </span><span class="quoted"><span class="quoted"><span>‹</span><a class="entity_ref" href="Phi_Semantics.PhiSem_Aggregate_Named_Tuple.html#PhiSem_Aggregate_Named_Tuple.semty_ntup|const"><span>semty_ntup</span></a><span> </span><span class="free"><span>f</span></span><span> </span><span class="main"><a class="entity_ref" href="../../HOL/HOL/HOL.html#HOL.not_equal|const"><span>≠</span></a></span><span> </span><span class="keyword1"><a class="entity_ref" href="../PhiStd/Phi_Semantics.PhiSem_Mem_Pointer.html#PhiSem_Mem_Pointer.\&lt;p&gt;\&lt;o&gt;\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;\&lt;e&gt;\&lt;r&gt;|const"><span>𝗉𝗍𝗋</span></a></span><span>›</span></span></span><span>
+  </span><span class="keyword1"><span class="command"><span>unfolding</span></span></span><span> </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer.html#PhiSem_Machine_Integer.mk_int_T_def|fact"><span>mk_int_T_def</span></a><span> </span><a class="entity_ref" href="../Phi_Semantics/PhiSem_Machine_Integer_Boolean.html#PhiSem_Machine_Integer_Boolean.bool_def&apos;|fact"><span>bool_def'</span></a><span>
+  </span><span class="keyword1"><span class="command"><span>by</span></span></span><span> </span><span class="operator"><span>simp_all</span></span><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="../../HOL/HOL/ISABELLE_HOME/src/HOL/Tools/Metis/metis_tactic.ML.html#Metis.metis|method"><span class="operator"><span>metis</span></span></a><span> </span><a class="entity_ref" href="Phi_Semantics.PhiSem_C.html#PhiSem_C.\&lt;p&gt;\&lt;t&gt;\&lt;r&gt;_neq_\&lt;i&gt;\&lt;n&gt;\&lt;t&gt;&apos;|fact"><span>𝗉𝗍𝗋_neq_𝗂𝗇𝗍'</span></a><span> </span><a class="entity_ref" href="Phi_Semantics.PhiSem_C.html#PhiSem_C.\&lt;p&gt;\&lt;t&gt;\&lt;r&gt;_neq_\&lt;s&gt;\&lt;t&gt;\&lt;r&gt;\&lt;u&gt;\&lt;c&gt;\&lt;t&gt;|fact"><span>𝗉𝗍𝗋_neq_𝗌𝗍𝗋𝗎𝖼𝗍</span></a><span class="main"><span>)</span></span><span class="main"><span class="keyword3"><span>+</span></span></span><span>
+
+
+
+</span><span class="comment1"><span>(*declare [[φinfer_requirements]]*)</span></span><span>
+
+</span><span class="comment1"><span>(*
+setup ‹Context.theory_map (Phi_Hacks.Thy_At_Begin.add 66 (K (
+  Simplifier.map_theory_simpset (fn ctxt =&gt; ctxt delsimps @{thms' Nat.One_nat_def Num.add_2_eq_Suc'}))))
+› 
+
+declare One_nat_def[φsledgehammer_simps] *)</span></span><span>
+
+</span><span class="keyword2"><span class="keyword"><span>end</span></span></span></pre>
+</body>
+
+</html>

@@ -12,21 +12,21 @@
 <h1>Theory Factorial</h1>
 </div>
 
-<pre class="source"><span class="comment1"><span>(</span><span>*</span><span>  Title:      HOL/Factorial.thy
+<pre class="source"><span class="comment1"><span>(*  Title:      HOL/Factorial.thy
     Author:     Jacques D. Fleuriot
     Author:     Lawrence C Paulson
     Author:     Jeremy Avigad
     Author:     Chaitanya Mangla
     Author:     Manuel Eberl
-</span><span>*</span><span>)</span></span><span>
+*)</span></span><span>
 
-</span><span class="keyword1"><span class="command"><span>section</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>Factorial Function, Rising Factorials</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>section</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹Factorial Function, Rising Factorials›</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span>theory</span></span></span><span> </span><a href="Factorial.html"><span>Factorial</span></a><span>
   </span><span class="keyword2"><span class="keyword"><span>imports</span></span></span><span> </span><a href="Groups_List.html"><span>Groups_List</span></a><span>
 </span><span class="keyword2"><span class="keyword"><span>begin</span></span></span><span>
 
-</span><span class="keyword1"><span class="command"><span>subsection</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>Factorial Function</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>subsection</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹Factorial Function›</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span>context</span></span></span><span> </span><a class="entity_ref" href="Nat.html#Nat.semiring_char_0|locale"><span>semiring_char_0</span></a><span>
 </span><span class="keyword2"><span class="keyword"><span>begin</span></span></span><span>
@@ -192,13 +192,13 @@
 </span><span class="keyword1"><span class="command"><span>qed</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span>lemma</span></span></span><span> </span><span class="entity_def" id="Factorial.fact_numeral|fact"><span class="entity_def" id="Factorial.fact_numeral|thm"><span>fact_numeral</span></span></span><span class="main"><span>:</span></span><span> </span><span class="quoted"><span class="quoted"><span>"</span><a class="entity_ref" href="Factorial.html#Factorial.semiring_char_0_class.fact|const"><span>fact</span></a><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="Num.html#Num.numeral_class.numeral|const"><span>numeral</span></a><span> </span><span class="free"><span>k</span></span><span class="main"><span>)</span></span><span> </span><span class="main"><a class="entity_ref" href="HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><a class="entity_ref" href="Num.html#Num.numeral_class.numeral|const"><span>numeral</span></a><span> </span><span class="free"><span>k</span></span><span> </span><span class="main"><a class="entity_ref" href="Groups.html#Groups.times_class.times|const"><span>*</span></a></span><span> </span><a class="entity_ref" href="Factorial.html#Factorial.semiring_char_0_class.fact|const"><span>fact</span></a><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="Num.html#Num.pred_numeral|const"><span>pred_numeral</span></a><span> </span><span class="free"><span>k</span></span><span class="main"><span>)</span></span><span>"</span></span></span><span>
-  </span><span class="comment1"><span>― ‹</span><span>Evaluation for specific numerals</span><span>›</span></span><span>
+  </span><span class="comment1"><span>― ‹Evaluation for specific numerals›</span></span><span>
   </span><span class="keyword1"><span class="command"><span>by</span></span></span><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="ISABELLE_HOME/src/HOL/Tools/Metis/metis_tactic.ML.html#Metis.metis|method"><span class="operator"><span>metis</span></span></a><span> </span><a class="entity_ref" href="Factorial.html#Factorial.semiring_char_0_class.fact_Suc|fact"><span>fact_Suc</span></a><span> </span><a class="entity_ref" href="Num.html#Num.numeral_eq_Suc|fact"><span>numeral_eq_Suc</span></a><span> </span><a class="entity_ref" href="Num.html#Num.semiring_1_class.of_nat_numeral|fact"><span>of_nat_numeral</span></a><span class="main"><span>)</span></span><span>
 
 
-</span><span class="keyword1"><span class="command"><span>subsection</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>Pochhammer's symbol: generalized rising factorial</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>subsection</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹Pochhammer's symbol: generalized rising factorial›</span></span></span><span>
 
-</span><span class="keyword1"><span class="command"><span>text</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>See </span><span class="antiquoted"><span class="operator"><span>🌐</span></span><a href="https://en.wikipedia.org/wiki/Pochhammer_symbol"><span>‹https://en.wikipedia.org/wiki/Pochhammer_symbol›</span></a></span><span>.</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>text</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹See </span><span class="antiquoted"><span class="operator"><span>🌐</span></span><a href="https://en.wikipedia.org/wiki/Pochhammer_symbol"><span>‹https://en.wikipedia.org/wiki/Pochhammer_symbol›</span></a></span><span>.›</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span>context</span></span></span><span> </span><a class="entity_ref" href="Rings.html#Rings.comm_semiring_1|locale"><span>comm_semiring_1</span></a><span>
 </span><span class="keyword2"><span class="keyword"><span>begin</span></span></span><span>
@@ -409,7 +409,7 @@
 </span><span class="keyword1"><span class="command"><span>qed</span></span></span><span>
 
 
-</span><span class="keyword1"><span class="command"><span>subsection</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹</span><span>Misc</span><span>›</span></span></span><span>
+</span><span class="keyword1"><span class="command"><span>subsection</span></span></span><span> </span><span class="quoted"><span class="plain_text"><span>‹Misc›</span></span></span><span>
 
 </span><span class="keyword1"><span class="command"><span>lemma</span></span></span><span> </span><span class="entity_def" id="Factorial.fact_code|fact"><span class="entity_def" id="Factorial.fact_code|thm"><span>fact_code</span></span></span><span> </span><span class="main"><span>[</span></span><span class="operator"><span>code</span></span><span class="main"><span>]</span></span><span class="main"><span>:</span></span><span>
   </span><span class="quoted"><span class="quoted"><span>"</span><a class="entity_ref" href="Factorial.html#Factorial.semiring_char_0_class.fact|const"><span>fact</span></a><span> </span><span class="free"><span>n</span></span><span> </span><span class="main"><a class="entity_ref" href="HOL.html#HOL.eq|const"><span>=</span></a></span><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="Nat.html#Nat.semiring_1_class.of_nat|const"><span>of_nat</span></a><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="Set_Interval.html#Set_Interval.fold_atLeastAtMost_nat|const"><span>fold_atLeastAtMost_nat</span></a><span> </span><span class="main"><span>(</span></span><span class="main"><a class="entity_ref" href="Groups.html#Groups.times_class.times|const"><span>(*)</span></a></span><span class="main"><span>)</span></span><span> </span><span class="numeral"><span>2</span></span><span> </span><span class="free"><span>n</span></span><span> </span><span class="main"><a class="entity_ref" href="Groups.html#Groups.one_class.one|const"><span>1</span></a></span><span class="main"><span>)</span></span><span> </span><span class="main"><span>::</span></span><span> </span><span class="tfree"><span>'a</span></span><span class="main"><span>::</span></span><a class="entity_ref" href="Nat.html#Nat.semiring_char_0|class"><span>semiring_char_0</span></a><span class="main"><span>)</span></span><span>"</span></span></span><span>
