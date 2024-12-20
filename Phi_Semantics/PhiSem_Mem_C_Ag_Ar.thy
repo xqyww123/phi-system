@@ -1,7 +1,7 @@
 theory PhiSem_Mem_C_Ag_Ar
   imports PhiSem_Mem_C PhiSem_Aggregate_Array
-  abbrevs "<sliceptr>" = "\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>"
-      and "<slcptr>" = "\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>"
+  abbrevs "<sliceptr>" = "\<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>"
+      and "<slcptr>" = "\<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>"
 begin
 
 section \<open>Semantics\<close>
@@ -169,11 +169,11 @@ subsection \<open>Slice Pointer\<close>
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((if N = 0 then i = 0 else TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<and> \<not> phantom_mem_semantic_type TY)
          \<Longrightarrow> Equiv_Class (SlicePtr addr N TY) (=)\<close>
 
-notation SlicePtr ("\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _" [20,20,900] 899)
+notation SlicePtr ("\<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[_:_] _" [20,20,900] 899)
 
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
-  \<open>\<phi>Equal (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
+  \<open>\<phi>Equal (\<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:N] TY) (\<lambda>_ _. \<not> phantom_mem_semantic_type TY) (=)\<close>
   unfolding \<phi>Equal_def
   by (clarsimp simp: memaddr_to_raw_inj_array, insert memaddr_to_raw_inj_array, force)
 
@@ -181,27 +181,27 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 
 lemma [\<phi>reason %slice_ptr_ToA]: \<comment> \<open>TODO: automatically generate this rule!\<close>
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr \<and> len' = len \<and> TY' = TY
-\<Longrightarrow> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr':len'] TY' \<close>
+\<Longrightarrow> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr':len'] TY' \<close>
   unfolding Premise_def
   by simp
 
 lemma [\<phi>reason %slice_ptr_ToA]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < len
-\<Longrightarrow> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr TY' \<close>
+\<Longrightarrow> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
     to \<open>TypedPtr TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr; auto_sledgehammer)
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>
-\<Longrightarrow> x \<Ztypecolon> TypedPtr TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
+\<Longrightarrow> x \<Ztypecolon> TypedPtr TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY' @tag \<T>\<P> \<close>
   \<medium_left_bracket>
     to RawPointer
     note idx_step_type_arr[simp] ;;
-    \<open>i \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:len] TY')\<close> certified
+    \<open>i \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY')\<close> certified
         using \<phi> apply auto
           apply (metis addr_gep_not_eq_zero address_type_def array_TY_neq_void block.layout(1) fold_simps(1) memaddr_blk_zero valid_memaddr_0 valid_memaddr_def)
           apply (metis addr_gep_not_eq_zero valid_memaddr_0)
@@ -210,13 +210,13 @@ lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<
           by (simp add: valid_memaddr_def)
   \<medium_right_bracket> .
 
-lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[_] _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
+lemma [\<phi>reason %slice_ptr_ToA for \<open>_ \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[_] _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> addr \<noteq> 0
-\<Longrightarrow> addr \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[LEN] TY) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] TY' @tag \<T>\<P> \<close>
+\<Longrightarrow> addr \<Ztypecolon> TypedPtr (\<a>\<r>\<r>\<a>\<y>[LEN] TY) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:LEN] TY' @tag \<T>\<P> \<close>
   \<medium_left_bracket>
     to RawPointer ;;
-    \<open>0 \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
+    \<open>0 \<Ztypecolon> MAKE _ (\<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:LEN] TY)\<close> certified by auto_sledgehammer
   \<medium_right_bracket> .
 
 

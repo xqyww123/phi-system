@@ -25,7 +25,7 @@ size_t max (size_t x, size_t y) {
   if (x < y) return y; else return x;
 }
 
-void push_dynarr (struct DynArr *addr, T v)\
+void push_dynarr (struct DynArr *addr, T v)
 {
   size_t len = addr -> len;
   size_t cap = addr -> cap;
