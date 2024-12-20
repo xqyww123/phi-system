@@ -433,7 +433,7 @@ lemma [\<phi>reason %\<phi>synthesis_cut for \<open>\<p>\<r>\<o>\<c> _ \<lbrace>
 subsection \<open>Programming Methods for Showing Properties of Values\<close>
 
 subsubsection \<open>Semantic Type\<close>
-
+(*
 lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x) M D R F
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show the value abstraction\<close> S \<open>has semantic type\<close> TY
@@ -442,10 +442,11 @@ lemma [\<phi>reason %\<phi>programming_method]:
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<t>\<y>\<p>\<e>\<o>\<f> T = TY)) M D
                              ((\<And>x. \<t>\<y>\<p>\<e>\<o>\<f> (A x) = TY @tag \<A>infer) &&& PROP R) F\<close>
   unfolding \<phi>Programming_Method_def ToA_Construction_def Transformation_def Action_Tag_def
-  sorry 
-(*
-  apply (simp add: subset_iff conjunction_imp, rule)
-  subgoal premises prems
+ 
+  apply (simp add: subset_iff conjunction_imp, rule SType_Of'_implies_SType_Of)
+  subgoal premises prems for xx
+    thm prems(1)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>, of xx]
+    apply (insert prems(3)[of xx] prems(1)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>, of xx])
     by (insert prems(3) prems(1)[OF \<open>PROP D\<close> \<open>PROP R\<close> \<open>PROP F\<close>], blast) .
 *)
 

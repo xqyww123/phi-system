@@ -593,23 +593,6 @@ text \<open>
   (or the reasoners of) \<^prop>\<open>A11\<close> and \<^prop>\<open>A22\<close>.
   \<close>
 
-lemma [\<phi>reason %cutting]:
-  \<open> True \<or> True \<close>
-  by blast
-
-lemma [\<phi>reason %cutting]:
-  \<open> True \<or> False \<close>
-  by blast
-
-lemma [\<phi>reason %cutting]:
-  \<open> False \<or> True \<close>
-  by blast
-
-lemma [\<phi>reason %cutting]:
-  \<open> True \<and> True \<close>
-  by blast
-
-
 section \<open>The Engine \& The Concepts\<close>
 
 text \<open>
@@ -2691,6 +2674,17 @@ declare [[
     \<phi>reason %cutting Branch_L Branch_R for \<open>PROP ?A ||| PROP ?B\<close>,
     \<phi>reason %cutting HOL.disjI1 HOL.disjI2 for \<open>?A \<or> ?B\<close>
 ]]
+
+
+lemma [\<phi>reason %cutting+10]:
+  \<open> True \<or> P \<close>
+  by blast
+
+lemma [\<phi>reason %cutting+10]:
+  \<open> P
+\<Longrightarrow> False \<or> P \<close>
+  by blast
+
 
 subsubsection \<open>Cutting Branch\<close>
 

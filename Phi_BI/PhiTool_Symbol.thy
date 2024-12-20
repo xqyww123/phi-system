@@ -19,7 +19,7 @@ declare mk_symbol_inject[simplified, iff]
 lemma mk_symbol_cong[cong]:
   \<open>mk_symbol A \<equiv> mk_symbol A\<close> .
 
-ML_file \<open>PhiTool_Symbol_syntax.ML\<close>
+ML_file \<open>./library/syntax/PhiTool_Symbol_syntax.ML\<close>
 ML_file \<open>PhiTool_Symbol.ML\<close>
 
 nonterminal "\<phi>_symbol_"

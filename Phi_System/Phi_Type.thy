@@ -2212,7 +2212,7 @@ lemma apply_Module_Distr_Homo\<^sub>S_rev:
 
 subsubsection \<open>Swap \& Assoc Normalization\<close>
 
-\<phi>reasoner_group \<phi>ToA_SA_norm = (1000, [10,2000]) in \<phi>simp
+\<phi>reasoner_group \<phi>ToA_SA_norm = (1000, [10,2000]) in \<phi>simp_all
       \<open>normalize the \<phi>-type by swapping, as that specified by \<open>\<phi>ToA_swap_normalization\<close>\<close>
   and \<phi>ToA_SA_derived = (50, [50, 50]) in \<phi>simp_derived and in \<phi>ToA_SA_norm
                                               and > \<phi>simp_derived_Tr_functor
@@ -3053,17 +3053,20 @@ lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.to_bitra
 
 lemma [\<phi>reason_template name Fa.\<A>simp_bi [\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>1 x. (a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @tag \<A>simp))
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>2 x. (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @tag \<A>simp))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>1 x. (a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @tag \<A>try_simp M1))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>2 x. (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @tag \<A>try_simp M2))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> M1 \<or> M2
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @tag \<A>_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
   using bitransformation[unfolded atomize_Ball \<r>Guard_def Premise_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
 
+
 lemma [\<phi>reason_template name Fa.\<A>backward_simp_bi [\<phi>transformation_based_backward_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>1 x. (a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @tag \<A>backward_simp))
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>2 x. (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @tag \<A>backward_simp))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>1 x. (a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @tag \<A>try_backward_simp M1))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (\<forall>a \<in> D\<^sub>2 x. (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @tag \<A>try_backward_simp M2))
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> M1 \<or> M2
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
 \<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @tag \<A>_backward_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def

@@ -550,7 +550,7 @@ lemma \<Sigma>_to_traverse[\<phi>reason default %To_ToA_cut+20]:
   unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
   by clarsimp
 
-lemma \<Sigma>_\<A>simp[\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]:
+lemma \<Sigma>_\<A>simp[\<phi>transformation_based_simp default %\<phi>simp-10 no trigger]:
   \<open> (\<And>c. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = c \<Longrightarrow> snd x \<Ztypecolon> T c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g c b @tag \<A>simp)
       \<comment> \<open>I don't know how to be right. This part causes a lot of HO problems\<close>
 \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = fst x \<and> g (fst x) (snd y) @tag \<A>_transitive_simp \<close>
@@ -1479,6 +1479,7 @@ text \<open>For technical reasons, the \<open>\<phi>Some\<close> is defined and 
 
 
 subsection \<open>Domainoid\<close>
+
    
 \<phi>type_def Domainoid ("\<DD>[_]" [4] 1000)
     where \<open>\<DD>[\<delta>] T \<equiv> \<delta> \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> closed_homo_sep \<delta>\<close>

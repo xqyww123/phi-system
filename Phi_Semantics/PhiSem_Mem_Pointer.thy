@@ -1008,6 +1008,11 @@ lemma [\<phi>reason %deriving_pointer_cut]:
 \<Longrightarrow> Derive_Pointer_Of (A \<s>\<u>\<b>\<j> P) ptr \<close>
   unfolding Derive_Pointer_Of_def ..
 
+lemma [\<phi>reason %deriving_pointer_cut]:
+  \<open> Derive_Pointer_Of (x \<Ztypecolon> T) ptr
+\<Longrightarrow> Derive_Pointer_Of (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) ptr \<close>
+  unfolding Derive_Pointer_Of_def ..
+
 subsection \<open>Address Of\<close>
 
 \<phi>overloads "&"

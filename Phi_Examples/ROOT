@@ -9,5 +9,4 @@ session "Phi_Examples" = "PhiStd" +
     Rational_Arith
     Quicksort
     Matrix_Oprs
-    Bucket_Hash
     Dynamic_Array

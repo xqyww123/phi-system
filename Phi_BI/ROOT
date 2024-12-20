@@ -1,14 +1,22 @@
 chapter Phi
 
-session Phi_Algebras = Main +
+session Phi_BI = "HOL-Library" +
   options [document_build = build]
   sessions
     "Phi_Statespace"
     "Phi_Document"
-    "HOL-Library"
+    "Phi_Logic_Programming_Reasoner"
   theories
     Algebras
     Map_of_Tree
+    Phi_BI
+    Phi_Aug
+    Len_Intvl
+    Map_of_Tree
+    Phi_Fiction
+    Phi_Preliminary
+    Phi_Spec_Pre
+    PhiTool_Symbol
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"

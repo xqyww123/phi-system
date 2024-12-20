@@ -1,19 +1,16 @@
 session "Phi_Semantics" = "Phi_System" +
   sessions
-    "Phi_Algebras"
     "Phi_Semantics_Framework"
-    "Phi_Logic_Programming_Reasoner"
     "Phi_System"
     "Word_Lib"
   theories
-    PhiSem_Aggregate_Base
+    PhSm_Ag_Base
     PhiSem_Aggregate_Array
     PhiSem_Aggregate_Tuple
     PhiSem_Base
     PhiSem_CF_Basic
     PhiSem_CF_Break
     PhiSem_CF_Breakable
-    PhiSem_CF_Solidity
     PhiSem_CF_Routine
     PhiSem_CF_Routine_Basic
     PhiSem_Generic_Boolean

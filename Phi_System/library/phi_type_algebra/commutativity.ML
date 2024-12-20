@@ -317,9 +317,9 @@ fun whether_to_swap_normalize ctxt =
 fun swap_normalization_guard (ctxt, sequent) =
   let val (bvs, goal) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (ToA, direction) =
-          case PLPR_Syntax.dest_action_of' (fn Const(\<^const_name>\<open>\<A>simp'\<close>, _) $ _ $ _ => true
+          case PLPR_Syntax.dest_action_of' (fn Const(\<^const_name>\<open>\<A>simp'\<close>, _) $ _ => true
                                              | _ => false) goal
-            of (ToA, _ $ direction $ _) =>
+            of (ToA, _ $ direction) =>
                (ToA, 
                 case direction of Const(\<^const_name>\<open>True\<close>, _) => true
                                 | Const(\<^const_name>\<open>False\<close>, _) => false

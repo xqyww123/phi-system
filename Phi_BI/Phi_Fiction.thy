@@ -1,5 +1,5 @@
 theory Phi_Fiction
-  imports Phi_System.Phi_BI Unital_Homo
+  imports Phi_BI Unital_Homo
 begin
 
 section \<open>Interpretation of Fictional Separation\<close>

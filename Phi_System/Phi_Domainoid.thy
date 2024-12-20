@@ -1,7 +1,7 @@
 chapter \<open>Domainoid\<close>
 
 theory Phi_Domainoid
-  imports Phi_BI Phi_Algb_Pre
+  imports Phi_BI.Phi_BI Phi_Algb_Pre
 begin
 
 section \<open>Motivation \& Introduction\<close>

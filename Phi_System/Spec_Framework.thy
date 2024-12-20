@@ -5,7 +5,7 @@
 chapter \<open>Specification Framework\<close>
 
 theory Spec_Framework
-  imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
+  imports Phi_BI.Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
   keywords "fiction_space"  :: thy_goal
   abbrevs "<shifts>" = "\<s>\<h>\<i>\<f>\<t>\<s>"
     and   "<val>" = "\<v>\<a>\<l>"

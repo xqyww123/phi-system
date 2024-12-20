@@ -1,5 +1,5 @@
 theory Phi_Element_Path
-  imports Phi_System.Calculus_of_Programming PhiTool_Symbol
+  imports Phi_System.Calculus_of_Programming Phi_BI.PhiTool_Symbol
 begin
 
 section \<open>Path of Elements in an Aggregate Structure\<close>

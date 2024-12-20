@@ -2,19 +2,13 @@ theory Linked_List
   imports Phi_Semantics.PhiSem_C
 begin
 
-declare [[auto_sledgehammer_params = "try0 = false"]]
-declare [[\<phi>trace_reasoning = 1]]
-declare [[\<phi>infer_requirements]]
-
 abbreviation \<open>\<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {nxt: \<p>\<t>\<r>, data: TY}\<close>
 
 \<phi>type_def Linked_Lst :: \<open>address \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<s>\<u>\<b>\<j> addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
-                                      (nxt, x) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> nxt: Ptr, data: T \<rbrace>
-                                      \<s>\<u>\<b>\<j> nxt. address_to_base addr \<and>
-                                               \<t>\<y>\<p>\<e>\<o>\<f> addr = \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T) \<and>
-                                               \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
+                                      (nxt, x) \<Ztypecolon> \<o>\<b>\<j>[addr] \<lbrace> nxt: Ptr, data: T \<rbrace>
+                                      \<s>\<u>\<b>\<j> nxt. \<t>\<y>\<p>\<e>\<o>\<f> addr = \<l>\<i>\<n>\<k>_\<l>\<i>\<s>\<t> (\<t>\<y>\<p>\<e>\<o>\<f> T) )\<close>
 
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T)
@@ -59,7 +53,6 @@ proc prepend_llist:
   ret
 \<medium_right_bracket> .
 
-
 proc pop_llist:
   input  \<open>l \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr T \<close>
   output \<open>(if l = [] then [] else tl l) \<Ztypecolon> \<r>\<e>\<f> Linked_Lst addr' T
@@ -76,8 +69,6 @@ proc pop_llist:
 
   ret  
 \<medium_right_bracket> .
-
-thm pop_llist_def
 
 
 proc nth_llist:

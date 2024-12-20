@@ -52,8 +52,12 @@ declare Mem.intro_reasoning[\<phi>reason default]
         Mem.elim_map [where \<phi> =\<open>\<lambda>x. x\<close>, simplified, \<phi>reason %\<phi>mapToA_mapper]
 
 subsubsection \<open>Syntax\<close>
-
+(*
 paragraph \<open>Memory Object\<close>
+
+abbreviation MemObj ("\<o>\<b>\<j>[_] _" [10,901] 900)
+  where \<open>\<o>\<b>\<j>[addr] T \<equiv> Mem addr (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<phi>\<s>\<u>\<b>\<j> address_to_base addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+*)
 
 consts Mem_synt :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
        may_mem_coerce :: \<open>('c, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close>
@@ -164,6 +168,11 @@ definition \<open>address_to_base addr \<equiv> addr.offset addr = 0\<close>
   \<comment> \<open>\<open>addr\<close> points to the base of an allocation block\<close>
   \<comment> \<open>wraps and prevents the rewrite \<open>addr.offset addr = 0\<close>,
       as \<open>address_to_base addr\<close> should be treated as an atom\<close>
+
+abbreviation MemObj ("\<o>\<b>\<j>[_] _" [10,901] 900)
+  where \<open>\<o>\<b>\<j>[addr] T \<equiv> Mem addr (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<phi>\<s>\<u>\<b>\<j> address_to_base addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<t>\<y>\<p>\<e>\<o>\<f> T \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+
+
 
 subsection \<open>Main\<close>
 
@@ -298,7 +307,34 @@ proc calloc1:
 
 \<phi>overloads calloc \<comment> \<open>for allocating multiple elements\<close>
        and memcpy
- 
+
+thm \<phi>MapAt_L.mapper_wrap_module_src
+
+(*
+proc malloc:
+  input Void
+  requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
+       and \<open>Semantic_Type T TY\<close>
+  premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<o>\<b>\<j>[addr] T\<close>
+  including Semantic_Zero_Val_EIF_brute
+  unfolding address_to_base_def
+  \<medium_left_bracket>
+    apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and U=\<open>Well_Type TY\<close>]
+
+
+    term \<open>Abstract_Domain\<^sub>L T (\<lambda>x. x \<in> Well_Type TY)\<close>
+
+*)
+
+
+
+
+
+
+
+
+
 proc mfree:
   input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
   requires \<open>Semantic_Type T TY\<close>

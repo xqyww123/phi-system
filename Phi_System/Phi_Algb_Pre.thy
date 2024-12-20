@@ -1,8 +1,8 @@
 theory Phi_Algb_Pre
   imports IDE_CP_Reasoning1
-          Phi_Algebras.Map_of_Tree
-          Phi_Algebras.LCRO_Interval
-          Phi_Algebras.Len_Intvl
+          Phi_BI.Map_of_Tree
+          Phi_BI.LCRO_Interval
+          Phi_BI.Len_Intvl
 begin 
 
 section \<open>Setup Reasoning Rules\<close>

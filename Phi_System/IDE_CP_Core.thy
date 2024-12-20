@@ -1,7 +1,7 @@
 chapter \<open>Integrated Deduction Environment for Programming (IDE-P)\<close>
 
 theory IDE_CP_Core
-  imports Phi_BI Phi_Element_Path
+  imports Phi_BI.Phi_BI Phi_Element_Path
   keywords
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
