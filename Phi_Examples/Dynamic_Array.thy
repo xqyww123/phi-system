@@ -4,9 +4,7 @@ theory Dynamic_Array
           PhiStd.PhiStd_Slice
 begin
 
-declare [[\<phi>trace_reasoning = 1]]
-
-\<phi>type_def DynArr :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x list) \<phi>\<close>
+\<phi>type_def DynArr
   where \<open>l \<Ztypecolon> DynArr addr T \<equiv> (a\<^sub>D, len, cap) \<Ztypecolon> \<o>\<b>\<j>[addr] \<lbrace> data: Ptr[\<a>\<r>\<r>\<a>\<y>[cap] (\<t>\<y>\<p>\<e>\<o>\<f> T)], len: \<nat>(\<s>\<i>\<z>\<e>_\<t>), cap: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
                              data \<Ztypecolon> \<o>\<b>\<j>[a\<^sub>D] \<bbbA>\<r>\<r>\<a>\<y>[cap] T
          \<s>\<u>\<b>\<j> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
