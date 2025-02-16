@@ -3,7 +3,7 @@ session Phi_Semantics_Framework = Main +
   sessions
     Phi_Statespace
     Virtual_Datatype
-    Phi_Algebras
+    Phi_BI
     Debt_Axiom
   theories
     Phi_Semantics_Framework

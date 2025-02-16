@@ -1,7 +1,7 @@
 chapter \<open>Formalization Tools for Map-of-Val\<close>
 
 theory PhSem_MoV
-  imports PhiSem_Aggregate_Base Phi_System.Resource_Template
+  imports PhSm_Ag_Base Phi_System.Resource_Template
 begin
 
 debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> aggregate_path \<rightharpoonup> VAL\<close>

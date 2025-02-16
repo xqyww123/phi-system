@@ -1,5 +1,8 @@
 signature PHI_HELP = sig
 
+  val True  : cterm
+  val False : cterm
+
   val has_head : string (* const name *) -> term -> bool
 
   val safe_fastype_of : term -> typ (*improved Term.fastype_of which considers dummyT*)
@@ -82,6 +85,9 @@ val K_I : 'a -> 'b -> 'b
 end
 
 structure Phi_Help : PHI_HELP = struct
+
+val True  = \<^cterm>\<open>True\<close>
+val False = \<^cterm>\<open>False\<close>
 
 fun has_head c (Const (c', _)) = (c = c')
   | has_head c (h $ _) = has_head c h

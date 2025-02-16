@@ -7,7 +7,7 @@ begin
 
 abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<a>\<r>\<r>\<a>\<y>[M] \<a>\<r>\<r>\<a>\<y>[N] \<i>\<n>\<t>\<close>
  
-\<phi>type_def MatSlice :: \<open>address \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (fiction, int mat) \<phi>\<close>
+\<phi>type_def MatSlice
   where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,m] (\<s>\<l>\<i>\<c>\<e>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
                                      \<s>\<u>\<b>\<j> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
   parameter_equality (id,id,id,id,id)
@@ -54,7 +54,7 @@ proc del_mat:
   output   \<open>Void\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-  mfree (a) certified by (auto simp: \<phi>, rule exI[where x=\<open>\<lambda>(a,b) (aa, ba). aa\<close>], auto_sledgehammer)
+  mfree (a)
 \<medium_right_bracket> .
 
 

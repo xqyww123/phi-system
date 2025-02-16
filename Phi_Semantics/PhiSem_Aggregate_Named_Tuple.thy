@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate_Named_Tuple
-  imports PhiSem_Aggregate_Base
+  imports PhSm_Ag_Base
   abbrevs "<struct>" = "\<s>\<t>\<r>\<u>\<c>\<t>"
 begin
 
@@ -24,7 +24,7 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
   and   V_named_tup_sep_disj_L:
             \<open>vf1 ## sem_mk_ntup f2 \<Longrightarrow> (\<exists>f1. vf1 = sem_mk_ntup f1)\<close>
   and   V_named_tup_sep_disj[simp]:
-            \<open>sem_mk_ntup f1 ## sem_mk_ntup f2 \<longleftrightarrow> f1 ## f2 \<close>
+            \<open>sem_mk_ntup f1 ## sem_mk_ntup f2 \<longleftrightarrow> fmdom' f1 \<inter> fmdom' f2 = {} \<close>
   and   V_named_tup_mult[simp]:
             \<open>sem_mk_ntup f1 * sem_mk_ntup f2 = sem_mk_ntup (f1 * f2)\<close>
   and   idx_step_type_tup [eval_aggregate_path]:
@@ -34,7 +34,8 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
   and   idx_step_value_named_tup[eval_aggregate_path]:
             \<open>idx_step_value (AgIdx_S s) (sem_mk_ntup vs) = the (fmlookup vs s)\<close>
   and   idx_step_mod_value_named_tup:
-            \<open>idx_step_mod_value (AgIdx_S s) f (sem_mk_ntup vs) = sem_mk_ntup (fmupd s (f (the (fmlookup vs s))) vs)\<close>
+            \<open>idx_step_mod_value (AgIdx_S s) f (sem_mk_ntup vs) =
+                sem_mk_ntup (fmupd s (f (the (fmlookup vs s))) vs)\<close>
 
 lemma semty_ntup_uniq':
   \<open> sem_mk_ntup vs \<in> Well_Type TY
@@ -51,6 +52,20 @@ lemma semty_ntup_uniq'2:
         smt (verit, ccfv_SIG) fmap_ext fmlookup_filter fmupd_lookup option.collapse option.rel_sel option.simps(3),
         presburger,
         smt (verit, best) option.sel option_rel_Some2) .
+
+lemma has_Zero_semty_ntup1 [simp]:
+  \<open> s |\<notin>| fmdom vs
+\<Longrightarrow> has_Zero (semty_ntup (fmupd s v vs)) \<longleftrightarrow> has_Zero v \<and> has_Zero (semty_ntup vs) \<close>
+  unfolding has_Zero_def
+  by (auto, smt (verit, best) fmdom_notI fmpredD fmpred_alt_def fmupd_lookup option.exhaust_sel)
+
+lemma has_Zero_semty_ntup0 [simp]:
+  \<open> has_Zero (semty_ntup fmempty) \<close>
+  unfolding has_Zero_def
+  by auto
+
+
+
 
 subsubsection \<open>Syntax\<close>
 
@@ -150,23 +165,38 @@ primrec semantic_named_tuple_constructor
 
 subsubsection \<open>Homomorphic Properties\<close>
 
+context includes fmap.lifting begin
+
+lemma fmupd_discrete[simp]:
+  \<open> fmupd s x fmempty ## f \<longleftrightarrow> s \<notin> fmdom' f \<close>
+  \<open> f ## fmupd s x fmempty \<longleftrightarrow> s \<notin> fmdom' f \<close>
+  for f :: \<open>('a,'b::discrete_semigroup) fmap\<close>
+  by (transfer, auto,
+      metis fun_upd_same map_upd_def option.simps(3),
+      metis fun_upd_apply map_upd_def option.distinct(1),
+      metis discrete_disj_1 fmlookup_dom'_iff fmupd_lookup one_option_def option.distinct(1) sep_disj_fmap.rep_eq,
+      simp add: fmdom'_alt_def)
+
+end
+
+(*
 lemma homo_sep_mult_V_named_tup[simp]:
   \<open>homo_sep_mult (\<lambda>v. sem_mk_ntup (fmupd s v fmempty))\<close>
   including fmap.lifting
   unfolding homo_sep_mult_def
-  by (auto, transfer, auto simp: fun_eq_iff times_fun_def map_upd_def)
+  apply auto
 
 lemma homo_sep_disj_V_named_tup[simp]:
   \<open>homo_sep_disj (\<lambda>v. sem_mk_ntup (fmupd s v fmempty))\<close>
   including fmap.lifting
   unfolding homo_sep_disj_def
-  by (clarsimp, transfer, clarsimp simp: map_upd_def)
+  by (clarsimp)
 
 lemma closed_homo_sep_disj_V_named_tup[simp]:
   \<open>closed_homo_sep_disj (\<lambda>v. sem_mk_ntup (fmupd s v fmempty))\<close>
   including fmap.lifting
   unfolding closed_homo_sep_disj_def
-  by (clarsimp, transfer, clarsimp simp: map_upd_def)
+  by (clarsimp simp: map_upd_def)
 
 lemma homo_sep_V_named_tup[simp]:
   \<open>homo_sep (\<lambda>v. sem_mk_ntup (fmupd s v fmempty))\<close>
@@ -177,6 +207,7 @@ lemma closed_homo_sep_V_named_tup[simp]:
   \<open>closed_homo_sep (\<lambda>v. sem_mk_ntup (fmupd s v fmempty))\<close>
   unfolding closed_homo_sep_def
   by simp
+*)
 
 subsubsection \<open>Reduction to poison\<close>
 
@@ -271,7 +302,7 @@ lemma \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 [simp, \<phi>type_property Named_Tuple_Fie
   unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def Semantic_Type_def
   apply auto
   apply (smt (z3) WT_named_tup Well_Type_unique exE_some fmempty_transfer fmrel_upd mem_Collect_eq)
-  apply (metis (mono_tags, lifting) WT_named_tup fmempty_transfer fmrel_upd mem_Collect_eq)
+  apply (metis (mono_tags, lifting) WT_named_tup fmempty_transfer fmrel_upd mem_Collect_eq discrete.sel)
    apply blast
   subgoal premises prems for x TY v
   proof -
@@ -285,7 +316,7 @@ lemma \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 [simp, \<phi>type_property Named_Tuple_Fie
       by (smt (verit) fmap_exhaust fmdom_notD fmempty_lookup fmupd_lookup option.distinct(1) option_rel_Some2 rel_option_None2)
     from prems(1)[THEN spec[where x=\<open>TY'\<close>]] prems(2) have False
       by (auto simp: fmrel_iff t2,
-          smt (verit, best) fmupd_lookup option.distinct(1) option.rel_sel option.sel sem_mk_dest_ntup)
+          smt (verit, best) fmupd_lookup option.distinct(1) option.rel_sel option.sel sem_mk_dest_ntup discrete.sel)
     then show ?thesis
       by blast
   qed .
@@ -341,7 +372,7 @@ apply auto
   apply (drule V_named_tup_sep_disj_R, auto simp: )[1]
   apply (metis (mono_tags, opaque_lifting) finsert_iff fmdom_fmupd fmupd_lookup idx_step_type_tup option.sel semty_ntup_eq_poison semty_ntup_neq_poison semty_ntup_neq_poison0)
   using semty_ntup_eq_poison semty_ntup_neq_poison apply force
-  apply (metis Inhabited_def SType_Of_not_poison Satisfiable_def V_named_tup_sep_disj empty_iff fmap_sepdisj_fmempty(2) fmdom_empty fmrel_fmdom_eq fset_simps(1) semty_ntup_eq_poison semty_ntup_neq_poison sep_disj_fmupd_left)
+  apply (metis Inhabited_def SType_Of_def V_named_tup_sep_disj concretize_SAT disjoint_iff fmdom'_alt_def fmdom_notI fmempty_lookup fmrel_fmdom'_eq fmupd_lookup semty_ntup_eq_poison semty_ntup_neq_poison)
          apply (smt (verit, del_insts) SType_Of_not_poison V_named_tup_mult WT_named_tup fmap_times_fempty(2) fmrel_fmdom_eq fmrel_upd fmupd_times_right mem_Collect_eq semty_ntup_eq_poison semty_ntup_neq_poison)
   subgoal premises prems for x TY p a TYa b cb xa
   proof -
@@ -364,7 +395,8 @@ apply auto
       then obtain x' v' where \<open>v' \<Turnstile> (x' \<Ztypecolon> T) \<and> v' \<notin> Well_Type t'\<close>
         by blast
       have t2: \<open>sem_mk_ntup (fmupd s v' vf) \<in> Well_Type TYa\<close>
-        by (metis (no_types, lifting) V_named_tup_mult V_named_tup_sep_disj \<open>v' \<Turnstile> (x' \<Ztypecolon> T) \<and> v' \<notin> Well_Type t'\<close> all_not_fin_conv fmap_sepdisj_fmempty(2) fmap_times_fempty(2) fmdom_empty fmupd_times_right prems(6) prems(7) sep_disj_fmupd_left t1 t3)
+        apply (simp add: t4)
+        by (smt (z3) V_named_tup_mult V_named_tup_sep_disj WT_named_tup \<open>v' \<Turnstile> (x' \<Ztypecolon> T) \<and> v' \<notin> Well_Type t'\<close> fmap_times_fempty(2) fmdom'_alt_def fmdom_fmupd fmupd_times_right mem_Collect_eq prems(6) prems(7) prems(8) sem_mk_dest_ntup t1 t3 t4)
       then show False
         using semty_ntup_uniq'2
         by (metis \<open>v' \<Turnstile> (x' \<Ztypecolon> T) \<and> v' \<notin> Well_Type t'\<close> finsert_iff fmdom_fmupd fmupd_lookup idx_step_type_tup option.sel t3 t4)
@@ -413,10 +445,13 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   apply (clarsimp; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>)
   apply (auto simp add: inj_image_mem_iff fmmap_fmupd)
   subgoal for x'
-    by (rule exI[where x=\<open>sem_mk_ntup (fmupd s x' fmempty)\<close>],
+    apply (rule exI[where x=\<open>sem_mk_ntup (fmupd s x' fmempty)\<close>],
         rule exI[where x=\<open>sem_mk_ntup (fmmap (the \<circ> Zero) tys)\<close>],
-        auto simp add: fmlookup_dom_iff sep_disj_fmap.rep_eq,
-        metis (no_types, lifting) fmap_times_fempty(2) fmempty_lookup fmlookup_dom_iff fmlookup_map fmmap_empty fmupd_times_right option.distinct(1)) .
+        auto simp add: fmlookup_dom_iff sep_disj_fmap.rep_eq)
+    apply (metis (no_types, lifting) fmap_times_fempty(2) fmdom_notI fmempty_lookup fmlookup_map fmmap_empty fmupd_times_right)
+    by (simp add: fmdom'_notI) .
+
+
 
 section \<open>Reasoning\<close>
 
@@ -480,11 +515,53 @@ lemma [\<phi>reason %inhabited+10]:
   unfolding subset_iff Premise_def Inhabited_def Satisfiable_def Semantic_Type_def Is_Named_Tuple_def
   apply (clarsimp)
   subgoal premises prems for x y p q
-    by (insert prems(1)[THEN spec, THEN spec, THEN mp, OF prems(4)],
+    apply (insert prems(1)[THEN spec, THEN spec, THEN mp, OF prems(4)],
         clarify,
         rule exI[where x=x], rule exI[where x=y],
         rule exI[where x=\<open>sem_mk_ntup (fmupd s p fmempty)\<close>],
-        rule exI[where x=q], insert prems(2-4), clarsimp, blast) .
+        rule exI[where x=q], insert prems(2-4), clarsimp)
+    by (metis fmdom'_alt_def) .
+
+
+
+term rel_prod
+
+lemma V_named_tup_sep_disj_R':
+  \<open> sem_mk_ntup f1 ## vf2 \<Longrightarrow> (\<exists>f2. vf2 = sem_mk_ntup f2 \<and> fmdom' f1 \<inter> fmdom' f2 = {}) \<close>
+  using V_named_tup_sep_disj_R by fastforce
+
+
+
+lemma [\<phi>reason add]:
+  \<open> Is_Named_Tuple Ts fields
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
+\<Longrightarrow> Equiv_Class T r\<^sub>1
+\<Longrightarrow> Equiv_Class U r\<^sub>2
+\<Longrightarrow> Equiv_Class (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) (rel_prod r\<^sub>1 r\<^sub>2) \<close>
+  unfolding Equiv_Class_alt_def Is_Named_Tuple_def Premise_def
+  apply (auto; drule V_named_tup_sep_disj_R'; drule V_named_tup_sep_disj_R'; clarsimp)
+  apply (metis fmdom'_alt_def fmupd_lookup fmupd_times_right option.sel)
+  by (metis fmap_times_fempty(2) fmdom'_alt_def fmdrop_fmupd_same fmdrop_idle fmupd_times_right)
+
+lemma [\<phi>reason add]:
+  \<open> Equiv_Class T r
+\<Longrightarrow> Equiv_Class \<lbrace> SYMBOL_VAR(s): T \<rbrace> r \<close>
+  unfolding Equiv_Class_alt_def
+  by (auto, metis fmupd_lookup option.sel)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -559,13 +636,12 @@ lemma [\<phi>reason %aggregate_access+1]:
     obtain c'f where c'f: \<open>c' = sem_mk_ntup c'f\<close>
       using V_named_tup_sep_disj_R prems(7) by blast
     show ?thesis
-      by (insert prems,
+      apply (insert prems,
           rule exI[where x=\<open>sem_mk_ntup (fmupd s (index_mod_value idx g v') fmempty)\<close>],
           rule exI[where x=c'],
           auto simp: c'f V_named_tup_mult_cons idx_step_mod_value_named_tupl_cons' \<r>Guard_def
-                     Premise_def idx_step_mod_value_named_tup fmupd_times_right,
-          metis fmupd_idem fmupd_lookup fmupd_times_right option.sel sem_mk_dest_ntup times_fmlookup,
-          fastforce)
+                     Premise_def idx_step_mod_value_named_tup fmupd_times_right)
+      by (simp add: fmdom'_notD fmdom_notI fmupd_times_right)
   qed .
 
 lemma [\<phi>reason %aggregate_access+1]:
@@ -599,14 +675,15 @@ lemma [\<phi>reason %aggregate_access]:
   unfolding \<phi>Aggregate_Constructor_Synth_def Semantic_Type'_def Action_Tag_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric] times_list_def; rule)
   subgoal premises prems for vs v
-    by (insert prems(1,3-) 
+    apply (insert prems(1,3-) 
                prems(2)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
                V_named_tup_mult,
         
         rule exI[where x=\<open>sem_mk_ntup (fmupd s v fmempty)\<close>],
         rule exI[where x=\<open>semantic_named_tuple_constructor sR vs\<close>],
-        auto simp: V_named_tup_sep_disj fmrel_fmdom_eq,
-        metis fmap_times_fempty(2) fmupd_times_right)
+        auto simp: V_named_tup_sep_disj fmrel_fmdom_eq)
+    apply (metis fmap_times_fempty(2) fmupd_times_right)
+    by (simp add: fmdom'_alt_def)
   subgoal premises prems for vs v
     by (insert prems(1,3-) 
                prems(2)[THEN spec[where x=vs], THEN mp, OF \<open>vs \<Turnstile> (xs \<Ztypecolon> L)\<close>]
@@ -639,10 +716,10 @@ lemma [\<phi>reason %aggregate_access]:
             Action_Tag_def Semantic_Type'_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
   subgoal for vs
-    by (rule exI[where x=\<open>sem_mk_ntup (fmupd s (\<phi>arg.dest v) fmempty)\<close>],
+    apply (rule exI[where x=\<open>sem_mk_ntup (fmupd s (\<phi>arg.dest v) fmempty)\<close>],
         rule exI[where x=\<open>sem_mk_ntup vs\<close>],
-        simp add: V_named_tup_sep_disj,
-        metis (no_types, lifting) fmap_sepdisj_fmempty(2) fmap_times_fempty(2) fmdom_notI fmempty_lookup fmrel_fmdom_eq fmupd_times_right sep_disj_fmupd_left)
+        simp add: V_named_tup_sep_disj)
+    by (metis fmap_times_fempty(2) fmdom'_alt_def fmrel_fmdom'_eq fmupd_times_right)
   using V_named_tup_mult by auto
 
 

@@ -34,9 +34,6 @@ proc test_prime:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
-term \<open>(\<lambda>e. \<b>\<r>\<e>\<a>\<k> lb \<w>\<i>\<t>\<h> (\<lambda>_. i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i. (1 < i \<and> i \<le> x \<and> (\<forall>j. 1 < j \<and> j < i \<longrightarrow> \<not> j dvd x)) \<and> i = x) \<o>\<r> \<b>\<r>\<e>\<a>\<k> lc
-                 \<w>\<i>\<t>\<h> (\<lambda>_. i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i. 1 < i \<and> i \<le> x \<and> (\<forall>j. 1 < j \<and> j < i \<longrightarrow> \<not> j dvd x)) \<o>\<r> i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat>\<heavy_comma>
-                 (\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n label_ret \<w>\<i>\<t>\<h> (\<lambda>\<r>\<e>\<t>. prime x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<bool>)))\<close>
 
 thm test_prime_def \<comment> \<open>Semantic definition\<close>
 thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>

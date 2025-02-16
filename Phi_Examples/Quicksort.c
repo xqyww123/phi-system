@@ -1,4 +1,3 @@
-
 void qsort (int* l, int len) {
   if (len < 1)
     return;
@@ -13,7 +12,7 @@ void qsort (int* l, int len) {
         ++d;
       }
     }
-    qsort (l, d) ;
+    qsort (l, d-1) ;
     qsort (l+d, len-d) ;
   }
 }

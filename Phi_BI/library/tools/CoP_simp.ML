@@ -34,7 +34,7 @@ signature PHI_COP_SIMP_RULES = sig
 
 val direction : bool
 
-val select_trans_rule : term -> thm
+val trans_rule_of : term -> thm
 
 val binding_of_extracting_trigger : binding
 val binding_of_rule_declaration_attr : binding
@@ -126,10 +126,10 @@ fun del_simp_trigger (pat,serial) ctxt =
 
 (* Simplifier *)
 
-fun select_trans_rule' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = select_trans_rule' X
-  | select_trans_rule' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X
-        $ (Const(\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) $ _ $ _ )) = SOME (RULES.select_trans_rule X)
-  | select_trans_rule' _ = NONE
+fun trans_rule_of' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = trans_rule_of' X
+  | trans_rule_of' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X
+        $ (Const(\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) $ _ )) = SOME (RULES.trans_rule_of X)
+  | trans_rule_of' _ = NONE
 
 (*val enable_rule_pass = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_rule_pass\<close> (K false)*)
 val extract_pattern_trigger = Attrib.setup_config_bool RULES.binding_of_extracting_trigger (K true)
@@ -138,26 +138,11 @@ fun force_rule_pass rule ctxt =
   let fun bad_rule msg = error ("Malform rule of Transformation-based Simplification:\n" ^
                                 Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ msg)
 
-      val has_substantial_changes =
-            case Thm.concl_of rule
-              of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ (_ (*\<A>simp*) $ X)) =>
-                    (case X of Const(\<^const_name>\<open>True\<close>, _)  => true
-                             | Const(\<^const_name>\<open>False\<close>, _) => false
-                             | X => raise TERM ("Must be a literal boolean. True for making some \
-                                                \substantial simplification and False for not.", [X]))
-               | _ => bad_rule ""
-
-      val trans_rule = select_trans_rule' (Thm.concl_of rule)
-                    |> Option.map (Thm.instantiate (TVars.empty, Vars.make [((("M",0),\<^typ>\<open>bool\<close>),
-                          if has_substantial_changes then \<^cterm>\<open>False\<close> else \<^cterm>\<open>True\<close>)]))
+      val trans_rule = trans_rule_of' (Thm.concl_of rule)
 
       val rule'= (case trans_rule
                     of SOME R => rule RS (Thm.transfer (Context.theory_of ctxt) R)
-                     | NONE => if has_substantial_changes
-                               then rule RS (Thm.transfer (Context.theory_of ctxt)
-                                                          @{lemma' \<open>P @tag \<A>simp' forward True \<Longrightarrow> P @tag \<A>simp' forward Any\<close>
-                                                               by (simp add: Action_Tag_def)})
-                               else rule )
+                     | NONE => rule )
               |> Phi_Help.beta_eta_contract
               |> Drule.zero_var_indexes
 
@@ -235,17 +220,37 @@ structure Phi_CoP_Simp = Phi_CoP_Simp_GEN (
   val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_simp\<close>
 
   val PLPR_pass_name = "Phi_CoP_Simp"
-  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>simp' True _\<close>
-  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' True _\<close>
+  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>simp' True\<close>
+  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' True\<close>
 
-  fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
-    | select_trans_rule (Const(\<^const_name>\<open>ExBI\<close>, _) $ X) = select_trans_rule X
-    | select_trans_rule (Abs (_, _, X)) = select_trans_rule X
-    | select_trans_rule (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = select_trans_rule X
-    | select_trans_rule (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = @{thm' \<A>simp_trans'}
-    | select_trans_rule (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (
-              Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = @{thm' \<A>simp_trans'P}
-    | select_trans_rule _ = @{thm' \<A>simp_trans }
+  val simp_trans' = @{lemma'
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' @tag \<A>_transitive_simp' direction
+\<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @tag \<A>simp_if_need direction
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @tag \<A>simp' direction \<close>
+  by (simp add: Action_Tag_def Transformation_def)}
+
+  val simp_trans'P = @{lemma'
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P y @tag \<A>_transitive_simp' direction
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y' \<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @tag \<A>simp_if_need direction)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] r' : (\<lambda>z. w z \<and> P y')
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @tag \<A>simp' direction \<close>
+  by (simp add: Action_Tag_def Transformation_def Simplify_def) }
+
+  val simp_trans = @{lemma'
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @tag \<A>_transitive_simp' direction
+\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @tag \<A>simp_if_need direction)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] r' : (\<lambda>z. \<exists>y. r y \<and> w y z)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @tag \<A>simp' direction \<close>
+  by (simp add: Action_Tag_def Transformation_def Simplify_def, blast) }
+
+  fun trans_rule_of (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = trans_rule_of Y
+    | trans_rule_of (Const(\<^const_name>\<open>ExBI\<close>, _) $ X) = trans_rule_of X
+    | trans_rule_of (Abs (_, _, X)) = trans_rule_of X
+    | trans_rule_of (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = trans_rule_of X
+    | trans_rule_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) = simp_trans'
+    | trans_rule_of (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (
+              Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = simp_trans'P
+    | trans_rule_of _ = simp_trans
 
 )
 
@@ -257,9 +262,16 @@ structure Phi_CoP_Backward_Simp = Phi_CoP_Simp_GEN (
   val binding_of_rule_declaration_attr = \<^binding>\<open>\<phi>transformation_based_backward_simp\<close>
 
   val PLPR_pass_name = "Phi_CoP_Simp"
-  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>simp' False _\<close>
-  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' False _\<close>
+  val pattern_of_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>simp' False\<close>
+  val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' False\<close>
 
-  val select_trans_rule = K @{thm' \<A>simp_trans_backward}
+  val simp_trans_backward = @{lemma'
+  \<open> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> w x \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @tag \<A>_transitive_simp' direction)
+\<Longrightarrow> z \<Ztypecolon> Z \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. w x @tag \<A>simp_if_need direction
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] r' : (\<lambda>y. \<exists>x. r x y \<and> w x)
+\<Longrightarrow> z \<Ztypecolon> Z \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r' y @tag \<A>simp' direction \<close>
+  by (simp add: Action_Tag_def Transformation_def Simplify_def, blast) }
+
+  val trans_rule_of = K simp_trans_backward
 
 )

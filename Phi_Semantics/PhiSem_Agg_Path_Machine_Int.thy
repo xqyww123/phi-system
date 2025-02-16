@@ -1,5 +1,5 @@
 theory PhiSem_Agg_Path_Machine_Int
-  imports PhiSem_Aggregate_Base
+  imports PhSm_Ag_Base
 begin
 
 end

@@ -175,7 +175,7 @@ variables (to which unknown variables will be instantiate) and fails sometimes e
 Therefore, we use sophisticated instantiation strategy here involving different levels of
 computational complexity to instantiate them as early as possible.*)
 
-fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
+fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then Phi_Help.True else Phi_Help.False) ret
   | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
       = mk_boolean_inst B b (mk_boolean_inst A b ret)
   | mk_boolean_inst (Const(\<^const_name>\<open>HOL.Not\<close>, _) $ A) b ret

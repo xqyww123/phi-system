@@ -216,17 +216,17 @@ val _ = Theory.setup (Context.theory_map (
               TERM(?G' (?F'\<^sub>T ?T) (?F'\<^sub>U ?U)) &&& TERM(?G') &&& TERM(?F'\<^sub>T) &&& TERM(?T) &&& TERM(?F'\<^sub>U) &&& TERM(?U)
                                            &&& TERM(?F) &&& TERM(?G) &&& TERM(?T) &&& TERM(?U) \<close>)]
 #>fold (register_assoc_tyoprs_rule_pass DA_INTRO)
-    [([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+    [([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fs ?s (?Ft ?t ?T)) &&& TERM(?Fc (?smul ?s ?t))
                                        &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>),
-     ([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+     ([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>\<Lambda>\<^sub>I ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fs ?s (\<lambda>p. ?Ft ?t (?T p))) &&& TERM(?Fc (?smul ?s ?t))
                 &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>)]
 #>fold (register_assoc_tyoprs_rule_pass DA_ELIM)
-    [([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+    [([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fc (?smul ?s ?t) ?T) &&& TERM(?Fs ?s (?Ft ?t ?T))
                                          &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>),
-     ([1], \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>\<Lambda>\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
+     ([1], \<^pattern_prop>\<open>Module_Assoc\<^sub>\<Lambda>\<^sub>E ?Fs ?Ft ?Fc ?T ?Ds ?Dt ?Dx ?smul ?f &&&
               TERM(?Fc (?smul ?s ?t) ?T) &&& TERM(?Fs ?s (\<lambda>p\<^sub>s. ?Ft ?t (\<lambda>p\<^sub>t. ?T (p\<^sub>s, p\<^sub>t))))
                                          &&& TERM(?Fs ?s) &&& TERM(?Ft ?t) &&& TERM(?T) \<close>)]
 ))
@@ -317,9 +317,9 @@ fun whether_to_swap_normalize ctxt =
 fun swap_normalization_guard (ctxt, sequent) =
   let val (bvs, goal) = Phi_Help.strip_meta_hhf_bvs (Phi_Help.leading_antecedent' sequent)
       val (ToA, direction) =
-          case PLPR_Syntax.dest_action_of' (fn Const(\<^const_name>\<open>\<A>simp'\<close>, _) $ _ $ _ => true
+          case PLPR_Syntax.dest_action_of' (fn Const(\<^const_name>\<open>\<A>simp'\<close>, _) $ _ => true
                                              | _ => false) goal
-            of (ToA, _ $ direction $ _) =>
+            of (ToA, _ $ direction) =>
                (ToA, 
                 case direction of Const(\<^const_name>\<open>True\<close>, _) => true
                                 | Const(\<^const_name>\<open>False\<close>, _) => false

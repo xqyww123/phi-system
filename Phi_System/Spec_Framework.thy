@@ -5,7 +5,7 @@
 chapter \<open>Specification Framework\<close>
 
 theory Spec_Framework
-  imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
+  imports Phi_BI.Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
   keywords "fiction_space"  :: thy_goal
   abbrevs "<shifts>" = "\<s>\<h>\<i>\<f>\<t>\<s>"
     and   "<val>" = "\<v>\<a>\<l>"
@@ -747,7 +747,24 @@ declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightar
   and \<phi>functionality_brute = (2, [2,2]) in \<phi>functionality_all and < \<phi>functional_to_functionality
     \<open>reducing to concrete semantics, and only used in deriving rules\<close>
 
+
 subsubsection \<open>Basic Rules\<close>
+
+lemma functional_concretize:
+  \<open> Functionality T ((=) x)
+\<Longrightarrow> v \<Turnstile> (x \<Ztypecolon> T)
+\<Longrightarrow> v = concretize T x \<close>
+  unfolding concretize_def \<phi>Type_def Functionality_def
+  by (simp add: some_equality)
+
+lemma concretize_eq:
+  \<open> Abstract_Domain\<^sub>L T ((=) x)
+\<Longrightarrow> Functionality U ((=) y)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U
+\<Longrightarrow> concretize T x = concretize U y \<close>
+  unfolding Transformation_def Abstract_Domain\<^sub>L_def \<r>ESC_def
+  by (simp add: concretize_SAT functional_concretize)
+
 
 (*deprecated*)
 lemma Is_Functional_premise_extraction:
@@ -761,6 +778,12 @@ lemma Functionality_premise_extraction:
   unfolding Functionality_def atomize_eq
   by blast
 
+lemma Functionality_sub:
+  \<open> (\<forall>x. P' x \<longrightarrow> P x)
+\<Longrightarrow> Functionality T P
+\<Longrightarrow> Functionality T P' \<close>
+  unfolding Functionality_def
+  by auto
 
 (* lemma Is_Functional_alt:
   \<open>Is_Functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>
@@ -1136,20 +1159,6 @@ proof clarsimp
   *)
 
 
-(*
-subsection \<open>Injective\<close>
-
-lemma is_singleton_I''[\<phi>reason 1000]:
-  \<open> Satisfiable A
-\<Longrightarrow> Is_Functional A
-\<Longrightarrow> is_singleton A\<close>
-  unfolding Satisfaction_def Satisfiable_def Is_Functional_def
-  by (metis empty_iff is_singletonI')
-  
-lemma [\<phi>reason 1000]:
-  \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
-  by (rule is_singleton_I''; simp add: Is_Functional_def)
-*)
 
 subsection \<open>Reflexive Separation\<close>
 

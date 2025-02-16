@@ -1,0 +1,3 @@
+- Fix the debt axiom `can_eqcmp_ptr`, 
+- I also remember there are some problems in the scalar warping rule. It turns out that, a mechanism is required in the TP reasoning subsystem to know if the reasoning at least applies some meaningful transformation or just fallback only.
+- Introduce native $\exists$ into TP.

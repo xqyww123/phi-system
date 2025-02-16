@@ -6,7 +6,7 @@ begin
 abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t>{num: \<a>\<i>\<n>\<t>, den: \<a>\<i>\<n>\<t>}\<close>
 
   
-\<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
+\<phi>type_def \<phi>Rational ("\<rat>")
   where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
   deriving Basic
        and \<open>Object_Equiv \<rat> (=)\<close>
@@ -14,7 +14,6 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<s>\<t>\<r>\<u>\<
        and \<open>Abstract_Domain \<rat> (\<lambda>_. True)\<close>
        and Semantic_Type
        and Inhabited
-
 
   proc rat_add:
     input \<open>\<v>\<a>\<l> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<v>\<a>\<l> q2 \<Ztypecolon> \<rat>\<close>

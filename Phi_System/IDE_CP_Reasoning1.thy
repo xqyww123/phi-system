@@ -4,7 +4,7 @@ text \<open>The part includes small process that can be built without infrastruc
   IDE-CP, and declarations of other large process.\<close>
 
 theory IDE_CP_Reasoning1
-  imports Spec_Framework Phi_BI
+  imports Spec_Framework Phi_BI.Phi_BI
   abbrevs "<subj-reasoning>" = "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>"
 begin
 

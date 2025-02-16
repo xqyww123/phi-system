@@ -42,6 +42,11 @@ lemma [\<phi>reason add]:
   \<open>Is_Type_Literal \<a>\<i>\<n>\<t>\<close>
   unfolding Is_Type_Literal_def ..
 
+lemma has_Zero_\<a>\<i>\<n>\<t>[simp]:
+  \<open> has_Zero \<a>\<i>\<n>\<t> \<close>
+  unfolding has_Zero_def
+  by simp
+
 
 
 section \<open>\<phi>-Types\<close>
@@ -54,6 +59,9 @@ subsection \<open>Integer in the normal sense\<close>
        and Abstract_Domain\<^sub>L
        and Semantic_Zero_Val
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<int> = \<a>\<i>\<n>\<t>\<close>
+       and Functionality
+       and Equiv_Class
+
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
@@ -73,7 +81,7 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
 
 subsection \<open>Natural Nmber\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>ANat ("\<nat>")
   where \<open>n \<Ztypecolon> \<nat> \<equiv> of_nat n \<Ztypecolon> \<int>\<close>
@@ -83,6 +91,8 @@ declare [[\<phi>trace_reasoning = 2]]
        and Semantic_Zero_Val
        and Inhabited
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<nat> = \<a>\<i>\<n>\<t>\<close>
+       and Functionality
+       and Equiv_Class
 
 
 declare [[

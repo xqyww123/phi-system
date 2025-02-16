@@ -42,7 +42,7 @@ proc test_ptr3:
 
 
 
-declare [[\<phi>reasoning_step_limit = 160]]
+declare [[\<phi>reasoning_step_limit = 170]]
 
 
 proc test_mem3:
@@ -61,6 +61,7 @@ proc test_mem4:
   addr.d.e
 \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 2]]
 
 proc test_mem4a:
   input \<open>(x,(y,z)) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> c: \<nat>, d: \<lbrace> b: \<nat>, e: \<nat>\<rbrace> \<rbrace>\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr\<close>
@@ -240,7 +241,7 @@ proc test_mem18:
 
 proc test_mem19:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<heavy_comma>
-          j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:N] \<a>\<i>\<n>\<t>\<close>
+          j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:N] \<a>\<i>\<n>\<t>\<close>
   premises \<open>i \<le> j \<and> j < i + n \<and> i + n \<le> N\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[i,n] \<nat>\<heavy_comma> x ! (j-i) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
 \<medium_left_bracket>
@@ -248,9 +249,9 @@ proc test_mem19:
 \<medium_right_bracket> .
 
 proc test_mem20:
-  input  \<open>j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input  \<open>j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   premises \<open>j + k \<le> n\<close>
-  output \<open>j+k \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>\<bbbP>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<close>
+  output \<open>j+k \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:n] \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   j + k
 \<medium_right_bracket> .

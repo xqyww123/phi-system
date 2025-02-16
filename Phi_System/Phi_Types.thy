@@ -107,6 +107,7 @@ let_\<phi>type \<phi>Prod
           \<Longrightarrow> Object_Equiv U eq
           \<Longrightarrow> Object_Equiv (T \<^emph> U) (\<lambda>x y. er (fst x) (fst y) \<and> eq (snd x) (snd y))\<close>
 
+
 subsection \<open>Func\<close>
  
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
@@ -139,7 +140,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding of Subjection\<close>
-
+ 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Sep_Functor_1
@@ -366,7 +367,7 @@ lemma \<phi>Dependent_Sum_SH\<^sub>I[\<phi>type_property \<phi>Dependent_Sum Sep
   by clarsimp
 
 lemma \<phi>Dependent_Sum_SH\<^sub>E[\<phi>type_property \<phi>Dependent_Sum Separation_Homo\<^sub>E]:
-  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> \<Sigma> T U (\<lambda>x. ((fst x, fst (snd x)), (fst x, snd (snd x)))) \<close>
+  \<open> Separation_Homo\<^sub>\<Lambda>\<^sub>E \<Sigma> \<Sigma> \<Sigma> T U UNIV (\<lambda>x. ((fst x, fst (snd x)), (fst x, snd (snd x)))) \<close>
   unfolding Separation_Homo\<^sub>\<Lambda>\<^sub>E_def Transformation_def
   by clarsimp
 
@@ -549,7 +550,7 @@ lemma \<Sigma>_to_traverse[\<phi>reason default %To_ToA_cut+20]:
   unfolding Action_Tag_def Transformation_def Reduce_HO_trivial_variable_def
   by clarsimp
 
-lemma \<Sigma>_\<A>simp[\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]:
+lemma \<Sigma>_\<A>simp[\<phi>transformation_based_simp default %\<phi>simp-10 no trigger]:
   \<open> (\<And>c. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = c \<Longrightarrow> snd x \<Ztypecolon> T c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c \<s>\<u>\<b>\<j> b. g c b @tag \<A>simp)
       \<comment> \<open>I don't know how to be right. This part causes a lot of HO problems\<close>
 \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. fst y = fst x \<and> g (fst x) (snd y) @tag \<A>_transitive_simp \<close>
@@ -975,13 +976,13 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
   
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
-\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x)\<close>
+\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U UNIV (\<lambda>x. x)\<close>
   for B :: \<open>('d::sep_magma_1,'e::sep_magma) \<phi>\<close>
   unfolding Separation_Homo\<^sub>E_def Transformation_def Object_Sep_Homo\<^sub>E_def
   by (clarsimp simp add: set_mult_expn; blast)
 
 lemma (*The above rule is reversible*)
-  \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
+  \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U UNIV (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
   unfolding Separation_Homo\<^sub>E_def Object_Sep_Homo\<^sub>E_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
@@ -1007,9 +1008,9 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi>\<^sub>0 I) (\<big_ast>\<^sup>\<phi>\<^sub>0 J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
        and Sep_Functor_1
        and Functionality
-       and Semimodule_Scalar_Assoc
-       and Semimodule_One
-       and Closed_Semimodule_Zero
+       and Module_Assoc
+       and Module_One
+       and Closed_Module_Zero
        and Carrier_Set
 
 
@@ -1050,14 +1051,14 @@ text \<open>We cannot derive the Scalar Distributivity automatically, because th
   (it is too aggressive to enable it, I believe).\<close>
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>Z[\<phi>reason 1000]:
-  \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>Z_def dom_of_add_set_def
+  \<open> Module_Distr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
+  unfolding Module_Distr_Homo\<^sub>Z_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant.unfold sep_quant_scalar_distr;
       smt (verit) Mul_Quant_def Transformation_def disjoint_iff plus_set_in_iff prod.cong)
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>S[\<phi>reason 1000]:
-  \<open> Semimodule_SDistr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>S_def dom_of_add_set_def
+  \<open> Module_Distr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi>\<^sub>0 I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
+  unfolding Module_Distr_Homo\<^sub>S_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Mul_Quant.unfold \<phi>Prod_expn' sep_quant_scalar_distr)
 
 
@@ -1344,7 +1345,7 @@ declare [[\<phi>trace_reasoning = 0]]
            (%identity_elements_of_\<phi>Fun)
        and Functionality
        and Functional_Transformation_Functor
-       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
+       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U UNIV (\<lambda>x. x)\<close>
        and \<open>\<g>\<u>\<a>\<r>\<d> homo_mul_carrier f
         \<Longrightarrow> Carrier_Set U P
         \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
@@ -1383,13 +1384,13 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp simp add: Ball_def; metis)
 
 lemma \<phi>Fun'_Scalar_Assoc\<^sub>I:
-  \<open> Semimodule_Scalar_Assoc\<^sub>I \<phi>Fun' \<phi>Fun' \<phi>Fun' T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (o) (\<lambda>_ _ x. x) \<close>
-  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Transformation_def
+  \<open> Module_Assoc\<^sub>I \<phi>Fun' \<phi>Fun' \<phi>Fun' T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (o) (\<lambda>_ _ x. x) \<close>
+  unfolding Module_Assoc\<^sub>I_def Transformation_def
   by clarsimp blast
 
 lemma \<phi>Fun'_Scalar_Assoc\<^sub>E:
-  \<open> Semimodule_Scalar_Assoc\<^sub>E \<phi>Fun' \<phi>Fun' \<phi>Fun' T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (o) (\<lambda>_ _ x. x) \<close>
-  unfolding Semimodule_Scalar_Assoc\<^sub>E_def Transformation_def
+  \<open> Module_Assoc\<^sub>E \<phi>Fun' \<phi>Fun' \<phi>Fun' T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (o) (\<lambda>_ _ x. x) \<close>
+  unfolding Module_Assoc\<^sub>E_def Transformation_def
   by clarsimp blast
 
 text \<open>Though \<open>\<phi>Fun'\<close> comprises an associative semimodule, we don not activate it in the reasoning
@@ -1478,6 +1479,7 @@ text \<open>For technical reasons, the \<open>\<phi>Some\<close> is defined and 
 
 
 subsection \<open>Domainoid\<close>
+
    
 \<phi>type_def Domainoid ("\<DD>[_]" [4] 1000)
     where \<open>\<DD>[\<delta>] T \<equiv> \<delta> \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> closed_homo_sep \<delta>\<close>
@@ -1642,7 +1644,7 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
              Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx T U
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
        and \<open> homo_sep (\<psi> s)
-         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
+         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U UNIV (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
@@ -1667,41 +1669,41 @@ declare [[\<phi>ToA_assoc_normalization \<open>\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \
 
 subsubsection \<open>Reasoning Rules\<close>
 
-lemma Semimodule_One\<^sub>I_by_function [\<phi>reason 1000]:
+lemma Module_One\<^sub>I_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
-\<Longrightarrow> Semimodule_One\<^sub>I (\<lambda>s. \<phi>ScalarMul \<psi> s T) T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>
-  unfolding Semimodule_One\<^sub>I_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+\<Longrightarrow> Module_One\<^sub>I (\<lambda>s. \<phi>ScalarMul \<psi> s T) T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>
+  unfolding Module_One\<^sub>I_def module_scalar_identity_def scalar_mult_def BI_eq_iff
             Transformation_def
   by clarsimp
 
-lemma Semimodule_One\<^sub>E_by_function [\<phi>reason 1000]:
+lemma Module_One\<^sub>E_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
-\<Longrightarrow> Semimodule_One\<^sub>E (\<lambda>s. \<phi>ScalarMul \<psi> s T) T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>
-  unfolding Semimodule_One\<^sub>E_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+\<Longrightarrow> Module_One\<^sub>E (\<lambda>s. \<phi>ScalarMul \<psi> s T) T 1 (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True) \<close>
+  unfolding Module_One\<^sub>E_def module_scalar_identity_def scalar_mult_def BI_eq_iff
             Transformation_def
   by clarsimp
 
-lemma Semimodule_Scalar_Assoc\<^sub>I_by_function[\<phi>reason 1000]:
+lemma Module_Assoc\<^sub>I_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
-\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (*) (\<lambda>_ _ x. x) \<close>
-  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc\<^sub>I_def scalar_mult_def Transformation_def
+\<Longrightarrow> Module_Assoc\<^sub>I (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (*) (\<lambda>_ _ x. x) \<close>
+  unfolding module_scalar_assoc_def Module_Assoc\<^sub>I_def scalar_mult_def Transformation_def
   by (clarsimp; blast)
 
-lemma Semimodule_Scalar_Assoc\<^sub>E_by_function[\<phi>reason 1000]:
+lemma Module_Assoc\<^sub>E_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
-\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (*) (\<lambda>_ _ x. x) \<close>
-  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc\<^sub>E_def scalar_mult_def Transformation_def
+\<Longrightarrow> Module_Assoc\<^sub>E (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) (\<phi>ScalarMul \<psi>) T Ds Ds (\<lambda>_ _ _. True) (*) (\<lambda>_ _ x. x) \<close>
+  unfolding module_scalar_assoc_def Module_Assoc\<^sub>E_def scalar_mult_def Transformation_def
   by clarsimp metis
 
-lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
+lemma Module_Distr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
+\<Longrightarrow> Module_Distr_Homo\<^sub>Z (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
                             (\<lambda>s t (x,y). (eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst) \<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
+  unfolding Module_Distr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Satisfiable_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
@@ -1723,13 +1725,13 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
   unfolding Transformation_def
   by auto metis
  
-lemma Semimodule_SDistr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
+lemma Module_Distr_Homo\<^sub>S_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
+\<Longrightarrow> Module_Distr_Homo\<^sub>S (\<lambda>s. \<phi>ScalarMul \<psi> s T) Ds
                             (\<lambda>s t x. Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))\<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>S_def Transformation_def module_S_distr_def Is_Functional_def
+  unfolding Module_Distr_Homo\<^sub>S_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Action_Tag_def Satisfiable_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
@@ -1941,6 +1943,346 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 
 
+subsubsection \<open>Function Abstraction\<close>
+
+
+\<phi>type_def \<phi>MapTree :: \<open>'x set \<Rightarrow> ('k,'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v::one,'y) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'v, 'x \<Rightarrow> 'y) \<phi>\<close>
+  where \<open>f \<Ztypecolon> \<phi>MapTree D K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g.
+                (\<forall>k. k \<in> D \<longrightarrow> pull_map [concretize K k] g \<Turnstile> (f k \<Ztypecolon> V)) \<and>
+                g [] = 1 \<and>
+                (\<forall>k' l. (\<forall>k\<in>D. k' \<noteq> concretize K k) \<longrightarrow> g (k'#l) = 1 ) \<close>
+
+  deriving \<open> Object_Equiv V eq
+         \<Longrightarrow> Object_Equiv (\<phi>MapTree D K V) (\<lambda>f g. \<forall>k\<in>D. eq (f k) (g k)) \<close>
+    and \<open> Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
+            Abstract_Domain  V P\<^sub>V \<Longrightarrow>
+            Abstract_Domain (\<phi>MapTree D K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<and> k \<in> D\<longrightarrow> P\<^sub>V (f k)) \<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
+
+text \<open>Interesting, relational functor \<^const>\<open>Transformation_Functor\<close> is (generally) stronger than
+  the functional functor \<^const>\<open>Functional_Transformation_Functor\<close>.
+  It is actually the combination of \<^const>\<open>Functional_Transformation_Functor\<close> and the
+  Commutativity of \<^const>\<open>Set_Abst\<close> over functors. I thought most of functors are also relational
+  functors but here, \<^const>\<open>\<phi>MapTree\<close> is an exception.
+
+  \<^term>\<open>\<phi>MapTree D K V\<close> is not relationally functorial over \<^term>\<open>V\<close> unless (as a suffcient condition)
+  \<^term>\<open>K\<close> is functional. Here is an example demonstrating this.
+  Consider a relational transformation
+    \<^prop>\<open>v \<Ztypecolon> V \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> V' \<s>\<u>\<b>\<j> v'. v' \<in> {v\<^sub>1, v\<^sub>2}\<close>
+  that non-determistically sends \<^term>\<open>v \<Ztypecolon> V\<close> to either \<^term>\<open>v\<^sub>1 \<Ztypecolon> V'\<close> or \<^term>\<open>v\<^sub>2 \<Ztypecolon> V'\<close>.
+
+  Consider \<^term>\<open>g \<Turnstile> (f \<Ztypecolon> \<phi>MapTree D K V)\<close> and assume \<^term>\<open>k \<Ztypecolon> K\<close> cannot distinguish \<open>k\<^sub>1, k\<^sub>2\<close>, i.e.,
+  \<open>k\<^sub>1 \<Turnstile> (k \<Ztypecolon> K)\<close>, \<open>k\<^sub>2 \<Turnstile> (k \<Ztypecolon> K)\<close>, both \<open>k\<^sub>1,k\<^sub>2\<close> are abstracted to the same abstraction \<^term>\<open>k\<close>.
+  \<^prop>\<open>g \<Turnstile> (f \<Ztypecolon> \<phi>MapTree D K V)\<close> requires that the \<^term>\<open>f k \<Ztypecolon> V\<close> also cannot distinguish \<open>g k\<^sub>1, g k\<^sub>2\<close>
+  even when they could be different. \<open>f k\<close> must be an abstraction of both \<open>g k\<^sub>1, g k\<^sub>2\<close>.
+
+  Now, assume the abstraction relation \<open>V\<close> is transformed to \<open>V'\<close>. Under \<open>V'\<close>, \<open>g k\<^sub>1, g k\<^sub>2\<close>
+  may not keep indistinguishable --- \<open>g k\<^sub>1, g k\<^sub>2\<close> may have disjoint abstractions under \<open>V'\<close> and may not
+  have a common abstraction.
+
+  When \<open>v \<Ztypecolon> V\<close> is transformed to \<open>V'\<close>, we could use a set \<open>{v\<^sub>1,v\<^sub>2}\<close>
+  to non-deterministically specify all possible choices. However, here we cannot similarly use the same
+  way because for set \<open>S\<close>, any element \<open>f \<in> S\<close>, \<open>g \<Turnstile> (f \<Ztypecolon> \<phi>MapTree D K V')\<close> always requires
+  \<open>g k\<^sub>1, g k\<^sub>2\<close> to have a common abstraction \<open>f k\<close>, whereas we've said above,
+  \<open>g k\<^sub>1, g k\<^sub>2\<close> may not have a common abstraction under \<open>V'\<close>.
+\<close>
+
+
+setup \<open>Sign.mandatory_path "\<phi>MapTree"\<close>
+
+lemma Transformation_Functor [\<phi>reason add]:
+      \<open> Transformation_Functor (\<phi>MapTree D K) (\<phi>MapTree D K) V V' (\<lambda>f. f ` D) (\<lambda>_. UNIV) (\<lambda>r f g. \<forall>k\<in>D. r (f k) (g k))\<close>
+  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def          
+            Abstract_Domain\<^sub>L_def \<r>ESC_def
+  apply (clarsimp simp: Satisfiable_def)
+  subgoal premises prems for f g v proof -
+    obtain h where t1: \<open>a\<in>D \<Longrightarrow> v \<Turnstile> (f a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g (f a) (h a v)\<close> for a v
+      using prems(1) by metis
+    show ?thesis
+      apply (rule exI[where x=\<open>\<lambda>k. h k (pull_map [concretize K k] v)\<close>], auto)
+      using prems(2) t1 apply blast
+      using prems(2) t1 by blast
+  qed .
+
+
+lemma Functional_Transformation_Functor [\<phi>reason add]:
+  \<open> Abstract_Domain\<^sub>L K' (\<lambda>k. k \<in> D')
+\<Longrightarrow> Functionality K (\<lambda>k. k \<in> D)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite D'
+\<Longrightarrow> Fun_CV_TrFunctor (\<phi>MapTree D) (\<phi>MapTree D') K V K' V' (\<lambda>_. D) (\<lambda>f. f ` D)
+                     (\<lambda>f _.  bij_betw f D' D)
+                     (\<lambda>_. UNIV) (\<lambda>_ _ _ _ _. True) (\<lambda>f\<^sub>1 f\<^sub>2 _ _ g. f\<^sub>2 o g o f\<^sub>1 )\<close>
+  unfolding Fun_CV_TrFunctor_def Transformation_def Premise_def
+  apply (auto simp: Ball_def)
+  apply (smt (verit, del_insts) Abstract_Domain\<^sub>L_def Extact_sufficient_conditions_Iden Functionality_sub Transformation_def bij_betw_def concretize_eq domIff image_eqI option.exhaust_sel option.map_sel ranI)
+  by (smt (verit, del_insts) Abstract_Domain\<^sub>L_def Functionality_def Satisfiable_def \<r>ESC_def bij_betw_iff_bijections concretize_SAT)
+
+
+lemma Separation_Homo\<^sub>I [\<phi>reason add]:
+  \<open> Separation_Homo\<^sub>I (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U UNIV zip_fun  \<close>
+  unfolding Separation_Homo\<^sub>I_def Transformation_def zip_fun_def BNF_Def.convol_def
+  apply (auto)
+  apply (meson pull_map_homo_mult pull_map_sep_disj)
+  apply (simp add: times_fun_def)
+  by (simp add: times_fun_def)
+
+
+lemma Separation_Homo\<^sub>E [\<phi>reason add]:
+  \<open> Injective_on K D
+\<Longrightarrow> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Separation_Homo\<^sub>E (\<phi>MapTree D K) (\<phi>MapTree D K) (\<phi>MapTree D K) T U UNIV unzip_fun \<close>
+  for T :: \<open>'c \<Rightarrow> ('b list \<Rightarrow> 'd::sep_no_inverse) BI\<close>
+  unfolding Separation_Homo\<^sub>E_def Transformation_def
+  apply (auto simp: subset_iff)
+  subgoal premises prems for z v proof -
+    have t1[simp]: \<open>k \<in> D \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
+      by (simp add: concretize_inj prems(1) prems(2) prems(4))
+    obtain g1 g2 where t2: \<open>k \<in> D \<Longrightarrow>
+            pull_map [concretize K k] v = g1 k * g2 k \<and> g2 k \<Turnstile> (snd (z k) \<Ztypecolon> U) \<and> g1 k \<Turnstile> (fst (z k) \<Ztypecolon> T) \<and> g1 k ## g2 k \<close> for k
+      using prems(3) by metis
+
+    have fuck: \<open>(\<lambda>x. If C (A x) (B x)) = If C A B\<close> for A B C
+      by auto
+
+    note domIff[iff del]
+    show ?thesis
+      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> D)
+                                    then g1 (inv_into D (concretize K) (hd ks)) (tl ks)
+                                    else v ks \<close>])
+      apply (rule exI[where x=\<open>\<lambda>ks. if (\<exists>k. ks \<noteq> [] \<and> hd ks = concretize K k \<and> k \<in> D)
+                                    then g2 (inv_into D (concretize K) (hd ks)) (tl ks)
+                                    else 1\<close>])
+      apply (auto simp: pull_map_def )
+
+      apply (auto simp add: fun_eq_iff times_fun)[1]
+      subgoal premises prems for x k proof -
+        have t4: \<open> pull_map [concretize K k] v = g1 k * g2 k\<close>
+          using prems(3) t2 by blast
+        have t5: \<open>concretize K k # tl x = x\<close>
+          using hd_Cons_tl prems(1) prems(2) by fastforce
+          show ?thesis
+            by (insert t4, auto simp: pull_map_def fun_eq_iff times_fun, metis t5)
+        qed
+      apply (subst fuck; auto)[1]
+      apply (metis comp_apply domIff option.map_sel snd_conv t1 t2 unzip_option_simps(1))
+      apply (subst fuck; auto)[1]
+      apply (metis comp_apply domIff option.map_sel option.simps(8) t1 t2 zip_option_prj(1))
+      apply (simp add: prems(4))
+      using prems(5) apply blast
+      using sep_disj_fun_def t2 by force
+qed .
+
+
+lemma Module_Distr_Homo\<^sub>S [\<phi>reason add]:
+  \<open> Injective_on K D
+\<Longrightarrow> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Module_Distr_Homo\<^sub>S (\<lambda>D. \<phi>MapTree D K V) (\<lambda>_. True)
+                            (\<lambda>s t _. s \<inter> t = {} \<and> s \<subseteq> D \<and> t \<subseteq> D) (\<lambda>s t f. (f, f)) \<close>
+  for V :: \<open>('b list \<Rightarrow> 'd::sep_magma_1, 'c option) \<phi>\<close>
+  unfolding Module_Distr_Homo\<^sub>S_def Transformation_def
+  apply auto
+  subgoal premises prems for s t z v proof -
+    have t1[simp]: \<open>k \<in> D \<Longrightarrow> inv_into D (concretize K) (concretize K k) = k\<close> for k
+      by (meson concretize_inj in_mono inv_into_f_f plus_set_in_iff prems(1) prems(2) prems(4) prems(5) prems(6))
+    have fuck: \<open>(\<lambda>x. If C (A x) (B x)) = If C A B\<close> for A B C by auto
+    have t2: \<open>k \<in> t \<Longrightarrow> inv_into D (concretize K) (concretize K k) \<in> t\<close> for k
+      using prems(5) by force
+    have [simp]:
+      \<open>k \<in> t \<Longrightarrow> pull_map [concretize K k] (\<lambda>ks. if ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> t then v ks else 1) = pull_map [concretize K k] v \<close> for k
+      unfolding pull_map_def fun_eq_iff
+      by (auto, insert t2, blast)
+    have [simp]:
+      \<open>k \<in> s \<Longrightarrow> pull_map [concretize K k] (\<lambda>ks. if ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> s then v ks else 1) = pull_map [concretize K k] v \<close> for k
+      unfolding pull_map_def fun_eq_iff
+      by (auto, metis prems(4) subsetD t1)
+
+    show ?thesis
+      apply (rule exI[where x=\<open>\<lambda>ks. if (ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> s)
+                                    then v ks else 1 \<close>])
+      apply (rule exI[where x=\<open>\<lambda>ks. if (ks \<noteq> [] \<and> inv_into D (concretize K) (hd ks) \<in> t)
+                                    then v ks else 1 \<close>])
+      apply (auto simp: times_fun fun_eq_iff )
+      using prems(3) apply blast
+      apply (simp add: prems(7))
+      using prems(7) apply auto[1]
+      apply (simp add: prems(7))
+      apply (metis list.collapse plus_set_in_iff prems(4) prems(7) prems(8) subsetD t1 t2)
+      using prems(6) apply force
+      apply (metis in_mono plus_set_in_iff prems(4) prems(8) t1)
+      using prems(6) apply presburger
+      apply (metis Int_iff empty_iff plus_set_in_iff prems(3) prems(8) t2)
+      using prems(3) sep_disj_fun_def by fastforce
+  qed .
+
+
+lemma expansion':
+  \<open> p \<Turnstile> (x \<Ztypecolon> \<phi>MapTree D K V) \<longleftrightarrow>
+      (\<forall>k. k \<in> D \<longrightarrow> pull_map [concretize K k] p \<Turnstile> (x k \<Ztypecolon> V))
+          \<and> p [] = 1 \<and> (\<forall>k'. (\<forall>k\<in>D. k' \<noteq> concretize K k) \<longrightarrow> pull_map [k'] p = 1) \<close>
+  by (auto simp: pull_map_def fun_eq_iff)
+
+lemma Module_Distr_Homo\<^sub>Z [\<phi>reason add]:
+  \<open> Injective_on K D
+\<Longrightarrow> Abstract_Domain\<^sub>L K (\<lambda>x. x \<in> D)
+\<Longrightarrow> Module_Distr_Homo\<^sub>Z (\<lambda>D. \<phi>MapTree D K V) (\<lambda>_. True)
+                            (\<lambda>s t _. s \<inter> t = {} \<and> s \<subseteq> D \<and> t \<subseteq> D)
+                            (\<lambda>_ t (f,g). f \<oplus>\<^sub>f[t] g ) \<close>
+  for V :: \<open>('b list \<Rightarrow> 'd::sep_magma_1, 'c option) \<phi>\<close>
+  unfolding Module_Distr_Homo\<^sub>Z_def Transformation_def
+  by (auto simp: pull_map_homo_mult \<phi>MapTree.expansion' simp del: \<phi>MapTree.expansion,
+      smt (verit, ccfv_SIG) Abstract_Domain\<^sub>L_def concretize_inj disjoint_iff in_mono inv_into_f_f mult_1_class.mult_1_left,
+      metis (mono_tags, lifting) concretize_inj in_mono inj_on_def mult_1_class.mult_1_right,
+      metis mult_1_class.mult_1_right times_fun_def)
+
+setup \<open>Sign.parent_path\<close>
+
+
+\<phi>type_def \<phi>Product :: \<open>('c1, 'x1) \<phi> \<Rightarrow> ('c2, 'x2) \<phi> \<Rightarrow> ('c1 \<times> 'c2, 'x1 \<times> 'x2) \<phi>\<close> (infixr "\<times>\<^sub>\<phi>" 70)
+  where \<open>x \<Ztypecolon> T \<times>\<^sub>\<phi> U \<equiv> (c,d) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> c d. c \<Turnstile> (fst x \<Ztypecolon> T) \<and> d \<Turnstile> (snd x \<Ztypecolon> U)\<close>
+
+  deriving \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain U Q
+        \<Longrightarrow> Abstract_Domain (T \<times>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y) \<close>
+
+       and \<open>Object_Equiv T eq1
+        \<Longrightarrow> Object_Equiv U eq2
+        \<Longrightarrow> Object_Equiv (T \<times>\<^sub>\<phi> U) (rel_prod eq1 eq2) \<close>
+
+       and \<open>Abstract_Domain\<^sub>L T P
+        \<Longrightarrow> Abstract_Domain\<^sub>L U Q
+        \<Longrightarrow> Abstract_Domain\<^sub>L (T \<times>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y) \<close>
+
+       and \<open> Transformation_BiFunctor (\<times>\<^sub>\<phi>) (\<times>\<^sub>\<phi>) T U T' U'
+                  (\<lambda>x. {fst x}) (\<lambda>x. {snd x}) (\<lambda>_. UNIV) (\<lambda>_. UNIV) rel_prod \<close>
+
+       and \<open> Functional_Transformation_BiFunctor (\<times>\<^sub>\<phi>) (\<times>\<^sub>\<phi>) T U T' U'
+                  (\<lambda>x. {fst x}) (\<lambda>x. {snd x}) (\<lambda>_. UNIV) (\<lambda>_. UNIV)
+                  (\<lambda>_ _. pred_prod) (\<lambda>f g _ _. f \<otimes>\<^sub>f g) \<close>
+
+
+(*
+
+
+
+\<phi>type_def \<phi>MMmap :: \<open>('k,'x) \<phi> \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('k \<Rightarrow> 'v, 'x \<Rightarrow> 'y) \<phi>\<close>
+  where \<open>f \<Ztypecolon> \<phi>MMmap K V \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<longrightarrow> g k \<Turnstile> (f x \<Ztypecolon> V)) \<close>
+  deriving \<open> Object_Equiv V eq
+         \<Longrightarrow> Object_Equiv (\<phi>MMmap K V) (rel_fun (=) eq) \<close>
+
+       and \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
+            Abstract_Domain  V P\<^sub>V \<Longrightarrow>
+            Abstract_Domain (\<phi>MMmap K V) (\<lambda>f. \<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<close>
+
+term 1
+
+term range
+term rel_fun
+
+lemma \<open> Transformation_Functor (\<phi>MMmap K) (\<phi>MMmap K) V V' range (\<lambda>_. UNIV) (\<lambda>_ _ _. True)\<close>
+  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def
+  apply clarsimp
+apply (subst all_comm)
+apply (subst choice_iff[symmetric])
+apply clarsimp
+nitpick
+
+  
+
+lemma \<open> Functionality K (\<lambda>_. True)
+    \<Longrightarrow> Transformation_Functor (\<phi>MMmap K) (\<phi>MMmap K) V V' range (\<lambda>_. UNIV) (rel_fun (=))\<close>
+  unfolding Transformation_Functor_def Transformation_def Functionality_def rel_fun_def
+  apply clarsimp
+nitpick
+
+
+
+lemma \<open>Functional_Transformation_Functor (\<phi>Map K) (\<phi>Map K) V V' range (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f _ g. f o g)\<close>
+  unfolding Functional_Transformation_Functor_def Transformation_def
+  apply clarsimp
+
+lemma
+  \<open> \<forall>g x. \<exists>a. (a \<in> range x \<longrightarrow> (\<forall>v. \<exists>x. v \<Turnstile> (a \<Ztypecolon> V) \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> V') \<and> g a x)) \<longrightarrow>
+           (\<forall>xa. \<exists>uu k xb. (k \<Turnstile> (xb \<Ztypecolon> K) \<longrightarrow> xa k \<Turnstile> (x xb \<Ztypecolon> V)) \<longrightarrow> (\<forall>k x. k \<Turnstile> (x \<Ztypecolon> K) \<longrightarrow> xa k \<Turnstile> (uu x \<Ztypecolon> V')) \<and> rel_fun (=) g x uu)\<close>
+  unfolding Object_Equiv_def Transformation_def rel_fun_def
+  apply clarsimp 
+  subgoal premises prems for g f xa
+  proof -
+    obtain h where t1: \<open>a \<in> range f \<Longrightarrow> v \<Turnstile> (a \<Ztypecolon> V) \<Longrightarrow> v \<Turnstile> (h a v \<Ztypecolon> V') \<and> g a (h a v) \<close> for a v
+      using prems(1) by metis
+    show ?thesis
+      thm prems
+
+    apply (rule exI)
+    apply auto
+
+    apply (rule exI[where x=\<open>\<lambda>a. @x. xa (@k. k \<Turnstile> (a \<Ztypecolon> K)) \<Turnstile> (x \<Ztypecolon> V') \<and> g (f a) x\<close>])
+    apply auto
+    subgoal premises prems for k x proof -
+      have t1: \<open>\<exists>k. k \<Turnstile> (x \<Ztypecolon> K)\<close>
+        using prems(3) by blast
+      have t2: \<open>\<exists>uu. xa (SOME k. k \<Turnstile> (x \<Ztypecolon> K)) \<Turnstile> (uu \<Ztypecolon> V') \<and> g (f x) uu\<close>
+        by (metis UNIV_I image_eqI prems(1) prems(2) prems(3) tfl_some)
+      show ?thesis
+  sorry
+
+
+let_\<phi>type \<phi>Map
+  deriving \<open>Transformation_Functor (\<phi>Map K) (\<phi>Map K) V V' range (\<lambda>_. UNIV) (rel_fun (=))\<close>
+(tactic: clarsimp; tactic \<open>all_tac o @{print}\<close>; subgoal' for g x xa \<open>rule exI[where x=\<open>\<lambda>a. @x. v \<Turnstile> (x \<Ztypecolon> V') \<and> g a x\<close>]\<close>) 
+*)
+
+(*
+term is_singleton
+
+lemma \<open>Object_Equiv K ek \<Longrightarrow>
+      Abstract_Domain K P\<^sub>K \<Longrightarrow>
+      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
+      Abstract_Domain\<^sub>L (\<phi>Map K V) (\<lambda>f. (\<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<and> (\<forall>a b. ek a b \<or> ek b a \<longrightarrow> f a = f b)) \<close>
+  unfolding Abstract_Domain_def Abstract_Domain\<^sub>L_def Object_Equiv_def
+            \<r>EIF_def \<r>ESC_def Transformation_def Satisfiable_def
+  apply clarsimp
+  apply (subst choice_iff[symmetric])
+  apply clarsimp
+  subgoal premises prems for f v proof -    
+    obtain h where t1: \<open>P\<^sub>V x \<Longrightarrow> h x \<Turnstile> (x \<Ztypecolon> V)\<close> for x
+      by (metis prems(2))
+    show ?thesis
+      apply (rule exI[where x=\<open>h (f (@x. v \<Turnstile> (x \<Ztypecolon> K)))\<close>], clarsimp)
+      subgoal premises t2 for x proof -
+        let ?x = \<open>@x. v \<Turnstile> (x \<Ztypecolon> K)\<close> 
+        have t3: \<open>v \<Turnstile> (?x \<Ztypecolon> K)\<close>
+          by (meson t2 tfl_some)
+        have t4: \<open>P\<^sub>K ?x\<close>
+          using prems(1) t3 by blast
+        have t5: \<open>h (f ?x) \<Turnstile> (f ?x \<Ztypecolon> V)\<close>
+          using prems(5) t1 t4 by blast
+        
+
+        thm prems
+        thm t2
+*)
+(*
+term \<open>Object_Equiv K ek \<Longrightarrow>
+      Abstract_Domain K P\<^sub>K \<Longrightarrow>
+      Abstract_Domain\<^sub>L  V P\<^sub>V \<Longrightarrow>
+      Abstract_Domain\<^sub>L (\<phi>Map K V) (\<lambda>f. (\<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (f k)) \<and> (\<forall>a b. ek a b \<or> ek b a \<longrightarrow> f a = f b)) \<close>
+
+lemma
+  \<open>  \<forall>x. Satisfiable (x \<Ztypecolon> K) \<longrightarrow> P\<^sub>K x \<Longrightarrow>
+       \<forall>x. P\<^sub>V x \<longrightarrow> Satisfiable (x \<Ztypecolon> V) \<Longrightarrow> \<forall>k. P\<^sub>K k \<longrightarrow> P\<^sub>V (x k) \<Longrightarrow> \<exists>xa. \<forall>k xb. k \<Turnstile> (xb \<Ztypecolon> K) \<longrightarrow> xa k \<Turnstile> (x xb \<Ztypecolon> V) \<close>
+  unfolding Satisfiable_def
+  apply (subst choice_iff[symmetric])
+  apply clarify
+  thm choice_iff[symmetric]
+
+*)
+
+
+
+
+
 subsection \<open>Permission Sharing\<close>
 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
@@ -1952,7 +2294,7 @@ subsection \<open>Permission Sharing\<close>
        and Semimodule_no0
        and \<open>Functionality (T::('c::share_semimodule, 'x) \<phi>) Dx
         \<Longrightarrow> Carrier_Set T D\<^sub>C
-        \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>S (\<lambda>\<s>. \<s> \<odiv> T) ((<) 0) (\<lambda>s t xy. 0 < s + t \<longrightarrow> Dx xy \<and> D\<^sub>C xy) (\<lambda>_ _ x. (x, x))\<close>
+        \<Longrightarrow> Module_Distr_Homo\<^sub>S (\<lambda>\<s>. \<s> \<odiv> T) ((<) 0) (\<lambda>s t xy. 0 < s + t \<longrightarrow> Dx xy \<and> D\<^sub>C xy) (\<lambda>_ _ x. (x, x))\<close>
 
        and Carrier_Set
        and Commutativity_Deriver
@@ -1993,7 +2335,7 @@ subsection \<open>Injection from partial map to permissioned partial map\<close>
   where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
        and Abstract_Domain\<^sub>L
-       and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U (\<lambda>x. x) \<close>
+       and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U UNIV (\<lambda>x. x) \<close>
        and \<open>Separation_Disj\<^sub>\<phi> to_share Dx T U
         \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
        and Functionality
@@ -2054,14 +2396,14 @@ subsection \<open>Parameterized FMQ\<close>
            \<comment> \<open>Gusser is not supported on most of the properties of quantifier \<phi>-types\<close>
        and Sep_Functor_1
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV zip_fun\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U unzip_fun\<close>
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> I) T U UNIV unzip_fun\<close>
        and Semimodule_NonAssoc 
-       and \<open>Semimodule_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_SDistr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
-       and \<open>Semimodule_SDistr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
-       and \<open>Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
-       and \<open>Closed_Semimodule_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
+       and \<open>Module_One\<^sub>I (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>x _. x) (\<lambda>_. True)\<close>
+       and \<open>Module_One\<^sub>E (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (T i) {i} (\<lambda>_. True) (\<lambda>f. f i) (\<lambda>_. True)\<close>
+       and \<open>Module_Distr_Homo\<^sub>Z (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g)\<close>
+       and \<open>Module_Distr_Homo\<^sub>S (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f))\<close>
+       and \<open>Module_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
+       and \<open>Closed_Module_Zero (\<lambda>I. \<big_ast>\<^sup>\<phi> I T) {}\<close>
 
 lemma \<phi>Mul_Quant\<^sub>\<Lambda>_cong[cong]:
   \<open> (\<And>i. i \<in> I \<Longrightarrow> T i = U i)
@@ -2210,14 +2552,14 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>(\<And>i. Functionality (T i) (P i))
         \<Longrightarrow> Functionality (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>x. \<forall>i < len_intvl.len iv. P (len_intvl.start iv + i) (x ! i))\<close>
        and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>I (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U {(x, y). length x = length y} (case_prod zip)\<close>
-       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U list.unzip\<close>
-       and \<open> Semimodule_Zero (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) \<lbrakk>i : 0\<rwpar> \<close>
-       and \<open> Semimodule_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>
-       and \<open> Semimodule_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True) \<close>
-       and \<open> Semimodule_SDistr_Homo\<^sub>S (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
+       and \<open>Separation_Homo\<^sub>\<Lambda>\<^sub>E (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) (\<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv) T U UNIV list.unzip\<close>
+       and \<open> Module_Zero (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) \<lbrakk>i : 0\<rwpar> \<close>
+       and \<open> Module_One\<^sub>I (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True) \<close>
+       and \<open> Module_One\<^sub>E (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (T i) \<lbrakk>i : 1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True) \<close>
+       and \<open> Module_Distr_Homo\<^sub>S (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
                                      (\<lambda>s t x. len_intvl.len s + len_intvl.len t = length x)
                                      (\<lambda>s t x. (take (len_intvl.len s) x, drop (len_intvl.len s) x)) \<close>
-       and \<open> Semimodule_SDistr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
+       and \<open> Module_Distr_Homo\<^sub>Z (\<lambda>iv. \<big_ast>\<^sub>\<lbrakk>\<^sub>:\<^sub>\<rbrakk>\<^sup>\<phi> iv T) (\<lambda>_. True)
                                      (\<lambda>s t (x,y). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>s t (x,y). x @ y) \<close>
 
 declare list_all2_single_length_1[simp del]
@@ -2314,8 +2656,8 @@ lemma [\<phi>reason add]:
        and \<open>Identity_Elements\<^sub>E T T\<^sub>D
         \<Longrightarrow> Identity_Elements\<^sub>E (\<phi>Mul_Quant_Tree f iv T) (\<lambda>x. length x = len_intvl.len iv \<and> list_all T\<^sub>D x) \<close>
        and Semimodule_NonAssoc
-       and \<open>Semimodule_One\<^sub>I (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
-       and \<open>Semimodule_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
+       and \<open>Module_One\<^sub>I (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>_. True) (\<lambda>x. [x]) (\<lambda>_. True)\<close>
+       and \<open>Module_One\<^sub>E (\<lambda>iv. \<phi>Mul_Quant_Tree f iv T) (f j \<^bold>\<rightarrow>\<^sub># T) \<lbrakk>j:1\<rwpar> (\<lambda>l. length l = 1) hd (\<lambda>_. True)\<close>
 
 
 \<phi>reasoner_group \<phi>Mul_Quant_Tree_wrap_module

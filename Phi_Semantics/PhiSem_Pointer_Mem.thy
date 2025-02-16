@@ -102,8 +102,8 @@ lemma memaddr_segment_shift[simp]:
   \<open>addr.segment (a ||+ i) = addr.segment a\<close>
   by (cases a, simp)
 
-lemma memaddr_index_shift[simp]:
-  \<open>addr.index (a ||+ i) = addr.index a + i\<close>
+lemma memaddr_offset_shift[simp]:
+  \<open>addr.offset (a ||+ i) = addr.offset a + i\<close>
   by (cases a, simp)
 
 lemma mem_shift_add_cancel[simp]:

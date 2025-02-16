@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val semimodule_zero : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
-val closed_semimodule_zero : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val Module_Zero : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
+val closed_Module_Zero : quiet * Position.T -> deriving_instruction list -> Phi_Type.derive
 
 end
 
@@ -11,8 +11,8 @@ open Phi_Type Phi_Type_Derivers
 
 fun gen_M0 closed (der_id, name) instruction (phi : phi_type) thy =
   let val parse_hint = parse_hint (
-          fn (Const(\<^const_name>\<open>Semimodule_Zero\<close>, _) $ F1 $ _ ) => F1
-           | (Const(\<^const_name>\<open>Closed_Semimodule_Zero\<close>, _) $ F1 $ _ ) => F1)
+          fn (Const(\<^const_name>\<open>Module_Zero\<close>, _) $ F1 $ _ ) => F1
+           | (Const(\<^const_name>\<open>Closed_Module_Zero\<close>, _) $ F1 $ _ ) => F1)
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
         default_reasoning false default_reasoning_configure (K (K NONE))
@@ -55,8 +55,8 @@ fun gen_M0 closed (der_id, name) instruction (phi : phi_type) thy =
         |> pair [rule']
   end
 
-val semimodule_zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Zero") (gen_M0 false)
-val closed_semimodule_zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Closed_Semimodule_Zero") (gen_M0 true)
+val Module_Zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Module_Zero") (gen_M0 false)
+val closed_Module_Zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Closed_Module_Zero") (gen_M0 true)
 
 
 end

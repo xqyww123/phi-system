@@ -4,6 +4,8 @@ begin
 
 section \<open>Map Representation of a Tree\<close>
 
+type_synonym ('k,'v) tree = \<open>'k list \<Rightarrow> 'v\<close>
+
 text \<open>This section presents a representation of tree using the mapping from path to value,
     of type \<^typ>\<open>'key list \<Rightarrow> 'val\<close>.
   It implements the hierarchical algebra and supports for permission algebra.
@@ -140,6 +142,26 @@ lemma push_map_dom1_eq[simp]:
   \<open>dom1 (push_map idx f) = dom1 (push_map idx g) \<longleftrightarrow> dom1 f = dom1 g\<close>
   unfolding dom1_def fun_eq_iff push_map_def set_eq_iff
   by (smt (verit, ccfv_threshold) append_eq_conv_conj mem_Collect_eq)
+
+lemma push_map_mult_ex:
+  \<open>h \<tribullet>\<^sub>m a = b * c \<Longrightarrow> b ## c \<Longrightarrow> (\<exists>b' c'. b = h \<tribullet>\<^sub>m b' \<and> c = h \<tribullet>\<^sub>m c' \<and> a = b' * c' \<and> b' ## c')\<close>
+  for a :: \<open>'k list \<Rightarrow> 'v::sep_no_inverse\<close>
+  unfolding fun_eq_iff push_map_def times_fun
+  apply auto
+  apply (rule exI[where x=\<open>\<lambda>k. b (h @ k)\<close>], auto simp add: push_map_def)
+  apply (metis append_take_drop_id)
+  apply (metis sep_disj_fun sep_no_inverse)
+  apply (rule exI[where x=\<open>\<lambda>k. c (h @ k)\<close>], auto simp add: push_map_def)
+  apply (metis append_take_drop_id)
+  apply (metis sep_disj_fun_def sep_no_inverse)
+  apply (metis append_eq_conv_conj)
+  using sep_disj_fun_def by blast
+
+lemma push_map_mult_same_head[simp]:
+  \<open> h \<tribullet>\<^sub>m a = h \<tribullet>\<^sub>m b * h \<tribullet>\<^sub>m c \<longleftrightarrow> a = b * c \<close>
+  for a :: \<open>'k list \<Rightarrow> 'v::mult_1\<close>
+  unfolding fun_eq_iff push_map_def times_fun
+  by (auto, metis append_eq_conv_conj)
 
 
 subsubsection \<open>Algebraic Properties\<close>

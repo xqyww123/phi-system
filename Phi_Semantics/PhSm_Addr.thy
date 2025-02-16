@@ -17,7 +17,7 @@ lemma layout[simp]:
 setup \<open>Sign.parent_path\<close>
 
 (*TODO: rename: block, offset*)
-datatype 'index addr = Addr (blk: block) (index: 'index)
+datatype 'index addr = Addr (blk: block) (offset: 'index)
 declare [[typedef_overloaded = false]]
 
 declare addr.sel[iff, \<phi>safe_simp]
@@ -34,7 +34,7 @@ proof
 next
   fix x
   assume \<open>\<And>blk ofs. PROP P (Addr blk ofs)\<close>
-  note this[of \<open>addr.blk x\<close> \<open>addr.index x\<close>, simplified]
+  note this[of \<open>addr.blk x\<close> \<open>addr.offset x\<close>, simplified]
   then show \<open>PROP P x\<close> .
 qed
 
@@ -56,8 +56,8 @@ lemma memaddr_blk_zero[simp]:
   \<open>addr.blk 0 = Null\<close>
   unfolding zero_addr_def by simp
 
-lemma memaddr_idx_zero[simp]:
-  \<open>addr.index 0 = 0\<close>
+lemma memaddr_ofs_zero[simp]:
+  \<open>addr.offset 0 = 0\<close>
   unfolding zero_addr_def by simp
 
 paragraph \<open>Freshness\<close>
@@ -89,7 +89,7 @@ lemma block_infinite_TY:
 subsection \<open>Address Type\<close>
 
 definition address_type :: \<open>address \<Rightarrow> TY\<close>
-  where \<open>address_type addr \<equiv> index_type (addr.index addr) (block.layout (addr.blk addr))\<close>
+  where \<open>address_type addr \<equiv> index_type (addr.offset addr) (block.layout (addr.blk addr))\<close>
 
 adhoc_overloading Type_Of_syntax address_type
 

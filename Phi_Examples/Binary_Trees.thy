@@ -176,26 +176,8 @@ abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<
 abbreviation \<open>\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
 abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
-(*
-\<phi>type_def BinTree :: \<open>address \<Rightarrow> TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
-  where \<open> (Leaf \<Ztypecolon> BinTree addr TY T)     = (Void \<s>\<u>\<b>\<j> addr = 0) \<close>
-      | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BinTree addr TY T) =
-                (L \<Ztypecolon> BinTree addr\<^sub>L TY T\<heavy_comma>
-                 R \<Ztypecolon> BinTree addr\<^sub>R TY T\<heavy_comma>
-                 (addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> left: Ptr[\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY], data: T, right: Ptr[\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY] \<rbrace> 
-                \<s>\<u>\<b>\<j> addr\<^sub>L addr\<^sub>R. \<top> )\<close>
 
-   deriving Basic
-       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (BinTree addr TY T) (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0)) \<close>
-       and \<open>Identity_Elements\<^sub>E (BinTree addr TY T) (\<lambda>l. addr = 0 \<and> l = Leaf)\<close>  
-       and \<open>Identity_Elements\<^sub>I (BinTree addr TY T) (\<lambda>l. l = Leaf) (\<lambda>l. addr = 0)\<close>
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<and> addr' = addr
-         \<Longrightarrow> Transformation_Functor (BinTree addr TY) (BinTree addr' TY') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
-           (arbitrary: addr')
-       and Functional_Transformation_Functor
-*)
-
-\<phi>type_def BinTree :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, 'x tree) \<phi>\<close>
+\<phi>type_def BinTree
   where \<open> (Leaf \<Ztypecolon> BinTree addr T)     = (Void \<s>\<u>\<b>\<j> addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
       | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BinTree addr T) =
                 (L \<Ztypecolon> BinTree addr\<^sub>L T\<heavy_comma>
@@ -219,9 +201,8 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
                 Tree.tree.set_tree (\<lambda>x. UNIV) (\<lambda>f. Tree.tree.pred_tree) (\<lambda>f P. Tree.tree.map_tree f)\<close>
        and Pointer_Of
 
-declare [[ML_print_depth = 100]]
   
-\<phi>type_def Bin_Search_Tree :: \<open>address \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
+\<phi>type_def Bin_Search_Tree
   where \<open>f \<Ztypecolon> Bin_Search_Tree addr K V \<equiv> tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>
                                          \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted_lookup_tree tree \<close>
 
@@ -263,13 +244,11 @@ lemma rel_tree__AVL_tree_invar:
  
 
 
-declare [[ML_print_depth = 100]]
-
 abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
 abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
 
 
-\<phi>type_def AVL_Tree :: \<open>address \<Rightarrow> (VAL, 'k::linorder) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (fiction, 'k \<rightharpoonup> 'v) \<phi>\<close>
+\<phi>type_def AVL_Tree
   where \<open>f \<Ztypecolon> AVL_Tree addr K V \<equiv> tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>
                              \<s>\<u>\<b>\<j> tree. f = map_option snd o lookup_tree tree
                                      \<and> sorted_lookup_tree tree \<and> AVL_invar tree

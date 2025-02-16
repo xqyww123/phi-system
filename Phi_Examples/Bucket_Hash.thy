@@ -18,7 +18,7 @@ abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {tabl: \<
 
 term \<open>\<bbbA>\<r>\<r>\<a>\<y>[N] x\<close>
 
-\<phi>type_def Hash :: \<open>address \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (fiction, nat \<rightharpoonup> 'x) \<phi>\<close>
+\<phi>type_def Hash
   where \<open>f \<Ztypecolon> Hash addr T \<equiv> 
        (tabl_addr, N) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> tabl: Ptr[\<a>\<r>\<r>\<a>\<y>[N] \<p>\<t>\<r>], N: \<nat>(\<s>\<i>\<z>\<e>_\<t>) \<rbrace>\<heavy_comma>
         bucket_ptrs \<Ztypecolon> \<m>\<e>\<m>[tabl_addr] \<bbbA>\<r>\<r>\<a>\<y>[N] Ptr\<heavy_comma>

@@ -224,12 +224,31 @@ definition zip_option :: \<open>'a option \<times> 'b option \<Rightarrow> ('a \
   where \<open>zip_option xy = (case xy of (Some x, Some y) \<Rightarrow> Some (x,y)
                                    | _ \<Rightarrow> None)\<close>
 
+definition \<open>unzip_option x = (map_option fst x, map_option snd x)\<close>
+
 lemma zip_option_simps[iff]:
   \<open> zip_option (Some a, Some b) = Some (a,b) \<close>
   \<open> zip_option (x, None) = None \<close>
   \<open> zip_option (None, y) = None \<close>
   unfolding zip_option_def
   by (simp_all, cases x, simp+)
+
+lemma unzip_option_simps[iff]:
+  \<open> unzip_option None = (None, None) \<close>
+  \<open> unzip_option (Some (a,b)) = (Some a, Some b) \<close>
+  unfolding unzip_option_def
+  by simp_all
+
+lemma unzip_zip_option[iff]:
+  \<open> case_prod (rel_option (\<lambda>_ _. True)) x
+\<Longrightarrow> unzip_option (zip_option x) = x \<close>
+  by (cases x; case_tac a; case_tac b; simp)
+
+lemma zip_option_prj[simp]:
+  \<open> fst (unzip_option x) = map_option fst x \<close>
+  \<open> snd (unzip_option x) = map_option snd x \<close>
+  unfolding unzip_option_def
+  by simp_all
 
 
 section \<open>Partial Map\<close>

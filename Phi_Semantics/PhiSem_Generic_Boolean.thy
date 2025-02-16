@@ -84,6 +84,7 @@ section \<open>\<phi>-Type\<close>
        and \<open>Semantic_Zero_Val \<b>\<o>\<o>\<l> \<bool> False\<close>
        and Inhabited
        and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<bool> = \<b>\<o>\<o>\<l>\<close>
+       and Equiv_Class
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)" (*TODO: auto derive!*)
