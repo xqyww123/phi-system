@@ -15,7 +15,10 @@ Separation Logic by Functors, Homomorphisms and Modules. Proc. ACM Program. Lang
 (January 2025), 40 pages. https://doi.org/10.1145/3704903
 
 
-<!-- 
+The following instruction is a bit out of date. I will fix it ASAP.
+
+---------------------------------
+
 As a quickview to our language:
 
 
@@ -48,9 +51,9 @@ We release the current development as a preview and look for cooperators and con
 
 ## Install \& Configuration
 
-The current version works on Isabelle-2022. Please download it from [here](https://isabelle.in.tum.de/).
+The current version works on Isabelle-2023. Please download it from [here](https://isabelle.in.tum.de/).
 
-1. Some additional symbols are required. Please copy lines in file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols) into your Isabelle symbol file `$HOME/.isabelle/Isabelle2022/etc/symbols`.
+1. Some additional symbols are required. Please copy lines in file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols) into your Isabelle symbol file `$HOME/.isabelle/Isabelle2023/etc/symbols`.
 
 2. You maybe need to install a specific font [PhiSymbols](https://github.com/xqyww123/phi-system/tree/master/fonts/PhiSymbols.otf) given in the font directory which defines glyphs of symbols we used in Isabelle.
 
@@ -99,4 +102,3 @@ Any contributor must agree with releasing their contributions in LGPL-v3.0.
     - Memories (OO model, C model): WIP.
     - Blockchain-related: WIP
 
--->
