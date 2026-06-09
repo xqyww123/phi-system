@@ -21,7 +21,7 @@ fun flt tm = not (Term.is_schematic tm) andalso
 (*lame! DO NOT REMOVE
 fun guess_entire_property ctxt0 (phi : phi_type) property_const =
   let val idx = maxidx_of_phi phi ~1 + 1
-      val property_const = Logic.incr_indexes ([], [], idx) property_const
+      val property_const = Logic.incr_indexes ([], idx) property_const
       val ((x_term,T_term), ctxt) = fix_phi_term_params (#term phi) ctxt0
       val (_, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val assertion = \<^Const>\<open>\<phi>Type x_ty m_ty\<close> $ x_term $ T_term

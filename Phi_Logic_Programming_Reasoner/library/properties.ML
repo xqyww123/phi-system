@@ -196,7 +196,7 @@ fun pretty_templates ctxt (table : (priority * template) Ord_List.T Symtab.table
 (*
 fun check_termplate ((params, pos, act) : template) : template =
   let val idx = fold (fn SOME param => Term.maxidx_term param | _ => I) params ~1
-   in if idx >= 0 then (map (Option.map (Logic.incr_indexes ([],[],1-idx))) params, pos, act)
+   in if idx >= 0 then (map (Option.map (Logic.incr_indexes ([], 1-idx))) params, pos, act)
                   else (params, pos, act)
   end
 *)
@@ -235,10 +235,10 @@ fun lookup_property_unify' ctxt =
   let val Envir.Envir {maxidx, tenv, tyenv} = env
       val filter = map_filter (fn (pos, th) =>
                       let val concl = Thm.concl_of th
-                                   |> maxidx >= 0 ? Logic.incr_indexes ([], [], maxidx+1)
+                                   |> maxidx >= 0 ? Logic.incr_indexes ([], maxidx+1)
                           val cidx = if maxidx >= 0 then Thm.maxidx_of th + maxidx + 1 else Thm.maxidx_of th
                           val env' = Envir.Envir {maxidx = cidx, tenv=tenv, tyenv=tyenv}
-                       in case Seq.pull (Unify.hounifiers (ctxt, env', [(pattern, concl)]))
+                       in case Seq.pull (Unify.hounifiers [] (ctxt, env', [(pattern, concl)]))
                        of SOME env => SOME (Seq.map fst (uncurry Seq.cons env), (pos,th))
                         | NONE => NONE
                       end)
@@ -293,7 +293,7 @@ fun check_dependencies params action (pos,property) ctxt =
   let exception Dep
       val didx = fold (fn SOME p => Term.maxidx_term p | _ => I) params ~1
       val prop_concl = Thm.concl_of property
-                    |> didx >= 0 ? Logic.incr_indexes ([],[],didx+1)
+                    |> didx >= 0 ? Logic.incr_indexes ([], didx+1)
    in(if not (Thm.is_dummy property) andalso exists (
             fn SOME param => Term.could_unify (param, prop_concl)
              | NONE => false) params
@@ -364,7 +364,7 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
       val thy = Context.theory_of ctxt
       fun negatize_param param =
             let val idx = maxidx_of_term param
-             in if idx >= 0 then Logic.incr_indexes ([],[],~1-idx) param else param
+             in if idx >= 0 then Logic.incr_indexes ([], ~1-idx) param else param
             end
 
       val compact_deps = map_filter I (#1 template)
@@ -404,7 +404,7 @@ fun invoke_instantiations_on_property (pos, property) ctxt =
 
 (*fun list_functors ctxt =
   Net.unify_term (Properties.get ctxt) (net_encode_phityp (Var(("uu",0),TVar(("'uu",0),[]))))
-    |> map (fn (tm,_,_) => Logic.incr_indexes ([],[],1) tm)*)
+    |> map (fn (tm,_,_) => Logic.incr_indexes ([], 1) tm)*)
 
 (* fun is_a_registered_functor_i thy net the_functor =
   let val key = net_encode_phityp the_functor

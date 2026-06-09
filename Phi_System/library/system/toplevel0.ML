@@ -344,7 +344,7 @@ fun gen_finish_proc prep_term qed spec int stat =
         val ctxt'1 = Proof.context_of stat'
         val sequent'1 = singleton (Proof_Context.export ctxt ctxt'1) sequent
         val end_tac = basic_method (fn ctxt' => fn goal' => (
-            let
+            \<^try>\<open>let
               val sequent' = singleton (Proof_Context.export ctxt'1 ctxt') sequent'1
               val _ = Phi_Reasoner.info_print ctxt' 2 (fn _ =>
                   Pretty.string_of (Pretty.chunks [
@@ -359,7 +359,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                           |> Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxt'
                 val _ = PLPR_Statistics.stop_recording_a_semantic_operation ctxt'
               in result end
-              handle E => raise (@{print} E)
+              catch E => raise (@{print} E)\<close>
             ))
        in
         stat'

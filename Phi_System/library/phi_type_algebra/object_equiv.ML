@@ -113,7 +113,7 @@ fun guess_property_obj_eq (phi:phi_type) ctxt =
               of SOME (rev_arg_tys_A, x_ty_A, model_ty_A) =>
                   let val arity_A = length rev_arg_tys_A
                       val typ = x_ty_A --> x_ty_A --> \<^typ>\<open>bool\<close>
-                      val ant = (Term.incr_bv (arity_A, 0, A))
+                      val ant = (Term.incr_bv arity_A 0 A)
                               |> fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A          
                               |> (fn X => \<^Const>\<open>Object_Equiv x_ty_A model_ty_A\<close> $ X $ Free(eq, typ))
                               |> fold (fn T => fn X =>

@@ -849,7 +849,7 @@ fun check_property_hint ctxt phi_typ_const hint =
                   | trim _ X = X
                 fun pad _ [] X = X
                   | pad j (T::tys) X =
-                      pad (i+1) tys X $ trim T (Logic.incr_indexes ([],[], i+j*k) T_term)
+                      pad (i+1) tys X $ trim T (Logic.incr_indexes ([], i+j*k) T_term)
                 fun pass ar (X as (Const("_type_constraint_", _) $ _)) = pad 0 ar X
                   | pass (_::ar) (X $ Y) = pass ar X $ Y
                   | pass ar X = pad 0 ar X                

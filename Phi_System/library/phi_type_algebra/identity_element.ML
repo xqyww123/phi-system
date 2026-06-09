@@ -83,7 +83,7 @@ fun guess_property_sing is_left (phi0:phi_type) ctxt =
                     val arity_A = length rev_arg_tys_A
                     val ([P], ctxt') = mk_P ctxt
                     val A' = fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A
-                                (Term.incr_bv (arity_A, 0, A))
+                                (Term.incr_bv arity_A 0 A)
                     val ant = (\<^Const>\<open>\<phi>Type x_ty_A model_ty_A\<close> $ \<^Const>\<open>one_class.one x_ty_A\<close> $ A')
                             |> (fn X => (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty_A\<close> $ X $ Free(P, HOLogic.boolT)
                                                     else \<^Const>\<open>Identity_Element\<^sub>E model_ty_A\<close> $ X))

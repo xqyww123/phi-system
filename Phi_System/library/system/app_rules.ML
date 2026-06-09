@@ -199,7 +199,7 @@ val name_and_symbol =
   group (fn () => "name") (short_ident || long_ident || sym_ident || keyword || string)
 val name_and_symbol_position = input name_and_symbol >> Input.source_content
 
-val attrib = token liberal_name ::: !!! args;
+val attrib = token liberal_name ::: Parse.!!! args;
 val xattribs = $$$ "[" |-- list attrib --| $$$ "]";
 val xopt_attribs = Scan.optional xattribs [];
 

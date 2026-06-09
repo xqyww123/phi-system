@@ -176,26 +176,34 @@ fun simproc_of expn ctxt cterm =
   end
 
 val named_forall =
-  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_forall\<close>)
-    {lhss = [\<^term>\<open>All (P :: 'a <named> 'names \<Rightarrow> bool)\<close>],
+  Simplifier.make_simproc \<^context>
+    {name = Sign.full_name \<^theory> \<^binding>\<open>named_forall\<close>,
+     lhss = [\<^term>\<open>All (P :: 'a <named> 'names \<Rightarrow> bool)\<close>],
      proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => forall_expansion_arg_encoding
-                                                    | _ => forall_expansion))}
+                                                    | _ => forall_expansion)),
+     identifier = []}
 val named_ex =
-  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>)
-    {lhss = [\<^term>\<open>Ex (P :: 'a <named> 'names \<Rightarrow> bool)\<close>],
+  Simplifier.make_simproc \<^context>
+    {name = Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>,
+     lhss = [\<^term>\<open>Ex (P :: 'a <named> 'names \<Rightarrow> bool)\<close>],
      proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => exists_expansion_arg_encoding
-                                                    | _ => exists_expansion))}
+                                                    | _ => exists_expansion)),
+     identifier = []}
 
 val named_ExBI =
-  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>)
-    {lhss = [\<^term>\<open>ExBI (P :: 'a <named> 'names \<Rightarrow> 'b BI)\<close>],
-     proc = K (simproc_of (K ExNu_expansion))}
+  Simplifier.make_simproc \<^context>
+    {name = Sign.full_name \<^theory> \<^binding>\<open>named_ExBI\<close>,
+     lhss = [\<^term>\<open>ExBI (P :: 'a <named> 'names \<Rightarrow> 'b BI)\<close>],
+     proc = K (simproc_of (K ExNu_expansion)),
+     identifier = []}
 
 val named_metaAll =
-  Simplifier.make_simproc \<^context> (Sign.full_name \<^theory> \<^binding>\<open>named_metaAll\<close>)
-    {lhss = [\<^term>\<open>Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)\<close>],
+  Simplifier.make_simproc \<^context>
+    {name = Sign.full_name \<^theory> \<^binding>\<open>named_metaAll\<close>,
+     lhss = [\<^term>\<open>Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)\<close>],
      proc = K (simproc_of (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => meta_All_expansion_arg_encoding
-                            | _ => meta_All_expansion))}
+                            | _ => meta_All_expansion)),
+     identifier = []}
 
 
 (*

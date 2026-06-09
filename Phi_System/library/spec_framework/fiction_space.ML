@@ -61,7 +61,7 @@ fun cert_arg ctxt resT raw_TM env =
     val chk = Sign.certify_term thy
             o Syntax.check_term ctxt
             o Type.constraint \<^Type>\<open>fun dummyT \<^Type>\<open>BI resT\<close>\<close>
-    val (Tm,Ty,_) = chk raw_TM
+    val (Tm,Ty) = chk raw_TM
     val _ = Type.no_tvars Ty
       handle TYPE (msg, _, _) => error msg;
     val Tm = Sign.no_vars ctxt Tm

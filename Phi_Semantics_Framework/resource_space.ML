@@ -321,14 +321,16 @@ fun distinctTree_tac ctxt = SUBGOAL (fn (goal, i) =>
 val distinctNameSolver = mk_solver "distinctNameSolver" distinctTree_tac;
 
 val distinct_simproc =
-  Simplifier.make_simproc \<^context> "StateSpace.distinct_simproc"
-   {lhss = [\<^term>\<open>kind.name x = kind.name y\<close>],
+  Simplifier.make_simproc \<^context>
+   {name = "StateSpace.distinct_simproc",
+    lhss = [\<^term>\<open>kind.name x = kind.name y\<close>],
     proc = fn _ => fn ctxt => fn ct =>
       (case Thm.term_of ct of
         Const (\<^const_name>\<open>HOL.eq\<close>,_) $ x $ y =>
           Option.map (fn neq => DistinctTreeProver.neq_to_eq_False OF [neq])
               (neq_x_y ctxt x y)
-      | _ => NONE)};
+      | _ => NONE),
+    identifier = []};
 
 fun interprete_parent_entry name dist_thm_name parent_expr thy =
   let
@@ -781,9 +783,9 @@ fun read_arg ctxt _ raw_T env =
     val ctxt' = fold (Variable.declare_typ o TFree) env ctxt;
     val TM0 = Syntax.parse_term ctxt' raw_T
     val chk = Syntax.check_term ctxt' o Type.constraint \<^Type>\<open>sep_homo_set dummyT\<close>
-    val T = chk TM0
-        handle err => (chk (\<^Const>\<open>sep_homo_set dummyT\<close> $ TM0)
-        handle _ => raise err)
+    val T = \<^try>\<open>chk TM0
+        catch err => \<^try>\<open>chk (\<^Const>\<open>sep_homo_set dummyT\<close> $ TM0)
+        catch _ => raise err\<close>\<close>
     val env' = Term.add_tfrees T env;
   in (T, env') end;
 
@@ -793,9 +795,9 @@ fun cert_arg ctxt _ raw_TM env =
     val chk = Sign.certify_term thy
             o Syntax.check_term ctxt
             o Type.constraint \<^Type>\<open>sep_homo_set dummyT\<close>
-    val (Tm,Ty,_) = chk raw_TM
-         handle err => (chk (\<^Const>\<open>sep_homo_set dummyT\<close> $ raw_TM)
-         handle _ => raise err)
+    val (Tm,Ty) = \<^try>\<open>chk raw_TM
+         catch err => \<^try>\<open>chk (\<^Const>\<open>sep_homo_set dummyT\<close> $ raw_TM)
+         catch _ => raise err\<close>\<close>
     val _ = Type.no_tvars Ty
       handle TYPE (msg, _, _) => error msg;
     val Tm = Sign.no_vars ctxt Tm

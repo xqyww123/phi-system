@@ -565,7 +565,7 @@ lemma [\<phi>reason default %br_join_fallback]:
                               then_conv Conv.fun_conv conv) ctm
                     end
           end
-     in let
+     in \<^try>\<open>(let
         val sequent'1 = Conv.gconv_rule (
               Phi_Conv.hhf_concl_conv (fn ctxt =>
                 Phi_Syntax.transformation_conv conv Conv.all_conv Conv.all_conv
@@ -573,8 +573,8 @@ lemma [\<phi>reason default %br_join_fallback]:
         val sequent'2 = @{thm' transformation_refl} RS (@{thm' Action_Tag_I} RS sequent'1)
          in SOME ((ctxt, sequent'2), Seq.empty)
         end
-     handle NOT_AVAILABLE => NONE
-          | E => error "!!!"
+     handle NOT_AVAILABLE => NONE)
+       catch E => error "!!!"\<close>
     end)
 \<close>
 

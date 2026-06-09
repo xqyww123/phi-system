@@ -44,7 +44,7 @@ proc (nodef) map_list_loop:
        and [simp]: \<open>length l = len\<close>
 
   input  \<open>len \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> l \<Ztypecolon> T\<heavy_comma> X\<close>
-  output \<open>map_index f l \<Ztypecolon> T\<heavy_comma> X\<close> 
+  output \<open>map_index f l \<Ztypecolon> T\<heavy_comma> X\<close>
 \<medium_left_bracket>
   note list_eq_iff_nth_eq [\<phi>sledgehammer_simps];;
   var i \<leftarrow> \<open>0 \<Ztypecolon> \<nat>('b)\<close> ;;
@@ -58,7 +58,7 @@ proc (nodef) map_list_loop:
       body ($i)
       apply_rule ToA_Mapper_backward[OF map[where i1=i, unfolded \<phi>Prod'_def]]
               is \<open>list_upd_map i (f i) l'\<close> certified using ToA_Mapper_f_expn[OF map[where i1=i]] by auto_sledgehammer ;;
-      $i \<leftarrow> $i + \<open>1 \<Ztypecolon> \<nat>('b)\<close> 
+      $i \<leftarrow> $i + \<open>1 \<Ztypecolon> \<nat>('b)\<close>
     \<medium_right_bracket> \<semicolon>
 \<medium_right_bracket> .
 

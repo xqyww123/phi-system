@@ -666,9 +666,9 @@ fun setup_rule_generation_pass template' ctxt =
         if Config.get_generic ctxt enable_reason_generator
         then let
             val args = map_filter (fn r =>
-                        let val concl = Logic.incr_indexes ([],[],pidx) (Thm.concl_of r)
+                        let val concl = Logic.incr_indexes ([], pidx) (Thm.concl_of r)
                             val cidx = maxidx_of_term concl
-                         in case Seq.chop 2 (Unify.hounifiers (ctxt, Envir.empty cidx, [(concl, pattern)]))
+                         in case Seq.chop 2 (Unify.hounifiers [] (ctxt, Envir.empty cidx, [(concl, pattern)]))
                          of ([(env', _)], _) => SOME (env', (ins_pos, r))
                           | ([_,_], _) => (Phi_Reasoner.warn_pretty ctxt 2 (fn () => let open Pretty in
                                             chunks [para "Failed to instantiate a template due to multi-resolution",

@@ -98,11 +98,11 @@ val openning_caches : (cache * bool) Symtab.table Synchronized.var
 fun load_cache_raw thy =
   let val path = cache_path thy
    in if File.is_file path
-      then decode_cache (XML.parse (Bytes.read path |> XZ.uncompress |> Bytes.content))
-           handle er => (
-             warning ("corrupted cache : " ^ Context.theory_name {long=true} thy ^ "\n" ^
-                      Runtime.exn_message er);
-             empty_cache)
+      then \<^try>\<open>decode_cache (XML.parse (Bytes.read path |> XZ.uncompress |> Bytes.content))
+             catch er => (
+               warning ("corrupted cache : " ^ Context.theory_name {long=true} thy ^ "\n" ^
+                        Runtime.exn_message er);
+               empty_cache)\<close>
       else empty_cache
   end
 

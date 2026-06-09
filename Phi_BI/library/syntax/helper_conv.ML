@@ -83,7 +83,8 @@ fun expand_aggregated_imps_hol Cp Cc ctm =
 
 (*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
 val move_Ex_for_set_notation =
-  Simplifier.make_simproc \<^context> "Embed_into_Phi_Type.move_Ex" {
+  Simplifier.make_simproc \<^context> {
+  name = "Embed_into_Phi_Type.move_Ex",
   lhss = [\<^term>\<open>\<exists>y. x = f y \<and> (\<exists>b. P y b)\<close>],
   proc = fn _ => fn _ => fn ctm =>
     case Thm.term_of ctm
@@ -97,7 +98,8 @@ val move_Ex_for_set_notation =
          in SOME (Thm.renamed_prop prop ret)
         end
         handle CTERM _ => NONE)
-       | _ => NONE
+       | _ => NONE,
+  identifier = []
 }
 
 end

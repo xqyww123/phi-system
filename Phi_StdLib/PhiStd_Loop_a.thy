@@ -45,7 +45,7 @@ proc (nodef) map_list_loop_a:
        and [simp]: \<open>length l = len\<close>
 
   input  \<open>len \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> l \<Ztypecolon> T\<heavy_comma> X\<close>
-  output \<open>map_index f l \<Ztypecolon> T\<heavy_comma> X\<close> 
+  output \<open>map_index f l \<Ztypecolon> T\<heavy_comma> X\<close>
 \<medium_left_bracket>
   var i \<leftarrow> \<open>0 \<Ztypecolon> \<nat>\<close> ;;
   while \<open>l' \<Ztypecolon> T\<heavy_comma> i \<Ztypecolon> \<v>\<a>\<r>[i] \<nat>\<heavy_comma> X \<s>\<u>\<b>\<j> l' i.
@@ -59,7 +59,11 @@ proc (nodef) map_list_loop_a:
       apply_rule ToA_Mapper_backward[OF map[where i1=i, unfolded \<phi>Prod'_def]]
               is \<open>list_upd_map i (f i) l'\<close> certified using ToA_Mapper_f_expn[OF map[where i1=i]] by auto_sledgehammer ;;
       $i \<leftarrow> $i + 1
-    \<medium_right_bracket> \<semicolon>
+      \<medium_right_bracket> certified by (auto simp add: Suc_le_eq the_\<phi>
+              \<open>\<forall>i. list_upd_map i (f i) = ff i\<close>[unfolded list_upd_map_def fun_eq_iff, THEN spec, THEN spec, symmetric]
+              list_eq_iff_nth_eq,
+              smt (verit, ccfv_threshold) \<open>i < length l\<close> \<p>\<r>\<e>\<m>_a hd_drop_conv_nth le_less_trans length_take leq_le_Suc_eq min_less_iff_conj not_less nth_list_update_eq nth_list_update_neq nth_map_index nth_take the_\<phi>(4) the_\<phi>(5) the_\<phi>(6),
+              metis \<open>i \<le> length l \<and> length l' = len \<and> take i l' = map_index f (take i l) \<and> drop i l' = drop i l\<close> \<p>\<r>\<e>\<m>_a nat_arith.suc1 nth_drop) \<semicolon>
 \<medium_right_bracket> .
 
 

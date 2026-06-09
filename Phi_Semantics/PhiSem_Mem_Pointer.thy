@@ -57,7 +57,7 @@ proof (clarsimp)
   assume a1: "finite {a. \<exists>y. f a = Some y}"
   obtain bb :: "(block \<Rightarrow> nat) \<Rightarrow> (block \<Rightarrow> bool) \<Rightarrow> nat \<Rightarrow> bool" where
     f2: "\<forall>X28 X31 X30. bb X30 X31 X28 = (\<exists>X32. X28 = X30 X32 \<and> X31 X32)"
-    by moura
+    by (rule that[of "\<lambda>X30 X31 X28. \<exists>X32. X28 = X30 X32 \<and> X31 X32"]) blast
   then have f3: "\<forall>f p. Collect (bb f p) = f ` Collect p"
     by auto
   obtain nn :: "block \<Rightarrow> nat" where

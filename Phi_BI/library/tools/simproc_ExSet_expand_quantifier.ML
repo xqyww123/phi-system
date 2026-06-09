@@ -73,7 +73,11 @@ fun ExBI_expand_quantifier' ctxt ctm =
 
 
 val _ = Theory.setup (Named_Target.theory_map (
-          Simplifier.define_simproc \<^binding>\<open>ExBI_expand_quantifier\<close>
-              {lhss = [\<^term>\<open>X x \<s>\<u>\<b>\<j> x. (\<exists>y. Y x y)\<close>], proc = K ExBI_expand_quantifier'}))
+          Simplifier.define_simproc
+              {passive = false,
+               name = \<^binding>\<open>ExBI_expand_quantifier\<close>,
+               lhss = [\<^term>\<open>X x \<s>\<u>\<b>\<j> x. (\<exists>y. Y x y)\<close>],
+               proc = K ExBI_expand_quantifier',
+               identifier = []} #> snd))
 
 end

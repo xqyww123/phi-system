@@ -42,8 +42,8 @@ fun eliminate ctxt rule xs As thm'' =
   end;
 
 fun eliminate_nusys ctxt rule xs As th =
-  eliminate ctxt rule xs As th
-  handle e => Exn.reraise (@{print} e)
+  \<^try>\<open>eliminate ctxt rule xs As th
+    catch e => Exn.reraise (@{print} e)\<close>
 fun obtain_export ctxt rule xs _ As = (eliminate_nusys ctxt rule xs As, I)
 
 local

@@ -284,21 +284,18 @@ attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.n
     \<close> "resolution with rule, and do nothing if fail"
 
 ML \<open>
-val phi_system_ML_attribute_locker_do_not_override = Mutex.mutex ()
+val phi_system_ML_attribute_locker_do_not_override = Thread.Mutex.mutex ()
 val phi_system_ML_attribute_sender_do_not_override : (morphism -> Thm.attribute) option Unsynchronized.ref =
       Unsynchronized.ref NONE
 fun phi_system_read_ML_attribute generic src =
-  let val _ = Mutex.lock phi_system_ML_attribute_locker_do_not_override
-      val _ =   ML_Context.expression (Input.pos_of src)
-              ( ML_Lex.read "phi_system_ML_attribute_sender_do_not_override := SOME (("
-              @ ML_Lex.read_source src
-              @ ML_Lex.read ") : morphism -> Thm.attribute)") generic
-            handle err => (
-              Mutex.unlock phi_system_ML_attribute_locker_do_not_override;
-              raise err)
-      val attr = the (@{print} (!phi_system_ML_attribute_sender_do_not_override))
-      val _ = Mutex.unlock phi_system_ML_attribute_locker_do_not_override;
-  in attr
+  let val _ = Thread.Mutex.lock phi_system_ML_attribute_locker_do_not_override
+   in \<^try>\<open>
+        let val _ = ML_Context.expression (Input.pos_of src)
+                  ( ML_Lex.read "phi_system_ML_attribute_sender_do_not_override := SOME (("
+                  @ ML_Lex.read_source src
+                  @ ML_Lex.read ") : morphism -> Thm.attribute)") generic
+         in the (@{print} (!phi_system_ML_attribute_sender_do_not_override)) end
+      finally Thread.Mutex.unlock phi_system_ML_attribute_locker_do_not_override\<close>
   end
 val phi_system_ML_attribute_parser = (
    Scan.lift Args.internal_attribute
@@ -928,7 +925,7 @@ declare [[
      in Phi_Reasoner.add_rule Position.none Phi_Reasoner.NORMAL_LOCAL_CUT' (SOME @{reasoner_group %is_literal})
             ([(Thm.concl_of rule, NONE)], []) NONE [rule] ctxt
     end
-    handle MATCH => ctxt
+    handle Match => ctxt
   )\<close> for \<open>Simplify mode_literal _ _\<close> (%\<phi>attr)
 ]]
 

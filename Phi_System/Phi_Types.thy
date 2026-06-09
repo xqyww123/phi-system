@@ -693,7 +693,8 @@ lemma [embed_into_\<phi>type]:
   by (rule \<phi>Type_eqI; clarsimp)
 
 ML \<open>
-val BI_Ex_embed_P = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
+val BI_Ex_embed_P = Simplifier.make_simproc \<^context> {
+  name = "BI_Ex_embed",
   lhss = [\<^pattern>\<open>Collect _ \<Ztypecolon> \<S> _ \<phi>\<s>\<u>\<b>\<j> _\<close>],
   proc = fn _ => fn ctxt => fn ctm =>
     SOME ((Conv.rewr_conv @{lemma' \<open> {x. f x} \<Ztypecolon> \<S> T \<phi>\<s>\<u>\<b>\<j> P \<equiv> {x. f x \<and> P} \<Ztypecolon> \<S> T \<close>
@@ -708,10 +709,12 @@ val BI_Ex_embed_P = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
               then_conv Conv.arg_conv (conv ctxt)
               else_conv Conv.all_conv
          in conv ctxt
-        end) ctxt))) ctm)
+        end) ctxt))) ctm),
+  identifier = []
 }
 
-val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
+val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> {
+  name = "BI_Ex_embed",
   lhss = [\<^pattern>\<open>_ \<Ztypecolon> _ \<s>\<u>\<b>\<j> x. \<top>\<close>],
   proc = fn _ => fn ctxt => fn ctm =>
     case Thm.term_of ctm
@@ -757,7 +760,8 @@ val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> "BI_Ex_embed" {
                     else SOME (Conv.rewr_conv @{lemma' \<open>f x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. True } \<Ztypecolon> \<S> T\<close> for f T
                                                    by (clarsimp simp: atomize_eq BI_eq_iff)} ctm) 
            )
-       | _ => NONE
+       | _ => NONE,
+  identifier = []
 }
 \<close>
 

@@ -487,7 +487,8 @@ structure Expansion = Simpset (
 
 (*rule: Qx P x \<longleftrightarrow> Qa b. P (a,b)*)
 fun case_split_simproc rule (simproc_name, name) ctxt0 =
-  Simplifier.make_simproc ctxt0 simproc_name {
+  Simplifier.make_simproc ctxt0 {
+      name = simproc_name,
       lhss = [Thm.term_of (Thm.lhs_of rule)],
       proc = fn _ => fn ctxt => fn ctm =>
         case Thm.term_of ctm
@@ -501,8 +502,8 @@ fun case_split_simproc rule (simproc_name, name) ctxt0 =
                   then SOME (Thm.transfer' ctxt rule)
                   else NONE
               end
-           | _ => NONE
-           
+           | _ => NONE,
+      identifier = []
     }
 
 val _ = Theory.setup (Context.theory_map (
@@ -564,7 +565,8 @@ local
       | is_atom (Free _) = true
       | is_atom (Var _) = true
       | is_atom _ = false
-in val eq_simproc = Simplifier.make_simproc \<^context> "Phi_Type.eq" {
+in val eq_simproc = Simplifier.make_simproc \<^context> {
+    name = "Phi_Type.eq",
     lhss = [\<^pattern>\<open>_ = _\<close>],
     proc = fn _ => fn ctxt => fn ctm =>
       case Thm.term_of ctm
@@ -572,7 +574,8 @@ in val eq_simproc = Simplifier.make_simproc \<^context> "Phi_Type.eq" {
             if is_atom RHS andalso not (is_atom LHS)
             then SOME (Conv.rewr_conv (Thm.transfer' ctxt @{thm' eq_commute[folded atomize_eq]}) ctm)
             else NONE
-         | _ => NONE
+         | _ => NONE,
+    identifier = []
   }
 end *)
 
@@ -1062,7 +1065,7 @@ fun Guess_Framework' (goal_template, insts_of, parsing_rule) =
     fn (phi, ctxt) =>
       let val (insts, phi, ctxt) = insts_of (phi, ctxt)
           val idx = fold (Term.maxidx_term o snd) insts ~1 + 1
-          val goal_template = Logic.incr_indexes ([],[],idx) goal_template
+          val goal_template = Logic.incr_indexes ([], idx) goal_template
           val idx = Term.maxidx_term goal_template idx + 1
           val params = Term.add_vars goal_template []
           val eqs = map (fn (redex,residue) =>
@@ -1336,7 +1339,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                              | some => some*)
    in (case #1 instruction of SOME (H0, aia0) =>
               let (*val idx = Phi_Type.maxidx_of_phi phi0 ~1 + 1
-                  val H = Logic.incr_indexes ([],[],idx) H0*)
+                  val H = Logic.incr_indexes ([], idx) H0*)
                   val thy = Proof_Context.theory_of ctxt0
                   val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 phi0 H0
 

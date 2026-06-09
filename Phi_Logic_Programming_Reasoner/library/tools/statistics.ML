@@ -209,7 +209,7 @@ structure Semantic_Operation = Proof_Data (
            * Time.time Unsynchronized.ref (*reasoning*)
            * Time.time Unsynchronized.ref (*proof_evaluation*)
            * Time.time Unsynchronized.ref (*proof_search*)
-           * Thread.thread ) option Unsynchronized.ref option
+           * Thread.Thread.thread ) option Unsynchronized.ref option
   val init = K NONE
 )
 
@@ -228,7 +228,7 @@ fun start_recording_a_semantic_operation ctxt =
                          Unsynchronized.ref Time.zeroTime,
                          Unsynchronized.ref Time.zeroTime,
                          Unsynchronized.ref Time.zeroTime,
-                         Thread.self () )
+                         Thread.Thread.self () )
 
 fun stop_recording_a_semantic_operation ctxt =
   case Semantic_Operation.get ctxt
@@ -236,7 +236,7 @@ fun stop_recording_a_semantic_operation ctxt =
      | SOME timing => (
         case !timing
           of SOME (timer, reasoning, proof_evaluation, proof_search, thrd) =>
-               if Thread.equal (thrd, Thread.self ())
+               if Thread.Thread.equal (thrd, Thread.Thread.self ())
                then let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
                  in Synchronized.change SO_timing (fn L =>
                      { total = usr+sys,
@@ -253,7 +253,7 @@ fun report_time_of_reasoning time ctxt =
     |> Option.mapPartial (fn x => !x)
     of NONE => ()
      | SOME (_, r, _, _, thrd) =>
-          if Thread.equal (thrd, Thread.self ())
+          if Thread.Thread.equal (thrd, Thread.Thread.self ())
           then r := (!r) + time
           else ()
 
@@ -262,7 +262,7 @@ fun report_time_of_proof_evaluation time ctxt =
     |> Option.mapPartial (fn x => !x)
     of NONE => ()
      | SOME (_, _, pe, _, thrd) =>
-          if Thread.equal (thrd, Thread.self ())
+          if Thread.Thread.equal (thrd, Thread.Thread.self ())
           then pe := (!pe) + time
           else ()
 
@@ -271,7 +271,7 @@ fun report_time_of_proof_search time ctxt =
     |> Option.mapPartial (fn x => !x)
     of NONE => ()
      | SOME (_, _, _, ps, thrd) =>
-          if Thread.equal (thrd, Thread.self ())
+          if Thread.Thread.equal (thrd, Thread.Thread.self ())
           then ps := (!ps) + time
           else ()
 
@@ -287,13 +287,10 @@ fun measure_time_of_reasoning ctxt f x =
                   var_r := old_r + usr + sys - ((!var_pe) - old_pe) - ((!var_ps) - old_ps)
           | _ => ()
         end
-   in let val ret = f x
+   in let val ret = Exn.capture f x
           val _ = update ()
-       in ret
-      end handle E =>
-        let val _ = update ()
-         in Exn.reraise E
-        end
+       in Exn.release ret
+      end
   end
 
 fun measure_time_of_proof_evaluation ctxt f x =
@@ -301,19 +298,12 @@ fun measure_time_of_proof_evaluation ctxt f x =
       val timing = Semantic_Operation.get ctxt
                 |> Option.mapPartial (fn x => !x)
                 |> Option.map (fn x => (#3 x, ! (#3 x)))
-   in let val ret = f x
-          val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
-          val _ = (case timing
-                     of SOME (var, old) => var := old + usr + sys
-                      | _ => ())
-       in ret
-      end handle E =>
-        let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
-            val _ = (case timing
-                     of SOME (var, old) => var := old + usr + sys
-                      | _ => ())
-         in Exn.reraise E
-        end
+      val ret = Exn.capture f x
+      val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+      val _ = (case timing
+                 of SOME (var, old) => var := old + usr + sys
+                  | _ => ())
+   in Exn.release ret
   end
 
 fun measure_time_of_proof_evaluation' enable ctxt f x =
@@ -325,19 +315,12 @@ fun measure_time_of_proof_search ctxt f x =
       val timing = Semantic_Operation.get ctxt
                 |> Option.mapPartial (fn x => !x)
                 |> Option.map (fn x => (#4 x, ! (#4 x)))
-   in let val ret = f x
-          val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
-          val _ = (case timing
-                     of SOME (var, old) => var := old + usr + sys
-                      | _ => ())
-       in ret
-      end handle E =>
-        let val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
-            val _ = (case timing
-                     of SOME (var, old) => var := old + usr + sys
-                      | _ => ())
-         in Exn.reraise E
-        end
+      val ret = Exn.capture f x
+      val {nongc = {usr, sys}, ...} = Timer.checkCPUTimes timer
+      val _ = (case timing
+                 of SOME (var, old) => var := old + usr + sys
+                  | _ => ())
+   in Exn.release ret
   end
 
 

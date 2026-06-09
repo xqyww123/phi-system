@@ -45,9 +45,11 @@ fun unfold_typeof _ ctxt cterm =
       end); NONE )
   end
 
-val unfold_typeof_simproc = Simplifier.make_simproc \<^context> "\<phi>.\<t>\<y>\<p>\<e>\<o>\<f>" {
+val unfold_typeof_simproc = Simplifier.make_simproc \<^context> {
+        name = "\<phi>.\<t>\<y>\<p>\<e>\<o>\<f>",
         lhss = [\<^pattern>\<open>\<t>\<y>\<p>\<e>\<o>\<f> ?T\<close>],
-        proc = unfold_typeof
+        proc = unfold_typeof,
+        identifier = []
     }
 
 (*

@@ -115,7 +115,7 @@ fun comm_weight_geq ctxt =
       val w_of = weight_of ctxt
    in fn bv_tys => fn (F,Gs) => 
       let val N = length Gs
-          val (F', Gs') = (Logic.incr_indexes ([],[],1) F, map (Logic.incr_indexes ([],[],1)) Gs)
+          val (F', Gs') = (Logic.incr_indexes ([], 1) F, map (Logic.incr_indexes ([], 1)) Gs)
           val partial_F_G = List.tabulate (N, fn i =>
                 let val G = nth Gs i
                     val ty = Term.fastype_of1 (bv_tys, G)

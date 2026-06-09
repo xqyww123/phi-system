@@ -19,7 +19,9 @@ fun has_poison (Const(\<^const_name>\<open>fmempty\<close>, _)) = SOME false
 in
 
 val setup_semty_ntup_to_poison =
-  Simplifier.define_simproc \<^binding>\<open>semty_ntup_to_poison\<close> {
+  Simplifier.define_simproc {
+      passive = false,
+      name = \<^binding>\<open>semty_ntup_to_poison\<close>,
       lhss = [\<^term>\<open>semty_ntup X\<close>],
       proc = fn _ => fn ctxt => fn ctm =>
         case Thm.term_of ctm
@@ -32,9 +34,9 @@ val setup_semty_ntup_to_poison =
                         |> Seq.pull
                         |> Option.map fst
                   | _ => NONE)
-           | _ => NONE
-              
-    }
+           | _ => NONE,
+      identifier = []
+    } #> snd
 
 
 end

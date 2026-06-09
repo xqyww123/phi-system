@@ -29,9 +29,8 @@ structure D = Theory_Data(struct
 end)
 
 fun handle_errors_toplevel thy f =
-  Runtime.exn_trace (fn _ => f ())
-  handle e =>
-    (D.get thy (fn e => raise e) e; error "BUG: bad error handle!")
+  \<^try>\<open>Runtime.exn_trace (fn _ => f ())
+    catch e => (D.get thy (fn e => raise e) e; error "BUG: bad error handle!")\<close>
 
 fun register_handler f = D.map (fn g => merge (f,g))
 

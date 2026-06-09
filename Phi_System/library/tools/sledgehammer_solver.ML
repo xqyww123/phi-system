@@ -125,15 +125,15 @@ datatype fail_reason = Too_Many_Subgoals | Timeout | Application_Fails | Subgoal
 exception Auto_Fail of fail_reason
 
 fun eval_prf_str timeout "" (ctxt,sequent) =
-     (Timeout.apply timeout (Timing.timing (
+     \<^try>\<open>(Timeout.apply timeout (Timing.timing (
             Position.setmp_thread_data Position.none (Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1))
          ) (ctxt,sequent) |> apfst (fn {elapsed=time,...} => (time,""))
               handle Phi_Reasoners.Automation_Fail _ => raise Auto_Fail Application_Fails
-                  |  Timeout.TIMEOUT _               => raise Auto_Fail Timeout
-                  |  err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
-                             raise Auto_Fail Unknown) )
+                  |  Timeout.TIMEOUT _               => raise Auto_Fail Timeout)
+       catch err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
+                             raise Auto_Fail Unknown)\<close>
   | eval_prf_str timeout prf (ctxt,sequent) =
-      let val seq =
+      \<^try>\<open>(let val seq =
             Method.evaluate (
               Parse.read_embedded ctxt (Thy_Header.get_keywords (Proof_Context.theory_of ctxt))
                                        Method.parse (Input.string prf)
@@ -145,15 +145,15 @@ fun eval_prf_str timeout "" (ctxt,sequent) =
              of ({elapsed=time,...}, SOME (Seq.Result ret, _)) => ((time,prf), ret)
               | _ => raise Auto_Fail Application_Fails
       end handle Timeout.TIMEOUT _ => raise Auto_Fail Timeout
-               | Auto_Fail err => Exn.reraise (Auto_Fail err)
-               | err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
-                          raise Auto_Fail Unknown)
+               | Auto_Fail err => Exn.reraise (Auto_Fail err))
+       catch err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
+                          raise Auto_Fail Unknown)\<close>
 
 
 fun eval_prf_str_stat timeout F_None prf stat =
     let val ctxt = Proof.context_of stat
         val keywords = Thy_Header.get_keywords (Proof_Context.theory_of ctxt)
-    in (case Timeout.apply (Time.fromSeconds timeout)
+    in \<^try>\<open>(case Timeout.apply (Time.fromSeconds timeout)
                 (Position.setmp_thread_data Position.none Seq.pull)
                 (Proof.apply (Parse.read_embedded ctxt keywords Method.parse
                                                   (Input.string ("(" ^ prf ^ ")"))) stat)
@@ -163,9 +163,9 @@ fun eval_prf_str_stat timeout F_None prf stat =
         handle Timeout.TIMEOUT _ => (
           tracing "The proof fails due to timeout. Re-searching proofs...";
           raise Auto_Fail Timeout)
-            | err => (
+       catch err => (
           tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
-          raise Auto_Fail Unknown)
+          raise Auto_Fail Unknown)\<close>
     end
 
 exception SH_Short_Cut of string
@@ -264,13 +264,12 @@ fun raw_sledgehammer stat =
             end
          | _ => raise Phi_Reasoners.Automation_Fail NONE)*)
     handle SH_Short_Cut ret => [wrap ret]
-         | err as Exn.Interrupt => (warning "Interrupted\n\
+         | err as Thread.Thread.Interrupt => (warning "Interrupted\n\
               \If this interruption is unexpected for you, it can be caused by the \<open>try0\<close> based\n\
               \proof reconstruction of Sledgehammer.\n\
               \You may \<open>declare [[auto_sledgehammer_params = \"try0 = false\"]]\<close> to disable \<open>try0\<close>,\n\
               \and hopefully the problem can be addressed.";
               Exn.reraise err)
-         | E => raise E
   end
 
 (*** Proof search using Sledgehammer ***)

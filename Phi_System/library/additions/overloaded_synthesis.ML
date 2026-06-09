@@ -46,8 +46,8 @@ fun declare_overloaded_operator signat0 pos (mode, prio_group) ctxt0 =
 
       val (args0, ret0) = case signat0 of Signature s => s
                                         | Operator f => default_signature f
-      val (args, ret) = (map (Logic.incr_indexes ([],[],1)) args0,
-                         Logic.incr_indexes ([],[],1) ret0)
+      val (args, ret) = (map (Logic.incr_indexes ([], 1)) args0,
+                         Logic.incr_indexes ([], 1) ret0)
       val arity = length args
 
       val rule = overload_rule_of arity
@@ -72,7 +72,7 @@ fun declare_overloaded_operator signat0 pos (mode, prio_group) ctxt0 =
 
       val idx = maxidx_of_term ret + 1
       val no_val_ret =
-            case Seq.chop 2 (Unify.hounifiers (Context.Proof ctxt, Envir.empty idx, [(ret, Abs("",dom_ty, Var(("X",0),rng_ty)))]))
+            case Seq.chop 2 (Unify.hounifiers [] (Context.Proof ctxt, Envir.empty idx, [(ret, Abs("",dom_ty, Var(("X",0),rng_ty)))]))
               of ([(env, _)], _) => SOME (Envir.norm_term env (Var(("X",0),rng_ty)))
                | _ => NONE
       val synthesis_mode = Option.map (fn ret' =>
