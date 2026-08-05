@@ -26,4 +26,4 @@ session "Phi_System" = "Phi_Semantics_Framework" +
     phi.sty
   document_files
     "root.tex"
-    "build"  
+    "build"

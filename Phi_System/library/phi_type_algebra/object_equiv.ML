@@ -237,7 +237,7 @@ fun gen_obj_equal' (_,name) instruction (phi0 : phi_type) thy0 =
 
       val thy = if def_contains_satisfaction phi0 then thy0
                       |> Config.put Phi_Reasoner.ignore_dup_reasoner true
-                      |> Bundle.includes ["Phi_BI.ToA_extract_pure_sat"]
+                      |> Bundle.includes [(true, "Phi_BI.ToA_extract_pure_sat")]
                       |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy0
                  else thy0
 

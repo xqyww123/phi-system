@@ -27,6 +27,7 @@ val LHS_of : term -> term
 val RHS_of : term -> term
 
 val pos_parser : string -> Position.T parser
+val could_beta_eta_contract : term -> bool
 val beta_eta_conversion : conv
 val beta_eta_contract : thm -> thm
 val beta_eta_contract_cterm : cterm -> cterm
@@ -182,35 +183,38 @@ fun pos_parser name =
                in (pos,x) end
   end
 
+fun could_beta_eta_contract t =
+  Term.could_beta_contract t orelse Term.could_eta_contract t
+
 fun beta_eta_contract th =
-  if Term.could_beta_eta_contract (Thm.prop_of th)
+  if could_beta_eta_contract (Thm.prop_of th)
   then Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
   else th
 
 fun beta_eta_contract_cterm x =
-  if Term.could_beta_eta_contract (Thm.term_of x)
+  if could_beta_eta_contract (Thm.term_of x)
   then Thm.dest_arg (Thm.cprop_of (Drule.beta_eta_conversion x))
   else x
 
 fun beta_eta_contract_term x =
-  if Term.could_beta_eta_contract x
+  if could_beta_eta_contract x
   then Envir.beta_eta_contract x
   else x
 
 fun beta_eta_conversion ctm =
-  if Term.could_beta_eta_contract (Thm.term_of ctm)
+  if could_beta_eta_contract (Thm.term_of ctm)
   then Drule.beta_eta_conversion ctm
   else Conv.all_conv ctm
 
 fun beta_eta_contract_leading_antecedent th =
-  if Term.could_beta_eta_contract (leading_antecedent' th)
+  if could_beta_eta_contract (leading_antecedent' th)
   then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
                                          Conv.all_conv (Thm.cprop_of th)) th
   else th
 
 fun lambda_normalization_ctac S s =
   let fun fallback exn =
-        if Term.could_beta_eta_contract (Thm.prop_of (snd s))
+        if could_beta_eta_contract (Thm.prop_of (snd s))
         then S (apsnd beta_eta_contract s)
         else Exn.reraise exn
    in S s
@@ -222,7 +226,7 @@ fun lambda_normalization_ctac S s =
 
 fun lambda_normalization_conv C ctm =
   let fun fallback exn =
-        if Term.could_beta_eta_contract (Thm.term_of ctm)
+        if could_beta_eta_contract (Thm.term_of ctm)
         then (Drule.beta_eta_conversion then_conv C) ctm
         else Exn.reraise exn
    in C ctm
@@ -234,7 +238,7 @@ fun lambda_normalization_conv C ctm =
 
 fun lambda_normalization_rule R thm =
   let fun fallback exn =
-        if Term.could_beta_eta_contract (Thm.prop_of thm)
+        if could_beta_eta_contract (Thm.prop_of thm)
         then R (beta_eta_contract thm)
         else Exn.reraise exn
    in R thm
@@ -288,7 +292,7 @@ fun naive_flex_solver ctxt thm =
                       tm_add o apsnd (Thm.cterm_of ctxt o Term_Subst.instantiate (instTy', Vars.empty))
                    ) (snd inst))
       val thm1 = Thm.instantiate (instTy, instTm) thm
-      val frees = Term.declare_term_frees (Thm.prop_of thm) Name.context
+      val frees = Term.declare_free_names (Thm.prop_of thm) Name.context
       val vars = fold (fn (a,b) => Term.add_vars a o Term.add_vars b) (Thm.tpairs_of thm1) []
       val fix_names = Name.invent frees "\<x>" (length vars)
       val fixes = map2 (fn N => fn (_,T) => Thm.cterm_of ctxt (Free (N,T))) fix_names vars
@@ -338,7 +342,7 @@ fun conj_elims th =
 *)
 
 fun conj_intros _ [] = @{thm' TrueI}
-  | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L
+  | conj_intros ctxt L = foldr1 (uncurry HOLogic.conj_intr) L
 
 (* Substitution \& Instantiation *)
 

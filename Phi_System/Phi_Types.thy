@@ -695,6 +695,7 @@ lemma [embed_into_\<phi>type]:
 ML \<open>
 val BI_Ex_embed_P = Simplifier.make_simproc \<^context> {
   name = "BI_Ex_embed",
+  kind = Simproc,
   lhss = [\<^pattern>\<open>Collect _ \<Ztypecolon> \<S> _ \<phi>\<s>\<u>\<b>\<j> _\<close>],
   proc = fn _ => fn ctxt => fn ctm =>
     SOME ((Conv.rewr_conv @{lemma' \<open> {x. f x} \<Ztypecolon> \<S> T \<phi>\<s>\<u>\<b>\<j> P \<equiv> {x. f x \<and> P} \<Ztypecolon> \<S> T \<close>
@@ -715,6 +716,7 @@ val BI_Ex_embed_P = Simplifier.make_simproc \<^context> {
 
 val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> {
   name = "BI_Ex_embed",
+  kind = Simproc,
   lhss = [\<^pattern>\<open>_ \<Ztypecolon> _ \<s>\<u>\<b>\<j> x. \<top>\<close>],
   proc = fn _ => fn ctxt => fn ctm =>
     case Thm.term_of ctm
@@ -766,7 +768,7 @@ val BI_Ex_embed_proc = Simplifier.make_simproc \<^context> {
 \<close>
 
 setup \<open>Context.theory_map (Phi_Conv.Embed_into_Phi_Type.map (fn ctxt =>
-  ctxt addsimprocs [BI_Ex_embed_P, BI_Ex_embed_proc])
+  ctxt |> fold Simplifier.add_proc [BI_Ex_embed_P, BI_Ex_embed_proc])
 )\<close>
 
 

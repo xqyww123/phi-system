@@ -12,7 +12,7 @@ begin
 (*subsubsection \<open>Syntax & Auxiliary\<close>
 
 definition "addr_allocated heap addr \<longleftrightarrow> MemAddress addr \<in> dom heap"
-adhoc_overloading allocated addr_allocated
+adhoc_overloading allocated \<rightleftharpoons> addr_allocated
 
 (* lemma addr_allocated_mono[dest]: "h \<subseteq>\<^sub>m h' \<Longrightarrow> addr_allocated h addr \<Longrightarrow> addr_allocated h' addr"
   unfolding addr_allocated_def by auto
@@ -25,7 +25,7 @@ lemma [iff]: "addr_allocated (h(k \<mapsto> v)) addr \<longleftrightarrow> k = M
 
 definition MemAddrState :: "heap \<Rightarrow> nat addr \<Rightarrow> 'b::lrep set \<Rightarrow> bool"
   where "MemAddrState h addr S \<longleftrightarrow> addr_allocated h addr \<and> shallowize (the (h (MemAddress addr))) \<in> S"
-adhoc_overloading ResourceState MemAddrState
+adhoc_overloading ResourceState \<rightleftharpoons> MemAddrState
 
 (*lemma MemAddrState_mono[dest]: "h \<subseteq>\<^sub>m h' \<Longrightarrow> MemAddrState h addr S \<Longrightarrow> MemAddrState h' addr S"
   unfolding MemAddrState_def addr_allocated_def by auto (metis \<phi>set_mono domI map_le_def option.sel) *)

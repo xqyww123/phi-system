@@ -246,11 +246,11 @@ type encoding = term (*either F_Gs_encoding or G_F_encoding*)
 datatype swap_direction = S_In | S_Out
 
 fun encoding_F_Gs (F,Gs) =
-  let fun is_dddot (Var (N, _)) = N = Auto_Bind.dddot
+  let fun is_dddot (Var (N, _)) = N = Auto_Bind.dddot_indexname
         | is_dddot _ = false
       fun pass_dddot [] = [] (*disabled: (*with the tailing unit, dddot can match zero or any terms*)*)
         | pass_dddot [X] =
-            if is_dddot X then [Var (Auto_Bind.dddot, \<^typ>\<open>prop\<close>)] else [X]
+            if is_dddot X then [Var (Auto_Bind.dddot_indexname, \<^typ>\<open>prop\<close>)] else [X]
         | pass_dddot (X::L) =
             if is_dddot X then error "\<open>\<dots>\<close> should only be seen at the last"
                           else Logic.mk_term X :: pass_dddot L

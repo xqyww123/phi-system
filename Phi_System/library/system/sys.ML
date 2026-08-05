@@ -185,7 +185,7 @@ fun set_param raw_term (ctxt,sequent) =
               val (N,term') = QuantExpansion.aggregate_vars_quantification ~1 term
               val sctxt = clear_simpset ctxt
                           addsimps QuantExpansion.aux_expansions ctxt
-                          addsimprocs [QuantExpansion.named_forall,
+                          |> fold Simplifier.add_proc [QuantExpansion.named_forall,
                                        QuantExpansion.named_ex,
                                        QuantExpansion.named_ExBI,
                                        QuantExpansion.named_metaAll]

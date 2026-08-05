@@ -53,7 +53,7 @@ val binding = \<^binding>\<open>simplification_protect\<close>
 val comment = "Rewrite rules applied before simplification in order to protect any specific\
               \ assertion forms"
 
-fun ss_setup ctxt = ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>]
+fun ss_setup ctxt = ctxt |> fold Simplifier.add_proc [\<^simproc>\<open>NO_MATCH\<close>]
 
 
 val _ = Theory.setup (

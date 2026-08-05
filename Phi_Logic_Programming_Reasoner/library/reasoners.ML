@@ -626,7 +626,7 @@ fun collect_obligation_premises option ctxt thm = let open Conv
               then case Local_Premises_of_Obligation.get ctxt
                 of [] => rule1
                  | L => let val fact = map (Conv.fconv_rule (Object_Logic.atomize ctxt)) L
-                                    |> foldl1 (uncurry (HOLogic.conj_intr ctxt))
+                                    |> foldl1 (uncurry HOLogic.conj_intr)
                          in fact RS (@{thm' contract_add_additional_prems} RS rule1)
                         end
               else rule1*)
@@ -817,7 +817,7 @@ fun prove_or_rebute can_inst ctxt ctxt0 =
                   end
              | _ => raise Unsupported
         val goals = map (fn goal =>
-                      Goal.init (conv_goal (Term.declare_term_frees (Thm.term_of goal) Name.context) goal)
+                      Goal.init (conv_goal (Term.declare_free_names (Thm.term_of goal) Name.context) goal)
                     ) goals
         val goals = if can_inst
                     then Variable.import false goals ctxt |> #1 |> #2

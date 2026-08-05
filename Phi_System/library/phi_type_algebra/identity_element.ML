@@ -254,7 +254,7 @@ fun gen_id_ele is_left (_,name) instruction (phi0 : phi_type) thy =
             ]
 
       val thy = thy
-              |> Bundle.includes ["IDE_CP_Applications1.abstract_domain_OPEN_MAKE"]
+              |> Bundle.includes [(true, "IDE_CP_Applications1.abstract_domain_OPEN_MAKE")]
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,

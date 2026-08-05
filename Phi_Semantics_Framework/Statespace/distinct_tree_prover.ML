@@ -1,6 +1,6 @@
 (*  Title:      HOL/Statespace/distinct_tree_prover.ML
-    
-    
+    Author:     Norbert Schirmer, TU Muenchen, 2007
+    Author:     Norbert Schirmer, Apple, 2021
 *)
 
 signature DISTINCT_TREE_PROVER =
@@ -225,7 +225,7 @@ fun find_in_set ctxt t ct =
   case find_tree t (Thm.term_of ct) of
     SOME ps => in_set ctxt ps ct
   | NONE => raise TERM ("find_in_set", [t, Thm.term_of ct])
-
+ 
 (*
 1. First get paths x_path y_path of x and y in the tree.
 2. For the common prefix descend into the tree according to the path
@@ -307,11 +307,11 @@ in
 fun subtractProver ctxt (Const (\<^const_name>\<open>Tip\<close>, T)) ct dist_thm =
       let
         val ct' = dist_thm |> Thm.cprop_of |> Thm.dest_comb |> #2 |> Thm.dest_comb |> #2;
-        val [alphaI] = #2 (dest_Type T);
+        val [alphaI] = dest_Type_args T;
       in
         Thm.instantiate
-          (TVars.make [(alpha, Thm.ctyp_of ctxt alphaI)],
-           Vars.make [((v, treeT alphaI), ct')]) @{thm subtract_Tip}
+          (TVars.make1 (alpha, Thm.ctyp_of ctxt alphaI),
+           Vars.make1 ((v, treeT alphaI), ct')) @{thm subtract_Tip}
       end
   | subtractProver ctxt (Const (\<^const_name>\<open>Node\<close>, nT) $ l $ x $ d $ r) ct dist_thm =
       let
@@ -366,6 +366,7 @@ fun distinctFieldSolver names =
 fun distinct_simproc names =
   Simplifier.make_simproc \<^context>
    {name = "DistinctTreeProver.distinct_simproc",
+    kind = Simproc,
     lhss = [\<^term>\<open>x = y\<close>],
     proc = fn _ => fn ctxt => fn ct =>
       (case Thm.term_of ct of

@@ -44,10 +44,10 @@ val _ =
     (Scan.repeat (Attrib.thm -- Scan.lift (Args.parens Args.name)))
     (fn ctxt =>
       map (fn (thm, name) =>
-        Output.output
+        Latex.output_
           (Document_Antiquotation.format ctxt
             (Document_Antiquotation.delimit ctxt (Document_Output.pretty_thm ctxt thm))) ^
-        enclose "\\rulename{" "}" (Output.output name))
+        enclose "\\rulename{" "}" (Latex.output_ name))
       #> space_implode "\\par\\smallskip%\n"
       #> Latex.string
       #> Document_Output.isabelle ctxt));
@@ -91,7 +91,7 @@ fun entity check markup binding index =
           if Context_Position.is_reported ctxt pos then ignore (check ctxt (name, pos)) else ();
         val latex =
           idx ^
-          (Output.output name
+          (Latex.output_ name
             |> (if markup = "" then I else enclose ("\\" ^ markup ^ "{") "}")
             |> hyper o enclose "\\mbox{\\isa{" "}}");
       in Latex.string latex end);
@@ -123,7 +123,8 @@ val _ =
     entity_antiqs no_check "isasystem" \<^binding>\<open>executable\<close> #>
     entity_antiqs Isabelle_Tool.check "isatool" \<^binding>\<open>tool\<close> #>
     entity_antiqs ML_Context.check_antiquotation "" \<^binding>\<open>ML_antiquotation\<close> #>
-    entity_antiqs (K JEdit.check_action) "isasystem" \<^binding>\<open>action\<close>);
+    entity_antiqs (K JEdit.check_action) "isasystem" \<^binding>\<open>action\<close> #>
+    entity_antiqs Markup_Kind.check_notation_kind "" \<^binding>\<open>notation_kind\<close>);
 
 end;
 

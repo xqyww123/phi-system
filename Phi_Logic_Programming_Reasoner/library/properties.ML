@@ -368,8 +368,8 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
             end
 
       val compact_deps = map_filter I (#1 template)
-      val ty_frees = fold (fold_types Term.declare_typ_names) compact_deps Name.context
-      val tm_frees = fold Term.declare_term_frees compact_deps Name.context
+      val ty_frees = fold Term.declare_tfree_names compact_deps Name.context
+      val tm_frees = fold Term.declare_free_names compact_deps Name.context
       val ty_vars = fold Term.add_tvars compact_deps []
       val tm_vars = fold Term.add_vars compact_deps []
       val (ty_fixes_names, _) = fold_map Name.variant (map (fst o fst) ty_vars) ty_frees

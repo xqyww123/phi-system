@@ -489,6 +489,7 @@ structure Expansion = Simpset (
 fun case_split_simproc rule (simproc_name, name) ctxt0 =
   Simplifier.make_simproc ctxt0 {
       name = simproc_name,
+      kind = Simproc,
       lhss = [Thm.term_of (Thm.lhs_of rule)],
       proc = fn _ => fn ctxt => fn ctm =>
         case Thm.term_of ctm
@@ -509,7 +510,7 @@ fun case_split_simproc rule (simproc_name, name) ctxt0 =
 val _ = Theory.setup (Context.theory_map (
 
   Expansion.map (fn ctxt =>
-    (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExBI_expand_quantifier\<close>,
+    (ctxt |> fold Simplifier.add_proc [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExBI_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
                        \<^simproc>\<open>Funcomp_Lambda\<close>, (*\<^simproc>\<open>defined_ExBI\<close>,*)
                        case_split_simproc @{thm' split_paired_all[folded atomize_eq]} ("split_paired_all-case_split", \<^const_name>\<open>case_prod\<close>) ctxt,
@@ -567,6 +568,7 @@ local
       | is_atom _ = false
 in val eq_simproc = Simplifier.make_simproc \<^context> {
     name = "Phi_Type.eq",
+    kind = Simproc,
     lhss = [\<^pattern>\<open>_ = _\<close>],
     proc = fn _ => fn ctxt => fn ctm =>
       case Thm.term_of ctm

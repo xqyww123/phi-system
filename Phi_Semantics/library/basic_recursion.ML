@@ -30,7 +30,7 @@ fun mk_parameterized_schematic_proc mk_T mk_F ctxt arg_ty ret_ty var_name =
     fun add_cases  N X =
           if N <= 0 then X
           else Const (\<^const_name>\<open>\<phi>V_case_prod\<close>, dummyT) $ Abs ("", dummyT, add_cases (N-1) X)
-    val [(F_name,())] = Variable.variant_frees ctxt [] [(var_name,())]
+    val [(F_name,())] = Variable.variant_names ctxt [(var_name,())]
     val var_F = Var ((F_name,0), f_T)
     val f' = (if N = 0 then var_F else mk_F (N-1) (add_cases (N-1) o add_bounds (N-1)) var_F)
           |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
@@ -137,7 +137,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
     val simp_ctxt = clear_simpset ctxt
               addsimps (@{thms \<phi>V_simps named.case prod.sel id_apply} @
                         QuantExpansion.aux_expansions ctxt)
-              addsimprocs [QuantExpansion.named_metaAll,
+              |> fold Simplifier.add_proc [QuantExpansion.named_metaAll,
                            QuantExpansion.named_forall]
     fun spec thm = spec (thm RS @{thm spec})
                    handle THM _ => thm

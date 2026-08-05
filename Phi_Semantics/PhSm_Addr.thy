@@ -91,7 +91,7 @@ subsection \<open>Address Type\<close>
 definition address_type :: \<open>address \<Rightarrow> TY\<close>
   where \<open>address_type addr \<equiv> index_type (addr.offset addr) (block.layout (addr.blk addr))\<close>
 
-adhoc_overloading Type_Of_syntax address_type
+adhoc_overloading Type_Of_syntax \<rightleftharpoons> address_type
 
 
 

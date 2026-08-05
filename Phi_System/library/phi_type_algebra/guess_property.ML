@@ -87,7 +87,7 @@ fun guess_conditions ctxt0 (const, is_covar) phi T_term0 =
                 end)
     | SOME ret =>
         let val filter' = filter flt o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
-            val name = Term.declare_term_frees (Thm.prop_of ret) Name.context
+            val name = Term.declare_free_names (Thm.prop_of ret) Name.context
             val (x_name, _) = Name.variant "\<x>" name
             fun filter_lambda func =
               let val x = Free (x_name, Term.domain_type (Term.fastype_of func))

@@ -394,7 +394,7 @@ definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"
                               ) ` f res))" 
 
 
-adhoc_overloading Monad_Syntax.bind bind
+adhoc_overloading Monad_Syntax.bind \<rightleftharpoons> bind
 
 definition \<open>det_lift f x = {f x}\<close>
 

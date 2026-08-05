@@ -117,7 +117,7 @@ fun bad_syntax (title, m, name) =
   let open Pretty in error (string_of (
     block ( text "Bad Syntax:"
           @ (case title of SOME t => [brk 1, str t] | _ => [])
-          @ [brk 1, mark_str (Position.markup (snd name) m, fst name)] )
+          @ [brk 1, mark_str (Position.markup_properties (snd name) m, fst name)] )
   )) end
 
 fun chk_complete_eval mode (title, m, name) (ctxt, sequent) =
@@ -125,7 +125,7 @@ fun chk_complete_eval mode (title, m, name) (ctxt, sequent) =
   else error (let open Pretty in string_of (
          chunks [block ( text "Evaluation of"
                        @ (case title of SOME t => [brk 1, str t] | _ => [])
-                       @ [brk 1, mark_str (Position.markup (snd name) m, fst name)]
+                       @ [brk 1, mark_str (Position.markup_properties (snd name) m, fst name)]
                        @ text "fails. There are unsolved antecedents or proof obligations"),
                  Thm.pretty_thm ctxt sequent]
        ) end)

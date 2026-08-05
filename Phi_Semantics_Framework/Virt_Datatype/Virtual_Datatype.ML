@@ -351,6 +351,7 @@ val distinctNameSolver = mk_solver "distinctNameSolver" distinctTree_tac;
 val distinct_simproc =
   Simplifier.make_simproc \<^context>
    {name = "StateSpace.distinct_simproc",
+    kind = Simproc,
     lhss = [\<^term>\<open>Field.name x = Field.name y\<close>],
     proc = fn _ => fn ctxt => fn ct =>
       (case Thm.term_of ct of
@@ -402,7 +403,7 @@ fun cons_definition name nameT parent_expr parent_comps new_comps thy =
           val tt' = tt |> fold upd all_names;
           val context' =
               Context_Position.set_visible false ctxt
-              addsimprocs [distinct_simproc]
+              |> fold Simplifier.add_proc [distinct_simproc]
               |> Context_Position.restore_visible ctxt
               |> Context.Proof
               |> ConstructorData.put {declinfo=declinfo,distinctthm=tt',silent=silent};
@@ -620,7 +621,7 @@ fun gen_define_VDT prep_typ' (value_sort,project_injectL)
 
     val prep_typ = apfst translate_self_to_rep ooo prep_typ'
 
-    val base' = Option.map (Locale.check thy) base
+    val base' = Option.map (Locale.check_global thy) base
 
     val ctxt = case base' of SOME t => Locale.init t thy
                            | NONE => Proof_Context.init_global thy
@@ -633,7 +634,7 @@ fun gen_define_VDT prep_typ' (value_sort,project_injectL)
             ("", mandatory) => (fst pname, mandatory)
           | _ => prefix);
 
-        val full_pname = Locale.check thy pname;
+        val full_pname = Locale.check_global thy pname;
         val quote = quote o fst
         val {args,components,...} =
               (case get_VDT (Context.Theory thy) full_pname of
@@ -704,7 +705,7 @@ fun gen_define_VDT prep_typ' (value_sort,project_injectL)
     (*TODO!!!*)
     val err_extra_frees = []
 
-    val project_injectL = Locale.check thy project_injectL
+    val project_injectL = Locale.check_global thy project_injectL
 
 
     fun fst_eq ((x:string,_),(y,_)) = x = y;

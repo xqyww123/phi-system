@@ -225,14 +225,22 @@ section \<open>Array in Memory\<close>
 
 subsection \<open>Syntax\<close>
 
+(*\<^const>\<open>Array\<close> is notated, so since Isabelle2025 its head arrives wrapped in a positional
+  constraint and is no longer a literal \<^ML>\<open>Const\<close>.  Only the test needs to see through the
+  wrapper: this handler does not rebuild the node but replaces it outright, so there is no original
+  head to keep.*)
 setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 110 (
-    fn ((ctxt,i), f, Const(\<^const_syntax>\<open>Array\<close>, _) $ n $ T) =>
-        SOME (Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, dummyT)
-                $ \<^Const>\<open>AgIdx_N \<^Type>\<open>sVAL\<close>\<close>
-                $ (\<^Const>\<open>Len_Intvl \<^Type>\<open>nat\<close>\<close> $ HOLogic.zero $ n)
-                $ f (ctxt,0) T)
-     | X => NONE)
+    fn ((ctxt,_), f, tm) =>
+      (case Phi_Syntax_Constraint.dest_comb_pos tm
+         of (Const _, h, [n, T]) =>
+              if Phi_Syntax_Constraint.is_head [\<^const_syntax>\<open>Array\<close>] h
+              then SOME (Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, dummyT)
+                           $ \<^Const>\<open>AgIdx_N \<^Type>\<open>sVAL\<close>\<close>
+                           $ (\<^Const>\<open>Len_Intvl \<^Type>\<open>nat\<close>\<close> $ HOLogic.zero $ n)
+                           $ f (ctxt,0) T)
+              else NONE
+          | _ => NONE))
 )\<close>
 
 

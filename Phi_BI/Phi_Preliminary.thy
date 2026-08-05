@@ -85,7 +85,7 @@ end
 
 setup \<open>Context.theory_map (
      Phi_Programming_Base_Simp_SS.map (fn ctxt =>
-       ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>defined_Ex\<close>])
+       ctxt |> fold Simplifier.add_proc [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>defined_Ex\<close>])
   #> Phi_Programming_Simp_Hook.add 1000 (fn _ => fn ctxt =>
        ctxt delsimps @{thms' One_nat_def}))\<close>
 

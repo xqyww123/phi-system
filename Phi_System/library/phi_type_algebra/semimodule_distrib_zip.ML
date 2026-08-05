@@ -76,7 +76,7 @@ fun gen_MDz is_zip (_, name) instruction (phi : phi_type) thy =
             (@{print} o Conv.rewr_conv (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rewr_pre}
                                       else @{thm' \<phi>TA_MD\<^sub>U_rewr_pre}))) ctm) o snd)
 
-      val thy = Bundle.includes ["Phi_Type.\<phi>TA_MD"] thy
+      val thy = Bundle.includes [(true, "Phi_Type.\<phi>TA_MD")] thy
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
                                       [(SOME (if is_zip

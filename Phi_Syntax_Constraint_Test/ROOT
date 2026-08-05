@@ -1,0 +1,13 @@
+(*A session of its own rather than a theory inside Phi_Test, so that it can be built in seconds
+  right after Phi_System and used as a fast gate.  Its subject is the syntax layer alone, so it
+  deliberately depends on neither the semantics nor the standard library.*)
+session "Phi_Syntax_Constraint_Test" = "Phi_System" +
+  description "
+    Regression tests for the positional constraints that Isabelle wraps around the head of a
+    notated application.  When such a constraint stops a syntax translation from matching, the
+    failure is silent -- a value list comes out short, a subjection collapses -- so an ordinary
+    session can go on building green while the specifications it accepts have quietly changed
+    meaning.  Nothing here can be left to the ordinary sessions to catch.
+  "
+  theories
+    Phi_Syntax_Constraint_Test

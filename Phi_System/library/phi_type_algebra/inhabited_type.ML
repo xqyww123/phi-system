@@ -59,7 +59,7 @@ fun gen_inhabited_type (_, name) instruction (phi0 : phi_type) thy =
 
       val thy' = thy
               |> Config.put Phi_Reasoner.ignore_dup_reasoner true
-              |> Bundle.includes ["Phi_BI.deriving_intabited_type"]
+              |> Bundle.includes [(true, "Phi_BI.deriving_intabited_type")]
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' inh_typ_derv_rule},

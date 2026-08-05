@@ -56,9 +56,12 @@ fun string_of_proof_method ss meth =
   let
     val meth_s =
       (case meth of
-        Metis_Method (NONE, NONE) => "metis"
-      | Metis_Method (type_enc_opt, lam_trans_opt) =>
-        "metis (" ^ commas (map_filter I [type_enc_opt, lam_trans_opt]) ^ ")"
+        Metis_Method (NONE, NONE, additional_fact_names) =>
+        space_implode " " ("metis" :: additional_fact_names)
+      | Metis_Method (type_enc_opt, lam_trans_opt, additional_fact_names) =>
+        space_implode " "
+          (("metis (" ^ commas (map_filter I [type_enc_opt, lam_trans_opt]) ^ ")")
+            :: additional_fact_names)
       | Meson_Method => "meson"
       | SMT_Method SMT_Z3 => "smt (z3)"
       | SMT_Method (SMT_Verit strategy) =>
@@ -99,10 +102,10 @@ fun one_line_proof_text (used_facts, meth, subgoal_count) =
 end
 
 val silence_state =
-      Proof.map_contexts (Try0.silence_methods false #> Config.put SMT_Config.verbose false)
+      Proof.map_contexts (Try0_HOL.silence_methods #> Config.put SMT_Config.verbose false)
 
 val debug_state =
-      Proof.map_contexts (Try0.silence_methods false #> Config.put SMT_Config.verbose true
+      Proof.map_contexts (Try0_HOL.silence_methods #> Config.put SMT_Config.verbose true
           #> Config.put SMT_Config.trace true #> Config.put SMT_Config.statistics true )
 
 fun time_ord (t1 : Time.time, t2) =
@@ -170,17 +173,24 @@ fun eval_prf_str_stat timeout F_None prf stat =
 
 exception SH_Short_Cut of string
 
+(*Isabelle2025-2: the suggested proof command lives inside a \<open>sendback\<close> markup element
+  (Active.sendback_markup_command); the slice between the 2nd and 3rd control character that
+  used to delimit it now lands on an inserted \<open>Markup.break " "\<close>. Messages carrying no
+  sendback element (e.g. "... found a proof ...") are just logged.*)
 fun dirty_hack ret stat s =
-  let fun find c s = CharVector.foldri (fn (i, c', ret) => if c' = c then i :: ret else ret) [] s
-      val inds = find #"\^E" s
-   in if length inds < 4
-      then tracing s
-      else let
-        val i2 = List.nth (inds, 1)
-        val i3 = List.nth (inds, 2)
-        val i4 = List.nth (inds, 3)
-        val s_prf = String.substring (s, i2+1, i3 - 1 -i2)
-        val preplay_succeeded = is_some (CharVector.findi (fn (i,c) => i > i4 andalso c = #"(") s)
+  let fun tree_text (XML.Elem (_, ts)) = String.concat (map tree_text ts)
+        | tree_text (XML.Text t) = t
+      fun find_sendback (XML.Elem ((name, _), ts)) =
+            if name = Markup.sendbackN then SOME (String.concat (map tree_text ts))
+            else get_first find_sendback ts
+        | find_sendback (XML.Text _) = NONE
+   in case get_first find_sendback (YXML.parse_body s)
+   of NONE => tracing s
+    | SOME s_prf => let
+        (*a preplay time suffix reads "(NN ms)"/"(NN s)", i.e. a "(" followed by a digit,
+          whereas the parens of a proof command ("(metis ...") are followed by a letter*)
+        val preplay_succeeded = is_some (CharVector.findi (fn (i,c) =>
+              c = #"(" andalso i + 1 < size s andalso Char.isDigit (String.sub (s, i + 1))) s)
         fun trans toks =
           let val toks1 = case toks of [] => raise Fail "internal bug #e12asfwgy43"
                                      | (tok::L) =>
@@ -438,7 +448,7 @@ fun auto'i id (ctxt,sequent') =
 
      fun update_cache hash (prf', (ctxt, sequent')) = (
            Phi_Reasoner.info_print ctxt 1 (fn () =>
-              "Find proof (" ^ id ^ ", time: " ^ Value.print_time (fst prf') ^ "): " ^
+              "Find proof (" ^ id ^ ", time: " ^ Time.print (fst prf') ^ "): " ^
                (if snd prf' = "" then "classical automation" else "\n" ^ snd prf')
            ) ;
            Phi_Cache_DB.update_hash_cache hash prf';

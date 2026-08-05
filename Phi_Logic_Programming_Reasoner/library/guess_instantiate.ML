@@ -208,7 +208,7 @@ fun guess_inst_solver ctxt0 =
     FIRST' (map (Raw_Simplifier.solver ctxt)
       (rev (#1 (Raw_Simplifier.solvers ctxt0)))) n) st)
 
-fun add_guess_inst_looper ctxt = ctxt addloop ("inst_var_by_Ctr_sels", guess_inst_tac)
+fun add_guess_inst_looper ctxt = ctxt |> Simplifier.add_loop ("inst_var_by_Ctr_sels", guess_inst_tac)
 fun add_guess_inst_solver ctxt = Raw_Simplifier.set_solvers [guess_inst_solver ctxt] ctxt
 
 

@@ -9,7 +9,7 @@ val quantify_args_of_proc_term : bool (*whether to record the names in the quant
 val quantify_args_of_proc_term_meta : bool (*whether to record the names in the quantification*)
                          -> term -> term
 
-(* \<p>\<r>\<o>\<c> f ?a ?b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
+(* \<p>\<r>\<o>\<c> f ?a ?b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?b] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 --------------------------------------------------------------------------------------
    \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 *)

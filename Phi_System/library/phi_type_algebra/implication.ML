@@ -383,7 +383,7 @@ fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) (phi0 : 
                       HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)) ))
 
       val thy' = thy
-              |> Bundle.includes ["IDE_CP_Applications1.abstract_domain_OPEN_MAKE"]
+              |> Bundle.includes [(true, "IDE_CP_Applications1.abstract_domain_OPEN_MAKE")]
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(SOME (default_ind_inst (fn [x] => [SOME x]), K I), ind_conv, Inh_reasoning)],

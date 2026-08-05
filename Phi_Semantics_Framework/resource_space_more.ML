@@ -64,7 +64,7 @@ fun read_expr_maps thy (Expression.Positional terms)
       = Expression.Named (map (apsnd (read_expr_term thy)) terms)
 
 fun read_expr thy (xname, (m, rewr)) =
-      (Locale.check thy xname, (read_expr_maps thy m, map (apsnd (read_expr_term thy)) rewr))
+      (Locale.check_global thy xname, (read_expr_maps thy m, map (apsnd (read_expr_term thy)) rewr))
 
 fun maps2 _ [] [] = []
   | maps2 f (x :: xs) (y :: ys) = f x y @ maps2 f xs ys

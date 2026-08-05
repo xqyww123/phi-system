@@ -85,6 +85,7 @@ fun expand_aggregated_imps_hol Cp Cc ctm =
 val move_Ex_for_set_notation =
   Simplifier.make_simproc \<^context> {
   name = "Embed_into_Phi_Type.move_Ex",
+  kind = Simproc,
   lhss = [\<^term>\<open>\<exists>y. x = f y \<and> (\<exists>b. P y b)\<close>],
   proc = fn _ => fn _ => fn ctm =>
     case Thm.term_of ctm

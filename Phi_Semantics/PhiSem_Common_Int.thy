@@ -7,7 +7,7 @@ section \<open>Common Integer Base\<close>
 subsection \<open>Logic Syntax and Isabelle Syntax Hijack\<close>
 
 setup \<open>
-let val remove_synt = Sign.notation false Syntax.mode_default [
+let val remove_synt = Sign.notation_global false Syntax.mode_default [
     (Const (\<^const_abbrev>\<open>inter\<close>, dummyT), Infixl (Input.string "Int", 70, Position.no_range)),
     (Const (\<^const_abbrev>\<open>union\<close>, dummyT), Infixl (Input.string "Un", 65, Position.no_range)),
     (Const (\<^const_name>\<open>Nats\<close>, dummyT), Mixfix (Input.string "\<nat>", [], 1000, Position.no_range)),

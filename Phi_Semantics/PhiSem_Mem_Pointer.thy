@@ -345,7 +345,7 @@ definition addr_gep :: "address \<Rightarrow> aggregate_index \<Rightarrow> addr
 definition addr_geps :: "address \<Rightarrow> aggregate_path \<Rightarrow> address"
   where "addr_geps addr path = map_addr (\<lambda>idx. idx @ path) addr"
 
-adhoc_overloading access_to_ele_synt addr_gep
+adhoc_overloading access_to_ele_synt \<rightleftharpoons> addr_gep
 
 (*
 syntax "_addr_gep_" :: \<open>address \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> address\<close> (infixl "\<tribullet>" 55)

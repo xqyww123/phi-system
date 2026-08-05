@@ -323,6 +323,7 @@ val distinctNameSolver = mk_solver "distinctNameSolver" distinctTree_tac;
 val distinct_simproc =
   Simplifier.make_simproc \<^context>
    {name = "StateSpace.distinct_simproc",
+    kind = Simproc,
     lhss = [\<^term>\<open>kind.name x = kind.name y\<close>],
     proc = fn _ => fn ctxt => fn ct =>
       (case Thm.term_of ct of
@@ -374,7 +375,7 @@ fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
           val tt' = tt |> fold upd all_names;
           val context' =
               Context_Position.set_visible false ctxt
-              addsimprocs [distinct_simproc]
+              |> fold Simplifier.add_proc [distinct_simproc]
               |> Context_Position.restore_visible ctxt
               |> Context.Proof
               |> EntryData.put {distinctthm=tt',silent=silent};
@@ -580,7 +581,7 @@ fun gen_define_Resource_Locale prep_typ prep_term prep_sort prep_data
       *)
     val _ = writeln ("Defining Resource_Locale " ^ Binding.print name_b ^ " ...");
 
-    val target' = Option.map (Locale.check thy) target
+    val target' = Option.map (Locale.check_global thy) target
 
     val ctxt = case target' of SOME t => Locale.init t thy
                              | NONE => Proof_Context.init_global thy
@@ -592,7 +593,7 @@ fun gen_define_Resource_Locale prep_typ prep_term prep_sort prep_data
             ("", mandatory) => (fst pname, mandatory)
           | _ => prefix);
 
-        val full_pname = Locale.check thy pname;
+        val full_pname = Locale.check_global thy pname;
         val quote = quote o fst
         val {args,components,...} =
               (case get_Resource_Locale (Context.Theory thy) full_pname of
@@ -662,7 +663,7 @@ fun gen_define_Resource_Locale prep_typ prep_term prep_sort prep_data
     (*TODO!!!*)
     val err_extra_frees = []
 
-    val project_injectL = Locale.check thy project_injectL
+    val project_injectL = Locale.check_global thy project_injectL
 
 
     fun fst_eq ((x:string,_),(y,_)) = x = y;

@@ -28,7 +28,7 @@ signature PHI_TOPLEVEL = sig
         -> xstring (*output*)
         -> xstring option (*throws*)
         -> (binding * string option * mixfix) list (*for fixes*)
-        -> (xstring * Position.T) list (*includes*)
+        -> Bundle.xname list (*includes*)
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
@@ -43,7 +43,7 @@ signature PHI_TOPLEVEL = sig
         -> xstring option (*throws*)
         -> ((binding * string option * mixfix) list * (*variants*)
             (binding * string option * mixfix) list   (*for fixes*))
-        -> (xstring * Position.T) list (*includes*)
+        -> Bundle.xname list (*includes*)
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
@@ -68,7 +68,7 @@ val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 (* Library *)
 
 fun print_results int = Proof_Display.print_results
-                            {interactive=int, pos=Position.thread_data (), proof_state=false}
+                            {interactive=int, pos=Position.thread_data ()}
 
 fun prep_decls prep_var raw_vars ctxt =
   let
@@ -141,7 +141,7 @@ structure Finishing_Construction_Hooks = Hooks (type arg = unit
 structure Begining_Procedures = Hooks (
   type arg = unit
   type state = {
-    includes: string list,
+    includes: Bundle.name list,
     assms: (typ, term, thm list) Element.ctxt list,
     concls: (typ, term) Element.stmt,
     after_qed: thm list list -> Proof.context -> Proof.context,
@@ -196,7 +196,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
   let
     val free_fixed_outside = Variable.names_of lthy
 
-    val includes = includes |> map (Bundle.check lthy)
+    val includes = includes |> map (Bundle.check_name lthy)
     val ((fixes,var_names), ctxt_parse) = lthy
                                        |> not (null includes) ? Bundle.includes includes
                                        |> prep_decls prep_var rawfixes
@@ -253,8 +253,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
         |> Phi_Procedure.define def_const binding
         |> (fn (lthy, th) =>
               (Proof_Display.print_results {interactive = int,
-                                            pos = Binding.pos_of (fst binding),
-                                            proof_state = false} lthy
+                                            pos = Binding.pos_of (fst binding)} lthy
                 (("\<phi>procedure", ""), [("", [th])]); lthy))
 
     val defines = map (prep_attrterm parse_prop) raw_defines
@@ -271,7 +270,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
               includes assms concls int
          |> Proof.map_context (fn ctxt =>
               ctxt |> Context_Position.set_visible false
-                 (* |> (fn ctxt => ctxt addsimprocs [Semantic_Type_Tools.unfold_typeof_simproc]) *)
+                 (* |> (fn ctxt => ctxt |> fold Simplifier.add_proc [Semantic_Type_Tools.unfold_typeof_simproc]) *)
                    |> Context_Position.restore_visible ctxt
                    |> Phi_ID.set_construct (Binding.name_of (fst binding))
                    |> Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)

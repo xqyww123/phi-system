@@ -22,6 +22,7 @@ val setup_semty_ntup_to_poison =
   Simplifier.define_simproc {
       passive = false,
       name = \<^binding>\<open>semty_ntup_to_poison\<close>,
+      kind = Simproc,
       lhss = [\<^term>\<open>semty_ntup X\<close>],
       proc = fn _ => fn ctxt => fn ctm =>
         case Thm.term_of ctm

@@ -47,6 +47,7 @@ fun unfold_typeof _ ctxt cterm =
 
 val unfold_typeof_simproc = Simplifier.make_simproc \<^context> {
         name = "\<phi>.\<t>\<y>\<p>\<e>\<o>\<f>",
+        kind = Simproc,
         lhss = [\<^pattern>\<open>\<t>\<y>\<p>\<e>\<o>\<f> ?T\<close>],
         proc = unfold_typeof,
         identifier = []

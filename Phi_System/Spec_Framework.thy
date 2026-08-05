@@ -40,18 +40,18 @@ optional_translations (do_notation)
   "x" <= "CONST \<phi>arg x"
 
 print_translation \<open>[
-  (\<^const_syntax>\<open>bind_do\<close>, fn _ => (
+  (\<^const_syntax>\<open>bind_do\<close>, fn ctxt => (
     fn (*[A, Abs B] =>
           Const(\<^const_syntax>\<open>bind_do\<close>, dummyT)
             $ A
-            $ (case Syntax_Trans.atomic_abs_tr' B
+            $ (case Syntax_Trans.atomic_abs_tr' ctxt B
                  of (f,x) => Const(\<^syntax_const>\<open>_abs\<close>, dummyT) $ f $ x)
      |*) [A, Const ("_abs", _) $ _ $ _] => raise Match
      | [_, Abs _] => raise Match
      | [A, B] =>
           Const(\<^const_syntax>\<open>bind_do\<close>, dummyT)
             $ A
-            $ (case Syntax_Trans.atomic_abs_tr' ("_", dummyT, Term.incr_boundvars 1 B $ Bound 0)
+            $ (case Syntax_Trans.atomic_abs_tr' ctxt ("_", dummyT, Term.incr_boundvars 1 B $ Bound 0)
                  of (f,x) => Const(\<^syntax_const>\<open>_abs\<close>, dummyT) $ f $ x) ))
 ]\<close>
 
@@ -241,7 +241,7 @@ definition SType_Of' :: \<open>VAL BI \<Rightarrow> TY\<close>
       then (@TY. Semantic_Type' A TY)
       else \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
 
-adhoc_overloading Type_Of_syntax SType_Of SType_Of'
+adhoc_overloading Type_Of_syntax \<rightleftharpoons> SType_Of SType_Of'
 
 lemma SType_Of'_implies_SType_Of:
   \<open> (\<And>x. \<t>\<y>\<p>\<e>\<o>\<f> (x \<Ztypecolon> T) = TY)

@@ -59,8 +59,16 @@ abbreviation MemObj ("\<o>\<b>\<j>[_] _" [10,901] 900)
   where \<open>\<o>\<b>\<j>[addr] T \<equiv> Mem addr (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<phi>\<s>\<u>\<b>\<j> address_to_base addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
 *)
 
-consts Mem_synt :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
-       may_mem_coerce :: \<open>('c, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close>
+consts may_mem_coerce :: \<open>('c, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close>
+
+(*\<open>\<m>\<e>\<m>[_] _\<close> is a syntax constant, not a logical one: a parse translation is dispatched on the head
+  of the application (\<^ML>\<open>Syntax_Phases\<close>, \<open>ast_to_term\<close>), and since Isabelle2025 the head of an
+  application is wrapped in a positional constraint whenever it is a LOGICAL constant carrying
+  mixfix syntax -- upon which the dispatch no longer reaches it, and the translation below is handed
+  an empty argument list instead of \<open>[addr, T]\<close>.  A syntax constant is never wrapped, which is why
+  every parse translation in the Isabelle distribution is keyed on one.*)
+syntax "_Mem_synt" :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
+syntax_consts "_Mem_synt" \<rightleftharpoons> Mem
 
 \<phi>adhoc_overloading may_mem_coerce \<open>\<lambda>x. x\<close> Mem_Coercion
 
@@ -84,14 +92,14 @@ print_translation \<open>
           of SOME ret => ret
            | NONE => (case term of Const(\<^const_syntax>\<open>Mem_Coercion\<close>, _) $ X => X
                                  | _ => term)
-   in Const(\<^const_syntax>\<open>Mem_synt\<close>, dummyT)
+   in Const(\<^syntax_const>\<open>_Mem_synt\<close>, dummyT)
     $ addr
     $ print ctxt T
   end )]
 \<close>
 
 parse_translation \<open>[
-  (\<^const_syntax>\<open>Mem_synt\<close>, fn ctxt => fn [addr, T] =>
+  (\<^syntax_const>\<open>_Mem_synt\<close>, fn ctxt => fn [addr, T] =>
   let val parsers = Phi_Mem_Parser.invoke (Context.Proof ctxt)
       fun parse ctxt term =
         case parsers (ctxt, parse, term)
@@ -105,14 +113,24 @@ parse_translation \<open>[
   end)
 ]\<close>
 
+(*\<open>\<^emph>\<close> and \<open>\<phi>Share\<close> are notated, so since Isabelle2025 their heads arrive wrapped in a positional
+  constraint; the heads are recognized through the wrapper and the term is rebuilt from the ORIGINAL
+  head, so that the wrapper -- and the source markup it carries -- survives.  Note \<^ML>\<open>Phi_Syntax_Constraint.is_head\<close>
+  answers only for a bare constant underneath, so the nested-product test below still means "A IS the
+  bare \<open>\<^emph>\<close> constant", exactly as the literal \<^ML>\<open>Const\<close> pattern it replaces did.*)
 setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 100 (
-    fn ((ctxt,i), f, Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ A $ B) =>
-         (case A of Const(\<^const_syntax>\<open>\<phi>Prod\<close>, _) => NONE (*nested product-sequence is rejected*)
-             | _ => SOME (Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ f (ctxt,i) A $ f (ctxt,i+1) B))
-     | (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Share\<close>, Ty) $ n $ T) =>
-          SOME (Const(\<^const_syntax>\<open>\<phi>Share\<close>, Ty) $ n $ f ctxt T)
-     | _ => NONE)
+    fn ((ctxt,i), f, tm) =>
+      (case Phi_Syntax_Constraint.dest_comb_pos tm
+         of (Const _, h, [A, B]) =>
+              if Phi_Syntax_Constraint.is_head [\<^const_syntax>\<open>\<phi>Prod\<close>] h
+              then if Phi_Syntax_Constraint.is_head [\<^const_syntax>\<open>\<phi>Prod\<close>] A
+                   then NONE (*nested product-sequence is rejected*)
+                   else SOME (Term.list_comb (h, [f (ctxt,i) A, f (ctxt,i+1) B]))
+              else if Phi_Syntax_Constraint.is_head [\<^const_syntax>\<open>\<phi>Share\<close>] h
+              then SOME (Term.list_comb (h, [A (*the share*), f (ctxt,i) B]))
+              else NONE
+          | _ => NONE))
 
 #>Phi_Mem_Printer.add 100 (
     fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Prod\<close>, T) $ A $ B) =>
@@ -127,25 +145,30 @@ consts Slice_synt :: \<open>nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<p
 
 translations "\<s>\<l>\<i>\<c>\<e>[start, len] T" == "\<big_ast>\<^sub>\<bbbT> CONST AgIdx_N \<lbrakk>start : len\<rwpar> T"
 
+(*This handler is reached only through the \<open>\<s>\<l>\<i>\<c>\<e>\<close> rule above -- the only producer of the shape --
+  and a rule's \<open>CONST c\<close> arrives bare, so the Isabelle2025 head wrapping does not actually reach it
+  and the literal \<^ML>\<open>Const\<close> patterns it replaces still matched.  The head test is made wrapper-aware
+  anyway, so that a producer added later through ordinary notation does not fail silently; the node
+  is rebuilt from its ORIGINAL parts, which keeps whatever markup they carry.
+
+  The \<^const>\<open>AgIdx_N\<close> position genuinely requires a \<open>CONST\<close> and always did: written as a plain
+  identifier it is still a \<^ML>\<open>Free\<close> at this stage, since it is \<open>decode_term\<close> -- which runs after the
+  parse translations -- that resolves an identifier to a constant.*)
 setup \<open>Context.theory_map (
   Phi_Mem_Parser.add 101 (
-    fn ((ctxt,_), f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2)
-                        $ iv
-                        $ T ) =>
-          SOME (Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2)
-                        $ iv
-                        $ f (ctxt,0) T )
-     | ((ctxt,_), f, Const(\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_name>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
-                        $ iv
-                        $ T ) =>
-          SOME (Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)
-                        $ Const(\<^const_syntax>\<open>AgIdx_N\<close>, Ty2) $ n $ m $ A
-                        $ iv
-                        $ f (ctxt,0) T )
-     | X => NONE)
+    fn ((ctxt,_), f, tm) =>
+      (case Phi_Syntax_Constraint.dest_comb_pos tm
+         of (Const _, h, [idx, iv, T]) =>
+              if Phi_Syntax_Constraint.is_head [\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>] h
+                 andalso Phi_Syntax_Constraint.is_head [\<^const_syntax>\<open>AgIdx_N\<close>] idx
+              then SOME (Term.list_comb (h, [idx, iv, f (ctxt,0) T]))
+              else NONE
+          | (Const _, h, [idx, n, m, A, iv, T]) =>
+              if Phi_Syntax_Constraint.is_head [\<^const_name>\<open>\<phi>Mul_Quant_Tree\<close>] h
+                 andalso Phi_Syntax_Constraint.is_head [\<^const_name>\<open>AgIdx_N\<close>] idx
+              then SOME (Term.list_comb (h, [idx, n, m, A, iv, f (ctxt,0) T]))
+              else NONE
+          | _ => NONE))
 
 #>Phi_Mem_Printer.add 101 (
     fn (ctxt, f, Const(\<^const_syntax>\<open>\<phi>Mul_Quant_Tree\<close>, Ty)

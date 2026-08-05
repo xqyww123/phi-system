@@ -297,7 +297,7 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<nat>('b::len))
         (if n < 2^(LENGTH('b) - 1) then of_nat n else - of_nat (2^LENGTH('b) - n))\<close>
   unfolding get_logical_int_from_semantic_int_def Ball_def
-  by (clarsimp; metis uint_nat unat_of_nat_len)
+  by (clarsimp simp add: uint_nat unat_of_nat_len)
 
 lemma [\<phi>reason %logical_spec_of_semantics]:
   \<open>get_logical_nat_from_semantic_int (n \<Ztypecolon> \<nat>('b::len)) n\<close>

@@ -2353,7 +2353,7 @@ instance "fmap" :: (type,sep_magma) sep_magma_1
   including fmap.lifting
   by (standard; transfer; simp)
   
-context includes fmap.lifting fset.lifting begin
+context includes fmap.lifting and fset.lifting begin
 
 lemma fmap_times_single[simp]:
   \<open>s |\<notin>| fmdom y \<Longrightarrow> y * fmupd s x fmempty = fmupd s x y\<close>

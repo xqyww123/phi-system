@@ -664,7 +664,7 @@ fun concl_of_goal st i =
 
 (* fun beta_eta_contract_leading_antecedent th =
   if (case Thm.prop_of th
-        of \<^const>\<open>Pure.imp\<close> $ X $ _ => Term.could_beta_eta_contract X
+        of \<^const>\<open>Pure.imp\<close> $ X $ _ => Phi_Help.could_beta_eta_contract X
          | _ => false)
   then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
                                          Conv.all_conv (Thm.cprop_of th)) th
@@ -842,7 +842,7 @@ fun gen_reason ctxt00 (handlers, trace, limit, tactics) =
 
                     val Z = if ngoals <= N
                             then raise Success (ctxt, th)
-                            else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
+                            else let val th' = if Phi_Help.could_beta_eta_contract (Thm.major_prem_of th)
                                                then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
                                                else th
                                      fun chk_guard pos M (ctxt, th) =

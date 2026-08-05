@@ -1179,8 +1179,8 @@ structure Gen_Open_Abstraction_SS = Simpset (
 ) \<close>
 
 setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
-          ctxt addsimprocs [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]
-               addsimps @{thms' HOL.simp_thms}
+          ctxt addsimps @{thms' HOL.simp_thms}
+            |> fold Simplifier.add_proc [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]
             |> Simplifier.add_cong @{thm' mk_symbol_cong}))\<close>
 
 
@@ -1318,9 +1318,16 @@ paragraph \<open>Sugar\<close>
             let val make = Const(\<^const_name>\<open>MAKE\<close>, dummyT)
                               $ (case n of NONE => Term.dummy
                                          | SOME N => HOLogic.mk_number \<^Type>\<open>nat\<close> N)
-                fun mark ((t1 as Const(\<^const_name>\<open>\<phi>Type\<close>, _)) $ t2 $ t3)
-                      = t1 $ t2 $ (make $ t3)
-                  | mark t3 = make $ t3
+                (*this runs on the raw pre-term, before \<^ML>\<open>Syntax.check_term\<close>, so since
+                  Isabelle2025 the \<open>\<Ztypecolon>\<close> head arrives wrapped in a positional constraint;
+                  the term is rebuilt from the original head so its markup survives*)
+                fun mark t =
+                  (case Phi_Syntax_Constraint.strip_comb_pos t
+                     of (h as Const _, [_, t3]) =>
+                          if Phi_Syntax_Constraint.is_head [\<^const_name>\<open>\<phi>Type\<close>] h
+                          then (case t of HA $ _ => HA $ (make $ t3) | _ => make $ t)
+                          else make $ t
+                      | _ => make $ t)
              in mark term
             end) term ) \<close>
 

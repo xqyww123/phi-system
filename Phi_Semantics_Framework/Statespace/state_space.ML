@@ -303,7 +303,7 @@ fun get_dist_thm2 ctxt x y =
 
     fun get_paths dist_thm =
       let
-        val ctree = Thm.cprop_of dist_thm |> Thm.dest_comb |> #2 |> Thm.dest_comb |> #2;
+        val ctree = Thm.cprop_of dist_thm |> Thm.dest_arg |> Thm.dest_arg;
         val tree = Thm.term_of ctree;
         val x_path = the (DistinctTreeProver.find_tree x tree);
         val y_path = the (DistinctTreeProver.find_tree y tree);
@@ -358,6 +358,7 @@ val distinctNameSolver = mk_solver "distinctNameSolver" distinctTree_tac;
 val distinct_simproc =
   Simplifier.make_simproc \<^context>
    {name = "StateSpace.distinct_simproc",
+    kind = Simproc,
     lhss = [\<^term>\<open>x = y\<close>],
     proc = fn _ => fn ctxt => fn ct =>
       (case Thm.term_of ct of
@@ -404,7 +405,7 @@ fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
           val tt' = tt |> fold upd all_names;
           val context' =
               Context_Position.set_visible false ctxt
-              addsimprocs [distinct_simproc]
+              |> Simplifier.add_proc distinct_simproc
               |> Context_Position.restore_visible ctxt
               |> Context.Proof
               |> NameSpaceData.put {declinfo=declinfo,distinctthm=tt',silent=silent};
@@ -414,7 +415,7 @@ fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
 
     val assume =
       ((Binding.name dist_thm_name, [attr]),
-        [(HOLogic.Trueprop $
+        [(HOLogic.mk_Trueprop
           (Const (\<^const_name>\<open>all_distinct\<close>, Type (\<^type_name>\<open>tree\<close>, [nameT]) --> HOLogic.boolT) $
             DistinctTreeProver.mk_tree (fn n => Free (n, nameT)) nameT
               (sort fast_string_ord all_comps)), [])]);
@@ -544,8 +545,8 @@ fun statespace_definition project_injectL value_sort Kd
       in Context.mapping I upd_prf ctxt end;
 
    fun string_of_typ T =
-      Print_Mode.setmp []
-        (Syntax.string_of_typ (Config.put show_sorts true (Syntax.init_pretty_global thy))) T;
+      Pretty.pure_string_of
+        (Syntax.pretty_typ (Config.put show_sorts true (Syntax.init_pretty_global thy)) T);
    val fixestate = (case state_type of
          NONE => []
        | SOME s =>
@@ -617,7 +618,7 @@ fun gen_define_statespace prep_typ state_space (value_sort,project_injectL,Kd) a
             ("", mandatory) => (fst pname, mandatory)
           | _ => prefix);
 
-        val full_pname = Locale.check thy pname;
+        val full_pname = Locale.check_global thy pname;
         val quote = quote o fst
         val {args,components,...} =
               (case get_statespace (Context.Theory thy) full_pname of
@@ -686,7 +687,7 @@ fun gen_define_statespace prep_typ state_space (value_sort,project_injectL,Kd) a
     (*TODO!!!*)
     val err_extra_frees = []
 
-    val project_injectL = Locale.check thy project_injectL
+    val project_injectL = Locale.check_global thy project_injectL
 
 
     fun fst_eq ((x:string,_),(y,_)) = x = y;

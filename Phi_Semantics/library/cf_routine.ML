@@ -58,7 +58,7 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
     val simp_ctxt = clear_simpset ctxt
               addsimps (@{thms \<phi>V_simps named.case prod.sel id_apply} @
                         QuantExpansion.aux_expansions ctxt)
-              addsimprocs [QuantExpansion.named_metaAll]
+              |> fold Simplifier.add_proc [QuantExpansion.named_metaAll]
     val rule = routine_rule
             |> Thm.instantiate (TVars.make [((("'names",0), \<^sort>\<open>type\<close>), names_ty)], Vars.empty)
             |> Drule.infer_instantiate ctxt [(("X" ,0), Thm.cterm_of ctxt X'),

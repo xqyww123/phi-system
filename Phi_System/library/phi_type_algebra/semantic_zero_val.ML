@@ -41,7 +41,7 @@ fun gen_semantic_zero_val (_, name) instruction (phi0 : phi_type) thy =
 
       val thy' = thy
               |> Config.put Phi_Reasoner.ignore_dup_reasoner true
-              |> Bundle.includes ["Spec_Framework.Semantic_Zero_Val_EIF_brute"]
+              |> Bundle.includes [(true, "Spec_Framework.Semantic_Zero_Val_EIF_brute")]
               |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property,

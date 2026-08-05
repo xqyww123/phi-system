@@ -41,26 +41,23 @@ fun add_trrules name rules thy =
    in thy
    |> Trrules.map (Name_Space.map_table_entry name (fn (flag,L) =>
         (flag' := flag ; (flag,rules @ L))))
-   |> (if !flag' then Sign.add_trrules else Sign.del_trrules) rules
+   |> Sign.translations_global (!flag') rules
   end
 
 
 fun read_trrules thy raw_rules =
   let
     val ctxt = Proof_Context.init_global thy;
-    val read_root =
-      #1 o dest_Type o Proof_Context.read_type_name {proper = true, strict = false} ctxt;
   in
-    raw_rules
-    |> map (Syntax.map_trrule (fn (r, s) => Syntax_Phases.parse_ast_pattern ctxt (read_root r, s)))
+    map (Syntax.parse_trrule ctxt) raw_rules
   end
 
 val equals = Parse.$$$ "=";
 
 val scan_value =
-      equals -- Args.$$$ "false" >> K (false, Sign.del_trrules) ||
-      equals -- Args.$$$ "true" >> K (true, Sign.add_trrules) ||
-      Scan.succeed (true, Sign.add_trrules)
+      equals -- Args.$$$ "false" >> K (false, Sign.translations_global false) ||
+      equals -- Args.$$$ "true" >> K (true, Sign.translations_global true) ||
+      Scan.succeed (true, Sign.translations_global true)
 
 fun define_group name description additional thy = thy
   |> define_group_i name

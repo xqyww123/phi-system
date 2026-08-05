@@ -864,7 +864,7 @@ fun check_deriving_ast ctxt (derv_ast : deriving_ast list) =
   let val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
       val thy = Context.theory_of ctxt
       fun chk_text text = ( Method.report text ; Method.check_text ctxt_parse (fst text))
-      val chk_bundles = map (Bundle.check ctxt_parse)
+      val chk_bundles = map (pair true o Bundle.check ctxt_parse)
       val chk_notes = map (apfst (Proof_Context.get_fact ctxt_parse) #>
                            apsnd (map (Attrib.attribute_cmd ctxt_parse)))
    in Derivings.empty
@@ -1613,7 +1613,7 @@ fun add_type {no_auto} (binding, term, def, pos, dervs, bundles, equality) thy =
   end
 
 fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =
-  let val bundles = map (Bundle.check ctxt) raw_bundles
+  let val bundles = map (pair true o Bundle.check ctxt) raw_bundles
       val ctxt'1 = open_proof_ctxt bundles ctxt
       val dervs = check_deriving_ast (Context.Proof ctxt'1) raw_derv
    in (dervs, bundles)

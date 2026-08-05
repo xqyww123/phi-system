@@ -267,7 +267,7 @@ fun gen_TF (der_id, name) instruction (phi0 : phi_type) thy0 =
 
       val thy  = if def_contains_satisfaction phi0 then thy0
                       |> Config.put Phi_Reasoner.ignore_dup_reasoner true
-                      |> Bundle.includes ["Phi_BI.ToA_extract_pure_sat"]
+                      |> Bundle.includes [(true, "Phi_BI.ToA_extract_pure_sat")]
                       |> Config.restore Phi_Reasoner.ignore_dup_reasoner thy0
                  else thy0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_TF, rule,

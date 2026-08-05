@@ -106,8 +106,9 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>simp_cong\<close> (Sc
   Thm.declaration_attribute (fn rule => fn generic =>
     let val (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ LHS $ _) = Thm.concl_of rule
         fun install ctxt =
-          ctxt addsimprocs [Simplifier.make_simproc ctxt {
+          ctxt |> fold Simplifier.add_proc [Simplifier.make_simproc ctxt {
               name = "\<phi>simp_cong",
+              kind = Simproc,
               lhss = [LHS],
               proc = K (cong rule),
               identifier = []

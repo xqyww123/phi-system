@@ -570,7 +570,7 @@ bundle extracting_Sufficient_Inhabitance_sat =
           Sufficient_Inhabitance_\<A>EIF_Sat [\<phi>reason %extract_pure_sat]
           Sufficient_Inhabitance_\<A>ESC_Sat [\<phi>reason %extract_pure_sat]
 bundle extracting_Inhabitance_sat begin
-  unbundle extracting_Inhabitance_Implication_sat extracting_Sufficient_Inhabitance_sat
+  unbundle extracting_Inhabitance_Implication_sat and extracting_Sufficient_Inhabitance_sat
 end
 
 lemma [\<phi>reason %extract_pure_all]:
@@ -1728,11 +1728,13 @@ parse_translation \<open>[
             = Const (\<^const_syntax>\<open>ExBI\<close>, dummyT) $ trans_one (Bs,trans B) A
         | trans B Bs
             = Const (\<^const_syntax>\<open>ExBI\<close>, dummyT) $ trans_one (Bs, (fn Bs =>
-                case P of(* Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free ("True",_) $ _
-                            => subst 0 Bs X
-                        |*) Const (\<^const_syntax>\<open>top\<close>, _)
-                            => subst 0 Bs X
-                        | _ => Const (\<^const_syntax>\<open>Subjection\<close>, dummyT) $ subst 0 Bs X $ subst 0 Bs P
+                (* \<open>\<top>\<close> is notated, so since Isabelle2025 its head arrives wrapped in a positional
+                   constraint; \<open>is_head\<close> recognizes it through the wrapper and, because it only
+                   answers for a bare constant underneath, still means "P IS \<open>\<top>\<close>" rather than
+                   "P's head is \<open>\<top>\<close>" *)
+                if Phi_Syntax_Constraint.is_head [\<^const_syntax>\<open>top\<close>] P
+                then subst 0 Bs X
+                else Const (\<^const_syntax>\<open>Subjection\<close>, dummyT) $ subst 0 Bs X $ subst 0 Bs P
               )) B
    in trans idts [] end)
 ]\<close>
@@ -3238,7 +3240,7 @@ bundle Identity_Element\<^sub>E_sat = Identity_Element\<^sub>E_\<A>EIF_sat [\<ph
                                Identity_Element\<^sub>E_\<A>ESC_sat [\<phi>reason %extract_pure_sat]
 
 bundle Identity_Element_sat begin
-  unbundle Identity_Element\<^sub>I_sat Identity_Element\<^sub>E_sat
+  unbundle Identity_Element\<^sub>I_sat and Identity_Element\<^sub>E_sat
 end
 
 
@@ -4696,12 +4698,12 @@ structure Assertion_SS = Simpset (
 )
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
-      (ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>HOL.defined_All\<close>,
+      (ctxt addsimps @{thms' Sum_Type.sum.case HOL.simp_thms}
+            |> fold Simplifier.add_proc [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>HOL.defined_All\<close>,
                          \<^simproc>\<open>defined_all\<close>, \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>,
                          \<^simproc>\<open>Set.defined_Bex\<close>, \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>,
                          \<^simproc>\<open>case_prod_eta\<close>, \<^simproc>\<open>Collect_mem\<close>,
-                         Phi_Conv.move_Ex_for_set_notation]
-            addsimps @{thms' Sum_Type.sum.case HOL.simp_thms})
+                         Phi_Conv.move_Ex_for_set_notation])
           (*|> Simplifier.add_cong @{thm' Subjection_cong}*)
     )))
 
@@ -4788,17 +4790,17 @@ ML_file \<open>library/reasoning/quantifier.ML\<close>
 simproc_setup defined_ExBI ( \<open>ExBI A\<close> ) = \<open>K BI_Quantifiers.defined_Ex\<close>
 
 setup \<open>Context.theory_map (Phi_Programming_Simp_Hook.add 100 (fn () => fn ctxt =>
-    ctxt delsimprocs [@{simproc defined_ExBI}]
-         delsimps @{thms' ExBI_defined}))
+    ctxt delsimps @{thms' ExBI_defined}
+         |> fold Simplifier.del_proc [@{simproc defined_ExBI}]))
 \<close>
 
 setup \<open>Context.theory_map (
   Assertion_SS_Source.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExBI}] ) #>
+    ctxt |> fold Simplifier.add_proc [@{simproc defined_ExBI}] ) #>
   Assertion_SS.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc Funcomp_Lambda}]) #>
+    ctxt |> fold Simplifier.add_proc [@{simproc Funcomp_Lambda}]) #>
   Phi_Safe_Simps.map (fn ctxt =>
-    ctxt addsimprocs [@{simproc defined_ExBI}, @{simproc Funcomp_Lambda}]))\<close>
+    ctxt |> fold Simplifier.add_proc [@{simproc defined_ExBI}, @{simproc Funcomp_Lambda}]))\<close>
 
 
 subsubsection \<open>Reasoners\<close>
