@@ -17,6 +17,20 @@ signature PLPR_PATTERN = sig
 type fixed_bounds = int -> bool
       (*whether the bound variable is fixed, so regarded as a normal free variable*)
 
+(*This is the upstream `Pure/pattern.ML' algorithm with `binders' initialised to
+  `bvs' -- the caller's contextual binders count as already entered -- plus one
+  relaxation: a contextual bound variable the caller declares fixed through
+  `fixed_bounds' may stay inside a binding stored into `tenv', which plain
+  upstream forbids.
+
+  The loose `Bound's in a term stored into `tenv' are numbered from the position
+  where `match' was called: entry k of `bvs' is always `Bound k', no matter how
+  deep inside the match the binding was found.  A consumer substituting such a
+  binding into a position under n binders must `Term.incr_boundvars n' it, and
+  must beta-normalise before asking what that depth is.
+
+  The `tenv' handed in must come from `match' calls with the SAME `bvs' and
+  `fixed_bounds': the repeated-schematic check in `cases' relies on it.*)
 val match: theory -> fixed_bounds -> bvs -> term * term
         -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 
@@ -70,9 +84,19 @@ fun mapbnd f =
 fun app (s,(i::is)) = app (s$Bound(i),is)
   | app (s,[])      = s;
 
-fun red (Abs(_,_,s)) (i::is) js = red s is (i::js)
-  | red t            []      [] = t
-  | red t            is      jn = app (mapbnd (fn k => nth jn k handle Subscript => k) t,is);
+(*Un-abstract a binding stored by `match_bind' so it can be compared against an
+  object sitting `diff' binders deep.  Two deviations from upstream, both because
+  a stored binding is no longer necessarily closed:
+    - upstream's `handle Subscript => k' is dead code there (a closed binding has
+      no index past `jn'); here such an index is a contextual bound variable
+      numbered from the position `match' was called at, so it must be lifted by
+      `diff';
+    - upstream's `red t [] [] = t' clause is gone.  It short-circuits `is = []',
+      which is the commonest shape (a schematic taking no arguments), and returns
+      the binding without that lift.*)
+fun red diff (Abs(_,_,s)) (i::is) js = red diff s is (i::js)
+  | red diff t            is      jn =
+      app (mapbnd (fn k => nth jn k handle Subscript => k - length jn + diff) t, is);
 
 
 val incr = mapbnd (fn i => i+1);
@@ -98,9 +122,14 @@ fun first_order_match thy fixed_bounds bv_tys (t,u) env =
         (Var(ixn,T), t)  =>
           if null (escaping fixed_bounds lev t)
           then (case Envir.lookup1 insts (ixn, T) of
+                  (*`fastype_of1' must see the UNSHIFTED `t': `bv_tys' is indexed
+                    from the current depth, the stored term from the call site.*)
                   NONE => (typ_match thy (T, fastype_of1 (bv_tys, t)) tyinsts,
-                           Vartab.update_new (ixn, (T, t)) insts)
-                | SOME u => if Envir.aeconv (t, u) then instsp else raise MATCH)
+                           Vartab.update_new (ixn, (T, Term.incr_boundvars (~lev) t)) insts)
+                  (*`u' was stored at whatever depth the first occurrence sat at,
+                    so bring `t' to the same numbering before comparing.*)
+                | SOME u => if Envir.aeconv (Term.incr_boundvars (~lev) t, u) then instsp
+                            else raise MATCH)
           else raise MATCH
       | (Free (a,T), Free (b,U)) =>
           if a=b then (typ_match thy (T,U) tyinsts, insts) else raise MATCH
@@ -128,10 +157,20 @@ let
         val diff = len - len_initial
         val js = escaping fixed_bounds diff t
     in if null is
-       then if null js then Vartab.update_new (ixn, (T, t)) itms else raise MATCH
+       then if null js then Vartab.update_new (ixn, (T, Term.incr_boundvars (~diff) t)) itms
+            else raise MATCH
        else if subset (op =) (js, is)
-            then let val t' = if downto0(is, diff - 1) then t
-                              else mapbnd (idx is) t
+            then let val n = length is
+                     (*`downto0' holds only when `is' is exactly the `diff' entered
+                       binders, and then `n = diff' makes both branches below the
+                       identity, so `t' may be kept as it stands.*)
+                     val t' = if downto0(is, diff - 1) then t
+                              else mapbnd (fn j =>
+                                     (*membership, not `j < diff': `is' may hold an
+                                       index of a contextual bound variable, and
+                                       `mkabs' does bind that one too*)
+                                     if member (op =) is j then idx is j
+                                     else j - diff + n) t
                  in Vartab.update_new (ixn, (T, mkabs (binders, is, t'))) itms end
             else raise MATCH
     end
@@ -160,7 +199,7 @@ let
            let val is = ints_of pargs
            in case Envir.lookup1 itms (ixn, T) of
                 NONE => (iTs,match_bind(itms,binders,ixn,T,is,obj))
-              | SOME u => if Envir.aeconv (obj, red u is []) then env
+              | SOME u => if Envir.aeconv (obj, red (length binders - len_initial) u is []) then env
                           else raise MATCH
            end
        | _ =>
