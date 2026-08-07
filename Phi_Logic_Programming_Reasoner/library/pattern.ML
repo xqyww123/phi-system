@@ -20,7 +20,7 @@ type fixed_bounds = int -> bool
 val match: theory -> fixed_bounds -> bvs -> term * term
         -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 
-val first_order_match: theory -> bv_typs -> term * term
+val first_order_match: theory -> fixed_bounds -> bv_typs -> term * term
                               -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 
 val matches: theory -> fixed_bounds -> bvs -> term * term -> bool
@@ -80,15 +80,23 @@ val incr = mapbnd (fn i => i+1);
 fun typ_match thy TU tyenv = Sign.typ_match thy TU tyenv
   handle Type.TYPE_MATCH => raise MATCH;
 
+(*The indices in `t' that this binding may NOT keep:
+    i < d   -- a bound variable entered during this match; the binder that binds it
+               is not coming along, so there is no valid way to relocate it
+    i >= d  -- a contextual bound variable, `bvs' entry (i - d); it may be kept only
+               if the caller declared it fixed, and then instantiation must shift it
+               by the depth of the position it lands in *)
+fun escaping fixed_bounds d t =
+  filter (fn i => i < d orelse not (fixed_bounds (i - d))) (loose_bnos t);
+
 (* First Order Match *)
 (*Improved from the system first_order_match, by allowing loose bounds in the object term,
     and regarding them as fixed free variables.*)
-fun first_order_match thy bv_tys (t,u) env =
+fun first_order_match thy fixed_bounds bv_tys (t,u) env =
   let
-    val bs = Inttab.make_set (loose_bnos u)
     fun mtch bv_tys lev (instsp as (tyinsts,insts)) = fn
         (Var(ixn,T), t)  =>
-          if forall (Inttab.defined bs) (loose_bnos t)
+          if null (escaping fixed_bounds lev t)
           then (case Envir.lookup1 insts (ixn, T) of
                   NONE => (typ_match thy (T, fastype_of1 (bv_tys, t)) tyinsts,
                            Vartab.update_new (ixn, (T, t)) insts)
@@ -100,7 +108,10 @@ fun first_order_match thy bv_tys (t,u) env =
           if a=b then (typ_match thy (T,U) tyinsts, insts) else raise MATCH
       | (Bound i, Bound j)  =>  if  i=j  then  instsp  else raise MATCH
       | (Abs(_,T,t), Abs(_,U,u))  =>
-          mtch bv_tys lev (typ_match thy (T,U) tyinsts, insts) (t,u)
+          (*`U', the OBJECT's binder type, not `T': the only consumer of `bv_tys' is
+            `fastype_of1 (bv_tys, t)' where `t' is an object subterm, and the eta
+            expansion clause below pushes the object's type too.*)
+          mtch (U::bv_tys) (lev+1) (typ_match thy (T,U) tyinsts, insts) (t,u)
       | (f$t, g$u) => mtch bv_tys lev (mtch bv_tys lev instsp (f,g)) (t, u)
       | (t, Abs(_,T,u))  => mtch (T::bv_tys) (lev+1) instsp ((incr t)$(Bound 0), u)
       | _ => raise MATCH
@@ -115,8 +126,7 @@ let
   fun match_bind(itms,binders,ixn,T,is,t) =
     let val len = length binders
         val diff = len - len_initial
-        val js = loose_bnos t
-              |> filter (fn i => i < diff orelse not (fixed_bounds (i - diff)))
+        val js = escaping fixed_bounds diff t
     in if null is
        then if null js then Vartab.update_new (ixn, (T, t)) itms else raise MATCH
        else if subset (op =) (js, is)
@@ -170,7 +180,7 @@ let
   val pT = fastype_of pat
   and oT = fastype_of1 (bvtys, obj)
   val envir' = apfst (typ_match thy (pT, oT)) envir;
-in mtch bvs po envir' handle Pattern => first_order_match thy bvtys po envir' end;
+in mtch bvs po envir' handle Pattern => first_order_match thy fixed_bounds bvtys po envir' end;
 
 fun matches thy fixed_bounds bv_typs po =
   (match thy fixed_bounds bv_typs po (Vartab.empty, Vartab.empty); true) handle MATCH => false;
