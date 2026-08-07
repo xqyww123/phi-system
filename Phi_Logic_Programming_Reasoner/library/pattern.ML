@@ -29,8 +29,10 @@ type fixed_bounds = int -> bool
   binding into a position under n binders must `Term.incr_boundvars n' it, and
   must beta-normalise before asking what that depth is.
 
-  The `tenv' handed in must come from `match' calls with the SAME `bvs' and
-  `fixed_bounds': the repeated-schematic check in `cases' relies on it.*)
+  The `tenv' handed in must come from calls with the SAME `bvs' and
+  `fixed_bounds': the repeated-schematic checks -- in `cases' on the higher-order
+  path and in `first_order_match' on the fallback -- both rely on it.  That holds
+  for `first_order_match' as a separate entry point too.*)
 val match: theory -> fixed_bounds -> bvs -> term * term
         -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 
@@ -43,6 +45,13 @@ val mk_spattern : term -> spattern
 val smatch : theory -> fixed_bounds -> bvs -> spattern * term
           -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
 val does_smatch : theory -> fixed_bounds -> bvs -> spattern * term -> bool
+
+(*`Envir.subst_term' for a `tenv' that came out of `match' above.  The loose
+  `Bound's in a stored binding are numbered from the position `match' was called
+  at, so an occurrence landing under n binders has to be lifted by n; n differs
+  per occurrence, which is why the caller cannot supply it and why plain
+  `Envir.subst_term' silently captures.*)
+val subst_term : Type.tyenv * Envir.tenv -> term -> term
 
 val strip_typs : term -> term
 
@@ -113,6 +122,11 @@ fun typ_match thy TU tyenv = Sign.typ_match thy TU tyenv
 fun escaping fixed_bounds d t =
   filter (fn i => i < d orelse not (fixed_bounds (i - d))) (loose_bnos t);
 
+(*This gate is also the SOLE precondition that makes the negative shifts below
+  safe: an empty result says every loose index in `t' is >= d, so shifting down
+  by d cannot go past zero.  `Term.incr_boundvars' does not check (term.ML:690) --
+  defeat the gate and the store yields terms like `Bound (~1)'.*)
+
 (* First Order Match *)
 (*Improved from the system first_order_match, by allowing loose bounds in the object term,
     and regarding them as fixed free variables.*)
@@ -126,8 +140,8 @@ fun first_order_match thy fixed_bounds bv_tys (t,u) env =
                     from the current depth, the stored term from the call site.*)
                   NONE => (typ_match thy (T, fastype_of1 (bv_tys, t)) tyinsts,
                            Vartab.update_new (ixn, (T, Term.incr_boundvars (~lev) t)) insts)
-                  (*`u' was stored at whatever depth the first occurrence sat at,
-                    so bring `t' to the same numbering before comparing.*)
+                  (*`u' is stored numbered from the call site (just above), so
+                    bring `t' down from the current depth before comparing.*)
                 | SOME u => if Envir.aeconv (Term.incr_boundvars (~lev) t, u) then instsp
                             else raise MATCH)
           else raise MATCH
@@ -256,5 +270,33 @@ fun strip_typs tm =
         | strip X = X
    in strip tm
   end
+
+
+
+(* substitution that respects the numbering above *)
+
+(*`Envir.subst_term2' (envir.ML:358-373) with a depth counter threaded through the
+  `Abs' arc; the counter and the `incr_boundvars lev' are `prf_subst' in
+  Pure/proofterm.ML:1429-1442, which does the same for proof terms.  Upstream needs
+  neither because a binding it stores is always closed.*)
+fun subst_term_same (tyenv, tenv) =
+  let
+    val substT = Envir.subst_type_same tyenv;
+    fun subst _ (Const (a, T)) = Const (a, substT T)
+      | subst _ (Free (a, T)) = Free (a, substT T)
+      | subst lev (Var (xi, T)) =
+          (case Envir.lookup1 tenv (xi, T) of
+            SOME u => Term.incr_boundvars lev u
+          | NONE => Var (xi, substT T))
+      | subst _ (Bound _) = raise Same.SAME
+      | subst lev (Abs (a, T, t)) =
+          (Abs (a, substT T, Same.commit (subst (lev + 1)) t)
+            handle Same.SAME => Abs (a, T, subst (lev + 1) t))
+      | subst lev (t $ u) =
+          (subst lev t $ Same.commit (subst lev) u
+            handle Same.SAME => t $ subst lev u);
+  in subst 0 end;
+
+fun subst_term envs = Same.commit (subst_term_same envs);
 
 end
