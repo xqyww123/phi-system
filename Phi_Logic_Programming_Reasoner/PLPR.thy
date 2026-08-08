@@ -505,6 +505,13 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 
 declare atomize_Ball[iso_atomize_rules, symmetric, iso_rulify_rules]
 
+definition \<open>pure_term_embed (x::'a::{}) \<equiv> True\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(TERM (x::'a::{})) \<equiv> Trueprop (pure_term_embed x)\<close>
+  unfolding pure_term_embed_def term_def
+  by (rule equal_intr_rule; (rule TrueI | assumption))
+
 
 subsubsection \<open>ML Library - III\<close>
 
