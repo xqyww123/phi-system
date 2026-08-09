@@ -312,22 +312,14 @@ fun gen_finish_proc prep_term qed spec int stat =
                                Pretty.block (Pretty.here \<^here>)
                             ])
                         in Phi_Sys.cast aim ctxt'
-                        #> (fn sequent =>
-                              let (*D58: provenance first, then the goal, then the inner
-                                    message.  The broad ERROR catch is deliberate: whatever
-                                    the solver failed with, the provenance holds.*)
-                                  fun wrap inner =
-                                    error (Pretty.string_of (Pretty.chunks (
-                                      Pretty.str ("While solving the proof obligation generated during "^
-                                                  "the cast towards the given specification:") ::
-                                      (case Thm.prems_of sequent
-                                         of x :: _ => [Syntax.pretty_term ctxt' x]
-                                          | _ => []) @
-                                      inner)))
-                               in Phi_Envir.solve_obligation NONE ctxt' sequent
-                                  handle ERROR msg => wrap [Pretty.str msg]
-                                       | Phi_Reasoners.Automation_Fail err => wrap (err ())
-                              end)
+                        (*D58: the provenance line rides the failure-text wrapper, so it
+                          reaches the sync error, the forked report and the batch print
+                          alike -- no handler here could see the forked failures.*)
+                        #> Phi_Envir.solve_obligation'
+                             (fn inner =>
+                                "While solving the proof obligation generated during " ^
+                                "the cast towards the given specification:\n" ^ inner)
+                             NONE ctxt'
                         end)
               |> pair ctxt'
               |> #vcg_before_assembling mode goal

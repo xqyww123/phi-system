@@ -24,13 +24,18 @@ signature PHI_REASONERS = sig
   (* Sledgehammer first, AoA as fallback.
      In phi contexts call `Phi_Envir.solve_obligation` — it freezes `\<phi>` /
      `\<phi>lemmata` into the named snapshots that recorded proofs refer to.
+     The (string -> string) argument wraps every failure text (sync and async
+     alike) — the cast site layers its provenance line through it; pass `I`
+     for no wrapping.
      Pull the returned sequence at most once: the `Agent_Give_Up` handler wraps only
      the first pull. *)
   val hammer_obligation_solver :
         {async : bool, read_store : bool option, write_store : bool option}
+     -> (string -> string) (*wraps the failure text*)
      -> Phi_Proof_Store.proof_id option -> Proof.context -> thm -> thm Seq.seq
   val hammer_obligation_solver' :
         {async : bool, read_store : bool option, write_store : bool option}
+     -> (string -> string) (*wraps the failure text*)
      -> Phi_Proof_Store.proof_id option
      -> (Proof.context -> thm -> thm) (*failure callback*)
      -> Proof.context -> thm -> thm
@@ -694,7 +699,7 @@ fun defer_obligation_tac cfg contr_mode =
 
 (*Stage-2 placeholder engine: the standalone auto_sledgehammer.  Stage 5 swaps
   in `hammer_or_AoA`, which is when `Agent_Give_Up` becomes reachable.*)
-fun hammer_obligation_solver {async, read_store, write_store} id =
+fun hammer_obligation_solver {async, read_store, write_store} wrap id =
       oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
         let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
             val th' = @{thm' Premise_I} RS th'1
@@ -702,6 +707,19 @@ fun hammer_obligation_solver {async, read_store, write_store} id =
          |> head_only (apply_tac ctxt (fn (ctxt,pre,aux,_) =>
             pre THEN HEADGOAL (Method.insert_tac ctxt aux)
                 THEN (fn st =>
+                   let (*The one place all failure text is composed (D51, revised
+                         2026-08-09): the engine applies it on the sync error
+                         path, the forked report and the promise branch alike.*)
+                       fun compose (MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, _)) =
+                             wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)
+                         | compose (exn as Phi_Sledgehammer_Solver.Auto_Fail _) =
+                             wrap (Pretty.string_of (Pretty.chunks
+                               (Pretty.para "Fail to solve the proof obligation automatically" ::
+                                (case Thm.prems_of st
+                                   of x :: _ => [Syntax.pretty_term ctxt x]
+                                    | _ => [Pretty.str (Runtime.exn_message exn)]))))
+                         | compose exn = wrap (Runtime.exn_message exn)
+                    in
                    (* Text dropped on purpose — already recorded by `hammer_or_AoA`, and `oblg_template`
                       has no channel for it. Do not join the future either; that would undo the fork. *)
                    Seq.single (snd (Phi_Sledgehammer_Solver.auto
@@ -709,7 +727,9 @@ fun hammer_obligation_solver {async, read_store, write_store} id =
                        fact_override = Sledgehammer_Fact.no_fact_override,
                        proof_id = id, timeout = NONE,
                        read_store = read_store, write_store = write_store,
-                       raise_Error_instead_of_Auto_Fail = true} ctxt st))))
+                       raise_Error_instead_of_Auto_Fail = true,
+                       failure_msg = SOME compose} ctxt st))
+                   end))
             Agressive_Solver)
          |> Seq.pull
         end
@@ -717,10 +737,10 @@ fun hammer_obligation_solver {async, read_store, write_store} id =
           (Phi_Reasoner.info_print ctxt 1 (fn () =>
               "AoA cost: $" ^ Real.fmt (StringCvt.FIX (SOME 4)) (#cost cost) ^
               ", tool_calls = " ^ Int.toString (#tool_calls cost));
-           error (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)))
+           error (wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail))))
 
-fun hammer_obligation_solver' opts id =
-      context_tactic_to_state_transition (hammer_obligation_solver opts id)
+fun hammer_obligation_solver' opts wrap id =
+      context_tactic_to_state_transition (hammer_obligation_solver opts wrap id)
 
 fun norm_tac tac th = Seq.make (fn () => Seq.pull (tac th))
 
