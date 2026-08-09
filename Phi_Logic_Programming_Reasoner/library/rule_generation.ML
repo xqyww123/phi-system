@@ -383,17 +383,13 @@ end
 (*simplify the generated rule except the conclusion by default, unless a part of the conclusion has
   been annotated by \<open>NO_SIMP\<close> (i.e., \<open>NO_SIMP\<close> occurs in the conclusion)*)
 fun pass_generated_rule {simp, masks, rule_pos} ctxt rule =
-  let (*val rule'1 = case Thm.concl_of rule
-                     of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
-                      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
-                      | X => if exists_Const (fn (\<^const_name>\<open>NO_SIMP\<close>, _) => true | _ => false) X
-                             then rule
-                             else rule RS' (ctxt, @{thm' NO_SIMP'_I})*)
+  let (*One \<open>NO_SIMP\<close> serves both levels; they are told apart by position, not by name:
+        bare at the top of a \<^typ>\<open>prop\<close> is meta-level, under \<open>Trueprop\<close> is object-level.
+        Same convention as \<open>Technical\<close>.*)
       val rule'1 = rule
       val ctxt's = Rule_Gen_SS.enhance ctxt
 
       fun trim_tag (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X) = SOME (the_default X (trim_tag X))
-        | trim_tag (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X) = SOME (the_default X (trim_tag X))
         | trim_tag (A $ B) = (case (trim_tag A, trim_tag B)
                                 of (NONE, NONE) => NONE
                                  | (A', B') => SOME (the_default A A' $ the_default B B'))
@@ -431,7 +427,7 @@ fun pass_generated_rule {simp, masks, rule_pos} ctxt rule =
         end
 
    in simplify rule'1
-   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def SIMP_def}
+   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def SIMP_def}
    |> PLPR_Syntax.merge_guards {merge_cond=true} (Context.Proof ctxt)
    |> normalize
   end

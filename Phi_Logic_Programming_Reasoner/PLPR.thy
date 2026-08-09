@@ -309,16 +309,16 @@ ML_file \<open>library/syntax/pended_goals.ML\<close>
 
 subsubsection \<open>NO_SIMP\<close>
 
-definition NO_SIMP where \<open>NO_SIMP X \<equiv> X\<close>
-  \<comment> \<open>to prevent simplification on the inner terms\<close>
+definition NO_SIMP where \<open>NO_SIMP (X::'a::{}) \<equiv> X\<close>
+  \<comment> \<open>to prevent simplification on the inner terms; one constant covers both the object level
+      (under \<open>Trueprop\<close>) and the meta level (at the top of a \<open>prop\<close>), like \<open>Technical\<close>.
+      The sort annotation in the \<open>cong\<close> below is load-bearing: without it \<open>X\<close> takes HOL's
+      default sort and the rule silently stops matching meta-level instances.\<close>
 
-definition NO_SIMP' where \<open>NO_SIMP' (X::prop) \<equiv> X\<close>
+lemma NO_SIMP_cong[cong]: \<open>NO_SIMP (X::'a::{}) \<equiv> NO_SIMP X\<close> .
 
-lemma NO_SIMP_cong[cong]: \<open>NO_SIMP X \<equiv> NO_SIMP X\<close> .
-lemma NO_SIMP'_cong[cong]: \<open>NO_SIMP' X \<equiv> NO_SIMP' X\<close> .
-
-lemma NO_SIMP_I: \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
-lemma NO_SIMP'_I: \<open>PROP P \<Longrightarrow> PROP NO_SIMP' P\<close> unfolding NO_SIMP'_def .
+lemma NO_SIMP_I : \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
+lemma NO_SIMP_I': \<open>PROP P \<Longrightarrow> PROP NO_SIMP P\<close> unfolding NO_SIMP_def .
 
 syntax
   "_Let_NS"      :: "[letbinds, 'a] \<Rightarrow> 'a"                ("(let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p (_)/ in (_))" [0, 10] 10)
@@ -1580,13 +1580,13 @@ lemma [\<phi>reason add]:
 
 lemma [\<phi>reason add]:
   \<open> PROP \<A>EIF' X P
-\<Longrightarrow> PROP \<A>EIF' (NO_SIMP' X) P \<close>
-  unfolding NO_SIMP'_def .
+\<Longrightarrow> PROP \<A>EIF' (NO_SIMP X) P \<close>
+  unfolding NO_SIMP_def .
 
 lemma [\<phi>reason add]:
   \<open> PROP \<A>ESC' P X
-\<Longrightarrow> PROP \<A>ESC' P (NO_SIMP' X) \<close>
-  unfolding NO_SIMP'_def .
+\<Longrightarrow> PROP \<A>ESC' P (NO_SIMP X) \<close>
+  unfolding NO_SIMP_def .
 
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>

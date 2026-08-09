@@ -2931,9 +2931,9 @@ subsection \<open>Transformation Functor\<close>
 lemma [\<phi>reason_template name Fa.simp_cong [\<phi>simp_cong]]:
   \<open> Transformation_Functor Fa Fa T U (\<lambda>x. {x}) (\<lambda>x. \<top>) (\<lambda>x. x)
 \<Longrightarrow> Transformation_Functor Fa Fa U T (\<lambda>x. {x}) (\<lambda>x. \<top>) (\<lambda>x. x)
-\<Longrightarrow> PROP NO_SIMP' ((x \<Ztypecolon> T) \<equiv> (x' \<Ztypecolon> U))
+\<Longrightarrow> PROP NO_SIMP ((x \<Ztypecolon> T) \<equiv> (x' \<Ztypecolon> U))
 \<Longrightarrow> (x \<Ztypecolon> Fa T) \<equiv> (x' \<Ztypecolon> Fa U)\<close>
-  unfolding Transformation_Functor_def Transformation_def atomize_eq NO_SIMP'_def
+  unfolding Transformation_Functor_def Transformation_def atomize_eq NO_SIMP_def
   apply (auto simp add: BI_eq_iff)
   subgoal premises prems for xa
     using prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>_ c. c = x'\<close>], simplified]

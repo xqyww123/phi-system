@@ -21,7 +21,9 @@ fun dest_Except_Pattern (Const(\<^const_name>\<open>Except_Pattern\<close>, _) $
   | dest_Except_Pattern X = raise TERM ("PLPR_Syntax.dest_With_Pattern",[X])
 
 fun strip_embedded_patterns tm =
-  let fun strip (pat,ex,inargs) (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X)
+  let (*only the meta-level \<open>NO_SIMP\<close> reaches here: this runs on the outermost layer of a
+        conclusion, where an object-level one is always hidden under \<open>Trueprop\<close>*)
+      fun strip (pat,ex,inargs) (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X)
             = strip (pat,ex,inargs) X
         | strip (pat,ex,inargs) (Const(\<^const_name>\<open>With_Pattern\<close>, _) $ X $ P)
             = strip (P :: pat, ex, inargs) X
@@ -48,8 +50,8 @@ fun elim_embedded_patterns thm =
   let val (ret, _) = strip_embedded_patterns (Thm.concl_of thm)
       fun elim ctm =
         case Thm.term_of ctm
-          of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ =>
-                (Conv.rewr_conv @{thm' NO_SIMP'_def} then_conv elim) ctm
+          of Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _ =>
+                (Conv.rewr_conv @{thm' NO_SIMP_def} then_conv elim) ctm
            | Const(\<^const_name>\<open>With_Pattern\<close>, _) $ _ $ _ =>
                 (Conv.rewr_conv @{thm' With_Pattern_def} then_conv elim) ctm
            | Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ _ $ _ =>
