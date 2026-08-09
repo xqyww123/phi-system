@@ -5,7 +5,12 @@ It intends to give a rich way with term quotations to represent and report
 *)
 
 theory PLPR_error_msg
-  imports Main
+  imports Main Minilang_AoA.Minilang_AoA
+    \<comment> \<open>\<open>Minilang_AoA\<close> must stay LAST in this list. Theory merge resolves a short-name clash
+        silently and in opposite directions on the two sides: the ML environment's
+        \<open>Symtab.merge (K true)\<close> (\<^file>\<open>~~/src/Pure/ML/ml_env.ML\<close>) lets the EARLIER parent win,
+        while the logical name space lets the LATER one win. Neither reports anything, so the
+        position in this list is what decides who shadows whom.\<close>
   abbrevs "<or>" = "\<o>\<r>"
       and "<fail>" = "\<f>\<a>\<i>\<l>"
 begin

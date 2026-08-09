@@ -1,4 +1,5 @@
 signature PHI_HELP = sig
+include PHI_HELP
 
   val True  : cterm
   val False : cterm
@@ -52,14 +53,8 @@ signature PHI_HELP = sig
 
 
 (*TODO: consider meta_Ball*)
-val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
-                            * term list (*premises of the antecedent*)
-                            * term (*conclusion containing loose bound*)
 val strip_meta_hhf_bvtys : term -> bv_typs * term
 val strip_meta_hhf_bvs : term -> bvs * term
-val leading_antecedent : term -> (string * typ) list (*quantified variables*)
-                               * term list (*premises of the antecedent*)
-                               * term (*conclusion containing loose bound*)
 val fix_leading_antecedent_meta_quantifiers : Proof.context -> term
                           -> term list (*quant vars*) * term list (*premises*) * term (*conclusion*) * Proof.context
                              (*where quantified variables are fixed*)
@@ -81,6 +76,7 @@ val K_I : 'a -> 'b -> 'b
 end
 
 structure Phi_Help : PHI_HELP = struct
+open Phi_Help
 
 val True  = \<^cterm>\<open>True\<close>
 val False = \<^cterm>\<open>False\<close>
@@ -91,15 +87,6 @@ fun has_head c (Const (c', _)) = (c = c')
 
 fun K_I _ x = x
 
-
-fun strip_meta_hhf term =
-  let
-    fun strip (V,P) (Const("Pure.imp", _) $ H $ B) = strip (V,H::P) B
-      | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) = strip ((a,T)::V,P) B
-      | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ X) =
-          strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
-      | strip (V,P) X = (rev V, rev P, X)
-  in strip ([],[]) term end
 
 fun strip_meta_hhf_bvtys term =
   let
@@ -120,9 +107,6 @@ fun strip_meta_hhf_bvs term =
 fun mk_meta_hhf (vars, prems, concl) =
   fold_rev (fn P => fn X => \<^Const>\<open>Pure.imp\<close> $ P $ X) prems concl
     |> fold_rev (fn (N,Ty) => fn X => \<^Const>\<open>Pure.all Ty\<close> $ Abs (N, Ty, X)) vars
-
-fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
-  | leading_antecedent X = raise TERM ("has no antecedent", [X])
 
 fun fix_leading_antecedent_meta_quantifiers ctxt0 sequent =
   let

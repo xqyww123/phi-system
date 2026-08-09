@@ -21,8 +21,6 @@ val binop_opt : ('a * 'a -> 'a) -> 'a option * 'a option -> 'a option
 val foldl_opt : ('a * 'a -> 'a) -> 'a option list -> 'a option
 
 
-val leading_antecedent' : thm -> term
-
 val LHS_of : term -> term
 val RHS_of : term -> term
 
@@ -155,8 +153,6 @@ fun max_of' ord = foldl_opt (fn ab => if ord ab = LESS then snd ab else fst ab)
 fun min_of' ord = foldl_opt (fn ab => if ord ab = GREATER then snd ab else fst ab)
 
 
-
-fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
 
 fun RHS_of (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ X) = X
   | RHS_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = RHS_of X

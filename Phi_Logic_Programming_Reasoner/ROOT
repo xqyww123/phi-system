@@ -3,6 +3,7 @@ session Phi_Logic_Programming_Reasoner = Main +
   sessions
     "HOL-Eisbach"
     "Phi_Document"
+    "Minilang_AoA"
   theories
     PLPR
   document_files (in "~~/src/Doc/")
