@@ -1290,7 +1290,7 @@ fun oblg_solver proof_id text ctxt sequent =
        val rulex = Expansion.simp_rules ctxt
        val ctxt = ctxt addsimps rulex
     in Phi_Help.ntimes (nprems' - nprems + 1)
-                       (fn i => Phi_Envir.solve_obligation (SOME (proof_id ^ "\<^sub>" ^ string_of_int i)) ctxt) sequent'2
+                       (fn i => Phi_Envir.solve_obligation (SOME (proof_id ^ "/" ^ string_of_int i)) ctxt) sequent'2
         (*|> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
                               @{thm' Premise_True} RS th
