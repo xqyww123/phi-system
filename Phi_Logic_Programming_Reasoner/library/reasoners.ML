@@ -21,10 +21,19 @@ signature PHI_REASONERS = sig
                                  -> int (*number of new conditions introduced*) * thm
   val obligation_intro_Ex_conv : schm_by_ex -> Proof.context -> thm -> thm
 
-  val auto_obligation_solver : Proof.context -> thm -> thm Seq.seq
-  val auto_obligation_solver' : (Proof.context -> thm -> thm) (*failure callback*)
-                              -> Proof.context -> thm -> thm
-  val auto_obligation_solver1 : Proof.context -> thm -> thm
+  (* Sledgehammer first, AoA as fallback.
+     In phi contexts call `Phi_Envir.solve_obligation` — it freezes `\<phi>` /
+     `\<phi>lemmata` into the named snapshots that recorded proofs refer to.
+     Pull the returned sequence at most once: the `Agent_Give_Up` handler wraps only
+     the first pull. *)
+  val hammer_obligation_solver :
+        {async : bool, read_store : bool option, write_store : bool option}
+     -> Phi_Proof_Store.proof_id option -> Proof.context -> thm -> thm Seq.seq
+  val hammer_obligation_solver' :
+        {async : bool, read_store : bool option, write_store : bool option}
+     -> Phi_Proof_Store.proof_id option
+     -> (Proof.context -> thm -> thm) (*failure callback*)
+     -> Proof.context -> thm -> thm
 
   val guard_condition_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
       (*The annotation of \<open>case_split\<close> is supported*)
@@ -320,7 +329,7 @@ fun head_only tac th =
   this short-cut makes differences only when the antecedent to be solved has some schematic variables
   to be instantiated during the tactic application.
 
-  The semantics of schematic variables in auto_obligation_solver and guard_condition_solver is,
+  The semantics of schematic variables in hammer_obligation_solver and guard_condition_solver is,
   any possible instantiation is acceptable.
 
   If the schematic variables are not able to be chosen arbitrarily, additional mechanisms have
@@ -683,39 +692,35 @@ fun defer_obligation_tac cfg contr_mode =
               intro_all_leading_ex i (@{thm' exI} RSN (i, thm))
           | _ => intro_all_leading_ex (i+1) thm*)
 
-(*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
-It is the default tactic in the system intended to solve simple proof obligations.*)
-val auto_obligation_solver = oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
-      let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
-          val th' = @{thm' Premise_I} RS th'1
-       in th'
-       |> head_only (apply_tac ctxt (fn (ctxt,pre,aux,_) =>
-          pre THEN HEADGOAL (Method.insert_tac ctxt aux)
-              THEN Clasimp.auto_tac ctxt) Agressive_Solver)
-       |> Seq.pull
-      end)
+(*Stage-2 placeholder engine: the standalone auto_sledgehammer.  Stage 5 swaps
+  in `hammer_or_AoA`, which is when `Agent_Give_Up` becomes reachable.*)
+fun hammer_obligation_solver {async, read_store, write_store} id =
+      oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
+        let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+            val th' = @{thm' Premise_I} RS th'1
+         in th'
+         |> head_only (apply_tac ctxt (fn (ctxt,pre,aux,_) =>
+            pre THEN HEADGOAL (Method.insert_tac ctxt aux)
+                THEN (fn st =>
+                   (* Text dropped on purpose — already recorded by `hammer_or_AoA`, and `oblg_template`
+                      has no channel for it. Do not join the future either; that would undo the fork. *)
+                   Seq.single (snd (Phi_Sledgehammer_Solver.auto
+                      {improved = true, async = async,
+                       fact_override = Sledgehammer_Fact.no_fact_override,
+                       proof_id = id, timeout = NONE,
+                       read_store = read_store, write_store = write_store,
+                       raise_Error_instead_of_Auto_Fail = true} ctxt st))))
+            Agressive_Solver)
+         |> Seq.pull
+        end
+        handle MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, cost) =>
+          (Phi_Reasoner.info_print ctxt 1 (fn () =>
+              "AoA cost: $" ^ Real.fmt (StringCvt.FIX (SOME 4)) (#cost cost) ^
+              ", tool_calls = " ^ Int.toString (#tool_calls cost));
+           error (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)))
 
-val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
-
-fun auto_obligation_solver1 ctxt sequent =  (
-        Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
-            Pretty.str "Solving the following goal using \<open>auto\<close> method...",
-            Syntax.pretty_term ctxt (Thm.major_prem_of sequent),
-            Pretty.block (Pretty.here \<^here>)
-        ]);
-        auto_obligation_solver' (fn _ =>
-          raise Automation_Fail (fn () =>
-                  Pretty.para "Fail to solve the proof obligation automatically" ::
-                  (case Thm.prems_of sequent
-                     of (x::_)
-                          => [Syntax.pretty_term ctxt x]
-                      | _ => []))
-          (*error (Pretty.string_of (Pretty.chunks [
-              Pretty.str "Fail to solve the proof obligation automatically:",
-              Syntax.pretty_term ctxt Goal
-            ])) *)
-        ) ctxt sequent
-     )
+fun hammer_obligation_solver' opts id =
+      context_tactic_to_state_transition (hammer_obligation_solver opts id)
 
 fun norm_tac tac th = Seq.make (fn () => Seq.pull (tac th))
 

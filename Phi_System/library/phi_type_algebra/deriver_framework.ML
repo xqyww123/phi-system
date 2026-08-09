@@ -1272,7 +1272,6 @@ fun oblg_solver proof_id text ctxt sequent =
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
    let val ctxt = Variable.declare_term (Thm.prop_of sequent) ctxt
-               |> Phi_Envir.freeze_dynamic_lemmas
        val ctxt'' = Expansion.equip ctxt
                  |> Simplifier.del_cong @{thm HOL.conj_cong}
        val nprems = Thm.nprems_of sequent
@@ -1291,7 +1290,7 @@ fun oblg_solver proof_id text ctxt sequent =
        val rulex = Expansion.simp_rules ctxt
        val ctxt = ctxt addsimps rulex
     in Phi_Help.ntimes (nprems' - nprems + 1)
-                       (fn i => Phi_Sledgehammer_Solver.auto (SOME (proof_id ^ "\<^sub>" ^ string_of_int i)) ctxt) sequent'2
+                       (fn i => Phi_Envir.solve_obligation (SOME (proof_id ^ "\<^sub>" ^ string_of_int i)) ctxt) sequent'2
         (*|> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
                               @{thm' Premise_True} RS th

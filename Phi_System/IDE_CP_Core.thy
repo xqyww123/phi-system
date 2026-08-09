@@ -434,13 +434,6 @@ lemma [\<phi>reason %\<phi>programming_method]:
 end
 
 
-subsection \<open>Automation\<close>
-
-named_theorems \<phi>sledgehammer_simps \<open>Simplification rules used before applying slegehammer automation\<close>
-
-ML_file \<open>library/tools/sledgehammer_solver.ML\<close>
-
-
 subsection \<open>Ad-hoc Overload\<close>
 
 ML_file \<open>library/system/app_rules.ML\<close>
@@ -2479,7 +2472,7 @@ setup \<open>Context.theory_map (
         then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
                  val sequent' = Phi_Reasoners.obligation_intro_Ex_conv ~1 ctxt sequent
               in raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt,
-                          Phi_Sledgehammer_Solver.auto id (Phi_Envir.freeze_dynamic_lemmas ctxt) sequent'))
+                          Phi_Envir.solve_obligation id ctxt sequent'))
               handle Phi_Reasoners.Automation_Fail err =>
                   error (Pretty.string_of (Pretty.chunks (err ())))
              end
@@ -2654,13 +2647,12 @@ in
                     then Binding.make (gen_name id', pos)
                     else b'
             val ctxt' = Proof_Context.add_fixes_cmd fixes ctxt |> snd
-                     |> Phi_Envir.freeze_dynamic_lemmas
             val thms = map (Syntax.parse_prop ctxt') bodys'
                      |> Syntax.check_props ctxt'
                      |> map_index (fn (j,term) => term
                           |> Thm.cterm_of ctxt'
                           |> Goal.init
-                          |> (fn thm => Phi_Sledgehammer_Solver.auto (id'' j) ctxt'
+                          |> (fn thm => Phi_Envir.solve_obligation (id'' j) ctxt'
                                             (@{thm Premise_D[where mode=default]} RS thm))
                           |> Goal.conclude
                           |> single

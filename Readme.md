@@ -15,6 +15,25 @@ Separation Logic by Functors, Homomorphisms and Modules. Proc. ACM Program. Lang
 (January 2025), 40 pages. https://doi.org/10.1145/3704903
 
 
+### Proof store files
+
+Each theory's proofs are recorded next to it in `<TheoryName>.proof-store`, a binary
+append-only log that is committed and distributed with the sources.
+
+Git cannot merge binary files, so this repository ships a driver that concatenates
+them — two valid logs concatenated are still a valid log. Enable it once per clone:
+
+    git config merge.proofstore.name   "proof store (concatenate)"
+    git config merge.proofstore.driver "tools/proofstore-merge.sh %A %O %B %L %P"
+
+To resolve a `.proof-store` conflict by hand, concatenate both sides:
+
+    git show :2:path/to/Theory.proof-store >  merged.tmp
+    git show :3:path/to/Theory.proof-store >> merged.tmp
+    mv merged.tmp path/to/Theory.proof-store
+    git add path/to/Theory.proof-store
+
+
 The following instruction is a bit out of date. I will fix it ASAP.
 
 ---------------------------------

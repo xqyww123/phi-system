@@ -291,7 +291,7 @@ fun gen_finish_proc prep_term qed spec int stat =
             fun attack_obligations ctxt sequent =
               case try Thm.major_prem_of sequent
                 of SOME (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ _)) =>
-                    attack_obligations ctxt (Phi_Reasoners.auto_obligation_solver1 ctxt sequent)
+                    attack_obligations ctxt (Phi_Envir.solve_obligation NONE ctxt sequent)
                  | _ => sequent
             val sequent_pre2 = attack_obligations ctxt sequent_pre1
             in Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
@@ -312,18 +312,22 @@ fun gen_finish_proc prep_term qed spec int stat =
                                Pretty.block (Pretty.here \<^here>)
                             ])
                         in Phi_Sys.cast aim ctxt'
-                        #> Phi_Reasoners.auto_obligation_solver' (fn ctxt => fn sequent =>
-                             error (Pretty.string_of (Pretty.chunks [
-                               Pretty.str ("Fail to solve the proof obligation generated during "^
-                                           "the cast towards the given specification:"),
-                               Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent),
-                               Pretty.block [
-                                 Pretty.str ("Tailing specification of a programming block is "^
-                                 "only sufficient for simple transformations having simple "^
-                                 "proof obligations. More complicated transformation should use "),
-                                 Pretty.keyword2 "assert", Pretty.str "command instead."
-                               ]
-                           ]))) ctxt'
+                        #> (fn sequent =>
+                              let (*D58: provenance first, then the goal, then the inner
+                                    message.  The broad ERROR catch is deliberate: whatever
+                                    the solver failed with, the provenance holds.*)
+                                  fun wrap inner =
+                                    error (Pretty.string_of (Pretty.chunks (
+                                      Pretty.str ("While solving the proof obligation generated during "^
+                                                  "the cast towards the given specification:") ::
+                                      (case Thm.prems_of sequent
+                                         of x :: _ => [Syntax.pretty_term ctxt' x]
+                                          | _ => []) @
+                                      inner)))
+                               in Phi_Envir.solve_obligation NONE ctxt' sequent
+                                  handle ERROR msg => wrap [Pretty.str msg]
+                                       | Phi_Reasoners.Automation_Fail err => wrap (err ())
+                              end)
                         end)
               |> pair ctxt'
               |> #vcg_before_assembling mode goal
@@ -389,8 +393,8 @@ fun led_future_proof s =
   else let val s = Proof.map_context Phi_ID.next s
            val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
            val meth = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (fn sequent =>
-                Phi_Sledgehammer_Solver.auto id (Phi_Envir.freeze_dynamic_lemmas ctxt)
-                                                (@{thm Premise_D[where mode=default]} RS sequent))))
+                Phi_Envir.solve_obligation id ctxt
+                                           (@{thm Premise_D[where mode=default]} RS sequent))))
         in Proof.local_future_terminal_proof ((meth, Position.no_range), NONE) s
        end
 

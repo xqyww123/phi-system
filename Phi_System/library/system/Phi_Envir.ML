@@ -36,6 +36,12 @@ signature PHI_ENVIR = sig
 
   val freeze_dynamic_lemmas : Proof.context -> Proof.context
 
+  val async_proof : bool Config.T
+  (*The one entry for solving proof obligations in phi contexts (D49/D62):
+    reads \<phi>async_proof, freezes the dynamic lemmas, and calls
+    Phi_Reasoners.hammer_obligation_solver'.*)
+  val solve_obligation : Phi_Proof_Store.proof_id option -> Proof.context -> thm -> thm
+
   structure Enter_Programming_Environ : HOOKS
   structure On_Updating_State_Sequent : HOOKS
 
@@ -208,6 +214,19 @@ fun freeze_dynamic_lemmas ctxt =
    |> Proof_Context.put_thms true ("the_\<phi>lemmata",
                                    SOME (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>))
   end
+
+val async_proof = Attrib.setup_config_bool \<^binding>\<open>\<phi>async_proof\<close> (K true)
+
+fun solve_obligation id ctxt =
+  Phi_Reasoners.hammer_obligation_solver'
+    {async = Config.get ctxt async_proof, read_store = NONE, write_store = NONE} id
+    (fn ctxt => fn sequent =>
+        raise Phi_Reasoners.Automation_Fail (fn () =>
+                Pretty.para "Fail to solve the proof obligation automatically" ::
+                (case Thm.prems_of sequent
+                   of x :: _ => [Syntax.pretty_term ctxt x]
+                    | _ => [])))
+    (freeze_dynamic_lemmas ctxt)
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_previous\<close>,
           fn genric =>
