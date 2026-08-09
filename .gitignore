@@ -11,3 +11,5 @@ output
 .*#
 *.proof-cache
 *.phi-cache
+
+*.proof-store.lock
