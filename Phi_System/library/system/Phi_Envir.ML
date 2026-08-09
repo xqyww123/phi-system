@@ -224,13 +224,15 @@ val async_proof = Attrib.setup_config_bool \<^binding>\<open>\<phi>async_proof\<
 fun solve_obligation' wrap id ctxt =
   Phi_Reasoners.hammer_obligation_solver'
     {async = Config.get ctxt async_proof, read_store = NONE, write_store = NONE} wrap id
+    (*The empty-sequence failure raises ERROR with the text fully composed:
+      every call site then shows it as-is — no site needs (or has) a handler
+      that would render a payload-carrying exception.*)
     (fn ctxt => fn sequent =>
-        raise Phi_Reasoners.Automation_Fail (fn () =>
-                [Pretty.str (wrap (Pretty.string_of (Pretty.chunks (
-                   Pretty.para "Fail to solve the proof obligation automatically" ::
-                   (case Thm.prems_of sequent
-                      of x :: _ => [Syntax.pretty_term ctxt x]
-                       | _ => [])))))]))
+        error (wrap (Pretty.string_of (Pretty.chunks (
+                 Pretty.para "Fail to solve the proof obligation automatically" ::
+                 (case Thm.prems_of sequent
+                    of x :: _ => [Syntax.pretty_term ctxt x]
+                     | _ => []))))))
     (freeze_dynamic_lemmas ctxt)
 
 val solve_obligation = solve_obligation' I
