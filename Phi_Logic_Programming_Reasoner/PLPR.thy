@@ -307,16 +307,8 @@ ML_file \<open>library/syntax/pended_goals.ML\<close>
 
 subsubsection \<open>NO_SIMP\<close>
 
-definition NO_SIMP where \<open>NO_SIMP (X::'a::{}) \<equiv> X\<close>
-  \<comment> \<open>to prevent simplification on the inner terms; one constant covers both the object level
-      (under \<open>Trueprop\<close>) and the meta level (at the top of a \<open>prop\<close>), like \<open>Technical\<close>.
-      The sort annotation in the \<open>cong\<close> below is load-bearing: without it \<open>X\<close> takes HOL's
-      default sort and the rule silently stops matching meta-level instances.\<close>
-
-lemma NO_SIMP_cong[cong]: \<open>NO_SIMP (X::'a::{}) \<equiv> NO_SIMP X\<close> .
-
-lemma NO_SIMP_I : \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
-lemma NO_SIMP_I': \<open>PROP P \<Longrightarrow> PROP NO_SIMP P\<close> unfolding NO_SIMP_def .
+text \<open>The \<open>NO_SIMP\<close> constant itself lives in \<^theory>\<open>Auto_Sledgehammer.Auto_Sledgehammer\<close>,
+  the common ancestor of PLPR and Minilang. Only the \<open>let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p\<close> syntax is PLPR's own.\<close>
 
 syntax
   "_Let_NS"      :: "[letbinds, 'a] \<Rightarrow> 'a"                ("(let\<^sub>n\<^sub>o\<^sub>-\<^sub>s\<^sub>i\<^sub>m\<^sub>p (_)/ in (_))" [0, 10] 10)
