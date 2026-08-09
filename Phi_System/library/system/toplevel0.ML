@@ -314,12 +314,21 @@ fun gen_finish_proc prep_term qed spec int stat =
                         in Phi_Sys.cast aim ctxt'
                         (*D58: the provenance line rides the failure-text wrapper, so it
                           reaches the sync error, the forked report and the batch print
-                          alike -- no handler here could see the forked failures.*)
-                        #> Phi_Envir.solve_obligation'
-                             (fn inner =>
-                                "While solving the proof obligation generated during " ^
-                                "the cast towards the given specification:\n" ^ inner)
-                             NONE ctxt'
+                          alike -- no handler here could see the forked failures.  The
+                          thin handler below covers ERRORs raised BEFORE the wrapper is
+                          in play (simprocs inside oblg_template, engine internals): D58
+                          wants the provenance on every ERROR.  Wrapper-composed texts
+                          already start with the line -- the prefix test skips those.*)
+                        #> (fn sequent =>
+                              let val provenance =
+                                    "While solving the proof obligation generated during " ^
+                                    "the cast towards the given specification:"
+                               in Phi_Envir.solve_obligation'
+                                    (fn inner => provenance ^ "\n" ^ inner) NONE ctxt' sequent
+                                  handle ERROR msg =>
+                                    if String.isPrefix provenance msg then Exn.reraise (ERROR msg)
+                                    else error (provenance ^ "\n" ^ msg)
+                              end)
                         end)
               |> pair ctxt'
               |> #vcg_before_assembling mode goal

@@ -712,6 +712,10 @@ fun hammer_obligation_solver {async, read_store, write_store} wrap id =
                          path, the forked report and the promise branch alike.*)
                        fun compose (MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, _)) =
                              wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)
+                         | compose (Phi_Sledgehammer_Solver.Auto_Fail
+                                      (Phi_Sledgehammer_Solver.Internal_Failure msg)) =
+                             (*engine bug, not an unprovable goal: the payload IS the message*)
+                             wrap msg
                          | compose (exn as Phi_Sledgehammer_Solver.Auto_Fail _) =
                              wrap (Pretty.string_of (Pretty.chunks
                                (Pretty.para "Fail to solve the proof obligation automatically" ::
