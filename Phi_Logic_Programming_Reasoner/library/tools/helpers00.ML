@@ -76,10 +76,6 @@ val varified_leading_antecedent_meta_quantifiers : Proof.context -> term
                           -> term list (*premises*) * term (*conclusion*)
                              (*where quantified variables are varified (schematic variables)*)
 
-val aconv_bound_diff : int -> term * term -> bool
-val subst_with_loose_bounds : (term * term) list -> term -> term
-          (*supports loose bounds either in the redex or the residue*)
-
 val K_I : 'a -> 'b -> 'b
 
 end
@@ -164,22 +160,6 @@ fun varified_leading_antecedent_meta_quantifiers ctxt sequent =
    in (prems',leading_ant')
   end
 
-fun aconv_bound_diff d (t1 $ u1, t2 $ u2) =
-      aconv_bound_diff d (t1,t2) andalso aconv_bound_diff d (u1,u2)
-  | aconv_bound_diff d (Abs (_, T1, t1), Abs (_, T2, t2)) =
-      aconv_bound_diff d (t1,t2) andalso T1 = T2
-  | aconv_bound_diff d (Bound i, Bound j) = i = j + d
-  | aconv_bound_diff _ (a1,a2) = a1 = a2
-
-fun subst_with_loose_bounds [] = I
-  | subst_with_loose_bounds pairs =
-      let fun substf i u =
-            case AList.lookup (aconv_bound_diff i) pairs u
-              of SOME u' => Term.incr_boundvars i u'
-               | NONE => (case u of Abs(a,T,t) => Abs(a, T, substf (i+1) t)
-                                  | t$u' => substf i t $ substf i u'
-                                  | _ => u)
-       in substf 0 end
 
 
 

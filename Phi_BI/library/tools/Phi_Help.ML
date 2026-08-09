@@ -30,6 +30,10 @@ include PHI_HELP
 
   val generic_theory_mapping : Position.T -> (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 
+  (*alpha-equivalence up to a uniform offset `d' on loose bounds -- moved here from
+    `helpers00.ML' when its other user was deleted; `abstract_over' below is the only one*)
+  val aconv_bound_diff : int -> term * term -> bool
+
   (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   The stuffs here improve it, but they still require that loose bounds do not occur in the redex*)
   val abstract_over : term * term -> term
@@ -124,6 +128,13 @@ fun generic_theory_mapping pos f =
 
 (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   This version improves it, by supporting loose bound variables occurring in both redex and residue*)
+fun aconv_bound_diff d (t1 $ u1, t2 $ u2) =
+      aconv_bound_diff d (t1,t2) andalso aconv_bound_diff d (u1,u2)
+  | aconv_bound_diff d (Abs (_, T1, t1), Abs (_, T2, t2)) =
+      aconv_bound_diff d (t1,t2) andalso T1 = T2
+  | aconv_bound_diff d (Bound i, Bound j) = i = j + d
+  | aconv_bound_diff _ (a1,a2) = a1 = a2
+
 fun abstract_over (v, body) =
   let
     fun abs lev tm =

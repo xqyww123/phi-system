@@ -38,7 +38,10 @@ type redex_residue = term * term
 
 fun rewrites thy fixed_bounds bvs (pat,rets) term =
   let val s = PLPR_Pattern.smatch thy fixed_bounds bvs (pat, term) (Vartab.empty, Vartab.empty)
-   in SOME (map (Envir.subst_term s) rets)
+   (*NOT `Envir.subst_term': a binding from `smatch' is numbered from the position
+     `smatch' was called at, so an occurrence of it under n binders has to be lifted
+     by n.  Getting this wrong is a silent capture, not an error.*)
+   in SOME (map (PLPR_Pattern.subst_term s) rets)
   end handle Pattern.MATCH => NONE
 
 fun rewrite thy fixed_bounds bv_typs (pat,ret) term =

@@ -53,17 +53,24 @@ We release the current development as a preview and look for cooperators and con
 
 The current version works on Isabelle-2023. Please download it from [here](https://isabelle.in.tum.de/).
 
-1. Some additional symbols are required. Please copy lines in file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols) into your Isabelle symbol file `$HOME/.isabelle/Isabelle2023/etc/symbols`.
-
-2. You maybe need to install a specific font [PhiSymbols](https://github.com/xqyww123/phi-system/tree/master/fonts/PhiSymbols.otf) given in the font directory which defines glyphs of symbols we used in Isabelle.
-
-3. Goto the root directory of φ-System. Execute,
+1. Goto the root directory of φ-System. Execute,
 ```
 isabelle components -u .
 ```
 to add φ-System into components of Isabelle.
 
-4. Now you can build the desired session by command, like,
+    This is the only configuration step. Besides making the sessions of φ-System
+    known to Isabelle, the component registers the additional symbols that φ-System
+    uses (file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols))
+    and the font providing their glyphs
+    ([PhiSymbols](https://github.com/xqyww123/phi-system/blob/master/fonts/PhiSymbols.ttf)),
+    by extending the `ISABELLE_SYMBOLS` setting and calling `isabelle_fonts` in
+    [etc/settings](https://github.com/xqyww123/phi-system/blob/master/etc/settings).
+    There is no need to copy anything into your personal
+    `$ISABELLE_HOME_USER/etc/symbols`, nor to install the font into your operating
+    system. Restart Isabelle/jEdit afterwards, as the settings are read at startup.
+
+2. Now you can build the desired session by command, like,
 ```
 isabelle build Phi_Semantics
 ```

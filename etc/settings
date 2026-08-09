@@ -1,0 +1,7 @@
+# -*- shell-script -*- :mode=shellscript:
+
+# additional symbols used by phi-System
+ISABELLE_SYMBOLS="$ISABELLE_SYMBOLS:$COMPONENT/symbols"
+
+# font providing the glyphs of those symbols
+isabelle_fonts "$COMPONENT/fonts/PhiSymbols.ttf"

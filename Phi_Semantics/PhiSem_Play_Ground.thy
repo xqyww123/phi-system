@@ -179,9 +179,9 @@ proc test_agg3:
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<nat>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
-  $v.x.n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
-  $v.x.m \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
-  $v
+  v.x.n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
+  v.x.m \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> \<semicolon>
+  v
 \<medium_right_bracket> .
 
 
