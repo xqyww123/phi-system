@@ -739,8 +739,7 @@ fun hammer_obligation_solver {async, read_store, write_store} wrap id =
         end
         handle MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, cost) =>
           (Phi_Reasoner.info_print ctxt 1 (fn () =>
-              "AoA cost: $" ^ Real.fmt (StringCvt.FIX (SOME 4)) (#cost cost) ^
-              ", tool_calls = " ^ Int.toString (#tool_calls cost));
+              MiniLang_Agent_AoA.string_of_cost cost);
            error (wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail))))
 
 fun hammer_obligation_solver' opts wrap id =
