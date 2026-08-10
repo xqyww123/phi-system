@@ -697,8 +697,9 @@ fun defer_obligation_tac cfg contr_mode =
               intro_all_leading_ex i (@{thm' exI} RSN (i, thm))
           | _ => intro_all_leading_ex (i+1) thm*)
 
-(*Stage-2 placeholder engine: the standalone auto_sledgehammer.  Stage 5 swaps
-  in `hammer_or_AoA`, which is when `Agent_Give_Up` becomes reachable.*)
+(*The tactic slot holds `hammer_or_AoA` (stage 5, §2.3): level-0 store lookup,
+  then one fork over [engine ORELSE AoA].  `Agent_Give_Up` is reachable from
+  here on; the handle below renders it (D51).*)
 fun hammer_obligation_solver {async, read_store, write_store} wrap id =
       oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
         let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
@@ -708,8 +709,9 @@ fun hammer_obligation_solver {async, read_store, write_store} wrap id =
             pre THEN HEADGOAL (Method.insert_tac ctxt aux)
                 THEN (fn st =>
                    let (*The one place all failure text is composed (D51, revised
-                         2026-08-09): the engine applies it on the sync error
-                         path, the forked report and the promise branch alike.*)
+                         2026-08-09): the forked report and the promise branch
+                         receive it via the failure_msg hook; the sync error
+                         path is the handle right below the call.*)
                        fun compose (MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, _)) =
                              wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)
                          | compose (Phi_Sledgehammer_Solver.Auto_Fail
@@ -724,15 +726,21 @@ fun hammer_obligation_solver {async, read_store, write_store} wrap id =
                                     | _ => [Pretty.str (Runtime.exn_message exn)]))))
                          | compose exn = wrap (Runtime.exn_message exn)
                     in
-                   (* Text dropped on purpose — already recorded by `hammer_or_AoA`, and `oblg_template`
-                      has no channel for it. Do not join the future either; that would undo the fork. *)
-                   Seq.single (snd (Phi_Sledgehammer_Solver.auto
-                      {improved = true, async = async,
-                       fact_override = Sledgehammer_Fact.no_fact_override,
-                       proof_id = id, timeout = NONE,
+                   (* Text future dropped on purpose — the text was already stored
+                      inside `hammer_or_AoA`, and `oblg_template` has no channel
+                      for it. Do not join the future either; that would undo the fork. *)
+                   (Seq.single (snd (MiniLang_Agent_AoA.hammer_or_AoA
+                      {fact_override = Sledgehammer_Fact.no_fact_override,
+                       proof_id = id, hammer_timeout = NONE, async = async,
                        read_store = read_store, write_store = write_store,
-                       raise_Error_instead_of_Auto_Fail = true,
                        failure_msg = SOME compose} ctxt st))
+                    (* Sync face: nothing upstream converts an escaping Auto_Fail
+                       (guard_errors is not on this path), and Internal_Failure
+                       must surface its payload (§2.9's consumption rule) — so
+                       this terminal slot renders it through the same composer.
+                       Agent_Give_Up is NOT caught here: it falls through to the
+                       outer handle, which also prints the agent cost. *)
+                    handle e as Phi_Sledgehammer_Solver.Auto_Fail _ => error (compose e))
                    end))
             Agressive_Solver)
          |> Seq.pull
