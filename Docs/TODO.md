@@ -18,17 +18,28 @@
   to decide: fix the derivation branch, and whether refute-class give-ups in the
   obligation slot should fail softly (empty Seq, allowing reasoner backtracking) instead
   of raising a hard error.
-  Suspected mechanism (2026-08-10): `prove_or_rebute` in
-  `Phi_Logic_Programming_Reasoner/library/reasoners.ML` gives the guard condition a chain
-  of WALL-CLOCK budgets (originally 30 ms prove, 30 ms falsify, 250 ms prove, 100 ms
-  falsify); when all expire it warns "Fail to prove or falisfy ... We assume the
-  conditions do not hold and this assumption can cause reasoning failure" and the
-  derivation proceeds down that branch — wall-clock deadlines make the outcome depend on
-  machine load, matching the observed pattern (an idle jEdit never hits it, loaded batch
-  builds hit it most of the time). The warning is invisible here because
-  `Phi_Types.thy:2527` declares `\<phi>trace_reasoning = 0`. NOT yet confirmed: raising the
-  four budgets to 100/100/300/200 ms did not fix it (one clean run, one degenerate run out
-  of two), so either the budgets need to be far larger or the guard is not merely slow.
+  ROOT CAUSE, established 2026-08-10 by diffing a successful against a failing
+  `\<phi>trace_reasoning = 3` trace of the same command (690 vs 719 lines, both captured under
+  isabelle-mcp): the two traces are byte-identical except that the `Sledgehammering on the
+  1th goal` lines sit at DIFFERENT positions relative to the stream of `Instantiate
+  reasoning template` / `Installing \<phi>-LPR reasoner` events. In the healthy run the reasoner
+  instantiated from template `\<phi>Mul_Quant_LenIv.\<A>backward_simp` is installed BEFORE the
+  engine attacks the obligation; in the degenerate run the engine goes first and the rule
+  is installed after. So `deriving` installs reasoning rules incrementally WHILE
+  obligations are being solved in parallel, and whether a rule is available at the moment
+  an obligation is attacked is a race: lose it and the reasoning falls back to another
+  rule, leaving the residual obligation that has lost its `len_intvl.len iv = 0`
+  hypothesis. Fix directions (author's call): serialise rule installation against
+  obligation solving, or defer obligation solving until the derivation phase has finished
+  installing, or make the fallback branch fail explicitly instead of silently emitting a
+  residual obligation.
+  Two hypotheses REFUTED by the same evidence: (a) the guard-condition wall-clock budgets
+  in `prove_or_rebute` are not the cause — its "Fail to prove or falisfy ... We assume the
+  conditions do not hold" warning fires exactly three times in BOTH the healthy and the
+  degenerate run, and raising the budgets from 30/30/250/100 ms to 100/100/300/200 ms
+  changed nothing; (b) machine load is not the cause either — the degenerate branch also
+  occurs on an idle machine. (The warnings are invisible by default because
+  `Phi_Types.thy:2527` declares `\<phi>trace_reasoning = 0`.)
   The lemma right after it, `\<phi>Mul_Quant_LenIv_wrap_module_src` (Phi_Types.thy:2581-2594),
   then fails with a bare `exception Option` (i.e. some `the NONE`) at the block
   bracket — seen on both the old and the new budgets, so it predates this experiment and
