@@ -2709,7 +2709,7 @@ lemma \<phi>Mul_Quant_Tree_wrap_module_src[\<phi>reason default %\<phi>Mul_Quant
           OF Tr[THEN mp], unfolded times_list_def append_Cons append_Nil
           \<phi>Prod_expn' \<phi>Prod_expn'' times_list_def append_Cons append_Nil append_Nil2] \<semicolon>
     C t1
-  \<medium_right_bracket> certified by auto_sledgehammer .
+  \<medium_right_bracket> certified by hammer_or_aoa .
 
 
 lemma \<phi>Mul_Quant_Tree_wrap_module_tgt[\<phi>reason default %\<phi>Mul_Quant_Tree_wrap_module+1]:
