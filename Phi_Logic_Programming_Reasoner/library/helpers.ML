@@ -1,4 +1,7 @@
 signature PHI_CONV = sig
+(*The base lives in Isa-Mini's library/aux_thms.ML — PLPR_error_msg imports
+  Minilang_AoA, so the general conversions are already in scope here.*)
+include PHI_CONV
 
 val may_Trueprop_conv : conv -> conv
 
@@ -70,7 +73,7 @@ val bottom_conv_by_comb_layers : (Proof.context -> conv) -> Proof.context -> con
 end
 
 structure Phi_Conv : PHI_CONV = struct
-open Conv
+open Phi_Conv Conv
 
 fun may_Trueprop_conv C ctm =
   case Thm.term_of ctm
