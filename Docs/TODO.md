@@ -18,3 +18,18 @@
   to decide: fix the derivation branch, and whether refute-class give-ups in the
   obligation slot should fail softly (empty Seq, allowing reasoner backtracking) instead
   of raising a hard error.
+  Suspected mechanism (2026-08-10): `prove_or_rebute` in
+  `Phi_Logic_Programming_Reasoner/library/reasoners.ML` gives the guard condition a chain
+  of WALL-CLOCK budgets (originally 30 ms prove, 30 ms falsify, 250 ms prove, 100 ms
+  falsify); when all expire it warns "Fail to prove or falisfy ... We assume the
+  conditions do not hold and this assumption can cause reasoning failure" and the
+  derivation proceeds down that branch — wall-clock deadlines make the outcome depend on
+  machine load, matching the observed pattern (an idle jEdit never hits it, loaded batch
+  builds hit it most of the time). The warning is invisible here because
+  `Phi_Types.thy:2527` declares `\<phi>trace_reasoning = 0`. NOT yet confirmed: raising the
+  four budgets to 100/100/300/200 ms did not fix it (one clean run, one degenerate run out
+  of two), so either the budgets need to be far larger or the guard is not merely slow.
+  The lemma right after it, `\<phi>Mul_Quant_LenIv_wrap_module_src` (Phi_Types.thy:2581-2594),
+  then fails with a bare `exception Option` (i.e. some `the NONE`) at the block
+  bracket — seen on both the old and the new budgets, so it predates this experiment and
+  is a separate blocker.
