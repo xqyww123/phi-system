@@ -3840,7 +3840,7 @@ lemma ToA_mapper_MOne_tgt
   \<medium_right_bracket> apply(rule conjunctionI, rule)
   \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and S1I[] and S1E[] and _ and Tr[]
     apply_rule apply_Module_One\<^sub>I[OF S1I]
-    certified by auto_sledgehammer \<semicolon>
+    certified by hammer_or_aoa \<semicolon>
     apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apfst E\<^sub>1 x\<close>]
     certified by (insert ToA_Mapper_f_expn[OF Tr] useful; auto simp add: fun_eq_iff map_prod_def image_iff;
                   smt (verit, best) Pair_inject apfst_convE case_prod_conv)  ;;
