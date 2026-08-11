@@ -223,7 +223,18 @@ val async_proof = Attrib.setup_config_bool \<^binding>\<open>\<phi>async_proof\<
 
 fun solve_obligation' wrap id ctxt =
   Phi_Reasoners.hammer_obligation_solver'
-    {async = Config.get ctxt async_proof, read_store = NONE, write_store = NONE} wrap id
+    (*user_facing = true is fixed here on purpose: this is the only entry through
+      which phi obligations are solved, and every one of its clients (the IDE
+      commands, the deriver framework, the toplevel) is a command a person is
+      watching -- so the fork must be the one that keeps the command displayed as
+      running.  failure_msg = NONE hands the composer's construction to
+      hammer_obligation_solver, the innermost layer that holds the obligation
+      itself; we could not build it here.*)
+    {async_mode = if Config.get ctxt async_proof
+                  then Phi_Sledgehammer_Solver.Async
+                         {failure_msg = NONE, user_facing = true}
+                  else Phi_Sledgehammer_Solver.Sync,
+     read_store = NONE, write_store = NONE} wrap id
     (*The empty-sequence failure raises ERROR with the text fully composed:
       every call site then shows it as-is — no site needs (or has) a handler
       that would render a payload-carrying exception.*)

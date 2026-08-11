@@ -29,12 +29,19 @@ signature PHI_REASONERS = sig
      for no wrapping.
      Pull the returned sequence at most once: the `Agent_Give_Up` handler wraps only
      the first pull. *)
+  (*async_mode: pass Async {failure_msg = NONE, ...} -- this solver substitutes
+    its own composer for the NONE, because it is the innermost layer that holds
+    BOTH the obligation and the context the obligation must be printed in, and
+    the only one that knows the AoA give-up vocabulary.  A SOME would be honoured
+    verbatim, but no caller has anything better to say.*)
   val hammer_obligation_solver :
-        {async : bool, read_store : bool option, write_store : bool option}
+        {async_mode : Phi_Sledgehammer_Solver.async_mode,
+         read_store : bool option, write_store : bool option}
      -> (string -> string) (*wraps the failure text*)
      -> Phi_Proof_Store.proof_id option -> Proof.context -> thm -> thm Seq.seq
   val hammer_obligation_solver' :
-        {async : bool, read_store : bool option, write_store : bool option}
+        {async_mode : Phi_Sledgehammer_Solver.async_mode,
+         read_store : bool option, write_store : bool option}
      -> (string -> string) (*wraps the failure text*)
      -> Phi_Proof_Store.proof_id option
      -> (Proof.context -> thm -> thm) (*failure callback*)
@@ -700,7 +707,7 @@ fun defer_obligation_tac cfg contr_mode =
 (*The tactic slot holds `hammer_or_AoA` (stage 5, §2.3): level-0 store lookup,
   then one fork over [engine ORELSE AoA].  `Agent_Give_Up` is reachable from
   here on; the handle below renders it (D51).*)
-fun hammer_obligation_solver {async, read_store, write_store} wrap id =
+fun hammer_obligation_solver {async_mode, read_store, write_store} wrap id =
       oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
         let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
             val th' = @{thm' Premise_I} RS th'1
@@ -711,7 +718,11 @@ fun hammer_obligation_solver {async, read_store, write_store} wrap id =
                    let (*The one place all failure text is composed (D51, revised
                          2026-08-09): the forked report and the promise branch
                          receive it via the failure_msg hook; the sync error
-                         path is the handle right below the call.*)
+                         path is the handle right below the call.  This is the
+                         innermost layer holding both the obligation (st) and the
+                         context to print it in, which is why the composer is
+                         built here and substituted into the caller's mode below,
+                         rather than being handed down from Phi_Envir.*)
                        fun compose (MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, _)) =
                              wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)
                          | compose (Phi_Sledgehammer_Solver.Auto_Fail
@@ -725,21 +736,33 @@ fun hammer_obligation_solver {async, read_store, write_store} wrap id =
                                    of x :: _ => [Syntax.pretty_term ctxt x]
                                     | _ => [Pretty.str (Runtime.exn_message exn)]))))
                          | compose exn = wrap (Runtime.exn_message exn)
+                       (*Substitute our composer for the caller's NONE — see the
+                         signature.  A caller that did supply one keeps it.*)
+                       val mode =
+                         (case async_mode of
+                            Phi_Sledgehammer_Solver.Async {failure_msg = NONE, user_facing} =>
+                              Phi_Sledgehammer_Solver.Async
+                                {failure_msg = SOME compose, user_facing = user_facing}
+                          | m => m)
+                       (*The obligation exactly as the solver receives it: after
+                         collect_obligation_premises and the aux insertion.*)
+                       val _ = Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks
+                                 (Pretty.str "Proof obligation handed to the solver:"
+                                  :: map (Syntax.pretty_term ctxt) (Thm.prems_of st)))
                     in
                    (* Text future dropped on purpose — the text was already stored
                       inside `hammer_or_AoA`, and `oblg_template` has no channel
                       for it. Do not join the future either; that would undo the fork. *)
                    (Seq.single (snd (MiniLang_Agent_AoA.hammer_or_AoA
                       {fact_override = Sledgehammer_Fact.no_fact_override,
-                       proof_id = id, hammer_timeout = NONE, async = async,
-                       read_store = read_store, write_store = write_store,
-                       failure_msg = SOME compose} ctxt st))
-                    (* Sync face: nothing upstream converts an escaping Auto_Fail
-                       (guard_errors is not on this path), and Internal_Failure
-                       must surface its payload (§2.9's consumption rule) — so
-                       this terminal slot renders it through the same composer.
-                       Agent_Give_Up is NOT caught here: it falls through to the
-                       outer handle, which also prints the agent cost. *)
+                       proof_id = id, hammer_timeout = NONE, async_mode = mode,
+                       read_store = read_store, write_store = write_store} ctxt st))
+                    (* Sync face: under Sync nothing upstream converts an escaping
+                       Auto_Fail, and Internal_Failure must surface its payload
+                       (§2.9's consumption rule) — so this terminal slot renders
+                       it through the same composer.  Agent_Give_Up is NOT caught
+                       here: it falls through to the outer handle, which also
+                       prints the agent cost. *)
                     handle e as Phi_Sledgehammer_Solver.Auto_Fail _ => error (compose e))
                    end))
             Agressive_Solver)
