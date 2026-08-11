@@ -385,7 +385,7 @@ lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<int>(_) \<t>\<r>\
 lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<nat>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag to \<int>(_)\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_nat x \<Ztypecolon> \<int>('b) @tag to \<int>(_) \<close>
-  \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket> certified by auto_sledgehammer .
+  \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket> certified by hammer_or_aoa .
 
 lemma [\<phi>reason %ToA_num_conv for \<open>_ \<Ztypecolon> \<nat>(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<int>(_) \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
   \<open> Threshold_Cost 5
