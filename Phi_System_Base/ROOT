@@ -1,0 +1,24 @@
+chapter Phi
+
+(*Every theory phi-system imports from outside this repository, prebuilt into one heap
+  so that development sessions need not re-evaluate them.  Develop with
+      isabelle jedit -l Phi_System_Base
+  Only foreign theories belong here -- phi-system's own theories (including the
+  Phi_Statespace fork of StateFun/DistinctTreeProver) must stay editable and hence
+  outside this image.*)
+session Phi_System_Base = "HOL-Library" +
+  sessions
+    "HOL-Computational_Algebra"
+    "HOL-Eisbach"
+    "List-Index"
+    "Word_Lib"
+    "Minilang_AoA"
+  theories
+    "HOL-Computational_Algebra.Primes"
+    "HOL-Eisbach.Eisbach"
+    "HOL-Eisbach.Eisbach_Tools"
+    "List-Index.List_Index"
+    "Word_Lib.More_Word"
+    "Word_Lib.Signed_Division_Word"
+    "Word_Lib.Word_Lemmas"
+    "Minilang_AoA.Minilang_AoA"

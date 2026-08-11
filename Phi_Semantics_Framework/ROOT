@@ -1,4 +1,4 @@
-session Phi_Semantics_Framework = Main +
+session Phi_Semantics_Framework = Phi_System_Base +
   options [document_build = build]
   sessions
     Phi_Statespace

@@ -1287,6 +1287,26 @@ fun oblg_solver proof_id text ctxt sequent =
                         Method.evaluate text' ctxt [] (ctxt, @{thm' Premise_I} RS sequent'1))
                  | NONE => (ctxt, sequent'1)
        val nprems' = Thm.nprems_of sequent'2
+       (*TEMPORARY DIAGNOSTIC 2026-08-11 -- DELETE AFTER: separates what the
+         pre-simplification does from what the hinted tactic does, to locate
+         where a well-formed obligation loses its premises.*)
+       val _ =
+         if String.isSubstring "Mul_Quant_LenIv" proof_id then
+           let fun show th = map (fn t => Pretty.item [Syntax.pretty_term ctxt t])
+                                 (Thm.prems_of th)
+            in warning (Pretty.string_of (Pretty.chunks (
+                 [Pretty.str ("TEMP-OBLG " ^ proof_id ^
+                              "  nprems=" ^ string_of_int nprems ^
+                              "  nprems'=" ^ string_of_int nprems' ^
+                              "  hint=" ^ (if is_some text then "SOME" else "NONE")),
+                  Pretty.str "-- sequent (as the deriver produced it):"]
+                 @ show sequent
+                 @ [Pretty.str "-- sequent'1 (after asm_lr_simp_tac):"]
+                 @ show sequent'1
+                 @ [Pretty.str "-- sequent'2 (after the hinted tactic):"]
+                 @ show sequent'2)))
+           end
+         else ()
        val rulex = Expansion.simp_rules ctxt
        val ctxt = ctxt addsimps rulex
     in Phi_Help.ntimes (nprems' - nprems + 1)

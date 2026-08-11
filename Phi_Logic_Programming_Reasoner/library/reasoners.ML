@@ -14,8 +14,11 @@ signature PHI_REASONERS = sig
   type contraction_mode = bool * bool * schm_by_ex
   (*contraction_mode = (collect_premises, conv_all, schm_by_ex)
 
-    collect_premises: whether to collect premises into the reported proof oblgiation
-    conv_all: whether to convert all meta-all into hol-all inside the reported obligation *)
+    collect_premises: shall the antecedents be put into the proof obligation?
+      If not, they are discarded.  \<open>A \<Longrightarrow> B \<Longrightarrow> obligation G\<close> gives
+      \<open>obligation (A \<longrightarrow> B \<longrightarrow> G)\<close> when true, \<open>obligation G\<close> when false.
+    conv_all: convert meta-all into hol-all inside the obligation.  Fails if any
+      antecedent is still there, so they must be gone by then. *)
 
   val collect_obligation_premises : contraction_mode -> Proof.context -> thm
                                  -> int (*number of new conditions introduced*) * thm
@@ -34,14 +37,47 @@ signature PHI_REASONERS = sig
     BOTH the obligation and the context the obligation must be printed in, and
     the only one that knows the AoA give-up vocabulary.  A SOME would be honoured
     verbatim, but no caller has anything better to say.*)
+  (*return_empty_seq_instead_of_raising_detailed_error: what to do when the proof
+    agent gives up, i.e. when `MiniLang_Agent_AoA.Agent_Give_Up` reaches this
+    solver.
+
+    false (what every caller passes today): raise ERROR carrying the agent's own
+      banner and detail, wrapped by the (string -> string) argument.  The command
+      fails then and there, and the user reads why.
+    true: return an empty sequence instead, so the reasoner backtracks and looks
+      for another way to discharge the antecedent.  The give-up text is lost --
+      whatever happens next, nothing reports that the agent was ever consulted.
+
+    Only these four give-up reasons are softened, and only when the flag is true:
+    "refute" (the agent believes the obligation is false), "resource_unavailable"
+    (it could not reach the model backend), "resource_exhausted" (it ran out of
+    budget) and "surrender" (it could not find a proof).  "technical_failure" AND
+    ANY REASON NOT IN THAT LIST always raise: `MiniLang_Agent_AoA.banner_of` has
+    a catch-all branch and the agent's reason string is passed through verbatim,
+    so the vocabulary is open and an unknown reason must not be swallowed.
+
+    Two failure channels are NOT covered by this flag -- they raise regardless:
+    the error raised when the AoA gate is closed, and
+    `Phi_Sledgehammer_Solver.Auto_Fail`.
+
+    Note that the flag interacts with the pull-at-most-once convention stated
+    above: that convention holds because the handler raises, so there is never a
+    second pull.  A caller passing true must re-examine it.
+
+    A caveat for whoever turns this on: a soft failure makes the reasoner take
+    another path in silence.  The premise-loss defect fixed in 2026-08-11 was
+    found only because the obligation failed loudly.  Pair any `true` with a
+    trace that reports the backtracking.*)
   val hammer_obligation_solver :
         {async_mode : Phi_Sledgehammer_Solver.async_mode,
-         read_store : bool option, write_store : bool option}
+         read_store : bool option, write_store : bool option,
+         return_empty_seq_instead_of_raising_detailed_error : bool}
      -> (string -> string) (*wraps the failure text*)
      -> Phi_Proof_Store.proof_id option -> Proof.context -> thm -> thm Seq.seq
   val hammer_obligation_solver' :
         {async_mode : Phi_Sledgehammer_Solver.async_mode,
-         read_store : bool option, write_store : bool option}
+         read_store : bool option, write_store : bool option,
+         return_empty_seq_instead_of_raising_detailed_error : bool}
      -> (string -> string) (*wraps the failure text*)
      -> Phi_Proof_Store.proof_id option
      -> (Proof.context -> thm -> thm) (*failure callback*)
@@ -81,6 +117,12 @@ signature PHI_REASONERS = sig
   val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm list
   val extract_prems_rewr : Proof.context -> cterm -> thm option option*)
   val is_syntactic_premise : term -> bool
+
+  (*Whether an antecedent is to be dropped from the proof obligation instead of
+    being collected into it as a premise.  Only shapes registered by the
+    attribute \<open>\<phi>filter_out_from_obligation_premise\<close> are dropped; the registry is
+    empty by default, so by default nothing is dropped.*)
+  val is_filtered_out_from_obligation_premise : Context.generic -> bvs -> term -> bool
 
   (*(* Simplifications that uses the extracted premises.
      The boolean: use_origin. if not use_origin, drops the original premises
@@ -508,24 +550,128 @@ val contract_premise_imp =
     @{lemma \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
             by (rule, (simp add: Premise_def)+)}
 
+(* Antecedents filtered out of the proof obligation *)
+
+(*An antecedent of the leading antecedent becomes a premise of the proof
+  obligation unless its shape is registered here.  The registry is a blacklist:
+  whatever is not registered is collected, so nothing disappears silently.*)
+
+val trace_filter_out_from_obligation_premise =
+      Attrib.setup_config_bool
+          \<^binding>\<open>\<phi>trace_filter_out_from_obligation_premise\<close> (K false)
+
+fun filtered_out_eq ((a,_) : spattern * Position.T, (b,_)) = a aconv b
+
+structure Filtered_Out_From_Obligation_Premise = Generic_Data (
+  type T = (spattern * Position.T) iNet.net
+  val empty = iNet.empty
+  val merge = iNet.merge filtered_out_eq
+)
+
+fun err_clashed_filter_out ctxt net entry =
+  let val (pat, _) = entry
+   in error (Pretty.string_of (Pretty.chunks (
+        Pretty.str "Clash with an existing \<phi>filter_out_from_obligation_premise \
+                   \pattern:" ::
+        Pretty.item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pat] ::
+        (iNet.lookup net (iNet.key_of_term pat)
+          |> filter (fn e => filtered_out_eq (e, entry))
+          |> map (fn (_,pos) =>
+                Pretty.block (Pretty.str "already declared" :: Pretty.brk 1 :: Pretty.here pos))))))
+  end
+
+fun add_filtered_out_from_obligation_premise (pat0, pos) ctxt =
+  let val _ = case Term.fastype_of pat0
+                of Type(\<^type_name>\<open>prop\<close>, _) => ()
+                 | _ => error "The pattern of \<phi>filter_out_from_obligation_premise \
+                              \must be a proposition"
+      val entry = (PLPR_Pattern.mk_spattern (Envir.beta_eta_contract pat0), pos)
+   in Filtered_Out_From_Obligation_Premise.map (fn net =>
+        iNet.insert_term filtered_out_eq (fst entry, entry) net
+          handle iNet.INSERT => err_clashed_filter_out ctxt net entry) ctxt
+  end
+
+val _ = Theory.setup (
+  Attrib.setup \<^binding>\<open>\<phi>filter_out_from_obligation_premise\<close> (
+    Scan.peek (fn generic =>
+      let val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern
+                                            (Context.proof_of generic)
+       in Scan.repeat1 (Parse.position (Args.named_term (fn str =>
+            let val tm = Syntax.read_prop ctxt str
+                val ctxt' = Proof_Context.augment tm ctxt
+             in singleton (Variable.export_terms ctxt' ctxt) tm
+            end)))
+      end)
+    >> (fn pats => Thm.declaration_attribute (K (
+          fold add_filtered_out_from_obligation_premise pats))))
+  "declare that antecedents matching the given proposition patterns are dropped \
+  \from the proof obligation instead of being collected into it as premises")
+
+fun is_filtered_out_from_obligation_premise ctxt =
+  let val net = Filtered_Out_From_Obligation_Premise.get ctxt
+      val thy = Context.theory_of ctxt
+      val trace = Config.get_generic ctxt trace_filter_out_from_obligation_premise
+      val pretty = Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt
+   in fn bvs => fn tm =>
+      case find_first (fn (pat,_) => PLPR_Pattern.does_smatch thy (K true) bvs (pat, tm))
+                      (iNet.match_term net tm)
+        of NONE => false
+         | SOME (pat, pos) =>
+            (if trace
+             then tracing (Pretty.string_of (Pretty.chunks [
+                    Pretty.str "filtering the antecedent",
+                    Pretty.item [pretty tm],
+                    Pretty.str "out of the proof obligation, because it matches the pattern",
+                    Pretty.item (pretty pat :: Pretty.brk 1 :: Pretty.here pos)]))
+             else ();
+             true)
+  end
+
+
+(*TEMP measurement, delete: append-only probe log, serialised across worker threads*)
+val probe_log_lock = Synchronized.var "phi_oblg_probe" ()
+val probe_log_path = Path.explode
+  "/tmp/claude-1002/-home-qiyuan-Current-MLML/e88d304c-ad2a-4d0e-adfb-73948bf5c881/scratchpad/phi_oblg_probe.log"
+val _ = Isabelle_System.make_directory (Path.dir probe_log_path)
+fun probe_say s =
+  Synchronized.change probe_log_lock (fn () => File.append probe_log_path (s ^ "\n"))
+fun probe_report tag ctxt A =
+  probe_say (
+    let val pos = Position.thread_data ()
+     in tag ^ " [" ^ Context.theory_name {long=false} (Proof_Context.theory_of ctxt) ^
+        "] " ^ the_default "<no file>" (Position.file_of pos) ^ ":" ^
+        (case Position.line_of pos of SOME l => string_of_int l | NONE => "<no line>") ^
+        (*the marker itself is kept unmangled so jEdit can jump to it*)
+        Position.here pos ^ " " ^
+        Protocol_Message.clean_output (Syntax.string_of_term ctxt A)
+    end)
+
 (*the term must be beta-eta normalized*)
 fun obligation_collect counter ctxt =
-  let fun conv ctm =
+  let val is_filtered_out = is_filtered_out_from_obligation_premise (Context.Proof ctxt)
+      fun conv bvs ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
                 Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
            | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ _
-               =>(if is_syntactic_premise A
-                  then (counter := !counter + 1;
+               =>(if is_filtered_out bvs A
+                  then ((*TEMP measurement, delete: what the registry actually drops*)
+                        probe_report "PHI_OBLG_DISCARD" ctxt A;
+                        (Conv.arg_conv (conv bvs) then_conv
+                         Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
+                  else ((*TEMP measurement, delete: what the old whitelist would have
+                          dropped here and this change now keeps -- i.e. §7.4's
+                          "before" reading, taken during an "after" run*)
+                        if is_syntactic_premise A then ()
+                        else probe_report "PHI_OBLG_RECOVERED" ctxt A;
+                        counter := !counter + 1;
                          (Conv.implies_conv
                             (Phi_Conv.atomize_conv ctxt then_conv
                              strip_premise_tag ctxt)
-                            conv then_conv
-                          Conv.rewr_conv contract_premise_imp) ctm)
-                  else (Conv.arg_conv conv then_conv
-                        Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
+                            (conv bvs) then_conv
+                          Conv.rewr_conv contract_premise_imp) ctm))
            | _ => raise CTERM ("unexpected proof obligation form", [ctm])
-   in conv
+   in conv []
   end
 
 (* REMOVE THIS WHEN NO BUG
@@ -707,7 +853,9 @@ fun defer_obligation_tac cfg contr_mode =
 (*The tactic slot holds `hammer_or_AoA` (stage 5, §2.3): level-0 store lookup,
   then one fork over [engine ORELSE AoA].  `Agent_Give_Up` is reachable from
   here on; the handle below renders it (D51).*)
-fun hammer_obligation_solver {async_mode, read_store, write_store} wrap id =
+fun hammer_obligation_solver
+      {async_mode, read_store, write_store,
+       return_empty_seq_instead_of_raising_detailed_error} wrap id =
       oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
         let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
             val th' = @{thm' Premise_I} RS th'1
@@ -749,6 +897,36 @@ fun hammer_obligation_solver {async_mode, read_store, write_store} wrap id =
                        val _ = Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks
                                  (Pretty.str "Proof obligation handed to the solver:"
                                   :: map (Syntax.pretty_term ctxt) (Thm.prems_of st)))
+                       (*TEMPORARY DIAGNOSTIC 2026-08-11 -- DELETE AFTER: dumps the exact
+                         material available to the solver at the hand-off point, to decide
+                         whether AoA's `premises:` being empty is a transmission loss or a
+                         faithful report of an empty context.*)
+                       val _ =
+                         if (case id of SOME s => String.isSubstring "Mul_Quant_LenIv" s
+                                      | NONE => false)
+                         then
+                           let val local_facts = Proof_Context.facts_of ctxt
+                               val outer = try Local_Theory.target_of ctxt
+                                        |> Option.map Proof_Context.facts_of |> the_list
+                               val named = Facts.dest_static false outer local_facts
+                               val assms = Assumption.all_assms_of ctxt
+                               val aux = aux_thms ctxt
+                            in warning (Pretty.string_of (Pretty.chunks (
+                               [Pretty.str ("TEMP-DIAG proof id = " ^ the_default "<none>" id),
+                                Pretty.block (Pretty.str "TEMP-DIAG obligation: " ::
+                                  map (Syntax.pretty_term ctxt) (Thm.prems_of st)),
+                                Pretty.str ("TEMP-DIAG target_of = " ^
+                                  (if null outer then "NONE (no local theory)" else "SOME")),
+                                Pretty.str ("TEMP-DIAG named local facts = " ^
+                                            string_of_int (length named))]
+                               @ map (fn (n, ths) => Pretty.str
+                                       ("  fact " ^ n ^ " : " ^ string_of_int (length ths) ^ " thms")) named
+                               @ [Pretty.str ("TEMP-DIAG all_assms_of = " ^ string_of_int (length assms))]
+                               @ map (fn ct => Pretty.item [Syntax.pretty_term ctxt (Thm.term_of ct)]) assms
+                               @ [Pretty.str ("TEMP-DIAG aux_thms = " ^ string_of_int (length aux))]
+                               @ map (fn th => Pretty.item [Syntax.pretty_term ctxt (Thm.prop_of th)]) aux)))
+                           end
+                         else ()
                     in
                    (* Text future dropped on purpose — the text was already stored
                       inside `hammer_or_AoA`, and `oblg_template` has no channel
@@ -771,7 +949,13 @@ fun hammer_obligation_solver {async_mode, read_store, write_store} wrap id =
         handle MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, cost) =>
           (Phi_Reasoner.info_print ctxt 1 (fn () =>
               MiniLang_Agent_AoA.string_of_cost cost);
-           error (wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail))))
+           (*Any reason outside this list -- "technical_failure" and whatever the
+             agent may invent, see `banner_of`'s catch-all -- always raises.*)
+           if return_empty_seq_instead_of_raising_detailed_error andalso
+              member (op =) ["refute", "resource_unavailable",
+                             "resource_exhausted", "surrender"] reason
+           then NONE
+           else error (wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail))))
 
 fun hammer_obligation_solver' opts wrap id =
       context_tactic_to_state_transition (hammer_obligation_solver opts wrap id)

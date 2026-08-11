@@ -234,7 +234,10 @@ fun solve_obligation' wrap id ctxt =
                   then Phi_Sledgehammer_Solver.Async
                          {failure_msg = NONE, user_facing = true}
                   else Phi_Sledgehammer_Solver.Sync,
-     read_store = NONE, write_store = NONE} wrap id
+     read_store = NONE, write_store = NONE,
+     (*false keeps today's behaviour: an agent give-up fails the command loudly
+       rather than letting the reasoner backtrack in silence.*)
+     return_empty_seq_instead_of_raising_detailed_error = false} wrap id
     (*The empty-sequence failure raises ERROR with the text fully composed:
       every call site then shows it as-is — no site needs (or has) a handler
       that would render a payload-carrying exception.*)
