@@ -13,30 +13,30 @@ declare tree.rel_eq[simp]
 lemma rel_tree_Leaf[\<phi>deriver_simps, iff]:
   \<open> rel_tree R \<langle>\<rangle> tree \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
   \<open> rel_tree R tree' \<langle>\<rangle> \<longleftrightarrow> tree' = \<langle>\<rangle> \<close>
-  by (auto_sledgehammer, auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma rel_tree_Node1[\<phi>deriver_simps]:
   \<open> NO_MATCH \<langle>L', y, R'\<rangle> tree
 \<Longrightarrow> rel_tree r \<langle>L, x, R\<rangle> tree \<longleftrightarrow> (\<exists>L' y R'. tree = \<langle>L', y, R'\<rangle> \<and> rel_tree r L L' \<and> r x y \<and> rel_tree r R R') \<close>
-  by auto_sledgehammer
+  by hammer_or_aoa
 
 lemma rel_tree__pred_tree:
   \<open>rel_tree R x y \<Longrightarrow> pred_tree (\<lambda>x. \<exists>y. R x y) x\<close>
-  by (induct x arbitrary: y; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma rel_tree_self_map:
   \<open> \<forall>a \<in> set_tree x. R a (f a)
 \<Longrightarrow> rel_tree R x (map_tree f x) \<close>
-  by (induct x; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma rel_tree_height:
   \<open> rel_tree R x y
 \<Longrightarrow> height x = height y \<close>
-  by (induct x arbitrary: y; auto simp: rel_tree_Node1)
+  by hammer_or_aoa
 
 lemma AList_Upd_map_of_is_Map_map_of[iff]:
   \<open>map_of l = Map.map_of l\<close>
-  by (induct l; auto)
+  by hammer_or_aoa
 
 
 subsection \<open>tree_domain_distinct\<close>
@@ -62,79 +62,79 @@ primrec sorted_lookup_tree :: \<open>('k::order \<times> 'v) tree \<Rightarrow> 
 lemma lookup_tree_map_tree[simp]:
   \<open>lookup_tree (map_tree (\<lambda>(k, v). (k, f k v)) tree) = (\<lambda>k. map_option (f k) (lookup_tree tree k)) \<close>
   unfolding fun_eq_iff
-  by (induct tree; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma tree_domain_distinct_map[iff]:
   \<open>tree_domain_distinct (Tree.tree.map_tree (\<lambda>(k, v). (k, f k v)) tree) \<longleftrightarrow> tree_domain_distinct tree\<close>
-  by (induct tree; auto simp: set_eq_iff dom_def)
+  by hammer_or_aoa
 
 
 lemma rel_tree_domain_eq:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
 \<Longrightarrow> dom (lookup_tree x) = dom (lookup_tree y) \<close>
-  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1 dom_def map_add_def split: option.split; hammer_or_aoa)
+  by hammer_or_aoa
 
 lemma sorted_lookup_tree_rel:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
 \<Longrightarrow> sorted_lookup_tree x \<longleftrightarrow> sorted_lookup_tree y \<close>
-  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1 split: option.split; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma rel_tree_domain_distinct:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
 \<Longrightarrow> tree_domain_distinct x \<longleftrightarrow> tree_domain_distinct y \<close>
-  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1 dom_def; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma sorted1_inorder_map_tree[iff]:
   \<open>sorted_lookup_tree (map_tree (\<lambda>(k, v). (k, f k v)) tree) \<longleftrightarrow> sorted_lookup_tree tree\<close>
-  by (induct tree; auto_sledgehammer)
+  by hammer_or_aoa
 
 subsection \<open>sorted\<close>
 
 lemma tree_sorted_implies_domain_distinct[simp]:
   \<open>sorted_lookup_tree tree \<Longrightarrow> tree_domain_distinct tree\<close>
-  by (induct tree; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma lookup_tree_eq_empty:
   \<open> lookup_tree tree = Map.empty \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
-  by (induct tree; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma lookup_tree_by_set_distinct[simp]:
   \<open> tree_domain_distinct tree
 \<Longrightarrow> (k, v) \<in> tree.set_tree tree \<longleftrightarrow> lookup_tree tree k = Some v\<close>
-  by (induct tree; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma rel_map_lookup_by_rel_tree:
   \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd a) (snd b)) x y
 \<Longrightarrow> tree_domain_distinct x
 \<Longrightarrow> rel_map r (lookup_tree x) (lookup_tree y) \<close>
-  by (induct x arbitrary: y; auto simp: set_eq_iff rel_fun_def rel_tree_Node1 split: option.split; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma rel_map_lookup_by_rel_tree2:
   \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd (snd a)) (snd (snd b))) x y
 \<Longrightarrow> tree_domain_distinct x
 \<Longrightarrow> rel_map r (map_option snd o lookup_tree x) (map_option snd o lookup_tree y) \<close>
-  by (induct x arbitrary: y; auto simp: set_eq_iff rel_fun_def rel_tree_Node1 split: option.split; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma lookup_tree_map_tree2[simp]:
   \<open> lookup_tree (map_tree (\<lambda>(k, h, v). (k, f k h v)) tree) = (\<lambda>k. map_option (case_prod (f k)) (lookup_tree tree k)) \<close>
   using lookup_tree_map_tree[where f=\<open>case_prod o f\<close>]
-  by (simp add: case_prod_beta')
+  by hammer_or_aoa
 
 lemma sorted_lookup_map_tree2[simp]:
   \<open> sorted_lookup_tree (map_tree (\<lambda>(k, h, v). (k, f k h v)) tree) \<longleftrightarrow> sorted_lookup_tree tree \<close>
   using sorted1_inorder_map_tree[where f=\<open>case_prod o f\<close>]
-  by (simp add: case_prod_beta')
+  by hammer_or_aoa
 
 lemma lookup_left_children:
   \<open> sorted_lookup_tree tree
 \<Longrightarrow> lookup_tree (left tree) = lookup_tree tree |` {x. x < fst (value tree)} \<close>
   \<comment> \<open>this value is the value of the root node\<close>
-  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma lookup_right_children:
   \<open> sorted_lookup_tree tree
 \<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close>
-  by (induct tree; auto simp: fun_eq_iff restrict_map_def; auto_sledgehammer)
+  by hammer_or_aoa
 
 
 
@@ -149,16 +149,16 @@ primrec insert_tree :: \<open>'k::linorder \<Rightarrow> 'v \<Rightarrow> ('k \<
 lemma lookup_tree_insert_tree[simp]:
   \<open> sorted_lookup_tree tree
 \<Longrightarrow> lookup_tree (insert_tree k v tree) = (lookup_tree tree)(k \<mapsto> v)\<close>
-  by (induct tree; auto simp: fun_eq_iff map_add_def split: option.split; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma insert_tree_sorted[simp]:
   \<open> sorted_lookup_tree tree
 \<Longrightarrow> sorted_lookup_tree (insert_tree k v tree) \<close>
-  by (induct tree; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma insert_tree_not_Leaf[simp]:
   \<open>insert_tree k v tree \<noteq> \<langle>\<rangle>\<close>
-  by (induct tree; auto_sledgehammer)
+  by hammer_or_aoa
 
 
 
@@ -235,12 +235,12 @@ primrec AVL_invar
 lemma Object_Equiv_of_AVL_tree_invar:
   \<open> AVL_invar xa
 \<Longrightarrow> AVL_invar (Tree.tree.map_tree (\<lambda>(k, (h,v)). (k, (h, the (y k)))) xa)  \<close>
-  by (induct xa arbitrary: y; auto_sledgehammer)
+  by hammer_or_aoa
 
 lemma rel_tree__AVL_tree_invar:
   \<open> rel_tree (\<lambda>a b. fst (snd a) = fst (snd b)) x y
 \<Longrightarrow> AVL_invar x \<longleftrightarrow> AVL_invar y \<close>
-  by (induct x arbitrary: y; auto simp: rel_tree_Node1; auto_sledgehammer)
+  by hammer_or_aoa
  
 
 
@@ -303,7 +303,7 @@ proc lookup_bintree:
   is [recursive]
   is [routine]
 \<medium_left_bracket>
-  obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
+  obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
   \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
  
   val k' \<leftarrow> addr.data.k \<semicolon>
@@ -346,7 +346,7 @@ proc defined_bintree:
   if \<open>$addr = 0\<close> \<medium_left_bracket>
     return (False) 
   \<medium_right_bracket> \<medium_left_bracket>
-    obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
+    obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
     val k' \<leftarrow> addr.data.k \<semicolon>
@@ -392,7 +392,7 @@ proc insert_bintree:
       \<m>\<a>\<k>\<e>\<s>(1) \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> BinTree addrb \<lbrace> k: K, v: V \<rbrace>\<close> \<semicolon>
       return (ret)
   \<medium_right_bracket> \<medium_left_bracket>
-      obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
+      obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
       \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> addr.data.k \<semicolon>
@@ -445,7 +445,7 @@ proc height_of:
   if \<open>$addr = 0\<close> \<medium_left_bracket>
       return (0)
   \<medium_right_bracket> \<medium_left_bracket>
-      obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by auto_sledgehammer \<semicolon>
+      obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
       \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
       addr.data.v.height \<rightarrow> val ret \<semicolon>
       \<m>\<a>\<k>\<e>\<s>(1) \<open>tree \<Ztypecolon> BinTree addr _\<close> \<semicolon>
@@ -479,7 +479,7 @@ proc maintain_i:
   val H\<^sub>E \<leftarrow> height_of (E) \<semicolon>
 
   if (H\<^sub>B = H\<^sub>E + 2) \<medium_left_bracket>
-      obtain A k\<^sub>B h\<^sub>B v\<^sub>B C where B[simp]: \<open>B = \<langle>A, (k\<^sub>B, h\<^sub>B, v\<^sub>B), C\<rangle>\<close> by auto_sledgehammer \<semicolon> (*this line and the*)
+      obtain A k\<^sub>B h\<^sub>B v\<^sub>B C where B[simp]: \<open>B = \<langle>A, (k\<^sub>B, h\<^sub>B, v\<^sub>B), C\<rangle>\<close> by hammer_or_aoa \<semicolon> (*this line and the*)
       \<open>BinTree a\<^sub>B _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>A, a\<^sub>C \<semicolon>                                        (*next line, for reasoning, one \<Omega>*)
 
       val A \<leftarrow> B.left \<semicolon>
@@ -498,10 +498,10 @@ proc maintain_i:
           \<open>BinTree a\<^sub>E _\<close> \<open>BinTree a\<^sub>C _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
           \<open>BinTree a\<^sub>A _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>B _\<close> \<semicolon>                                                  (*for reasoning, \<Omega>*)
  
-          return (B) certified by (auto simp add: fun_eq_iff map_add_def split: option.split; auto_sledgehammer) (*Tac-1n-2m*)
+          return (B) certified by hammer_or_aoa (*Tac-1n-2m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
-          obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by auto_sledgehammer \<semicolon>  (*this line and the next*)
+          obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by hammer_or_aoa \<semicolon>  (*this line and the next*)
           \<open>BinTree a\<^sub>C _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R \<semicolon>                                           (*line, for reasoning, one \<Omega>*)
 
           val C\<^sub>L \<leftarrow> C.left \<semicolon>
@@ -522,13 +522,13 @@ proc maintain_i:
 
           holds_fact t1[useful]: \<open>k\<^sub>B < k\<^sub>D\<close>  \<semicolon>                                    (*for proof, Tac-s*)
 
-          return (C) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)  (*Tac-1n-3m*)
+          return (C) certified by hammer_or_aoa  (*Tac-1n-3m*)
     \<medium_right_bracket>
   \<medium_right_bracket>
   \<medium_left_bracket>
     if (H\<^sub>E = H\<^sub>B + 2) \<medium_left_bracket>
 
-      obtain F k\<^sub>E h\<^sub>E v\<^sub>E G where E[simp]: \<open>E = \<langle>F, (k\<^sub>E, h\<^sub>E, v\<^sub>E), G\<rangle>\<close> by auto_sledgehammer \<semicolon> (*for reasoning, \<Omega>*)
+      obtain F k\<^sub>E h\<^sub>E v\<^sub>E G where E[simp]: \<open>E = \<langle>F, (k\<^sub>E, h\<^sub>E, v\<^sub>E), G\<rangle>\<close> by hammer_or_aoa \<semicolon> (*for reasoning, \<Omega>*)
       \<open>BinTree a\<^sub>E _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F, a\<^sub>G \<semicolon>
   
       val F \<leftarrow> E.left \<semicolon>
@@ -547,10 +547,10 @@ proc maintain_i:
           \<open>BinTree a\<^sub>F _\<close> \<open>BinTree a\<^sub>B _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
           \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>E _\<close> \<semicolon>                                  (*for reasoning, \<Omega>*)
 
-          return (E) certified by (auto simp: map_add_def fun_eq_iff split: option.split; auto_sledgehammer)  (*Tac-1n-3m*)
+          return (E) certified by hammer_or_aoa  (*Tac-1n-3m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
-          obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by auto_sledgehammer \<semicolon>
+          obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by hammer_or_aoa \<semicolon>
           \<open>BinTree a\<^sub>F _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R \<semicolon>
 
           val F\<^sub>L \<leftarrow> F.left \<semicolon>
@@ -569,9 +569,7 @@ proc maintain_i:
           \<open>BinTree a\<^sub>F\<^sub>L _\<close> \<open>BinTree a\<^sub>B _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>
           \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>F _\<close> \<semicolon>
 
-          return (F) certified by (clarsimp, rule,
-                                   ((auto simp: map_add_def fun_eq_iff split: option.split)[1]; auto_sledgehammer),
-                                   auto; auto_sledgehammer)                          (*Tac-4n-3m*)
+          return (F) certified by hammer_or_aoa                          (*Tac-4n-3m*)
       \<medium_right_bracket>
     \<medium_right_bracket>
     \<medium_left_bracket>
@@ -617,7 +615,7 @@ proc insert_avl_i:
       return (ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
-      obtain L k' h' v' R where tree_def[simp]: \<open>tree = \<langle>L, (k', h', v'), R\<rangle>\<close> by auto_sledgehammer \<semicolon>
+      obtain L k' h' v' R where tree_def[simp]: \<open>tree = \<langle>L, (k', h', v'), R\<rangle>\<close> by hammer_or_aoa \<semicolon>
       \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> addr.data.k \<semicolon>
