@@ -72,6 +72,15 @@ translations
   "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: S" <= "CONST View_Shift_CurrentConstruction s R S"
   "\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> f \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S \<t>\<h>\<r>\<o>\<w>\<s> E" <= "CONST PendingConstruction f s R S E"
 
+text \<open>The construction state and the pending state carry where the program is, not a
+  hypothesis about the program, so neither belongs in a reported proof obligation.
+  The patterns must name the real constants: the \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>:\<close> and
+  \<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c>\<close> forms above are print-only (note the \<open><=\<close>), and the constants
+  they print through occur in no term.\<close>
+
+declare [[\<phi>filter_out_from_obligation_premise \<open>CurrentConstruction mode s R S\<close>
+                                                \<open>PendingConstruction f s R S E\<close>]]
+
 definition \<open>Code s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Satisfiable T"

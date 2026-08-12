@@ -1369,6 +1369,13 @@ translations
   "CONST \<phi>Procedure p X Y E" <= "CONST \<phi>Procedure (_do_block p) X Y E"
   "CONST \<phi>Procedure_no_exception p X Y" <= "CONST \<phi>Procedure_no_exception (_do_block p) X Y"
 
+text \<open>A procedure specification standing as an antecedent is the program being built,
+  not a hypothesis about it, so it does not belong in a reported proof obligation.
+  Two patterns because the with-exception and the no-exception forms are two constants.\<close>
+
+declare [[\<phi>filter_out_from_obligation_premise \<open>\<phi>Procedure f X Y E\<close>
+                                                \<open>\<phi>Procedure_no_exception f X Y\<close>]]
+
 lemma \<phi>Procedure_alt:
   \<open>\<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> U \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<longleftrightarrow> (\<forall>comp r. comp \<Turnstile> INTERP_SPEC (T * Itself r)

@@ -111,6 +111,12 @@ text \<open>A general syntactic tag used for hiding internal things.\<close>
 definition Technical :: \<open>'a::{} \<Rightarrow> 'a\<close> ("TECHNICAL _" [18] 17) where \<open>Technical x \<equiv> x\<close>
   \<comment> \<open>TODO: Unify all tags\<close>
 
+text \<open>A technical tag carries internal bookkeeping, never a hypothesis the user could
+  use, so it does not belong in a reported proof obligation.\<close>
+
+declare [[\<phi>filter_out_from_obligation_premise \<open>TECHNICAL x\<close>
+                                                \<open>PROP Technical P\<close>]]
+
 
 lemma Technical_I : \<open>P \<Longrightarrow> Technical P\<close> unfolding Technical_def .
 lemma Technical_I': \<open>PROP P \<Longrightarrow> PROP Technical P\<close> unfolding Technical_def .

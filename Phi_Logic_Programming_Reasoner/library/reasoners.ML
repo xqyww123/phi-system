@@ -628,24 +628,6 @@ fun is_filtered_out_from_obligation_premise ctxt =
   end
 
 
-(*TEMP measurement, delete: append-only probe log, serialised across worker threads*)
-val probe_log_lock = Synchronized.var "phi_oblg_probe" ()
-val probe_log_path = Path.explode
-  "/tmp/claude-1002/-home-qiyuan-Current-MLML/e88d304c-ad2a-4d0e-adfb-73948bf5c881/scratchpad/phi_oblg_probe.log"
-val _ = Isabelle_System.make_directory (Path.dir probe_log_path)
-fun probe_say s =
-  Synchronized.change probe_log_lock (fn () => File.append probe_log_path (s ^ "\n"))
-fun probe_report tag ctxt A =
-  probe_say (
-    let val pos = Position.thread_data ()
-     in tag ^ " [" ^ Context.theory_name {long=false} (Proof_Context.theory_of ctxt) ^
-        "] " ^ the_default "<no file>" (Position.file_of pos) ^ ":" ^
-        (case Position.line_of pos of SOME l => string_of_int l | NONE => "<no line>") ^
-        (*the marker itself is kept unmangled so jEdit can jump to it*)
-        Position.here pos ^ " " ^
-        Protocol_Message.clean_output (Syntax.string_of_term ctxt A)
-    end)
-
 (*the term must be beta-eta normalized*)
 fun obligation_collect counter ctxt =
   let val is_filtered_out = is_filtered_out_from_obligation_premise (Context.Proof ctxt)
@@ -654,17 +636,12 @@ fun obligation_collect counter ctxt =
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
                 Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
            | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ _
-               =>(if is_filtered_out bvs A
-                  then ((*TEMP measurement, delete: what the registry actually drops*)
-                        probe_report "PHI_OBLG_DISCARD" ctxt A;
-                        (Conv.arg_conv (conv bvs) then_conv
-                         Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
-                  else ((*TEMP measurement, delete: what the old whitelist would have
-                          dropped here and this change now keeps -- i.e. §7.4's
-                          "before" reading, taken during an "after" run*)
-                        if is_syntactic_premise A then ()
-                        else probe_report "PHI_OBLG_RECOVERED" ctxt A;
-                        counter := !counter + 1;
+               =>((*the whitelist wins: an antecedent that says of itself that it is a
+                    proof premise is never filtered out, whatever is registered*)
+                  if is_filtered_out bvs A andalso not (is_syntactic_premise A)
+                  then (Conv.arg_conv (conv bvs) then_conv
+                        Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm
+                  else (counter := !counter + 1;
                          (Conv.implies_conv
                             (Phi_Conv.atomize_conv ctxt then_conv
                              strip_premise_tag ctxt)
