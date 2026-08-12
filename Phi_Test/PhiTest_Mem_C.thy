@@ -281,7 +281,7 @@ lemma
              take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
   \<medium_left_bracket>
-  \<medium_right_bracket> certified by auto_sledgehammer .
+  \<medium_right_bracket> certified by hammer_or_aoa .
 
 
 
@@ -295,7 +295,8 @@ lemma
              y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> j\<^sup>\<t>\<^sup>\<h>] T\<heavy_comma>
              take (j - start) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[start, j - start] T\<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
-  sorry (* TODO[Isabelle2024 port]: auto_sledgehammer breaks down; proof skipped *)
+  \<medium_left_bracket>
+  \<medium_right_bracket> certified by hammer_or_aoa .
 
 
 lemma
@@ -306,7 +307,7 @@ lemma
              drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T\<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
   \<medium_left_bracket> 
-  \<medium_right_bracket> certified by auto_sledgehammer .
+  \<medium_right_bracket> certified by hammer_or_aoa .
 
 lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
@@ -316,7 +317,7 @@ lemma
              y ! (j - start) \<Ztypecolon> \<m>\<e>\<m>[addr \<tribullet> j\<^sup>\<t>\<^sup>\<h>] T \<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
   \<medium_left_bracket> 
-  \<medium_right_bracket> certified by auto_sledgehammer .
+  \<medium_right_bracket> certified by hammer_or_aoa .
 
 lemma
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> start \<le> j \<and> j < start + len
@@ -326,7 +327,7 @@ lemma
              drop (j - start + 1) y \<Ztypecolon> \<m>\<e>\<m>[addr] \<s>\<l>\<i>\<c>\<e>[j + 1, start + len - j - 1] T \<close>
   for T :: \<open>(mem_fic, 'a) \<phi>\<close>
   \<medium_left_bracket> 
-  \<medium_right_bracket> certified by auto_sledgehammer .
+  \<medium_right_bracket> certified by hammer_or_aoa .
 
 
 

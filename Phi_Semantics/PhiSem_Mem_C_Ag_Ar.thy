@@ -141,7 +141,7 @@ proc op_get_element_pointer_arr[\<phi>overload \<tribullet> 50]:
   have t1: \<open>0 < any\<close>
     by (insert \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[any] TY\<close>
                \<open>valid_memaddr addr\<close> parse_eleidx_input_def that(1) valid_idx_step_arr,
-        cases addr, auto_sledgehammer) ;;
+        cases addr, hammer_or_aoa) ;;
     holds_fact t2: \<open>0 < N \<Longrightarrow> phantom_mem_semantic_type (\<a>\<r>\<r>\<a>\<y>[N] TY) \<longleftrightarrow> phantom_mem_semantic_type TY\<close> for N \<semicolon>
   semantic_return \<open>
     sem_mk_pointer (memaddr_to_raw (addr_geps (rawaddr_to_log_arr TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))) sem_idx))
@@ -191,7 +191,7 @@ lemma [\<phi>reason %slice_ptr_ToA]:
 \<Longrightarrow> i \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr TY' \<close>
   \<medium_left_bracket>
     to \<open>OPEN _ _\<close>
-    to \<open>TypedPtr TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr; auto_sledgehammer)
+    to \<open>TypedPtr TY'\<close> certified by (insert \<phi>, auto simp add: valid_idx_step_arr; hammer_or_aoa)
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %slice_ptr_ToA+10 for \<open>_ \<tribullet> (_)\<^sup>\<t>\<^sup>\<h> \<Ztypecolon> TypedPtr _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[_:_] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close>]:
@@ -293,7 +293,7 @@ lemma split_mem_coerce_array:
   \<medium_left_bracket> for n, l premises Tr
     split_mem_coerce_array'
     unfold Tr  
-  \<medium_right_bracket> certified by auto_sledgehammer 
+  \<medium_right_bracket> certified by hammer_or_aoa 
   \<medium_left_bracket> premises Tr 
     apply_rule split_mem_coerce_array'[symmetric, where n=n and l=x and T=T, unfolded Tr]
     certified by auto_sledgehammer

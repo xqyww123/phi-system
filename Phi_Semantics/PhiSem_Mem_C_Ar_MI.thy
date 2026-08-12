@@ -25,7 +25,7 @@ proc op_add_ptr[\<phi>overload +]:
     show ?thesis
       by (insert useful, auto simp: memaddr_to_raw_array_GEP[OF t1] distrib_right,
                   simp add: add.commute signed_of_int signed_take_bit_int_eq_self;
-                  auto_sledgehammer)
+                  hammer_or_aoa)
   qed
 \<medium_right_bracket> .
 
