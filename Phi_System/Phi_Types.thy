@@ -2524,11 +2524,7 @@ private lemma list_all2_single_length_1[simp]:
   \<open>list_all2 (=) [hd x] x \<longleftrightarrow> length x = Suc 0\<close>
   by (metis append_eq_conv_conj length_Suc_conv list.sel(1) list.size(3) list_all2_eq take0)
 
-declare [[\<phi>trace_reasoning = 4]]
-(*TEMPORARY 2026-08-11 -- DELETE AFTER: obligations must be solved synchronously
-  while the premise-loss fix is being verified, or failures only surface at the
-  end of the theory and the completion signal lies.*)
-declare [[\<phi>async_proof = false]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Mul_Quant_LenIv :: \<open> nat len_intvl
                               \<Rightarrow> (nat \<Rightarrow> ('c::sep_algebra, 'x) \<phi>)
@@ -2573,15 +2569,6 @@ declare [[\<phi>async_proof = false]]
                                      (\<lambda>s t (x,y). len_intvl.len s = length x \<and> len_intvl.len t = length y) (\<lambda>s t (x,y). x @ y) \<close>
 
 declare list_all2_single_length_1[simp del]
-
-(*TEMPORARY 2026-08-11 -- DELETE AFTER: reasoning trace and the theorem dump below
-  are for the premise-loss investigation.  A `declare` in a theory target writes the
-  background theory (Generic_Target.theory_target_notes), so level 4 would otherwise
-  leak into every theory importing Phi_Types; reset it here.*)
-declare [[\<phi>trace_reasoning = 0]]
-declare [[\<phi>async_proof = true]]
-
-thm \<phi>Mul_Quant_LenIv.Transformation_Functor
 
 end
 

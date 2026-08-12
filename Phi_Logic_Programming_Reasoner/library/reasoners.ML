@@ -874,36 +874,6 @@ fun hammer_obligation_solver
                        val _ = Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks
                                  (Pretty.str "Proof obligation handed to the solver:"
                                   :: map (Syntax.pretty_term ctxt) (Thm.prems_of st)))
-                       (*TEMPORARY DIAGNOSTIC 2026-08-11 -- DELETE AFTER: dumps the exact
-                         material available to the solver at the hand-off point, to decide
-                         whether AoA's `premises:` being empty is a transmission loss or a
-                         faithful report of an empty context.*)
-                       val _ =
-                         if (case id of SOME s => String.isSubstring "Mul_Quant_LenIv" s
-                                      | NONE => false)
-                         then
-                           let val local_facts = Proof_Context.facts_of ctxt
-                               val outer = try Local_Theory.target_of ctxt
-                                        |> Option.map Proof_Context.facts_of |> the_list
-                               val named = Facts.dest_static false outer local_facts
-                               val assms = Assumption.all_assms_of ctxt
-                               val aux = aux_thms ctxt
-                            in warning (Pretty.string_of (Pretty.chunks (
-                               [Pretty.str ("TEMP-DIAG proof id = " ^ the_default "<none>" id),
-                                Pretty.block (Pretty.str "TEMP-DIAG obligation: " ::
-                                  map (Syntax.pretty_term ctxt) (Thm.prems_of st)),
-                                Pretty.str ("TEMP-DIAG target_of = " ^
-                                  (if null outer then "NONE (no local theory)" else "SOME")),
-                                Pretty.str ("TEMP-DIAG named local facts = " ^
-                                            string_of_int (length named))]
-                               @ map (fn (n, ths) => Pretty.str
-                                       ("  fact " ^ n ^ " : " ^ string_of_int (length ths) ^ " thms")) named
-                               @ [Pretty.str ("TEMP-DIAG all_assms_of = " ^ string_of_int (length assms))]
-                               @ map (fn ct => Pretty.item [Syntax.pretty_term ctxt (Thm.term_of ct)]) assms
-                               @ [Pretty.str ("TEMP-DIAG aux_thms = " ^ string_of_int (length aux))]
-                               @ map (fn th => Pretty.item [Syntax.pretty_term ctxt (Thm.prop_of th)]) aux)))
-                           end
-                         else ()
                     in
                    (* Text future dropped on purpose — the text was already stored
                       inside `hammer_or_AoA`, and `oblg_template` has no channel
