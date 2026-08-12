@@ -48,7 +48,7 @@ proc op_add_ptr_unsigned[\<phi>overload +]:
     show ?thesis
       by (insert useful,
                   auto simp: memaddr_to_raw_array_GEP[OF t1]
-                             distrib_right ucast_of_nat_small; auto_sledgehammer)
+                             distrib_right ucast_of_nat_small; hammer_or_aoa)
     qed
 \<medium_right_bracket> .
 
