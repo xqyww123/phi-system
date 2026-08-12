@@ -136,7 +136,7 @@ lemma split_4mat:
                                     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
                                     \<s>\<u>\<b>\<j> x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2. (x\<^sub>1\<^sub>1, x\<^sub>1\<^sub>2, x\<^sub>2\<^sub>1, x\<^sub>2\<^sub>2) = split_block x s t\<close>
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
-  \<medium_left_bracket> \<medium_right_bracket> certified by (auto simp: Bex_def in_set_conv_nth image_iff; auto_sledgehammer) .
+  \<medium_left_bracket> \<medium_right_bracket> certified by (auto simp: Bex_def in_set_conv_nth image_iff; hammer_or_aoa) .
 
 lemma merge_4mat:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> s \<le> m \<and> t \<le> n

@@ -72,7 +72,7 @@ lemma tree_domain_distinct_map[iff]:
 lemma rel_tree_domain_eq:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
 \<Longrightarrow> dom (lookup_tree x) = dom (lookup_tree y) \<close>
-  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1 dom_def map_add_def split: option.split; auto_sledgehammer)
+  by (induct x arbitrary: y; auto simp: set_eq_iff rel_tree_Node1 dom_def map_add_def split: option.split; hammer_or_aoa)
 
 lemma sorted_lookup_tree_rel:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
