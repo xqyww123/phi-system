@@ -1,6 +1,6 @@
 theory PhiSem_Aggregate_Tuple
   imports PhSm_Ag_Base
-  abbrevs "<tup>" = "\<t>\<u>\<p>"
+  abbrevs "<tup>" = "\<tup>"
 begin
 
 section \<open>Semantics\<close>
@@ -49,18 +49,18 @@ lemma has_Zero_tup1 [simp]:
 
 subsubsection \<open>Syntax\<close>
 
-abbreviation semty_tup_empty ("\<t>\<u>\<p> {}")
+abbreviation semty_tup_empty ("\<tup> {}")
   where \<open>semty_tup_empty \<equiv> sem_tup_T []\<close>
 
 notation semty_tup_empty ("tup{}")
      and semty_tup_empty ("T{}")
-     and semty_tup_empty ("\<t>\<u>\<p> { }")
+     and semty_tup_empty ("\<tup> { }")
 
 syntax "\<phi>_tuple_" :: \<open>logic \<Rightarrow> \<phi>_tuple_arg_\<close> ("_")
 
        "_semty_tup" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("tup{_}" [50] 999)
        "_semty_tup" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("T{_}" [50] 999)
-       "_semty_tup" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("\<t>\<u>\<p> {_}" [50] 999)
+       "_semty_tup" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("\<tup> {_}" [50] 999)
 
 parse_translation \<open>[
   (\<^syntax_const>\<open>_semty_tup\<close>, fn ctxt => fn [args] =>
@@ -116,7 +116,7 @@ lemma semantic_tuple_constructor_N_no_use:
   by (induct L; auto)
 
 lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal (\<t>\<u>\<p> {}) \<close> ..
+  \<open> Is_Type_Literal (\<tup> {}) \<close> ..
 
 lemma [\<phi>reason add]:
   \<open> Is_Type_Literal H
@@ -136,11 +136,11 @@ ML_file \<open>library/Ag_Tuple.ML\<close>
 local_setup \<open>setup_semty_tup_to_poison\<close>
 
 lemma
-  \<open>P (\<t>\<u>\<p> {\<p>\<o>\<i>\<s>\<o>\<n>}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>P (\<tup> {\<p>\<o>\<i>\<s>\<o>\<n>}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   by simp
 
 lemma
-  \<open>P (\<t>\<u>\<p> {A, B, \<p>\<o>\<i>\<s>\<o>\<n>, C}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>P (\<tup> {A, B, \<p>\<o>\<i>\<s>\<o>\<n>, C}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   by simp
 
 
@@ -153,7 +153,7 @@ subsection \<open>Empty Tuple\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and Functionality
-       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Empty_Tuple = \<t>\<u>\<p> {}\<close>
+       and \<open>\<typeof> Empty_Tuple = \<tup> {}\<close>
        and \<open>Semantic_Zero_Val (sem_tup_T []) Empty_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Tuple\<close>
        and Inhabited
@@ -181,28 +181,28 @@ definition Tuple_Type_Helper :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY list \<
     (\<forall>x c. c \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>vf. c = sem_mk_tup vf \<and> (\<p>\<o>\<i>\<s>\<o>\<n> \<notin> set Tys \<longrightarrow> list_all2 (\<lambda>t v. v \<in> Well_Type t) Tys vf)))
 )\<close>
 
-subsubsection \<open>\<open>\<t>\<y>\<p>\<e>\<o>\<f>\<close>\<close>
+subsubsection \<open>\<open>\<typeof>\<close>\<close>
 
 lemma semty_tup_eq_poison_rev[simp]: \<open>\<p>\<o>\<i>\<s>\<o>\<n> = sem_tup_T Ts \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> \<in> set Ts\<close>
   by (metis semty_tup_eq_poison)
   
 
-lemma \<t>\<y>\<p>\<e>\<o>\<f>_tup:
+lemma typeof_tup:
   \<open> Tuple_Type_Helper U Tys
-\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> U \<equiv> sem_tup_T Tys  \<close>
+\<Longrightarrow> \<typeof> U \<equiv> sem_tup_T Tys  \<close>
   unfolding Tuple_Type_Helper_def SType_Of_def atomize_eq Semantic_Type_def
   apply auto
   apply (smt (verit) SType_Of_not_poison WT_tup mem_Collect_eq someI_ex)
   by (smt (verit) Eps_cong SType_Of_def SType_Of_not_poison WT_tup mem_Collect_eq)
 
 lemma Tuple_Type_Helper_0:
-  \<open> Tuple_Type_Helper \<lbrace> T \<rbrace> [\<t>\<y>\<p>\<e>\<o>\<f> T] \<close>
+  \<open> Tuple_Type_Helper \<lbrace> T \<rbrace> [\<typeof> T] \<close>
   unfolding Tuple_Type_Helper_def Inhabited_def
   apply auto
   apply (metis (no_types) SType_Of_not_poison Tuple_Field.expansion typing_inhabited)
   unfolding SType_Of_def Inhabited_def Satisfiable_def Semantic_Type_def
     apply (auto simp: split_ifs)
-  subgoal for x P TY by (rule exI[where x=\<open>\<t>\<u>\<p> {TY}\<close>], auto)
+  subgoal for x P TY by (rule exI[where x=\<open>\<tup> {TY}\<close>], auto)
   subgoal premises prems for x TY v
     apply (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>sem_mk_tup [v]\<close>]] prems(2),
             auto )
@@ -218,7 +218,7 @@ lemma Tuple_Type_Helper_0:
 
 lemma Tuple_Type_Helper_S:
   \<open> Tuple_Type_Helper Ts TYs
-\<Longrightarrow> Tuple_Type_Helper (\<lbrace> T \<rbrace> \<^emph> Ts) (\<t>\<y>\<p>\<e>\<o>\<f> T # TYs)  \<close>
+\<Longrightarrow> Tuple_Type_Helper (\<lbrace> T \<rbrace> \<^emph> Ts) (\<typeof> T # TYs)  \<close>
   unfolding Tuple_Type_Helper_def SType_Of_def Inhabited_def Satisfiable_def Semantic_Type_def
   
   apply (auto)
@@ -281,29 +281,29 @@ lemma Tuple_Type_Helper_S:
   qed
   using V_tup_mult by blast 
 
-simproc_setup \<t>\<y>\<p>\<e>\<o>\<f>_tup (\<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<lbrace> T \<rbrace> \<^emph> U)\<close> | \<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<lbrace> T \<rbrace>)\<close>) = \<open>
+simproc_setup typeof_tup (\<open>\<typeof> (\<lbrace> T \<rbrace> \<^emph> U)\<close> | \<open>\<typeof> (\<lbrace> T \<rbrace>)\<close>) = \<open>
   fn _ => fn ctxt => fn ctm =>
-    Drule.infer_instantiate ctxt [(("U",0), Thm.dest_arg ctm)] @{thm' \<t>\<y>\<p>\<e>\<o>\<f>_tup}
+    Drule.infer_instantiate ctxt [(("U",0), Thm.dest_arg ctm)] @{thm' typeof_tup}
       |> REPEAT_DETERM (resolve_tac ctxt @{thms' Tuple_Type_Helper_0 Tuple_Type_Helper_S} 1)
       |> Seq.pull
       |> Option.map fst
 \<close>
 
 lemma
-  \<open> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A \<rbrace>) = P (\<t>\<u>\<p> {\<t>\<y>\<p>\<e>\<o>\<f> A}) \<close>
+  \<open> P (\<typeof> \<lbrace> A \<rbrace>) = P (\<tup> {\<typeof> A}) \<close>
   by simp
 
 lemma 
-  \<open> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A, B \<rbrace>) = P (\<t>\<u>\<p> {\<t>\<y>\<p>\<e>\<o>\<f> A, \<t>\<y>\<p>\<e>\<o>\<f> B}) \<close>
+  \<open> P (\<typeof> \<lbrace> A, B \<rbrace>) = P (\<tup> {\<typeof> A, \<typeof> B}) \<close>
   by simp
 
 lemma 
-  \<open> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A, B, C \<rbrace>) = P (\<t>\<u>\<p> {\<t>\<y>\<p>\<e>\<o>\<f> A, \<t>\<y>\<p>\<e>\<o>\<f> B, \<t>\<y>\<p>\<e>\<o>\<f> C}) \<close>
+  \<open> P (\<typeof> \<lbrace> A, B, C \<rbrace>) = P (\<tup> {\<typeof> A, \<typeof> B, \<typeof> C}) \<close>
   by simp
 
 lemma 
-  \<open> \<t>\<y>\<p>\<e>\<o>\<f> B = \<p>\<o>\<i>\<s>\<o>\<n>
-\<Longrightarrow> P (\<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> A, B, C \<rbrace>) = P \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> \<typeof> B = \<p>\<o>\<i>\<s>\<o>\<n>
+\<Longrightarrow> P (\<typeof> \<lbrace> A, B, C \<rbrace>) = P \<p>\<o>\<i>\<s>\<o>\<n> \<close>
   by simp
 
 
@@ -354,13 +354,13 @@ text \<open>All the reasoning rules below are for semantic properties.
 subsection \<open>Show validity of an index for a type\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  \<open> \<condition> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N 0) (sem_tup_T (Ty # Tys)) Ty \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  \<open> \<condition> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (sem_tup_T Tys) RET
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N (Suc i)) (sem_tup_T (Ty # Tys)) RET \<close>
   unfolding is_valid_step_idx_of_def Premise_def
@@ -368,7 +368,7 @@ lemma [\<phi>reason %chk_sem_ele_idx]:
 
 lemma [\<phi>reason %chk_sem_ele_idx - 5 except \<open>is_valid_step_idx_of (AgIdx_N 0) (sem_tup_T _) _\<close>
                                            \<open>is_valid_step_idx_of (AgIdx_N (Suc _)) (sem_tup_T _) _\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat n n'
+  \<open> \<guard> \<r>nat_to_suc_nat n n'
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N n') (sem_tup_T Tys) Ty
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) (sem_tup_T Tys) Ty \<close>
   unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
@@ -395,7 +395,7 @@ lemma idx_step_mod_value_V_tup_suc:
 
 lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Getter (AgIdx_N 0 # _) _ _ _\<close>
                                           \<open>\<phi>Aggregate_Getter (AgIdx_N (Suc _) # _) _ _ _\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+  \<open> \<guard> \<r>nat_to_suc_nat i i'
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i' # idx) \<lbrace> T \<rbrace> Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) \<lbrace> T \<rbrace> Y f\<close>
   unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
@@ -403,7 +403,7 @@ lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Getter (Ag
 
 lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Getter (AgIdx_N 0 # _) _ _ _\<close>
                                           \<open>\<phi>Aggregate_Getter (AgIdx_N (Suc _) # _) _ _ _\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+  \<open> \<guard> \<r>nat_to_suc_nat i i'
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i' # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y f\<close>
   unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
@@ -425,7 +425,7 @@ lemma [\<phi>reason %aggregate_access-10 except \<open>\<phi>Aggregate_Getter (A
 
 lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Mapper (AgIdx_N 0 # _) _ _ _ _ _\<close>
                                           \<open>\<phi>Aggregate_Mapper (AgIdx_N (Suc _) # _) _ _ _ _ _\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+  \<open> \<guard> \<r>nat_to_suc_nat i i'
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i' # idx) (\<lbrace> T \<rbrace> \<^emph> X) X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i  # idx) (\<lbrace> T \<rbrace> \<^emph> X) X' Y Y' f \<close>
   unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
@@ -433,7 +433,7 @@ lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Mapper (Ag
 
 lemma [\<phi>reason %aggregate_access-5 except \<open>\<phi>Aggregate_Mapper (AgIdx_N 0 # _) _ _ _ _ _\<close>
                                           \<open>\<phi>Aggregate_Mapper (AgIdx_N (Suc _) # _) _ _ _ _ _\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<r>nat_to_suc_nat i i'
+  \<open> \<guard> \<r>nat_to_suc_nat i i'
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i' # idx) \<lbrace> T \<rbrace> X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i  # idx) \<lbrace> T \<rbrace> X' Y Y' f \<close>
   unfolding \<r>nat_to_suc_nat_def \<r>Guard_def
@@ -556,17 +556,17 @@ subsection \<open>Synthesis\<close>
 declare synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> T \<rbrace> \<^emph> U\<close> for T U,
          \<phi>reason %\<phi>synthesis_ag_T
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
+             for \<open>\<proc> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<val>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<^emph> ?U \<remains> _ \<rbrace> \<throws> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> T \<rbrace>\<close> for T,
          \<phi>reason %\<phi>synthesis_ag_T
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
+             for \<open>\<proc> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<val>[\<r>\<e>\<t>] \<lbrace> ?T \<rbrace> \<remains> _ \<rbrace> \<throws> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> \<rbrace>\<close>,
          \<phi>reason %\<phi>synthesis_ag_T
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. () \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
+             for \<open>\<proc> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. () \<Ztypecolon> \<val>[\<r>\<e>\<t>] \<lbrace> \<rbrace> \<remains> _ \<rbrace> \<throws> _ @tag synthesis\<close>]
 
 
 hide_fact semantic_tuple_constructor_N_no_use
@@ -574,7 +574,7 @@ hide_fact semantic_tuple_constructor_N_no_use
 subsection \<open>Aux\<close>
 
 lemma semty_tup_eq_poison_compute[simp]:
-  \<open> \<t>\<u>\<p> {} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> \<tup> {} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
   \<open> sem_tup_T (H#L) = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> H = \<p>\<o>\<i>\<s>\<o>\<n> \<or> sem_tup_T L = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
   by simp_all blast
 

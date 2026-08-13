@@ -172,31 +172,31 @@ lemma insert_tree_not_Leaf[simp]:
 section \<open>Verifying the Concrete Programs\<close>
 
 
-abbreviation \<open>\<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> TY \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: TY, right: \<p>\<t>\<r>} \<close>
-abbreviation \<open>\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<s>\<t>\<r>\<u>\<c>\<t> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
-abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
+abbreviation \<open>tree_node TY \<equiv> \<struct> {left: \<ptr>, data: TY, right: \<ptr>} \<close>
+abbreviation \<open>kv_pair TY\<^sub>K TY\<^sub>V \<equiv> \<struct> {k: TY\<^sub>K, v: TY\<^sub>V}\<close>
+abbreviation \<open>bst_node TY\<^sub>K TY\<^sub>V \<equiv> tree_node (kv_pair TY\<^sub>K TY\<^sub>V) \<close>
 
 
 \<phi>type_def BinTree
-  where \<open> (Leaf \<Ztypecolon> BinTree addr T)     = (Void \<s>\<u>\<b>\<j> addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+  where \<open> (Leaf \<Ztypecolon> BinTree addr T)     = (Void \<subj> addr = 0 \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
       | \<open> (\<langle>L, x, R\<rangle> \<Ztypecolon> BinTree addr T) =
                 (L \<Ztypecolon> BinTree addr\<^sub>L T\<heavy_comma>
                  R \<Ztypecolon> BinTree addr\<^sub>R T\<heavy_comma>
-                 (addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<m>\<e>\<m>[addr] \<lbrace> left: Ptr, data: T, right: Ptr \<rbrace> 
-                \<s>\<u>\<b>\<j> addr\<^sub>L addr\<^sub>R. \<t>\<y>\<p>\<e>\<o>\<f> addr = \<s>\<t>\<r>\<u>\<c>\<t> {left: \<p>\<t>\<r>, data: \<t>\<y>\<p>\<e>\<o>\<f> T, right: \<p>\<t>\<r>} \<and>
-                                 \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
+                 (addr\<^sub>L, x, addr\<^sub>R) \<Ztypecolon> \<mem>[addr] \<lbrace> left: Ptr, data: T, right: Ptr \<rbrace> 
+                \<subj> addr\<^sub>L addr\<^sub>R. \<typeof> addr = \<struct> {left: \<ptr>, data: \<typeof> T, right: \<ptr>} \<and>
+                                 \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> )\<close>
 
    deriving Basic
        and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (BinTree addr T)
-                                      (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0) \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
-       and \<open>Identity_Elements\<^sub>E (BinTree addr T) (\<lambda>l. addr = 0 \<and> l = Leaf \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>  
-       and \<open>Identity_Elements\<^sub>I (BinTree addr T) (\<lambda>l. l = Leaf) (\<lambda>l. addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr
-         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
+                                      (\<lambda>x. pred_tree P x \<and> (x = Leaf \<longleftrightarrow> addr = 0) \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+       and \<open>Identity_Elements\<^sub>E (BinTree addr T) (\<lambda>l. addr = 0 \<and> l = Leaf \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>  
+       and \<open>Identity_Elements\<^sub>I (BinTree addr T) (\<lambda>l. l = Leaf) (\<lambda>l. addr = 0 \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
+       and \<open> \<condition> addr' = addr
+         \<Longrightarrow> \<premise> \<typeof> T = \<typeof> U
          \<Longrightarrow> Transformation_Functor (BinTree addr) (BinTree addr') T U set_tree (\<lambda>_. UNIV) rel_tree\<close>
            (arbitrary: addr')
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr
-         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
+       and \<open> \<condition> addr' = addr
+         \<Longrightarrow> \<premise> \<typeof> T = \<typeof> U
          \<Longrightarrow> Functional_Transformation_Functor (BinTree addr) (BinTree addr') T U
                 Tree.tree.set_tree (\<lambda>x. UNIV) (\<lambda>f. Tree.tree.pred_tree) (\<lambda>f P. Tree.tree.map_tree f)\<close>
        and Pointer_Of
@@ -204,25 +204,25 @@ abbreviation \<open>\<b>\<s>\<t>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv>
   
 \<phi>type_def Bin_Search_Tree
   where \<open>f \<Ztypecolon> Bin_Search_Tree addr K V \<equiv> tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>
-                                         \<s>\<u>\<b>\<j> tree. f = lookup_tree tree \<and> sorted_lookup_tree tree \<close>
+                                         \<subj> tree. f = lookup_tree tree \<and> sorted_lookup_tree tree \<close>
 
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
          \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr K V)
-                             (\<lambda>f. \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
+                             (\<lambda>f. \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
             (tactic: clarsimp, subgoal' for tree x y \<open>induct tree arbitrary: x\<close>)
        and \<open> Identity_Elements\<^sub>E (Bin_Search_Tree addr K V)
-                                (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+                                (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
        and \<open> Identity_Elements\<^sub>I (Bin_Search_Tree addr K V)
-                                (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+                                (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0 \<and> \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
        and \<open> Object_Equiv V eq
          \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
             (tactic: clarsimp, 
                      rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,_). (k, the (g k))) x\<close>],
                      auto intro!: rel_tree_self_map simp: fun_eq_iff)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
+       and \<open> \<condition> (\<typeof> T = \<typeof> U \<and> addr' = addr)
          \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr K) (Bin_Search_Tree addr' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U \<and> addr' = addr)
+       and \<open> \<condition> (\<typeof> T = \<typeof> U \<and> addr' = addr)
          \<Longrightarrow> Functional_Transformation_Functor (Bin_Search_Tree addr K) (Bin_Search_Tree addr' K) T U ran (\<lambda>_. UNIV)
                                               (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close>
        and Pointer_Of
@@ -244,31 +244,31 @@ lemma rel_tree__AVL_tree_invar:
  
 
 
-abbreviation \<open>\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V \<equiv> \<k>\<v>_\<p>\<a>\<i>\<r> TY\<^sub>K (\<s>\<t>\<r>\<u>\<c>\<t> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
-abbreviation \<open>\<a>\<v>\<l>_\<n>\<o>\<d>\<e> TY\<^sub>K TY\<^sub>V \<equiv> \<t>\<r>\<e>\<e>_\<n>\<o>\<d>\<e> (\<a>\<v>\<l>_\<p>\<a>\<i>\<r> TY\<^sub>K TY\<^sub>V) \<close>
+abbreviation \<open>avl_pair TY\<^sub>K TY\<^sub>V \<equiv> kv_pair TY\<^sub>K (\<struct> {height: \<a>\<i>\<n>\<t>, v: TY\<^sub>V})\<close>
+abbreviation \<open>avl_node TY\<^sub>K TY\<^sub>V \<equiv> tree_node (avl_pair TY\<^sub>K TY\<^sub>V) \<close>
 
 
 \<phi>type_def AVL_Tree
   where \<open>f \<Ztypecolon> AVL_Tree addr K V \<equiv> tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>
-                             \<s>\<u>\<b>\<j> tree. f = map_option snd o lookup_tree tree
+                             \<subj> tree. f = map_option snd o lookup_tree tree
                                      \<and> sorted_lookup_tree tree \<and> AVL_invar tree
-                                     \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+                                     \<and> \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
   deriving \<open> Abstract_Domain\<^sub>L K P\<^sub>K
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
          \<Longrightarrow> Abstract_Domain (AVL_Tree addr K V)
-                         (\<lambda>f. \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
+                         (\<lambda>f. \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
             (tactic: clarsimp, subgoal' for tree x h y \<open>induct tree arbitrary: x\<close>)
        and \<open> Identity_Elements\<^sub>E (AVL_Tree addr K V)
-                            (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+                            (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
        and \<open> Identity_Elements\<^sub>I (AVL_Tree addr K V) (\<lambda>l. l = Map.empty)
-                           (\<lambda>l. addr = 0 \<and> \<t>\<y>\<p>\<e>\<o>\<f> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<t>\<y>\<p>\<e>\<o>\<f> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
+                           (\<lambda>l. addr = 0 \<and> \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
        and \<open> Object_Equiv V eq
          \<Longrightarrow> Object_Equiv (AVL_Tree addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
             (tactic: clarsimp, 
                      rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,h,_). (k, h, the (g k))) x\<close>],
                      auto simp: fun_eq_iff intro!: rel_tree_self_map)
-       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> addr' = addr
-         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> \<t>\<y>\<p>\<e>\<o>\<f> T = \<t>\<y>\<p>\<e>\<o>\<f> U
+       and \<open> \<condition> addr' = addr
+         \<Longrightarrow> \<premise> \<typeof> T = \<typeof> U
          \<Longrightarrow> Transformation_Functor (AVL_Tree addr K) (AVL_Tree addr' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
     (* and \<open> Functional_Transformation_Functor (AVL_Tree addr K) (AVL_Tree addr K) T U ran (\<lambda>_. UNIV)
                                                (\<lambda>_ P f. \<forall>x \<in> dom f. P (the (f x))) (\<lambda>f _ x. map_option f o x) \<close> *)
@@ -289,46 +289,46 @@ context
     and CMP Eq :: \<open>VAL \<phi>arg \<Rightarrow> VAL \<phi>arg \<Rightarrow> VAL proc\<close>
     and zero\<^sub>K :: 'k
     and zero\<^sub>V :: 'v
-  assumes cmp: \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> CMP u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 < k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
-      and eq : \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<p>\<r>\<o>\<c> Eq u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<v>\<a>\<l>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l>[v] K \<longmapsto> k\<^sub>1 = k\<^sub>2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>  
-      and [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> K) K zero\<^sub>K\<close>  \<comment> \<open>specify the semantic zero value of K\<close>
-      and [\<phi>reason add]: \<open>Semantic_Zero_Val (\<t>\<y>\<p>\<e>\<o>\<f> V) V zero\<^sub>V\<close>
+  assumes cmp: \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<proc> CMP u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<val>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<val>[v] K \<longmapsto> k\<^sub>1 < k\<^sub>2 \<Ztypecolon> \<val> \<bool> \<rbrace> \<close>
+      and eq : \<open>\<And>k\<^sub>1 k\<^sub>2 u v. \<proc> Eq u v \<lbrace> k\<^sub>1 \<Ztypecolon> \<val>[u] K\<heavy_comma> k\<^sub>2 \<Ztypecolon> \<val>[v] K \<longmapsto> k\<^sub>1 = k\<^sub>2 \<Ztypecolon> \<val> \<bool> \<rbrace> \<close>  
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val (\<typeof> K) K zero\<^sub>K\<close>  \<comment> \<open>specify the semantic zero value of K\<close>
+      and [\<phi>reason add]: \<open>Semantic_Zero_Val (\<typeof> V) V zero\<^sub>V\<close>
 begin
 
 proc lookup_bintree:
-  input    \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  input    \<open>tree \<Ztypecolon> \<ref> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<val> K\<close>
   premises \<open>k \<in> dom (lookup_tree tree) \<and> sorted_lookup_tree tree\<close>
   output   \<open>tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-            the (lookup_tree tree k) \<Ztypecolon> \<v>\<a>\<l> V\<close>
+            the (lookup_tree tree k) \<Ztypecolon> \<val> V\<close>
   is [recursive]
   is [routine]
 \<medium_left_bracket>
   obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
-  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+  transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
  
   val k' \<leftarrow> addr.data.k \<semicolon>
   if (eq (k', k)) \<medium_left_bracket>
     val ret \<leftarrow> addr.data.v \<semicolon>
-    \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+    \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
     return (ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
     if (cmp (k, k')) \<medium_left_bracket>
       lookup_bintree (addr.left, k) \<rightarrow> val ret \<semicolon>
-      \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+      \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
       return (ret)
     \<medium_right_bracket> \<medium_left_bracket>
       lookup_bintree (addr.right, k) \<rightarrow> val ret \<semicolon>
-      \<open>BinTree a\<^sub>L _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+      \<open>BinTree a\<^sub>L _\<close> \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
       return (ret)
     \<medium_right_bracket> \<semicolon>
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
 proc (nodef) lookup_bst:
-  input    \<open>f \<Ztypecolon> \<r>\<e>\<f> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  input    \<open>f \<Ztypecolon> \<ref> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<val> K\<close>
   premises \<open>k \<in> dom f\<close>
-  output   \<open>the (f k) \<Ztypecolon> \<v>\<a>\<l> V\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
+  output   \<open>the (f k) \<Ztypecolon> \<val> V\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
   unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
   lookup_bintree (addr, k)
@@ -336,9 +336,9 @@ proc (nodef) lookup_bst:
 
 
 proc defined_bintree:
-  input    \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
+  input    \<open>tree \<Ztypecolon> \<ref> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<val> K\<close>
   premises \<open>sorted_lookup_tree tree\<close>
-  output   \<open>k \<in> dom (lookup_tree tree) \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma>
+  output   \<open>k \<in> dom (lookup_tree tree) \<Ztypecolon> \<val> \<bool>\<heavy_comma>
             tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<close>
   is [recursive]
   is [routine]
@@ -347,21 +347,21 @@ proc defined_bintree:
     return (False) 
   \<medium_right_bracket> \<medium_left_bracket>
     obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
-    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+    transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
     val k' \<leftarrow> addr.data.k \<semicolon>
     if (eq (k', k)) \<medium_left_bracket>
-      \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+      \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
       return (True)
     \<medium_right_bracket>
     \<medium_left_bracket>
       if (cmp (k, k')) \<medium_left_bracket>
         val ret \<leftarrow> defined_bintree (addr.left, k) \<semicolon>
-        \<open>BinTree a\<^sub>L _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+        \<open>BinTree a\<^sub>L _\<close> \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
         return (ret)
       \<medium_right_bracket> \<medium_left_bracket> 
         val ret \<leftarrow> defined_bintree (addr.right, k) \<semicolon>
-        \<open>BinTree a\<^sub>L _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+        \<open>BinTree a\<^sub>L _\<close> \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
         return (ret)
       \<medium_right_bracket> \<semicolon>
     \<medium_right_bracket>
@@ -370,8 +370,8 @@ proc defined_bintree:
 
 
 proc (nodef) defined_bst:
-  input  \<open>f \<Ztypecolon> \<r>\<e>\<f> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<close>
-  output \<open>k \<in> dom f \<Ztypecolon> \<v>\<a>\<l> \<bool>\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
+  input  \<open>f \<Ztypecolon> \<ref> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<val> K\<close>
+  output \<open>k \<in> dom f \<Ztypecolon> \<val> \<bool>\<heavy_comma> f \<Ztypecolon> Bin_Search_Tree addr K V\<close>
   unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
   defined_bintree (addr, k)
@@ -379,9 +379,9 @@ proc (nodef) defined_bst:
 
 
 proc insert_bintree:
-  input  \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  input  \<open>tree \<Ztypecolon> \<ref> BinTree addr \<lbrace> k: K, v: V \<rbrace>\<heavy_comma> k \<Ztypecolon> \<val> K\<heavy_comma> v \<Ztypecolon> \<val> V\<close>
   output \<open>insert_tree k v tree \<Ztypecolon> BinTree addr' \<lbrace> k: K, v: V \<rbrace>\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> Ptr \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+          addr' \<Ztypecolon> \<val> Ptr \<subj> addr'. \<top>\<close>
   is [recursive]
   is [routine]
 \<medium_left_bracket>
@@ -389,27 +389,27 @@ proc insert_bintree:
       val ret \<leftarrow> calloc1 \<open>\<lbrace> left: Ptr, data: \<lbrace> k: K, v: V \<rbrace>, right: Ptr \<rbrace>\<close> \<semicolon>
       ret.data.k := k \<semicolon>
       ret.data.v := v \<semicolon>
-      \<m>\<a>\<k>\<e>\<s>(1) \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> BinTree addrb \<lbrace> k: K, v: V \<rbrace>\<close> \<semicolon>
+      \<makes>(1) \<open>\<langle>\<langle>\<rangle>, (k,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> BinTree addrb \<lbrace> k: K, v: V \<rbrace>\<close> \<semicolon>
       return (ret)
   \<medium_right_bracket> \<medium_left_bracket>
       obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
-      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+      transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> addr.data.k \<semicolon>
       if (eq (k', k)) \<medium_left_bracket>
           addr.data.v := v \<semicolon>
-          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close>  \<semicolon>
+          \<makes>(1) \<open>BinTree addr _\<close>  \<semicolon>
           return (addr)
       \<medium_right_bracket> \<medium_left_bracket>
           if (cmp (k, k')) \<medium_left_bracket>
               insert_bintree (addr.left, k, v) \<rightarrow> val a\<^sub>L' \<semicolon>
               addr.left := a\<^sub>L' \<semicolon>
-              \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+              \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
               return (addr)
           \<medium_right_bracket> \<medium_left_bracket>
               insert_bintree (addr.right, k, v) \<rightarrow> val a\<^sub>R' \<semicolon>
               addr.right := a\<^sub>R' \<semicolon>
-              \<open>BinTree a\<^sub>L _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+              \<open>BinTree a\<^sub>L _\<close> \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
               return (addr)
           \<medium_right_bracket>
       \<medium_right_bracket>
@@ -418,9 +418,9 @@ proc insert_bintree:
 
 
 proc (nodef) insert_bst:
-  input  \<open>f \<Ztypecolon> \<r>\<e>\<f> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  input  \<open>f \<Ztypecolon> \<ref> Bin_Search_Tree addr K V\<heavy_comma> k \<Ztypecolon> \<val> K\<heavy_comma> v \<Ztypecolon> \<val> V\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> Bin_Search_Tree addr' K V\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> Ptr \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+          addr' \<Ztypecolon> \<val> Ptr \<subj> addr'. \<top>\<close>
   unfolding Bin_Search_Tree.unfold
 \<medium_left_bracket>
   insert_bintree (addr, k, v)
@@ -428,42 +428,42 @@ proc (nodef) insert_bst:
 
 
 proc Max:
-  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  output \<open>max x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input  \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close>
+  output \<open>max x y \<Ztypecolon> \<val> \<nat>\<close>
 \<medium_left_bracket>
   if (x < y) \<medium_left_bracket> y \<medium_right_bracket> \<medium_left_bracket> x \<medium_right_bracket>
 \<medium_right_bracket> .
 
 
 proc height_of:
-  input    \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
+  input    \<open>tree \<Ztypecolon> \<ref> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
   premises \<open>AVL_invar tree\<close>
   output   \<open>tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
-            height tree \<Ztypecolon> \<v>\<a>\<l> \<nat> \<close>
+            height tree \<Ztypecolon> \<val> \<nat> \<close>
   is [routine]
 \<medium_left_bracket>
   if \<open>$addr = 0\<close> \<medium_left_bracket>
       return (0)
   \<medium_right_bracket> \<medium_left_bracket>
       obtain L node R where tree_def[simp]: \<open>tree = \<langle>L, node, R\<rangle>\<close> by hammer_or_aoa \<semicolon>
-      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
+      transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
       addr.data.v.height \<rightarrow> val ret \<semicolon>
-      \<m>\<a>\<k>\<e>\<s>(1) \<open>tree \<Ztypecolon> BinTree addr _\<close> \<semicolon>
+      \<makes>(1) \<open>tree \<Ztypecolon> BinTree addr _\<close> \<semicolon>
       return (ret)
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
 
 proc maintain_i:
-  input    \<open>\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<Ztypecolon> \<r>\<e>\<f> BinTree a\<^sub>D \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
+  input    \<open>\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<Ztypecolon> \<ref> BinTree a\<^sub>D \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close>
 
   premises \<open>sorted_lookup_tree (\<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle>) \<and>
             AVL_invar B \<and> AVL_invar E \<and>
             height E \<le> height B + 2 \<and> height B \<le> height E + 2 \<close>
 
   output   \<open>tree \<Ztypecolon> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
-            addr \<Ztypecolon> \<v>\<a>\<l> Ptr
-            \<s>\<u>\<b>\<j> addr tree. map_option snd o lookup_tree tree = map_option snd o lookup_tree \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<and>
+            addr \<Ztypecolon> \<val> Ptr
+            \<subj> addr tree. map_option snd o lookup_tree tree = map_option snd o lookup_tree \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<and>
                            AVL_invar tree \<and> sorted_lookup_tree tree \<and>
                           (height tree = height \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> \<or> height tree = height \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle> - 1) \<and>
                           (height E \<le> height B + 1 \<and> height B \<le> height E + 1 \<longrightarrow> height tree = height \<langle>B, (k\<^sub>D, h\<^sub>D, v\<^sub>D), E\<rangle>)\<close>
@@ -471,7 +471,7 @@ proc maintain_i:
 
 \<medium_left_bracket>
 
-  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>OPEN 1 _\<close> \<exists>a\<^sub>B, a\<^sub>E \<semicolon>                                                 (*for reasoning, \<Omega>*)
+  transforms_to \<open>OPEN 1 _\<close> \<exists>a\<^sub>B, a\<^sub>E \<semicolon>                                                 (*for reasoning, \<Omega>*)
 
   val B \<leftarrow> a\<^sub>D.left \<semicolon>
   val E \<leftarrow> a\<^sub>D.right \<semicolon>
@@ -480,7 +480,7 @@ proc maintain_i:
 
   if (H\<^sub>B = H\<^sub>E + 2) \<medium_left_bracket>
       obtain A k\<^sub>B h\<^sub>B v\<^sub>B C where B[simp]: \<open>B = \<langle>A, (k\<^sub>B, h\<^sub>B, v\<^sub>B), C\<rangle>\<close> by hammer_or_aoa \<semicolon> (*this line and the*)
-      \<open>BinTree a\<^sub>B _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>A, a\<^sub>C \<semicolon>                                        (*next line, for reasoning, one \<Omega>*)
+      \<open>BinTree a\<^sub>B _\<close> transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>A, a\<^sub>C \<semicolon>                                        (*next line, for reasoning, one \<Omega>*)
 
       val A \<leftarrow> B.left \<semicolon>
       val C \<leftarrow> B.right \<semicolon>
@@ -495,14 +495,14 @@ proc maintain_i:
           B.right := a\<^sub>D \<semicolon>
           B.data.v.height := Max(H\<^sub>A, H\<^sub>D') + 1 \<semicolon>
 
-          \<open>BinTree a\<^sub>E _\<close> \<open>BinTree a\<^sub>C _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
-          \<open>BinTree a\<^sub>A _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>B _\<close> \<semicolon>                                                  (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>E _\<close> \<open>BinTree a\<^sub>C _\<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>A _\<close> \<makes>(1) \<open>BinTree a\<^sub>B _\<close> \<semicolon>                                                  (*for reasoning, \<Omega>*)
  
           return (B) certified by hammer_or_aoa (*Tac-1n-2m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by hammer_or_aoa \<semicolon>  (*this line and the next*)
-          \<open>BinTree a\<^sub>C _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R \<semicolon>                                           (*line, for reasoning, one \<Omega>*)
+          \<open>BinTree a\<^sub>C _\<close> transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>C\<^sub>L, a\<^sub>C\<^sub>R \<semicolon>                                           (*line, for reasoning, one \<Omega>*)
 
           val C\<^sub>L \<leftarrow> C.left \<semicolon>
           val C\<^sub>R \<leftarrow> C.right \<semicolon>
@@ -516,9 +516,9 @@ proc maintain_i:
           C.right := a\<^sub>D \<semicolon>
           C.data.v.height := Max(H\<^sub>B', H\<^sub>D') + 1 \<semicolon>
 
-          \<open>BinTree a\<^sub>E _\<close> \<open>BinTree a\<^sub>C\<^sub>R _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>         (*for reasoning, \<Omega>*)
-          \<open>BinTree a\<^sub>C\<^sub>L _\<close> \<open>BinTree a\<^sub>A _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>B _\<close> \<semicolon>         (*for reasoning, \<Omega>*)
-          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>C _\<close> \<semicolon>                                           (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>E _\<close> \<open>BinTree a\<^sub>C\<^sub>R _\<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>         (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>C\<^sub>L _\<close> \<open>BinTree a\<^sub>A _\<close> \<makes>(1) \<open>BinTree a\<^sub>B _\<close> \<semicolon>         (*for reasoning, \<Omega>*)
+          \<makes>(1) \<open>BinTree a\<^sub>C _\<close> \<semicolon>                                           (*for reasoning, \<Omega>*)
 
           holds_fact t1[useful]: \<open>k\<^sub>B < k\<^sub>D\<close>  \<semicolon>                                    (*for proof, Tac-s*)
 
@@ -529,7 +529,7 @@ proc maintain_i:
     if (H\<^sub>E = H\<^sub>B + 2) \<medium_left_bracket>
 
       obtain F k\<^sub>E h\<^sub>E v\<^sub>E G where E[simp]: \<open>E = \<langle>F, (k\<^sub>E, h\<^sub>E, v\<^sub>E), G\<rangle>\<close> by hammer_or_aoa \<semicolon> (*for reasoning, \<Omega>*)
-      \<open>BinTree a\<^sub>E _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F, a\<^sub>G \<semicolon>
+      \<open>BinTree a\<^sub>E _\<close> transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F, a\<^sub>G \<semicolon>
   
       val F \<leftarrow> E.left \<semicolon>
       val G \<leftarrow> E.right \<semicolon>
@@ -544,14 +544,14 @@ proc maintain_i:
           E.left := a\<^sub>D \<semicolon>
           E.data.v.height := Max(H\<^sub>D', H\<^sub>G) + 1 \<semicolon>
 
-          \<open>BinTree a\<^sub>F _\<close> \<open>BinTree a\<^sub>B _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
-          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>E _\<close> \<semicolon>                                  (*for reasoning, \<Omega>*)
+          \<open>BinTree a\<^sub>F _\<close> \<open>BinTree a\<^sub>B _\<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
+          \<makes>(1) \<open>BinTree a\<^sub>E _\<close> \<semicolon>                                  (*for reasoning, \<Omega>*)
 
           return (E) certified by hammer_or_aoa  (*Tac-1n-3m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by hammer_or_aoa \<semicolon>
-          \<open>BinTree a\<^sub>F _\<close> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R \<semicolon>
+          \<open>BinTree a\<^sub>F _\<close> transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>F\<^sub>L, a\<^sub>F\<^sub>R \<semicolon>
 
           val F\<^sub>L \<leftarrow> F.left \<semicolon>
           val F\<^sub>R \<leftarrow> F.right \<semicolon>
@@ -565,16 +565,16 @@ proc maintain_i:
           F.right := E \<semicolon>
           F.data.v.height := Max(H\<^sub>D', H\<^sub>E') + 1\<semicolon>
 
-          \<open>BinTree a\<^sub>G _\<close> \<open>BinTree a\<^sub>F\<^sub>R _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>E _\<close> \<semicolon>
-          \<open>BinTree a\<^sub>F\<^sub>L _\<close> \<open>BinTree a\<^sub>B _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>
-          \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>F _\<close> \<semicolon>
+          \<open>BinTree a\<^sub>G _\<close> \<open>BinTree a\<^sub>F\<^sub>R _\<close> \<makes>(1) \<open>BinTree a\<^sub>E _\<close> \<semicolon>
+          \<open>BinTree a\<^sub>F\<^sub>L _\<close> \<open>BinTree a\<^sub>B _\<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>
+          \<makes>(1) \<open>BinTree a\<^sub>F _\<close> \<semicolon>
 
           return (F) certified by hammer_or_aoa                          (*Tac-4n-3m*)
       \<medium_right_bracket>
     \<medium_right_bracket>
     \<medium_left_bracket>
       a\<^sub>D.data.v.height := Max (height_of (a\<^sub>D.left), height_of (a\<^sub>D.right)) + 1  \<semicolon>
-      \<open>BinTree a\<^sub>B _ \<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>
+      \<open>BinTree a\<^sub>B _ \<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>
       return (a\<^sub>D)
     \<medium_right_bracket>
   \<medium_right_bracket>
@@ -589,14 +589,14 @@ abbreviation \<open>Avl_Node \<equiv> \<lbrace>
                           \<rbrace> \<close>
 
 proc insert_avl_i:
-  input  \<open>tree \<Ztypecolon> \<r>\<e>\<f> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma> v \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  input  \<open>tree \<Ztypecolon> \<ref> BinTree addr \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<heavy_comma>
+          k \<Ztypecolon> \<val> K\<heavy_comma> v \<Ztypecolon> \<val> V\<close>
 
   premises \<open>sorted_lookup_tree tree \<and> AVL_invar tree \<close>
 
-  output \<open>addr' \<Ztypecolon> \<v>\<a>\<l> Ptr\<heavy_comma>
+  output \<open>addr' \<Ztypecolon> \<val> Ptr\<heavy_comma>
           tree' \<Ztypecolon> BinTree addr' \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>
-          \<s>\<u>\<b>\<j> addr' tree'.
+          \<subj> addr' tree'.
           map_option snd o lookup_tree tree' = (map_option snd o lookup_tree tree)(k \<mapsto> v) \<and>
           sorted_lookup_tree tree' \<and> AVL_invar tree' \<and>
           (height tree' = height tree \<or> height tree' = height tree + 1) \<close>
@@ -611,29 +611,29 @@ proc insert_avl_i:
       ret.data.k := k \<semicolon>
       ret.data.v.v := v \<semicolon>
       ret.data.v.height := 1 \<semicolon>
-      \<m>\<a>\<k>\<e>\<s>(1) \<open>\<langle>\<langle>\<rangle>, (k,1,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> BinTree addrb \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close> \<semicolon>
+      \<makes>(1) \<open>\<langle>\<langle>\<rangle>, (k,1,v), \<langle>\<rangle>\<rangle> \<Ztypecolon> BinTree addrb \<lbrace> k: K, v: \<lbrace> height: \<nat>, v: V \<rbrace> \<rbrace>\<close> \<semicolon>
       return (ret)
   \<medium_right_bracket>
   \<medium_left_bracket>
       obtain L k' h' v' R where tree_def[simp]: \<open>tree = \<langle>L, (k', h', v'), R\<rangle>\<close> by hammer_or_aoa \<semicolon>
-      \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>_\<t>\<o> \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
+      transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<exists>a\<^sub>L, a\<^sub>R \<semicolon>
 
       val k' \<leftarrow> addr.data.k \<semicolon>
       if (eq (k', k)) \<medium_left_bracket>
         addr.data.v.v := v \<semicolon>
-        \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close>  \<semicolon>
+        \<makes>(1) \<open>BinTree addr _\<close>  \<semicolon>
         return (addr)
       \<medium_right_bracket> \<medium_left_bracket>
         if (cmp (k, k')) \<medium_left_bracket>
             insert_avl_i (addr.left, k, v) \<rightarrow> val a\<^sub>L' \<semicolon>
             addr.left := a\<^sub>L' \<semicolon>
-            \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+            \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
             return (maintain_i (addr))
         \<medium_right_bracket>
         \<medium_left_bracket>
             insert_avl_i (addr.right, k, v) \<rightarrow> val a\<^sub>R' \<semicolon>
             addr.right := a\<^sub>R' \<semicolon>
-            \<open>BinTree a\<^sub>L _\<close> \<m>\<a>\<k>\<e>\<s>(1) \<open>BinTree addr _\<close> \<semicolon>
+            \<open>BinTree a\<^sub>L _\<close> \<makes>(1) \<open>BinTree addr _\<close> \<semicolon>
 
             return (maintain_i (addr))
         \<medium_right_bracket>
@@ -643,12 +643,12 @@ proc insert_avl_i:
 
 
 proc (nodef) insert_avl:
-  input  \<open>f \<Ztypecolon> \<r>\<e>\<f> AVL_Tree addr K V\<heavy_comma>
-          k \<Ztypecolon> \<v>\<a>\<l> K\<heavy_comma>
-          v \<Ztypecolon> \<v>\<a>\<l> V\<close>
+  input  \<open>f \<Ztypecolon> \<ref> AVL_Tree addr K V\<heavy_comma>
+          k \<Ztypecolon> \<val> K\<heavy_comma>
+          v \<Ztypecolon> \<val> V\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> AVL_Tree addr' K V\<heavy_comma>
-          addr' \<Ztypecolon> \<v>\<a>\<l> Ptr
-          \<s>\<u>\<b>\<j> addr'. \<top>\<close>
+          addr' \<Ztypecolon> \<val> Ptr
+          \<subj> addr'. \<top>\<close>
   unfolding AVL_Tree.unfold
 \<medium_left_bracket>
   insert_avl_i (addr, k, v)

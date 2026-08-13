@@ -18,10 +18,10 @@ fun objectize_after_n ctxt n ctm =
   if n = 0 then Phi_Conv.iso_atomize_conv ctxt ctm
   else Conv.implies_concl_conv (objectize_after_n ctxt (n-1)) ctm
 
-(*Given a sequent \<open>Antecedents \<Longrightarrow> \<r>Success \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<Longrightarrow> C\<close>
+(*Given a sequent \<open>Antecedents \<Longrightarrow> \<r>Success \<Longrightarrow> \<obligation> P \<Longrightarrow> C\<close>
   if C has no schematic variables (or not differs up to unification in every branch)
   it reasons \<open>Antecedents\<close> exhaustively and collects the reported proof obligations Pi,
-  and returns \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<or>Pi \<Longrightarrow> C. *)
+  and returns \<obligation> \<or>Pi \<Longrightarrow> C. *)
 fun reason_exhaustively goals_num (ctxt,sequent) =
   let fun insert_tag cprop num sequent =
             Thm.implies_intr cprop sequent
@@ -38,22 +38,22 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
                                          of SOME (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                                Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _))
                                               => (n, sequent)
-                                          | _ => error "Bad sequent: \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> tag should be attached immediately after the \<r>Success")
+                                          | _ => error "Bad sequent: \<obligation> tag should be attached immediately after the \<r>Success")
                                | _ => (n, insert_tag \<^cprop>\<open>\<r>Success\<close> n (
-                                          insert_tag \<^cprop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> n sequent)))
+                                          insert_tag \<^cprop>\<open>\<obligation> True\<close> n sequent)))
                | _ => let
                    val i = find_index (fn Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => true
                                         | _ => false) (Thm.prems_of sequent)
                 in if i = ~1
                    then let val n = Thm.nprems_of sequent
                          in (n, insert_tag \<^cprop>\<open>\<r>Success\<close> n (
-                                insert_tag \<^cprop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> n sequent))
+                                insert_tag \<^cprop>\<open>\<obligation> True\<close> n sequent))
                         end
                    else case try List.nth (Thm.prems_of sequent, i+1)
                      of SOME (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                  Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _))
                           => (i, sequent)
-                      | _ => error "Bad sequent: \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> tag should be attached immediately after the \<r>Success"
+                      | _ => error "Bad sequent: \<obligation> tag should be attached immediately after the \<r>Success"
                end
 
      val sequent' = Conv.fconv_rule (objectize_after_n ctxt (n+2)) sequent''

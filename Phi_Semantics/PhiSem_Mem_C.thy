@@ -1,9 +1,9 @@
 theory PhiSem_Mem_C
   imports PhiSem_Mem_Pointer
-  abbrevs "<mem>" = "\<m>\<e>\<m>"
-      and "<mem-blk>" = "\<m>\<e>\<m>-\<b>\<l>\<k>"
-      and "<slice>" = "\<s>\<l>\<i>\<c>\<e>"
-      and "<ref>" = "\<r>\<e>\<f>"
+  abbrevs "<mem>" = "\<mem>"
+      and "<mem-blk>" = "\<mem>-\<blk>"
+      and "<slice>" = "\<slice>"
+      and "<ref>" = "\<ref>"
 begin
 
 section \<open>Semantics\<close>
@@ -26,24 +26,24 @@ section \<open>Basic \<phi>Types for Semantic Models\<close>
 
 subsection \<open>Coercion from Value Spec to Mem Spec\<close>
 
-\<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _" [81] 80)
+\<phi>type_def Mem_Coercion :: \<open>(VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<mem>-\<coerce> _" [81] 80)
   where \<open>Mem_Coercion T \<equiv> (o) (to_share o map_option discrete) o Map_of_Val \<Zcomp>\<^sub>f T\<close>
   deriving Basic
        and Functional_Transformation_Functor
        and Commutativity_Deriver
 
-\<phi>type_def Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _" [50,81] 80)
-  where \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<equiv> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T\<close>
+\<phi>type_def Guided_Mem_Coercion :: \<open>TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (mem_fic,'a) \<phi>\<close> ("\<mem>-\<coerce>[_] _" [50,81] 80)
+  where \<open>\<mem>-\<coerce>[TY] T \<equiv> \<mem>-\<coerce> T\<close>
 
 
 subsection \<open>Memory Object\<close>
 
-\<phi>type_def MemBlk :: \<open>block \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>-\<b>\<l>\<k>[_]")
-  where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<s>\<u>\<b>\<j> blk \<noteq> Null\<close>
+\<phi>type_def MemBlk :: \<open>block \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<mem>-\<blk>[_]")
+  where \<open>x \<Ztypecolon> MemBlk blk T \<equiv> x \<Ztypecolon> FIC.aggregate_mem.\<phi> (blk \<^bold>\<rightarrow> T) \<subj> blk \<noteq> Null\<close>
   deriving Sep_Functor_1
 
 \<phi>type_def Mem :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
-  where \<open>Mem addr T \<equiv> \<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.offset addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
+  where \<open>Mem addr T \<equiv> \<mem>-\<blk>[addr.blk addr] (addr.offset addr \<^bold>\<rightarrow>\<^sub>@ T) \<close>
   deriving Sep_Functor_1
 
 declare Mem.intro_reasoning[\<phi>reason default]
@@ -55,19 +55,19 @@ subsubsection \<open>Syntax\<close>
 (*
 paragraph \<open>Memory Object\<close>
 
-abbreviation MemObj ("\<o>\<b>\<j>[_] _" [10,901] 900)
-  where \<open>\<o>\<b>\<j>[addr] T \<equiv> Mem addr (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<phi>\<s>\<u>\<b>\<j> address_to_base addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+abbreviation MemObj ("\<obj>[_] _" [10,901] 900)
+  where \<open>\<obj>[addr] T \<equiv> Mem addr (\<mem>-\<coerce> T) \<phi>\<subj> address_to_base addr \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
 *)
 
 consts may_mem_coerce :: \<open>('c, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close>
 
-(*\<open>\<m>\<e>\<m>[_] _\<close> is a syntax constant, not a logical one: a parse translation is dispatched on the head
+(*\<open>\<mem>[_] _\<close> is a syntax constant, not a logical one: a parse translation is dispatched on the head
   of the application (\<^ML>\<open>Syntax_Phases\<close>, \<open>ast_to_term\<close>), and since Isabelle2025 the head of an
   application is wrapped in a positional constraint whenever it is a LOGICAL constant carrying
   mixfix syntax -- upon which the dispatch no longer reaches it, and the translation below is handed
   an empty argument list instead of \<open>[addr, T]\<close>.  A syntax constant is never wrapped, which is why
   every parse translation in the Isabelle distribution is keyed on one.*)
-syntax "_Mem_synt" :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_] _" [10,901] 900)
+syntax "_Mem_synt" :: \<open>address \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<mem>[_] _" [10,901] 900)
 syntax_consts "_Mem_synt" \<rightleftharpoons> Mem
 
 \<phi>adhoc_overloading may_mem_coerce \<open>\<lambda>x. x\<close> Mem_Coercion
@@ -141,11 +141,11 @@ setup \<open>Context.theory_map (
 
 paragraph \<open>Slice\<close>
 
-consts Slice_synt :: \<open>nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close> ("\<s>\<l>\<i>\<c>\<e>[_, _] _" [10,10,910] 911)
+consts Slice_synt :: \<open>nat \<Rightarrow> nat \<Rightarrow> (mem_fic,'a) \<phi> \<Rightarrow> (mem_fic, 'a list) \<phi>\<close> ("\<slice>[_, _] _" [10,10,910] 911)
 
-translations "\<s>\<l>\<i>\<c>\<e>[start, len] T" == "\<big_ast>\<^sub>\<bbbT> CONST AgIdx_N \<lbrakk>start : len\<rwpar> T"
+translations "\<slice>[start, len] T" == "\<big_ast>\<^sub>\<bbbT> CONST AgIdx_N \<lbrakk>start : len\<rwpar> T"
 
-(*This handler is reached only through the \<open>\<s>\<l>\<i>\<c>\<e>\<close> rule above -- the only producer of the shape --
+(*This handler is reached only through the \<open>\<slice>\<close> rule above -- the only producer of the shape --
   and a rule's \<open>CONST c\<close> arrives bare, so the Isabelle2025 head wrapping does not actually reach it
   and the literal \<^ML>\<open>Const\<close> patterns it replaces still matched.  The head test is made wrapper-aware
   anyway, so that a producer added later through ordinary notation does not fail silently; the node
@@ -192,22 +192,22 @@ definition \<open>address_to_base addr \<equiv> addr.offset addr = 0\<close>
   \<comment> \<open>wraps and prevents the rewrite \<open>addr.offset addr = 0\<close>,
       as \<open>address_to_base addr\<close> should be treated as an atom\<close>
 
-abbreviation MemObj ("\<o>\<b>\<j>[_] _" [10,901] 900)
-  where \<open>\<o>\<b>\<j>[addr] T \<equiv> Mem addr (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<phi>\<s>\<u>\<b>\<j> address_to_base addr \<and> \<t>\<y>\<p>\<e>\<o>\<f> addr = \<t>\<y>\<p>\<e>\<o>\<f> T \<and> \<t>\<y>\<p>\<e>\<o>\<f> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+abbreviation MemObj ("\<obj>[_] _" [10,901] 900)
+  where \<open>\<obj>[addr] T \<equiv> Mem addr (\<mem>-\<coerce> T) \<phi>\<subj> address_to_base addr \<and> \<typeof> addr = \<typeof> T \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
 
 
 
 subsection \<open>Main\<close>
 
 proc op_load_mem:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> state\<close>
-  requires Extr: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<close>
+  input \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> state\<close>
+  requires Extr: \<open>\<get> x \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce>[TY] T) \<from> state \<remaining> R\<close>
        and \<open>Semantic_Type' (x \<Ztypecolon> T) TY\<close>
-  output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state\<close>
+  output \<open>x \<Ztypecolon> \<val> T\<heavy_comma> state\<close>
   unfolding Guided_Mem_Coercion_def
   including \<phi>sem_type_sat_EIF
 \<medium_left_bracket>
-  semantic_local_value(addr) \<p>\<t>\<r>
+  semantic_local_value(addr) \<ptr>
 
   apply_rule ToA_Extract_onward[OF Extr]
 
@@ -219,11 +219,11 @@ proc op_load_mem:
                 and blk=\<open>addr.blk addr\<close>
                 and idx=\<open>addr.offset addr\<close>] \<semicolon>
 
-  \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.offset addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T))))\<close>
-  \<open>x \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] T)\<close>
+  \<open>x \<Ztypecolon> MAKE _ (\<mem>-\<blk>[addr.blk addr] (addr.offset addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<mem>-\<coerce> T))))\<close>
+  \<open>x \<Ztypecolon> MAKE _ (\<mem>[addr] T)\<close>
   apply_rule ToA_Extract_backward[OF Extr]
 
-  holds_fact [simp]: \<open>\<t>\<y>\<p>\<e>\<o>\<f> addr = TY\<close>
+  holds_fact [simp]: \<open>\<typeof> addr = TY\<close>
          and \<open>Mem.Val_of_Rep (block.layout (addr.blk addr)) (Byte_Rep_of_Val xa) = xa\<close> \<semicolon>
 
   semantic_assert \<open>let addr = rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))
@@ -237,11 +237,11 @@ proc op_load_mem:
 declare [[\<phi>trace_reasoning = 1]]
 
 proc op_store_mem:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
-  requires \<open>report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of\<close>
-       and Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U)
-                   \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
-                 \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R\<close>
+  input  \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> y \<Ztypecolon> \<val> U\<heavy_comma> State\<close>
+  requires \<open>report_unprocessed_element_index input_index EIHOOK_Addr_Of\<close>
+       and Map: \<open>\<subst> y \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce> U)
+                   \<for> x \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce>[TY] T)
+                 \<from> State \<to> State' \<remaining> R\<close>
        and \<open>Semantic_Type T TY\<close>
        and \<open>Semantic_Type U TY\<close>
   output \<open>\<lambda>_::unit \<phi>arg. State'\<close>
@@ -253,7 +253,7 @@ proc op_store_mem:
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
 
-  $addr semantic_local_value \<p>\<t>\<r>
+  $addr semantic_local_value \<ptr>
   $y semantic_local_value \<open>TY\<close>
 
   apply_rule FIC.aggregate_mem.setter_rule[
@@ -263,32 +263,32 @@ proc op_store_mem:
           and cblk = \<open>addr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>
           and cidx = \<open>addr.offset (rawaddr_to_log TY (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
 
-  \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (addr.offset addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U))))\<close>
-  \<open>y \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[addr] U)\<close>
+  \<open>y \<Ztypecolon> MAKE _ (\<mem>-\<blk>[addr.blk addr] (addr.offset addr \<^bold>\<rightarrow>\<^sub>@ (MAKE _ (\<mem>-\<coerce> U))))\<close>
+  \<open>y \<Ztypecolon> MAKE _ (\<mem>[addr] U)\<close>
   
   apply_rule ToA_Subst_backward[OF Map]
 \<medium_right_bracket> .
 
 lemma op_load_mem_triangle_opr_\<phi>app[\<phi>overload \<tribullet> 10]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY = \<p>\<t>\<r>
-\<Longrightarrow> \<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g> R
+  \<open> \<condition> TY = \<ptr>
+\<Longrightarrow> \<get> x \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce>[TY] T) \<from> state \<remaining> R
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
-\<Longrightarrow> report_unprocessed_element_index input_index \<E>\<I>\<H>\<O>\<O>\<K>_Addr_Of
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_load_mem TY v \<lbrace> addr \<Ztypecolon> \<v>\<a>\<l>[v] TypedPtr TY\<heavy_comma> state \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state \<rbrace>\<close>
+\<Longrightarrow> report_unprocessed_element_index input_index EIHOOK_Addr_Of
+\<Longrightarrow> \<proc> op_load_mem TY v \<lbrace> addr \<Ztypecolon> \<val>[v] TypedPtr TY\<heavy_comma> state \<longmapsto> x \<Ztypecolon> \<val> T\<heavy_comma> state \<rbrace>\<close>
   by (rule op_load_mem_\<phi>app, blast+)
 
 
 
 (*
 proc op_store_mem:
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> State\<close>
+  input  \<open>addr \<Ztypecolon> \<val> Ptr TY\<heavy_comma> y \<Ztypecolon> \<val> U\<heavy_comma> State\<close>
   requires \<open>parse_eleidx_input TY input_index sem_idx spec_idx reject\<close>
-       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and \<open>\<condition> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of spec_idx TY TY'\<close>
        and \<open>report_unprocessed_element_index reject\<close>
-  requires Map: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
-                   \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
-                 \<f>\<r>\<o>\<m> State \<t>\<o> State' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+  requires Map: \<open>\<subst> y \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce>[TY] U)
+                   \<for> x \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce>[TY] T)
+                 \<from> State \<to> State' \<remaining>[C\<^sub>R] R\<close>
        and \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
        and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   output \<open>\<lambda>_::unit \<phi>arg. State'\<close>
@@ -306,18 +306,18 @@ text \<open>(deprecated! as we can have non-deterministic monad)
 
 proc calloc1:
   input \<open>Void\<close>
-  requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
+  requires \<open>\<param> T\<close>
        and \<open>Semantic_Zero_Val TY T z\<close>
   premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
-  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T) \<s>\<u>\<b>\<j> addr. address_to_base addr\<close>
+  output \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce> T) \<subj> addr. address_to_base addr\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
 \<medium_left_bracket>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and U=\<open>{the (Zero TY)}\<close>]
 
-  \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>-\<b>\<l>\<k>[blk] (MAKE _ (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T)))\<close>
-  \<open>z \<Ztypecolon> MAKE _ (\<m>\<e>\<m>[Addr blk 0] T)\<close>
+  \<open>z \<Ztypecolon> MAKE _ (\<mem>-\<blk>[blk] (MAKE _ (\<mem>-\<coerce> T)))\<close>
+  \<open>z \<Ztypecolon> MAKE _ (\<mem>[Addr blk 0] T)\<close>
 
   semantic_assumption \<open>type_storable_in_mem TY\<close>
 
@@ -336,10 +336,10 @@ thm \<phi>MapAt_L.mapper_wrap_module_src
 (*
 proc malloc:
   input Void
-  requires \<open>\<p>\<a>\<r>\<a>\<m> T\<close>
+  requires \<open>\<param> T\<close>
        and \<open>Semantic_Type T TY\<close>
   premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
-  output \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<o>\<b>\<j>[addr] T\<close>
+  output \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<obj>[addr] T\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
   \<medium_left_bracket>
@@ -359,7 +359,7 @@ proc malloc:
 
 
 proc mfree:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr TY\<heavy_comma> x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)\<close>
+  input \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> x \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce>[TY] T)\<close>
   requires \<open>Semantic_Type T TY\<close>
   premises \<open>address_to_base addr\<close>
   output \<open>Void\<close>
@@ -368,7 +368,7 @@ proc mfree:
 \<medium_left_bracket>
   to \<open>OPEN _ _\<close> to \<open>OPEN _ _\<close>
   to \<open>FIC.aggregate_mem.\<phi> Itself\<close> \<exists>v
-  $addr semantic_local_value \<p>\<t>\<r>
+  $addr semantic_local_value \<ptr>
 
   apply_rule FIC.aggregate_mem.deallocate_rule
              [where v=v and blk=\<open>addr.blk (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1))\<close>]
@@ -391,29 +391,29 @@ text \<open>We differentiate \<open>\<leftarrow>\<close> and \<open>:=\<close>.
 
 (*
 proc(nodef) "_load_mem_bracket_"[\<phi>overload "[]"]:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> state\<close>
+  input \<open>addr \<Ztypecolon> \<val> Ptr TY0\<heavy_comma> state\<close>
   requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx reject\<close>
-       and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and L2[]: \<open>\<condition> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
        and L4[]: \<open>report_unprocessed_element_index reject\<close>
-  requires Extr[]: \<open>\<g>\<e>\<t> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr spec_idx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T) \<f>\<r>\<o>\<m> state \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+  requires Extr[]: \<open>\<get> x \<Ztypecolon> \<mem>[addr_geps addr spec_idx] (\<mem>-\<coerce>[TY] T) \<from> state \<remaining>[C\<^sub>R] R\<close>
        and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> state\<close>
+  output \<open>x \<Ztypecolon> \<val> T\<heavy_comma> state\<close>
 \<medium_left_bracket>
   $addr apply_rule op_get_element_pointer[OF L1 Premise_I[OF L2] L3 L4]
   apply_rule op_load_mem[OF Extr L01]
 \<medium_right_bracket> .
 
 proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY0\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> state\<close>
+  input \<open>addr \<Ztypecolon> \<val> Ptr TY0\<heavy_comma> y \<Ztypecolon> \<val> U\<heavy_comma> state\<close>
   requires L1[]: \<open>parse_eleidx_input TY0 input_index sem_idx spec_idx reject\<close>
-       and L2[]: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> spec_idx \<noteq> []\<close>
+       and L2[]: \<open>\<condition> input_index = [] \<or> spec_idx \<noteq> []\<close>
        and L3[]: \<open>is_valid_index_of spec_idx TY0 TY\<close>
        and L4[]: \<open>report_unprocessed_element_index reject\<close>
-  requires Map[]: \<open>\<s>\<u>\<b>\<s>\<t> y \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr spec_idx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U)
-                     \<f>\<o>\<r> x \<Ztypecolon> \<m>\<e>\<m>[addr_geps addr spec_idx] (\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T)
-                   \<f>\<r>\<o>\<m> state \<t>\<o> state' \<r>\<e>\<m>\<a>\<i>\<n>\<i>\<n>\<g>[C\<^sub>R] R\<close>
+  requires Map[]: \<open>\<subst> y \<Ztypecolon> \<mem>[addr_geps addr spec_idx] (\<mem>-\<coerce>[TY] U)
+                     \<for> x \<Ztypecolon> \<mem>[addr_geps addr spec_idx] (\<mem>-\<coerce>[TY] T)
+                   \<from> state \<to> state' \<remaining>[C\<^sub>R] R\<close>
        and L01[]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
        and L02[]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   premises \<open>addr \<noteq> 0\<close>
@@ -427,8 +427,8 @@ proc(nodef) "_store_mem_bracket_"[\<phi>overload "[]:="]:
 section \<open>Reasoning Setup\<close>
 
 \<phi>reasoner_group mapToA_mem_coerce_all = (%\<phi>mapToA_norm, [%\<phi>mapToA_norm, %\<phi>mapToA_norm+100])
-    \<open>rules resolving the memory coercion. Given a target like \<open>\<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] \<lbrace> a: T, b: U \<rbrace>\<close>,
-      the rules reduce it by moving \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> inside, to \<open>a \<^bold>\<rightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] T \<^emph> b \<^bold>\<rightarrow> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[ty] U \<rbrace>,
+    \<open>rules resolving the memory coercion. Given a target like \<open>\<mem>-\<coerce>[ty] \<lbrace> a: T, b: U \<rbrace>\<close>,
+      the rules reduce it by moving \<mem>-\<coerce> inside, to \<open>a \<^bold>\<rightarrow> \<mem>-\<coerce>[ty] T \<^emph> b \<^bold>\<rightarrow> \<mem>-\<coerce>[ty] U \<rbrace>,
       untill atomic types are reached.\<close>\<close>
   and mapToA_mem_coerce = (%mapToA_mem_coerce_all+5, [%mapToA_mem_coerce_all+5, %mapToA_mem_coerce_all+79])
     \<open>user rules\<close>
@@ -447,18 +447,18 @@ section \<open>Reasoning Setup\<close>
 
 declare [[
   \<phi>reason_default_pattern
-      \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> (1000)
-  and \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> (1000)
-  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<w>\<i>\<t>\<h> _ \<close> (1000)
-  and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>' \<close> (1000)
-  and \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
-       \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
-      \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
-       \<o>\<v>\<e>\<r> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
+      \<open>_ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<transforms> _ \<with> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<transforms> _ \<with> _ @tag \<T>\<P> \<close> (1000)
+  and \<open>_ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<transforms> _ \<with> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<transforms> _ \<with> _ @tag \<T>\<P>' \<close> (1000)
+  and \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<with> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<with> _ \<close> (1000)
+  and \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<with> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<with> _ @tag \<T>\<P>' \<close> (1000)
+  and \<open>\<m>\<a>\<p> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
+       \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close> \<Rightarrow>
+      \<open>\<m>\<a>\<p> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
+       \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>         (1000)
   and \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
-       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close> \<Rightarrow>
+       \<over> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close> \<Rightarrow>
       \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
-       \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[?TY] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _ \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _\<close>         (1000)
+       \<over> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>         (1000)
 ]]
 
 consts \<A>_mem_coerce :: mode
@@ -476,65 +476,65 @@ thm ToA_Mapper_fallback_remainder
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
   \<open> Semantic_Type T TY
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
-    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<OTast> W \<mapsto> T' \<OTast> W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
-    \<o>\<v>\<e>\<r> f : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T \<OTast> W \<mapsto> T' \<OTast> W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+\<Longrightarrow> \<m>\<a>\<p> g : \<mem>-\<coerce>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
+    \<over> f : \<mem>-\<coerce>[TY] T \<OTast> W \<mapsto> T' \<OTast> W'
+    \<with> \<getter> h \<setter> s \<in'> D
+\<Longrightarrow> \<m>\<a>\<p> g : \<mem>-\<coerce>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
+    \<over> f : \<mem>-\<coerce> T \<OTast> W \<mapsto> T' \<OTast> W'
+    \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def . 
 
 thm Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simplified,
       OF ToA_Mapper_fallback_remainder, OF Mem_Coercion.ToA_mapper]
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm
-        for \<open>\<m>\<a>\<p> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
-             \<o>\<v>\<e>\<r> _ : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[_] _ \<OTast> _ \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> _ \<OTast> _
-             \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> _ \<s>\<e>\<t>\<t>\<e>\<r> _ \<i>\<n> _ \<close>]:
+        for \<open>\<m>\<a>\<p> _ : \<mem>-\<coerce>[_] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
+             \<over> _ : \<mem>-\<coerce>[_] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
+             \<with> \<getter> _ \<setter> _ \<in'> _ \<close>]:
   \<comment> \<open>This rule assumes \<open>Semantic_Type\<close> reduces \<open>TY\<close> to the normal form!\<close>
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<o>\<v>\<e>\<r> f : T \<mapsto> T' \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> fst ` D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U \<OTast> \<circle> \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<OTast> \<circle>
-    \<o>\<v>\<e>\<r> f \<otimes>\<^sub>f r : \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T \<OTast> \<circle> \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T' \<OTast> \<circle>
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> apfst h \<s>\<e>\<t>\<t>\<e>\<r> apfst s \<i>\<n> D \<close>
+  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> fst ` D
+\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<mem>-\<coerce>[TY] U \<OTast> \<circle> \<mapsto> \<mem>-\<coerce> U' \<OTast> \<circle>
+    \<over> f \<otimes>\<^sub>f r : \<mem>-\<coerce>[TY] T \<OTast> \<circle> \<mapsto> \<mem>-\<coerce> T' \<OTast> \<circle>
+    \<with> \<getter> apfst h \<setter> apfst s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def
   by (rule ToA_Mapper_fallback_remainder, rule Mem_Coercion.ToA_mapper)
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U' \<OTast> R'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> T'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U' \<OTast> R'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> T'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  \<open> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce> U' \<OTast> R'
+    \<over> f : T \<mapsto> T'
+    \<with> \<getter> h \<setter> s \<in'> D
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce>[TY] U' \<OTast> R'
+    \<over> f : T \<mapsto> T'
+    \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .
 
 (*
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
   \<open> \<m>\<a>\<p> g : U \<mapsto> U'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+    \<over> f : T \<mapsto> \<mem>-\<coerce> T' \<^emph>[C\<^sub>W] W'
+    \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T' \<^emph>[C\<^sub>W] W'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+    \<over> f : T \<mapsto> \<mem>-\<coerce>[TY] T' \<^emph>[C\<^sub>W] W'
+    \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
   \<open> \<m>\<a>\<p> g : U \<mapsto> U'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> T'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
+    \<over> f : T \<mapsto> \<mem>-\<coerce> T'
+    \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] T'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+    \<over> f : T \<mapsto> \<mem>-\<coerce>[TY] T'
+    \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .
 *)
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e> U'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> T'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<m>\<e>\<m>-\<c>\<o>\<e>\<r>\<c>\<e>[TY] U'
-    \<o>\<v>\<e>\<r> f : T \<mapsto> T'
-    \<w>\<i>\<t>\<h> \<g>\<e>\<t>\<t>\<e>\<r> h \<s>\<e>\<t>\<t>\<e>\<r> s \<i>\<n> D \<close>
+  \<open> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce> U'
+    \<over> f : T \<mapsto> T'
+    \<with> \<getter> h \<setter> s \<in'> D
+\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce>[TY] U'
+    \<over> f : T \<mapsto> T'
+    \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .
 
 thm \<phi>mapToA_refl'
@@ -543,15 +543,15 @@ thm Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simp
 
 subsection \<open>Auxiliary Simplification\<close>
 
-subsubsection \<open>Converting \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk a] ((addr.offset a @ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
-                          \<open>\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk a] (addr.offset a \<^bold>\<rightarrow>\<^sub>@ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
-                      to \<open>\<m>\<e>\<m>[a \<tribullet> i\<^sup>\<t>\<^sup>\<h>] \<dots>\<close>\<close>
+subsubsection \<open>Converting \<open>\<mem>-\<blk>[addr.blk a] ((addr.offset a @ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
+                          \<open>\<mem>-\<blk>[addr.blk a] (addr.offset a \<^bold>\<rightarrow>\<^sub>@ [i\<^sup>\<t>\<^sup>\<h>]) \<^bold>\<rightarrow>\<^sub>@ \<dots>\<close>
+                      to \<open>\<mem>[a \<tribullet> i\<^sup>\<t>\<^sup>\<h>] \<dots>\<close>\<close>
 
 lemma MemBlk_\<phi>MapAt_L_assoc[no_atp, \<phi>programming_simps, \<phi>programming_base_simps]:
-  \<open> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (a \<^bold>\<rightarrow>\<^sub>@ b \<^bold>\<rightarrow>\<^sub>@ T) = \<m>\<e>\<m>-\<b>\<l>\<k>[blk] ((a @ b) \<^bold>\<rightarrow>\<^sub>@ T) \<close>
+  \<open> \<mem>-\<blk>[blk] (a \<^bold>\<rightarrow>\<^sub>@ b \<^bold>\<rightarrow>\<^sub>@ T) = \<mem>-\<blk>[blk] ((a @ b) \<^bold>\<rightarrow>\<^sub>@ T) \<close>
   by (simp add: \<phi>MapAt_L.scalar_assoc[simplified times_list_def])
 
-simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[addr.blk addr] (idx \<^bold>\<rightarrow>\<^sub>@ T)\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
+simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<mem>-\<blk>[addr.blk addr] (idx \<^bold>\<rightarrow>\<^sub>@ T)\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>MemBlk\<close>, _) $ (Const(\<^const_name>\<open>addr.blk\<close>, _) $ a0)
                                     $ (Const(\<^const_name>\<open>\<phi>MapAt_L\<close>, _) $ idx $ _) =>
@@ -576,7 +576,7 @@ simproc_setup MemBlk_\<phi>MapAt_repair (\<open>\<m>\<e>\<m>-\<b>\<l>\<k>[addr.b
             val rule = \<^instantiate>\<open>blk=cblk and idx=cidx and addr=caddr' and T=cT and 'a=\<open>Thm.dest_ctyp0 (Thm.ctyp_of_cterm cT)\<close>
                                 in lemma \<open>addr.blk addr = blk
                                       \<Longrightarrow> addr.offset addr = idx
-                                      \<Longrightarrow> \<m>\<e>\<m>-\<b>\<l>\<k>[blk] (idx \<^bold>\<rightarrow>\<^sub>@ T) \<equiv> \<m>\<e>\<m>[addr] T\<close>
+                                      \<Longrightarrow> \<mem>-\<blk>[blk] (idx \<^bold>\<rightarrow>\<^sub>@ T) \<equiv> \<mem>[addr] T\<close>
                                       by (simp add: Mem_def)\<close>
          in SOME rule
         end else NONE end \<close>
@@ -608,7 +608,7 @@ subsubsection \<open>Reasoning Rules\<close>
 
 
 lemma [\<phi>reason %deriving_pointer_cut]:
-  \<open> Derive_Pointer_Of (x \<Ztypecolon> \<m>\<e>\<m>[addr] T) (Some (addr \<Ztypecolon> Ptr)) \<close>
+  \<open> Derive_Pointer_Of (x \<Ztypecolon> \<mem>[addr] T) (Some (addr \<Ztypecolon> Ptr)) \<close>
   for T :: \<open>(mem_fic,'x) \<phi>\<close>
   unfolding Derive_Pointer_Of_def ..
 

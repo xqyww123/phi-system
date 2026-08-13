@@ -11,8 +11,8 @@ val rule0 = @{lemma
   \<open> Semantic_Type T TY ||| EXCEPTION TEXT(\<open>S\<close>)
 \<Longrightarrow> Inhabited T        ||| EXCEPTION TEXT(\<open>I\<close>)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T \<equiv> TY \<close>
+\<Longrightarrow> \<obligation> True
+\<Longrightarrow> \<typeof> T \<equiv> TY \<close>
   by (simp add: atomize_Branch EXCEPTION_def, rule SType_Of_unfold, simp)
 }
 
@@ -46,9 +46,9 @@ fun unfold_typeof _ ctxt cterm =
   end
 
 val unfold_typeof_simproc = Simplifier.make_simproc \<^context> {
-        name = "\<phi>.\<t>\<y>\<p>\<e>\<o>\<f>",
+        name = "\<phi>.typeof",
         kind = Simproc,
-        lhss = [\<^pattern>\<open>\<t>\<y>\<p>\<e>\<o>\<f> ?T\<close>],
+        lhss = [\<^pattern>\<open>\<typeof> ?T\<close>],
         proc = unfold_typeof,
         identifier = []
     }

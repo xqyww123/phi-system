@@ -1,7 +1,7 @@
 signature GENERIC_ELEMENT_ACCESS = sig
 include GENERIC_ELEMENT_ACCESS
 
-type final_hook = cterm (*the term of the hook action like \<E>\<I>\<H>\<O>\<O>\<K>_none*)
+type final_hook = cterm (*the term of the hook action like EIHOOK_none*)
                -> bool (*true for read or false for write*)
                -> Phi_Opr_Stack.opr_frame list * context_state
                -> Phi_Opr_Stack.opr_frame list * context_state
@@ -14,7 +14,7 @@ end
 structure Generic_Element_Access : GENERIC_ELEMENT_ACCESS = struct
 open Generic_Element_Access
 
-type final_hook = cterm (*the term of the hook action like \<E>\<I>\<H>\<O>\<O>\<K>_none*)
+type final_hook = cterm (*the term of the hook action like EIHOOK_none*)
                -> bool (*true for read or false for write*)
                -> Phi_Opr_Stack.opr_frame list * context_state
                -> Phi_Opr_Stack.opr_frame list * context_state

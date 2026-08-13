@@ -52,7 +52,7 @@ fun mk_exp thy has_R arity =
 
 fun ExBI_expand_quantifier' ctxt ctm =
   let val thy = Proof_Context.theory_of ctxt
-      val (_,tenv) = Pattern.match thy (\<^pattern>\<open>ExBI (\<lambda>x. _ \<s>\<u>\<b>\<j> ?X x)\<close>, Thm.term_of ctm)
+      val (_,tenv) = Pattern.match thy (\<^pattern>\<open>ExBI (\<lambda>x. _ \<subj> ?X x)\<close>, Thm.term_of ctm)
                                        (Vartab.empty, Vartab.empty)
       val SOME (_, X) = Vartab.lookup tenv ("X",0)
       fun dest arity (Abs (_,_,X)) = dest arity X
@@ -77,7 +77,7 @@ val _ = Theory.setup (Named_Target.theory_map (
               {passive = false,
                name = \<^binding>\<open>ExBI_expand_quantifier\<close>,
                kind = Simproc,
-               lhss = [\<^term>\<open>X x \<s>\<u>\<b>\<j> x. (\<exists>y. Y x y)\<close>],
+               lhss = [\<^term>\<open>X x \<subj> x. (\<exists>y. Y x y)\<close>],
                proc = K ExBI_expand_quantifier',
                identifier = []} #> snd))
 

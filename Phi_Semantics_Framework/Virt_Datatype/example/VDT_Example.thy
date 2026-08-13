@@ -155,19 +155,19 @@ typ \<open>'rep :: plus\<close>
 
 subsubsection \<open>Constructor\<close>
 
-term \<open>C1.mk 42 :: 'rep\<close> \<comment> \<open>Make an instance by constructor \<^term>\<open>\<f>\<i>\<e>\<l>\<d>_C1\<close>\<close>
+term \<open>C1.mk 42 :: 'rep\<close> \<comment> \<open>Make an instance by constructor \<^term>\<open>field_C1\<close>\<close>
 
-lemma \<open>C1.mk = Virtual_Datatype.Field.inject \<f>\<i>\<e>\<l>\<d>_C1\<close>
+lemma \<open>C1.mk = Virtual_Datatype.Field.inject field_C1\<close>
   \<comment> \<open>\<open>C1.mk\<close> is merely a syntax sugar of \<open>Virtual_Datatype.Field.inject C1\<close>\<close>
   by simp
 
-ML \<open>@{term C1.mk} = @{term \<open>Virtual_Datatype.Field.inject \<f>\<i>\<e>\<l>\<d>_C1\<close>}\<close> \<comment> \<open>is True!\<close>
+ML \<open>@{term C1.mk} = @{term \<open>Virtual_Datatype.Field.inject field_C1\<close>}\<close> \<comment> \<open>is True!\<close>
 
 subsubsection \<open>Destructor\<close>
 
-term \<open>C1.dest :: 'rep \<Rightarrow> nat\<close> \<comment> \<open>Destructor corresponding to \<^term>\<open>\<f>\<i>\<e>\<l>\<d>_C1\<close>\<close>
+term \<open>C1.dest :: 'rep \<Rightarrow> nat\<close> \<comment> \<open>Destructor corresponding to \<^term>\<open>field_C1\<close>\<close>
 
-lemma \<open>C1.dest = Virtual_Datatype.Field.project \<f>\<i>\<e>\<l>\<d>_C1\<close>
+lemma \<open>C1.dest = Virtual_Datatype.Field.project field_C1\<close>
   \<comment> \<open>Yet another syntax sugar\<close>
   by simp
 
@@ -177,9 +177,9 @@ lemma \<open>C1.dest (C1.mk x) = x\<close>
 
 subsubsection \<open>Constructor Name\<close>
 
-term \<open>C1.name :: 'CONS_NAME\<close> \<comment> \<open>The name of the constructor \<open>\<f>\<i>\<e>\<l>\<d>_C1\<close>\<close>
+term \<open>C1.name :: 'CONS_NAME\<close> \<comment> \<open>The name of the constructor \<open>field_C1\<close>\<close>
 
-lemma \<open>C1.name = Virtual_Datatype.Field.name \<f>\<i>\<e>\<l>\<d>_C1\<close>
+lemma \<open>C1.name = Virtual_Datatype.Field.name field_C1\<close>
   \<comment> \<open>Yet another syntax sugar\<close>
   by simp
 

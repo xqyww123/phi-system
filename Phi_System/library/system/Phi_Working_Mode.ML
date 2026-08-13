@@ -22,7 +22,7 @@ type working_mode = {
 }
 (*
 cast operation: transform to the desired assertion.
-If successful, it results in \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<Longrightarrow> Result\<close>
+If successful, it results in \<open>\<obligation> P \<Longrightarrow> Result\<close>
 which always has a leading obligation P no matter whether it is trivially true.
 cast exception is the version for casting an exception assertion.
 *)
@@ -113,7 +113,7 @@ fun mode1 ctxt = case Mode.get ctxt
 
 fun generic_initialize_sequent gen s =
   case Facts.lookup (Context.Proof (Proof.context_of s))
-                    (Proof_Context.facts_of (Proof.context_of s)) "local.\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>"
+                    (Proof_Context.facts_of (Proof.context_of s)) "local.\<phi>initial"
     of SOME {thms=[X], dynamic=false} => (Thm.transfer' (Proof.context_of s) X, s)
      | _ => gen s
 

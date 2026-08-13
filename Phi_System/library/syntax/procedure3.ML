@@ -9,9 +9,9 @@ val quantify_args_of_proc_term : bool (*whether to record the names in the quant
 val quantify_args_of_proc_term_meta : bool (*whether to record the names in the quantification*)
                          -> term -> term
 
-(* \<p>\<r>\<o>\<c> f ?a ?b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?b] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
+(* \<proc> f ?a ?b \<lbrace> x \<Ztypecolon> \<val>[?a] T\<heavy_comma> y \<Ztypecolon> \<val>[?b] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<throws> EE
 --------------------------------------------------------------------------------------
-   \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
+   \<forall>pack. \<proc> f pack \<lbrace> x \<Ztypecolon> \<val>[\<phi>V_fst pack] T\<heavy_comma> y \<Ztypecolon> \<val>[\<phi>V_snd pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<throws> EE
 *)
 val package_argument : Proof.context -> thm -> thm
 
@@ -99,8 +99,8 @@ fun quantify_args_of_proc_term record_name (Const (\<^const_name>\<open>Trueprop
 
 
 (*
-    (\<And>a b. \<p>\<r>\<o>\<c> f a b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE ) \<Longrightarrow>
-    (\<forall>a. \<p>\<r>\<o>\<c> f a \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE )
+    (\<And>a b. \<proc> f a b \<lbrace> x \<Ztypecolon> \<val>[b] T\<heavy_comma> y \<Ztypecolon> \<val>[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<throws> EE ) \<Longrightarrow>
+    (\<forall>a. \<proc> f a \<lbrace> x \<Ztypecolon> \<val>[\<phi>V_fst a] T\<heavy_comma> y \<Ztypecolon> \<val>[\<phi>V_snd a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<throws> EE )
 *)
 fun rule_of_package_arguement ctxt proc =
   let val packed = quantify_args_of_proc_term false proc

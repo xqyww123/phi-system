@@ -20,8 +20,8 @@ lemma "__routine_basic__":
 \<Longrightarrow> Semantic_Types Y TY_RETs
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> (\<And>(vs:: 'a::FIX_ARITY_VALs \<phi>arg <named> 'names).
-          \<p>\<r>\<o>\<c> F (case_named id vs) \<lbrace> X (case_named id vs) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_routine_basic TY_ARGs TY_RETs F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+          \<proc> F (case_named id vs) \<lbrace> X (case_named id vs) \<longmapsto> Y \<rbrace> \<throws> E)
+\<Longrightarrow> \<proc> op_routine_basic TY_ARGs TY_RETs F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<throws> E\<close>
   unfolding op_routine_basic_def Semantic_Types_i_def Semantic_Types_def named_All named.case id_apply
   by (rule \<phi>SEQ, rule \<phi>SEQ, rule \<phi>M_assert, blast, assumption, rule \<phi>SEQ,
       rule \<phi>M_assert, blast, rule \<phi>M_Success')

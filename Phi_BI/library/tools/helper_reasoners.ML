@@ -1,23 +1,23 @@
 signature PHI_REASONERS = sig
 include PHI_REASONERS
 
-(*For a ToA like \<open>if C then A else B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> that will be split to two subgoals and in which
+(*For a ToA like \<open>if C then A else B \<transforms> Y\<close> that will be split to two subgoals and in which
   the schematic variables in the target \<open>Y\<close> may be instantiated to different values,
   reasoner_ToA_conditioned_subgoals merges the instantiations between the two subgoals.
   For example, if the two branches returns \<open>Y[x/a]\<close> and \<open>Y[x/b]\<close> respectively for different two
   instantiations \<open>a\<close> and \<open>b\<close>, reasoner_ToA_conditioned_subgoals returns \<open>Y[x/(if C then a else b)]\<close>
   for each schematic variable.
 
-  See \<open>case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> as an example.
+  See \<open>case_sum A B x \<transforms> Y\<close> as an example.
 
   The normal rule must of form, for example:
     \<open>     Y \<equiv> If C Y\<^sub>a Y\<^sub>B
-      \<Longrightarrow> \<cdots> such as X\<^sub>a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>a
-      \<Longrightarrow> If C X\<^sub>a X\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<close>
+      \<Longrightarrow> \<cdots> such as X\<^sub>a \<transforms> Y\<^sub>a
+      \<Longrightarrow> If C X\<^sub>a X\<^sub>b \<transforms> Y \<close>
   with R:
     \<open>     Y \<equiv> If C Y\<^sub>a Y\<^sub>B
-      \<Longrightarrow> \<cdots> such as X\<^sub>a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>a
-      \<Longrightarrow> If C X\<^sub>a X\<^sub>b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<close>
+      \<Longrightarrow> \<cdots> such as X\<^sub>a \<transforms> Y\<^sub>a
+      \<Longrightarrow> If C X\<^sub>a X\<^sub>b \<transforms> Y \<remains> R \<close>
   quick rule is the quick-cut used when the Y contains no schematic variables.
   *)
 val reasoner_ToA_conditioned_subgoals :

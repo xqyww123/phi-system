@@ -10,8 +10,8 @@ theory Phi_Preliminary
   keywords "optional_translations" :: thy_decl
        and "optional_translation_group" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
-  abbrevs "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
-      and "<suffices>" = "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>"
+  abbrevs "<implies>" = "\<implies>"
+      and "<suffices>" = "\<suffices>"
 begin
 
 (* declare [[ML_debugger, ML_exception_debugger, ML_print_depth=100]] *)

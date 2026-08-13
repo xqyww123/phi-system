@@ -18,12 +18,12 @@ definition op_Ra_ceiling_Za :: \<open>(VAL, VAL) proc'\<close>
     Return (\<phi>arg (sem_mk_aint \<lceil>v\<rceil>)))\<close>
 
 lemma op_Ra_floor_Za_\<phi>app[\<phi>overload floor, \<phi>synthesis 100]:
-  \<open>\<p>\<r>\<o>\<c> op_Ra_floor_Za raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<real> \<longmapsto> \<lfloor>x\<rfloor> \<Ztypecolon> \<v>\<a>\<l> \<int> \<rbrace>\<close>
+  \<open>\<proc> op_Ra_floor_Za raw \<lbrace> x \<Ztypecolon> \<val>[raw] \<real> \<longmapsto> \<lfloor>x\<rfloor> \<Ztypecolon> \<val> \<int> \<rbrace>\<close>
   unfolding op_Ra_floor_Za_def
   by (cases raw; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 lemma op_Ra_ceiling_Za_\<phi>app[\<phi>overload ceiling, \<phi>synthesis 100]:
-  \<open>\<p>\<r>\<o>\<c> op_Ra_ceiling_Za raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<real> \<longmapsto> \<lceil>x\<rceil> \<Ztypecolon> \<v>\<a>\<l> \<int> \<rbrace>\<close>
+  \<open>\<proc> op_Ra_ceiling_Za raw \<lbrace> x \<Ztypecolon> \<val>[raw] \<real> \<longmapsto> \<lceil>x\<rceil> \<Ztypecolon> \<val> \<int> \<rbrace>\<close>
   unfolding op_Ra_ceiling_Za_def
   by (cases raw; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
@@ -43,15 +43,15 @@ declare [[
 
 lemma op_Za_to_Ra_\<phi>app
   [\<phi>overload to_real, \<phi>synthesis for _ (100)
-                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. real_of_int x \<Ztypecolon> _\<close> (1200)]:
-  \<open> \<p>\<r>\<o>\<c> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<int> \<longmapsto> real_of_int x \<Ztypecolon> \<v>\<a>\<l> \<real> \<rbrace> \<close>
+                                 and \<open>x \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. real_of_int x \<Ztypecolon> _\<close> (1200)]:
+  \<open> \<proc> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<val>[raw] \<int> \<longmapsto> real_of_int x \<Ztypecolon> \<val> \<real> \<rbrace> \<close>
   unfolding op_Za_to_Ra_def
   by (cases raw; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 lemma op_Na_to_Ra_\<phi>app
   [\<phi>overload to_real, \<phi>synthesis for _ (100)
-                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. real_of_int x \<Ztypecolon> _\<close> (1200)]:
-  \<open> \<p>\<r>\<o>\<c> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<nat> \<longmapsto> real_of_nat x \<Ztypecolon> \<v>\<a>\<l> \<real> \<rbrace> \<close>
+                                 and \<open>x \<Ztypecolon> \<val> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. real_of_int x \<Ztypecolon> _\<close> (1200)]:
+  \<open> \<proc> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<val>[raw] \<nat> \<longmapsto> real_of_nat x \<Ztypecolon> \<val> \<real> \<rbrace> \<close>
   \<medium_left_bracket> op_Za_to_Ra \<medium_right_bracket>.
 
 

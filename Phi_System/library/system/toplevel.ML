@@ -62,7 +62,7 @@ structure Phi_Toplevel : PHI_TOPLEVEL = struct
 
 open Phi_Toplevel
 
-val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
+val v_proc_var = ("\<proc>",0)
 
 
 (* Library *)

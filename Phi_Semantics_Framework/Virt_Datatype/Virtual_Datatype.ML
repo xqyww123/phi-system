@@ -82,7 +82,7 @@ val CONS_OF_N = "CONS_OF"
 val constructor_locale_N = "_names"
 val fields_locale_N = "_prjs"
 val TVAR_N = "TYPE"
-val fieldN = "\<f>\<i>\<e>\<l>\<d>_"
+val fieldN = "field_"
 
 val project_injectL_default = \<^locale>\<open>field_entry\<close>
 

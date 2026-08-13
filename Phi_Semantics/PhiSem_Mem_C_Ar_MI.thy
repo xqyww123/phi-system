@@ -5,11 +5,11 @@ begin
 section \<open>Pointer Arithmetic\<close>
 
 proc op_add_ptr[\<phi>overload +]:
-  input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close>
+  input  \<open>i \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<val> \<int>('b)\<close>
   premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
-  output \<open>nat (int i + j) \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY\<close>
+  output \<open>nat (int i + j) \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<close>
 \<medium_left_bracket>
-  $i semantic_local_value \<p>\<t>\<r>
+  $i semantic_local_value \<ptr>
   $j semantic_local_value \<open>\<i>\<n>\<t>('b)\<close> 
 
   have [simp]: \<open>word_of_nat (nat (2 ^ LENGTH('b) + j)) = (word_of_int j :: 'b word)\<close>
@@ -18,10 +18,10 @@ proc op_add_ptr[\<phi>overload +]:
   semantic_return \<open>
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.scast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
-          \<Turnstile> (nat (int i + j) \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY)\<close>
+          \<Turnstile> (nat (int i + j) \<Ztypecolon> \<slice>-\<ptr>[addr:len] TY)\<close>
   certified proof -
-    have t1: \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0) \<close>
-      by auto_sledgehammer
+    have t1: \<open>address_type addr = \<array>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0) \<close>
+      by hammer_or_aoa
     show ?thesis
       by (insert useful, auto simp: memaddr_to_raw_array_GEP[OF t1] distrib_right,
                   simp add: add.commute signed_of_int signed_take_bit_int_eq_self;
@@ -31,20 +31,20 @@ proc op_add_ptr[\<phi>overload +]:
 
 
 proc op_add_ptr_unsigned[\<phi>overload +]:
-  input  \<open>i \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close>
+  input  \<open>i \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<val> \<nat>('b)\<close>
   premises \<open>i + j \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
-  output \<open>i + j \<Ztypecolon> \<v>\<a>\<l> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY\<close>
+  output \<open>i + j \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<close>
 \<medium_left_bracket>
-  $i semantic_local_value \<p>\<t>\<r>
+  $i semantic_local_value \<ptr>
   $j semantic_local_value \<open>\<i>\<n>\<t>('b)\<close>
 
   semantic_return \<open>
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.ucast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
-          \<Turnstile> (i + j \<Ztypecolon> \<s>\<l>\<i>\<c>\<e>-\<p>\<t>\<r>[addr:len] TY)\<close>
+          \<Turnstile> (i + j \<Ztypecolon> \<slice>-\<ptr>[addr:len] TY)\<close>
   certified proof -
-    have t1: \<open>address_type addr = \<a>\<r>\<r>\<a>\<y>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> i + j = 0) \<close>
-      by auto_sledgehammer
+    have t1: \<open>address_type addr = \<array>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> i + j = 0) \<close>
+      by hammer_or_aoa
     show ?thesis
       by (insert useful,
                   auto simp: memaddr_to_raw_array_GEP[OF t1]

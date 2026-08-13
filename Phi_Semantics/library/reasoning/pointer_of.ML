@@ -10,7 +10,7 @@ local
 val derv_rule = @{lemma
   \<open> Derive_Pointer_Of assn ptr
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> \<obligation> True
 \<Longrightarrow> TERM (T, ptr) \<close>
   by this
 }

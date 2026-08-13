@@ -40,7 +40,7 @@ precondition matches the state sequent exactly, no serious ToA will be applied s
 and the candidate be the optimal. The priority of reasoning rules has no influence on deciding
 which candidate is optimal.
 
-The resulted state sequent will have exactly one Obligtaion antecedent in form \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P\<close>.
+The resulted state sequent will have exactly one Obligtaion antecedent in form \<^prop>\<open>\<obligation> P\<close>.
 Since your VCG is offline, you need to collect them somewhere and give to users finally.
 
 \<close>
@@ -50,8 +50,8 @@ text \<open>Here I give an example building a procedure using ML.\<close>
 
 
 proc
-  input \<open>flag \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
-  output \<open>(if flag then 1 else 2) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input \<open>flag \<Ztypecolon> \<val> \<bool>\<close>
+  output \<open>(if flag then 1 else 2) \<Ztypecolon> \<val> \<nat>\<close>
   is [routine]
   \<medium_left_bracket>
     if \<open>$flag\<close> \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>2 \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>.
@@ -102,6 +102,6 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>VCG\<close> "a very
 
 \<close>
 
-term \<open>\<p>\<r>\<o>\<c> Return\<close>
+term \<open>\<proc> Return\<close>
 
 end

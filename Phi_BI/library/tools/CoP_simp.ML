@@ -224,23 +224,23 @@ structure Phi_CoP_Simp = Phi_CoP_Simp_GEN (
   val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' True\<close>
 
   val simp_trans' = @{lemma'
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' @tag \<A>_transitive_simp' direction
-\<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @tag \<A>simp_if_need direction
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @tag \<A>simp' direction \<close>
+  \<open> x \<Ztypecolon> T \<transforms> y \<Ztypecolon> U \<subj> y. y = y' @tag \<A>_transitive_simp' direction
+\<Longrightarrow> y' \<Ztypecolon> U \<transforms> z \<Ztypecolon> Z \<subj> z. w z @tag \<A>simp_if_need direction
+\<Longrightarrow> x \<Ztypecolon> T \<transforms> z \<Ztypecolon> Z \<subj> z. w z @tag \<A>simp' direction \<close>
   by (simp add: Action_Tag_def Transformation_def)}
 
   val simp_trans'P = @{lemma'
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P y @tag \<A>_transitive_simp' direction
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y' \<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @tag \<A>simp_if_need direction)
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] r' : (\<lambda>z. w z \<and> P y')
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @tag \<A>simp' direction \<close>
+  \<open> x \<Ztypecolon> T \<transforms> y \<Ztypecolon> U \<subj> y. y = y' \<and> P y @tag \<A>_transitive_simp' direction
+\<Longrightarrow> (\<condition> P y' \<Longrightarrow> y' \<Ztypecolon> U \<transforms> z \<Ztypecolon> Z \<subj> z. w z @tag \<A>simp_if_need direction)
+\<Longrightarrow> \<simplify>[\<safe>] r' : (\<lambda>z. w z \<and> P y')
+\<Longrightarrow> x \<Ztypecolon> T \<transforms> z \<Ztypecolon> Z \<subj> z. r' z @tag \<A>simp' direction \<close>
   by (simp add: Action_Tag_def Transformation_def Simplify_def) }
 
   val simp_trans = @{lemma'
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @tag \<A>_transitive_simp' direction
-\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @tag \<A>simp_if_need direction)
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] r' : (\<lambda>z. \<exists>y. r y \<and> w y z)
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. r' z @tag \<A>simp' direction \<close>
+  \<open> x \<Ztypecolon> T \<transforms> y \<Ztypecolon> U \<subj> y. r y @tag \<A>_transitive_simp' direction
+\<Longrightarrow> (\<And>y. \<condition> r y \<Longrightarrow> y \<Ztypecolon> U \<transforms> z \<Ztypecolon> Z \<subj> z. w y z @tag \<A>simp_if_need direction)
+\<Longrightarrow> \<simplify>[\<safe>] r' : (\<lambda>z. \<exists>y. r y \<and> w y z)
+\<Longrightarrow> x \<Ztypecolon> T \<transforms> z \<Ztypecolon> Z \<subj> z. r' z @tag \<A>simp' direction \<close>
   by (simp add: Action_Tag_def Transformation_def Simplify_def, blast) }
 
   fun trans_rule_of (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = trans_rule_of Y
@@ -266,10 +266,10 @@ structure Phi_CoP_Backward_Simp = Phi_CoP_Simp_GEN (
   val pattern_of_transitive_simp_rule = \<^pattern_prop>\<open>_ @tag \<A>_transitive_simp' False\<close>
 
   val simp_trans_backward = @{lemma'
-  \<open> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> w x \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y @tag \<A>_transitive_simp' direction)
-\<Longrightarrow> z \<Ztypecolon> Z \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. w x @tag \<A>simp_if_need direction
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] r' : (\<lambda>y. \<exists>x. r x y \<and> w x)
-\<Longrightarrow> z \<Ztypecolon> Z \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r' y @tag \<A>simp' direction \<close>
+  \<open> (\<And>x. \<condition> w x \<Longrightarrow> x \<Ztypecolon> T \<transforms> y \<Ztypecolon> U \<subj> y. r x y @tag \<A>_transitive_simp' direction)
+\<Longrightarrow> z \<Ztypecolon> Z \<transforms> x \<Ztypecolon> T \<subj> x. w x @tag \<A>simp_if_need direction
+\<Longrightarrow> \<simplify>[\<safe>] r' : (\<lambda>y. \<exists>x. r x y \<and> w x)
+\<Longrightarrow> z \<Ztypecolon> Z \<transforms> y \<Ztypecolon> U \<subj> y. r' y @tag \<A>simp' direction \<close>
   by (simp add: Action_Tag_def Transformation_def Simplify_def, blast) }
 
   val trans_rule_of = K simp_trans_backward

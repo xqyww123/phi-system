@@ -7,20 +7,20 @@ theory PLPR
        and "print_\<phi>reasoners" "print_\<phi>reasoner_groups" :: diag
        and ">" :: quasi_command
   abbrevs
-      "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
-  and "<guard>" = "\<g>\<u>\<a>\<r>\<d>"
-  and "<condition>" = "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>"
+      "<premise>" = "\<premise>"
+  and "<guard>" = "\<guard>"
+  and "<condition>" = "\<condition>"
   and "<@GOAL>" = "@GOAL"
-  and "<threshold>" = "\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>"
+  and "<threshold>" = "\<threshold>"
   and "!!" = "!!"
   and "??" = "??"
-  and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
-  and "<safe>" = "\<s>\<a>\<f>\<e>"
-  and "<no>" = "\<n>\<o>"
-  and "<inst>" = "\<i>\<n>\<s>\<t>"
-  and "<user>" = "\<u>\<s>\<e>\<r>"
-  and "<do>" = "\<d>\<o>"
-  and "<param>" = "\<p>\<a>\<r>\<a>\<m>"
+  and "<simplify>" = "\<simplify>"
+  and "<safe>" = "\<safe>"
+  and "<no>" = "\<no>"
+  and "<inst>" = "\<inst>"
+  and "<user>" = "\<user>"
+  and "<do>" = "\<do>"
+  and "<param>" = "\<param>"
 begin
 
 subsection \<open>Preliminaries\<close>
@@ -98,7 +98,7 @@ text \<open>If the guard of a rule fails, the rule will be considered non-applia
   A rule can have at most one guard, and it must be at the leading place.
 \<close>
 
-definition \<r>Guard :: \<open>bool \<Rightarrow> bool\<close> ("\<g>\<u>\<a>\<r>\<d> _" [5] 5) where \<open>\<r>Guard X \<equiv> X\<close>
+definition \<r>Guard :: \<open>bool \<Rightarrow> bool\<close> ("\<guard> _" [5] 5) where \<open>\<r>Guard X \<equiv> X\<close>
 
 lemma \<r>Guard_I: \<open>P \<Longrightarrow> \<r>Guard P\<close> unfolding \<r>Guard_def .
 lemma \<r>Guard_D: \<open>\<r>Guard P \<Longrightarrow> P\<close> unfolding \<r>Guard_def .
@@ -185,39 +185,39 @@ consts default :: mode
        \<c>\<h>\<a>\<n>\<g>\<e>\<d> :: \<open>mode \<Rightarrow> mode\<close>
        MODE_GUARD :: mode \<comment> \<open>necessary condition for exploring a search branch, may instantiating the
                               goal but never instantiating the contextual premises\<close>
-       NO_INST :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>") \<comment> \<open>prohibiting instantiation\<close>
+       NO_INST :: mode ("\<no>-\<inst>") \<comment> \<open>prohibiting instantiation\<close>
        MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
        MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*deprecated!*)
-       MODE_SAFE :: mode ("\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
-       MODE_NO_INST_SAFE :: mode ("\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
+       MODE_SAFE :: mode ("\<safe>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
+       MODE_NO_INST_SAFE :: mode ("\<no>-\<inst>-\<safe>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
 
 
 
 subsubsection \<open>Annotations for Proof Obligations\<close>
 
-definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,28] 27)
+definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<condition>[_] _ " [1000,28] 27)
   where "Premise mode x \<equiv> x"
 
-abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [28] 27)
+abbreviation Normal_Premise ("\<premise> _" [28] 27)
   where "Normal_Premise \<equiv> Premise default"
-abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [28] 27)
+abbreviation Simp_Premise ("\<condition> _" [28] 27)
   where "Simp_Premise \<equiv> Premise MODE_GUARD"
-abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [28] 27)
+abbreviation Proof_Obligation ("\<obligation> _" [28] 27)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
 
 
 text \<open>
   \<^prop>\<open>Premise mode P\<close> wraps a boolean assertion for different roles in reasoning.
 
-  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is \<^emph>\<open>guard\<close> of a rule constraining whether the rule can be applied.
+  \<^descr> \<^prop>\<open>\<condition> P\<close> is \<^emph>\<open>guard\<close> of a rule constraining whether the rule can be applied.
     The assertion \<open>P\<close> is attempted with a weak but safe solver (usually @{method clarsimp}) in order
     to prevent infinite loop on unprovable propositions which is clearly unexpected.
     Therefore, any rule protected by it is appliable only when the condition \<open>P\<close> is provable
     using the safe solver.
 
-  \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> reports a proof obligation, and the reasoning system moves \<open>P\<close> into the nearest
-    \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q\<close> which collects all reported obligations. The reasoning system never checks
-    the validity of \<open>P\<close> but simply report it by moving, and \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q\<close> typically presented
+  \<^descr> \<^prop>\<open>\<premise> P\<close> reports a proof obligation, and the reasoning system moves \<open>P\<close> into the nearest
+    \<^prop>\<open>\<obligation> P \<and> Q\<close> which collects all reported obligations. The reasoning system never checks
+    the validity of \<open>P\<close> but simply report it by moving, and \<^prop>\<open>\<obligation> P \<and> Q\<close> typically presented
     after \<open>\<r>Success\<close> should never occur during the reasoning process because they are goals left to
     users. There is no way suspending the reasoning and asking users' intervention because there
     can be a lot of searching branches which do not always succeed in the end, so we just collect
@@ -232,8 +232,8 @@ lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by s
 lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma Premise_const_True[simp]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] True\<close>
+  \<open>\<premise> True\<close> \<open>\<condition> True\<close> \<open>\<obligation> True\<close> \<open>\<condition>[NO_INST] True\<close>
+  \<open>\<condition>[\<safe>] True\<close> \<open>\<condition>[\<no>-\<inst>-\<safe>] True\<close>
   unfolding Premise_def by simp+
 
 lemma Premise_norm:
@@ -250,58 +250,58 @@ lemma contract_obligations:
 
 subsubsection \<open>User Input of Terms\<close>
 
-definition ParamTag :: " 'a::{} \<Rightarrow> bool" ("\<p>\<a>\<r>\<a>\<m> _" [1000] 26) where "\<p>\<a>\<r>\<a>\<m> x \<equiv> True"
+definition ParamTag :: " 'a::{} \<Rightarrow> bool" ("\<param> _" [1000] 26) where "\<param> x \<equiv> True"
 
-text \<open>Antecedent \<^prop>\<open>\<p>\<a>\<r>\<a>\<m> x\<close> asks users to input some term that matches pattern \<^term>\<open>x\<close>.
+text \<open>Antecedent \<^prop>\<open>\<param> x\<close> asks users to input some term that matches pattern \<^term>\<open>x\<close>.
   \<phi>-Processor `set_param` processes this antecedent.\<close>
 
-lemma ParamTag: "\<p>\<a>\<r>\<a>\<m> x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
-lemma [cong]: "\<p>\<a>\<r>\<a>\<m> x \<longleftrightarrow> \<p>\<a>\<r>\<a>\<m> x" \<comment> \<open>Disable simplification on parameters\<close> ..
+lemma ParamTag: "\<param> x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
+lemma [cong]: "\<param> x \<longleftrightarrow> \<param> x" \<comment> \<open>Disable simplification on parameters\<close> ..
 
 ML_file \<open>library/syntax/param.ML\<close>
 
 subsubsection \<open>User Input of Facts or Rules\<close>
 
-definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<u>\<s>\<e>\<r> _" [11] 10) where "Argument x \<equiv> x"
+definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<user> _" [11] 10) where "Argument x \<equiv> x"
 
 lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
 
-text \<open>Antecedent \<^prop>\<open>\<u>\<s>\<e>\<r> P\<close> represents the wrapped antecedent \<^prop>\<open>P\<close>
-  is intended to be given or solved by users. Different with \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close> where
+text \<open>Antecedent \<^prop>\<open>\<user> P\<close> represents the wrapped antecedent \<^prop>\<open>P\<close>
+  is intended to be given or solved by users. Different with \<^prop>\<open>\<premise> Q\<close> where
   boolean \<^prop>\<open>Q\<close> is a pure assertion being a verification condition,
   the wrapped \<^prop>\<open>P\<close> is a judgement in the programming, such as a transformation of abstraction
   or a view shift or any others representing specific properties.
 
-  In addition, \<^prop>\<open>\<u>\<s>\<e>\<r> P\<close> suppresses any attempts from the automatic reasoner. \<^prop>\<open>P\<close>
+  In addition, \<^prop>\<open>\<user> P\<close> suppresses any attempts from the automatic reasoner. \<^prop>\<open>P\<close>
   will be protected as intact.
 \<close>
 
 
 subsubsection \<open>Pended Goals\<close>
 
-definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<d>\<o> _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
+definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<do> _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
 
-text \<open>In a rule, \<^prop>\<open>\<d>\<o> A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
+text \<open>In a rule, \<^prop>\<open>\<do> A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
 obtained from the reasoning, instead of a prerequisite condition of applying the rule.
 During the reasoning process,
 
-\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<d>\<o>\<close>, \<^prop>\<open>A\<close> is evaluated immediately
+\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<do>\<close>, \<^prop>\<open>A\<close> is evaluated immediately
   and once it fails the search branch backtracks;
 
-\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<d>\<o> A\<close> wrapped by \<open>\<d>\<o>\<close>, it means an obtained
+\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<do> A\<close> wrapped by \<open>\<do>\<close>, it means an obtained
   reasoning obligation as an outcome of the reasoning,
-  just like \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> meaning an extracted verification condition.
-  So conforming to \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>, no immediate reasoning work is invoked and the antecedent
-  is returned and is given before the \<^schematic_prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots>\<close> in order,
+  just like \<^prop>\<open>\<premise> P\<close> meaning an extracted verification condition.
+  So conforming to \<^prop>\<open>\<premise> P\<close>, no immediate reasoning work is invoked and the antecedent
+  is returned and is given before the \<^schematic_prop>\<open>\<obligation> \<dots>\<close> in order,
   as an outcome of the reasoning,.
 
-  For example, if during a reasoning process, two \<^prop>\<open>\<d>\<o> A1\<close> and \<^prop>\<open>\<d>\<o> A2\<close> are encountered in
+  For example, if during a reasoning process, two \<^prop>\<open>\<do> A1\<close> and \<^prop>\<open>\<do> A2\<close> are encountered in
   order, and if the reasoning succeeds, the final outcome would be
-  \[ \<^schematic_prop>\<open>\<d>\<o> A1 \<Longrightarrow> \<d>\<o> A2 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots> \<Longrightarrow> Conclusion\<close> \]
+  \[ \<^schematic_prop>\<open>\<do> A1 \<Longrightarrow> \<do> A2 \<Longrightarrow> \<obligation> \<dots> \<Longrightarrow> Conclusion\<close> \]
 \<close>
 
-lemma Do_I: \<open>PROP P \<Longrightarrow> \<d>\<o> PROP P\<close> unfolding Do_def .
-lemma Do_D: \<open>\<d>\<o> PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
+lemma Do_I: \<open>PROP P \<Longrightarrow> \<do> PROP P\<close> unfolding Do_def .
+lemma Do_D: \<open>\<do> PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
 
 ML_file \<open>library/syntax/pended_goals.ML\<close>
 
@@ -368,7 +368,7 @@ ML_file \<open>library/helpers0.ML\<close>
 subsubsection \<open>Meta Ball\<close>
 
 definition meta_Ball :: \<open>'a set \<Rightarrow> ('a \<Rightarrow> prop) \<Rightarrow> prop\<close>
-  where \<open>meta_Ball S P \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)\<close>
+  where \<open>meta_Ball S P \<equiv> (\<And>x. \<premise> x \<in> S \<Longrightarrow> PROP P x)\<close>
 
 definition meta_case_prod :: \<open>('a \<Rightarrow> 'b \<Rightarrow> prop) \<Rightarrow> ('a \<times> 'b \<Rightarrow> prop)\<close>
   where \<open>meta_case_prod f \<equiv> (\<lambda>x. f (fst x) (snd x))\<close>
@@ -388,7 +388,7 @@ paragraph \<open>Basic Rules\<close>
 subparagraph \<open>meta_Ball\<close>
 
 lemma meta_Ball_I:
-  \<open> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)
+  \<open> (\<And>x. \<premise> x \<in> S \<Longrightarrow> PROP P x)
 \<Longrightarrow> PROP meta_Ball S P\<close>
   unfolding meta_Ball_def .
 
@@ -406,7 +406,7 @@ lemma atomize_Ball:
   unfolding meta_Ball_def Premise_def Ball_def atomize_imp atomize_all .
 
 lemma Ball_for_reason:
-  \<open>Trueprop (\<forall>x\<in>A. P x) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
+  \<open>Trueprop (\<forall>x\<in>A. P x) \<equiv> (\<And>x. \<premise> x \<in> A \<Longrightarrow> P x)\<close>
   unfolding atomize_imp atomize_all Ball_def Premise_def .
 
 lemma meta_Ball_pair:
@@ -915,15 +915,15 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
   unfolding Do_def Do_embed_def .
 
-\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
+\<phi>reasoner_ML ParamTag 1000 (\<open>\<param> ?P\<close>) = \<open>
   Phi_Reasoners.wrap (K Phi_Reasoners.defer_param_antecedent) o snd
 \<close>
 
-\<phi>reasoner_ML Argument 1000 (\<open>\<u>\<s>\<e>\<r> ?P\<close>) = \<open>
+\<phi>reasoner_ML Argument 1000 (\<open>\<user> ?P\<close>) = \<open>
   Phi_Reasoners.wrap (K Phi_Reasoners.defer_antecedent) o snd
 \<close>
 
-\<phi>reasoner_ML Do 1200 (\<open>\<d>\<o> (PROP ?P)\<close>) = \<open>
+\<phi>reasoner_ML Do 1200 (\<open>\<do> (PROP ?P)\<close>) = \<open>
   Phi_Reasoners.wrap (K Phi_Reasoners.defer_antecedent) o snd
 \<close>
 
@@ -1336,7 +1336,7 @@ text \<open>\<phi>-LPR reasoning rules are specially designed for execution of l
   boolean facts implied inside a reasoning rule to give such direct forms.
   One usage of thie feature is later in the \<phi>-deriver where inductive hypotheses (such as a transformation)
   can imply boolean conditions necessary to the proof.
-  For example, \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> A transforms B with Q\<close> implies \<open>P \<longrightarrow> Satisfiable A \<longrightarrow> Satisfiable B \<and> Q\<close>
+  For example, \<open>\<condition> P \<Longrightarrow> A transforms B with Q\<close> implies \<open>P \<longrightarrow> Satisfiable A \<longrightarrow> Satisfiable B \<and> Q\<close>
 \<close>
 
 definition \<open>\<r>EIF P Q \<longleftrightarrow> (P \<longrightarrow> Q)\<close> \<comment> \<open>Extracting Implied Facts\<close>
@@ -1504,12 +1504,12 @@ lemma [\<phi>reason %extract_pure]:
 
 lemma [\<phi>reason %extract_pure]:
   \<open> \<r>EIF P Q
-\<Longrightarrow> \<r>EIF (\<g>\<u>\<a>\<r>\<d> P) Q \<close>
+\<Longrightarrow> \<r>EIF (\<guard> P) Q \<close>
   unfolding \<r>Guard_def .
 
 lemma [\<phi>reason %extract_pure]:
   \<open> \<r>ESC Q P
-\<Longrightarrow> \<r>ESC Q (\<g>\<u>\<a>\<r>\<d> P) \<close>
+\<Longrightarrow> \<r>ESC Q (\<guard> P) \<close>
   unfolding \<r>Guard_def .
 
 lemma [\<phi>reason %extract_pure]:
@@ -1717,7 +1717,7 @@ paragraph \<open>Annotations of Case-Split\<close>
 
 definition \<open>case_split x \<equiv> x\<close>
   \<comment> \<open>Annotating the wrapped term \<open>x\<close> should be case-split.
-      The annotation is supported in safe_obligation_solver, i.e., \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close>\<close>
+      The annotation is supported in safe_obligation_solver, i.e., \<open>\<condition> P\<close>\<close>
 
 subparagraph \<open>Reductions\<close>
 
@@ -1743,7 +1743,7 @@ paragraph \<open>Annotations of Controllers\<close>
 definition \<open>LPR_ctrl x \<equiv> x\<close>
   \<comment> \<open>tagging (especially boolean) flags which will be instantiated during the reasoning process,
       so they are treated as fixed variables and never instantiated by boolean proposition solvers
-      (e.g., \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close>), and are split by case analysis by the solvers (i.e., identical to
+      (e.g., \<open>\<condition> P\<close>), and are split by case analysis by the solvers (i.e., identical to
       \<open>case_split\<close> annotation plus non-instantiation indication).\<close>
 
 subparagraph \<open>Reductions\<close>
@@ -1880,7 +1880,7 @@ lemma [\<phi>reason %IEUV_eq+40]:
 
 (*
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 SV\<^sub>1 (fst x = y\<^sub>1) O\<^sub>1 \<and>\<^sub>\<r>
+  \<open> \<guard> IEUV S\<^sub>1 SV\<^sub>1 (fst x = y\<^sub>1) O\<^sub>1 \<and>\<^sub>\<r>
           IEUV S\<^sub>2 SV\<^sub>2 (snd x = y\<^sub>2) O\<^sub>2 \<and>\<^sub>\<r>
           Literal_Boolean (S\<^sub>1 \<or> S\<^sub>2)
 \<Longrightarrow> IEUV True (SV\<^sub>1 \<and> SV\<^sub>2) (x = (y\<^sub>1,y\<^sub>2)) (O\<^sub>1 \<and> O\<^sub>2) \<close>
@@ -1888,7 +1888,7 @@ lemma [\<phi>reason %IEUV_eq+20]:
   by (cases x; simp)
 
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>1 SV\<^sub>1 (x\<^sub>1 = fst y) O\<^sub>1 \<and>\<^sub>\<r>
+  \<open> \<guard> IEUV S\<^sub>1 SV\<^sub>1 (x\<^sub>1 = fst y) O\<^sub>1 \<and>\<^sub>\<r>
           IEUV S\<^sub>2 SV\<^sub>2 (x\<^sub>2 = snd y) O\<^sub>2 \<and>\<^sub>\<r>
           Literal_Boolean (S\<^sub>1 \<or> S\<^sub>2)
 \<Longrightarrow> IEUV True (SV\<^sub>1 \<and> SV\<^sub>2) ((x\<^sub>1,x\<^sub>2) = y) (O\<^sub>1 \<and> O\<^sub>2) \<close>
@@ -1897,28 +1897,28 @@ lemma [\<phi>reason %IEUV_eq+20]:
 *)
 
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
+  \<open> \<guard> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
 \<Longrightarrow> IEUV S SV (x = y\<^sub>1) Y
 \<Longrightarrow> IEUV True SV (x = fst y) Y \<close>
   unfolding IEUV_def Literal_Boolean_def \<r>Guard_def
   by force
 
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
+  \<open> \<guard> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
 \<Longrightarrow> IEUV S SV (x = y\<^sub>2) Y
 \<Longrightarrow> IEUV True SV (x = snd y) Y \<close>
   unfolding IEUV_def Literal_Boolean_def \<r>Guard_def
   by force
 
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
+  \<open> \<guard> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
 \<Longrightarrow> IEUV S SV (y\<^sub>1 = x) Y
 \<Longrightarrow> IEUV True SV (fst y = x) Y \<close>
   unfolding IEUV_def Literal_Boolean_def \<r>Guard_def
   by force
 
 lemma [\<phi>reason %IEUV_eq+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
+  \<open> \<guard> IEUV S\<^sub>y True (y = (y\<^sub>1, y\<^sub>2)) Y\<^sub>y
 \<Longrightarrow> IEUV S SV (y\<^sub>2 = x) Y
 \<Longrightarrow> IEUV True SV (snd y = x) Y \<close>
   unfolding IEUV_def Literal_Boolean_def \<r>Guard_def
@@ -1927,14 +1927,14 @@ lemma [\<phi>reason %IEUV_eq+20]:
 
 (*
 lemma [\<phi>reason %IEUV_eq+30]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S SV (x = y) Y \<and>\<^sub>\<r>
+  \<open> \<guard> IEUV S SV (x = y) Y \<and>\<^sub>\<r>
           Literal_Boolean SV
 \<Longrightarrow> IEUV S SV (fst x = fst y) Y \<close>
   unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
   by simp blast
 
 lemma [\<phi>reason add]:
-  \<open> \<g>\<u>\<a>\<r>\<d> IEUV S SV (x = y) Y \<and>\<^sub>\<r>
+  \<open> \<guard> IEUV S SV (x = y) Y \<and>\<^sub>\<r>
           Literal_Boolean SV
 \<Longrightarrow> IEUV S SV (snd x = snd y) Y \<close>
   unfolding IEUV_def Literal_Boolean_def \<r>Guard_def Ant_Seq_def
@@ -1964,19 +1964,19 @@ fun defer_premise ctxt =
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
 \<close>
 
-\<phi>reasoner_ML Normal_Premise %general (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
+\<phi>reasoner_ML Normal_Premise %general (\<open>\<premise> ?P\<close> | \<open>\<obligation> ?P\<close>)
   = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
 
-\<phi>reasoner_ML Simp_Premise %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
+\<phi>reasoner_ML Simp_Premise %general (\<open>\<condition> ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.guard_condition_solver {can_inst=true}) o snd\<close>
 
-\<phi>reasoner_ML NO_INST %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] ?P\<close>)
+\<phi>reasoner_ML NO_INST %general (\<open>\<condition>[NO_INST] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.guard_condition_solver {can_inst=false}) o snd\<close>
 
-\<phi>reasoner_ML \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] ?P\<close>)
+\<phi>reasoner_ML \<open>\<condition>[\<safe>] P\<close> %general (\<open>\<condition>[\<safe>] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=true}) o snd\<close>
 
-\<phi>reasoner_ML \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] ?P\<close>)
+\<phi>reasoner_ML \<open>\<condition>[\<no>-\<inst>-\<safe>] P\<close> %general (\<open>\<condition>[\<no>-\<inst>-\<safe>] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=false}) o snd\<close>
 
 consts prove_obligations_in_time :: mode
@@ -2000,22 +2000,22 @@ hide_fact contract_drop_waste contract_obligations contract_premise_all
 paragraph \<open>Extracting Pure\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<r>EIF (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) P \<close>
-  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) P \<close>
-  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P) P  \<close>
-  \<open> \<r>EIF (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P) P \<close>
-  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P) P \<close>
-  \<open> \<r>EIF (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P) P \<close>
+  \<open> \<r>EIF (\<premise> P) P \<close>
+  \<open> \<r>EIF (\<condition> P) P \<close>
+  \<open> \<r>EIF (\<condition>[NO_INST] P) P  \<close>
+  \<open> \<r>EIF (\<obligation> P) P \<close>
+  \<open> \<r>EIF (\<condition>[\<safe>] P) P \<close>
+  \<open> \<r>EIF (\<condition>[\<no>-\<inst>-\<safe>] P) P \<close>
   unfolding \<r>EIF_def Premise_def
   by blast+
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> \<r>ESC P (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<close>
-  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<close>
-  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P) \<close>
-  \<open> \<r>ESC P (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P) \<close>
-  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] P) \<close>
-  \<open> \<r>ESC P (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<n>\<o>-\<i>\<n>\<s>\<t>-\<s>\<a>\<f>\<e>] P) \<close>
+  \<open> \<r>ESC P (\<premise> P) \<close>
+  \<open> \<r>ESC P (\<condition> P) \<close>
+  \<open> \<r>ESC P (\<condition>[NO_INST] P) \<close>
+  \<open> \<r>ESC P (\<obligation> P) \<close>
+  \<open> \<r>ESC P (\<condition>[\<safe>] P) \<close>
+  \<open> \<r>ESC P (\<condition>[\<no>-\<inst>-\<safe>] P) \<close>
   unfolding \<r>ESC_def Premise_def
   by blast+
 
@@ -2048,13 +2048,13 @@ ML_file \<open>library/tools/simplification_protect.ML\<close>
 
 subsection \<open>Simplification \& Rewrite\<close>
 
-text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
+text \<open>\<open>\<open>\<simplify>[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
   \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
 
   We implement a \<open>default\<close> mode where the system simple-set is used to simplify
   \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
-definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<simplify>[_] _ :/ _" [10,1000,10] 9)
   where "Simplify setting result origin \<equiv> result = origin"
 
 (* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
@@ -2076,7 +2076,7 @@ lemma Simplify_to_Premise: \<open>Premise default (A = B) \<Longrightarrow> Simp
   unfolding Do_Simplificatin_def Simplify_def atomize_eq . *)
 
 lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_def ..
-lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
+lemma End_Simplification': \<open>\<premise> A = B \<Longrightarrow> Simplify mode A B\<close>
   unfolding Simplify_def Premise_def atomize_eq .
 lemma End_Simplification'': \<open>A = B \<Longrightarrow> Simplify mode A B\<close> 
   unfolding Simplify_def atomize_eq .
@@ -2096,7 +2096,7 @@ lemma [\<phi>reason %extract_pure]:
 
 subsubsection \<open>Default Simplifier\<close>
 
-abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [999,10] 9)
+abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<simplify> _ : _" [999,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
@@ -2104,14 +2104,14 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
                          (fn ctxt => ctxt addsimps Useful_Thms.get ctxt) {fix_vars=false} (*TODO: set this fix_vars to true*))
     o snd\<close>
 
-\<phi>reasoner_ML \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] x : y\<close> %cutting (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ?X' : ?X\<close>)
+\<phi>reasoner_ML \<open>\<simplify>[\<safe>] x : y\<close> %cutting (\<open>\<simplify>[\<safe>] ?X' : ?X\<close>)
   = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) Phi_Safe_Simps.equip {fix_vars=true})
     o snd\<close>
 
 lemma [\<phi>reason %cutting]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] X : Y
+  \<open> \<simplify>[mode] X : Y
 \<Longrightarrow> NO_LAMBDA_CONVERTIBLE X Y
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<c>\<h>\<a>\<n>\<g>\<e>\<d> mode] X : Y \<close>
+\<Longrightarrow> \<simplify>[\<c>\<h>\<a>\<n>\<g>\<e>\<d> mode] X : Y \<close>
   unfolding Simplify_def by simp
 
 
@@ -2121,7 +2121,7 @@ subsubsection \<open>Augmenting Refined Local Conditions\<close>
 
 declare allI [\<phi>reason %\<phi>LPR_imp]
 
-\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %\<phi>LPR_imp+10 ( \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>
+\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %\<phi>LPR_imp+10 ( \<open>\<condition> _ \<longrightarrow> _\<close> | \<open>\<premise> _ \<longrightarrow> _\<close>
                                                   | \<open>HOL.All _\<close> | \<open>Set.Ball _ _\<close> ) = \<open>
   fn (_, (ctxt0,sequent)) =>
   let fun qchk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk X
@@ -2165,13 +2165,13 @@ declare allI [\<phi>reason %\<phi>LPR_imp]
 
 lemma [\<phi>reason %\<phi>LPR_imp+10]:
   \<open> PROP Reduce_HO_trivial_variable (Trueprop (P x))
-\<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y = x \<longrightarrow> P y \<close>
+\<Longrightarrow> \<forall>y. \<condition> y = x \<longrightarrow> P y \<close>
   unfolding Premise_def Reduce_HO_trivial_variable_def
   by blast
 
 lemma [\<phi>reason %\<phi>LPR_imp+10]:
-  \<open> PROP Reduce_HO_trivial_variable (Trueprop (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> P x))
-\<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y = x \<and> Q \<longrightarrow> P y \<close>
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (\<condition> Q \<longrightarrow> P x))
+\<Longrightarrow> \<forall>y. \<condition> y = x \<and> Q \<longrightarrow> P y \<close>
   unfolding Premise_def Reduce_HO_trivial_variable_def
   by blast
 
@@ -2192,7 +2192,7 @@ ML_file \<open>library/properties.ML\<close>
 
 consts \<phi>instantiation :: mode
 
-\<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] _ : _\<close>)
+\<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<simplify>[\<phi>instantiation] _ : _\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
         (PLPR_Rule_Gen.Rule_Gen_SS.enhance) {fix_vars=true}) o snd\<close>
 
@@ -2460,9 +2460,9 @@ text \<open>\<phi>-LPR is a priority-guided depth-first reasoner giving the firs
   for each branch by disjuntion.\<close>
 
 lemma merge_oblg_divergence:
-  \<open> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<Longrightarrow> C)
-\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pb \<Longrightarrow> C)
-\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<or> Pb \<Longrightarrow> C)\<close>
+  \<open> PROP Pure.prop (\<obligation> Pa \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<obligation> Pb \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<obligation> Pa \<or> Pb \<Longrightarrow> C)\<close>
   unfolding Pure.prop_def Premise_def by blast
 
 ML_file \<open>library/exhaustive.ML\<close>
@@ -2741,23 +2741,23 @@ lemma RDB_False[\<phi>reason %\<r>if+10]:
   by simp
 
 lemma [\<phi>reason %\<r>if+2]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C
+  \<open> \<guard> \<condition> C
 \<Longrightarrow> P
 \<Longrightarrow> if C then P else Q \<close>
   unfolding \<r>Guard_def Premise_def
   by simp
 
 lemma [\<phi>reason %\<r>if+1]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C
+  \<open> \<guard> \<condition> \<not> C
 \<Longrightarrow> Q
 \<Longrightarrow> if C then P else Q \<close>
   unfolding \<r>Guard_def Premise_def
   by simp
 
 lemma [\<phi>reason %\<r>if+1]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> C' : C
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C' \<Longrightarrow> P)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C' \<Longrightarrow> Q)
+  \<open> \<simplify> C' : C
+\<Longrightarrow> (\<condition> C' \<Longrightarrow> P)
+\<Longrightarrow> (\<condition> \<not> C' \<Longrightarrow> Q)
 \<Longrightarrow> if C then P else Q \<close>
   unfolding \<r>Guard_def Premise_def Simplify_def
   by simp
@@ -2870,7 +2870,7 @@ paragraph \<open>Cost\<close>
 text \<open>The cost is measured by reports from the following antecedents inserted in the user rules.\<close>
 
 definition Incremental_Cost :: \<open>int \<Rightarrow> bool\<close> where [iff]: \<open>Incremental_Cost _ = True\<close>
-definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> ("\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>") where [iff]: \<open>Threshold_Cost   _ = True\<close>
+definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> ("\<threshold>") where [iff]: \<open>Threshold_Cost   _ = True\<close>
 
 text \<open>The final cost of a reasoning process is the sum of all the reported \<open>Incremental_Cost\<close> or
   the maximum \<open>Threshold_Cost\<close>, the one which is larger.
@@ -3082,12 +3082,12 @@ ML \<open>exception PLPR_EXCEPTION of string\<close>
 
 lemma [\<phi>reason 100]:
   \<open> P
-\<Longrightarrow> P \<o>\<r> \<f>\<a>\<i>\<l> text \<close>
+\<Longrightarrow> P \<or'> \<fail> text \<close>
   unfolding OR_FAIL_def .
 
 lemma [\<phi>reason no explorative backtrack 90]:
   \<open> FAIL text
-\<Longrightarrow> P \<o>\<r> \<f>\<a>\<i>\<l> text \<close>
+\<Longrightarrow> P \<or'> \<fail> text \<close>
   unfolding FAIL_def by blast
 
 subsection \<open>Syntactic Mode\<close>

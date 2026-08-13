@@ -31,7 +31,7 @@ declare length_preserving_map__map[\<phi>reason add]
         length_preserving_map__sublist_map_L [\<phi>reason add]
 
 lemma [\<phi>reason default %length_preserving__default]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>D. length (f x) = length x)
+  \<open> \<premise> (\<forall>x\<in>D. length (f x) = length x)
 \<Longrightarrow> length_preserving_map D f \<close>
   unfolding length_preserving_map_def Premise_def
   by simp
@@ -232,26 +232,26 @@ paragraph \<open>Direct Success\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_success for \<open>dabc_equation ?c (?x + ?d) (?c + ?x) ?d\<close>
                                            \<open>dabc_equation ?var_c (?x + ?d) (?c + ?x) ?var_d\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x ##\<^sub>+ d \<and> c ##\<^sub>+ x \<and> c ##\<^sub>+ x + d \<and> c + x ##\<^sub>+ d
+  \<open> \<condition> x ##\<^sub>+ d \<and> c ##\<^sub>+ x \<and> c ##\<^sub>+ x + d \<and> c + x ##\<^sub>+ d
 \<Longrightarrow> dabc_equation c (x + d) (c + x) d \<close>
   for x :: \<open>'a :: partial_semigroup_add\<close>
   unfolding dabc_equation_def Premise_def
   using partial_add_assoc' by blast
 
 lemma [\<phi>reason %\<A>_partial_add_success]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a ##\<^sub>+ b \<and> a + b ##\<^sub>+ c
+  \<open> \<condition> a ##\<^sub>+ b \<and> a + b ##\<^sub>+ c
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond True True a b (a + b) c (a + b + c)\<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def Premise_def
   by simp
 
 lemma [\<phi>reason %\<A>_partial_add_success]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> b ##\<^sub>+ c
+  \<open> \<condition> b ##\<^sub>+ c
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond False True undefined b b c (b + c) \<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def Premise_def
   by simp
 
 lemma [\<phi>reason %\<A>_partial_add_success]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a ##\<^sub>+ b
+  \<open> \<condition> a ##\<^sub>+ b
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond True False a b (a + b) undefined (a + b) \<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def Premise_def
   by simp
@@ -263,7 +263,7 @@ text \<open>The rules do not conflict with those for groups because a canonicall
   be a group.\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_default]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b
+  \<open> \<condition>[NO_INST] a \<le> b
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond False True anyd a a (b - a) b\<close>
   for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def Premise_def
@@ -294,15 +294,15 @@ lemma [\<phi>reason %\<A>_partial_add_cut+20]:
 paragraph \<open>LCRO Interval\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> d \<and> b < c \<and> a \<le> c \<and> c \<le> d
+  \<open> \<condition>[NO_INST] a \<le> b \<and> b \<le> d \<and> b < c \<and> a \<le> c \<and> c \<le> d
 \<Longrightarrow> dabc_equation [a,b) [b,d) [a,c) [c,d) \<close>
   unfolding dabc_equation_def Premise_def
   by (clarsimp, metis add_lcro_intvl lower_interval order_less_imp_le upper_interval)
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a \<le> b \<and> b \<le> c \<and> c \<le> d
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] a = b \<and>\<^sub>\<r> C\<^sub>A = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>A = True
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] c = d \<and>\<^sub>\<r> C\<^sub>C = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>C = True
+  \<open> \<condition>[NO_INST] a \<le> b \<and> b \<le> c \<and> c \<le> d
+\<Longrightarrow> \<condition>[NO_INST] a = b \<and>\<^sub>\<r> C\<^sub>A = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>A = True
+\<Longrightarrow> \<condition>[NO_INST] c = d \<and>\<^sub>\<r> C\<^sub>C = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>C = True
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond C\<^sub>A C\<^sub>C [a,b) [b,c) [a,c) [c,d) [a,d)\<close>
   unfolding Premise_def equation\<^sub>3\<^sub>1_cond_def Orelse_shortcut_def Ant_Seq_def
   by (cases C\<^sub>A; cases C\<^sub>C; simp; meson add_lcro_intvl order_trans upper_interval)
@@ -313,12 +313,12 @@ paragraph \<open>Len Intvl\<close>
 subparagraph \<open>Direct\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST]
+  \<open> \<condition>[NO_INST]
       len_intvl.start c < len_intvl.start b \<and>
       len_intvl.start b \<le> len_intvl.start c + len_intvl.len c \<and>
       len_intvl.start c + len_intvl.len c \<le> len_intvl.start b + len_intvl.len b
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
+\<Longrightarrow> \<simplify>[\<safe>] a : \<lbrakk>len_intvl.start c : len_intvl.start b - len_intvl.start c\<rwpar>
+\<Longrightarrow> \<simplify>[\<safe>] d : \<lbrakk>len_intvl.start c + len_intvl.len c : len_intvl.start b + len_intvl.len b - len_intvl.start c - len_intvl.len c\<rwpar>
 \<Longrightarrow> dabc_equation a b c d\<close>
   unfolding dabc_equation_def Premise_def Simplify_def
   by (cases b; cases c; clarsimp simp: len_intvl_ex;
@@ -326,14 +326,14 @@ lemma [\<phi>reason %\<A>_partial_add_specific]:
 
 
 lemma [\<phi>reason %\<A>_partial_add_specific]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST]
+  \<open> \<condition>[NO_INST]
             len_intvl.start d \<le> len_intvl.start b \<and>
             len_intvl.start b + len_intvl.len b \<le> len_intvl.start d + len_intvl.len d
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] c : \<lbrakk>len_intvl.start b + len_intvl.len b : len_intvl.start d + len_intvl.len d - len_intvl.start b - len_intvl.len b\<rwpar>
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] ab : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d + len_intvl.len b\<rwpar>
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len a = 0 \<and>\<^sub>\<r> C\<^sub>a = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>a = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len_intvl.len c = 0 \<and>\<^sub>\<r> C\<^sub>c = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>c = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
+\<Longrightarrow> \<simplify>[\<safe>] a : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d\<rwpar>
+\<Longrightarrow> \<simplify>[\<safe>] c : \<lbrakk>len_intvl.start b + len_intvl.len b : len_intvl.start d + len_intvl.len d - len_intvl.start b - len_intvl.len b\<rwpar>
+\<Longrightarrow> \<simplify>[\<safe>] ab : \<lbrakk>len_intvl.start d : len_intvl.start b - len_intvl.start d + len_intvl.len b\<rwpar>
+\<Longrightarrow> \<condition>[NO_INST] len_intvl.len a = 0 \<and>\<^sub>\<r> C\<^sub>a = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>a = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
+\<Longrightarrow> \<condition>[NO_INST] len_intvl.len c = 0 \<and>\<^sub>\<r> C\<^sub>c = False \<or>\<^sub>c\<^sub>u\<^sub>t C\<^sub>c = True \<comment> \<open>TODO: optimize the reasoning here by one step\<close>
 \<Longrightarrow> equation\<^sub>3\<^sub>1_cond C\<^sub>a C\<^sub>c a b ab c d \<close>
   unfolding equation\<^sub>3\<^sub>1_cond_def Premise_def Simplify_def \<r>Guard_def
             Orelse_shortcut_def Ant_Seq_def
@@ -407,7 +407,7 @@ paragraph \<open>List\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_cut for \<open>equation\<^sub>2\<^sub>1 _ (_#_) (_#_)\<close>
                                        \<open>equation\<^sub>2\<^sub>1 (_ # _) ?var (_#_)\<close> ]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = z
+  \<open> \<condition> x = z
 \<Longrightarrow> equation\<^sub>2\<^sub>1 ys xs zs
 \<Longrightarrow> equation\<^sub>2\<^sub>1 ys (x#xs) (z#zs) \<close>
   unfolding Premise_def equation\<^sub>2\<^sub>1_def plus_list_def
@@ -550,13 +550,13 @@ lemma [\<phi>reason %partial_add_overlaps_direct_success]:
 paragraph \<open>Cancellative and Canonically Ordered Commutative Partial Monoid\<close>
 
 lemma [\<phi>reason %partial_add_overlaps_cancl]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<or> b \<le> a
+  \<open> \<guard> \<condition> a \<le> b \<or> b \<le> a
 \<Longrightarrow> partial_add_overlaps a b \<close>
   for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
   unfolding partial_add_overlaps_def ..
 
 lemma [\<phi>reason %partial_add_overlaps_cancl]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<or> b \<le> a
+  \<open> \<guard> \<condition> a \<le> b \<or> b \<le> a
 \<Longrightarrow> partial_add_overlaps a b \<close>
   for a :: \<open>'a::{canonically_ordered_monoid_add, cancel_ab_semigroup_add}\<close>
   unfolding partial_add_overlaps_def ..
@@ -571,7 +571,7 @@ lemma [\<phi>reason default %partial_add_overlaps_default]:
 paragraph \<open>LCRO Interval\<close>
 
 lemma [\<phi>reason %partial_add_overlaps_specific]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c \<le> a \<and> a < d \<or> a \<le> c \<and> c < b
+  \<open> \<condition> c \<le> a \<and> a < d \<or> a \<le> c \<and> c < b
 \<Longrightarrow> partial_add_overlaps [a,b) [c,d) \<close>
   unfolding partial_add_overlaps_def
   ..
@@ -579,32 +579,32 @@ lemma [\<phi>reason %partial_add_overlaps_specific]:
 paragraph \<open>Len Intvl\<close>
 
 lemma [\<phi>reason %partial_add_overlaps_specific]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start b \<le> len_intvl.start a \<and> len_intvl.start a < len_intvl.start b + len_intvl.len b \<or>
+  \<open> \<condition> len_intvl.start b \<le> len_intvl.start a \<and> len_intvl.start a < len_intvl.start b + len_intvl.len b \<or>
             len_intvl.start a \<le> len_intvl.start b \<and> len_intvl.start b < len_intvl.start a + len_intvl.len a
 \<Longrightarrow> partial_add_overlaps a b \<close>
   unfolding partial_add_overlaps_def
   ..
 
 lemma [\<phi>reason %partial_add_overlaps_specific+11]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a \<le> i \<and> i < len_intvl.start a + len_intvl.len a
+  \<open> \<condition> len_intvl.start a \<le> i \<and> i < len_intvl.start a + len_intvl.len a
 \<Longrightarrow> partial_add_overlaps a \<lbrakk>i:1\<rwpar> \<close>
   unfolding partial_add_overlaps_def
   ..
 
 lemma [\<phi>reason %partial_add_overlaps_specific+10]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start b \<le> i \<and> i < len_intvl.start b + len_intvl.len b
+  \<open> \<condition> len_intvl.start b \<le> i \<and> i < len_intvl.start b + len_intvl.len b
 \<Longrightarrow> partial_add_overlaps \<lbrakk>i:1\<rwpar> b \<close>
   unfolding partial_add_overlaps_def
   ..
 
 lemma [\<phi>reason %partial_add_overlaps_specific+11]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start a \<le> i \<and> i < len_intvl.start a + len_intvl.len a
+  \<open> \<condition> len_intvl.start a \<le> i \<and> i < len_intvl.start a + len_intvl.len a
 \<Longrightarrow> partial_add_overlaps a \<lbrakk>i:Suc 0\<rwpar> \<close>
   unfolding partial_add_overlaps_def
   ..
 
 lemma [\<phi>reason %partial_add_overlaps_specific+10]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> len_intvl.start b \<le> i \<and> i < len_intvl.start b + len_intvl.len b
+  \<open> \<condition> len_intvl.start b \<le> i \<and> i < len_intvl.start b + len_intvl.len b
 \<Longrightarrow> partial_add_overlaps \<lbrakk>i:Suc 0\<rwpar> b \<close>
   unfolding partial_add_overlaps_def
   ..
@@ -624,12 +624,12 @@ lemma [\<phi>reason %partial_add_overlaps_specific + 100]:
 paragraph \<open>Set\<close>
 
 lemma [\<phi>reason %partial_add_overlaps_specific]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S
+  \<open> \<guard> \<condition> x \<in> S
 \<Longrightarrow> partial_add_overlaps S {x} \<close>
   unfolding partial_add_overlaps_def ..
 
 lemma [\<phi>reason %partial_add_overlaps_specific]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S
+  \<open> \<guard> \<condition> x \<in> S
 \<Longrightarrow> partial_add_overlaps {x} S \<close>
   unfolding partial_add_overlaps_def ..
 
@@ -691,14 +691,14 @@ paragraph \<open>List\<close>
 
 lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (*) ?var _ _\<close>]:
   \<open> common_multiplicator_2 (@) a b c
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] a' : a
+\<Longrightarrow> \<simplify>[\<safe>] a' : a
 \<Longrightarrow> common_multiplicator_2 (*) a' b c \<close>
   unfolding common_multiplicator_2_def times_list_def Simplify_def
   by clarsimp
 
 lemma [\<phi>reason %common_multiplicator_2_list[bottom] for \<open>common_multiplicator_2 (*) _ ?var _\<close>]:
   \<open> common_multiplicator_2 (@) a b c
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<s>\<a>\<f>\<e>] b' : b
+\<Longrightarrow> \<simplify>[\<safe>] b' : b
 \<Longrightarrow> common_multiplicator_2 (*) a b' c \<close>
   unfolding common_multiplicator_2_def times_list_def Simplify_def
   by clarsimp
@@ -801,15 +801,15 @@ lemma [\<phi>reason for \<open>is_id_element [] 0\<close>]:
 subsubsection \<open>Len Intvl\<close>
 
 lemma [\<phi>reason for \<open>is_id_element \<lbrakk>_ : Suc 0\<rwpar> \<lbrakk>_ : _\<rwpar> \<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len = 1
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i = j
+  \<open> \<condition>[NO_INST] len = 1
+\<Longrightarrow> \<condition> i = j
 \<Longrightarrow> is_id_element \<lbrakk>i : Suc 0\<rwpar> \<lbrakk>j : len\<rwpar> \<close>
   unfolding is_id_element_def Premise_def
   by simp
 
 lemma [\<phi>reason for \<open>is_id_element \<lbrakk>_ : 1\<rwpar> \<lbrakk>_ : _\<rwpar> \<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] len = 1
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i = j
+  \<open> \<condition>[NO_INST] len = 1
+\<Longrightarrow> \<condition> i = j
 \<Longrightarrow> is_id_element \<lbrakk>i : 1\<rwpar> \<lbrakk>j : len\<rwpar> \<close>
   unfolding is_id_element_def Premise_def
   by simp
@@ -835,9 +835,9 @@ lemma [\<phi>reason %cutting]:
   unfolding scalar_mult_def by simp
 
 lemma [\<phi>reason %cutting]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f = g
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> u = v
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> scalar_mult f u = scalar_mult g v\<close>
+  \<open> \<condition> f = g
+\<Longrightarrow> \<condition> u = v
+\<Longrightarrow> \<condition> scalar_mult f u = scalar_mult g v\<close>
   unfolding scalar_mult_def Premise_def by simp
 
 lemma inj_scalar_mult[simp]:
@@ -902,7 +902,7 @@ lemma [\<phi>reason %extract_pure]:
   by blast
 
 lemma [\<phi>reason default %algb_falling_lattice]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<psi> 1 = 1)
+  \<open> \<condition> (\<psi> 1 = 1)
 \<Longrightarrow> homo_one \<psi>\<close>
   unfolding homo_one_def Premise_def
   by simp
@@ -929,7 +929,7 @@ bundle extract_mul_carrier = homo_mul_carrier_EIF [\<phi>reason %extract_pure]
                              homo_mul_carrier_ESC [\<phi>reason %extract_pure]
 
 lemma [\<phi>reason default %algb_falling_lattice]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x))
+  \<open> \<condition> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x))
 \<Longrightarrow> homo_mul_carrier \<psi>\<close>
   unfolding homo_mul_carrier_def Premise_def .
 
@@ -988,12 +988,12 @@ lemma [\<phi>reason default %algb_falling_lattice]:
 declare closed_homo_sep.axioms(1)[simp]
 
 lemma [\<phi>reason default %algb_falling_lattice]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> homo_sep \<psi>
+  \<open> \<condition> homo_sep \<psi>
 \<Longrightarrow> homo_sep \<psi> \<close>
   unfolding \<r>Guard_def Premise_def .
 
 lemma [\<phi>reason default %algb_falling_lattice]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<psi>
+  \<open> \<condition> closed_homo_sep \<psi>
 \<Longrightarrow> closed_homo_sep \<psi> \<close>
   unfolding \<r>Guard_def Premise_def .
 
@@ -1027,7 +1027,7 @@ lemma [\<phi>reason %extract_pure]:
   by blast
 
 lemma [\<phi>reason default %algb_falling_lattice]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. \<psi> x = 1)
+  \<open> \<condition> (\<forall>x. \<psi> x = 1)
 \<Longrightarrow> constant_1 \<psi>\<close>
   unfolding constant_1_def Premise_def
   by simp
@@ -1054,7 +1054,7 @@ lemma [\<phi>reason %extract_pure]:
 paragraph \<open>Fallback\<close>
 
 lemma [\<phi>reason %algb_falling_lattice]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. mul_carrier (\<psi> x))
+  \<open> \<guard> \<condition> (\<forall>x. mul_carrier (\<psi> x))
 \<Longrightarrow> constantly_inside_carrier \<psi> \<close>
   unfolding \<r>Guard_def Premise_def constantly_inside_carrier_def .
 
@@ -1180,12 +1180,12 @@ declare homo_mul_carrier_push_map [\<phi>reason %algb_cut]
 subsubsection \<open>Share Division\<close>
 
 lemma homo_mul_carrier_share [\<phi>reason %algb_cut]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 < n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier \<Rightarrow> 'a)\<close>
   unfolding homo_mul_carrier_def Premise_def
   by (clarsimp simp add: share_carrier_closed)
 
 lemma homo_mul_carrier_share_1[\<phi>reason %algb_cut+10]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier_1 \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 \<le> n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier_1 \<Rightarrow> 'a)\<close>
   unfolding homo_mul_carrier_def Premise_def
   by (clarsimp simp add: share_carrier_closed_1)
 
@@ -1195,42 +1195,42 @@ lemma homo_one_share[\<phi>reason %algb_cut]:
   by simp
 
 lemma homo_sep_mult_share0[\<phi>reason %algb_cut]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 < n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_mult_def Premise_def
   by (simp add: share_sep_right_distrib_0)
 
 lemma homo_sep_mult_share[\<phi>reason %algb_cut+10]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 \<le> n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_mult_def Premise_def
   by (simp add: share_sep_right_distrib)
 
 lemma homo_sep_disj_share0[\<phi>reason %algb_cut]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 < n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
   unfolding homo_sep_disj_def Premise_def
   by simp
 
 lemma homo_sep_disj_share [\<phi>reason %algb_cut+10]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::{share_sep_disj, share_one, sep_magma_1} \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 \<le> n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::{share_sep_disj, share_one, sep_magma_1} \<Rightarrow> 'a)\<close>
   unfolding homo_sep_disj_def Premise_def
   by (cases \<open>n = 0\<close>; simp)
 
 lemma closed_homo_sep_disj_share0[\<phi>reason %algb_cut]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 < n \<Longrightarrow> closed_homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
   unfolding closed_homo_sep_disj_def Premise_def
   by simp
 
 lemma homo_sep_share0[\<phi>reason %algb_cut]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 < n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_def Premise_def
   by (simp add: homo_sep_mult_share0 homo_sep_disj_share0)
 
 lemma homo_sep_share [\<phi>reason %algb_cut]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 \<le> n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_def Premise_def
   by (simp add: homo_sep_mult_share homo_sep_disj_share)
 
 lemma closed_homo_sep_share[\<phi>reason %algb_cut]:
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
+  \<open>\<condition> 0 < n \<Longrightarrow> closed_homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding closed_homo_sep_def Premise_def
   by (simp add: homo_sep_share0 closed_homo_sep_disj_share0)
 
@@ -1272,7 +1272,7 @@ declare closed_homo_sep_Some[simp, \<phi>reason %algb_cut]
 subsubsection \<open>Share\<close>
 
 lemma [\<phi>reason %algb_cut]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
+  \<open> \<condition> 0 < n
 \<Longrightarrow> homo_mul_carrier (Share n) \<close>
   unfolding homo_mul_carrier_def Premise_def
   by clarsimp

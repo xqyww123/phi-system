@@ -15,7 +15,7 @@ structure Phi_Variable : PHI_VARIABLE = struct
 
 open Phi_Variable
 
-val varname_prefix = "\<v>\<a>\<r>_"
+val varname_prefix = "var_"
 val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K false)
 
 datatype var_state = Uninitialized | Initialized of cterm * cterm | May_Initialized of cterm * cterm
@@ -138,7 +138,7 @@ val _ = Theory.setup (
       pos = \<^here>,
       priorirty = @{priority %\<phi>parser_var_decl+50},
       precedence = 0,
-      pattern = [\<^pattern_prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>],
+      pattern = [\<^pattern_prop>\<open>\<current> ?blk [?H] \<results> \<in'> ?S\<close>],
       proc = (fn opr_ctxt as (_,(ctxt,sequent)) =>
         \<^keyword>\<open>var\<close> |--
                 Parse.list1 (Parse.list1 Parse.binding -- Scan.option (\<^keyword>\<open>::\<close> |-- Parse.term))

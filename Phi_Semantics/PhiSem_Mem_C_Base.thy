@@ -118,11 +118,11 @@ sublocale aggregate_mem_resource Res typ_of_blk ..
 
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk)) \<and> cblk = blk
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' cblk \<lbrace> 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself \<longmapsto>
+\<Longrightarrow> \<premise> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk)) \<and> cblk = blk
+\<Longrightarrow> \<premise> 0 < n
+\<Longrightarrow> \<proc> R.\<phi>R_get_res_entry' cblk \<lbrace> 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself \<longmapsto>
       \<lambda>ret. 1(blk := n \<odivr> (to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx))) \<Ztypecolon> \<phi> Itself
-          \<s>\<u>\<b>\<j> x. ret = \<phi>arg (discrete (Byte_Rep_of_Val x)) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> index_value idx x = u_idx \<rbrace>\<close>
+          \<subj> x. ret = \<phi>arg (discrete (Byte_Rep_of_Val x)) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> index_value idx x = u_idx \<rbrace>\<close>
   unfolding Premise_def
   subgoal premises prems proof -
 
@@ -130,8 +130,8 @@ lemma getter_rule:
     by (simp add: prems(2))
 
   have simp1: \<open>
-      (A x \<s>\<u>\<b>\<j> x. B x \<and> x \<in> Byte.Rep_of_TY (typ_of_blk blk) \<and> x \<in> Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type (typ_of_blk cblk)})
-    = (A (Byte_Rep_of_Val v) \<s>\<u>\<b>\<j> v. B (Byte_Rep_of_Val v) \<and> v \<in> Well_Type (typ_of_blk blk) \<and> index_value idx v = u_idx) \<close>
+      (A x \<subj> x. B x \<and> x \<in> Byte.Rep_of_TY (typ_of_blk blk) \<and> x \<in> Byte_Rep_of_Val ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type (typ_of_blk cblk)})
+    = (A (Byte_Rep_of_Val v) \<subj> v. B (Byte_Rep_of_Val v) \<and> v \<in> Well_Type (typ_of_blk blk) \<and> index_value idx v = u_idx) \<close>
   for A B C ret TY S
   unfolding BI_eq_iff split_discrete_ex
   by (auto simp: image_iff Bex_def)
@@ -147,11 +147,11 @@ qed .
 context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
 
 lemma allocate_rule:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>r. finite (dom r) \<longrightarrow> (\<exists>blk. blk \<notin> dom r \<and> typ_of_blk blk = TY \<and> blk \<noteq> null_blk))
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v\<in>U. v \<in> Well_Type TY)
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry (\<lambda>blk. typ_of_blk blk = TY \<and> blk \<noteq> null_blk) (\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U })
+  \<open> \<premise> (\<forall>r. finite (dom r) \<longrightarrow> (\<exists>blk. blk \<notin> dom r \<and> typ_of_blk blk = TY \<and> blk \<noteq> null_blk))
+\<Longrightarrow> \<premise> (\<forall>v\<in>U. v \<in> Well_Type TY)
+\<Longrightarrow> \<proc> R.\<phi>R_allocate_res_entry (\<lambda>blk. typ_of_blk blk = TY \<and> blk \<noteq> null_blk) (\<lambda>k. {Some (discrete (Byte_Rep_of_Val v)) |v. v\<in>U })
       \<lbrace> Void \<longmapsto> \<lambda>ret. 1(blk := to_share \<circ> (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself
-                  \<s>\<u>\<b>\<j> blk v. ret = \<phi>arg blk \<and> v \<in> U \<and> typ_of_blk blk = TY \<and> blk \<noteq> null_blk  \<rbrace> \<close>
+                  \<subj> blk v. ret = \<phi>arg blk \<and> v \<in> U \<and> typ_of_blk blk = TY \<and> blk \<noteq> null_blk  \<rbrace> \<close>
   unfolding Premise_def
   subgoal premises prems proof-
 
@@ -194,12 +194,12 @@ lemma allocate_rule:
 qed .
 
 lemma setter_rule:
-  assumes EQ: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> cblk = blk\<close>
+  assumes EQ: \<open>\<premise> cblk = blk\<close>
   shows \<open> valid_index (typ_of_blk blk) idx
-      \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (index_type idx (typ_of_blk blk))
-      \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
-      \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x\<in>Well_Type (typ_of_blk blk). index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x)
-      \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_atS cblk (\<lambda>h. {Some (map_discrete (Byte.map_Rep (typ_of_blk cblk) (index_mod_value cidx (\<lambda>_. v))) (the h))}))
+      \<Longrightarrow> \<premise> v \<in> Well_Type (index_type idx (typ_of_blk blk))
+      \<Longrightarrow> \<premise> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
+      \<Longrightarrow> \<premise> (\<forall>x\<in>Well_Type (typ_of_blk blk). index_mod_value cidx (\<lambda>_. v) x = index_mod_value idx (\<lambda>_. v) x)
+      \<Longrightarrow> \<proc> R.\<phi>R_set_res (map_fun_atS cblk (\<lambda>h. {Some (map_discrete (Byte.map_Rep (typ_of_blk cblk) (index_mod_value cidx (\<lambda>_. v))) (the h))}))
             \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
               \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   unfolding Premise_def
@@ -222,8 +222,8 @@ lemma setter_rule:
       metis Byte.Val_of_Rep_inj index_mod_value_welltyp Byte.map_Rep_def)
 
 lemma deallocate_rule:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type (typ_of_blk blk)
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_atS blk (\<lambda>_. {None}))
+  \<open> \<premise> v \<in> Well_Type (typ_of_blk blk)
+\<Longrightarrow> \<proc> R.\<phi>R_set_res (map_fun_atS blk (\<lambda>_. {None}))
       \<lbrace> 1(blk := to_share \<circ> (map_option discrete \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<longmapsto>
         \<lambda>\<r>\<e>\<t>. 1 \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   unfolding Premise_def

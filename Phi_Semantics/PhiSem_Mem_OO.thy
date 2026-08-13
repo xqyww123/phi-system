@@ -139,7 +139,7 @@ subsection \<open>Reference\<close>
 (*Do we really need the class annotation here?*)
 
 definition Ref :: \<open>class \<Rightarrow> (VAL, object_ref) \<phi>\<close>
-  where \<open>Ref cls ref = ({ V_ref.mk ref } \<s>\<u>\<b>\<j> of_class cls ref)\<close>
+  where \<open>Ref cls ref = ({ V_ref.mk ref } \<subj> of_class cls ref)\<close>
 
 lemma \<phi>Ref_expns[\<phi>expns]:
   \<open>v \<in> (ref \<Ztypecolon> Ref cls) \<longleftrightarrow> v = V_ref.mk ref \<and> of_class cls ref\<close>
@@ -226,15 +226,15 @@ section \<open>Specification of Instructions\<close>
 paragraph \<open>Reference Value\<close>
 
 lemma \<phi>M_getV_ref:
-  \<open> (of_class cls ref \<Longrightarrow> \<p>\<r>\<o>\<c> F ref \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
-\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV reference V_ref.dest raw F \<lbrace> X\<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+  \<open> (of_class cls ref \<Longrightarrow> \<proc> F ref \<lbrace> X \<longmapsto> Y \<rbrace> \<throws> E)
+\<Longrightarrow> \<proc> \<phi>M_getV reference V_ref.dest raw F \<lbrace> X\<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls) \<longmapsto> Y \<rbrace> \<throws> E\<close>
   by (cases raw; simp; rule; simp add: \<phi>expns)
 
 
 paragraph \<open>Allocation\<close>
 
 lemma op_obj_allocate:
-  \<open>\<p>\<r>\<o>\<c> op_obj_allocate cls
+  \<open>\<proc> op_obj_allocate cls
       \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Itself\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL op_obj_allocate_def
   apply (clarsimp simp add: \<phi>expns del: subsetI)
@@ -258,10 +258,10 @@ lemma op_obj_allocate:
 paragraph \<open>Load Field\<close>
 
 lemma op_obj_load_field_raw_\<phi>app:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_load_field field TY raw \<lbrace>
-      discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> \<v>\<a>\<l>[raw] (Ref cls)
-  \<longmapsto> discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> \<v>\<a>\<l> v \<Ztypecolon> Itself
+  \<open> \<premise> v \<in> Well_Type TY
+\<Longrightarrow> \<proc> op_obj_load_field field TY raw \<lbrace>
+      discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> \<val>[raw] (Ref cls)
+  \<longmapsto> discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> \<val> v \<Ztypecolon> Itself
 \<rbrace>\<close>
   unfolding op_obj_load_field_def Premise_def
   by (rule \<phi>M_getV_ref, rule, rule \<phi>SEQ, rule \<phi>M_assert, simp, rule, simp add: Itself_expn)
@@ -269,7 +269,7 @@ lemma op_obj_load_field_raw_\<phi>app:
 proc (nodef) op_obj_load_field:
   requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
-  output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> T \<heavy_comma> \<v>\<a>\<l> x \<Ztypecolon> T\<close>
+  output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> T \<heavy_comma> \<val> x \<Ztypecolon> T\<close>
 \<medium_left_bracket> \<open>obj: _\<close> to Itself \<exists>v
   have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
   ;; $ref op_obj_load_field_raw[where TY=TY]
@@ -279,9 +279,9 @@ proc (nodef) op_obj_load_field:
 paragraph \<open>Store Field\<close>
 
 lemma op_obj_store_field_raw_\<phi>app:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u \<in> Well_Type TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
+  \<open> \<premise> v \<in> Well_Type TY
+\<Longrightarrow> \<premise> u \<in> Well_Type TY
+\<Longrightarrow> \<proc> op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
       discrete v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)\<heavy_comma> u \<Ztypecolon> Val rawu Itself
   \<longmapsto> discrete u \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself
 \<rbrace>\<close>
@@ -297,7 +297,7 @@ lemma op_obj_store_field_raw_\<phi>app:
 proc (nodef) op_obj_store_field:
   requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   requires B: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
-  input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> T \<heavy_comma> \<v>\<a>\<l> ref \<Ztypecolon> Ref cls \<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> U\<close>
+  input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> T \<heavy_comma> \<val> ref \<Ztypecolon> Ref cls \<heavy_comma> \<val> y \<Ztypecolon> U\<close>
   output \<open>y \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> U\<close>
   \<medium_left_bracket> to Itself \<exists>u
     \<open>obj: _\<close> to Itself \<exists>v
@@ -310,9 +310,9 @@ proc (nodef) op_obj_store_field:
 paragraph \<open>Dispose\<close>
 
 lemma op_obj_dispose:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ref \<noteq> Nil
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> dom fields = dom (class.fields_of cls)
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_dispose cls rawv
+  \<open> \<premise> ref \<noteq> Nil
+\<Longrightarrow> \<premise> dom fields = dom (class.fields_of cls)
+\<Longrightarrow> \<proc> op_obj_dispose cls rawv
     \<lbrace> to_share o fields \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Itself \<heavy_comma> ref \<Ztypecolon> Val rawv (Ref cls) \<longmapsto> \<lambda>ret. Void \<rbrace>\<close>
   unfolding op_obj_dispose_def Premise_def
   apply (rule \<phi>M_getV_ref)
@@ -335,7 +335,7 @@ lemma op_obj_dispose:
       apply (cases \<open>fields = Map.empty\<close>)
       using t3 apply blast
       using FIC.OO_share.partial_implies[where x=\<open>1(ref := fields)\<close> and n=1, simplified,
-            OF \<open>r \<in> FIC.SPACE\<close>, OF t4, OF \<open>\<s>\<t>\<a>\<t>\<e> res \<i>\<s> _\<close>]
+            OF \<open>r \<in> FIC.SPACE\<close>, OF t4, OF \<open>\<state> res \<is> _\<close>]
             discrete_partial_map_subsumption_L2
       by (metis domIff map_le_def)
     show ?thesis by (simp add: t1 t2 prems Return_def det_lift_def)

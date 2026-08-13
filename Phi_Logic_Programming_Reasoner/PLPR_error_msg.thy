@@ -11,8 +11,8 @@ theory PLPR_error_msg
         \<open>Symtab.merge (K true)\<close> (\<^file>\<open>~~/src/Pure/ML/ml_env.ML\<close>) lets the EARLIER parent win,
         while the logical name space lets the LATER one win. Neither reports anything, so the
         position in this list is what decides who shadows whom.\<close>
-  abbrevs "<or>" = "\<o>\<r>"
-      and "<fail>" = "\<f>\<a>\<i>\<l>"
+  abbrevs "<or>" = "\<or'>"
+      and "<fail>" = "\<fail>"
 begin
 
 section \<open>Error Reporting\<close>
@@ -231,7 +231,7 @@ definition FAIL :: \<open>text \<Rightarrow> bool\<close> where \<open>FAIL x \<
 
 definition FAIL' :: \<open>text \<Rightarrow> prop\<close> where \<open>FAIL' x \<equiv> (\<And>P. PROP P)\<close>
 
-definition OR_FAIL :: \<open>bool \<Rightarrow> text \<Rightarrow> bool\<close> (infix "\<o>\<r> \<f>\<a>\<i>\<l>" 10)
+definition OR_FAIL :: \<open>bool \<Rightarrow> text \<Rightarrow> bool\<close> (infix "\<or'> \<fail>" 10)
     where \<open>OR_FAIL P text \<longleftrightarrow> P\<close>
 
 subsubsection \<open>Traced Fail\<close>

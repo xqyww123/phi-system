@@ -46,5 +46,5 @@ fun gen_styp_of (_, name) instruction (phi0 : phi_type) thy =
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val STyp_Of = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "\<t>\<y>\<p>\<e>\<o>\<f>") gen_styp_of
+val STyp_Of = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "\<typeof>") gen_styp_of
 end

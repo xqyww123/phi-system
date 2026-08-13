@@ -307,7 +307,7 @@ fun LPR_inst ctxt th = ( (*TODO: strengthen fast_inst*)
   then (
     Phi_Reasoner.info_print ctxt 3 (fn () => "Phi_Reasoners.LPR_inst") ;
     Phi_Reasoner.reason NONE (SOME 1) ctxt
-                        (@{lemma' \<open> \<g>\<u>\<a>\<r>\<d> IEUV Any False P P' \<and>\<^sub>\<r> Literal_Boolean Any
+                        (@{lemma' \<open> \<guard> IEUV Any False P P' \<and>\<^sub>\<r> Literal_Boolean Any
                                 \<Longrightarrow> Premise mode P'
                                 \<Longrightarrow> Premise mode P \<close>
                                by (simp add: IEUV_def \<r>Guard_def Ant_Seq_def)
@@ -805,7 +805,7 @@ fun has_obligations_tag thm = find_obligations_tag thm <> ~1
 fun defer_obligation cfg contract = oblg_template false cfg (fn ctxt => fn thm =>
   let val idx = find_obligations_tag thm
   in if idx = ~1
-     then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
+     then error ("Fail to defer a proof obligation: an \<obligation> antecedent is not found.")
      else Thm.permute_prems 1 idx thm
       |> contract ctxt
       |> Thm.permute_prems 0 (~idx)

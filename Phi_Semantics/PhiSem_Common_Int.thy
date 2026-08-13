@@ -117,8 +117,8 @@ declare [[
     overloaded_operator_in_synthesis \<open>(mod)\<close>,
     overloaded_operator_in_synthesis \<open>(sdiv)\<close>,
     overloaded_operator_in_synthesis \<open>(/)\<close>,
-    overloaded_operator_in_synthesis \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 < x2 \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>,
-    overloaded_operator_in_synthesis \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 \<le> x2 \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>,
+    overloaded_operator_in_synthesis \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 < x2 \<Ztypecolon> \<val>[v] \<bool>\<close>,
+    overloaded_operator_in_synthesis \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 \<le> x2 \<Ztypecolon> \<val>[v] \<bool>\<close>,
     overloaded_operator_in_synthesis \<open>drop_bit\<close>,
     overloaded_operator_in_synthesis \<open>push_bit\<close>
 ]]
@@ -158,34 +158,34 @@ lemmas [\<phi>reason %\<phi>synthesis_literal_number] = "_synthesis_literal_"[wh
 
 (*
 lemmas [\<phi>reason 2000 for \<open>PROP Gen_Synthesis_Rule (
-          Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<v>\<a>\<l>[ret] ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) _ _ \<close>]
+          Trueprop (\<forall>vs. \<proc> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<val>[ret] ?T \<rbrace> \<throws> ?E )) _ _ \<close>]
   = make_synthesis_rule_for_const [where const = x for x :: \<open>'a::numeral\<close>]
 lemmas [\<phi>reason 2010 for \<open>PROP Gen_Synthesis_Rule (
-          Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<v>\<a>\<l>[ret] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) _ _ \<close>]
+          Trueprop (\<forall>vs. \<proc> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<val>[ret] ?T \<remains> ?R \<rbrace> \<throws> ?E )) _ _ \<close>]
   = make_synthesis_rule'_for_const[where const = x for x :: \<open>'a::numeral\<close>]
 *)
 
 lemma [\<phi>reason %\<phi>synthesis_normalize]:
-  \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. 1 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. Suc 0 \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
+  \<open> \<proc> H \<lbrace> R1 \<longmapsto> \<lambda>ret. 1 \<Ztypecolon> T ret \<remains> R2 \<rbrace> \<throws> E @tag synthesis
+\<Longrightarrow> \<proc> H \<lbrace> R1 \<longmapsto> \<lambda>ret. Suc 0 \<Ztypecolon> T ret \<remains> R2 \<rbrace> \<throws> E @tag synthesis\<close>
   unfolding One_nat_def .
 
 lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
-  \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
+  \<open> \<proc> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<remains> R \<rbrace> \<throws> E @tag synthesis
+\<Longrightarrow> \<proc> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<remains> R \<rbrace> \<throws> E @tag synthesis\<close>
   for x :: nat
   unfolding push_bit_nat_def .
 
 lemma [\<phi>reason %\<phi>synthesis_weak_normalize]:
-  \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @tag synthesis\<close>
+  \<open> \<proc> f \<lbrace> X \<longmapsto> \<lambda>ret. push_bit n x \<Ztypecolon> Y ret \<remains> R \<rbrace> \<throws> E @tag synthesis
+\<Longrightarrow> \<proc> f \<lbrace> X \<longmapsto> \<lambda>ret. x * 2 ^ n \<Ztypecolon> Y ret \<remains> R \<rbrace> \<throws> E @tag synthesis\<close>
   for x :: int
   unfolding push_bit_int_def .
 
 
 
 \<phi>typeclass \<phi>Order (T)
-  fixes leq[\<phi>overload \<le>]: \<open>\<p>\<r>\<o>\<c> leq(v\<^sub>a,v\<^sub>b) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v\<^sub>b] T \<longmapsto> x \<le> y \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace> \<close>
+  fixes leq[\<phi>overload \<le>]: \<open>\<proc> leq(v\<^sub>a,v\<^sub>b) \<lbrace> x \<Ztypecolon> \<val>[v\<^sub>a] T\<heavy_comma> y \<Ztypecolon> \<val>[v\<^sub>b] T \<longmapsto> x \<le> y \<Ztypecolon> \<val> \<bool> \<rbrace> \<close>
 
 thm \<phi>Order_def
 

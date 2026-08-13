@@ -69,9 +69,9 @@ val merge_conditions =
   end
 
 val guard_atomize = [
-  @{lemma' \<open>(P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Q) \<equiv> Trueprop (\<g>\<u>\<a>\<r>\<d> (P \<longrightarrow> Q))\<close>
+  @{lemma' \<open>(P \<Longrightarrow> \<guard> Q) \<equiv> Trueprop (\<guard> (P \<longrightarrow> Q))\<close>
        by (simp add: \<r>Guard_def atomize_imp)},
-  @{lemma' \<open>(\<And>x. \<g>\<u>\<a>\<r>\<d> Q x) \<equiv> Trueprop (\<g>\<u>\<a>\<r>\<d> (\<forall>x. Q x))\<close>
+  @{lemma' \<open>(\<And>x. \<guard> Q x) \<equiv> Trueprop (\<guard> (\<forall>x. Q x))\<close>
        by (simp add: \<r>Guard_def atomize_all)}
 ]
 
@@ -106,9 +106,9 @@ fun guardize {merge_cond} ctxt =
          (Conv.implies_conv (conv true) (move_and_merge_ants (N-1)) then_conv
           (fn ctm => Conv.rewr_conv
                (if can_merge_cond (Thm.term_of ctm)
-                then @{lemma \<open>(\<g>\<u>\<a>\<r>\<d> (Premise mode' P) \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (Premise mode Q) \<Longrightarrow> PROP R) \<equiv> (\<g>\<u>\<a>\<r>\<d> (Premise mode (P \<and> Q)) \<Longrightarrow> PROP R)\<close>
+                then @{lemma \<open>(\<guard> (Premise mode' P) \<Longrightarrow> \<guard> (Premise mode Q) \<Longrightarrow> PROP R) \<equiv> (\<guard> (Premise mode (P \<and> Q)) \<Longrightarrow> PROP R)\<close>
                           by (unfold \<r>Guard_def contract_obligations)}
-                else @{lemma \<open>(\<g>\<u>\<a>\<r>\<d> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Q \<Longrightarrow> PROP R) \<equiv> (\<g>\<u>\<a>\<r>\<d> P \<and>\<^sub>\<r> Q \<Longrightarrow> PROP R)\<close>
+                else @{lemma \<open>(\<guard> P \<Longrightarrow> \<guard> Q \<Longrightarrow> PROP R) \<equiv> (\<guard> P \<and>\<^sub>\<r> Q \<Longrightarrow> PROP R)\<close>
                           by (unfold \<r>Guard_def Ant_Seq_imp)}
                ) ctm)) ctm
 

@@ -1,6 +1,6 @@
 theory Fiction_Refinemen
   imports PhiSem_Formalization_Tools Phi_Semantics_Framework.Phi_SemFrame_ex
-  abbrevs "<refines>" = "\<r>\<e>\<f>\<i>\<n>\<e>\<s>"
+  abbrevs "<refines>" = "\<refines>"
       and "<w.r.t>" = "\<w>.\<r>.\<t>"
 begin
 
@@ -47,7 +47,7 @@ definition Transition_of :: \<open>'ret proc \<Rightarrow> 'ret \<phi>arg + ABNM
 definition Raw_Procedure :: "'ret proc
                         \<Rightarrow> ('ret \<phi>arg \<Rightarrow> resource rel)
                         \<Rightarrow> bool"
-    ("\<r>\<a>\<w> \<p>\<r>\<o>\<c> (2_) \<r>\<e>\<f>\<i>\<n>\<e>\<s> _ " [11,11] 10)
+    ("\<raw> \<proc> (2_) \<refines> _ " [11,11] 10)
   where "Raw_Procedure f S \<longleftrightarrow> (\<forall>x r. f (r * x) \<subseteq> LooseState (\<lambda>v. { r * y | y. (x,y) \<in> S v }) 0)"
 
 definition Fictional_Refine :: "'ret proc
@@ -60,15 +60,15 @@ definition Fictional_Refine :: "'ret proc
 
 (*
 lemma refinement_frame'':
-  \<open> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
-\<Longrightarrow> Id_on R * A \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on R * B \<w>.\<r>.\<t> I \<i>\<n> R * D\<close>
+  \<open> A \<refines> B \<w>.\<r>.\<t> I \<in'> D
+\<Longrightarrow> Id_on R * A \<refines> Id_on R * B \<w>.\<r>.\<t> I \<in'> R * D\<close>
   for B :: \<open>'b::sep_monoid rel\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: subset_iff \<phi>expns Image_def Bex_def Id_on_iff)
   subgoal for r R u v u' v' rr a b
 
 lemma refinement_frame':
-  \<open> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
+  \<open> A \<refines> B \<w>.\<r>.\<t> I \<in'> D
 \<Longrightarrow> Id_on UNIV * A = A\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: subset_iff \<phi>expns Image_def Bex_def Id_on_iff set_eq_iff; rule)
@@ -79,7 +79,7 @@ lemma refinement_frame':
   subgoal for x r R u v rr a' b'
 
 lemma
-  \<open>Any \<r>\<e>\<f>\<i>\<n>\<e>\<s> Any \<w>.\<r>.\<t> Itself \<i>\<n> D\<close>
+  \<open>Any \<refines> Any \<w>.\<r>.\<t> Itself \<in'> D\<close>
   for Any :: \<open>'a::sep_monoid rel\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: subset_iff \<phi>expns Image_def Bex_def Id_on_iff)
@@ -88,7 +88,7 @@ lemma
 
 
 lemma
-  \<open>Any \<r>\<e>\<f>\<i>\<n>\<e>\<s> UNIV \<w>.\<r>.\<t> I\<close>
+  \<open>Any \<refines> UNIV \<w>.\<r>.\<t> I\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: subset_iff \<phi>expns Image_def Bex_def Id_on_iff)
   subgoal for x r R t u v *)
@@ -114,9 +114,9 @@ lemma
 
 (*
 lemma
-  \<open> A1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B1 \<w>.\<r>.\<t> I \<i>\<n> D1
-\<Longrightarrow> A2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B2 \<w>.\<r>.\<t> I \<i>\<n> D2
-\<Longrightarrow> A1 * A2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B1 * B2 \<w>.\<r>.\<t> I \<i>\<n> D1 * D2\<close>
+  \<open> A1 \<refines> B1 \<w>.\<r>.\<t> I \<in'> D1
+\<Longrightarrow> A2 \<refines> B2 \<w>.\<r>.\<t> I \<in'> D2
+\<Longrightarrow> A1 * A2 \<refines> B1 * B2 \<w>.\<r>.\<t> I \<in'> D1 * D2\<close>
   for A1 :: \<open>'a::sep_monoid rel\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: \<phi>expns subset_iff Image_def Bex_def)
@@ -169,10 +169,10 @@ context begin
 
 private lemma from_fictional_refinement':
   \<open> Valid_Proc f
-\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> D)
+\<Longrightarrow> (\<And>v. Transition_of' f v \<refines> Rel v \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<in'> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))\<close>
+\<Longrightarrow> \<proc> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Itself \<subj> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<throws> (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<subj> y. (x,y) \<in> Rel (Abnm e))\<close>
   unfolding \<phi>Procedure_alt Fictional_Forward_Simulation_def atomize_all Valid_Transition_def
   apply (auto simp add: Image_iff subset_iff Bex_def R.basic_fiction_\<I> \<phi>expns Transition_of'_def
           LooseState_def split_sum_all INTERP_RES_def interp_split' R.\<r>_valid_split' interp_comp_\<I>
@@ -214,21 +214,21 @@ qed
 
 lemma from_fictional_refinement:
   \<open> Valid_Proc f
-\<Longrightarrow> YY = (\<lambda>v. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v))
-\<Longrightarrow> EE = (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))
-\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> D)
+\<Longrightarrow> YY = (\<lambda>v. y \<Ztypecolon> \<phi> Itself \<subj> y. (x,y) \<in> Rel (Normal v))
+\<Longrightarrow> EE = (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<subj> y. (x,y) \<in> Rel (Abnm e))
+\<Longrightarrow> (\<And>v. Transition_of' f v \<refines> Rel v \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<in'> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE\<close>
+\<Longrightarrow> \<proc> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> YY \<rbrace> \<throws> EE\<close>
   using from_fictional_refinement' by blast
 
 end
 
 lemma "__getter_rule__":
   \<open> Valid_Proc getter
-\<Longrightarrow> (\<And>ret. Transition_of' getter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({x} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg v)) \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> {x})
-\<Longrightarrow> \<p>\<r>\<o>\<c> getter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> ret = \<phi>arg v \<rbrace>\<close>
-  by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on ({x} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg v))\<close>
+\<Longrightarrow> (\<And>ret. Transition_of' getter ret \<refines> Id_on ({x} \<subj> ret = Normal (\<phi>arg v)) \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<in'> {x})
+\<Longrightarrow> \<proc> getter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<phi> Itself \<subj> ret = \<phi>arg v \<rbrace>\<close>
+  by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on ({x} \<subj> ret = Normal (\<phi>arg v))\<close>
                                        and D = \<open>{x}\<close>],
      assumption,
      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExBI_expn,
@@ -239,11 +239,11 @@ lemma "__getter_rule__":
 
 lemma "__setter_rule__":
   \<open> Valid_Proc setter
-\<Longrightarrow> (\<And>ret. Transition_of' setter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none
-            \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> {x})
-\<Longrightarrow> \<p>\<r>\<o>\<c> setter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>_. y \<Ztypecolon> \<phi> Itself \<rbrace>\<close>
+\<Longrightarrow> (\<And>ret. Transition_of' setter ret \<refines> {(x,y)} \<subj> ret = Normal \<phi>V_none
+            \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<in'> {x})
+\<Longrightarrow> \<proc> setter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>_. y \<Ztypecolon> \<phi> Itself \<rbrace>\<close>
   by (rule from_fictional_refinement
-                  [where Rel=\<open>\<lambda>ret. {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
+                  [where Rel=\<open>\<lambda>ret. {(x,y)} \<subj> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
       assumption,
       clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExBI_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
       simp add: Id_on_iff zero_set_def zero_fun_def,
@@ -253,11 +253,11 @@ lemma "__setter_rule__":
 
 lemma "__allocator_rule__":
   \<open> Valid_Proc allocator
-\<Longrightarrow> (\<And>ret. Transition_of' allocator ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k
-            \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> {1})
-\<Longrightarrow> \<p>\<r>\<o>\<c> allocator \<lbrace> Void \<longmapsto> \<lambda>ret. y k \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace>\<close>
+\<Longrightarrow> (\<And>ret. Transition_of' allocator ret \<refines> {(1,y k)} \<subj> k. ret = Normal (\<phi>arg k) \<and> P k
+            \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<in'> {1})
+\<Longrightarrow> \<proc> allocator \<lbrace> Void \<longmapsto> \<lambda>ret. y k \<Ztypecolon> \<phi> Itself \<subj> k. ret = \<phi>arg k \<and> P k \<rbrace>\<close>
   by (rule from_fictional_refinement
-        [where Rel=\<open>\<lambda>ret. {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
+        [where Rel=\<open>\<lambda>ret. {(1,y k)} \<subj> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
            and x=\<open>1\<close> and D=\<open>{1}\<close>, unfolded \<phi>_unit],
       assumption,
       clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExBI_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
@@ -280,8 +280,8 @@ lemma getter_transition:
 
 lemma getter_refinement:
   \<open>Transition_of' (\<phi>R_get_res_entry' k k2) ret
-   \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({1(k := 1(k2 \<mapsto> any))} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg any))
-   \<w>.\<r>.\<t> basic_fiction \<i>\<n> {1(k := 1(k2 \<mapsto> any))}\<close>
+   \<refines> Id_on ({1(k := 1(k2 \<mapsto> any))} \<subj> ret = Normal (\<phi>arg any))
+   \<w>.\<r>.\<t> basic_fiction \<in'> {1(k := 1(k2 \<mapsto> any))}\<close>
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: basic_fiction_\<I> set_mult_expn Id_on_iff
           Subjection_expn zero_set_def set_eq_iff prj.homo_mult times_fun)
@@ -296,8 +296,8 @@ lemma getter_valid:
 lemma setter_refinement:
   \<open> \<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m k k2 = Some any \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H domain
 \<Longrightarrow> Transition_of' (\<phi>R_set_res' (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)) ret
-\<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` pairself (fun_upd 1 k2) ` {(Some any, u)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none
-\<w>.\<r>.\<t> basic_fiction \<i>\<n> (fun_upd 1 k) ` (fun_upd 1 k2) ` {Some any}\<close>
+\<refines> pairself (fun_upd 1 k) ` pairself (fun_upd 1 k2) ` {(Some any, u)} \<subj> ret = Normal \<phi>V_none
+\<w>.\<r>.\<t> basic_fiction \<in'> (fun_upd 1 k) ` (fun_upd 1 k2) ` {Some any}\<close>
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k\<close>]], assumption)
   unfolding Fictional_Forward_Simulation_def setter_transition
   apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
@@ -335,7 +335,7 @@ end
 
 
 (* lemma \<phi>R_get_res_transition:
-  \<open> (\<And>res. Transition_of' (F res) ret \<subseteq> Id_on (UNIV \<s>\<u>\<b>\<j> res \<in> UNIV * P ret))
+  \<open> (\<And>res. Transition_of' (F res) ret \<subseteq> Id_on (UNIV \<subj> res \<in> UNIV * P ret))
 \<Longrightarrow> Transition_of' (\<phi>R_get_res F) ret \<subseteq> Id_on SPACE * Id_on (mk ` P ret)\<close>
   unfolding Transition_of'_def \<phi>R_get_res_def
   apply (cases ret; clarsimp simp add: set_eq_iff Id_on_iff subset_iff Subjection_expn image_iff
@@ -388,8 +388,8 @@ lemma allocator_transition:
 lemma allocator_refinement:
   \<open> \<forall>r. r \<in>\<^sub>S\<^sub>H domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)
 \<Longrightarrow> Transition_of' (\<phi>R_allocate_res_entry' P init) ret
-   \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1, 1(k := init))} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k
-   \<w>.\<r>.\<t> basic_fiction \<i>\<n> {1}\<close>
+   \<refines> {(1, 1(k := init))} \<subj> k. ret = Normal (\<phi>arg k) \<and> P k
+   \<w>.\<r>.\<t> basic_fiction \<in'> {1}\<close>
   apply (rule refinement_sub_fun[OF allocator_transition], assumption)
   unfolding Fictional_Forward_Simulation_def
   apply (cases ret; clarsimp simp add: set_mult_expn Subjection_expn basic_fiction_\<I>
@@ -442,8 +442,8 @@ lemma getter_transition:
 
 lemma getter_refinement:
   \<open>Transition_of' (\<phi>R_get_res_entry' k) ret
-   \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({1(k \<mapsto> any)} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg any))
-   \<w>.\<r>.\<t> basic_fiction \<i>\<n> {1(k \<mapsto> any)}\<close>
+   \<refines> Id_on ({1(k \<mapsto> any)} \<subj> ret = Normal (\<phi>arg any))
+   \<w>.\<r>.\<t> basic_fiction \<in'> {1(k \<mapsto> any)}\<close>
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: basic_fiction_\<I> set_mult_expn Id_on_iff
           Subjection_expn zero_set_def set_eq_iff prj.homo_mult times_fun)
@@ -457,7 +457,7 @@ lemma getter_valid:
 lemma setter_refinement:
   \<open>(\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m k = Some any \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> Transition_of' (\<phi>R_set_res' (\<lambda>f. f(k := u))) ret
-  \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` {(Some any, u)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none \<w>.\<r>.\<t> basic_fiction \<i>\<n> fun_upd 1 k ` {Some any}\<close>
+  \<refines> pairself (fun_upd 1 k) ` {(Some any, u)} \<subj> ret = Normal \<phi>V_none \<w>.\<r>.\<t> basic_fiction \<in'> fun_upd 1 k ` {Some any}\<close>
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>\<lambda>f. f(k := u)\<close>]], assumption)
   unfolding Fictional_Forward_Simulation_def setter_transition
   apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
@@ -498,7 +498,7 @@ sublocale basic_fiction Res \<open>\<F>_pointwise I\<close> ..
 
 lemma getter_rule:
   \<open> refinement_projection I {x} \<subseteq> UNIV * {Some v}
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace> 1(k := x) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. 1(k := x) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> ret = \<phi>arg v \<rbrace>\<close>
+\<Longrightarrow> \<proc> R.\<phi>R_get_res_entry' k \<lbrace> 1(k := x) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. 1(k := x) \<Ztypecolon> \<phi> Itself \<subj> ret = \<phi>arg v \<rbrace>\<close>
   by (rule "__getter_rule__",
       rule R.getter_valid,
       rule sep_refinement_stepwise,
@@ -510,9 +510,9 @@ lemma getter_rule:
 
 lemma setter_rule:
   \<open> refinement_projection I {v'} \<subseteq> UNIV * {Some v}
-\<Longrightarrow> Id_on UNIV * {(Some v, u)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', u')} \<w>.\<r>.\<t> I \<i>\<n> {v'}
+\<Longrightarrow> Id_on UNIV * {(Some v, u)} \<refines> {(v', u')} \<w>.\<r>.\<t> I \<in'> {v'}
 \<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k = Some v \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H R.domain
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (\<lambda>f. f(k := u))
+\<Longrightarrow> \<proc> R.\<phi>R_set_res' (\<lambda>f. f(k := u))
       \<lbrace> 1(k := v') \<Ztypecolon> \<phi> Itself \<longmapsto> 1(k := u') \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   by (rule "__setter_rule__",
       rule R.setter_valid,
@@ -528,7 +528,7 @@ lemma setter_rule:
 lemma
   \<open> \<forall>k. P k \<longrightarrow> 1(k := u) \<in>\<^sub>S\<^sub>H R.domain
 \<Longrightarrow> \<forall>r. r \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' P u \<lbrace> Void \<longmapsto> \<lambda>ret. 1(k := u') \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace> \<close>
+\<Longrightarrow> \<proc> R.\<phi>R_allocate_res_entry' P u \<lbrace> Void \<longmapsto> \<lambda>ret. 1(k := u') \<Ztypecolon> \<phi> Itself \<subj> k. ret = \<phi>arg k \<and> P k \<rbrace> \<close>
   apply (rule "__allocator_rule__",
       rule R.allocator_valid,
       assumption,
@@ -552,8 +552,8 @@ sublocale basic_fiction Res \<open>\<F>_pointwise (\<F>_pointwise I)\<close> ..
 
 lemma getter_rule:
   \<open> refinement_projection I {x} \<subseteq> UNIV * {Some v}
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k k2 \<lbrace> 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Itself \<longmapsto>
-                                    \<lambda>ret. 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> ret = \<phi>arg v \<rbrace>\<close>
+\<Longrightarrow> \<proc> R.\<phi>R_get_res_entry' k k2 \<lbrace> 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Itself \<longmapsto>
+                                    \<lambda>ret. 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Itself \<subj> ret = \<phi>arg v \<rbrace>\<close>
   by (rule "__getter_rule__",
       rule R.getter_valid,
       rule sep_refinement_stepwise,
@@ -566,9 +566,9 @@ lemma getter_rule:
 
 lemma setter_rule:
   \<open> refinement_projection I {v'} \<subseteq> UNIV * {Some v}
-\<Longrightarrow> Id_on UNIV * {(Some v, u)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', u')} \<w>.\<r>.\<t> I \<i>\<n> {v'}
+\<Longrightarrow> Id_on UNIV * {(Some v, u)} \<refines> {(v', u')} \<w>.\<r>.\<t> I \<in'> {v'}
 \<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k k2 = Some v \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H R.domain
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)
+\<Longrightarrow> \<proc> R.\<phi>R_set_res' (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)
       \<lbrace> 1(k := 1(k2 := v')) \<Ztypecolon> \<phi> Itself \<longmapsto> 1(k := 1(k2 := u')) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   by (rule "__setter_rule__",
       rule R.setter_valid,
@@ -610,7 +610,7 @@ term \<open>(o) f\<close>
 term \<open>(;\<^sub>\<I>) I\<close>
 
 lemma
-  \<open>Id_on UNIV * Id_on {u} \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on {f u} \<w>.\<r>.\<t> I \<i>\<n> {f u}\<close>
+  \<open>Id_on UNIV * Id_on {u} \<refines> Id_on {f u} \<w>.\<r>.\<t> I \<in'> {f u}\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: Id_on_iff set_mult_expn Subjection_expn; blast)
 

@@ -208,7 +208,7 @@ fun ToR_rule_add_tag ctxt th =
   |> (fn th => (chk_ToR_prop (Context.Proof ctxt) (Thm.prop_of th) ; th))
 
 val _ = Theory.setup (Context.theory_map (
-  Phi_Reasoner.add_pass (Free("Add ToR tag auto", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>,
+  Phi_Reasoner.add_pass (Free("Add ToR tag auto", dummyT), \<^pattern_prop>\<open>_ \<transforms> _ \<with> _\<close>,
     fn _ => fn (rules, prio, pats, guard, ctxt) =>
         if Config.get_generic ctxt enable_auto_chk_and_conv
         then let val _ = List.app (chk_ToR_prop ctxt o fst) (fst pats)
@@ -222,35 +222,35 @@ val _ = Theory.setup (Context.theory_map (
           end
         else (rules, prio, pats, guard, ctxt) )
 
-#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>,
+#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<transforms> _ \<with> _ @tag \<T>\<P>\<close>,
     fn _ => fn data as (rules, _, _, _, ctxt) => (
         List.app (chk_ToR_prop ctxt o Thm.prop_of) rules ;
         data ))
 
-#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>,
+#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<transforms> _ \<with> _ @tag \<T>\<P>'\<close>,
     fn _ => fn data as (rules, _, _, _, ctxt) => (
         List.app (chk_ToR_prop ctxt o Thm.prop_of) rules ;
         data ))
 
 (*
-#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @clean\<close>,
+#> Phi_Reasoner.add_pass (Free("Check ToA", dummyT), \<^pattern_prop>\<open>_ \<transforms> _ \<with> _ @clean\<close>,
     fn _ => fn data as (rules, _, _, _, ctxt) => (
         List.app (chk_ToR_prop ctxt o Thm.prop_of) rules ;
         data )) *)
 
  (*
 #>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
-          \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>, pass_pattern_of_intro_ToR)
+          \<^pattern_prop>\<open>?var_X \<transforms> _ \<with> _ @tag \<T>\<P>\<close>, pass_pattern_of_intro_ToR)
 #>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),
-          \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @tag \<T>\<P>\<close>, pass_pattern_of_elim_ToR)
+          \<^pattern_prop>\<open>_ \<transforms> ?var_Y \<with> _ @tag \<T>\<P>\<close>, pass_pattern_of_elim_ToR)
 #>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
-          \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>, pass_pattern_of_intro_ToR)
+          \<^pattern_prop>\<open>?var_X \<transforms> _ \<with> _ @tag \<T>\<P>'\<close>, pass_pattern_of_intro_ToR)
 #>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),
-          \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @tag \<T>\<P>'\<close>, pass_pattern_of_elim_ToR)
+          \<^pattern_prop>\<open>_ \<transforms> ?var_Y \<with> _ @tag \<T>\<P>'\<close>, pass_pattern_of_elim_ToR)
 #>Phi_Reasoner.add_pass (Free("Pattern of intro-ToR", dummyT),
-          \<^pattern_prop>\<open>?var_X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close>, pass_pattern_of_intro_ToR)
+          \<^pattern_prop>\<open>?var_X \<transforms> _ \<with> _ \<close>, pass_pattern_of_intro_ToR)
 #>Phi_Reasoner.add_pass (Free("Pattern of elim-ToR", dummyT),
-          \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ \<close>, pass_pattern_of_elim_ToR) *)
+          \<^pattern_prop>\<open>_ \<transforms> ?var_Y \<with> _ \<close>, pass_pattern_of_elim_ToR) *)
 ))
 
 (* pass_pattern_of_intro_ToR *)

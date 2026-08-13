@@ -1,26 +1,26 @@
 theory PhiSem_Aggregate_Array
   imports PhSm_Ag_Base
-  abbrevs "<Array>" = "\<bbbA>\<r>\<r>\<a>\<y>"
-      and "<array>" = "\<a>\<r>\<r>\<a>\<y>"
+  abbrevs "<Array>" = "\<Array>"
+      and "<array>" = "\<array>"
 begin
 
 section \<open>Semantics\<close>
 
-debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<a>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
+debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<array>[_] _" [20, 910] 910)
                 and sem_mk_array   :: \<open>VAL list \<Rightarrow> VAL\<close>
                 and sem_dest_array :: \<open>VAL \<Rightarrow> VAL list\<close>
   where sem_mk_dest_array[simp]: \<open>sem_dest_array (sem_mk_array vs) = vs\<close>
-  and   semty_array_eq_poison[simp]: \<open>\<a>\<r>\<r>\<a>\<y>[N] T = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> (T = \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0)\<close>
-  and   WT_arr[simp]:   \<open>Well_Type (\<a>\<r>\<r>\<a>\<y>[n] t) = { sem_mk_array vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
+  and   semty_array_eq_poison[simp]: \<open>\<array>[N] T = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> (T = \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0)\<close>
+  and   WT_arr[simp]:   \<open>Well_Type (\<array>[n] t) = { sem_mk_array vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
   and   semty_arr_uniq: \<open>sem_mk_array vs \<in> Well_Type TY \<Longrightarrow> \<exists>T. TY = mk_array_T (length vs) T\<close>
-  and   zero_arr[simp]: \<open>\<a>\<r>\<r>\<a>\<y>[N] T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow>
-            Zero (\<a>\<r>\<r>\<a>\<y>[N] T) = (if N = 0 then Some (sem_mk_array [])
+  and   zero_arr[simp]: \<open>\<array>[N] T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow>
+            Zero (\<array>[N] T) = (if N = 0 then Some (sem_mk_array [])
                                          else map_option (\<lambda>z. sem_mk_array (replicate N z)) (Zero T))\<close>
-  and   idx_step_type_arr [eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_type (AgIdx_N i) (\<a>\<r>\<r>\<a>\<y>[N] T) = T\<close>
-  and   valid_idx_step_arr[eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> valid_idx_step (\<a>\<r>\<r>\<a>\<y>[N] T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
+  and   idx_step_type_arr [eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_type (AgIdx_N i) (\<array>[N] T) = T\<close>
+  and   valid_idx_step_arr[eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> valid_idx_step (\<array>[N] T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
   and   idx_step_value_arr[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (sem_mk_array vs) = vs!i\<close>
   and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (sem_mk_array vs) = sem_mk_array (vs[i := f (vs!i)])\<close>
-  and   type_measure_arr : \<open>type_measure (\<a>\<r>\<r>\<a>\<y>[N] T) = (if T = \<p>\<o>\<i>\<s>\<o>\<n> \<or> N = 0 then 0 else Suc (type_measure T))\<close>
+  and   type_measure_arr : \<open>type_measure (\<array>[N] T) = (if T = \<p>\<o>\<i>\<s>\<o>\<n> \<or> N = 0 then 0 else Suc (type_measure T))\<close>
   and   V_arr_sep_disj[simp]:
             \<open>sem_mk_array vs1 ## sem_mk_array vs2 \<longleftrightarrow> list_all2 (##) vs1 vs2\<close>
   and   V_arr_mult[simp]:
@@ -38,25 +38,25 @@ lemma list_all_replicate[simp]:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
   by (induct n; simp; blast)
 
-lemma \<a>\<r>\<r>\<a>\<y>_0_eq_any:
-  \<open>\<a>\<r>\<r>\<a>\<y>[0] A = \<a>\<r>\<r>\<a>\<y>[0] B\<close>
+lemma array_0_eq_any:
+  \<open>\<array>[0] A = \<array>[0] B\<close>
   by (simp add: Well_Type_unique)
 
 lemma [simp]:
-  \<open>N \<noteq> 0 \<Longrightarrow> \<a>\<r>\<r>\<a>\<y>[N] \<p>\<o>\<i>\<s>\<o>\<n> = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open>N \<noteq> 0 \<Longrightarrow> \<array>[N] \<p>\<o>\<i>\<s>\<o>\<n> = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
   using semty_array_eq_poison
   by blast
 
 lemma [\<phi>reason add]:
   \<open> Is_Type_Literal T
 \<Longrightarrow> Is_Literal N
-\<Longrightarrow> Is_Type_Literal (\<a>\<r>\<r>\<a>\<y>[N] T) \<close>
+\<Longrightarrow> Is_Type_Literal (\<array>[N] T) \<close>
   unfolding Is_Type_Literal_def ..
 
 lemma has_Zero_array[simp]:
-  \<open> has_Zero (\<a>\<r>\<r>\<a>\<y>[N] T) \<longleftrightarrow> N = 0 \<or> has_Zero T \<close>
+  \<open> has_Zero (\<array>[N] T) \<longleftrightarrow> N = 0 \<or> has_Zero T \<close>
   unfolding has_Zero_def
-  by (cases \<open>\<a>\<r>\<r>\<a>\<y>[N] T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; clarsimp)
+  by (cases \<open>\<array>[N] T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; clarsimp)
 
 
 
@@ -64,8 +64,8 @@ section \<open>\<phi>Type\<close>
 
 
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
-                    ("\<bbbA>\<r>\<r>\<a>\<y>[_] _" [20, 910] 910)
-  where \<open>l \<Ztypecolon> Array N T \<equiv> sem_mk_array vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
+                    ("\<Array>[_] _" [20, 910] 910)
+  where \<open>l \<Ztypecolon> Array N T \<equiv> sem_mk_array vs \<Ztypecolon> Itself \<subj> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
         \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
           (tactic: clarsimp ; subgoal' for x \<open>induct x arbitrary: N\<close>)
@@ -76,25 +76,25 @@ section \<open>\<phi>Type\<close>
            (tactic: clarsimp ; subgoal' for g x xb \<open>induct x arbitrary: xb xa N Na; auto simp add: list_all2_Cons2\<close>)
        and Functional_Transformation_Functor
        and \<open>Is_Aggregate (Array N T)\<close>
-    (* and \<open>Semantic_Type T TY \<Longrightarrow> Semantic_Type (Array N T) (\<a>\<r>\<r>\<a>\<y>[N] TY)\<close>
+    (* and \<open>Semantic_Type T TY \<Longrightarrow> Semantic_Type (Array N T) (\<array>[N] TY)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
-       and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
+       and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<array>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp] *)
        and Inhabited
-       and \<open>Functionality T D \<Longrightarrow> Functionality (\<bbbA>\<r>\<r>\<a>\<y>[N] T) (list_all D)\<close>
+       and \<open>Functionality T D \<Longrightarrow> Functionality (\<Array>[N] T) (list_all D)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
 
 lemma semty_Array [simp, \<phi>type_property Array Semantic_Type]:
-  \<open>\<t>\<y>\<p>\<e>\<o>\<f> (Array N T) = \<a>\<r>\<r>\<a>\<y>[N] (\<t>\<y>\<p>\<e>\<o>\<f> T)\<close>
+  \<open>\<typeof> (Array N T) = \<array>[N] (\<typeof> T)\<close>
   unfolding SType_Of_def Inhabited_def Satisfiable_def Semantic_Type_def
   apply (cases N)
   apply auto
   apply (smt (verit, best) WT_arr Well_Type_unique exE_some less_nat_zero_code list.pred_inject(1) list.size(3) list_all2_conv_all_nth mem_Collect_eq)
   using WT_arr list.pred_inject(1) apply blast
-  apply (smt (verit, del_insts) \<a>\<r>\<r>\<a>\<y>_0_eq_any length_0_conv list.ctr_transfer(1) semty_arr_uniq someI)
+  apply (smt (verit, del_insts) array_0_eq_any length_0_conv list.ctr_transfer(1) semty_arr_uniq someI)
   using WT_arr list.pred_inject(1) apply blast
-  apply (smt (verit) \<a>\<r>\<r>\<a>\<y>_0_eq_any exE_some list.size(3) list_all2_Nil2 semty_arr_uniq)
+  apply (smt (verit) array_0_eq_any exE_some list.size(3) list_all2_Nil2 semty_arr_uniq)
   using WT_arr list.pred_inject(1) apply blast
 
   subgoal for nat x TY p xa TYa xb
@@ -109,9 +109,9 @@ lemma semty_Array [simp, \<phi>type_property Array Semantic_Type]:
       note t3 = someI_ex[OF t1, THEN spec[where x=\<open>replicate N xx\<close>], THEN spec[where x=\<open>sem_mk_array (replicate N u)\<close>],
                          THEN mp, OF t2]
       from semty_arr_uniq[OF t3]
-        obtain TT where t4: \<open>(SOME TY. \<forall>x v. ?xx x v TY) = \<a>\<r>\<r>\<a>\<y>[length (replicate N u)] TT\<close>
+        obtain TT where t4: \<open>(SOME TY. \<forall>x v. ?xx x v TY) = \<array>[length (replicate N u)] TT\<close>
           by blast
-      have t5: \<open>sem_mk_array (replicate N u) \<in> Well_Type (\<a>\<r>\<r>\<a>\<y>[length (replicate N u)] TT)\<close>
+      have t5: \<open>sem_mk_array (replicate N u) \<in> Well_Type (\<array>[length (replicate N u)] TT)\<close>
         using t3 t4 by force
       have t6: \<open>u \<in> Well_Type TT\<close>
         using prems(1) t5 by auto
@@ -129,7 +129,7 @@ lemma semty_Array [simp, \<phi>type_property Array Semantic_Type]:
         metis (no_types, lifting) length_replicate list_all2_conv_all_nth nth_replicate)
   
   subgoal premises prems for nat x TY p
-    by (insert prems(1-3) prems(4)[THEN spec[where x=\<open>\<a>\<r>\<r>\<a>\<y>[N] TY\<close>]],
+    by (insert prems(1-3) prems(4)[THEN spec[where x=\<open>\<array>[N] TY\<close>]],
         auto simp: list_all2_conv_all_nth,
         metis (mono_tags, lifting) list_all_length)
   
@@ -154,7 +154,7 @@ lemma semty_Array [simp, \<phi>type_property Array Semantic_Type]:
 
 
 let_\<phi>type Array
-  deriving \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<a>\<r>\<r>\<a>\<y>[N] TY) (Array N T) (replicate N zero)\<close>
+  deriving \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (\<array>[N] TY) (Array N T) (replicate N zero)\<close>
            notes list_all2_conv_all_nth[simp] list_all_length[simp]
 
 (*
@@ -182,8 +182,8 @@ text \<open>All the reasoning rules below are for semantic properties.
       All reasoning rules for transformations and SL are derived automatically by the above \<open>\<phi>type_def\<close> command\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (\<a>\<r>\<r>\<a>\<y>[N] TY) TY \<close>
+  \<open> \<premise> i < N \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (\<array>[N] TY) TY \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_arr idx_step_type_arr)
 
@@ -191,14 +191,14 @@ subsection \<open>Index to Fields of Structures\<close>
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Getter idx X Y f
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
+\<Longrightarrow> \<premise> i < N
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
   unfolding \<phi>Aggregate_Getter_def Premise_def \<phi>Type_Mapping_def
   by (clarsimp simp add: idx_step_value_arr list_all2_conv_all_nth)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Mapper idx X X Y Y' f
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
+\<Longrightarrow> \<premise> i < N
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i # idx) (Array N X) (Array N X) Y Y' (\<lambda>g l. l[i := f g (l!i)])\<close>
   unfolding \<phi>Aggregate_Mapper_def Premise_def \<phi>Type_Mapping_def
   by (clarsimp simp add: idx_step_mod_value_arr list_all2_conv_all_nth nth_list_update)

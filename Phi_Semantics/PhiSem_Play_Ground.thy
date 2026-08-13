@@ -13,7 +13,7 @@ begin
 declare [[\<phi>trace_reasoning = 2]]
 
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
-  where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
+  where \<open>x \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<subj> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv \<rat> (=)\<close>
@@ -21,8 +21,8 @@ declare [[\<phi>trace_reasoning = 2]]
 thm \<phi>Rational.intro_reasoning
 
 lemma [\<phi>reason add]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> snd x \<noteq> 0
-\<Longrightarrow> x \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_int (fst x) / of_int (snd x) \<Ztypecolon> \<rat>\<close>
+  \<open> \<premise> snd x \<noteq> 0
+\<Longrightarrow> x \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<transforms> of_int (fst x) / of_int (snd x) \<Ztypecolon> \<rat>\<close>
   \<medium_left_bracket>
     \<open>of_int (fst x) / of_int (snd x) \<Ztypecolon> MAKE _ \<rat>\<close>
   \<medium_right_bracket> .
@@ -32,8 +32,8 @@ declare One_nat_def [simp del]
 declare [[\<phi>trace_reasoning = 2]]
 
 proc rat_add:
-  input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
-  output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
+  input \<open>q1 \<Ztypecolon> \<val> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<val> \<rat>\<close>
+  output \<open>q1 + q2 \<Ztypecolon> \<val> \<rat>\<close>
 \<medium_left_bracket>  
   val q1 \<leftarrow> $q1 to \<open>OPEN _ _\<close>
   \<semicolon>  val q2 \<leftarrow> $q2 to \<open>OPEN _ _\<close>
@@ -46,9 +46,9 @@ thm rat_add_def
 
 
 proc test_ptr:
-  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> TypedPtr (\<t>\<u>\<p> {\<t>\<u>\<p> {aint}, aint, aint}), \<int> \<rbrace>\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<val> \<lbrace> TypedPtr (\<tup> {\<tup> {aint}, aint, aint}), \<int> \<rbrace>\<close>
   premises \<open>ptr \<noteq> 0\<close>
-  output \<open>ptr \<tribullet> 2 \<Ztypecolon> \<v>\<a>\<l> TypedPtr aint\<close>
+  output \<open>ptr \<tribullet> 2 \<Ztypecolon> \<val> TypedPtr aint\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 0)   \<semicolon>
   & $1[b]\<tribullet>$a[0] \<semicolon>
@@ -65,25 +65,25 @@ no_notation Set.member ("(_/ : _)" [51, 51] 50)
 
 
 proc test_ptr2:
-  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> TypedPtr (\<s>\<t>\<r>\<u>\<c>\<t> {a: \<p>\<t>\<r>, x: \<t>\<u>\<p> {\<b>\<o>\<o>\<l>, \<s>\<t>\<r>\<u>\<c>\<t> {q: \<a>\<i>\<n>\<t>, w: \<p>\<t>\<r>}}, y: \<a>\<i>\<n>\<t>}), \<int> \<rbrace>\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<val> \<lbrace> TypedPtr (\<struct> {a: \<ptr>, x: \<tup> {\<b>\<o>\<o>\<l>, \<struct> {q: \<a>\<i>\<n>\<t>, w: \<ptr>}}, y: \<a>\<i>\<n>\<t>}), \<int> \<rbrace>\<close>
   premises \<open>ptr \<noteq> 0\<close>
-  output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<v>\<a>\<l> TypedPtr \<p>\<t>\<r>\<close>
+  output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<val> TypedPtr \<ptr>\<close>
 \<medium_left_bracket>
   val a, b \<leftarrow> (0, 1) \<semicolon>
   & $1[a].x[b].w
 \<medium_right_bracket> .
 
 proc test_ptr3:
-  input \<open>addr \<Ztypecolon> \<v>\<a>\<l> TypedPtr (\<s>\<t>\<r>\<u>\<c>\<t> {a: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>})\<close>
+  input \<open>addr \<Ztypecolon> \<val> TypedPtr (\<struct> {a: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>})\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr \<tribullet> a \<Ztypecolon> \<v>\<a>\<l> TypedPtr \<a>\<i>\<n>\<t>\<close>
+  output \<open>addr \<tribullet> a \<Ztypecolon> \<val> TypedPtr \<a>\<i>\<n>\<t>\<close>
 \<medium_left_bracket>
   &addr.a
 \<medium_right_bracket> .
 
 proc test_agg2:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
     
@@ -93,8 +93,8 @@ proc test_agg2:
 \<medium_right_bracket> .
 
 proc test_agg21:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
     
@@ -104,8 +104,8 @@ proc test_agg21:
 \<medium_right_bracket> .
 
 proc test_agg22:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
@@ -115,8 +115,8 @@ proc test_agg22:
 \<medium_right_bracket> .
 
 proc test_agg23:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
@@ -126,8 +126,8 @@ proc test_agg23:
 \<medium_right_bracket> .
 
 proc test_agg24:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
@@ -137,8 +137,8 @@ proc test_agg24:
 \<medium_right_bracket> .
 
 proc test_agg25:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,3), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,3), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
@@ -148,8 +148,8 @@ proc test_agg25:
 \<medium_right_bracket> .
 
 proc test_agg26:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,3), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,3), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
      
@@ -159,24 +159,24 @@ proc test_agg26:
 \<medium_right_bracket> .
 
 proc test_agg27:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket>  
   val v \<leftarrow> ( $1[0,1] := \<open>2 \<Ztypecolon> \<int>\<close> )\<semicolon>
   $v[0,0] := \<open>1 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
 proc test_agg28:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket>  
   ($1[0,1] := \<open>2 \<Ztypecolon> \<int>\<close>) [0,0] := \<open>1 \<Ztypecolon> \<nat>\<close>
 \<medium_right_bracket> .
 
 
 proc test_agg3:
-  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<int>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
-  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> x: \<lbrace> m: \<nat>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
+  input \<open>((a,b), x) \<Ztypecolon> \<val> \<lbrace> x: \<lbrace> m: \<int>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<val> \<lbrace> x: \<lbrace> m: \<nat>, n: \<int> \<rbrace>, y: \<int> \<rbrace>\<close>
 \<medium_left_bracket> 
   var v \<leftarrow> $1 \<semicolon>
   v.x.n \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> \<semicolon>
@@ -189,7 +189,7 @@ proc test_agg3:
 proc
   assumes [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   assumes [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY'\<close>
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> T\<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> U\<close>
+  input \<open>\<val> x \<Ztypecolon> T\<heavy_comma> \<val> y \<Ztypecolon> U\<close>
   output \<open>Any\<close>
   \<medium_left_bracket> $x \<rightarrow> var z
   ;; $y \<rightarrow> z
@@ -200,8 +200,8 @@ int XX(int x) { if 0 < x then x - 1 else 0 }
 
   
 proc AAA:
-  input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
-  output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
+  input  \<open>\<val> x \<Ztypecolon> \<nat>\<close>
+  output \<open>\<val> x - 1 \<Ztypecolon> \<nat>\<close>
   is [routine]
   \<medium_left_bracket>
     ($x, $x) \<rightarrow> val y, var z \<semicolon> 
@@ -212,8 +212,8 @@ proc AAA:
 
 
 proc
-  input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
-  output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
+  input  \<open>\<val> x \<Ztypecolon> \<nat>\<close>
+  output \<open>\<val> x - 1 \<Ztypecolon> \<nat>\<close>
   is [routine]
   \<medium_left_bracket>
     if ( 0 < $x ) \<medium_left_bracket> $x - 1 \<medium_right_bracket> \<medium_left_bracket> 0 \<medium_right_bracket>
@@ -243,8 +243,8 @@ thm fib.elims
 
   
 proc FIB:
-  input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>\<close>
-  output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<close>
+  input \<open>\<val> n \<Ztypecolon> \<nat>\<close>
+  output \<open>\<val> fib n \<Ztypecolon> \<nat>\<close>
   is [recursive n]
   is [routine] 
 \<medium_left_bracket>
@@ -255,13 +255,13 @@ proc FIB:
 
 (*
 syntax "_rec_fun_"
-    ("\<r>\<e>\<c>\<u>\<r>\<s>\<i>\<v>\<e>- *)
+    ("\<recursive>- *)
 
 declare [[\<phi>hide_techinicals, \<phi>display_value_internal_name=false]]
 
 proc FIB2:
-  input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>
-  output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
+  input \<open>\<val> n \<Ztypecolon> \<nat>(8)\<close>
+  output \<open>\<val> fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
   is [recursive n]
 \<medium_left_bracket> 
   if \<open>$n \<le> 1\<close> \<medium_left_bracket>
@@ -277,39 +277,39 @@ thm FIB2_def
 
 
 proc YYY:
-  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
-  output \<open>\<v>\<a>\<l> a + of_nat b + c \<Ztypecolon> \<int>\<close>
+  input \<open>\<val> a \<Ztypecolon> \<int>\<heavy_comma> \<val> b \<Ztypecolon> \<nat>\<heavy_comma> \<val> c \<Ztypecolon> \<int>\<close>
+  output \<open>\<val> a + of_nat b + c \<Ztypecolon> \<int>\<close>
   is [routine]
   \<medium_left_bracket> \<open>$a + of_nat $b + $c\<close> \<medium_right_bracket>.
 
 proc YYY2:
-  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
+  input \<open>\<val> a \<Ztypecolon> \<int>\<heavy_comma> \<val> b \<Ztypecolon> \<nat>\<heavy_comma> \<val> c \<Ztypecolon> \<int>\<close>
   premises \<open>0 \<le> a \<and> 0 \<le> c\<close>
-  output \<open>\<v>\<a>\<l> nat a + b + nat c \<Ztypecolon> \<nat>\<close>
+  output \<open>\<val> nat a + b + nat c \<Ztypecolon> \<nat>\<close>
   \<medium_left_bracket> \<open> nat $a + $b + nat $c \<close> \<medium_right_bracket>.
 
 thm YYY2_def
 
 proc XXXX:
-  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
-  output \<open>\<v>\<a>\<l> a + b * c \<Ztypecolon> \<int>\<close>
+  input \<open>\<val> a \<Ztypecolon> \<int>\<heavy_comma> \<val> b \<Ztypecolon> \<int>\<heavy_comma> \<val> c \<Ztypecolon> \<int>\<close>
+  output \<open>\<val> a + b * c \<Ztypecolon> \<int>\<close>
   \<medium_left_bracket> $a + $b * $c \<medium_right_bracket> .
 
 proc
-  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
-  output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
+  input \<open>\<val> a \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<val> b \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<val> c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
+  output \<open>\<val> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>.
 
 declare [[\<phi>hide_techinicals=false]]
 
 
 proc
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
+  input \<open>\<val> x \<Ztypecolon> \<nat>\<close>
   premises \<open>x < 10\<close>
-  output \<open>\<v>\<a>\<l> 10 \<Ztypecolon> \<nat>\<close>
+  output \<open>\<val> 10 \<Ztypecolon> \<nat>\<close>
 \<medium_left_bracket>
   $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
-  while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
+  while \<open>x \<Ztypecolon> ?T \<subj> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
   \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket> (*guard*)
   \<medium_left_bracket> $v \<rightarrow> $v ;;
     \<open>$v = 10\<close> ;;
@@ -335,17 +335,17 @@ thm op_var_scope_def
 thm AAA_def
 
 proc
-  input \<open>\<v>\<a>\<l> b \<Ztypecolon> \<bool>\<close>
-  output \<open>(if b then 32 else 24) \<Ztypecolon> \<v>\<a>\<l> (if b then \<nat>(32) else \<nat>(16))\<close>
+  input \<open>\<val> b \<Ztypecolon> \<bool>\<close>
+  output \<open>(if b then 32 else 24) \<Ztypecolon> \<val> (if b then \<nat>(32) else \<nat>(16))\<close>
   \<medium_left_bracket>
     if $b \<medium_left_bracket> \<open>32 \<Ztypecolon> \<nat>(32)\<close> \<medium_right_bracket> \<medium_left_bracket> \<open>24 \<Ztypecolon> \<nat>(16)\<close> \<medium_right_bracket>
   \<medium_right_bracket> .
 
 (*
 proc XXX:
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
+  input \<open>\<val> x \<Ztypecolon> \<nat>\<close>
   premises A: \<open>x < 10\<close>
-  output \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
+  output \<open>\<val> x \<Ztypecolon> \<nat>\<close>
   is [recursive x]
   is [recursive x]
   is [recursive xa]
@@ -356,9 +356,9 @@ proc XXX:
 
 
 proc YYY2:
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> \<nat>\<close>
+  input \<open>\<val> x \<Ztypecolon> \<nat>\<heavy_comma> \<val> y \<Ztypecolon> \<nat>\<close>
   premises A: \<open>x < y\<close>
-  output \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<heavy_comma> 20 \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>\<val> x \<Ztypecolon> \<nat>\<heavy_comma> 20 \<Ztypecolon> \<val> \<nat>\<close>
   is [recursive x y]
   is [recursive x y]
   is [recursive xa ya]

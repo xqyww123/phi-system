@@ -84,7 +84,7 @@ fun merge_premises_bindings R [] = map (the_default ((Binding.empty, []),[])) R
   | merge_premises_bindings (NONE::R1) (((B,A2),P2)::R2)
       = ((B,A2),P2) :: merge_premises_bindings R1 R2
   | merge_premises_bindings ((SOME ((B1,A1),P1))::R1) (((B2,A2),P2)::R2)
-      = if Binding.name_of B1 = "\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>"
+      = if Binding.name_of B1 = "\<phi>initial"
         then error "Too much premises bindings given"
         else ((B2, A1@A2), P1@P2) :: merge_premises_bindings R1 R2
   | merge_premises_bindings [] (_::_)

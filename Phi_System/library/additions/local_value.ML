@@ -122,7 +122,7 @@ fun update_val b rule ctxt =
   end
 
 val value_assigner_id = "val"
-val valname_prefix = "\<v>\<a>\<l>_"
+val valname_prefix = "val_"
 
 fun value_assigner (b,eleidx) (ctxt,_) =
 let

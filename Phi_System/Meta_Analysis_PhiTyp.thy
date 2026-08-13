@@ -29,7 +29,7 @@ In the latter \<open>r\<close>, the \<open>x\<close> is transformed to one of th
 \<close>
 
 definition Transformation_Order :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
-  where \<open>Transformation_Order T U = (\<lambda>x y. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U)\<close>
+  where \<open>Transformation_Order T U = (\<lambda>x y. x \<Ztypecolon> T \<transforms> y \<Ztypecolon> U)\<close>
 
 definition Complete_Transformation :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'b) \<phi> \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Complete_Transformation T U f \<longleftrightarrow> f OO Transformation_Order U U = Transformation_Order T U\<close>

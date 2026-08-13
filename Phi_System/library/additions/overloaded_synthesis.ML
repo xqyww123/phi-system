@@ -62,11 +62,11 @@ fun declare_overloaded_operator signat0 pos (mode, prio_group) ctxt0 =
       val (dom_ty, rng_ty) = Term.dest_funT (Term.fastype_of ret)
       val ret_val_ty = Procedure_Syntax.dest_argT dom_ty
       val pattern1 = \<^pattern_prop>\<open>PROP Gen_Synthesis_Rule
-                        (Trueprop (\<forall>vs::?'a. \<p>\<r>\<o>\<c> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?YY ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E)) ?An ?Re\<close>
+                        (Trueprop (\<forall>vs::?'a. \<proc> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?YY ret \<rbrace> \<throws> ?E)) ?An ?Re\<close>
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
       val pattern2 = \<^pattern_prop>\<open>PROP Gen_Synthesis_Rule
-                        (Trueprop (\<forall>vs::?'a. \<p>\<r>\<o>\<c> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E)) ?An ?Re\<close>
+                        (Trueprop (\<forall>vs::?'a. \<proc> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?YY ret \<remains> ?R \<rbrace> \<throws> ?E)) ?An ?Re\<close>
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
 

@@ -5,7 +5,7 @@ text \<open>The part includes small process that can be built without infrastruc
 
 theory IDE_CP_Reasoning1
   imports Spec_Framework Phi_BI.Phi_BI
-  abbrevs "<subj-reasoning>" = "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>"
+  abbrevs "<subj-reasoning>" = "\<subj>-\<reasoning>"
 begin
 
 section \<open>Annotations Guiding the Reasoning\<close>
@@ -21,11 +21,11 @@ text \<open>The annotation marking on a target \<^term>\<open>Y <matches> A\<clo
   restricts that the source have to first match pattern \<open>A\<close>.\<close>
 
 lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (Y <matches> A) \<w>\<i>\<t>\<h> P\<close>
+  \<open>Matches X A \<Longrightarrow> X \<transforms> Y \<with> P \<Longrightarrow> X \<transforms> (Y <matches> A) \<with> P\<close>
   unfolding Assertion_Matches_def .
 
 lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> (Y <matches> A) \<w>\<i>\<t>\<h> P\<close>
+  \<open>Matches X A \<Longrightarrow> X \<shifts> Y \<with> P \<Longrightarrow> X \<shifts> (Y <matches> A) \<with> P\<close>
   unfolding Assertion_Matches_def .
 
 subsubsection \<open>Useless Tag\<close>
@@ -42,9 +42,9 @@ text \<open>Simplification plays an important role in the programming in IDE_CP.
   some useless information that we do not need.
   For example, we want to rewrite \<^term>\<open>x \<Ztypecolon> T\<close> to \<^term>\<open>y \<Ztypecolon> U\<close> but the rewrite may be held
   only with an additional proposition \<^term>\<open>Useless\<close> which is useless for us,
-  \[ \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<s>\<u>\<b>\<j> Useless\<close> \]
+  \[ \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<subj> Useless\<close> \]
   In cases like this, we can wrap the useless proposition by tag \<open>\<open>USELESS\<close>\<close>,
-  as \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<s>\<u>\<b>\<j> USELESS Useless\<close>. The equality is still held because
+  as \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<subj> USELESS Useless\<close>. The equality is still held because
   \<^prop>\<open>USELESS P \<equiv> P\<close>, but IDE-CP is configured to drop the \<^prop>\<open>Useless\<close>
   so the work space will not be polluted by helpless propositions.
 \<close>
@@ -116,44 +116,44 @@ lemma [\<phi>reason %cutting]:
 paragraph \<open>Transformation Rules\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  \<open> S x \<transforms> Y \<with> P
+\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<transforms> Y \<with> P \<close>
   by simp
 
 (*TODO! this \<A>?!*)
 lemma [\<phi>reason 1000]:
-  \<open> S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A>
-\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A> \<close>
+  \<open> S x \<transforms> Y \<with> P @tag \<A>
+\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<transforms> Y \<with> P @tag \<A> \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> S x * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  \<open> S x * R \<transforms> Y \<with> P
+\<Longrightarrow> (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) * R \<transforms> Y \<with> P \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> S x * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A>
-\<Longrightarrow> (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @tag \<A> \<close>
+  \<open> S x * R \<transforms> Y \<with> P @tag \<A>
+\<Longrightarrow> (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) * R \<transforms> Y \<with> P @tag \<A> \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<w>\<i>\<t>\<h> P \<close>
+  \<open> X \<transforms> S x \<with> P
+\<Longrightarrow> X \<transforms> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<with> P \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<w>\<i>\<t>\<h> P @tag \<A>
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<w>\<i>\<t>\<h> P @tag \<A> \<close>
+  \<open> X \<transforms> S x \<with> P @tag \<A>
+\<Longrightarrow> X \<transforms> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<with> P @tag \<A> \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  \<open> X \<transforms> S x \<remains> R \<with> P
+\<Longrightarrow> X \<transforms> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<remains> R \<with> P \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<A>
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @tag \<A> \<close>
+  \<open> X \<transforms> S x \<remains> R \<with> P @tag \<A>
+\<Longrightarrow> X \<transforms> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<remains> R \<with> P @tag \<A> \<close>
   by simp
 
 
@@ -383,11 +383,11 @@ lemma \<phi>IntroFrameVar'_No:
   unfolding \<phi>IntroFrameVar'_def by simp
 
 lemma \<phi>IntroFrameVar_Yes:
-  "\<phi>IntroFrameVar (Some R) (S \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) S (T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) T"
+  "\<phi>IntroFrameVar (Some R) (S \<remains> R) S (T \<remains> R) T"
   unfolding \<phi>IntroFrameVar_def REMAINS_def by simp
 
 lemma \<phi>IntroFrameVar'_Yes:
-  " \<phi>IntroFrameVar' R (S \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) S (\<lambda>ret. T ret * R) T (\<lambda>ex. E ex * R) E"
+  " \<phi>IntroFrameVar' R (S \<remains> R) S (\<lambda>ret. T ret * R) T (\<lambda>ex. E ex * R) E"
   unfolding \<phi>IntroFrameVar'_def REMAINS_def by simp
 
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
@@ -426,13 +426,13 @@ hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes
 
 subsubsection \<open>Reasoning Goals Embedded in BI Assertion\<close>
 
-definition Subj_Reasoning :: \<open> 'p BI \<Rightarrow> bool \<Rightarrow> 'p BI \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
+definition Subj_Reasoning :: \<open> 'p BI \<Rightarrow> bool \<Rightarrow> 'p BI \<close> (infixl "\<subj>-\<reasoning>" 15)
   where \<open>Subj_Reasoning \<equiv> Subjection\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+  \<open> X \<transforms> Y \<with> P
 \<Longrightarrow> A
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> A \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> X \<transforms> Y \<subj>-\<reasoning> A \<with> P\<close>
   unfolding Subj_Reasoning_def Transformation_def
   by simp
 
@@ -451,7 +451,7 @@ ML_file \<open>library/tools/embed_BI_into_phi_types.ML\<close>
 
 consts mode_embed_into_\<phi>type :: mode
 
-\<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] _ : _\<close>)
+\<phi>reasoner_ML Simp_Premise 10 (\<open>\<simplify>[mode_embed_into_\<phi>type] _ : _\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
                         (fn ctxt => Embed_into_Phi_Type.equip ctxt) {fix_vars=true}) o snd\<close>
 
@@ -482,17 +482,17 @@ end\<close>
 
 subsection \<open>Semantic Type of Multiple Values\<close>
 
-lemma [\<phi>reason 1200 for \<open>Semantic_Types_i (\<lambda>vs. ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
+lemma [\<phi>reason 1200 for \<open>Semantic_Types_i (\<lambda>vs. ?x \<Ztypecolon> \<val>[\<phi>V_fst vs] ?T\<heavy_comma> ?R vs) _\<close>]:
   \<open> Semantic_Type T TY
 \<Longrightarrow> Semantic_Types_i (\<lambda>vs. R vs) TYs
-\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T\<heavy_comma> R (\<phi>V_snd vs)) (TY#TYs)\<close>
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<val>[\<phi>V_fst vs] T\<heavy_comma> R (\<phi>V_snd vs)) (TY#TYs)\<close>
   unfolding Semantic_Types_i_def Semantic_Types_def
             Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
   \<open> Semantic_Type T TY
-\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<v>\<a>\<l>[vs] T\<heavy_comma> R) [TY]\<close>
+\<Longrightarrow> Semantic_Types_i (\<lambda>vs. x \<Ztypecolon> \<val>[vs] T\<heavy_comma> R) [TY]\<close>
   unfolding Semantic_Types_i_def Semantic_Types_def
             Well_Typed_Vals_def \<phi>arg_forall Semantic_Type_def subset_iff
   by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
@@ -534,16 +534,16 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>x. Semantic_Types_i (\<lambda>ret. S ret) TYs)
-\<Longrightarrow> Semantic_Types_i (\<lambda>ret. S ret \<s>\<u>\<b>\<j> P ret) TYs\<close>
+\<Longrightarrow> Semantic_Types_i (\<lambda>ret. S ret \<subj> P ret) TYs\<close>
   unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def Satisfiable_def Subjection_expn
   by clarsimp
 
 
 subsection \<open>Removing Values\<close> (*TODO: depreciate me*)
 
-definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Output)\<close>
+definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<transforms> Output)\<close>
 
-text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<val> T\<close>
   from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
 
 text \<open>Given an assertion X, antecedent \<^term>\<open>Remove_Values X X'\<close>
@@ -573,20 +573,20 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values T T'
-\<Longrightarrow> Remove_Values (T \<s>\<u>\<b>\<j> P) (T' \<s>\<u>\<b>\<j> P)\<close>
+\<Longrightarrow> Remove_Values (T \<subj> P) (T' \<subj> P)\<close>
   unfolding Remove_Values_def Transformation_def
   by simp
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values (T * R) (T' * R')
-\<Longrightarrow> Remove_Values ((T \<s>\<u>\<b>\<j> P) * R) ((T' \<s>\<u>\<b>\<j> P) * R')\<close>
+\<Longrightarrow> Remove_Values ((T \<subj> P) * R) ((T' \<subj> P) * R')\<close>
   unfolding Remove_Values_def Transformation_def
   by simp
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values A A'
 \<Longrightarrow> Remove_Values B B'
-\<Longrightarrow> Remove_Values (A \<r>\<e>\<m>\<a>\<i>\<n>\<s> B) (A' \<r>\<e>\<m>\<a>\<i>\<n>\<s> B')\<close>
+\<Longrightarrow> Remove_Values (A \<remains> B) (A' \<remains> B')\<close>
   unfolding REMAINS_def Remove_Values_def Transformation_def REMAINS_def
   by (simp; blast)
 

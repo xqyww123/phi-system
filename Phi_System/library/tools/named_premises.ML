@@ -24,7 +24,7 @@ structure Named_Premises : NAMED_PREMISES = struct
 
 structure Data = Proof_Data (
   type T = (Attrib.binding * term list (*let bindings*)) Symtab.table * string (*anonymous id*)
-  val init = K (Symtab.empty, "\<p>\<r>\<e>\<m>_a")
+  val init = K (Symtab.empty, "prem_a")
 )
 
 fun registered ctxt = Symtab.defined (fst (Data.get ctxt))

@@ -264,7 +264,7 @@ declare [[
 
 lemma [\<phi>reason %parse_eleidx_input]:
   \<open> parse_eleidx_input TY input sem_idx spec_idx reject
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input = [] \<or> spec_idx \<noteq> []
+\<Longrightarrow> \<condition> input = [] \<or> spec_idx \<noteq> []
 \<Longrightarrow> parse_eleidx_input_least1 TY input sem_idx spec_idx reject\<close>
   unfolding parse_eleidx_input_least1_def Premise_def by simp blast
 
@@ -279,7 +279,7 @@ lemma [\<phi>reason default %parse_eleidx_input_fallback]:
   by simp
 
 lemma [\<phi>reason %parse_eleidx_literal_symbol]:
-  \<open> \<g>\<u>\<a>\<r>\<d> is_valid_step_idx_of (AgIdx_S s) TY U
+  \<open> \<guard> is_valid_step_idx_of (AgIdx_S s) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx reject
 \<Longrightarrow> parse_eleidx_input TY
       ((\<phi>arg.dest (semantic_literal (sem_mk_symbol s)), S) # input)
@@ -288,7 +288,7 @@ lemma [\<phi>reason %parse_eleidx_literal_symbol]:
   by clarsimp
 
 lemma [\<phi>reason %parse_eleidx_number]:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest v \<Turnstile> S @tag \<A>parse_eleidx) \<and>\<^sub>\<r>
+  \<open> \<guard> (\<phi>arg.dest v \<Turnstile> S @tag \<A>parse_eleidx) \<and>\<^sub>\<r>
           get_logical_nat_from_semantic_int S n \<and>\<^sub>\<r>
           is_valid_step_idx_of (AgIdx_N n) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx reject
@@ -300,7 +300,7 @@ lemma [\<phi>reason %parse_eleidx_number]:
   by (cases v; clarsimp; metis option.sel)
 
 lemma [\<phi>reason %parse_eleidx_literal_number]:
-  \<open> \<g>\<u>\<a>\<r>\<d> (\<phi>arg.dest (semantic_literal v) \<Turnstile> S @tag \<A>parse_eleidx) \<and>\<^sub>\<r>
+  \<open> \<guard> (\<phi>arg.dest (semantic_literal v) \<Turnstile> S @tag \<A>parse_eleidx) \<and>\<^sub>\<r>
           get_logical_nat_from_semantic_int (v \<Ztypecolon> Itself) n \<and>\<^sub>\<r>
           is_valid_step_idx_of (AgIdx_N n) TY U
 \<Longrightarrow> parse_eleidx_input U input sem_idx spec_idx reject
@@ -329,8 +329,8 @@ setup \<open>Context.theory_map (Eval_Sem_Idx_SS.map (
   Simplifier.add_cong @{thm' mk_symbol_cong}
 ))\<close>
 
-\<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] ?X' : ?X\<close>
-                                      | \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] ?P\<close> )
+\<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<simplify>[eval_aggregate_path] ?X' : ?X\<close>
+                                      | \<open>\<condition>[eval_aggregate_path] ?P\<close> )
   = \<open>Phi_Reasoners.wrap (
       PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Eval_Sem_Idx_SS.get' {fix_vars=false}) o snd\<close>
 
@@ -338,8 +338,8 @@ setup \<open>Context.theory_map (Eval_Sem_Idx_SS.map (
 lemmas [eval_aggregate_path] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms
 
 declare [[
-  \<phi>premise_attribute       [THEN Premise_D] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>  (%\<phi>attr_late_normalize),
-  \<phi>premise_attribute once? [useful]         for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>  (%\<phi>attr) (*TODO: use EIF instead of this?*)
+  \<phi>premise_attribute       [THEN Premise_D] for \<open>\<condition>[eval_aggregate_path] _\<close>  (%\<phi>attr_late_normalize),
+  \<phi>premise_attribute once? [useful]         for \<open>\<condition>[eval_aggregate_path] _\<close>  (%\<phi>attr) (*TODO: use EIF instead of this?*)
 ]]
 
 
@@ -433,16 +433,16 @@ subsection \<open>IDE-Interfaces\<close>
 
 term ParamTag
 
-definition Index_Param_Tag :: \<open>aggregate_path \<Rightarrow> bool\<close> ("\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> _" [1000] 26)
-  where "\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> x \<equiv> True"
+definition Index_Param_Tag :: \<open>aggregate_path \<Rightarrow> bool\<close> ("\<index'> \<param> _" [1000] 26)
+  where "\<index'> \<param> x \<equiv> True"
 
 lemma Index_Param_Tag_Swap:
-  \<open> \<p>\<a>\<r>\<a>\<m> P \<Longrightarrow> \<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> P \<close>
+  \<open> \<param> P \<Longrightarrow> \<index'> \<param> P \<close>
   unfolding Index_Param_Tag_def ..
 
 ML_file \<open>syntax/index_param.ML\<close>
 
-\<phi>lang_parser set_index_param 5000 (premises \<open>\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> _\<close>) \<open>fn (ctxt,sequent) =>
+\<phi>lang_parser set_index_param 5000 (premises \<open>\<index'> \<param> _\<close>) \<open>fn (ctxt,sequent) =>
   Scan.pass (Context.Proof ctxt) Synt_Index_Param.index_term_parser >> (fn term => fn _ =>
       Phi_Sys.set_param term (ctxt, @{thm Index_Param_Tag_Swap} RS sequent))\<close>
 *)
@@ -470,8 +470,8 @@ lemma op_get_aggregate:
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> parse_eleidx_input_least1 TY input_index sem_idx spec_idx reject
 \<Longrightarrow> \<phi>Aggregate_Getter spec_idx T U f
-\<Longrightarrow> report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate sem_idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
+\<Longrightarrow> report_unprocessed_element_index reject EIHOOK_none
+\<Longrightarrow> \<proc> op_get_aggregate sem_idx TY rv \<lbrace> x \<Ztypecolon> \<val>[rv] T \<longmapsto> f x \<Ztypecolon> \<val> U \<rbrace>\<close>
   unfolding op_get_aggregate_def Semantic_Type'_def subset_iff \<phi>Aggregate_Getter_def
             parse_eleidx_input_def
             parse_eleidx_input_least1_def
@@ -484,10 +484,10 @@ lemma "_op_set_aggregate_":
 \<Longrightarrow> is_valid_index_of idx TY TY\<^sub>U'
 \<Longrightarrow> Premise eval_aggregate_path (TY\<^sub>U' = TY\<^sub>U \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
-\<Longrightarrow> report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY\<^sub>U sem_idx (rv\<^bold>,ru)
-      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> \<lambda>ret. f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l>[ret] T'
-        \<s>\<u>\<b>\<j> (TY\<^sub>U' = TY\<^sub>U \<longrightarrow> \<phi>arg.dest ret \<in> Well_Type TY) \<rbrace>\<close>
+\<Longrightarrow> report_unprocessed_element_index reject EIHOOK_none
+\<Longrightarrow> \<proc> op_set_aggregate TY TY\<^sub>U sem_idx (rv\<^bold>,ru)
+      \<lbrace> x \<Ztypecolon> \<val>[rv] T\<heavy_comma> y \<Ztypecolon> \<val>[ru] U \<longmapsto> \<lambda>ret. f (\<lambda>_. y) x \<Ztypecolon> \<val>[ret] T'
+        \<subj> (TY\<^sub>U' = TY\<^sub>U \<longrightarrow> \<phi>arg.dest ret \<in> Well_Type TY) \<rbrace>\<close>
   unfolding op_set_aggregate_def Semantic_Type'_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
             parse_eleidx_input_def is_valid_index_of_def
             parse_eleidx_input_least1_def
@@ -503,8 +503,8 @@ lemma op_set_aggregate:
 \<Longrightarrow> is_valid_index_of idx TY TY2'
 \<Longrightarrow> Premise eval_aggregate_path (TY2' = TY2 \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
-\<Longrightarrow> report_unprocessed_element_index reject \<E>\<I>\<H>\<O>\<O>\<K>_none
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 sem_idx (rv\<^bold>, ru) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
+\<Longrightarrow> report_unprocessed_element_index reject EIHOOK_none
+\<Longrightarrow> \<proc> op_set_aggregate TY TY2 sem_idx (rv\<^bold>, ru) \<lbrace> x \<Ztypecolon> \<val>[rv] T\<heavy_comma> y \<Ztypecolon> \<val>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<val> T' \<rbrace>\<close>
   by ((rule \<phi>CONSEQ[OF "_op_set_aggregate_" view_shift_refl view_shift_by_implication view_shift_refl]; simp?),
       simp add: Transformation_def, blast)
 
@@ -514,7 +514,7 @@ proc op_construct_aggregate:
   input  \<open>Void\<close>
   requires C[unfolded \<phi>Aggregate_Constructor_def, useful]:
             \<open>\<phi>Aggregate_Constructor constructor args TY (x \<Ztypecolon> T)\<close>
-  output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  output \<open>x \<Ztypecolon> \<val> T\<close>
   \<medium_left_bracket>
     semantic_assert \<open>constructor (map \<phi>arg.dest args) \<in> Well_Type TY\<close>
     semantic_return \<open>constructor (map \<phi>arg.dest args) \<Turnstile> (x \<Ztypecolon> T)\<close>
@@ -524,9 +524,9 @@ proc op_construct_aggregate:
 proc synthesis_construct_aggregate:
   requires [unfolded \<phi>Aggregate_Constructor_def, useful]:
            \<open>\<phi>Aggregate_Constructor_Synth constructor (y \<Ztypecolon> U) TY (x \<Ztypecolon> T)\<close>
-       and C: \<open>\<p>\<r>\<o>\<c> C \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. y \<Ztypecolon> \<v>\<a>\<l>\<s>[ret] U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1 \<rbrace> @tag synthesis\<close>
+       and C: \<open>\<proc> C \<lbrace> R\<^sub>0 \<longmapsto> \<lambda>ret. y \<Ztypecolon> \<vals>[ret] U \<remains> R\<^sub>1 \<rbrace> @tag synthesis\<close>
   input  \<open>R\<^sub>0\<close>
-  output \<open>x \<Ztypecolon> \<v>\<a>\<l> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<^sub>1\<close>
+  output \<open>x \<Ztypecolon> \<val> T \<remains> R\<^sub>1\<close>
   @tag synthesis
   \<medium_left_bracket>
     C semantic_local_values_nochk

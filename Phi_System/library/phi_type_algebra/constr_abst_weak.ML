@@ -88,7 +88,7 @@ fun gen_constr_from_raw (_,name) instruction (phi0 : phi_type) thy =
                           addsimps [@{thm special_Ex_def}]
            in SOME (sequent
            |> Conv.gconv_rule (HOLogic.Trueprop_conv (
-                Conv.rewr_conv @{lemma \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>
+                Conv.rewr_conv @{lemma \<open>\<obligation> P \<equiv> \<premise> P\<close>
                                     by (unfold Premise_def) } then_conv
                 Simplifier.rewrite sctxt
               )) 1
@@ -107,7 +107,7 @@ fun gen_constr_from_raw (_,name) instruction (phi0 : phi_type) thy =
    in case Seq.pull rules
    of SOME (rule, _) =>
       let val rule = Conv.fconv_rule  (Conv.bottom_rewrs_conv
-                     @{thms' Action_Tag_def[where P=\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> and A=\<open>\<T>\<P>\<close> for X Y P, symmetric]} thy)
+                     @{thms' Action_Tag_def[where P=\<open>X \<transforms> Y \<with> P\<close> and A=\<open>\<T>\<P>\<close> for X Y P, symmetric]} thy)
                      rule
        in thy
         |> Local_Theory.declaration {syntax=false, pervasive=false, pos= #3 instruction} (

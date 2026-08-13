@@ -16,8 +16,8 @@ theory Phi_Semantics_Framework
   imports Resource_Space Virtual_Datatype.Virtual_Datatype Debt_Axiom.Debt_Axiom
           "HOL-Library.Monad_Syntax"
   keywords "resource_space" :: thy_goal
-  abbrevs "<throws>" = "\<t>\<h>\<r>\<o>\<w>\<s>"
-    and "<proc>" = "\<p>\<r>\<o>\<c>"
+  abbrevs "<throws>" = "\<throws>"
+    and "<proc>" = "\<proc>"
 begin
 
 
@@ -311,7 +311,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
   considered or modelled by the trust base.
   For example, the formalization of the allocation instruction may assume the size of the object
   to be allocated is always less than the size of the address space (e.g., \<open>2\<^sup>3\<^sup>2\<close> bytes).
-  In another case users may assume the size of their objects is representable by \<open>\<s>\<i>\<z>\<e>_\<t>\<close>.
+  In another case users may assume the size of their objects is representable by \<open>size_\<t>\<close>.
   \<open>Assumption_Violated\<close> enables an easy way for semantic assumptions, e.g., to assume \<open>P\<close>,
   \[ \<open>if P then do-something else return Assumption_Violated\<close> \]
   \<open>Assumption_Violated\<close> is admitted by any post-condition, i.e.,
@@ -398,7 +398,7 @@ adhoc_overloading Monad_Syntax.bind \<rightleftharpoons> bind
 
 definition \<open>det_lift f x = {f x}\<close>
 
-definition Return ("\<r>\<e>\<t>\<u>\<r>\<n>")
+definition Return ("\<return>")
   where \<open>Return = det_lift o Success\<close>
 
 definition Nondet :: \<open>'ret proc \<Rightarrow> 'ret proc \<Rightarrow> 'ret proc\<close>

@@ -15,23 +15,23 @@ lemma RETURN_FRAME_I:
 
 lemma RETURN_FRAME_normal:
   \<open> RETURN_FRAME TYPE('rets) label Y
-\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y ret \<longmapsto> 0 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
+\<Longrightarrow> \<proc> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y ret \<longmapsto> 0 \<rbrace>
+    \<throws> (\<lambda>_. Brking_Frame label Y) \<close>
   for ret :: \<open>'rets::FIX_ARITY_VALs \<phi>arg\<close>
   using op_break_\<phi>app .
 
 lemma RETURN_FRAME_unit:
   \<open> RETURN_FRAME TYPE(unit) label Y
-\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y (\<phi>arg ()) \<longmapsto> 0 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
+\<Longrightarrow> \<proc> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> TECHNICAL Brk_Frame label\<heavy_comma> Y (\<phi>arg ()) \<longmapsto> 0 \<rbrace>
+    \<throws> (\<lambda>_. Brking_Frame label Y) \<close>
   using op_break_\<phi>app[where S=Y] .
 
 (* TODO: suppress the Frame tailing in the above rules!!!!
 lemma RETURN_FRAME_normal:
   \<open> RETURN_FRAME TYPE('rets) label Y
-\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret\<heavy_comma> TECHNICAL Brk_Frame label
-\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> State \<longmapsto> 0 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
+\<Longrightarrow> State \<transforms> Y ret\<heavy_comma> TECHNICAL Brk_Frame label
+\<Longrightarrow> \<proc> (op_break TYPE('any) TYPE('rets) label ret) \<lbrace> State \<longmapsto> 0 \<rbrace>
+    \<throws> (\<lambda>_. Brking_Frame label Y) \<close>
   for ret :: \<open>'rets::FIX_ARITY_VALs \<phi>arg\<close>
 \<medium_left_bracket> premises _ and Tr 
   Tr
@@ -42,9 +42,9 @@ term \<open>Identity_Elements\<close>
 
 lemma RETURN_FRAME_unit:
   \<open> RETURN_FRAME TYPE(unit) label Y
-\<Longrightarrow> State \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y (\<phi>arg ())\<heavy_comma> TECHNICAL Brk_Frame label
-\<Longrightarrow> \<p>\<r>\<o>\<c> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> State \<longmapsto> 0 \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label Y) \<close>
+\<Longrightarrow> State \<transforms> Y (\<phi>arg ())\<heavy_comma> TECHNICAL Brk_Frame label
+\<Longrightarrow> \<proc> (op_break TYPE('any) TYPE(unit) label (\<phi>arg ())) \<lbrace> State \<longmapsto> 0 \<rbrace>
+    \<throws> (\<lambda>_. Brking_Frame label Y) \<close>
 \<medium_left_bracket> premises _ and Tr
   Tr
   apply_rule op_break_\<phi>app[where S=Y]
@@ -67,10 +67,10 @@ proc op_routine:
       and  \<open>\<r>Success\<close>
       and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
             return_\<phi>app\<^bold>: TECHNICAL(RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret Y)
-            \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs)
+            \<Longrightarrow> \<proc> F label_ret (case_named (\<lambda>x. x) vs)
                    \<lbrace> TECHNICAL Brk_Frame label_ret\<heavy_comma> X (case_named id vs)
                  \<longmapsto> \<lambda>ret. TECHNICAL Brk_Frame label_ret\<heavy_comma> Y ret
-                   \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<b>\<r>\<e>\<a>\<k> label_ret \<w>\<i>\<t>\<h> Y \<o>\<r> E e))\<close>
+                   \<rbrace> \<throws> (\<lambda>e. \<break> label_ret \<with> Y \<or'> E e))\<close>
   input  \<open>X vs\<close>
   output \<open>Y\<close>
   throws \<open>E\<close>
@@ -105,9 +105,9 @@ hide_fact RETURN_FRAME_normal RETURN_FRAME_unit
 subsection \<open>Syntax\<close>
 
 syntax "_routine_" :: \<open>idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> do_binds \<Rightarrow> do_bind\<close>
-          ("((2\<r>\<o>\<u>\<t>\<i>\<n>\<e> '(_ : _') : _ {//)(_)//})" [12,12,100,12] 13)
+          ("((2\<routine> '(_ : _') : _ {//)(_)//})" [12,12,100,12] 13)
        "_recursive_routine_" :: \<open>idt \<Rightarrow> idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> do_binds \<Rightarrow> do_bind\<close>
-          ("((2\<r>\<e>\<c>\<u>\<r>\<s>\<i>\<v>\<e>-\<r>\<o>\<u>\<t>\<i>\<n>\<e> _ '(_ : _') : _ {//)(_)//})")
+          ("((2\<recursive>-\<routine> _ '(_ : _') : _ {//)(_)//})")
 
 print_ast_translation \<open>let open Ast
   fun get_label (Appl [Constant "_constrain", BV, _]) = get_label BV

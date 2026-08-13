@@ -83,7 +83,7 @@ section \<open>\<phi>-Type\<close>
        and Functionality
        and \<open>Semantic_Zero_Val \<b>\<o>\<o>\<l> \<bool> False\<close>
        and Inhabited
-       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> \<bool> = \<b>\<o>\<o>\<l>\<close>
+       and \<open>\<typeof> \<bool> = \<b>\<o>\<o>\<l>\<close>
        and Equiv_Class
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
@@ -106,30 +106,30 @@ subsection \<open>Constant\<close>
 
 lemma op_const_bool_\<phi>app[\<phi>synthesis for \<open>\<lambda>v. True \<Ztypecolon> ?T v\<close> (1200) and \<open>\<lambda>v. False \<Ztypecolon> ?T v\<close> (1200)]:
   \<open> Is_Literal b
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_const_bool b \<lbrace> Void \<longmapsto> \<v>\<a>\<l> b \<Ztypecolon> \<bool> \<rbrace>\<close>
+\<Longrightarrow> \<proc> op_const_bool b \<lbrace> Void \<longmapsto> \<val> b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_const_bool_def
   by (rule, simp)
 
 lemma True_\<phi>app:
-  \<open>\<p>\<r>\<o>\<c> op_const_bool True \<lbrace> Void \<longmapsto> \<v>\<a>\<l> True \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<proc> op_const_bool True \<lbrace> Void \<longmapsto> \<val> True \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>.
 
 lemma False_\<phi>app:
-  \<open>\<p>\<r>\<o>\<c> op_const_bool False \<lbrace> Void \<longmapsto> \<v>\<a>\<l> False \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<proc> op_const_bool False \<lbrace> Void \<longmapsto> \<val> False \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> \<open>False\<close> \<medium_right_bracket>.
 
 
 subsection \<open>Not\<close>
 
 lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
-  \<open>\<p>\<r>\<o>\<c> op_not raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<bool> \<longmapsto> \<v>\<a>\<l> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<proc> op_not raw \<lbrace> x \<Ztypecolon> \<val>[raw] \<bool> \<longmapsto> \<val> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
   by (cases raw, simp, rule, simp, rule,  simp)
 
 subsection \<open>And\<close>
 
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
-  \<open>\<p>\<r>\<o>\<c> op_and (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<proc> op_and (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<val>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<val>[vb] \<bool> \<longmapsto> \<val> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
   by (cases va; cases vb; simp, rule, rule, simp, rule, simp, rule, simp)
 
@@ -137,31 +137,31 @@ lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
 subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
-  \<open>\<p>\<r>\<o>\<c> op_or (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<proc> op_or (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<val>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<val>[vb] \<bool> \<longmapsto> \<val> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
   by (cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp)
 
 subsection \<open>Xor\<close>
 
 lemma op_xor[\<phi>overload \<oplus>, \<phi>synthesis 100]:
-  \<open>\<p>\<r>\<o>\<c> op_xor (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> \<not> b \<or> \<not> a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<proc> op_xor (va\<^bold>, vb) \<lbrace> a \<Ztypecolon> \<val>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<val>[vb] \<bool> \<longmapsto> \<val> (a \<and> \<not> b \<or> \<not> a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_xor_def
   by (cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp)
 
 subsection \<open>Equal\<close>
 
 declare [[
-    overloaded_operator_in_synthesis \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>,
+    overloaded_operator_in_synthesis \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<val>[v] \<bool>\<close>,
     overloaded_operator_in_synthesis
-        \<open>\<lambda>v. x mod N \<Ztypecolon> T v\<close> \<open>\<lambda>v. y mod N \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x mod N = y mod N \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>
+        \<open>\<lambda>v. x mod N \<Ztypecolon> T v\<close> \<open>\<lambda>v. y mod N \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x mod N = y mod N \<Ztypecolon> \<val>[v] \<bool>\<close>
 ]]
 
 lemma op_equal_\<phi>app[\<phi>overload =]:
   \<open> \<phi>Equal T can_eq eq
 \<Longrightarrow> Semantic_Type' (a \<Ztypecolon> T) TY
 \<Longrightarrow> Semantic_Type' (b \<Ztypecolon> T) TY
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> can_eq a b
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_equal TY (\<phi>V_pair rawa rawb) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[rawa] T\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
+\<Longrightarrow> \<premise> can_eq a b
+\<Longrightarrow> \<proc> op_equal TY (\<phi>V_pair rawa rawb) \<lbrace> a \<Ztypecolon> \<val>[rawa] T\<heavy_comma> b \<Ztypecolon> \<val>[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<val> \<bool> \<rbrace>\<close>
   unfolding op_equal_def
   by ((cases rawa; cases rawb; simp, rule, rule),
       simp add: Semantic_Type'_def subset_iff Premise_def,

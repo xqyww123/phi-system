@@ -23,7 +23,7 @@ end
 
 structure Generic_Element_Access : GENERIC_ELEMENT_ACCESS = struct
 
-val EIHook_none = \<^cterm>\<open>\<E>\<I>\<H>\<O>\<O>\<K>_none\<close>
+val EIHook_none = \<^cterm>\<open>EIHOOK_none\<close>
                |> Thm.trim_context_cterm
 
 (*** Get Element of Abstract Object ***)

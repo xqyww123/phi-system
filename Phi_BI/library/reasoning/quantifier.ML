@@ -63,11 +63,11 @@ fun quick_check quantifier =
   end
 
 val ExBI_boolean_Ex_lift = @{lemma
-        \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y)) \<equiv> (A x \<s>\<u>\<b>\<j> x y. P x y) \<close>
+        \<open> (A x \<subj> x. (\<exists>y. P x y)) \<equiv> (A x \<subj> x y. P x y) \<close>
         by (unfold BI_eq_iff atomize_eq, clarsimp)}
 
 val ExBI_boolean_Ex_lift' = @{lemma
-        \<open> (A x \<s>\<u>\<b>\<j> x. (\<exists>y. P x y) \<and> Q x) \<equiv> (A x \<s>\<u>\<b>\<j> x y. P x y \<and> Q x) \<close>
+        \<open> (A x \<subj> x. (\<exists>y. P x y) \<and> Q x) \<equiv> (A x \<subj> x y. P x y \<and> Q x) \<close>
         by (unfold BI_eq_iff atomize_eq, clarsimp)}
 
 fun sink_Ex_quantifier C =
@@ -226,7 +226,7 @@ structure BI_Quantifiers = Quantifier1 (
   val imp  = HOLogic.imp
 
   val iff_reflection = @{thm' eq_reflection}
-  val ex_iffI = @{lemma' \<open>(P \<Longrightarrow> Q) \<Longrightarrow> (Q \<Longrightarrow> P) \<Longrightarrow> (A \<s>\<u>\<b>\<j> P) = (A \<s>\<u>\<b>\<j> Q)\<close>
+  val ex_iffI = @{lemma' \<open>(P \<Longrightarrow> Q) \<Longrightarrow> (Q \<Longrightarrow> P) \<Longrightarrow> (A \<subj> P) = (A \<subj> Q)\<close>
                      by (simp add: BI_eq_iff, blast)}
   val iff_trans = @{thm' trans}
   val conjI= @{thm' conjI}

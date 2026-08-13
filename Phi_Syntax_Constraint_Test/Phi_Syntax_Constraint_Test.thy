@@ -50,8 +50,8 @@ text \<open>If Isabelle ever changes when it wraps a head, this section fires fi
 
 ML \<open>
 val _ = expect "notated head is wrapped"      "[pos]\<phi>Type"  (head_report (pre \<open>x \<Ztypecolon> T\<close>))
-val _ = expect "nested notated head"          "[pos]Val"    (head_report (pre \<open>\<v>\<a>\<l>[v] T\<close>))
-val _ = expect "rule-borne head stays bare"   "Val"         (head_report (pre \<open>\<v>\<a>\<l> T\<close>))
+val _ = expect "nested notated head"          "[pos]Val"    (head_report (pre \<open>\<val>[v] T\<close>))
+val _ = expect "rule-borne head stays bare"   "Val"         (head_report (pre \<open>\<val> T\<close>))
 \<close>
 
 subsection \<open>B. value collection -- \<^ML>\<open>Procedure_Syntax.translate_ret\<close>\<close>
@@ -74,11 +74,11 @@ fun ret_arity_of t =
 
 fun ret_arity src = ret_arity_of (pre src)
 
-val _ = expect "direct      [v]"           "1" (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T\<close>)
-val _ = expect "rule-borne  \<v>\<a>\<l>"           "1" (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>)
-val _ = expect "two direct  [v] [w]"       "2" (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[w] U\<close>)
-val _ = expect "mixed       \<v>\<a>\<l> [v] \<v>\<a>\<l>"   "3" (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v] U\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l> W\<close>)
-val _ = expect "two rule-borne"            "2" (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>)
+val _ = expect "direct      [v]"           "1" (ret_arity \<open>x \<Ztypecolon> \<val>[v] T\<close>)
+val _ = expect "rule-borne  \<val>"           "1" (ret_arity \<open>x \<Ztypecolon> \<val> T\<close>)
+val _ = expect "two direct  [v] [w]"       "2" (ret_arity \<open>x \<Ztypecolon> \<val>[v] T\<heavy_comma> y \<Ztypecolon> \<val>[w] U\<close>)
+val _ = expect "mixed       \<val> [v] \<val>"   "3" (ret_arity \<open>x \<Ztypecolon> \<val> T\<heavy_comma> y \<Ztypecolon> \<val>[v] U\<heavy_comma> z \<Ztypecolon> \<val> W\<close>)
+val _ = expect "two rule-borne"            "2" (ret_arity \<open>x \<Ztypecolon> \<val> T\<heavy_comma> y \<Ztypecolon> \<val> U\<close>)
 
 (*A value name written twice yields TWO components, not one, because the two occurrences carry
   different source positions and the collected entries are compared verbatim.  That is inherited
@@ -86,7 +86,7 @@ val _ = expect "two rule-borne"            "2" (ret_arity \<open>x \<Ztypecolon>
   \<^ML>\<open>Free\<close>, and Isabelle2024 already made two such occurrences unequal.  It is pinned here so that a
   later attempt to normalize positions away -- which would merge the two and silently halve the
   procedure's arity -- cannot pass unnoticed.*)
-val _ = expect "same name twice"           "2" (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v] U\<close>)
+val _ = expect "same name twice"           "2" (ret_arity \<open>x \<Ztypecolon> \<val>[v] T\<heavy_comma> y \<Ztypecolon> \<val>[v] U\<close>)
 \<close>
 
 text \<open>and the split is caused by the positions alone: peel every positional wrapper off the parsed
@@ -97,7 +97,7 @@ text \<open>and the split is caused by the positions alone: peel every positiona
 ML \<open>
 val _ = expect "same name twice, positions peeled" "1"
           (ret_arity_of (Phi_Syntax_Constraint.strip_pos_deep
-                          (pre \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v] U\<close>)))
+                          (pre \<open>x \<Ztypecolon> \<val>[v] T\<heavy_comma> y \<Ztypecolon> \<val>[v] U\<close>)))
 \<close>
 
 subsection \<open>C. the \<open>\<a>\<r>\<g>i\<close> naming -- a user-facing interface\<close>
@@ -114,15 +114,15 @@ fun arg_names src =
                              | _ => I) t []
    in commas (rev ns) end
 
-val _ = expect "one anonymous"       "\<a>\<r>\<g>1"              (arg_names \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>)
+val _ = expect "one anonymous"       "\<a>\<r>\<g>1"              (arg_names \<open>x \<Ztypecolon> \<val> T\<close>)
 val _ = expect "three anonymous"     "\<a>\<r>\<g>1, \<a>\<r>\<g>2, \<a>\<r>\<g>3"
-          (arg_names \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<heavy_comma> z \<Ztypecolon> \<v>\<a>\<l> W\<close>)
-val _ = expect "named ones skipped"  "\<a>\<r>\<g>1"              (arg_names \<open>x \<Ztypecolon> \<v>\<a>\<l>[w] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>)
+          (arg_names \<open>x \<Ztypecolon> \<val> T\<heavy_comma> y \<Ztypecolon> \<val> U\<heavy_comma> z \<Ztypecolon> \<val> W\<close>)
+val _ = expect "named ones skipped"  "\<a>\<r>\<g>1"              (arg_names \<open>x \<Ztypecolon> \<val>[w] T\<heavy_comma> y \<Ztypecolon> \<val> U\<close>)
 \<close>
 
 subsection \<open>D. \<^const>\<open>anonymous\<close> spelled out\<close>
 
-text \<open>\<open>\<v>\<a>\<l> T\<close> expands to \<open>Val anonymous T\<close> through a translation rule, so its \<^const>\<open>anonymous\<close>
+text \<open>\<open>\<val> T\<close> expands to \<open>Val anonymous T\<close> through a translation rule, so its \<^const>\<open>anonymous\<close>
       arrives bare.  Written literally it arrives wrapped instead.  The two must behave alike: the
       classifier that decides "this is an anonymous value" and the scan that later looks the value
       up in the collected list have to agree, or the lookup walks straight past the entry the
@@ -132,29 +132,29 @@ ML \<open>
 val _ = expect "anonymous written out is wrapped" "[pos]anonymous"
           (head_report (pre \<open>anonymous\<close>))
 
-val _ = expect "literal anonymous, alone"     "1" (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l>[anonymous] T\<close>)
-val _ = expect "literal anonymous, then \<v>\<a>\<l>"   "2"
-          (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l>[anonymous] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>)
+val _ = expect "literal anonymous, alone"     "1" (ret_arity \<open>x \<Ztypecolon> \<val>[anonymous] T\<close>)
+val _ = expect "literal anonymous, then \<val>"   "2"
+          (ret_arity \<open>x \<Ztypecolon> \<val>[anonymous] T\<heavy_comma> y \<Ztypecolon> \<val> U\<close>)
 val _ = expect "two literal anonymous"        "2"
-          (ret_arity \<open>x \<Ztypecolon> \<v>\<a>\<l>[anonymous] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[anonymous] U\<close>)
+          (ret_arity \<open>x \<Ztypecolon> \<val>[anonymous] T\<heavy_comma> y \<Ztypecolon> \<val>[anonymous] U\<close>)
 val _ = expect "literal anonymous is named"   "\<a>\<r>\<g>1"
-          (arg_names \<open>x \<Ztypecolon> \<v>\<a>\<l>[anonymous] T\<close>)
+          (arg_names \<open>x \<Ztypecolon> \<val>[anonymous] T\<close>)
 \<close>
 
-subsection \<open>E. \<open>\<s>\<u>\<b>\<j> \<top>\<close> is a plain existential\<close>
+subsection \<open>E. \<open>\<subj> \<top>\<close> is a plain existential\<close>
 
-text \<open>The parse translation for \<open>\<s>\<u>\<b>\<j>\<close> drops the side condition when it is \<^const>\<open>top\<close>.  When
-      the test stopped matching, \<open>A \<s>\<u>\<b>\<j> x. \<top>\<close> kept a \<^const>\<open>Subjection\<close> node, which no longer
+text \<open>The parse translation for \<open>\<subj>\<close> drops the side condition when it is \<^const>\<open>top\<close>.  When
+      the test stopped matching, \<open>A \<subj> x. \<top>\<close> kept a \<^const>\<open>Subjection\<close> node, which no longer
       matches the pattern the simplification procedure for embedded existentials destructures --
       so the procedure quietly stopped firing, in a session that still built green.\<close>
 
 ML \<open>
 val _ = expect "subj-top is EX*" "true"
-          (@{make_string} (Term.aconv_untyped (\<^term>\<open>A \<s>\<u>\<b>\<j> x. \<top>\<close>, \<^term>\<open>\<exists>*x. A\<close>)))
+          (@{make_string} (Term.aconv_untyped (\<^term>\<open>A \<subj> x. \<top>\<close>, \<^term>\<open>\<exists>*x. A\<close>)))
 
 val _ = expect "and it has the shape the embedded-existential procedure expects" "true"
           (@{make_string}
-            (case \<^pattern>\<open>_ \<Ztypecolon> _ \<s>\<u>\<b>\<j> x. \<top>\<close> of
+            (case \<^pattern>\<open>_ \<Ztypecolon> _ \<subj> x. \<top>\<close> of
                Const (\<^const_name>\<open>ExBI\<close>, _) $
                  Abs (_, _, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) => true
              | _ => false))

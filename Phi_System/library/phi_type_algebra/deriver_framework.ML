@@ -178,7 +178,7 @@ val deriving_framework :
       <some optional antecedents, but no induction will be applied on them> \<Longrightarrow>
       \<r>Success (*terminates the deriving successfully*)
     ) (*repeats as a deriving can invole multiple subgoals*) \<Longrightarrow>
-    \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True (*stores the generated proof obligations*) \<Longrightarrow>
+    \<obligation> True (*stores the generated proof obligations*) \<Longrightarrow>
     <derived property>`
 
   A deriving may contain multiple subgoals, and for each subgoal, a configure describes it.
@@ -2059,7 +2059,7 @@ fun pure_PLPR_reasoning num ctxt sequent =
 
 fun pure_PLPR_reasoner ctxt sequent =
   case sequent
-    |> Thm.implies_intr \<^cprop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
+    |> Thm.implies_intr \<^cprop>\<open>\<obligation> True\<close>
     |> Thm.implies_intr \<^cprop>\<open>\<r>Success\<close>
     |> Thm.permute_prems 0 2
     |> Phi_Reasoner.reason NONE NONE ctxt

@@ -40,7 +40,7 @@ section \<open>\<phi>-Types\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and Functionality
-       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Symbol = \<s>\<y>\<m>\<b>\<o>\<l>\<close>
+       and \<open>\<typeof> Symbol = \<s>\<y>\<m>\<b>\<o>\<l>\<close>
        and \<open>Semantic_Zero_Val \<s>\<y>\<m>\<b>\<o>\<l> Symbol SYMBOL(zero)\<close>
        and Inhabited
        and Equiv_Class
@@ -57,13 +57,13 @@ text \<open>There is no semantic instruction to make a symbol, because they are 
   known during compilation time.\<close>
 
 lemma [\<phi>reason %\<phi>synthesis_literal]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_symbol s)] Symbol \<r>\<e>\<m>\<a>\<i>\<n>\<s> X @tag synthesis\<close>
+  \<open>X \<transforms> s \<Ztypecolon> \<val>[semantic_literal (sem_mk_symbol s)] Symbol \<remains> X @tag synthesis\<close>
   for X :: assn
   unfolding Transformation_def semantic_literal_def Action_Tag_def
   by clarsimp
 
 lemma "_intro_symbol_":
-  \<open>S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[semantic_literal (sem_mk_symbol s)] Symbol\<close>
+  \<open>S \<transforms> S \<heavy_comma> s \<Ztypecolon> \<val>[semantic_literal (sem_mk_symbol s)] Symbol\<close>
   unfolding Transformation_def semantic_literal_def
   by clarsimp
 

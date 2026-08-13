@@ -288,17 +288,17 @@ val _ = Theory.setup (Context.theory_map (Syntax_Phases.term_check ~110 "\<phi>-
 (*** Basic Operations about Local Values ***)
 
 val value_extraction_rule_no_remove =
-  @{lemma' \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
+  @{lemma' \<open>x \<Ztypecolon> \<val>[v] T \<transforms> x \<Ztypecolon> \<val>[v] T \<with> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
         by (simp add: Transformation_def)}
 
 val value_extraction_rule_remove =
-  @{lemma' \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
+  @{lemma' \<open>x \<Ztypecolon> \<val>[v] T \<transforms> Void \<with> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
         by (simp add: Transformation_def)}
 
 val implies_prod_left_1 = @{lemma
-  \<open> L' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q
-\<Longrightarrow> L' * R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (R::'a::sep_magma_1 BI) \<w>\<i>\<t>\<h> P \<and> Q \<close>
+  \<open> L' \<transforms> 1 \<with> P
+\<Longrightarrow> R' \<transforms> R \<with> Q
+\<Longrightarrow> L' * R' \<transforms> (R::'a::sep_magma_1 BI) \<with> P \<and> Q \<close>
   by (unfold Transformation_def split_paired_All, fastforce)}
 
 fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true
@@ -383,8 +383,8 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
 
 val rule_push_a_value =
   @{lemma' \<open>  \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
-          \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B
-          \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<v>\<a>\<l>[v] T) * B \<close>
+          \<Longrightarrow> A \<transforms> B
+          \<Longrightarrow> A \<transforms> (x \<Ztypecolon> \<val>[v] T) * B \<close>
       for A :: \<open>'a::sep_magma_1 BI\<close>
        by (clarsimp simp add: Action_Tag_def Transformation_def)}
 

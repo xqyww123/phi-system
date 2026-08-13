@@ -1,6 +1,6 @@
 theory PhiSem_Aggregate_Named_Tuple
   imports PhSm_Ag_Base
-  abbrevs "<struct>" = "\<s>\<t>\<r>\<u>\<c>\<t>"
+  abbrevs "<struct>" = "\<struct>"
 begin
 
 section \<open>Semantics\<close>
@@ -69,12 +69,12 @@ lemma has_Zero_semty_ntup0 [simp]:
 
 subsubsection \<open>Syntax\<close>
 
-abbreviation "semty_ntup_empty" ("\<s>\<t>\<r>\<u>\<c>\<t> {}")
+abbreviation "semty_ntup_empty" ("\<struct> {}")
   where \<open>semty_ntup_empty \<equiv> semty_ntup fmempty\<close>
 
 notation semty_ntup_empty ("struct{}")
      and semty_ntup_empty ("S{}")
-     and semty_ntup_empty ("\<s>\<t>\<r>\<u>\<c>\<t> { }")
+     and semty_ntup_empty ("\<struct> { }")
 
 nonterminal semty_ntup_args and semty_ntup_arg
 
@@ -84,7 +84,7 @@ syntax "semty_ntup_arg" :: \<open>\<phi>_symbol_ \<Rightarrow> logic \<Rightarro
 
        "_semty_ntup" :: \<open>semty_ntup_args \<Rightarrow> logic\<close> ("struct{_}" [50] 999)
        "_semty_ntup" :: \<open>semty_ntup_args \<Rightarrow> logic\<close> ("S{_}" [50] 999)
-       "_semty_ntup" :: \<open>semty_ntup_args \<Rightarrow> logic\<close> ("\<s>\<t>\<r>\<u>\<c>\<t> {_}" [50] 999)
+       "_semty_ntup" :: \<open>semty_ntup_args \<Rightarrow> logic\<close> ("\<struct> {_}" [50] 999)
 
 parse_translation \<open>[
   (\<^syntax_const>\<open>_semty_ntup\<close>, fn ctxt => fn [args] =>
@@ -223,20 +223,20 @@ lemma semty_ntup_neq_poison[simp]:
   by (metis domIff fmdom.rep_eq fmdom_fmupd fmlookup_ran_iff fmupd_lookup option.simps(1))
 
 lemma semty_ntup_neq_poison0[simp]:
-  \<open> \<s>\<t>\<r>\<u>\<c>\<t> { } \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> \<struct> { } \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
   unfolding semty_ntup_eq_poison
   by clarsimp
 
 lemma
-  \<open>\<s>\<t>\<r>\<u>\<c>\<t>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>} = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>\<struct>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>} = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   by simp
 
 lemma
-  \<open>P (\<s>\<t>\<r>\<u>\<c>\<t>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>P (\<struct>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   by simp
 
 lemma
-  \<open>\<s>\<t>\<r>\<u>\<c>\<t>{a: \<b>\<o>\<o>\<l>, b: \<b>\<o>\<o>\<l>, c: \<b>\<o>\<o>\<l>} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>\<struct>{a: \<b>\<o>\<o>\<l>, b: \<b>\<o>\<o>\<l>, c: \<b>\<o>\<o>\<l>} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
   by simp
 
 
@@ -254,7 +254,7 @@ subsection \<open>Empty Tuple\<close>
        and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Named_Tuple\<close>
        and Inhabited
-       and \<open>\<t>\<y>\<p>\<e>\<o>\<f> Empty_Named_Tuple = \<s>\<t>\<r>\<u>\<c>\<t> { }\<close>
+       and \<open>\<typeof> Empty_Named_Tuple = \<struct> { }\<close>
 
 \<phi>adhoc_overloading \<phi>_Empty_Tuple_sugar Empty_Named_Tuple
 
@@ -297,8 +297,8 @@ print_translation \<open>[
 
 subsubsection \<open>Properties\<close>
 
-lemma \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 [simp, \<phi>type_property Named_Tuple_Field Semantic_Type]:
-  \<open> \<t>\<y>\<p>\<e>\<o>\<f> \<lbrace> SYMBOL_VAR(s): T \<rbrace> = \<s>\<t>\<r>\<u>\<c>\<t> {SYMBOL_VAR(s): \<t>\<y>\<p>\<e>\<o>\<f> T} \<close> 
+lemma typeof_ntup_1 [simp, \<phi>type_property Named_Tuple_Field Semantic_Type]:
+  \<open> \<typeof> \<lbrace> SYMBOL_VAR(s): T \<rbrace> = \<struct> {SYMBOL_VAR(s): \<typeof> T} \<close> 
   unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def Semantic_Type_def
   apply auto
   apply (smt (z3) WT_named_tup Well_Type_unique exE_some fmempty_transfer fmrel_upd mem_Collect_eq)
@@ -328,9 +328,9 @@ definition Named_Tuple_Types :: \<open>(VAL, 'x) \<phi> \<Rightarrow> (symbol, T
         (\<forall>x c. c \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>vf. c = sem_mk_ntup vf \<and> fmrel (\<lambda>t v. v \<in> Well_Type t) Tys vf)))
 )\<close>
 
-lemma \<t>\<y>\<p>\<e>\<o>\<f>_ntup:
+lemma typeof_ntup:
   \<open> Named_Tuple_Types T Tys
-\<Longrightarrow> \<t>\<y>\<p>\<e>\<o>\<f> T \<equiv> semty_ntup Tys \<close>
+\<Longrightarrow> \<typeof> T \<equiv> semty_ntup Tys \<close>
   unfolding Named_Tuple_Types_def SType_Of_def atomize_eq Semantic_Type_def
   by (auto simp: semty_ntup_eq_poison,
       metis semty_ntup_eq_poison,
@@ -351,19 +351,19 @@ lemma Named_Tuple_Types_0:
 
 
 lemma Named_Tuple_Types_1:
-  \<open> Named_Tuple_Types \<lbrace> SYMBOL_VAR(s): T \<rbrace> (fmupd s (\<t>\<y>\<p>\<e>\<o>\<f> T) fmempty) \<close>
+  \<open> Named_Tuple_Types \<lbrace> SYMBOL_VAR(s): T \<rbrace> (fmupd s (\<typeof> T) fmempty) \<close>
   unfolding Named_Tuple_Types_def
   apply auto
   using SType_Of_not_poison semty_ntup_eq_poison apply fastforce
-  apply (metis Named_Tuple_Field.expansion \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 SType_Of_not_poison semty_ntup_eq_poison)
-  apply (metis Named_Tuple_Field.expansion SType_Of_not_poison \<t>\<y>\<p>\<e>\<o>\<f>_ntup_1 semty_ntup_eq_poison)
+  apply (metis Named_Tuple_Field.expansion typeof_ntup_1 SType_Of_not_poison semty_ntup_eq_poison)
+  apply (metis Named_Tuple_Field.expansion SType_Of_not_poison typeof_ntup_1 semty_ntup_eq_poison)
   by (metis SType_Of_not_poison fmempty_transfer fmlookup_ran_iff fmrel_upd fmupd_lookup)
 
 
 lemma Named_Tuple_Types_N:
   \<open> Named_Tuple_Types U Tys
 \<Longrightarrow> s |\<notin>| fmdom Tys
-\<Longrightarrow> Named_Tuple_Types (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) (fmupd s (\<t>\<y>\<p>\<e>\<o>\<f> T) Tys) \<close>
+\<Longrightarrow> Named_Tuple_Types (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) (fmupd s (\<typeof> T) Tys) \<close>
   unfolding Named_Tuple_Types_def Inhabited_def Satisfiable_def
 apply auto
   using semty_ntup_eq_poison semty_ntup_neq_poison apply force
@@ -385,7 +385,7 @@ apply auto
       using fmrel_fmdom_eq prems(1) t1 by blast
     obtain t' Ts' where t4: \<open>TYa = semty_ntup (fmupd s t' Ts') \<and> fmrel (\<lambda>t v. v \<in> Well_Type t) Ts' vf \<and> xa \<in> Well_Type t'\<close>
       using semty_ntup_uniq'2 t2 t3 by presburger
-    have t5: \<open>\<t>\<y>\<p>\<e>\<o>\<f> T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+    have t5: \<open>\<typeof> T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
       using prems(1) prems(10) prems(3) semty_ntup_eq_poison semty_ntup_neq_poison by force
     have t6: \<open>\<not> Inhabited T \<or> (\<forall>TY. \<exists>x v. v \<Turnstile> (x \<Ztypecolon> T) \<and> v \<notin> Well_Type TY)\<close>
       by (metis SType_Of_not_poison t5)
@@ -410,9 +410,9 @@ apply auto
   using semty_ntup_eq_poison semty_ntup_neq_poison by force
 
 
-simproc_setup \<t>\<y>\<p>\<e>\<o>\<f>_ntup (\<open>\<t>\<y>\<p>\<e>\<o>\<f> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U)\<close>) = \<open>
+simproc_setup typeof_ntup (\<open>\<typeof> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U)\<close>) = \<open>
   fn _ => fn ctxt => fn ctm =>
-    Drule.infer_instantiate ctxt [(("T",0), Thm.dest_arg ctm)] @{thm' \<t>\<y>\<p>\<e>\<o>\<f>_ntup}
+    Drule.infer_instantiate ctxt [(("T",0), Thm.dest_arg ctm)] @{thm' typeof_ntup}
       |> REPEAT_DETERM (resolve_tac ctxt @{thms' Named_Tuple_Types_N Named_Tuple_Types_1} 1)
       |> Seq.pull
       |> Option.map fst
@@ -439,7 +439,7 @@ lemma Empty_Tuple_reduce[simp]:
 lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   \<open> Semantic_Zero_Val ty T x
 \<Longrightarrow> Semantic_Zero_Val (semty_ntup tys) Ts xs
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[\<s>\<a>\<f>\<e>] s |\<notin>| fmdom tys
+\<Longrightarrow> \<condition>[\<safe>] s |\<notin>| fmdom tys
 \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty tys)) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding Semantic_Zero_Val_def Premise_def
   apply (clarsimp; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>)
@@ -487,13 +487,13 @@ lemma Is_Named_Tuple_comp[\<phi>reason add]:
 subsection \<open>Semantics Related\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx+20]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s = s'
+  \<open> \<guard> \<condition> s = s'
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup (fmupd s TY Tys)) TY \<close>
   unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s \<noteq> s'
+  \<open> \<guard> \<condition> s \<noteq> s'
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup Tys) RET
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup (fmupd s TY Tys)) RET \<close>
   unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
@@ -509,7 +509,7 @@ lemma [\<phi>reason %chk_sem_ele_idx+20]:
 lemma [\<phi>reason %inhabited+10]:
   \<open> Inhabited T
 \<Longrightarrow> Is_Named_Tuple Ts fields
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
+\<Longrightarrow> \<condition> s |\<notin>| fields
 \<Longrightarrow> Inhabited Ts
 \<Longrightarrow> Inhabited (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) \<close>
   unfolding subset_iff Premise_def Inhabited_def Satisfiable_def Semantic_Type_def Is_Named_Tuple_def
@@ -534,7 +534,7 @@ lemma V_named_tup_sep_disj_R':
 
 lemma [\<phi>reason add]:
   \<open> Is_Named_Tuple Ts fields
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
+\<Longrightarrow> \<condition> s |\<notin>| fields
 \<Longrightarrow> Equiv_Class T r\<^sub>1
 \<Longrightarrow> Equiv_Class U r\<^sub>2
 \<Longrightarrow> Equiv_Class (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U) (rel_prod r\<^sub>1 r\<^sub>2) \<close>
@@ -568,7 +568,7 @@ lemma [\<phi>reason add]:
 subsection \<open>General\<close>
 
 lemma [\<phi>reason 2000]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s \<noteq> s'
+  \<open> \<condition> s \<noteq> s'
 \<Longrightarrow> s |\<notin>| fmdom R
 \<Longrightarrow> s |\<notin>| fmdom (fmupd s' v R) \<close>
   for s :: symbol
@@ -582,7 +582,7 @@ lemma [\<phi>reason 1200]:
 subsection \<open>Index\<close>
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' \<noteq> s
+  \<open> \<guard> \<condition> s' \<noteq> s
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> X) Y (f o snd)\<close>
   unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def
@@ -590,16 +590,16 @@ lemma [\<phi>reason %aggregate_access]:
   by (clarsimp, drule V_named_tup_sep_disj_R, clarsimp simp: idx_step_value_named_tup, metis idx_step_value_named_tup)
 
 lemma [\<phi>reason %aggregate_access+1]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
+  \<open> \<guard> \<condition> s' = s
 \<Longrightarrow> Is_Named_Tuple X fields
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
+\<Longrightarrow> \<condition> s |\<notin>| fields
 \<Longrightarrow> \<phi>Aggregate_Getter idx T Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> X) Y (f o fst)\<close>
   unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def Is_Named_Tuple_def
   by (clarsimp, drule V_named_tup_sep_disj_R, clarsimp simp: idx_step_value_named_tup, fastforce)
 
 lemma [\<phi>reason %aggregate_access+1]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
+  \<open> \<guard> \<condition> s' = s
 \<Longrightarrow> \<phi>Aggregate_Getter idx T Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) \<lbrace> SYMBOL_VAR(s): T \<rbrace> Y f\<close>
   unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def
@@ -608,7 +608,7 @@ lemma [\<phi>reason %aggregate_access+1]:
 
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' \<noteq> s
+  \<open> \<guard> \<condition> s' \<noteq> s
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> X) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> X') Y Y' (apsnd o f)\<close>
   unfolding \<phi>Aggregate_Mapper_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def
@@ -625,9 +625,9 @@ lemma [\<phi>reason %aggregate_access]:
   qed .
 
 lemma [\<phi>reason %aggregate_access+1]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
+  \<open> \<guard> \<condition> s' = s
 \<Longrightarrow> Is_Named_Tuple R fields
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s |\<notin>| fields
+\<Longrightarrow> \<condition> s |\<notin>| fields
 \<Longrightarrow> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) (\<lbrace> SYMBOL_VAR(s): X \<rbrace> \<^emph> R) (\<lbrace> SYMBOL_VAR(s): X' \<rbrace> \<^emph> R) Y Y' (apfst o f)\<close>
   unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def Is_Named_Tuple_def
@@ -645,7 +645,7 @@ lemma [\<phi>reason %aggregate_access+1]:
   qed .
 
 lemma [\<phi>reason %aggregate_access+1]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
+  \<open> \<guard> \<condition> s' = s
 \<Longrightarrow> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) \<lbrace> SYMBOL_VAR(s): X \<rbrace> \<lbrace> SYMBOL_VAR(s): X' \<rbrace> Y Y' f\<close>
   unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
@@ -744,17 +744,17 @@ subsection \<open>Synthesis\<close>
 declare synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U\<close> for s T U,
          \<phi>reason %\<phi>synthesis_ag_NT
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<^emph> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
+             for \<open>\<proc> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<val>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<^emph> ?U \<remains> _ \<rbrace> \<throws> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> \<rbrace>\<close>,
          \<phi>reason %\<phi>synthesis_ag_NT
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] Empty_Named_Tuple \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
+             for \<open>\<proc> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<val>[\<r>\<e>\<t>] Empty_Named_Tuple \<remains> _ \<rbrace> \<throws> _ @tag synthesis\<close>]
 
         synthesis_construct_aggregate_\<phi>app
         [where T=\<open>\<lbrace> SYMBOL_VAR(s): T \<rbrace>\<close> for s T,
          \<phi>reason %\<phi>synthesis_ag_NT
-             for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<v>\<a>\<l>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @tag synthesis\<close>]
+             for \<open>\<proc> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<val>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<remains> _ \<rbrace> \<throws> _ @tag synthesis\<close>]
 
 
 end

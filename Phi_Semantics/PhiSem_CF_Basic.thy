@@ -95,9 +95,9 @@ subsection \<open>Branch-like\<close>
 lemma sel_\<phi>app:
   \<open> Semantic_Type' (a \<Ztypecolon> A) TY
 \<Longrightarrow> Semantic_Type' (b \<Ztypecolon> B) TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_sel TY (\<phi>V_pair rawc (\<phi>V_pair rawa rawb)) \<lbrace>
-        c \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool>\<heavy_comma> a \<Ztypecolon> \<v>\<a>\<l>[rawa] A\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] B
-    \<longmapsto> (if c then a else b) \<Ztypecolon> \<v>\<a>\<l> (if c then A else B)
+\<Longrightarrow> \<proc> op_sel TY (\<phi>V_pair rawc (\<phi>V_pair rawa rawb)) \<lbrace>
+        c \<Ztypecolon> \<val>[rawc] \<bool>\<heavy_comma> a \<Ztypecolon> \<val>[rawa] A\<heavy_comma> b \<Ztypecolon> \<val>[rawb] B
+    \<longmapsto> (if c then a else b) \<Ztypecolon> \<val> (if c then A else B)
     \<rbrace>\<close>
   unfolding op_sel_def
   by ((cases rawc; cases rawb; cases rawa; cases c; simp add: Semantic_Type'_def subset_iff),
@@ -107,19 +107,19 @@ lemma sel_\<phi>app:
       rule, simp add: \<phi>expns WT_bool)
 
 lemma branch_\<phi>app:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T )
-\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F )
-\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @tag invoke_br_join)
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_if br\<^sub>T br\<^sub>F rawc \<lbrace> C \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool>\<heavy_comma> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E\<^sub>T e \<s>\<u>\<b>\<j> C) + (E\<^sub>F e \<s>\<u>\<b>\<j> \<not> C)) \<close>
+  \<open> (\<premise>   C \<longrightarrow> \<proc> br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<throws> E\<^sub>T )
+\<Longrightarrow> (\<premise> \<not> C \<longrightarrow> \<proc> br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<throws> E\<^sub>F )
+\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<transforms> Y v @tag invoke_br_join)
+\<Longrightarrow> \<proc> op_if br\<^sub>T br\<^sub>F rawc \<lbrace> C \<Ztypecolon> \<val>[rawc] \<bool>\<heavy_comma> X \<longmapsto> Y \<rbrace> \<throws> (\<lambda>e. (E\<^sub>T e \<subj> C) + (E\<^sub>F e \<subj> \<not> C)) \<close>
   unfolding op_if_def Premise_def Action_Tag_def
   by (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool;
       insert \<phi>CONSEQ view_shift_by_implication view_shift_refl; blast)
 
 proc "if":
-  requires C: \<open>\<p>\<r>\<o>\<c> cond \<lbrace> X \<longmapsto> \<v>\<a>\<l> C \<Ztypecolon> \<bool>\<heavy_comma> X1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
-      and brT: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T \<close>
-      and brF: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F \<close>
-      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y v @tag invoke_br_join)\<close>
+  requires C: \<open>\<proc> cond \<lbrace> X \<longmapsto> \<val> C \<Ztypecolon> \<bool>\<heavy_comma> X1 \<rbrace> \<throws> E \<close>
+      and brT: \<open>\<premise>   C \<longrightarrow> \<proc> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<throws> E\<^sub>T \<close>
+      and brF: \<open>\<premise> \<not> C \<longrightarrow> \<proc> brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<throws> E\<^sub>F \<close>
+      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<transforms> Y v @tag invoke_br_join)\<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
@@ -132,8 +132,8 @@ ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_
 subsection \<open>Loops\<close>
  
 lemma "__DoWhile__rule_\<phi>app":
-  " \<p>\<r>\<o>\<c> body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> (\<exists>*x'. \<v>\<a>\<l> P x' \<Ztypecolon> \<bool>\<heavy_comma> X x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_do_while body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> X x' \<s>\<u>\<b>\<j> x'. \<not> P x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E "
+  " \<proc> body \<lbrace> X x \<subj> x. P x \<longmapsto> (\<exists>*x'. \<val> P x' \<Ztypecolon> \<bool>\<heavy_comma> X x') \<rbrace> \<throws> E
+\<Longrightarrow> \<proc> op_do_while body \<lbrace> X x \<subj> x. P x \<longmapsto> X x' \<subj> x'. \<not> P x' \<rbrace> \<throws> E "
   unfolding op_do_while_def \<phi>Procedure_def
   apply (simp add: less_eq_BI_iff LooseState_expn')
   apply (rule allI impI conjI)+
@@ -153,16 +153,16 @@ lemma "__DoWhile__rule_\<phi>app":
     by blast .
   
 proc (nodef) do_while:
-  requires \<open>\<p>\<a>\<r>\<a>\<m> ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
-       and V: \<open>\<r>CALL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<w>\<i>\<t>\<h> Any\<close>
-       and B: \<open>\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x
-      \<longrightarrow> \<p>\<r>\<o>\<c> body \<lbrace> X' x \<longmapsto> (\<v>\<a>\<l> cond x' \<Ztypecolon> \<bool>\<heavy_comma> X' x' \<s>\<u>\<b>\<j> x'. invariant x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+  requires \<open>\<param> ( X' x \<subj> x. Inv: invariant x \<and> Guard: cond x)\<close>
+       and V: \<open>\<r>CALL X \<transforms> ( X' x \<subj> x. invariant x \<and> cond x) \<with> Any\<close>
+       and B: \<open>\<forall>x. \<premise> cond x \<longrightarrow> \<premise> invariant x
+      \<longrightarrow> \<proc> body \<lbrace> X' x \<longmapsto> (\<val> cond x' \<Ztypecolon> \<bool>\<heavy_comma> X' x' \<subj> x'. invariant x') \<rbrace> \<throws> E \<close>
   input  \<open>X\<close>
-  output \<open>X' x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> \<not> cond x'\<close>
+  output \<open>X' x' \<subj> x'. invariant x' \<and> \<not> cond x'\<close>
   throws E
   \<medium_left_bracket>
     apply_rule V[unfolded Action_Tag_def]
-    apply_rule "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<s>\<u>\<b>\<j> invariant x'\<close>, simplified]
+    apply_rule "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<subj> invariant x'\<close>, simplified]
     \<medium_left_bracket> B \<medium_right_bracket> !!
   \<medium_right_bracket> .
 
@@ -183,35 +183,35 @@ causing it is very difficult to recover the actual abstract guard
 *)
 
 proc while:
-  requires \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
-    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<w>\<i>\<t>\<h> Any"
-    and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> X x\<heavy_comma> R \<longmapsto> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool>\<heavy_comma> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
-    and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> X x\<heavy_comma> R \<longmapsto> X x'\<heavy_comma> R \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
+  requires \<open>\<param> ( X x \<subj> x. Inv: invariant x \<and> Guard: cond x)\<close>
+    and V: "X' \<transforms> ((X x \<remains> R) \<subj> x. invariant x) \<with> Any"
+    and C: "\<forall>x. \<premise> invariant x \<longrightarrow> \<proc> Cond \<lbrace> X x\<heavy_comma> R \<longmapsto> \<val> cond x' \<Ztypecolon> \<bool>\<heavy_comma> X x'\<heavy_comma> R \<subj> x'. invariant x' \<rbrace> \<throws> E1"
+    and B: "\<forall>x. \<premise> invariant x \<longrightarrow> \<premise> cond x \<longrightarrow> \<proc> Body \<lbrace> X x\<heavy_comma> R \<longmapsto> X x'\<heavy_comma> R \<subj> x'. invariant x' \<rbrace> \<throws> E2"
   input  \<open>X'\<close>
-  output \<open>X x\<heavy_comma> R \<s>\<u>\<b>\<j> x. invariant x \<and> \<not> cond x\<close>
+  output \<open>X x\<heavy_comma> R \<subj> x. invariant x \<and> \<not> cond x\<close>
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> V C
     branch \<medium_left_bracket>
-      do_while \<open>X vars\<heavy_comma> R \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
+      do_while \<open>X vars\<heavy_comma> R \<subj> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
       \<medium_left_bracket> B C \<medium_right_bracket>
     \<medium_right_bracket>
-    \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ;;
+    \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<subj> vars. invariant vars \<and> \<not> cond vars\<close> ;;
   \<medium_right_bracket> .
 
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>while\<close>, 3))\<close>
 
 proc (nodef) refine_while
   [unfolded \<phi>Type_def[where T=\<open>X::'a \<Rightarrow> (FIC_N \<Rightarrow> FIC) BI\<close>]]:
-  requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> Transition: f x)\<close>
-    and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<w>\<i>\<t>\<h> Any"
-    and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x\<heavy_comma> \<v>\<a>\<l> cond x \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
-    and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. x' = f x \<and> invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
+  requires \<open>\<param> (X x \<subj> x. Inv: invariant x \<and> Guard: cond x \<and> Transition: f x)\<close>
+    and V: "X' \<transforms> (X x \<remains> R) \<subj> invariant x \<with> Any"
+    and C: "\<forall>x. \<premise> invariant x \<longrightarrow> \<proc> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x\<heavy_comma> \<val> cond x \<Ztypecolon> \<bool> \<rbrace> \<throws> E1"
+    and B: "\<forall>x. \<premise> invariant x \<longrightarrow> \<premise> cond x \<longrightarrow> \<proc> Body \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x' \<subj> x'. x' = f x \<and> invariant x' \<rbrace> \<throws> E2"
   input \<open>X'\<close>
-  output \<open>R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. x' = While_Combinator.while cond f x \<and> invariant x'\<close>
+  output \<open>R\<heavy_comma> X x' \<subj> x'. x' = While_Combinator.while cond f x \<and> invariant x'\<close>
   throws \<open>E1 + E2\<close>
   apply (represent_BI_pred_in_\<phi>Type X)
   \<medium_left_bracket> V
-    while \<open>x' \<Ztypecolon> X \<s>\<u>\<b>\<j> x' i.
+    while \<open>x' \<Ztypecolon> X \<subj> x' i.
         Inv: (x' = (f ^^ i) x \<and> (\<forall>k < i. cond ((f ^^ k) x)) \<and> (\<forall>k \<le> i. invariant ((f ^^ k) x)) ) \<and>
         Guard: cond x'\<close>
     \<medium_left_bracket> C \<medium_right_bracket>
@@ -221,8 +221,8 @@ proc (nodef) refine_while
                         metis funpow.simps(2) le_SucE o_apply the_\<phi>(6) the_\<phi>lemmata(3) the_\<phi>lemmata(4)) \<semicolon>
 
     have [\<phi>reason add]:
-        \<open>\<And>y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (f ^^ y) x = While_Combinator.while cond f x
-      \<Longrightarrow> X ((f ^^ y) x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X (While_Combinator.while cond f x)\<close>
+        \<open>\<And>y. \<premise> (f ^^ y) x = While_Combinator.while cond f x
+      \<Longrightarrow> X ((f ^^ y) x) \<transforms> X (While_Combinator.while cond f x)\<close>
       by (simp add: Premise_def)
 
   \<medium_right_bracket> certified
@@ -232,9 +232,9 @@ proc (nodef) refine_while
 subsection \<open>Recursion\<close>
 
 lemma "__op_recursion_simp__":
-  "(\<And>g x' v'. (\<And>x'' v''. \<p>\<r>\<o>\<c> g v''  \<lbrace> X x'' v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x'')
-                      \<Longrightarrow> \<p>\<r>\<o>\<c> F g v' \<lbrace> X x' v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x' )
-\<Longrightarrow> \<forall>x v. \<p>\<r>\<o>\<c> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x"
+  "(\<And>g x' v'. (\<And>x'' v''. \<proc> g v''  \<lbrace> X x'' v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<throws> E x'')
+                      \<Longrightarrow> \<proc> F g v' \<lbrace> X x' v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<throws> E x' )
+\<Longrightarrow> \<forall>x v. \<proc> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<throws> E x"
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all
   apply (clarsimp simp add: SemRec_deterministic2 less_eq_BI_iff del: subsetI)
 
@@ -255,11 +255,11 @@ lemma "__op_recursion__":
       \<Longrightarrow> PROP Labelled label (Technical
           (\<And>x'' (v''::'a \<phi>arg <named> 'names).
               P x'' \<Longrightarrow>
-              \<p>\<r>\<o>\<c> g (case_named id v'') \<lbrace> case_named (X x'') v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x''))
-      \<Longrightarrow> \<p>\<r>\<o>\<c> F g (case_named id v') \<lbrace> case_named (X x') v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x' )
+              \<proc> g (case_named id v'') \<lbrace> case_named (X x'') v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<throws> E x''))
+      \<Longrightarrow> \<proc> F g (case_named id v') \<lbrace> case_named (X x') v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<throws> E x' )
 \<Longrightarrow> PROP Pure.prop (
       P x \<Longrightarrow>
-      \<p>\<r>\<o>\<c> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x
+      \<proc> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<throws> E x
 )"
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all \<phi>arg_forall \<phi>arg_All Technical_def
             Pure.prop_def
@@ -296,10 +296,10 @@ attribute_setup recursive = \<open>Scan.repeat (Scan.lift Parse.term) >> (fn var
 subsection \<open>Syntax\<close>
 
 syntax "_while_" :: \<open>do_binds \<Rightarrow> do_binds \<Rightarrow> do_binds\<close>
-                 ("((2\<w>\<h>\<i>\<l>\<e> {//(_))//(2} {//(_))//})" [11,11] 20)
+                 ("((2\<while> {//(_))//(2} {//(_))//})" [11,11] 20)
        "_if_" :: \<open>do_binds \<Rightarrow> do_binds \<Rightarrow> do_binds \<Rightarrow> do_binds\<close>
-                 ("((2\<i>\<f> {//(_))//(2} \<t>\<h>\<e>\<n> {//(_))//(2} \<e>\<l>\<s>\<e> {//(_))//})" [11,11,11] 20)
-       "_fix_point_" :: \<open>idt \<Rightarrow> idt \<Rightarrow> do_binds \<Rightarrow> do_bind\<close> ("((2\<f>\<i>\<x> _ '(_') {//)(_)//})" [100,100,10] 20)
+                 ("((2\<if> {//(_))//(2} \<then'> {//(_))//(2} \<else> {//(_))//})" [11,11,11] 20)
+       "_fix_point_" :: \<open>idt \<Rightarrow> idt \<Rightarrow> do_binds \<Rightarrow> do_bind\<close> ("((2\<fix> _ '(_') {//)(_)//})" [100,100,10] 20)
 
 optional_translations (do_notation)
 

@@ -971,18 +971,18 @@ val _ = Theory.setup (
 
 (*
 val to_cond_rewr = @{lemma \<open>
-        (A \<equiv> B) \<equiv> Trueprop (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = B)
+        (A \<equiv> B) \<equiv> Trueprop (\<condition> A = B)
   \<close> by (simp add: atomize_eq Premise_def) }
 *)
 
 val rule_refl1 = @{lemma \<open>
         T \<equiv> U
-    \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U @tag \<T>\<P>
+    \<Longrightarrow> x \<Ztypecolon> T \<transforms> x \<Ztypecolon> U @tag \<T>\<P>
   \<close> by (simp add: Action_Tag_def transformation_refl) }
 
 val rule_refl_WR = @{lemma \<open>
         T \<equiv> T'
-    \<Longrightarrow> x \<Ztypecolon> T \<OTast> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, unspec) \<Ztypecolon> (T' \<^emph> U) \<OTast> \<circle> @tag \<T>\<P>'
+    \<Longrightarrow> x \<Ztypecolon> T \<OTast> U \<transforms> (x, unspec) \<Ztypecolon> (T' \<^emph> U) \<OTast> \<circle> @tag \<T>\<P>'
   \<close> by (simp add: Action_Tag_def transformation_refl \<phi>Prod'_def \<phi>Prod_expn') }
 
 fun gen_refl_Tr term ctxt cong =

@@ -79,8 +79,8 @@ end
 
      
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
-  where \<open>(l \<Ztypecolon> List\<^sub>S 0 T) = (Void \<s>\<u>\<b>\<j> l = [])\<close>
-      | \<open>(l \<Ztypecolon> List\<^sub>S (Suc n) T) = (h \<Ztypecolon> T\<heavy_comma> l' \<Ztypecolon> List\<^sub>S n T \<s>\<u>\<b>\<j> h l'. l = h # l')\<close>
+  where \<open>(l \<Ztypecolon> List\<^sub>S 0 T) = (Void \<subj> l = [])\<close>
+      | \<open>(l \<Ztypecolon> List\<^sub>S (Suc n) T) = (h \<Ztypecolon> T\<heavy_comma> l' \<Ztypecolon> List\<^sub>S n T \<subj> h l'. l = h # l')\<close>
   deriving \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>l. list_all T\<^sub>D l \<and> length l = n)\<close>
        and Identity_Elements\<^sub>I
 
@@ -89,16 +89,16 @@ term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Ele
 
    
 \<phi>type_def List\<^sub>S'  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
-  where \<open>([] \<Ztypecolon> List\<^sub>S' n T) = (Void \<s>\<u>\<b>\<j> n = 0)\<close>
-      | \<open>(x # l \<Ztypecolon> List\<^sub>S' n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S' (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
+  where \<open>([] \<Ztypecolon> List\<^sub>S' n T) = (Void \<subj> n = 0)\<close>
+      | \<open>(x # l \<Ztypecolon> List\<^sub>S' n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S' (n - 1) T \<subj> n = length l + 1)\<close>
       deriving \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
             \<Longrightarrow> Identity_Elements\<^sub>I (List\<^sub>S' n T) (list_all T\<^sub>D) (\<lambda>x. list_all T\<^sub>P x \<and> n = length x)\<close> (*TODO: derive such n = length x*)
            and \<open>Identity_Elements\<^sub>E T T\<^sub>D
             \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S' n T) (\<lambda>x. list_all T\<^sub>D x \<and> n = length x)\<close> 
  (*\<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
-           and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = 0 \<Longrightarrow> Identity_Element\<^sub>E ([] \<Ztypecolon> List\<^sub>S n T)\<close>
+           and \<open>\<premise> n = 0 \<Longrightarrow> Identity_Element\<^sub>E ([] \<Ztypecolon> List\<^sub>S n T)\<close>
            and \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>
-           and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
+           and \<open>\<premise> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
            and*)
            and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S' n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
            (*and Object_Equiv\<^sub>O*)
@@ -125,7 +125,7 @@ declare List.\<Sigma>\<^sub>E[\<phi>reason add]
         List.\<Sigma>\<^sub>I[where c=\<open>\<lambda>_. c\<close> for c, \<phi>reason add]
 
 lemma List_\<phi>Dependent_Sum_rewr:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>set x. fst a = c)
+  \<open> \<premise> (\<forall>a\<in>set x. fst a = c)
 \<Longrightarrow> (x \<Ztypecolon> List (\<Sigma> T)) = ((c, map snd x) \<Ztypecolon> \<Sigma> p. List (T p)) \<close>
   by (rule List.\<phi>Dependent_Sum.rewr;
       simp add: Premise_def;
@@ -210,24 +210,24 @@ subsection \<open>Testing Transformations\<close>
 
 (*
 lemma
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
-\<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S] (\<Sigma> j. T j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
+  \<open> \<condition> i \<in> S
+\<Longrightarrow> (i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S] (\<Sigma> j. T j) \<transforms> ((i, f i) \<Ztypecolon> \<big_ast>\<^sub>0[i\<in>S - {i}] (\<Sigma> T)) * (f i \<Ztypecolon> T i) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 *)
 
 lemma
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S
-\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (T i)) \<close>
+  \<open> \<condition> i \<in> S
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<transforms> (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {i}] (T i)) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> i \<noteq> j
-\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {j} - {i}] (T i)) \<close>
+  \<open> \<condition> i \<in> S \<and> j \<in> S \<and> i \<noteq> j
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<transforms> (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {j} - {i}] (T i)) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> S \<and> j \<in> S \<and> k \<in> S \<and> i \<noteq> j \<and> i \<noteq> k \<and> j \<noteq> k
-\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (f k \<Ztypecolon> T k) * (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {k} - {j} - {i}] (T i)) \<close>
+  \<open> \<condition> i \<in> S \<and> j \<in> S \<and> k \<in> S \<and> i \<noteq> j \<and> i \<noteq> k \<and> j \<noteq> k
+\<Longrightarrow> f i \<Ztypecolon> \<big_ast>[i\<in>S] (T i) \<transforms> (f k \<Ztypecolon> T k) * (f j \<Ztypecolon> T j) * (f i \<Ztypecolon> T i) * (f i \<Ztypecolon> \<big_ast>[i\<in>S - {k} - {j} - {i}] (T i)) \<close>
   \<medium_left_bracket> \<medium_right_bracket> .
 
 end

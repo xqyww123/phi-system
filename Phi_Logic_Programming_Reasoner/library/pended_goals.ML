@@ -24,7 +24,7 @@ fun gen_defer_antecedent find_idx thm =
       let val idx = find_idx H L
       in
         if idx = ~1
-        then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
+        then error ("Fail to defer a proof obligation: an \<obligation> antecedent is not found.")
         else Thm.permute_prems 1 idx thm
           |> Thm.permute_prems 0 (~idx)
           |> Seq.single
@@ -35,9 +35,9 @@ val defer_antecedent = gen_defer_antecedent (fn _ => fn L => find_obligation fal
 
 val err_msg = "Bad configuration of reasoning rules!\n\
             \Some antecedents are bound on undetermined variables to be given by users in future, \
-            \which can only be used in \<d>\<o>, \<p>\<a>\<r>\<a>\<m>, \<u>\<s>\<e>\<r> and \<p>\<r>\<e>\<m>\<i>\<s>\<e>.\n\
-            \Check any variables assigned by \<p>\<a>\<r>\<a>\<m> antecedent are only used in \
-            \\<d>\<o>, \<p>\<a>\<r>\<a>\<m>, \<u>\<s>\<e>\<r> and \<p>\<r>\<e>\<m>\<i>\<s>\<e>."
+            \which can only be used in \<do>, \<param>, \<user> and \<premise>.\n\
+            \Check any variables assigned by \<param> antecedent are only used in \
+            \\<do>, \<param>, \<user> and \<premise>."
 
 fun chk_param X L idx =
   let

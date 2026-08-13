@@ -142,11 +142,11 @@ val rewr_CL = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow
                        \<equiv> (Ant \<Longrightarrow> P \<Longrightarrow> X @tag \<A>)\<close>
                      by (unfold Action_Tag_def atomize_imp)}
 
-val rewr_IH = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @tag \<phi>TA_subgoal \<A>)
-                     \<equiv> (\<And>A. Ant \<Longrightarrow> P \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)\<close>
+val rewr_IH = @{lemma \<open> Trueprop (Ant \<longrightarrow> P \<longrightarrow> (X \<transforms> Y) @tag \<phi>TA_subgoal \<A>)
+                     \<equiv> (\<And>A. Ant \<Longrightarrow> P \<Longrightarrow> A \<transforms> X \<Longrightarrow> A \<transforms> Y)\<close>
                    by (unfold Action_Tag_def atomize_imp Transformation_def, rule, blast, blast)}
 
-val rewr_ant = @{lemma \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @tag to A \<equiv> \<forall>A y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = x \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X) \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) \<close>
+val rewr_ant = @{lemma \<open> X \<transforms> y \<Ztypecolon> T \<subj> y. y = x @tag to A \<equiv> \<forall>A y. \<premise> y = x \<longrightarrow> (A \<transforms> X) \<longrightarrow> (A \<transforms> y \<Ztypecolon> T) \<close>
                     by (simp add: Transformation_def atomize_eq Action_Tag_def Premise_def, rule, blast, blast)}
 
 fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =

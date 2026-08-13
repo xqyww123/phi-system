@@ -194,7 +194,7 @@ fun TF_reasoning phi ctxt = default_reasoning true
       default_reasoning_configure
       (K (fn term =>
         let val frees = Term.add_frees term []
-                     |> filter (fn (N, _) => String.isPrefix "\<v>\<a>\<r>_" N)
+                     |> filter (fn (N, _) => String.isPrefix "var_" N)
          in SOME (map Free frees, fn frees' =>
               Term_Subst.instantiate_frees (TFrees.empty, Frees.build (fold2 (curry Frees.add) frees frees')) term)
         end))
