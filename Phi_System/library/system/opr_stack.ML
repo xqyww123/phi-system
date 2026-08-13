@@ -336,10 +336,19 @@ val _ = Theory.setup (Context.theory_map (Synt_No_Delayed_Apply.map (
 
 (** Database of Meta Operators **)
 
+(* Same policy as Operators above -- inherited entries merge silently, a genuine
+   duplicate name aborts -- but meta_opr is a function type, so `op =` does not
+   typecheck and pointer identity stands in for it: two parents that both inherited
+   one entry from a common ancestor hold the same value.  The earlier
+   `Symtab.merge (K false)` aborted on ANY key two parents share once their tables
+   were no longer the same value, i.e. on entries neither of them had touched, and
+   with a bare Symtab.DUP that names no operator. *)
 structure Meta_Opr = Theory_Data (
   type T = meta_opr Symtab.table
   val empty = Symtab.empty
-  val merge = Symtab.merge (K false)
+  val merge = Symtab.join (fn k => fn ab =>
+    if pointer_eq ab then raise Symtab.SAME
+    else error ("Duplicate meta operator " ^ quote k))
 )
 
 fun lookup_meta_opr thy = Symtab.lookup (Meta_Opr.get thy)
