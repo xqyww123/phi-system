@@ -2,8 +2,8 @@ theory PhiSem_Machine_Integer_Boolean
   imports PhiSem_Machine_Integer
 begin
 
-specification (\<b>\<o>\<o>\<l>)
-  bool_def'[discharging_semantic_debt]: \<open>\<b>\<o>\<o>\<l> = int(1)\<close> by blast
+specification (\<bool'>)
+  bool_def'[discharging_semantic_debt]: \<open>\<bool'> = int(1)\<close> by blast
 
 specification (sem_mk_bool)
   sem_mk_bool_def'[discharging_semantic_debt]: \<open>sem_mk_bool b = sem_mk_int (1, if b then 1 else 0)\<close>

@@ -5,8 +5,8 @@ theory PhiSem_Mem_Pointer
   abbrevs "+_a" = "+\<^sub>a"
       and "<Ptr>" = "\<Ptr>"
       and "<ptr>" = "\<ptr>"
-      and "<pointer-of>" = "\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<of>"
-      and "<ptrof>" = "\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<of>"
+      and "<pointer-of>" = "\<pointer>-\<of>"
+      and "<ptrof>" = "\<pointer>-\<of>"
       and "<ref>" = "\<ref>"
 begin
 
@@ -14,11 +14,11 @@ section \<open>Semantics of Pointer\<close>
 
 subsection \<open>Type\<close>
 
-debt_axiomatization \<p>\<o>\<i>\<n>\<t>\<e>\<r> :: TY ("\<ptr>")
-  where \<p>\<o>\<i>\<n>\<t>\<e>\<r>_isnot_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+debt_axiomatization sem_pointer_T :: TY ("\<ptr>")
+  where pointer_isnot_poison[simp]: \<open>\<ptr> \<noteq> \<poison>\<close>
 
 lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal \<p>\<o>\<i>\<n>\<t>\<e>\<r> \<close>
+  \<open> Is_Type_Literal \<ptr> \<close>
   unfolding Is_Type_Literal_def ..
 
 subsection \<open>Value\<close>
@@ -82,7 +82,7 @@ subsubsection \<open>Validity of Mem Block and Addresses\<close>
 
 definition \<open>Valid_MemBlk seg = (
     case seg of Null \<Rightarrow> True
-              | Block _ ty \<Rightarrow> type_storable_in_mem ty \<and> ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+              | Block _ ty \<Rightarrow> type_storable_in_mem ty \<and> ty \<noteq> \<poison>
     )\<close>
 
 lemma Valid_MemBlk_zero[simp]: \<open>Valid_MemBlk Null\<close>
@@ -96,10 +96,10 @@ definition valid_memaddr :: "address \<Rightarrow> bool"
     Valid_MemBlk (addr.blk addr) \<and>
     (addr.blk addr = Null \<longrightarrow> addr.offset addr = []) \<and>
     valid_index (block.layout (addr.blk addr)) (addr.offset addr) \<and>
-    address_type addr \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>"
+    address_type addr \<noteq> \<poison>"
 
 lemma valid_memaddr_not_poison[simp]:
-  \<open> valid_memaddr addr \<Longrightarrow> \<typeof> addr \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> valid_memaddr addr \<Longrightarrow> \<typeof> addr \<noteq> \<poison> \<close>
   unfolding valid_memaddr_def
   by auto
 
@@ -677,7 +677,7 @@ lemma [\<phi>reason %ToA_cut]:
   \<open> Threshold_Cost 1
 \<Longrightarrow> x \<Ztypecolon> Ptr[TY] \<transforms> x \<Ztypecolon> Ptr \<with> x = 0 \<or> address_type x = TY \<close>
   \<medium_left_bracket>
-     transforms_to \<o>\<p>\<e>\<n>
+     transforms_to \<open'>
   \<medium_right_bracket> .
 
 lemma [\<phi>reason %ToA_cut]:
@@ -722,7 +722,7 @@ lemma [\<phi>reason %ToA_cut]:
 \<Longrightarrow> \<premise> memaddr_to_raw y = x \<and> valid_memaddr y
 \<Longrightarrow> x \<Ztypecolon> RawPointer \<transforms> y \<Ztypecolon> Ptr[TY] \<close>
   \<medium_left_bracket>
-    transforms_to \<o>\<p>\<e>\<n>
+    transforms_to \<open'>
     \<open>y \<Ztypecolon> MAKE _ Ptr[TY]\<close>
   \<medium_right_bracket> .
 
@@ -905,20 +905,20 @@ definition abstract_address_offset :: \<open>address \<Rightarrow> TY \<Rightarr
     memaddr_to_raw addr ||+ of_nat (MemObj_Size TY * n) = memaddr_to_raw addr' \<and>
     address_type addr' = TY') \<close>
 
-subsection \<open>Syntax of and auto deriviation for \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<of>\<close>\<close>
+subsection \<open>Syntax of and auto deriviation for \<open>\<pointer>-\<of>\<close>\<close>
 
-consts pointer_of_syntax :: \<open>('c,'x) \<phi> \<Rightarrow> VAL assertion\<close> ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<of>")
+consts pointer_of_syntax :: \<open>('c,'x) \<phi> \<Rightarrow> VAL assertion\<close> ("\<pointer>-\<of>")
        pointer_val_of_syntax :: \<open>VAL \<phi>arg \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> 'm::one assertion\<close>
 
 syntax "_ref_" :: \<open>logic \<Rightarrow> logic\<close> ("\<ref> _" [22] 21)
 
 translations
-  "\<val> \<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<of> T" => "CONST pointer_val_of_syntax (CONST anonymous) T"
+  "\<val> \<pointer>-\<of> T" => "CONST pointer_val_of_syntax (CONST anonymous) T"
   "x \<Ztypecolon> \<ref> T\<heavy_comma> C"    => "CONST pointer_val_of_syntax (CONST anonymous) T\<heavy_comma> x \<Ztypecolon> T\<heavy_comma> C"
   "x \<Ztypecolon> \<ref> T"       => "CONST pointer_val_of_syntax (CONST anonymous) T\<heavy_comma> x \<Ztypecolon> T"
 
 definition Pointer_Of :: \<open>('c,'x) \<phi> \<Rightarrow> 'v assertion \<Rightarrow> bool\<close>
-                          ("\<p>\<o>\<i>\<n>\<t>\<e>\<r>-\<of> _ \<is> _" [11,11] 10)
+                          ("\<pointer>-\<of> _ \<is> _" [11,11] 10)
   where \<open>Pointer_Of T assn \<equiv> True\<close>
 
 definition Derive_Pointer_Of :: \<open>'assertion_or_\<phi>type::{} \<Rightarrow> VAL assertion option \<Rightarrow> bool\<close>

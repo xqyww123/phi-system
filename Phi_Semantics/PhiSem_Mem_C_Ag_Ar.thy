@@ -11,14 +11,14 @@ debt_axiomatization
         (\<lambda>path. case path of AgIdx_N i # path' \<Rightarrow>
                                   if i < length vs then Map_of_Val (vs ! i) path' else 1
                            | _ \<Rightarrow> 1)\<close>
-  and idx_step_offset_arr:  \<open>ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_offset (\<array>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
+  and idx_step_offset_arr:  \<open>ty \<noteq> \<poison> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_offset (\<array>[N] ty) (AgIdx_N j) = j * MemObj_Size ty\<close>
   and idx_step_offset_arr':  \<open>idx_step_offset (\<array>[0] ty) (AgIdx_N j) = 0\<close>
-  and MemObj_Size_arr: \<open>\<array>[N] ty \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> MemObj_Size (\<array>[N] ty) = N * MemObj_Size ty\<close>
-  and array_TY_neq_void: \<open>\<v>\<o>\<i>\<d> \<noteq> \<array>[N] TY\<close>
+  and MemObj_Size_arr: \<open>\<array>[N] ty \<noteq> \<poison> \<Longrightarrow> MemObj_Size (\<array>[N] ty) = N * MemObj_Size ty\<close>
+  and array_TY_neq_void: \<open>\<void> \<noteq> \<array>[N] TY\<close>
 
 
 lemma memaddr_to_raw_array_GEP:
-  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
+  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<poison> \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> memaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw addr ||+ of_nat (i * MemObj_Size TY) \<close>
   unfolding memaddr_to_raw_def addr_gep_def address_type_def
   by (cases addr; clarsimp simp: idx_step_offset_arr idx_step_offset_arr';
@@ -26,7 +26,7 @@ lemma memaddr_to_raw_array_GEP:
 
 lemma memaddr_to_raw_inj_array:
   \<open> valid_memaddr addr
-\<Longrightarrow> address_type addr = \<array>[N] TY \<and> (if N = 0 then i = 0 else TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)
+\<Longrightarrow> address_type addr = \<array>[N] TY \<and> (if N = 0 then i = 0 else TY \<noteq> \<poison>)
 \<Longrightarrow> i \<le> N \<and> j \<le> N
 \<Longrightarrow> \<not> phantom_mem_semantic_type TY
 \<Longrightarrow> memaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw (addr \<tribullet> (j)\<^sup>\<t>\<^sup>\<h>) \<longleftrightarrow> i = j \<close>
@@ -57,13 +57,13 @@ lemma memaddr_to_raw_inj_array:
 
 
 lemma memaddr_to_raw_array_0th:
-  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
+  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<poison> \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> memaddr_to_raw (addr \<tribullet> (0)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw addr \<close>
   unfolding memaddr_to_raw_def addr_gep_def address_type_def
   by (metis (mono_tags, lifting) add_cancel_right_right addr.case_eq_if addr.map_sel(1) addr.map_sel(2) idx_step_offset_arr idx_step_offset_arr' index_offset_tail mult_is_0)
 
 lemma memaddr_to_raw_array_ith:
-  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (N = 0 \<longrightarrow> i = 0)
+  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<poison> \<and> (N = 0 \<longrightarrow> i = 0)
 \<Longrightarrow> phantom_mem_semantic_type TY
 \<Longrightarrow> memaddr_to_raw (addr \<tribullet> (i)\<^sup>\<t>\<^sup>\<h>) = memaddr_to_raw addr \<close>
   unfolding memaddr_to_raw_def addr_gep_def address_type_def
@@ -76,7 +76,7 @@ lemma memaddr_to_raw_inj_arr:
      address_type addr1 = \<array>[N] TY \<Longrightarrow>
      address_type addr2 = \<array>[M] TY \<Longrightarrow>
      \<not> phantom_mem_semantic_type TY \<Longrightarrow>
-     0 < N \<Longrightarrow> 0 < M \<Longrightarrow> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow>
+     0 < N \<Longrightarrow> 0 < M \<Longrightarrow> TY \<noteq> \<poison> \<Longrightarrow>
      memaddr_to_raw addr1 = memaddr_to_raw addr2 \<Longrightarrow>
      addr1 = addr2 \<close>
   subgoal premises prems proof -
@@ -119,7 +119,7 @@ lemma memaddr_to_raw_arr[iff]:
 
 
 lemma memaddr_to_raw_phantom_mem_type_gep_N__arr:
-  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0
+  \<open> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<poison> \<and> N \<noteq> 0
 \<Longrightarrow> phantom_mem_semantic_type TY
 \<Longrightarrow> valid_index TY path
 \<Longrightarrow> memaddr_to_raw (addr_geps addr (AgIdx_N i # path)) = memaddr_to_raw addr\<close>
@@ -165,8 +165,8 @@ subsection \<open>Slice Pointer\<close>
        and \<open>Abstract_Domain\<^sub>L (SlicePtr addr N TY) (\<lambda>x. x \<le> N \<and> valid_memaddr addr \<and> \<typeof> addr = \<array>[N] TY) \<close>
        and \<open>Object_Equiv (SlicePtr addr N TY) (=)\<close>
        and Functionality
-       and \<open> \<typeof> (SlicePtr addr N TY) = (if \<typeof> addr = \<array>[N] TY \<and> valid_memaddr addr then \<ptr> else \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
-       and \<open> \<condition> ((if N = 0 then i = 0 else TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<and> \<not> phantom_mem_semantic_type TY)
+       and \<open> \<typeof> (SlicePtr addr N TY) = (if \<typeof> addr = \<array>[N] TY \<and> valid_memaddr addr then \<ptr> else \<poison>) \<close>
+       and \<open> \<condition> ((if N = 0 then i = 0 else TY \<noteq> \<poison>) \<and> \<not> phantom_mem_semantic_type TY)
          \<Longrightarrow> Equiv_Class (SlicePtr addr N TY) (=)\<close>
 
 notation SlicePtr ("\<slice>-\<ptr>[_:_] _" [20,20,900] 899)
@@ -304,11 +304,11 @@ subsubsection \<open>ToA Mapper\<close>
 lemma [\<phi>reason %mapToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %mapToA_mem_coerce]:
-  \<open> \<m>\<a>\<p> g : \<slice>[0,n] (\<mem>-\<coerce>[sty] U) \<OTast> R \<mapsto> \<slice>[0,n] (\<mem>-\<coerce> U') \<OTast> R'
+  \<open> \<map> g : \<slice>[0,n] (\<mem>-\<coerce>[sty] U) \<OTast> R \<mapsto> \<slice>[0,n] (\<mem>-\<coerce> U') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> getter \<setter> setter \<in'> D
 
-\<Longrightarrow> \<m>\<a>\<p> g : \<mem>-\<coerce>[\<array>[n] sty] (\<Array>[n] U) \<OTast> R
+\<Longrightarrow> \<map> g : \<mem>-\<coerce>[\<array>[n] sty] (\<Array>[n] U) \<OTast> R
           \<mapsto> \<mem>-\<coerce> (\<Array>[n] U') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> getter \<setter> setter \<in'> D \<close>
@@ -317,12 +317,12 @@ lemma [\<phi>reason %mapToA_mem_coerce,
 lemma [\<phi>reason %mapToA_mem_coerce,
        unfolded Guided_Mem_Coercion_def,
        \<phi>reason %mapToA_mem_coerce]:
-  \<open> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+  \<open> \<map> g : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : \<slice>[0,n] (\<mem>-\<coerce>[sty] T) \<OTast> W
           \<mapsto> \<slice>[0,n] (\<mem>-\<coerce> T') \<OTast> W'
     \<with> \<getter> getter \<setter> setter \<in'> D
 
-\<Longrightarrow> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+\<Longrightarrow> \<map> g : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : \<mem>-\<coerce>[\<array>[n] sty] (\<Array>[n] T) \<OTast> W
           \<mapsto> \<mem>-\<coerce> (\<Array>[n] T') \<OTast> W'
     \<with> \<getter> getter \<setter> setter \<in'> D \<close>
@@ -366,7 +366,7 @@ hide_fact split_mem_coerce_array'
 subsubsection \<open>Address Offset\<close>
 
 lemma [\<phi>reason add]:
-  \<open> \<condition> i+n < N \<and> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  \<open> \<condition> i+n < N \<and> address_type addr = \<array>[N] TY \<and> TY \<noteq> \<poison>
 \<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> (i+n)\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def
             memaddr_to_raw_def addr_gep_def address_type_def
@@ -376,7 +376,7 @@ lemma [\<phi>reason add]:
   using add_mult_distrib idx_step_offset_arr idx_step_type_arr by auto
 
 lemma [\<phi>reason add]:
-  \<open> \<condition> i*M+j+n < M * N \<and> address_type addr = \<array>[N] \<array>[M] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  \<open> \<condition> i*M+j+n < M * N \<and> address_type addr = \<array>[N] \<array>[M] TY \<and> TY \<noteq> \<poison>
 \<Longrightarrow> \<simplify>[\<safe>] (i', j') : (i + (j + n) div M, (j + n) mod M)
 \<Longrightarrow> abstract_address_offset (addr \<tribullet> i\<^sup>\<t>\<^sup>\<h> \<tribullet> j\<^sup>\<t>\<^sup>\<h>) TY TY n (addr \<tribullet> i'\<^sup>\<t>\<^sup>\<h> \<tribullet> j'\<^sup>\<t>\<^sup>\<h>) \<close>
   unfolding abstract_address_offset_def Simplify_rev_def Premise_def

@@ -126,7 +126,7 @@ print_ast_translation \<open>let open Ast
     | strip_list (Appl [Constant "_args", A, B]) =
         Appl [Constant "\<^const>Product_Type.Times", strip_list A, strip_list B]
     | strip_list (Constant \<^const_syntax>\<open>Nil\<close>) =
-        Constant \<^const_syntax>\<open>\<v>\<o>\<i>\<d>\<close>
+        Constant \<^const_syntax>\<open>sem_void_T\<close>
     | strip_list X = X
 in [
   (\<^const_syntax>\<open>op_routine\<close>, fn ctxt =>

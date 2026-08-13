@@ -11,16 +11,16 @@ theory PhiSem_C
 begin
 
 debt_axiomatization
-  where ptr_neq_\<i>\<n>\<t>'  [simp]: \<open>\<ptr> \<noteq> sem_int_T n\<close>
-    and ptr_neq_struct [simp]: \<open>\<ptr> \<noteq> semty_ntup f\<close>
+  where ptr_neq_int_t'  [simp]: \<open>\<ptr> \<noteq> sem_int_T n\<close>
+    and ptr_neq_struct [simp]: \<open>\<ptr> \<noteq> sem_ntup_T f\<close>
 
 
 lemma TY_neqs[simp]:
-  \<open>\<ptr> \<noteq> \<i>\<n>\<t>('n)\<close>         \<open>\<i>\<n>\<t>('n) \<noteq> \<ptr>\<close>
-  \<open>\<ptr> \<noteq> \<b>\<o>\<o>\<l>\<close>            \<open>\<b>\<o>\<o>\<l> \<noteq> \<ptr>\<close>
-  \<open>semty_ntup f \<noteq> \<ptr>\<close>
+  \<open>\<ptr> \<noteq> \<int'>('n)\<close>         \<open>\<int'>('n) \<noteq> \<ptr>\<close>
+  \<open>\<ptr> \<noteq> \<bool'>\<close>            \<open>\<bool'> \<noteq> \<ptr>\<close>
+  \<open>sem_ntup_T f \<noteq> \<ptr>\<close>
   unfolding mk_int_T_def bool_def'
-  by simp_all (metis ptr_neq_\<i>\<n>\<t>' ptr_neq_struct)+
+  by simp_all (metis ptr_neq_int_t' ptr_neq_struct)+
 
 
 

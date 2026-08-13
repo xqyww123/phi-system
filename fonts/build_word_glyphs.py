@@ -46,7 +46,8 @@ PUA_LAST = 0xE7FF
 BOLD_CAPITAL_A = 0x1D400        # 𝐀  mathematical bold capital A
 BOLD_SMALL_A = 0x1D41A          # 𝐚  mathematical bold small a
 BOLD_SCRIPT_CAPITAL_A = 0x1D4D0  # 𝓐  mathematical bold script capital A
-SANS_SMALL_A = 0x1D5BA          # 𝖺  what the spelled-out form renders as today
+SANS_CAPITAL_A = 0x1D5A0        # 𝖠  the code Isabelle gives \<A>
+SANS_SMALL_A = 0x1D5BA          # 𝖺  the code Isabelle gives \<a>
 SCRIPT_CAPITAL_T = 0x1D4AF      # 𝒯  the code Isabelle gives \<T>; capital size reference
 
 STIX_CANDIDATES = [
@@ -54,18 +55,34 @@ STIX_CANDIDATES = [
     "/usr/share/fonts/opentype/stix2/STIXTwoMath-Regular.otf",
     "/usr/local/share/fonts/stix2/STIXTwoMath-Regular.otf",
 ]
+STIX_TEXT_CANDIDATES = [
+    "~/.local/share/fonts/stix2/STIXTwoText-Medium.otf",
+    "/usr/share/fonts/opentype/stix2/STIXTwoText-Medium.otf",
+    "/usr/local/share/fonts/stix2/STIXTwoText-Medium.otf",
+]
+
+# These words are notation for an ordinary ASCII constant (sem_aint_T and its
+# siblings), not keywords, and they are drawn one weight lighter so that a line
+# full of them does not out-shout the keywords around it.  The intermediate
+# weights exist only in STIX Two Text -- the mathematical alphanumeric blocks
+# carry regular and bold and nothing between them -- so these come from
+# STIXTwoText-Medium and are addressed as plain ASCII.
+#
+# `pointer` is not among them: the pointer type prints as \<ptr>, and the only
+# thing \<pointer> draws is the operator \<pointer>-\<of>, which is a keyword.
+MEDIUM_WORDS = {"aint", "areal", "bool", "int", "map", "poison", "symbol", "void"}
 
 
 def die(msg):
     sys.exit("build_word_glyphs: " + msg)
 
 
-def find_stix(explicit):
-    for cand in ([explicit] if explicit else []) + STIX_CANDIDATES:
+def find_font(explicit, candidates, what, option):
+    for cand in ([explicit] if explicit else []) + candidates:
         p = pathlib.Path(os.path.expanduser(cand))
         if p.is_file():
             return p
-    die("STIXTwoMath-Regular.otf not found; pass --stix PATH (see WORD_GLYPHS.md)")
+    die("%s not found; pass %s PATH (see WORD_GLYPHS.md)" % (what, option))
 
 
 def find_isabelle_mono():
@@ -121,12 +138,21 @@ def previous_assignment():
     return out
 
 
-def source_code_point(ch, all_upper):
+def source_code_point(ch, all_upper, plain=False):
+    if plain:                       # STIX Two Text is an ordinary ASCII font
+        return ord(ch)
     if all_upper:
         return BOLD_SCRIPT_CAPITAL_A + ord(ch) - ord("A")
     if ch.isupper():
         return BOLD_CAPITAL_A + ord(ch) - ord("A")
     return BOLD_SMALL_A + ord(ch) - ord("a")
+
+
+def sans_code_point(ch):
+    """The letters the word was spelled out in before it became one glyph."""
+    if ch.isupper():
+        return SANS_CAPITAL_A + ord(ch) - ord("A")
+    return SANS_SMALL_A + ord(ch) - ord("a")
 
 
 def glyph_height(font, code_point):
@@ -138,12 +164,12 @@ def glyph_height(font, code_point):
     return pen.bounds[3]
 
 
-def compose(src, word, all_upper, scale):
+def compose(src, word, all_upper, scale, plain=False):
     """Draw `word` left to right into one glyph; return the glyph and its advance."""
     gs, cmap, hmtx = src.getGlyphSet(), src.getBestCmap(), src["hmtx"]
     pen, x = TTGlyphPen(None), 0.0
     for ch in word:
-        name = cmap[source_code_point(ch, all_upper)]
+        name = cmap[source_code_point(ch, all_upper, plain)]
         # Cu2QuPen converts STIX's cubic curves to the quadratic ones TrueType needs.
         gs[name].draw(TransformPen(Cu2QuPen(pen, max_err=1.0), Transform(scale, 0, 0, scale, x, 0)))
         x += hmtx[name][0] * scale
@@ -165,11 +191,15 @@ def drop_generated(font):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stix", help="path to STIXTwoMath-Regular.otf")
+    ap.add_argument("--stix-text", help="path to STIXTwoText-Medium.otf")
     ap.add_argument("--check", action="store_true", help="verify only, write nothing")
     args = ap.parse_args()
 
     words = read_words()
-    stix = TTFont(str(find_stix(args.stix)))
+    stix = TTFont(str(find_font(args.stix, STIX_CANDIDATES,
+                                "STIXTwoMath-Regular.otf", "--stix")))
+    stix_text = TTFont(str(find_font(args.stix_text, STIX_TEXT_CANDIDATES,
+                                     "STIXTwoText-Medium.otf", "--stix-text")))
     mono = TTFont(str(find_isabelle_mono()))
     font = TTFont(str(FONT))
 
@@ -182,6 +212,8 @@ def main():
     ref_upper = glyph_height(mono, SCRIPT_CAPITAL_T)
     scale_lower = ref_lower / glyph_height(stix, BOLD_SMALL_A + 23)
     scale_upper = ref_upper / glyph_height(stix, BOLD_SCRIPT_CAPITAL_A + 19)
+    med_lower = ref_lower / glyph_height(stix_text, ord("x"))
+    med_upper = ref_upper / glyph_height(stix_text, ord("T"))
 
     taken = taken_symbol_names()
     assigned = previous_assignment()
@@ -193,8 +225,13 @@ def main():
     rows, clip_rows = [], []
     for word in words:
         all_upper = word.isupper()
-        scale = scale_upper if all_upper else scale_lower
-        glyph, advance = compose(stix, word, all_upper, scale)
+        plain = word in MEDIUM_WORDS
+        src = stix_text if plain else stix
+        if plain:
+            scale = med_upper if all_upper else med_lower
+        else:
+            scale = scale_upper if all_upper else scale_lower
+        glyph, advance = compose(src, word, all_upper, scale, plain)
         glyph.recalcBounds(glyf)
         gname = GLYPH_PREFIX + word
         code = assigned.get(word) or next(free)
@@ -209,7 +246,11 @@ def main():
         rows.append((name, code, word))
         # What the word turns into when it leaves jEdit: the same letters this glyph was
         # drawn from, so the text that lands on the clipboard looks like the glyph.
-        clip_rows.append((code, "".join(chr(source_code_point(c, all_upper)) for c in word)))
+        # A Medium word has no matching mathematical alphabet, so it falls back to the
+        # sans letters it used to be spelled out in -- still not plain ASCII, which
+        # would be indistinguishable from an ordinary identifier.
+        clip_rows.append((code, "".join(chr(sans_code_point(c)) for c in word) if plain
+                          else "".join(chr(source_code_point(c, all_upper)) for c in word)))
 
     font.setGlyphOrder(order)
     glyf.glyphOrder = order

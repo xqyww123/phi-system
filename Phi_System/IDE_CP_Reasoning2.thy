@@ -317,22 +317,22 @@ abbreviation ToA_Subst'' :: \<open>'c BI \<Rightarrow> 'c BI \<Rightarrow> 'c::s
 
 definition ToA_Mapper :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_magma, 'a) \<phi> \<Rightarrow> ('c,'b) \<phi>
                        \<Rightarrow> ('x \<Rightarrow> 'y) \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'y) \<phi> \<Rightarrow> ('x \<Rightarrow> 'a) \<Rightarrow> ('b \<Rightarrow> 'y) \<Rightarrow> 'x set \<Rightarrow> bool\<close>
-                          ("\<m>\<a>\<p> (_ :/ _ \<mapsto>/ _)/ \<over> (_ :/ _ \<mapsto>/ _)/ \<with> (\<getter> _/ \<setter> _)/ \<in'> _" [21,21,21,21,21,21,21,21,21] 18)
-  where \<open>\<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> domain \<equiv>
+                          ("\<map> (_ :/ _ \<mapsto>/ _)/ \<over> (_ :/ _ \<mapsto>/ _)/ \<with> (\<getter> _/ \<setter> _)/ \<in'> _" [21,21,21,21,21,21,21,21,21] 18)
+  where \<open>\<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> domain \<equiv>
             (\<forall>x \<in> domain. x \<Ztypecolon> T \<transforms> h x \<Ztypecolon> U) \<and>
             (\<forall>y \<in> g ` h ` domain. y \<Ztypecolon> U' \<transforms> s y \<Ztypecolon> T') \<and>
             (\<forall>x \<in> domain. f x = s (g (h x)))\<close>
 
 definition ToA_Mapper_Clean :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('c::sep_magma, 'a) \<phi> \<Rightarrow> ('c,'b) \<phi>
                        \<Rightarrow> ('x \<Rightarrow> 'y) \<Rightarrow> ('c,'x) \<phi> \<Rightarrow> ('c,'y) \<phi> \<Rightarrow> ('x \<Rightarrow> 'a) \<Rightarrow> ('b \<Rightarrow> 'y) \<Rightarrow> bool\<close>
-                          ("\<clean> \<m>\<a>\<p> (_ :/ _ \<mapsto>/ _)/ \<over> (_ :/ _ \<mapsto>/ _)/ \<with> (\<getter> _/ \<setter> _)" [21,21,21,21,21,21,21,21] 18)
-  where \<open>\<clean> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<equiv>
+                          ("\<clean> \<map> (_ :/ _ \<mapsto>/ _)/ \<over> (_ :/ _ \<mapsto>/ _)/ \<with> (\<getter> _/ \<setter> _)" [21,21,21,21,21,21,21,21] 18)
+  where \<open>\<clean> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<equiv>
             (\<forall>x. x \<Ztypecolon> T \<transforms> h x \<Ztypecolon> U) \<and>
             (\<forall>y. y \<Ztypecolon> U' \<transforms> s y \<Ztypecolon> T') \<and>
             (\<forall>x. f x = s (g (h x)))\<close>
 
 lemma ToA_Mapper_rev_def[no_atp]:
-  \<open>(\<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> domain) \<longleftrightarrow>
+  \<open>(\<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> domain) \<longleftrightarrow>
       (\<forall>x \<in> domain. x \<Ztypecolon> T \<transforms> h x \<Ztypecolon> U) \<and>
       (\<forall>y \<in> g ` h ` domain. y \<Ztypecolon> U' \<transforms> s y \<Ztypecolon> T') \<and>
       (\<forall>x \<in> domain. s (g (h x)) = f x)\<close>
@@ -341,7 +341,7 @@ lemma ToA_Mapper_rev_def[no_atp]:
 abbreviation ToA_Getter :: \<open>('x \<Rightarrow> 'a) \<Rightarrow> ('c::sep_magma, 'x) \<phi> \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 'x set \<Rightarrow> ('a \<Rightarrow> 'x) \<Rightarrow> bool\<close>
                            ("\<getter> _ : _ \<mapsto> _ \<in'> _ \<with> \<setter> _" [21,21,21,21,21] 18)
   where \<open>\<getter> h : T \<mapsto> U \<in'> domain \<with> \<setter> s \<equiv>
-          \<m>\<a>\<p> id : U \<mapsto> U \<over> id : T \<mapsto> T \<with> \<getter> h \<setter> s \<in'> domain\<close>
+          \<map> id : U \<mapsto> U \<over> id : T \<mapsto> T \<with> \<getter> h \<setter> s \<in'> domain\<close>
 
 ML_file \<open>library/syntax/ToA_mapper.ML\<close>
 
@@ -411,25 +411,25 @@ declare [[
   and \<open>\<subst> (_,_) \<Ztypecolon> ?T \<^emph> ?U \<for> _ \<from> _ \<to> _ @clean\<close>
    \<Rightarrow> \<open>\<subst> (_,_) \<Ztypecolon> ?T \<^emph> ?U \<for> _ \<from> _ \<to> _ @clean\<close> (200)
 
-  and \<open>\<m>\<a>\<p> _ : ?U \<OTast> ?out_R \<OTast> ?var_E \<mapsto> ?U' \<OTast> ?out_R' \<OTast> ?var_E'
+  and \<open>\<map> _ : ?U \<OTast> ?out_R \<OTast> ?var_E \<mapsto> ?U' \<OTast> ?out_R' \<OTast> ?var_E'
        \<over> _ : ?T \<OTast> _ \<OTast> ?var_E \<mapsto> _ \<OTast> _ \<OTast> ?var_E'
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>
-   \<Rightarrow> \<open>\<m>\<a>\<p> _ : ?U \<OTast> _ \<OTast> _ \<mapsto> ?U' \<OTast> _ \<OTast> _
+   \<Rightarrow> \<open>\<map> _ : ?U \<OTast> _ \<OTast> _ \<mapsto> ?U' \<OTast> _ \<OTast> _
        \<over> _ : ?T \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>    (120)
-  and \<open>\<m>\<a>\<p> ?in_g  : ?U \<OTast> ?out_R \<mapsto> ?U' \<OTast> ?out_R'
+  and \<open>\<map> ?in_g  : ?U \<OTast> ?out_R \<mapsto> ?U' \<OTast> ?out_R'
        \<over> ?out_f : ?T \<OTast> ?out_W \<mapsto> ?out_T' \<OTast> ?out_W'
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>
-   \<Rightarrow> \<open>\<m>\<a>\<p> _ : ?U \<OTast> _ \<mapsto> ?U' \<OTast> _
+   \<Rightarrow> \<open>\<map> _ : ?U \<OTast> _ \<mapsto> ?U' \<OTast> _
        \<over> _ : ?T \<OTast> _ \<mapsto> _ \<OTast> _
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>    (110)
-  and \<open>\<m>\<a>\<p> _ : ?U \<OTast> _ \<mapsto> ?U' \<OTast> _ \<over> _ : ?T \<mapsto> _
+  and \<open>\<map> _ : ?U \<OTast> _ \<mapsto> ?U' \<OTast> _ \<over> _ : ?T \<mapsto> _
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>
-   \<Rightarrow> \<open>\<m>\<a>\<p> _ : ?U \<OTast> _ \<mapsto> ?U' \<OTast> _ \<over> _ : ?T \<mapsto> _
+   \<Rightarrow> \<open>\<map> _ : ?U \<OTast> _ \<mapsto> ?U' \<OTast> _ \<over> _ : ?T \<mapsto> _
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>    (90)
-  and \<open>\<m>\<a>\<p> _ : ?U \<mapsto> ?U' \<over> _ : ?T \<mapsto> _
+  and \<open>\<map> _ : ?U \<mapsto> ?U' \<over> _ : ?T \<mapsto> _
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>
-   \<Rightarrow> \<open>\<m>\<a>\<p> _ : ?U \<mapsto> ?U' \<over> _ : ?T \<mapsto> _
+   \<Rightarrow> \<open>\<map> _ : ?U \<mapsto> ?U' \<over> _ : ?T \<mapsto> _
        \<with> \<getter> _ \<setter> _ \<in'> _\<close>    (80)
 (*  and \<open>\<getter> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<in'> ?D \<with> \<setter> _\<close> \<Rightarrow>
       \<open>\<getter> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<in'> ?D \<with> \<setter> _\<close>   (200) *)
@@ -438,18 +438,18 @@ declare [[
       \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<get> ?obj \<from> ?src))\<close> (0)
   and \<open>\<subst> ?redex \<for> ?residue \<from> ?Src \<to> ?Ret \<remaining> ?R\<close> \<Rightarrow>
       \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<subst> ?redex \<for> ?residue \<from> ?Src \<to> ?Ret \<remaining> ?R))\<close> (0)
-  and \<open>\<m>\<a>\<p> ?g : ?U \<mapsto> ?U' \<over> ?f : ?T \<mapsto> ?T' \<with> \<getter> ?h \<setter> ?s \<in'> ?D\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<m>\<a>\<p> ?g : ?U \<mapsto> ?U' \<over> ?f : ?T \<mapsto> ?T' \<with> \<getter> ?h \<setter> ?s \<in'> ?D))\<close> (0)
+  and \<open>\<map> ?g : ?U \<mapsto> ?U' \<over> ?f : ?T \<mapsto> ?T' \<with> \<getter> ?h \<setter> ?s \<in'> ?D\<close> \<Rightarrow>
+      \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<map> ?g : ?U \<mapsto> ?U' \<over> ?f : ?T \<mapsto> ?T' \<with> \<getter> ?h \<setter> ?s \<in'> ?D))\<close> (0)
 
-  and \<open>\<clean> \<m>\<a>\<p> ?f : ?T \<mapsto> ?U \<over> ?g : ?X \<mapsto> ?Y \<with> \<getter> ?h \<setter> ?s\<close>
-   \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<clean> \<m>\<a>\<p> ?f : ?T \<mapsto> ?U \<over> ?g : ?X \<mapsto> ?Y \<with> \<getter> ?h \<setter> ?s))\<close> (10)
-  and \<open>\<clean> \<m>\<a>\<p> _ : ?W1 \<^emph> ?W2 \<mapsto> ?W1' \<^emph> ?W2' \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _\<close>
-   \<Rightarrow> \<open>\<clean> \<m>\<a>\<p> _ : ?W1 \<^emph> ?W2 \<mapsto> ?W1' \<^emph> ?W2' \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _\<close> (100)
-  and \<open>\<clean> \<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : ?A \<^emph> ?B \<mapsto> _ \<with> \<getter> _ \<setter> _\<close>
-   \<Rightarrow> \<open>\<clean> \<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : ?A \<^emph> ?B \<mapsto> _ \<with> \<getter> _ \<setter> _\<close> (100),
+  and \<open>\<clean> \<map> ?f : ?T \<mapsto> ?U \<over> ?g : ?X \<mapsto> ?Y \<with> \<getter> ?h \<setter> ?s\<close>
+   \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed Rule\<close> (\<clean> \<map> ?f : ?T \<mapsto> ?U \<over> ?g : ?X \<mapsto> ?Y \<with> \<getter> ?h \<setter> ?s))\<close> (10)
+  and \<open>\<clean> \<map> _ : ?W1 \<^emph> ?W2 \<mapsto> ?W1' \<^emph> ?W2' \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _\<close>
+   \<Rightarrow> \<open>\<clean> \<map> _ : ?W1 \<^emph> ?W2 \<mapsto> ?W1' \<^emph> ?W2' \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _\<close> (100)
+  and \<open>\<clean> \<map> _ : _ \<mapsto> _ \<over> _ : ?A \<^emph> ?B \<mapsto> _ \<with> \<getter> _ \<setter> _\<close>
+   \<Rightarrow> \<open>\<clean> \<map> _ : _ \<mapsto> _ \<over> _ : ?A \<^emph> ?B \<mapsto> _ \<with> \<getter> _ \<setter> _\<close> (100),
 
   \<phi>default_reasoner_group
-      \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close> : %\<phi>mapToA_mapper (100)
+      \<open>\<map> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close> : %\<phi>mapToA_mapper (100)
 
 (*  and \<open>\<getter> _ : _ \<mapsto> _  \<in'> _ \<with> \<setter> _\<close> : %\<phi>mapToA_getter (100) *)
 ]]
@@ -483,27 +483,27 @@ lemma ToA_Subst_backward:
 
 
 lemma ToA_Mapper_onward:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
+  \<open> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<premise> x \<in> D
 \<Longrightarrow> x \<Ztypecolon> T \<transforms> h x \<Ztypecolon> U\<close>
   unfolding ToA_Mapper_def Premise_def
   by (clarsimp simp add: \<phi>Prod_expn'')
 
 lemma ToA_Mapper_backward:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
+  \<open> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<premise> x \<in> g ` h ` D
 \<Longrightarrow> x \<Ztypecolon> U' \<transforms> s x \<Ztypecolon> T'\<close>
   unfolding ToA_Mapper_def Premise_def
   by (clarsimp simp add: \<phi>Prod_expn'')
 
 lemma ToA_Mapper_f_expn:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
+  \<open> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<forall>x \<in> D. f x = s (g (h x)) \<close>
   unfolding ToA_Mapper_def
   by clarsimp
 
 lemma ToA_Mapper_f_expn_rev[no_atp]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
+  \<open> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<forall>x \<in> D. s (g (h x)) = f x \<close>
   unfolding ToA_Mapper_def
   by clarsimp
@@ -518,31 +518,31 @@ lemma ToA_Mapper_cong:
 \<Longrightarrow> (\<And>x. x \<in> D' \<Longrightarrow> h x \<equiv> h' x)
 \<Longrightarrow> (\<And>x. x \<in> h' ` D' \<Longrightarrow> g x \<equiv> g' x)
 \<Longrightarrow> (\<And>x. x \<in> g' ` h' ` D' \<Longrightarrow> s x \<equiv> s' x)
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U\<^sub>1 \<over> f : T \<mapsto> T\<^sub>1 \<with> \<getter> h \<setter> s \<in'> D
- \<equiv> \<m>\<a>\<p> g' : U' \<mapsto> U\<^sub>1' \<over> f' : T' \<mapsto> T\<^sub>1' \<with> \<getter> h' \<setter> s' \<in'> D'\<close>
+\<Longrightarrow> \<map> g : U \<mapsto> U\<^sub>1 \<over> f : T \<mapsto> T\<^sub>1 \<with> \<getter> h \<setter> s \<in'> D
+ \<equiv> \<map> g' : U' \<mapsto> U\<^sub>1' \<over> f' : T' \<mapsto> T\<^sub>1' \<with> \<getter> h' \<setter> s' \<in'> D'\<close>
   unfolding ToA_Mapper_def atomize_eq
   by (clarsimp simp add: image_iff Bex_def; rule; clarsimp; metis)
 
 lemma ToA_MapperC_onward:
-  \<open> \<clean> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
+  \<open> \<clean> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
 \<Longrightarrow> x \<Ztypecolon> T \<transforms> h x \<Ztypecolon> U\<close>
   unfolding ToA_Mapper_Clean_def Premise_def
   by (clarsimp simp add: \<phi>Prod_expn'')
 
 lemma ToA_MapperC_backward:
-  \<open> \<clean> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
+  \<open> \<clean> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
 \<Longrightarrow> x \<Ztypecolon> U' \<transforms> s x \<Ztypecolon> T'\<close>
   unfolding ToA_Mapper_Clean_def Premise_def
   by (clarsimp simp add: \<phi>Prod_expn'')
 
 lemma ToA_MapperC_f_expn:
-  \<open> \<clean> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
+  \<open> \<clean> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
 \<Longrightarrow> \<forall>x. f x = s (g (h x)) \<close>
   unfolding ToA_Mapper_Clean_def
   by clarsimp
 
 lemma ToA_MapperC_f_expn_rev[no_atp]:
-  \<open> \<clean> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
+  \<open> \<clean> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s
 \<Longrightarrow> \<forall>x. s (g (h x)) = f x \<close>
   unfolding ToA_Mapper_Clean_def
   by clarsimp
@@ -550,8 +550,8 @@ lemma ToA_MapperC_f_expn_rev[no_atp]:
 
 lemma ToA_Mapper_\<phi>Some_rewr_origin[no_atp]:
   \<open> NO_MATCH (\<black_circle> UUU) U
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> domain
- \<equiv> \<m>\<a>\<p> g : \<black_circle> U \<mapsto> \<black_circle> U' \<over> f : \<black_circle> T \<mapsto> \<black_circle> T' \<with> \<getter> h \<setter> s \<in'> domain \<close>
+\<Longrightarrow> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> domain
+ \<equiv> \<map> g : \<black_circle> U \<mapsto> \<black_circle> U' \<over> f : \<black_circle> T \<mapsto> \<black_circle> T' \<with> \<getter> h \<setter> s \<in'> domain \<close>
   unfolding ToA_Mapper_def \<phi>Some_transformation_strip .
 
 
@@ -559,8 +559,8 @@ lemma ToA_Mapper_LPR_gen_cong:
   \<open> D \<equiv> D'
 \<Longrightarrow> (\<And>x. x \<in> D' \<Longrightarrow> h x \<equiv> h' x)
 \<Longrightarrow> (\<And>x. x \<in> g ` h' ` D' \<Longrightarrow> s x \<equiv> s' x)
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U\<^sub>1 \<over> f : T \<mapsto> T\<^sub>1 \<with> \<getter> h \<setter> s \<in'> D
-  \<equiv> \<m>\<a>\<p> g : U \<mapsto> U\<^sub>1 \<over> f : T \<mapsto> T\<^sub>1 \<with> \<getter> h' \<setter> s' \<in'> D'\<close>
+\<Longrightarrow> \<map> g : U \<mapsto> U\<^sub>1 \<over> f : T \<mapsto> T\<^sub>1 \<with> \<getter> h \<setter> s \<in'> D
+  \<equiv> \<map> g : U \<mapsto> U\<^sub>1 \<over> f : T \<mapsto> T\<^sub>1 \<with> \<getter> h' \<setter> s' \<in'> D'\<close>
   unfolding ToA_Mapper_def atomize_eq
   by (clarsimp simp add: image_iff Bex_def; rule; clarsimp; metis)
 
@@ -570,8 +570,8 @@ setup \<open>Context.theory_map (PLPR_Rule_Gen.Rule_Gen_SS.map (
 hide_fact ToA_Mapper_LPR_gen_cong
 
 lemma ToA_Mapper_fallback_remainder:
-  \<open> \<m>\<a>\<p> f : U \<mapsto> U' \<over> g : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> fst ` D
-\<Longrightarrow> \<m>\<a>\<p> f \<otimes>\<^sub>f w : U \<OTast> \<circle> \<mapsto> U' \<OTast> \<circle>
+  \<open> \<map> f : U \<mapsto> U' \<over> g : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> fst ` D
+\<Longrightarrow> \<map> f \<otimes>\<^sub>f w : U \<OTast> \<circle> \<mapsto> U' \<OTast> \<circle>
     \<over> g \<otimes>\<^sub>f w : T \<OTast> \<circle> \<mapsto> T' \<OTast> \<circle>
     \<with> \<getter> apfst h \<setter> apfst s \<in'> D \<close>
   unfolding ToA_Mapper_def Transformation_def \<phi>Prod'_def
@@ -584,7 +584,7 @@ subsubsection \<open>Extracting Implied Facts\<close>
 lemma [\<phi>reason %extract_pure]:
   \<open> (\<And>x. \<r>EIF (\<condition> x \<in> D \<longrightarrow> (x \<Ztypecolon> T \<transforms> h x \<Ztypecolon> U)) (Q\<^sub>1 x))
 \<Longrightarrow> (\<And>x. \<r>EIF (\<condition> x \<in> g ` h ` D \<longrightarrow> (x \<Ztypecolon> U' \<transforms> s x \<Ztypecolon> T')) (Q\<^sub>2 x))
-\<Longrightarrow> \<r>EIF (\<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D)
+\<Longrightarrow> \<r>EIF (\<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D)
          ((\<forall>x. Q\<^sub>1 x \<and> Q\<^sub>2 x) \<and> (\<forall>x \<in> D. f x = s (g (h x)))) \<close>
   unfolding \<r>EIF_def ToA_Mapper_def ToA_Subst_def Premise_def Ball_def
   by (clarsimp simp add: \<phi>Prod_expn'')
@@ -598,7 +598,7 @@ lemma [\<phi>reason %\<phi>programming_method]:
        \<forall>x \<in> D. f x = s (g (h x)))
       MM DD RR FF
 \<Longrightarrow> PROP \<phi>Programming_Method
-      (Trueprop (\<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D)) MM DD RR FF \<close>
+      (Trueprop (\<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> D)) MM DD RR FF \<close>
   unfolding \<phi>Programming_Method_def Premise_def
   subgoal premises prems
     by (insert prems(1)[OF \<open>PROP DD\<close> \<open>PROP RR\<close> \<open>PROP FF\<close>];
@@ -818,97 +818,97 @@ lemma [\<phi>reason %\<phi>mapToA_init+10]:
 subsubsection \<open>Normalize Maps\<close>
 
 lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
-          for \<open>\<m>\<a>\<p> id : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : _ \<mapsto> _
+          for \<open>\<map> id : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : _ \<mapsto> _
                \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<mapsto> U' \<over> f : T \<mapsto> T'
+  \<open> \<map> g \<otimes>\<^sub>f r : U \<mapsto> U' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> mapToA_assign_id g
 \<Longrightarrow> mapToA_assign_id r
-\<Longrightarrow> \<m>\<a>\<p> id : U \<mapsto> U' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> id : U \<mapsto> U' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)
 
 lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
-          for \<open>\<m>\<a>\<p> id \<otimes>\<^sub>f _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : _ \<mapsto> _
+          for \<open>\<map> id \<otimes>\<^sub>f _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : _ \<mapsto> _
                \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
+  \<open> \<map> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> mapToA_assign_id g
-\<Longrightarrow> \<m>\<a>\<p> id \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> id \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)
 
 lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
-          for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f id : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : _ \<mapsto> _
+          for \<open>\<map> _ \<otimes>\<^sub>f id : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : _ \<mapsto> _
                \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
+  \<open> \<map> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> mapToA_assign_id r
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f id : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f id : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)
 
 
 lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
-          for \<open>\<m>\<a>\<p> id \<otimes>\<^sub>f _ : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<over> _ : _ \<mapsto> _
+          for \<open>\<map> id \<otimes>\<^sub>f _ : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<over> _ : _ \<mapsto> _
                \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
+  \<open> \<map> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> mapToA_assign_id g
-\<Longrightarrow> \<m>\<a>\<p> id \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> id \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)
 
 lemma [\<phi>reason %\<phi>mapToA_varify_maps+30
-          for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f id : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<over> _ : _ \<mapsto> _
+          for \<open>\<map> _ \<otimes>\<^sub>f id : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<over> _ : _ \<mapsto> _
                \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
+  \<open> \<map> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> mapToA_assign_id r
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f id : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f id : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding mapToA_assign_id_def
   by (simp add: map_prod.id)
 
 (*
 lemma [\<phi>reason %\<phi>mapToA_varify_maps
-          for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<over> _ : _ \<mapsto> _
+          for \<open>\<map> _ \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _ \<over> _ : _ \<mapsto> _
                \<with> \<getter> _ \<setter> _ \<in'> _ \<close>
-          except \<open>\<m>\<a>\<p> ?var \<otimes>\<^sub>f _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _
+          except \<open>\<map> ?var \<otimes>\<^sub>f _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _
                   \<with> \<getter> _ \<setter> _ \<in'> _ \<close>]:
-  \<open> \<m>\<a>\<p> g' \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<over> f : T \<mapsto> T'
+  \<open> \<map> g' \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<premise> g' = g
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f r : U \<^emph>[C\<^sub>R] R \<mapsto> U' \<^emph>[C\<^sub>R] R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Premise_def
   by simp
 
 lemma [\<phi>reason %\<phi>mapToA_varify_maps
-          for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+          for \<open>\<map> _ : _ \<mapsto> _ \<over> _ \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
                \<with> \<getter> _ \<setter> _ \<in'> _ \<close>
-          except \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> ?var \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
+          except \<open>\<map> _ : _ \<mapsto> _ \<over> ?var \<otimes>\<^sub>f _ : _ \<^emph>[_] _ \<mapsto> _ \<^emph>[_] _
                   \<with> \<getter> _ \<setter> _ \<in'> _ \<close>]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f' \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+  \<open> \<map> g : U \<mapsto> U' \<over> f' \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> \<premise> f' = f
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
+\<Longrightarrow> \<map> g : U \<mapsto> U' \<over> f \<otimes>\<^sub>f w : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Premise_def
   by simp
 *)
 
 lemma [\<phi>reason %\<phi>mapToA_varify_maps
-          for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> id \<otimes>\<^sub>f _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+          for \<open>\<map> _ : _ \<mapsto> _ \<over> id \<otimes>\<^sub>f _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
                \<with> \<getter> _ \<setter> _ \<in'> _ \<close> ]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f' \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
+  \<open> \<map> g : U \<mapsto> U' \<over> f' \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
 \<Longrightarrow> mapToA_assign_id f'
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<over> id \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
+\<Longrightarrow> \<map> g : U \<mapsto> U' \<over> id \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding mapToA_assign_id_def
   by simp
@@ -923,13 +923,13 @@ context
         ToA_splitting_source_has_remainder_first[\<phi>reason %ToA_splitting_source except \<open>_ \<transforms> (_ :: ?'a :: sep_semigroup set) \<with> _\<close>]*)
 begin
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<circle> \<^emph> _) \<OTast> _ \<mapsto> (\<circle> \<^emph> _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : (\<circle> \<^emph> _) \<OTast> _ \<mapsto> (\<circle> \<^emph> _) \<OTast> _
                                   \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r : U\<^sub>2 \<OTast> R \<mapsto> U\<^sub>2' \<OTast> R'
+  \<open> \<map> g\<^sub>2 \<otimes>\<^sub>f r : U\<^sub>2 \<OTast> R \<mapsto> U\<^sub>2' \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
 
-\<Longrightarrow> \<m>\<a>\<p> ((\<lambda>_. unspec) \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f r : (\<circle> \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (\<circle> \<^emph> U\<^sub>2') \<OTast> R'
+\<Longrightarrow> \<map> ((\<lambda>_. unspec) \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f r : (\<circle> \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (\<circle> \<^emph> U\<^sub>2') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> (\<lambda>x. case h x of (x,r) \<Rightarrow> ((unspec, x), r))
         \<setter> (\<lambda>((_,x),r). s (x, r))
@@ -947,13 +947,13 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<circle
       by (insert ToA_Mapper_f_expn[OF prems(1), THEN bspec[OF _ prems(2)]],
           clarsimp split: prod.split) .
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[False] _ \<^emph> _) \<OTast> _
                                   \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r : U\<^sub>2 \<OTast> R \<mapsto> U\<^sub>2' \<OTast> R'
+  \<open> \<map> g\<^sub>2 \<otimes>\<^sub>f r : U\<^sub>2 \<OTast> R \<mapsto> U\<^sub>2' \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
 
-\<Longrightarrow> \<m>\<a>\<p> ((\<lambda>_. unspec) \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f r : (\<half_blkcirc>[False] U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (\<half_blkcirc>[False] U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
+\<Longrightarrow> \<map> ((\<lambda>_. unspec) \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f r : (\<half_blkcirc>[False] U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (\<half_blkcirc>[False] U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> (\<lambda>x. case h x of (x,r) \<Rightarrow> ((unspec, x), r))
         \<setter> (\<lambda>((_,x),r). s (x, r))
@@ -971,24 +971,24 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<half_b
       by (insert ToA_Mapper_f_expn[OF prems(1), THEN bspec[OF _ prems(2)]],
           clarsimp split: prod.split) .
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _ \<mapsto> (\<half_blkcirc>[True] _ \<^emph> _) \<OTast> _
                                   \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
+  \<open> \<map> g : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : (\<half_blkcirc>[True] U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (\<half_blkcirc>[True] U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
+\<Longrightarrow> \<map> g : (\<half_blkcirc>[True] U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (\<half_blkcirc>[True] U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   by simp
 
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<circle>) \<OTast> _ \<mapsto> (_ \<^emph> \<circle>) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : (_ \<^emph> \<circle>) \<OTast> _ \<mapsto> (_ \<^emph> \<circle>) \<OTast> _
                                   \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f r : U\<^sub>1 \<OTast> R \<mapsto> U\<^sub>1' \<OTast> R'
+  \<open> \<map> g\<^sub>1 \<otimes>\<^sub>f r : U\<^sub>1 \<OTast> R \<mapsto> U\<^sub>1' \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
 
-\<Longrightarrow> \<m>\<a>\<p> (g\<^sub>1 \<otimes>\<^sub>f (\<lambda>_. unspec)) \<otimes>\<^sub>f r : (U\<^sub>1 \<^emph> \<circle>) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> \<circle>) \<OTast> R'
+\<Longrightarrow> \<map> (g\<^sub>1 \<otimes>\<^sub>f (\<lambda>_. unspec)) \<otimes>\<^sub>f r : (U\<^sub>1 \<^emph> \<circle>) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> \<circle>) \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> (\<lambda>x. case h x of (x,r) \<Rightarrow> ((x,unspec),r))
         \<setter> (\<lambda>((x,_),r). s (x,r))
@@ -1007,13 +1007,13 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emp
           clarsimp split: prod.split) .
 
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[False] _) \<OTast> _
                                   \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f r : U\<^sub>1 \<OTast> R \<mapsto> U\<^sub>1' \<OTast> R'
+  \<open> \<map> g\<^sub>1 \<otimes>\<^sub>f r : U\<^sub>1 \<OTast> R \<mapsto> U\<^sub>1' \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
 
-\<Longrightarrow> \<m>\<a>\<p> (g\<^sub>1 \<otimes>\<^sub>f (\<lambda>_. unspec)) \<otimes>\<^sub>f r : (U\<^sub>1 \<^emph> \<half_blkcirc>[False] U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> \<half_blkcirc>[False] U\<^sub>2') \<OTast> R'
+\<Longrightarrow> \<map> (g\<^sub>1 \<otimes>\<^sub>f (\<lambda>_. unspec)) \<otimes>\<^sub>f r : (U\<^sub>1 \<^emph> \<half_blkcirc>[False] U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> \<half_blkcirc>[False] U\<^sub>2') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> (\<lambda>x. case h x of (x,r) \<Rightarrow> ((x,unspec),r))
         \<setter> (\<lambda>((x,_),r). s (x,r))
@@ -1032,12 +1032,12 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emp
           clarsimp split: prod.split) .
 
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _ \<mapsto> (_ \<^emph> \<half_blkcirc>[True] _) \<OTast> _
                                   \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
+  \<open> \<map> g : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : (U\<^sub>1 \<^emph> \<half_blkcirc>[True] U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> \<half_blkcirc>[True] U\<^sub>2') \<OTast> R'
+\<Longrightarrow> \<map> g : (U\<^sub>1 \<^emph> \<half_blkcirc>[True] U\<^sub>2) \<OTast> R \<mapsto> (U\<^sub>1' \<^emph> \<half_blkcirc>[True] U\<^sub>2') \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   by simp
@@ -1045,17 +1045,17 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : (_ \<^emp
 end
 
 lemma [\<phi>reason %\<phi>mapToA_sys_norm
-        for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
+        for \<open>\<map> _ : _ \<mapsto> _
              \<over> _ : (\<circle> \<^emph> _ ) \<OTast> _ \<mapsto> _
              \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
   \<open> \<simplify> f\<^sub>1' : f\<^sub>1
 \<Longrightarrow> \<premise> (\<forall>((x,_),_) \<in> D. f\<^sub>1' x = unspec)
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3 : T\<^sub>2 \<OTast> W \<mapsto> T\<^sub>2' \<OTast> W'
     \<with> \<getter> h \<setter> s
       \<in'> (\<lambda>((a,b),c). (b,c)) ` D
 
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f f\<^sub>3 : (\<circle> \<^emph> T\<^sub>2 ) \<OTast> W \<mapsto> (\<circle> \<^emph> T\<^sub>2') \<OTast> W'
     \<with> \<getter> h o (\<lambda>((a,b),c). (b,c))
          \<setter> (\<lambda>(b,c). ((unspec,b),c)) o s
@@ -1076,17 +1076,17 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm
 
 
 lemma [\<phi>reason %\<phi>mapToA_sys_norm
-        for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
+        for \<open>\<map> _ : _ \<mapsto> _
              \<over> _ : (\<half_blkcirc>[False] _ \<^emph> _ ) \<OTast> _ \<mapsto> _
              \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
   \<open> \<simplify> f\<^sub>1' : f\<^sub>1
 \<Longrightarrow> \<premise> (\<forall>((x,_),_) \<in> D. f\<^sub>1' x = unspec)
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> f\<^sub>2 \<otimes>\<^sub>f f\<^sub>3 : T\<^sub>2 \<OTast> W \<mapsto> T\<^sub>2' \<OTast> W'
     \<with> \<getter> h \<setter> s
       \<in'> (\<lambda>((a,b),c). (b,c)) ` D
 
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f f\<^sub>3 : (\<half_blkcirc>[False] T\<^sub>1 \<^emph> T\<^sub>2 ) \<OTast> W \<mapsto> (\<half_blkcirc>[False] T\<^sub>1' \<^emph> T\<^sub>2') \<OTast> W'
     \<with> \<getter> h o (\<lambda>((a,b),c). (b,c))
          \<setter> (\<lambda>(b,c). ((unspec,b),c)) o s
@@ -1106,13 +1106,13 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm
         auto simp: Simplify_def Premise_def split: prod.split)
 
 lemma [\<phi>reason %\<phi>mapToA_sys_norm
-        for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
+        for \<open>\<map> _ : _ \<mapsto> _
              \<over> _ : (\<half_blkcirc>[True] _ \<^emph> _ ) \<OTast> _ \<mapsto> _
              \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U'
+  \<open> \<map> g : U \<mapsto> U'
     \<over> f : (T\<^sub>1 \<^emph> T\<^sub>2 ) \<OTast> W \<mapsto> (T\<^sub>1' \<^emph> T\<^sub>2') \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> f : (\<half_blkcirc>[True] T\<^sub>1 \<^emph> T\<^sub>2 ) \<OTast> W \<mapsto> (\<half_blkcirc>[True] T\<^sub>1' \<^emph> T\<^sub>2') \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   by simp
@@ -1122,10 +1122,10 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm
 
 
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<m>\<a>\<p> _ : \<circle> \<OTast> _ \<OTast> _ \<mapsto> \<circle> \<OTast> _ \<OTast> _ \<over> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<map> _ : \<circle> \<OTast> _ \<OTast> _ \<mapsto> \<circle> \<OTast> _ \<OTast> _ \<over> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
                                   \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
   \<open> \<condition> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
-\<Longrightarrow> \<m>\<a>\<p> gg : \<circle> \<OTast> T \<OTast> E \<mapsto> \<circle> \<OTast> T' \<OTast> E'
+\<Longrightarrow> \<map> gg : \<circle> \<OTast> T \<OTast> E \<mapsto> \<circle> \<OTast> T' \<OTast> E'
     \<over> ff : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
     \<with> \<getter> (\<lambda>(x,_,e). (unspec,x,e))
         \<setter> (\<lambda>(_,x,e). (x,unspec,e))
@@ -1133,10 +1133,10 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<m>\<a>\<p> _ : \<circ
   unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
   by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<mapsto> \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<over> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<map> _ : \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<mapsto> \<half_blkcirc>[False] _ \<OTast> _ \<OTast> _ \<over> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
                                   \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
   \<open> \<condition> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f \<otimes>\<^sub>f e) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec) \<otimes>\<^sub>f e)
-\<Longrightarrow> \<m>\<a>\<p> gg : \<half_blkcirc>[False] U \<OTast> T \<OTast> E \<mapsto> \<half_blkcirc>[False] U' \<OTast> T' \<OTast> E'
+\<Longrightarrow> \<map> gg : \<half_blkcirc>[False] U \<OTast> T \<OTast> E \<mapsto> \<half_blkcirc>[False] U' \<OTast> T' \<OTast> E'
     \<over> ff : T \<OTast> \<circle> \<OTast> E \<mapsto> T' \<OTast> \<circle> \<OTast> E'
     \<with> \<getter> (\<lambda>(x,_,e). (unspec,x,e))
         \<setter> (\<lambda>(_,x,e). (x,unspec,e))
@@ -1144,10 +1144,10 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm+10 for \<open>\<m>\<a>\<p> _ : \<half
   unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
   by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<circle> \<OTast> _ \<mapsto> \<circle> \<OTast> _ \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : \<circle> \<OTast> _ \<mapsto> \<circle> \<OTast> _ \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
                                   \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
   \<open> \<condition> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec))
-\<Longrightarrow> \<m>\<a>\<p> gg : \<circle> \<OTast> T \<mapsto> \<circle> \<OTast> T'
+\<Longrightarrow> \<map> gg : \<circle> \<OTast> T \<mapsto> \<circle> \<OTast> T'
     \<over> ff : T \<OTast> \<circle> \<mapsto> T' \<OTast> \<circle>
     \<with> \<getter> (\<lambda>(x,_). (unspec,x))
         \<setter> (\<lambda>(_,x). (x,unspec))
@@ -1155,10 +1155,10 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<circle>
   unfolding ToA_Mapper_def Premise_def \<phi>Prod'_def
   by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[False] U _ \<OTast> _ \<mapsto> \<half_blkcirc>[False] U _ \<OTast> _ \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : \<half_blkcirc>[False] U _ \<OTast> _ \<mapsto> \<half_blkcirc>[False] U _ \<OTast> _ \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
                                   \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
   \<open> \<condition> (gg = (\<lambda>_. unspec) \<otimes>\<^sub>f f) \<and> (ff = f \<otimes>\<^sub>f (\<lambda>_. unspec))
-\<Longrightarrow> \<m>\<a>\<p> gg : \<half_blkcirc>[False] U \<OTast> T \<mapsto> \<half_blkcirc>[False] U' \<OTast> T'
+\<Longrightarrow> \<map> gg : \<half_blkcirc>[False] U \<OTast> T \<mapsto> \<half_blkcirc>[False] U' \<OTast> T'
     \<over> ff : T \<OTast> \<circle> \<mapsto> T' \<OTast> \<circle>
     \<with> \<getter> (\<lambda>(x,_). (unspec,x))
         \<setter> (\<lambda>(_,x). (x,unspec))
@@ -1167,22 +1167,22 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<half_bl
   by (clarsimp simp add: \<phi>Prod_expn'' Ball_def)
 
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : \<half_blkcirc>[True] _ \<OTast> _ \<mapsto> \<half_blkcirc>[True] _ \<OTast> _ \<over> _ : _ \<OTast> _ \<mapsto> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : \<half_blkcirc>[True] _ \<OTast> _ \<mapsto> \<half_blkcirc>[True] _ \<OTast> _ \<over> _ : _ \<OTast> _ \<mapsto> _
                                   \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+  \<open> \<map> g : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : \<half_blkcirc>[True] U \<OTast> R \<mapsto> \<half_blkcirc>[True] U' \<OTast> R'
+\<Longrightarrow> \<map> g : \<half_blkcirc>[True] U \<OTast> R \<mapsto> \<half_blkcirc>[True] U' \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   by simp
 
-lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : \<half_blkcirc>[True]  _ \<OTast> _ \<mapsto> _
+lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<map> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<over> _ : \<half_blkcirc>[True]  _ \<OTast> _ \<mapsto> _
                                   \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+  \<open> \<map> g : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+\<Longrightarrow> \<map> g : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : \<half_blkcirc>[True] T \<OTast> W \<mapsto> \<half_blkcirc>[True] T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   by simp
@@ -1194,27 +1194,27 @@ lemma [\<phi>reason %\<phi>mapToA_sys_norm for \<open>\<m>\<a>\<p> _ : _ \<OTast
 
 
 (*
-lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _ (\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ [True]\<^emph>[_] _ \<mapsto> _ [True]\<^emph>[_] _ \<with> \<getter> _ \<setter> _ \<in'> _)\<close>]:
-  \<open> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R'
+lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _ (\<map> _ : _ \<mapsto> _ \<over> _ : _ [True]\<^emph>[_] _ \<mapsto> _ [True]\<^emph>[_] _ \<with> \<getter> _ \<setter> _ \<in'> _)\<close>]:
+  \<open> \<map> g : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : R\<^sub>1 \<OTast> W \<mapsto> R\<^sub>1' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
 
 \<Longrightarrow> mapToA_cond True Any Any2
-   (\<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<^emph>[C\<^sub>R] R'
+   (\<map> g : U \<OTast> R \<mapsto> U' \<^emph>[C\<^sub>R] R'
     \<over> f : R\<^sub>1 [True]\<^emph>[C\<^sub>W] W \<mapsto> R\<^sub>1' [True]\<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D) \<close>
   unfolding mapToA_cond_def
   by simp
 
 lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _
-                                    (\<m>\<a>\<p> _ : _ [True]\<^emph>[_] _ \<mapsto> _ [True]\<^emph>[_] _
+                                    (\<map> _ : _ [True]\<^emph>[_] _ \<mapsto> _ [True]\<^emph>[_] _
                                      \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _)\<close>]:
-  \<open> \<m>\<a>\<p> w : W\<^sub>1 \<^emph>[C\<^sub>R] R \<mapsto> W\<^sub>1' \<^emph>[C\<^sub>R] R'
+  \<open> \<map> w : W\<^sub>1 \<^emph>[C\<^sub>R] R \<mapsto> W\<^sub>1' \<^emph>[C\<^sub>R] R'
     \<over> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D
 
 \<Longrightarrow> mapToA_cond True Any Any'
-   (\<m>\<a>\<p> w : W\<^sub>1 [True]\<^emph>[C\<^sub>R] R \<mapsto> W\<^sub>1' [True]\<^emph>[C\<^sub>R] R'
+   (\<map> w : W\<^sub>1 [True]\<^emph>[C\<^sub>R] R \<mapsto> W\<^sub>1' [True]\<^emph>[C\<^sub>R] R'
     \<over> f : T \<^emph>[C\<^sub>W] W \<mapsto> T' \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D) \<close>
   unfolding mapToA_cond_def
@@ -1224,14 +1224,14 @@ lemma [\<phi>reason %\<phi>mapToA_aux for \<open>mapToA_cond True _ _
 
 (*
 lemma [\<phi>reason %\<phi>mapToA_sys_norm
-           for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _
+           for \<open>\<map> _ : _ \<mapsto> _
                 \<over> _ : (_ [True]\<^emph> _ ) \<^emph>[_] _ \<mapsto> (_ [True]\<^emph> _) \<^emph>[_] _
                 \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U'
+  \<open> \<map> g : U \<mapsto> U'
     \<over> f : (T\<^sub>1 \<^emph> T\<^sub>2 ) \<^emph>[C\<^sub>W] W \<mapsto> (T\<^sub>1' \<^emph> T\<^sub>2') \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D
 
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> f : (T\<^sub>1  [True]\<^emph> T\<^sub>2 ) \<^emph>[C\<^sub>W] W
           \<mapsto> (T\<^sub>1' [True]\<^emph> T\<^sub>2') \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
@@ -1251,13 +1251,13 @@ begin
 text \<open>\<open>ToA_mapper_elim_Ext\<close>\<close>
 
 lemma [\<phi>reason %\<phi>mapToA_post_split
-          for \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
+          for \<open>\<map> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
                \<over> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
                \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R'
+  \<open> \<map> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> (\<lambda>(x,w,e). (x,w)) ` D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f e : U \<OTast> R \<OTast> E \<mapsto> U' \<OTast> R' \<OTast> E'
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f r \<otimes>\<^sub>f e : U \<OTast> R \<OTast> E \<mapsto> U' \<OTast> R' \<OTast> E'
     \<over> f \<otimes>\<^sub>f w \<otimes>\<^sub>f e : T \<OTast> W \<OTast> E \<mapsto> T' \<OTast> W' \<OTast> E'
     \<with> \<getter> (\<lambda>(x,w,e). case h (x,w) of (y,r) \<Rightarrow> (y,r,e))
          \<setter> (\<lambda>(y,r,e). case s (y,r) of (x,w) \<Rightarrow> (x,w,e))
@@ -1280,11 +1280,11 @@ lemma [\<phi>reason %\<phi>mapToA_post_split
 lemma ToA_mapper_intro_Ext[no_atp]:
   \<open> \<simplify> h' : (\<lambda>(x,w). case h (x,w,unspec) of (y,r,_) \<Rightarrow> (y,r))
 \<Longrightarrow> \<simplify> s' : (\<lambda>(y,r). case s (y,r,unspec) of (x,w,_) \<Rightarrow> (x,w))
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r \<otimes>\<^sub>f (\<lambda>_. unspec) : U \<OTast> R \<OTast> \<circle> \<mapsto> U' \<OTast> R' \<OTast> \<circle>
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f r \<otimes>\<^sub>f (\<lambda>_. unspec) : U \<OTast> R \<OTast> \<circle> \<mapsto> U' \<OTast> R' \<OTast> \<circle>
     \<over> f \<otimes>\<^sub>f w \<otimes>\<^sub>f (\<lambda>_. unspec) : T \<OTast> W \<OTast> \<circle> \<mapsto> T' \<OTast> W' \<OTast> \<circle>
     \<with> \<getter> h \<setter> s
       \<in'> (\<lambda>(x,w). (x,w,unspec)) ` D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R'
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h' \<setter> s' \<in'> D \<close>
   for T :: \<open>('e::sep_monoid,'f) \<phi>\<close>
@@ -1321,18 +1321,18 @@ begin
 lemma \<phi>mapToA_split_goal_Ty[
       no_atp,
       \<phi>reason %\<phi>mapToA_split_goal
-          for \<open>\<m>\<a>\<p> _ : (_ \<^emph> _) \<OTast> _ \<OTast> _ \<mapsto> (_ \<^emph> _) \<OTast> _ \<OTast> _
+          for \<open>\<map> _ : (_ \<^emph> _) \<OTast> _ \<OTast> _ \<mapsto> (_ \<^emph> _) \<OTast> _ \<OTast> _
                \<over> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
                \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
   \<open> split_map g g\<^sub>1 g\<^sub>2
-\<Longrightarrow> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 : U\<^sub>1 \<OTast> R\<^sub>1 \<OTast> W\<^sub>2 \<OTast> E \<mapsto> U\<^sub>1' \<OTast> R\<^sub>1' \<OTast> W\<^sub>2' \<OTast> E'
+\<Longrightarrow> \<map> g\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 : U\<^sub>1 \<OTast> R\<^sub>1 \<OTast> W\<^sub>2 \<OTast> E \<mapsto> U\<^sub>1' \<OTast> R\<^sub>1' \<OTast> W\<^sub>2' \<OTast> E'
     \<over> f\<^sub>1 \<otimes>\<^sub>f w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2 \<otimes>\<^sub>f e : T \<OTast> W\<^sub>1 \<OTast> W\<^sub>2 \<OTast> E \<mapsto> T' \<OTast> W\<^sub>1' \<OTast> W\<^sub>2' \<OTast> E'
     \<with> \<getter> h\<^sub>1 \<setter> s\<^sub>1 \<in'> (\<lambda>(x,w,e). case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow> (x,w\<^sub>1,w\<^sub>2,e)) ` D
-\<Longrightarrow> \<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r\<^sub>2 : U\<^sub>2 \<OTast> R \<OTast> E \<mapsto> U\<^sub>2' \<OTast> R' \<OTast> E' \<comment> \<open>goto, \<section>\<open>Conditioned Targets\<close>\<close>
+\<Longrightarrow> \<map> g\<^sub>2 \<otimes>\<^sub>f r\<^sub>2 : U\<^sub>2 \<OTast> R \<OTast> E \<mapsto> U\<^sub>2' \<OTast> R' \<OTast> E' \<comment> \<open>goto, \<section>\<open>Conditioned Targets\<close>\<close>
     \<over> f\<^sub>2 : R\<^sub>1 \<OTast> W\<^sub>2 \<OTast> E \<mapsto> R\<^sub>1' \<OTast> W\<^sub>2' \<OTast> E'
     \<with> \<getter> h\<^sub>2 \<setter> s\<^sub>2 \<in'> (\<lambda>(x,w,e). case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow> snd (h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e))) ` D
-\<Longrightarrow> \<clean> \<m>\<a>\<p> w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2 : W\<^sub>1 \<^emph> W\<^sub>2 \<mapsto> W\<^sub>1' \<^emph> W\<^sub>2' \<over> ww : W \<mapsto> W' \<with> \<getter> h\<^sub>C \<setter> s\<^sub>C
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>2 : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<OTast> E \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R' \<OTast> E'
+\<Longrightarrow> \<clean> \<map> w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2 : W\<^sub>1 \<^emph> W\<^sub>2 \<mapsto> W\<^sub>1' \<^emph> W\<^sub>2' \<over> ww : W \<mapsto> W' \<with> \<getter> h\<^sub>C \<setter> s\<^sub>C
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f r\<^sub>2 : (U\<^sub>1 \<^emph> U\<^sub>2) \<OTast> R \<OTast> E \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<OTast> R' \<OTast> E'
     \<over> f\<^sub>1 \<otimes>\<^sub>f ww \<otimes>\<^sub>f e : T \<OTast> W \<OTast> E \<mapsto> T' \<OTast> W' \<OTast> E'
     \<with> \<getter> (\<lambda>(x,w,e). case h\<^sub>C w of (w\<^sub>1,w\<^sub>2) \<Rightarrow>
                          case h\<^sub>1 (x,w\<^sub>1,w\<^sub>2,e) of (y\<^sub>1,r\<^sub>1) \<Rightarrow>
@@ -1380,23 +1380,23 @@ apply (case_tac \<open>s\<^sub>1 (g\<^sub>1 ab, s\<^sub>2 (g\<^sub>2 ac, r\<^sub
 declare ToA_mapper_intro_Ext
         [OF _ _ \<phi>mapToA_split_goal_Ty, \<phi>reasoned 2,
          \<phi>reason %\<phi>mapToA_split_goal
-            for \<open>\<m>\<a>\<p> _ : (_ \<^emph> _) \<OTast> ?var_R \<mapsto> (_ \<^emph> _) \<OTast> ?var_R'
+            for \<open>\<map> _ : (_ \<^emph> _) \<OTast> ?var_R \<mapsto> (_ \<^emph> _) \<OTast> ?var_R'
                  \<over> _ : _ \<OTast> ?var_W \<mapsto> _ \<OTast> ?var_W'
                  \<with> \<getter> _ \<setter> _ \<in'> _\<close>]
 
 (*
 lemma [\<phi>reason %\<phi>mapToA_split_goal,
        THEN ToA_mapper_intro_Ex, simplified]:
-  \<open> \<m>\<a>\<p> g\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 : U\<^sub>1 \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1, W\<^sub>2, E) \<mapsto> U\<^sub>1' \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1', W\<^sub>2', E')
+  \<open> \<map> g\<^sub>1 \<otimes>\<^sub>f f\<^sub>2 : U\<^sub>1 \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1, W\<^sub>2, E) \<mapsto> U\<^sub>1' \<^emph>[C\<^sub>R\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (R\<^sub>1', W\<^sub>2', E')
     \<over> f\<^sub>1 \<otimes>\<^sub>f w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2 \<otimes>\<^sub>f e : T \<^emph>[C\<^sub>W\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>1, W\<^sub>2, E) \<mapsto> T' \<^emph>[C\<^sub>W\<^sub>1, C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>1', W\<^sub>2', E')
     \<with> \<getter> h\<^sub>1 \<setter> s\<^sub>1 \<in'> apsnd prod.rotR ` D
 \<Longrightarrow> (C\<^sub>R\<^sub>1 \<or> C\<^sub>W\<^sub>2 \<or> C\<^sub>E) \<and>
-   (\<m>\<a>\<p> g\<^sub>2 \<otimes>\<^sub>f r\<^sub>2 : U\<^sub>2 \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> U\<^sub>2' \<^emph>[C\<^sub>R, C\<^sub>E] (R', E') \<comment> \<open>goto, \<section>\<open>Conditioned Targets\<close>\<close>
+   (\<map> g\<^sub>2 \<otimes>\<^sub>f r\<^sub>2 : U\<^sub>2 \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> U\<^sub>2' \<^emph>[C\<^sub>R, C\<^sub>E] (R', E') \<comment> \<open>goto, \<section>\<open>Conditioned Targets\<close>\<close>
     \<over> f\<^sub>2 : R\<^sub>1 [C\<^sub>R\<^sub>1]\<^emph>[C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>2, E) \<mapsto> R\<^sub>1' [C\<^sub>R\<^sub>1]\<^emph>[C\<^sub>W\<^sub>2, C\<^sub>E] (W\<^sub>2', E')
     \<with> \<getter> h\<^sub>2 \<setter> s\<^sub>2 \<in'> snd ` h\<^sub>1 ` apsnd prod.rotR ` D)
 \<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W  = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1  \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2  @tag \<A>merge \<comment> \<open>goto, \<section>\<open>Filter out empty slots\<close>\<close>
 \<Longrightarrow> \<half_blkcirc>[C\<^sub>W] W' = \<half_blkcirc>[C\<^sub>W\<^sub>1] W\<^sub>1' \<^emph> \<half_blkcirc>[C\<^sub>W\<^sub>2] W\<^sub>2' @tag \<A>merge
-\<Longrightarrow> \<m>\<a>\<p> (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f r\<^sub>2: (U\<^sub>1 \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R, C\<^sub>E] (R', E')
+\<Longrightarrow> \<map> (g\<^sub>1 \<otimes>\<^sub>f g\<^sub>2) \<otimes>\<^sub>f r\<^sub>2: (U\<^sub>1 \<^emph> U\<^sub>2) \<^emph>[C\<^sub>R, C\<^sub>E] (R, E) \<mapsto> (U\<^sub>1' \<^emph> U\<^sub>2') \<^emph>[C\<^sub>R, C\<^sub>E] (R', E')
     \<over> f\<^sub>1 \<otimes>\<^sub>f (w\<^sub>1 \<otimes>\<^sub>f w\<^sub>2) \<otimes>\<^sub>f e : T \<^emph>[C\<^sub>W, C\<^sub>E] (W, E) \<mapsto> T' \<^emph>[C\<^sub>W, C\<^sub>E] (W', E')
     \<with> \<getter> prod.rotL o apsnd h\<^sub>2 o h\<^sub>1 o apsnd prod.rotR
         \<setter> apsnd prod.rotL o s\<^sub>1 o apsnd s\<^sub>2 o prod.rotR
@@ -1432,18 +1432,18 @@ lemma [\<phi>reason %\<phi>mapToA_split_goal,
 
 lemma \<phi>mapToA_split_source
   [\<phi>reason %\<phi>mapToA_split_source
-      for \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
+      for \<open>\<map> _ : _ \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
            \<over> _ : (_ \<^emph> _) \<OTast> _ \<OTast> _ \<mapsto> _ \<OTast> _ \<OTast> _
            \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
 
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 \<otimes>\<^sub>f e : U \<OTast> R\<^sub>1 \<OTast> R\<^sub>2 \<OTast> E \<mapsto> U' \<OTast> R\<^sub>1' \<OTast> R\<^sub>2' \<OTast> E'
+  \<open> \<map> g \<otimes>\<^sub>f r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 \<otimes>\<^sub>f e : U \<OTast> R\<^sub>1 \<OTast> R\<^sub>2 \<OTast> E \<mapsto> U' \<OTast> R\<^sub>1' \<OTast> R\<^sub>2' \<OTast> E'
     \<over> f\<^sub>1 \<otimes>\<^sub>f w\<^sub>1 : T\<^sub>1 \<OTast> W\<^sub>1 \<OTast> R\<^sub>2 \<OTast> E \<mapsto> T\<^sub>1' \<OTast> W\<^sub>1' \<OTast> R\<^sub>2' \<OTast> E'
     \<with> \<getter> h\<^sub>1 \<setter> s\<^sub>1 \<in'> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e))) ` D
-\<Longrightarrow> \<m>\<a>\<p> w\<^sub>1 : W\<^sub>1 \<OTast> R\<^sub>2 \<OTast> E \<mapsto> W\<^sub>1' \<OTast> R\<^sub>2' \<OTast> E'
+\<Longrightarrow> \<map> w\<^sub>1 : W\<^sub>1 \<OTast> R\<^sub>2 \<OTast> E \<mapsto> W\<^sub>1' \<OTast> R\<^sub>2' \<OTast> E'
     \<over> f\<^sub>2 \<otimes>\<^sub>f w\<^sub>2 : T\<^sub>2 \<OTast> W \<OTast> E \<mapsto> T\<^sub>2' \<OTast> W' \<OTast> E'
     \<with> \<getter> h\<^sub>2 \<setter> s\<^sub>2 \<in'> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). (x\<^sub>2, w\<^sub>2e)) ` D
-\<Longrightarrow> \<clean> \<m>\<a>\<p> rr : R \<mapsto> R' \<over> r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 : R\<^sub>1 \<^emph> R\<^sub>2 \<mapsto> R\<^sub>1' \<^emph> R\<^sub>2' \<with> \<getter> h\<^sub>C \<setter> s\<^sub>C
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f rr \<otimes>\<^sub>f e : U \<OTast> R \<OTast> E \<mapsto> U' \<OTast> R' \<OTast> E'
+\<Longrightarrow> \<clean> \<map> rr : R \<mapsto> R' \<over> r\<^sub>1 \<otimes>\<^sub>f r\<^sub>2 : R\<^sub>1 \<^emph> R\<^sub>2 \<mapsto> R\<^sub>1' \<^emph> R\<^sub>2' \<with> \<getter> h\<^sub>C \<setter> s\<^sub>C
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f rr \<otimes>\<^sub>f e : U \<OTast> R \<OTast> E \<mapsto> U' \<OTast> R' \<OTast> E'
     \<over> (f\<^sub>1 \<otimes>\<^sub>f f\<^sub>2) \<otimes>\<^sub>f w\<^sub>2 : (T\<^sub>1 \<^emph> T\<^sub>2) \<OTast> W \<OTast> E \<mapsto> (T\<^sub>1' \<^emph> T\<^sub>2') \<OTast> W' \<OTast> E'
     \<with> \<getter> (\<lambda>((x\<^sub>1,x\<^sub>2),w\<^sub>2e). case h\<^sub>1 (x\<^sub>1, h\<^sub>2 (x\<^sub>2, w\<^sub>2e)) of (y,r\<^sub>1,r\<^sub>2,e) \<Rightarrow> (y,h\<^sub>C (r\<^sub>1,r\<^sub>2),e))
          \<setter> (\<lambda>(y,r,e). case s\<^sub>C r of (r\<^sub>1,r\<^sub>2) \<Rightarrow>
@@ -1498,24 +1498,24 @@ lemma \<phi>mapToA_split_source
 declare ToA_mapper_intro_Ext
     [OF _ _ \<phi>mapToA_split_source, \<phi>reasoned 2,
      \<phi>reason %\<phi>mapToA_split_source
-      for \<open>\<m>\<a>\<p> _ : _ \<OTast> ?var_R \<mapsto> _ \<OTast> ?var_R'
+      for \<open>\<map> _ : _ \<OTast> ?var_R \<mapsto> _ \<OTast> ?var_R'
            \<over> _ : (_ \<^emph> _) \<OTast> ?var_W \<mapsto> _ \<OTast> ?var_W'
            \<with> \<getter> _ \<setter> _ \<in'> _\<close>]
 
 end
 
 lemma [\<phi>reason default %\<phi>mapToA_clean_default
-           for \<open>\<clean> \<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _\<close> ]:
-  \<open> \<clean> \<m>\<a>\<p> g : T \<mapsto> U \<over> g : T \<mapsto> U \<with> \<getter> (\<lambda>x. x) \<setter> (\<lambda>x. x) \<close>
+           for \<open>\<clean> \<map> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _\<close> ]:
+  \<open> \<clean> \<map> g : T \<mapsto> U \<over> g : T \<mapsto> U \<with> \<getter> (\<lambda>x. x) \<setter> (\<lambda>x. x) \<close>
   unfolding ToA_Mapper_Clean_def
   by simp
   
 
 lemma [\<phi>reason %\<phi>mapToA_clean]:
-  \<open> \<clean> \<m>\<a>\<p> w\<^sub>2 : W\<^sub>2 \<mapsto> W\<^sub>2'
+  \<open> \<clean> \<map> w\<^sub>2 : W\<^sub>2 \<mapsto> W\<^sub>2'
     \<over> ww : W \<mapsto> W'
     \<with> \<getter> h \<setter> s
-\<Longrightarrow> \<clean> \<m>\<a>\<p> any \<otimes>\<^sub>f w\<^sub>2 : \<circle> \<^emph> W\<^sub>2 \<mapsto> \<circle> \<^emph> W\<^sub>2'
+\<Longrightarrow> \<clean> \<map> any \<otimes>\<^sub>f w\<^sub>2 : \<circle> \<^emph> W\<^sub>2 \<mapsto> \<circle> \<^emph> W\<^sub>2'
     \<over> ww : W \<mapsto> W'
     \<with> \<getter> (\<lambda>x. (unspec, h x)) \<setter> s o snd \<close>
   for W :: \<open>('c::sep_magma_1,'x) \<phi>\<close>
@@ -1523,10 +1523,10 @@ lemma [\<phi>reason %\<phi>mapToA_clean]:
   by (simp add: \<phi>Prod_expn')
   
 lemma [\<phi>reason %\<phi>mapToA_clean]:
-  \<open> \<clean> \<m>\<a>\<p> w\<^sub>1 : W\<^sub>1 \<mapsto> W\<^sub>1'
+  \<open> \<clean> \<map> w\<^sub>1 : W\<^sub>1 \<mapsto> W\<^sub>1'
     \<over> ww : W \<mapsto> W'
     \<with> \<getter> h \<setter> s
-\<Longrightarrow> \<clean> \<m>\<a>\<p> w\<^sub>1 \<otimes>\<^sub>f any : W\<^sub>1 \<^emph> \<circle> \<mapsto> W\<^sub>1' \<^emph> \<circle>
+\<Longrightarrow> \<clean> \<map> w\<^sub>1 \<otimes>\<^sub>f any : W\<^sub>1 \<^emph> \<circle> \<mapsto> W\<^sub>1' \<^emph> \<circle>
     \<over> ww : W \<mapsto> W'
     \<with> \<getter> (\<lambda>x. (h x, unspec)) \<setter> s o fst \<close>
   for W :: \<open>('c::sep_magma_1,'x) \<phi>\<close>
@@ -1534,15 +1534,15 @@ lemma [\<phi>reason %\<phi>mapToA_clean]:
   by (simp add: \<phi>Prod_expn')
 
 lemma [\<phi>reason %\<phi>mapToA_clean]:
-  \<open> \<clean> \<m>\<a>\<p> rr : R \<mapsto> R' \<over> r\<^sub>2 : R\<^sub>2 \<mapsto> R\<^sub>2' \<with> \<getter> h \<setter> s
-\<Longrightarrow> \<clean> \<m>\<a>\<p> rr : R \<mapsto> R' \<over> any \<otimes>\<^sub>f r\<^sub>2 : \<circle> \<^emph> R\<^sub>2 \<mapsto> \<circle> \<^emph> R\<^sub>2' \<with> \<getter> h o snd \<setter> (\<lambda>x. ((), s x)) \<close>
+  \<open> \<clean> \<map> rr : R \<mapsto> R' \<over> r\<^sub>2 : R\<^sub>2 \<mapsto> R\<^sub>2' \<with> \<getter> h \<setter> s
+\<Longrightarrow> \<clean> \<map> rr : R \<mapsto> R' \<over> any \<otimes>\<^sub>f r\<^sub>2 : \<circle> \<^emph> R\<^sub>2 \<mapsto> \<circle> \<^emph> R\<^sub>2' \<with> \<getter> h o snd \<setter> (\<lambda>x. ((), s x)) \<close>
   for R :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
   unfolding ToA_Mapper_Clean_def
   by (simp add: \<phi>Prod_expn')
 
 lemma [\<phi>reason %\<phi>mapToA_clean]:
-  \<open> \<clean> \<m>\<a>\<p> rr : R \<mapsto> R' \<over> r\<^sub>1 : R\<^sub>1 \<mapsto> R\<^sub>1' \<with> \<getter> h \<setter> s
-\<Longrightarrow> \<clean> \<m>\<a>\<p> rr : R \<mapsto> R' \<over> r\<^sub>1 \<otimes>\<^sub>f any : R\<^sub>1 \<^emph> \<circle> \<mapsto> R\<^sub>1' \<^emph> \<circle> \<with> \<getter> h o fst \<setter> (\<lambda>x. (s x, ())) \<close>
+  \<open> \<clean> \<map> rr : R \<mapsto> R' \<over> r\<^sub>1 : R\<^sub>1 \<mapsto> R\<^sub>1' \<with> \<getter> h \<setter> s
+\<Longrightarrow> \<clean> \<map> rr : R \<mapsto> R' \<over> r\<^sub>1 \<otimes>\<^sub>f any : R\<^sub>1 \<^emph> \<circle> \<mapsto> R\<^sub>1' \<^emph> \<circle> \<with> \<getter> h o fst \<setter> (\<lambda>x. (s x, ())) \<close>
   for R :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
   unfolding ToA_Mapper_Clean_def
   by (simp add: \<phi>Prod_expn')
@@ -1791,17 +1791,17 @@ lemma [\<phi>reason %\<phi>mapToA_clean]:
 subsubsection \<open>Reflexive\<close>
 
 lemma \<phi>mapToA_refl
-      [(*\<phi>reason %\<phi>mapToA_refl for \<open>\<m>\<a>\<p> _ : ?T \<mapsto> ?U \<over> _ : ?T \<mapsto> ?U \<with> \<getter> _ \<setter> _ \<in'> _\<close>,*)
-       \<phi>reason %\<phi>mapToA_refl for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> f : T \<mapsto> U \<over> f : T \<mapsto> U \<with> \<getter> id \<setter> id \<in'> D \<close>
+      [(*\<phi>reason %\<phi>mapToA_refl for \<open>\<map> _ : ?T \<mapsto> ?U \<over> _ : ?T \<mapsto> ?U \<with> \<getter> _ \<setter> _ \<in'> _\<close>,*)
+       \<phi>reason %\<phi>mapToA_refl for \<open>\<map> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
+  \<open> \<map> f : T \<mapsto> U \<over> f : T \<mapsto> U \<with> \<getter> id \<setter> id \<in'> D \<close>
   unfolding ToA_Mapper_def
   by clarsimp
 
 lemma \<phi>mapToA_refl'
-      [(* \<phi>reason %\<phi>mapToA_refl+1 for \<open>\<m>\<a>\<p> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<over> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _
+      [(* \<phi>reason %\<phi>mapToA_refl+1 for \<open>\<map> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _ \<over> _ : ?T \<^emph>[_] _ \<mapsto> ?U \<^emph>[_] _
                                     \<with> \<getter> _ \<setter> _ \<in'> _\<close>, *)
-       \<phi>reason %\<phi>mapToA_refl+1 for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> f : T \<OTast> \<circle> \<mapsto> U \<OTast> \<circle>
+       \<phi>reason %\<phi>mapToA_refl+1 for \<open>\<map> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
+  \<open> \<map> f : T \<OTast> \<circle> \<mapsto> U \<OTast> \<circle>
     \<over> f : T \<OTast> \<circle> \<mapsto> U \<OTast> \<circle>
     \<with> \<getter> id \<setter> id \<in'> D \<close>
   unfolding ToA_Mapper_def
@@ -1811,7 +1811,7 @@ lemma \<phi>mapToA_refl'
 subsubsection \<open>Fallback\<close>
 
 lemma [\<phi>reason %\<phi>mapToA_fallbacks]:
-  \<open> \<m>\<a>\<p> f \<otimes>\<^sub>f g : U \<OTast> T \<mapsto> U' \<OTast> T'
+  \<open> \<map> f \<otimes>\<^sub>f g : U \<OTast> T \<mapsto> U' \<OTast> T'
     \<over> g \<otimes>\<^sub>f f : T \<OTast> U \<mapsto> T' \<OTast> U'
     \<with> \<getter> prod.swap \<setter> prod.swap \<in'> D \<close>
   for T :: \<open>'b \<Rightarrow> 'e::sep_algebra BI\<close>
@@ -1885,7 +1885,7 @@ lemma [\<phi>reason %\<phi>mapToA_init+10 except \<open>\<subst> _ \<for> _ \<fr
 
 
 lemma [\<phi>reason %\<phi>mapToA_init]:
-  \<open> \<m>\<a>\<p> g : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W' \<with> \<getter> h \<setter> s \<in'> {(x,w)}
+  \<open> \<map> g : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<OTast> W \<mapsto> T' \<OTast> W' \<with> \<getter> h \<setter> s \<in'> {(x,w)}
 \<Longrightarrow> \<simplify>[\<safe>] ret : h (x, w)
 \<Longrightarrow> \<simplify>[\<safe>] ret\<^sub>f : f (x, w)
 \<Longrightarrow> \<simplify>[\<safe>] ret\<^sub>1 : fst ret
@@ -1900,7 +1900,7 @@ lemma [\<phi>reason %\<phi>mapToA_init]:
   by (clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn')
 
 lemma [\<phi>reason %\<phi>mapToA_init+10]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>f : U \<OTast> R \<mapsto> U \<OTast> R
+  \<open> \<map> g \<otimes>\<^sub>f r\<^sub>f : U \<OTast> R \<mapsto> U \<OTast> R
     \<over> f \<otimes>\<^sub>f w\<^sub>f : T \<OTast> W \<mapsto> T \<OTast> W
     \<with> \<getter> h \<setter> s \<in'> {(x,w)}
 \<Longrightarrow> mapToA_assign_id g
@@ -1922,18 +1922,18 @@ paragraph \<open>Direct use of ToA_Mapper\<close>
 (*
 definition \<open>ToAmap_assign_empty r h s R R' r\<^sub>x h\<^sub>x s\<^sub>x R\<^sub>x R'\<^sub>x \<longleftrightarrow>
   (\<forall>g f D U U' T T'.
-     (\<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R'
+     (\<map> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R'
       \<over> f : T \<mapsto> T'
       \<with> \<getter> h \<setter> s \<in'> D) \<longrightarrow>
-     (\<m>\<a>\<p> g \<otimes>\<^sub>f r\<^sub>x : U \<^emph> R\<^sub>x \<mapsto> U' \<^emph> R'\<^sub>x
+     (\<map> g \<otimes>\<^sub>f r\<^sub>x : U \<^emph> R\<^sub>x \<mapsto> U' \<^emph> R'\<^sub>x
       \<over> f : T \<mapsto> T'
       \<with> \<getter> h\<^sub>x \<setter> s\<^sub>x \<in'> D))\<close>
 
 definition \<open>ToAmap_assign_empty_src h s W W' D w h\<^sub>x s\<^sub>x D\<^sub>x \<longleftrightarrow>
   (\<forall>g f U U' T T'.
-      (\<m>\<a>\<p> g : U \<mapsto> U' \<over> f \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
+      (\<map> g : U \<mapsto> U' \<over> f \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
        \<with> \<getter> h \<setter> s \<in'> D\<^sub>x) \<longrightarrow>
-      (\<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T'
+      (\<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T'
        \<with> \<getter> h\<^sub>x \<setter> s\<^sub>x \<in'> D))\<close>
 
 \<phi>reasoner_group ToAmap_assign_empty = (1100, [10, 2000]) for \<open>ToAmap_assign_empty r h s R R' r\<^sub>x h\<^sub>x s\<^sub>x R\<^sub>x R'\<^sub>x\<close> \<open>\<close>
@@ -1978,26 +1978,26 @@ lemma [\<phi>reason %ToAmap_assign_empty_src]:
 
 (*
 lemma [\<phi>reason %\<phi>mapToA_sys_norm
-           for \<open>\<m>\<a>\<p> _ \<otimes>\<^sub>f _ : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<over> _ : _ \<mapsto> _
+           for \<open>\<map> _ \<otimes>\<^sub>f _ : _ \<^emph> _ \<mapsto> _ \<^emph> _ \<over> _ : _ \<mapsto> _
                 \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
+  \<open> \<map> g \<otimes>\<^sub>f r : U \<OTast> R \<mapsto> U' \<OTast> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f r : U \<^emph> R \<mapsto> U' \<^emph> R' \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   for T :: \<open>('c::sep_magma_1,'x) \<phi>\<close>
   unfolding \<phi>Prod'_def .*)
 
 lemma [\<phi>reason %\<phi>mapToA_sys_norm
-           for \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _
+           for \<open>\<map> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _
                 \<with> \<getter> _ \<setter> _ \<in'> _\<close>
-           except \<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+           except \<open>\<map> _ : _ \<mapsto> _ \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
                    \<with> \<getter> _ \<setter> _ \<in'> _\<close>]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
+  \<open> \<map> g : U \<mapsto> U' \<over> f \<otimes>\<^sub>f w : T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<times> {\<epsilon>}
 \<Longrightarrow> Identity_Elements\<^sub>E W  D\<^sub>E
 \<Longrightarrow> Identity_Elements\<^sub>I W' D\<^sub>I P\<^sub>I
 \<Longrightarrow> \<premise> (\<forall>x. D\<^sub>E x \<longleftrightarrow> x = \<epsilon>) \<and> (D\<^sub>I (w \<epsilon>))
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T'
+\<Longrightarrow> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T'
     \<with> \<getter> (\<lambda>x. h (x, \<epsilon>)) \<setter> fst o s \<in'> D \<close>
   unfolding Identity_Elements\<^sub>E_def Identity_Elements\<^sub>I_def
             Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def Premise_def \<phi>Prod'_def
@@ -2048,7 +2048,7 @@ val _ = (
   PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>_ \<transforms> _ \<with> _\<close>, transformation_counter) ;
   PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>\<get> _ \<from> _\<close>, transformation_counter) ;
   PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>\<subst> _ \<for> _ \<from> _ \<to> _\<close>, transformation_counter) ;
-  PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>\<m>\<a>\<p> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>, transformation_counter)
+  PLPR_Statistics.add_subgoal_counter (\<^pattern_prop>\<open>\<map> _ : _ \<mapsto> _ \<over> _ : _ \<mapsto> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>, transformation_counter)
 )
 
 \<close>

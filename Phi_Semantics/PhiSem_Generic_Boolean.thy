@@ -2,31 +2,31 @@ chapter \<open>Generic Boolean\<close>
 
 theory PhiSem_Generic_Boolean
   imports PhiSem_Base
-  abbrevs "<bool>" = "\<b>\<o>\<o>\<l>"
+  abbrevs "<bool>" = "\<bool'>"
 begin
 
 section \<open>Semantics\<close>
 
-debt_axiomatization \<b>\<o>\<o>\<l>          :: TY
+debt_axiomatization sem_bool_T    :: TY ("\<bool'>")
                 and sem_mk_bool   :: \<open>bool \<Rightarrow> VAL\<close>
                 and sem_dest_bool :: \<open>VAL \<Rightarrow> bool\<close>
   where sem_mk_dest_bool[simp]: \<open>sem_dest_bool (sem_mk_bool b) = b\<close>
-    and \<b>\<o>\<o>\<l>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<b>\<o>\<o>\<l> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+    and bool_neq_poison[simp]: \<open>\<bool'> \<noteq> \<poison>\<close>
     and can_eq_bool: \<open>Can_EqCompare res (sem_mk_bool x1) (sem_mk_bool x2)\<close>
     and eq_bool:     \<open>EqCompare (sem_mk_bool x1) (sem_mk_bool x2) = (x1 = x2)\<close>
-    and zero_bool[simp]: \<open>Zero \<b>\<o>\<o>\<l> = Some (sem_mk_bool False)\<close>
-    and WT_bool[simp]:   \<open>Well_Type \<b>\<o>\<o>\<l> = { sem_mk_bool x |x. True }\<close>  
+    and zero_bool[simp]: \<open>Zero \<bool'> = Some (sem_mk_bool False)\<close>
+    and WT_bool[simp]:   \<open>Well_Type \<bool'> = { sem_mk_bool x |x. True }\<close>  
 
 lemma sem_mk_bool_inj[simp]:
   \<open>sem_mk_bool x = sem_mk_bool y \<equiv> x = y\<close>
   by (smt (verit, del_insts) sem_mk_dest_bool)
 
-lemma \<p>\<o>\<i>\<s>\<o>\<n>_neq_\<b>\<o>\<o>\<l>[simp]:
-  \<open>\<p>\<o>\<i>\<s>\<o>\<n> \<noteq> \<b>\<o>\<o>\<l>\<close>
-  using \<b>\<o>\<o>\<l>_neq_\<p>\<o>\<i>\<s>\<o>\<n> by fastforce
+lemma poison_neq_bool[simp]:
+  \<open>\<poison> \<noteq> \<bool'>\<close>
+  using bool_neq_poison by fastforce
 
 lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal \<b>\<o>\<o>\<l> \<close>
+  \<open> Is_Type_Literal \<bool'> \<close>
   unfolding Is_Type_Literal_def ..
 
 section \<open>Instructions\<close>
@@ -36,31 +36,31 @@ definition op_const_bool :: "bool \<Rightarrow> VAL proc"
 
 definition op_not :: "(VAL, VAL) proc'"
   where "op_not v =
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool v (\<lambda>v.
+    \<phi>M_getV \<bool'> sem_dest_bool v (\<lambda>v.
     Return (\<phi>arg (sem_mk_bool (\<not> v)))
   )"
 
 definition op_and :: "(VAL \<times> VAL, VAL) proc'"
   where "op_and =
     \<phi>M_caseV (\<lambda>va vb.
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool va (\<lambda>v.
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vb (\<lambda>u.
+    \<phi>M_getV \<bool'> sem_dest_bool va (\<lambda>v.
+    \<phi>M_getV \<bool'> sem_dest_bool vb (\<lambda>u.
     Return (\<phi>arg (sem_mk_bool (v \<and> u)))
   )))"
 
 definition op_or :: "(VAL \<times> VAL, VAL) proc'"
   where "op_or =
     \<phi>M_caseV (\<lambda>va vb.
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool va (\<lambda>v.
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vb (\<lambda>u.
+    \<phi>M_getV \<bool'> sem_dest_bool va (\<lambda>v.
+    \<phi>M_getV \<bool'> sem_dest_bool vb (\<lambda>u.
     Return (\<phi>arg (sem_mk_bool (v \<or> u)))
   )))"
 
 definition op_xor :: "(VAL \<times> VAL, VAL) proc'"
   where "op_xor =
     \<phi>M_caseV (\<lambda>va vb.
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool va (\<lambda>v.
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vb (\<lambda>u.
+    \<phi>M_getV \<bool'> sem_dest_bool va (\<lambda>v.
+    \<phi>M_getV \<bool'> sem_dest_bool vb (\<lambda>u.
     Return (\<phi>arg (sem_mk_bool (v \<and> \<not> u \<or> \<not> v \<and> u)))
   )))"
 
@@ -81,9 +81,9 @@ section \<open>\<phi>-Type\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and Functionality
-       and \<open>Semantic_Zero_Val \<b>\<o>\<o>\<l> \<bool> False\<close>
+       and \<open>Semantic_Zero_Val \<bool'> \<bool> False\<close>
        and Inhabited
-       and \<open>\<typeof> \<bool> = \<b>\<o>\<o>\<l>\<close>
+       and \<open>\<typeof> \<bool> = \<bool'>\<close>
        and Equiv_Class
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:

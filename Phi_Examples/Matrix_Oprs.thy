@@ -5,10 +5,10 @@ theory Matrix_Oprs
           Phi_Semantics.PhiSem_Mem_C_MI
 begin
 
-abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<array>[M] \<array>[N] \<i>\<n>\<t>\<close>
+abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<array>[M] \<array>[N] \<int'>\<close>
  
 \<phi>type_def MatSlice
-  where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<mem>[addr] \<slice>[i,m] (\<slice>[j,n] \<int>\<^sup>r(\<i>\<n>\<t>))
+  where \<open>x \<Ztypecolon> MatSlice addr i j m n \<equiv> l \<Ztypecolon> \<mem>[addr] \<slice>[i,m] (\<slice>[j,n] \<int>\<^sup>r(\<int'>))
                                      \<subj> l. l = mat_to_list x \<and> x \<in> carrier_mat m n\<close>
   parameter_equality (id,id,id,id,id)
   deriving \<open>Abstract_Domain (MatSlice addr i j m n) (\<lambda>x. addr \<noteq> 0 \<and> x \<in> carrier_mat m n)\<close>
@@ -29,7 +29,7 @@ proc zero_mat:
 \<medium_left_bracket>
   map_slice(m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_slice(n) \<medium_left_bracket> for h \<rightarrow> val h  \<semicolon>
-      a[i+k, j+h] := \<open>0 \<Ztypecolon> \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
+      a[i+k, j+h] := \<open>0 \<Ztypecolon> \<int>\<^sup>r(\<int'>)\<close>
     \<medium_right_bracket>
   \<medium_right_bracket> \<semicolon>
 
@@ -45,7 +45,7 @@ proc new_mat:
             \<subj> a. address_to_base a\<close>
   unfolding MatSlice.unfold
 \<medium_left_bracket>
-  calloc1 \<open>\<Array>[M] \<Array>[N] \<int>\<^sup>r(\<i>\<n>\<t>)\<close>
+  calloc1 \<open>\<Array>[M] \<Array>[N] \<int>\<^sup>r(\<int'>)\<close>
 \<medium_right_bracket> .
 
 proc del_mat:
@@ -181,8 +181,8 @@ proc strassen:
 \<medium_left_bracket>
   if (n = 0)
   \<medium_left_bracket>
-    \<open>MatSlice a\<^sub>A _ _ _ _\<close> transforms_to \<o>\<p>\<e>\<n>
-    \<open>MatSlice a\<^sub>B _ _ _ _\<close> transforms_to \<o>\<p>\<e>\<n>  \<semicolon>
+    \<open>MatSlice a\<^sub>A _ _ _ _\<close> transforms_to \<open'>
+    \<open>MatSlice a\<^sub>B _ _ _ _\<close> transforms_to \<open'>  \<semicolon>
 
     a\<^sub>A[i\<^sub>A, j\<^sub>A] := a\<^sub>A[i\<^sub>A, j\<^sub>A] * a\<^sub>B[i\<^sub>B, j\<^sub>B] \<semicolon>
       

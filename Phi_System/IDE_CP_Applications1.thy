@@ -14,7 +14,7 @@ theory IDE_CP_Applications1
       and "<bubbling>" = "\<bubbling>"
       and "<assoc>" = "\<assoc>"
       and "<scalar>" = "\<scalar>"
-      and "<open>" = "\<o>\<p>\<e>\<n>"
+      and "<open>" = "\<open'>"
       and "<makes>" = "\<makes>"
 begin
 
@@ -1066,15 +1066,15 @@ declare [[
 
 paragraph \<open>Syntax\<close>
 
-syntax \<o>\<p>\<e>\<n>  :: \<open>logic\<close> ("\<o>\<p>\<e>\<n>")
-       \<o>\<p>\<e>\<n>' :: \<open>nat \<Rightarrow> logic\<close> ("\<o>\<p>\<e>\<n>'(_')")
+syntax synt_open  :: \<open>logic\<close> ("\<open'>")
+       synt_open' :: \<open>nat \<Rightarrow> logic\<close> ("\<open'>'(_')")
 
 parse_ast_translation \<open>let open Ast in [
-  (\<^syntax_const>\<open>\<o>\<p>\<e>\<n>\<close>, fn ctxt => fn args =>
+  (\<^syntax_const>\<open>synt_open\<close>, fn ctxt => fn args =>
       Appl [Constant \<^const_syntax>\<open>OPEN\<close>,
         Appl [Constant "_constrain", Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, Variable "\^E\^Fposition\^E<position>\^E\^F\^E"],
         Appl [Constant "_constrain", Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, Variable "\^E\^Fposition\^E<position>\^E\^F\^E"]] ),
-  (\<^syntax_const>\<open>\<o>\<p>\<e>\<n>'\<close>, fn ctxt => fn args =>
+  (\<^syntax_const>\<open>synt_open'\<close>, fn ctxt => fn args =>
       Appl [Constant \<^const_syntax>\<open>OPEN\<close>,
         hd args,
         Appl [Constant "_constrain", Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, Variable "\^E\^Fposition\^E<position>\^E\^F\^E"]] )

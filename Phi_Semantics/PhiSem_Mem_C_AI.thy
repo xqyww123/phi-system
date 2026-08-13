@@ -4,10 +4,10 @@ begin
 
 
 debt_axiomatization
-      MemObj_Size_aint: \<open>0 < MemObj_Size \<a>\<i>\<n>\<t>\<close>
+      MemObj_Size_aint: \<open>0 < MemObj_Size \<aint>\<close>
 
-lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
-  \<open> \<not> phantom_mem_semantic_type \<a>\<i>\<n>\<t> \<close>
+lemma phantom_mem_semantic_type_aint[simp]:
+  \<open> \<not> phantom_mem_semantic_type \<aint> \<close>
   unfolding phantom_mem_semantic_type_def
   using MemObj_Size_aint by blast
 
@@ -19,14 +19,14 @@ proc calloc_aN:
   requires \<open>\<param> T\<close>
   input \<open>n \<Ztypecolon> \<val> \<nat>\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
-  premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>TY \<noteq> \<poison>\<close>
   output \<open>replicate n z \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<val> TypedPtr (\<array>[n] TY)
           \<subj> addr. address_to_base addr \<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] ;;
 
-  semantic_local_value($n) \<open>\<a>\<i>\<n>\<t>\<close>
+  semantic_local_value($n) \<open>\<aint>\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<array>[nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
                                                and U=\<open>{sem_mk_array (replicate (nat (sem_dest_aint (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))}\<close>]
@@ -50,7 +50,7 @@ proc calloc_aN2:
   requires \<open>\<param> T\<close>
   input \<open>n \<Ztypecolon> \<val> \<nat>\<heavy_comma> m \<Ztypecolon> \<val> \<nat>\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
-  premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>TY \<noteq> \<poison>\<close>
   output \<open>replicate n (replicate m z) \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce> \<Array>[n] \<Array>[m] T)\<heavy_comma>
           addr \<Ztypecolon> \<val> TypedPtr (\<array>[n] \<array>[m] TY)
           \<subj> addr. address_to_base addr \<close>
@@ -58,8 +58,8 @@ proc calloc_aN2:
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] ;;
 
-  semantic_local_value($n) \<open>\<a>\<i>\<n>\<t>\<close>
-  semantic_local_value($m) \<open>\<a>\<i>\<n>\<t>\<close>
+  semantic_local_value($n) \<open>\<aint>\<close>
+  semantic_local_value($m) \<open>\<aint>\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
 
   apply_rule FIC.aggregate_mem.allocate_rule

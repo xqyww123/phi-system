@@ -10,7 +10,7 @@ debt_axiomatization sVAL_emb :: \<open>sVAL \<Rightarrow> VAL\<close>  \<comment
                 and is_sTY   :: \<open>TY \<Rightarrow> bool\<close>   \<comment> \<open>is small type\<close>
   where sVAL_emb_inj: \<open>sVAL_emb x = sVAL_emb y \<longleftrightarrow> x = y\<close>
     and is_sTY: \<open>is_sTY T \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> v \<in> range sVAL_emb\<close>
-    and is_sTY_poison: \<open>is_sTY \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+    and is_sTY_poison: \<open>is_sTY \<poison>\<close>
 
 lemma inj_sVAL_emb:
   \<open>inj sVAL_emb\<close>

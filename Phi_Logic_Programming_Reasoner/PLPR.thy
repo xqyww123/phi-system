@@ -182,7 +182,7 @@ type_synonym mode = action
 text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
 
 consts default :: mode
-       \<c>\<h>\<a>\<n>\<g>\<e>\<d> :: \<open>mode \<Rightarrow> mode\<close>
+       MODE_CHANGED :: \<open>mode \<Rightarrow> mode\<close> ("\<changed>")
        MODE_GUARD :: mode \<comment> \<open>necessary condition for exploring a search branch, may instantiating the
                               goal but never instantiating the contextual premises\<close>
        NO_INST :: mode ("\<no>-\<inst>") \<comment> \<open>prohibiting instantiation\<close>
@@ -2111,7 +2111,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 lemma [\<phi>reason %cutting]:
   \<open> \<simplify>[mode] X : Y
 \<Longrightarrow> NO_LAMBDA_CONVERTIBLE X Y
-\<Longrightarrow> \<simplify>[\<c>\<h>\<a>\<n>\<g>\<e>\<d> mode] X : Y \<close>
+\<Longrightarrow> \<simplify>[\<changed> mode] X : Y \<close>
   unfolding Simplify_def by simp
 
 

@@ -3,7 +3,7 @@ theory PhiSem_Machine_Integer
           "Word_Lib.More_Word" (*We use the word lib from seL4*)
           "Word_Lib.Signed_Division_Word"
           "Word_Lib.Word_Lemmas"
-  abbrevs "<int>" = "\<i>\<n>\<t>"
+  abbrevs "<int>" = "\<int'>"
 begin
 
 chapter \<open>Semantics for Machine Integers\<close>
@@ -16,18 +16,18 @@ section \<open>Models\<close>
 subsubsection \<open>Type\<close>
 
 debt_axiomatization sem_int_T :: \<open>nat \<Rightarrow> TY\<close>
-  where \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>': \<open>sem_int_T b \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  where int_t_neq_poison': \<open>sem_int_T b \<noteq> \<poison>\<close>
 
 definition \<open>mk_int_T = sem_int_T o len0_class.len_of\<close>
 
-lemma \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]:
-  \<open>mk_int_T b \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
-  \<open>\<p>\<o>\<i>\<s>\<o>\<n> \<noteq> mk_int_T b\<close>
+lemma int_t_neq_poison[simp]:
+  \<open>mk_int_T b \<noteq> \<poison>\<close>
+  \<open>\<poison> \<noteq> mk_int_T b\<close>
   unfolding mk_int_T_def
-  by (simp_all add: \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>', metis \<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>' comp_apply)
+  by (simp_all add: int_t_neq_poison', metis int_t_neq_poison' comp_apply)
 
 syntax "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("int'(_')")
-       "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<i>\<n>\<t>'(_')")
+       "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<int'>'(_')")
 
 (*translations "int('b)" => "CONST mk_int_T (CONST Pure.type :: 'b itself)" *)
 
@@ -61,22 +61,23 @@ parse_ast_translation \<open>
           Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]))] end\<close>
 
 
-typedecl \<i>\<n>\<t> \<comment> \<open>size of address space\<close>
+typedecl int_t ("\<int'>") \<comment> \<open>size of address space\<close>
 
-consts \<i>\<n>\<t>_bits :: "nat" \<comment> \<open>bit width of address space, in unit of bits\<close>
-specification (\<i>\<n>\<t>_bits) \<i>\<n>\<t>_bits_L0: "0 < \<i>\<n>\<t>_bits" by blast
+consts int_t_bits :: "nat" \<comment> \<open>bit width of address space, in unit of bits\<close>
+specification (int_t_bits) int_t_bits_L0: "0 < int_t_bits" by blast
   \<comment> \<open>We leave it unspecified and only require it is positive\<close>
 
 
-instantiation \<i>\<n>\<t> :: len begin
-definition "len_of_\<i>\<n>\<t> (_::\<i>\<n>\<t> itself) = \<i>\<n>\<t>_bits"
-instance by (standard, simp add: \<i>\<n>\<t>_bits_L0 len_of_\<i>\<n>\<t>_def)
+instantiation int_t :: len begin
+definition "len_of_int_t (_::int_t itself) = int_t_bits"
+instance by (standard, simp add: int_t_bits_L0 len_of_int_t_def)
 end
 
-abbreviation \<open>\<i>\<n>\<t> \<equiv> \<i>\<n>\<t>(\<i>\<n>\<t>)\<close>
+abbreviation sem_int_t' ("\<int'>")
+  where \<open>sem_int_t' \<equiv> \<int'>(int_t)\<close>
 
 lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal \<i>\<n>\<t>('a) \<close>
+  \<open> Is_Type_Literal \<int'>('a) \<close>
   unfolding Is_Type_Literal_def ..
 
 
@@ -176,7 +177,7 @@ subsubsection \<open>Rounded Natural Number\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (\<phi>RoundedNat (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
-       and \<open>\<typeof> (\<phi>RoundedNat (TYPE('a))) = \<i>\<n>\<t>('a)\<close>
+       and \<open>\<typeof> (\<phi>RoundedNat (TYPE('a))) = \<int'>('a)\<close>
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedNat TYPE('b)) 0\<close>
        and Inhabited
 
@@ -245,7 +246,7 @@ declare [[\<phi>reason_default_pattern
       \<open>?x \<Ztypecolon> ?T \<transforms> _ \<Ztypecolon> \<phi>Nat _ \<with> _ @tag \<T>\<P> \<close>    (200) ]]
 
 let_\<phi>type \<phi>Nat
-  deriving \<open> \<typeof> \<nat>('b) = \<i>\<n>\<t>('b) \<close>
+  deriving \<open> \<typeof> \<nat>('b) = \<int'>('b) \<close>
        and \<open>Semantic_Zero_Val int('b) \<nat>('b) 0\<close>
 
 lemma [\<phi>reason %ToA_num_conv_cut]:
@@ -315,7 +316,7 @@ subsubsection \<open>Integer\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (\<phi>Int uu) (=)\<close>
-       and \<open> \<typeof>(\<phi>Int TYPE('a)) = \<i>\<n>\<t>('a) \<close>
+       and \<open> \<typeof>(\<phi>Int TYPE('a)) = \<int'>('a) \<close>
        and Inhabited
 
 syntax \<phi>Int_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<int>'(_')")
@@ -427,7 +428,7 @@ subsubsection \<open>Rounded Natural Number\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and \<open>Object_Equiv (\<phi>RoundedInt (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
-       and \<open> \<typeof>(\<phi>RoundedInt TYPE('a)) = \<i>\<n>\<t>('a) \<close>
+       and \<open> \<typeof>(\<phi>RoundedInt TYPE('a)) = \<int'>('a) \<close>
        and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedInt TYPE('b)) 0\<close>
        and Inhabited
 
@@ -661,7 +662,7 @@ lemma [\<phi>reason %\<phi>synthesis_parse_number
        \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
 ]:
-  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>(\<i>\<n>\<t>)) X
+  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>(\<int'>)) X
 \<Longrightarrow> Synthesis_Parse n X\<close>
   for X :: \<open>'ret \<Rightarrow> assn\<close>
   unfolding Synthesis_Parse_def ..

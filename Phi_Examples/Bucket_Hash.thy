@@ -115,7 +115,7 @@ proc update_hash:
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length ;;
 
-  transforms_to \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
+  transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
   val N \<leftarrow> addr.N \<semicolon>
   val hash \<leftarrow> calc_hash (k, N) \<semicolon>
@@ -152,7 +152,7 @@ proc hash_has_key:
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
-  transforms_to \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
+  transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
   val N \<leftarrow> addr.N \<semicolon>
   val hash \<leftarrow> k % N \<semicolon>
@@ -193,7 +193,7 @@ proc hash_lookup:
 \<medium_left_bracket>
   note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
 
-  transforms_to \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, base, buckets \<semicolon>
+  transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
 
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
   val N \<leftarrow> addr.N \<semicolon>
@@ -210,7 +210,7 @@ proc new_hash:
   input  \<open>N \<Ztypecolon> \<val> \<nat>(size_\<t>)\<close>
   requires \<open>\<param> T\<close>
   premises \<open>0 < N\<close>
-       and \<open>\<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+       and \<open>\<typeof> T \<noteq> \<poison>\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>Map.empty \<Ztypecolon> \<ref> Hash addr T \<subj> addr. \<top>\<close>
 \<medium_left_bracket>
@@ -245,7 +245,7 @@ proc del_hash:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr T\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
+  transforms_to \<open'> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
   val N \<leftarrow> $addr.N \<semicolon>
   val tabl \<leftarrow> $addr.tabl \<semicolon>
   iterate (\<open>0 \<Ztypecolon> \<nat>(size_\<t>)\<close>, N)
@@ -266,7 +266,7 @@ proc entries_of_hash:
           f \<Ztypecolon> Hash addr T
           \<subj> l addr'. set l = Map.graph f\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
+  transforms_to \<open'> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
   val dynarr \<leftarrow> apply_rule new_dynarr[where T=\<open>\<lbrace> k: \<nat>(size_\<t>), v: T \<rbrace>\<close>] \<semicolon>
   val N \<leftarrow> addr.N \<semicolon>
   val tabl \<leftarrow> addr.tabl \<semicolon>
@@ -284,7 +284,7 @@ proc entries_of_hash:
 proc rehash:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr  T\<heavy_comma> N \<Ztypecolon> \<val> \<nat>(size_\<t>)\<close>
   premises \<open>0 < N\<close>
-       and \<open>\<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+       and \<open>\<typeof> T \<noteq> \<poison>\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>f \<Ztypecolon> \<ref> Hash addr' T \<subj> addr'. \<top>\<close>
 \<medium_left_bracket>

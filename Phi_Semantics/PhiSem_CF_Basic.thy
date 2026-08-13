@@ -11,7 +11,7 @@ subsection \<open>Non-Branching Selection\<close>
 definition op_sel :: "TY \<Rightarrow> (VAL \<times> VAL \<times> VAL, VAL) proc'"
   where "op_sel TY =
     \<phi>M_caseV (\<lambda>vc. \<phi>M_caseV (\<lambda>va vb.
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool vc (\<lambda>c.
+    \<phi>M_getV \<bool'> sem_dest_bool vc (\<lambda>c.
     \<phi>M_getV TY id va (\<lambda>a.
     \<phi>M_getV TY id vb (\<lambda>b.
     Return (\<phi>arg (if c then a else b)))))))"
@@ -22,7 +22,7 @@ definition op_if :: "'ret proc
                   \<Rightarrow> 'ret proc
                   \<Rightarrow> (VAL,'ret) proc'"
   where "op_if brT brF v =
-    \<phi>M_getV \<b>\<o>\<o>\<l> sem_dest_bool v (\<lambda>c. (if c then brT else brF))"
+    \<phi>M_getV \<bool'> sem_dest_bool v (\<lambda>c. (if c then brT else brF))"
 
 subsection \<open>While Loop\<close>
 

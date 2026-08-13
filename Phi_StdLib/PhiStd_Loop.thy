@@ -33,7 +33,7 @@ proc (nodef) map_list_loop:
   requires \<open>\<param> U\<close>
        and \<open>Abstract_Domain T D\<close>
        and map: \<open>\<And>i l. \<premise> i < len \<and> D l
-                   \<Longrightarrow> \<m>\<a>\<p> g i \<otimes>\<^sub>f id : U i \<OTast> R i \<mapsto> U i \<OTast> R i
+                   \<Longrightarrow> \<map> g i \<otimes>\<^sub>f id : U i \<OTast> R i \<mapsto> U i \<OTast> R i
                        \<over> ff i : T \<mapsto> T
                        \<with> \<getter> h i \<setter> s i \<in'> {l}\<close>
        and \<open>(\<And>i. \<simplify>[\<safe>] (list_upd_map i (f i)) : ff i)\<close> \<comment> \<open>TODO: error print\<close>
@@ -72,7 +72,7 @@ proc (nodef) map_2list_loop:
        and [symmetric, simp]: \<open>(\<And>l i. \<simplify>[\<safe>] (h\<^sub>b i (l ! i)) : fst (h\<^sub>b' i l))\<close> \<comment> \<open>TODO: error print\<close>
        and map\<^sub>a[\<phi>reason 9999]: \<open>\<And>x i l.
                        \<premise> i < len \<and> D\<^sub>a l
-                   \<Longrightarrow> \<m>\<a>\<p> g\<^sub>a i x \<otimes>\<^sub>f id : U\<^sub>a i \<OTast> R\<^sub>a i \<mapsto> U\<^sub>a i \<OTast> R\<^sub>a i
+                   \<Longrightarrow> \<map> g\<^sub>a i x \<otimes>\<^sub>f id : U\<^sub>a i \<OTast> R\<^sub>a i \<mapsto> U\<^sub>a i \<OTast> R\<^sub>a i
                        \<over> ff i x : T\<^sub>a \<mapsto> T\<^sub>a
                        \<with> \<getter> h\<^sub>a i \<setter> s\<^sub>a i \<in'> {l} \<close>
        and P2[symmetric, simp, \<phi>safe_simp]: \<open>(\<And>i x. \<simplify>[\<safe>] (list_upd_map i (f i x)) : ff i x)\<close> \<comment> \<open>TODO: error print, defualt premise attribute!\<close>

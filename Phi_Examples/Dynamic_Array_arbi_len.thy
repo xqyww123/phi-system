@@ -27,10 +27,10 @@ begin
                               \<subj> a\<^sub>D len cap data. len = length l \<and> cap = length data \<and>
                                                    len \<le> cap \<and> (cap = 0 \<or> cap < 2 * len) \<and>
                                                    take len data = l \<and> address_to_base a\<^sub>D \<and> address_to_base addr \<and>
-                                                   \<typeof> addr = \<struct> {data: \<ptr>, len: \<a>\<i>\<n>\<t>, cap: \<a>\<i>\<n>\<t>} \<and>
-                                                   \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+                                                   \<typeof> addr = \<struct> {data: \<ptr>, len: \<aint>, cap: \<aint>} \<and>
+                                                   \<typeof> T \<noteq> \<poison> \<close>
 
-  deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0 \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
+  deriving \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (DynArr addr T) (\<lambda>l. list_all P l \<and> addr \<noteq> 0 \<and> \<typeof> T \<noteq> \<poison>)\<close>
        and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (DynArr addr T) (list_all2 eq)\<close>
             (tactic: auto, subgoal' for x xa xb xc \<open>rule exI[where x=\<open>xa @ drop (length xa) xc\<close>]\<close>)
        and \<open> \<condition> (addr' = addr)
@@ -44,14 +44,14 @@ begin
         \<Longrightarrow> Functional_Transformation_Functor (DynArr addr) (DynArr addr') T U (\<lambda>_. UNIV) (\<lambda>x. UNIV)
              (\<lambda>f. list_all) (\<lambda>f P. map f)\<close>
 
-abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<struct> {data: \<ptr>, len: \<a>\<i>\<n>\<t>, cap: \<a>\<i>\<n>\<t>}\<close>
+abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<struct> {data: \<ptr>, len: \<aint>, cap: \<aint>}\<close>
 
 
 proc len_dynarr:
   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
   output   \<open>length l \<Ztypecolon> \<val> \<nat>\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<semicolon>
+  transforms_to \<open'> \<semicolon>
   val ret \<leftarrow> addr.len \<semicolon>
   \<open>MAKE _ (DynArr addr _)\<close> \<semicolon>
   ret
@@ -63,7 +63,7 @@ proc get_dynarr:
   premises \<open>i < length l\<close>
   output   \<open>l!i \<Ztypecolon> \<val> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<semicolon>
+  transforms_to \<open'> \<semicolon>
   addr.data[i]
   \<makes> \<open>DynArr addr _\<close>
 \<medium_right_bracket> .
@@ -74,7 +74,7 @@ proc set_dynarr:
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<semicolon>
+  transforms_to \<open'> \<semicolon>
   addr.data[i] := v \<semicolon> 
   \<makes> \<open>l[i := v] \<Ztypecolon> (DynArr addr _)\<close>
 \<medium_right_bracket> .
@@ -92,7 +92,7 @@ proc push_dynarr:
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output   \<open>l @ [v] \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<semicolon>
+  transforms_to \<open'> \<semicolon>
   val len \<leftarrow> addr.len \<semicolon>
   val cap \<leftarrow> addr.cap \<semicolon>
   if (cap = len) \<medium_left_bracket>
@@ -132,7 +132,7 @@ proc pop_dynarr:
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output   \<open>last l \<Ztypecolon> \<val> T\<heavy_comma> butlast l \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<semicolon>
+  transforms_to \<open'> \<semicolon>
   val len \<leftarrow> addr.len - 1 \<semicolon>
   val half_cap \<leftarrow> addr.cap / 2 \<semicolon>
   val ret \<leftarrow> addr.data[len] \<semicolon>
@@ -153,7 +153,7 @@ proc pop_dynarr:
 
 proc new_dynarr:
   input  \<open>Void\<close>
-  premises \<open>\<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>\<typeof> T \<noteq> \<poison>\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>[] \<Ztypecolon> \<ref> DynArr addr T \<subj> addr. \<top>\<close>
 \<medium_left_bracket>
@@ -168,7 +168,7 @@ proc del_dynarr:
   input  \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
-  transforms_to \<o>\<p>\<e>\<n> \<semicolon>
+  transforms_to \<open'> \<semicolon>
   mfree (addr.data) \<semicolon>
   mfree (addr)
 \<medium_right_bracket> .

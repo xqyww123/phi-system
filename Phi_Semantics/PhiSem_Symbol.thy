@@ -1,6 +1,6 @@
 theory PhiSem_Symbol
   imports PhiSem_Base
-  abbrevs "<symbol>" = "\<s>\<y>\<m>\<b>\<o>\<l>"
+  abbrevs "<symbol>" = "\<symbol>"
 begin
 
 text \<open>Semantic symbol type is a literal string which cannot be modified runtime and has fixed range
@@ -10,24 +10,24 @@ text \<open>Semantic symbol type is a literal string which cannot be modified ru
 
 section \<open>Semantics\<close>
 
-debt_axiomatization \<s>\<y>\<m>\<b>\<o>\<l> :: TY
+debt_axiomatization sem_symbol_T    :: TY ("\<symbol>")
                 and sem_mk_symbol   :: \<open>symbol \<Rightarrow> VAL\<close>
                 and sem_dest_symbol :: \<open>VAL \<Rightarrow> symbol\<close>
-where WT_symbol  [simp]: \<open>Well_Type \<s>\<y>\<m>\<b>\<o>\<l> = { sem_mk_symbol sym | sym. True } \<close>
+where WT_symbol  [simp]: \<open>Well_Type \<symbol> = { sem_mk_symbol sym | sym. True } \<close>
   and can_eqcmp_aint[simp]: \<open>Can_EqCompare res (sem_mk_symbol s1) (sem_mk_symbol s2)\<close>
   and eqcmp_aint[simp]: \<open>EqCompare (sem_mk_symbol s1) (sem_mk_symbol s2) \<longleftrightarrow> s1 = s2\<close>
-  and  zero_aint[simp]: \<open>Zero \<s>\<y>\<m>\<b>\<o>\<l> = Some (sem_mk_symbol SYMBOL(zero))\<close>
+  and  zero_aint[simp]: \<open>Zero \<symbol> = Some (sem_mk_symbol SYMBOL(zero))\<close>
 
 lemma sem_mk_symbol_inj[simp]:
   \<open>sem_mk_symbol x = sem_mk_symbol y \<longleftrightarrow> x = y\<close>
   by (metis eqcmp_aint)
 
 lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal \<s>\<y>\<m>\<b>\<o>\<l> \<close>
+  \<open> Is_Type_Literal \<symbol> \<close>
   unfolding Is_Type_Literal_def ..
 
-lemma has_Zero_\<s>\<y>\<m>\<b>\<o>\<l>[simp]:
-  \<open> has_Zero \<s>\<y>\<m>\<b>\<o>\<l> \<close>
+lemma has_Zero_symbol[simp]:
+  \<open> has_Zero \<symbol> \<close>
   unfolding has_Zero_def
   by simp
 
@@ -40,8 +40,8 @@ section \<open>\<phi>-Types\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and Functionality
-       and \<open>\<typeof> Symbol = \<s>\<y>\<m>\<b>\<o>\<l>\<close>
-       and \<open>Semantic_Zero_Val \<s>\<y>\<m>\<b>\<o>\<l> Symbol SYMBOL(zero)\<close>
+       and \<open>\<typeof> Symbol = \<symbol>\<close>
+       and \<open>Semantic_Zero_Val \<symbol> Symbol SYMBOL(zero)\<close>
        and Inhabited
        and Equiv_Class
 

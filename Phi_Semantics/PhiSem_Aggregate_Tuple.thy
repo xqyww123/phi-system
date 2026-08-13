@@ -10,17 +10,17 @@ debt_axiomatization sem_tup_T    :: \<open>TY list \<Rightarrow> TY\<close>
                 and sem_dest_tup :: \<open>VAL \<Rightarrow> VAL list\<close>
                 where sem_dest_mk_tup[simp]: \<open>sem_dest_tup (sem_mk_tup vs) = vs\<close>
   and   WT_tup[simp]: \<open>Well_Type (sem_tup_T ts)  = { sem_mk_tup vs |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
-  and   semty_tup_eq_poison[simp]: \<open>sem_tup_T Ts = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> \<in> set Ts\<close>
+  and   semty_tup_eq_poison[simp]: \<open>sem_tup_T Ts = \<poison> \<longleftrightarrow> \<poison> \<in> set Ts\<close>
   and   semty_tup_uniq:
             \<open>sem_mk_tup vs \<in> Well_Type TY \<Longrightarrow> \<exists>Ts. TY = sem_tup_T Ts\<close>
 
-  and   zero_tup[simp]: \<open>sem_tup_T Ts \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> Zero (sem_tup_T Ts) = map_option sem_mk_tup (those (map Zero Ts))\<close>
+  and   zero_tup[simp]: \<open>sem_tup_T Ts \<noteq> \<poison> \<Longrightarrow> Zero (sem_tup_T Ts) = map_option sem_mk_tup (those (map Zero Ts))\<close>
   and   V_tup_sep_disj_R[simp]: \<open>sem_mk_tup l1 ## vl2 \<longleftrightarrow> (\<exists>l2. vl2 = sem_mk_tup l2)\<close>
   and   V_tup_sep_disj_L[simp]: \<open>vl1 ## sem_mk_tup l2 \<longleftrightarrow> (\<exists>l1. vl1 = sem_mk_tup l1)\<close>
   and   V_tup_mult    : \<open>sem_mk_tup l1 * sem_mk_tup l2 = sem_mk_tup (l1 @ l2)\<close>
-  and   idx_step_type_tup [eval_aggregate_path] : \<open> sem_tup_T tys \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> i < length tys
+  and   idx_step_type_tup [eval_aggregate_path] : \<open> sem_tup_T tys \<noteq> \<poison> \<and> i < length tys
                                                 \<Longrightarrow> idx_step_type (AgIdx_N i) (sem_tup_T tys) = tys!i \<close>
-  and   valid_idx_step_tup[eval_aggregate_path] : \<open> sem_tup_T tys \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  and   valid_idx_step_tup[eval_aggregate_path] : \<open> sem_tup_T tys \<noteq> \<poison>
                                                 \<Longrightarrow> valid_idx_step (sem_tup_T tys) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < length tys} \<close>
   and   idx_step_value_tup[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (sem_mk_tup vs) = vs!i\<close>
   and   idx_step_mod_value_tup : \<open>idx_step_mod_value (AgIdx_N i) f (sem_mk_tup vs) = sem_mk_tup (vs[i := f (vs!i)])\<close>
@@ -37,12 +37,12 @@ lemma has_Zero_tup0 [simp]:
 lemma has_Zero_tup1 [simp]:
   \<open> has_Zero (sem_tup_T (T # Ts)) \<longleftrightarrow> has_Zero T \<and> has_Zero (sem_tup_T Ts) \<close>
   unfolding has_Zero_def
-  by ((cases \<open>sem_tup_T (T # Ts) = \<p>\<o>\<i>\<s>\<o>\<n>\<close> ; auto),
-      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> list.set_intros(1) option.distinct(1) semty_tup_eq_poison,
-      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> list.set_intros(1) option.distinct(1) semty_tup_eq_poison,
-      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> list.set_intros(2) option.discI semty_tup_eq_poison,
+  by ((cases \<open>sem_tup_T (T # Ts) = \<poison>\<close> ; auto),
+      metis Zero_poison list.set_intros(1) option.distinct(1) semty_tup_eq_poison,
+      metis Zero_poison list.set_intros(1) option.distinct(1) semty_tup_eq_poison,
+      metis Zero_poison list.set_intros(2) option.discI semty_tup_eq_poison,
       metis list.set_intros(2) semty_tup_eq_poison,
-      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> option.distinct(1) semty_tup_eq_poison,
+      metis Zero_poison option.distinct(1) semty_tup_eq_poison,
       (insert option.simps(4), fastforce)[1],
       metis option.case_eq_if option.exhaust option.simps(8))
 
@@ -136,11 +136,11 @@ ML_file \<open>library/Ag_Tuple.ML\<close>
 local_setup \<open>setup_semty_tup_to_poison\<close>
 
 lemma
-  \<open>P (\<tup> {\<p>\<o>\<i>\<s>\<o>\<n>}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>P (\<tup> {\<poison>}) = P \<poison>\<close>
   by simp
 
 lemma
-  \<open>P (\<tup> {A, B, \<p>\<o>\<i>\<s>\<o>\<n>, C}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>P (\<tup> {A, B, \<poison>, C}) = P \<poison>\<close>
   by simp
 
 
@@ -177,13 +177,13 @@ translations
 
 definition Tuple_Type_Helper :: \<open>(VAL, 'x) \<phi> \<Rightarrow> TY list \<Rightarrow> bool\<close>
   where \<open>Tuple_Type_Helper T Tys = (
-    (\<p>\<o>\<i>\<s>\<o>\<n> \<notin> set Tys \<longleftrightarrow> Inhabited T \<and> (\<exists>TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)) \<and>
-    (\<forall>x c. c \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>vf. c = sem_mk_tup vf \<and> (\<p>\<o>\<i>\<s>\<o>\<n> \<notin> set Tys \<longrightarrow> list_all2 (\<lambda>t v. v \<in> Well_Type t) Tys vf)))
+    (\<poison> \<notin> set Tys \<longleftrightarrow> Inhabited T \<and> (\<exists>TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)) \<and>
+    (\<forall>x c. c \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>vf. c = sem_mk_tup vf \<and> (\<poison> \<notin> set Tys \<longrightarrow> list_all2 (\<lambda>t v. v \<in> Well_Type t) Tys vf)))
 )\<close>
 
 subsubsection \<open>\<open>\<typeof>\<close>\<close>
 
-lemma semty_tup_eq_poison_rev[simp]: \<open>\<p>\<o>\<i>\<s>\<o>\<n> = sem_tup_T Ts \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> \<in> set Ts\<close>
+lemma semty_tup_eq_poison_rev[simp]: \<open>\<poison> = sem_tup_T Ts \<longleftrightarrow> \<poison> \<in> set Ts\<close>
   by (metis semty_tup_eq_poison)
   
 
@@ -302,8 +302,8 @@ lemma
   by simp
 
 lemma 
-  \<open> \<typeof> B = \<p>\<o>\<i>\<s>\<o>\<n>
-\<Longrightarrow> P (\<typeof> \<lbrace> A, B, C \<rbrace>) = P \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> \<typeof> B = \<poison>
+\<Longrightarrow> P (\<typeof> \<lbrace> A, B, C \<rbrace>) = P \<poison> \<close>
   by simp
 
 
@@ -354,13 +354,13 @@ text \<open>All the reasoning rules below are for semantic properties.
 subsection \<open>Show validity of an index for a type\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<condition> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  \<open> \<condition> sem_tup_T (Ty # Tys) \<noteq> \<poison>
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N 0) (sem_tup_T (Ty # Tys)) Ty \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<condition> sem_tup_T (Ty # Tys) \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  \<open> \<condition> sem_tup_T (Ty # Tys) \<noteq> \<poison>
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (sem_tup_T Tys) RET
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N (Suc i)) (sem_tup_T (Ty # Tys)) RET \<close>
   unfolding is_valid_step_idx_of_def Premise_def
@@ -574,8 +574,8 @@ hide_fact semantic_tuple_constructor_N_no_use
 subsection \<open>Aux\<close>
 
 lemma semty_tup_eq_poison_compute[simp]:
-  \<open> \<tup> {} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
-  \<open> sem_tup_T (H#L) = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> H = \<p>\<o>\<i>\<s>\<o>\<n> \<or> sem_tup_T L = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> \<tup> {} \<noteq> \<poison> \<close>
+  \<open> sem_tup_T (H#L) = \<poison> \<longleftrightarrow> H = \<poison> \<or> sem_tup_T L = \<poison> \<close>
   by simp_all blast
 
 declare semty_tup_eq_poison[simp del]

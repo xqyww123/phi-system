@@ -16,7 +16,7 @@ private lemma \<phi>TA_SemTy_rule:
   \<open> \<r>EIF Ant Ant'
 \<Longrightarrow> (\<condition> Ant' \<Longrightarrow> Abstract_Domain T D)
 \<Longrightarrow> (\<condition> Ant' \<Longrightarrow> Abstract_Domain\<^sub>L T D\<^sub>L)
-\<Longrightarrow> \<premise> (Ant' \<longrightarrow> TY = (if Ex D then TY' else \<p>\<o>\<i>\<s>\<o>\<n>) \<and> D\<^sub>L = D)
+\<Longrightarrow> \<premise> (Ant' \<longrightarrow> TY = (if Ex D then TY' else \<poison>) \<and> D\<^sub>L = D)
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY' @tag \<phi>TA_subgoal undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<obligation> True
@@ -73,7 +73,7 @@ private lemma styp_of_derv_rule':
 \<Longrightarrow> Semantic_Type T TY
 \<Longrightarrow> \<premise> ((\<exists>x. D\<^sub>L x) = (\<exists>x. D x) \<and>
             ((\<exists>x. D x) \<longrightarrow> TY' = TY) \<and>
-            ((\<forall>x. \<not> D x) \<longrightarrow> TY' = \<p>\<o>\<i>\<s>\<o>\<n>))
+            ((\<forall>x. \<not> D x) \<longrightarrow> TY' = \<poison>))
 \<Longrightarrow> SType_Of T = TY' \<close>
   unfolding Abstract_Domain\<^sub>L_def Abstract_Domain_def \<r>ESC_def \<r>EIF_def
             Premise_def SType_Of_def Inhabited_def 
@@ -101,7 +101,7 @@ subsubsection \<open>Semantic Zero Value\<close>
 context begin
 
 private lemma \<phi>TA_Semantic_Zero_Val_rule:
-  \<open> (Ant \<Longrightarrow> \<premise> (TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<longrightarrow> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T))))
+  \<open> (Ant \<Longrightarrow> \<premise> (TY \<noteq> \<poison> \<longrightarrow> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T))))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<obligation> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT

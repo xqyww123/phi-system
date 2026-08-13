@@ -28,7 +28,7 @@ subsection \<open>Type\<close>
 
 unspecified_type TY
 
-debt_axiomatization \<p>\<o>\<i>\<s>\<o>\<n> :: TY
+debt_axiomatization sem_poison_T :: TY ("\<poison>")
 
 subsection \<open>Value\<close>
 
@@ -151,7 +151,7 @@ subsection \<open>All-in-One Semantics\<close>
 
 debt_axiomatization Well_Type :: \<open>TY \<Rightarrow> VAL set\<close>
   where Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
-    and Well_Type_poison[simp]: \<open>Well_Type \<p>\<o>\<i>\<s>\<o>\<n> = {}\<close>
+    and Well_Type_poison[simp]: \<open>Well_Type \<poison> = {}\<close>
 
 debt_axiomatization Can_EqCompare :: \<open>resource \<Rightarrow> VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
   where can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
@@ -167,12 +167,12 @@ debt_axiomatization Zero :: \<open>TY \<Rightarrow> VAL option\<close>
 definition has_Zero :: \<open>TY \<Rightarrow> bool\<close>
   where \<open>has_Zero T \<longleftrightarrow> Zero T \<noteq> None\<close>
 
-lemma Zero_\<p>\<o>\<i>\<s>\<o>\<n>[simp]:
-  \<open> Zero \<p>\<o>\<i>\<s>\<o>\<n> = None \<close>
+lemma Zero_poison[simp]:
+  \<open> Zero \<poison> = None \<close>
   by (metis Well_Type_poison empty_iff not_None_eq option.pred_inject(2) zero_well_typ)
 
-lemma has_Zero_\<p>\<o>\<i>\<s>\<o>\<n>[simp]:
-  \<open> \<not> has_Zero \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+lemma has_Zero_poison[simp]:
+  \<open> \<not> has_Zero \<poison> \<close>
   unfolding has_Zero_def
   by simp
 

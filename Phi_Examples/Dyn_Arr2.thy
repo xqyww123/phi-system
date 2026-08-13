@@ -28,7 +28,7 @@ declare [[ML_print_depth = 100]]
        and Functional_Transformation_Functor
 
 
-abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<struct> {data: pointer, len: \<a>\<i>\<n>\<t>, cap: \<a>\<i>\<n>\<t>}\<close>
+abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<struct> {data: pointer, len: \<aint>, cap: \<aint>}\<close>
 
 
 proc len_dynarr:

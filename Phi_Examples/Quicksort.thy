@@ -10,11 +10,11 @@ declare [[auto_sledgehammer_params = "try0 = false",
 declare [[\<phi>variable_is_typed]]
 
   proc qsort:
-    input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<i>\<n>\<t>\<heavy_comma>
-            \<val> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
-            l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<i>\<n>\<t>)  \<close>
+    input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<int'>\<heavy_comma>
+            \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
+            l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<int'>)  \<close>
     premises \<open>i + len \<le> LEN\<close>
-    output \<open>l' \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<i>\<n>\<t>)
+    output \<open>l' \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<int'>)
             \<subj> l'. l <~~> l' \<and> sorted l'\<close>
     is [recursive]
     is [routine]
@@ -24,8 +24,8 @@ declare [[\<phi>variable_is_typed]]
     \<medium_right_bracket> \<medium_left_bracket>
       val pivot \<leftarrow> *(i + (len - 1)) \<semicolon>
       var d \<leftarrow> 0 \<semicolon>
-      iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<var>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
-                           l' \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<i>\<n>\<t>)
+      iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<var>[d] \<nat>(\<int'>)\<heavy_comma>
+                           l' \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<int'>)
                    \<subj> l' d.
                      d \<le> n \<and> l <~~> l' \<and>
                      (if n = length l' then 0<d \<and> l'!(d-1) = ?pivot
@@ -75,7 +75,7 @@ thm qsort_def
 
   proc qsort_rat:
     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l>\<heavy_comma>
-            \<val> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+            \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
             l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<rat>\<close>
     premises \<open>i + len \<le> LEN\<close>
     output \<open>l' \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<rat>
@@ -87,8 +87,8 @@ thm qsort_def
       return
     \<medium_right_bracket> \<medium_left_bracket>
       val pivot \<leftarrow> *(i + (len - 1)) \<semicolon>
-      var d \<leftarrow> \<open>0 \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<close> \<semicolon>
-      iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<var>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+      var d \<leftarrow> \<open>0 \<Ztypecolon> \<nat>(\<int'>)\<close> \<semicolon>
+      iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<var>[d] \<nat>(\<int'>)\<heavy_comma>
                            l' \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<rat>
                      \<subj> l' d.
                        d \<le> n \<and> l <~~> l' \<and>
@@ -126,7 +126,7 @@ declare [[\<phi>infer_requirements]]
  
   proc qsort_generic:
     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] (\<typeof> T)\<heavy_comma>
-            \<val> len \<Ztypecolon> \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+            \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
             l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] T  \<close>
     requires \<open>Order T\<close>
     premises \<open>i + len \<le> LEN\<close>
@@ -140,7 +140,7 @@ declare [[\<phi>infer_requirements]]
     \<medium_right_bracket> \<medium_left_bracket>
       val pivot \<leftarrow> *(i + (len - 1)) \<semicolon>
       var d \<leftarrow> 0 \<semicolon>
-      iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<var>[d] \<nat>(\<i>\<n>\<t>)\<heavy_comma>
+      iterate (0,len) \<open>\<lambda>n. d  \<Ztypecolon> \<var>[d] \<nat>(\<int'>)\<heavy_comma>
                            l' \<Ztypecolon> \<mem>[addr] \<slice>[i,len] T
                            \<subj> l' d.
                              d \<le> n \<and> l <~~> l' \<and>

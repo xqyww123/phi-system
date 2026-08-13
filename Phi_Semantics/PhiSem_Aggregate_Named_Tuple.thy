@@ -5,18 +5,18 @@ begin
 
 section \<open>Semantics\<close>
 
-debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<close>
+debt_axiomatization sem_ntup_T    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<close>
                 and sem_mk_ntup   :: \<open>(symbol, VAL) fmap \<Rightarrow> VAL\<close>
                 and sem_dest_ntup :: \<open>VAL \<Rightarrow> (symbol, VAL) fmap\<close>
   where sem_mk_dest_ntup[simp]: \<open>sem_dest_ntup (sem_mk_ntup vs) = vs\<close>
-  and   semty_ntup_eq_poison: \<open>semty_ntup Ts = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> \<p>\<o>\<i>\<s>\<o>\<n> |\<in>| fmran Ts\<close>
-  (*and   semty_ntup_inj: \<open> semty_ntup Ts1 = semty_ntup Ts2 \<longleftrightarrow> Ts1 = Ts2 \<close>*)
+  and   semty_ntup_eq_poison: \<open>sem_ntup_T Ts = \<poison> \<longleftrightarrow> \<poison> |\<in>| fmran Ts\<close>
+  (*and   semty_ntup_inj: \<open> sem_ntup_T Ts1 = sem_ntup_T Ts2 \<longleftrightarrow> Ts1 = Ts2 \<close>*)
   and   WT_named_tup[simp]:
-            \<open>Well_Type (semty_ntup Ts)  = { sem_mk_ntup vs |vs. fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs }\<close>
+            \<open>Well_Type (sem_ntup_T Ts)  = { sem_mk_ntup vs |vs. fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs }\<close>
   and   semty_ntup_uniq:
-            \<open>sem_mk_ntup vs \<in> Well_Type TY \<Longrightarrow> \<exists>Ts. TY = semty_ntup Ts\<close>
+            \<open>sem_mk_ntup vs \<in> Well_Type TY \<Longrightarrow> \<exists>Ts. TY = sem_ntup_T Ts\<close>
   and   zero_named_tup[simp]:
-            \<open>Zero (semty_ntup Ts) = (if fmpred (\<lambda>_ t. Zero t \<noteq> None) Ts
+            \<open>Zero (sem_ntup_T Ts) = (if fmpred (\<lambda>_ t. Zero t \<noteq> None) Ts
                                      then Some (sem_mk_ntup (fmmap (the o Zero) Ts))
                                      else None)\<close>
   and   V_named_tup_sep_disj_R:
@@ -28,9 +28,9 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
   and   V_named_tup_mult[simp]:
             \<open>sem_mk_ntup f1 * sem_mk_ntup f2 = sem_mk_ntup (f1 * f2)\<close>
   and   idx_step_type_tup [eval_aggregate_path]:
-            \<open>s |\<in>| fmdom Ts \<Longrightarrow> idx_step_type (AgIdx_S s) (semty_ntup Ts) = the (fmlookup Ts s)\<close>
+            \<open>s |\<in>| fmdom Ts \<Longrightarrow> idx_step_type (AgIdx_S s) (sem_ntup_T Ts) = the (fmlookup Ts s)\<close>
   and   valid_idx_step_named_tup[eval_aggregate_path]:
-            \<open>valid_idx_step (semty_ntup Ts) j \<longleftrightarrow> j \<in> {AgIdx_S s | s. s |\<in>| fmdom Ts }\<close>
+            \<open>valid_idx_step (sem_ntup_T Ts) j \<longleftrightarrow> j \<in> {AgIdx_S s | s. s |\<in>| fmdom Ts }\<close>
   and   idx_step_value_named_tup[eval_aggregate_path]:
             \<open>idx_step_value (AgIdx_S s) (sem_mk_ntup vs) = the (fmlookup vs s)\<close>
   and   idx_step_mod_value_named_tup:
@@ -39,13 +39,13 @@ debt_axiomatization semty_ntup    :: \<open>(symbol, TY) fmap \<Rightarrow> TY\<
 
 lemma semty_ntup_uniq':
   \<open> sem_mk_ntup vs \<in> Well_Type TY
-\<Longrightarrow> \<exists>Ts. TY = semty_ntup Ts \<and> fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs \<close>
+\<Longrightarrow> \<exists>Ts. TY = sem_ntup_T Ts \<and> fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs \<close>
   by (smt (verit, del_insts) WT_named_tup mem_Collect_eq sem_mk_dest_ntup semty_ntup_uniq)
 
 lemma semty_ntup_uniq'2:
   \<open> sem_mk_ntup (fmupd s v vs) \<in> Well_Type TY
 \<Longrightarrow> s |\<notin>| fmdom vs
-\<Longrightarrow> \<exists>t Ts. TY = semty_ntup (fmupd s t Ts) \<and> fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs \<and> v \<in> Well_Type t \<close>
+\<Longrightarrow> \<exists>t Ts. TY = sem_ntup_T (fmupd s t Ts) \<and> fmrel (\<lambda> t v. v \<in> Well_Type t) Ts vs \<and> v \<in> Well_Type t \<close>
   apply (drule semty_ntup_uniq', auto simp: fmrel_iff)
   subgoal for Ts
     by (rule exI[where x=\<open>the (fmlookup Ts s)\<close>], rule exI[where x=\<open>fmfilter (\<lambda>k. k \<noteq> s) Ts\<close>], auto,
@@ -55,12 +55,12 @@ lemma semty_ntup_uniq'2:
 
 lemma has_Zero_semty_ntup1 [simp]:
   \<open> s |\<notin>| fmdom vs
-\<Longrightarrow> has_Zero (semty_ntup (fmupd s v vs)) \<longleftrightarrow> has_Zero v \<and> has_Zero (semty_ntup vs) \<close>
+\<Longrightarrow> has_Zero (sem_ntup_T (fmupd s v vs)) \<longleftrightarrow> has_Zero v \<and> has_Zero (sem_ntup_T vs) \<close>
   unfolding has_Zero_def
   by (auto, smt (verit, best) fmdom_notI fmpredD fmpred_alt_def fmupd_lookup option.exhaust_sel)
 
 lemma has_Zero_semty_ntup0 [simp]:
-  \<open> has_Zero (semty_ntup fmempty) \<close>
+  \<open> has_Zero (sem_ntup_T fmempty) \<close>
   unfolding has_Zero_def
   by auto
 
@@ -70,7 +70,7 @@ lemma has_Zero_semty_ntup0 [simp]:
 subsubsection \<open>Syntax\<close>
 
 abbreviation "semty_ntup_empty" ("\<struct> {}")
-  where \<open>semty_ntup_empty \<equiv> semty_ntup fmempty\<close>
+  where \<open>semty_ntup_empty \<equiv> sem_ntup_T fmempty\<close>
 
 notation semty_ntup_empty ("struct{}")
      and semty_ntup_empty ("S{}")
@@ -92,7 +92,7 @@ parse_translation \<open>[
               = x :: strip_args L
           | strip_args (Const(\<^syntax_const>\<open>semty_ntup_arg0\<close>, _) $ x) = [x]
           | strip_args _ = error "Bad Syntax"
-     in \<^Const>\<open>semty_ntup\<close> $
+     in \<^Const>\<open>sem_ntup_T\<close> $
         fold_rev (fn (Const(\<^syntax_const>\<open>semty_ntup_arg\<close>, _) $ s $ T) => (fn X =>
                         \<^Const>\<open>fmupd \<^Type>\<open>symbol\<close> \<^Type>\<open>TY\<close>\<close> $ s $ T $ X)
                    | X => error "Bad Syntax")
@@ -101,7 +101,7 @@ parse_translation \<open>[
 ]\<close>
 
 print_translation \<open>[
-  (\<^const_syntax>\<open>semty_ntup\<close>, fn ctxt => fn [args] =>
+  (\<^const_syntax>\<open>sem_ntup_T\<close>, fn ctxt => fn [args] =>
   let fun strip_fmupd (Const(\<^const_syntax>\<open>fmupd\<close>, _) $ s $ v $ L)
             = (s,v) :: strip_fmupd L
         | strip_fmupd (Const(\<^const_syntax>\<open>fmempty\<close>, _)) = []
@@ -122,13 +122,13 @@ print_translation \<open>[
 subsubsection \<open>Basic Properties\<close>
 
 lemma [\<phi>reason add]:
-  \<open> Is_Type_Literal (semty_ntup fmempty) \<close>
+  \<open> Is_Type_Literal (sem_ntup_T fmempty) \<close>
   unfolding Is_Type_Literal_def ..
 
 lemma [\<phi>reason add]:
   \<open> Is_Type_Literal v
-\<Longrightarrow> Is_Type_Literal (semty_ntup fm)
-\<Longrightarrow> Is_Type_Literal (semty_ntup (fmupd k v fm)) \<close>
+\<Longrightarrow> Is_Type_Literal (sem_ntup_T fm)
+\<Longrightarrow> Is_Type_Literal (sem_ntup_T (fmupd k v fm)) \<close>
   unfolding Is_Type_Literal_def ..
 
 lemma sem_mk_ntup_inj[simp]:
@@ -218,25 +218,25 @@ local_setup \<open>setup_semty_ntup_to_poison\<close>
 
 lemma semty_ntup_neq_poison[simp]:
   \<open> k |\<notin>| fmdom Ts
-\<Longrightarrow> semty_ntup (fmupd k TY Ts) = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> TY = \<p>\<o>\<i>\<s>\<o>\<n> \<or> semty_ntup Ts = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+\<Longrightarrow> sem_ntup_T (fmupd k TY Ts) = \<poison> \<longleftrightarrow> TY = \<poison> \<or> sem_ntup_T Ts = \<poison>\<close>
   unfolding semty_ntup_eq_poison atomize_eq
   by (metis domIff fmdom.rep_eq fmdom_fmupd fmlookup_ran_iff fmupd_lookup option.simps(1))
 
 lemma semty_ntup_neq_poison0[simp]:
-  \<open> \<struct> { } \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open> \<struct> { } \<noteq> \<poison> \<close>
   unfolding semty_ntup_eq_poison
   by clarsimp
 
 lemma
-  \<open>\<struct>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>} = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>\<struct>{a: T, b: U, c: \<poison>} = \<poison>\<close>
   by simp
 
 lemma
-  \<open>P (\<struct>{a: T, b: U, c: \<p>\<o>\<i>\<s>\<o>\<n>}) = P \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>P (\<struct>{a: T, b: U, c: \<poison>}) = P \<poison>\<close>
   by simp
 
 lemma
-  \<open>\<struct>{a: \<b>\<o>\<o>\<l>, b: \<b>\<o>\<o>\<l>, c: \<b>\<o>\<o>\<l>} \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>\<struct>{a: \<bool'>, b: \<bool'>, c: \<bool'>} \<noteq> \<poison>\<close>
   by simp
 
 
@@ -250,8 +250,8 @@ subsection \<open>Empty Tuple\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and Functionality
-       (*and \<open>Semantic_Type Empty_Named_Tuple (semty_ntup fmempty)\<close> *)
-       and \<open>Semantic_Zero_Val (semty_ntup fmempty) Empty_Named_Tuple ()\<close>
+       (*and \<open>Semantic_Type Empty_Named_Tuple (sem_ntup_T fmempty)\<close> *)
+       and \<open>Semantic_Zero_Val (sem_ntup_T fmempty) Empty_Named_Tuple ()\<close>
        and \<open>Is_Aggregate Empty_Named_Tuple\<close>
        and Inhabited
        and \<open>\<typeof> Empty_Named_Tuple = \<struct> { }\<close>
@@ -308,7 +308,7 @@ lemma typeof_ntup_1 [simp, \<phi>type_property Named_Tuple_Field Semantic_Type]:
   proof -
     have t1: \<open>sem_mk_ntup (fmupd s v fmempty) \<in> Well_Type TY\<close>
       using prems(2) prems(3) by blast
-    obtain TY' where t2: \<open>TY = semty_ntup (fmupd s TY' fmempty)\<close>
+    obtain TY' where t2: \<open>TY = sem_ntup_T (fmupd s TY' fmempty)\<close>
       apply (insert semty_ntup_uniq[OF t1]
                     prems(2)[THEN spec[where x=x], THEN spec[where x=\<open>sem_mk_ntup (fmupd s v fmempty)\<close>]],
              auto simp: fmrel_iff)
@@ -323,14 +323,14 @@ lemma typeof_ntup_1 [simp, \<phi>type_property Named_Tuple_Field Semantic_Type]:
 
 definition Named_Tuple_Types :: \<open>(VAL, 'x) \<phi> \<Rightarrow> (symbol, TY) fmap \<Rightarrow> bool\<close>
   where \<open>Named_Tuple_Types T Tys = (
-    (\<p>\<o>\<i>\<s>\<o>\<n> |\<notin>| fmran Tys \<longleftrightarrow> Inhabited T \<and> (\<exists>TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)) \<and>
-    (\<p>\<o>\<i>\<s>\<o>\<n> |\<notin>| fmran Tys \<longrightarrow>
+    (\<poison> |\<notin>| fmran Tys \<longleftrightarrow> Inhabited T \<and> (\<exists>TY. \<forall>x v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<in> Well_Type TY)) \<and>
+    (\<poison> |\<notin>| fmran Tys \<longrightarrow>
         (\<forall>x c. c \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>vf. c = sem_mk_ntup vf \<and> fmrel (\<lambda>t v. v \<in> Well_Type t) Tys vf)))
 )\<close>
 
 lemma typeof_ntup:
   \<open> Named_Tuple_Types T Tys
-\<Longrightarrow> \<typeof> T \<equiv> semty_ntup Tys \<close>
+\<Longrightarrow> \<typeof> T \<equiv> sem_ntup_T Tys \<close>
   unfolding Named_Tuple_Types_def SType_Of_def atomize_eq Semantic_Type_def
   by (auto simp: semty_ntup_eq_poison,
       metis semty_ntup_eq_poison,
@@ -383,9 +383,9 @@ apply auto
       by (metis V_named_tup_mult fmap_times_fempty(2) fmrel_fmdom_eq fmupd_times_right prems(1) prems(6) prems(7) prems(8) prems(9) t1)
     have t3: \<open>s |\<notin>| fmdom vf\<close>
       using fmrel_fmdom_eq prems(1) t1 by blast
-    obtain t' Ts' where t4: \<open>TYa = semty_ntup (fmupd s t' Ts') \<and> fmrel (\<lambda>t v. v \<in> Well_Type t) Ts' vf \<and> xa \<in> Well_Type t'\<close>
+    obtain t' Ts' where t4: \<open>TYa = sem_ntup_T (fmupd s t' Ts') \<and> fmrel (\<lambda>t v. v \<in> Well_Type t) Ts' vf \<and> xa \<in> Well_Type t'\<close>
       using semty_ntup_uniq'2 t2 t3 by presburger
-    have t5: \<open>\<typeof> T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+    have t5: \<open>\<typeof> T = \<poison>\<close>
       using prems(1) prems(10) prems(3) semty_ntup_eq_poison semty_ntup_neq_poison by force
     have t6: \<open>\<not> Inhabited T \<or> (\<forall>TY. \<exists>x v. v \<Turnstile> (x \<Ztypecolon> T) \<and> v \<notin> Well_Type TY)\<close>
       by (metis SType_Of_not_poison t5)
@@ -425,7 +425,7 @@ lemma fmpred_sing[simp]:
 let_\<phi>type Named_Tuple_Field
   deriving Semantic_Zero_Val
   deriving \<open> Semantic_Zero_Val ty T x
-         \<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
+         \<Longrightarrow> Semantic_Zero_Val (sem_ntup_T (fmupd s ty fmempty)) \<lbrace> SYMBOL_VAR(s): T \<rbrace> x \<close>
 
 text \<open>All the reasoning rules below are for semantic properties.
       All reasoning rules for transformations and SL are derived automatically by the above \<open>\<phi>type_def\<close> command\<close>
@@ -438,9 +438,9 @@ lemma Empty_Tuple_reduce[simp]:
 
 lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   \<open> Semantic_Zero_Val ty T x
-\<Longrightarrow> Semantic_Zero_Val (semty_ntup tys) Ts xs
+\<Longrightarrow> Semantic_Zero_Val (sem_ntup_T tys) Ts xs
 \<Longrightarrow> \<condition>[\<safe>] s |\<notin>| fmdom tys
-\<Longrightarrow> Semantic_Zero_Val (semty_ntup (fmupd s ty tys)) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
+\<Longrightarrow> Semantic_Zero_Val (sem_ntup_T (fmupd s ty tys)) (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding Semantic_Zero_Val_def Premise_def
   apply (clarsimp; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>)
   apply (auto simp add: inj_image_mem_iff fmmap_fmupd)
@@ -488,20 +488,20 @@ subsection \<open>Semantics Related\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx+20]:
   \<open> \<guard> \<condition> s = s'
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup (fmupd s TY Tys)) TY \<close>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (sem_ntup_T (fmupd s TY Tys)) TY \<close>
   unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<guard> \<condition> s \<noteq> s'
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup Tys) RET
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (semty_ntup (fmupd s TY Tys)) RET \<close>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (sem_ntup_T Tys) RET
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (sem_ntup_T (fmupd s TY Tys)) RET \<close>
   unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
 
 lemma [\<phi>reason %chk_sem_ele_idx+20]:
   \<open> FAIL TEXT(s \<open>is not a field of the named tuple\<close>)
-\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s) (semty_ntup fmempty) RET \<close>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s) (sem_ntup_T fmempty) RET \<close>
   unfolding \<r>Guard_def Premise_def FAIL_def
   by blast
 
@@ -652,7 +652,7 @@ lemma [\<phi>reason %aggregate_access+1]:
   by (clarsimp simp add: \<r>Guard_def Premise_def, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor []) (() \<Ztypecolon> \<circle>) (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  \<open>\<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor []) (() \<Ztypecolon> \<circle>) (sem_ntup_T fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
   by clarsimp
 
@@ -660,18 +660,18 @@ lemma [\<phi>reason %aggregate_access+20]:
   \<open> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor [s])
           (x \<Ztypecolon> List_Item T)
-          (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
+          (sem_ntup_T (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_Synth_def semantic_named_tuple_constructor_def
             Action_Tag_def Semantic_Type'_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open> Semantic_Type' (x \<Ztypecolon> T) TY @tag \<A>ctr_arg (Inl s)
-\<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (semty_ntup TyR) (r \<Ztypecolon> R)
+\<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor sR) (xs \<Ztypecolon> L) (sem_ntup_T TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor_Synth (semantic_named_tuple_constructor (s # sR))
           ((x,xs) \<Ztypecolon> List_Item T \<^emph> L)
-          (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
+          (sem_ntup_T (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
   unfolding \<phi>Aggregate_Constructor_Synth_def Semantic_Type'_def Action_Tag_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric] times_list_def; rule)
   subgoal premises prems for vs v
@@ -692,7 +692,7 @@ lemma [\<phi>reason %aggregate_access]:
 
 
 lemma [\<phi>reason %aggregate_access]:
-  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (semty_ntup fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (sem_ntup_T fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
   by clarsimp
 
@@ -700,7 +700,7 @@ lemma [\<phi>reason %aggregate_access+20]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
-          (semty_ntup (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
+          (sem_ntup_T (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def
             Action_Tag_def Semantic_Type'_def
   by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
@@ -708,10 +708,10 @@ lemma [\<phi>reason %aggregate_access+20]:
 lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) @tag \<A>ctr_arg (Inl s)
 \<Longrightarrow> Semantic_Type' (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (semty_ntup TyR) (r \<Ztypecolon> R)
+\<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (sem_ntup_T TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
-          (semty_ntup (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
+          (sem_ntup_T (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> R)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def
             Action_Tag_def Semantic_Type'_def
   apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)

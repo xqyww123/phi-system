@@ -5,16 +5,16 @@ begin
 abbreviation \<open>link_list TY \<equiv> \<struct> {nxt: \<ptr>, data: TY}\<close>
 
 \<phi>type_def Linked_Lst
-  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<subj> addr = 0 \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
+  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<subj> addr = 0 \<and> \<typeof> T \<noteq> \<poison>)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
                                       (nxt, x) \<Ztypecolon> \<obj>[addr] \<lbrace> nxt: Ptr, data: T \<rbrace>
                                       \<subj> nxt. \<typeof> addr = link_list (\<typeof> T) )\<close>
 
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T)
-                                      (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0) \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) \<close>
-          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [] \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>)\<close>
-          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = [] \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>) (\<lambda>_. addr = 0)\<close>
+                                      (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0) \<and> \<typeof> T \<noteq> \<poison>) \<close>
+          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [] \<and> \<typeof> T \<noteq> \<poison>)\<close>
+          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = [] \<and> \<typeof> T \<noteq> \<poison>) (\<lambda>_. addr = 0)\<close>
           and \<open> \<premise> \<typeof> T = \<typeof> U
             \<Longrightarrow> Transformation_Functor (Linked_Lst addr) (Linked_Lst addr) T U set (\<lambda>_. UNIV) list_all2\<close>
           and \<open> \<premise> \<typeof> T = \<typeof> U
@@ -25,7 +25,7 @@ abbreviation \<open>link_list TY \<equiv> \<struct> {nxt: \<ptr>, data: TY}\<clo
 
 proc init:
   input  Void
-  premises \<open>\<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>\<typeof> T \<noteq> \<poison>\<close>
   output \<open>[] \<Ztypecolon> \<ref> Linked_Lst 0 T\<close>
 \<medium_left_bracket>
   \<makes>(0) \<open>Linked_Lst _ T\<close> \<semicolon>
@@ -63,7 +63,7 @@ proc pop_llist:
     return(addr)
   \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<semicolon>
    
-  transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
+  transforms_to \<open>\<open'>(1)\<close> \<semicolon>
   val ret \<leftarrow> addr.nxt \<semicolon>
   mfree (addr) \<semicolon>
 
@@ -72,12 +72,12 @@ proc pop_llist:
 
 
 proc nth_llist:
-  input    \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<i>\<n>\<t>)\<close>
+  input    \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<int'>)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> Linked_Lst addr T\<heavy_comma> l!i \<Ztypecolon> \<val> T\<close>
   is [recursive l i addr]
 \<medium_left_bracket>
-  transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
+  transforms_to \<open>\<open'>(1)\<close> \<semicolon>
   if (i = 0) \<medium_left_bracket>
       addr.data
   \<medium_right_bracket> \<medium_left_bracket>
@@ -97,12 +97,12 @@ proc hd_llist:
 
 
 proc update_nth_llist:
-  input    \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<i>\<n>\<t>)\<heavy_comma> y \<Ztypecolon> \<val> T\<close>
+  input    \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<int'>)\<heavy_comma> y \<Ztypecolon> \<val> T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := y] \<Ztypecolon> Linked_Lst addr T\<close>
   is [recursive l i addr]
 \<medium_left_bracket>
-  transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
+  transforms_to \<open>\<open'>(1)\<close> \<semicolon>
   if (i = 0) \<medium_left_bracket>
       addr.data := y
   \<medium_right_bracket> \<medium_left_bracket>
@@ -114,15 +114,15 @@ proc update_nth_llist:
 
 proc length_of:
   input    \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<close>
-  premises \<open>length l < 2 ^ LENGTH(\<i>\<n>\<t>)\<close>
-  output   \<open>length l \<Ztypecolon> \<val> \<nat>(\<i>\<n>\<t>)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
+  premises \<open>length l < 2 ^ LENGTH(\<int'>)\<close>
+  output   \<open>length l \<Ztypecolon> \<val> \<nat>(\<int'>)\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
   is [recursive l addr]
   is [routine]
 \<medium_left_bracket>
   if (addr = NULL) \<medium_left_bracket>
     return(0)
   \<medium_right_bracket> \<medium_left_bracket>
-    transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
+    transforms_to \<open>\<open'>(1)\<close> \<semicolon>
     addr.nxt \<rightarrow> val t1 \<semicolon>
     val ret \<leftarrow> length_of (addr.nxt) + 1 \<semicolon>
     \<makes>(1) \<open>Linked_Lst addr T\<close> \<semicolon> (* 1: call the second constructor *)
@@ -139,10 +139,10 @@ proc reverse_aux:
   is [recursive l l' addr addr']
 \<medium_left_bracket>
   if (addr = NULL) \<medium_left_bracket>
-    transforms_to \<open>\<o>\<p>\<e>\<n>(0)\<close>
+    transforms_to \<open>\<open'>(0)\<close>
     addr'
   \<medium_right_bracket> \<medium_left_bracket>
-    transforms_to \<open>\<o>\<p>\<e>\<n>(1)\<close> \<semicolon>
+    transforms_to \<open>\<open'>(1)\<close> \<semicolon>
     addr.nxt \<rightarrow> val aa \<semicolon>
     addr.nxt := addr' \<semicolon>
     \<open>Linked_Lst addr' T\<close> \<makes>(1) \<open>hd l # l' \<Ztypecolon> Linked_Lst addr T\<close> \<semicolon>

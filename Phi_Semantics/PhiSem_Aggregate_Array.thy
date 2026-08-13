@@ -10,17 +10,17 @@ debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<
                 and sem_mk_array   :: \<open>VAL list \<Rightarrow> VAL\<close>
                 and sem_dest_array :: \<open>VAL \<Rightarrow> VAL list\<close>
   where sem_mk_dest_array[simp]: \<open>sem_dest_array (sem_mk_array vs) = vs\<close>
-  and   semty_array_eq_poison[simp]: \<open>\<array>[N] T = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> (T = \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0)\<close>
+  and   semty_array_eq_poison[simp]: \<open>\<array>[N] T = \<poison> \<longleftrightarrow> (T = \<poison> \<and> N \<noteq> 0)\<close>
   and   WT_arr[simp]:   \<open>Well_Type (\<array>[n] t) = { sem_mk_array vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
   and   semty_arr_uniq: \<open>sem_mk_array vs \<in> Well_Type TY \<Longrightarrow> \<exists>T. TY = mk_array_T (length vs) T\<close>
-  and   zero_arr[simp]: \<open>\<array>[N] T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow>
+  and   zero_arr[simp]: \<open>\<array>[N] T \<noteq> \<poison> \<Longrightarrow>
             Zero (\<array>[N] T) = (if N = 0 then Some (sem_mk_array [])
                                          else map_option (\<lambda>z. sem_mk_array (replicate N z)) (Zero T))\<close>
-  and   idx_step_type_arr [eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_type (AgIdx_N i) (\<array>[N] T) = T\<close>
-  and   valid_idx_step_arr[eval_aggregate_path] : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<Longrightarrow> valid_idx_step (\<array>[N] T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
+  and   idx_step_type_arr [eval_aggregate_path] : \<open>T \<noteq> \<poison> \<and> N \<noteq> 0 \<Longrightarrow> idx_step_type (AgIdx_N i) (\<array>[N] T) = T\<close>
+  and   valid_idx_step_arr[eval_aggregate_path] : \<open>T \<noteq> \<poison> \<Longrightarrow> valid_idx_step (\<array>[N] T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
   and   idx_step_value_arr[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (sem_mk_array vs) = vs!i\<close>
   and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (sem_mk_array vs) = sem_mk_array (vs[i := f (vs!i)])\<close>
-  and   type_measure_arr : \<open>type_measure (\<array>[N] T) = (if T = \<p>\<o>\<i>\<s>\<o>\<n> \<or> N = 0 then 0 else Suc (type_measure T))\<close>
+  and   type_measure_arr : \<open>type_measure (\<array>[N] T) = (if T = \<poison> \<or> N = 0 then 0 else Suc (type_measure T))\<close>
   and   V_arr_sep_disj[simp]:
             \<open>sem_mk_array vs1 ## sem_mk_array vs2 \<longleftrightarrow> list_all2 (##) vs1 vs2\<close>
   and   V_arr_mult[simp]:
@@ -43,7 +43,7 @@ lemma array_0_eq_any:
   by (simp add: Well_Type_unique)
 
 lemma [simp]:
-  \<open>N \<noteq> 0 \<Longrightarrow> \<array>[N] \<p>\<o>\<i>\<s>\<o>\<n> = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+  \<open>N \<noteq> 0 \<Longrightarrow> \<array>[N] \<poison> = \<poison> \<close>
   using semty_array_eq_poison
   by blast
 
@@ -56,7 +56,7 @@ lemma [\<phi>reason add]:
 lemma has_Zero_array[simp]:
   \<open> has_Zero (\<array>[N] T) \<longleftrightarrow> N = 0 \<or> has_Zero T \<close>
   unfolding has_Zero_def
-  by (cases \<open>\<array>[N] T = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; clarsimp)
+  by (cases \<open>\<array>[N] T = \<poison>\<close>; clarsimp)
 
 
 
@@ -182,7 +182,7 @@ text \<open>All the reasoning rules below are for semantic properties.
       All reasoning rules for transformations and SL are derived automatically by the above \<open>\<phi>type_def\<close> command\<close>
 
 lemma [\<phi>reason %chk_sem_ele_idx]:
-  \<open> \<premise> i < N \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  \<open> \<premise> i < N \<and> TY \<noteq> \<poison>
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (\<array>[N] TY) TY \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_arr idx_step_type_arr)

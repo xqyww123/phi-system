@@ -6,26 +6,26 @@ begin
 debt_axiomatization
       MemObj_Size_int: \<open>MemObj_Size (sem_int_T n) = 0 \<longleftrightarrow> n = 0\<close>
 
-lemma phantom_mem_semantic_type_\<a>\<i>\<n>\<t>[simp]:
+lemma phantom_mem_semantic_type_aint[simp]:
   \<open> phantom_mem_semantic_type (sem_int_T n) \<longleftrightarrow> n = 0 \<close>
   unfolding phantom_mem_semantic_type_def
   using MemObj_Size_int by clarsimp
 
-abbreviation \<open>size_\<t> \<equiv> \<i>\<n>\<t>(size_\<t>)\<close>
+abbreviation \<open>size_\<t> \<equiv> \<int'>(size_\<t>)\<close>
  
 
 proc calloc:
   requires \<open>\<param> T\<close>
   input \<open>n \<Ztypecolon> \<val> \<nat>(size_\<t>)\<close>
   requires \<open>Semantic_Zero_Val TY T z\<close>
-  premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>TY \<noteq> \<poison>\<close>
   output \<open>replicate n z \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce> (Array n T))\<heavy_comma> addr \<Ztypecolon> \<val> TypedPtr (\<array>[n] TY)
           \<subj> addr. addr.offset addr = 0\<close>
   including Semantic_Zero_Val_EIF_brute
 \<medium_left_bracket>
   note list_all2_conv_all_nth[simp] \<semicolon>
 
-  semantic_local_value($n) \<open>\<i>\<n>\<t>(size_\<t>)\<close>
+  semantic_local_value($n) \<open>\<int'>(size_\<t>)\<close>
   semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=\<open>\<array>[snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))] TY\<close>
                                                and U=\<open>{sem_mk_array (replicate (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>1))) (the (Zero TY)))}\<close>]

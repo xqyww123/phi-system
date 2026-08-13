@@ -1,20 +1,20 @@
 theory PhiSem_Real_Abst
   imports PhiSem_Common_Int HOL.Real
-  abbrevs "<areal>" = "\<a>\<r>\<e>\<a>\<l>"
+  abbrevs "<areal>" = "\<areal>"
 begin
 
 chapter \<open>Abstract Real Numbers\<close>
 
 section \<open>Semantics\<close>
 
-debt_axiomatization \<a>\<r>\<e>\<a>\<l> :: TY
+debt_axiomatization sem_areal_T   :: TY ("\<areal>")
                 and sem_mk_areal  :: \<open>real \<Rightarrow> VAL\<close>
                 and sem_dest_areal :: \<open>VAL \<Rightarrow> real\<close>
 where sem_dest_mk_areal[simp]: \<open>sem_dest_areal (sem_mk_areal i) = i\<close>
-  and WT_areal[simp]: \<open>Well_Type \<a>\<r>\<e>\<a>\<l> = { sem_mk_areal i |i. True } \<close>
+  and WT_areal[simp]: \<open>Well_Type \<areal> = { sem_mk_areal i |i. True } \<close>
   and can_eqcmp_areal[simp]: "Can_EqCompare res (sem_mk_areal i1) (sem_mk_areal i2)"
   and eqcmp_areal[simp]: "EqCompare (sem_mk_areal i1) (sem_mk_areal i2) \<longleftrightarrow> i1 = i2"
-  and  zero_areal[simp]: \<open>Zero \<a>\<r>\<e>\<a>\<l> = Some (sem_mk_areal 0)\<close>
+  and  zero_areal[simp]: \<open>Zero \<areal> = Some (sem_mk_areal 0)\<close>
 
 lemma sem_mk_areal_inj[simp]:
   \<open>sem_mk_areal i = sem_mk_areal j \<longleftrightarrow> i = j\<close>
@@ -28,8 +28,8 @@ section \<open>\<phi>-Types\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and Functionality
-       and \<open>\<typeof> \<real> = \<a>\<r>\<e>\<a>\<l>\<close>
-       and \<open>Semantic_Zero_Val \<a>\<r>\<e>\<a>\<l> \<real> 0\<close>
+       and \<open>\<typeof> \<real> = \<areal>\<close>
+       and \<open>Semantic_Zero_Val \<areal> \<real> 0\<close>
        and Inhabited
 
 lemma [\<phi>reason 1000]:
@@ -49,53 +49,53 @@ definition op_const_areal :: "real \<Rightarrow> VAL proc"
 definition op_add_ar :: "(VAL \<times> VAL, VAL) proc'"
   where "op_add_ar =
       \<phi>M_caseV (\<lambda>vb va.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal vb (\<lambda>val_b.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal va (\<lambda>val_a.
+      \<phi>M_getV \<areal> sem_dest_areal vb (\<lambda>val_b.
+      \<phi>M_getV \<areal> sem_dest_areal va (\<lambda>val_a.
       Return (\<phi>arg (sem_mk_areal (val_a + val_b)))
   )))"
 
 definition op_sub_ar :: "(VAL \<times> VAL, VAL) proc'"
   where "op_sub_ar =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal vb (\<lambda>val_b.
+      \<phi>M_getV \<areal> sem_dest_areal va (\<lambda>val_a.
+      \<phi>M_getV \<areal> sem_dest_areal vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_areal (val_a - val_b)))
   )))"
 
 definition op_neg_ar :: "(VAL, VAL) proc'"
   where "op_neg_ar rv =
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal rv (\<lambda>v.
+      \<phi>M_getV \<areal> sem_dest_areal rv (\<lambda>v.
       Return (\<phi>arg (sem_mk_areal (-v))))"
 
 definition op_mul_ar :: "(VAL \<times> VAL, VAL) proc'"
   where "op_mul_ar =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal vb (\<lambda>val_b.
+      \<phi>M_getV \<areal> sem_dest_areal va (\<lambda>val_a.
+      \<phi>M_getV \<areal> sem_dest_areal vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_areal (val_a * val_b)))
   )))"
 
 definition op_div_ar :: "(VAL \<times> VAL, VAL) proc'"
   where "op_div_ar =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal vb (\<lambda>val_b.
+      \<phi>M_getV \<areal> sem_dest_areal va (\<lambda>val_a.
+      \<phi>M_getV \<areal> sem_dest_areal vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_areal (val_a / val_b)))
   )))"
 
 definition op_ar_lt :: "(VAL \<times> VAL, VAL) proc'"
   where "op_ar_lt =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal vb (\<lambda>val_b.
+      \<phi>M_getV \<areal> sem_dest_areal va (\<lambda>val_a.
+      \<phi>M_getV \<areal> sem_dest_areal vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_bool (val_a < val_b)))
   )))"
 
 definition op_ar_le :: "(VAL \<times> VAL, VAL) proc'"
   where "op_ar_le =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<r>\<e>\<a>\<l> sem_dest_areal vb (\<lambda>val_b.
+      \<phi>M_getV \<areal> sem_dest_areal va (\<lambda>val_a.
+      \<phi>M_getV \<areal> sem_dest_areal vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_bool (val_a \<le> val_b)))
   )))"
 

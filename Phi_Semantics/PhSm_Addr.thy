@@ -7,10 +7,10 @@ datatype block = Null | Block nat TY
 
 setup \<open>Sign.mandatory_path "block"\<close>
 
-definition \<open>layout blk = (case blk of Null \<Rightarrow> \<v>\<o>\<i>\<d> | Block _ TY \<Rightarrow> TY)\<close>
+definition \<open>layout blk = (case blk of Null \<Rightarrow> \<void> | Block _ TY \<Rightarrow> TY)\<close>
 
 lemma layout[simp]:
-  \<open>block.layout Null = \<v>\<o>\<i>\<d>\<close>
+  \<open>block.layout Null = \<void>\<close>
   \<open>block.layout (Block i TY) = TY\<close>
   unfolding block.layout_def by simp+
 

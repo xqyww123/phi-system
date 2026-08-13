@@ -56,7 +56,7 @@ subsubsection \<open>Syntax\<close>
 paragraph \<open>Memory Object\<close>
 
 abbreviation MemObj ("\<obj>[_] _" [10,901] 900)
-  where \<open>\<obj>[addr] T \<equiv> Mem addr (\<mem>-\<coerce> T) \<phi>\<subj> address_to_base addr \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  where \<open>\<obj>[addr] T \<equiv> Mem addr (\<mem>-\<coerce> T) \<phi>\<subj> address_to_base addr \<and> \<typeof> T \<noteq> \<poison>\<close>
 *)
 
 consts may_mem_coerce :: \<open>('c, 'a) \<phi> \<Rightarrow> (mem_fic, 'a) \<phi>\<close>
@@ -193,7 +193,7 @@ definition \<open>address_to_base addr \<equiv> addr.offset addr = 0\<close>
       as \<open>address_to_base addr\<close> should be treated as an atom\<close>
 
 abbreviation MemObj ("\<obj>[_] _" [10,901] 900)
-  where \<open>\<obj>[addr] T \<equiv> Mem addr (\<mem>-\<coerce> T) \<phi>\<subj> address_to_base addr \<and> \<typeof> addr = \<typeof> T \<and> \<typeof> T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  where \<open>\<obj>[addr] T \<equiv> Mem addr (\<mem>-\<coerce> T) \<phi>\<subj> address_to_base addr \<and> \<typeof> addr = \<typeof> T \<and> \<typeof> T \<noteq> \<poison>\<close>
 
 
 
@@ -308,7 +308,7 @@ proc calloc1:
   input \<open>Void\<close>
   requires \<open>\<param> T\<close>
        and \<open>Semantic_Zero_Val TY T z\<close>
-  premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>TY \<noteq> \<poison>\<close>
   output \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce> T) \<subj> addr. address_to_base addr\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
@@ -338,7 +338,7 @@ proc malloc:
   input Void
   requires \<open>\<param> T\<close>
        and \<open>Semantic_Type T TY\<close>
-  premises \<open>TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>TY \<noteq> \<poison>\<close>
   output \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<obj>[addr] T\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
@@ -451,13 +451,13 @@ declare [[
   and \<open>_ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<transforms> _ \<with> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<transforms> _ \<with> _ @tag \<T>\<P>' \<close> (1000)
   and \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<with> _ @tag \<T>\<P> \<close> \<Rightarrow> \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<with> _ \<close> (1000)
   and \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<with> _ @tag \<T>\<P>' \<close> \<Rightarrow> \<open>_ \<transforms> _ \<Ztypecolon> \<mem>-\<coerce>[?TY] _ \<OTast> _ \<with> _ @tag \<T>\<P>' \<close> (1000)
-  and \<open>\<m>\<a>\<p> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
+  and \<open>\<map> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
        \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close> \<Rightarrow>
-      \<open>\<m>\<a>\<p> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
+      \<open>\<map> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
        \<over> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>         (1000)
-  and \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+  and \<open>\<map> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
        \<over> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close> \<Rightarrow>
-      \<open>\<m>\<a>\<p> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
+      \<open>\<map> _ : _ \<OTast> _ \<mapsto> _ \<OTast> _
        \<over> _ : \<mem>-\<coerce>[?TY] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _ \<with> \<getter> _ \<setter> _ \<in'> _\<close>         (1000)
 ]]
 
@@ -476,10 +476,10 @@ thm ToA_Mapper_fallback_remainder
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
   \<open> Semantic_Type T TY
-\<Longrightarrow> \<m>\<a>\<p> g : \<mem>-\<coerce>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
+\<Longrightarrow> \<map> g : \<mem>-\<coerce>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : \<mem>-\<coerce>[TY] T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : \<mem>-\<coerce>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
+\<Longrightarrow> \<map> g : \<mem>-\<coerce>[TY\<^sub>U] U \<OTast> R \<mapsto> U' \<OTast> R'
     \<over> f : \<mem>-\<coerce> T \<OTast> W \<mapsto> T' \<OTast> W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def . 
@@ -488,51 +488,51 @@ thm Guided_Mem_Coercion.elim_map[where \<phi>=\<open>\<lambda>x. x\<close>, simp
       OF ToA_Mapper_fallback_remainder, OF Mem_Coercion.ToA_mapper]
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm
-        for \<open>\<m>\<a>\<p> _ : \<mem>-\<coerce>[_] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
+        for \<open>\<map> _ : \<mem>-\<coerce>[_] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
              \<over> _ : \<mem>-\<coerce>[_] _ \<OTast> _ \<mapsto> \<mem>-\<coerce> _ \<OTast> _
              \<with> \<getter> _ \<setter> _ \<in'> _ \<close>]:
   \<comment> \<open>This rule assumes \<open>Semantic_Type\<close> reduces \<open>TY\<close> to the normal form!\<close>
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> fst ` D
-\<Longrightarrow> \<m>\<a>\<p> g \<otimes>\<^sub>f r : \<mem>-\<coerce>[TY] U \<OTast> \<circle> \<mapsto> \<mem>-\<coerce> U' \<OTast> \<circle>
+  \<open> \<map> g : U \<mapsto> U' \<over> f : T \<mapsto> T' \<with> \<getter> h \<setter> s \<in'> fst ` D
+\<Longrightarrow> \<map> g \<otimes>\<^sub>f r : \<mem>-\<coerce>[TY] U \<OTast> \<circle> \<mapsto> \<mem>-\<coerce> U' \<OTast> \<circle>
     \<over> f \<otimes>\<^sub>f r : \<mem>-\<coerce>[TY] T \<OTast> \<circle> \<mapsto> \<mem>-\<coerce> T' \<OTast> \<circle>
     \<with> \<getter> apfst h \<setter> apfst s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def
   by (rule ToA_Mapper_fallback_remainder, rule Mem_Coercion.ToA_mapper)
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce> U' \<OTast> R'
+  \<open> \<map> g : U \<mapsto> \<mem>-\<coerce> U' \<OTast> R'
     \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce>[TY] U' \<OTast> R'
+\<Longrightarrow> \<map> g : U \<mapsto> \<mem>-\<coerce>[TY] U' \<OTast> R'
     \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .
 
 (*
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U'
+  \<open> \<map> g : U \<mapsto> U'
     \<over> f : T \<mapsto> \<mem>-\<coerce> T' \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> f : T \<mapsto> \<mem>-\<coerce>[TY] T' \<^emph>[C\<^sub>W] W'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> U'
+  \<open> \<map> g : U \<mapsto> U'
     \<over> f : T \<mapsto> \<mem>-\<coerce> T'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> U'
+\<Longrightarrow> \<map> g : U \<mapsto> U'
     \<over> f : T \<mapsto> \<mem>-\<coerce>[TY] T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .
 *)
 
 lemma [\<phi>reason %mapToA_mem_coerce_norm]:
-  \<open> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce> U'
+  \<open> \<map> g : U \<mapsto> \<mem>-\<coerce> U'
     \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D
-\<Longrightarrow> \<m>\<a>\<p> g : U \<mapsto> \<mem>-\<coerce>[TY] U'
+\<Longrightarrow> \<map> g : U \<mapsto> \<mem>-\<coerce>[TY] U'
     \<over> f : T \<mapsto> T'
     \<with> \<getter> h \<setter> s \<in'> D \<close>
   unfolding Guided_Mem_Coercion_def .

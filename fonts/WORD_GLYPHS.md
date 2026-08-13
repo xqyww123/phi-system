@@ -56,7 +56,9 @@ fixes that in both directions:
 
 * copying a word out yields the word in **mathematical bold** letters, the same
   letters the glyph was drawn from, so the pasted text looks like what was on
-  screen (`𝐩𝐞𝐧𝐝𝐢𝐧𝐠`, `𝐀𝐫𝐫𝐚𝐲`, `𝓣𝓟`);
+  screen (`𝐩𝐞𝐧𝐝𝐢𝐧𝐠`, `𝐀𝐫𝐫𝐚𝐲`, `𝓣𝓟`) — except for the Medium words, which come
+  out in mathematical sans-serif (`𝖺𝗂𝗇𝗍`), there being no bold-free mathematical
+  alphabet to match them;
 * pasting such letters back in turns them into the glyph again, so a round trip
   through another application loses nothing.
 
@@ -90,27 +92,45 @@ Code points already assigned in `../symbols-words` are reused, so reordering or
 deleting a line never renumbers the words that survive.  Adding a line takes the
 next free code point.
 
-Requirements: `fontTools`, and `STIXTwoMath-Regular.otf` — the script looks in
-`~/.local/share/fonts/stix2/` and the usual system font directories, or takes
-`--stix PATH`.  STIX Two is OFL licensed (`STIX-OFL.txt` in this directory) and
-is already the source of several hand-drawn glyphs in this font.  `--check`
-verifies the inputs and writes nothing.
+Requirements: `fontTools`, `STIXTwoMath-Regular.otf` and `STIXTwoText-Medium.otf`
+— the script looks in `~/.local/share/fonts/stix2/` and the usual system font
+directories, or takes `--stix PATH` / `--stix-text PATH`.  STIX Two is OFL
+licensed (`STIX-OFL.txt` in this directory) and is already the source of several
+hand-drawn glyphs in this font.  `--check` verifies the inputs and writes nothing.
 
 ## What the generator decides for you
 
-**Which alphabet.**  The case of the word picks the outline source, all of them
-mathematical alphabets from STIX Two Math:
+**Which alphabet.**  A word is either a keyword or a semantic type name, and the
+two are drawn a weight apart:
 
-| word form            | alphabet                          | example              |
-| -------------------- | --------------------------------- | -------------------- |
-| all lower case       | mathematical bold, U+1D41A        | `transforms` → **transforms** |
-| all upper case       | mathematical bold script, U+1D4D0 | `TP`, `EIHOOK`       |
-| mixed                | mathematical bold, capital included | `Array`            |
+| word                              | alphabet                              | example          |
+| --------------------------------- | ------------------------------------- | ---------------- |
+| keyword, all lower case           | STIX Two Math bold, U+1D41A           | `transforms`     |
+| keyword, all upper case           | STIX Two Math bold script, U+1D4D0    | `TP`, `EIHOOK`   |
+| keyword, mixed case               | STIX Two Math bold, capital included  | `Array`          |
+| semantic type name (`MEDIUM_WORDS`) | STIX Two Text Medium, plain ASCII   | `aint`, `poison` |
 
 Upright bold serif is the convention mathematical writing uses for multi-letter
 operator names and program keywords; bold script matches what the old
 `\<A>`..`\<Z>` spelling looked like, so the all-upper-case words keep their
 appearance.
+
+The semantic type names — `aint areal bool int map poison symbol void` — are notation
+for an ordinary ASCII constant (`sem_aint_T` and its siblings), not keywords, so
+they are drawn lighter: a line that mentions four of them should not be darker
+than the keyword that governs it.  Medium is only available in STIX Two Text; the
+mathematical alphanumeric blocks carry regular and bold and nothing in between.
+Being an ordinary text font it is addressed as plain ASCII rather than through a
+mathematical block.
+
+`pointer` stays bold although `sem_pointer_T` is one of those constants: the
+pointer type prints as `\<ptr>`, and the only thing the `\<pointer>` glyph draws
+is the operator `\<pointer>-\<of>`, which is a keyword like any other.
+
+That split is also why the clipboard text (below) differs for them: there is no
+mathematical alphabet at Medium weight, so a copied type name comes out in the
+sans letters it used to be spelled out in.  Plain ASCII would be worse — it would
+be indistinguishable from an ordinary identifier.
 
 **How big.**  Outlines are scaled so the word matches the size of the spelling it
 replaces: lower case against the x-height of `𝗑` in `IsabelleDejaVuSansMono`,

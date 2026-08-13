@@ -6,11 +6,11 @@ section \<open>Pointer Arithmetic\<close>
 
 proc op_add_ptr[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<val> \<int>('b)\<close>
-  premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>0 \<le> int i + j \<and> nat (int i + j) \<le> len \<and> TY \<noteq> \<poison>\<close>
   output \<open>nat (int i + j) \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<close>
 \<medium_left_bracket>
   $i semantic_local_value \<ptr>
-  $j semantic_local_value \<open>\<i>\<n>\<t>('b)\<close> 
+  $j semantic_local_value \<open>\<int'>('b)\<close> 
 
   have [simp]: \<open>word_of_nat (nat (2 ^ LENGTH('b) + j)) = (word_of_int j :: 'b word)\<close>
     by (smt (verit, ccfv_threshold) One_nat_def nat_0_le of_int_of_nat_eq sint_of_int_eq the_\<phi>lemmata(1) two_less_eq_exp_length wi_hom_add word_of_int_0 word_of_int_2p_len) \<semicolon>
@@ -20,7 +20,7 @@ proc op_add_ptr[\<phi>overload +]:
               ||+ Word.scast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (nat (int i + j) \<Ztypecolon> \<slice>-\<ptr>[addr:len] TY)\<close>
   certified proof -
-    have t1: \<open>address_type addr = \<array>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0) \<close>
+    have t1: \<open>address_type addr = \<array>[len] TY \<and> TY \<noteq> \<poison> \<and> (len = 0 \<longrightarrow> nat (int i + j) = 0) \<close>
       by hammer_or_aoa
     show ?thesis
       by (insert useful, auto simp: memaddr_to_raw_array_GEP[OF t1] distrib_right,
@@ -32,18 +32,18 @@ proc op_add_ptr[\<phi>overload +]:
 
 proc op_add_ptr_unsigned[\<phi>overload +]:
   input  \<open>i \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<heavy_comma> j \<Ztypecolon> \<val> \<nat>('b)\<close>
-  premises \<open>i + j \<le> len \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  premises \<open>i + j \<le> len \<and> TY \<noteq> \<poison>\<close>
   output \<open>i + j \<Ztypecolon> \<val> \<slice>-\<ptr>[addr:len] TY\<close>
 \<medium_left_bracket>
   $i semantic_local_value \<ptr>
-  $j semantic_local_value \<open>\<i>\<n>\<t>('b)\<close>
+  $j semantic_local_value \<open>\<int'>('b)\<close>
 
   semantic_return \<open>
       sem_mk_pointer (sem_dest_pointer (\<phi>arg.dest \<a>\<r>\<g>1)
               ||+ Word.ucast (of_nat (snd (sem_dest_int (\<phi>arg.dest \<a>\<r>\<g>2))) :: 'b word) * of_nat (MemObj_Size TY))
           \<Turnstile> (i + j \<Ztypecolon> \<slice>-\<ptr>[addr:len] TY)\<close>
   certified proof -
-    have t1: \<open>address_type addr = \<array>[len] TY \<and> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> (len = 0 \<longrightarrow> i + j = 0) \<close>
+    have t1: \<open>address_type addr = \<array>[len] TY \<and> TY \<noteq> \<poison> \<and> (len = 0 \<longrightarrow> i + j = 0) \<close>
       by hammer_or_aoa
     show ?thesis
       by (insert useful,

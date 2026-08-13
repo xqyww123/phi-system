@@ -1,6 +1,6 @@
 theory PhiSem_Int_ArbiPrec
   imports PhiSem_Generic_Boolean PhiSem_Common_Int
-  abbrevs "<aint>" = "\<a>\<i>\<n>\<t>"
+  abbrevs "<aint>" = "\<aint>"
 begin
 
 chapter \<open>Integer of Arbitrary Precision\<close>
@@ -10,15 +10,15 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 
 section \<open>Semantics\<close>
 
-debt_axiomatization \<a>\<i>\<n>\<t> :: TY
+debt_axiomatization sem_aint_T    :: TY ("\<aint>")
                 and sem_mk_aint   :: \<open>int \<Rightarrow> VAL\<close>
                 and sem_dest_aint :: \<open>VAL \<Rightarrow> int\<close>
 where sem_mk_dest_aint[simp]: \<open>sem_dest_aint (sem_mk_aint i) = i\<close>
-  and WT_aint[simp]: \<open>Well_Type \<a>\<i>\<n>\<t> = { sem_mk_aint i |i. True } \<close>
-  and \<a>\<i>\<n>\<t>_neq_\<p>\<o>\<i>\<s>\<o>\<n>[simp]: \<open>\<a>\<i>\<n>\<t> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  and WT_aint[simp]: \<open>Well_Type \<aint> = { sem_mk_aint i |i. True } \<close>
+  and aint_neq_poison[simp]: \<open>\<aint> \<noteq> \<poison>\<close>
   and can_eqcmp_aint[simp]: "Can_EqCompare res (sem_mk_aint i1) (sem_mk_aint i2)"
   and eqcmp_aint[simp]: "EqCompare (sem_mk_aint i1) (sem_mk_aint i2) \<longleftrightarrow> i1 = i2"
-  and  zero_aint[simp]: \<open>Zero \<a>\<i>\<n>\<t>   = Some (sem_mk_aint 0)\<close>
+  and  zero_aint[simp]: \<open>Zero \<aint>   = Some (sem_mk_aint 0)\<close>
   and \<phi>Sem_aint_to_logic_int[simp]: \<open>\<phi>Sem_int_to_logic_int (sem_mk_aint i) = Some i\<close>
   and \<phi>Sem_aint_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (sem_mk_aint i) = (if 0 \<le> i then Some (nat i) else None)\<close>
 
@@ -39,11 +39,11 @@ lemma [\<phi>reason %logical_spec_of_semantics]:
   by simp
 
 lemma [\<phi>reason add]:
-  \<open>Is_Type_Literal \<a>\<i>\<n>\<t>\<close>
+  \<open>Is_Type_Literal \<aint>\<close>
   unfolding Is_Type_Literal_def ..
 
-lemma has_Zero_\<a>\<i>\<n>\<t>[simp]:
-  \<open> has_Zero \<a>\<i>\<n>\<t> \<close>
+lemma has_Zero_aint[simp]:
+  \<open> has_Zero \<aint> \<close>
   unfolding has_Zero_def
   by simp
 
@@ -58,7 +58,7 @@ subsection \<open>Integer in the normal sense\<close>
   deriving Basic
        and Abstract_Domain\<^sub>L
        and Semantic_Zero_Val
-       and \<open>\<typeof> \<int> = \<a>\<i>\<n>\<t>\<close>
+       and \<open>\<typeof> \<int> = \<aint>\<close>
        and Functionality
        and Equiv_Class
 
@@ -90,7 +90,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semantic_Type
        and Semantic_Zero_Val
        and Inhabited
-       and \<open>\<typeof> \<nat> = \<a>\<i>\<n>\<t>\<close>
+       and \<open>\<typeof> \<nat> = \<aint>\<close>
        and Functionality
        and Equiv_Class
 
@@ -143,77 +143,77 @@ subsection \<open>Arithmetic Operations\<close>
 definition op_aadd :: "(VAL \<times> VAL, VAL) proc'"
   where "op_aadd =
       \<phi>M_caseV (\<lambda>vb va.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
       Return (\<phi>arg (sem_mk_aint (val_a + val_b)))
   )))"
 
 definition op_asub :: "(VAL \<times> VAL, VAL) proc'"
   where "op_asub =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_aint (val_a - val_b)))
   )))"
 
 definition op_aneg :: "(VAL, VAL) proc'"
   where "op_aneg rv =
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint rv (\<lambda>v.
+      \<phi>M_getV \<aint> sem_dest_aint rv (\<lambda>v.
       Return (\<phi>arg (sem_mk_aint (-v))))"
 
 definition op_amul :: "(VAL \<times> VAL, VAL) proc'"
   where "op_amul =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_aint (val_b * val_a)))
   )))"
 
 definition op_adiv :: "(VAL \<times> VAL, VAL) proc'"
   where "op_adiv =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_aint (val_a div val_b)))
   )))"
 
 definition op_amod :: "(VAL \<times> VAL, VAL) proc'"
   where "op_amod =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_aint (val_a mod val_b)))
   )))"
 
 definition op_alshr :: "(VAL \<times> VAL, VAL) proc'"
   where "op_alshr =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_aint (val_a div 2 ^ (Int.nat val_b))))
   )))"
 
 definition op_alshl :: "(VAL \<times> VAL, VAL) proc'"
   where "op_alshl =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_aint (val_a * 2 ^ (Int.nat val_b))))
   )))"
 
 definition op_a_lt :: "(VAL \<times> VAL, VAL) proc'"
   where "op_a_lt =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_bool (val_a < val_b)))
   )))"
 
 definition op_a_le :: "(VAL \<times> VAL, VAL) proc'"
   where "op_a_le =
       \<phi>M_caseV (\<lambda>va vb.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint va (\<lambda>val_a.
-      \<phi>M_getV \<a>\<i>\<n>\<t> sem_dest_aint vb (\<lambda>val_b.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
       Return (\<phi>arg (sem_mk_bool (val_a \<le> val_b)))
   )))"
 

@@ -2,47 +2,47 @@ chapter \<open>Value model of Finite Map\<close>
 
 theory PhSm_V_FMap
   imports PhSm_Ag_Base
-  abbrevs "<map>" = "\<m>\<a>\<p>"
+  abbrevs "<map>" = "\<map>"
 begin
 
 section \<open>Semantics\<close>
 
-debt_axiomatization \<m>\<a>\<p> :: \<open>TY \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<m>\<a>\<p> [_,_]")
-                and \<m>\<a>\<p>_rep  :: \<open>(sVAL \<Rightarrow> VAL) \<Rightarrow> VAL\<close>
-  where \<m>\<a>\<p>_rep_inj [simp] : \<open>\<m>\<a>\<p>_rep vsT = \<m>\<a>\<p>_rep vsT' \<longleftrightarrow> vsT = vsT'\<close>
-    and \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>[simp] : \<open>\<m>\<a>\<p>[T,U] = \<p>\<o>\<i>\<s>\<o>\<n> \<longleftrightarrow> T = \<p>\<o>\<i>\<s>\<o>\<n> \<or> U = \<p>\<o>\<i>\<s>\<o>\<n> \<or> \<not> is_sTY T\<close>
-    and \<m>\<a>\<p>_WT             : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> U \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> is_sTY T \<Longrightarrow> 
-                              Well_Type \<m>\<a>\<p>[T,U] = { \<m>\<a>\<p>_rep f |f. (\<forall>k. f k \<in> Well_Type U) }\<close>
-    and \<m>\<a>\<p>_WT_uniq        : \<open>\<m>\<a>\<p>_rep fU \<in> Well_Type TY \<Longrightarrow> \<exists>T U. TY = \<m>\<a>\<p>[T,U]\<close>
-    and \<m>\<a>\<p>_zero           : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> U \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> is_sTY T \<Longrightarrow>
-                              Zero \<m>\<a>\<p>[T,U] = map_option (\<lambda>v. \<m>\<a>\<p>_rep (\<lambda>_. v)) (Zero U)\<close>
-    and \<m>\<a>\<p>_idx_step_type  : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> U \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> is_sTY T \<Longrightarrow>
-                              idx_step_type (AgIdx_V v) \<m>\<a>\<p>[T,U] = U \<close>
-    and \<m>\<a>\<p>_valid_idx_step : \<open>T \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> U \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> is_sTY T \<Longrightarrow>
-                              valid_idx_step \<m>\<a>\<p>[T,U] j \<longleftrightarrow> j \<in> {AgIdx_V v |v. sVAL_emb v \<in> Well_Type T }\<close>
-    and \<m>\<a>\<p>_idx_step_value : \<open>idx_step_value (AgIdx_V v) (\<m>\<a>\<p>_rep f) = f v\<close>
-    and \<m>\<a>\<p>_idx_step_mod_value :
-                             \<open>idx_step_mod_value (AgIdx_V v) g (\<m>\<a>\<p>_rep f) = \<m>\<a>\<p>_rep (f(v := g (f v)))\<close>
+debt_axiomatization sem_map_T :: \<open>TY \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<map> [_,_]")
+                and map_rep   :: \<open>(sVAL \<Rightarrow> VAL) \<Rightarrow> VAL\<close>
+  where map_rep_inj [simp] : \<open>map_rep vsT = map_rep vsT' \<longleftrightarrow> vsT = vsT'\<close>
+    and map_eq_poison[simp] : \<open>\<map>[T,U] = \<poison> \<longleftrightarrow> T = \<poison> \<or> U = \<poison> \<or> \<not> is_sTY T\<close>
+    and map_WT             : \<open>T \<noteq> \<poison> \<and> U \<noteq> \<poison> \<and> is_sTY T \<Longrightarrow> 
+                              Well_Type \<map>[T,U] = { map_rep f |f. (\<forall>k. f k \<in> Well_Type U) }\<close>
+    and map_WT_uniq        : \<open>map_rep fU \<in> Well_Type TY \<Longrightarrow> \<exists>T U. TY = \<map>[T,U]\<close>
+    and map_zero           : \<open>T \<noteq> \<poison> \<and> U \<noteq> \<poison> \<and> is_sTY T \<Longrightarrow>
+                              Zero \<map>[T,U] = map_option (\<lambda>v. map_rep (\<lambda>_. v)) (Zero U)\<close>
+    and map_idx_step_type  : \<open>T \<noteq> \<poison> \<and> U \<noteq> \<poison> \<and> is_sTY T \<Longrightarrow>
+                              idx_step_type (AgIdx_V v) \<map>[T,U] = U \<close>
+    and map_valid_idx_step : \<open>T \<noteq> \<poison> \<and> U \<noteq> \<poison> \<and> is_sTY T \<Longrightarrow>
+                              valid_idx_step \<map>[T,U] j \<longleftrightarrow> j \<in> {AgIdx_V v |v. sVAL_emb v \<in> Well_Type T }\<close>
+    and map_idx_step_value : \<open>idx_step_value (AgIdx_V v) (map_rep f) = f v\<close>
+    and map_idx_step_mod_value :
+                             \<open>idx_step_mod_value (AgIdx_V v) g (map_rep f) = map_rep (f(v := g (f v)))\<close>
 
 
 subsubsection \<open>Basic Properties\<close>
 
 lemma [\<phi>reason add]:
   \<open> Is_Type_Literal U
-\<Longrightarrow> Is_Type_Literal \<m>\<a>\<p>[T,U] \<close>
+\<Longrightarrow> Is_Type_Literal \<map>[T,U] \<close>
   unfolding Is_Type_Literal_def ..
 
 
 subsubsection \<open>Reduction to poison\<close>
 
-lemma \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>_red[simp]:
-  \<open> \<m>\<a>\<p>[T, \<p>\<o>\<i>\<s>\<o>\<n>] = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
-  \<open> \<m>\<a>\<p>[\<p>\<o>\<i>\<s>\<o>\<n>, U] = \<p>\<o>\<i>\<s>\<o>\<n> \<close>
+lemma map_eq_poison_red[simp]:
+  \<open> \<map>[T, \<poison>] = \<poison> \<close>
+  \<open> \<map>[\<poison>, U] = \<poison> \<close>
   by simp+
 
 lemma is_sTY_typeof:
   \<open> is_sTY (\<typeof> K)
-\<Longrightarrow> \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+\<Longrightarrow> \<typeof> K \<noteq> \<poison>
 \<Longrightarrow> v \<Turnstile> (x \<Ztypecolon> K)
 \<Longrightarrow> v \<in> range sVAL_emb \<close>
   by (meson SType_Of_not_poison is_sTY)
@@ -53,8 +53,8 @@ section \<open>\<phi>Type\<close>
 
 \<phi>type_def VMap :: "(VAL, 'k) \<phi> \<Rightarrow> 'k set \<Rightarrow> (VAL, 'v) \<phi> \<Rightarrow> (VAL, 'k \<Rightarrow> 'v) \<phi>"
                     ("_ \<equiv>'(_')\<Rrightarrow> _" [76,20,75] 75)
-  where \<open>f \<Ztypecolon> VMap K D V \<equiv> \<m>\<a>\<p>_rep f' \<Ztypecolon> Itself
-        \<subj> f'. is_sTY (\<typeof> K) \<and> \<typeof> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> \<typeof> V \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>
+  where \<open>f \<Ztypecolon> VMap K D V \<equiv> map_rep f' \<Ztypecolon> Itself
+        \<subj> f'. is_sTY (\<typeof> K) \<and> \<typeof> K \<noteq> \<poison> \<and> \<typeof> V \<noteq> \<poison>
                \<and> (\<forall>kk k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<and> k \<in> D     \<longrightarrow> f' kk \<Turnstile> (f k \<Ztypecolon> V))
                \<and> (\<forall>kk. (\<nexists>k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<and> k \<in> D) \<longrightarrow> f' kk = the (Zero (\<typeof> V))) \<close>
   deriving \<open>Abstract_Domain\<^sub>L K P\<^sub>K \<Longrightarrow>
@@ -68,42 +68,42 @@ abbreviation Total_VMap :: "(VAL, 'k) \<phi> \<Rightarrow> (VAL, 'v) \<phi> \<Ri
                             ("_ \<equiv>\<Rrightarrow> _" [76,75] 75)
   where \<open>K \<equiv>\<Rrightarrow> V \<equiv> K \<equiv>(UNIV)\<Rrightarrow> V\<close>
 
-lemma has_Zero_\<m>\<a>\<p> [simp]:
-  \<open> has_Zero (\<m>\<a>\<p>[K, V]) \<longleftrightarrow> K \<noteq> \<p>\<o>\<i>\<s>\<o>\<n> \<and> is_sTY K \<and> has_Zero V \<close>
+lemma has_Zero_map [simp]:
+  \<open> has_Zero (\<map>[K, V]) \<longleftrightarrow> K \<noteq> \<poison> \<and> is_sTY K \<and> has_Zero V \<close>
   unfolding has_Zero_def
-  by (cases \<open>K = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; cases \<open>V = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; cases \<open>is_sTY K\<close>; auto simp: \<m>\<a>\<p>_zero;
-      metis Zero_\<p>\<o>\<i>\<s>\<o>\<n> \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>)
+  by (cases \<open>K = \<poison>\<close>; cases \<open>V = \<poison>\<close>; cases \<open>is_sTY K\<close>; auto simp: map_zero;
+      metis Zero_poison map_eq_poison)
 
 
 lemma typeof_VMap [simp]:
   \<open> has_Zero (\<typeof> V)
-\<Longrightarrow> \<typeof> (VMap K D V) = \<m>\<a>\<p>[\<typeof> K, \<typeof> V]\<close>
+\<Longrightarrow> \<typeof> (VMap K D V) = \<map>[\<typeof> K, \<typeof> V]\<close>
 proof -
 
-  have t1: \<open>(\<p>\<o>\<i>\<s>\<o>\<n> = \<m>\<a>\<p> [T,U]) = (T = \<p>\<o>\<i>\<s>\<o>\<n> \<or> U = \<p>\<o>\<i>\<s>\<o>\<n> \<or> \<not> is_sTY T)\<close> for T U
-    by (metis \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>)
+  have t1: \<open>(\<poison> = \<map> [T,U]) = (T = \<poison> \<or> U = \<poison> \<or> \<not> is_sTY T)\<close> for T U
+    by (metis map_eq_poison)
 
-  have t2: \<open>(\<typeof> K = \<p>\<o>\<i>\<s>\<o>\<n>) = (\<not> Inhabited K \<or> (\<exists>x v. v \<Turnstile> (x \<Ztypecolon> K) \<and> v \<notin> Well_Type (\<typeof> K)))\<close> for K
+  have t2: \<open>(\<typeof> K = \<poison>) = (\<not> Inhabited K \<or> (\<exists>x v. v \<Turnstile> (x \<Ztypecolon> K) \<and> v \<notin> Well_Type (\<typeof> K)))\<close> for K
     by (metis SType_Of_not_poison)
 
   show \<open> has_Zero (\<typeof> V)
-    \<Longrightarrow> \<typeof> (VMap K D V) = \<m>\<a>\<p>[\<typeof> K, \<typeof> V]\<close>
+    \<Longrightarrow> \<typeof> (VMap K D V) = \<map>[\<typeof> K, \<typeof> V]\<close>
     unfolding SType_Of_def[where T=\<open>VMap K D V\<close>] Inhabited_def
     apply (auto simp: Satisfiable_def,
            rule some1_equality, rule, assumption,
-           (unfold Semantic_Type_def; clarsimp; cases \<open>\<typeof> K = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; cases \<open>\<typeof> V = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; simp; metis Well_Type_unique),
-           (unfold Semantic_Type_def;  cases \<open>\<typeof> K = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; cases \<open>\<typeof> V = \<p>\<o>\<i>\<s>\<o>\<n>\<close>;
-            clarsimp simp: \<m>\<a>\<p>_WT),
+           (unfold Semantic_Type_def; clarsimp; cases \<open>\<typeof> K = \<poison>\<close>; cases \<open>\<typeof> V = \<poison>\<close>; simp; metis Well_Type_unique),
+           (unfold Semantic_Type_def;  cases \<open>\<typeof> K = \<poison>\<close>; cases \<open>\<typeof> V = \<poison>\<close>;
+            clarsimp simp: map_WT),
            metis SType_Of_not_poison has_Zero_def option.exhaust_sel option.pred_inject(2) zero_well_typ,
-           metis \<m>\<a>\<p>_eq_\<p>\<o>\<i>\<s>\<o>\<n>,
+           metis map_eq_poison,
            clarsimp simp: t1 t2 has_Zero_def Inhabited_def Satisfiable_def)
     subgoal premises prems for y x p xa pa
       by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. xa\<close>], THEN spec[where x=\<open>\<lambda>kk. if (\<exists>k. sVAL_emb kk \<Turnstile> (k \<Ztypecolon> K) \<and> k \<in> D) then pa else y\<close>], simplified],
           auto simp: prems(6) split: if_split_asm)
     apply (clarsimp simp: t1 t2 has_Zero_def Inhabited_def Satisfiable_def Semantic_Type_def)
     subgoal premises prems for y x p xa pa
-    apply (insert prems(1)[THEN spec[where x=\<open>\<m>\<a>\<p>[\<typeof> K, \<typeof> V]\<close>]] prems(2-);
-           cases \<open>\<typeof> K = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; cases \<open>\<typeof> V = \<p>\<o>\<i>\<s>\<o>\<n>\<close>; clarsimp simp: \<m>\<a>\<p>_WT)
+    apply (insert prems(1)[THEN spec[where x=\<open>\<map>[\<typeof> K, \<typeof> V]\<close>]] prems(2-);
+           cases \<open>\<typeof> K = \<poison>\<close>; cases \<open>\<typeof> V = \<poison>\<close>; clarsimp simp: map_WT)
         by (metis option.pred_inject(2) zero_well_typ) .
 qed
 
@@ -111,9 +111,9 @@ qed
 lemma VMap_zero [\<phi>reason add]:
   \<open> \<condition> T\<^sub>K = \<typeof> K \<and> T\<^sub>V = \<typeof> V
 \<Longrightarrow> Semantic_Zero_Val T\<^sub>V V z
-\<Longrightarrow> Semantic_Zero_Val (\<m>\<a>\<p> [T\<^sub>K, T\<^sub>V]) (VMap K D V) (\<lambda>_. z) \<close>
+\<Longrightarrow> Semantic_Zero_Val (\<map> [T\<^sub>K, T\<^sub>V]) (VMap K D V) (\<lambda>_. z) \<close>
   unfolding Semantic_Zero_Val_def Premise_def
-  by (auto simp: \<m>\<a>\<p>_zero)
+  by (auto simp: map_zero)
 
 
 

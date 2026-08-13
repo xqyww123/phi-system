@@ -65,7 +65,7 @@ no_notation Set.member ("(_/ : _)" [51, 51] 50)
 
 
 proc test_ptr2:
-  input \<open>(ptr, x) \<Ztypecolon> \<val> \<lbrace> TypedPtr (\<struct> {a: \<ptr>, x: \<tup> {\<b>\<o>\<o>\<l>, \<struct> {q: \<a>\<i>\<n>\<t>, w: \<ptr>}}, y: \<a>\<i>\<n>\<t>}), \<int> \<rbrace>\<close>
+  input \<open>(ptr, x) \<Ztypecolon> \<val> \<lbrace> TypedPtr (\<struct> {a: \<ptr>, x: \<tup> {\<bool'>, \<struct> {q: \<aint>, w: \<ptr>}}, y: \<aint>}), \<int> \<rbrace>\<close>
   premises \<open>ptr \<noteq> 0\<close>
   output \<open>ptr \<tribullet> x \<tribullet> 1\<^sup>\<t>\<^sup>\<h> \<tribullet> w \<Ztypecolon> \<val> TypedPtr \<ptr>\<close>
 \<medium_left_bracket>
@@ -74,9 +74,9 @@ proc test_ptr2:
 \<medium_right_bracket> .
 
 proc test_ptr3:
-  input \<open>addr \<Ztypecolon> \<val> TypedPtr (\<struct> {a: \<a>\<i>\<n>\<t>, b: \<a>\<i>\<n>\<t>})\<close>
+  input \<open>addr \<Ztypecolon> \<val> TypedPtr (\<struct> {a: \<aint>, b: \<aint>})\<close>
   premises \<open>addr \<noteq> 0\<close>
-  output \<open>addr \<tribullet> a \<Ztypecolon> \<val> TypedPtr \<a>\<i>\<n>\<t>\<close>
+  output \<open>addr \<tribullet> a \<Ztypecolon> \<val> TypedPtr \<aint>\<close>
 \<medium_left_bracket>
   &addr.a
 \<medium_right_bracket> .

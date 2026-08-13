@@ -16,7 +16,7 @@ subsection \<open>Type Classes for Common Reasoning Strategies\<close>
 term x
 
 lemma
-  \<open>\<exists>c. c \<in> Well_Type TY \<longleftrightarrow> TY \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>
+  \<open>\<exists>c. c \<in> Well_Type TY \<longleftrightarrow> TY \<noteq> \<poison>\<close>
 *)
 
 (*

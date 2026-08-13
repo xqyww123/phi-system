@@ -66,7 +66,7 @@ theory Phi_BI
       and "<when>" = "\<when>"
       and "<remains>" = "\<remains>"
       and "<get>" = "\<get>"
-      and "<map>" = "\<m>\<a>\<p>"
+      and "<map>" = "\<map>"
       and "<by>" = "\<by>"
       and "<from>" = "\<from>"
       and "<remaining>" = "\<remaining>"
