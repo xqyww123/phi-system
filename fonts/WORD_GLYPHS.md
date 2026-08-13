@@ -1,0 +1,146 @@
+# Keyword words as single glyphs
+
+phi-System used to write its keywords one Isabelle symbol per letter:
+
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
+
+Each `\<t>` is a standard Isabelle symbol whose code point is a mathematical
+sans-serif letter, so the ten symbols together read as `𝗍𝗋𝖺𝗇𝗌𝖿𝗈𝗋𝗆𝗌` on screen.
+This replaces the ten symbols with one, `\<transforms>`, whose glyph draws the
+whole word.
+
+`fonts/build_word_glyphs.py` generates those glyphs into `PhiSymbols.ttf` and
+writes the matching symbol declarations to `../symbols-words`.
+
+## Why one glyph, and not several code points
+
+An Isabelle symbol decodes to **exactly one Unicode code point**.  The `code:`
+field of a symbol table is parsed by `Integer.decode` and turned into characters
+by `Character.toChars` (`Pure/General/symbol.scala`), so there is no syntax for
+more than one, and adding one would break something deeper: the prover reports
+positions as *symbol* offsets while the editor counts *characters*, and the two
+are reconciled by `Symbol.Matcher`, a purely syntactic scanner with no table of
+decoded forms.  A symbol that decoded to seven characters would be counted as
+seven symbols by the editor and one by the prover, and every error marker,
+hover and completion after it on the line would be off by six.
+
+So the word has to be a single code point carrying a single, very wide glyph.
+The code points live in the Private Use Area (U+E000 upwards), which neither
+Isabelle nor the hand-drawn part of this font uses.
+
+## Why the glyphs go into PhiSymbols.ttf and not a new font
+
+`Pure/Tools/jEdit/src/syntax_style.scala` permits **at most two** user symbol
+fonts and aborts the plugin if a third appears.  Both slots are already taken:
+one by the Isabelle distribution itself, one by `PhiSymbols`.  Note also that
+jEdit's font substitution is off by default (`view.enableFontSubst=false`), so a
+glyph is only reachable through the `font:` field of the symbol table — dropping
+that field makes the symbol render as blank.
+
+## Pipeline
+
+    PhiSymbols.sfd  --FontForge-->  PhiSymbols.ttf  --build_word_glyphs.py-->  PhiSymbols.ttf
+     (hand-drawn)                                                              (+ word glyphs)
+
+Hand-drawn symbols stay in `PhiSymbols.sfd`; edit them with FontForge and export
+the `.ttf` as before.  Word glyphs are generated and never enter the `.sfd`.
+The script is idempotent — every glyph it adds is named `word.<word>` and all of
+them are dropped at the start of a run — so it is safe to run it repeatedly, and
+safe to run it again after re-exporting the `.sfd`.
+
+## Copying a word out of jEdit
+
+The buffer holds the decoded symbol, so a plain copy hands other applications the
+private-use code point — U+E048, not `pending`.  `../jedit/phi_word_clipboard.bsh`
+fixes that in both directions:
+
+* copying a word out yields the word in **mathematical bold** letters, the same
+  letters the glyph was drawn from, so the pasted text looks like what was on
+  screen (`𝐩𝐞𝐧𝐝𝐢𝐧𝐠`, `𝐀𝐫𝐫𝐚𝐲`, `𝓣𝓟`);
+* pasting such letters back in turns them into the glyph again, so a round trip
+  through another application loses nothing.
+
+Copying and pasting *within* jEdit is untouched: jEdit prefers its own rich-text
+flavor, which is a JVM-local object no other process can see, and the script leaves
+it alone.  Text that is not a whole word is never folded, so ordinary mathematical
+bold in a comment survives a paste unchanged.
+
+`phi-System/etc/settings` links the script into `$JEDIT_SETTINGS/startup/`, and puts
+it back if it goes missing, so registering the component is all a user has to do.
+The letters come from `../jedit/word-clipboard-text`, generated alongside the glyphs.
+
+Two places this does not reach.  Dragging text out of jEdit goes through
+`TextAreaTransferHandler`, which builds its own clipboard contents and consults no
+service list, so a drag still carries the private-use code point.  And Isabelle/VSCode
+carries a symbol table frozen into the VSCodium component when it was built; no
+phi-System symbol is in it — not the word glyphs and not the hand-drawn ones either —
+so there `\<pending>` simply stays the seven characters you typed.
+
+## Adding or changing a word
+
+1. Edit `words.txt` (one word per line, `#` starts a comment).
+2. Run `python3 build_word_glyphs.py` from this directory.
+3. Restart the Isabelle/jEdit session and check the new symbol renders.
+
+Step 2 rewrites `PhiSymbols.ttf`, `../symbols-words` and `../jedit/word-clipboard-text`
+together, so the glyph, the symbol declaration and the clipboard text cannot drift
+apart.
+
+Code points already assigned in `../symbols-words` are reused, so reordering or
+deleting a line never renumbers the words that survive.  Adding a line takes the
+next free code point.
+
+Requirements: `fontTools`, and `STIXTwoMath-Regular.otf` — the script looks in
+`~/.local/share/fonts/stix2/` and the usual system font directories, or takes
+`--stix PATH`.  STIX Two is OFL licensed (`STIX-OFL.txt` in this directory) and
+is already the source of several hand-drawn glyphs in this font.  `--check`
+verifies the inputs and writes nothing.
+
+## What the generator decides for you
+
+**Which alphabet.**  The case of the word picks the outline source, all of them
+mathematical alphabets from STIX Two Math:
+
+| word form            | alphabet                          | example              |
+| -------------------- | --------------------------------- | -------------------- |
+| all lower case       | mathematical bold, U+1D41A        | `transforms` → **transforms** |
+| all upper case       | mathematical bold script, U+1D4D0 | `TP`, `EIHOOK`       |
+| mixed                | mathematical bold, capital included | `Array`            |
+
+Upright bold serif is the convention mathematical writing uses for multi-letter
+operator names and program keywords; bold script matches what the old
+`\<A>`..`\<Z>` spelling looked like, so the all-upper-case words keep their
+appearance.
+
+**How big.**  Outlines are scaled so the word matches the size of the spelling it
+replaces: lower case against the x-height of `𝗑` in `IsabelleDejaVuSansMono`,
+capitals against the height of `𝒯` (the glyph behind `\<T>`).  Nothing grows or
+shrinks on migration.
+
+**The symbol name.**  Normally the word itself.  Seven words collide with symbols
+Isabelle already defines — `bool` (𝔹), `in` (∈), `index` (ı), `int` (ℤ), `open`
+(the cartouche delimiter ‹), `or` (∨), `then` (⪢) — and those get a trailing
+prime: `\<open'>`, `\<in'>`, and so on.  The prime appears only in source text;
+the glyph still reads `open`, and the abbreviation is still `<open>`.  The
+collision check runs against Isabelle's `etc/symbols` and this component's
+hand-maintained `symbols`, so a future name clash is caught automatically.
+
+**The abbreviation.**  Every word gets `abbrev: <word>`, so typing `<transforms>`
+in jEdit offers the symbol.  All 133 were checked against every existing
+abbreviation in Isabelle and in this component: none collided.
+
+## One thing the generator cannot fix
+
+`Pure/General/symbol.ML` carries a hardcoded list of which symbols count as
+*letters*, and `symbol.scala` carries the same list for the editor.  Only
+`\<a>`..`\<z>`, `\<A>`..`\<Z>` and the Greek letters are on it.  A new symbol is
+therefore **not a letter** and cannot appear inside an identifier: writing
+`\<typeof>_plus` no longer names one theorem, it lexes as a symbol followed by
+`_plus`.  (`group: letter` in the symbol table has nothing to do with this — that
+field only sorts the symbol palette.)
+
+Where the old spelling was embedded in a name — `\<t>\<y>\<p>\<e>\<o>\<f>_plus`,
+`has_Zero_\<p>\<o>\<i>\<s>\<o>\<n>` — the name is spelled out in plain ASCII
+instead (`typeof_plus`, `has_Zero_poison`).  The alternative would be patching
+both lists in the Isabelle distribution, which is not under version control here
+and would have to be re-applied by everyone who builds phi-System.
