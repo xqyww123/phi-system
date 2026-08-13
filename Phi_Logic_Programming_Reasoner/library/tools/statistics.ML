@@ -332,7 +332,14 @@ fun timing_of_semantic_operations () = Synchronized.value SO_timing
 
 (* Common *)
 
-val _ = Theory.at_begin (fn thy => (reset_utilization_statistics thy; NONE))
+(* Theory.at_begin only BUILDS the theory transformer; Theory.setup is what applies
+   it.  Without the setup the wrapper was never installed and the per-theory reset
+   never ran, so counts accumulated across PIDE re-evaluations of one theory.
+   Two things this does NOT do: it does not reach theories restored from a heap
+   image (they are not begun again), and it runs twice per begin, because
+   Theory.apply_wrappers loops while any wrapper returns SOME and Pure's own always
+   do on a fresh theory. *)
+val _ = Theory.setup (Theory.at_begin (fn thy => (reset_utilization_statistics thy; NONE)))
 
 fun reset_all () = (reset_utilization_statistics_all () ;
                     reset_subgoal_statistics () ;
