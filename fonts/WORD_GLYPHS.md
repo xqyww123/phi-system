@@ -1,5 +1,11 @@
 # Keyword words as single glyphs
 
+This file covers the generator: how a word becomes a glyph, a symbol and a clipboard
+entry, and how to add one.  `MIGRATION.md` beside it covers the other half — how the
+sources were rewritten to use these symbols, what deliberately still spells itself out,
+and the rule that decides whether a word can be a symbol at all.
+
+
 phi-System used to write its keywords one Isabelle symbol per letter:
 
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
@@ -202,3 +208,8 @@ Where the old spelling was embedded in a name — `\<t>\<y>\<p>\<e>\<o>\<f>_plus
 instead (`typeof_plus`, `has_Zero_poison`).  The alternative would be patching
 both lists in the Isabelle distribution, which is not under version control here
 and would have to be re-applied by everyone who builds phi-System.
+
+And where the word **was** the name of a constant, a type or a syntax constant, the
+thing is given an ordinary ASCII name and the word is attached as notation —
+`debt_axiomatization sem_aint_T :: TY ("\<aint>")`, `typedecl int_t ("\<int'>")`.  That
+is what `MIGRATION.md` is about; read it before adding a word that names something.

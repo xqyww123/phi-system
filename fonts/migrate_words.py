@@ -27,8 +27,12 @@ import re
 import subprocess
 import sys
 
-ROOT = pathlib.Path("/home/qiyuan/Current/MLML/contrib/phi-system")
+ROOT = pathlib.Path(__file__).resolve().parent.parent   # contrib/phi-system
 SYMBOLS_WORDS = ROOT / "symbols-words"
+# The Isabelle whose letter-symbol table this migration was computed against.  Naming it
+# matters: contrib/Isabelle2024 carries a `letter_symbols` list too, so falling back to
+# the wrong distribution would parse happily and answer differently.
+ISABELLE = "Isabelle2025-2"
 
 SKIP = {
     # Declared as a constant or a type under that bare name -- a symbol is not a
@@ -56,66 +60,34 @@ FORCE_ASCII = set()   # plain-ASCII names were rejected; see SKIP instead
 # constructor `sem_int_T`, which is a different constant.
 EMBEDDED_ASCII = {"int": "int_t"}
 
-# The eight semantic type constants used to be named by the spelling itself, which is
-# why they were skipped too: a symbol is not a letter, so it cannot be a name.  They
-# are now ordinary ASCII constants (`sem_aint_T` and siblings, following `sem_tup_T`)
-# carrying the word as notation, so their spelling is free to migrate like any other
-# -- except at the declaration, and at the three sites that name the constant instead
-# of using it (`\\<^const_name>`/`\\<^const_syntax>`, which take the internal name).
-# Those are patched here, on the text as it comes out of HEAD and before any run is
-# rewritten, so the whole migration stays one function of HEAD.
-DECL_PATCHES = {
-    # `size_\<t>` is the address-space word width expressed as a type -- the pointer-side
-    # twin of `int_t`, with the same comment on it.  A symbol is not a letter, so the
-    # name goes to ASCII and the word becomes notation.  Only the sites that need the
-    # name rather than the notation are patched; every use is left to RENAMES.
-    "Phi_Semantics/PhiSem_Mem_Pointer.thy": [
-        (r'typedecl size_\<t> \<comment>', r'typedecl size_t ("\<size_t>") \<comment>'),
-        (r'instantiation size_\<t> :: len begin', r'instantiation size_t :: len begin'),
-        (r'definition [iff]: "len_of_size_\<t> (_::size_\<t> itself) = addrspace_bits"',
-         r'definition [iff]: "len_of_size_t (_::size_t itself) = addrspace_bits"')],
-    # this whole file is one 200-line comment, `(*theory` to `end*)`, and nothing
-    # imports it; the line is patched only so the dead code stays coherent
-    "Phi_Semantics/PhiSem_Pointer_Mem.thy": [(
-        r'type_synonym size_\<t> = \<open>addr_cap word\<close>',
-        r'type_synonym size_t = \<open>addr_cap word\<close> ("\<size_t>")')],
-    # the term-level twin of the type, exactly as `sem_int_t'` is for `int_t`: the
-    # machine integer at the address-space width.  Its name is what makes this a
-    # declaration rather than a use, so the notation has to be spelled out.
-    "Phi_Semantics/PhiSem_Mem_C_MI.thy": [(
-        r'''abbreviation \<open>size_\<t> \<equiv> \<int'>(size_\<t>)\<close>''',
-        '''abbreviation sem_size_t ("\\<size_t>")\n'''
-        r'''  where \<open>sem_size_t \<equiv> \<int'>(size_t)\<close>''')],
-}
-
-# Entries are dropped once the round that needed them is committed: this script rewrites
-# the working tree from HEAD, so a patch whose text is already in HEAD no longer applies
-# and would only fail.  What earlier rounds did is recorded in their commits and in
-# PHI_WORD_SYMBOL_MIGRATION.md.
-
-# Plain ASCII renames.  They have nothing to do with the spelling migration; they live
-# here because this script always rewrites the working tree from HEAD, so a rename done
-# in a separate pass would be undone by the next run.
+# The source migration is finished; both tables below are empty, and re-running the
+# script is now a no-op that checks the tree still agrees with the rules above.
 #
-# `semty_ntup` is the one TY constructor not shaped like `sem_tup_T`.  Only the bare
-# name moves: `semty_` is this codebase's prefix for the lemmas and auxiliaries around a
-# TY, and `semty_tup_eq_poison`, `semty_tup_empty` and `_semty_tup` already sit beside
-# `sem_tup_T` in exactly that way, so their `ntup` counterparts are left alone.
-RENAMES = {
-    # the one primitive TY constructor not shaped like `sem_tup_T`; `mk_` in this
-    # codebase means a derived convenience (`mk_int_T = sem_int_T o len_of`), while
-    # `sem_mk_array` right beside it makes a value, not a type
-    "mk_array_T": "sem_array_T",
-    # a mixfix delimiter, nothing is named by it.  The symbol cannot be `\<w.r.t.>`:
-    # a symbol name admits only [A-Za-z][A-Za-z0-9_']*, so the periods live in the
-    # glyph and in the abbreviation `<w.r.t>`, not in the name.
-    "\\<w>.\\<r>.\\<t>": "\\<wrt>",
-    # every use of the type; its declaration sites are in DECL_PATCHES above, and a
-    # name that embeds it (`len_of_size_\<t>`) is excluded by the identifier boundary
-    "size_\\<t>": "\\<size_t>",
-}
+# What each round rewrote is recorded in its commit -- 1229a5ad spells out all eleven
+# renames -- and in MIGRATION.md beside this file.  The tables are deliberately NOT kept
+# as that record: they are live rewrite rules compiled into a repo-wide regex, so a
+# retired entry would go on forbidding its old name, and two entries from different
+# rounds could chain (`A->B` and `B->C` in one single-pass run leaves both names alive).
+#
+# To do another round: fill them in, run, commit the sources, then empty them again.  An
+# entry that no longer applies fails the run loudly, which is the reminder.
+DECL_PATCHES = {}      # relative path -> [(old text, new text)], applied before any run
+RENAMES = {}           # old identifier -> new identifier, on identifier boundaries
+
+# A patch whose new text still contains its old text would be applied again on every
+# run, unboundedly and silently, which is the one shape this mechanism cannot survive.
+for _rel, _patches in DECL_PATCHES.items():
+    for _old, _new in _patches:
+        if _old in _new:
+            sys.exit("migrate_words: %s: the new text contains the old text, so this "
+                     "patch would re-apply on every run: %r" % (_rel, _old))
+for _old, _new in RENAMES.items():
+    if _old in _new:
+        sys.exit("migrate_words: %r -> %r would re-apply on every run" % (_old, _new))
+
 RENAME = re.compile(r"(?<![A-Za-z0-9_'])(%s)(?![A-Za-z0-9_'])"
-                    % "|".join(re.escape(k) for k in sorted(RENAMES, key=len, reverse=True)))
+                    % "|".join(re.escape(k) for k in sorted(RENAMES, key=len, reverse=True))
+                    ) if RENAMES else None
 
 # A name antiquotation takes the constant's internal name, so a generated symbol must
 # never end up inside one; anything DECL_PATCHES misses is caught here rather than at
@@ -160,8 +132,12 @@ def load_letters():
     not be one, or a bound variable written right after a binder would be widened
     into the binder's own token.
     """
-    home = pathlib.Path(os.environ.get("ISABELLE_HOME") or ROOT.parent / "Isabelle2025-2")
-    src = (home / "src/Pure/General/symbol.ML").read_text(encoding="utf-8")
+    home = pathlib.Path(os.environ.get("ISABELLE_HOME") or ROOT.parent / ISABELLE)
+    src_file = home / "src/Pure/General/symbol.ML"
+    if not src_file.is_file():
+        sys.exit("migrate_words: no symbol.ML under %s; set ISABELLE_HOME" % home)
+    print("letter symbols from %s" % src_file)
+    src = src_file.read_text(encoding="utf-8")
     i = src.index("val letter_symbols =")
     out = set(re.findall(r'"(\\<[^">]*>)"', src[i:src.index("];", i)]))
     if len(out) < 100:
@@ -309,14 +285,16 @@ def main():
                               cwd=ROOT, capture_output=True, text=True, check=True).stdout
         head = text
         for old, new in DECL_PATCHES.get(rel, ()):
-            if old not in text:
-                failures.append((path, "declaration patch does not apply"))
+            if old not in text:                # one-shot: an entry that no longer
+                failures.append((path,         # applies has been committed; empty it
+                                 "declaration patch does not apply -- committed already?"))
                 text = None
                 break
             text = text.replace(old, new)
         if text is None:
             continue
-        text = RENAME.sub(lambda m: RENAMES[m.group(1)], text)
+        if RENAME is not None:
+            text = RENAME.sub(lambda m: RENAMES[m.group(1)], text)
         # a patch or a rename is a change too, even with no run left to rewrite
         if text == head and not RUN.search(text):
             continue
@@ -332,15 +310,16 @@ def main():
         if bad:
             failures.append((path, "glued symbol: %s" % bad[0][1][:60]))
             continue
-        # This is a shared working tree, and the loop above visits every .thy and .ML
-        # in the repository.  Writing whenever the file on disk differs from `new`
-        # would revert anyone else's uncommitted edit to a file this migration has
-        # nothing to say about, silently.  So write only where the migration itself
-        # has something to contribute, and report the rest as a conflict.
+        # This is a shared working tree and the loop visits every .thy and .ML in the
+        # repository, so writing whenever the file on disk differs from `new` would
+        # silently revert somebody else's uncommitted edit.  There are exactly two
+        # states in which writing is safe: the file is as HEAD left it, or it is
+        # already what this run would write (a previous run of this script).  Anything
+        # else is somebody's work in progress, and is reported rather than clobbered.
         on_disk = path.read_text(encoding="utf-8")
         if new == on_disk:
             continue
-        if new == head:
+        if on_disk != head:
             conflicts.append(path)
             continue
         changed.append((path, 0))
@@ -352,7 +331,7 @@ def main():
     print("\n%d files %s, %d occurrences seen"
           % (len(changed), "would change" if args.dry_run else "changed", sum(stats.values())))
     if conflicts:
-        print("\nleft alone -- edited by someone else, and this migration does not touch them:")
+        print("\nleft alone -- modified in the working tree by someone other than this run:")
         for p in conflicts:
             print("   %s" % p.relative_to(ROOT))
     if failures:

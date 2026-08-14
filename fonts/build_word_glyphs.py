@@ -38,6 +38,11 @@ SYMBOLS_OUT = COMPONENT / "symbols-words"               # generated, listed in e
 SYMBOLS_HAND = COMPONENT / "symbols"                    # hand-maintained
 CLIPBOARD_OUT = COMPONENT / "jedit/word-clipboard-text"  # generated, read by phi_word_clipboard.bsh
 
+# The Isabelle whose symbol table and mono font this component is generated against.
+# Named once: falling back to a different distribution would still parse, and answer
+# differently -- contrib/Isabelle2024 is right there.
+ISABELLE = "Isabelle2025-2"
+
 GLYPH_PREFIX = "word."
 FONT_NAME = "PhiSymbols"                                # the `font:` field of every entry
 PUA_FIRST = 0xE000                                      # private use area, unused elsewhere
@@ -88,7 +93,7 @@ def find_font(explicit, candidates, what, option):
 
 def find_isabelle_mono():
     """The font the spelled-out form renders from -- the x-height reference."""
-    home = os.environ.get("ISABELLE_HOME") or str(COMPONENT.parent / "Isabelle2025-2")
+    home = os.environ.get("ISABELLE_HOME") or str(COMPONENT.parent / ISABELLE)
     hits = glob.glob(home + "/contrib/isabelle_fonts-*/ttf-hinted/IsabelleDejaVuSansMono.ttf")
     if not hits:
         die("IsabelleDejaVuSansMono.ttf not found; set ISABELLE_HOME")
@@ -130,17 +135,18 @@ def read_words():
 
 
 def taken_symbol_names():
-    """Symbol names already claimed by Isabelle or by the hand-maintained table."""
+    """Symbol names already claimed by Isabelle or by the hand-maintained table.
+
+    Missing the Isabelle table is fatal, not something to shrug at: priming is what
+    keeps `\\<int>` and `\\<open>` off names Isabelle owns, and it would simply not
+    happen, quietly, leaving a table that collides with the distribution's own.
+    """
     names = set()
-    files = [SYMBOLS_HAND]
-    home = os.environ.get("ISABELLE_HOME")
-    if home:
-        files.append(pathlib.Path(home) / "etc/symbols")
-    else:
-        files.append(COMPONENT.parent / "Isabelle2025-2/etc/symbols")
-    for f in files:
+    home = pathlib.Path(os.environ.get("ISABELLE_HOME") or COMPONENT.parent / ISABELLE)
+    print("symbol names already taken, from %s and %s" % (SYMBOLS_HAND, home / "etc/symbols"))
+    for f in [SYMBOLS_HAND, home / "etc/symbols"]:
         if not f.is_file():
-            continue
+            die("no %s; set ISABELLE_HOME if the distribution moved" % f)
         for line in f.read_text(encoding="utf-8").splitlines():
             m = re.match(r"\\<(\^?[A-Za-z][A-Za-z0-9_']*)>", line.strip())
             if m:
@@ -246,6 +252,14 @@ def main():
 
     taken = taken_symbol_names()
     assigned = previous_assignment()
+    # Every code point already in use comes from `symbols-words`, and every source that
+    # writes one of these symbols depends on it staying put.  If that file is lost, this
+    # run would hand out fresh code points from PUA_FIRST in words.txt order and every
+    # such source would silently start rendering the wrong word.  A font that already
+    # carries word glyphs is proof this is not the first run.
+    if not assigned and any(g.startswith(GLYPH_PREFIX) for g in font.getGlyphOrder()):
+        die("%s is missing or unreadable, but %s already has word glyphs: regenerating "
+            "now would renumber every symbol.  Restore it from git." % (SYMBOLS_OUT, FONT))
     free = (c for c in range(PUA_FIRST, PUA_LAST + 1) if c not in set(assigned.values()))
 
     drop_generated(font)
@@ -265,6 +279,15 @@ def main():
         gname = GLYPH_PREFIX + word
         # A word whose name Isabelle already uses (\<in>, \<open>, ...) gets a prime.
         name = word + "'" if word in taken else word
+        # If that verdict ever flips -- a new Isabelle claims a name this table already
+        # uses, or gives one back -- the symbol silently changes name and takes a fresh
+        # code point, and every source that wrote the old one breaks with no diagnostic.
+        # Refuse instead, and let whoever upgrades decide.
+        other = word + "'" if name == word else word
+        if name not in assigned and other in assigned:
+            die("%r was \\<%s> and is now \\<%s>: Isabelle's symbol table changed under "
+                "this component.  Every source writing the old symbol must be rewritten."
+                % (word, other, name))
         code = assigned.get(name) or next(free)
         glyf.glyphs[gname] = glyph
         hmtx.metrics[gname] = (advance, glyph.xMin)
