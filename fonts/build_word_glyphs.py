@@ -278,8 +278,18 @@ def main():
         # A Medium word has no matching mathematical alphabet, so it falls back to the
         # sans letters it used to be spelled out in -- still not plain ASCII, which
         # would be indistinguishable from an ordinary identifier.
-        clip_rows.append((code, "".join(chr(sans_code_point(c)) for c in drawn) if plain
-                          else "".join(chr(source_code_point(c, all_upper)) for c in drawn)))
+        clip = ("".join(chr(sans_code_point(c)) for c in drawn) if plain
+                else "".join(chr(source_code_point(c, all_upper)) for c in drawn))
+        # Enforced, because getting it wrong is silent and wide: phi_word_clipboard.bsh
+        # folds these letters back into the glyph on paste, so an ASCII letter here
+        # would turn the word into a glyph wherever it occurs in ordinary English.
+        # Nothing above can produce one today -- both mappings send letters into a
+        # mathematical block -- and the plausible future change that would ("the Medium
+        # glyph is drawn from plain ASCII, so let its clipboard text be too") is wrong
+        # for a reason invisible from inside this file.
+        if any(c.isascii() and c.isalpha() for c in clip):
+            die("%r would put ASCII letters on the clipboard: %r" % (word, clip))
+        clip_rows.append((code, clip))
 
     font.setGlyphOrder(order)
     glyf.glyphOrder = order

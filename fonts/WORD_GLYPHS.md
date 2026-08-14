@@ -64,8 +64,29 @@ fixes that in both directions:
 
 Copying and pasting *within* jEdit is untouched: jEdit prefers its own rich-text
 flavor, which is a JVM-local object no other process can see, and the script leaves
-it alone.  Text that is not a whole word is never folded, so ordinary mathematical
-bold in a comment survives a paste unchanged.
+it alone.
+
+### What the paste direction folds
+
+It reads a run left to right, longest word first.  When no word matches at a
+position it looks at the character: **ASCII that no word claims is carried over**
+— a full stop after a word, an underscore or a digit joined to it, `w.r.t.`'s own
+periods — while **a mathematical letter that no word claims abandons the whole
+run untouched**, because the run is then somebody else's bold text and none of it
+may be modified.  So `𝐩𝐞𝐧𝐝𝐢𝐧𝐠.` folds and `𝐬𝐭𝐚𝐭𝐞𝐬` does not.
+
+That ASCII clause was added when the first entries with punctuation, `wrt` and
+`size_t`, put `.` and `_` into the table.  Before it, any word written against a
+full stop silently stopped folding — the rule was all-or-nothing per run.
+
+### The constraint on a new entry
+
+**Any ASCII character in an entry's drawn text lands in the table and becomes
+significant to the paste direction.**  Punctuation and digits are fine.  ASCII
+*letters* would not be: the paste step would fold the word wherever it occurs in
+an ordinary English sentence.  This is why the Medium words go through
+`sans_code_point` even though their glyph is drawn from an ordinary ASCII text
+font, and `build_word_glyphs.py` now refuses to write a table containing one.
 
 `phi-System/etc/settings` links the script into `$JEDIT_SETTINGS/startup/`, and puts
 it back if it goes missing, so registering the component is all a user has to do.
@@ -82,7 +103,11 @@ so there `\<pending>` simply stays the seven characters you typed.
 
 1. Edit `words.txt` (one entry per line, `#` starts a comment).
 2. Run `python3 build_word_glyphs.py` from this directory.
-3. Restart the Isabelle/jEdit session and check the new symbol renders.
+3. Run `../jedit/run_word_clipboard_test.sh` — it round-trips every entry through
+   the real BeanShell interpreter and checks the fold rule described above.  The
+   two halves of this feature are generated apart and nothing but this test makes
+   them agree.
+4. Restart the Isabelle/jEdit session and check the new symbol renders.
 
 An entry is normally just the word, and then the symbol name, the glyph and the
 abbreviation are all that word.  They come apart when the word reads with

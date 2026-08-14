@@ -1,0 +1,76 @@
+// Properties phi_word_clipboard.bsh must hold, checked against the generated table.
+//
+// The two halves of the word-glyph feature are generated apart: fonts/build_word_glyphs.py
+// writes word-clipboard-text, and this directory's script reads it.  Nothing makes them
+// agree except that they are regenerated together, so this test exists to catch the drift.
+// It exercises the real interpreter and the real committed table -- run it after any change
+// to either half.  See ../fonts/WORD_GLYPHS.md, "Copying a word out of jEdit".
+//
+// Run it with jedit/run_word_clipboard_test.sh, which supplies the interpreter and paths.
+
+source(System.getenv("PHI_SYSTEM_HOME") + "/jedit/phi_word_clipboard.bsh");
+
+t = phi_word_table();
+failures = 0;
+
+hex(s) {
+    b = new StringBuffer();
+    for (i = 0; i < s.length(); ) {
+        c = s.codePointAt(i);
+        b.append(" U+" + Integer.toHexString(c).toUpperCase());
+        i += Character.charCount(c);
+    }
+    return b.toString().trim();
+}
+
+check(what, got, want) {
+    if (got.equals(want)) return void;
+    System.out.println("FAIL " + what + "\n  got  " + hex(got) + "\n  want " + hex(want));
+    failures = failures + 1;
+}
+
+bold(w) {                                   // mathematical bold small letters
+    b = new StringBuffer();
+    for (i = 0; i < w.length(); i++)
+        b.appendCodePoint(0x1D41A + (int) w.charAt(i) - (int) 'a');
+    return b.toString();
+}
+
+expand = t.get("expand");
+n = 0;
+
+// 1. every entry folds to its glyph and expands back -- the round trip, over all of them
+for (code : expand.keySet()) {
+    glyph = new String(Character.toChars(code.intValue()));
+    letters = expand.get(code);
+    check("fold " + letters, phi_word_fold(t, letters), glyph);
+    check("expand " + hex(glyph), phi_word_expand(t, glyph), letters);
+    n = n + 1;
+}
+
+// 2. ASCII a word does not claim is carried over, so a word keeps folding when it is
+//    written against punctuation.  This is what the periods in `w.r.t.` broke.
+pending = expand.get(new Integer(0xE048));
+if (pending != null) {
+    g = new String(Character.toChars(0xE048));
+    check("word then full stop", phi_word_fold(t, pending + "."), g + ".");
+    check("word in parentheses", phi_word_fold(t, "(" + pending + ")"), "(" + g + ")");
+    check("word then newline", phi_word_fold(t, pending + "\n"), g + "\n");
+} else {
+    System.out.println("FAIL 0xE048 is no longer `pending`; update this test");
+    failures = failures + 1;
+}
+
+// 3. a mathematical letter no word claims abandons the whole run -- somebody else's bold
+//    text in a comment must come back exactly as it went out
+zzz = bold("zzz");
+check("not a word, untouched", phi_word_fold(t, zzz), zzz);
+check("not a word, with a word beside it", phi_word_fold(t, zzz), zzz);
+
+// 4. plain ASCII is not the clipboard's business
+check("plain ASCII untouched", phi_word_fold(t, "keep_me and int and bool."),
+      "keep_me and int and bool.");
+
+System.out.println((failures == 0 ? "PASS" : "FAILED") + ": " + n
+                   + " entries round-tripped, " + failures + " failure(s)");
+if (failures != 0) System.exit(1);
