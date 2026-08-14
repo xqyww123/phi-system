@@ -106,9 +106,15 @@ phi_word_fold_run(t, run)
         for (key : keys) {
             if (run.startsWith(key, i)) { hit = key; break; }
         }
-        if (hit == null) return run;        // not a sequence of words -- leave it alone
-        buf.append(fold.get(hit));
-        i += hit.length();
+        if (hit != null) { buf.append(fold.get(hit)); i += hit.length(); continue; }
+        // A word may be written against punctuation -- a full stop after it, an
+        // underscore or a digit joined to it -- so ASCII that no word claims is
+        // carried over.  A mathematical letter that no word claims is different: the
+        // run is then somebody else's bold text, and none of it may be touched.
+        code = run.codePointAt(i);
+        if (code > 127) return run;
+        buf.append(run, i, i + Character.charCount(code));
+        i += Character.charCount(code);
     }
     return buf.toString();
 }
