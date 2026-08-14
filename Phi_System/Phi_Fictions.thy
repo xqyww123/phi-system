@@ -43,7 +43,7 @@ lemma Itself_refinement_projection:
   by (clarsimp simp add: set_mult_expn, blast)
 
 lemma Itself_refinement:
-  \<open>{(u,v)} * Id_on top \<refines> {(u,v)} \<w>.\<r>.\<t> Itself \<in'> {u}\<close>
+  \<open>{(u,v)} * Id_on top \<refines> {(u,v)} \<wrt> Itself \<in'> {u}\<close>
   for u :: \<open>'a::{sep_cancel,sep_semigroup}\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: subset_iff set_mult_expn,
@@ -56,10 +56,10 @@ subsubsection \<open>Composition\<close>
 
 
 lemma sep_refinement_stepwise:
-  \<open> S1 \<refines> S2 \<w>.\<r>.\<t> Ia \<in'> D
-\<Longrightarrow> S2 \<refines> S3 \<w>.\<r>.\<t> Ib \<in'> D'
+  \<open> S1 \<refines> S2 \<wrt> Ia \<in'> D
+\<Longrightarrow> S2 \<refines> S3 \<wrt> Ib \<in'> D'
 \<Longrightarrow> refinement_projection Ib D' \<le> D
-\<Longrightarrow> S1 \<refines> S3 \<w>.\<r>.\<t> (Ia \<Zcomp> Ib) \<in'> D'\<close>
+\<Longrightarrow> S1 \<refines> S3 \<wrt> (Ia \<Zcomp> Ib) \<in'> D'\<close>
   for Ia :: \<open>('a::sep_magma_1, 'b::sep_magma_1) \<phi>\<close>
   unfolding Fictional_Forward_Simulation_def refinement_projection_def
   apply (auto simp add: subset_iff Image_def Bex_def less_eq_BI_iff set_mult_expn split_option_all)
@@ -84,11 +84,11 @@ lemma sep_refinement_stepwise:
   qed .
 
 lemma sep_refinement_stepwise':
-  \<open> S1 \<refines> S2 \<w>.\<r>.\<t> Ia \<in'> D
-\<Longrightarrow> S2' \<refines> S3 \<w>.\<r>.\<t> Ib \<in'> D'
+  \<open> S1 \<refines> S2 \<wrt> Ia \<in'> D
+\<Longrightarrow> S2' \<refines> S3 \<wrt> Ib \<in'> D'
 \<Longrightarrow> refinement_projection Ib D' \<le> D
 \<Longrightarrow> S2 \<le> S2'
-\<Longrightarrow> S1 \<refines> S3 \<w>.\<r>.\<t> (Ia \<Zcomp> Ib) \<in'> D'\<close>
+\<Longrightarrow> S1 \<refines> S3 \<wrt> (Ia \<Zcomp> Ib) \<in'> D'\<close>
   for Ia :: \<open>'b::sep_magma_1 \<Rightarrow> 'a::sep_magma_1 BI\<close>
   using refinement_sub_fun sep_refinement_stepwise
   by metis
@@ -184,9 +184,9 @@ lemma \<F>_pointwise_projection:
   qed .
 
 lemma \<F>_pointwise_refinement:
-  \<open> A * Id_on top \<refines> B \<w>.\<r>.\<t> I k \<in'> D
+  \<open> A * Id_on top \<refines> B \<wrt> I k \<in'> D
 \<Longrightarrow> pairself (fun_upd 1 k) ` A * Id_on top \<refines> pairself (fun_upd 1 k) ` B
-    \<w>.\<r>.\<t> \<F>_pointwise I \<in'> fun_upd 1 k ` D\<close>
+    \<wrt> \<F>_pointwise I \<in'> fun_upd 1 k ` D\<close>
   for I :: \<open>'c \<Rightarrow> 'b::sep_magma_1 \<Rightarrow> 'a::sep_magma_1 BI\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: set_mult_expn image_iff Image_def subset_iff Bex_def times_fun Id_on_iff)
@@ -324,7 +324,7 @@ subsubsection \<open>Cancellative Separation Insertion Homomorphism\<close>
 (*
 lemma refinement_projection:
   \<open> kernel_is_1 \<psi>
-\<Longrightarrow> Id_on UNIV * {(a, b)} \<refines> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> \<in'> \<psi> ` {a}\<close>
+\<Longrightarrow> Id_on UNIV * {(a, b)} \<refines> pairself \<psi> ` {(a,b)} \<wrt> \<F>_functional \<psi> \<in'> \<psi> ` {a}\<close>
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: set_mult_expn Subjection_expn_set)
 subgoal for r R u v w *)
@@ -347,7 +347,7 @@ lemma \<F>_functional_refinement_complex:
   \<open> (\<forall>a b. (a,b) \<in> R \<longrightarrow> a \<in> D \<and> b \<in> D)
 \<Longrightarrow> frame_preserving_relation R
 \<Longrightarrow> Sep_Closed D
-\<Longrightarrow> R * Id_on UNIV \<refines> pairself \<psi> ` R \<w>.\<r>.\<t> \<F>_functional \<psi> D \<in'> \<psi> ` (Domain R) \<close>
+\<Longrightarrow> R * Id_on UNIV \<refines> pairself \<psi> ` R \<wrt> \<F>_functional \<psi> D \<in'> \<psi> ` (Domain R) \<close>
   unfolding Fictional_Forward_Simulation_def
   by (auto simp add: set_mult_expn sep_orthogonal Sep_Closed_def image_iff Bex_def,
       smt (z3) frame_preserving_relation_def homo_mult sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
@@ -355,7 +355,7 @@ lemma \<F>_functional_refinement_complex:
 lemma \<F>_functional_refinement:
   \<open> a \<in> D \<and> b \<in> D
 \<Longrightarrow> \<F>_functional_condition D
-\<Longrightarrow> {(a, b)} * Id_on UNIV \<refines> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<in'> \<psi> ` {a} \<close>
+\<Longrightarrow> {(a, b)} * Id_on UNIV \<refines> pairself \<psi> ` {(a,b)} \<wrt> \<F>_functional \<psi> D \<in'> \<psi> ` {a} \<close>
   unfolding Fictional_Forward_Simulation_def \<F>_functional_condition_def
   apply (auto simp add: set_mult_expn sep_orthogonal)
   apply (metis (no_types, lifting) homo_mult sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
@@ -364,7 +364,7 @@ lemma \<F>_functional_refinement:
 lemma \<F>_functional_refinement':
   \<open> a \<in> D \<and> B \<subseteq> D
 \<Longrightarrow> \<F>_functional_condition D
-\<Longrightarrow> {(a, b) |b. b\<in>B} * Id_on UNIV \<refines> pairself \<psi> ` {(a,b) |b. b\<in>B} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<in'> \<psi> ` {a} \<close>
+\<Longrightarrow> {(a, b) |b. b\<in>B} * Id_on UNIV \<refines> pairself \<psi> ` {(a,b) |b. b\<in>B} \<wrt> \<F>_functional \<psi> D \<in'> \<psi> ` {a} \<close>
   unfolding Fictional_Forward_Simulation_def \<F>_functional_condition_def
   by (auto simp add: set_mult_expn sep_orthogonal,
       smt (verit) homo_mult sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc subsetD)

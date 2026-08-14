@@ -132,3 +132,5 @@
 \<when>               code: 0x00E082  font: PhiSymbols  group: letter  abbrev: <when>
 \<while>              code: 0x00E083  font: PhiSymbols  group: letter  abbrev: <while>
 \<with>               code: 0x00E084  font: PhiSymbols  group: letter  abbrev: <with>
+\<size_t>             code: 0x00E073  font: PhiSymbols  group: letter  abbrev: <size_t>
+\<wrt>                code: 0x00E086  font: PhiSymbols  group: letter  abbrev: <w.r.t>

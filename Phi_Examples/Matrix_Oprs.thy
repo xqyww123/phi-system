@@ -20,8 +20,8 @@ abbreviation \<open>\<m>\<a>\<t> M N \<equiv> \<array>[M] \<array>[N] \<int'>\<c
 lemmas [\<phi>sledgehammer_simps] = mat_to_list_def list_eq_iff_nth_eq list_all2_conv_all_nth zero_mat_def
 
 proc zero_mat:
-  input    \<open>a \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M N]\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            m \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
+  input    \<open>a \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M N]\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            m \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a i j m n\<close>
   premises \<open>i + m \<le> M \<and> j + n \<le> N \<and> M < 2 ^ addrspace_bits \<and> N < 2 ^ addrspace_bits\<close>
   output   \<open>0\<^sub>m m n \<Ztypecolon> MatSlice a i j m n\<close>
@@ -59,9 +59,9 @@ proc del_mat:
 
 
 proc copy_mat:
-  input    \<open>a\<^sub>x \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            a\<^sub>y \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            m \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>x \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            a\<^sub>y \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            m \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
             y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 
@@ -81,9 +81,9 @@ proc copy_mat:
 
 
 proc add_mat:
-  input    \<open>a\<^sub>x \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            a\<^sub>y \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            m \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>x \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            a\<^sub>y \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            m \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
             y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 
@@ -103,9 +103,9 @@ proc add_mat:
 
 
 proc sub_mat:
-  input    \<open>a\<^sub>x \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            a\<^sub>y \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            m \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>x \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>x N\<^sub>x]\<heavy_comma> i\<^sub>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            a\<^sub>y \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M\<^sub>y N\<^sub>y]\<heavy_comma> i\<^sub>y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            m \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> n \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
             x \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma>
             y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
 
@@ -156,11 +156,11 @@ context
 begin
  
 proc strassen:
-  input    \<open>a\<^sub>A \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>A \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>A \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            a\<^sub>B \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>B \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>B \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            a\<^sub>C \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>C \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>C \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            a\<^sub>D \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>D \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma> j\<^sub>D \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
-            n \<Ztypecolon> \<val> \<nat>(size_\<t>)\<heavy_comma>
+  input    \<open>a\<^sub>A \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>A \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>A \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            a\<^sub>B \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>B \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>B \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            a\<^sub>C \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>C \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>C \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            a\<^sub>D \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> N N]\<heavy_comma> i\<^sub>D \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> j\<^sub>D \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
+            n \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma>
             A \<Ztypecolon> MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n)\<heavy_comma>
             B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<heavy_comma>
             buf\<^sub>1 \<Ztypecolon> MatSlice a\<^sub>C i\<^sub>C j\<^sub>C (2^n) (2^n)\<heavy_comma> \<comment> \<open>buffers used to store intermediate values\<close>
@@ -324,7 +324,7 @@ proc strassen_mul:
   output   \<open>A * B \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
             B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n) \<close>
 \<medium_left_bracket>
-  \<open>literal n \<Ztypecolon> \<nat>(size_\<t>)\<close> \<rightarrow> val n \<semicolon>
+  \<open>literal n \<Ztypecolon> \<nat>(\<size_t>)\<close> \<rightarrow> val n \<semicolon>
   1 << n \<rightarrow> val N \<semicolon>
   new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val C \<semicolon>
   new_mat \<open>2^n\<close> \<open>2^n\<close> \<rightarrow> val D \<semicolon>

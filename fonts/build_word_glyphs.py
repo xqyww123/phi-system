@@ -19,6 +19,7 @@ import glob
 import os
 import pathlib
 import re
+import string
 import sys
 
 from fontTools.misc.transform import Transform
@@ -94,16 +95,36 @@ def find_isabelle_mono():
     return pathlib.Path(sorted(hits)[-1])
 
 
+SYMBOL_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_']*$")   # all Isabelle admits, symbol.scala:318
+DRAWABLE = set(string.ascii_letters + string.digits + "._-")
+
+
 def read_words():
+    """One entry per line: `name`, or `name = drawn text`, or `name = text = abbrev`.
+
+    The three are normally the same word.  They come apart when the word reads with
+    punctuation a symbol name cannot carry: `wrt = w.r.t. = w.r.t` is named `\\<wrt>`,
+    draws `w.r.t.`, and is typed as `<w.r.t>`.
+    """
     out = []
     for line in WORDS.read_text(encoding="utf-8").splitlines():
         line = line.split("#", 1)[0].strip()
         if not line:
             continue
-        if not line.isalpha():
-            die("not a plain word: %r" % line)
-        out.append(line)
-    if len(set(out)) != len(out):
+        fields = [f.strip() for f in line.split("=")]
+        if len(fields) > 3:
+            die("more than three fields: %r" % line)
+        name = fields[0]
+        text = fields[1] if len(fields) > 1 and fields[1] else name
+        abbrev = fields[2] if len(fields) > 2 and fields[2] else text
+        if not SYMBOL_NAME.match(name):
+            die("not a symbol name Isabelle would accept: %r" % name)
+        undrawable = [c for c in text if c not in DRAWABLE]
+        if undrawable:
+            die("no glyph for %r in %r" % (undrawable[0], text))
+        out.append((name, text, abbrev))
+    names = [n for n, _, _ in out]
+    if len(set(names)) != len(names):
         die("duplicate entries in words.txt")
     return out
 
@@ -128,18 +149,24 @@ def taken_symbol_names():
 
 
 def previous_assignment():
-    """word -> code point, so that editing words.txt never renumbers survivors."""
+    """symbol name -> code point, so that editing words.txt never renumbers survivors.
+
+    Keyed by the symbol name rather than the word, because the two part company
+    once a word carries its own abbreviation.
+    """
     out = {}
     if SYMBOLS_OUT.is_file():
         for line in SYMBOLS_OUT.read_text(encoding="utf-8").splitlines():
-            m = re.match(r"\\<[A-Za-z][A-Za-z0-9_']*>\s+code:\s*(0x[0-9a-fA-F]+).*abbrev:\s*<(\w+)>", line)
+            m = re.match(r"\\<([A-Za-z][A-Za-z0-9_']*)>\s+code:\s*(0x[0-9a-fA-F]+)", line)
             if m:
-                out[m.group(2)] = int(m.group(1), 16)
+                out[m.group(1)] = int(m.group(2), 16)
     return out
 
 
 def source_code_point(ch, all_upper, plain=False):
-    if plain:                       # STIX Two Text is an ordinary ASCII font
+    # Punctuation has no mathematical alphabet; it comes from the font's own ASCII,
+    # which means a period or an underscore is drawn at the font's regular weight.
+    if plain or not ch.isalpha():   # STIX Two Text is an ordinary ASCII font
         return ord(ch)
     if all_upper:
         return BOLD_SCRIPT_CAPITAL_A + ord(ch) - ord("A")
@@ -150,6 +177,8 @@ def source_code_point(ch, all_upper, plain=False):
 
 def sans_code_point(ch):
     """The letters the word was spelled out in before it became one glyph."""
+    if not ch.isalpha():
+        return ord(ch)
     if ch.isupper():
         return SANS_CAPITAL_A + ord(ch) - ord("A")
     return SANS_SMALL_A + ord(ch) - ord("a")
@@ -223,34 +252,34 @@ def main():
     glyf, hmtx = font["glyf"], font["hmtx"]
     order = list(font.getGlyphOrder())
     rows, clip_rows = [], []
-    for word in words:
-        all_upper = word.isupper()
+    for word, drawn, abbrev in words:
+        all_upper = drawn.isupper()
         plain = word in MEDIUM_WORDS
         src = stix_text if plain else stix
         if plain:
             scale = med_upper if all_upper else med_lower
         else:
             scale = scale_upper if all_upper else scale_lower
-        glyph, advance = compose(src, word, all_upper, scale, plain)
+        glyph, advance = compose(src, drawn, all_upper, scale, plain)
         glyph.recalcBounds(glyf)
         gname = GLYPH_PREFIX + word
-        code = assigned.get(word) or next(free)
+        # A word whose name Isabelle already uses (\<in>, \<open>, ...) gets a prime.
+        name = word + "'" if word in taken else word
+        code = assigned.get(name) or next(free)
         glyf.glyphs[gname] = glyph
         hmtx.metrics[gname] = (advance, glyph.xMin)
         order.append(gname)
         for table in font["cmap"].tables:
             if table.isUnicode():
                 table.cmap[code] = gname
-        # A word whose name Isabelle already uses (\<in>, \<open>, ...) gets a prime.
-        name = word + "'" if word in taken else word
-        rows.append((name, code, word))
+        rows.append((name, code, abbrev))
         # What the word turns into when it leaves jEdit: the same letters this glyph was
         # drawn from, so the text that lands on the clipboard looks like the glyph.
         # A Medium word has no matching mathematical alphabet, so it falls back to the
         # sans letters it used to be spelled out in -- still not plain ASCII, which
         # would be indistinguishable from an ordinary identifier.
-        clip_rows.append((code, "".join(chr(sans_code_point(c)) for c in word) if plain
-                          else "".join(chr(source_code_point(c, all_upper)) for c in word)))
+        clip_rows.append((code, "".join(chr(sans_code_point(c)) for c in drawn) if plain
+                          else "".join(chr(source_code_point(c, all_upper)) for c in drawn)))
 
     font.setGlyphOrder(order)
     glyf.glyphOrder = order
@@ -258,8 +287,8 @@ def main():
 
     text = "# Generated by fonts/build_word_glyphs.py -- do not edit.\n" + "".join(
         "\\<%s>%s code: 0x%06X  font: %s  group: letter  abbrev: <%s>\n"
-        % (name, " " * max(1, 18 - len(name)), code, FONT_NAME, word)
-        for name, code, word in rows)
+        % (name, " " * max(1, 18 - len(name)), code, FONT_NAME, abbrev)
+        for name, code, abbrev in rows)
 
     clip_text = ("# Generated by fonts/build_word_glyphs.py -- do not edit.\n"
                  "# code point of the word glyph, then the text it becomes on the clipboard.\n"

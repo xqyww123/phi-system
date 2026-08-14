@@ -65,92 +65,33 @@ EMBEDDED_ASCII = {"int": "int_t"}
 # Those are patched here, on the text as it comes out of HEAD and before any run is
 # rewritten, so the whole migration stays one function of HEAD.
 DECL_PATCHES = {
-    "Phi_Semantics/PhiSem_Int_ArbiPrec.thy": [(
-        r'debt_axiomatization \<a>\<i>\<n>\<t> :: TY',
-        r'debt_axiomatization sem_aint_T    :: TY ("\<aint>")')],
-    "Phi_Semantics/PhiSem_Real_Abst.thy": [(
-        r'debt_axiomatization \<a>\<r>\<e>\<a>\<l> :: TY',
-        r'debt_axiomatization sem_areal_T   :: TY ("\<areal>")')],
-    "Phi_Semantics/PhiSem_Generic_Boolean.thy": [(
-        r'debt_axiomatization \<b>\<o>\<o>\<l>          :: TY',
-        r'''debt_axiomatization sem_bool_T    :: TY ("\<bool'>")''')],
-    "Phi_Semantics/PhiSem_Symbol.thy": [(
-        r'debt_axiomatization \<s>\<y>\<m>\<b>\<o>\<l> :: TY',
-        r'debt_axiomatization sem_symbol_T    :: TY ("\<symbol>")')],
-    "Phi_Semantics/PhiSem_Void.thy": [(
-        'debt_axiomatization \\<v>\\<o>\\<i>\\<d> :: TY\n'
-        '               and \\<v>\\<o>\\<i>\\<d>V :: VAL',
-        'debt_axiomatization sem_void_T :: TY ("\\<void>")\n'
-        '               and voidV      :: VAL')],
-    "Phi_Semantics_Framework/Phi_Semantics_Framework.thy": [(
-        r'debt_axiomatization \<p>\<o>\<i>\<s>\<o>\<n> :: TY',
-        r'debt_axiomatization sem_poison_T :: TY ("\<poison>")')],
+    # `size_\<t>` is the address-space word width expressed as a type -- the pointer-side
+    # twin of `int_t`, with the same comment on it.  A symbol is not a letter, so the
+    # name goes to ASCII and the word becomes notation.  Only the sites that need the
+    # name rather than the notation are patched; every use is left to RENAMES.
     "Phi_Semantics/PhiSem_Mem_Pointer.thy": [
-        # the notation stays \<ptr>, which the rest of the sources already write
-        (r'debt_axiomatization \<p>\<o>\<i>\<n>\<t>\<e>\<r> :: TY ("\<ptr>")'
-         '\n'
-         r'  where \<p>\<o>\<i>\<n>\<t>\<e>\<r>_isnot_\<p>\<o>\<i>\<s>\<o>\<n>[simp]:'
-         r' \<open>\<p>\<o>\<i>\<n>\<t>\<e>\<r> \<noteq> \<p>\<o>\<i>\<s>\<o>\<n>\<close>',
-         r'debt_axiomatization sem_pointer_T :: TY ("\<ptr>")'
-         '\n'
-         r'  where pointer_isnot_poison[simp]: \<open>\<ptr> \<noteq> \<poison>\<close>'),
-        (r'  \<open> Is_Type_Literal \<p>\<o>\<i>\<n>\<t>\<e>\<r> \<close>',
-         r'  \<open> Is_Type_Literal \<ptr> \<close>')],
-    "Phi_Semantics/PhSm_V_FMap.thy": [(
-        r'debt_axiomatization \<m>\<a>\<p> :: \<open>TY \<Rightarrow> TY \<Rightarrow> TY\<close>'
-        r' ("\<m>\<a>\<p> [_,_]")'
-        '\n'
-        r'                and \<m>\<a>\<p>_rep  :: \<open>(sVAL \<Rightarrow> VAL) \<Rightarrow> VAL\<close>',
-        r'debt_axiomatization sem_map_T :: \<open>TY \<Rightarrow> TY \<Rightarrow> TY\<close>'
-        r' ("\<map> [_,_]")'
-        '\n'
-        r'                and map_rep   :: \<open>(sVAL \<Rightarrow> VAL) \<Rightarrow> VAL\<close>')],
-    "Phi_Semantics/PhiSem_CF_Routine.thy": [(
-        r'\<^const_syntax>\<open>\<v>\<o>\<i>\<d>\<close>',
-        r'\<^const_syntax>\<open>sem_void_T\<close>')],
-    "Phi_Semantics/library/Ag_Tuple.ML": [(
-        r'\<^const_name>\<open>\<p>\<o>\<i>\<s>\<o>\<n>\<close>',
-        r'\<^const_name>\<open>sem_poison_T\<close>')],
-    "Phi_Semantics/library/Ag_Named_Tuple.ML": [(
-        r'\<^const_name>\<open>\<p>\<o>\<i>\<s>\<o>\<n>\<close>',
-        r'\<^const_name>\<open>sem_poison_T\<close>')],
-    # a syntax constant, eliminated again by the parse_ast_translation just below it;
-    # the notation must be primed because \<open> is Isabelle's cartouche delimiter
-    "Phi_System/IDE_CP_Applications1.thy": [
-        (r'''syntax \<o>\<p>\<e>\<n>  :: \<open>logic\<close> ("\<o>\<p>\<e>\<n>")
-       \<o>\<p>\<e>\<n>' :: \<open>nat \<Rightarrow> logic\<close> ("\<o>\<p>\<e>\<n>'(_')")''',
-         r'''syntax synt_open  :: \<open>logic\<close> ("\<open'>")
-       synt_open' :: \<open>nat \<Rightarrow> logic\<close> ("\<open'>'(_')")'''),
-        (r'\<^syntax_const>\<open>\<o>\<p>\<e>\<n>\<close>',
-         r'\<^syntax_const>\<open>synt_open\<close>'),
-        (r"\<^syntax_const>\<open>\<o>\<p>\<e>\<n>'\<close>",
-         r"\<^syntax_const>\<open>synt_open'\<close>")],
-    # three things share this spelling: the HOL type that indexes the machine-word
-    # length, its bit width, and the term abbreviation for the semantic type at that
-    # width.  `sem_int_T` is already taken by the TY constructor, so they are named
-    # after the type instead.  Lemmas that speak of integers in general, not of that
-    # type -- int_neq_poison, ptr_neq_int' -- keep the bare word and need no patch.
-    "Phi_Semantics/PhiSem_Machine_Integer.thy": [
-        (r'''       "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<i>\<n>\<t>'(_')")''',
-         r'''       "_int_semty_" :: \<open>type \<Rightarrow> TY\<close> ("\<int'>'(_')")'''),
-        (r'''typedecl \<i>\<n>\<t> \<comment>''', r'''typedecl int_t ("\<int'>") \<comment>'''),
-        (r'''consts \<i>\<n>\<t>_bits :: "nat"''', r'''consts int_t_bits :: "nat"'''),
-        (r'''specification (\<i>\<n>\<t>_bits) \<i>\<n>\<t>_bits_L0: "0 < \<i>\<n>\<t>_bits" by blast''',
-         r'''specification (int_t_bits) int_t_bits_L0: "0 < int_t_bits" by blast'''),
-        (r'''instantiation \<i>\<n>\<t> :: len begin''', r'''instantiation int_t :: len begin'''),
-        (r'''definition "len_of_\<i>\<n>\<t> (_::\<i>\<n>\<t> itself) = \<i>\<n>\<t>_bits"''',
-         r'''definition "len_of_int_t (_::int_t itself) = int_t_bits"'''),
-        (r'''instance by (standard, simp add: \<i>\<n>\<t>_bits_L0 len_of_\<i>\<n>\<t>_def)''',
-         r'''instance by (standard, simp add: int_t_bits_L0 len_of_int_t_def)'''),
-        (r'''abbreviation \<open>\<i>\<n>\<t> \<equiv> \<i>\<n>\<t>(\<i>\<n>\<t>)\<close>''',
-         '''abbreviation sem_int_t' ("\\<int'>")\n'''
-         r'''  where \<open>sem_int_t' \<equiv> \<int'>(int_t)\<close>''')],
-    # a logical constant, not syntax: it appears in terms such as
-    # `\<simplify>[\<changed> default] X : Y`, so it joins its MODE_ siblings
-    "Phi_Logic_Programming_Reasoner/PLPR.thy": [(
-        r'       \<c>\<h>\<a>\<n>\<g>\<e>\<d> :: \<open>mode \<Rightarrow> mode\<close>',
-        r'       MODE_CHANGED :: \<open>mode \<Rightarrow> mode\<close> ("\<changed>")')],
+        (r'typedecl size_\<t> \<comment>', r'typedecl size_t ("\<size_t>") \<comment>'),
+        (r'instantiation size_\<t> :: len begin', r'instantiation size_t :: len begin'),
+        (r'definition [iff]: "len_of_size_\<t> (_::size_\<t> itself) = addrspace_bits"',
+         r'definition [iff]: "len_of_size_t (_::size_t itself) = addrspace_bits"')],
+    # this whole file is one 200-line comment, `(*theory` to `end*)`, and nothing
+    # imports it; the line is patched only so the dead code stays coherent
+    "Phi_Semantics/PhiSem_Pointer_Mem.thy": [(
+        r'type_synonym size_\<t> = \<open>addr_cap word\<close>',
+        r'type_synonym size_t = \<open>addr_cap word\<close> ("\<size_t>")')],
+    # the term-level twin of the type, exactly as `sem_int_t'` is for `int_t`: the
+    # machine integer at the address-space width.  Its name is what makes this a
+    # declaration rather than a use, so the notation has to be spelled out.
+    "Phi_Semantics/PhiSem_Mem_C_MI.thy": [(
+        r'''abbreviation \<open>size_\<t> \<equiv> \<int'>(size_\<t>)\<close>''',
+        '''abbreviation sem_size_t ("\\<size_t>")\n'''
+        r'''  where \<open>sem_size_t \<equiv> \<int'>(size_t)\<close>''')],
 }
+
+# Entries are dropped once the round that needed them is committed: this script rewrites
+# the working tree from HEAD, so a patch whose text is already in HEAD no longer applies
+# and would only fail.  What earlier rounds did is recorded in their commits and in
+# PHI_WORD_SYMBOL_MIGRATION.md.
 
 # Plain ASCII renames.  They have nothing to do with the spelling migration; they live
 # here because this script always rewrites the working tree from HEAD, so a rename done
@@ -160,7 +101,19 @@ DECL_PATCHES = {
 # name moves: `semty_` is this codebase's prefix for the lemmas and auxiliaries around a
 # TY, and `semty_tup_eq_poison`, `semty_tup_empty` and `_semty_tup` already sit beside
 # `sem_tup_T` in exactly that way, so their `ntup` counterparts are left alone.
-RENAMES = {"semty_ntup": "sem_ntup_T"}
+RENAMES = {
+    # the one primitive TY constructor not shaped like `sem_tup_T`; `mk_` in this
+    # codebase means a derived convenience (`mk_int_T = sem_int_T o len_of`), while
+    # `sem_mk_array` right beside it makes a value, not a type
+    "mk_array_T": "sem_array_T",
+    # a mixfix delimiter, nothing is named by it.  The symbol cannot be `\<w.r.t.>`:
+    # a symbol name admits only [A-Za-z][A-Za-z0-9_']*, so the periods live in the
+    # glyph and in the abbreviation `<w.r.t>`, not in the name.
+    "\\<w>.\\<r>.\\<t>": "\\<wrt>",
+    # every use of the type; its declaration sites are in DECL_PATCHES above, and a
+    # name that embeds it (`len_of_size_\<t>`) is excluded by the identifier boundary
+    "size_\\<t>": "\\<size_t>",
+}
 RENAME = re.compile(r"(?<![A-Za-z0-9_'])(%s)(?![A-Za-z0-9_'])"
                     % "|".join(re.escape(k) for k in sorted(RENAMES, key=len, reverse=True)))
 
@@ -194,7 +147,7 @@ def load_symbol_names():
     """word -> symbol name, e.g. 'open' -> \"open'\" when Isabelle owns the name."""
     out = {}
     for line in SYMBOLS_WORDS.read_text(encoding="utf-8").splitlines():
-        m = re.match(r"\\<([A-Za-z][A-Za-z0-9_']*)>.*abbrev:\s*<(\w+)>", line)
+        m = re.match(r"\\<([A-Za-z][A-Za-z0-9_']*)>.*abbrev:\s*<([^>]+)>", line)
         if m:
             out[m.group(2)] = m.group(1)
     return out
@@ -344,7 +297,7 @@ def main():
     names = load_symbol_names()
     letters = load_letters()
     stats = collections.Counter()
-    changed, failures = [], []
+    changed, failures, conflicts = [], [], []
 
     # Always start from the committed text, so the run is repeatable and a fixed
     # rule can simply be re-applied instead of unpicking a previous pass.
@@ -379,15 +332,29 @@ def main():
         if bad:
             failures.append((path, "glued symbol: %s" % bad[0][1][:60]))
             continue
-        if new != path.read_text(encoding="utf-8"):
-            changed.append((path, 0))
-            if not args.dry_run:
-                path.write_text(new, encoding="utf-8")
+        # This is a shared working tree, and the loop above visits every .thy and .ML
+        # in the repository.  Writing whenever the file on disk differs from `new`
+        # would revert anyone else's uncommitted edit to a file this migration has
+        # nothing to say about, silently.  So write only where the migration itself
+        # has something to contribute, and report the rest as a conflict.
+        on_disk = path.read_text(encoding="utf-8")
+        if new == on_disk:
+            continue
+        if new == head:
+            conflicts.append(path)
+            continue
+        changed.append((path, 0))
+        if not args.dry_run:
+            path.write_text(new, encoding="utf-8")
 
     for k, n in sorted(stats.items(), key=lambda kv: -kv[1]):
         print("  %-24s %6d" % (k, n))
     print("\n%d files %s, %d occurrences seen"
           % (len(changed), "would change" if args.dry_run else "changed", sum(stats.values())))
+    if conflicts:
+        print("\nleft alone -- edited by someone else, and this migration does not touch them:")
+        for p in conflicts:
+            print("   %s" % p.relative_to(ROOT))
     if failures:
         print("\nFAILED on %d files:" % len(failures))
         for p, why in failures[:10]:

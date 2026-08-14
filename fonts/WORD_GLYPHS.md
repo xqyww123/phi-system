@@ -80,9 +80,22 @@ so there `\<pending>` simply stays the seven characters you typed.
 
 ## Adding or changing a word
 
-1. Edit `words.txt` (one word per line, `#` starts a comment).
+1. Edit `words.txt` (one entry per line, `#` starts a comment).
 2. Run `python3 build_word_glyphs.py` from this directory.
 3. Restart the Isabelle/jEdit session and check the new symbol renders.
+
+An entry is normally just the word, and then the symbol name, the glyph and the
+abbreviation are all that word.  They come apart when the word reads with
+punctuation, because a symbol name admits only `[A-Za-z][A-Za-z0-9_']*` — no
+period, no hyphen.  Then write `name = drawn text = abbreviation`:
+
+    wrt = w.r.t. = w.r.t     \<wrt> draws `w.r.t.` and is typed as <w.r.t>
+    size_t                   an underscore needs no split; it is a legal name
+
+Either of the last two fields may be left out.  Punctuation is drawn from the
+source font's own ASCII, so a period or an underscore comes out at that font's
+regular weight — invisible on a period, slightly light on an underscore against
+mathematical bold letters.
 
 Step 2 rewrites `PhiSymbols.ttf`, `../symbols-words` and `../jedit/word-clipboard-text`
 together, so the glyph, the symbol declaration and the clipboard text cannot drift

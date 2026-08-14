@@ -36,8 +36,8 @@ definition [simp]: "len_of_addr_cap (_::addr_cap itself) = addrspace_bits"
 instance apply standard using addrspace_bits_L0 by simp
 end
 
-type_synonym size_\<t> = \<open>addr_cap word\<close>
-abbreviation to_size_t :: \<open>nat \<Rightarrow> size_\<t>\<close> where \<open>to_size_t \<equiv> of_nat\<close>
+type_synonym size_t = \<open>addr_cap word\<close> ("\<size_t>")
+abbreviation to_size_t :: \<open>nat \<Rightarrow> \<size_t>\<close> where \<open>to_size_t \<equiv> of_nat\<close>
 
 
 declare [ [typedef_overloaded] ]
@@ -55,7 +55,7 @@ declare addr.sel[iff]
 hide_const (open) segment index
 
 type_synonym address = \<open>nat list addr\<close> (* the index of address is non empty *)
-type_synonym rawaddr = \<open>size_\<t> addr\<close>
+type_synonym rawaddr = \<open>\<size_t> addr\<close>
 
 instantiation segidx :: zero begin
 definition [simp]: "zero_segidx = Null"

@@ -150,7 +150,7 @@ context begin
 
 private lemma from_fictional_refinement':
   \<open> Valid_Proc f
-\<Longrightarrow> (\<And>v. Transition_of' f v \<refines> Rel v \<w>.\<r>.\<t> R.basic_fiction \<Zcomp> I \<in'> D)
+\<Longrightarrow> (\<And>v. Transition_of' f v \<refines> Rel v \<wrt> R.basic_fiction \<Zcomp> I \<in'> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<proc> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Itself \<subj> y. (x,y) \<in> Rel (Normal v) \<rbrace>
@@ -199,7 +199,7 @@ lemma from_fictional_refinement:
   \<open> Valid_Proc f
 \<Longrightarrow> YY = (\<lambda>v. y \<Ztypecolon> \<phi> Itself \<subj> y. (x,y) \<in> Rel (Normal v))
 \<Longrightarrow> EE = (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<subj> y. (x,y) \<in> Rel (Abnm e))
-\<Longrightarrow> (\<And>v. Transition_of' f v \<refines> Rel v \<w>.\<r>.\<t> R.basic_fiction \<Zcomp> I \<in'> D)
+\<Longrightarrow> (\<And>v. Transition_of' f v \<refines> Rel v \<wrt> R.basic_fiction \<Zcomp> I \<in'> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<proc> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> YY \<rbrace> \<throws> EE\<close>
@@ -209,7 +209,7 @@ end
 
 lemma "__getter_rule__":
   \<open> Valid_Proc getter
-\<Longrightarrow> (\<And>ret. Transition_of' getter ret \<refines> Id_on (\<exists>\<^sup>sv. {x} \<subjs> ret = Normal (\<phi>arg v) \<and> P v) \<w>.\<r>.\<t> R.basic_fiction \<Zcomp> I \<in'> {x})
+\<Longrightarrow> (\<And>ret. Transition_of' getter ret \<refines> Id_on (\<exists>\<^sup>sv. {x} \<subjs> ret = Normal (\<phi>arg v) \<and> P v) \<wrt> R.basic_fiction \<Zcomp> I \<in'> {x})
 \<Longrightarrow> \<proc> getter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<phi> Itself \<subj> v. ret = \<phi>arg v \<and> P v \<rbrace>\<close>
   by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on (\<exists>\<^sup>sv. {x} \<subjs> ret = Normal (\<phi>arg v) \<and> P v)\<close>
                                        and D = \<open>{x}\<close>],
@@ -223,7 +223,7 @@ lemma "__getter_rule__":
 lemma "__setter_rule__":
   \<open> Valid_Proc setter
 \<Longrightarrow> (\<And>ret. Transition_of' setter ret \<refines> {(x,y) |y. y \<in> Y} \<subjs> ret = Normal \<phi>V_none
-            \<w>.\<r>.\<t> R.basic_fiction \<Zcomp> I \<in'> {x})
+            \<wrt> R.basic_fiction \<Zcomp> I \<in'> {x})
 \<Longrightarrow> \<proc> setter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>_. y \<Ztypecolon> \<phi> Itself \<subj> y. y \<in> Y \<rbrace>\<close>
   by (rule from_fictional_refinement
                   [where Rel=\<open>\<lambda>ret. {(x,y) |y. y \<in> Y} \<subjs> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
@@ -237,7 +237,7 @@ lemma "__setter_rule__":
 lemma "__allocator_rule__":
   \<open> Valid_Proc allocator
 \<Longrightarrow> (\<And>ret. Transition_of' allocator ret \<refines> (\<exists>\<^sup>sk y. {(1,y)} \<subjs> ret = Normal (\<phi>arg k) \<and> y \<in> Y k \<and> P k)
-            \<w>.\<r>.\<t> R.basic_fiction \<Zcomp> I \<in'> {1})
+            \<wrt> R.basic_fiction \<Zcomp> I \<in'> {1})
 \<Longrightarrow> \<proc> allocator \<lbrace> Void \<longmapsto> \<lambda>ret. y \<Ztypecolon> \<phi> Itself \<subj> k y. ret = \<phi>arg k \<and> y \<in> Y k \<and> P k \<rbrace>\<close>
   by (rule from_fictional_refinement
         [where Rel=\<open>\<lambda>ret. \<exists>\<^sup>sk y. {(1,y)} \<subjs> ret = Normal (\<phi>arg k) \<and> y \<in> Y k \<and> P k\<close>
@@ -414,7 +414,7 @@ lemma allocator_refinement:
 \<Longrightarrow> \<forall>k. P k \<longrightarrow> (\<forall>a\<in>init k. 1(k := a) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> Transition_of' (\<phi>R_allocate_res_entry P init) ret
    \<refines> (\<exists>\<^sup>sk. {(1, 1(k := a)) |a. a \<in> init k} \<subjs> ret = Normal (\<phi>arg k) \<and> P k)
-   \<w>.\<r>.\<t> basic_fiction \<in'> {1}\<close>
+   \<wrt> basic_fiction \<in'> {1}\<close>
   apply (rule refinement_sub_fun[OF allocator_transition], assumption, assumption)
   unfolding Fictional_Forward_Simulation_def
   apply (cases ret; clarsimp simp add: set_mult_expn mk_homo_mult)
@@ -434,7 +434,7 @@ lemma allocator_refinement:
 \<Longrightarrow> \<forall>k. P k \<longrightarrow> 1(k := init) \<in>\<^sub>S\<^sub>H domain
 \<Longrightarrow> Transition_of' (\<phi>R_allocate_res_entry' P init) ret
    \<refines> (\<exists>\<^sup>sk. {(1, 1(k := init))} \<subjs> ret = Normal (\<phi>arg k) \<and> P k)
-   \<w>.\<r>.\<t> basic_fiction \<in'> {1}\<close>
+   \<wrt> basic_fiction \<in'> {1}\<close>
   apply (rule refinement_sub_fun[OF allocator_transition], assumption, assumption)
   unfolding Fictional_Forward_Simulation_def
   apply (cases ret; clarsimp simp add: set_mult_expn mk_homo_mult)
@@ -460,8 +460,8 @@ lemma allocator_valid:
 end
 
 lemma refinement_ExBI_L:
-  \<open> (\<And>v. A \<refines> B v \<w>.\<r>.\<t> I \<in'> D)
-\<Longrightarrow> A \<refines> ExSet B \<w>.\<r>.\<t> I \<in'> D\<close>
+  \<open> (\<And>v. A \<refines> B v \<wrt> I \<in'> D)
+\<Longrightarrow> A \<refines> ExSet B \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: less_eq_BI_iff Image_def Bex_def Id_on_iff, blast)
 
@@ -478,7 +478,7 @@ begin
 sublocale basic_fiction Res I Fic ..
 
 lemma "__allocate_rule_2__":
-  \<open> (\<And>k. P k \<Longrightarrow> {(1, 1(k := u)) |u. u\<in>U k} * Id_on UNIV \<refines> {(1, u') |u'. u' \<in> U' k} \<w>.\<r>.\<t> I \<in'> {1})
+  \<open> (\<And>k. P k \<Longrightarrow> {(1, 1(k := u)) |u. u\<in>U k} * Id_on UNIV \<refines> {(1, u') |u'. u' \<in> U' k} \<wrt> I \<in'> {1})
 \<Longrightarrow> \<forall>k. P k \<longrightarrow> (\<forall>u\<in>U k. 1(k := u) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> \<forall>r. r \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)
 \<Longrightarrow> \<proc> R.\<phi>R_allocate_res_entry P U \<lbrace> Void \<longmapsto> \<lambda>ret. u' \<Ztypecolon> \<phi> Itself \<subj> k u'. ret = \<phi>arg k \<and> u' \<in> U' k \<and> P k \<rbrace> \<close>
@@ -553,7 +553,7 @@ lemma getter_transition:
 lemma getter_refinement:
   \<open>Transition_of' (\<phi>R_get_res_entry' k) ret
    \<refines> (\<exists>\<^sup>su. Id_on ({1(k \<mapsto> u)} \<subjs> ret = Normal (\<phi>arg u) \<and> u \<in> P k \<and> u \<in> S))
-   \<w>.\<r>.\<t> basic_fiction \<in'> fun_upd 1 k ` Some ` S\<close>
+   \<wrt> basic_fiction \<in'> fun_upd 1 k ` Some ` S\<close>
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: set_mult_expn Id_on_iff
                               prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
@@ -574,7 +574,7 @@ lemma setter_refinement:
   \<open>(\<And>v. v \<in> S \<and> v \<in> P k \<Longrightarrow> \<forall>u\<in>F v. pred_option (\<lambda>x. x \<in> P k) u)
 \<Longrightarrow> Transition_of' (\<phi>R_set_res (map_fun_atS k (F o the))) ret
   \<refines> (\<exists>\<^sup>s v. pairself (fun_upd 1 k) ` {(Some v, u) |u. u\<in>F v} \<subjs> ret = Normal \<phi>V_none \<and> v \<in> S \<and> v \<in> P k)
-  \<w>.\<r>.\<t> basic_fiction
+  \<wrt> basic_fiction
   \<in'> fun_upd 1 k ` Some ` S\<close>
 
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_atS k (F o the)\<close>]])
@@ -682,7 +682,7 @@ thm "__setter_rule__"
 
 lemma "_setter_rule_2_":
   \<open> \<condition> k' = k
-\<Longrightarrow> ((\<exists>\<^sup>sv. {(Some v, u) |u. u \<in> f v} \<subjs> v \<in> V \<and> v \<in> RP k) * Id_on UNIV \<refines> {(v', u') |u'. u' \<in> F v'} \<w>.\<r>.\<t> I k \<in'> {v'})
+\<Longrightarrow> ((\<exists>\<^sup>sv. {(Some v, u) |u. u \<in> f v} \<subjs> v \<in> V \<and> v \<in> RP k) * Id_on UNIV \<refines> {(v', u') |u'. u' \<in> F v'} \<wrt> I k \<in'> {v'})
 \<Longrightarrow> refinement_projection (I k) {v'} \<subseteq> Some ` V * UNIV
 \<Longrightarrow> (\<And>v. v \<in> V \<and> v \<in> RP k \<Longrightarrow> \<forall>u\<in> f v. pred_option (\<lambda>x. x \<in> RP k) u)
 \<Longrightarrow> \<proc> R.\<phi>R_set_res (map_fun_atS k (f o the))
@@ -716,7 +716,7 @@ end
 subsection \<open>Pointwise Fiction\<close>
 
 lemma Itself_refinement':
-  \<open>{(u,v) |v. v \<in> V} * Id_on top \<refines> {(u,v) |v. v \<in> V} \<w>.\<r>.\<t> Itself \<in'> {u}\<close>
+  \<open>{(u,v) |v. v \<in> V} * Id_on top \<refines> {(u,v) |v. v \<in> V} \<wrt> Itself \<in'> {u}\<close>
   for u :: \<open>'a::{sep_cancel,sep_semigroup}\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: subset_iff set_mult_expn,

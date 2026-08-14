@@ -96,7 +96,7 @@ lemma map_tree_refinement_modify:
 \<Longrightarrow> (\<And>r. r ## push_map idx a \<and> r ## push_map idx b \<and> r * push_map idx a \<in> S \<Longrightarrow> r * push_map idx b \<in> S)
 \<Longrightarrow> (\<exists>\<^sup>sa. {(a, a ++ push_map idx b)} \<subjs> dom a = D) * Id_on UNIV
     \<refines> { (push_map idx a, push_map idx b)}
-    \<w>.\<r>.\<t> \<F>_functional id S
+    \<wrt> \<F>_functional id S
     \<in'> { push_map idx a }\<close>
   for a :: \<open>'a list \<Rightarrow> VAL discrete option\<close>
   unfolding Fictional_Forward_Simulation_def the_subtree_def
@@ -209,7 +209,7 @@ lemma fiction_Map_of_Val_ins_refinement:
             \<and> u \<in> discrete ` Well_Type TY) * Id_on UNIV
     \<refines> {(idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
-    \<w>.\<r>.\<t> \<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY)
+    \<wrt> \<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY)
     \<in'> {idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}\<close>
   apply (subst fiction_Map_of_Val_ins_comp_id_simp[symmetric])
   apply (rule sep_refinement_stepwise[
@@ -270,7 +270,7 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
             \<and> u \<in> discrete ` Well_Type TY) * Id_on UNIV
     \<refines> {(to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
-    \<w>.\<r>.\<t> \<F>_functional((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY)
+    \<wrt> \<F>_functional((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY)
     \<in'> {to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}\<close>
   unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
   by (rule sep_refinement_stepwise,
@@ -397,7 +397,7 @@ lemma fiction_Map_of_Val_perm_partial_refinement_BYTE:
             \<and> u \<in> discrete ` Rep_of_Val ` Well_Type TY) * Id_on UNIV
     \<refines> {(to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx),
             to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val v))}
-    \<w>.\<r>.\<t> (\<F>_functional (Rep_of_Val_ins TY) (Rep_of_Val_ins_dom TY) \<Zcomp>
+    \<wrt> (\<F>_functional (Rep_of_Val_ins TY) (Rep_of_Val_ins_dom TY) \<Zcomp>
           \<F>_functional((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY))
     \<in'> {to_share o idx \<tribullet>\<^sub>m (map_option discrete \<circ> Map_of_Val u_idx)}\<close>
   subgoal premises prems proof -

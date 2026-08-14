@@ -31,14 +31,14 @@ consts addrspace_bits :: "nat" \<comment> \<open>bit width of address space, in 
 specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by blast
   \<comment> \<open>We leave it unspecified and only require it is positive\<close>
 
-typedecl size_\<t> \<comment> \<open>size of address space\<close>
+typedecl size_t ("\<size_t>") \<comment> \<open>size of address space\<close>
 
-instantiation size_\<t> :: len begin
-definition [iff]: "len_of_size_\<t> (_::size_\<t> itself) = addrspace_bits"
+instantiation size_t :: len begin
+definition [iff]: "len_of_size_t (_::size_t itself) = addrspace_bits"
 instance apply standard using addrspace_bits_L0 by simp
 end
 
-abbreviation to_size_t :: \<open>nat \<Rightarrow> size_\<t> word\<close> where \<open>to_size_t \<equiv> of_nat\<close>
+abbreviation to_size_t :: \<open>nat \<Rightarrow> \<size_t> word\<close> where \<open>to_size_t \<equiv> of_nat\<close>
 
 lemma unat_to_size_t[simp]:
   \<open>n < 2 ^ addrspace_bits \<Longrightarrow> unat (to_size_t n) = n\<close>
@@ -46,7 +46,7 @@ lemma unat_to_size_t[simp]:
 
 paragraph \<open>Physical Addresses\<close>
 
-type_synonym rawaddr = \<open>size_\<t> word addr\<close> \<comment> \<open>Physical pointer having physical offset\<close>
+type_synonym rawaddr = \<open>\<size_t> word addr\<close> \<comment> \<open>Physical pointer having physical offset\<close>
 
 subsubsection \<open>Algebraic Properties\<close>
 

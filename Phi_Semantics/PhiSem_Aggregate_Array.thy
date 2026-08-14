@@ -6,13 +6,13 @@ begin
 
 section \<open>Semantics\<close>
 
-debt_axiomatization mk_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<array>[_] _" [20, 910] 910)
+debt_axiomatization sem_array_T :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<close> ("\<array>[_] _" [20, 910] 910)
                 and sem_mk_array   :: \<open>VAL list \<Rightarrow> VAL\<close>
                 and sem_dest_array :: \<open>VAL \<Rightarrow> VAL list\<close>
   where sem_mk_dest_array[simp]: \<open>sem_dest_array (sem_mk_array vs) = vs\<close>
   and   semty_array_eq_poison[simp]: \<open>\<array>[N] T = \<poison> \<longleftrightarrow> (T = \<poison> \<and> N \<noteq> 0)\<close>
   and   WT_arr[simp]:   \<open>Well_Type (\<array>[n] t) = { sem_mk_array vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
-  and   semty_arr_uniq: \<open>sem_mk_array vs \<in> Well_Type TY \<Longrightarrow> \<exists>T. TY = mk_array_T (length vs) T\<close>
+  and   semty_arr_uniq: \<open>sem_mk_array vs \<in> Well_Type TY \<Longrightarrow> \<exists>T. TY = sem_array_T (length vs) T\<close>
   and   zero_arr[simp]: \<open>\<array>[N] T \<noteq> \<poison> \<Longrightarrow>
             Zero (\<array>[N] T) = (if N = 0 then Some (sem_mk_array [])
                                          else map_option (\<lambda>z. sem_mk_array (replicate N z)) (Zero T))\<close>

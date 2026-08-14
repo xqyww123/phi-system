@@ -182,56 +182,56 @@ definition \<I>\<^sub>r\<^sub>e\<^sub>l :: \<open>('a::one,'b::one) interp \<Rig
 subsubsection \<open>Fictional Refinement\<close>
 
 definition Fictional_Forward_Simulation :: \<open>'c rel \<Rightarrow> 'a rel \<Rightarrow> ('c::sep_magma, 'a::sep_magma) \<phi> \<Rightarrow> 'a set \<Rightarrow> bool\<close>
-      ("_/ \<refines> _/ \<w>.\<r>.\<t> _/ \<in'> _" [11,11,11] 10)
-  where \<open>(F \<refines> G \<w>.\<r>.\<t> T \<in'> D)
+      ("_/ \<refines> _/ \<wrt> _/ \<in'> _" [11,11,11] 10)
+  where \<open>(F \<refines> G \<wrt> T \<in'> D)
     \<longleftrightarrow> (\<forall>x r R. F `` BI.dest (T (x * r) * R \<subj> x ## r \<and> x \<in> D) \<le> { y'. \<exists>y. y' \<Turnstile> T (y * r) * R \<and> y ## r \<and> (x,y) \<in> G})\<close>
 
 text \<open>We use relation directly here but doesn't mean we cannot model return value or threw exceptions.
 They can parameterize the relation, as we don't need to (it is not designed to) abstract the values.
 We only relate resources in different abstractions.
 
-\<^prop>\<open>\<And>ret. F ret \<refines> G ret \<w>.\<r>.\<t> T \<in'> D\<close>
+\<^prop>\<open>\<And>ret. F ret \<refines> G ret \<wrt> T \<in'> D\<close>
 \<close>
 
 lemma empty_refines_any[simp]:
-  \<open>0 \<refines> Any \<w>.\<r>.\<t> I \<in'> D\<close>
+  \<open>0 \<refines> Any \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def subset_iff
   by (simp add: Image_iff)
 
 lemma refinement_sub_domain:
   \<open> D' \<le> D
-\<Longrightarrow> A \<refines> B \<w>.\<r>.\<t> I \<in'> D
-\<Longrightarrow> A \<refines> B \<w>.\<r>.\<t> I \<in'> D'\<close>
+\<Longrightarrow> A \<refines> B \<wrt> I \<in'> D
+\<Longrightarrow> A \<refines> B \<wrt> I \<in'> D'\<close>
   unfolding Fictional_Forward_Simulation_def subset_iff
   by (clarsimp simp add: subset_iff Image_iff Image_def Bex_def Id_on_iff) blast
 
 lemma refinement_sub_fun:
   \<open> A' \<le> A
-\<Longrightarrow> A  \<refines> B \<w>.\<r>.\<t> I \<in'> D
-\<Longrightarrow> A' \<refines> B \<w>.\<r>.\<t> I \<in'> D\<close>
+\<Longrightarrow> A  \<refines> B \<wrt> I \<in'> D
+\<Longrightarrow> A' \<refines> B \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
   by (clarsimp simp add: subset_iff Image_def Bex_def Id_on_iff; blast)
 
 lemma refinement_sub_fun_right:
   \<open> B \<le> B'
-\<Longrightarrow> A \<refines> B \<w>.\<r>.\<t> I \<in'> D
-\<Longrightarrow> A \<refines> B' \<w>.\<r>.\<t> I \<in'> D\<close>
+\<Longrightarrow> A \<refines> B \<wrt> I \<in'> D
+\<Longrightarrow> A \<refines> B' \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
   by (clarsimp simp add: subset_iff Image_def Bex_def Id_on_iff; blast)
 
 lemma refinement_frame:
-  \<open> A \<refines> B \<w>.\<r>.\<t> I \<in'> D
-\<Longrightarrow> A \<refines> B * Id_on R \<w>.\<r>.\<t> I \<in'> D * R\<close>
+  \<open> A \<refines> B \<wrt> I \<in'> D
+\<Longrightarrow> A \<refines> B * Id_on R \<wrt> I \<in'> D * R\<close>
   for B :: \<open>'b::sep_semigroup rel\<close>
   unfolding Fictional_Forward_Simulation_def less_eq_BI_iff
   by (clarsimp simp add: subset_iff set_mult_expn Image_def Bex_def Id_on_iff,
       smt (z3) sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc')
 
 lemma sep_refinement_horizontal_stepwise:
-  \<open> A1 \<refines> B1 \<w>.\<r>.\<t> I \<in'> D
-\<Longrightarrow> A2 \<refines> B2 \<w>.\<r>.\<t> I \<in'> D'
+  \<open> A1 \<refines> B1 \<wrt> I \<in'> D
+\<Longrightarrow> A2 \<refines> B2 \<wrt> I \<in'> D'
 \<Longrightarrow> (B1 `` D \<le> D')
-\<Longrightarrow> A1 O A2 \<refines> B1 O B2 \<w>.\<r>.\<t> I \<in'> D\<close>
+\<Longrightarrow> A1 O A2 \<refines> B1 O B2 \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def subset_iff
   apply (clarsimp simp add: Image_iff Bex_def)
   subgoal premises prems for x r R u v y z
@@ -255,31 +255,31 @@ lemma sep_refinement_horizontal_stepwise:
   qed .
 
 lemma constant_refinement:
-  \<open>Id_on A * Id_on top \<refines> Id_on B \<w>.\<r>.\<t> I \<in'> B\<close>
+  \<open>Id_on A * Id_on top \<refines> Id_on B \<wrt> I \<in'> B\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: less_eq_BI_iff Id_on_iff set_mult_expn times_fun; blast)
 
 lemma refinement_subjection:
-  \<open> (P \<Longrightarrow> A \<refines> B \<w>.\<r>.\<t> I \<in'> D)
+  \<open> (P \<Longrightarrow> A \<refines> B \<wrt> I \<in'> D)
 \<Longrightarrow> P \<longrightarrow> Q
-\<Longrightarrow> A \<subjs> P \<refines> B \<subjs> Q \<w>.\<r>.\<t> I \<in'> D\<close>
+\<Longrightarrow> A \<subjs> P \<refines> B \<subjs> Q \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def 
   by (clarsimp simp add: less_eq_BI_iff Image_def Bex_def) blast
 
 lemma refinement_existential:
-  \<open> (\<And>x. A x \<refines> B x \<w>.\<r>.\<t> I \<in'> D)
-\<Longrightarrow> ExSet A \<refines> ExSet B \<w>.\<r>.\<t> I \<in'> D\<close>
+  \<open> (\<And>x. A x \<refines> B x \<wrt> I \<in'> D)
+\<Longrightarrow> ExSet A \<refines> ExSet B \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: less_eq_BI_iff Image_def Bex_def Id_on_iff; blast)
 
 lemma refinement_source_subjection:
-  \<open>(A \<subjs> P \<refines> B \<w>.\<r>.\<t> I \<in'> D) \<longleftrightarrow> (P \<longrightarrow> (A \<refines> B \<w>.\<r>.\<t> I \<in'> D))\<close>
+  \<open>(A \<subjs> P \<refines> B \<wrt> I \<in'> D) \<longleftrightarrow> (P \<longrightarrow> (A \<refines> B \<wrt> I \<in'> D))\<close>
   unfolding Fictional_Forward_Simulation_def
   by (auto simp add: less_eq_BI_iff Image_def Bex_def Id_on_iff set_mult_expn; blast)
 
 lemma refinement_ExBI:
-  \<open> (\<And>v. A v \<refines> B v \<w>.\<r>.\<t> I \<in'> D)
-\<Longrightarrow> ExSet A \<refines> ExSet B \<w>.\<r>.\<t> I \<in'> D\<close>
+  \<open> (\<And>v. A v \<refines> B v \<wrt> I \<in'> D)
+\<Longrightarrow> ExSet A \<refines> ExSet B \<wrt> I \<in'> D\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: less_eq_BI_iff Image_def Bex_def Id_on_iff, blast)
 
