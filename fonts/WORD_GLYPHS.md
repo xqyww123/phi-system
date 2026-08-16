@@ -118,12 +118,15 @@ so there `\<pending>` simply stays the seven characters you typed.
 An entry is normally just the word, and then the symbol name, the glyph and the
 abbreviation are all that word.  They come apart when the word reads with
 punctuation, because a symbol name admits only `[A-Za-z][A-Za-z0-9_']*` — no
-period, no hyphen.  Then write `name = drawn text = abbreviation`:
+period, no hyphen.  Then write `name = drawn text = abbreviations`:
 
-    wrt = w.r.t. = w.r.t     \<wrt> draws `w.r.t.` and is typed as <w.r.t>
-    size_t                   an underscore needs no split; it is a legal name
+    wrt = w.r.t. = w.r.t,wrt   \<wrt> draws `w.r.t.` and is typed <w.r.t> or <wrt>
+    size_t                     an underscore needs no split; it is a legal name
 
-Either of the last two fields may be left out.  Punctuation is drawn from the
+Either of the last two fields may be left out.  The third is a comma-separated
+list because Isabelle reads one abbreviation per `abbrev:` field and takes as
+many as an entry declares; `\<wrt>` has two so that neither the way it reads nor
+the way it is named has to be the one you remember.  Punctuation is drawn from the
 source font's own ASCII, so a period or an underscore comes out at that font's
 regular weight — invisible on a period, slightly light on an underscore against
 mathematical bold letters.
@@ -189,9 +192,22 @@ the glyph still reads `open`, and the abbreviation is still `<open>`.  The
 collision check runs against Isabelle's `etc/symbols` and this component's
 hand-maintained `symbols`, so a future name clash is caught automatically.
 
-**The abbreviation.**  Every word gets `abbrev: <word>`, so typing `<transforms>`
-in jEdit offers the symbol.  All 133 were checked against every existing
-abbreviation in Isabelle and in this component: none collided.
+**The abbreviation.**  A word gets `abbrev: <word>`, so typing `<transforms>` in jEdit
+offers the symbol; the third field of a `words.txt` entry overrides it, which is how
+`\<wrt>` answers to both `<w.r.t>` and `<wrt>`.  Only the abbreviation is typed — the
+symbol name is never what you type, so the primed names above do not show up here.  The
+script refuses a table in which two words share an abbreviation, or in which one of
+them is already an abbreviation in Isabelle's table or in this component's
+hand-maintained `symbols`.  That check matters because Isabelle takes a collision
+without complaint and simply offers you both symbols.
+
+**Which palette tab.**  Every word gets `group: phi_Keywords`.  jEdit's symbol palette
+shows one tab per group name, so the words sit in a tab of their own instead of more
+than doubling the size of Letter.  The title is the group name with `_` turned into a
+space and every all-lower-case part capitalised — hence "Phi Keywords", not "phi
+Keywords" — and the tabs are ordered by group name, which puts it between Operator and
+Punctuation.  A symbol may carry several `group:` fields and then appears in several
+tabs; Isabelle itself does that for the 49 symbols of its Z Notation set.
 
 ## One thing the generator cannot fix
 
@@ -200,8 +216,8 @@ abbreviation in Isabelle and in this component: none collided.
 `\<a>`..`\<z>`, `\<A>`..`\<Z>` and the Greek letters are on it.  A new symbol is
 therefore **not a letter** and cannot appear inside an identifier: writing
 `\<typeof>_plus` no longer names one theorem, it lexes as a symbol followed by
-`_plus`.  (`group: letter` in the symbol table has nothing to do with this — that
-field only sorts the symbol palette.)
+`_plus`.  (`group:` in the symbol table has nothing to do with this — that field
+only picks which tab of the symbol palette a symbol appears in.)
 
 Where the old spelling was embedded in a name — `\<t>\<y>\<p>\<e>\<o>\<f>_plus`,
 `has_Zero_\<p>\<o>\<i>\<s>\<o>\<n>` — the name is spelled out in plain ASCII

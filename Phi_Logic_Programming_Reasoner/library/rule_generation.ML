@@ -600,19 +600,22 @@ val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__se
 (*
 val parser = Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
           -- Scan.option Attrib.attribs*)
+(*The read and the reset belong INSIDE the critical section, as in every other
+  ML-sender of this codebase (e.g. Phi_Type.ML_sender in typ_def.ML).  With them
+  outside, two threads compiling a `pass:` source race: both assign under the
+  lock, then whoever reaches the reset first stores NONE and the other's `the`
+  raises Option.*)
 fun parse_pass ctxt =
   Option.map (fn src =>
-    let val _ = Synchronized.change rule_template_pass__sender_locker (fn () => (
-                  ML_Context.expression (Input.pos_of src)
+    Synchronized.change_result rule_template_pass__sender_locker (fn () =>
+      let val _ = ML_Context.expression (Input.pos_of src)
                     (ML_Lex.read "PLPR_Rule_Gen.rule_template_pass__sender := SOME (" @
                      ML_Lex.read_source src @
                      ML_Lex.read ")")
-                    ctxt;
-                  ()))
-        val pass = the (!rule_template_pass__sender)
-        val _ = rule_template_pass__sender := NONE
-     in pass
-    end)
+                    ctxt
+          val pass = the (!rule_template_pass__sender)
+       in (pass, rule_template_pass__sender := NONE)
+      end))
 
 fun parse_action (mode, prio_group, pats, attribs) =
   case (attribs, prio_group, pats)

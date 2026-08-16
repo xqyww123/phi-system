@@ -17,7 +17,7 @@ admit only ASCII letters, `\<a>`..`\<z>`, `\<A>`..`\<Z>` and the enumerated Gree
 Confirmed three ways: the documented grammar (`src/Doc/Isar_Ref/Outer_Syntax.thy:112`);
 a hardcoded immutable set in `symbol.ML` and `symbol.scala`, which never read
 `ISABELLE_SYMBOLS`; and no component in the distribution or the AFP ships a symbols
-file that would extend it.  `group: letter` in a symbols table is cosmetic — it drives
+file that would extend it.  `group:` in a symbols table is cosmetic — it drives
 the jEdit palette only.
 
 Everything below follows from that.  A word that merely *appears* in terms can become a

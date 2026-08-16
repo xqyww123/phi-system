@@ -1,5 +1,16 @@
 session "Phi_System" = "Phi_Semantics_Framework" +
-  options[document_build = build]
+  (*TEMPORARY (`exception Option` hunt, 2026-08-14, user-approved).  ML_debugger
+    instruments this session's own ML; ML_exception_debugger makes a failing
+    command print the resulting call trace.  Both are needed: without the
+    instrumentation Poly/ML has no stack to print, and then the report degrades
+    to the bare raise line, which is what every earlier observation showed.
+    Arming them here rather than on the command line means ANY ordinary build
+    of this session catches the bug if it fires.
+    (ML_exception_trace is useless on this Poly/ML -- its handler never fires.)
+    TO REVERT: drop these two options, drop Option_Hunt_Probe from the theory
+    list below, delete Phi_System/Option_Hunt_Probe.thy, and rebuild --
+    instrumented heaps are slower.  See OPTION_EXCEPTION_IN_PROOF_REPLAY.md.*)
+  options[document_build = build, ML_debugger = true, ML_exception_debugger = true]
   sessions
     "Phi_BI"
     "Phi_Semantics_Framework"
@@ -14,6 +25,7 @@ session "Phi_System" = "Phi_Semantics_Framework" +
     IDE_CP_Reasoning3
     Phi_Types
     PhiSem_Formalization_Tools
+    Option_Hunt_Probe (*TEMPORARY, delete with the file -- see above*)
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"

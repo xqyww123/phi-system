@@ -15,6 +15,7 @@ Usage:  python3 build_word_glyphs.py [--stix PATH] [--check]
 """
 
 import argparse
+import collections
 import glob
 import os
 import pathlib
@@ -45,6 +46,10 @@ ISABELLE = "Isabelle2025-2"
 
 GLYPH_PREFIX = "word."
 FONT_NAME = "PhiSymbols"                                # the `font:` field of every entry
+# The `group:` field.  One tab of jEdit's symbol palette per group name, so the words get
+# their own instead of doubling the size of Letter.  jEdit titles the tab by splitting on
+# `_` and capitalising each all-lower-case part, so this one reads "Phi Keywords".
+GROUP = "phi_Keywords"
 PUA_FIRST = 0xE000                                      # private use area, unused elsewhere
 PUA_LAST = 0xE7FF
 
@@ -105,11 +110,13 @@ DRAWABLE = set(string.ascii_letters + string.digits + "._-")
 
 
 def read_words():
-    """One entry per line: `name`, or `name = drawn text`, or `name = text = abbrev`.
+    """One entry per line: `name`, or `name = drawn text`, or `name = text = abbrevs`.
 
     The three are normally the same word.  They come apart when the word reads with
-    punctuation a symbol name cannot carry: `wrt = w.r.t. = w.r.t` is named `\\<wrt>`,
-    draws `w.r.t.`, and is typed as `<w.r.t>`.
+    punctuation a symbol name cannot carry: `wrt = w.r.t. = w.r.t,wrt` is named
+    `\\<wrt>`, draws `w.r.t.`, and answers to both `<w.r.t>` and `<wrt>`.  The third
+    field is a comma-separated list because Isabelle reads one abbreviation per
+    `abbrev:` field and takes as many as an entry cares to declare.
     """
     out = []
     for line in WORDS.read_text(encoding="utf-8").splitlines():
@@ -121,27 +128,34 @@ def read_words():
             die("more than three fields: %r" % line)
         name = fields[0]
         text = fields[1] if len(fields) > 1 and fields[1] else name
-        abbrev = fields[2] if len(fields) > 2 and fields[2] else text
+        abbrevs = [a.strip() for a in fields[2].split(",")] if len(fields) > 2 else []
+        abbrevs = [a for a in abbrevs if a] or [text]
         if not SYMBOL_NAME.match(name):
             die("not a symbol name Isabelle would accept: %r" % name)
         undrawable = [c for c in text if c not in DRAWABLE]
         if undrawable:
             die("no glyph for %r in %r" % (undrawable[0], text))
-        out.append((name, text, abbrev))
+        for a in abbrevs:
+            # It is typed between angle brackets, and the table is whitespace-separated.
+            if any(c in a for c in "<> \t"):
+                die("not something you could type as <%s>: %r" % (a, line))
+        if len(set(abbrevs)) != len(abbrevs):
+            die("the same abbreviation twice: %r" % line)
+        out.append((name, text, abbrevs))
     names = [n for n, _, _ in out]
     if len(set(names)) != len(names):
         die("duplicate entries in words.txt")
     return out
 
 
-def taken_symbol_names():
-    """Symbol names already claimed by Isabelle or by the hand-maintained table.
+def already_taken():
+    """Symbol names and abbreviations already claimed by Isabelle or the hand table.
 
     Missing the Isabelle table is fatal, not something to shrug at: priming is what
     keeps `\\<int>` and `\\<open>` off names Isabelle owns, and it would simply not
     happen, quietly, leaving a table that collides with the distribution's own.
     """
-    names = set()
+    names, abbrevs = set(), set()
     home = pathlib.Path(os.environ.get("ISABELLE_HOME") or COMPONENT.parent / ISABELLE)
     print("symbol names already taken, from %s and %s" % (SYMBOLS_HAND, home / "etc/symbols"))
     for f in [SYMBOLS_HAND, home / "etc/symbols"]:
@@ -151,7 +165,10 @@ def taken_symbol_names():
             m = re.match(r"\\<(\^?[A-Za-z][A-Za-z0-9_']*)>", line.strip())
             if m:
                 names.add(m.group(1))
-    return names
+            # Kept verbatim: an Isabelle abbreviation need not be bracketed at all
+            # (`abbrev: %`, `abbrev: -->`), so there is no inner text to compare.
+            abbrevs.update(re.findall(r"abbrev:\s*(\S+)", line))
+    return names, abbrevs
 
 
 def previous_assignment():
@@ -250,7 +267,7 @@ def main():
     med_lower = ref_lower / glyph_height(stix_text, ord("x"))
     med_upper = ref_upper / glyph_height(stix_text, ord("T"))
 
-    taken = taken_symbol_names()
+    taken, taken_abbrevs = already_taken()
     assigned = previous_assignment()
     # Every code point already in use comes from `symbols-words`, and every source that
     # writes one of these symbols depends on it staying put.  If that file is lost, this
@@ -266,7 +283,7 @@ def main():
     glyf, hmtx = font["glyf"], font["hmtx"]
     order = list(font.getGlyphOrder())
     rows, clip_rows = [], []
-    for word, drawn, abbrev in words:
+    for word, drawn, abbrevs in words:
         all_upper = drawn.isupper()
         plain = word in MEDIUM_WORDS
         src = stix_text if plain else stix
@@ -295,7 +312,7 @@ def main():
         for table in font["cmap"].tables:
             if table.isUnicode():
                 table.cmap[code] = gname
-        rows.append((name, code, abbrev))
+        rows.append((name, code, abbrevs))
         # What the word turns into when it leaves jEdit: the same letters this glyph was
         # drawn from, so the text that lands on the clipboard looks like the glyph.
         # A Medium word has no matching mathematical alphabet, so it falls back to the
@@ -318,10 +335,20 @@ def main():
     glyf.glyphOrder = order
     font["maxp"].numGlyphs = len(order)
 
+    # An abbreviation is what gets typed, so a collision would silently offer the wrong
+    # symbol -- and it stays silent, because Isabelle takes both without complaint.
+    mine = collections.Counter(a for _, _, abbrevs in rows for a in abbrevs)
+    for a, n in sorted(mine.items()):
+        if n > 1:
+            die("<%s> is the abbreviation of %d words" % (a, n))
+        if "<%s>" % a in taken_abbrevs:
+            die("<%s> is already an abbreviation in %s or Isabelle's table" % (a, SYMBOLS_HAND))
+
     text = "# Generated by fonts/build_word_glyphs.py -- do not edit.\n" + "".join(
-        "\\<%s>%s code: 0x%06X  font: %s  group: letter  abbrev: <%s>\n"
-        % (name, " " * max(1, 18 - len(name)), code, FONT_NAME, abbrev)
-        for name, code, abbrev in rows)
+        "\\<%s>%s code: 0x%06X  font: %s  group: %s%s\n"
+        % (name, " " * max(1, 18 - len(name)), code, FONT_NAME, GROUP,
+           "".join("  abbrev: <%s>" % a for a in abbrevs))
+        for name, code, abbrevs in rows)
 
     clip_text = ("# Generated by fonts/build_word_glyphs.py -- do not edit.\n"
                  "# code point of the word glyph, then the text it becomes on the clipboard.\n"

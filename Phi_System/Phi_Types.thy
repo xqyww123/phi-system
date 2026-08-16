@@ -2591,7 +2591,7 @@ lemma \<phi>Mul_Quant_LenIv_wrap_module_src:
   \<medium_left_bracket> premises Tr and _ and _ and _ and C[]
     C
     Tr
-  \<medium_right_bracket> certified by (insert \<phi>, auto simp add: nth_append nth_Cons'; auto_sledgehammer) .
+  \<medium_right_bracket> certified by hammer_or_aoa .
 
 lemma \<phi>Mul_Quant_LenIv_wrap_module_tgt:
   \<open> \<guard> (\<condition> len_intvl.start iv \<le> i \<and> i < len_intvl.start iv + len_intvl.len iv
