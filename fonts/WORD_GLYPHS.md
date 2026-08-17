@@ -105,6 +105,13 @@ carries a symbol table frozen into the VSCodium component when it was built; no
 phi-System symbol is in it — not the word glyphs and not the hand-drawn ones either —
 so there `\<pending>` simply stays the seven characters you typed.
 
+Outside jEdit, `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<name>`
+escape rather than its code point — its output feeds language-model prompts, the
+semantic database and logs, none of which load PhiSymbols, and the escape still spells
+the word.  The reverse direction does name a raw private-use character, so one that came
+out of a drag can be repaired.  Pasting such a character into a `.thy` shows nothing,
+`view.enableFontSubst=false` being the default.
+
 ## Adding or changing a word
 
 1. Edit `words.txt` (one entry per line, `#` starts a comment).
