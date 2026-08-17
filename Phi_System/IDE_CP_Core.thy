@@ -2475,9 +2475,24 @@ setup \<open>Context.theory_map (
            Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
            not (Symtab.defined (#config arg) "no_oblg")   andalso
            not (can \<^keyword>\<open>certified\<close> (#toks arg))
-        then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
+        then (*Every obligation of ONE operator application needs its own id.  The
+               ReEntry below re-runs the whole hook table from the top carrying this
+               same arg (Hook.ML:100-105), so a second obligation here would otherwise
+               compute the first one's key and overwrite its proof in the store.
+
+               The first obligation keeps the old key to the character, so no existing
+               record moves.  A later one prepends a NEGATIVE component: Phi_ID.encode
+               reverses the path, so nesting a block deeper appends at the same place in
+               the encoded string -- a positive number here could collide with
+               "statement n of a nested block", a negative one cannot, real components
+               being never negative.  It renders with a tilde (~1), not a minus sign:
+               encode goes through string_of_int, which hands negatives to Int.toString.*)
+             let val oblg_no = #oblg_no arg
+                 val expr_id = if oblg_no = 0 then #id arg else ~oblg_no :: #id arg
+                 val id = Option.map (Phi_ID.encode o Phi_ID.cons expr_id)
+                                     (Phi_ID.get_if_is_named ctxt)
                  val sequent' = Phi_Reasoners.obligation_intro_Ex_conv ~1 ctxt sequent
-              in raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt,
+              in raise Phi_CP_IDE.Post_App.ReEntry (Phi_CP_IDE.uptick_oblg_no arg, (ctxt,
                           Phi_Envir.solve_obligation id ctxt sequent'))
              end
         else (ctxt, sequent))
@@ -2637,8 +2652,15 @@ let
           Parse_Spec.opt_thm_name ":" -- Scan.repeat1 Parse.prop -- for_fixes);
 in
   fn (oprs, (ctxt, sequent)) => Parse.position \<^keyword>\<open>holds_fact\<close> -- statement >> (
-  fn ((_,pos), raw_statements) => fn _ =>
-  let val id = Phi_ID.get ctxt
+  fn ((_,pos), raw_statements) => fn cfg =>
+  (*The expr_id has to be in the id.  Phi_ID.get advances once per phi STATEMENT
+    (processor.ML:205), while a statement may hold several holds_fact -- without
+    it, two of them in one statement produce the same proof id to the character,
+    and the second silently overwrites the first in the proof store.  The expr_id
+    ticks once per processor application (processor.ML:166), so it separates
+    them.  It also separates the generated fact names below, which used to clash
+    in the same case.*)
+  let val id = Phi_ID.cons (#id cfg) (Phi_ID.get ctxt)
 
       (*We first generate names of the facts if not given*)
       fun gen_name (_, ids) = String.concatWith "_" ("\<phi>fact" :: rev_map string_of_int [] ids)

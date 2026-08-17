@@ -8,6 +8,13 @@ val subspace_expr_id : expr_id -> expr_id
 
 type config = string Symtab.table
 type eval_cfg = { id : expr_id,
+                  oblg_no : int (*Which obligation this is within ONE Post_App.invoke.  A hook
+                                  that solves an obligation re-enters the table from the top
+                                  carrying the same arg (Hook.ML:100-105), so a second
+                                  obligation of one operator application would otherwise
+                                  compute the same proof id as the first -- and silently
+                                  overwrite its proof in the store.  0 is the first, and its
+                                  id is left exactly as it was, so no existing record moves.*),
                   config : config,
                   toks: Token.src (*subsequent user inputs, may suppress certain automation
                                     such as the implicit existential quantification fixer when
@@ -16,6 +23,7 @@ type eval_cfg = { id : expr_id,
 
 val set_expr_id : expr_id -> eval_cfg -> eval_cfg
 val set_tokens : Token.src -> eval_cfg -> eval_cfg
+val uptick_oblg_no : eval_cfg -> eval_cfg
 
 structure Post_App : HOOKS
 
@@ -35,10 +43,15 @@ fun uptick_expr_id (i::L) = (i+1::L)
 fun subspace_expr_id L = 0 :: L
 
 type config = string Symtab.table
-type eval_cfg = {id : expr_id, config : string Symtab.table, toks: Token.src}
+type eval_cfg = {id : expr_id, oblg_no : int, config : string Symtab.table, toks: Token.src}
 
-fun set_expr_id id' {id=_, config, toks} = {id=id', config=config, toks=toks}
-fun set_tokens toks' {id, config, toks=_} = {id=id, config=config, toks=toks'}
+(*A new expression counts obligations afresh; new tokens of the same expression do not.*)
+fun set_expr_id id' {id=_, oblg_no=_, config, toks} =
+      {id=id', oblg_no=0, config=config, toks=toks}
+fun set_tokens toks' {id, oblg_no, config, toks=_} =
+      {id=id, oblg_no=oblg_no, config=config, toks=toks'}
+fun uptick_oblg_no {id, oblg_no, config, toks} =
+      {id=id, oblg_no=oblg_no+1, config=config, toks=toks}
 
 structure Post_App = Hooks (
   type arg = eval_cfg

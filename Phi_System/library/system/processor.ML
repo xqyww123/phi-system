@@ -161,7 +161,7 @@ fun eval_tokens cfg ctxt =
             else let
                 val processors = parse_token toks
                 fun apply (prev_name, opr_ctxt) =
-                  let val ecfg = {id=expr_id, config=cfg, toks=toks}
+                  let val ecfg = {id=expr_id, oblg_no=0, config=cfg, toks=toks}
                    in case processors (Phi_Opr_Stack.precedence_of (#1 (#1 opr_ctxt))) ecfg opr_ctxt
                         of SOME (opr_ctxt', toks') => loop toks' (uptick_expr_id expr_id, opr_ctxt')
                          | NONE => case one_step (mode, 0, false, ecfg) (prev_name, opr_ctxt)
@@ -207,20 +207,20 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
         val opr_ctxt = (oprs, stat)
         val expr_id = initial_expr_id
         val opr_ctxt = Phi_Opr_Stack.Begin_of_Line.invoke (Context.Proof (#1 stat))
-                                                          {id=expr_id, config=cfg, toks=toks}
+                                                          {id=expr_id, oblg_no=0, config=cfg, toks=toks}
                                                           opr_ctxt
                     |> Phi_Opr_Stack.uninitialize
         val expr_id = uptick_expr_id expr_id
-        val opr_ctxt = apsnd (Phi_CP_IDE.Post_App.invoke (Context.Proof (fst stat0)) {id=expr_id, config=cfg, toks=toks}) opr_ctxt
+        val opr_ctxt = apsnd (Phi_CP_IDE.Post_App.invoke (Context.Proof (fst stat0)) {id=expr_id, oblg_no=0, config=cfg, toks=toks}) opr_ctxt
         val expr_id = uptick_expr_id expr_id
         val (expr_id, opr_ctxt) = if empty_tokens toks then (expr_id, opr_ctxt)
                                   else eval_tokens cfg (fst stat) toks (expr_id, opr_ctxt)
         val expr_id = uptick_expr_id expr_id
-        val opr_ctxt = Phi_Opr_Stack.end_expression {id=expr_id, config=cfg, toks=[]} 1
+        val opr_ctxt = Phi_Opr_Stack.end_expression {id=expr_id, oblg_no=0, config=cfg, toks=[]} 1
                                                     opr_ctxt
         val expr_id = uptick_expr_id expr_id
         val opr_ctxt = Phi_Opr_Stack.End_of_Line.invoke (Context.Proof (#1 (#2 opr_ctxt)))
-                                                        {id=expr_id, config=cfg, toks=[]} opr_ctxt
+                                                        {id=expr_id, oblg_no=0, config=cfg, toks=[]} opr_ctxt
         val opr_ctxt = apsnd (apfst ( Phi_Opr_Stack.Data.put (#1 opr_ctxt)
                                    #> Config.restore Phi_Reasoner.auto_level (fst stat0))) opr_ctxt
      in if Phi_Opr_Stack.precedence_of (#1 (#1 opr_ctxt)) >= 0
