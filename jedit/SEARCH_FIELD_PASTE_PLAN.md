@@ -85,41 +85,83 @@ and all — is under `JEditDataFlavor.jEditRichTextDataFlavor`, registered as a 
 carrying U+E048 is put on the clipboard, `getContents(null)` returns a proxy for which
 `isDataFlavorSupported(jEditRichTextDataFlavor)` is true and the text is U+E048.
 
-**This is not a new technique in this file** — `phi_word_clipboard.bsh:177` already does
+**This is not a new technique in this file** — `phi_word_clipboard.bsh:345` already does
 exactly it for the `$` register, with the comment "text jEdit itself put there: it still
-carries the glyphs, take it as is". Reusing it makes an intra-jEdit copy **exact**: no
+carries the glyphs, take it as is".  (That citation is post-`WORD_BOUNDARY_PLAN.md`; it was
+`:177` before that rewrite.) Reusing it makes an intra-jEdit copy **exact**: no
 dependence on the fold rule, so none of the shapes `WORD_BOUNDARY_PLAN.md` cannot repair —
 a glyph against the user's own mathematical letters, a glyph separated by `_` — can reach
 the search box at all.
 
 So the order is: rich flavor if present, else fold the plain text, else leave alone.
 
-```
-class Phi_Field_Transfer_Handler extends javax.swing.TransferHandler {
-    public Phi_Field_Transfer_Handler(inner) { super(); this.inner = inner; }
-    public boolean canImport(JComponent c, DataFlavor[] f) { return inner.canImport(c, f); }
-    public boolean canImport(javax.swing.TransferHandler.TransferSupport s) { return inner.canImport(s); }
-    public int  getSourceActions(JComponent c) { return inner.getSourceActions(c); }
-    public void exportToClipboard(JComponent c, java.awt.datatransfer.Clipboard cb, int a) { inner.exportToClipboard(c, cb, a); }
-    public void exportAsDrag(JComponent c, java.awt.event.InputEvent e, int a) { inner.exportAsDrag(c, e, a); }
+**Write it as an anonymous subclass bound to a name, not as a scripted class.** Two
+measured facts about jEdit's BeanShell force this, and both cost an afternoon to find:
+a scripted class's constructor is not found when its parameter has no declared type
+(`Can't find constructor: Phi_Field_Transfer_Handler( ... )`), and the anonymous subclass bsh
+generates has **only a no-arg constructor** — it does not forward arguments to the superclass,
+so `new javax.swing.TransferHandler("phi") { ... }` fails the same way. The form that works is
+`new javax.swing.TransferHandler() { ... }`, which reaches the superclass's protected no-arg
+constructor as a subclass may. Everything the wrapper overrides returns a primitive or void,
+which is the shape bsh's anonymous-class parser handles, so the body parses in any position.
+A function returning the wrapper gives the test a way to wrap a recording handler:
 
-    public boolean importData(JComponent c, Transferable t) {
-        try {
-            if (t != null && t.isDataFlavorSupported(JEditDataFlavor.jEditRichTextDataFlavor)) {
-                phi_rich = t.getTransferData(JEditDataFlavor.jEditRichTextDataFlavor);
-                return inner.importData(c, new StringSelection(phi_rich.getText()));
-            }
-            if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-                phi_s2 = t.getTransferData(DataFlavor.stringFlavor);
-                if (phi_s2 != null) {
-                    phi_folded = phi_word_fold(phi_t, phi_s2);
-                    if (!phi_folded.equals(phi_s2))
-                        return inner.importData(c, new StringSelection(phi_folded));
+```
+phi_field_handler(phi_inner)              // one wrapper per field, closing over its handler
+{
+    phi_handler = new javax.swing.TransferHandler() {
+        public boolean canImport(JComponent c, DataFlavor[] f) {
+            return phi_inner.canImport(c, f);
+        }
+        public boolean canImport(javax.swing.TransferHandler.TransferSupport s) {
+            return phi_inner.canImport(s);
+        }
+        public int getSourceActions(JComponent c) { return phi_inner.getSourceActions(c); }
+        public void exportToClipboard(JComponent c, Clipboard cb, int a) {
+            phi_inner.exportToClipboard(c, cb, a);
+        }
+        public void exportAsDrag(JComponent c, java.awt.event.InputEvent e, int a) {
+            phi_inner.exportAsDrag(c, e, a);
+        }
+        public boolean importData(JComponent c, Transferable t) {
+            try {
+                if (t != null && t.isDataFlavorSupported(JEditDataFlavor.jEditRichTextDataFlavor)) {
+                    phi_rich = t.getTransferData(JEditDataFlavor.jEditRichTextDataFlavor);
+                    if (phi_rich != null)
+                        return phi_inner.importData(c, new StringSelection(phi_rich.getText()));
+                }
+                if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                    phi_plain = t.getTransferData(DataFlavor.stringFlavor);
+                    if (phi_plain != null) {
+                        phi_folded = phi_word_fold(phi_t, phi_plain);
+                        if (!phi_folded.equals(phi_plain))
+                            return phi_inner.importData(c, new StringSelection(phi_folded));
+                    }
                 }
             }
-        } catch (Exception e) { }
-        return inner.importData(c, t);
-    }
+            catch (Exception e) { }
+            return phi_inner.importData(c, t);
+        }
+    };
+    return phi_handler;
+}
+```
+
+`phi_wrap_field` installs one and marks the field, and the mark rather than an `instanceof`
+test is what makes it idempotent: jEdit resets the BeanShell class manager when a plugin is
+unloaded, and against a fresh class object `instanceof` would answer "not ours" and wrap a
+wrapper, folding twice.
+
+```
+phi_wrap_field(phi_field)
+{
+    if (phi_field == null) return false;
+    if (phi_field.getClientProperty("phi_word_wrapped") != null) return false;
+    phi_inner = phi_field.getTransferHandler();
+    if (phi_inner == null) return false;
+    phi_field.setTransferHandler(phi_field_handler(phi_inner));
+    phi_field.putClientProperty("phi_word_wrapped", Boolean.TRUE);
+    return true;
 }
 ```
 
@@ -171,9 +213,9 @@ phi_awt_listener = new java.awt.event.AWTEventListener() {
     public void eventDispatched(java.awt.AWTEvent e) {
         try {
             if (e.getID() != java.awt.event.ContainerEvent.COMPONENT_ADDED) return;
-            phi_ch = e.getChild();
-            if (phi_ch instanceof HistoryTextArea || phi_ch instanceof HistoryTextField)
-                phi_wrap_field(phi_ch);
+            phi_child = e.getChild();
+            if (phi_child instanceof HistoryTextArea || phi_child instanceof HistoryTextField)
+                phi_wrap_field(phi_child);
         } catch (Throwable ex) { }
     }
 };

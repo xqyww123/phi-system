@@ -441,7 +441,7 @@ hand:
 
 **The round trip must leave the JVM, or it tests nothing.** Copying and pasting inside jEdit
 never exercises the fold at all: a jEdit copy puts its own rich-text flavor on the clipboard
-beside the plain text, `phi_word_clipboard.bsh:177` hands that flavor back untouched, and
+beside the plain text, the register wrapper hands that flavor back untouched, and
 `Registers.paste` prefers it — so the glyphs come back intact **before** any fix, and
 `phi_word_fold` never runs. An earlier draft of this plan proposed two in-jEdit checks and
 claimed the first one produced `\<orelse>` today; **measured**, it does not. Both checks

@@ -224,8 +224,136 @@ t0 = System.currentTimeMillis();
 phi_word_fold(t, expanded);
 ms2 = System.currentTimeMillis() - t0;
 if (ms1 > 2000 || ms2 > 2000) {
-    System.out.println("FAIL " + sample.length() + " characters took " + ms1 + " ms to expand and "
-                       + ms2 + " ms to fold; the per-character loop is back");
+    System.out.println("FAIL " + sample.length() + " characters took " + ms1
+                       + " ms to expand and " + ms2 + " ms to fold; the loop is back");
+    failures = failures + 1;
+}
+
+// 15. pasting into jEdit's own text input fields.  These are plain Swing text components
+//     whose stock handler reads the plain-text flavor, so without the wrapper the field
+//     receives letters while the buffer holds the glyph and the search matches nothing.
+import org.gjt.sp.jedit.gui.HistoryTextArea;
+import org.gjt.sp.jedit.gui.HistoryTextField;
+import org.gjt.sp.jedit.datatransfer.JEditDataFlavor;
+import org.gjt.sp.jedit.datatransfer.RichTextTransferable;
+
+area = new HistoryTextArea("phi-test");
+stock = area.getTransferHandler();
+if (!phi_wrap_field(area)) {
+    System.out.println("FAIL the field was not wrapped");
+    failures = failures + 1;
+}
+if (phi_wrap_field(area)) {                 // idempotent: a re-parented field arrives twice
+    System.out.println("FAIL wrapping is not idempotent");
+    failures = failures + 1;
+}
+
+paste(field, transferable) {
+    field.setText("");
+    field.getTransferHandler().importData(field, transferable);
+    return field.getText();
+}
+
+// a. text copied inside jEdit carries the glyphs under jEdit's own flavor: taken as is, so
+//    even a shape folding cannot repair arrives exactly
+exact = glyph("size") + "_" + glyph("then'");
+rich_only = new RichTextTransferable(exact, "text");
+check("rich flavor is taken as is", paste(area, rich_only), exact);
+
+// b. both flavors present, as a real jEdit copy leaves them: the rich one wins
+letters = phi_word_expand(t, exact);
+both_flavors = new java.awt.datatransfer.Transferable() {
+    public java.awt.datatransfer.DataFlavor[] getTransferDataFlavors() {
+        return new java.awt.datatransfer.DataFlavor[] {
+            JEditDataFlavor.jEditRichTextDataFlavor,
+            java.awt.datatransfer.DataFlavor.stringFlavor };
+    }
+    public boolean isDataFlavorSupported(java.awt.datatransfer.DataFlavor f) {
+        return JEditDataFlavor.jEditRichTextDataFlavor.equals(f)
+               || java.awt.datatransfer.DataFlavor.stringFlavor.equals(f);
+    }
+    public Object getTransferData(java.awt.datatransfer.DataFlavor f) {
+        if (JEditDataFlavor.jEditRichTextDataFlavor.equals(f))
+            return new org.gjt.sp.jedit.datatransfer.JEditRichText(exact, "text");
+        return letters;
+    }
+};
+check("the rich flavor wins over the plain one", paste(area, both_flavors), exact);
+
+// c. text from outside jEdit has only the plain flavor, and is folded
+plain = new java.awt.datatransfer.StringSelection(expand.get(
+            new Integer(glyph("pending").codePointAt(0))));
+check("letters from another application fold", paste(area, plain), glyph("pending"));
+
+// d. ordinary text is not the clipboard's business here either
+check("ordinary text is untouched",
+      paste(area, new java.awt.datatransfer.StringSelection("/home/user/a_file.thy")),
+      "/home/user/a_file.thy");
+
+// e. a transferable that throws must not propagate out of importData
+thrower = new java.awt.datatransfer.Transferable() {
+    public java.awt.datatransfer.DataFlavor[] getTransferDataFlavors() {
+        return new java.awt.datatransfer.DataFlavor[] {
+            java.awt.datatransfer.DataFlavor.stringFlavor };
+    }
+    public boolean isDataFlavorSupported(java.awt.datatransfer.DataFlavor f) { return true; }
+    public Object getTransferData(java.awt.datatransfer.DataFlavor f) {
+        throw new java.io.IOException("no data");
+    }
+};
+try { area.getTransferHandler().importData(area, thrower); }
+catch (Exception e) {
+    System.out.println("FAIL a throwing transferable escaped importData: " + e);
+    failures = failures + 1;
+}
+
+// f. everything that is not the incoming text goes straight through to the inner handler
+seen = new java.util.HashMap();
+recorder = new javax.swing.TransferHandler() {
+    public boolean canImport(javax.swing.JComponent c, java.awt.datatransfer.DataFlavor[] f) {
+        seen.put("canImport", Boolean.TRUE); return true;
+    }
+    public int getSourceActions(javax.swing.JComponent c) {
+        seen.put("getSourceActions", Boolean.TRUE); return 3;
+    }
+    public void exportToClipboard(javax.swing.JComponent c, java.awt.datatransfer.Clipboard cb,
+                                  int a) {
+        seen.put("exportToClipboard", Boolean.TRUE);
+    }
+};
+outer = phi_field_handler(recorder);
+outer.canImport(area, new java.awt.datatransfer.DataFlavor[0]);
+if (outer.getSourceActions(area) != 3) {
+    System.out.println("FAIL getSourceActions was not forwarded"); failures = failures + 1;
+}
+outer.exportToClipboard(area, new java.awt.datatransfer.Clipboard("phi-test"), 1);
+for (what : new String[] { "canImport", "getSourceActions", "exportToClipboard" })
+    if (!seen.containsKey(what)) {
+        System.out.println("FAIL " + what + " did not reach the inner handler");
+        failures = failures + 1;
+    }
+
+// g. the fields are built lazily inside dialogs, so they are found by a global AWT listener
+//    rather than by name.  Both shapes the search widgets use: a field added straight to a
+//    panel, and an area that arrives inside a JScrollPane.
+panel = new javax.swing.JPanel();
+bar_field = new HistoryTextField("phi-test");
+panel.add(bar_field);
+if (bar_field.getClientProperty("phi_word_wrapped") == null) {
+    System.out.println("FAIL the listener missed a field added to a panel");
+    failures = failures + 1;
+}
+dialog_area = new HistoryTextArea("phi-test");
+panel.add(new javax.swing.JScrollPane(dialog_area));
+if (dialog_area.getClientProperty("phi_word_wrapped") == null) {
+    System.out.println("FAIL the listener missed an area inside a scroll pane");
+    failures = failures + 1;
+}
+check("a field found by the listener folds too", paste(bar_field, plain), glyph("pending"));
+
+// h. the stock handler is what was wrapped, not one of ours
+if (stock == null || stock.getClass().getName().indexOf("TextTransferHandler") < 0) {
+    System.out.println("FAIL the wrapped handler was not Swing's stock one: " + stock);
     failures = failures + 1;
 }
 

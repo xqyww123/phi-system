@@ -170,6 +170,27 @@ Two failure modes recurred often enough to be worth naming, because they will re
   stands — copying source out and pasting it back introduces nothing of its own.
 
 
+## What landing plan 3 taught
+
+- **A scripted BeanShell class is not the way to subclass a Java class here.** Its
+  constructor is not found when a parameter has no declared type, and the anonymous subclass
+  bsh generates instead has **only a no-arg constructor**: it does not forward arguments, so
+  `new javax.swing.TransferHandler("phi") { ... }` fails exactly like the scripted class did.
+  `new javax.swing.TransferHandler() { ... }` works, reaching the superclass's protected
+  no-arg constructor. `DRAG_AND_DROP_PLAN.md` subclasses `TextAreaTransferHandler` the same
+  way and will meet this; its sketch already binds the object to a name, which is right, but
+  it must not grow a constructor.
+- **Idempotence is marked on the component, not read off the wrapper's type.** jEdit resets
+  the BeanShell class manager when a plugin is unloaded (`PluginJAR.uninit`), after which a
+  fresh class object would make an `instanceof` test answer "not ours" and wrap a second
+  time — a wrapper around a wrapper, folding twice. A client property on the field cannot
+  drift that way.
+- **Six mutations were run against the finished field-paste code** — rich flavor ignored,
+  folding disabled, the idempotence guard removed, the listener never registered, `canImport`
+  not forwarded, the inner handler's `importData` never reached — and the suite catches all
+  six.
+
+
 ## Open items
 
 - **Round 7's audit was launched before decision 4** and reported the widened run class as a

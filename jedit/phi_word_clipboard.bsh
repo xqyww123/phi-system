@@ -30,6 +30,15 @@
 //          glyphs, unless jEdit's rich-text flavor is present, in which case the text
 //          came from jEdit and is handed over untouched.
 //
+//   paste into jEdit's own text input fields -- the Search and Replace boxes, the
+//          quick-search bar, the file browser's boxes, Isabelle's Query, Sledgehammer
+//          and Debugger fields -- goes through neither of those.  They are plain Swing
+//          text components whose stock TransferHandler reads the plain-text flavor, so
+//          the field would receive the letters while the buffer holds the glyph and the
+//          search would match nothing.  Each field's handler is therefore wrapped in a
+//          delegating one, and the fields are found with a global AWT listener because
+//          they are built lazily inside dialogs and nothing announces them.
+//
 // Both directions are driven by patterns compiled once, when the table is built, and
 // never inside a loop: a selection can be millions of characters and every return to
 // the BeanShell interpreter costs about 3.5 microseconds.  See WORD_BOUNDARY_PLAN.md,
@@ -41,6 +50,7 @@
 // phi-System's etc/settings links this file into $JEDIT_SETTINGS/startup, so it runs
 // whenever jEdit starts with the component registered.
 
+import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -50,6 +60,8 @@ import org.gjt.sp.jedit.Registers;
 import org.gjt.sp.jedit.datatransfer.JEditDataFlavor;
 import org.gjt.sp.jedit.datatransfer.JEditTransferableService;
 import org.gjt.sp.jedit.datatransfer.TransferHandler;
+import org.gjt.sp.jedit.gui.HistoryTextArea;
+import org.gjt.sp.jedit.gui.HistoryTextField;
 import org.gjt.sp.util.Log;
 
 // The boundary marker, never written as a literal: an invisible character in source is
@@ -201,6 +213,107 @@ phi_word_fold(t, text)
     return phi_out.toString().replace(phi_wj, "");
 }
 
+/* pasting into jEdit's own text input fields */
+
+// Everything the clipboard route needs is public on javax.swing.TransferHandler, so the
+// wrapper holds the field's original handler and calls it.  Only the incoming text is
+// rewritten; canImport, the source actions and both export routes go straight through.
+//
+// Two things it deliberately does not do.  It does not override
+// importData(TransferSupport): the inherited one forwards here, but the handler being
+// wrapped overrides that method to record isDrop and friends, so on a *drop* into a field
+// the inner body sees isDrop == false -- no focus request, the dropped text not selected.
+// Paste is unaffected.  And it does not expand on the way out, so copying out of a wrapped
+// field yields the raw glyph; ../fonts/WORD_GLYPHS.md says so rather than leaving it to be
+// discovered.
+phi_field_handler(phi_inner)
+{
+    // An anonymous subclass rather than a scripted class, for two measured reasons: bsh
+    // cannot find a scripted constructor whose parameter has no declared type, and the
+    // anonymous subclass it generates has only a no-arg constructor -- it does not forward
+    // arguments, so the superclass's protected no-arg form is the one to call.  Every
+    // method below returns a primitive or void, which is the shape bsh's anonymous-class
+    // parser handles.  One wrapper per field, closing over that field's own inner handler.
+    phi_handler = new javax.swing.TransferHandler() {
+        public boolean canImport(javax.swing.JComponent c, DataFlavor[] f) {
+            return phi_inner.canImport(c, f);
+        }
+        public boolean canImport(javax.swing.TransferHandler.TransferSupport s) {
+            return phi_inner.canImport(s);
+        }
+        public int getSourceActions(javax.swing.JComponent c) {
+            return phi_inner.getSourceActions(c);
+        }
+        public void exportToClipboard(javax.swing.JComponent c, Clipboard cb, int a) {
+            phi_inner.exportToClipboard(c, cb, a);
+        }
+        public void exportAsDrag(javax.swing.JComponent c, java.awt.event.InputEvent e,
+                                 int a) {
+            phi_inner.exportAsDrag(c, e, a);
+        }
+        public boolean importData(javax.swing.JComponent c, Transferable t) {
+            try {
+                // anything copied inside jEdit carries the glyphs themselves under jEdit's
+                // own flavor: take that, and the fold rule never enters into it, so even
+                // the shapes folding cannot repair arrive exact
+                phi_rich_flavor = JEditDataFlavor.jEditRichTextDataFlavor;
+                if (t != null && t.isDataFlavorSupported(phi_rich_flavor)) {
+                    phi_rich = t.getTransferData(phi_rich_flavor);
+                    if (phi_rich != null)
+                        return phi_inner.importData(
+                            c, new StringSelection(phi_rich.getText()));
+                }
+                if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                    phi_plain = t.getTransferData(DataFlavor.stringFlavor);
+                    if (phi_plain != null) {
+                        phi_folded = phi_word_fold(phi_t, phi_plain);
+                        if (!phi_folded.equals(phi_plain))
+                            return phi_inner.importData(c, new StringSelection(phi_folded));
+                    }
+                }
+            }
+            catch (Exception e) { }
+            return phi_inner.importData(c, t);
+        }
+    };
+    return phi_handler;
+}
+
+phi_wrap_field(phi_field)
+{
+    if (phi_field == null) return false;
+    // idempotent, and by a mark on the component rather than by the wrapper's type: jEdit
+    // resets the BeanShell class manager when a plugin is unloaded, after which a fresh
+    // class object would make an instanceof test say "not ours" and wrap a second time
+    if (phi_field.getClientProperty("phi_word_wrapped") != null) return false;
+    phi_inner = phi_field.getTransferHandler();
+    if (phi_inner == null) return false;
+    phi_field.setTransferHandler(phi_field_handler(phi_inner));
+    phi_field.putClientProperty("phi_word_wrapped", Boolean.TRUE);
+    return true;
+}
+
+phi_install_field_paste()
+{
+    // The fields are built lazily, inside dialogs jEdit constructs on demand, and no
+    // message announces them.  This listener runs on every container event in the
+    // application, so its body stays as small as it can be: a type test and a call.
+    phi_awt_listener = new java.awt.event.AWTEventListener() {
+        public void eventDispatched(java.awt.AWTEvent e) {
+            try {
+                if (e.getID() != java.awt.event.ContainerEvent.COMPONENT_ADDED) return;
+                phi_child = e.getChild();
+                if (phi_child instanceof HistoryTextArea
+                        || phi_child instanceof HistoryTextField)
+                    phi_wrap_field(phi_child);
+            }
+            catch (Throwable ex) { }
+        }
+    };
+    java.awt.Toolkit.getDefaultToolkit().addAWTEventListener(
+        phi_awt_listener, java.awt.AWTEvent.CONTAINER_EVENT_MASK);
+}
+
 /* installation */
 
 phi_word_install()
@@ -244,6 +357,8 @@ phi_word_install()
         }
     };
     Registers.setRegister('$', phi_wrapper);
+
+    phi_install_field_paste();
 
     Log.log(Log.NOTICE, this,
             "phi word clipboard: " + phi_n + " words expand on copy, fold on paste");

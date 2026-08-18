@@ -128,8 +128,8 @@ font, and `build_word_glyphs.py` now refuses to write a table containing one.
 it back if it goes missing, so registering the component is all a user has to do.
 The letters come from `../jedit/word-clipboard-text`, generated alongside the glyphs.
 
-Where this does not reach.  The last four lines each have a plan of their own; strike
-the marker on a line when its plan lands, and do not delete the line.
+Where this does not reach.  Two of the lines below carry a marker for a plan not yet
+landed; strike the marker when that plan lands, and do not delete the line.
 
 * **Isabelle/VSCode** carries a symbol table frozen into the VSCodium component when it
   was built; no phi-System symbol is in it — not the word glyphs and not the hand-drawn
@@ -145,13 +145,13 @@ the marker on a line when its plan lands, and do not delete the line.
   another application — goes through jEdit's `%` register, which is not wrapped, so it
   hands over the private-use code point.  *Covered by a plan not yet landed:
   `../jedit/PRIMARY_SELECTION_PLAN.md`.*
-* **Pasting into jEdit's own text input fields**, the Search and Replace boxes among
-  them, uses Swing's stock transfer handler, so the field receives the letters while the
-  buffer holds the glyph and the search matches nothing.  *Covered by a plan not yet
-  landed: `../jedit/SEARCH_FIELD_PASTE_PLAN.md`.*
-* **Copying out of one of those input fields** will still yield the raw glyph once they
-  are wrapped, the wrapper being one-way.  *Covered by a plan not yet landed:
-  `../jedit/SEARCH_FIELD_PASTE_PLAN.md`; this line states a fact only once it has.*
+* **Copying out of one of jEdit's own text input fields** yields the raw glyph.  Pasting
+  *into* them now folds — every `HistoryTextField` and `HistoryTextArea` has its transfer
+  handler wrapped, which covers the Search and Replace boxes, the quick-search bar, the file
+  browser's fields and Isabelle's Query, Sledgehammer and Debugger inputs — but the wrapper
+  is one-way: the export methods are handed through untouched, so nothing expands on the way
+  out.  These are input boxes and copying out of one into another application is rare, so the
+  asymmetry is accepted rather than repaired.
 
 Outside jEdit, `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<name>`
 escape rather than its code point — its output feeds language-model prompts, the
