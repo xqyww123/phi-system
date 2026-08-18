@@ -66,13 +66,27 @@ fixes that in both directions:
   out in mathematical sans-serif (`𝖺𝗂𝗇𝗍`), there being no bold-free mathematical
   alphabet to match them;
 * pasting such letters back in turns them into the glyph again, so a round trip
-  through another application loses nothing.
+  through another application loses nothing — for a word on its own, and for two
+  words written against each other; the shapes that still do not survive one are
+  named below.
 
 Copying and pasting *within* jEdit is untouched: jEdit prefers its own rich-text
 flavor, which is a JVM-local object no other process can see, and the script leaves
 it alone.
 
 ### What the paste direction folds
+
+**What counts as one run** is a fixed convention rather than a consequence of the
+table: a maximal stretch of characters from the mathematical alphanumeric block
+(U+1D400..U+1D7FF), together with `.` and `_`, the two ASCII characters entries use
+(`w.r.t.` and `size_t`).  It used to be "a character the table spells with", which
+meant the same input could change behaviour whenever a word was added to
+`words.txt`.  One shipped behaviour changed when it was fixed: a word glyph written
+directly against a mathematical character no entry uses — `\<pending>` against a
+bold `q`, say — now comes back as letters where it used to come back as the glyph.
+That is the abandon rule below doing its job: `𝐩𝐞𝐧𝐝𝐢𝐧𝐠𝐪` reads as somebody's
+bold word, and folding half of it into a glyph is the mangling the rule exists to
+prevent.
 
 It reads a run left to right, longest word first.  When no word matches at a
 position it looks at the character: **ASCII that no word claims is carried over**
@@ -84,6 +98,22 @@ may be modified.  So `𝐩𝐞𝐧𝐝𝐢𝐧𝐠.` folds and `𝐬𝐭𝐚𝐭
 That ASCII clause was added when the first entries with punctuation, `wrt` and
 `size_t`, put `.` and `_` into the table.  Before it, any word written against a
 full stop silently stopped folding — the rule was all-or-nothing per run.
+
+**Two words written directly against each other come back intact**, because the copy
+direction marks the boundary: between two adjacent glyphs it emits a `U+2060 WORD
+JOINER`.  Without it the letters ran together and the paste direction could not tell
+where the first word ended — `\<or'>\<else>` expanded to `orelse` and folded back to
+the single symbol `\<orelse>`, quietly changing what the text said.  A joiner is not
+run-forming, so it ends a run and each word folds on its own; folding then strips
+every `U+2060` from its result, so none is ever written into a buffer.
+
+**A word written against somebody else's mathematical letters still does not come
+back.**  Two shapes: when those letters complete a longer table word the pair folds
+into a *different* glyph — `\<change>` and a user's bold `𝐝` come back as `\<changed>` —
+and when they do not, the abandon rule takes the glyph down with them and the whole
+run comes back as letters.  Nor does a word separated from another by an underscore:
+`\<size>_\<then'>` comes back as eight letters and an underscore, because the scan
+matches `size_t` and is then left with a remainder no word claims.
 
 ### The constraint on a new entry
 
@@ -98,28 +128,51 @@ font, and `build_word_glyphs.py` now refuses to write a table containing one.
 it back if it goes missing, so registering the component is all a user has to do.
 The letters come from `../jedit/word-clipboard-text`, generated alongside the glyphs.
 
-Two places this does not reach.  Dragging text out of jEdit goes through
-`TextAreaTransferHandler`, which builds its own clipboard contents and consults no
-service list, so a drag still carries the private-use code point.  And Isabelle/VSCode
-carries a symbol table frozen into the VSCodium component when it was built; no
-phi-System symbol is in it — not the word glyphs and not the hand-drawn ones either —
-so there `\<pending>` simply stays the seven characters you typed.
+Where this does not reach.  The last four lines each have a plan of their own; strike
+the marker on a line when its plan lands, and do not delete the line.
+
+* **Isabelle/VSCode** carries a symbol table frozen into the VSCodium component when it
+  was built; no phi-System symbol is in it — not the word glyphs and not the hand-drawn
+  ones either — so there `\<pending>` simply stays the seven characters you typed.
+* **HyperSearch's "copy results"** writes the system clipboard directly, bypassing both
+  the clipboard register and the service list, so a startup script has no interception
+  point.  No plan; a known limit.
+* **Dragging text out of jEdit** goes through `TextAreaTransferHandler`, which builds
+  its own clipboard contents and consults no service list, so a drag still carries the
+  private-use code point.  *Covered by a plan not yet landed:
+  `../jedit/DRAG_AND_DROP_PLAN.md`.*
+* **The X11 primary selection** — selecting with the mouse, middle-clicking into
+  another application — goes through jEdit's `%` register, which is not wrapped, so it
+  hands over the private-use code point.  *Covered by a plan not yet landed:
+  `../jedit/PRIMARY_SELECTION_PLAN.md`.*
+* **Pasting into jEdit's own text input fields**, the Search and Replace boxes among
+  them, uses Swing's stock transfer handler, so the field receives the letters while the
+  buffer holds the glyph and the search matches nothing.  *Covered by a plan not yet
+  landed: `../jedit/SEARCH_FIELD_PASTE_PLAN.md`.*
+* **Copying out of one of those input fields** will still yield the raw glyph once they
+  are wrapped, the wrapper being one-way.  *Covered by a plan not yet landed:
+  `../jedit/SEARCH_FIELD_PASTE_PLAN.md`; this line states a fact only once it has.*
 
 Outside jEdit, `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<name>`
 escape rather than its code point — its output feeds language-model prompts, the
 semantic database and logs, none of which load PhiSymbols, and the escape still spells
-the word.  The reverse direction does name a raw private-use character, so one that came
-out of a drag can be repaired.  Pasting such a character into a `.thy` shows nothing,
+the word.  The reverse direction does name a raw private-use character, so one that
+escaped by any of the routes just listed — HyperSearch's copied results, and until their
+plans land, a drag or the primary selection — can be repaired.  Pasting such a character
+into a `.thy` shows nothing,
 `view.enableFontSubst=false` being the default.
 
 ## Adding or changing a word
 
 1. Edit `words.txt` (one entry per line, `#` starts a comment).
 2. Run `python3 build_word_glyphs.py` from this directory.
-3. Run `../jedit/run_word_clipboard_test.sh` — it round-trips every entry through
-   the real BeanShell interpreter and checks the fold rule described above.  The
-   two halves of this feature are generated apart and nothing but this test makes
-   them agree.
+3. Run `../jedit/run_word_clipboard_test.sh` — it round-trips every entry, and every
+   ordered pair of entries written against each other, through the real BeanShell
+   interpreter, and checks the fold rule described above.  The two halves of this
+   feature are generated apart and nothing but this test makes them agree.  It also
+   fails if the new entry spells with an ASCII character other than `.` or `_`: what
+   counts as one run is a fixed convention, so such a word would silently stop
+   folding until the convention is widened to match.
 4. Restart the Isabelle/jEdit session and check the new symbol renders.
 
 An entry is normally just the word, and then the symbol name, the glyph and the

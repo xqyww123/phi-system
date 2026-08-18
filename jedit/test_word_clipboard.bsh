@@ -1,17 +1,20 @@
 // Properties phi_word_clipboard.bsh must hold, checked against the generated table.
 //
 // The two halves of the word-glyph feature are generated apart: fonts/build_word_glyphs.py
-// writes word-clipboard-text, and this directory's script reads it.  Nothing makes them
-// agree except that they are regenerated together, so this test exists to catch the drift.
-// It exercises the real interpreter and the real committed table -- run it after any change
-// to either half.  See ../fonts/WORD_GLYPHS.md, "Copying a word out of jEdit".
+// writes word-clipboard-text and symbols-words, and this directory's script reads the first.
+// Nothing makes them agree except that they are regenerated together, so this test exists to
+// catch the drift.  It exercises the real interpreter and the real committed table -- run it
+// after any change to either half.  See ../fonts/WORD_GLYPHS.md, "Copying a word out of
+// jEdit", and jedit/WORD_BOUNDARY_PLAN.md for why the boundary marker is there.
 //
-// Run it with jedit/run_word_clipboard_test.sh, which supplies the interpreter and paths.
+// Run it with jedit/run_word_clipboard_test.sh, which supplies the interpreter, a display
+// and the checks on this script's own output.
 
 source(System.getenv("PHI_SYSTEM_HOME") + "/jedit/phi_word_clipboard.bsh");
 
 t = phi_word_table();
 failures = 0;
+wj = new String(Character.toChars(0x2060));     // never a literal: it would be invisible
 
 hex(s) {
     b = new StringBuffer();
@@ -23,10 +26,14 @@ hex(s) {
     return b.toString().trim();
 }
 
-check(what, got, want) {
-    if (got.equals(want)) return void;
+fail(what, got, want) {
     System.out.println("FAIL " + what + "\n  got  " + hex(got) + "\n  want " + hex(want));
     failures = failures + 1;
+}
+
+check(what, got, want) {
+    if (got.equals(want)) return void;
+    fail(what, got, want);
 }
 
 bold(w) {                                   // mathematical bold small letters
@@ -36,41 +43,193 @@ bold(w) {                                   // mathematical bold small letters
     return b.toString();
 }
 
+// Word glyphs are named, not spelled: the letters are mathematical and cannot be typed
+// here.  ../symbols-words maps an Isabelle symbol name to the code point, and is generated
+// by the same script as the table, so reading it also checks the two agree.
+names = new java.util.HashMap();
+symbols = new java.io.File(System.getenv("PHI_SYSTEM_HOME"), "symbols-words");
+if (!symbols.isFile()) {
+    System.out.println("FAIL ../symbols-words is missing; the test cannot name a glyph");
+    failures = failures + 1;
+} else {
+    for (line : java.nio.file.Files.readAllLines(symbols.toPath())) {
+        m = java.util.regex.Pattern.compile("^\\\\<([^>]+)>\\s+code:\\s*(0x[0-9A-Fa-f]+)")
+                                   .matcher(line);
+        if (m.find()) names.put(m.group(1), new String(Character.toChars(
+                                                  Integer.decode(m.group(2)).intValue())));
+    }
+}
+
+glyph(name) {
+    g = names.get(name);
+    if (g == null) {
+        System.out.println("FAIL no glyph named " + name + "; update this test");
+        failures = failures + 1;
+        return "";
+    }
+    return g;
+}
+
 expand = t.get("expand");
 n = 0;
 
-// 1. every entry folds to its glyph and expands back -- the round trip, over all of them
+// 1. every entry folds to its glyph and expands back -- the round trip, over all of them,
+//    and a lone glyph gets no boundary marker
 for (code : expand.keySet()) {
-    glyph = new String(Character.toChars(code.intValue()));
+    g = new String(Character.toChars(code.intValue()));
     letters = expand.get(code);
-    check("fold " + letters, phi_word_fold(t, letters), glyph);
-    check("expand " + hex(glyph), phi_word_expand(t, glyph), letters);
+    check("fold " + letters, phi_word_fold(t, letters), g);
+    check("expand " + hex(g), phi_word_expand(t, g), letters);
+    if (phi_word_expand(t, g).indexOf(wj) >= 0)
+        fail("lone glyph got a joiner " + hex(g), phi_word_expand(t, g), letters);
     n = n + 1;
 }
 
-// 2. ASCII a word does not claim is carried over, so a word keeps folding when it is
-//    written against punctuation.  This is what the periods in `w.r.t.` broke.
-pending = expand.get(new Integer(0xE048));
-if (pending != null) {
-    g = new String(Character.toChars(0xE048));
-    check("word then full stop", phi_word_fold(t, pending + "."), g + ".");
-    check("word in parentheses", phi_word_fold(t, "(" + pending + ")"), "(" + g + ")");
-    check("word then newline", phi_word_fold(t, pending + "\n"), g + "\n");
-} else {
-    System.out.println("FAIL 0xE048 is no longer `pending`; update this test");
-    failures = failures + 1;
+// 2. two glyphs written directly against each other survive the round trip.  This is what
+//    the boundary marker is for: without it 49 of these pairs come back wrong, one of them
+//    -- \<or'>\<else> -> \<orelse> -- as a different word with no sign anything happened.
+codes = new java.util.ArrayList(expand.keySet());
+pairs = 0;
+broken = 0;
+for (a : codes) {
+    ga = new String(Character.toChars(a.intValue()));
+    for (b2 : codes) {
+        s = ga + new String(Character.toChars(b2.intValue()));
+        pairs = pairs + 1;
+        if (!phi_word_fold(t, phi_word_expand(t, s)).equals(s)) {
+            broken = broken + 1;
+            if (broken <= 3)
+                fail("pair " + hex(s), phi_word_fold(t, phi_word_expand(t, s)), s);
+        }
+    }
 }
+if (broken > 0) { System.out.println("  (" + broken + " broken pairs of " + pairs + ")"); }
 
-// 3. a mathematical letter no word claims abandons the whole run -- somebody else's bold
-//    text in a comment must come back exactly as it went out
+// 3. the two three-glyph failures, the longest a minimal failure can be
+tri1 = glyph("prem") + glyph("is") + glyph("else");
+tri2 = glyph("prem") + glyph("is") + glyph("entry");
+check("three glyphs, prem is else", phi_word_fold(t, phi_word_expand(t, tri1)), tri1);
+check("three glyphs, prem is entry", phi_word_fold(t, phi_word_expand(t, tri2)), tri2);
+
+// 4. the ambiguity is removed, not resolved against the single word: \<orelse> copied on
+//    its own must still come back as \<orelse>
+orelse = glyph("orelse");
+check("orelse alone", phi_word_fold(t, phi_word_expand(t, orelse)), orelse);
+
+// 5. bold letters on BOTH sides of an adjacent pair: neither expansion folds, so this is
+//    the one shape where a conditional joiner strip would leave an invisible character in
+//    the buffer.  The strip is unconditional, so nothing is left.
 zzz = bold("zzz");
-check("not a word, untouched", phi_word_fold(t, zzz), zzz);
-check("not a word, with a word beside it", phi_word_fold(t, zzz), zzz);
+both = zzz + glyph("has") + glyph("has") + zzz;
+got = phi_word_fold(t, phi_word_expand(t, both));
+if (got.indexOf(wj) >= 0) fail("joiner left in the buffer", got, phi_word_expand(t, both));
+check("bold on both sides comes back as letters", got,
+      zzz + expand.get(new Integer(glyph("has").codePointAt(0)))
+          + expand.get(new Integer(glyph("has").codePointAt(0))) + zzz);
 
-// 4. plain ASCII is not the clipboard's business
+// 6. a joiner arriving from anywhere is removed
+check("a pasted joiner is removed", phi_word_fold(t, "a" + wj + "b"), "ab");
+
+// 7. ASCII a word does not claim is carried over, so a word keeps folding when it is
+//    written against punctuation.  This is what the periods in `w.r.t.` broke.
+pending = expand.get(new Integer(glyph("pending").codePointAt(0)));
+g = glyph("pending");
+check("word then full stop", phi_word_fold(t, pending + "."), g + ".");
+check("word in parentheses", phi_word_fold(t, "(" + pending + ")"), "(" + g + ")");
+check("word then newline", phi_word_fold(t, pending + "\n"), g + "\n");
+
+// 8. a mathematical letter no word claims abandons the whole run -- somebody else's bold
+//    text in a comment must come back exactly as it went out
+check("not a word, untouched", phi_word_fold(t, zzz), zzz);
+check("not a word, with a word beside it", phi_word_fold(t, zzz + pending), zzz + pending);
+
+// 9. plain ASCII is not the clipboard's business
 check("plain ASCII untouched", phi_word_fold(t, "keep_me and int and bool."),
       "keep_me and int and bool.");
 
-System.out.println((failures == 0 ? "PASS" : "FAILED") + ": " + n
-                   + " entries round-tripped, " + failures + " failure(s)");
+// 10. shapes WORD_BOUNDARY_PLAN.md does not repair.  Pinned so that a later widening of
+//     the insertion rule is a decision somebody took, not an accident.
+size_then = glyph("size") + "_" + glyph("then'");
+got = phi_word_fold(t, phi_word_expand(t, size_then));
+for (i = 0; i < got.length(); i++)
+    if (names.containsValue(String.valueOf(got.charAt(i))))
+        fail("size _ then' should carry no glyph", got, size_then);
+change_d = phi_word_expand(t, glyph("change")) + bold("d");
+check("change against a user's bold d becomes changed", phi_word_fold(t, change_d),
+      glyph("changed"));
+
+// 11. the one shipped behaviour this rewrite changes on purpose: a glyph written against a
+//     mathematical character no word uses.  What counts as one run is now the whole
+//     mathematical alphanumeric block, not the letters the table happens to spell with, so
+//     the run is abandoned where it used to fold.  See "A deliberate widening".
+pending_q = phi_word_expand(t, glyph("pending")) + bold("q");
+check("pending against a bold q stays letters", phi_word_fold(t, pending_q), pending_q);
+
+// 12. the null guards
+if (phi_word_expand(t, null) != null) {
+    System.out.println("FAIL expand null"); failures = failures + 1;
+}
+if (phi_word_fold(t, null) != null) {
+    System.out.println("FAIL fold null"); failures = failures + 1;
+}
+
+// 13. the run class is a fixed convention -- the mathematical block plus `.` and `_` -- so
+//     a word spelled with any other ASCII character would stop folding, silently.  If this
+//     fires, widen phi_run_class in the script and say so in ../fonts/WORD_GLYPHS.md.
+for (letters : t.get("keys")) {
+    for (i = 0; i < letters.length(); i++) {
+        c = letters.charAt(i);
+        if (c < 128 && c != '.' && c != '_') {
+            System.out.println("FAIL the table uses ASCII the run class does not cover: "
+                               + hex(String.valueOf(c)) + " in " + letters);
+            failures = failures + 1;
+        }
+    }
+}
+
+// 13b. the two patterns the run and glyph classes compile to, pinned directly.  Neither
+//      shows up in any output comparison -- widening either one leaves every byte of every
+//      result unchanged and only costs time -- so nothing but an assertion catches it.
+if (t.get("run_pat").matcher("._.").find()) {
+    System.out.println("FAIL punctuation alone counts as a run; a run must hold a "
+                       + "mathematical letter, or every full stop in ordinary source "
+                       + "costs a trip through the interpreter");
+    failures = failures + 1;
+}
+if (!t.get("run_pat").matcher("." + bold("a") + "_").find()) {
+    System.out.println("FAIL a mathematical letter with punctuation around it is not "
+                       + "recognised as one run");
+    failures = failures + 1;
+}
+last = 0;
+for (code : expand.keySet()) if (code.intValue() > last) last = code.intValue();
+beyond = new String(Character.toChars(last + 1));
+check("a private-use character past the table is not a glyph",
+      phi_word_expand(t, beyond + beyond), beyond + beyond);
+
+// 14. a performance floor.  Both functions run on the AWT thread over whole selections, and
+//     an interpreted per-character loop costs about 3.5 microseconds a character -- four to
+//     nine seconds for this input, against tens of milliseconds compiled.  A two-second
+//     ceiling is far above the compiled figures and far below the interpreted ones.
+block = new StringBuffer();
+while (block.length() < 448) block.append("lemma foo: \"a + b = c\" by auto_sledgehammer\n");
+block.setLength(448);
+big = new StringBuffer();
+while (big.length() < 1000000) big.append(block).append(glyph("pending"));
+sample = big.toString();
+t0 = System.currentTimeMillis();
+expanded = phi_word_expand(t, sample);
+ms1 = System.currentTimeMillis() - t0;
+t0 = System.currentTimeMillis();
+phi_word_fold(t, expanded);
+ms2 = System.currentTimeMillis() - t0;
+if (ms1 > 2000 || ms2 > 2000) {
+    System.out.println("FAIL " + sample.length() + " characters took " + ms1 + " ms to expand and "
+                       + ms2 + " ms to fold; the per-character loop is back");
+    failures = failures + 1;
+}
+
+System.out.println((failures == 0 ? "PASS" : "FAILED") + ": " + n + " entries round-tripped, "
+                   + pairs + " adjacent pairs, " + sample.length() + " characters in "
+                   + ms1 + "/" + ms2 + " ms, " + failures + " failure(s)");
 if (failures != 0) System.exit(1);
