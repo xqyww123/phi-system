@@ -4,8 +4,8 @@
 // (see fonts/WORD_GLYPHS.md).  Inside jEdit that is exactly what you want; outside it
 // there is no font and no meaning, so a plain copy hands other applications U+E048
 // instead of "pending".  This script makes copying produce the word in mathematical
-// bold letters -- the same letters the glyph was drawn from, so the pasted text looks
-// like what was on screen -- and makes pasting turn those letters back into the glyph.
+// letters -- the same letters the glyph was drawn from, so the pasted text looks like
+// what was on screen -- and makes pasting turn those letters back into the glyph.
 //
 // Two glyphs written directly against each other need one thing more.  Their letters
 // run together on the clipboard and the paste direction can no longer tell where the
@@ -76,7 +76,8 @@ phi_wj = new String(Character.toChars(0x2060));
 // letters the table happens to use is a deliberate widening; WORD_BOUNDARY_PLAN.md,
 // "A deliberate widening", says why.  test_word_clipboard.bsh checks that the table
 // still uses no ASCII beyond these two.
-phi_run_class = "[\\x{1D400}-\\x{1D7FF}._]";
+phi_math_range = "\\x{1D400}-\\x{1D7FF}";
+phi_run_class = "[" + phi_math_range + "._]";
 
 /* the generated table: glyph code point <-> the letters it reads as, and the patterns
    that go with it -- they are built here so that a table and its patterns can never
@@ -84,32 +85,27 @@ phi_run_class = "[\\x{1D400}-\\x{1D7FF}._]";
 
 phi_word_table()
 {
-    phi_tab = new java.util.HashMap();      // "expand": Integer code point -> String letters
+    // "expand" maps an Integer code point to the String of letters it reads as
+    Object phi_tab = new java.util.HashMap();
     phi_tab.put("expand", new java.util.HashMap());
     phi_tab.put("fold", new java.util.HashMap());   // String letters -> String glyph
-    phi_tab.put("letters", new java.util.HashSet());
     phi_tab.put("keys", new java.util.ArrayList());
 
-    phi_home = System.getenv("PHI_SYSTEM_HOME");
+    String phi_home = System.getenv("PHI_SYSTEM_HOME");
     if (phi_home == null) return phi_tab;
-    phi_file = new java.io.File(phi_home, "jedit/word-clipboard-text");
+    Object phi_file = new java.io.File(phi_home, "jedit/word-clipboard-text");
     if (!phi_file.isFile()) return phi_tab;
 
-    for (phi_line : java.nio.file.Files.readAllLines(phi_file.toPath())) {
-        phi_line = phi_line.trim();
+    for (String phi_raw : java.nio.file.Files.readAllLines(phi_file.toPath())) {
+        String phi_line = phi_raw.trim();
         if (phi_line.isEmpty() || phi_line.startsWith("#")) continue;
-        phi_parts = phi_line.split("\\s+", 2);
+        String[] phi_parts = phi_line.split("\\s+", 2);
         if (phi_parts.length != 2) continue;
-        phi_code = Integer.decode(phi_parts[0]).intValue();
-        phi_letters = phi_parts[1];
+        int phi_code = Integer.decode(phi_parts[0]).intValue();
+        String phi_letters = phi_parts[1];
         phi_tab.get("expand").put(new Integer(phi_code), phi_letters);
         phi_tab.get("fold").put(phi_letters, new String(Character.toChars(phi_code)));
         phi_tab.get("keys").add(phi_letters);
-        for (phi_i = 0; phi_i < phi_letters.length(); ) {
-            phi_c = phi_letters.codePointAt(phi_i);
-            phi_tab.get("letters").add(new Integer(phi_c));
-            phi_i += Character.charCount(phi_c);
-        }
     }
     // longest first, so that folding a run of adjacent words is unambiguous
     java.util.Collections.sort(phi_tab.get("keys"), new java.util.Comparator() {
@@ -117,26 +113,29 @@ phi_word_table()
     });
     if (phi_tab.get("keys").isEmpty()) return phi_tab;
 
-    // the glyphs themselves: the table's own span, not the whole private-use area, so
-    // that a Powerline or Nerd-font character in the buffer is never taken for a word
-    phi_lo = 0x10FFFF;
-    phi_hi = 0;
-    for (phi_code : phi_tab.get("expand").keySet()) {
-        if (phi_code.intValue() < phi_lo) phi_lo = phi_code.intValue();
-        if (phi_code.intValue() > phi_hi) phi_hi = phi_code.intValue();
+    // The glyphs themselves.  It is the table's own span rather than the whole private-use
+    // area only to keep the scan cheap: what stops a Powerline or Nerd-font character in
+    // the buffer from being treated as a word is the lookup in phi_word_expand, which is
+    // consulted before anything is emitted, and that also covers a code point retired
+    // from the middle of the span by deleting a word from words.txt.
+    int phi_lo = 0x10FFFF;
+    int phi_hi = 0;
+    for (Integer phi_cp : phi_tab.get("expand").keySet()) {
+        if (phi_cp.intValue() < phi_lo) phi_lo = phi_cp.intValue();
+        if (phi_cp.intValue() > phi_hi) phi_hi = phi_cp.intValue();
     }
     phi_tab.put("glyph_pat", Pattern.compile("[\\x{" + Integer.toHexString(phi_lo) + "}-\\x{"
                                              + Integer.toHexString(phi_hi) + "}]"));
 
     // a maximal run of run-forming characters holding at least one mathematical letter
-    phi_tab.put("run_pat", Pattern.compile(phi_run_class + "*[\\x{1D400}-\\x{1D7FF}]"
+    phi_tab.put("run_pat", Pattern.compile(phi_run_class + "*[" + phi_math_range + "]"
                                            + phi_run_class + "*"));
 
     // all the words as one alternation.  Java tries alternatives in order, and the list
     // is longest first, so the first one that matches at a position is the longest --
     // which is exactly the greedy rule this replaced.
-    phi_alt = new StringBuffer();
-    for (phi_key : phi_tab.get("keys")) {
+    StringBuffer phi_alt = new StringBuffer();
+    for (String phi_key : phi_tab.get("keys")) {
         if (phi_alt.length() > 0) phi_alt.append("|");
         phi_alt.append(Pattern.quote(phi_key));
     }
@@ -151,22 +150,27 @@ phi_t = phi_word_table();
 phi_word_expand(t, text)
 {
     if (text == null) return text;
-    phi_pat = t.get("glyph_pat");
+    Object phi_pat = t.get("glyph_pat");
     if (phi_pat == null) return text;
-    phi_expand = t.get("expand");
-    phi_m = phi_pat.matcher(text);
-    phi_out = new StringBuffer(text.length());
-    phi_prev = -1;                          // where the previous glyph ended
-    phi_last = 0;                           // how far the text has been copied out
+    Object phi_expand = t.get("expand");
+    Matcher phi_m = phi_pat.matcher(text);
+    StringBuffer phi_out = new StringBuffer(text.length());
+    int phi_prev = -1;                      // where the previous *word* ended
+    int phi_last = 0;                       // how far the text has been copied out
     while (phi_m.find()) {
         phi_out.append(text, phi_last, phi_m.start());
-        // the previous character of the source was a glyph too: mark the boundary
-        if (phi_m.start() == phi_prev) phi_out.append(phi_wj);
-        phi_letters = phi_expand.get(new Integer(text.codePointAt(phi_m.start())));
-        if (phi_letters == null) phi_out.append(text, phi_m.start(), phi_m.end());
-        else phi_out.append(phi_letters);
-        phi_prev = phi_m.end();
         phi_last = phi_m.end();
+        // The class spans the table's code points; a retired one inside that span is
+        // not a word, so look the word up first and mark a boundary only beside one.
+        String phi_letters = phi_expand.get(new Integer(text.codePointAt(phi_m.start())));
+        if (phi_letters == null) {
+            phi_out.append(text, phi_m.start(), phi_m.end());
+            continue;
+        }
+        // the previous character of the source was a word glyph too: mark the boundary
+        if (phi_m.start() == phi_prev) phi_out.append(phi_wj);
+        phi_out.append(phi_letters);
+        phi_prev = phi_m.end();
     }
     phi_out.append(text, phi_last, text.length());
     return phi_out.toString();
@@ -176,22 +180,23 @@ phi_word_expand(t, text)
 
 phi_word_fold_run(t, run)
 {
-    phi_fold = t.get("fold");
-    phi_m = t.get("word_pat").matcher(run);
-    phi_buf = new StringBuffer(run.length());
-    phi_pos = 0;
+    Object phi_fold = t.get("fold");
+    Matcher phi_m = t.get("word_pat").matcher(run);
+    StringBuffer phi_buf = new StringBuffer(run.length());
+    int phi_pos = 0;
     while (phi_m.find(phi_pos)) {
-        // A word may be written against punctuation -- a full stop after it, an
-        // underscore or a digit joined to it -- so ASCII that no word claims is
-        // carried over.  A mathematical letter that no word claims is different: the
-        // run is then somebody else's bold text, and none of it may be touched.
-        for (phi_i = phi_pos; phi_i < phi_m.start(); phi_i++)
+        // A word may be written against punctuation the table itself uses -- a full
+        // stop after it, an underscore between two words -- so ASCII that no word
+        // claims is carried over.  Any other ASCII never reaches here; it ends the
+        // run.  A mathematical letter that no word claims is different: the run is
+        // then somebody else's bold text, and none of it may be touched.
+        for (int phi_i = phi_pos; phi_i < phi_m.start(); phi_i++)
             if (run.charAt(phi_i) > 127) return run;
         phi_buf.append(run, phi_pos, phi_m.start());
         phi_buf.append(phi_fold.get(phi_m.group()));
         phi_pos = phi_m.end();
     }
-    for (phi_i = phi_pos; phi_i < run.length(); phi_i++)   // the tail after the last word
+    for (int phi_i = phi_pos; phi_i < run.length(); phi_i++)  // the tail after the last word
         if (run.charAt(phi_i) > 127) return run;
     phi_buf.append(run, phi_pos, run.length());
     return phi_buf.toString();
@@ -200,10 +205,10 @@ phi_word_fold_run(t, run)
 phi_word_fold(t, text)
 {
     if (text == null) return text;
-    phi_pat = t.get("run_pat");
+    Object phi_pat = t.get("run_pat");
     if (phi_pat == null) return text;
-    phi_m = phi_pat.matcher(text);
-    phi_out = new StringBuffer(text.length());
+    Matcher phi_m = phi_pat.matcher(text);
+    StringBuffer phi_out = new StringBuffer(text.length());
     while (phi_m.find())
         phi_m.appendReplacement(
             phi_out, Matcher.quoteReplacement(phi_word_fold_run(t, phi_m.group())));
@@ -234,7 +239,7 @@ phi_field_handler(phi_inner)
     // arguments, so the superclass's protected no-arg form is the one to call.  Every
     // method below returns a primitive or void, which is the shape bsh's anonymous-class
     // parser handles.  One wrapper per field, closing over that field's own inner handler.
-    phi_handler = new javax.swing.TransferHandler() {
+    Object phi_handler = new javax.swing.TransferHandler() {
         public boolean canImport(javax.swing.JComponent c, DataFlavor[] f) {
             return phi_inner.canImport(c, f);
         }
@@ -256,17 +261,17 @@ phi_field_handler(phi_inner)
                 // anything copied inside jEdit carries the glyphs themselves under jEdit's
                 // own flavor: take that, and the fold rule never enters into it, so even
                 // the shapes folding cannot repair arrive exact
-                phi_rich_flavor = JEditDataFlavor.jEditRichTextDataFlavor;
+                Object phi_rich_flavor = JEditDataFlavor.jEditRichTextDataFlavor;
                 if (t != null && t.isDataFlavorSupported(phi_rich_flavor)) {
-                    phi_rich = t.getTransferData(phi_rich_flavor);
+                    Object phi_rich = t.getTransferData(phi_rich_flavor);
                     if (phi_rich != null)
                         return phi_inner.importData(
                             c, new StringSelection(phi_rich.getText()));
                 }
                 if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-                    phi_plain = t.getTransferData(DataFlavor.stringFlavor);
+                    String phi_plain = t.getTransferData(DataFlavor.stringFlavor);
                     if (phi_plain != null) {
-                        phi_folded = phi_word_fold(phi_t, phi_plain);
+                        String phi_folded = phi_word_fold(phi_t, phi_plain);
                         if (!phi_folded.equals(phi_plain))
                             return phi_inner.importData(c, new StringSelection(phi_folded));
                     }
@@ -286,7 +291,7 @@ phi_wrap_field(phi_field)
     // resets the BeanShell class manager when a plugin is unloaded, after which a fresh
     // class object would make an instanceof test say "not ours" and wrap a second time
     if (phi_field.getClientProperty("phi_word_wrapped") != null) return false;
-    phi_inner = phi_field.getTransferHandler();
+    Object phi_inner = phi_field.getTransferHandler();
     if (phi_inner == null) return false;
     phi_field.setTransferHandler(phi_field_handler(phi_inner));
     phi_field.putClientProperty("phi_word_wrapped", Boolean.TRUE);
@@ -298,11 +303,11 @@ phi_install_field_paste()
     // The fields are built lazily, inside dialogs jEdit constructs on demand, and no
     // message announces them.  This listener runs on every container event in the
     // application, so its body stays as small as it can be: a type test and a call.
-    phi_awt_listener = new java.awt.event.AWTEventListener() {
+    Object phi_awt_listener = new java.awt.event.AWTEventListener() {
         public void eventDispatched(java.awt.AWTEvent e) {
             try {
                 if (e.getID() != java.awt.event.ContainerEvent.COMPONENT_ADDED) return;
-                phi_child = e.getChild();
+                Object phi_child = e.getChild();
                 if (phi_child instanceof HistoryTextArea
                         || phi_child instanceof HistoryTextField)
                     phi_wrap_field(phi_child);
@@ -318,8 +323,7 @@ phi_install_field_paste()
 
 phi_word_install()
 {
-    t = phi_t;                              // the closures below use this bare name
-    phi_n = t.get("expand").size();
+    int phi_n = phi_t.get("expand").size();
     if (phi_n == 0) {
         Log.log(Log.WARNING, this, "phi word clipboard: no table found, not installed");
         return;
@@ -329,29 +333,29 @@ phi_word_install()
     // method in it returns a primitive type; one declaring a reference return type
     // fails with `Parse error ... Encountered: (`.  Both of these declare reference
     // return types, so both are bound to a name first.
-    phi_service = new JEditTransferableService() {
+    Object phi_service = new JEditTransferableService() {
         public boolean accept(textArea, text) { return true; }
         public Transferable getTransferable(textArea, text) {
-            return new StringSelection(phi_word_expand(t, text));
+            return new StringSelection(phi_word_expand(phi_t, text));
         }
     };
     TransferHandler.getInstance().registerTransferableService(phi_service);
 
-    phi_clipboard = Registers.getRegister('$');
-    phi_wrapper = new Registers.Register() {
+    Object phi_clipboard = Registers.getRegister('$');
+    Object phi_wrapper = new Registers.Register() {
         public String toString() { return phi_clipboard.toString(); }
         public void setValue(String value) { phi_clipboard.setValue(value); }
         public void setTransferable(Transferable t2) { phi_clipboard.setTransferable(t2); }
         public Transferable getTransferable() {
-            phi_outer = phi_clipboard.getTransferable();
+            Object phi_outer = phi_clipboard.getTransferable();
             if (phi_outer == null) return null;
             // text jEdit itself put there: it still carries the glyphs, take it as is
             if (phi_outer.isDataFlavorSupported(JEditDataFlavor.jEditRichTextDataFlavor))
                 return phi_outer;
             if (!phi_outer.isDataFlavorSupported(DataFlavor.stringFlavor)) return phi_outer;
             try {
-                return new StringSelection(
-                    phi_word_fold(t, phi_outer.getTransferData(DataFlavor.stringFlavor)));
+                String phi_text = phi_outer.getTransferData(DataFlavor.stringFlavor);
+                return new StringSelection(phi_word_fold(phi_t, phi_text));
             }
             catch (Exception e) { return phi_outer; }
         }

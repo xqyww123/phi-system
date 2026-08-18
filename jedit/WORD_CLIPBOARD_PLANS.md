@@ -1,7 +1,8 @@
 # The four word-glyph clipboard plans: order, decisions, conventions, state
 
 `phi_word_clipboard.bsh` in this directory makes phi-System's word glyphs survive the
-clipboard. Four plans extend it. This file is the index: it records the order they are
+clipboard. Four plans extend it, and a fifth (`UI_FONT_PLAN.md`) makes what they deliver
+visible in jEdit's own widgets. This file is the index: it records the order they are
 implemented in, the decisions the user has taken, the conventions all four share, what has
 been reviewed, and what is still open. Read it before picking up any single plan — each
 plan is self-contained about *its* work, but none of them carries the cross-cutting state.
@@ -30,6 +31,7 @@ Everything below is about routes where that conversion does not happen, or happe
 | 2 | `PRIMARY_SELECTION_PLAN.md` | Wraps jEdit's `%` register so the X11 primary selection (mouse-select, middle-click) converts too. |
 | 3 | `SEARCH_FIELD_PASTE_PLAN.md` | Wraps the transfer handler of jEdit's text input fields so pasting a copied glyph into the Find box matches the buffer. |
 | 4 | `DRAG_AND_DROP_PLAN.md` | Installs a transfer handler on every buffer text area so drag and drop converts. |
+| — | `UI_FONT_PLAN.md` | Ships a UI font holding both ordinary text and the glyphs, so a glyph pasted into a search box can be *seen*. Follows plan 3; not in the numbered order, because it fixes rendering rather than conversion. |
 
 **Why this order.** Plan 1 is a hard prerequisite: the other three call the two functions it
 rewrites, and it creates the top-level `phi_t` all three of them assume. Plans 2, 3 and 4 are
@@ -79,10 +81,16 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
 
 ## Conventions every plan follows
 
-- **Prefix every new BeanShell name with `phi_`, method locals included.** Startup scripts
-  share one global namespace, and a method assigning a bare name writes through to an
-  existing global of that name. This is measured, not folklore: the committed test passes
-  today only because two such write-throughs cancel out.
+- **Declare every function-local with a type, and prefix every name with `phi_`.** The type
+  is what makes a local a local: in BeanShell an *untyped* assignment inside a method walks
+  the namespace chain and writes through to an existing binding, while a *typed declaration*
+  always creates a local (**measured**, both halves). The prefix alone protects only against
+  other people's names — it does not stop two functions of the same script from clobbering
+  each other's untyped local of the same name, which is exactly how `phi_word_fold` and
+  `phi_word_fold_run` came to share one matcher and die with `IllegalStateException: No
+  match found` the moment a global `phi_m` existed. **Measured** with every function-local
+  name planted as a hostile global before loading: typed locals leave the round trip intact
+  and those globals untouched; untyped ones throw on load.
 - **Never write an invisible or unrenderable character into a source file or a plan.**
   Construct it — `new String(Character.toChars(0x2060))`. Check afterwards; a literal is
   invisible by definition and `cat -A` is the only way to see it. Both a joiner and four
@@ -109,8 +117,10 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
 
 Every plan has been through at least one two-turn adversarial review: three reviewers with
 different lenses (source accuracy, does-it-run, consequences) find problems independently,
-then cross-examine each other and vote findings out. Roughly 230 findings were raised across
-the rounds and about 110 survived cross-examination and were applied.
+then cross-examine each other and vote findings out. Roughly 270 findings were raised across
+the rounds and about 120 survived cross-examination and were applied. Round 8 was the first
+to review **code** rather than a plan, and it was the most productive of the eight: reviewers
+who run and mutate the thing find defects that reviewers who read it cannot.
 
 | Round | Target | Raised | Survived |
 |-------|--------|--------|----------|
@@ -121,6 +131,7 @@ the rounds and about 110 survived cross-examination and were applied.
 | 5 | `SEARCH_FIELD_PASTE_PLAN.md` | 28 | 13 |
 | 6 | all four, cross-plan | 40 | 20 |
 | 7 | all four, audit of round 6's fixes | 47 | 15 |
+| 8 | plan 1's **landed code**, three lenses | 36 | 13 |
 
 Two failure modes recurred often enough to be worth naming, because they will recur again:
 
@@ -189,6 +200,33 @@ Two failure modes recurred often enough to be worth naming, because they will re
   folding disabled, the idempotence guard removed, the listener never registered, `canImport`
   not forwarded, the inner handler's `importData` never reached — and the suite catches all
   six.
+
+
+## What the code review of plan 1 taught
+
+Three reviewers with different lenses read the landed code, ran it, and mutated it. The
+findings that survived cross-examination were all of one family — **the tests could not fail
+where it mattered** — and the two production defects they found were both of the namespace
+kind this file's conventions are about.
+
+- **A test that hangs instead of failing is worse than no test.** The suite's own helper
+  `hex()` used untyped locals `b`/`i`/`c`, so it reset the loop counter of the two checks
+  that call it. Forcing either to fire printed the same FAIL line for ever: **measured**,
+  1,728,919 lines and 135 MB in 30 seconds, and through the runner — which buffered stdout
+  into a variable — not one character reached the terminal. The runner now has a timeout, it
+  streams to a file, and it truncates a runaway log.
+- **Mutate the parts nobody thought to mutate.** The author's own mutation testing covered
+  the two text functions and found the suite sound. The reviewers mutated the *installation*
+  and the *generated table* instead: swapping copy and paste — the feature exactly inverted —
+  still passed, and so did deleting a word from `word-clipboard-text` while `symbols-words`
+  still named it. Both now fail. Before trusting a suite, ask which part of the code no
+  mutation has ever touched.
+- **An invariant that only holds because of an accident of the data is not an invariant.**
+  The glyph class is the table's own span, so a code point retired by deleting a word from
+  `words.txt` still matched it; expansion marked a boundary beside that non-word because it
+  emitted the marker before looking the word up. It now looks up first.
+- **Pin what cannot show up in the output.** Dropping `Pattern.quote` from the alternation
+  passed every check, and then `w.r.t.` became a pattern whose `.` matches anything.
 
 
 ## Open items

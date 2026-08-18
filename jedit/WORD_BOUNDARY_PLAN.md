@@ -177,6 +177,10 @@ fold   1,000,000 chars     8,829 ms         121 ms
 fold   5,000,000 chars    41,158 ms         343 ms
 ```
 
+Those are the prototype's figures, taken while the plan was written. The landed code was
+re-measured on the same corpus and is the same shape: **108 ms** and **376 ms** at five
+million characters.
+
 At the scale of one real clipboard operation — phi-System's largest source file is
 `Phi_System/Phi_Type.thy` at 543,999 characters — the rewritten functions take about 20 ms
 in each direction, where the committed ones take about two and five seconds.
@@ -236,7 +240,7 @@ Powerline or Nerd-font glyph somebody has in the buffer, say.
    mathematical letter, does cut the interpreted calls further — 13,580 against 21,026 over
    the same 5 million characters — but the pattern grows from 69 characters to 2,084, the
    engine tries that whole alternation at every scanning position, and folding takes
-   **2,793 ms instead of 338 ms** (**measured**, byte-identical output). Saving returns to
+   **2,793 ms instead of 343 ms** (**measured**, byte-identical output). Saving returns to
    the interpreter is worth it only while the scan stays cheap.
 2. Within a run, the 135 keys become **one compiled alternation**, built longest-first.
    Java's alternation is ordered, so the first alternative that matches at a position is the
@@ -265,15 +269,19 @@ the character is in the mathematical alphanumeric block (U+1D400..U+1D7FF) or is
 That is a change of convention, taken on purpose, and it is a change to shipped behaviour
 rather than an implementation detail. It is recorded here so nobody later "fixes" it back.
 
-**What it changes.** Exactly one shape: a word glyph written directly against a mathematical
-character the table does not use. **Measured** as a round trip, which is the only way to see
-it: `\<pending>` followed by a mathematical bold `q` — no entry spells a `q` — expands to
-eight letters, and folding those eight letters gives the glyph back today and leaves them as
-letters after the change. Folding the glyph-plus-`q` *directly* distinguishes nothing, under
-either rule, because the glyph is not a run-forming character in the first place.
+**What it changes.** One kind of neighbour, in two shapes: a word glyph written against a
+mathematical character the table does not use — directly, or with only `.` or `_` between
+them, those two being run-forming, so the widened run reaches across them.
 
-Nothing else moves: all 135 single glyphs and all 18225 ordered adjacent
-pairs behave identically under both rules (**measured**), and across the 369
+**Measured** as a round trip, which is the only way to see it: `\<pending>` followed by a
+mathematical bold `q` — no entry spells a `q` — expands to eight letters, and folding those
+eight letters gives the glyph back today and leaves them as letters after the change. The
+same holds with a `.` or a `_` between the two. Folding the glyph-plus-`q` *directly*
+distinguishes nothing, under either rule, because the glyph is not a run-forming character
+in the first place.
+
+Nothing else moves, and the claim is scoped: all 135 single glyphs and all 18225 ordered
+adjacent pairs behave identically under both rules (**measured**), and across the 369
 `.thy`/`.ML`/`.sml`/`.sig` sources there are **0** places where a glyph is written against
 such a character (**measured**).
 
@@ -300,22 +308,21 @@ one behavioural change above rather than letting a user discover it.
 ### What else must change in the existing file, and why
 
 **Hoist the table to a top-level `phi_t`.** All three sibling plans assume it exists; none
-of them creates it. It moves here, and `phi_word_install` keeps a local `t = phi_t;`
-because the existing service body (`:163`) and register wrapper (`:180`) reference the bare
-name `t` — **measured**: dropping that local kills copy *and* paste with an
-`UndeclaredThrowableException` carrying no message.
+of them creates it. The closures in `phi_word_install` name `phi_t` directly; an earlier
+draft kept a local `t = phi_t;` because the closure bodies said `t`, and once those bodies
+were rewritten the local was only a hazard — it is the one unprefixed name in the file, and
+it overwrites a global `t` belonging to any other startup script that has one.
 
-**Prefix the bare local names in the existing functions**, not only in new code. In
-BeanShell a method assigning a bare name walks the namespace chain and writes through to an
-existing binding, creating a local only when no binding is found. `phi_word_expand` and
-`phi_word_fold` both assign a bare `letters`, and `test_word_clipboard.bsh:45` has a global
-of that name. **Measured**: the committed test passes today only by accident — the fold's
-write-through leaves a `HashSet` in the global, and the expand's write-through happens to
-put the right string back before the assertion reads it. Giving the rewritten `phi_word_expand`
-prefixed locals removes the second write-through and the test aborts with
-`Method length() not found in class 'java.util.HashSet'`. Prefixing `phi_word_fold`'s
-locals as well restores `PASS: 135 entries round-tripped, 0 failure(s)` (**measured**). Do
-both, and prefix every new name too, including method locals.
+**Declare every local inside a function with a type.** In BeanShell an *untyped* assignment
+walks the namespace chain and writes through to an existing binding, creating a local only
+when no binding is found; a *typed declaration* always creates a local (**measured**, both
+halves). The prefix alone is not enough, and the difference is not academic: `phi_word_fold`
+and `phi_word_fold_run` both used an untyped `phi_m`, so the moment any global of that name
+existed — the test grew one — the inner call clobbered the outer matcher and folding died
+with `IllegalStateException: No match found`. **Measured** with every function-local name
+planted as a hostile global before loading: with typed locals the round trip is intact and
+the globals are untouched; with untyped ones the script throws on load. Keep the `phi_`
+prefix as well, so a reader sees the intent, but the type is what enforces it.
 
 **Keep the null guards.** Both functions start with `if (text == null) return text;` today.
 The rewrite must keep them: the service call site can be reached with null, and **measured**,
@@ -471,7 +478,9 @@ below therefore go out to another application and back.
    produces the same bytes, so the difference will not show up in any output comparison.
    Keep both null guards. Prefix
    every bare name, in the new code and in the existing `phi_word_fold`,
-   `phi_word_fold_run` and `phi_word_table`. Keep `t = phi_t;` inside `phi_word_install`.
+   `phi_word_fold_run` and `phi_word_table`, and give every one of them a declared type —
+   the prefix documents the intent, the type is what makes a local a local. The closures in
+   `phi_word_install` name `phi_t` directly; do not reintroduce a bare `t`.
    Update the file's header comment, which describes the two directions and does not yet
    mention boundaries. Fix the wrong comment at `:158-159` while there — see
    `DRAG_AND_DROP_PLAN.md`, "The delegating wrapper", for the measured rule it gets wrong.

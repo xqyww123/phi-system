@@ -9,16 +9,20 @@
 # calls getSystemClipboard().  Headless that throws.  Xvfb rather than the real display,
 # so the test can never disturb what the user has selected or copied.
 #
-# The interpreter reports a script error on STDOUT and then exits 0, so its exit code
-# says nothing: an unbound name or a mistyped method -- the errors only loading the whole
-# script can catch -- would otherwise "pass" silently.  Two checks below, because neither
-# is enough alone: the test has to say PASS: itself, which catches an error anywhere
-# before the summary line, and the output must carry no interpreter error, which catches
-# one after it.
+# Three ways this reports a failure, and each exists because the other two miss a case:
+#
+#   the exit code   only catches what the test itself calls System.exit on, and the
+#                   interpreter reports a script error and then exits 0;
+#   no PASS: line   catches an error anywhere before the summary, but not after it;
+#   an error string catches one after it, and script errors go to stdout, not stderr.
+#
+# A timeout too: a test that loops instead of failing would otherwise wedge for good,
+# and a bug of exactly that shape once produced 135 MB of identical FAIL lines in 30 s.
 set -e
 here=$(cd "$(dirname "$0")" && pwd)
 component=$(dirname "$here")
 isabelle=${ISABELLE_HOME:-$(dirname "$component")/Isabelle2025-2}
+limit=${PHI_TEST_TIMEOUT:-300}
 
 jar=$(ls "$isabelle"/contrib/jedit-*/jedit*/jedit.jar 2>/dev/null | head -1)
 java=$(ls "$isabelle"/contrib/jdk-*/*/bin/java 2>/dev/null | head -1)
@@ -26,31 +30,38 @@ java=$(ls "$isabelle"/contrib/jdk-*/*/bin/java 2>/dev/null | head -1)
 [ -n "$java" ] || { echo "java not found under $isabelle/contrib" >&2; exit 2; }
 command -v xvfb-run >/dev/null 2>&1 || { echo "xvfb-run not found; install xvfb" >&2; exit 2; }
 
-err=$(mktemp)
-trap 'rm -f "$err"' EXIT
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
 
 set +e
-out=$(PHI_SYSTEM_HOME=$component xvfb-run -a "$java" -Dfile.encoding=UTF-8 -cp "$jar" \
-          org.gjt.sp.jedit.bsh.Interpreter "$here/test_word_clipboard.bsh" 2>"$err")
+PHI_SYSTEM_HOME=$component timeout "$limit" xvfb-run -a "$java" -Dfile.encoding=UTF-8 \
+    -cp "$jar" org.gjt.sp.jedit.bsh.Interpreter "$here/test_word_clipboard.bsh" \
+    > "$log" 2>&1
 rc=$?
 set -e
 
-printf '%s\n' "$out"
-[ -s "$err" ] && cat "$err" >&2
+# print it all, unless a runaway test made that useless
+if [ "$(wc -c < "$log")" -gt 200000 ]; then
+  head -20 "$log"
+  echo "... $(wc -l < "$log") lines, $(wc -c < "$log") bytes -- truncated ..."
+  tail -20 "$log"
+else
+  cat "$log"
+fi
 
+if [ "$rc" -eq 124 ]; then
+  echo "FAILED: the test did not finish within ${limit}s" >&2
+  exit 1
+fi
 if [ "$rc" -ne 0 ]; then
   echo "FAILED: interpreter exited $rc" >&2
   exit 1
 fi
-if [ -s "$err" ]; then
-  echo "FAILED: output on stderr" >&2
+if ! grep -q "PASS:" "$log"; then
+  echo "FAILED: the test did not report PASS:" >&2
   exit 1
 fi
-case "$out" in
-  *"PASS:"*) ;;
-  *) echo "FAILED: the test did not report PASS:" >&2; exit 1 ;;
-esac
-case "$out" in
-  *"Evaluation Error"*|*"Script threw exception"*|*"InterpreterError"*)
-    echo "FAILED: the interpreter reported an error" >&2; exit 1 ;;
-esac
+if grep -qE "Evaluation Error|Script threw exception|InterpreterError" "$log"; then
+  echo "FAILED: the interpreter reported an error" >&2
+  exit 1
+fi

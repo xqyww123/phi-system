@@ -539,11 +539,12 @@ solve are recorded there and are repeated here only so that nobody re-does the w
   `phi_t = phi_word_table();` inside `phi_word_install()` leaves the top-level name unset
   (`void`): the script loads cleanly, the existing test still passes, and it fails at the
   first drag.
-* **`phi_word_install` must still bind a local named `t`.** The existing service body
-  (`:163`) and register wrapper (`:180`) reference the bare name `t`. Dropping it kills
-  copy *and* paste with an `UndeclaredThrowableException` carrying no message. Keep
-  `t = phi_t;` inside `phi_word_install`; do not rename the two closure bodies, which are
-  working code.
+* **Declare every function-local with a type, and name no bare `t`.** The closures inside
+  `phi_word_install` name the global `phi_t` directly; an earlier draft bound a local
+  `t = phi_t;` because the closure bodies said `t`, and that local is gone. The typing
+  matters more: in BeanShell an untyped assignment inside a method writes through to any
+  global of that name, and two functions sharing an untyped local name clobber each other
+  mid-call. `WORD_BOUNDARY_PLAN.md` records the measurement.
 
 Startup scripts run with `ownNamespace = false` — `jEdit.java:4005` calls
 `handler.runMacro(null, newMacro, false)` and `Macros.BeanShellHandler.runMacro`
@@ -770,7 +771,7 @@ That session is the user's to run. Do not report success without it.
 ## Procedure
 
 1. **Extend `phi_word_clipboard.bsh`.** `WORD_BOUNDARY_PLAN.md` has already created the
-   top-level `phi_t`, kept `t = phi_t;` inside `phi_word_install`, rewritten both text
+   top-level `phi_t`, rewritten both text
    functions and corrected the comment at `:158-159`; do none of that again. Add the five
    imports; add the top-level
    `phi_drag` map, `phi_delegating` and `phi_unexpand`; add the

@@ -7,357 +7,414 @@
 // after any change to either half.  See ../fonts/WORD_GLYPHS.md, "Copying a word out of
 // jEdit", and jedit/WORD_BOUNDARY_PLAN.md for why the boundary marker is there.
 //
-// Run it with jedit/run_word_clipboard_test.sh, which supplies the interpreter, a display
-// and the checks on this script's own output.
+// Every name here carries the phi_ prefix, locals of helper methods included.  That is not
+// tidiness: in BeanShell a method assigning a bare name walks the namespace chain and writes
+// through to an existing binding, so a helper's `i` becomes the caller's loop counter.  A
+// test written the other way does not fail when a check fires -- it loops printing the same
+// line for ever, which is what this file did until it was measured.
+//
+// Run it with jedit/run_word_clipboard_test.sh, which supplies the interpreter, a display,
+// a timeout and the checks on this script's own output.
+
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import org.gjt.sp.jedit.Registers;
+import org.gjt.sp.jedit.datatransfer.JEditDataFlavor;
+import org.gjt.sp.jedit.datatransfer.RichTextTransferable;
+import org.gjt.sp.jedit.datatransfer.TransferHandler;
+import org.gjt.sp.jedit.gui.HistoryTextArea;
+import org.gjt.sp.jedit.gui.HistoryTextField;
 
 source(System.getenv("PHI_SYSTEM_HOME") + "/jedit/phi_word_clipboard.bsh");
 
-t = phi_word_table();
-failures = 0;
-wj = new String(Character.toChars(0x2060));     // never a literal: it would be invisible
+phi_tbl = phi_word_table();
+phi_failures = new int[1];              // an array, so no helper needs to write through
+phi_marker = new String(Character.toChars(0x2060));   // never a literal: it is invisible
 
-hex(s) {
-    b = new StringBuffer();
-    for (i = 0; i < s.length(); ) {
-        c = s.codePointAt(i);
-        b.append(" U+" + Integer.toHexString(c).toUpperCase());
-        i += Character.charCount(c);
+phi_hex(phi_s) {
+    phi_b = new StringBuffer();
+    for (phi_i = 0; phi_i < phi_s.length(); ) {
+        phi_c = phi_s.codePointAt(phi_i);
+        phi_b.append(" U+" + Integer.toHexString(phi_c).toUpperCase());
+        phi_i += Character.charCount(phi_c);
     }
-    return b.toString().trim();
+    return phi_b.toString().trim();
 }
 
-fail(what, got, want) {
-    System.out.println("FAIL " + what + "\n  got  " + hex(got) + "\n  want " + hex(want));
-    failures = failures + 1;
+phi_bad(phi_what) {                     // a failure with nothing useful to compare against
+    System.out.println("FAIL " + phi_what);
+    phi_failures[0] = phi_failures[0] + 1;
 }
 
-check(what, got, want) {
-    if (got.equals(want)) return void;
-    fail(what, got, want);
+phi_saw(phi_what, phi_got) {            // a predicate failed: only what was seen is news
+    System.out.println("FAIL " + phi_what + "\n  saw  " + phi_hex(phi_got));
+    phi_failures[0] = phi_failures[0] + 1;
 }
 
-bold(w) {                                   // mathematical bold small letters
-    b = new StringBuffer();
-    for (i = 0; i < w.length(); i++)
-        b.appendCodePoint(0x1D41A + (int) w.charAt(i) - (int) 'a');
-    return b.toString();
+phi_check(phi_what, phi_got, phi_want) {
+    if (phi_got.equals(phi_want)) return void;
+    System.out.println("FAIL " + phi_what + "\n  got  " + phi_hex(phi_got)
+                       + "\n  want " + phi_hex(phi_want));
+    phi_failures[0] = phi_failures[0] + 1;
+}
+
+phi_bold(phi_w) {                       // mathematical bold small letters
+    phi_b = new StringBuffer();
+    for (phi_i = 0; phi_i < phi_w.length(); phi_i++)
+        phi_b.appendCodePoint(0x1D41A + (int) phi_w.charAt(phi_i) - (int) 'a');
+    return phi_b.toString();
 }
 
 // Word glyphs are named, not spelled: the letters are mathematical and cannot be typed
 // here.  ../symbols-words maps an Isabelle symbol name to the code point, and is generated
-// by the same script as the table, so reading it also checks the two agree.
-names = new java.util.HashMap();
-symbols = new java.io.File(System.getenv("PHI_SYSTEM_HOME"), "symbols-words");
-if (!symbols.isFile()) {
-    System.out.println("FAIL ../symbols-words is missing; the test cannot name a glyph");
-    failures = failures + 1;
+// by the same script as the table, so reading it is also how the two are compared below.
+phi_names = new java.util.HashMap();
+phi_symbols = new java.io.File(System.getenv("PHI_SYSTEM_HOME"), "symbols-words");
+if (!phi_symbols.isFile()) {
+    phi_bad("../symbols-words is missing; the test cannot name a glyph");
 } else {
-    for (line : java.nio.file.Files.readAllLines(symbols.toPath())) {
-        m = java.util.regex.Pattern.compile("^\\\\<([^>]+)>\\s+code:\\s*(0x[0-9A-Fa-f]+)")
-                                   .matcher(line);
-        if (m.find()) names.put(m.group(1), new String(Character.toChars(
-                                                  Integer.decode(m.group(2)).intValue())));
+    phi_line_pat = java.util.regex.Pattern.compile(
+        "^\\\\<([^>]+)>\\s+code:\\s*(0x[0-9A-Fa-f]+)");
+    for (phi_line : java.nio.file.Files.readAllLines(phi_symbols.toPath())) {
+        phi_line_m = phi_line_pat.matcher(phi_line);
+        if (phi_line_m.find())
+            phi_names.put(phi_line_m.group(1),
+                          new Integer(Integer.decode(phi_line_m.group(2)).intValue()));
     }
 }
 
-glyph(name) {
-    g = names.get(name);
-    if (g == null) {
-        System.out.println("FAIL no glyph named " + name + "; update this test");
-        failures = failures + 1;
+phi_glyph(phi_name) {
+    phi_code = phi_names.get(phi_name);
+    if (phi_code == null) {
+        phi_bad("no glyph named " + phi_name + "; update this test");
         return "";
     }
-    return g;
+    return new String(Character.toChars(phi_code.intValue()));
 }
 
-expand = t.get("expand");
-n = 0;
+phi_expand = phi_tbl.get("expand");
+phi_n = 0;
 
-// 1. every entry folds to its glyph and expands back -- the round trip, over all of them,
+// 1. the two generated halves describe the same words.  This is the drift the header
+//    promises to catch: a word present in symbols-words but missing from the table renders
+//    in the editor and then leaves jEdit as a raw private-use code point.
+phi_missing = new java.util.ArrayList(phi_names.values());
+phi_missing.removeAll(phi_expand.keySet());
+phi_extra = new java.util.ArrayList(phi_expand.keySet());
+phi_extra.removeAll(phi_names.values());
+if (!phi_missing.isEmpty() || !phi_extra.isEmpty())
+    phi_bad("symbols-words and word-clipboard-text disagree: " + phi_missing.size()
+            + " named but not in the table, " + phi_extra.size()
+            + " in the table but unnamed -- regenerate both with build_word_glyphs.py");
+
+// 2. every entry folds to its glyph and expands back -- the round trip, over all of them,
 //    and a lone glyph gets no boundary marker
-for (code : expand.keySet()) {
-    g = new String(Character.toChars(code.intValue()));
-    letters = expand.get(code);
-    check("fold " + letters, phi_word_fold(t, letters), g);
-    check("expand " + hex(g), phi_word_expand(t, g), letters);
-    if (phi_word_expand(t, g).indexOf(wj) >= 0)
-        fail("lone glyph got a joiner " + hex(g), phi_word_expand(t, g), letters);
-    n = n + 1;
+for (phi_code : phi_expand.keySet()) {
+    phi_g = new String(Character.toChars(phi_code.intValue()));
+    phi_letters = phi_expand.get(phi_code);
+    phi_check("fold " + phi_letters, phi_word_fold(phi_tbl, phi_letters), phi_g);
+    phi_check("expand " + phi_hex(phi_g), phi_word_expand(phi_tbl, phi_g), phi_letters);
+    if (phi_word_expand(phi_tbl, phi_g).indexOf(phi_marker) >= 0)
+        phi_saw("a lone glyph got a boundary marker", phi_word_expand(phi_tbl, phi_g));
+    phi_n = phi_n + 1;
 }
 
-// 2. two glyphs written directly against each other survive the round trip.  This is what
+// 3. two glyphs written directly against each other survive the round trip.  This is what
 //    the boundary marker is for: without it 49 of these pairs come back wrong, one of them
 //    -- \<or'>\<else> -> \<orelse> -- as a different word with no sign anything happened.
-codes = new java.util.ArrayList(expand.keySet());
-pairs = 0;
-broken = 0;
-for (a : codes) {
-    ga = new String(Character.toChars(a.intValue()));
-    for (b2 : codes) {
-        s = ga + new String(Character.toChars(b2.intValue()));
-        pairs = pairs + 1;
-        if (!phi_word_fold(t, phi_word_expand(t, s)).equals(s)) {
-            broken = broken + 1;
-            if (broken <= 3)
-                fail("pair " + hex(s), phi_word_fold(t, phi_word_expand(t, s)), s);
+phi_codes = new java.util.ArrayList(phi_expand.keySet());
+phi_pairs = 0;
+phi_broken = 0;
+for (phi_a : phi_codes) {
+    phi_ga = new String(Character.toChars(phi_a.intValue()));
+    for (phi_b : phi_codes) {
+        phi_s = phi_ga + new String(Character.toChars(phi_b.intValue()));
+        phi_pairs = phi_pairs + 1;
+        phi_r = phi_word_fold(phi_tbl, phi_word_expand(phi_tbl, phi_s));
+        if (!phi_r.equals(phi_s)) {
+            phi_broken = phi_broken + 1;
+            if (phi_broken <= 3) phi_check("pair " + phi_hex(phi_s), phi_r, phi_s);
         }
     }
 }
-if (broken > 0) { System.out.println("  (" + broken + " broken pairs of " + pairs + ")"); }
+if (phi_broken > 3) phi_bad((phi_broken - 3) + " further broken pairs of " + phi_pairs);
 
-// 3. the two three-glyph failures, the longest a minimal failure can be
-tri1 = glyph("prem") + glyph("is") + glyph("else");
-tri2 = glyph("prem") + glyph("is") + glyph("entry");
-check("three glyphs, prem is else", phi_word_fold(t, phi_word_expand(t, tri1)), tri1);
-check("three glyphs, prem is entry", phi_word_fold(t, phi_word_expand(t, tri2)), tri2);
+// 4. the two three-glyph failures, the longest a minimal failure can be
+phi_tri1 = phi_glyph("prem") + phi_glyph("is") + phi_glyph("else");
+phi_tri2 = phi_glyph("prem") + phi_glyph("is") + phi_glyph("entry");
+phi_check("three glyphs, prem is else",
+          phi_word_fold(phi_tbl, phi_word_expand(phi_tbl, phi_tri1)), phi_tri1);
+phi_check("three glyphs, prem is entry",
+          phi_word_fold(phi_tbl, phi_word_expand(phi_tbl, phi_tri2)), phi_tri2);
 
-// 4. the ambiguity is removed, not resolved against the single word: \<orelse> copied on
+// 5. the ambiguity is removed, not resolved against the single word: \<orelse> copied on
 //    its own must still come back as \<orelse>
-orelse = glyph("orelse");
-check("orelse alone", phi_word_fold(t, phi_word_expand(t, orelse)), orelse);
+phi_orelse = phi_glyph("orelse");
+phi_check("orelse alone", phi_word_fold(phi_tbl, phi_word_expand(phi_tbl, phi_orelse)),
+          phi_orelse);
 
-// 5. bold letters on BOTH sides of an adjacent pair: neither expansion folds, so this is
-//    the one shape where a conditional joiner strip would leave an invisible character in
+// 6. bold letters on BOTH sides of an adjacent pair: neither expansion folds, so this is
+//    the one shape where a conditional marker strip would leave an invisible character in
 //    the buffer.  The strip is unconditional, so nothing is left.
-zzz = bold("zzz");
-both = zzz + glyph("has") + glyph("has") + zzz;
-got = phi_word_fold(t, phi_word_expand(t, both));
-if (got.indexOf(wj) >= 0) fail("joiner left in the buffer", got, phi_word_expand(t, both));
-check("bold on both sides comes back as letters", got,
-      zzz + expand.get(new Integer(glyph("has").codePointAt(0)))
-          + expand.get(new Integer(glyph("has").codePointAt(0))) + zzz);
+phi_zzz = phi_bold("zzz");
+phi_both = phi_zzz + phi_glyph("has") + phi_glyph("has") + phi_zzz;
+phi_got = phi_word_fold(phi_tbl, phi_word_expand(phi_tbl, phi_both));
+if (phi_got.indexOf(phi_marker) >= 0)
+    phi_saw("a boundary marker was left in the buffer", phi_got);
+phi_has_letters = phi_expand.get(new Integer(phi_glyph("has").codePointAt(0)));
+phi_check("bold on both sides comes back as letters", phi_got,
+          phi_zzz + phi_has_letters + phi_has_letters + phi_zzz);
 
-// 6. a joiner arriving from anywhere is removed
-check("a pasted joiner is removed", phi_word_fold(t, "a" + wj + "b"), "ab");
+// 7. a boundary marker arriving from anywhere is removed
+phi_check("a pasted boundary marker is removed",
+          phi_word_fold(phi_tbl, "a" + phi_marker + "b"), "ab");
 
-// 7. ASCII a word does not claim is carried over, so a word keeps folding when it is
+// 8. ASCII a word does not claim is carried over, so a word keeps folding when it is
 //    written against punctuation.  This is what the periods in `w.r.t.` broke.
-pending = expand.get(new Integer(glyph("pending").codePointAt(0)));
-g = glyph("pending");
-check("word then full stop", phi_word_fold(t, pending + "."), g + ".");
-check("word in parentheses", phi_word_fold(t, "(" + pending + ")"), "(" + g + ")");
-check("word then newline", phi_word_fold(t, pending + "\n"), g + "\n");
+phi_pending = phi_expand.get(new Integer(phi_glyph("pending").codePointAt(0)));
+phi_pg = phi_glyph("pending");
+phi_check("word then full stop", phi_word_fold(phi_tbl, phi_pending + "."), phi_pg + ".");
+phi_check("word in parentheses", phi_word_fold(phi_tbl, "(" + phi_pending + ")"),
+          "(" + phi_pg + ")");
+phi_check("word then newline", phi_word_fold(phi_tbl, phi_pending + "\n"), phi_pg + "\n");
 
-// 8. a mathematical letter no word claims abandons the whole run -- somebody else's bold
+// 9. a mathematical letter no word claims abandons the whole run -- somebody else's bold
 //    text in a comment must come back exactly as it went out
-check("not a word, untouched", phi_word_fold(t, zzz), zzz);
-check("not a word, with a word beside it", phi_word_fold(t, zzz + pending), zzz + pending);
+phi_check("not a word, untouched", phi_word_fold(phi_tbl, phi_zzz), phi_zzz);
+phi_check("not a word, with a word beside it", phi_word_fold(phi_tbl, phi_zzz + phi_pending),
+          phi_zzz + phi_pending);
 
-// 9. plain ASCII is not the clipboard's business
-check("plain ASCII untouched", phi_word_fold(t, "keep_me and int and bool."),
-      "keep_me and int and bool.");
+// 10. plain ASCII is not the clipboard's business
+phi_check("plain ASCII untouched", phi_word_fold(phi_tbl, "keep_me and int and bool."),
+          "keep_me and int and bool.");
 
-// 10. shapes WORD_BOUNDARY_PLAN.md does not repair.  Pinned so that a later widening of
+// 11. every alternative in the folding pattern is quoted.  `w.r.t.` carries two regex
+//     metacharacters, so without Pattern.quote it becomes a pattern whose `.` matches
+//     anything -- and folding an innocent bold word then throws inside the paste wrapper,
+//     where the catch turns it into a silently unconverted paste.
+phi_check("a table word is matched literally, not as a pattern",
+          phi_word_fold(phi_tbl, phi_bold("warmth")), phi_bold("warmth"));
+
+// 12. shapes WORD_BOUNDARY_PLAN.md does not repair.  Pinned so that a later widening of
 //     the insertion rule is a decision somebody took, not an accident.
-size_then = glyph("size") + "_" + glyph("then'");
-got = phi_word_fold(t, phi_word_expand(t, size_then));
-for (i = 0; i < got.length(); i++)
-    if (names.containsValue(String.valueOf(got.charAt(i))))
-        fail("size _ then' should carry no glyph", got, size_then);
-change_d = phi_word_expand(t, glyph("change")) + bold("d");
-check("change against a user's bold d becomes changed", phi_word_fold(t, change_d),
-      glyph("changed"));
+phi_size_then = phi_glyph("size") + "_" + phi_glyph("then'");
+phi_got = phi_word_fold(phi_tbl, phi_word_expand(phi_tbl, phi_size_then));
+for (phi_i = 0; phi_i < phi_got.length(); phi_i++)
+    if (phi_expand.containsKey(new Integer(phi_got.charAt(phi_i)))) {
+        phi_saw("size _ then' should carry no glyph", phi_got);
+        break;
+    }
+phi_change_d = phi_word_expand(phi_tbl, phi_glyph("change")) + phi_bold("d");
+phi_check("change against a user's bold d becomes changed",
+          phi_word_fold(phi_tbl, phi_change_d), phi_glyph("changed"));
 
-// 11. the one shipped behaviour this rewrite changes on purpose: a glyph written against a
+// 13. the shipped behaviour this rewrite changed on purpose: a glyph written against a
 //     mathematical character no word uses.  What counts as one run is now the whole
 //     mathematical alphanumeric block, not the letters the table happens to spell with, so
-//     the run is abandoned where it used to fold.  See "A deliberate widening".
-pending_q = phi_word_expand(t, glyph("pending")) + bold("q");
-check("pending against a bold q stays letters", phi_word_fold(t, pending_q), pending_q);
+//     the run is abandoned where it used to fold -- and, because `.` and `_` are
+//     run-forming, that reaches across them too.  See "A deliberate widening".
+phi_pending_q = phi_word_expand(phi_tbl, phi_glyph("pending")) + phi_bold("q");
+phi_check("pending against a bold q stays letters", phi_word_fold(phi_tbl, phi_pending_q),
+          phi_pending_q);
+phi_pending_dot_q = phi_word_expand(phi_tbl, phi_glyph("pending")) + "." + phi_bold("q");
+phi_check("pending, a full stop and a bold q stays letters",
+          phi_word_fold(phi_tbl, phi_pending_dot_q), phi_pending_dot_q);
 
-// 12. the null guards
-if (phi_word_expand(t, null) != null) {
-    System.out.println("FAIL expand null"); failures = failures + 1;
-}
-if (phi_word_fold(t, null) != null) {
-    System.out.println("FAIL fold null"); failures = failures + 1;
-}
+// 14. the null guards
+if (phi_word_expand(phi_tbl, null) != null) phi_bad("expand null");
+if (phi_word_fold(phi_tbl, null) != null) phi_bad("fold null");
 
-// 13. the run class is a fixed convention -- the mathematical block plus `.` and `_` -- so
-//     a word spelled with any other ASCII character would stop folding, silently.  If this
-//     fires, widen phi_run_class in the script and say so in ../fonts/WORD_GLYPHS.md.
-for (letters : t.get("keys")) {
-    for (i = 0; i < letters.length(); i++) {
-        c = letters.charAt(i);
-        if (c < 128 && c != '.' && c != '_') {
-            System.out.println("FAIL the table uses ASCII the run class does not cover: "
-                               + hex(String.valueOf(c)) + " in " + letters);
-            failures = failures + 1;
-        }
-    }
-}
+// 15. every word must be exactly one run, asked of the pattern itself rather than by
+//     restating the convention.  A word spelled with anything the run class does not cover
+//     -- a digit, a hyphen, a mathematical character outside the block -- would simply stop
+//     folding.  If this fires, widen phi_run_class and say so in ../fonts/WORD_GLYPHS.md.
+for (phi_key : phi_tbl.get("keys"))
+    if (!phi_tbl.get("run_pat").matcher(phi_key).matches())
+        phi_saw("this word is not one run, so it will not fold", phi_key);
 
-// 13b. the two patterns the run and glyph classes compile to, pinned directly.  Neither
-//      shows up in any output comparison -- widening either one leaves every byte of every
-//      result unchanged and only costs time -- so nothing but an assertion catches it.
-if (t.get("run_pat").matcher("._.").find()) {
-    System.out.println("FAIL punctuation alone counts as a run; a run must hold a "
-                       + "mathematical letter, or every full stop in ordinary source "
-                       + "costs a trip through the interpreter");
-    failures = failures + 1;
-}
-if (!t.get("run_pat").matcher("." + bold("a") + "_").find()) {
-    System.out.println("FAIL a mathematical letter with punctuation around it is not "
-                       + "recognised as one run");
-    failures = failures + 1;
-}
-last = 0;
-for (code : expand.keySet()) if (code.intValue() > last) last = code.intValue();
-beyond = new String(Character.toChars(last + 1));
-check("a private-use character past the table is not a glyph",
-      phi_word_expand(t, beyond + beyond), beyond + beyond);
+// 16. the two compiled classes, pinned directly.  Neither shows up in any output
+//     comparison -- widening either leaves every byte of every result unchanged and only
+//     costs time -- so nothing but an assertion catches it.
+if (phi_tbl.get("run_pat").matcher("._.").find())
+    phi_bad("punctuation alone counts as a run; a run must hold a mathematical letter, or "
+            + "every full stop in ordinary source costs a trip through the interpreter");
+if (!phi_tbl.get("run_pat").matcher("." + phi_bold("a") + "_").find())
+    phi_bad("a mathematical letter with punctuation around it is not recognised as one run");
+phi_last_code = 0;
+for (phi_code : phi_expand.keySet())
+    if (phi_code.intValue() > phi_last_code) phi_last_code = phi_code.intValue();
+phi_beyond = new String(Character.toChars(phi_last_code + 1));
+if (phi_tbl.get("glyph_pat").matcher(phi_beyond).find())
+    phi_bad("the glyph class reaches past the table's own last code point");
+phi_check("a private-use character past the table is left alone",
+          phi_word_expand(phi_tbl, phi_beyond + phi_beyond), phi_beyond + phi_beyond);
 
-// 14. a performance floor.  Both functions run on the AWT thread over whole selections, and
-//     an interpreted per-character loop costs about 3.5 microseconds a character -- four to
-//     nine seconds for this input, against tens of milliseconds compiled.  A two-second
-//     ceiling is far above the compiled figures and far below the interpreted ones.
-block = new StringBuffer();
-while (block.length() < 448) block.append("lemma foo: \"a + b = c\" by auto_sledgehammer\n");
-block.setLength(448);
-big = new StringBuffer();
-while (big.length() < 1000000) big.append(block).append(glyph("pending"));
-sample = big.toString();
-t0 = System.currentTimeMillis();
-expanded = phi_word_expand(t, sample);
-ms1 = System.currentTimeMillis() - t0;
-t0 = System.currentTimeMillis();
-phi_word_fold(t, expanded);
-ms2 = System.currentTimeMillis() - t0;
-if (ms1 > 2000 || ms2 > 2000) {
-    System.out.println("FAIL " + sample.length() + " characters took " + ms1
-                       + " ms to expand and " + ms2 + " ms to fold; the loop is back");
-    failures = failures + 1;
-}
+// 16b. a code point inside the span that is no longer a word -- the state that deleting a
+//      word from words.txt leaves behind, since the generator keeps survivors by name and
+//      retires the code point rather than reusing it.  Expansion must look the word up
+//      before it marks a boundary, or a WORD JOINER ends up glued to a raw private-use
+//      character.  Built here by holing a copy of the table, patterns and all.
+phi_holed = new java.util.HashMap(phi_tbl);
+phi_holed_expand = new java.util.HashMap(phi_expand);
+phi_retired = new Integer(phi_glyph("pending").codePointAt(0));
+phi_holed_expand.remove(phi_retired);
+phi_holed.put("expand", phi_holed_expand);
+phi_live = phi_glyph("has");
+phi_out2 = phi_word_expand(phi_holed, phi_pg + phi_live);
+if (phi_out2.indexOf(phi_marker) >= 0)
+    phi_saw("a boundary marker was marked beside a retired code point", phi_out2);
+phi_out2 = phi_word_expand(phi_holed, phi_live + phi_pg);
+if (phi_out2.indexOf(phi_marker) >= 0)
+    phi_saw("a boundary marker was marked beside a retired code point", phi_out2);
 
-// 15. pasting into jEdit's own text input fields.  These are plain Swing text components
+// 17. the two objects phi_word_install actually puts in place, driven end to end.  Without
+//     this, everything in that function is covered only by "the script loaded" -- and the
+//     feature inverted, folding on copy and expanding on paste, still passes every check
+//     above.
+phi_out = TransferHandler.getInstance().getTransferable(null, phi_pg)
+              .getTransferData(DataFlavor.stringFlavor);
+phi_check("the copy hook expands", phi_out, phi_pending);
+java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
+    .setContents(new StringSelection(phi_out), null);
+phi_check("the paste hook folds what the copy hook produced",
+          Registers.getRegister('$').getTransferable()
+              .getTransferData(DataFlavor.stringFlavor), phi_pg);
+
+// 18. pasting into jEdit's own text input fields.  These are plain Swing text components
 //     whose stock handler reads the plain-text flavor, so without the wrapper the field
 //     receives letters while the buffer holds the glyph and the search matches nothing.
-import org.gjt.sp.jedit.gui.HistoryTextArea;
-import org.gjt.sp.jedit.gui.HistoryTextField;
-import org.gjt.sp.jedit.datatransfer.JEditDataFlavor;
-import org.gjt.sp.jedit.datatransfer.RichTextTransferable;
+phi_area = new HistoryTextArea("phi-test");
+phi_stock = phi_area.getTransferHandler();
+if (!phi_wrap_field(phi_area)) phi_bad("the field was not wrapped");
+if (phi_wrap_field(phi_area)) phi_bad("wrapping is not idempotent");
+if (phi_stock == null || phi_stock.getClass().getName().indexOf("TextTransferHandler") < 0)
+    phi_bad("the wrapped handler was not Swing's stock one: " + phi_stock);
 
-area = new HistoryTextArea("phi-test");
-stock = area.getTransferHandler();
-if (!phi_wrap_field(area)) {
-    System.out.println("FAIL the field was not wrapped");
-    failures = failures + 1;
-}
-if (phi_wrap_field(area)) {                 // idempotent: a re-parented field arrives twice
-    System.out.println("FAIL wrapping is not idempotent");
-    failures = failures + 1;
-}
-
-paste(field, transferable) {
-    field.setText("");
-    field.getTransferHandler().importData(field, transferable);
-    return field.getText();
+phi_paste(phi_field, phi_transferable) {
+    phi_field.setText("");
+    phi_field.getTransferHandler().importData(phi_field, phi_transferable);
+    return phi_field.getText();
 }
 
 // a. text copied inside jEdit carries the glyphs under jEdit's own flavor: taken as is, so
 //    even a shape folding cannot repair arrives exactly
-exact = glyph("size") + "_" + glyph("then'");
-rich_only = new RichTextTransferable(exact, "text");
-check("rich flavor is taken as is", paste(area, rich_only), exact);
+phi_check("the rich flavor is taken as is",
+          phi_paste(phi_area, new RichTextTransferable(phi_size_then, "text")),
+          phi_size_then);
 
 // b. both flavors present, as a real jEdit copy leaves them: the rich one wins
-letters = phi_word_expand(t, exact);
-both_flavors = new java.awt.datatransfer.Transferable() {
-    public java.awt.datatransfer.DataFlavor[] getTransferDataFlavors() {
-        return new java.awt.datatransfer.DataFlavor[] {
-            JEditDataFlavor.jEditRichTextDataFlavor,
-            java.awt.datatransfer.DataFlavor.stringFlavor };
+phi_both_flavors = new java.awt.datatransfer.Transferable() {
+    public DataFlavor[] getTransferDataFlavors() {
+        return new DataFlavor[] { JEditDataFlavor.jEditRichTextDataFlavor,
+                                  DataFlavor.stringFlavor };
     }
-    public boolean isDataFlavorSupported(java.awt.datatransfer.DataFlavor f) {
+    public boolean isDataFlavorSupported(DataFlavor f) {
         return JEditDataFlavor.jEditRichTextDataFlavor.equals(f)
-               || java.awt.datatransfer.DataFlavor.stringFlavor.equals(f);
+               || DataFlavor.stringFlavor.equals(f);
     }
-    public Object getTransferData(java.awt.datatransfer.DataFlavor f) {
+    public Object getTransferData(DataFlavor f) {
         if (JEditDataFlavor.jEditRichTextDataFlavor.equals(f))
-            return new org.gjt.sp.jedit.datatransfer.JEditRichText(exact, "text");
-        return letters;
+            return new org.gjt.sp.jedit.datatransfer.JEditRichText(phi_size_then, "text");
+        return phi_word_expand(phi_tbl, phi_size_then);
     }
 };
-check("the rich flavor wins over the plain one", paste(area, both_flavors), exact);
+phi_check("the rich flavor wins over the plain one",
+          phi_paste(phi_area, phi_both_flavors), phi_size_then);
 
 // c. text from outside jEdit has only the plain flavor, and is folded
-plain = new java.awt.datatransfer.StringSelection(expand.get(
-            new Integer(glyph("pending").codePointAt(0))));
-check("letters from another application fold", paste(area, plain), glyph("pending"));
+phi_plain = new StringSelection(phi_pending);
+phi_check("letters from another application fold", phi_paste(phi_area, phi_plain), phi_pg);
 
 // d. ordinary text is not the clipboard's business here either
-check("ordinary text is untouched",
-      paste(area, new java.awt.datatransfer.StringSelection("/home/user/a_file.thy")),
-      "/home/user/a_file.thy");
+phi_check("ordinary text is untouched",
+          phi_paste(phi_area, new StringSelection("/home/user/a_file.thy")),
+          "/home/user/a_file.thy");
 
 // e. a transferable that throws must not propagate out of importData
-thrower = new java.awt.datatransfer.Transferable() {
-    public java.awt.datatransfer.DataFlavor[] getTransferDataFlavors() {
-        return new java.awt.datatransfer.DataFlavor[] {
-            java.awt.datatransfer.DataFlavor.stringFlavor };
+phi_thrower = new java.awt.datatransfer.Transferable() {
+    public DataFlavor[] getTransferDataFlavors() {
+        return new DataFlavor[] { DataFlavor.stringFlavor };
     }
-    public boolean isDataFlavorSupported(java.awt.datatransfer.DataFlavor f) { return true; }
-    public Object getTransferData(java.awt.datatransfer.DataFlavor f) {
-        throw new java.io.IOException("no data");
-    }
+    public boolean isDataFlavorSupported(DataFlavor f) { return true; }
+    public Object getTransferData(DataFlavor f) { throw new java.io.IOException("no data"); }
 };
-try { area.getTransferHandler().importData(area, thrower); }
-catch (Exception e) {
-    System.out.println("FAIL a throwing transferable escaped importData: " + e);
-    failures = failures + 1;
-}
+try { phi_area.getTransferHandler().importData(phi_area, phi_thrower); }
+catch (Exception e) { phi_bad("a throwing transferable escaped importData: " + e); }
 
 // f. everything that is not the incoming text goes straight through to the inner handler
-seen = new java.util.HashMap();
-recorder = new javax.swing.TransferHandler() {
-    public boolean canImport(javax.swing.JComponent c, java.awt.datatransfer.DataFlavor[] f) {
-        seen.put("canImport", Boolean.TRUE); return true;
+phi_seen = new java.util.HashMap();
+phi_recorder = new javax.swing.TransferHandler() {
+    public boolean canImport(javax.swing.JComponent c, DataFlavor[] f) {
+        phi_seen.put("canImport", Boolean.TRUE); return true;
     }
     public int getSourceActions(javax.swing.JComponent c) {
-        seen.put("getSourceActions", Boolean.TRUE); return 3;
+        phi_seen.put("getSourceActions", Boolean.TRUE); return 3;
     }
-    public void exportToClipboard(javax.swing.JComponent c, java.awt.datatransfer.Clipboard cb,
-                                  int a) {
-        seen.put("exportToClipboard", Boolean.TRUE);
+    public void exportToClipboard(javax.swing.JComponent c,
+                                  java.awt.datatransfer.Clipboard cb, int a) {
+        phi_seen.put("exportToClipboard", Boolean.TRUE);
     }
 };
-outer = phi_field_handler(recorder);
-outer.canImport(area, new java.awt.datatransfer.DataFlavor[0]);
-if (outer.getSourceActions(area) != 3) {
-    System.out.println("FAIL getSourceActions was not forwarded"); failures = failures + 1;
-}
-outer.exportToClipboard(area, new java.awt.datatransfer.Clipboard("phi-test"), 1);
-for (what : new String[] { "canImport", "getSourceActions", "exportToClipboard" })
-    if (!seen.containsKey(what)) {
-        System.out.println("FAIL " + what + " did not reach the inner handler");
-        failures = failures + 1;
-    }
+phi_outer = phi_field_handler(phi_recorder);
+phi_outer.canImport(phi_area, new DataFlavor[0]);
+if (phi_outer.getSourceActions(phi_area) != 3) phi_bad("getSourceActions was not forwarded");
+phi_outer.exportToClipboard(phi_area, new java.awt.datatransfer.Clipboard("phi-test"), 1);
+for (phi_what : new String[] { "canImport", "getSourceActions", "exportToClipboard" })
+    if (!phi_seen.containsKey(phi_what))
+        phi_bad(phi_what + " did not reach the inner handler");
 
 // g. the fields are built lazily inside dialogs, so they are found by a global AWT listener
 //    rather than by name.  Both shapes the search widgets use: a field added straight to a
 //    panel, and an area that arrives inside a JScrollPane.
-panel = new javax.swing.JPanel();
-bar_field = new HistoryTextField("phi-test");
-panel.add(bar_field);
-if (bar_field.getClientProperty("phi_word_wrapped") == null) {
-    System.out.println("FAIL the listener missed a field added to a panel");
-    failures = failures + 1;
-}
-dialog_area = new HistoryTextArea("phi-test");
-panel.add(new javax.swing.JScrollPane(dialog_area));
-if (dialog_area.getClientProperty("phi_word_wrapped") == null) {
-    System.out.println("FAIL the listener missed an area inside a scroll pane");
-    failures = failures + 1;
-}
-check("a field found by the listener folds too", paste(bar_field, plain), glyph("pending"));
+phi_panel = new javax.swing.JPanel();
+phi_bar_field = new HistoryTextField("phi-test");
+phi_panel.add(phi_bar_field);
+if (phi_bar_field.getClientProperty("phi_word_wrapped") == null)
+    phi_bad("the listener missed a field added to a panel");
+phi_dialog_area = new HistoryTextArea("phi-test");
+phi_panel.add(new javax.swing.JScrollPane(phi_dialog_area));
+if (phi_dialog_area.getClientProperty("phi_word_wrapped") == null)
+    phi_bad("the listener missed an area inside a scroll pane");
+phi_check("a field found by the listener folds too",
+          phi_paste(phi_bar_field, phi_plain), phi_pg);
 
-// h. the stock handler is what was wrapped, not one of ours
-if (stock == null || stock.getClass().getName().indexOf("TextTransferHandler") < 0) {
-    System.out.println("FAIL the wrapped handler was not Swing's stock one: " + stock);
-    failures = failures + 1;
-}
+// 19. the script's function locals are declared with a type, so no global of the same name
+//     can reach into them.  Untyped, an assignment inside a method writes through to any
+//     such global -- and two of the script's own functions share the name `phi_m`, so one
+//     clobbers the other's matcher mid-call.  None of that shows up in ordinary output.
+phi_m = "planted";
+phi_buf = "planted";
+phi_letters = "planted";
+phi_pos = "planted";
+phi_check("a hostile global does not disturb the round trip",
+          phi_word_fold(phi_tbl, phi_word_expand(phi_tbl, phi_pg + phi_pg)), phi_pg + phi_pg);
+if (!phi_m.equals("planted") || !phi_buf.equals("planted")
+        || !phi_letters.equals("planted") || !phi_pos.equals("planted"))
+    phi_bad("the script wrote through to a global sharing a function-local's name");
 
-System.out.println((failures == 0 ? "PASS" : "FAILED") + ": " + n + " entries round-tripped, "
-                   + pairs + " adjacent pairs, " + sample.length() + " characters in "
-                   + ms1 + "/" + ms2 + " ms, " + failures + " failure(s)");
-if (failures != 0) System.exit(1);
+// 20. a performance floor.  Both functions run on the AWT thread over whole selections, and
+//     an interpreted per-character loop costs about 3.5 microseconds a character -- four to
+//     nine seconds for this input, against tens of milliseconds compiled.  A two-second
+//     ceiling is far above the compiled figures and far below the interpreted ones.
+phi_block = new StringBuffer();
+while (phi_block.length() < 448)
+    phi_block.append("lemma foo: \"a + b = c\" by auto_sledgehammer\n");
+phi_block.setLength(448);
+phi_big = new StringBuffer();
+while (phi_big.length() < 1000000) phi_big.append(phi_block).append(phi_pg);
+phi_sample = phi_big.toString();
+phi_t0 = System.currentTimeMillis();
+phi_expanded = phi_word_expand(phi_tbl, phi_sample);
+phi_ms1 = System.currentTimeMillis() - phi_t0;
+phi_t0 = System.currentTimeMillis();
+phi_word_fold(phi_tbl, phi_expanded);
+phi_ms2 = System.currentTimeMillis() - phi_t0;
+if (phi_ms1 > 2000 || phi_ms2 > 2000)
+    phi_bad(phi_sample.length() + " characters took " + phi_ms1 + " ms to expand and "
+            + phi_ms2 + " ms to fold; the per-character loop is back");
+
+System.out.println((phi_failures[0] == 0 ? "PASS" : "FAILED") + ": " + phi_n
+                   + " entries round-tripped, " + phi_pairs + " adjacent pairs, "
+                   + phi_sample.length() + " characters in " + phi_ms1 + "/" + phi_ms2
+                   + " ms, " + phi_failures[0] + " failure(s)");
+if (phi_failures[0] != 0) System.exit(1);

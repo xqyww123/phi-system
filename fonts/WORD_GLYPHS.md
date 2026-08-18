@@ -82,18 +82,24 @@ table: a maximal stretch of characters from the mathematical alphanumeric block
 (`w.r.t.` and `size_t`).  It used to be "a character the table spells with", which
 meant the same input could change behaviour whenever a word was added to
 `words.txt`.  One shipped behaviour changed when it was fixed: a word glyph written
-directly against a mathematical character no entry uses — `\<pending>` against a
-bold `q`, say — now comes back as letters where it used to come back as the glyph.
+against a mathematical character no entry uses — `\<pending>` against a bold `q`,
+say, either straight against it or with only a `.` or `_` between them, those two
+being run-forming as well — now comes back as letters where it used to come back
+as the glyph.
 That is the abandon rule below doing its job: `𝐩𝐞𝐧𝐝𝐢𝐧𝐠𝐪` reads as somebody's
 bold word, and folding half of it into a glyph is the mangling the rule exists to
 prevent.
 
 It reads a run left to right, longest word first.  When no word matches at a
 position it looks at the character: **ASCII that no word claims is carried over**
-— a full stop after a word, an underscore or a digit joined to it, `w.r.t.`'s own
+— a full stop after a word, an underscore between two words, `w.r.t.`'s own
 periods — while **a mathematical letter that no word claims abandons the whole
 run untouched**, because the run is then somebody else's bold text and none of it
 may be modified.  So `𝐩𝐞𝐧𝐝𝐢𝐧𝐠.` folds and `𝐬𝐭𝐚𝐭𝐞𝐬` does not.
+
+Any other ASCII simply ends the run, which is why a digit written against a word
+does no harm: `\<pending>8` folds because the `8` is outside the run, not because
+the rule carried it.
 
 That ASCII clause was added when the first entries with punctuation, `wrt` and
 `size_t`, put `.` and `_` into the table.  Before it, any word written against a
@@ -118,9 +124,11 @@ matches `size_t` and is then left with a remainder no word claims.
 ### The constraint on a new entry
 
 **Any ASCII character in an entry's drawn text lands in the table and becomes
-significant to the paste direction.**  Punctuation and digits are fine.  ASCII
-*letters* would not be: the paste step would fold the word wherever it occurs in
-an ordinary English sentence.  This is why the Medium words go through
+significant to the paste direction**, and a run covers only two of them: `.` and
+`_`.  An entry spelled with any other ASCII — a digit, a hyphen — never folds
+back, and `../jedit/run_word_clipboard_test.sh` fails when one appears.  ASCII
+*letters* are worse still: the paste step would fold the word wherever it occurs
+in an ordinary English sentence.  This is why the Medium words go through
 `sans_code_point` even though their glyph is drawn from an ordinary ASCII text
 font, and `build_word_glyphs.py` now refuses to write a table containing one.
 
