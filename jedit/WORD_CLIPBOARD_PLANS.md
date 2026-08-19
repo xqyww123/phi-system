@@ -1,8 +1,8 @@
 # The four word-glyph clipboard plans: order, decisions, conventions, state
 
 `phi_word_clipboard.bsh` in this directory makes phi-System's word glyphs survive the
-clipboard. Four plans extend it, and a fifth (`UI_FONT_PLAN.md`) makes what they deliver
-visible in jEdit's own widgets. This file is the index: it records the order they are
+clipboard. Four plans extend it, and a fifth (`UI_FONT_PLAN.md`) makes phi-System's glyphs
+visible in jEdit's own widgets, which is a rendering problem rather than a clipboard one. This file is the index: it records the order they are
 implemented in, the decisions the user has taken, the conventions all four share, what has
 been reviewed, and what is still open. Read it before picking up any single plan — each
 plan is self-contained about *its* work, but none of them carries the cross-cutting state.
@@ -31,7 +31,7 @@ Everything below is about routes where that conversion does not happen, or happe
 | 2 | `PRIMARY_SELECTION_PLAN.md` | Wraps jEdit's `%` register so the X11 primary selection (mouse-select, middle-click) converts too. |
 | 3 | `SEARCH_FIELD_PASTE_PLAN.md` | Wraps the transfer handler of jEdit's text input fields so pasting a copied glyph into the Find box matches the buffer. |
 | 4 | `DRAG_AND_DROP_PLAN.md` | Installs a transfer handler on every buffer text area so drag and drop converts. |
-| — | `UI_FONT_PLAN.md` | Ships a UI font holding both ordinary text and the glyphs, so a glyph pasted into a search box can be *seen*. Follows plan 3; not in the numbered order, because it fixes rendering rather than conversion. |
+| — | `UI_FONT_PLAN.md` **(reviewed 5x, ready to implement)** | Merges a text face into `fonts/PhiSymbols.ttf` so a glyph in a search box can be *seen*. Independent of all four: the blank box is live today with none of them landed. Not in the numbered order, because it fixes rendering rather than conversion. |
 
 **Why this order.** Plan 1 is a hard prerequisite: the other three call the two functions it
 rewrites, and it creates the top-level `phi_t` all three of them assume. Plans 2, 3 and 4 are
@@ -77,6 +77,16 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
 9. **Expansion is one `Matcher` pass**, not a joiner `replaceAll` followed by one
    `String.replace` per distinct glyph. Measured: 102 ms against 563 ms over 5 million
    characters, with byte-identical output.
+10. **The UI font is one file, merged into `fonts/PhiSymbols.ttf`** — not a second generated
+    font beside it. See `UI_FONT_PLAN.md`.
+11. **Monospaced widgets are not supported.** One font carries one design for ASCII; the sans
+    base is merged, so the Search dialog's Find and Replace boxes become proportional while the
+    other thirteen wrapped widgets are untouched. The alternative preserved those two and
+    changed the thirteen.
+12. **The GPL material in the Isabelle base is shipped and disclosed**, as Isabelle itself does:
+    26 blackboard-bold code points from `txmia`/`pxfonts` are copied by the merge, and name ID 0
+    and `fonts/phi-font-readme.txt` name them. Excluding them was the alternative, rejected
+    because they are common in Isabelle mathematics.
 
 
 ## Conventions every plan follows
@@ -131,6 +141,11 @@ who run and mutate the thing find defects that reviewers who read it cannot.
 | 5 | `SEARCH_FIELD_PASTE_PLAN.md` | 28 | 13 |
 | 6 | all four, cross-plan | 40 | 20 |
 | 7 | all four, audit of round 6's fixes | 47 | 15 |
+| 8 | plan 1's *code*, as committed | 38 | 22 |
+| 9 | `UI_FONT_PLAN.md`, first version | 38 | 22 |
+| 10 | `UI_FONT_PLAN.md`, rewrite | 57 | 19 |
+| 11 | `UI_FONT_PLAN.md`, third version | 41 | 19 |
+| 12 | `UI_FONT_PLAN.md`, fourth version | 29 | 19 |
 | 8 | plan 1's **landed code**, three lenses | 36 | 13 |
 
 Two failure modes recurred often enough to be worth naming, because they will recur again:
@@ -138,6 +153,19 @@ Two failure modes recurred often enough to be worth naming, because they will re
 - **A fix landing in the prose but not in the numbered steps, the code sketch or the test
   bullets.** Round 6 caught three of these. Verify a fix by grepping for the *old* wording,
   not by re-reading the new.
+- **Compare data, not pixels, whenever the property is about data.** Of the eleven blocking
+  findings across the font plan's five review rounds, **five were assertions that fail on a
+  correct build**, and they came from one source: checking "the glyphs were copied unchanged" by
+  rendering them. `stringWidth` and `getStringBounds` answer differently with fractional metrics
+  on or off, the differing set moves with the point size, and Java2D's default antialiasing hint
+  behaves as *off*. Comparing `glyf` bytes and `hmtx` integers is exact, configuration-free and
+  far faster. Rendering checks should be coarse — *does it draw ink* — where nothing can flip.
+- **A plan is not a measurement archive.** The same font plan carried about forty measured
+  figures, and three consecutive rounds were spent on figures that went stale when a rule
+  changed. Keep a number only where a decision hangs on it; put the rest in the commit message.
+- **Diminishing returns are real, and they turn negative.** Rounds 11 and 12 of that plan found
+  mostly wounds inflicted by round 10's and 11's own fixes. Plan 1's experience points the same
+  way: seven review rounds missed two defects that the first day of implementation found.
 - **A measurement whose corpus is not stated is not a measurement.** Round 7's largest
   finding was of this kind: plan 1's speed figures came from a synthetic text ten times
   denser in glyphs than the real sources, two statements of the same quantity disagreed by a
