@@ -31,7 +31,7 @@ Everything below is about routes where that conversion does not happen, or happe
 | 2 | `PRIMARY_SELECTION_PLAN.md` | Wraps jEdit's `%` register so the X11 primary selection (mouse-select, middle-click) converts too. |
 | 3 | `SEARCH_FIELD_PASTE_PLAN.md` | Wraps the transfer handler of jEdit's text input fields so pasting a copied glyph into the Find box matches the buffer. |
 | 4 | `DRAG_AND_DROP_PLAN.md` | Installs a transfer handler on every buffer text area so drag and drop converts. |
-| — | `UI_FONT_PLAN.md` **(reviewed 5x, ready to implement)** | Merges a text face into `fonts/PhiSymbols.ttf` so a glyph in a search box can be *seen*. Independent of all four: the blank box is live today with none of them landed. Not in the numbered order, because it fixes rendering rather than conversion. |
+| — | `UI_FONT_PLAN.md` **(landed)** | Merges a text face into `fonts/PhiSymbols.ttf` so a glyph in a search box can be *seen*. Independent of all four: the blank box is live today with none of them landed. Not in the numbered order, because it fixes rendering rather than conversion. |
 
 **Why this order.** Plan 1 is a hard prerequisite: the other three call the two functions it
 rewrites, and it creates the top-level `phi_t` all three of them assume. Plans 2, 3 and 4 are
@@ -87,6 +87,11 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
     26 blackboard-bold code points from `txmia`/`pxfonts` are copied by the merge, and name ID 0
     and `fonts/phi-font-readme.txt` name them. Excluding them was the alternative, rejected
     because they are common in Isabelle mathematics.
+13. **The font's name table is written by the generator**, not by `fonts/PhiSymbols.sfd`, which
+    is what `UI_FONT_PLAN.md` had said. FontForge is not installed here, so editing the `.sfd`
+    alone could not have produced a correct artefact; and the licence obligations come from what
+    the merge copies, which is the generator's doing. Name ID 0 reads `Copyright 2023 Qiyuan
+    Xu`, and ID 14 points at `github.com/xqyww123/phi-system/tree/main/fonts`.
 
 
 ## Conventions every plan follows
@@ -274,6 +279,25 @@ kind this file's conventions are about.
 - **Not fixable from a startup script**: HyperSearch's "copy results"
   (`HyperSearchResults.java:791-794`, `:1049-1052`) writes the system clipboard directly,
   bypassing both the register and the service list. Recorded as a known limit.
+
+
+## What landing the font plan taught
+
+- **A check that compares font data instead of pixels found seven distinct defects on its
+  first run, and none of them was a false alarm.** The five review rounds spent on rendering
+  assertions produced the opposite: five blocking findings that were assertions failing on a
+  correct build. The rewrite that replaced them cost about a page of text.
+- **A derived field is not part of "copied unchanged".** The first version compared compiled
+  glyph bytes, and 52 of the text face's glyphs failed: it stores bounding boxes one unit
+  looser than the outline, and fontTools recomputes them on save. Turning the recomputation
+  off is not the fix — `recalcBBoxes=False` also switches off `maxp.recalc()`, which is what
+  keeps `maxPoints` and `maxContours` correct, and those being too small is the same class of
+  failure as the hinting maxima. The comparison dropped the bounding box instead.
+- **Every check was shown to fail before it was believed.** Eight deliberate breakages, each
+  damaging exactly one thing, each refused by the run: no deep copy, unscaled STIX advances,
+  unscaled STIX outlines, the text face winning phi's two code points, the blank glyph not
+  supplied from STIX, `prep` left behind, a supplementary code point in a format 4 subtable,
+  and an undamaged build that must pass.
 
 
 ## Where the numbers come from

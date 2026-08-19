@@ -1,4 +1,4 @@
-PhiSymbols.ttf holds two kinds of glyph.
+PhiSymbols.ttf holds three kinds of glyph.
 
 1. HAND-DRAWN GLYPHS -- source: PhiSymbols.sfd (FontForge)
 
@@ -81,7 +81,7 @@ Whoever knows where they came from, please fill it in.
 
 Each phi-System keyword that used to be spelled one symbol per letter
 (\<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>) now has a single symbol whose glyph
-draws the whole word (\<transforms>).  133 of them occupy U+E000..U+E084.
+draws the whole word (\<transforms>).  135 of them occupy U+E000..U+E086.
 
 Outlines come from STIX Two Math (OFL, see STIX-OFL.txt), from its mathematical
 alphanumeric blocks:
@@ -89,10 +89,17 @@ alphanumeric blocks:
   mathematical bold          U+1D400 / U+1D41A   lower-case and mixed-case words
   mathematical bold script   U+1D4D0             all-upper-case words (TP, EIHOOK)
 
+A few words name an ordinary constant rather than a keyword, and are drawn one
+weight lighter so that a line full of them does not out-shout the keywords
+around them.  The mathematical alphanumeric blocks carry regular and bold and
+nothing between them, so those come from STIX Two Text Medium instead, and are
+addressed as plain ASCII.
+
 They are composed and scaled by fonts/build_word_glyphs.py and are NOT present
 in PhiSymbols.sfd.  Do not edit them by hand -- re-run the script instead; it
-drops every glyph it previously added (all named word.<word>) before rebuilding,
-so it is safe to run repeatedly and safe to run after re-exporting the .sfd.
+drops every glyph it previously added -- everything named word.*, base.* or
+stix.* -- before rebuilding, so it is safe to run repeatedly and safe to run
+after re-exporting the .sfd.
 
 The word list is fonts/words.txt.  The symbol declarations it generates go to
 ../symbols-words, which etc/settings adds to ISABELLE_SYMBOLS.
@@ -101,3 +108,58 @@ See fonts/WORD_GLYPHS.md for the full rationale: why one word must be one glyph,
 why the glyphs cannot live in a separate font, how the symbol names and
 abbreviations are chosen, and which seven words carry a trailing prime because
 Isabelle already defines a symbol of that name.
+
+
+3. A MERGED TEXT FACE -- source: the Isabelle fonts component, plus STIX Two Math
+
+This is the bulk of the file.  Sections 1 and 2 draw symbols and words and no
+ordinary text at all: between them they cover no printable ASCII.  That is fine
+in jEdit's text area, which picks a font per character, but a Swing text
+component -- the Find box, the quick-search bar, Isabelle's Query input -- has
+one font for the whole component, so a box showing a word glyph beside ordinary
+text needs a single family that draws both.  fonts/build_word_glyphs.py makes
+PhiSymbols that family by copying a whole text face into it.
+
+  the text face      IsabelleDejaVuSans.ttf, the ttf-hinted variant, from the
+                     isabelle_fonts component of Isabelle2025-2 (name ID 5
+                     "Version 2.37; ttfautohint (v1.8.4)").  1489 code points,
+                     copied outline for outline under the base. glyph prefix.
+                     PhiSymbols wins the only two code points both draw,
+                     U+061F and U+2023, as it already does in the text area.
+
+  mathematical       850 code points of U+1D400..U+1D7FF that the text face
+  alphanumerics      does not draw, from STIX Two Math, under the stix. prefix.
+                     STIX is drawn on a 1000-unit em against 2048, so both the
+                     outlines and the advances are scaled by 2.048.
+
+The text face is not a single upstream.  Isabelle assembles it from DejaVu Sans
+-- itself derived from the Bitstream Vera Fonts, with glyphs imported from the
+Arev Fonts -- together with the IsabelleSymbols glyphs, which are Bluesky TeX
+fonts scaled 222%, some symbols from Symbola, and blackboard-bold glyphs from
+the font txmia of the pxfonts package.  Those last ones are under the GPL, and
+26 of them are copied here.  The Isabelle fonts component's own README states
+that mixture; it is not paraphrased further, only pointed at.  What the file
+itself says is in its name table: name ID 0 names every upstream, ID 13 the
+licences, ID 14 this directory, where DejaVu LICENSE, Noto-OFL.txt and
+STIX-OFL.txt are.
+
+Two things follow that are worth knowing before wondering about them.
+
+The copied glyphs carry ttfautohint bytecode, so the merge also copies the text
+face's fpgm, prep and cvt tables and its seven instruction-related maxp maxima.
+Those are what the bytecode calls into: with the tables but not the raised
+maxima, the interpreter gives up and every glyph in the font draws nothing.
+The one cost is that PhiSymbols' own glyphs, which are essentially uninstructed,
+now start from the graphics state prep sets, so they rasterise slightly
+differently WHEN ANTIALIASING IS OFF.  Under jEdit's shipped
+view.antiAlias=subpixel HRGB, and under greyscale antialiasing, nothing changes.
+
+Complex-script layout does not survive the merge.  PhiSymbols has a small GDEF
+of its own and no GSUB, GPOS or MATH, so the text face's are lost.  Latin is
+unaffected -- precomposed accents and fi/fl are single glyphs, and Java's
+drawString applies no GPOS kerning anyway -- while Arabic mark positioning
+degrades.
+
+See jedit/UI_FONT_PLAN.md for why the merge goes in this direction rather than
+into a second font, and jedit/phi_word_clipboard.bsh for the code that hands
+the family to a field.

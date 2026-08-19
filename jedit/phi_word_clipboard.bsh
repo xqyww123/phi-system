@@ -298,19 +298,37 @@ phi_wrap_field(phi_field)
     return true;
 }
 
+phi_field_font(phi_field)
+{
+    // A Swing text component has one font for the whole component, so a field showing a
+    // word glyph and ordinary text at once needs a family that draws both.  PhiSymbols
+    // is that family: fonts/build_word_glyphs.py merges Isabelle's own text face into
+    // it.  Kept apart from phi_wrap_field, which returns early for a field it wrapped on
+    // an earlier pass -- neither of its conditions says anything about the font.
+    if (phi_field == null) return false;
+    java.awt.Font phi_was = phi_field.getFont();
+    if (phi_was == null || "PhiSymbols".equals(phi_was.getFamily())) return false;
+    phi_field.setFont(
+        new java.awt.Font("PhiSymbols", phi_was.getStyle(), phi_was.getSize()));
+    return true;
+}
+
 phi_install_field_paste()
 {
     // The fields are built lazily, inside dialogs jEdit constructs on demand, and no
     // message announces them.  This listener runs on every container event in the
-    // application, so its body stays as small as it can be: a type test and a call.
+    // application, so its body stays as small as it can be: a type test, and the two
+    // things a field needs -- a transfer handler that folds, and a font that draws.
     Object phi_awt_listener = new java.awt.event.AWTEventListener() {
         public void eventDispatched(java.awt.AWTEvent e) {
             try {
                 if (e.getID() != java.awt.event.ContainerEvent.COMPONENT_ADDED) return;
                 Object phi_child = e.getChild();
                 if (phi_child instanceof HistoryTextArea
-                        || phi_child instanceof HistoryTextField)
+                        || phi_child instanceof HistoryTextField) {
                     phi_wrap_field(phi_child);
+                    phi_field_font(phi_child);
+                }
             }
             catch (Throwable ex) { }
         }

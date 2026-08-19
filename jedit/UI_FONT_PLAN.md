@@ -4,9 +4,10 @@ Read `WORD_CLIPBOARD_PLANS.md` beside this file first: it carries the implementa
 decisions the user has settled, the conventions all the plans follow, and what has been
 reviewed.
 
-**Where it stands.** The defect is live today and needs no clipboard to reproduce. The fix is
-applied beside `phi_wrap_field`, which `SEARCH_FIELD_PASTE_PLAN.md` created and which is
-committed (`aaec0131`), so that plan is a prerequisite. It has landed.
+**Where it stands.** Implemented. The fix is applied beside `phi_wrap_field`, which
+`SEARCH_FIELD_PASTE_PLAN.md` created and which is committed (`aaec0131`), so that plan was a
+prerequisite. One thing was decided differently while implementing, and step 2 below records
+it: the name table is written by the generator, not by `PhiSymbols.sfd`.
 
 **How this plan is written.** It records decisions and the reasons for them, not a measurement
 archive. Five review rounds were spent largely on figures that went stale when a rule changed,
@@ -273,14 +274,21 @@ fontTools is available. `run_word_clipboard_test.sh` invokes only `jedit.jar`'s 
    - an `--output` **directory** option, defaulting to the committed locations and mirroring the
      component layout, honoured by every artefact the run writes — the font, `symbols-words`,
      `jedit/word-clipboard-text` — so a check build cannot touch a shared working tree.
-2. **Write name ID 0 and IDs 13/14 in `fonts/PhiSymbols.sfd`**, not in the generator: the `name`
-   table comes out of the FontForge export, and `PhiSymbols.sfd:6` already holds the copyright
-   string the shipped `.ttf` carries as ID 0. Extend ID 0 with every provenance including the
-   GPL material; ID 13/14 carry the licence statement and URL. Neither upstream licence requires
-   a rename — DejaVu's terms reserve "Bitstream", "Vera", "Tavmjong Bah" and "Arev", STIX's OFL
-   reserves "TM Math" — so `PhiSymbols` needs no licence justification; what binds is the OFL's
-   requirement that a derivative carrying STIX outlines be distributed under the OFL with its
-   notice.
+2. **Write name ID 0 and IDs 13/14 in the generator**, not in `fonts/PhiSymbols.sfd`. This plan
+   said the opposite, because the `name` table comes out of the FontForge export. Two things
+   changed it. FontForge is not installed here, so editing the `.sfd` alone would leave the
+   committed `.ttf` carrying its 2023 name table and no way to fix it. And the obligations come
+   from what the *merge* copies — DejaVu and Bitstream Vera, STIX under the OFL, the GPL
+   blackboard-bold glyphs — which is the generator's doing, not the hand-drawn font's; the
+   `.sfd`'s own notice covers only the hand-drawn glyphs. Whoever re-exports the `.sfd` runs the
+   generator afterwards, so the generator's records always reach the artefact. Setting them from
+   constants is what keeps the run idempotent, so `drop_generated` has nothing to undo. Neither
+   upstream licence requires a rename — DejaVu's terms reserve "Bitstream", "Vera", "Tavmjong
+   Bah" and "Arev", STIX's OFL reserves "TM Math" — so `PhiSymbols` needs no licence
+   justification; what binds is the OFL's requirement that a derivative carrying STIX
+   outlines be distributed under the OFL with its notice. ID 0 reads `Copyright 2023
+   Qiyuan Xu`, and ID 14 points at `github.com/xqyww123/phi-system/tree/main/fonts`,
+   where the three licence texts are.
 3. **Restructure `fonts/phi-font-readme.txt` around three kinds of glyph** — hand-drawn,
    generated word glyphs, and the merged text face, the third being the bulk of the file. Record
    the Isabelle component, `ttf-hinted`, and the base's name ID 5; say the base is itself DejaVu

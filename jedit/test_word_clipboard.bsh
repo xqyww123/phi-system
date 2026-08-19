@@ -413,6 +413,75 @@ if (phi_ms1 > 2000 || phi_ms2 > 2000)
     phi_bad(phi_sample.length() + " characters took " + phi_ms1 + " ms to expand and "
             + phi_ms2 + " ms to fold; the per-character loop is back");
 
+// 21. the font.  PhiSymbols carries a whole text face as well as the word glyphs, because a
+//     Swing text component has one font for the whole component and the hand-drawn font
+//     covers no printable ASCII at all -- see jedit/UI_FONT_PLAN.md.
+//
+//     Only coarse questions are asked here, and deliberately.  Whether ink appears at all
+//     is the thing rendering answers that no antialiasing or fractional-metrics setting can
+//     flip; everything exact about the merge -- outlines copied unchanged, advances, the em
+//     correction -- is a statement about font data, and is checked as font data by
+//     ../fonts/build_word_glyphs.py --check.
+//
+//     The font is registered here because this interpreter is bare jedit.jar.  Under
+//     Isabelle, Isabelle_Fonts.init() registers every ISABELLE_FONTS entry a hundred lines
+//     before jEdit starts, and etc/settings already lists this file.
+java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(
+    java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT,
+        new java.io.File(System.getenv("PHI_SYSTEM_HOME") + "/fonts/PhiSymbols.ttf")));
+// getFamily, not getName: getName hands back whatever family was asked for, so it answers
+// "PhiSymbols" even when no such family exists and Dialog is what would be drawn.
+phi_font = new java.awt.Font("PhiSymbols", java.awt.Font.PLAIN, 24);
+if (!"PhiSymbols".equals(phi_font.getFamily()))
+    phi_bad("the font did not resolve by family: " + phi_font.getFamily());
+
+phi_draw(phi_text) {                    // what PhiSymbols puts on a blank white ground
+    java.awt.image.BufferedImage phi_img = new java.awt.image.BufferedImage(
+        300, 48, java.awt.image.BufferedImage.TYPE_INT_RGB);
+    java.awt.Graphics2D phi_g = phi_img.createGraphics();
+    phi_g.setColor(java.awt.Color.WHITE);
+    phi_g.fillRect(0, 0, 300, 48);
+    phi_g.setColor(java.awt.Color.BLACK);
+    phi_g.setFont(new java.awt.Font("PhiSymbols", java.awt.Font.PLAIN, 24));
+    phi_g.drawString(phi_text, 6, 36);
+    phi_g.dispose();
+    return phi_img;
+}
+
+phi_ink(phi_img) {
+    int phi_lit = 0;
+    for (int phi_y = 0; phi_y < 48; phi_y++)
+        for (int phi_x = 0; phi_x < 300; phi_x++)
+            if ((phi_img.getRGB(phi_x, phi_y) & 0xFFFFFF) != 0xFFFFFF) phi_lit++;
+    return phi_lit;
+}
+
+if (phi_ink(phi_draw(phi_glyph("pending"))) == 0)
+    phi_bad("a word glyph drew nothing in PhiSymbols");
+// Two ASCII strings, because ink alone would prove nothing: a font missing a character
+// draws .notdef, and this font's .notdef is a box with two contours, so any string at all
+// would "draw".  Narrow letters and wide ones come out the same only as rows of boxes.
+phi_narrow = phi_ink(phi_draw("iiiiii"));
+phi_wide = phi_ink(phi_draw("MMMMMM"));
+if (phi_narrow == 0 || phi_wide == 0)
+    phi_bad("ordinary text drew nothing in PhiSymbols");
+else if (phi_narrow == phi_wide)
+    phi_bad("ordinary text is being drawn as notdef boxes: iiiiii and MMMMMM both came "
+            + "out as " + phi_narrow + " pixels");
+
+// the listener hands a field the family; phi_panel is the one from 18g
+phi_font_field = new HistoryTextField("phi-test");
+phi_panel.add(phi_font_field);
+if (!"PhiSymbols".equals(phi_font_field.getFont().getFamily()))
+    phi_bad("the listener left a new field's font family as "
+            + phi_font_field.getFont().getFamily());
+// and it hands it to a field wrapped on an earlier pass too, which is why the font is not
+// set inside phi_wrap_field: that returns early for exactly this field
+phi_panel.add(phi_area);
+if (!"PhiSymbols".equals(phi_area.getFont().getFamily()))
+    phi_bad("a field wrapped on an earlier pass did not get the font: "
+            + phi_area.getFont().getFamily());
+
 System.out.println((phi_failures[0] == 0 ? "PASS" : "FAILED") + ": " + phi_n
                    + " entries round-tripped, " + phi_pairs + " adjacent pairs, "
                    + phi_sample.length() + " characters in " + phi_ms1 + "/" + phi_ms2

@@ -43,16 +43,28 @@ jEdit's font substitution is off by default (`view.enableFontSubst=false`), so a
 glyph is only reachable through the `font:` field of the symbol table — dropping
 that field makes the symbol render as blank.
 
+That reasoning is about the text area.  jEdit's own input fields — the Find and
+Replace boxes, the quick-search bar, Isabelle's Query input — have one font for
+the whole component and no `font:` field to consult, which is why `PhiSymbols`
+carries a whole text face as well and why those two boxes, monospaced before, are
+now proportional.  The history drop-down under a field, and other Swing surfaces
+such as HyperSearch's result list and the file browser's tree, are still not
+covered: they draw in whatever `MenuItem.font` and their own defaults say.
+
 ## Pipeline
 
     PhiSymbols.sfd  --FontForge-->  PhiSymbols.ttf  --build_word_glyphs.py-->  PhiSymbols.ttf
-     (hand-drawn)                                                              (+ word glyphs)
+     (hand-drawn)                                                     (+ word glyphs, + a text face)
 
 Hand-drawn symbols stay in `PhiSymbols.sfd`; edit them with FontForge and export
 the `.ttf` as before.  Word glyphs are generated and never enter the `.sfd`.
-The script is idempotent — every glyph it adds is named `word.<word>` and all of
-them are dropped at the start of a run — so it is safe to run it repeatedly, and
-safe to run it again after re-exporting the `.sfd`.
+The script is idempotent — every glyph it adds is named `word.*`, `base.*` or
+`stix.*` and all of them are dropped at the start of a run — so it is safe to run
+it repeatedly, and safe to run it again after re-exporting the `.sfd`.
+
+The text face is the third kind of glyph, and it is there for jEdit's own input
+fields rather than for the text area; `phi-font-readme.txt` section 3 says what
+is copied and `../jedit/UI_FONT_PLAN.md` why.
 
 ## Copying a word out of jEdit
 
@@ -174,14 +186,20 @@ into a `.thy` shows nothing,
 
 1. Edit `words.txt` (one entry per line, `#` starts a comment).
 2. Run `python3 build_word_glyphs.py` from this directory.
-3. Run `../jedit/run_word_clipboard_test.sh` — it round-trips every entry, and every
+3. Run `python3 build_word_glyphs.py --check`.  It rebuilds everything in memory,
+   writes nothing, and checks the merged text face against its sources: outlines
+   copied unchanged, advances, the em correction on the mathematical alphanumerics,
+   and that the sources were not modified.  It compares font data rather than
+   rendered pixels, on purpose — see `../jedit/UI_FONT_PLAN.md`.
+4. Run `../jedit/run_word_clipboard_test.sh` — it round-trips every entry, and every
    ordered pair of entries written against each other, through the real BeanShell
    interpreter, and checks the fold rule described above.  The two halves of this
    feature are generated apart and nothing but this test makes them agree.  It also
    fails if the new entry spells with an ASCII character other than `.` or `_`: what
    counts as one run is a fixed convention, so such a word would silently stop
-   folding until the convention is widened to match.
-4. Restart the Isabelle/jEdit session and check the new symbol renders.
+   folding until the convention is widened to match.  It also draws the font, and
+   fails if a word glyph or ordinary ASCII puts no ink on the page.
+5. Restart the Isabelle/jEdit session and check the new symbol renders.
 
 An entry is normally just the word, and then the symbol name, the glyph and the
 abbreviation are all that word.  They come apart when the word reads with
@@ -211,7 +229,10 @@ Requirements: `fontTools`, `STIXTwoMath-Regular.otf` and `STIXTwoText-Medium.otf
 — the script looks in `~/.local/share/fonts/stix2/` and the usual system font
 directories, or takes `--stix PATH` / `--stix-text PATH`.  STIX Two is OFL
 licensed (`STIX-OFL.txt` in this directory) and is already the source of several
-hand-drawn glyphs in this font.  `--check` verifies the inputs and writes nothing.
+hand-drawn glyphs in this font.  The Isabelle distribution is needed as well, for
+the symbol table and for the text face; `--output DIR` writes the run's three
+files under `DIR` in the component's own layout instead of over the committed
+ones, which is how a build is tried without touching a shared working tree.
 
 ## What the generator decides for you
 
