@@ -65,7 +65,10 @@ ISABELLE = "Isabelle2025-2"
 # the x-height reference the word glyphs are sized against.  Isabelle registers the
 # *hinted* variant of both unless the untracked $ISABELLE_HOME_USER/etc/preferences
 # sets isabelle_fonts_hinted=false, so the hinted variant is what gets merged.
-BASE_FACE = "IsabelleDejaVuSans.ttf"
+TEXT_FACE = "IsabelleDejaVuSans.ttf"
+# Named by shape rather than by role, and deliberately: it is not a second face that gets
+# merged, it is the ruler the word glyphs are measured against, and being monospaced is
+# the whole reason it is the right ruler.
 MONO_FACE = "IsabelleDejaVuSansMono.ttf"
 # Every face of the component carries this as name ID 5.  Asserted, so that upgrading
 # the distribution fails the build instead of silently ageing the committed font.
@@ -77,8 +80,8 @@ STIX_VERSION = "Version 2.12 b168"
 
 # The glyph name prefixes this script owns, by origin.  Nothing has to remember to drop
 # them: a run starts from SOURCE_FONT, which carries none of them.
-GLYPH_PREFIX = "word."
-BASE_PREFIX = "base."
+WORD_PREFIX = "word."
+TEXT_PREFIX = "text."
 STIX_PREFIX = "stix."
 
 FONT_NAME = "PhiSymbols"                                # the `font:` field of every entry
@@ -102,7 +105,10 @@ MATH_ALPHANUMERIC = range(0x1D400, 0x1D800)   # the block all six live in
 # face's function definitions and its stack depth.  All four travel together: with fpgm
 # and prep but not the raised maxima the interpreter gives up and every glyph in the
 # font draws nothing -- so all seven instruction-related maxp fields, not the two an
-# eye would land on.
+# eye would land on.  Nothing here guards that; the guard is the ink check in
+# jedit/test_word_clipboard.bsh, which is the right shape for a failure whose signature
+# is that nothing draws at all.  Measured: a build with the maxima left unraised fails
+# it with "a word glyph drew nothing in PhiSymbols".
 HINTING_TABLES = ("fpgm", "prep", "cvt ")
 MAXP_HINTING_FIELDS = ("maxFunctionDefs", "maxStackElements", "maxStorage",
                        "maxSizeOfInstructions", "maxTwilightPoints",
@@ -345,8 +351,8 @@ def check_assignment(assigned):
             "point; without it a damaged %s cannot be detected.  Restore it from git."
             % (ARTEFACT, SYMBOLS_OUT))
     with TTFont(str(ARTEFACT)) as built:
-        committed = {n.removeprefix(GLYPH_PREFIX): c
-                     for c, n in built.getBestCmap().items() if n.startswith(GLYPH_PREFIX)}
+        committed = {n.removeprefix(WORD_PREFIX): c
+                     for c, n in built.getBestCmap().items() if n.startswith(WORD_PREFIX)}
     if not committed:
         return                                  # nothing has ever been assigned
     missing = sorted(set(committed) - {n.rstrip("'") for n in assigned})
@@ -436,7 +442,7 @@ def add_glyph(font, name, glyph, metrics):
     font.getGlyphOrder().append(name)
 
 
-def merge_face(font, src, code_points, prefix):
+def copy_glyphs(font, src, code_points, prefix):
     """Copy `src`'s glyphs for `code_points` into `font`, named `prefix` + source name.
 
     Deep-copied: storing a source glyph object and then renaming the components of a
@@ -463,7 +469,7 @@ def merge_face(font, src, code_points, prefix):
     return len(copied)
 
 
-def merge_scaled_face(font, src, code_points, prefix, scale):
+def copy_glyphs_scaled(font, src, code_points, prefix, scale):
     """The same, from a source drawn on a different em -- STIX's 1000 against 2048.
 
     Both halves of the correction matter, and each hides the other's absence: scaled
@@ -562,7 +568,7 @@ def unchanged(font, path):
                    for n in font.getGlyphOrder())
 
 
-def check_font(font, base, stix, phi_before, stix_codes, clip_rows):
+def check_font(font, text_face, stix, phi_before, stix_codes, clip_rows):
     """Every structural property jedit/UI_FONT_PLAN.md asks the merged font to have.
 
     Font data, never rendered pixels.  The property wanted is "the text face's glyphs
@@ -578,32 +584,32 @@ def check_font(font, base, stix, phi_before, stix_codes, clip_rows):
             problems.append(message)
 
     glyf, cmap, hmtx = font["glyf"], font.getBestCmap(), font["hmtx"]
-    base_glyf, base_cmap, base_hmtx = base["glyf"], base.getBestCmap(), base["hmtx"]
+    text_face_glyf, text_face_cmap, text_face_hmtx = text_face["glyf"], text_face.getBestCmap(), text_face["hmtx"]
     stix_cmap, stix_glyphs = stix.getBestCmap(), stix.getGlyphSet()
     phi_codes = set(phi_before)
 
     # The text face was copied unchanged, but for two classes of exception -- each an
     # equality, so that anything else differing is a failure rather than a widening.
     supplied = set()
-    for code, name in sorted(base_cmap.items()):
+    for code, name in sorted(text_face_cmap.items()):
         if code in phi_codes:
             continue
         if code not in cmap:
             want(False, "U+%04X of the text face is missing" % code)
             continue
         mine = cmap[code]
-        if base_glyf[name].numberOfContours == 0 and glyf[mine].numberOfContours != 0:
+        if text_face_glyf[name].numberOfContours == 0 and glyf[mine].numberOfContours != 0:
             supplied.add(code)
             continue
-        want(outline_key(glyf, mine, BASE_PREFIX) == outline_key(base_glyf, name)
-             and hmtx[mine] == base_hmtx[name],
+        want(outline_key(glyf, mine, TEXT_PREFIX) == outline_key(text_face_glyf, name)
+             and hmtx[mine] == text_face_hmtx[name],
              "U+%04X does not draw as the text face draws it" % code)
-    want(supplied == set(stix_codes) & set(base_cmap),
+    want(supplied == set(stix_codes) & set(text_face_cmap),
          "supplied over a blank text-face glyph: %s, expected %s"
-         % (sorted(supplied), sorted(set(stix_codes) & set(base_cmap))))
-    want(phi_codes & set(base_cmap) == PHI_WINS,
+         % (sorted(supplied), sorted(set(stix_codes) & set(text_face_cmap))))
+    want(phi_codes & set(text_face_cmap) == PHI_WINS,
          "PhiSymbols and the text face overlap on %s, not %s"
-         % (sorted(phi_codes & set(base_cmap)), sorted(PHI_WINS)))
+         % (sorted(phi_codes & set(text_face_cmap)), sorted(PHI_WINS)))
 
     # Nothing PhiSymbols draws itself, word glyphs included, moved in the merge.
     for code, before in phi_before.items():
@@ -705,9 +711,9 @@ def main():
                           "--stix", STIX_VERSION)
     stix_text_path = find_font(args.stix_text, STIX_TEXT_CANDIDATES,
                                "STIXTwoText-Medium.otf", "--stix-text", STIX_VERSION)
-    base_path, mono_path = find_isabelle_font(BASE_FACE), find_isabelle_font(MONO_FACE)
+    text_face_path, mono_path = find_isabelle_font(TEXT_FACE), find_isabelle_font(MONO_FACE)
     stix, stix_text = TTFont(str(stix_path)), TTFont(str(stix_text_path))
-    base, mono = TTFont(str(base_path)), TTFont(str(mono_path))
+    text_face, mono = TTFont(str(text_face_path)), TTFont(str(mono_path))
     # Without recalcTimestamp=False every run differs from the last in head.modified
     # alone, and the artefact stops being determined by its inputs.  With it, the
     # artefact carries the hand-drawn font's dates, which is what they should mean:
@@ -715,7 +721,7 @@ def main():
     font = TTFont(str(SOURCE_FONT), recalcTimestamp=False)
 
     # The merge copies outlines verbatim, so the text face has to agree as well.
-    for other, what in ((mono, MONO_FACE), (base, BASE_FACE)):
+    for other, what in ((mono, MONO_FACE), (text_face, TEXT_FACE)):
         if font["head"].unitsPerEm != other["head"].unitsPerEm:
             die("PhiSymbols and %s disagree on unitsPerEm" % what)
 
@@ -751,7 +757,7 @@ def main():
             scale = scale_upper if all_upper else scale_lower
         glyph, advance = compose(src, drawn, all_upper, scale, plain)
         glyph.recalcBounds(glyf)
-        gname = GLYPH_PREFIX + word
+        gname = WORD_PREFIX + word
         # A word whose name Isabelle already uses (\<in>, \<open>, ...) gets a prime.
         name = word + "'" if word in taken else word
         # If that verdict ever flips -- a new Isabelle claims a name this table already
@@ -791,27 +797,27 @@ def main():
     # would be an artefact of the order of the statements below.
     phi_cmap = font.getBestCmap()
     phi_before = {c: glyph_state(font, n) for c, n in phi_cmap.items()}
-    base_cmap, base_glyf, stix_cmap = base.getBestCmap(), base["glyf"], stix.getBestCmap()
+    text_face_cmap, text_face_glyf, stix_cmap = text_face.getBestCmap(), text_face["glyf"], stix.getBestCmap()
     # The mathematical alphanumerics the text face does not draw: it lacks most of the
     # block outright, and maps one code point in it to a glyph with no outline.
     stix_codes = sorted(c for c in MATH_ALPHANUMERIC
                         if c in stix_cmap and c not in phi_cmap
-                        and (c not in base_cmap
-                             or base_glyf[base_cmap[c]].numberOfContours == 0))
+                        and (c not in text_face_cmap
+                             or text_face_glyf[text_face_cmap[c]].numberOfContours == 0))
     # PhiSymbols draws U+061F and U+2023 itself and wins them, as it already does in
     # the text area: `symbols` declares both `font: PhiSymbols`.
-    base_codes = sorted(set(base_cmap) - set(phi_cmap) - set(stix_codes))
-    copied = merge_face(font, base, base_codes, BASE_PREFIX)
-    merge_scaled_face(font, stix, stix_codes, STIX_PREFIX,
+    text_face_codes = sorted(set(text_face_cmap) - set(phi_cmap) - set(stix_codes))
+    copied = copy_glyphs(font, text_face, text_face_codes, TEXT_PREFIX)
+    copy_glyphs_scaled(font, stix, stix_codes, STIX_PREFIX,
                       font["head"].unitsPerEm / stix["head"].unitsPerEm)
     for tag in HINTING_TABLES:
-        font[tag] = copy.deepcopy(base[tag])
-    raise_maxp_hinting(font, base)
+        font[tag] = copy.deepcopy(text_face[tag])
+    raise_maxp_hinting(font, text_face)
     set_name_records(font)
     # Checked here, where both fonts are still open, rather than inside check_font:
     # the merge is the only thing that could have touched them, and a check that owns
     # its own copies cannot see a source this run corrupted.
-    for source, path in ((base, base_path), (stix, stix_path)):
+    for source, path in ((text_face, text_face_path), (stix, stix_path)):
         if not unchanged(source, path):
             die("%s was modified by this run" % path)
 
@@ -837,7 +843,7 @@ def main():
 
     print("%d words, %d text-face code points in %d glyphs, %d mathematical "
           "alphanumerics from STIX"
-          % (len(rows), len(base_codes), copied, len(stix_codes)))
+          % (len(rows), len(text_face_codes), copied, len(stix_codes)))
 
     # One path from here, whatever the mode: build, write, check what was written.  The
     # checks run on the bytes that landed rather than on this script's model of them,
@@ -864,7 +870,7 @@ def main():
         print("primed to avoid a name clash: %s" % (", ".join(primed) or "none"))
 
     written.seek(0)
-    check_font(TTFont(written), base, stix, phi_before, stix_codes, clip_rows)
+    check_font(TTFont(written), text_face, stix, phi_before, stix_codes, clip_rows)
     if args.check:
         compare_with_committed(written.getvalue(), text, clip_text, stix_path)
 
