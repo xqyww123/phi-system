@@ -7,15 +7,16 @@ single Isabelle symbol per word (``\\<transforms>``) whose glyph draws the whole
 word.  Isabelle allows exactly one code point per symbol, so the word has to be
 one glyph -- see WORD_GLYPHS.md for why.
 
-Hand-drawn glyphs stay in PhiSymbols.sfd (FontForge).  Word glyphs are generated
-here and never enter the .sfd.  The run is idempotent: every glyph this script
-previously added carries one of the ``word.``, ``base.``, ``stix.`` name prefixes
-and is dropped first.
+Hand-drawn glyphs stay in PhiSymbols.sfd (FontForge), exported to
+source/PhiSymbols-hand-drawn.ttf, which is what a run starts from.  Word glyphs
+are generated here and never enter the .sfd.  Nothing is ever undone: the input
+is the hand-drawn font and the output is PhiSymbols.ttf, so a run cannot inherit
+the last run's work.
 
-The other two prefixes are a whole text face, merged in so that a Swing widget
+Besides the word glyphs a run copies in a whole text face, so that a Swing widget
 given the family ``PhiSymbols`` draws ordinary text as well as word glyphs -- a
 Swing text component has one font for the whole component, and the hand-drawn
-font covers no ASCII at all.  See jedit/UI_FONT_PLAN.md.
+font covers no printable ASCII at all.  See jedit/UI_FONT_PLAN.md.
 
 Usage:  python3 build_word_glyphs.py [--stix PATH] [--output DIR] [--check]
 """
@@ -31,6 +32,7 @@ import re
 import string
 import sys
 
+import fontTools
 from fontTools.misc.transform import Transform
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.cu2quPen import Cu2QuPen
@@ -41,12 +43,18 @@ from fontTools.ttLib import TTFont
 HERE = pathlib.Path(__file__).resolve().parent          # contrib/phi-system/fonts
 COMPONENT = HERE.parent                                 # contrib/phi-system
 
-FONT = HERE / "PhiSymbols.ttf"                          # always read here; written under --output
+# The hand-drawn font this run starts from: the FontForge export of PhiSymbols.sfd,
+# committed so that a run never has to undo the last run's work.  Never registered, never
+# shipped, never installed -- it is an input, the way the .sfd is -- and it lives outside
+# fonts/ because that directory is what name ID 14 advertises to end users, while this
+# file claims the family name PhiSymbols and draws no printable ASCII at all.
+SOURCE_FONT = HERE / "source/PhiSymbols-hand-drawn.ttf"
+ARTEFACT = HERE / "PhiSymbols.ttf"                      # the only font this run writes
 WORDS = HERE / "words.txt"
 SYMBOLS_OUT = COMPONENT / "symbols-words"               # generated, listed in etc/settings
 SYMBOLS_HAND = COMPONENT / "symbols"                    # hand-maintained
 CLIPBOARD_OUT = COMPONENT / "jedit/word-clipboard-text"  # generated, read by phi_word_clipboard.bsh
-GENERATED = (FONT, SYMBOLS_OUT, CLIPBOARD_OUT)          # everything a run writes
+GENERATED = (ARTEFACT, SYMBOLS_OUT, CLIPBOARD_OUT)      # everything a run writes
 
 # The Isabelle whose symbol table and fonts this component is generated against.
 # Named once: falling back to a different distribution would still parse, and answer
@@ -62,13 +70,16 @@ MONO_FACE = "IsabelleDejaVuSansMono.ttf"
 # Every face of the component carries this as name ID 5.  Asserted, so that upgrading
 # the distribution fails the build instead of silently ageing the committed font.
 ISABELLE_FONT_VERSION = "Version 2.37; ttfautohint (v1.8.4)"
+# The same for STIX, and for the same reason: a different release draws the same code
+# points differently, and the first thing anyone would notice is --check declaring the
+# committed files stale when nothing in the tree had moved.
+STIX_VERSION = "Version 2.12 b168"
 
-# The glyph name prefixes this script owns, by origin.  drop_generated drops all three
-# through this one tuple: extending the script without extending it is completely
-# silent, because the "skip what the destination already covers" filter would then find
-# everything present, copy nothing, and leave the stale glyphs in place.
-GENERATED_PREFIXES = ("word.", "base.", "stix.")
-GLYPH_PREFIX, BASE_PREFIX, STIX_PREFIX = GENERATED_PREFIXES
+# The glyph name prefixes this script owns, by origin.  Nothing has to remember to drop
+# them: a run starts from SOURCE_FONT, which carries none of them.
+GLYPH_PREFIX = "word."
+BASE_PREFIX = "base."
+STIX_PREFIX = "stix."
 
 FONT_NAME = "PhiSymbols"                                # the `font:` field of every entry
 # The `group:` field.  One tab of jEdit's symbol palette per group name, so the words get
@@ -96,13 +107,6 @@ HINTING_TABLES = ("fpgm", "prep", "cvt ")
 MAXP_HINTING_FIELDS = ("maxFunctionDefs", "maxStackElements", "maxStorage",
                        "maxSizeOfInstructions", "maxTwilightPoints",
                        "maxInstructionDefs", "maxZones")
-# What the FontForge export of PhiSymbols.sfd carries, restored by drop_generated so
-# that a run starts from the hand-drawn font.  A font that has been merged cannot tell
-# us these -- it carries the text face's -- so they are written down here, and checked
-# against any font that has not been merged.
-PHI_CVT = [68, 1297]
-PHI_MAXP_HINTING = (1, 64, 1, 46, 0, 0, 2)
-
 # The only code points both PhiSymbols and the text face draw.  PhiSymbols wins them,
 # as it already does in the text area -- `symbols` declares \<rev_quest> and \<tribullet>
 # `font: PhiSymbols`.  Asserted, so that a text face growing into phi's territory is a
@@ -177,10 +181,16 @@ def die(msg):
     sys.exit("build_word_glyphs: " + msg)
 
 
-def find_font(explicit, candidates, what, option):
+def find_font(explicit, candidates, what, option, version=None):
     for cand in ([explicit] if explicit else []) + candidates:
         p = pathlib.Path(os.path.expanduser(cand))
         if p.is_file():
+            if version is not None:
+                with TTFont(str(p)) as probe:
+                    got = probe["name"].getDebugName(5)
+                if got != version:
+                    die("%s is %r, not the %r this component is generated against."
+                        % (p, got, version))
             return p
     die("%s not found; pass %s PATH (see WORD_GLYPHS.md)" % (what, option))
 
@@ -276,19 +286,61 @@ def already_taken():
     return names, abbrevs
 
 
-def previous_assignment():
-    """symbol name -> code point, so that editing words.txt never renumbers survivors.
+HIGH_WATER = "# highest code point ever assigned: 0x%06X"
+HIGH_WATER_RE = re.compile(r"# highest code point ever assigned:\s*(0x[0-9a-fA-F]+)")
 
-    Keyed by the symbol name rather than the word, because the two part company
-    once a word carries its own abbreviation.
+
+def previous_assignment():
+    """symbol name -> code point, and the highest code point ever handed out.
+
+    Keyed by the symbol name rather than the word, because the two part company once a
+    word carries its own abbreviation.  The high-water mark is a comment line of the
+    same file -- Isabelle folds comment lines away when it reads a symbol table, so it
+    costs nothing there, and unlike the entries it survives a word being deleted.  A
+    table written before this line existed falls back to the highest entry in it, which
+    is the same number as long as nothing has been deleted yet.
     """
-    out = {}
+    out, high = {}, 0
     if SYMBOLS_OUT.is_file():
         for line in SYMBOLS_OUT.read_text(encoding="utf-8").splitlines():
             m = re.match(r"\\<([A-Za-z][A-Za-z0-9_']*)>\s+code:\s*(0x[0-9a-fA-F]+)", line)
             if m:
                 out[m.group(1)] = int(m.group(2), 16)
-    return out
+                continue
+            m = HIGH_WATER_RE.match(line)
+            if m:
+                high = int(m.group(1), 16)
+    return out, max([high] + list(out.values()) or [PUA_FIRST - 1])
+
+
+def check_assignment(assigned):
+    """Refuse to run when the record of which word owns which code point is damaged.
+
+    Those code points are written into every .thy file that uses one of these symbols,
+    so handing them out afresh is not a rebuild, it is a silent rewrite of every such
+    source.  `symbols-words` is one record of the assignment and the artefact's own cmap
+    is the other; they are written together and must agree.  An emptiness test is not
+    enough: a partial `symbols-words` renumbers whatever it has lost, quietly.
+    """
+    if not ARTEFACT.is_file():
+        die("%s is missing.  It is the second record of which word owns which code "
+            "point; without it a damaged %s cannot be detected.  Restore it from git."
+            % (ARTEFACT, SYMBOLS_OUT))
+    with TTFont(str(ARTEFACT)) as built:
+        committed = {n.removeprefix(GLYPH_PREFIX): c
+                     for c, n in built.getBestCmap().items() if n.startswith(GLYPH_PREFIX)}
+    if not committed:
+        return                                  # nothing has ever been assigned
+    missing = sorted(set(committed) - {n.rstrip("'") for n in assigned})
+    if missing:
+        die("%s is missing %d of the words %s draws, including %r.  Regenerating now "
+            "would hand their code points to other words.  Restore it from git."
+            % (SYMBOLS_OUT, len(missing), ARTEFACT, missing[0]))
+    for name, code in assigned.items():
+        was = committed.get(name.rstrip("'"))
+        if was is not None and was != code:
+            die("%s says \\<%s> is U+%04X and %s draws it at U+%04X.  One of the two is "
+                "damaged; restore both from git." % (SYMBOLS_OUT, name, code, ARTEFACT, was))
 
 
 def source_code_point(ch, all_upper, plain=False):
@@ -425,33 +477,17 @@ def set_maxp_hinting(font, values):
         setattr(font["maxp"], field, value)
 
 
-def drop_generated(font):
-    """Undo everything this script adds, so that a run starts from the hand-drawn font."""
-    order = [g for g in font.getGlyphOrder() if not g.startswith(GENERATED_PREFIXES)]
-    merged = any(g.startswith(BASE_PREFIX) for g in font.getGlyphOrder())
-    for name in set(font.getGlyphOrder()) - set(order):
-        font["glyf"].glyphs.pop(name, None)
-        font["hmtx"].metrics.pop(name, None)
-    for table in font["cmap"].tables:
-        for cp in [c for c, n in table.cmap.items() if n.startswith(GENERATED_PREFIXES)]:
-            del table.cmap[cp]
-    font.setGlyphOrder(order)
-    font["glyf"].glyphOrder = order
-    # The merge changes more than glyphs, and leaving any of it in place would compound
-    # over runs.  A font that has never been merged instead has the values checked, so
-    # that re-exporting the .sfd with different hinting is not silently overwritten.
-    if merged:
-        del font["fpgm"], font["prep"]
-        font["cvt "].values = list(PHI_CVT)
-        set_maxp_hinting(font, PHI_MAXP_HINTING)
-    elif (list(font["cvt "].values), maxp_hinting(font)) != (PHI_CVT, PHI_MAXP_HINTING):
-        die("%s carries hinting this script does not know about.  PHI_CVT and "
-            "PHI_MAXP_HINTING describe the FontForge export and must be updated "
-            "together with it." % FONT)
-    # fontTools' format 2.0 `post` encoder appends a glyph name and never removes one,
-    # so the committed font still carries word.tr from a word deleted long ago.  Emptied
-    # here, and rebuilt from the live glyph order on save.
-    font["post"].extraNames = []
+def raise_maxp_hinting(font, text_face):
+    """Raise the seven instruction-related maxima to cover both fonts' bytecode.
+
+    The copied glyphs need the text face's; the hand-drawn font keeps its own, and one
+    of its 64 glyphs is instructed.  The text face dominates in every field today, so
+    the max is the text face's -- but a re-exported .sfd needing more would otherwise
+    pass every check while its glyphs stopped drawing, which is the failure the whole
+    transplant exists to prevent.
+    """
+    set_maxp_hinting(font, tuple(max(a, b) for a, b in
+                                 zip(maxp_hinting(font), maxp_hinting(text_face))))
 
 
 def outline_key(glyf, name, prefix=""):
@@ -501,7 +537,7 @@ def unchanged(font, path):
                    for n in font.getGlyphOrder())
 
 
-def check_font(font, base, base_path, stix, stix_path, phi_before, stix_codes, clip_rows):
+def check_font(font, base, stix, phi_before, stix_codes, clip_rows):
     """Every structural property jedit/UI_FONT_PLAN.md asks the merged font to have.
 
     Font data, never rendered pixels.  The property wanted is "the text face's glyphs
@@ -582,9 +618,6 @@ def check_font(font, base, base_path, stix, stix_path, phi_before, stix_codes, c
              "U+%04X is %d units tall, not the %d STIX's glyph scales to"
              % (code, height, wanted))
 
-    for source, path in ((base, base_path), (stix, stix_path)):
-        want(unchanged(source, path), "%s was modified by this run" % path)
-
     tables = set(font.keys()) - {"GlyphOrder"}
     want(tables == MERGED_TABLES, "the merged font carries the tables %s, expected %s"
          % (sorted(tables), sorted(MERGED_TABLES)))
@@ -605,25 +638,55 @@ def check_font(font, base, base_path, stix, stix_path, phi_before, stix_codes, c
     print("structural checks: all passed")
 
 
+def compare_with_committed(font_bytes, text, clip_text, stix_path):
+    """Whether the committed files are what today's inputs produce.
+
+    This is the question `--check` exists to answer.  Editing words.txt and forgetting
+    to regenerate is invisible to everything else: `symbols-words` and the clipboard
+    table go stale together, so they still agree with each other, and the test suite
+    compares them with each other.
+    """
+    stale = [str(path) for built, path in ((font_bytes, ARTEFACT),
+                                           (text.encode("utf-8"), SYMBOLS_OUT),
+                                           (clip_text.encode("utf-8"), CLIPBOARD_OUT))
+             if not path.is_file() or path.read_bytes() != built]
+    if not stale:
+        print("the committed files are what these inputs produce")
+        return
+    for path in stale:
+        print("  " + path)
+    die("%d committed file(s) differ from what this run produces.  Either they are out "
+        "of date -- run this script without --check -- or your inputs differ from the "
+        "ones they were built with: this run used fontTools %s and %s.  A different "
+        "fontTools writes the same glyphs into different bytes."
+        % (len(stale), fontTools.version, stix_path.name))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stix", help="path to STIXTwoMath-Regular.otf")
     ap.add_argument("--stix-text", help="path to STIXTwoText-Medium.otf")
     ap.add_argument("--output", metavar="DIR", help="write the generated files under DIR, "
                     "in the component's own layout, instead of over the committed ones")
-    ap.add_argument("--check", action="store_true", help="verify only, write nothing")
+    ap.add_argument("--check", action="store_true", help="write nothing; check the build "
+                    "and compare it against the committed files")
     args = ap.parse_args()
+    if args.check and args.output:
+        ap.error("--output names where a build is written and --check writes nothing")
 
     words = read_words()
-    stix_path = find_font(args.stix, STIX_CANDIDATES, "STIXTwoMath-Regular.otf", "--stix")
+    stix_path = find_font(args.stix, STIX_CANDIDATES, "STIXTwoMath-Regular.otf",
+                          "--stix", STIX_VERSION)
     stix_text_path = find_font(args.stix_text, STIX_TEXT_CANDIDATES,
-                               "STIXTwoText-Medium.otf", "--stix-text")
+                               "STIXTwoText-Medium.otf", "--stix-text", STIX_VERSION)
     base_path, mono_path = find_isabelle_font(BASE_FACE), find_isabelle_font(MONO_FACE)
     stix, stix_text = TTFont(str(stix_path)), TTFont(str(stix_text_path))
     base, mono = TTFont(str(base_path)), TTFont(str(mono_path))
     # Without recalcTimestamp=False every run differs from the last in head.modified
-    # alone, and the committed font stops being determined by its inputs.
-    font = TTFont(str(FONT), recalcTimestamp=False)
+    # alone, and the artefact stops being determined by its inputs.  With it, the
+    # artefact carries the hand-drawn font's dates, which is what they should mean:
+    # created is the FontForge export, modified is the last change to the design.
+    font = TTFont(str(SOURCE_FONT), recalcTimestamp=False)
 
     # The merge copies outlines verbatim, so the text face has to agree as well.
     for other, what in ((mono, MONO_FACE), (base, BASE_FACE)):
@@ -640,22 +703,19 @@ def main():
     med_upper = ref_upper / glyph_height(stix_text, ord("T"))
 
     taken, taken_abbrevs = already_taken()
-    assigned = previous_assignment()
-    # Every code point already in use comes from `symbols-words`, and every source that
-    # writes one of these symbols depends on it staying put.  If that file is lost, this
-    # run would hand out fresh code points from PUA_FIRST in words.txt order and every
-    # such source would silently start rendering the wrong word.  A font that already
-    # carries word glyphs is proof this is not the first run.
-    if not assigned and any(g.startswith(GLYPH_PREFIX) for g in font.getGlyphOrder()):
-        die("%s is missing or unreadable, but %s already has word glyphs: regenerating "
-            "now would renumber every symbol.  Restore it from git." % (SYMBOLS_OUT, FONT))
-    free = (c for c in range(PUA_FIRST, PUA_LAST + 1) if c not in set(assigned.values()))
+    assigned, high_water = previous_assignment()
+    check_assignment(assigned)
+    # Never reuse a retired code point.  Handing a deleted word's code point to the next
+    # word added makes every document written before the deletion render -- and fold to
+    # -- a different word, silently; it has happened once in this repository already.
+    # The high-water mark outlives the deletion because HIGHEST_ASSIGNED keeps it in
+    # `symbols-words`, where deleting a word cannot take it away.
+    used = set(assigned.values())
+    free = (c for c in range(high_water + 1, PUA_LAST + 1) if c not in used)
 
-    drop_generated(font)
     glyf, hmtx = font["glyf"], font["hmtx"]
-    # The live glyph order, not a snapshot of it: one object, so that every position
-    # after drop_generated is correct by construction rather than by remembering to
-    # take the copy late enough.
+    # The live glyph order, not a snapshot of it: one object, so that every position is
+    # correct by construction rather than by remembering to take the copy late enough.
     order = font.getGlyphOrder()
     rows, clip_rows = [], []
     for word, drawn, abbrevs in words:
@@ -725,8 +785,14 @@ def main():
                       font["head"].unitsPerEm / stix["head"].unitsPerEm)
     for tag in HINTING_TABLES:
         font[tag] = copy.deepcopy(base[tag])
-    set_maxp_hinting(font, maxp_hinting(base))
+    raise_maxp_hinting(font, base)
     set_name_records(font)
+    # Checked here, where both fonts are still open, rather than inside check_font:
+    # the merge is the only thing that could have touched them, and a check that owns
+    # its own copies cannot see a source this run corrupted.
+    for source, path in ((base, base_path), (stix, stix_path)):
+        if not unchanged(source, path):
+            die("%s was modified by this run" % path)
 
     font.setGlyphOrder(order)
     glyf.glyphOrder = order
@@ -741,7 +807,8 @@ def main():
         if "<%s>" % a in taken_abbrevs:
             die("<%s> is already an abbreviation in %s or Isabelle's table" % (a, SYMBOLS_HAND))
 
-    text = "# Generated by fonts/build_word_glyphs.py -- do not edit.\n" + "".join(
+    text = ("# Generated by fonts/build_word_glyphs.py -- do not edit.\n"
+            + HIGH_WATER % max([high_water] + [c for _, c, _ in rows]) + "\n") + "".join(
         "\\<%s>%s code: 0x%06X  font: %s  group: %s%s\n"
         % (name, " " * max(1, 18 - len(name)), code, FONT_NAME, GROUP,
            "".join("  abbrev: <%s>" % a for a in abbrevs))
@@ -754,33 +821,35 @@ def main():
     print("%d words, %d text-face code points in %d glyphs, %d mathematical "
           "alphanumerics from STIX"
           % (len(rows), len(base_codes), copied, len(stix_codes)))
-    if args.check:
-        # Checked after a round trip through the file format, so that the artefact is
-        # what gets checked rather than this script's model of it -- writing a
-        # supplementary code point into a format 4 cmap subtable, for one, fails
-        # nowhere but in font.save.
-        written = io.BytesIO()
-        font.save(written)
-        written.seek(0)
-        check_font(TTFont(written), base, base_path, stix, stix_path, phi_before,
-                   stix_codes, clip_rows)
-        return
 
-    # Under --output the same three files, in the same layout, somewhere else: a check
-    # build must never be able to touch the committed ones.
+    # One path from here, whatever the mode: build, write, check what was written.  The
+    # checks run on the bytes that landed rather than on this script's model of them,
+    # which is the only way to see a fault that appears at save time -- a supplementary
+    # code point in a format 4 cmap subtable, for one.  And writing first is what keeps
+    # --output usable as an evidence path: a deliberately damaged build has to reach the
+    # disk to be rendered, and "shown to fail" is what this component asks of a check.
+    written = io.BytesIO()
+    font.save(written)
+    written.seek(0)
     root = pathlib.Path(args.output) if args.output else COMPONENT
     font_out, symbols_out, clipboard_out = [root / p.relative_to(COMPONENT)
                                             for p in GENERATED]
-    for path in (font_out, symbols_out, clipboard_out):
-        path.parent.mkdir(parents=True, exist_ok=True)
-    font.save(str(font_out))
-    symbols_out.write_text(text, encoding="utf-8")
-    clipboard_out.write_text(clip_text, encoding="utf-8")
-    primed = [n for n, _, _ in rows if n.endswith("'")]
-    print("%d word glyphs and a merged text face -> %s" % (len(rows), font_out))
-    print("%d symbol entries -> %s" % (len(rows), symbols_out))
-    print("%d clipboard entries -> %s" % (len(clip_rows), clipboard_out))
-    print("primed to avoid a name clash: %s" % (", ".join(primed) or "none"))
+    if not args.check:
+        for path in (font_out, symbols_out, clipboard_out):
+            path.parent.mkdir(parents=True, exist_ok=True)
+        font_out.write_bytes(written.getvalue())
+        symbols_out.write_text(text, encoding="utf-8")
+        clipboard_out.write_text(clip_text, encoding="utf-8")
+        primed = [n for n, _, _ in rows if n.endswith("'")]
+        print("%d word glyphs and a merged text face -> %s" % (len(rows), font_out))
+        print("%d symbol entries -> %s" % (len(rows), symbols_out))
+        print("%d clipboard entries -> %s" % (len(clip_rows), clipboard_out))
+        print("primed to avoid a name clash: %s" % (", ".join(primed) or "none"))
+
+    written.seek(0)
+    check_font(TTFont(written), base, stix, phi_before, stix_codes, clip_rows)
+    if args.check:
+        compare_with_committed(written.getvalue(), text, clip_text, stix_path)
 
 
 if __name__ == "__main__":
