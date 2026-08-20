@@ -283,6 +283,18 @@ primary-selection wrapper installed
   shift-click extension as well (`TextAreaMouseHandler.java:214`).
 - **Adjacent glyphs**: `WORD_BOUNDARY_PLAN.md` repairs the 51 directly-adjacent sequences and
   leaves 9 `_`-bridged and 26 user-letter ones, which this plan inherits unchanged.
+- **A mouse selection inside one of jEdit's own text input fields is not covered**, and
+  cannot be by this hook. Those fields are plain Swing components, and
+  `DefaultCaret.updateSystemSelection` (`DefaultCaret.java:1396` in the JDK 21 sources
+  shipped with the component, called from `:1345`) writes `Toolkit.getSystemSelection()`
+  itself, with the component's selected text, never going near register `%`. **Measured**
+  with `java.awt.Robot` on an Xvfb display, with this script loaded and the `%` register
+  wrapped: dragging across a `HistoryTextField` holding `\<pending>abc` leaves
+  `U+E048 U+61 U+62 U+63` on the primary selection, while a write through the register in
+  the same run produces the letters. It is the same asymmetry `../fonts/WORD_GLYPHS.md`
+  already records for copying out of those fields — pasting *into* them folds, taking text
+  *out* of them does not convert — and repairing it would mean replacing the caret on every
+  such field, which no plan proposes.
 - **Platforms without a primary selection** get an unwrapped `DefaultRegister` at `%` after
   the first mouse selection; the install returns early and nothing is broken, but nothing is
   fixed there either.

@@ -174,14 +174,19 @@ landed; strike the marker when that plan lands, and do not delete the line.
   middle-clicked into a buffer fold back into the glyph.  Since expanding and folding are
   not inverses for every shape, the wrapper also remembers the last text it published, so
   that a selection read back inside jEdit is exact even where folding alone could not
-  repair it.  `../jedit/PRIMARY_SELECTION_PLAN.md` records the rest.
+  repair it.  A mouse selection made *inside* one of jEdit's own input fields is the
+  exception, and belongs to the line below.  `../jedit/PRIMARY_SELECTION_PLAN.md` records
+  the rest.
 * **Copying out of one of jEdit's own text input fields** yields the raw glyph.  Pasting
   *into* them now folds — every `HistoryTextField` and `HistoryTextArea` has its transfer
   handler wrapped, which covers the Search and Replace boxes, the quick-search bar, the file
   browser's fields and Isabelle's Query, Sledgehammer and Debugger inputs — but the wrapper
   is one-way: the export methods are handed through untouched, so nothing expands on the way
-  out.  These are input boxes and copying out of one into another application is rare, so the
-  asymmetry is accepted rather than repaired.
+  out.  Selecting text in one of them with the mouse lands the raw glyph on the X11 primary
+  selection for a related reason: these are plain Swing components, and Swing's own
+  `DefaultCaret` writes the primary selection directly, never going near the `%` register
+  the line above wraps.  These are input boxes and taking text out of one into another
+  application is rare, so the asymmetry is accepted rather than repaired.
 
 Outside jEdit, `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<name>`
 escape rather than its code point — its output feeds language-model prompts, the
