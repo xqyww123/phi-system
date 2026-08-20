@@ -16,6 +16,40 @@ Source read from the Isabelle component's own jEdit tree:
 BeanShell out of `jedit.jar`, under `xvfb-run` for anything touching a real X11 selection.
 
 
+## What changed after this plan was reviewed
+
+This plan was reviewed as round 4, before any of the four had landed. Three of them have
+since, and one thing they established makes the sample code below **wrong as written**.
+
+**Every function-local must be declared with a type.** The code review of plan 1's landed
+code (`6571def0`) found that in BeanShell an untyped assignment inside a method walks the
+namespace chain and writes through to a global of that name — the `phi_` prefix protects
+against *other people's* names, and the type is what makes a local a local. Two of the
+shipped script's own functions had shared an untyped `phi_m`, so one clobbered the other's
+matcher mid-call, and a helper in the test reset its caller's loop counter, turning a failing
+check into 135 MB of identical output in thirty seconds. The sample under "The mechanism"
+predates that: `phi_inner`, `phi_sel`, `phi_w2`, `phi_original`, `phi_expanded`, `phi_outer`,
+`phi_s` and `phi_e` are all untyped, and two of them are assigned *inside* methods. Declare
+every one. Note in particular that the comment "`phi_sel` — this wrapper's own slots; NOT
+top-level" states an intent the code as written does not achieve.
+
+**Section 19 of `test_word_clipboard.bsh` is where that is checked.** It plants a hostile
+global for each name and then *calls* the code, because naming a global proves nothing on
+its own. Add this plan's new locals to it.
+
+**What has landed, and what it means here.** `WORD_BOUNDARY_PLAN.md` (plan 1) rewrote
+`phi_word_expand` and `phi_word_fold`, hoisted the table to a top-level `phi_t` — which the
+sample already assumes — and made `run_word_clipboard_test.sh` run under `xvfb-run`, so
+step 2's caveat about the `Registers` static initialiser is already satisfied.
+`SEARCH_FIELD_PASTE_PLAN.md` (plan 3) added the input-field wrapper, and the font work added
+`phi_field_font` and the test's section 21; new test sections start at 22.
+
+**The jEdit citations below were re-verified on 2026-08-20** against
+`contrib/Isabelle2025-2/contrib/jedit-20251128/`, including the load-bearing one: the write
+to `%` at `TextAreaMouseHandler.java:541` really does sit outside the `if(quickCopyDrag)` at
+`:542`, and Isabelle's site properties really do set `view.middleMousePaste=true`.
+
+
 ## The problem
 
 X11 has two clipboards. One is the ordinary clipboard that Ctrl-C and Ctrl-V use. The other
@@ -282,9 +316,10 @@ in the buffer, and confirm the glyph arrives as a glyph.
 ## Procedure
 
 1. **Extend `phi_word_clipboard.bsh`** with `phi_install_primary_selection`, called from
-   `phi_word_install` after the `n == 0` guard. About 35 lines, no new text-transformation
-   logic. Every new bare name carries the `phi_` prefix, method locals included, and must not
-   collide with a name another part of the script already owns.
+   `phi_word_install` after the `phi_n == 0` guard. About 35 lines, no new
+   text-transformation logic. Every new bare name carries the `phi_` prefix **and a
+   declared type** — see "What changed after this plan was reviewed" — and must not collide
+   with a name another part of the script already owns.
 2. **Extend `test_word_clipboard.bsh`** to cover, against a plain
    `java.awt.datatransfer.Clipboard` standing in for the selection:
    - a glyph written to the register comes out as letters and reads back as the glyph;
