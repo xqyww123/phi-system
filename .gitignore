@@ -14,3 +14,7 @@ output
 
 *.proof-store.lock
 *.unicode.thy
+
+# Python bytecode caches, never artefacts of this component
+__pycache__/
+*.pyc
