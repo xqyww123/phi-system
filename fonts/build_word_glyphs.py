@@ -125,6 +125,19 @@ HEIGHT_TOLERANCE = 8
 # its README; this says it inside the file, because the file travels alone -- html.scala
 # copies every ISABELLE_FONTS entry as a bare .ttf into each browser-info directory, and
 # component_vscode_extension.scala into the VS Code extension, neither with a licence.
+# The upstream notices themselves, verbatim from the licence files in this directory.
+# The OFL and the Bitstream terms ask for these to travel with the binary, and this
+# binary travels alone: name IDs 13 and 14 can only point at a directory, and in a
+# browser-info directory or inside the VS Code extension that directory is not there.
+UPSTREAM_NOTICES = (
+    "Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved.\n"
+    "Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved.\n"
+    "Copyright 2001-2021 The STIX Fonts Project Authors "
+    "(https://github.com/stipub/stixfonts).\n"
+    "Copyright 2022 The Noto Project Authors "
+    "(https://github.com/notofonts/symbols).\n"
+    "The blackboard-bold glyphs are from the font txmia by Young Ryu, package pxfonts, "
+    "which states no version of the GPL; GPL v2 is included as fonts/GPL-2.0.txt.")
 COPYRIGHT = (
     "Copyright 2023 Qiyuan Xu.\n"
     "Hand-drawn glyphs are copied and modified from Noto Sans Symbols 2, STIX Two Math "
@@ -134,7 +147,7 @@ COPYRIGHT = (
     "Fonts -- together with the IsabelleSymbols glyphs: Bluesky TeX fonts scaled 222%, "
     "some symbols from Symbola, and the blackboard-bold glyphs from the font txmia of "
     "the pxfonts package, which are subject to the GPL.  See the README of the Isabelle "
-    "fonts component for that mixture.")
+    "fonts component for that mixture.\n" + UPSTREAM_NOTICES)
 LICENCE = (
     "This font contains glyphs from upstreams under different licences: the Bitstream "
     "Vera Fonts Copyright and the Arev Fonts Copyright (DejaVu Sans), the SIL Open Font "
@@ -149,7 +162,12 @@ PROVENANCE = ("Noto Sans Symbols 2", "STIX Two", "DejaVu Sans", "Bitstream Vera"
 
 # What the merged font's table set must be.  Written down so that swapping this merge
 # for fontTools.merge, which would drag in the text face's GSUB, GPOS and MATH tables
-# that PhiSymbols has no counterpart for, cannot pass unnoticed.
+# that PhiSymbols has no counterpart for, cannot pass unnoticed.  The stronger reason
+# not to swap is in fontTools itself: merge/tables.py gives maxp's mergeMap "maxStorage",
+# "maxFunctionDefs" and "maxInstructionDefs" the value `first`, under its own comment
+# "# TODO When we correctly merge hinting data, update these values".  PhiSymbols would
+# be first, so those three would stay at its own 1, 1 and 0 -- exactly the font in which
+# nothing draws.
 MERGED_TABLES = frozenset(["FFTM", "GDEF", "OS/2", "cmap", "cvt ", "fpgm", "gasp",
                            "glyf", "head", "hhea", "hmtx", "loca", "maxp", "name",
                            "post", "prep"])
@@ -404,6 +422,20 @@ def map_code_point(font, code, glyph_name):
             table.cmap[code] = glyph_name
 
 
+def add_glyph(font, name, glyph, metrics):
+    """The only way a glyph enters this font: outline, metrics and glyph order together.
+
+    Three places used to spell this out, so "in glyf but missing from hmtx or from the
+    glyph order" was a rule three sites had to remember rather than a state nothing can
+    reach.  Appending to the live glyph order is what keeps it one object.
+    """
+    if name in font["glyf"].glyphs:
+        die("%s would be added twice" % name)
+    font["glyf"].glyphs[name] = glyph
+    font["hmtx"].metrics[name] = metrics
+    font.getGlyphOrder().append(name)
+
+
 def merge_face(font, src, code_points, prefix):
     """Copy `src`'s glyphs for `code_points` into `font`, named `prefix` + source name.
 
@@ -412,7 +444,6 @@ def merge_face(font, src, code_points, prefix):
     them, in the very object this run keeps reading.  A component comes along whether
     or not a code point addresses it.
     """
-    glyf, hmtx, order = font["glyf"], font["hmtx"], font.getGlyphOrder()
     src_glyf, src_hmtx, src_cmap = src["glyf"], src["hmtx"], src.getBestCmap()
     copied = set()
 
@@ -424,9 +455,7 @@ def merge_face(font, src, code_points, prefix):
         for component in glyph.components if glyph.isComposite() else []:
             take(component.glyphName)
             component.glyphName = prefix + component.glyphName
-        glyf.glyphs[prefix + name] = glyph
-        hmtx.metrics[prefix + name] = src_hmtx[name]
-        order.append(prefix + name)
+        add_glyph(font, prefix + name, glyph, src_hmtx[name])
 
     for code in code_points:
         take(src_cmap[code])
@@ -441,19 +470,15 @@ def merge_scaled_face(font, src, code_points, prefix, scale):
     outlines with unscaled advances leaves the letters overlapping, scaled advances
     with unscaled outlines draws them at half size while every width still checks out.
     """
-    glyf, hmtx, order = font["glyf"], font["hmtx"], font.getGlyphOrder()
     gs, src_hmtx, src_cmap = src.getGlyphSet(), src["hmtx"], src.getBestCmap()
     for code in code_points:
         name = src_cmap[code]
-        if prefix + name not in glyf.glyphs:
-            pen = TTGlyphPen(None)
-            draw_scaled(pen, gs, name, scale)
-            glyph = pen.glyph()
-            glyph.recalcBounds(glyf)
-            glyf.glyphs[prefix + name] = glyph
-            hmtx.metrics[prefix + name] = (int(round(src_hmtx[name][0] * scale)),
-                                           glyph.xMin)
-            order.append(prefix + name)
+        pen = TTGlyphPen(None)
+        draw_scaled(pen, gs, name, scale)
+        glyph = pen.glyph()
+        glyph.recalcBounds(font["glyf"])
+        add_glyph(font, prefix + name, glyph,
+                  (int(round(src_hmtx[name][0] * scale)), glyph.xMin))
         map_code_point(font, code, prefix + name)
 
 
@@ -497,8 +522,8 @@ def outline_key(glyf, name, prefix=""):
     from.  Two things a glyph also carries are deliberately left out, because they
     differ between two fonts without the drawing differing at all: the stored bounding
     box, which fontTools recomputes from the outline on save and which the text face
-    pads by a unit on 52 of its glyphs, and the glyph *ids* a composite compiles its
-    components to.  A composite is therefore compared component by component, with the
+    pads by a unit on 46 of its glyphs, and the glyph *ids* a composite compiles its
+    components to -- which differ for all 180 of its composites.  A composite is therefore compared component by component, with the
     copy's name prefix taken back off.
     """
     glyph = glyf[name]
@@ -622,12 +647,13 @@ def check_font(font, base, stix, phi_before, stix_codes, clip_rows):
     want(tables == MERGED_TABLES, "the merged font carries the tables %s, expected %s"
          % (sorted(tables), sorted(MERGED_TABLES)))
 
+    # Equality, not presence: the name table is one of the few things a run does not
+    # rebuild from scratch, so "there is something there" would be satisfied by the
+    # previous run's records even if this run wrote none.
     names = font["name"]
-    want(names.getDebugName(13) and names.getDebugName(14),
-         "no licence (name ID 13) and licence URL (name ID 14) in the name table")
-    notice = names.getDebugName(0) or ""
-    for who in PROVENANCE:
-        want(who in notice, "the copyright notice does not name %s" % who)
+    for name_id, wanted in ((0, COPYRIGHT), (13, LICENCE), (14, LICENCE_URL)):
+        want(names.getDebugName(name_id) == wanted,
+             "name ID %d is not what this run writes" % name_id)
 
     for message in problems[:20]:
         print("  " + message)
@@ -713,10 +739,7 @@ def main():
     used = set(assigned.values())
     free = (c for c in range(high_water + 1, PUA_LAST + 1) if c not in used)
 
-    glyf, hmtx = font["glyf"], font["hmtx"]
-    # The live glyph order, not a snapshot of it: one object, so that every position is
-    # correct by construction rather than by remembering to take the copy late enough.
-    order = font.getGlyphOrder()
+    glyf = font["glyf"]
     rows, clip_rows = [], []
     for word, drawn, abbrevs in words:
         all_upper = drawn.isupper()
@@ -741,9 +764,7 @@ def main():
                 "this component.  Every source writing the old symbol must be rewritten."
                 % (word, other, name))
         code = assigned.get(name) or next(free)
-        glyf.glyphs[gname] = glyph
-        hmtx.metrics[gname] = (advance, glyph.xMin)
-        order.append(gname)
+        add_glyph(font, gname, glyph, (advance, glyph.xMin))
         map_code_point(font, code, gname)
         rows.append((name, code, abbrevs))
         # What the word turns into when it leaves jEdit: the same letters this glyph was
@@ -793,10 +814,6 @@ def main():
     for source, path in ((base, base_path), (stix, stix_path)):
         if not unchanged(source, path):
             die("%s was modified by this run" % path)
-
-    font.setGlyphOrder(order)
-    glyf.glyphOrder = order
-    font["maxp"].numGlyphs = len(order)
 
     # An abbreviation is what gets typed, so a collision would silently offer the wrong
     # symbol -- and it stays silent, because Isabelle takes both without complaint.
