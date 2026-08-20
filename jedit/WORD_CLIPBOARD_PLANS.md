@@ -283,6 +283,10 @@ kind this file's conventions are about.
 
 ## What landing the font plan taught
 
+- **The four checks only a running editor can answer all passed** (2026-08-20): a word glyph
+  selected in the buffer arrives in the Find box drawn as in the buffer; ordinary paths and
+  English in the other fields are unchanged; the text area is unchanged at the default
+  `view.antiAlias=subpixel HRGB`; and the UI font size behaves as the plan predicted.
 - **A check that compares font data instead of pixels found seven distinct defects on its
   first run, and none of them was a false alarm.** The five review rounds spent on rendering
   assertions produced the opposite: five blocking findings that were assertions failing on a
