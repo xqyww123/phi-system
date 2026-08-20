@@ -1,30 +1,38 @@
 signature PHI_ID = sig
 
-type construct = string
-type ID = construct * int list
-  (*The statement ID: within a named construct (a phi procedure), every statement gets a
-    unique ID -- the construct's full name paired with a path of statement counters, one
-    level per nested block, innermost level first.  `next` advances it once per statement;
-    `step_in` opens a level on entering a block (no step-out: leaving a block restores the
-    outer context, whose ID was never touched).  Finer-than-statement numbering -- which
-    OPERATION of the statement -- is NOT here; that is `expr_id` in Phi_CP_IDE.eval_cfg.*)
-type encoded_ID = string
+type ID
+  (*The address of a statement or of one operation within it, inside a named construct
+    (a phi procedure): the construct's full name, a path of counters -- one level per
+    nested block or per-line expression chain, INNERMOST LEVEL FIRST, the system-wide
+    convention; presentation reverses it -- and the obligation counter of this address.
+    Every value-level construction (next/step_in/nth_child/set_construct_v) starts a
+    fresh counter.  Carrying an ID value around (set_expr_id, eval_cfg record literals)
+    must NEVER rebuild it: obligation streams sharing one address share its numbering
+    exactly because they share the value.*)
+type key_spec
+  (*How one obligation is keyed in the proof store: a structural key minted from an ID,
+    a name given by a deriver, or no key.  Constructed ONLY by mint/named/no_key.*)
 
-val cons : int list -> ID -> ID
+(* value level *)
+val next            : ID -> ID
+val step_in         : ID -> ID
+val nth_child       : int -> ID -> ID       (*= funpow i next o step_in; i < 0 is an error*)
+val set_construct_v : string -> ID -> ID    (*expects a full name; fails if already set*)
+val path            : ID -> int list
+  (*innermost level first; the only read-out of an ID's content*)
 
-val get : Proof.context -> ID
-val get_if_is_named : Proof.context -> ID option
+(* minting *)
+val mint       : ID -> key_spec
+  (*anonymous construct: no key, no tick; named: ticks the ID's counter and encodes*)
+val named      : string -> key_spec
+val no_key     : key_spec
+val key_string : key_spec -> string option  (*the only conversion to a store key*)
+
+(* context level *)
+val get           : Proof.context -> ID
 val set_construct : string -> Proof.context -> Proof.context
-val step_in : Proof.context -> Proof.context
-val next : Proof.context -> Proof.context
-
-val encode : ID -> encoded_ID
-val dep  : encoded_ID -> encoded_ID -> bool
-val dep' : ID -> ID -> bool
-
-val father : ID -> ID
-
-structure Tab : TABLE
+val next_ctxt     : Proof.context -> Proof.context
+val step_in_ctxt  : Proof.context -> Proof.context
 
 end
 
@@ -33,56 +41,55 @@ fun rev_map _ ret [] = ret
 
 structure Phi_ID : PHI_ID = struct
 
-type construct = string
-type ID = construct * int list
-type encoded_ID = string
+type ID = string (*construct*) * int list (*path, innermost first*)
+        * int Unsynchronized.ref (*obligation counter*)
+  (*The counter needs no synchronization: keys are minted synchronously before any
+    proof fork (Phi_Envir passes them through); there is no concurrent tick path.*)
 
-fun father (c,[]) = (c,[])
-  | father (c,p::r) = (c,r)
+datatype key_spec = Structural of string | Named of string | No_Key
 
-fun cons i (c,p) = (c,i@p)
+fun next (c, i::p, _) = (c, i+1::p, Unsynchronized.ref 0)
+  | next (_, [], _) = error "BUG: the path of a Phi_ID cannot be empty"
+
+fun step_in (c, p, _) = (c, 0::p, Unsynchronized.ref 0)
+
+fun nth_child i id =
+  if i < 0 then error "BUG: nth_child expects a non-negative index"
+  else funpow i next (step_in id)
+
+fun set_construct_v name ("", _, _) = (name, [0], Unsynchronized.ref 0)
+  | set_construct_v _ _ = error "Construct has been set in this context"
+
+fun path (_, p, _) = p
+
+fun mint ("", _, _) = No_Key
+  | mint (c, p, counter) =
+      let val n = !counter
+          val _ = counter := n + 1
+       in Structural (String.concatWith "/" (c :: rev_map string_of_int [] p)
+                      ^ ":" ^ string_of_int n)
+      end
+
+val named = Named
+val no_key = No_Key
+
+fun key_string (Structural s) = SOME s
+  | key_string (Named s) = SOME s
+  | key_string No_Key = NONE
 
 structure ID = Proof_Data (
   type T = ID
-  val init = K ("",[0])
+  fun init _ = ("", [0], Unsynchronized.ref 0)
 )
 
 val get = ID.get
-fun get_if_is_named ctxt =
-  let val id = get ctxt
-   in if fst id = ""
-      then NONE
-      else SOME id
-  end
 
 fun set_construct name ctxt =
-  ID.map (fn ("", _) =>
-              if name = ""
-              then ("",[0])
-              else (Sign.full_bname (Proof_Context.theory_of ctxt) name, [0])
-           | _ => error "Construct has been set in this context") ctxt
+  ID.map (set_construct_v
+            (if name = "" then ""
+             else Sign.full_bname (Proof_Context.theory_of ctxt) name)) ctxt
 
-val step_in = ID.map (fn (c, p) => (c, 0::p))
-val next = ID.map (fn (c, i::p) => (c, i+1::p))
-
-fun encode (c,p) = String.concatWith "/" (c :: rev_map string_of_int [] p)
-
-(* i \<le> j \<Longrightarrow> string_of_int i \<le> string_of_int j, if no leading zero *)
-val int_string_ord = pointer_eq_ord (size_ord ||| string_ord)
-
-fun dep ida idb =
-  let val ha::ida' = String.fields (fn c => c = #"/") ida
-      val hb::idb' = String.fields (fn c => c = #"/") idb
-   in ha = hb andalso is_less_equal (dict_ord int_string_ord (ida',idb'))
-  end
-
-fun dep'' [ha] (hb::_) = ha <= hb
-  | dep'' (ha::La) (hb::Lb) =
-      if ha = hb then dep'' La Lb else false
-  | dep'' _ _ = false
-
-fun dep' (ca,pa) (cb,pb) = (ca = cb andalso dep'' (rev pa) (rev pb))
-
-structure Tab = Table (type key = ID val ord = prod_ord string_ord (list_ord int_ord))
+val next_ctxt = ID.map next
+val step_in_ctxt = ID.map step_in
 
 end

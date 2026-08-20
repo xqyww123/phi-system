@@ -184,6 +184,8 @@ fun eval_until gen_ctxt (limit, num) (mode, complete_eval, cfg) =
         | eval num prev_name (acts as (Left_Parenthesis _ :: _)) s = (num, prev_name, acts, s)
         | eval num prev_name (acts as (Meta_Apply _ :: _)) s = (num, prev_name, acts, s)
         | eval num prev_name (acts as (Comma _ :: _)) s = (num, prev_name, acts, s)
+        | eval num prev_name (acts as (Statement_Interruption :: _)) s = (num, prev_name, acts, s)
+        | eval num prev_name (acts as (Initial_Statement :: _)) s = (num, prev_name, acts, s)
         | eval num prev_name [] s = (num, prev_name, [], s)
    in eval num
   end
@@ -223,10 +225,14 @@ fun close_parenthesis (cfg, meta_arg, complete_eval) (oprs, s0) =
 
         | close _ ((Opr _ :: _, _), _) = error "internal bug #91066fd2-8881-422f-bf54-4b3f69879042"
         | close _ ((Meta_Opr _ :: _, _), _) = error "internal bug #10cc33ab-de95-48fb-8b8c-103f2c0110fd"
+        | close _ ((Statement_Interruption :: _, _), _) = error "internal bug #27e8310b-cb30-4852-b008-77dccbf92a30"
+        | close _ ((Initial_Statement :: _, _), _) = error "internal bug #55b55ce6-967e-4d99-8722-8bd1ab0369ca"
         | close args ((Left_Parenthesis vals_before :: acts, arg_names), s) =
             ((acts, arg_names), Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s)
-        | close args ((Meta_Apply (f, vals_before, (_, pos)) :: acts, arg_names), (ctxt,sequent)) =
-            f (cfg, ((NONE, pos), vals_before) :: args, meta_arg) ((acts, arg_names), (ctxt,sequent))
+        | close args ((Meta_Apply (f, expr_id, vals_before, (_, pos)) :: acts, arg_names), (ctxt,sequent)) =
+            (*key by the frame's birth address, not by whatever cfg is ambient at the closing bracket*)
+            f (Phi_CP_IDE.set_expr_id expr_id cfg, ((NONE, pos), vals_before) :: args, meta_arg)
+              ((acts, arg_names), (ctxt,sequent))
         | close args ((Comma arg :: acts, arg_names), s) =
             close (arg :: args) ((acts, arg_names), s)
         | close _ (([],_), _) = error "parenthesis is inbalanced!"
@@ -344,7 +350,7 @@ fun meta_apply cfg (pos,arg_name) left_precedence f ((actions, arg_names), (ctxt
       val (_, _, actions', (ctxt',sequent')) =
               eval_until (Context.Proof ctxt) (left_precedence, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
       val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
-   in ((Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names), (ctxt'', sequent''))
+   in ((Meta_Apply (f, #id cfg, vals, pos) :: actions', arg_name :: arg_names), (ctxt'', sequent''))
   end
 
 fun begin_block pos ((actions, arg_names), s) =
@@ -354,12 +360,14 @@ fun begin_block pos ((actions, arg_names), s) =
 
 fun inside_calling_stack name (actions, _) =
   let fun is_during (Apply ((s, _), _, _, _) :: _) = (s = name)
-        | is_during (Meta_Apply (_, _, (s, _)) :: _) = s = name
+        | is_during (Meta_Apply (_, _, _, (s, _)) :: _) = s = name
         | is_during (Begin_Block :: _) = false
         | is_during (Comma _ :: L) = is_during L
         | is_during (Opr _ :: L) = is_during L
         | is_during (Meta_Opr _ :: L) = is_during L
         | is_during (Left_Parenthesis _ :: L) = is_during L
+        | is_during (Statement_Interruption :: L) = is_during L
+        | is_during (Initial_Statement :: L) = is_during L
         | is_during [] = false
    in is_during actions
   end
@@ -369,7 +377,7 @@ fun check_meta_apply_balance opr pos =
   let fun err () = error ("Unbalanced " ^ opr ^ " " ^ Position.here pos)  
       fun chk_stack (Left_Parenthesis _ :: _) = err ()
         | chk_stack (Apply _ :: _) = err ()
-        | chk_stack (Meta_Apply (_,_,(opr',_)) :: _) =
+        | chk_stack (Meta_Apply (_,_,_,(opr',_)) :: _) =
             if opr = opr' then () else err ()
         | chk_stack (Begin_Block :: _) = err ()
         | chk_stack (_ :: L) = chk_stack L

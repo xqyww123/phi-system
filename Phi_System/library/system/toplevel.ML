@@ -479,7 +479,7 @@ val _ =
             and_list ((binding -- opt_attribs || attribs >> pair Binding.empty) -- ppats)) []
       >> begin_block_cmd)
    -- statement_cmd_no_auto)
-   >> (fn (blk,prcs) => Toplevel.proof' (fn int => @{print} o prcs o blk int o Proof.map_context Phi_ID.next)))
+   >> (fn (blk,prcs) => Toplevel.proof' (fn int => @{print} o prcs o blk int o Proof.map_context Phi_ID.next_ctxt)))
 
 datatype end_blk_action = Enter_Proof_Mode | Transparent_Proof of (Proof.state -> Proof.state)
 
@@ -496,12 +496,12 @@ val _ =
                                  | (_, SOME s) => SOME (Subj_Annot s)
                                  | _ => NONE
    in stat
-   |> Proof.map_context Phi_ID.next
+   |> Proof.map_context Phi_ID.next_ctxt
    |> (case act
          of Enter_Proof_Mode => end_block_cmd spec int
           | Transparent_Proof tail_statement => end_block_auto_proof_cmd spec int
                                              #> (fn s => s
-                                             |> Proof.map_context Phi_ID.next
+                                             |> Proof.map_context Phi_ID.next_ctxt
                                              |> Phi_Envir.under_programming_environ (Proof.context_of s) ? tail_statement))
   end)))
 (*

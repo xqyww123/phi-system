@@ -29,6 +29,7 @@ datatype opr_frame = Apply of ( (string * Position.T)
                    | Meta_Apply of ((Phi_CP_IDE.eval_cfg * named_arg list * exn option (*free argument*)
                                           -> (opr_frame list * names_of_args) * context_state
                                           -> (opr_frame list * names_of_args) * context_state)
+                                    * Phi_CP_IDE.expr_id
                                     * thm list (*values before*)
                                     * (string * Position.T) (*name and position of the apply*))
                    | Begin_Block
@@ -47,6 +48,10 @@ datatype opr_frame = Apply of ( (string * Position.T)
                                     opr_frame list * context_state ->
                                     opr_frame list * context_state))
                    | Left_Parenthesis of thm list (*values before*)
+                   | Statement_Interruption
+                   | Initial_Statement
+                     (*the two sentinels are syntactic marks only: they never take part in
+                       reduction, which the dedicated constructors state at the type level*)
 
 type opr_stack = opr_frame list * names_of_args
 type context = opr_stack * context_state
@@ -122,6 +127,7 @@ datatype opr_frame = Apply of ( (string * Position.T)
                       | Meta_Apply of ( (Phi_CP_IDE.eval_cfg * named_arg list * free_param option
                                               -> (opr_frame list * names_of_args) * context_state
                                               -> (opr_frame list * names_of_args) * context_state)
+                                      * Phi_CP_IDE.expr_id
                                       * thm list (*values before*)
                                       * (string * Position.T) (*name and position of the apply*))
                       | Begin_Block
@@ -140,6 +146,8 @@ datatype opr_frame = Apply of ( (string * Position.T)
                                       opr_frame list * context_state ->
                                       opr_frame list * context_state))
                       | Left_Parenthesis of thm list (*values before*)
+                      | Statement_Interruption
+                      | Initial_Statement
 
 type meta_opr = Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option * thm list (*values before*) ->
                 opr_frame list * context_state ->
@@ -156,6 +164,12 @@ fun precedence_of_frame (Apply _) = ~1
   | precedence_of_frame (Opr (prec, _, _, _, _, _)) = prec
   | precedence_of_frame (Meta_Opr (prec, _, _, _, _, _, _)) = prec
   | precedence_of_frame (Left_Parenthesis _) = ~1
+  | precedence_of_frame Statement_Interruption = ~1
+      (*must stay ~1: eval_line's "The expression does not end" warning
+        (processor.ML) checks precedence_of < 0 on the remaining stack*)
+  | precedence_of_frame Initial_Statement = 1001
+      (*copied from the Meta_Opr sentinel it replaces; not reachable today --
+        the tag is popped before any evaluation*)
 
 fun precedence_of [] = ~1
   | precedence_of (frame :: _) = precedence_of_frame frame
@@ -169,39 +183,34 @@ exception String_Param of string
 (* Statement Interruption *)
 
 (*An statement can be separated into two Isar commands, particularly due to inserted proof of
-  obligations. When a statement is split, a special null-arity meta operator of highest precedence
-  is pushed to the operator stack, marking the statement is incomplete.
+  obligations. When a statement is split, the Statement_Interruption sentinel is pushed to the
+  operator stack, marking the statement is incomplete.
  *)
 
-val statement_interruptionN = "<interrupt>"
-val statement_interruptionO = Meta_Opr (~1, NONE, (statement_interruptionN,Position.none), [], NONE, [], K I)
-
-fun is_interrupted (Meta_Opr (_, _, ("<interrupt>", _), _, _, _, _) :: _) = true
+fun is_interrupted (Statement_Interruption :: _) = true
   | is_interrupted _ = false
 
-fun interrupt ((opr,anames),s) = ((statement_interruptionO::opr,anames),s)
+fun interrupt ((opr,anames),s) = ((Statement_Interruption::opr,anames),s)
 
 fun uninterrupted ((opr,anames),s) =
-  let val opr' = case opr of (Meta_Opr (_, _, ("<interrupt>", _), _, _, _, _) :: opr') => opr'
+  let val opr' = case opr of (Statement_Interruption :: opr') => opr'
                            | _ => opr
    in ((opr',anames),s)
   end
 
 
 (* Mark of the First Statement in a Block *)
-val initial_statementN = "<initial>"
-val initial_statementO = Meta_Opr (1001,NONE,(initial_statementN,Position.none),[],NONE,[],K I)
 
-fun is_the_first_statement (Meta_Opr (_, _, ("<initial>", _), _, _, _, _) :: _) = true
+fun is_the_first_statement (Initial_Statement :: _) = true
   | is_the_first_statement _ = false
 
 fun pop_the_initial_tag ((opr,anames),s) =
-  let val opr' = case opr of (Meta_Opr (_, _, ("<initial>", _), _, _, _, _) :: opr') => opr'
+  let val opr' = case opr of (Initial_Statement :: opr') => opr'
                            | _ => opr
    in ((opr',anames),s)
   end
 
-val init_opr_stack = ([initial_statementO], [(NONE, Position.none)])
+val init_opr_stack = ([Initial_Statement], [(NONE, Position.none)])
 
 
 (** Stack Data **)

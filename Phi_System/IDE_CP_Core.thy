@@ -2475,25 +2475,18 @@ setup \<open>Context.theory_map (
            Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
            not (Symtab.defined (#config arg) "no_oblg")   andalso
            not (can \<^keyword>\<open>certified\<close> (#toks arg))
-        then (*Every obligation of ONE operator application needs its own id.  The
+        then (*Every obligation of ONE operator application needs its own key.  The
                ReEntry below re-runs the whole hook table from the top carrying this
-               same arg (Hook.ML:100-105), so a second obligation here would otherwise
-               compute the first one's key and overwrite its proof in the store.
-
-               The first obligation keeps the old key to the character, so no existing
-               record moves.  A later one prepends a NEGATIVE component: Phi_ID.encode
-               reverses the path, so nesting a block deeper appends at the same place in
-               the encoded string -- a positive number here could collide with
-               "statement n of a nested block", a negative one cannot, real components
-               being never negative.  It renders with a tilde (~1), not a minus sign:
-               encode goes through string_of_int, which hands negatives to Int.toString.*)
-             let val oblg_no = #oblg_no arg
-                 val expr_id = if oblg_no = 0 then #id arg else ~oblg_no :: #id arg
-                 val id = Option.map (Phi_ID.encode o Phi_ID.cons expr_id)
-                                     (Phi_ID.get_if_is_named ctxt)
-                 val sequent' = Phi_Reasoners.obligation_intro_Ex_conv ~1 ctxt sequent
-              in raise Phi_CP_IDE.Post_App.ReEntry (Phi_CP_IDE.uptick_oblg_no arg, (ctxt,
-                          Phi_Envir.solve_obligation id ctxt sequent'))
+               same arg (Hook.ML:100-105) -- hence the same ID value, whose counter
+               mint ticks: a second obligation at this address mints the next ordinal
+               instead of computing the first one's key and overwriting its proof in
+               the store.*)
+             let val sequent' = Phi_Reasoners.obligation_intro_Ex_conv ~1 ctxt sequent
+                 (*mint immediately before solve_obligation: nothing fallible may
+                   stand between the tick and the store record*)
+                 val key = Phi_ID.mint (#id arg)
+              in raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt,
+                          Phi_Envir.solve_obligation key ctxt sequent'))
              end
         else (ctxt, sequent))
        | _ => (ctxt, sequent)
@@ -2653,20 +2646,16 @@ let
 in
   fn (oprs, (ctxt, sequent)) => Parse.position \<^keyword>\<open>holds_fact\<close> -- statement >> (
   fn ((_,pos), raw_statements) => fn cfg =>
-  (*The expr_id has to be in the id.  Phi_ID.get advances once per phi STATEMENT
-    (processor.ML:205), while a statement may hold several holds_fact -- without
-    it, two of them in one statement produce the same proof id to the character,
-    and the second silently overwrites the first in the proof store.  The expr_id
-    ticks once per processor application (processor.ML:166), so it separates
-    them.  It also separates the generated fact names below, which used to clash
-    in the same case.*)
-  let val id = Phi_ID.cons (#id cfg) (Phi_ID.get ctxt)
+  (*The cfg's ID already carries the address of this very operation: the ambient
+    Phi_ID advances once per phi STATEMENT, while a statement may hold several
+    holds_fact -- the per-operation step (processor.ML ticks it once per processor
+    application) separates their keys and the generated fact names alike.*)
+  let val id = #id cfg
 
       (*We first generate names of the facts if not given*)
-      fun gen_name (_, ids) = String.concatWith "_" ("\<phi>fact" :: rev_map string_of_int [] ids)
+      fun gen_name id = String.concatWith "_" ("\<phi>fact" :: rev_map string_of_int [] (Phi_ID.path id))
       val ctxt' = fold_index (fn (i,(((b', raw_attrs),bodys'),fixes)) => fn ctxt =>
-        let val id' = Phi_ID.cons [i] id
-            fun id'' j = if fst id' = "" then NONE else SOME (Phi_ID.encode (Phi_ID.cons [j] id'))
+        let val id' = Phi_ID.nth_child i id
             val attrs = map (Attrib.check_src ctxt #> Attrib.attribute_cmd ctxt) raw_attrs
 
             val b = if Binding.is_empty b'
@@ -2678,7 +2667,8 @@ in
                      |> map_index (fn (j,term) => term
                           |> Thm.cterm_of ctxt'
                           |> Goal.init
-                          |> (fn thm => Phi_Envir.solve_obligation (id'' j) ctxt'
+                          |> (fn thm => Phi_Envir.solve_obligation
+                                            (Phi_ID.mint (Phi_ID.nth_child j id')) ctxt'
                                             (@{thm Premise_D[where mode=default]} RS thm))
                           |> Goal.conclude
                           |> single

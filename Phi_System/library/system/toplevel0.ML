@@ -98,7 +98,7 @@ in
 fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
   let
     val _ = PLPR_Statistics.start_recording_a_semantic_operation (Proof.context_of stat)
-    val stat = Proof.map_context Phi_ID.next stat
+    val stat = Proof.map_context Phi_ID.next_ctxt stat
     val is_top = not (Phi_Envir.under_programming_environ (Proof.context_of stat))
                  orelse is_backward_mode stat
     val normalize_tac =
@@ -239,7 +239,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
             |> Proof_Context.set_mode Proof_Context.mode_default
             |> Config.restore Phi_Syntax.chk_source_val (Proof.context_of stat)
             |> Config.restore phi_allow_source_object_to_be_not_variable (Proof.context_of stat)
-            |> Phi_ID.step_in
+            |> Phi_ID.step_in_ctxt
             |> Phi_Opr_Stack.initialize_opr_stack)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC all_tac), Position.no_range))
@@ -291,7 +291,7 @@ fun gen_finish_proc prep_term qed spec int stat =
             fun attack_obligations ctxt sequent =
               case try Thm.major_prem_of sequent
                 of SOME (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ _)) =>
-                    attack_obligations ctxt (Phi_Envir.solve_obligation NONE ctxt sequent)
+                    attack_obligations ctxt (Phi_Envir.solve_obligation Phi_ID.no_key ctxt sequent)
                  | _ => sequent
             val sequent_pre2 = attack_obligations ctxt sequent_pre1
             in Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
@@ -324,7 +324,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                                     "While solving the proof obligation generated during " ^
                                     "the cast towards the given specification:"
                                in Phi_Envir.solve_obligation'
-                                    (fn inner => provenance ^ "\n" ^ inner) NONE ctxt' sequent
+                                    (fn inner => provenance ^ "\n" ^ inner) Phi_ID.no_key ctxt' sequent
                                   handle ERROR msg =>
                                     if String.isPrefix provenance msg then Exn.reraise (ERROR msg)
                                     else error (provenance ^ "\n" ^ msg)
@@ -391,10 +391,12 @@ val end_block = gen_finish_proc (K I) Proof.local_qed
 
 fun led_future_proof s =
   if Proof.goal_finished s then s
-  else let val s = Proof.map_context Phi_ID.next s
-           val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
+  else let val s = Proof.map_context Phi_ID.next_ctxt s
+           (*must be evaluated OUTSIDE the Method.Basic closure: mint ticks a counter,
+             and each evaluation of the closure would burn one more ordinal*)
+           val key = Phi_ID.mint (Phi_ID.get (Proof.context_of s))
            val meth = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (fn sequent =>
-                Phi_Envir.solve_obligation id ctxt
+                Phi_Envir.solve_obligation key ctxt
                                            (@{thm Premise_D[where mode=default]} RS sequent))))
         in Proof.local_future_terminal_proof ((meth, Position.no_range), NONE) s
        end

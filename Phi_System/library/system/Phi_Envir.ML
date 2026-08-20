@@ -42,9 +42,9 @@ signature PHI_ENVIR = sig
     Phi_Reasoners.hammer_obligation_solver'.  The primed variant threads a
     wrapper over every failure text (sync error, forked report, batch print
     alike) — the cast site layers its provenance line through it (D58).*)
-  val solve_obligation' : (string -> string) -> Phi_Proof_Store.proof_id option
+  val solve_obligation' : (string -> string) -> Phi_ID.key_spec
                        -> Proof.context -> thm -> thm
-  val solve_obligation : Phi_Proof_Store.proof_id option -> Proof.context -> thm -> thm
+  val solve_obligation : Phi_ID.key_spec -> Proof.context -> thm -> thm
 
   structure Enter_Programming_Environ : HOOKS
   structure On_Updating_State_Sequent : HOOKS
@@ -221,7 +221,7 @@ fun freeze_dynamic_lemmas ctxt =
 
 val async_proof = Attrib.setup_config_bool \<^binding>\<open>\<phi>async_proof\<close> (K true)
 
-fun solve_obligation' wrap id ctxt =
+fun solve_obligation' wrap key ctxt =
   Phi_Reasoners.hammer_obligation_solver'
     (*user_facing = true is fixed here on purpose: this is the only entry through
       which phi obligations are solved, and every one of its clients (the IDE
@@ -237,7 +237,7 @@ fun solve_obligation' wrap id ctxt =
      read_store = NONE, write_store = NONE,
      (*false keeps today's behaviour: an agent give-up fails the command loudly
        rather than letting the reasoner backtrack in silence.*)
-     return_empty_seq_instead_of_raising_detailed_error = false} wrap id
+     return_empty_seq_instead_of_raising_detailed_error = false} wrap (Phi_ID.key_string key)
     (*The empty-sequence failure raises ERROR with the text fully composed:
       every call site then shows it as-is — no site needs (or has) a handler
       that would render a payload-carrying exception.*)
