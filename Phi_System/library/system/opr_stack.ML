@@ -82,7 +82,7 @@ val set_meta_opr : string * meta_opr -> theory -> theory
 (* Control of Lines and Statements *)
 
 val is_the_first_statement : opr_frame list -> bool
-val uninitialize : context -> context
+val pop_the_initial_tag : context -> context
 
 val interrupt : context -> context
 val is_interrupted : opr_frame list -> bool
@@ -195,7 +195,7 @@ val initial_statementO = Meta_Opr (1001,NONE,(initial_statementN,Position.none),
 fun is_the_first_statement (Meta_Opr (_, _, ("<initial>", _), _, _, _, _) :: _) = true
   | is_the_first_statement _ = false
 
-fun uninitialize ((opr,anames),s) =
+fun pop_the_initial_tag ((opr,anames),s) =
   let val opr' = case opr of (Meta_Opr (_, _, ("<initial>", _), _, _, _, _) :: opr') => opr'
                            | _ => opr
    in ((opr',anames),s)

@@ -373,7 +373,7 @@ fun build_dot_opr_stack cfg idxs oprs =
              else @{priority loose %\<phi>lang_dot_opr}),
             SOME (if i = last then 0 else 1),
             (if i = last then "<val>" else "\<tribullet>", pos),
-            #id cfg,
+            Phi_CP_IDE.sub_expr_id i (#id cfg),
             NONE,
             vals,
             (if i = last then (fn (_, _, _, vals) => apsnd (Generic_Variable_Access.push_values vals))

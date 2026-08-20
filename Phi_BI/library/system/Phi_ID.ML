@@ -2,6 +2,12 @@ signature PHI_ID = sig
 
 type construct = string
 type ID = construct * int list
+  (*The statement ID: within a named construct (a phi procedure), every statement gets a
+    unique ID -- the construct's full name paired with a path of statement counters, one
+    level per nested block, innermost level first.  `next` advances it once per statement;
+    `step_in` opens a level on entering a block (no step-out: leaving a block restores the
+    outer context, whose ID was never touched).  Finer-than-statement numbering -- which
+    OPERATION of the statement -- is NOT here; that is `expr_id` in Phi_CP_IDE.eval_cfg.*)
 type encoded_ID = string
 
 val cons : int list -> ID -> ID

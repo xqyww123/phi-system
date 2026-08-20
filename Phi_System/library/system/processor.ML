@@ -209,7 +209,7 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
         val opr_ctxt = Phi_Opr_Stack.Begin_of_Line.invoke (Context.Proof (#1 stat))
                                                           {id=expr_id, oblg_no=0, config=cfg, toks=toks}
                                                           opr_ctxt
-                    |> Phi_Opr_Stack.uninitialize
+                    |> Phi_Opr_Stack.pop_the_initial_tag
         val expr_id = uptick_expr_id expr_id
         val opr_ctxt = apsnd (Phi_CP_IDE.Post_App.invoke (Context.Proof (fst stat0)) {id=expr_id, oblg_no=0, config=cfg, toks=toks}) opr_ctxt
         val expr_id = uptick_expr_id expr_id

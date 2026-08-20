@@ -4,7 +4,9 @@ type expr_id = int list (*Unique id of each step of processing syntactic command
 
 val initial_expr_id : expr_id
 val uptick_expr_id : expr_id -> expr_id
-val subspace_expr_id : expr_id -> expr_id
+val sub_expr_id : int -> expr_id -> expr_id
+  (*sub-number the i-th of several operations spawned by ONE processor application;
+    head-cons, so it lands as the LAST segment of the encoded proof key*)
 
 type config = string Symtab.table
 type eval_cfg = { id : expr_id,
@@ -40,7 +42,7 @@ type expr_id = int list
 val initial_expr_id = [0]
 fun uptick_expr_id (i::L) = (i+1::L)
   | uptick_expr_id [] = error "BUG: expr_id cannot be empty"
-fun subspace_expr_id L = 0 :: L
+fun sub_expr_id i L = i :: L
 
 type config = string Symtab.table
 type eval_cfg = {id : expr_id, oblg_no : int, config : string Symtab.table, toks: Token.src}

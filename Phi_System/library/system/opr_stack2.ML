@@ -172,7 +172,9 @@ fun eval_until gen_ctxt (limit, num) (mode, complete_eval, cfg) =
               else if pr = limit then bad_syntax prev_name
               else let val _ = chk_arity_constraint arity mode name (chk_complete_eval mode prev_name s)
                        val name' = (SOME "operator", Markup.operator, name)
-                       val (acts',s') = meta (cfg,name,param,vals) (aR,s)
+                       (*the meta must key the obligations it solves by the frame's position,
+                          not by whatever cfg happens to be ambient at reduction time*)
+                       val (acts',s') = meta (Phi_CP_IDE.set_expr_id expr_id cfg,name,param,vals) (aR,s)
                                      |> apsnd (fn (ctxt,sequent) => (ctxt,sequent)
                                           |> post_app (Phi_CP_IDE.set_expr_id expr_id cfg)
                                           |> complete_eval ? chk_complete_eval mode name'
