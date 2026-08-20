@@ -308,8 +308,17 @@ phi_field_font(phi_field)
     if (phi_field == null) return false;
     java.awt.Font phi_was = phi_field.getFont();
     if (phi_was == null || "PhiSymbols".equals(phi_was.getFamily())) return false;
-    phi_field.setFont(
-        new java.awt.Font("PhiSymbols", phi_was.getStyle(), phi_was.getSize()));
+    java.awt.Font phi_new =
+        new java.awt.Font("PhiSymbols", phi_was.getStyle(), phi_was.getSize());
+    // The family may not resolve -- the font was never registered, or a re-export gave
+    // it another name ID 1.  Java answers with family Dialog rather than failing, and
+    // installing that would replace the field's FontUIResource with a plain Font that
+    // draws notdef boxes.  Checking here, rather than trusting the latch above, is what
+    // makes "a field never carries a font that does not resolve" true by construction;
+    // and because it is decided per field rather than once, a field built before
+    // registration recovers as soon as the next one is built.
+    if (!"PhiSymbols".equals(phi_new.getFamily())) return false;
+    phi_field.setFont(phi_new);
     return true;
 }
 

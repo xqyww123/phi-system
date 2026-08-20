@@ -25,6 +25,14 @@ import org.gjt.sp.jedit.datatransfer.TransferHandler;
 import org.gjt.sp.jedit.gui.HistoryTextArea;
 import org.gjt.sp.jedit.gui.HistoryTextField;
 
+// Registered before the script is loaded, because loading it installs the AWT listener
+// and every field built after that asks for the family.  Under Isabelle this ordering is
+// automatic -- Isabelle_Fonts.init runs a hundred lines before jEdit starts, and
+// etc/settings already lists this file -- but this interpreter is bare jedit.jar.
+java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(
+    java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT,
+        new java.io.File(System.getenv("PHI_SYSTEM_HOME") + "/fonts/PhiSymbols.ttf")));
+
 source(System.getenv("PHI_SYSTEM_HOME") + "/jedit/phi_word_clipboard.bsh");
 
 phi_tbl = phi_word_table();
@@ -32,9 +40,9 @@ phi_failures = new int[1];              // an array, so no helper needs to write
 phi_marker = new String(Character.toChars(0x2060));   // never a literal: it is invisible
 
 phi_hex(phi_s) {
-    phi_b = new StringBuffer();
-    for (phi_i = 0; phi_i < phi_s.length(); ) {
-        phi_c = phi_s.codePointAt(phi_i);
+    StringBuffer phi_b = new StringBuffer();
+    for (int phi_i = 0; phi_i < phi_s.length(); ) {
+        int phi_c = phi_s.codePointAt(phi_i);
         phi_b.append(" U+" + Integer.toHexString(phi_c).toUpperCase());
         phi_i += Character.charCount(phi_c);
     }
@@ -59,8 +67,8 @@ phi_check(phi_what, phi_got, phi_want) {
 }
 
 phi_bold(phi_w) {                       // mathematical bold small letters
-    phi_b = new StringBuffer();
-    for (phi_i = 0; phi_i < phi_w.length(); phi_i++)
+    StringBuffer phi_b = new StringBuffer();
+    for (int phi_i = 0; phi_i < phi_w.length(); phi_i++)
         phi_b.appendCodePoint(0x1D41A + (int) phi_w.charAt(phi_i) - (int) 'a');
     return phi_b.toString();
 }
@@ -84,7 +92,7 @@ if (!phi_symbols.isFile()) {
 }
 
 phi_glyph(phi_name) {
-    phi_code = phi_names.get(phi_name);
+    Integer phi_code = phi_names.get(phi_name);
     if (phi_code == null) {
         phi_bad("no glyph named " + phi_name + "; update this test");
         return "";
@@ -392,6 +400,22 @@ if (!phi_m.equals("planted") || !phi_buf.equals("planted")
         || !phi_letters.equals("planted") || !phi_pos.equals("planted"))
     phi_bad("the script wrote through to a global sharing a function-local's name");
 
+// This file's own helpers have the same defect class, and it bit once: `phi_hex` used to
+// reset the caller's loop counter, so a check that fired printed the same line for ever
+// instead of failing.  Naming the globals is not enough to catch it -- phi_check returns
+// before reaching phi_hex when the comparison passes -- so each helper is *called* here
+// while the globals are planted.
+phi_b = "planted";
+phi_c = "planted";
+phi_i = "planted";
+phi_code = "planted";
+phi_hex(phi_pg);
+phi_bold("abc");
+phi_glyph("pending");
+if (!phi_b.equals("planted") || !phi_c.equals("planted")
+        || !phi_i.equals("planted") || !phi_code.equals("planted"))
+    phi_bad("a helper in this file wrote through to a global sharing its local's name");
+
 // 20. a performance floor.  Both functions run on the AWT thread over whole selections, and
 //     an interpreted per-character loop costs about 3.5 microseconds a character -- four to
 //     nine seconds for this input, against tens of milliseconds compiled.  A two-second
@@ -423,12 +447,7 @@ if (phi_ms1 > 2000 || phi_ms2 > 2000)
 //     correction -- is a statement about font data, and is checked as font data by
 //     ../fonts/build_word_glyphs.py --check.
 //
-//     The font is registered here because this interpreter is bare jedit.jar.  Under
-//     Isabelle, Isabelle_Fonts.init() registers every ISABELLE_FONTS entry a hundred lines
-//     before jEdit starts, and etc/settings already lists this file.
-java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(
-    java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT,
-        new java.io.File(System.getenv("PHI_SYSTEM_HOME") + "/fonts/PhiSymbols.ttf")));
+//     The font itself is registered at the top of this file, before the script is loaded.
 // getFamily, not getName: getName hands back whatever family was asked for, so it answers
 // "PhiSymbols" even when no such family exists and Dialog is what would be drawn.
 phi_font = new java.awt.Font("PhiSymbols", java.awt.Font.PLAIN, 24);
@@ -469,18 +488,26 @@ else if (phi_narrow == phi_wide)
     phi_bad("ordinary text is being drawn as notdef boxes: iiiiii and MMMMMM both came "
             + "out as " + phi_narrow + " pixels");
 
-// the listener hands a field the family; phi_panel is the one from 18g
+// Every field the listener has seen carries the family -- the two built in 18g as well as
+// the two here.  phi_panel is 18g's.
 phi_font_field = new HistoryTextField("phi-test");
+phi_was_style = phi_font_field.getFont().getStyle();
+phi_was_size = phi_font_field.getFont().getSize();
 phi_panel.add(phi_font_field);
-if (!"PhiSymbols".equals(phi_font_field.getFont().getFamily()))
-    phi_bad("the listener left a new field's font family as "
-            + phi_font_field.getFont().getFamily());
 // and it hands it to a field wrapped on an earlier pass too, which is why the font is not
 // set inside phi_wrap_field: that returns early for exactly this field
 phi_panel.add(phi_area);
-if (!"PhiSymbols".equals(phi_area.getFont().getFamily()))
-    phi_bad("a field wrapped on an earlier pass did not get the font: "
-            + phi_area.getFont().getFamily());
+for (phi_seen : new Object[] { phi_bar_field, phi_dialog_area, phi_font_field, phi_area })
+    if (!"PhiSymbols".equals(phi_seen.getFont().getFamily()))
+        phi_bad("a field the listener saw carries family "
+                + phi_seen.getFont().getFamily() + ", not PhiSymbols");
+// Only the family changes.  Asserted because it is half the contract and nothing else
+// looks: a phi_field_font that also reset the style and the size passed every check.
+if (phi_font_field.getFont().getStyle() != phi_was_style
+        || phi_font_field.getFont().getSize() != phi_was_size)
+    phi_bad("the field's style or size changed with the family: was " + phi_was_style
+            + "/" + phi_was_size + ", is " + phi_font_field.getFont().getStyle()
+            + "/" + phi_font_field.getFont().getSize());
 
 System.out.println((phi_failures[0] == 0 ? "PASS" : "FAILED") + ": " + phi_n
                    + " entries round-tripped, " + phi_pairs + " adjacent pairs, "
