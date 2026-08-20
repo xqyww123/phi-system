@@ -82,11 +82,12 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
 10. **The UI font is one file, merged into `fonts/PhiSymbols.ttf`** — not a second generated
     font beside it. See `UI_FONT_PLAN.md`.
 11. **Monospaced widgets are not supported.** One font carries one design for ASCII; the sans
-    base is merged, so the Search dialog's Find and Replace boxes become proportional while the
-    other thirteen wrapped widgets are untouched. The alternative preserved those two and
+    text face is merged, so the Search dialog's Find and Replace boxes become proportional
+    while the other thirteen wrapped widgets are untouched. The alternative preserved those two and
     changed the thirteen.
-12. **The GPL material in the Isabelle base is shipped and disclosed**, as Isabelle itself does:
-    26 blackboard-bold code points from `txmia`/`pxfonts` are copied by the merge, and name ID 0
+12. **The GPL material in the Isabelle text face is shipped and disclosed**, as Isabelle
+    itself does: 26 blackboard-bold code points from `txmia`/`pxfonts` are copied by the
+    merge, and name ID 0
     and `fonts/phi-font-readme.txt` name them. Excluding them was the alternative, rejected
     because they are common in Isabelle mathematics.
 13. **The font's name table is written by the generator**, not by `fonts/PhiSymbols.sfd`, which
@@ -95,6 +96,26 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
     the merge copies, which is the generator's doing. Name ID 0 reads `Copyright 2023 Qiyuan
     Xu`, and ID 14 points at `github.com/xqyww123/phi-system/tree/main/fonts`.
 
+
+14. **The generator reads a committed hand-drawn font and writes the artefact**, rather than
+    reading its own output. `fonts/source/PhiSymbols-hand-drawn.ttf` is that input, taken from
+    commit `f589d323` with its copyright line normalised to `Copyright 2023 Qiyuan Xu`. It is
+    never registered and never installed. This reverses `UI_FONT_PLAN.md`'s own rejection of a
+    committed pre-merge file, and deletes the undo apparatus that rejection required.
+15. **A retired code point is never handed to another word.** A new word takes the code point
+    after the highest ever assigned; the high-water mark is a comment line of `symbols-words`,
+    which a deletion cannot take with it. The old rule recycled one once already, in this
+    repository. `fonts/WORD_GLYPHS.md` states the new rule.
+16. **The GPL text shipped is version 2**, unmodified, as `fonts/GPL-2.0.txt`. No upstream
+    states a version — CTAN's pxfonts page, the Isabelle component's README and `txmia`'s own
+    `/Notice` all say just "GPL" — and the GPL lets the recipient choose when a work names
+    none. Name ID 0 also carries the four upstream copyright lines verbatim, because the font
+    travels as a bare `.ttf` where a record pointing at a directory finds nothing.
+17. **The concept is called the text face, never the base.** In font merging "base" means the
+    font you merge *into*, and Isabelle uses it that way for this very file
+    (`component_fonts.scala:4`, "DejaVu base + Isabelle symbols"); here it named the font we
+    copy *from*. The rename covers the generator, this file, `UI_FONT_PLAN.md`,
+    `WORD_GLYPHS.md` and `phi-font-readme.txt` together.
 
 ## Conventions every plan follows
 

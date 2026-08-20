@@ -96,10 +96,11 @@ nothing between them, so those come from STIX Two Text Medium instead, and are
 addressed as plain ASCII.
 
 They are composed and scaled by fonts/build_word_glyphs.py and are NOT present
-in PhiSymbols.sfd.  Do not edit them by hand -- re-run the script instead; it
-drops every glyph it previously added -- everything named word.*, base.* or
-stix.* -- before rebuilding, so it is safe to run repeatedly and safe to run
-after re-exporting the .sfd.
+in PhiSymbols.sfd.  Do not edit them by hand -- re-run the script instead.  It
+reads fonts/source/PhiSymbols-hand-drawn.ttf and writes this file, so a run has
+nothing of its own to undo and running it twice gives the same bytes.  Never
+install that source file: it claims the family name PhiSymbols and draws no
+printable ASCII.
 
 The word list is fonts/words.txt.  The symbol declarations it generates go to
 ../symbols-words, which etc/settings adds to ISABELLE_SYMBOLS.
@@ -123,7 +124,7 @@ PhiSymbols that family by copying a whole text face into it.
   the text face      IsabelleDejaVuSans.ttf, the ttf-hinted variant, from the
                      isabelle_fonts component of Isabelle2025-2 (name ID 5
                      "Version 2.37; ttfautohint (v1.8.4)").  1489 code points,
-                     copied outline for outline under the base. glyph prefix.
+                     copied outline for outline under the text. glyph prefix.
                      PhiSymbols wins the only two code points both draw,
                      U+061F and U+2023, as it already does in the text area.
 
@@ -140,10 +141,16 @@ the font txmia of the pxfonts package.  Those last ones are under the GPL, and
 26 of them are copied here.  The Isabelle fonts component's own README states
 that mixture; it is not paraphrased further, only pointed at.  What the file
 itself says is in its name table: name ID 0 names every upstream, ID 13 the
-licences, ID 14 this directory, where DejaVu LICENSE, Noto-OFL.txt and
-STIX-OFL.txt are.
+licences, ID 14 this directory, where DejaVu LICENSE, Noto-OFL.txt, STIX-OFL.txt
+and GPL-2.0.txt are.  Name ID 0 also carries the four upstream copyright lines
+verbatim, because this file travels as a bare .ttf into every generated
+presentation directory and into the VS Code extension, where a record pointing
+at a directory finds nothing.  No upstream states a GPL version -- CTAN's
+pxfonts page, the Isabelle component's README and txmia's own /Notice field all
+say just "GPL" -- and the GPL lets the recipient choose when a work names none,
+so version 2 is the text included here.
 
-Two things follow that are worth knowing before wondering about them.
+Three things follow that are worth knowing before wondering about them.
 
 The copied glyphs carry ttfautohint bytecode, so the merge also copies the text
 face's fpgm, prep and cvt tables and its seven instruction-related maxp maxima.
@@ -153,6 +160,11 @@ The one cost is that PhiSymbols' own glyphs, which are essentially uninstructed,
 now start from the graphics state prep sets, so they rasterise slightly
 differently WHEN ANTIALIASING IS OFF.  Under jEdit's shipped
 view.antiAlias=subpixel HRGB, and under greyscale antialiasing, nothing changes.
+
+The dates in this font are the hand-drawn font's dates.  head.created is the
+FontForge export it came from and head.modified is the last change to that
+source, because the merge preserves them rather than stamping the moment the
+script ran -- which is what makes two runs produce the same bytes.
 
 Complex-script layout does not survive the merge.  PhiSymbols has a small GDEF
 of its own and no GSUB, GPOS or MATH, so the text face's are lost.  Latin is

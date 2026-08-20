@@ -4,10 +4,18 @@ Read `WORD_CLIPBOARD_PLANS.md` beside this file first: it carries the implementa
 decisions the user has settled, the conventions all the plans follow, and what has been
 reviewed.
 
-**Where it stands.** Implemented. The fix is applied beside `phi_wrap_field`, which
-`SEARCH_FIELD_PASTE_PLAN.md` created and which is committed (`aaec0131`), so that plan was a
-prerequisite. One thing was decided differently while implementing, and step 2 below records
-it: the name table is written by the generator, not by `PhiSymbols.sfd`.
+**Where it stands.** Implemented, then reviewed as code and repaired. The fix is applied
+beside `phi_wrap_field`, which `SEARCH_FIELD_PASTE_PLAN.md` created and which is committed
+(`aaec0131`), so that plan was a prerequisite.
+
+Three things this plan said were reversed by what was learnt implementing and reviewing it,
+and each is recorded where it was said rather than quietly dropped: the name table is written
+by the generator, not by `PhiSymbols.sfd` (step 2); the generator reads a committed hand-drawn
+**input** rather than its own output, which deletes the whole undo apparatus this plan
+designed ("Keeping the artefact re-derivable"); and one check moved out of `--check` into the
+run itself. A code review of the landed commit raised 39 findings, and a second round
+verifying the repairs raised 81 — including one that would have overwritten the new source
+file on its first run.
 
 **How this plan is written.** It records decisions and the reasons for them, not a measurement
 archive. Five review rounds were spent largely on figures that went stale when a rule changed,
@@ -84,39 +92,39 @@ does change `head`'s bounding box, `indexToLocFormat` and `flags`, and hhea's
 
 **Eight things: `glyf`, `hmtx`, `cmap`, the glyph order, and `fpgm`, `prep`, `cvt` and the
 `maxp` maxima.** Isabelle registers the *hinted* faces, whose glyphs carry ttfautohint bytecode
-that needs the base's function definitions and stack depth. The four tables must travel
+that needs the text face's function definitions and stack depth. The four tables must travel
 together: with `fpgm` and `prep` but not the raised `maxp` maxima the interpreter gives up and
 **every glyph draws nothing**; with all four, the copied Latin renders exactly as it does in the
-base. Set all seven instruction-related `maxp` fields, not two — phi's own values are
+text face. Set all seven instruction-related `maxp` fields, not two — phi's own values are
 `maxFunctionDefs` 1, `maxStackElements` 64, `maxStorage` 1, `maxSizeOfInstructions` 46,
-`maxTwilightPoints` 0, `maxInstructionDefs` 0, `maxZones` 2, against the base's 141, 434, 318,
-526, 196, 0, 2.
+`maxTwilightPoints` 0, `maxInstructionDefs` 0, `maxZones` 2, against the text face's 141, 434,
+318, 526, 196, 0, 2.
 
-*The one cost*: carrying the base's `fpgm` and `prep` slightly changes how phi's own glyphs
+*The one cost*: carrying the text face's `fpgm` and `prep` slightly changes how phi's own glyphs
 rasterise **when antialiasing is off** — they are essentially uninstructed, so what reaches them
 is the graphics state `prep` sets. Under jEdit's shipped `view.antiAlias=subpixel HRGB`, and
 under greyscale antialiasing, nothing changes. Say so in `phi-font-readme.txt`; it needs no
 assertion.
 
-**The base is `ttf-hinted/IsabelleDejaVuSans.ttf`.** `isabelle_fonts-*/etc/settings` takes the
-`ttf/` branch only when `isabelle_fonts_hinted=false` appears in the untracked
+**The text face is `ttf-hinted/IsabelleDejaVuSans.ttf`.** `isabelle_fonts-*/etc/settings` takes
+the `ttf/` branch only when `isabelle_fonts_hinted=false` appears in the untracked
 `$ISABELLE_HOME_USER/etc/preferences`; the default is `ttf-hinted`. Resolve it the way
 `find_isabelle_mono` already resolves the mono face — `ISABELLE_HOME` or the sibling
 distribution, plus the `contrib/isabelle_fonts-*/ttf-hinted/` glob — in **one helper taking a
 file name**, so the x-height reference and the text face can never come from different variants.
 Do **not** resolve through `ISABELLE_FONTS`: that variable exists only inside Isabelle's
-settings environment, while `WORD_GLYPHS.md` documents the generator as plain
-`python3 build_word_glyphs.py`. Assert the resolved base's name ID 5 equals
-`Version 2.37; ttfautohint (v1.8.4)`, so a distribution upgrade fails the build instead of
-silently ageing the committed font.
+settings environment, while `WORD_GLYPHS.md` documents the generator as plain `python3
+build_word_glyphs.py`. Assert the resolved text face's name ID 5 equals `Version 2.37;
+ttfautohint (v1.8.4)`, so a distribution upgrade fails the build instead of silently ageing the
+committed font.
 
-**The mathematical alphanumerics come from STIX Two Math**, which `build_word_glyphs.py:64-68`
-already locates. The candidate rule is "**the base lacks the code point, or maps it to a glyph
-with no outline**" — the base has five blank-outlined entries, one of which, U+1D5D4, is inside
-the block. Build the candidate list against the **original** base and PhiSymbols, never against
-the destination mid-merge, so which font supplies a code point is a rule rather than an artefact
-of statement order. That yields 850 code points (996 assigned in the block, the base lacks 875
-and draws one blank, PhiSymbols draws 26 itself).
+**The mathematical alphanumerics come from STIX Two Math**, which `STIX_CANDIDATES` already
+locates. The candidate rule is "**the text face lacks the code point, or maps it to a glyph with
+no outline**" — the text face has five blank-outlined entries, one of which, U+1D5D4, is inside
+the block. Build the candidate list against the **original** text face and PhiSymbols, never
+against the destination mid-merge, so which font supplies a code point is a rule rather than an
+artefact of statement order. That yields 850 code points (996 assigned in the block, the text
+face lacks 875 and draws one blank, PhiSymbols draws 26 itself).
 
 **Both halves of the em correction matter, and each hides the other's absence.** STIX is drawn
 on a 1000-unit em against 2048, with cubic outlines. Scale the outlines —
@@ -125,18 +133,18 @@ that pen order — **and** scale the advances by the same factor, rounded to the
 Outlines alone leaves the letters overlapping; advances alone draws them at half size while
 every width still checks out.
 
-**The cmap rule the existing idiom hides.** `build_word_glyphs.py:312-314` writes a code point
+**The cmap rule the existing idiom hides.** Writing a code point
 into every Unicode subtable, which is safe only because word glyphs are in the BMP. Writing a
 supplementary code point into a format-4 subtable makes `font.save` die with `OverflowError`.
 Supplementary code points go only into format 12.
 
-**Two code points belong to phi.** PhiSymbols and the base share exactly `U+061F` and `U+2023`,
-both declared `font: PhiSymbols` in `symbols` (`\<rev_quest>`, `\<tribullet>`), so phi's glyph
-wins — as it already does in the text area. Assert the overlap is exactly these two, so a future
-base growing into phi's territory fails the build.
+**Two code points belong to phi.** PhiSymbols and the text face share exactly `U+061F` and
+`U+2023`, both declared `font: PhiSymbols` in `symbols` (`\<rev_quest>`, `\<tribullet>`), so
+phi's glyph wins — as it already does in the text area. Assert the overlap is exactly these two,
+so a future text face growing into phi's territory fails the build.
 
 **The copy must not mutate the source.** Storing a source `Glyph` object in the destination and
-then renaming its components rewrites the source's composites — and the base has **180** of
+then renaming its components rewrites the source's composites — and the text face has **180** of
 them, in the very object the generator keeps using. Deep-copy each glyph before renaming, and
 end the merge by asserting the source's glyph order, composite components, `hmtx` and `cmap` are
 unchanged. (Re-opening the source from bytes is *not* an equivalent fix.)
@@ -144,29 +152,38 @@ unchanged. (Re-opening the source from bytes is *not* an equivalent fix.)
 
 ## Keeping the artefact re-derivable
 
-`PhiSymbols.ttf` is committed and is meant to be determined by `PhiSymbols.sfd` plus the
-generator's inputs. Two things keep that true, and both belong in `drop_generated`, whose
-contract is already "undo everything this generator adds":
+`PhiSymbols.ttf` is committed and is meant to be determined by its inputs.
 
-* **Two prefixes, one tuple.** Copied glyphs are named `base.` and `stix.` by origin, and
-  `drop_generated` drops `("word.", "base.", "stix.")` through a single named tuple. Failing to
-  extend it is completely silent: the "skip what the destination already covers" filter then
-  finds everything present, copies nothing, and the stale glyphs survive an Isabelle upgrade.
-* **Reset what the merge changed besides glyphs**: delete `fpgm` and `prep`, restore `cvt` to
-  phi's two entries and the seven `maxp` fields to phi's values, and empty
-  `font["post"].extraNames` — fontTools' format-2.0 encoder never removes a name once added, and
-  the committed font still carries `word.tr` from a word deleted long ago.
+**This section originally said the opposite of what landed, and the reversal is the most
+substantial thing implementation changed.** It described an elaborate undo — a
+`drop_generated` that stripped every glyph a previous run had added, two hinting constants
+transcribed into the source because a merged font cannot tell you what the unmerged one
+had, an `elif` policing them, a `post.extraNames` reset — and it rejected the alternative
+in one clause: "a committed pre-merge fixture with an asserted SHA was considered and
+dropped as ceremony".
 
-Open the destination with `TTFont(FONT, recalcTimestamp=False)`, or every run differs from the
-last in `head.modified` alone. That is enough; a committed pre-merge fixture with an asserted
-SHA was considered and dropped as ceremony — the property that matters is "the font contains the
-right glyphs", which the checks below establish directly.
+The rejection was wrong, and every line of that undo existed only because the generator
+read its own output. The generator now reads `fonts/source/PhiSymbols-hand-drawn.ttf`, a
+committed **input**, and writes `PhiSymbols.ttf`. Note the difference from what was
+rejected: not a fixture to compare against, an input to build from. Nothing needs undoing,
+because nothing of the last run is ever read. `drop_generated`, both constants, the `elif`,
+the `merged` detection and the `post` reset are all gone, and so is a defect inside them
+that made the font unsaveable.
 
-**Placement is made robust rather than documented.** `build_word_glyphs.py:284` takes
-`order = list(font.getGlyphOrder())` as a snapshot the word-glyph loop appends to; drop that
-`list()` copy so exactly one glyph-order object exists in the run, and every position after
-`drop_generated` becomes correct. Only "before `drop_generated`" remains an error, and that one
-is caught, because the extended drop would eat the merge and the coverage check would fail.
+What survives from this section: opening with `recalcTimestamp=False`, so that two runs
+give the same bytes. The artefact's dates are then the hand-drawn font's, which is what
+`created` and `modified` should mean.
+
+The source file is taken from commit `f589d323` — the last version of the artefact before
+this generator existed, so a genuine FontForge export — with only its copyright line
+normalised. It is out of `fonts/` because that directory is what name ID 14 advertises,
+and the file claims the family name `PhiSymbols` while drawing no printable ASCII: two
+fonts of that name on one system could resolve to the one that draws nothing.
+
+**One check the reversal removed had to be replaced.** `drop_generated` also refused a
+hand-drawn font whose hinting this script does not know about. The seven `maxp` maxima are
+now the maximum of both fonts rather than the text face's, so a re-exported `.sfd` needing
+larger ones cannot pass while its glyphs stop drawing.
 
 
 ## Applying it to the widgets
@@ -180,7 +197,7 @@ from the one place that discovers the fields. `phi_field_font` keeps the field's
 and changes the family to `PhiSymbols`.
 
 **Two shipped behaviours change, and both are visible.** The Find and Replace boxes are
-monospaced today and become proportional — the user chose this knowing the mono base would have
+monospaced today and become proportional — the user chose this knowing the mono face would have
 changed the other thirteen widgets instead, and that one font carries one design for ASCII. And
 a field given a plain `Font` stops following UI font-size changes, since `updateComponentTreeUI`
 replaces only `FontUIResource` fonts: the Search dialog is rebuilt on each open
@@ -199,10 +216,10 @@ the quick-search bar and an open file browser keep the old size until restart.
 * **Bold and italic are synthesised**; only the regular face is merged. No wrapped field is
 bold.
 * **Complex-script shaping and positioning.** PhiSymbols has a small `GDEF` of its own and no
-  `GSUB`, `GPOS` or `MATH`, so the base's layout does not survive: GSUB `{' RQD', aalt, ccmp,
-  liga, salt}`, GPOS `{kern, mark, mkmk}`, its 1492-entry `GDEF` and its `MATH` table are all
-  lost. Latin is unaffected — precomposed accents and `fi`/`fl` are single glyphs, and Java's
-  `drawString` applies no GPOS kerning anyway — while Arabic mark positioning degrades.
+  `GSUB`, `GPOS` or `MATH`, so the text face's layout does not survive: GSUB `{' RQD', aalt,
+ccmp,   liga, salt}`, GPOS `{kern, mark, mkmk}`, its 1492-entry `GDEF` and its `MATH` table are
+all   lost. Latin is unaffected — precomposed accents and `fi`/`fl` are single glyphs, and
+Java's   `drawString` applies no GPOS kerning anyway — while Arabic mark positioning degrades.
 
 
 ## Risks
@@ -213,20 +230,20 @@ bold.
   The obligation is unmet today — the shipped font has name IDs 0-6 only, no ID 13, no ID 14,
   and its ID 0 names three upstreams without an OFL notice or a Bitstream attribution. Step 2
   **extends** ID 0 and adds the missing records.
-* **The merge brings in GPL material, and the font discloses it.** The Isabelle base is not one
-  upstream: its own README says the blackboard-bold glyphs come from `txmia` (package
-  `pxfonts`) and "these are subject to GPL", besides Bluesky TeX material scaled 222% and glyphs
-  from Symbola. 26 of those blackboard-bold code points — U+2102, U+210D, U+2115, U+2119,
-  U+211A, U+211D, U+2124 and 19 in U+1D538..U+1D56B — are in the base's cmap and every one is
-  copied. **The user decided to ship the mixture and disclose it as Isabelle does**: name ID 0
-  and `phi-font-readme.txt` name the GPL material and its source and point at the Isabelle
-  component's README. Excluding those 26 was the alternative, rejected because they are common
-  in Isabelle mathematics and would be blank in every wrapped field.
+* **The merge brings in GPL material, and the font discloses it.** The Isabelle text face
+  is not one upstream: its own README says the blackboard-bold glyphs come from `txmia` (package
+`pxfonts`) and "these are subject to GPL", besides Bluesky TeX material scaled 222% and glyphs
+from Symbola. 26 of those blackboard-bold code points — U+2102, U+210D, U+2115, U+2119,
+U+211A, U+211D, U+2124 and 19 in U+1D538..U+1D56B — are in the text face's cmap and every one is
+copied. **The user decided to ship the mixture and disclose it as Isabelle does**: name ID 0
+and `phi-font-readme.txt` name the GPL material and its source and point at the Isabelle
+component's README. Excluding those 26 was the alternative, rejected because they are common
+in Isabelle mathematics and would be blank in every wrapped field.
 * **The file grows from 96,972 to roughly 480,000 bytes**, and that is what is copied into every
   generated presentation directory.
 * **A user who sets `isabelle_fonts_hinted=false`** gets unhinted outlines in the text area and
   the hinted rasterisation in these widgets. One committed font cannot serve both.
-* **`build_word_glyphs.py:45` hard-codes `ISABELLE = "Isabelle2025-2"`** as the fallback when
+* **The generator hard-codes `ISABELLE = "Isabelle2025-2"`** as the fallback when
   `ISABELLE_HOME` is unset, so the generator can keep building against a distribution left
   behind by an upgrade. The name ID 5 assertion above is what turns that into a loud failure.
 * **`OS/2` fields become false and are left that way**: `usFirstCharIndex` stays 0x061F,
@@ -239,19 +256,22 @@ bold.
 ## Checking it: compare font data, not pixels
 
 **This is the plan's main methodological decision, and it replaces an earlier design.** An
-earlier version asserted pixel identity over the base's 1492 code points and advance equality
-through Java's text machinery. Five of the eleven blocking findings across five review rounds
-came from exactly that: `stringWidth` and `getStringBounds` give different answers with
-fractional metrics on or off, the differing set moves with the point size, Java2D's default
-antialiasing hint behaves as *off*, and every one of those configurations produced an assertion
-that failed on a correct build.
+earlier version asserted pixel identity over the text face's 1492 code points and advance
+equality through Java's text machinery. In four of the five review rounds a reviewer raised, as
+a blocking finding, an assertion that fails on a *correct* build — more than one reviewer each
+time — and every instance came from checking font data through Java's rendering machinery:
+`stringWidth` and `getStringBounds` give different answers with fractional metrics on or off,
+the differing set moves with the point size, and Java2D's default antialiasing hint behaves as
+*off*. (An earlier draft of this paragraph put a count on it. The count was carried forward
+from a brief written after four of the rounds and was never re-derived; what the review records
+support is the four-of-five above.)
 
-The property actually wanted is **"the base's glyphs were copied unchanged"**, and that is a
-statement about font data. Compare `glyf` outlines and `hmtx` integers: exact, deterministic,
+The property actually wanted is **"the text face's glyphs were copied unchanged"**, and that is
+a statement about font data. Compare `glyf` outlines and `hmtx` integers: exact, deterministic,
 free of every rendering configuration, and orders of magnitude faster. Rendering then needs only
 coarse checks — *does the font draw ink at all* — which no configuration can flip.
 
-**Structural checks live in the generator's `--check` mode** (`build_word_glyphs.py:247`), where
+**Structural checks live in the generator's `--check` mode** (`check_font`), where
 fontTools is available. `run_word_clipboard_test.sh` invokes only `jedit.jar`'s BeanShell under
 `xvfb-run`; it has no `python3`, so nothing structural can live there.
 
@@ -261,19 +281,31 @@ fontTools is available. `run_word_clipboard_test.sh` invokes only `jedit.jar`'s 
 1. **Extend `fonts/build_word_glyphs.py`.**
    - `find_isabelle_font(name)` replacing `find_isabelle_mono`, resolving through
    `ISABELLE_HOME`
-     and the `ttf-hinted` glob, asserting the base's name ID 5.
-   - `merge_text_face(font, source, codepoints, prefix)`: deep-copies each glyph, carries
+     and the `ttf-hinted` glob, asserting the text face's name ID 5.
+   - `copy_glyphs(font, source, codepoints, prefix)`: deep-copies each glyph, carries
      composites and renames their components, writes `glyf`, `hmtx`, the live glyph order and
      the cmap subtables permitted for each code point, and returns the order.
    - the STIX pass with the pen order and both halves of the em correction, over the candidates
-     the base lacks **or draws blank**, computed against the original base and PhiSymbols.
-   - `fpgm`, `prep`, `cvt` and the seven `maxp` fields copied from the base.
-   - the destination opened with `recalcTimestamp=False`; the `list()` copy at `:284` dropped.
-   - `drop_generated` taking `("word.", "base.", "stix.")`, resetting the four hinting tables to
-     phi's values and emptying `post`'s `extraNames`.
-   - an `--output` **directory** option, defaulting to the committed locations and mirroring the
-     component layout, honoured by every artefact the run writes — the font, `symbols-words`,
-     `jedit/word-clipboard-text` — so a check build cannot touch a shared working tree.
+     the text face lacks **or draws blank**, computed against the original text face and
+     PhiSymbols.
+   - `fpgm`, `prep` and `cvt` copied from the text face.
+   - the destination opened with `recalcTimestamp=False`, and the glyph order held as one
+     live object rather than a snapshot, so that every position is right by construction.
+   - **no undo step at all** — see "Keeping the artefact re-derivable" above, which this
+     reversed. The input is `fonts/source/PhiSymbols-hand-drawn.ttf` and the output is
+     `PhiSymbols.ttf`; a run reads nothing it wrote. The seven `maxp` maxima are the
+     maximum of both fonts, which is what replaces the refusal the undo step carried.
+   - a guard that refuses to run when the record of which word owns which code point is
+     damaged: `symbols-words` and the artefact's own cmap must agree, and a new word takes
+     the code point after the highest ever assigned, never a free one below it.
+   - an `--output` **directory** option, defaulting to the committed locations and mirroring
+     the component layout, honoured by every artefact the run writes — the font,
+     `symbols-words`, `jedit/word-clipboard-text` — so a build cannot touch a shared working
+     tree. `--check` writes nothing and compares the build against the committed files
+     instead, so the two options are contradictory and giving both is a usage error.
+   - one path through all of it: build, save into a buffer, write it out unless `--check`,
+     then run the structural checks on the re-opened bytes. Writing before checking is what
+     keeps a deliberately damaged `--output` build available as evidence.
 2. **Write name ID 0 and IDs 13/14 in the generator**, not in `fonts/PhiSymbols.sfd`. This plan
    said the opposite, because the `name` table comes out of the FontForge export. Two things
    changed it. FontForge is not installed here, so editing the `.sfd` alone would leave the
@@ -282,7 +314,8 @@ fontTools is available. `run_word_clipboard_test.sh` invokes only `jedit.jar`'s 
    blackboard-bold glyphs — which is the generator's doing, not the hand-drawn font's; the
    `.sfd`'s own notice covers only the hand-drawn glyphs. Whoever re-exports the `.sfd` runs the
    generator afterwards, so the generator's records always reach the artefact. Setting them from
-   constants is what keeps the run idempotent, so `drop_generated` has nothing to undo. Neither
+   constants is what keeps the run idempotent: setting them to a fixed value twice changes
+   nothing. Neither
    upstream licence requires a rename — DejaVu's terms reserve "Bitstream", "Vera", "Tavmjong
    Bah" and "Arev", STIX's OFL reserves "TM Math" — so `PhiSymbols` needs no licence
    justification; what binds is the OFL's requirement that a derivative carrying STIX
@@ -291,11 +324,11 @@ fontTools is available. `run_word_clipboard_test.sh` invokes only `jedit.jar`'s 
    where the three licence texts are.
 3. **Restructure `fonts/phi-font-readme.txt` around three kinds of glyph** — hand-drawn,
    generated word glyphs, and the merged text face, the third being the bulk of the file. Record
-   the Isabelle component, `ttf-hinted`, and the base's name ID 5; say the base is itself DejaVu
-   Sans plus IsabelleSymbols — Bluesky TeX scaled 222%, Symbola, and the GPL blackboard-bold
-   glyphs from `txmia`/`pxfonts` — and point at that component's README rather than paraphrasing
-   it. Add the antialiasing-off sentence. Fix the stale count at `:84` ("133 … U+E000..U+E084"
-   where the table has 135 running to U+E086).
+the Isabelle component, `ttf-hinted`, and the text face's name ID 5; say the text face is itself
+DejaVu    Sans plus IsabelleSymbols — Bluesky TeX scaled 222%, Symbola, and the GPL
+blackboard-bold    glyphs from `txmia`/`pxfonts` — and point at that component's README rather
+than paraphrasing    it. Add the antialiasing-off sentence. Fix the stale count at `:84` ("133 …
+U+E000..U+E084"    where the table has 135 running to U+E086).
 4. **Add `phi_field_font(phi_field)` to `phi_word_clipboard.bsh`** and call it from the AWT
    listener in `phi_install_field_paste` (`:311-313`) beside `phi_wrap_field`, not inside it.
    Family `PhiSymbols`, style and size from the field's current font. Follow the file's
@@ -304,13 +337,14 @@ fontTools is available. `run_word_clipboard_test.sh` invokes only `jedit.jar`'s 
 5. **Add structural checks to the generator's `--check` mode.** Each must be shown to fail
    against a deliberately broken build made with `--output`; a check nobody has seen fail is not
    a check.
-   - every code point in the base's cmap has, in the merged font, a `glyf` outline byte-equal to
-     the base's and an equal `hmtx` entry — **except** two named classes, as an equality so that
+   - every code point in the text face's cmap has, in the merged font, a `glyf` outline
+     byte-equal to the text face's and an equal `hmtx` entry — **except** two named
+     classes, as an equality so that
      anything else differing fails: `{U+061F, U+2023}`, where phi's glyph and advance win, and
-     the code points supplied over a blank base glyph, where the merged font must have an
-     outline and the base must not;
+     the code points supplied over a blank text-face glyph, where the merged font must have an
+     outline and the text face must not;
    - phi's own 196 code points have outlines and advances identical before and after the merge —
-     compared within the one run, snapshotting after `drop_generated` and before the merge;
+     compared within the one run, snapshotting before the merge;
    - every code point in `jedit/word-clipboard-text` is present;
    - the mathematical alphanumeric block is covered by glyphs that have outlines, not merely
      cmap entries;
@@ -318,8 +352,9 @@ fontTools is available. `run_word_clipboard_test.sh` invokes only `jedit.jar`'s 
      each bounding-box height is within a few units of the source's scaled — a band, not an
      equality, because cubic-to-quadratic conversion moves extrema — **and** at least 0.9 times
      it, which is the half that catches an outline left at 1000-unit scale;
-   - the overlap between PhiSymbols' own code points and the base's is exactly the two;
-   - the source fonts are unchanged after the run;
+   - the overlap between PhiSymbols' own code points and the text face's is exactly the two;
+   - the source fonts are unchanged after the run — checked in `main`, where both are still
+     open, because a check that opens its own copies cannot see a source the run corrupted;
    - the artefact's table set equals a written-down expectation, so a later switch to
      `fontTools.merge` cannot pass;
    - the artefact carries name IDs 13 and 14 and an ID 0 naming every provenance.
@@ -359,7 +394,7 @@ like, because a check whose expectation is "no change" cannot be failed by a hum
 - **Never run `isabelle build`**, in any session, with any flags.
 - Never run `git clean`, `git stash`, `git checkout`, or `git reset --hard`. Shared tree, with
   another session committing to it.
-- Do not modify anything under `contrib/Isabelle2025-2/`, `ICSE27/` or `ICSE27-x/`. The base
-  font is read from there and copied; the distribution's own file is never touched.
+- Do not modify anything under `contrib/Isabelle2025-2/`, `ICSE27/` or `ICSE27-x/`. The
+  text face is read from there and copied; the distribution's own file is never touched.
 - Do not test against the live X11 display; use `xvfb-run`.
 - `contrib/phi-system` is its own git repository; commit there and bump the super-repo.

@@ -53,14 +53,21 @@ covered: they draw in whatever `MenuItem.font` and their own defaults say.
 
 ## Pipeline
 
-    PhiSymbols.sfd  --FontForge-->  PhiSymbols.ttf  --build_word_glyphs.py-->  PhiSymbols.ttf
-     (hand-drawn)                                                     (+ word glyphs, + a text face)
+    PhiSymbols.sfd  --FontForge-->  source/PhiSymbols-hand-drawn.ttf  --build_word_glyphs.py-->  PhiSymbols.ttf
+     (hand-drawn)                    (the input, never installed)              (+ word glyphs, + a text face)
 
 Hand-drawn symbols stay in `PhiSymbols.sfd`; edit them with FontForge and export
-the `.ttf` as before.  Word glyphs are generated and never enter the `.sfd`.
-The script is idempotent — every glyph it adds is named `word.*`, `base.*` or
-`stix.*` and all of them are dropped at the start of a run — so it is safe to run
-it repeatedly, and safe to run it again after re-exporting the `.sfd`.
+to **`source/PhiSymbols-hand-drawn.ttf`**, not to `PhiSymbols.ttf`.  Word glyphs
+are generated and never enter the `.sfd`.
+
+The script never undoes anything: it reads the hand-drawn font and writes
+`PhiSymbols.ttf`, so a run cannot inherit the last run's work and there is
+nothing to strip.  Running it twice gives byte-identical output.
+
+**Never install `source/PhiSymbols-hand-drawn.ttf`.** It claims the family name
+`PhiSymbols` and draws no printable ASCII, so a system carrying both would have
+two fonts of that name and might resolve to the one that draws nothing.  It is an
+input, like the `.sfd`, which is why it is not in this directory.
 
 The text face is the third kind of glyph, and it is there for jEdit's own input
 fields rather than for the text area; `phi-font-readme.txt` section 3 says what
@@ -186,11 +193,13 @@ into a `.thy` shows nothing,
 
 1. Edit `words.txt` (one entry per line, `#` starts a comment).
 2. Run `python3 build_word_glyphs.py` from this directory.
-3. Run `python3 build_word_glyphs.py --check`.  It rebuilds everything in memory,
-   writes nothing, and checks the merged text face against its sources: outlines
-   copied unchanged, advances, the em correction on the mathematical alphanumerics,
-   and that the sources were not modified.  It compares font data rather than
-   rendered pixels, on purpose — see `../jedit/UI_FONT_PLAN.md`.
+3. Run `python3 build_word_glyphs.py --check`.  Step 2 already ran every structural
+   check on the bytes it wrote — that is one path, not two — so this step answers a
+   different question: are the three committed files what today's inputs produce?
+   It is how you find out that `words.txt` was edited and never regenerated, which
+   nothing else can see, because the symbol table and the clipboard table go stale
+   together and still agree with each other.  The structural checks compare font
+   data rather than rendered pixels, on purpose — see `../jedit/UI_FONT_PLAN.md`.
 4. Run `../jedit/run_word_clipboard_test.sh` — it round-trips every entry, and every
    ordered pair of entries written against each other, through the real BeanShell
    interpreter, and checks the fold rule described above.  The two halves of this
@@ -222,8 +231,15 @@ together, so the glyph, the symbol declaration and the clipboard text cannot dri
 apart.
 
 Code points already assigned in `../symbols-words` are reused, so reordering or
-deleting a line never renumbers the words that survive.  Adding a line takes the
-next free code point.
+deleting a line never renumbers the words that survive.  A new line takes the code
+point after the **highest ever assigned**, never a free one below it: a retired
+code point is never handed to another word.  That matters because these code
+points are written into every `.thy` file that uses one of these symbols, so
+recycling one silently changes what those files say — it happened once here, when
+a deleted `\<tr>` left 0xE073 free and a later `\<size_t>` took it.  The high-water
+mark is a comment line at the top of `../symbols-words`; Isabelle folds comment
+lines away when it reads a symbol table, and unlike an entry it survives the
+deletion of the word that set it.  2048 code points, 135 in use.
 
 Requirements: `fontTools`, `STIXTwoMath-Regular.otf` and `STIXTwoText-Medium.otf`
 — the script looks in `~/.local/share/fonts/stix2/` and the usual system font
