@@ -18,10 +18,11 @@ letters the table happens to use — which changes *which* letters take a glyph 
 them, but not that they do; so Correction 2 needs no rewrite. Second, manual checks 1 and 2
 used `\<has>\<has>`, which round-trips on its own once that plan lands and would therefore
 pass even with the memory disabled; they now use a shape that still discriminates. Third,
-two pieces of work this plan used to carry moved into that one: the hoist of the table to a
-top-level `phi_t`, and the correction of the wrong comment at `phi_word_clipboard.bsh:158-159`.
-Do neither of them here. Nothing else depends on it: the joiner that plan introduces is
-stripped inside `phi_word_fold` itself, so `phi_unexpand` needs no extra call.
+two pieces of work this plan used to carry moved into that one and landed with it: the hoist
+of the table to a top-level `phi_t`, and the correction of the wrong comment above
+`phi_service` in `phi_word_install`. Do neither of them here. Nothing else depends on it:
+the joiner that plan introduces is stripped inside `phi_word_fold` itself, so
+`phi_unexpand` needs no extra call.
 
 Everything cited below was read from **Java source**, which ships in full inside the
 Isabelle component (not only as a jar):
@@ -157,12 +158,13 @@ Copy goes: selection → `Registers.copy` (`Registers.java:80-90`) →
 **service list** (`datatransfer/TransferHandler.java:53-77`), in which later services
 overwrite earlier ones per flavor. `jEdit.java:534-539` registers the built-in services,
 `jEdit.java:546-578` then runs startup scripts, and only afterwards does
-`jEdit.java:612` call `finishStartup`, which creates the first view — so
-`phi_word_clipboard.bsh:160-166` lands last and claims `stringFlavor`.
+`jEdit.java:612` call `finishStartup`, which creates the first view — so the
+`JEditTransferableService` that `phi_word_install` registers lands last and claims
+`stringFlavor`.
 
 Paste is separate and has no service list: `Registers.paste` reads `reg.getTransferable()`
 (`Registers.java:244`) and prefers jEdit's rich-text flavor, which is why the existing fix
-wraps register `$` (`phi_word_clipboard.bsh:168-185`) instead of registering a service.
+wraps register `$` (in `phi_word_install`) instead of registering a service.
 
 Drag goes: mouse gesture → `TextAreaMouseHandler.java:308` → `TextArea.startDragAndDrop`
 → `javax.swing.TransferHandler.exportAsDrag` → the drag gesture handler, which calls
@@ -208,9 +210,9 @@ public setter `TextArea.setTransferHandler` (`TextArea.java:204`).
 
 ### What BeanShell can do here, measured
 
-`phi_word_clipboard.bsh:158-159` records bsh's limits with anonymous class bodies, so this
-was the real unknown. Running jEdit's repackaged interpreter headlessly, all of the
-following were observed:
+The comment above `phi_service` in `phi_word_install` records bsh's limits with anonymous
+class bodies, so this was the real unknown. Running jEdit's repackaged interpreter
+headlessly, all of the following were observed:
 
 * `class X extends TextAreaTransferHandler` instantiates; `instanceof` holds for both
   `TextAreaTransferHandler` and `javax.swing.TransferHandler`; reflection on the generated
@@ -274,8 +276,8 @@ out   U+1D429 U+1D41E U+1D427 U+1D41D U+1D422 U+1D427 U+1D420 U+1D433 U+1D433 U+
 
 `phi_word_expand` turns the glyph into its seven letters, which then sit against the three
 that were already there; `phi_word_fold` reads that as one run, finds a mathematical letter
-no word claims, and abandons the whole run (`phi_word_clipboard.bsh:113-115` — the rule
-`WORD_GLYPHS.md` describes under "What the paste direction folds"). The glyph does not
+no word claims, and abandons the whole run (`phi_word_fold_run` — the rule `WORD_GLYPHS.md`
+describes under "What the paste direction folds"). The glyph does not
 come back.
 
 **Mechanism two: adjacent glyphs whose letters re-segment differently.** No unclaimed
@@ -498,16 +500,16 @@ blocking selection transfer on the AWT thread, so the wrapper is returned uncond
 and the second read is served from memory.
 
 The delegating wrapper. It is bound to a name before being returned, and the reason is
-narrower than the comment at `phi_word_clipboard.bsh:158-159` currently claims. That
-comment says bsh "cannot parse an anonymous class body written directly as an argument",
-and that is false as a general rule — 85 lines earlier, `:73-75` of the same file passes
-`new java.util.Comparator() { public int compare(a, b) {...} }` straight to
-`Collections.sort`, and the shipped test exercises it. **Measured**: an anonymous class
-body as a call argument parses when the methods inside declare primitive return types and
-fails with `Parse error ... Encountered: (` when one declares a **reference** return type.
-Every method of a `Transferable` returns a reference type, which is why this one has to be
-bound first. **The existing comment is wrong, and `WORD_BOUNDARY_PLAN.md` corrects it** as part of its
-own step 1 — not here (see Procedure step 1).
+narrower than this file's comment used to claim. That comment said bsh "cannot parse an
+anonymous class body written directly as an argument", and that is false as a general rule
+— the `Collections.sort` call in `phi_word_table` passes
+`new java.util.Comparator() { public int compare(a, b) {...} }` straight in, and the
+shipped test exercises it. **Measured**: an anonymous class body as a call argument parses
+when the methods inside declare primitive return types and fails with
+`Parse error ... Encountered: (` when one declares a **reference** return type. Every
+method of a `Transferable` returns a reference type, which is why this one has to be bound
+first. **`WORD_BOUNDARY_PLAN.md` corrected that comment when it landed**, so there is
+nothing to correct here (see Procedure step 1).
 
 ```
 phi_delegating(inner, replacement)
@@ -558,9 +560,9 @@ courtesy to other macros, it is what stops our methods writing through to their 
 
 ### The imports the new code needs — five of them, and only for the test harness
 
-`phi_word_clipboard.bsh:31-38` imports nothing from `org.gjt.sp.jedit.textarea` or
-`org.gjt.sp.jedit.msg`, and imports `Registers`, `TransferHandler` and `Log` by name rather
-than by package. The new code needs all five of:
+The import block of `phi_word_clipboard.bsh` brings in nothing from
+`org.gjt.sp.jedit.textarea` or `org.gjt.sp.jedit.msg`, and imports `Registers`,
+`TransferHandler` and `Log` by name rather than by package. The new code needs all five of:
 
     import org.gjt.sp.jedit.textarea.TextAreaTransferHandler;
     import org.gjt.sp.jedit.EBComponent;
@@ -624,7 +626,7 @@ Points that are not decoration:
   `setTransferHandler` belongs.
 * **Startup scripts run before any view exists** — `jEdit.java:546-578` runs them and only
   `jEdit.java:612` calls `finishStartup`, which creates the first view.
-* **Register after the `n == 0` guard** (`phi_word_clipboard.bsh:153-156`). With no table
+* **Register after the `phi_n == 0` guard** in `phi_word_install`. With no table
   there is nothing to expand or fold, and drag should stay at jEdit's stock behaviour.
 
 ### Calling `setTransferHandler` a second time is clean
@@ -667,7 +669,7 @@ replaced on the second call and again on a third.
 
 - **Ordinary text is untouched.** `phi_word_expand` copies through any code point not in
   the table, and `phi_word_fold` abandons a whole run of mathematical letters when one of
-  them is unclaimed (`phi_word_clipboard.bsh:113-115`). Same rule and same limits as the
+  them is unclaimed (`phi_word_fold_run`). Same rule and same limits as the
   paste direction.
 - **A drag out of jEdit goes through `phi_word_expand` only**, so it inherits the copy
   direction's behaviour exactly, including the glyph-against-unclaimed-letters case: the
@@ -771,27 +773,24 @@ That session is the user's to run. Do not report success without it.
 ## Procedure
 
 1. **Extend `phi_word_clipboard.bsh`.** `WORD_BOUNDARY_PLAN.md` has already created the
-   top-level `phi_t`, rewritten both text
-   functions and corrected the comment at `:158-159`; do none of that again. Add the five
-   imports; add the top-level
+   top-level `phi_t`, rewritten both text functions and corrected the comment above
+   `phi_service`; do none of that again. Add the five imports; add the top-level
    `phi_drag` map, `phi_delegating` and `phi_unexpand`; add the
    `Phi_Text_Area_Transfer_Handler` class with three **public** overrides; add the
-   `EBComponent` and register it from `phi_word_install`, after the `n == 0` guard.
+   `EBComponent` and register it from `phi_word_install`, after the `phi_n == 0` guard.
    Every new bare name, including method locals, carries the `phi_` prefix.
    About 65 lines, and **no new text-transformation logic** — `phi_word_expand` and
    `phi_word_fold` are reused as they stand.
 
-   **The comment at `phi_word_clipboard.bsh:158-159`** states a rule about BeanShell that is
-   not true; `WORD_BOUNDARY_PLAN.md` corrects it as part of its own step 1, so leave it
-   alone here. The measured rule is repeated below because this plan's wrapper depends on
-   it. It reads "BeanShell cannot parse an anonymous
-   class body written directly as an argument, so both of these are bound to a name first."
-   The narrow, measured rule is in "The delegating wrapper" above: such a body parses as an
-   argument, and fails only when a method inside it declares a reference return type — as
-   `:73-75` of that same file demonstrates, passing a `Comparator` whose `compare` returns
-   `int` straight to `Collections.sort`. Both objects at `:158-159` do declare reference
-   return types, so the code is right and only the reason is wrong — which is why the
-   rewrite of that comment belongs to `WORD_BOUNDARY_PLAN.md` and not to this step.
+   **The BeanShell rule this plan's wrapper depends on** is already stated in the file, in
+   the comment above `phi_service` in `phi_word_install`: an anonymous class body written
+   directly as a call argument parses when every method in it returns a primitive type, and
+   fails with `Parse error ... Encountered: (` when one declares a reference return type.
+   The `Collections.sort` call in `phi_word_table` passes such a body — a `Comparator` whose
+   `compare` returns `int` — straight in, and the shipped test exercises it. Every method of
+   a `Transferable` returns a reference type, which is why `phi_delegating` has to bind its
+   wrapper to a name before returning it. An earlier version of that comment stated the rule
+   too broadly; `WORD_BOUNDARY_PLAN.md` corrected it when it landed.
 
 2. **Extend `run_word_clipboard_test.sh` / `test_word_clipboard.bsh`.**
    `WORD_GLYPHS.md` warns that the halves of this feature are generated apart and that
@@ -869,7 +868,7 @@ That session is the user's to run. Do not report success without it.
 
    Leave the following paragraph alone as well. It begins "Outside jEdit,
    `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<name>` escape" and says
-   at `:112-113` that a raw private-use character "that came out of a drag can be repaired"
+   that a raw private-use character "that came out of a drag can be repaired"
    by its reverse direction. `WORD_BOUNDARY_PLAN.md` step 6 re-aims that clause once, in a
    wording that stays true before, between and after all four plans, so there is nothing to
    do to it here — and in particular do not re-aim it at the X11 primary selection, which by

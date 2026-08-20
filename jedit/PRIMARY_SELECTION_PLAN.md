@@ -62,7 +62,7 @@ properties". So middle-click paste is live by default, and the fold direction of
 is a **default-on, user-facing behaviour change**, not an opt-in edge case.
 
 **The read direction is unfixed too.** `Registers.paste` reads `reg.getTransferable()`
-(`:244`) and the existing script wraps only register `$` (`phi_word_clipboard.bsh:168,185`),
+(`:244`) and the existing script wraps only register `$` (in `phi_word_install`),
 so a middle-click paste of mathematical letters from another application does not fold.
 
 **Isabelle does not touch `%`.** Its only register use is `'$'` — `Registers.copy` at
@@ -79,8 +79,8 @@ a plain in-JVM register at `%`, unwrapped.
 
 `Registers.Register` (`Registers.java:678-701`) is an interface with four methods:
 `toString`, `setValue`, `getTransferable`, `setTransferable`. The existing script already
-wraps register `$` through it (`phi_word_clipboard.bsh:168-185`), so the technique is not
-new here — this reuses it.
+wraps register `$` through it, in `phi_word_install`, so the technique is not new here —
+this reuses it.
 
 The one difference from `$` is which half needs work. For `$`, the outgoing direction is
 handled by the service list, because `Registers.copy` builds its transferable through

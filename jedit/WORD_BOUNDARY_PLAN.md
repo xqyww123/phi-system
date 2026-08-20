@@ -24,7 +24,7 @@ brings it back by **folding** those letters into the glyph again. Expansion is l
 edges: it throws away the fact that a word ended where it did. Folding then has to guess
 the boundaries, which it does by scanning a run left to right, taking the longest table
 word that matches at each position, and abandoning the whole run when it meets a
-mathematical letter no word claims (`phi_word_clipboard.bsh:113-115`).
+mathematical letter no word claims (`phi_word_fold_run`).
 
 Guessing wrongly is possible. Write `\<change>\<do>` with nothing between them: expansion
 gives eight letters, `changedo`; the scan finds `changed` at position 0 — a word in its own
@@ -339,9 +339,10 @@ person to discover it.
 **The rewrite invalidates line citations elsewhere.** It changes `phi_word_expand` and
 `phi_word_fold` wholesale, adds top-level names and compiled patterns, prefixes the locals in
 `phi_word_table`, `phi_word_fold` and `phi_word_fold_run`, and rewrites the header comment.
-Every `phi_word_clipboard.bsh:NNN` citation in the other three plans is against the file as
-it stands today and will be stale afterwards. Refresh them, or replace them with names, when
-each of those plans is implemented.
+Every `phi_word_clipboard.bsh:NNN` citation in the other three plans was against the file as
+it stood before this rewrite, and went stale with it. They have since been replaced by names
+— a function, or a named thing inside one — which is the half of that choice that does not
+have to be redone every time the file is touched.
 
 **Never write the joiner character itself into the source.** Construct it as
 `new String(Character.toChars(0x2060))`. A literal would be invisible — unreadable,
@@ -482,7 +483,7 @@ below therefore go out to another application and back.
    the prefix documents the intent, the type is what makes a local a local. The closures in
    `phi_word_install` name `phi_t` directly; do not reintroduce a bare `t`.
    Update the file's header comment, which describes the two directions and does not yet
-   mention boundaries. Fix the wrong comment at `:158-159` while there — see
+   mention boundaries. Fix the wrong comment above `phi_service` while there — see
    `DRAG_AND_DROP_PLAN.md`, "The delegating wrapper", for the measured rule it gets wrong.
 2. **Make `run_word_clipboard_test.sh` run under `xvfb-run`, and make it fail loudly.**
    Say in its header comment why a display is needed. Then fix a second thing: the

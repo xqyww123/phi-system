@@ -68,7 +68,9 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
    including the file browser's fields and Isabelle's Query and Debugger panels.
 6. **jEdit's own stale-`dragSource` defect is not repaired.** Plan 4 works around it and
    documents it; reaching into another project's private static is out of scope.
-7. **The wrong comment at `phi_word_clipboard.bsh:158-159` is corrected**, by plan 1.
+7. **The wrong comment above `phi_service` in `phi_word_install` is corrected**, by plan 1.
+   Done: it now states the measured rule, that an anonymous class body as a call argument
+   parses when every method in it returns a primitive type.
 8. **The fold's run pattern requires at least one mathematical letter in a run.** Without it
    `.` and `_` — run-forming because of the `size_t` and `w.r.t.` entries — make every full
    stop in ordinary source a run of its own. Measured: about 4.5 times faster on real source,
@@ -124,8 +126,15 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
 - **BeanShell's own errors escape every guard.** An unbound name or an unresolved method is
   an `EvalError` that neither `catch (Exception)` nor `catch (Throwable)` intercepts inside
   bsh. No runtime guard can catch them; only loading the whole script in the test can.
-- **Line citations into `phi_word_clipboard.bsh` go stale after plan 1**, which rewrites both
-  functions and the header comment. Refresh them when implementing plans 2, 3 and 4.
+- **Cite `phi_word_clipboard.bsh` by name, never by line number.** The file has been
+  rewritten four times since the plans were written — plan 1's rewrite, plan 3's addition,
+  the code review's fixes, and the font work — and every `bsh:NNN` citation was wrong by the
+  end of it, one of them pointing 194 lines away from what it claimed. All of them have been
+  replaced by names: a function, or a named thing inside one (`phi_word_fold_run`, the
+  `phi_n == 0` guard in `phi_word_install`, the comment above `phi_service`). A name does not
+  have to be refreshed by whoever touches the file next. Citations into files this component
+  does not own — jEdit's and the JDK's sources — keep their line numbers, since those move
+  only when the distribution is upgraded.
 
 
 ## What has been reviewed, and how

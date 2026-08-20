@@ -85,10 +85,10 @@ and all — is under `JEditDataFlavor.jEditRichTextDataFlavor`, registered as a 
 carrying U+E048 is put on the clipboard, `getContents(null)` returns a proxy for which
 `isDataFlavorSupported(jEditRichTextDataFlavor)` is true and the text is U+E048.
 
-**This is not a new technique in this file** — `phi_word_clipboard.bsh:345` already does
-exactly it for the `$` register, with the comment "text jEdit itself put there: it still
-carries the glyphs, take it as is".  (That citation is post-`WORD_BOUNDARY_PLAN.md`; it was
-`:177` before that rewrite.) Reusing it makes an intra-jEdit copy **exact**: no
+**This is not a new technique in this file** — the `$`-register wrapper in
+`phi_word_install` already does exactly it, with the comment "text jEdit itself put there:
+it still carries the glyphs, take it as is".  Reusing it makes an intra-jEdit copy
+**exact**: no
 dependence on the fold rule, so none of the shapes `WORD_BOUNDARY_PLAN.md` cannot repair —
 a glyph against the user's own mathematical letters, a glyph separated by `_` — can reach
 the search box at all.
