@@ -492,7 +492,8 @@ def set_name_records(font):
     """Say inside the file where the outlines came from and under what terms.
 
     Both platforms the font already carries records for.  Setting them to a constant is
-    what makes this idempotent -- there is nothing for drop_generated to undo.
+    what makes this idempotent: writing the same constants over the same records twice
+    changes nothing.
     """
     for name_id, text in ((0, COPYRIGHT), (13, LICENCE), (14, LICENCE_URL)):
         for platform_id, encoding_id, language_id in ((1, 0, 0), (3, 1, 0x409)):

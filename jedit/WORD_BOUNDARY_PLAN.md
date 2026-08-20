@@ -545,12 +545,12 @@ below therefore go out to another application and back.
    another application loses nothing" becomes true for adjacent glyphs only; qualify it
    rather than leaving it absolute.
 
-   Second, and this is the part that keeps the four plans from colliding: the paragraph at
-   `:101-106` opens "Two places this does not reach." and names exactly two — dragging out of
-   jEdit, and Isabelle/VSCode. It names neither the primary selection nor input-field paste,
-   so the later plans have nothing to delete and their steps must not be written as
-   deletions. **Rewrite that paragraph here, once, into a list that is correct after all four
-   plans have landed**: Isabelle/VSCode; HyperSearch's "copy results"; and a place held for
+   Second, and this is the part that keeps the four plans from colliding: the paragraph that
+   opened "Two places this does not reach." named exactly two — dragging out of jEdit, and
+   Isabelle/VSCode. It named neither the primary selection nor input-field paste, so the
+   later plans have nothing to delete and their steps must not be written as deletions.
+   **Rewrite that paragraph here, once, into a list that is correct after all four plans
+   have landed**: Isabelle/VSCode; HyperSearch's "copy results"; and a place held for
    the one-way asymmetry `SEARCH_FIELD_PASTE_PLAN.md` introduces, that copying *out* of a
    wrapped input field still yields the raw glyph. Mark four lines — drag and drop, the
    primary selection, input-field paste, and that asymmetry — as **covered by a plan not yet
@@ -561,13 +561,19 @@ below therefore go out to another application and back.
    there, did not.
 
    Third, the paragraph immediately after it — the one beginning "Outside jEdit,
-   `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<name>` escape" — says at
-   `:112-113` that a raw private-use character "that came out of a drag can be repaired" by
-   that function's reverse direction. Re-aim that clause **here**, once, so it survives all
+   `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<name>` escape" — said
+   that a raw private-use character "that came out of a drag can be repaired" by that
+   function's reverse direction. Re-aim that clause **here**, once, so it survives all
    four plans: the repair is still available, but the routes that produce such a character
    are HyperSearch's "copy results" and, until the plans in the list above land, a drag and
    the primary selection. Written that way the sentence is true before, between and after the
    four plans, and none of them has to touch it again.
+
+   **Both landed, and both composed as designed.** The paragraph now opens "Where this does
+   not reach." and lists five routes, two of them still carrying the marker for a plan not
+   yet landed; plan 3 struck its own when it landed, without deleting anything. The clause in
+   the paragraph after it now names the routes rather than the drag alone. Read the two
+   paragraphs above as the record of what was found and what was done, not as work to do.
 
 
 ## What this plan does not cover

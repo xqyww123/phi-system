@@ -83,7 +83,8 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
     font beside it. See `UI_FONT_PLAN.md`.
 11. **Monospaced widgets are not supported.** One font carries one design for ASCII; the sans
     text face is merged, so the Search dialog's Find and Replace boxes become proportional
-    while the other thirteen wrapped widgets are untouched. The alternative preserved those two and
+    while the other thirteen wrapped widgets are untouched. The alternative preserved those
+    two and
     changed the thirteen.
 12. **The GPL material in the Isabelle text face is shipped and disclosed**, as Isabelle
     itself does: 26 blackboard-bold code points from `txmia`/`pxfonts` are copied by the
@@ -160,12 +161,21 @@ These are settled. A plan that contradicts one of them is wrong, not a proposal.
 
 ## What has been reviewed, and how
 
-Every plan has been through at least one two-turn adversarial review: three reviewers with
-different lenses (source accuracy, does-it-run, consequences) find problems independently,
-then cross-examine each other and vote findings out. Roughly 270 findings were raised across
-the rounds and about 120 survived cross-examination and were applied. Round 8 was the first
-to review **code** rather than a plan, and it was the most productive of the eight: reviewers
-who run and mutate the thing find defects that reviewers who read it cannot.
+Every plan has been through at least one two-turn adversarial review: reviewers with
+different lenses find problems independently, then cross-examine each other and vote findings
+out. **Raised** is the number of distinct findings turn one produced, pooled over the
+reviewers. **Survived** is how many of those a majority of the cross-examiners voted to keep.
+
+560 findings were raised across the fifteen rounds. 217 survived in the twelve rounds where
+that figure can still be recomputed; for three of them it cannot, and the table says so rather
+than carrying a number.
+
+Round 8 was the first to review **code** rather than a plan. It raised the fewest findings of
+any round and it was the most valuable: it found a suite that hung instead of failing, and two
+namespace defects in the shipped script that no reader had seen. Reviewers who run and mutate
+the thing find defects that reviewers who read it cannot — and rounds 14 and 15 said the same
+again, the second of them catching a repair that would have overwritten a committed file on
+its first run.
 
 | Round | Target | Raised | Survived |
 |-------|--------|--------|----------|
@@ -175,13 +185,33 @@ who run and mutate the thing find defects that reviewers who read it cannot.
 | 4 | `PRIMARY_SELECTION_PLAN.md` | 29 | 14 |
 | 5 | `SEARCH_FIELD_PASTE_PLAN.md` | 28 | 13 |
 | 6 | all four, cross-plan | 40 | 20 |
-| 7 | all four, audit of round 6's fixes | 47 | 15 |
-| 8 | plan 1's *code*, as committed | 38 | 22 |
-| 9 | `UI_FONT_PLAN.md`, first version | 38 | 22 |
-| 10 | `UI_FONT_PLAN.md`, rewrite | 57 | 19 |
-| 11 | `UI_FONT_PLAN.md`, third version | 41 | 19 |
-| 12 | `UI_FONT_PLAN.md`, fourth version | 29 | 19 |
-| 8 | plan 1's **landed code**, three lenses | 36 | 13 |
+| 7 | all four, audit of round 6's fixes | 42 | 20 (15 applied) |
+| 8 | plan 1's landed **code**, three lenses | 23 | 14 (13 applied) |
+| 9 | `UI_FONT_PLAN.md`, first version | 38 | 23 |
+| 10 | `UI_FONT_PLAN.md`, rewrite | 57 | not recoverable |
+| 11 | `UI_FONT_PLAN.md`, third version | 41 | not recoverable |
+| 12 | `UI_FONT_PLAN.md`, fourth version | 29 | not recoverable |
+| 13 | `UI_FONT_PLAN.md`, fifth version | 25 | 14 |
+| 14 | the font merge's landed **code**, four lenses | 39 | 18 |
+| 15 | the repair plan for round 14, four lenses | 81 | 34 |
+
+Four rows need a word, and the reason they do is itself a lesson — see "Numbers written down
+are not measurements" below.
+
+* **Rounds 7 and 8** carry two figures because two different quantities were recorded under
+  one heading. 20 and 14 survived the vote; 15 and 13 were applied, the difference being
+  findings superseded by a decision the user took while the round was running (round 7) and
+  one the author judged already covered (round 8).
+* **Rounds 10, 11 and 12** cannot be recomputed at all: all three reviewers numbered their
+  findings `F1`, `F2`, `F3`…, the ids collide, and the cross-examiners namespaced them
+  inconsistently, so any rule silently merges three reviewers' `F1`s into one. The three rows
+  used to read 19, 19, 19; nothing in the records produces that, and 19 is traceable to a
+  different round's misreported figure. Re-deriving them means matching about 127 findings by
+  content, which nobody has done.
+* **Round 13** ran with two reviewers rather than three, after a crash was resumed from cache.
+  Its "Raised" is therefore two reviewers' output, not three.
+* **Rounds 14 and 15** used four lenses rather than three; "a majority of the cross-examiners"
+  is four voters there, not three.
 
 Two failure modes recurred often enough to be worth naming, because they will recur again:
 
@@ -332,6 +362,35 @@ kind this file's conventions are about.
   unscaled STIX outlines, the text face winning phi's two code points, the blank glyph not
   supplied from STIX, `prep` left behind, a supplementary code point in a format 4 subtable,
   and an undamaged build that must pass.
+
+
+## Numbers written down are not measurements
+
+The review table above was audited against the records the rounds actually produced. Five of
+its thirteen rows were wrong, and every one of the wrong ones had been written down by hand
+from a report rather than recomputed. This is worth keeping because the habit it names is
+cheap to repeat and hard to notice.
+
+- **A row was fabricated by copy-paste.** Round 8 appeared twice, because two sessions each
+  recorded the same review without seeing the other's row, and the second one's figures --
+  `38 | 22` -- turned out to be a verbatim copy of round 9's pair, written in the same edit.
+  Neither number had ever been measured.
+- **A figure survived a change of the thing it counted.** "Roughly 270 findings ... about 120
+  survived" was exactly right for the eight-row table it was written against, and stayed in
+  place while five more rows were added.
+- **A count in prose outlived its derivation.** `UI_FONT_PLAN.md` claimed "five of the eleven
+  blocking findings across five review rounds"; the eleven came from a brief written after
+  *four* rounds, and no set of eleven blocking findings exists in the records at all.
+- **A measurement was quoted for a different quantity.** "52 of the text face's glyphs" was a
+  count of failing checks. The number of glyphs is 46; the other differences are 180
+  composites, which differ for an unrelated reason.
+- **Two rounds' figures are simply gone**, because their reviewers all numbered findings
+  `F1`, `F2`, `F3` and the ids collided. An identifier chosen for convenience inside one
+  agent's output destroyed the ability to count across agents.
+
+What follows from all five: **re-derive a figure at the moment you write it down, or write
+down that you cannot.** "Not recoverable" in a table is worth more than a plausible number,
+and it is the only honest thing to put where nobody can check.
 
 
 ## Where the numbers come from
