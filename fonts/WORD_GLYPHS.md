@@ -155,7 +155,7 @@ font, and `build_word_glyphs.py` now refuses to write a table containing one.
 it back if it goes missing, so registering the component is all a user has to do.
 The letters come from `../jedit/word-clipboard-text`, generated alongside the glyphs.
 
-Where this does not reach.  Two of the lines below carry a marker for a plan not yet
+Where this does not reach.  One of the lines below carries a marker for a plan not yet
 landed; strike the marker when that plan lands, and do not delete the line.
 
 * **Isabelle/VSCode** carries a symbol table frozen into the VSCodium component when it
@@ -169,9 +169,12 @@ landed; strike the marker when that plan lands, and do not delete the line.
   private-use code point.  *Covered by a plan not yet landed:
   `../jedit/DRAG_AND_DROP_PLAN.md`.*
 * **The X11 primary selection** — selecting with the mouse, middle-clicking into
-  another application — goes through jEdit's `%` register, which is not wrapped, so it
-  hands over the private-use code point.  *Covered by a plan not yet landed:
-  `../jedit/PRIMARY_SELECTION_PLAN.md`.*
+  another application — is reached now: jEdit's `%` register is wrapped in both
+  directions, so a selected glyph leaves as the word in mathematical letters, and letters
+  middle-clicked into a buffer fold back into the glyph.  Since expanding and folding are
+  not inverses for every shape, the wrapper also remembers the last text it published, so
+  that a selection read back inside jEdit is exact even where folding alone could not
+  repair it.  `../jedit/PRIMARY_SELECTION_PLAN.md` records the rest.
 * **Copying out of one of jEdit's own text input fields** yields the raw glyph.  Pasting
   *into* them now folds — every `HistoryTextField` and `HistoryTextArea` has its transfer
   handler wrapped, which covers the Search and Replace boxes, the quick-search bar, the file
@@ -184,9 +187,9 @@ Outside jEdit, `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its `\<
 escape rather than its code point — its output feeds language-model prompts, the
 semantic database and logs, none of which load PhiSymbols, and the escape still spells
 the word.  The reverse direction does name a raw private-use character, so one that
-escaped by any of the routes just listed — HyperSearch's copied results, and until their
-plans land, a drag or the primary selection — can be repaired.  Pasting such a character
-into a `.thy` shows nothing,
+escaped by any of the routes just listed — HyperSearch's copied results, a copy out of
+one of jEdit's own input fields, and until its plan lands, a drag — can be repaired.
+Pasting such a character into a `.thy` shows nothing,
 `view.enableFontSubst=false` being the default.
 
 ## Adding or changing a word

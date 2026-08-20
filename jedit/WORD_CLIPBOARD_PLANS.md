@@ -7,10 +7,11 @@ implemented in, the decisions the user has taken, the conventions all four share
 been reviewed, and what is still open. Read it before picking up any single plan — each
 plan is self-contained about *its* work, but none of them carries the cross-cutting state.
 
-**Plan 1 has landed.** `phi_word_clipboard.bsh`, `test_word_clipboard.bsh`,
-`run_word_clipboard_test.sh` and `fonts/WORD_GLYPHS.md` carry it; plans 2, 3 and 4 are
-still documents. Line citations into `phi_word_clipboard.bsh` taken before that commit
-are stale — the file was rewritten.
+**Plans 1, 2 and 3 have landed**, and so has `UI_FONT_PLAN.md`; plan 4 is still a
+document. `phi_word_clipboard.bsh`, `test_word_clipboard.bsh`, `run_word_clipboard_test.sh`,
+`fonts/PhiSymbols.ttf` and `fonts/WORD_GLYPHS.md` carry them. Line citations into
+`phi_word_clipboard.bsh` taken before plan 1 are stale — that plan rewrote the file — which
+is why the plans now cite it by function name instead.
 
 
 ## The problem, in three sentences
@@ -28,8 +29,8 @@ Everything below is about routes where that conversion does not happen, or happe
 | # | Plan | What it does |
 |---|------|--------------|
 | 1 | `WORD_BOUNDARY_PLAN.md` **(landed)** | Rewrites `phi_word_expand` and `phi_word_fold`: marks word boundaries with `U+2060`, and replaces the interpreted per-character loops with compiled-regex ones. |
-| 2 | `PRIMARY_SELECTION_PLAN.md` | Wraps jEdit's `%` register so the X11 primary selection (mouse-select, middle-click) converts too. |
-| 3 | `SEARCH_FIELD_PASTE_PLAN.md` | Wraps the transfer handler of jEdit's text input fields so pasting a copied glyph into the Find box matches the buffer. |
+| 2 | `PRIMARY_SELECTION_PLAN.md` **(landed)** | Wraps jEdit's `%` register so the X11 primary selection (mouse-select, middle-click) converts too. |
+| 3 | `SEARCH_FIELD_PASTE_PLAN.md` **(landed)** | Wraps the transfer handler of jEdit's text input fields so pasting a copied glyph into the Find box matches the buffer. |
 | 4 | `DRAG_AND_DROP_PLAN.md` | Installs a transfer handler on every buffer text area so drag and drop converts. |
 | — | `UI_FONT_PLAN.md` **(landed)** | Merges a text face into `fonts/PhiSymbols.ttf` so a glyph in a search box can be *seen*. Independent of all four: the blank box is live today with none of them landed. Not in the numbered order, because it fixes rendering rather than conversion. |
 

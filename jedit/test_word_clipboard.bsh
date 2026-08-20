@@ -390,6 +390,8 @@ phi_check("a field found by the listener folds too",
 //     can reach into them.  Untyped, an assignment inside a method writes through to any
 //     such global -- and two of the script's own functions share the name `phi_m`, so one
 //     clobbers the other's matcher mid-call.  None of that shows up in ordinary output.
+//     The primary-selection wrapper's own locals are checked the same way in 22, where the
+//     stand-in register that lets its methods be exercised at all is built.
 phi_m = "planted";
 phi_buf = "planted";
 phi_letters = "planted";
@@ -508,6 +510,171 @@ if (phi_font_field.getFont().getStyle() != phi_was_style
     phi_bad("the field's style or size changed with the family: was " + phi_was_style
             + "/" + phi_was_size + ", is " + phi_font_field.getFont().getStyle()
             + "/" + phi_font_field.getFont().getSize());
+
+// 22. the X11 primary selection.  Selecting with the mouse writes register '%' with a bare
+//     StringSelection and a middle click reads it back; no service list is consulted on
+//     either side, so the wrapper phi_install_primary_selection puts there does both halves
+//     itself -- expanding on the way out, folding on the way back.  Everything below is
+//     driven through Registers, the way jEdit drives it.
+//
+//     Not against the platform's own selection: a stand-in register over a plain
+//     java.awt.datatransfer.Clipboard is installed at '%' instead, because a real selection
+//     can neither be made to throw nor be asked how often it was read.  The register the
+//     load-time install wrapped is put back at the end.
+
+// Planted first and left planted for the whole section: these are the names the
+// primary-selection code binds inside its methods, and an untyped one there would write
+// through to the global instead.  Same check as 19, done here because exercising those
+// methods needs the stand-in register built below.
+phi_primary = "planted";
+phi_memo = "planted";
+phi_selection = "planted";
+phi_original = "planted";
+phi_expanded = "planted";
+phi_outer = "planted";
+phi_now = "planted";
+phi_sent = "planted";
+
+phi_saved_pct = Registers.getRegister('%');
+phi_sel_state = new java.util.HashMap();   // the fetch count, and the switch that throws
+phi_sel_clip = new java.awt.datatransfer.Clipboard("phi-primary");
+phi_stand_in = new Registers.Register() {
+    public String toString() { return "phi-stand-in"; }
+    public void setValue(String phi_v) { this.setTransferable(new StringSelection(phi_v)); }
+    public void setTransferable(java.awt.datatransfer.Transferable phi_tr) {
+        if (phi_sel_state.get("throw_set") != null)
+            throw new IllegalStateException("the selection is busy");
+        phi_sel_clip.setContents(phi_tr, null);
+    }
+    public java.awt.datatransfer.Transferable getTransferable() {
+        Integer phi_was = phi_sel_state.get("fetches");
+        phi_sel_state.put("fetches",
+                          new Integer(phi_was == null ? 1 : phi_was.intValue() + 1));
+        return phi_sel_clip.getContents(null);
+    }
+};
+
+phi_sel_read() {                        // what jEdit pastes, read through the wrapper
+    return Registers.getRegister('%').getTransferable()
+               .getTransferData(DataFlavor.stringFlavor);
+}
+phi_sel_out() {                         // what another application sees on the selection
+    return phi_sel_clip.getContents(null).getTransferData(DataFlavor.stringFlavor);
+}
+
+// First the install that phi_word_install itself does, driven against the platform's own
+// primary selection -- an isolated Xvfb display, never the user's.  Without this the whole
+// section would pass with the call struck out of phi_word_install, because every check
+// below installs the wrapper itself; and it is the only place the wrapper is exercised over
+// jEdit's real ClipboardRegister rather than over the stand-in.
+Registers.setRegister('%', phi_pg);
+phi_check("the load-time install reaches the platform's primary selection",
+          java.awt.Toolkit.getDefaultToolkit().getSystemSelection().getContents(null)
+              .getTransferData(DataFlavor.stringFlavor), phi_pending);
+phi_check("and the platform's selection reads back as the glyph", phi_sel_read(), phi_pg);
+
+Registers.setRegister('%', phi_stand_in);
+phi_install_primary_selection();
+if (Registers.getRegister('%') == phi_stand_in)
+    phi_bad("the primary-selection wrapper was not installed");
+// decision 1 of PRIMARY_SELECTION_PLAN.md: nothing in the shipped configuration reads it,
+// and it delegates.  Checked because "nothing reads it" is exactly when a wrong one hides.
+phi_check("toString delegates to the register underneath",
+          Registers.getRegister('%').toString(), "phi-stand-in");
+
+// a. a mouse selection of a word glyph
+Registers.setRegister('%', phi_pg);
+phi_check("a selected glyph leaves as letters", phi_sel_out(), phi_pending);
+phi_check("and jEdit reads it back as the glyph", phi_sel_read(), phi_pg);
+
+// b. a glyph written against mathematical letters no word claims.  Folding cannot repair
+//    this shape -- the run is somebody else's bold text and none of it may be touched -- so
+//    the round trip is exact only because the wrapper remembers what it last published.
+phi_sel_zzz = phi_pg + phi_zzz;
+Registers.setRegister('%', phi_sel_zzz);
+phi_check("glyph against unclaimed letters leaves as letters",
+          phi_sel_out(), phi_pending + phi_zzz);
+phi_check("and the memo makes that round trip exact", phi_sel_read(), phi_sel_zzz);
+phi_check("folding alone would not have repaired it",
+          phi_word_fold(phi_tbl, phi_pending + phi_zzz), phi_pending + phi_zzz);
+
+// c. the memo is not infallible, and the plan does not pretend it is: another application
+//    publishing character for character what the wrapper last put out is answered from the
+//    memo.  The user gets back what they last selected in jEdit, so it is not corruption --
+//    but it is a real behaviour, pinned here rather than denied.
+phi_sel_clip.setContents(new StringSelection(phi_pending + phi_zzz), null);
+phi_check("a foreign string equal to the remembered expansion returns the remembered text",
+          phi_sel_read(), phi_sel_zzz);
+
+// d. the ordinary foreign cases: letters fold, everything else is left alone, both ways
+phi_sel_clip.setContents(new StringSelection(phi_pending), null);
+phi_check("letters from another application fold", phi_sel_read(), phi_pg);
+phi_sel_clip.setContents(new StringSelection("int foo = 1;"), null);
+phi_check("ordinary text from another application is untouched",
+          phi_sel_read(), "int foo = 1;");
+Registers.setRegister('%', "int foo = 1;");
+phi_check("ordinary text goes out untouched", phi_sel_out(), "int foo = 1;");
+
+// e. one fetch per read.  A second phi_primary.getTransferable() would cost another
+//    blocking round trip to whichever application owns the selection, so the failure path
+//    hands back the transferable already in hand rather than asking again.
+phi_sel_state.put("fetches", new Integer(0));
+phi_sel_read();
+if (phi_sel_state.get("fetches").intValue() != 1)
+    phi_bad("reading the selection fetched it " + phi_sel_state.get("fetches")
+            + " times, not once");
+phi_sel_clip.setContents(phi_thrower, null);        // claims the flavor, throws on the data
+phi_sel_state.put("fetches", new Integer(0));
+phi_sel_fell_back = Registers.getRegister('%').getTransferable();
+if (phi_sel_state.get("fetches").intValue() != 1)
+    phi_bad("the failure path fetched the selection " + phi_sel_state.get("fetches")
+            + " times, not once");
+if (phi_sel_fell_back != phi_thrower)
+    phi_bad("the failure path did not hand back the transferable already in hand");
+
+// f. a selection that throws.  Both write paths are guarded, the pass-through one included:
+//    written after the try rather than inside it, a throw there would escape onto the AWT
+//    event thread, which is the one thread this wrapper must never break.
+phi_sel_opaque = new java.awt.datatransfer.Transferable() {   // no flavor to expand
+    public DataFlavor[] getTransferDataFlavors() { return new DataFlavor[0]; }
+    public boolean isDataFlavorSupported(DataFlavor phi_f) { return false; }
+    public Object getTransferData(DataFlavor phi_f) { return null; }
+};
+phi_sel_state.put("throw_set", Boolean.TRUE);
+try { Registers.setRegister('%', phi_pg); }
+catch (Exception e) { phi_bad("a throwing selection escaped the expanding path: " + e); }
+try { Registers.setRegister('%', phi_sel_opaque); }
+catch (Exception e) { phi_bad("a throwing selection escaped the pass-through path: " + e); }
+phi_sel_state.remove("throw_set");
+
+// g. platforms with no primary selection: registers['%'] starts null and the install must
+//    return early.  That state cannot be produced on X11, so it is written into jEdit's own
+//    register table and put back immediately -- setRegister cannot store a null Register,
+//    its Transferable overload takes the call instead.
+phi_reg_field = Class.forName("org.gjt.sp.jedit.Registers").getDeclaredField("registers");
+phi_reg_field.setAccessible(true);
+phi_reg_table = phi_reg_field.get(null);
+phi_wrapped_pct = Registers.getRegister('%');
+java.lang.reflect.Array.set(phi_reg_table, (int) '%', null);
+phi_install_primary_selection();
+if (Registers.getRegister('%') != null)
+    phi_bad("the install did not return early where there is no primary selection");
+java.lang.reflect.Array.set(phi_reg_table, (int) '%', phi_wrapped_pct);
+
+// h. installed twice -- a second wrapper around the first.  With one shared top-level map
+//    instead of one per wrapper, the outer would store into the map the inner reads and the
+//    glyph would come back as letters.
+phi_install_primary_selection();
+Registers.setRegister('%', phi_pg);
+phi_check("installed twice, a glyph still leaves as letters", phi_sel_out(), phi_pending);
+phi_check("installed twice, it still reads back as the glyph", phi_sel_read(), phi_pg);
+
+Registers.setRegister('%', phi_saved_pct);
+if (!"planted".equals(phi_primary) || !"planted".equals(phi_memo)
+        || !"planted".equals(phi_selection) || !"planted".equals(phi_original)
+        || !"planted".equals(phi_expanded) || !"planted".equals(phi_outer)
+        || !"planted".equals(phi_now) || !"planted".equals(phi_sent))
+    phi_bad("the primary-selection wrapper wrote through to a global sharing a local's name");
 
 System.out.println((phi_failures[0] == 0 ? "PASS" : "FAILED") + ": " + phi_n
                    + " entries round-tripped, " + phi_pairs + " adjacent pairs, "

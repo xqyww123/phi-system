@@ -39,6 +39,12 @@
 //          delegating one, and the fields are found with a global AWT listener because
 //          they are built lazily inside dialogs and nothing announces them.
 //
+//   select the X11 primary selection has no copy command at all: whatever the mouse
+//          selects goes there, and a middle click pastes it.  jEdit maps it to register
+//          '%', which no service list touches -- both of its writers build a bare
+//          StringSelection -- so that wrapper does both halves itself, expanding in
+//          setTransferable and folding in getTransferable.
+//
 // Both directions are driven by patterns compiled once, when the table is built, and
 // never inside a loop: a selection can be millions of characters and every return to
 // the BeanShell interpreter costs about 3.5 microseconds.  See WORD_BOUNDARY_PLAN.md,
@@ -346,6 +352,86 @@ phi_install_field_paste()
         phi_awt_listener, java.awt.AWTEvent.CONTAINER_EVENT_MASK);
 }
 
+/* the X11 primary selection */
+
+phi_install_primary_selection()
+{
+    // jEdit maps the primary selection to register '%' (Registers.java:610-612), and its
+    // two writers -- a mouse selection and a gutter line selection -- both go through
+    // Registers.setRegister(char,String), which builds a bare StringSelection and never
+    // consults the service list the copy direction hooks.  Neither is gated by the
+    // middle-click preference, and Isabelle's site properties turn that preference on
+    // anyway, so this is the default path: the wrapper does both halves itself.
+    Object phi_primary = Registers.getRegister('%');
+    if (phi_primary == null) return;            // no primary selection on this platform
+
+    // The last text this wrapper published, and the text it was made from.  Expanding and
+    // folding are not inverses for every input -- a glyph written against somebody else's
+    // bold letters expands and does not fold back -- so jEdit reading its own selection
+    // back is answered from here instead.  One map per wrapper rather than one at the top
+    // level: installing twice would otherwise have the outer wrapper store into the map
+    // the inner one reads, and a selected glyph would read back as letters.
+    Object phi_memo = new java.util.HashMap();
+
+    Object phi_selection = new Registers.Register() {
+        // Nothing in the shipped configuration reads this: the register viewer skips '%'
+        // before asking, the register saver short-circuits on it, and getRegisterValue has
+        // no caller.  ClipboardRegister.toString answers null for a selection holding no
+        // text, which is its business and not this wrapper's.
+        public String toString() { return phi_primary.toString(); }
+
+        public void setValue(String value) {
+            this.setTransferable(new StringSelection(value));
+        }
+
+        public void setTransferable(Transferable t2) {
+            try {
+                if (t2 != null && t2.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                    String phi_original = t2.getTransferData(DataFlavor.stringFlavor);
+                    if (phi_original != null) {
+                        String phi_expanded = phi_word_expand(phi_t, phi_original);
+                        phi_memo.put("original", phi_original);
+                        phi_memo.put("expanded", phi_expanded);
+                        phi_primary.setTransferable(new StringSelection(phi_expanded));
+                        return;
+                    }
+                }
+                // inside the try, not after it: written after, a selection that throws
+                // would be caught here and then written again unguarded, and the second
+                // throw would escape onto the AWT event thread
+                phi_primary.setTransferable(t2);
+            }
+            catch (Exception e) { }
+        }
+
+        public Transferable getTransferable() {
+            // bound before the try, because the catch returns it: if the very first
+            // statement is what throws, an unbound name would make the catch fail too
+            Transferable phi_outer = null;
+            try {
+                phi_outer = phi_primary.getTransferable();
+                if (phi_outer == null) return phi_outer;
+                if (!phi_outer.isDataFlavorSupported(DataFlavor.stringFlavor))
+                    return phi_outer;
+                String phi_now = phi_outer.getTransferData(DataFlavor.stringFlavor);
+                if (phi_now == null) return phi_outer;
+                // exactly what this wrapper last published: hand back the text it was made
+                // from, so a round trip inside jEdit is exact even for the shapes folding
+                // cannot repair.  Another application publishing that string character for
+                // character is answered the same way; test_word_clipboard.bsh pins it.
+                String phi_sent = phi_memo.get("expanded");
+                if (phi_sent != null && phi_sent.equals(phi_now))
+                    return new StringSelection(phi_memo.get("original"));
+                return new StringSelection(phi_word_fold(phi_t, phi_now));
+            }
+            // the transferable already in hand, not a second phi_primary.getTransferable():
+            // that would cost another blocking fetch from the selection's owner
+            catch (Exception e) { return phi_outer; }
+        }
+    };
+    Registers.setRegister('%', phi_selection);
+}
+
 /* installation */
 
 phi_word_install()
@@ -390,6 +476,7 @@ phi_word_install()
     Registers.setRegister('$', phi_wrapper);
 
     phi_install_field_paste();
+    phi_install_primary_selection();
 
     Log.log(Log.NOTICE, this,
             "phi word clipboard: " + phi_n + " words expand on copy, fold on paste");
