@@ -245,6 +245,12 @@ Two failure modes recurred often enough to be worth naming, because they will re
 
 ## What landing plan 1 taught, for the three that follow
 
+- **The two checks only a running editor can answer passed** (2026-08-18): `\<or'>\<else>`
+  written with nothing between them leaves as `orelse` and comes back as the two symbols
+  rather than the single `\<orelse>`, and `\<orelse>` alone survives the same round trip
+  unchanged. Recorded here in retrospect, on 2026-08-23: the outcome was reported in
+  conversation and the landing commit followed 56 seconds later, but nothing in this
+  repository said so until now.
 - **The three compiled patterns live in the table, not in three top-level names.**
   `phi_word_table` builds them and puts them under `glyph_pat`, `run_pat` and `word_pat`,
   so a table and its patterns cannot disagree — whichever table a caller passes, the
@@ -277,6 +283,22 @@ Two failure modes recurred often enough to be worth naming, because they will re
 
 ## What landing plan 3 taught
 
+- **The four checks were run and reported as passing** (2026-08-18), and the run found a
+  defect none of them names: a word glyph that now reaches the Find box correctly is drawn
+  as nothing, because a Swing text component has one font for the whole component and the
+  hand-drawn font covers no printable ASCII. That observation is where `UI_FONT_PLAN.md`
+  came from. Recorded here in retrospect, on 2026-08-23, with the limits of the record
+  stated rather than smoothed over: the report was one sentence rather than item by item,
+  so no individual check can be given a pass of its own, and **check 2 — pasting a word
+  glyph into Isabelle's Query panel, which this plan calls its main scope claim — has never
+  been confirmed by hand.**
+- **Neither plan's code has been checked by hand since it was rewritten.** `6571def0` changed
+  140 lines of `phi_word_clipboard.bsh` after both plans had landed and their checks had been
+  run, including giving every function-local a declared type — an untyped `phi_m` was
+  breaking folding outright — and `c2578962` added `phi_field_font` into the very AWT listener
+  plan 3 installs. The font plan's own manual checks do not close this: its first check is the
+  select-then-`Ctrl-F` path, which by design never touches the clipboard, so plan 3's paste
+  wrapper has not been exercised by hand in its current form.
 - **A scripted BeanShell class is not the way to subclass a Java class here.** Its
   constructor is not found when a parameter has no declared type, and the anonymous subclass
   bsh generates instead has **only a no-arg constructor**: it does not forward arguments, so
