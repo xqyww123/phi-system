@@ -29,7 +29,10 @@ type config = string Symtab.table
 type eval_cfg = {id : expr_id, config : string Symtab.table, toks: Token.src}
 
 (*set_expr_id carries an existing ID value and never rebuilds its counter: obligation
-  streams sharing one address share its numbering exactly because they share the value.*)
+  streams sharing one address share its numbering exactly because they share the value.
+  A counter that outlives its command -- a frame born in one command, minting in a later
+  one -- is ticked again when only the later command re-executes: orphan keys, never
+  collisions (plan §7 R4).*)
 fun set_expr_id id' {id=_, config, toks} =
       {id=id', config=config, toks=toks}
 fun set_tokens toks' {id, config, toks=_} =

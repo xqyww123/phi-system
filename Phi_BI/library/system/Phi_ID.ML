@@ -2,7 +2,8 @@ signature PHI_ID = sig
 
 type ID
   (*The address of a statement or of one operation within it, inside a named construct
-    (a phi procedure): the construct's full name, a path of counters -- one level per
+    (a phi procedure): the construct's full name ("" while no construct has been
+    entered -- such an anonymous ID mints no key), a path of counters -- one level per
     nested block or per-line expression chain, INNERMOST LEVEL FIRST, the system-wide
     convention; presentation reverses it -- and the obligation counter of this address.
     Every value-level construction (next/step_in/nth_child/set_construct_v) starts a
@@ -80,6 +81,8 @@ fun key_string (Structural s) = SOME s
 structure ID = Proof_Data (
   type T = ID
   fun init _ = ("", [0], Unsynchronized.ref 0)
+    (*fresh cell per context on purpose: `val init = K ...` would evaluate the ref
+      once and share it process-wide*)
 )
 
 val get = ID.get
