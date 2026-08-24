@@ -50,3 +50,9 @@
   then fails with a bare `exception Option` (i.e. some `the NONE`) at the block
   bracket — seen on both the old and the new budgets, so it predates this experiment and
   is a separate blocker.
+  UPDATE 2026-08-24 (guard race landed, GUARD_NITPICK_FALSIFY_PLAN.md): the names above
+  are stale — `prove_or_rebute` is now `prove_or_refute`, its typo'd "falisfy" warning now
+  reads "falsify", and the serial 30/30/250/100 ms budget cascade it refers to has been
+  replaced by a prove/refute race (30ms front + one per-racer budget,
+  `\<phi>guard_race_timeout`), so the budget experiments recorded here are not reproducible
+  on current sources.

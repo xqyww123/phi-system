@@ -144,6 +144,13 @@ signature PHI_REASONERS = sig
   (*structure Local_Premises_of_Obligation : NAMED_THMS
       (*You can add any facts to be reported as premises of a proof obligation*)*)
 
+  (*guard race (prove_or_refute) -- see GUARD_NITPICK_FALSIFY_PLAN.md*)
+  val guard_race_timeout : int Config.T
+      (*milliseconds; per-racer budget -- when the race degrades to serial
+        execution, the wall-clock upper bound is #racers * budget*)
+  val guard_race_log : string Config.T
+      (*empty = off; otherwise a file path receiving one TSV line per race*)
+
 end
 
 
@@ -969,67 +976,206 @@ fun dest_all ct used =
       in SOME ((x, Thm.ctyp_of_cterm v), (ct', used')) end
   | _ => NONE)
 
+(*** Guard Race ***)
+
+(*GUARD_NITPICK_FALSIFY_PLAN.md §1–§3.  After the 30ms serial quick-proof
+  attempt, proving and refuting racers race under a per-racer budget; the
+  first decisive result ends the race and the losers are cancelled (forked
+  mode: future group cancellation sends interrupts).  Hence every racer exit
+  must let interrupts pass through untouched — converting cancellation into
+  failure burns the losers' budget and breaks PIDE/Ctrl-C cancellation.
+  This exception discipline is a deliberate twin of auto_sledgehammer's
+  sledgehammer_solver.ML (classify / normalise): do not "fix" one copy
+  without the other; per the rule of three, extract a shared kernel only
+  when a third consumer appears.  `Refuted` has no producer until T2
+  (R-nitpick).*)
+
+(** race engine **)
+
+datatype race_result = Proved of thm | Refuted
+
+(*a racer returns SOME only on a decisive result*)
+type racer = string * (unit -> race_result option)
+
+(*Par_Exn is a container, not a failure: proper interrupts never sit inside
+  one (Par_Exn.make filters them), but Exn.Interrupt_Breakdown is NOT proper
+  and CAN — while is_interrupt of the container itself is false.  So unpack
+  and test per component, or a user cancellation becomes a swallowed
+  "machinery error".  Never use `Par_Exn.dest = SOME _` as a test for
+  "parallel failure": an interrupt destructures to SOME [] too.*)
+fun contains_interrupt exn =
+  Exn.is_interrupt exn orelse
+  (case Par_Exn.dest exn of
+     SOME exns => exists Exn.is_interrupt exns
+   | NONE => false)
+
+(*racer exit discipline — the ONLY exception handling around a racer:
+  interrupts (= cancellation, the race's own short-circuit) pass through;
+  Timeout and genuine errors are this racer's failure only.  `handle _` is
+  forbidden here.  contains_interrupt rather than Exn.is_interrupt: a racer
+  body may fork internally and deliver a Par_Exn, so this check is not
+  redundant with the one in run_race.*)
+fun run_racer diag budget (name, body) =
+  (case Exn.capture_body (fn () => Timeout.apply budget body ()) of
+     Exn.Res NONE => NONE
+   | Exn.Res (SOME r) => SOME (name, r)
+   | Exn.Exn (Timeout.TIMEOUT _) => NONE
+   | Exn.Exn exn =>
+       if contains_interrupt exn then Exn.reraise exn
+       else (diag 2 (fn () => "racer " ^ name ^ " crashed: " ^ Runtime.exn_message exn);
+             NONE))
+
+(*Run one race; returns the mode actually chosen (forked?) and the winner.
+  Forked iff the future machinery considers the racer list relevant —
+  Future.relevant is constant-false on a 0/1-element list, so the length of
+  the racer list decides the mode.  This test is NOT redundant even though
+  Par_List.get_some re-evaluates Future.relevant internally (and can then
+  degrade to a plain non-short-circuiting map): we must know, and report
+  honestly, which runner we picked — do not "simplify" the branch away.
+  The first racer is favoured on simultaneous winners (get_some arbitrates
+  by list order), so callers put the prover first to bias ties toward
+  Proved.*)
+fun run_race diag budget (racers: racer list) : bool * (string * race_result) option =
+  let val forked = Future.relevant racers
+      val run = if forked then Par_List.get_some else get_first
+      val winner =
+        (case Exn.capture_body (fn () => run (run_racer diag budget) racers) of
+           Exn.Res r => r
+         | Exn.Exn exn =>
+             if contains_interrupt exn then Exn.reraise exn
+             else (diag 2 (fn () => "race machinery error: " ^ Runtime.exn_message exn);
+                   NONE))
+   in (forked, winner) end
+
+
+(** racers **)
+
 val negation = \<^cterm>\<open>Not\<close>
 
-fun prove_or_rebute can_inst ctxt ctxt0 =
+(*R-conv (plan §2.2): refute by PROVING the negation — each subgoal's
+  conclusion is negated under its \<And>/\<Longrightarrow> prefix and handed to the same
+  classical search.  A non-Trueprop conclusion (Unsupported) makes the racer
+  absent (NONE).  The precomputation of the negated goals is deliberately
+  eager, at racer construction before the race: whether it succeeds decides
+  the racer-list length and hence forked vs serial.  The can_inst variable
+  discipline is the proof-searcher's own (freeze schematics / export),
+  intentionally different from R-nitpick's as-is discipline — see the
+  duality note in plan §2.3.
+  Its refutation never wins the race: it is recorded into rconv_refuted and
+  read only on the no-winner path, where the write is visible because that
+  path joins ALL racers before returning (verified against the Pure sources,
+  plan §11.1).  "No winner" implies the prover failed, which structurally
+  closes the vacuous-hypothesis race (a contradictory hypothesis H makes
+  both H \<Longrightarrow> C and H \<Longrightarrow> \<not>C provable): the prover would have won.*)
+fun r_conv_racer can_inst ctxt ctxt0 rconv_refuted goals : racer option =
+  let exception Unsupported
+      fun conv_goal used ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+                let val (f,a) = Thm.dest_comb ctm
+                 in Thm.apply f (conv_goal used a)
+                end
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (x,_,_) =>
+                let val (q,b) = Thm.dest_comb ctm
+                    val (x', used') = Name.variant x used;
+                    val (v, b') = Thm.dest_abs_fresh x' b
+                 in Thm.apply q (Thm.lambda v (conv_goal used' b'))
+                end
+           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                let val (c,b) = Thm.dest_comb ctm
+                 in Thm.apply c (Thm.apply negation b)
+                end
+           | _ => raise Unsupported
+      val search = auto_search_tac ctxt
+      fun solved1 goal =
+        (case Seq.pull (search goal) of
+           SOME (ret, _) => Thm.no_prems ret
+         | NONE => false)
+   in (SOME (map (fn goal =>
+            Goal.init (conv_goal (Term.declare_free_names (Thm.term_of goal) Name.context) goal)
+          ) goals
+          |> (fn gs => if can_inst
+                       then Variable.import false gs ctxt |> #1 |> #2
+                       else Variable.export ctxt ctxt0 gs))
+       handle Unsupported => NONE)
+      |> Option.map (fn conv_goals =>
+           ("R-conv", fn () =>
+              if exists solved1 conv_goals
+              then (Synchronized.change rconv_refuted (K true); NONE)
+              else NONE))
+  end
+
+
+(** guard solver **)
+
+val guard_race_timeout =
+      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 500)
+val guard_race_log =
+      Attrib.setup_config_string \<^binding>\<open>\<phi>guard_race_log\<close> (K "")
+
+fun prove_or_refute can_inst ctxt ctxt0 =
   let val search = auto_search_tac ctxt
    in timed_tac (Time.fromMilliseconds 30) search ORELSE
   (fn th =>
-    let exception Unsupported
+    let val timer = Timing.start ()
         val goals = Thm.cprems_of th
         val fail = Seq.make (fn () => (
               List.app (fn goal =>
                 Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () => let open Pretty in
                   chunks (
-                    [block (text "Fail to prove or falisfy the following guard condition"),
+                    [block (text "Fail to prove or falsify the following guard condition"),
                     Goal_Display.pretty_a_goal ctxt (Thm.term_of goal),
                     block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
                     )
                 end)) goals
               ; NONE))
-     in let
-        exception Falsified
-        fun conv_goal used ctm =
-          case Thm.term_of ctm  
-            of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-                  let val (f,a) = Thm.dest_comb ctm
-                   in Thm.apply f (conv_goal used a)
-                  end
-             | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (x,_,_) =>
-                  let val (q,b) = Thm.dest_comb ctm
-                      val (x', used') = Name.variant x used;
-                      val (v, b') = Thm.dest_abs_fresh x' b
-                   in Thm.apply q (Thm.lambda v (conv_goal used' b'))
-                  end
-             | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-                  let val (c,b) = Thm.dest_comb ctm
-                   in Thm.apply c (Thm.apply negation b)
-                  end
-             | _ => raise Unsupported
-        val goals = map (fn goal =>
-                      Goal.init (conv_goal (Term.declare_free_names (Thm.term_of goal) Name.context) goal)
-                    ) goals
-        val goals = if can_inst
-                    then Variable.import false goals ctxt |> #1 |> #2
-                    else Variable.export ctxt ctxt0 goals
-        val falsify = Seq.make (fn () =>
-            if exists (fn goal =>
-              case Seq.pull (search goal)
-                of SOME (ret, _) => Thm.no_prems ret
-                 | _ => false ) goals
-            then raise Falsified
-            else NONE
-          )
-     in Seq.make (fn () => Seq.pull (
-            timed_seq (Time.fromMilliseconds 30) falsify ORELSE0
-            timed_seq (Time.fromMilliseconds 250) (search th) ORELSE0
-            timed_seq (Time.fromMilliseconds 100) falsify ORELSE0
-            fail )
-          handle Falsified => NONE)
-    end handle Unsupported =>
-      timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt) th ORELSE0
-      fail
-    end)
+
+        (*a budget < 1ms would mean NO timeout at all (Timeout.ignored) — clamp*)
+        val budget = Time.fromMilliseconds (Int.max (1, Config.get ctxt guard_race_timeout))
+
+        fun diag level msg =
+          Phi_Reasoner.warn_pretty (Context.Proof ctxt) level
+            (fn () => Pretty.str ("guard race: " ^ msg ()))
+
+        (*Synchronized.change, never Synchronized.assign (assign makes the
+          variable Immutable)*)
+        val rconv_refuted = Synchronized.var "guard_race.rconv" false
+
+        val racers =
+          ("P-auto", fn () =>
+             (case Seq.pull (search th) of
+                SOME (th', _) => if Thm.no_prems th' then SOME (Proved th') else NONE
+              | NONE => NONE)) ::
+          map_filter I [r_conv_racer can_inst ctxt ctxt0 rconv_refuted goals]
+
+        val (forked, winner) = run_race diag budget racers
+
+        (*total outcome mapping: the verdict names the winner and doubles as
+          the log field and the summary word*)
+        val (verdict, result) =
+          (case winner of
+             SOME (name, Proved th') => ("proved by " ^ name, Seq.single th')
+           | SOME (name, Refuted) => ("refuted by " ^ name, Seq.empty)
+           | NONE =>
+               if Synchronized.value rconv_refuted
+               then ("refuted by R-conv (post-race record)", Seq.empty)
+               else ("undecided", fail))
+
+        val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
+        val _ =
+          (case Config.get ctxt guard_race_log of
+             "" => ()
+           | log_path =>
+               File.append (Path.explode log_path)
+                 (String.concatWith "\t"
+                    [serial_string (), verdict, string_of_int elapsed,
+                     string_of_int (length racers), string_of_int (length goals),
+                     if forked then "forked" else "serial"] ^ "\n"))
+        val _ = diag 2 (fn () =>
+                  verdict ^ " in " ^ string_of_int elapsed ^ "ms, " ^
+                  string_of_int (length goals) ^ " subgoal(s), " ^
+                  (if forked then "forked" else "serial"))
+     in result end)
   end
 
   
@@ -1056,7 +1202,7 @@ fun guard_condition_solver {can_inst} ctxt0 th0 =
                 ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
                 (if is_F
                  then timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt)
-                 else prove_or_rebute can_inst ctxt ctxt0)
+                 else prove_or_refute can_inst ctxt ctxt0)
                 (* (timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt)) *)
         (*fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW

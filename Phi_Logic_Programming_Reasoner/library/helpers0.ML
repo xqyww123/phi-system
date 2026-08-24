@@ -511,12 +511,5 @@ fun eq_pair4 f g h i ((a,b,c,d),(a',b',c',d')) =
 
 fun select P x = if P x then SOME x else NONE
 
-infixr 0 ORELSE0
-
-fun op ORELSE0 (f, g) =
-  (case Seq.pull f of
-    NONE => g
-  | some => Seq.make (fn () => some));
-
 
 
