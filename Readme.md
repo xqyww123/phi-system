@@ -96,6 +96,25 @@ isabelle build Phi_Semantics
 
 For semantics of machine integers, we rely on the Word-Lib given by [seL4](https://github.com/seL4/l4v) project and you need to install it from their repo.
 
+### Optional: a working Nunchaku counterexample finder
+
+Isabelle2025-2's `nunchaku` command ships broken out of the box (the bundled
+2017 binary does not know the solver names the frontend sends).  A maintained
+build is available as a conda package and is used by φ-System's proof
+automation as a fast counterexample guard when present:
+
+```
+conda install -c https://conda.qiyuan.me isabelle-nunchaku
+```
+
+The package (linux-64; source: [xqyww123/nunchaku](https://github.com/xqyww123/nunchaku))
+registers itself as an Isabelle component and sets `NUNCHAKU_VERSION`, which
+version-gated consumers use to tell a working install from the bundled one.
+Nothing in φ-System's own settings refers to it: without the package,
+everything falls back to Nitpick, which is a supported configuration.
+Uninstalling the package closes the gate again — no other switch exists or
+is needed.
+
 ## Examples
 
 Here is a very simple example giving a verified fibonacci function. After the retrun statement and the end of the function body, it generates two proof obligations which are proven by Sledgehammer automatically.
