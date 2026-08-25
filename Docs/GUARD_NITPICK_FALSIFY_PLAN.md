@@ -922,3 +922,154 @@ MCP 自动重同步。共享工作目录禁 stash/checkout/reset/clean。提交�
 scratchpad：`/tmp/claude-1002/-home-qiyuan-Current-MLML/966ef49e-eb27-4d41-b984-25a7eff4cebd/scratchpad`
 （旧 T0_Smoke.thy 已退役，勿再用）。日志设施常驻默认关（作者确认），
 `PLPR.unicode.thy` 完全不用管（作者裁定）。
+
+## 14 · T3 进场交接（2026-08-26，compact 前准备；本节假定读者没有会话记忆）
+
+### 14.1 状态一句话
+
+守卫竞速三类选手齐备并全部提交：P-auto（证明）、R-conv（证否定式，赛后
+备胎 + 早终场协议）、R-nitpick（Nitpick 反模型，每子目标一选手）。最近三个
+提交：phi-system `6c79fdb3`（N1 裁定落地 + T2 选手上线）、`cef02850`
+（两员 Opus 5 两回合对抗评审的全部修复：⓪ 裁决删除可用性探测、
+`max_threads=1`、每场 Lazy 参数、NITPICK_SPY 守卫、装配点重构、注释真伪
+修订），主仓库 `ae19b25` bump。均未推送。MCP `Phi_System_Base` 正常，
+冒烟四测全绿，PLPR 前沿警告基线逐行不变。
+
+### 14.2 T3 之前必须知道的四条本轮变更（照旧清单写会出错）
+
+1. **不再有"选手可用性守卫"**（⓪ 裁决，§2.3）：R-nitpick 无条件进选手表；
+   无 Scala 对端的进程里，选手体窄接 `Output.Protocol_Message` 空手退场
+   （出口 `none`，不是缺席）。故 §7 T3-⑤ 与 T4 中"安全缺席/对端可用性"
+   的措辞已过时——**缺席只剩两个条件**：assumptions 或子目标含 TVar、
+   `NITPICK_SPY=yes`。T4 相应简化为"逐前端跑一次真实 R-nitpick 调用"。
+2. **冒烟断言助手已升级为备选集**（`test ctxt name expects prop_str`，
+   `expects : (string*string) list list`）：两名正确反驳者之间是时序竞速，
+   同一测试可有多种合法日志。error 信息会附完整 TSV 行（出口列自解释
+   缺席/none/crash）。写新探针时照此形状。
+3. **可达性补遗（实测，T3 造探针必踩）**：等式形守卫（`?x = t`）被
+   `fast_inst` 平凡形通道先行拦截；simp 可判的带变量原子（`?x < 0`）被
+   竞速前置的 `asm_full_simp + quick_cut` 判死——两者都到不了竞速。带
+   schematic 变量的探针必须用 **simp 不可见的带变量原子**（现有构造件
+   `BADP n`，见 Test/Guard_Race_Smoke.thy）。
+4. **R-nitpick 通常抢先终场**（实测 99ms/154ms）：凡"R-conv 应当胜出"的
+   探针，必须用 **Nitpick 看不穿的构造件**才能稳定复现，否则会被
+   R-nitpick 抢走。这是 T3-④ 与既有 N1 探针的共同难点，尚无现成构造件
+   ——设计它是 T3 的第一件实事（思路：Nitpick 无法有限模型化的类型/
+   递归结构，或超出 card 上限的构造）。
+
+### 14.3 T3 作业（§7 原清单 + 本轮修订）
+
+在 `Phi_Logic_Programming_Reasoner/Test/Guard_Race_Smoke.thy` 上扩建
+（现有四测：对照不进竞速 / 搜索炸弹 undecided / BAD∧SPIN 双反驳者
+任一 / BADN 仅 R-nitpick）。七探针：
+① 地面假守卫被驳、全场短路（BADN 已覆盖大半，补"其余选手确被取消"的
+   出口列断言）；② 30–250ms 可证守卫 P-auto 胜出、墙钟不高于现状；
+③ 空虚-H 守卫不被 R-conv 抢杀、通常 Proved（早终场协议的结构性论证，
+   §11.1 ③）；④ can_inst=true 仅某实例化可证 → 不被误杀，对照全实例皆假
+   → 被驳（需 14.2-④ 的构造件）；⑤ 含 schematic `?'a` → R-nitpick 缺席
+   （现有测试里的 `'a` 是 read_prop 固定的 TFree，**不触发**屏蔽；须用
+   ML 构造目标）；⑥ `nitpick_params` 污染免疫探针（先
+   `nitpick_params [expect="genuine", overlord]` 再跑守卫，验证钉死清单
+   生效；注意坏值污染现应表现为该选手族 `crash` 出口而非战术报错）；
+   ⑦ 串行降级路径与并行裁决一致（引擎在多线程关闭时按表序短路串行，
+   §1.2-6）。
+
+### 14.4 其后顺序与未决
+
+T3 → T4（前端探针，按 14.2-① 简化）→ T5（`Phi_Types.thy` 语料收数，
+回填预算终值、检验 card 上限；注意 `Phi_Types.thy` ≠ T0 语料
+`Phi_Type.thy`）→ T7 文档；T6（R-nunchaku）异步，上线前须裁"是否参与
+`refuted_by` 账本"（§2.4 已记双方立场）。另有一件独立候选：
+`search_solved` 验收谓词只查 `Thm.no_prems`、不查 hyps/tpairs 的加固
+（评审副产物，与语境选择无关，覆盖两分支与 P-auto）。
+
+### 14.5 环境与纪律（承 §13.5，不变）
+
+绝不擅自 `isabelle build`（作者已给验证目的的长效授权，建议派 agent，
+仍禁 -c/-f）。改 `.ML` 后 MCP 自动重同步。共享工作目录禁
+stash/checkout/reset/clean。提交须作者逐次明示批准；推送只 origin 且须
+作者吩咐。`Phi_Examples/` 下有其他 agent 的未提交改动，提交时显式 stage
+自己的文件。用户 jEdit prover 绝不可杀。scratchpad 现有可复用探针：
+`N1_TrueBranch_Probe.thy`（N1 真分支，已升级备选集）、
+`T2B_Adversarial_Probe.thy`（13 路语境对抗）、`Echo_Cost_Probe.thy`
+（Scala 往返计时）。
+
+## 15 · T3 实施记录（2026-08-25；执行 §14.3 的作业）
+
+### 15.1 一句话
+
+§7 的 T3 七项探针全部落地在
+`Phi_Logic_Programming_Reasoner/Test/Guard_Race_Smoke.thy`（连同原有四个冒烟
+测试共十二个探针），两次全量复跑逐条通过，PLPR 前沿警告基线逐行不变。
+
+### 15.2 关键前置：Nitpick 看不穿的构造件（§14.2-④ 记的待办）
+
+本质一句话：要一个**本身为假、但在每个有限模型里都为真**的命题。Nitpick 只
+在有限论域里搜反模型，因此永远举不出反例（它如实报 "Nitpick found no
+counterexample"）；而经典反驳器只需一条 `elim!` 规则就能一步致命。三个候选
+都在钉死参数（card 1-10、max_potential 0、SAT4J、max_threads 1）下实测确认
+看不穿：
+
+| 候选 | 命题 | 耗时 |
+| --- | --- | --- |
+| ① | `finite (UNIV::nat set)` | 91ms |
+| ② | Dedekind 无穷性 `\<forall>f::nat\<Rightarrow>nat. inj f \<longrightarrow> surj f` | 578ms |
+| ③ | nat 有最大元 `\<exists>m. \<forall>k. k \<le> m` | 63ms |
+
+取最简单的 ①，做成 `BLIND_SPIN n = finite (UNIV::nat set)`，配 `elim!`（秒驳）
+与向上循环的 `intro!`（自旋，保证熬过 30ms 快攻、进入竞速）。实测竞速日志：
+`refuted  R-conv  508ms  forked  P-auto:timeout,R-conv:none,R-nitpick1:none`。
+
+### 15.3 断言助手的形状（§14.2-② 的备选集机制之上）
+
+一个引擎 `race_test {project, can_inst} ctxt name expects t` 直接吃 term；
+`test` 是它的字符串外壳（`can_inst = true` 时按 schematic 模式读）。三种列
+投影 —— 只看裁决与胜者 / 加出口列 / 加 forked-serial 列 —— 对应四个具名模式
+`plain`、`with_exits`、`with_mode`、`schematic`。每个探针只钉自己关心的列，
+时序相关的列不进断言。
+
+### 15.4 本轮新增的实测事实
+
+1. **带 schematic 项变量的守卫，R-nitpick 不按实例反驳。**
+   `CHAIN […] \<and> SOMETRUE ?x`（除 `?x = 0` 外每个实例都假）实测
+   `proved  P-auto  111ms … R-nitpick1:none`。这是 §2.3 "falsify 的
+   close_form 把残余 Vars 全称闭合 = 反驳每个实例" 一句的实证；此前它只是
+   照 Nitpick 源码推断出来的。
+2. **空虚假设守卫按 §2.2 的结构性论证行事。**
+   `FALLS […] \<Longrightarrow> \<condition> (SPIN 0)` 实测
+   `proved  P-auto  99ms … R-conv:cancelled,R-nitpick1:cancelled` ——
+   R-conv 连出手机会都没有。旧 D11 的结构性关闭拿到实测背书。
+3. **schematic 类型变量把 R-nitpick 整族挡在选手表外。** 出口列只剩
+   `P-auto:timeout,R-conv:none`，**没有** R-nitpick 条目 —— 与"在场但
+   none"可区分。注意表面语法造不出 `?'a`（`read_prop` 固定类型变量），
+   必须对 term 做类型替换。
+4. **参数污染免疫。** 先下
+   `nitpick_params [expect = unknown, timeout = 0.001, card = 1-1,
+   max_potential = 5, verbose]`，同一守卫照旧 `refuted  R-nitpick1  82ms`：
+   若 `expect` 未被钉死，genuine 结局会让 Nitpick 报错（出口变 crash）；
+   1ms 超时会掐死搜索；card 1-1 会缩窄论域；verbose 会破坏静默。四项全被
+   钉死值压过。
+5. **串行降级裁决一致。** `Multithreading.max_threads_update 1` 下同一守卫
+   得同一裁决，日志 `refuted  R-conv  597ms  serial`，比并行多约 100ms
+   （即 R-nitpick 那一趟）。远未触及 §1.2-6 的 (2+k)×预算 上界，因为两名
+   反驳者都提前返回。开关在所有出口路径上恢复原值（`Exn.capture_body`）。
+6. **链长标定。** `CHAIN` 的 intro! 搜索超线性：400 元素不到 30ms、根本不
+   进竞速，2000 元素撑爆 500ms 预算，1000 元素 = 126ms。`FALLS` 的 elim!
+   下行是线性的：400 = 33ms，800 = 99ms。
+
+### 15.5 与 §7 原清单的偏差（明说，不冒充）
+
+- **T3-② 只断言裁决与胜者**，没有做"墙钟不高于现状"的对比 —— 那是 T5
+  性能测量的作业。
+- **T3-⑤ 的措辞按 ⓪ 裁决改过**：R-nitpick 的缺席只剩 TVar 与 `NITPICK_SPY`
+  两个条件，本探针覆盖前者；后者是环境变量，没有做成探针。
+- **T3-⑥ 的污染面只覆盖钉死清单里的键**；§2.3 记录的结构性残余（词条键
+  whack/eval/need，以及逐类型、逐常量赋值）本探针不覆盖，按原裁决容忍。
+- **T3-⑦ 用全局线程数开关制造串行**，这是引擎唯一的降级开关
+  （`Future.relevant` 经 `Multithreading.max_threads`）。
+
+### 15.6 其后
+
+T4（前端探针，按 §14.2-① 简化）→ T5（`Phi_Types.thy` 语料收数）→ T7 文档；
+T6 异步。§14.4 记的独立候选（`search_solved` 的验收谓词只查 `Thm.no_prems`、
+不查 hyps/tpairs）仍未动。
