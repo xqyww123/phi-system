@@ -20,7 +20,12 @@ begin
    construct declarations below, turning them into frees (measured trap). *)
 
 declare [[\<phi>trace_reasoning = 3]]
-declare [[\<phi>guard_race_log = "$ISABELLE_TMP_PREFIX/guard_race_smoke.tsv"]]
+(*ISABELLE_TMP, not ISABELLE_TMP_PREFIX: the prefix directory is shared by
+  every Isabelle process of one user, so two frontends evaluating this theory
+  at once would interleave their lines into one file and each probe's
+  line-count delta would pick up the other's race.  ISABELLE_TMP is
+  per-process (measured: $ISABELLE_TMP_PREFIX/process<id>).*)
+declare [[\<phi>guard_race_log = "$ISABELLE_TMP/guard_race_smoke.tsv"]]
 
 ML \<open>
 (*the config is the single source of truth for the log path*)

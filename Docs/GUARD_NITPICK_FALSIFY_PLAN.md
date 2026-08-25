@@ -1073,3 +1073,183 @@ counterexample"）；而经典反驳器只需一条 `elim!` 规则就能一步�
 T4（前端探针，按 §14.2-① 简化）→ T5（`Phi_Types.thy` 语料收数）→ T7 文档；
 T6 异步。§14.4 记的独立候选（`search_solved` 的验收谓词只查 `Thm.no_prems`、
 不查 hyps/tpairs）仍未动。
+
+## 16 · T4 实施记录（2026-08-25；前端探针，按 §14.2-① 简化）
+
+### 16.0 一句话
+
+三个前端（Isabelle-MCP、Isa-REPL、jEdit）各真跑一次 R-nitpick，全部产出
+`R-nitpick1:win`，即全部有 Scala 对端。T4 完成。
+
+### 16.1 作业是什么
+
+⓪ 裁决取消可用性守卫之后，T4 只剩一件事：**在每个前端各真跑一次
+R-nitpick**，确认它在那儿确实产出反模型，而不是每次都窄接
+`Output.Protocol_Message` 空手退场。判据用现成的：探针电池里 T3-1 与 T3-6
+两条守卫**只有 R-nitpick 能赢**，它们绿就等于该前端有 Scala 对端且 Nitpick
+真在干活；不需要另造探针，也不需要人读日志。
+
+### 16.2 三条腿
+
+| 前端 | 状态 | 证据 |
+| --- | --- | --- |
+| Isabelle-MCP | 已确认 | T3 全程跑在它下面，R-nitpick 多次直接终场 |
+| Isa-REPL | 已确认（见 16.3） | 三行 `R-nitpick1:win`，49ms / 56ms / 62ms |
+| jEdit | 已确认（见 16.4） | `R-nitpick1:win`，60ms |
+
+### 16.3 Isa-REPL 实测
+
+起法：`repl_server.sh 127.0.0.1:6677 Phi_System_Base <输出目录>
+-o document=false`（**启 REPL 服务器是 build 禁令的明文例外**）。端口避开
+6666 上别的 agent 的 REPL——那个的 base session 是 `MathBench_Prover`
+（建在 HOL-Complex_Analysis 上），装不下 PLPR，借不上。启动时顺带重建了
+`Phi_System_Base`；该 session 只装仓库外部依赖，是别处的改动使它失效，与本
+工作无关，中途绝不可掐。
+
+用 Python 客户端（`async with Client(...)` + `file`，注意方法全是协程，
+`examples/` 下的同步写法已过时）整篇求值 `Guard_Race_Smoke.thy`，零 error。
+该进程自己的日志十一行（对照探针不进竞速、不写日志）：
+
+```
+undecided  -           505  forked  P-auto:timeout,R-conv:timeout,R-nitpick1:none
+refuted    R-nitpick1   62  forked  P-auto:cancelled,R-conv:none,R-nitpick1:win
+refuted    R-nitpick1   49  forked  P-auto:cancelled,R-conv:none,R-nitpick1:win
+proved     P-auto      106  forked  P-auto:win,R-conv:cancelled,R-nitpick1:none
+proved     P-auto      103  forked  P-auto:win,R-conv:none,R-nitpick1:none
+proved     P-auto       91  forked  P-auto:win,R-conv:cancelled,R-nitpick1:none
+refuted    R-conv      500  forked  P-auto:timeout,R-conv:none,R-nitpick1:none
+refuted    R-conv      500  forked  P-auto:timeout,R-conv:none,R-nitpick1:none
+refuted    R-conv      500  forked  P-auto:timeout,R-conv:none
+refuted    R-conv      544  serial  P-auto:timeout,R-conv:none,R-nitpick1:none
+refuted    R-nitpick1   56  forked  P-auto:cancelled,R-conv:none,R-nitpick1:win
+```
+
+要点：**三行 `R-nitpick1:win`** —— 在 `isabelle build` 托管的进程里真的产出
+了 Nitpick 反模型。§2.3 环境清单里 "Isa-REPL via repl_server.sh's isabelle
+build 有对端" 一句，由源码推断变为实测。裁决与胜者两列与 MCP 下逐行一致；
+REPL 下 Nitpick 反而更快（49-62ms，MCP 下 65-82ms）。
+
+### 16.4 jEdit 实测（作者执行，2026-08-25）
+
+作者在自己的 jEdit 里打开
+`Phi_Logic_Programming_Reasoner/Test/Guard_Race_Smoke.thy`（session
+`Phi_System_Base`）跑到末尾，全绿。他回报的 T3-6 那行：
+
+```
+refuted  R-nitpick1  60  1  forked  P-auto:cancelled,R-conv:none,R-nitpick1:win
+```
+
+`R-nitpick1:win` 是判据本身：该守卫（`BADN`，无 simp 规则也无 elim 规则）
+经典反驳器碰不了，只有找到有限反模型才能判假。故 jEdit 下 Scala 对端在，
+Kodkod 跑通。三个前端至此全部确认，T4 收工。
+
+复核这类回报时只需看一件事：出口列里有没有 `R-nitpick1:win`。
+
+### 16.5 顺带修掉的一个脆弱点
+
+探针日志原先写在 `$ISABELLE_TMP_PREFIX/guard_race_smoke.tsv`。实测该目录是
+`/tmp/isabelle-qiyuan`，**同一用户的所有 Isabelle 进程共用**——MCP 与
+Isa-REPL 刚才就写进了同一个文件。顺序跑无碍（断言取行数增量），但两个前端
+**同时**求值本理论就会交织，某个探针会读到另一个进程的竞速行——而 jEdit
+腿恰恰会造成这种并发。改用逐进程的 `$ISABELLE_TMP`（实测展开为
+`$ISABELLE_TMP_PREFIX/process<id>`），交织的可能从结构上消失。MCP 与
+Isa-REPL 下各复跑一遍确认，两个日志文件各 11 行、零交织。
+
+### 16.6 其后
+
+T5（`Phi_Types.thy` 语料收数，回填预算终值、检验 card 上限；注意
+`Phi_Types.thy` ≠ T0 语料 `Phi_Type.thy`）→ T7 文档；T6 异步，上线前须裁
+"是否参与 `refuted_by` 账本"。§14.4 记的独立候选（`search_solved` 的验收
+谓词只查 `Thm.no_prems`）仍未动。
+
+## 17 · T5 进场交接（2026-08-25，compact 前准备；本节假定读者没有会话记忆）
+
+### 17.1 状态一句话
+
+守卫竞速三类选手全部上线并提交；T3（探针电池，十二条）与 T4（三前端各一次
+真实 R-nitpick 调用）均已完成，见 §15、§16。剩下 T5（性能测量与预算回填）、
+T7（文档），T6（R-nunchaku）异步。
+
+**未提交、等作者批准的改动有两处**（进 T5 前先处理掉）：
+`Phi_Logic_Programming_Reasoner/Test/Guard_Race_Smoke.thy` 的日志路径改为逐
+进程的 `$ISABELLE_TMP`（§16.5），以及本文件的 §16 全节。已提交的最近两笔是
+phi-system `8fefff90` + 主仓库 `5ef6cab`（T3），均**未推送**。
+
+另：T4 期间起的 Isa-REPL 服务器仍在 `127.0.0.1:6677` 上跑（base session
+`Phi_System_Base`），可复用亦可关；6666 上是别的 agent 的 REPL，勿动。
+
+### 17.2 T5 要产出什么（§7 原文，按 D3 裁决修订）
+
+§7 写的是"安全前沿墙钟对比 + 插桩（竞速触发次数 / 各选手胜场 / 超时率 /
+是否真并行 / kodkod 缓存命中），回填预算默认值"。两处必须按后来的裁决修正：
+
+1. **内存计数器已被 D3 废除**（`guard_race_stats`、`count_race` 连 signature
+   导出一并删除，§8 D3 / §12.2-6）。**唯一插桩是 `\<phi>guard_race_log`**
+   这个 TSV 日志。别去找计数器，它不存在。
+2. 前四个数全部可以从 TSV 直接读出：触发次数 = 行数；各选手胜场 = winner 列；
+   超时率 = 出口列里的 `timeout`；是否真并行 = forked/serial 列。**只有
+   "kodkod 缓存命中"在日志里没有对应列**——这一项要先确认 Nitpick/Kodkod
+   侧究竟有没有可观测的缓存，再决定测法或撤销该项（未决，见 17.6）。
+
+外加两件本计划别处指定的作业：**回填预算终值**（`\<phi>guard_race_timeout`
+现为 500ms，§1.2）与**检验 card 上限**（现钉死 `card = 1-10`，§2.3）。
+
+### 17.3 语料：用哪个理论，以及一条已知的坑
+
+- **目标语料是 `Phi_System/Phi_Types.thy`（2810 行）**。它与 T0 用的安全前沿
+  终点 `Phi_System/Phi_Type.thy`（8202 行）是**两个不同的 theory**，只差一个
+  字母，历史上已经混过一次。
+- **T0 在安全前沿上零命中**：探针插在 fail 出口，跑完 PLPR → `Phi_Type.thy`
+  整条前沿**一次都没触发**——该语料上不存在"30ms 速证超时且级联无果"的守卫
+  （§11.1 T0 结果 2）。所以 T0 的四个数在那条语料上是空的，T5 换语料正是为此。
+- **`Phi_Types.thy` 是已知 3 命中语料**：`Docs/TODO.md` 记录某次运行产生 3 条
+  守卫 fail 告警，位置在 `Phi_Types.thy` :2527/:2581 附近。**注意这是竞速上线
+  之前的记录**，那时的"命中"指旧级联的 fail 出口告警；竞速的入口条件与之相同
+  （30ms 速证超时），所以预期这 3 条会变成 3 行 TSV，但**这是预期不是实测**，
+  T5 要做的第一件事就是把它测出来。
+
+### 17.4 工具：TSV 日志怎么开、怎么读
+
+在被测理论里 `declare [[\<phi>guard_race_log = "$ISABELLE_TMP/guard_race.tsv"]]`。
+**用 `$ISABELLE_TMP` 而不是 `$ISABELLE_TMP_PREFIX`**：后者是
+`/tmp/isabelle-<user>`，同一用户的**所有** Isabelle 进程共用，两个前端同时跑
+会把行交织进同一个文件（§16.5 实测）；前者逐进程，展开为
+`$ISABELLE_TMP_PREFIX/process<id>`。
+
+七列语义（`reasoners.ML` 的 `guard_race_log` signature 注释是权威）：
+serial、verdict（`proved`/`refuted`/`undecided`）、胜者名或 `-`、墙钟毫秒、
+子目标数、模式（`forked`/`serial`）、逐选手出口（`名字:代码`，代码取
+`win`/`none`/`timeout`/`crash`/`cancelled`/`discarded`）。
+
+另需 `declare [[\<phi>trace_reasoning = 3]]` 才看得到人读的告警行（fail 出口
+默认静默）。
+
+### 17.5 解读数据的两个坑
+
+1. **预算是虚拟时间，日志里的耗时是墙钟。** `Timeout.apply` 按
+   `timeout_scale` 缩放并扣除 GC，所以一行日志的耗时**诚实地超过**名义预算是
+   正常的，不是 bug（signature 注释已写明）。回填预算时别拿墙钟直接当预算。
+2. **`undecided` 分不出"被外层看门狗掐掉"与"Nitpick 自判 unknown"。** 这是
+   §1.2-3 作者裁定统一包裹时**已接受**的代价，不要重开这个议题；500ms 之前
+   自行返回的场次仍带真实裁决与耗时。
+
+### 17.6 未决
+
+- "kodkod 缓存命中"这一项是否可测、怎么测（17.2-2）。
+- 预算终值与 card 上限的最终取值，须由 T5 数据支撑后由作者裁定。
+- T6（R-nunchaku）上线前须裁"是否参与 `refuted_by` 账本"（§2.4 已记双方立场）。
+- 独立候选未动：`search_solved` 的验收谓词只查 `Thm.no_prems`、不查
+  hyps/tpairs 的加固（覆盖 R-conv 两分支与 P-auto，与语境选择无关）。
+
+### 17.7 环境与纪律（承 §14.5，不变）
+
+绝不擅自 `isabelle build`（**启 REPL 服务器 `repl_server.sh` 是明文例外**；
+作者另给过验证目的的长效授权，仍禁 `-c`/`-f`）。改 `.ML` 后 MCP 自动重同步，
+REPL 需重启。共享工作目录禁 stash/checkout/reset，**绝对禁止任何形式的
+`git clean`**。提交须作者逐次明示批准；推送只 `origin` 且须作者吩咐。
+`Phi_Examples/` 与 `jedit/` 下有其他 agent 的未提交改动，提交时只显式 stage
+自己的文件。用户的 jEdit prover 绝不可杀。MCP 会话用 `Phi_System_Base`。
+scratchpad 现有可复用件：`t4_repl_probe.py`（Isa-REPL 整篇求值，注意客户端
+方法全是协程、`async with Client(...)`，仓库 `examples/` 下的同步写法已过时）、
+`T3_Blind_Construct_Probe.thy`、`N1_TrueBranch_Probe.thy`、
+`T2B_Adversarial_Probe.thy`、`Echo_Cost_Probe.thy`、`Tmp_Path_Probe.thy`。
