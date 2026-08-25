@@ -250,7 +250,11 @@ Two failure modes recurred often enough to be worth naming, because they will re
   rather than the single `\<orelse>`, and `\<orelse>` alone survives the same round trip
   unchanged. Recorded here in retrospect, on 2026-08-23: the outcome was reported in
   conversation and the landing commit followed 56 seconds later, but nothing in this
-  repository said so until now.
+  repository said so until now. **Both were run again on 2026-08-25**, against the code as
+  it stands after every later rewrite, and both passed: the clipboard carried
+  `\<or'>\<else>` out as `U+1D428 U+1D42B  U+2060  U+1D41E U+1D425 U+1D42C U+1D41E` — the
+  joiner sitting between the two words — and a paste back from a plain text editor produced
+  `U+E041 U+E01A`, two symbols, not `U+E042`.
 - **The three compiled patterns live in the table, not in three top-level names.**
   `phi_word_table` builds them and puts them under `glyph_pat`, `run_pat` and `word_pat`,
   so a table and its patterns cannot disagree — whichever table a caller passes, the
@@ -281,6 +285,39 @@ Two failure modes recurred often enough to be worth naming, because they will re
   stands — copying source out and pasting it back introduces nothing of its own.
 
 
+## What landing plan 2 taught
+
+- **The three checks only a running editor can answer passed** (2026-08-25). Dragging across
+  a word glyph put `U+1D429 U+1D41E U+1D427 U+1D41D U+1D422 U+1D427 U+1D420` on the primary
+  selection, where another application read it; mathematical letters typed elsewhere and
+  middle-clicked into a buffer folded back into the glyph; and a middle-click quick copy
+  inside the buffer put the glyph itself at the drop point while leaving the original in
+  place, which is the round trip through `%` that the remembered text exists for.
+- **A test section that installs the thing it tests hides the caller.** Every check of the
+  primary-selection wrapper called `phi_install_primary_selection` itself, so striking that
+  call out of `phi_word_install` left the whole section green. What closes it is one check
+  driven against the platform's own selection, through whatever the load-time install left
+  at `%`. `DRAG_AND_DROP_PLAN.md` registers an `EBComponent` from `phi_word_install` and has
+  exactly the same blind spot waiting for it.
+- **`ClipboardRegister.toString` answers null when the selection holds no text**, and string
+  concatenation prints that as "null". A probe written the obvious way therefore reports
+  `Registers.getRegister('%')` as null on a display that has a perfectly good primary
+  selection. Compare against null explicitly.
+- **`Registers.setRegister` cannot store a null register.** Its `Transferable` overload takes
+  the call instead and hands the null to the existing register, which stays in place. The
+  state a platform without a primary selection starts in therefore cannot be produced through
+  the public API; the test writes jEdit's private register table directly and puts it back.
+- **One remembered-text map per wrapper, never one at the top level.** Installing twice nests
+  wrappers, and with a shared map the outer one stores into the map the inner one reads, so a
+  selected glyph reads back as letters. Measured, and pinned by a check.
+  `DRAG_AND_DROP_PLAN.md`'s sketch has a top-level `phi_drag` map and must answer the same
+  question before it lands.
+- **What this hook cannot reach** is recorded where a reader will meet it: a mouse selection
+  inside one of jEdit's own text input fields is written by Swing's `DefaultCaret`, not by
+  register `%`. `PRIMARY_SELECTION_PLAN.md`'s risks carry the measurement,
+  `../fonts/WORD_GLYPHS.md` carries the user-facing sentence.
+
+
 ## What landing plan 3 taught
 
 - **The four checks were run and reported as passing** (2026-08-18), and the run found a
@@ -289,16 +326,34 @@ Two failure modes recurred often enough to be worth naming, because they will re
   hand-drawn font covers no printable ASCII. That observation is where `UI_FONT_PLAN.md`
   came from. Recorded here in retrospect, on 2026-08-23, with the limits of the record
   stated rather than smoothed over: the report was one sentence rather than item by item,
-  so no individual check can be given a pass of its own, and **check 2 — pasting a word
-  glyph into Isabelle's Query panel, which this plan calls its main scope claim — has never
-  been confirmed by hand.**
-- **Neither plan's code has been checked by hand since it was rewritten.** `6571def0` changed
-  140 lines of `phi_word_clipboard.bsh` after both plans had landed and their checks had been
-  run, including giving every function-local a declared type — an untyped `phi_m` was
-  breaking folding outright — and `c2578962` added `phi_field_font` into the very AWT listener
-  plan 3 installs. The font plan's own manual checks do not close this: its first check is the
-  select-then-`Ctrl-F` path, which by design never touches the clipboard, so plan 3's paste
-  wrapper has not been exercised by hand in its current form.
+  so no individual check can be given a pass of its own, and check 2 — pasting a word glyph
+  into Isabelle's Query panel, which this plan calls its main scope claim — had never been
+  confirmed by hand.
+- **All four were run again on 2026-08-25, item by item, and all four passed** — including
+  the Query panel. The scope claim holds in practice as well as in the source: Isabelle's
+  own input fields are `Completion_Popup.History_Text_Field`, which extends jEdit's
+  `HistoryTextField` (`completion_popup.scala:396`), so the listener's type test covers
+  them. Ordinary text, a directory path in the file browser and in the Open dialog, typing,
+  history recall and Isabelle's completion popup were all unaffected.
+- **One observation could not be reproduced, and is recorded rather than explained away.**
+  On the first use of the quick-search bar in that session, a pasted word glyph appeared as
+  a row of empty boxes. Measured immediately after, in the same running editor: the field
+  was `HistoryTextField`, carried the client property this script marks it with, carried
+  family `PhiSymbols`, and its transfer handler was this script's wrapper; a second paste
+  put exactly one `U+E048` in it, drawn as the word. Whatever the first state was, it was
+  not "the letters, unfolded" — `PhiSymbols` covers 998 code points of the mathematical
+  block, so letters in that family would have been drawn as letters. A restart could not
+  reproduce it: the first paste after a fresh start folded correctly. No code was changed
+  on the strength of an unreproduced observation.
+- **For two days neither plan's code had been checked by hand since it was rewritten, and
+  that gap is now closed.** `6571def0` changed 140 lines of `phi_word_clipboard.bsh` after
+  both plans had landed and their checks had been run, including giving every function-local
+  a declared type — an untyped `phi_m` was breaking folding outright — and `c2578962` added
+  `phi_field_font` into the very AWT listener plan 3 installs. The font plan's own manual
+  checks did not close that: its first check is the select-then-`Ctrl-F` path, which by
+  design never touches the clipboard. Re-running both plans' checks on 2026-08-25 is what
+  closed it. The lesson is the one worth keeping: **a manual check is a statement about the
+  code that existed when it was run**, so a rewrite of that code retires it.
 - **A scripted BeanShell class is not the way to subclass a Java class here.** Its
   constructor is not found when a parameter has no declared type, and the anonymous subclass
   bsh generates instead has **only a no-arg constructor**: it does not forward arguments, so
