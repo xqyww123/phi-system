@@ -147,7 +147,10 @@ signature PHI_REASONERS = sig
   (*guard race (prove_or_refute) -- see GUARD_NITPICK_FALSIFY_PLAN.md*)
   val guard_race_timeout : int Config.T
       (*milliseconds; per-racer budget -- when the race degrades to serial
-        execution, the wall-clock upper bound is #racers * budget*)
+        execution, the wall-clock upper bound is #racers * budget.  The budget
+        is virtual time (Timeout.apply scales it by timeout_scale and
+        discounts GC) while the logged elapsed is wall clock, so a logged
+        race may honestly exceed its nominal budget.*)
   val guard_race_log : string Config.T
       (*empty = off; otherwise a file path receiving one TSV line per race*)
 
@@ -979,134 +982,125 @@ fun dest_all ct used =
 (*** Guard Race ***)
 
 (*GUARD_NITPICK_FALSIFY_PLAN.md §1–§3.  After the 30ms serial quick-proof
-  attempt, proving and refuting racers race under a per-racer budget; the
-  first decisive result ends the race and the losers are cancelled (forked
-  mode: future group cancellation sends interrupts).  Hence every racer exit
-  must let interrupts pass through untouched — converting cancellation into
-  failure burns the losers' budget and breaks PIDE/Ctrl-C cancellation.
-  This exception discipline is a deliberate twin of auto_sledgehammer's
-  sledgehammer_solver.ML (classify / normalise): do not "fix" one copy
-  without the other; per the rule of three, extract a shared kernel only
-  when a third consumer appears.  `Refuted` has no producer until T2
-  (R-nitpick).*)
+  attempt, proving and refuting racers race under a per-racer budget on the
+  race engine of Performant_Isabelle_ML (Race.race, library/race.ML): the
+  winner is the lowest-indexed racer that recorded a claim (the first claim
+  to arrive ends the race), losers are cancelled promptly, every racer gets
+  a truthful exit, and every racer has terminated before the race returns —
+  the join barrier the post-race record below relies on.  The engine never
+  converts an interrupt into a result: external cancellation re-raises out
+  of the race, while a racer's own internal interrupt is absorbed as that
+  racer's Cancelled exit; a racer's crash is that racer's failure only,
+  reported post-race from its exit.  The exception discipline shared with
+  auto_sledgehammer's sledgehammer_solver.ML (classify / normalise) has its
+  kernel in Race.contains_interrupt — sledgehammer_solver.ML still carries
+  its own inline copy: keep the two in sync (unification pending, plan §8).*)
 
-(** race engine **)
+(** Racers **)
 
-datatype race_result = Proved of thm | Refuted
+datatype race_result = Proved of thm | Refuted of string
+  (*Refuted carries the REFUTER's name: a refutation can reach the winner
+    slot by relay (see the early-finish protocol below), so attribution
+    travels in the result, not in the racer name the engine reports.*)
 
-(*a racer returns SOME only on a decisive result*)
-type racer = string * (unit -> race_result option)
+(*the shared acceptance criterion of both searching racers: run the search,
+  keep the state iff nothing is left to prove*)
+fun search_solved search st =
+  (case Seq.pull (search st) of
+     SOME (st', _) => if Thm.no_prems st' then SOME st' else NONE
+   | NONE => NONE)
 
-(*Par_Exn is a container, not a failure: proper interrupts never sit inside
-  one (Par_Exn.make filters them), but Exn.Interrupt_Breakdown is NOT proper
-  and CAN — while is_interrupt of the container itself is false.  So unpack
-  and test per component, or a user cancellation becomes a swallowed
-  "machinery error".  Never use `Par_Exn.dest = SOME _` as a test for
-  "parallel failure": an interrupt destructures to SOME [] too.*)
-fun contains_interrupt exn =
-  Exn.is_interrupt exn orelse
-  (case Par_Exn.dest exn of
-     SOME exns => exists Exn.is_interrupt exns
-   | NONE => false)
+(*Early-finish protocol (plan §8, author-ruled 2026-08-25): let a refutation
+  end the race the moment it is known that no proof can still arrive.  Both
+  events live in ONE variable, so each racer publishes its own event and
+  reads the other's inside a single critical section — whenever both events
+  occur, the second racer to enter the critical section sees the first's,
+  and no ordering argument is needed.
+    pauto_finished — P-auto ran to completion without proving.  Set on that
+      normal empty-handed return only: a timeout or crash leaves the body by
+      an exception path, which the racer exit discipline does not intercept.
+    refuted_by — a refutation was found, recorded under the refuter's name.
+      A refutation computed but not yet committed can be lost to a perfectly
+      timed interrupt; the cost is one suppressed default-off warning (all
+      three failure exits are observationally equivalent, plan §11.1 ⑤).
+  A refutation may END the race only when pauto_finished is already set.
+  P-auto is the only producer of Proved, so this pre-empts no still-possible
+  proof; the verdict is the same one the no-winner path would read from the
+  record (visible there because the engine joins all racers first) — the
+  protocol only moves it earlier.  With today's two racers the time saved is
+  about zero; the protocol pays once R-nitpick joins and an early verdict
+  cancels racers still burning budget (plan §8).  "No winner" implies P-auto
+  failed, which structurally closes the vacuous-hypothesis guard (a
+  contradictory hypothesis H makes both H \<Longrightarrow> C and H \<Longrightarrow> \<not>C provable):
+  P-auto would have won.  Synchronized.change_result, never
+  Synchronized.assign (assign makes the variable Immutable).*)
 
-(*racer exit discipline — the ONLY exception handling around a racer:
-  interrupts (= cancellation, the race's own short-circuit) pass through;
-  Timeout and genuine errors are this racer's failure only.  `handle _` is
-  forbidden here.  contains_interrupt rather than Exn.is_interrupt: a racer
-  body may fork internally and deliver a Par_Exn, so this check is not
-  redundant with the one in run_race.*)
-fun run_racer diag budget (name, body) =
-  (case Exn.capture_body (fn () => Timeout.apply budget body ()) of
-     Exn.Res NONE => NONE
-   | Exn.Res (SOME r) => SOME (name, r)
-   | Exn.Exn (Timeout.TIMEOUT _) => NONE
-   | Exn.Exn exn =>
-       if contains_interrupt exn then Exn.reraise exn
-       else (diag 2 (fn () => "racer " ^ name ^ " crashed: " ^ Runtime.exn_message exn);
-             NONE))
-
-(*Run one race; returns the mode actually chosen (forked?) and the winner.
-  Forked iff the future machinery considers the racer list relevant —
-  Future.relevant is constant-false on a 0/1-element list, so the length of
-  the racer list decides the mode.  This test is NOT redundant even though
-  Par_List.get_some re-evaluates Future.relevant internally (and can then
-  degrade to a plain non-short-circuiting map): we must know, and report
-  honestly, which runner we picked — do not "simplify" the branch away.
-  The first racer is favoured on simultaneous winners (get_some arbitrates
-  by list order), so callers put the prover first to bias ties toward
-  Proved.*)
-fun run_race diag budget (racers: racer list) : bool * (string * race_result) option =
-  let val forked = Future.relevant racers
-      val run = if forked then Par_List.get_some else get_first
-      val winner =
-        (case Exn.capture_body (fn () => run (run_racer diag budget) racers) of
-           Exn.Res r => r
-         | Exn.Exn exn =>
-             if contains_interrupt exn then Exn.reraise exn
-             else (diag 2 (fn () => "race machinery error: " ^ Runtime.exn_message exn);
-                   NONE))
-   in (forked, winner) end
-
-
-(** racers **)
+fun p_auto_racer search protocol th : race_result Race.racer =
+  ("P-auto", fn () =>
+     (case search_solved search th of
+        SOME th' => SOME (Proved th')
+      | NONE =>
+          Synchronized.change_result protocol
+            (fn {pauto_finished = _, refuted_by} =>
+              (Option.map Refuted refuted_by,
+               {pauto_finished = true, refuted_by = refuted_by}))))
 
 val negation = \<^cterm>\<open>Not\<close>
 
 (*R-conv (plan §2.2): refute by PROVING the negation — each subgoal's
   conclusion is negated under its \<And>/\<Longrightarrow> prefix and handed to the same
-  classical search.  A non-Trueprop conclusion (Unsupported) makes the racer
-  absent (NONE).  The precomputation of the negated goals is deliberately
-  eager, at racer construction before the race: whether it succeeds decides
-  the racer-list length and hence forked vs serial.  The can_inst variable
-  discipline is the proof-searcher's own (freeze schematics / export),
+  classical search.  The whole computation, negation included, runs inside
+  the racer body (plan §8 D6): it is bounded by this racer's budget and
+  covered by the engine's exception discipline, and a non-Trueprop
+  conclusion (Unsupported) just comes back empty-handed.
+  ctxt is the inner, goal-side context; ctxt0 the outer context of
+  guard_condition_solver — Variable.export ctxt ctxt0 is direction-
+  sensitive, do not swap the two.  can_inst = true freezes the residual
+  schematics (a universal refutation); false exports them back (an
+  existential refutation — an accepted completeness-only weakening, plan
+  §2.3).  This variable discipline is the proof-searcher's own,
   intentionally different from R-nitpick's as-is discipline — see the
-  duality note in plan §2.3.
-  Its refutation never wins the race: it is recorded into rconv_refuted and
-  read only on the no-winner path, where the write is visible because that
-  path joins ALL racers before returning (verified against the Pure sources,
-  plan §11.1).  "No winner" implies the prover failed, which structurally
-  closes the vacuous-hypothesis race (a contradictory hypothesis H makes
-  both H \<Longrightarrow> C and H \<Longrightarrow> \<not>C provable): the prover would have won.*)
-fun r_conv_racer can_inst ctxt ctxt0 rconv_refuted goals : racer option =
-  let exception Unsupported
-      fun conv_goal used ctm =
-        case Thm.term_of ctm
-          of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-                let val (f,a) = Thm.dest_comb ctm
-                 in Thm.apply f (conv_goal used a)
-                end
-           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (x,_,_) =>
-                let val (q,b) = Thm.dest_comb ctm
-                    val (x', used') = Name.variant x used;
-                    val (v, b') = Thm.dest_abs_fresh x' b
-                 in Thm.apply q (Thm.lambda v (conv_goal used' b'))
-                end
-           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-                let val (c,b) = Thm.dest_comb ctm
-                 in Thm.apply c (Thm.apply negation b)
-                end
-           | _ => raise Unsupported
-      val search = auto_search_tac ctxt
-      fun solved1 goal =
-        (case Seq.pull (search goal) of
-           SOME (ret, _) => Thm.no_prems ret
-         | NONE => false)
-   in (SOME (map (fn goal =>
-            Goal.init (conv_goal (Term.declare_free_names (Thm.term_of goal) Name.context) goal)
-          ) goals
-          |> (fn gs => if can_inst
-                       then Variable.import false gs ctxt |> #1 |> #2
-                       else Variable.export ctxt ctxt0 gs))
-       handle Unsupported => NONE)
-      |> Option.map (fn conv_goals =>
-           ("R-conv", fn () =>
-              if exists solved1 conv_goals
-              then (Synchronized.change rconv_refuted (K true); NONE)
-              else NONE))
-  end
+  duality note in plan §2.3; the discarded import context is the question
+  T2 must answer before extending this (plan §11.1 ④).*)
+fun r_conv_racer can_inst ctxt ctxt0 search protocol goals : race_result Race.racer =
+  ("R-conv", fn () =>
+     let exception Unsupported
+         fun conv_goal used ctm =
+           case Thm.term_of ctm
+             of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+                   let val (f,a) = Thm.dest_comb ctm
+                    in Thm.apply f (conv_goal used a)
+                   end
+              | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (x,_,_) =>
+                   let val (q,b) = Thm.dest_comb ctm
+                       val (x', used') = Name.variant x used;
+                       val (v, b') = Thm.dest_abs_fresh x' b
+                    in Thm.apply q (Thm.lambda v (conv_goal used' b'))
+                   end
+              | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                   let val (c,b) = Thm.dest_comb ctm
+                    in Thm.apply c (Thm.apply negation b)
+                   end
+              | _ => raise Unsupported
+         val refuted =
+           (map (fn goal =>
+                Goal.init (conv_goal (Term.declare_free_names (Thm.term_of goal) Name.context) goal)
+              ) goals
+              |> (fn gs => if can_inst
+                           then Variable.import false gs ctxt |> #1 |> #2
+                           else Variable.export ctxt ctxt0 gs)
+              |> exists (is_some o search_solved search))
+           handle Unsupported => false
+      in if refuted
+         then Synchronized.change_result protocol
+                (fn {pauto_finished, refuted_by = _} =>
+                  (if pauto_finished then SOME (Refuted "R-conv") else NONE,
+                   {pauto_finished = pauto_finished, refuted_by = SOME "R-conv"}))
+         else NONE
+     end)
 
 
-(** guard solver **)
+(** Guard Solver **)
 
 val guard_race_timeout =
       Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 500)
@@ -1137,40 +1131,61 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           Phi_Reasoner.warn_pretty (Context.Proof ctxt) level
             (fn () => Pretty.str ("guard race: " ^ msg ()))
 
-        (*Synchronized.change, never Synchronized.assign (assign makes the
-          variable Immutable)*)
-        val rconv_refuted = Synchronized.var "guard_race.rconv" false
+        (*diagnostic I/O must never decide a proof: on any failure, report
+          via diag and disable logging, never fail the tactic*)
+        fun checked_io what f =
+          (case Exn.capture_body f of
+             Exn.Res r => SOME r
+           | Exn.Exn exn =>
+               if Race.contains_interrupt exn then Exn.reraise exn
+               else (diag 2 (fn () => what ^ ": " ^ Runtime.exn_message exn); NONE))
+        val log_path =
+          (case Config.get ctxt guard_race_log of
+             "" => NONE
+           | s => checked_io "invalid \<phi>guard_race_log path" (fn () => Path.explode s))
 
+        val protocol = Synchronized.var "guard_race.protocol"
+                         {pauto_finished = false, refuted_by = NONE : string option}
+
+        (*engine contract, both caller obligations: (a) racer bodies must be
+          self-bounded — each gets its own Timeout.apply budget here; (b) this
+          call site must not defer interrupts — nothing in phi-system does.
+          P-auto stays first: the engine breaks concurrent claims to the
+          lowest index and starts serial racers in order, both biasing ties
+          toward Proved.*)
         val racers =
-          ("P-auto", fn () =>
-             (case Seq.pull (search th) of
-                SOME (th', _) => if Thm.no_prems th' then SOME (Proved th') else NONE
-              | NONE => NONE)) ::
-          map_filter I [r_conv_racer can_inst ctxt ctxt0 rconv_refuted goals]
+          [p_auto_racer search protocol th,
+           r_conv_racer can_inst ctxt ctxt0 search protocol goals]
+          |> map (fn (name, body) => (name, fn () => Timeout.apply budget body ()))
 
-        val (forked, winner) = run_race diag budget racers
+        val {winner, exits, forked} = Race.race racers
 
-        (*total outcome mapping: the verdict names the winner and doubles as
-          the log field and the summary word*)
+        val _ = List.app (fn (name, Race.Crashed exn) =>
+                                diag 2 (fn () => "racer " ^ name ^ " crashed: " ^ Runtime.exn_message exn)
+                            | _ => ()) exits
+
+        (*total outcome mapping: the verdict names the prover/refuter and
+          doubles as the log field and the summary word*)
         val (verdict, result) =
           (case winner of
              SOME (name, Proved th') => ("proved by " ^ name, Seq.single th')
-           | SOME (name, Refuted) => ("refuted by " ^ name, Seq.empty)
+           | SOME (_, Refuted refuter) => ("refuted by " ^ refuter, Seq.empty)
            | NONE =>
-               if Synchronized.value rconv_refuted
-               then ("refuted by R-conv (post-race record)", Seq.empty)
-               else ("undecided", fail))
+               (case #refuted_by (Synchronized.value protocol) of
+                  SOME refuter => ("refuted by " ^ refuter ^ " (post-race record)", Seq.empty)
+                | NONE => ("undecided", fail)))
 
         val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
         val _ =
-          (case Config.get ctxt guard_race_log of
-             "" => ()
-           | log_path =>
-               File.append (Path.explode log_path)
-                 (String.concatWith "\t"
-                    [serial_string (), verdict, string_of_int elapsed,
-                     string_of_int (length racers), string_of_int (length goals),
-                     if forked then "forked" else "serial"] ^ "\n"))
+          (case log_path of
+             NONE => ()
+           | SOME path =>
+               ignore (checked_io "guard race log write failed" (fn () =>
+                 File.append path
+                   (String.concatWith "\t"
+                      [serial_string (), verdict, string_of_int elapsed,
+                       string_of_int (length racers), string_of_int (length goals),
+                       if forked then "forked" else "serial"] ^ "\n"))))
         val _ = diag 2 (fn () =>
                   verdict ^ " in " ^ string_of_int elapsed ^ "ms, " ^
                   string_of_int (length goals) ^ " subgoal(s), " ^

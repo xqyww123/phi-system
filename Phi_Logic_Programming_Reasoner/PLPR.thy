@@ -1,5 +1,6 @@
 theory PLPR
   imports PLPR_error_msg "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
+          "Performant_Isabelle_ML.Performant_Isabelle_ML"
   keywords "except" "@tag" "requires" :: quasi_command
        and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
        and "\<phi>reasoner_group" :: thy_defn
