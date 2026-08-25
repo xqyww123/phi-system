@@ -30,7 +30,7 @@ fun log_lines ctxt =
      then filter (fn s => s <> "") (split_lines (File.read path))
      else []
   end
-fun test ctxt name expect prop_str =
+fun test ctxt name expects prop_str =
   let val n0 = length (log_lines ctxt)
       val st = Thm.trivial (Thm.cterm_of ctxt (Syntax.read_prop ctxt prop_str))
       val (t, r) = Timing.timing (fn () =>
@@ -40,8 +40,11 @@ fun test ctxt name expect prop_str =
             case space_explode "\t" line of
               _ :: verdict :: winner :: _ => (verdict, winner)
             | _ => error (name ^ ": malformed log line: " ^ line)) new
-      val _ = if observed = expect then ()
-              else error (name ^ ": expected " ^ @{make_string} expect ^
+      (*expects = the set of acceptable outcomes: a race between two
+        correct refuters is decided by timing, so more than one log can
+        be legitimate for one test*)
+      val _ = if member (op =) expects observed then ()
+              else error (name ^ ": expected one of " ^ @{make_string} expects ^
                           " but logged " ^ @{make_string} observed)
   in writeln (name ^ ": " ^ (case r of SOME _ => "state" | NONE => "empty") ^
               " in " ^ string_of_int (Time.toMilliseconds (#elapsed t)) ^ "ms" ^
@@ -62,13 +65,34 @@ lemma BAD_E[elim!]: "BAD \<Longrightarrow> P" unfolding BAD_def by simp
 definition SPIN :: "nat \<Rightarrow> bool" where "SPIN n = False"
 lemma SPIN_I[intro!]: "SPIN (Suc n) \<Longrightarrow> SPIN n" unfolding SPIN_def by simp
 
-ML \<open>test \<^context> "control (fast partial search, race NOT entered)" []
+ML \<open>test \<^context> "control (fast partial search, race NOT entered)" [[]]
   "\<condition> (\<forall>x::nat. \<exists>y. y * y \<le> x \<and> x < (y+1) * (y+1))"\<close>
 
-ML \<open>test \<^context> "undecided (search bomb -> race -> fail exit)" [("undecided", "-")]
+(*NB the 'a here is read as a FIXED TFree (read_prop fixes it), so the
+  R-nitpick racer is present and correctly returns none under the sound
+  universal reading of TFrees (measured: exits show R-nitpick1:none).
+  The TVar silencing triggers only on genuine schematic ?'a, which needs
+  an ML-constructed goal -- a T3 probe item.*)
+ML \<open>test \<^context> "undecided (search bomb -> race -> fail exit)" [[("undecided", "-")]]
   "\<condition> (((\<exists>x. \<forall>y. p x = p (y::'a)) = ((\<exists>x. q x) = (\<forall>y. p y))) = ((\<exists>x. \<forall>y. q x = q y) = ((\<exists>x. p x) = (\<forall>y. q (y::'a)))))"\<close>
 
-ML \<open>test \<^context> "false BAD&SPIN (attempt spins, negation dies to BAD_E -> refuted)" [("refuted", "R-conv")]
+(*BAD & SPIN is refutable by BOTH refuters: R-conv proves the negation in
+  milliseconds but may only relay post-race (P-auto must finish first),
+  while a genuine Nitpick model ends the race directly (~100ms measured).
+  Which one the log shows is a timing race between two correct verdicts --
+  both are accepted; absent the Scala peer only the R-conv line occurs.*)
+ML \<open>test \<^context> "false BAD&SPIN (attempt spins -> refuted by either refuter)"
+  [[("refuted", "R-nitpick1")], [("refuted", "R-conv")]]
   "\<condition> (BAD \<and> SPIN 0)"\<close>
+
+(* BADN: false atom with NO rule at all -- no simp rule, no elim rule.
+   The classical refuter cannot touch it (auto cannot unfold a bare
+   definition), so R-conv comes back empty; Nitpick unfolds definitions
+   and refutes.  This is the test that only R-nitpick can win. *)
+definition BADN :: "nat \<Rightarrow> bool" where "BADN n = False"
+
+ML \<open>test \<^context> "false BADN&SPIN (only the model refuter can see it)"
+  [[("refuted", "R-nitpick1")]]
+  "\<condition> (BADN 0 \<and> SPIN 0)"\<close>
 
 end

@@ -415,7 +415,61 @@ T 步的可达性分支删除）。
 - 日志设施定位经作者确认（2026-08-25）：**常驻但默认关死**——纯测量用途、
   生产零开销、不删除；T5 及将来任何再测量直接开 config 使用。
 
-待作者裁决：Guard_Race_Smoke.thy 的提交。
+已定（2026-08-25，作者批准 #1）——**N1 裁定：R-conv 冻结分支改用导入语境**：
+- 裁定内容：can_inst=true 分支不再丢弃 `Variable.import` 产出的导入语境
+  ctxt'，而是在选手体内以 `auto_search_tac ctxt'` 就地重建搜索；
+  can_inst=false 分支、P-auto 与 30ms 快攻照旧共享外层 `search`。
+  原则一句话：**每条分支的搜索运行在其目标所生活的语境下**。
+- 记录的理由（对抗辩论合流结论，两位裁判一致；引错依据视为记录性错误）：
+  守卫竞速运行在**下游用户的证明语境**上（`\<phi>reasoner_ML` 注册 +
+  五个直接调用点，wrap 透传推理引擎实时 ctxt），用户理论可经
+  `Classical.addSWrapper` 等正规扩展点注册 wrapper 进入搜索链，任何
+  phi-system 侧 grep/注释都够不着；账本正确的语境是对"写得对的 wrapper"
+  的最低承诺。理由**不是**防错误判定（内核在已探测路径上两案同样挡得住，
+  PC2），**不是**惯例一致（两树均无"只吃布尔仍留语境"的严格同型先例；
+  Quickcheck.test_goal 是最近旁证），**不是**发现 R（跨场同名铸造两案
+  等价，双方共同划掉）。
+- 研究档案：三研究员（源码追踪 F1–F9 / 对抗实测 13 探针含 PC0-PC2 /
+  惯例普查 ~20 保留 vs 4 丢弃）+ 两裁判两回合辩论，辩护现状方依预承诺
+  倒戈条件转向；其核验另发现竞速语境本装有 phi 注册的
+  guess_inst_solver（simp solver，落在 F3 已证无害形状）。探针理论
+  scratchpad T2_Context_Probe.thy / T2B_Adversarial_Probe.thy。
+- 辩论副产物立案（T2 期单独呈作者裁决）：`search_solved` 验收谓词只查
+  `Thm.no_prems`、不查 hyps/tpairs——双方唯一都认可的潜在判定翻转路径，
+  与语境选择无关；加固形状为 Goal.conclude 级检查，覆盖两分支与 P-auto。
+- §11.1 ④ N1 备忘就此关案；代码注释同步改写（错误理由不得写入）。
+
+（Guard_Race_Smoke.thy 已获批提交：phi-system 4609815a，2026-08-25。）
+
+已定（2026-08-25，作者"1–5 全批"）：
+- **#2 裁定**：R-nitpick 假设收集喂**目标侧语境 ctxt**（`Assumption.all_assms_of
+  ctxt`）——Nitpick 官方入口同款（nitpick.ML:984-996）；实测该假设集对
+  ctxt0/ctxt 选择不敏感（前处理只登记变量不产生假设），取"目标在哪问哪"
+  为定论。
+- **N1 落地并验证**：r_conv_racer can_inst=true 分支改为绑住 ctxt'、体内
+  `auto_search_tac ctxt'` 重建搜索；专项探针 N1_TrueBranch_Probe.thy
+  （scratchpad）两测全绿——空冻结与真冻结（?x→x_）均由 R-conv 正确反驳。
+  探针途中实测到两条**可达性补遗**：等式形守卫（?x = t）被 fast_inst
+  平凡形通道先行拦截；simp 可判的带变量原子（?x < 0）被竞速前置的
+  asm_full_simp+quick_cut 廉价判死——两者都到不了竞速，探针必须用
+  simp 不可见的带变量原子（BADP 构造件）。
+- **T2 落地（§2.3 全部纪律）**：reasoners.ML 新增 kodkod_peer 懒探测
+  （`can \<^scala>\<open>echo\<close>`，无对端则选手缺席）、is_fixed_equation/
+  extract_fixed_frees 照抄件（Nitpick 未导出，注明出处）、nitpick_params
+  钉死清单（§2.3 各键 + falsify=true 防 satisfy 污染 + card 钉回官方默认
+  "1-10"；timeout=预算十进制秒串；tac_timeout=0.05）、r_nitpick_racer
+  （零变换传目标、subst 真传、Auto_Try 静默、只信 genuine）、装配点
+  （TVar 筛除：假设含 ?'t 则全体缺席、子目标含 ?'t 则该选手缺席；
+  选手表 P_auto :: R_conv :: R-nitpick*）。
+- **T2 验证（冒烟扩至四测，全绿）**：BAD∧SPIN 由 R-nitpick1 **86ms 直接
+  终场**，P-auto 出口 timeout→cancelled（早终场收益首次实测可见）；
+  断言助手升级为备选集（两名正确反驳者之间的时序竞速，两种日志都合法）；
+  新增 BADN 测试（无任何规则的假原子，经典反驳者不可见、仅 Nitpick 能驳，
+  102ms 胜出）；搜索炸弹仍 undecided 且实测澄清：read_prop 把 'a 读成
+  固定 TFree，R-nitpick 在场并按全称读法正确空手（exits：R-nitpick1:none）
+  ——schematic ?'a 屏蔽的专项探针留给 T3。前沿警告基线逐行不变。
+
+待作者裁决：本轮改动（N1 + T2 + 冒烟扩建 + 计划誊记）的提交。
 
 ## 9 · 档案索引
 
