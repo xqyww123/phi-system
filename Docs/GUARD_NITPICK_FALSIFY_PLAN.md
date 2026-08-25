@@ -405,7 +405,17 @@ T 步的可达性分支删除）。
   jedit/*_PLAN.md 先例），reasoners.ML 两处引用改 `Docs/` 路径；主仓库中
   删除原件。
 
-待作者裁决：SPIN/BAD 构造件抢救去处（关切四残项）；D7/D8 改动的提交。
+- **SPIN/BAD 构造件迁库（作者 2026-08-25 赞同方案一）**：冒烟理论落成
+  `Phi_Logic_Programming_Reasoner/Test/Guard_Race_Smoke.thy`（不注册 ROOT，
+  按需经 MCP 评估）；日志路径改 `$ISABELLE_TMP_PREFIX/guard_race_smoke.tsv`；
+  测试升级为**断言式**（对每场竞速新增日志行的 (verdict, winner) 列断言，
+  失配即 error 跑红）；`\<^context>` 静态反引与 BAD 居首两条教训注释在文件内。
+  三路实测全绿。T3 在此文件上扩建七探针。scratchpad 的 T0_Smoke.thy 就此退役。
+- D7/D8 改动已提交（phi-system ae1dd806，主仓库 a5b0ae7）。
+- 日志设施定位经作者确认（2026-08-25）：**常驻但默认关死**——纯测量用途、
+  生产零开销、不删除；T5 及将来任何再测量直接开 config 使用。
+
+待作者裁决：Guard_Race_Smoke.thy 的提交。
 
 ## 9 · 档案索引
 
@@ -735,3 +745,68 @@ forked?）而非蓝图的裸 `option`——B13"诊断报实选模式"要求把�
   `PLPR.thy` 警告行均与 T1 基线逐行一致。
 
 未提交（等作者逐次批准）。下一步照 §12.4：T2 进场，先答 §12.2-16-④ 语境问题。
+
+## 13 · T2 进场交接（2026-08-25，compact 前准备；本节假定读者没有会话记忆）
+
+### 13.1 状态一句话
+
+竞速架构全部落地并提交：竞速引擎 `race.ML`（Performant_Isabelle_ML 仓库
+686a067，342 行，独立对抗评审+验收通过）；PLPR 集成（phi-system d0e0869b，
+含 D6/对称早终场协议/Refuted 带名/checked_io 护罩/集成评审全部修复——协议
+状态是**单个** `Synchronized.var` 记录 `{pauto_finished, refuted_by}`）；
+D7 七字段日志 + D8 计划迁库（phi-system ae1dd806，主仓库 a5b0ae7 删原件）。
+冒烟理论已迁库为断言式回归测试
+`Phi_Logic_Programming_Reasoner/Test/Guard_Race_Smoke.thy`（三路全绿）。
+MCP `Phi_System_Base` 正常（heap 2026-08-25 重建）。全前沿零错误、警告基线
+逐行核对一致（`PLPR.thy` 组整体 +1 系 imports 增行）。
+
+### 13.2 未决事项
+
+- **Guard_Race_Smoke.thy + 本计划 §8/§13 誊记的提交**：作者批准待发。
+- auto_sledgehammer 侧孪生注释重指向 `Race.contains_interrupt`：一句注释，
+  另一仓库，须作者点头；注意其 sledgehammer_solver.ML:1829 的**递归**拆包与
+  引擎单层语义不同，只能改注释不能直接换调用。
+- `Phi_Examples/` 下有**其他 agent** 的未提交改动（约 175 行证明提示删除）
+  ——提交任何 phi-system 改动时显式 stage 自己的文件，勿捎带。
+
+### 13.3 T2 第一步：语境探针（阻塞性检查项，§11.1 ④ / 原 §12.2-16-④）
+
+问题重述（假定读者无记忆）：R-conv 预计算的 can_inst=true 分支
+`Variable.import false gs ctxt |> #1 |> #2` 把 schematic 冻结成新 Free 后
+**只留下定理、丢弃了导入语境**，随后 `search_solved` 用外层 `ctxt` 搜索——
+冻结出的 Free 在外层语境未声明。此形状系旧级联原样继承、T1/集成刻意未动。
+T2 实现 §2.3 的假设收集（`Assumption.all_assms_of ctxt` 起手 +
+`extract_fixed_frees` 的 subst 真传）时必须正面回答"喂哪个语境"，且与
+评审记录的姊妹问题一并答：can_inst=false 分支 `Variable.export ctxt ctxt0`
+解冻恰好被冻结的变量、给出存在式反驳（§2.3 已裁定接受为完备性弱化——
+问题只是两分支语境选择要写成有据的定论）。
+
+探针设计（建议，实施者可按实测修订）：造 can_inst=true、结论带 schematic
+变量的守卫（形态参考深查矩阵 case 6，档案见 §9）；在 MCP 下对比 (a) 现状
+外层 `ctxt` 与 (b) 导入语境 ctxt'：`Variable.is_declared` 对冻结 Free 的
+判定、`search_solved` 行为差异、`Assumption.all_assms_of` 两语境的假设集
+差异。纪律：isabelle-mcp 行为必须实测不得从源码推断（既有教训）；探针用
+正对照 + 目标之后的可观察副作用。拿测量结果向作者提答案，那是 T2 期第一个
+需要作者裁决的时刻。
+
+### 13.4 T2 主体（语境问题答毕后）
+
+照 §2.3 全部纪律逐条落实：变量零变换原样传入、TVar 检出即本选手缺席、
+假设与 subst、参数钉死清单（每场竞速构造一次、子目标选手共享）、Kodkod
+单路径 + 三行可用性守卫（无 Scala 对端则不进选手表）、只信 genuine、
+Auto_Try 静默。选手表 `P_auto :: R_conv :: map R_nitpick subgoals`（每
+子目标一选手、各拿全预算；`Timeout.apply` 包裹在装配点统一 map 完成——
+引擎调用方义务）。R-nitpick 的 genuine 直接 `SOME (Refuted <选手名>)`
+终场，不看协议旗标（模型式反驳与 Proved 在融洽理论互斥，§2.3 裁决映射）；
+引擎的 exits 列自动覆盖新选手，日志无需再改。完成后 T3 在
+Guard_Race_Smoke.thy 上扩建七探针（§7 T3 清单）。
+
+### 13.5 环境与纪律（承 §10.5/§12.5）
+
+绝不擅自 `isabelle build`；作者已为**验证目的**给出 build 长效授权
+（2026-08-25，建议派 agent 执行；仍禁 -c/-f）。改 `.ML` 后 REPL 只需重启、
+MCP 自动重同步。共享工作目录禁 stash/checkout/reset/clean。提交须作者
+逐次明示批准；推送只 push origin 且须作者吩咐。用户 jEdit prover 绝不可杀。
+scratchpad：`/tmp/claude-1002/-home-qiyuan-Current-MLML/966ef49e-eb27-4d41-b984-25a7eff4cebd/scratchpad`
+（旧 T0_Smoke.thy 已退役，勿再用）。日志设施常驻默认关（作者确认），
+`PLPR.unicode.thy` 完全不用管（作者裁定）。
