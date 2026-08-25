@@ -9,21 +9,6 @@ rewrites the two text functions this one reuses; `PRIMARY_SELECTION_PLAN.md` and
 `SEARCH_FIELD_PASTE_PLAN.md` are the other two. Read `../fonts/WORD_GLYPHS.md` first — it
 defines the feature all four extend.
 
-**What changed after this plan was reviewed.** `WORD_BOUNDARY_PLAN.md` was written later and
-repairs the 51 adjacent-glyph sequences described under "Correction 2" below. Three
-consequences, and only three. The two-slot memory is **still justified**: it rests on the
-other mechanism, a glyph written against mathematical letters no word claims. That plan
-widens what counts as one run — the whole mathematical alphanumeric block rather than the
-letters the table happens to use — which changes *which* letters take a glyph down with
-them, but not that they do; so Correction 2 needs no rewrite. Second, manual checks 1 and 2
-used `\<has>\<has>`, which round-trips on its own once that plan lands and would therefore
-pass even with the memory disabled; they now use a shape that still discriminates. Third,
-two pieces of work this plan used to carry moved into that one and landed with it: the hoist
-of the table to a top-level `phi_t`, and the correction of the wrong comment above
-`phi_service` in `phi_word_install`. Do neither of them here. Nothing else depends on it:
-the joiner that plan introduces is stripped inside `phi_word_fold` itself, so
-`phi_unexpand` needs no extra call.
-
 Everything cited below was read from **Java source**, which ships in full inside the
 Isabelle component (not only as a jar):
 
@@ -45,6 +30,123 @@ can be called on a protected method from BeanShell; that expansion and folding a
 inverses; that text dropped in from another application is reliably ignored by jEdit; that
 `phi_unexpand` being total makes the overrides total; and that BeanShell cannot parse an
 anonymous class body written as a call argument.
+
+
+## What changed after this plan was reviewed
+
+This plan was reviewed as rounds 1 and 2, and again in the cross-plan rounds 6 and 7, all
+before any of the four had landed. Three have landed since, along with the font work and a
+code review of plan 1's shipped code, and several of the things below make the sketches in
+this document **wrong as written**. Read this section before writing any code.
+
+**Plan 1 landed.** `WORD_BOUNDARY_PLAN.md` was written later and
+repairs the 51 adjacent-glyph sequences described under "Correction 2" below. Three
+consequences, and only three. The two-slot memory is **still justified**: it rests on the
+other mechanism, a glyph written against mathematical letters no word claims. That plan
+widens what counts as one run — the whole mathematical alphanumeric block rather than the
+letters the table happens to use — which changes *which* letters take a glyph down with
+them, but not that they do; so Correction 2 needs no rewrite. Second, manual checks 1 and 2
+used `\<has>\<has>`, which round-trips on its own once that plan lands and would therefore
+pass even with the memory disabled; they now use a shape that still discriminates. Third,
+two pieces of work this plan used to carry moved into that one and landed with it: the hoist
+of the table to a top-level `phi_t`, and the correction of the wrong comment above
+`phi_service` in `phi_word_install`. Do neither of them here. Nothing else depends on it:
+the joiner that plan introduces is stripped inside `phi_word_fold` itself, so
+`phi_unexpand` needs no extra call.
+
+**Every function-local must be declared with a type, not merely prefixed.** The code review
+of plan 1's landed code (`6571def0`) measured that in BeanShell an *untyped* assignment
+inside a method walks the namespace chain and writes through to an existing binding, while a
+*typed declaration* always creates a local. The prefix protects against other people's names;
+the type is what makes a local a local. Every local in this plan's sketches is untyped —
+`phi_t0`, `phi_original`, `phi_expanded`, `phi_s`, `phi_out`, `phi_fl`, `phi_w` — and
+Procedure step 1 still says only "carries the `phi_` prefix". Declare every one, and read
+step 1 as "carries the `phi_` prefix **and a declared type**". Two of those names are not
+hypothetical hazards:
+
+* `phi_t0` is a **top-level name in `test_word_clipboard.bsh`** — the stopwatch of the
+  performance floor in section 20. An untyped `phi_t0` inside `createTransferable` overwrites
+  it, and the floor then compares against a timestamp from another era.
+* `phi_original` and `phi_expanded` are locals of the primary-selection wrapper, and test
+  section 22 plants hostile globals of exactly those names before exercising it. An untyped
+  one here fails that check — which is the system working, but it will look like plan 2
+  breaking.
+
+**Test sections now run to 22; new ones start at 23.** Section 19 is where the typed-locals
+rule is checked for the script's own functions, and section 22 does the same for the
+primary-selection wrapper, in its own section because exercising that wrapper needs a
+stand-in register built first. This plan's locals need the same treatment, and its overrides
+likewise need something to be exercised through.
+
+**A test section that installs the thing it tests hides the caller.** Landing plan 2 measured
+this: every check of the primary-selection wrapper called `phi_install_primary_selection`
+itself, so striking that call out of `phi_word_install` left the whole section green. Here the
+caller is the `EditBus.addToBus` registration. What can be checked without a running jEdit:
+`EditBus` keeps its registrations in a `private static final HandlerList components`
+(`EditBus.java:231`), a `HashMap<Class<?>, List<EBMessageHandler>>`; the test can read it
+reflectively — it already reads jEdit's private register table for the no-primary-selection
+case — and assert the component is on the bus under `EBMessage.class`. What cannot be checked
+that way is the handler's reaction: an `EditPaneUpdate` needs a real `EditPane`, and
+`View.createEditPane` (`View.java:2066`) is the only place one is constructed. So the
+reaction stays a manual check, and the registration does not have to.
+
+**The top-level `phi_drag` map is right here, and plan 2's opposite rule does not transfer.**
+That plan measured that a *shared* remembered-text map breaks a second install, and concluded
+one map per wrapper. The shapes differ: there the wrapper delegates to whatever was at the
+register, so installing twice nests wrapper inside wrapper and the outer one writes into the
+map the inner one reads. Here the handler is a **subclass installed with
+`setTransferHandler`**, which replaces rather than nests, and the state must be shared across
+handler *instances* by design — the source pane's handler and the destination's are different
+objects. What a second install does produce is a second `EBComponent` on the bus and a second
+`setTransferHandler` per new pane; that is benign by the same reasoning, and the test should
+pin it rather than leave it argued. **Read, not measured.**
+
+**Three of the four items under "What this plan does not cover" have landed**, and that
+section still describes them as plans: the X11 primary selection (plan 2, landed), pasting
+into jEdit's own input fields (plan 3, landed) and the adjacent-glyph round trip (plan 1,
+landed). Rewrite them as shipped when this plan lands rather than leaving three
+"prototyped and working" claims standing. Only HyperSearch's "copy results" is still open.
+
+**Procedure step 4 is now two edits, not one.** Striking the drag line's marker is still
+right, and it is now the only marker left in that list. But the paragraph after it, the one
+beginning "Outside jEdit, `Isabelle_RPC_Host.unicode` keeps a private-use symbol as its
+`\<name>` escape", was re-aimed when plan 2 landed and now reads "...HyperSearch's copied
+results, a copy out of one of jEdit's own input fields, and until its plan lands, a drag — can
+be repaired." When this plan lands, the clause naming a drag has to go: a drag will no longer
+produce a raw private-use character. Step 4's claim that this paragraph needs nothing done to
+it is no longer true.
+
+**The suite runs under `xvfb-run`, and its classpath is `jedit.jar` alone.** Plan 1 made
+`run_word_clipboard_test.sh` use `xvfb-run` — so step 2's caveat about needing a display is
+already satisfied — but the runner builds `-cp "$jar"` and nothing else. Step 2's real
+`JEditTextArea` recipe needs FlatLaf beside it; the jar is present in this distribution at
+`contrib/flatlaf-3.6.2/lib/flatlaf-3.6.2-no-natives.jar`. Extending that classpath is part of
+step 2. Note also that the suite already takes roughly 40 to 100 seconds of wall clock,
+almost all of it the million-character performance floor, against the runner's 300 second
+default timeout.
+
+**A committed break harness is now the convention, and it is what makes the new checks
+believable.** `fonts/archive/break_checks.py` and `jedit/archive/break_primary_selection.py`
+each damage the code one way at a time and require the suite to refuse the run **by a named
+check**, not merely to fail somewhere; the second builds a scratch `PHI_SYSTEM_HOME` of
+symlinks whose only real file is the damaged script and runs the real runner inside it. Both
+were asked for and approved by the user. This plan is expected to produce one in the same
+shape.
+
+**The jEdit citations were re-verified on 2026-08-25** against
+`contrib/Isabelle2025-2/contrib/jedit-20251128/`, and every one that was checked holds:
+`TextAreaTransferHandler.java` at `:53`, `:73`, `:265`, `:270`, `:311`, `:381`, `:390`,
+`:422` and `:475`; `EditPane.java:814`; `TextArea.java:204` and `:5202`; `EditBus.java:129`,
+`:200` and `:417`; `View.java:2066`; `msg/EditPaneUpdate.java:39`; `bsh/Capabilities.java:78`;
+`StandaloneTextArea.java:121`; `DockingLayoutManager.java:135`; `SearchDialog.java:415`;
+`BeanShell.java:501` and `:505`; `BeanShellFacade.java:66-70`; `Macros.java:1113`;
+`jEdit.java:608` and `:4005`; and `completion_popup.scala:396`.
+
+**One thing this plan is not, and the manual checks should not confuse it with.** The
+middle-button quick copy — select, then middle-drag or middle-click inside a buffer — does not
+go through a transfer handler at all. It goes through register `%`, which plan 2 wrapped, and
+it was checked by hand on 2026-08-25. If a middle-button gesture misbehaves during this plan's
+manual checks, it is plan 2's path, not this one's.
 
 
 ## The problem, in one paragraph
