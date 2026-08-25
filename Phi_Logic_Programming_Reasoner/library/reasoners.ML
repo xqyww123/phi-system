@@ -144,7 +144,7 @@ signature PHI_REASONERS = sig
   (*structure Local_Premises_of_Obligation : NAMED_THMS
       (*You can add any facts to be reported as premises of a proof obligation*)*)
 
-  (*guard race (prove_or_refute) -- see GUARD_NITPICK_FALSIFY_PLAN.md*)
+  (*guard race (prove_or_refute) -- see Docs/GUARD_NITPICK_FALSIFY_PLAN.md*)
   val guard_race_timeout : int Config.T
       (*milliseconds; per-racer budget -- when the race degrades to serial
         execution, the wall-clock upper bound is #racers * budget.  The budget
@@ -152,7 +152,10 @@ signature PHI_REASONERS = sig
         discounts GC) while the logged elapsed is wall clock, so a logged
         race may honestly exceed its nominal budget.*)
   val guard_race_log : string Config.T
-      (*empty = off; otherwise a file path receiving one TSV line per race*)
+      (*empty = off; otherwise a file path receiving one TSV line per race:
+        serial, verdict (proved/refuted/undecided), winner racer or "-",
+        wall-clock ms, #subgoals, mode (forked/serial), and per-racer exits
+        as name:code pairs (win/none/timeout/crash/cancelled/discarded)*)
 
 end
 
@@ -981,7 +984,7 @@ fun dest_all ct used =
 
 (*** Guard Race ***)
 
-(*GUARD_NITPICK_FALSIFY_PLAN.md §1–§3.  After the 30ms serial quick-proof
+(*Docs/GUARD_NITPICK_FALSIFY_PLAN.md §1–§3.  After the 30ms serial quick-proof
   attempt, proving and refuting racers race under a per-racer budget on the
   race engine of Performant_Isabelle_ML (Race.race, library/race.ML): the
   winner is the lowest-indexed racer that recorded a claim (the first claim
@@ -1164,16 +1167,26 @@ fun prove_or_refute can_inst ctxt ctxt0 =
                                 diag 2 (fn () => "racer " ^ name ^ " crashed: " ^ Runtime.exn_message exn)
                             | _ => ()) exits
 
-        (*total outcome mapping: the verdict names the prover/refuter and
-          doubles as the log field and the summary word*)
-        val (verdict, result) =
+        (*total outcome mapping (D7 schema): a single-token verdict plus the
+          winner's name feed both the TSV log and the human summary; the
+          direct-win and post-race-record refutations share one verdict
+          token — the exits column tells them apart (a recorded refutation
+          has no "win" exit)*)
+        val recorded_refuter =
           (case winner of
-             SOME (name, Proved th') => ("proved by " ^ name, Seq.single th')
-           | SOME (_, Refuted refuter) => ("refuted by " ^ refuter, Seq.empty)
+             NONE => #refuted_by (Synchronized.value protocol)
+           | SOME _ => NONE)
+        val (verdict, vwinner, result) =
+          (case winner of
+             SOME (name, Proved th') => ("proved", name, Seq.single th')
+           | SOME (_, Refuted refuter) => ("refuted", refuter, Seq.empty)
            | NONE =>
-               (case #refuted_by (Synchronized.value protocol) of
-                  SOME refuter => ("refuted by " ^ refuter ^ " (post-race record)", Seq.empty)
-                | NONE => ("undecided", fail)))
+               (case recorded_refuter of
+                  SOME refuter => ("refuted", refuter, Seq.empty)
+                | NONE => ("undecided", "-", fail)))
+        val verdict_text =
+          verdict ^ (if vwinner = "-" then "" else " by " ^ vwinner) ^
+          (if is_some recorded_refuter then " (post-race record)" else "")
 
         val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
         val _ =
@@ -1181,13 +1194,22 @@ fun prove_or_refute can_inst ctxt ctxt0 =
              NONE => ()
            | SOME path =>
                ignore (checked_io "guard race log write failed" (fn () =>
-                 File.append path
-                   (String.concatWith "\t"
-                      [serial_string (), verdict, string_of_int elapsed,
-                       string_of_int (length racers), string_of_int (length goals),
-                       if forked then "forked" else "serial"] ^ "\n"))))
+                 let fun exit_code Race.Won = "win"
+                       | exit_code Race.Gave_None = "none"
+                       | exit_code Race.Timed_Out = "timeout"
+                       | exit_code (Race.Crashed _) = "crash"
+                       | exit_code Race.Cancelled = "cancelled"
+                       | exit_code (Race.Discarded _) = "discarded"
+                  in File.append path
+                       (String.concatWith "\t"
+                          [serial_string (), verdict, vwinner,
+                           string_of_int elapsed, string_of_int (length goals),
+                           if forked then "forked" else "serial",
+                           String.concatWith ","
+                             (map (fn (n, e) => n ^ ":" ^ exit_code e) exits)] ^ "\n")
+                 end)))
         val _ = diag 2 (fn () =>
-                  verdict ^ " in " ^ string_of_int elapsed ^ "ms, " ^
+                  verdict_text ^ " in " ^ string_of_int elapsed ^ "ms, " ^
                   string_of_int (length goals) ^ " subgoal(s), " ^
                   (if forked then "forked" else "serial"))
      in result end)
