@@ -1036,7 +1036,10 @@ fun search_solved search st =
   failed, which structurally closes the vacuous-hypothesis guard (a
   contradictory hypothesis H makes both H \<Longrightarrow> C and H \<Longrightarrow> \<not>C provable):
   P-auto would have won.  Synchronized.change_result, never
-  Synchronized.assign (assign makes the variable Immutable).*)
+  Synchronized.assign (assign makes the variable Immutable).
+  R-nitpick deliberately does NOT write this ledger: a genuine model
+  excludes provability in a consistent theory, so it claims directly
+  (§2.3); whether R-nunchaku joins the ledger is a §2.4 decision.*)
 
 fun p_auto_racer search protocol th : race_result Race.racer =
   ("P-auto", fn () =>
@@ -1064,15 +1067,18 @@ val negation = \<^cterm>\<open>Not\<close>
   §2.3).  This variable discipline is the proof-searcher's own,
   intentionally different from R-nitpick's as-is discipline — see the
   duality note in plan §2.3.
-  N1 ruling (plan §8, 2026-08-25): each branch searches under the context
-  its goals live in — the freeze branch builds its own search over the
-  import context ctxt', because the race runs under USER proof contexts,
-  whose claset wrappers (a stock user extension point, outside any audit
-  of phi-system) must not receive a ledger that misdescribes the frozen
-  Frees.  Only a bool leaves this racer; consuming the proved state would
-  additionally require Variable.export through ctxt'.  (That search_solved
-  accepts on no_prems alone, ignoring hyps/tpairs, is a recorded hardening
-  candidate — plan §8.)*)
+  N1 ruling (plan §8, 2026-08-25): the freeze branch MUST build its own
+  search over the import context ctxt' — its goals carry Frees only ctxt'
+  declares, and the race runs under USER proof contexts, whose claset
+  wrappers (a stock user extension point, outside any audit of phi-system)
+  must not receive a ledger that misdescribes the frozen Frees.  The
+  export branch deliberately keeps the shared ctxt search: its goals live
+  in ctxt0 and ctxt merely over-declares (ctxt extends ctxt0) — the safe
+  direction; do not "fix" it to search under ctxt0.  Only a bool leaves
+  this racer; consuming the proved state would additionally require
+  Variable.export through ctxt'.  (That search_solved accepts on no_prems
+  alone, ignoring hyps/tpairs, is a recorded hardening candidate —
+  plan §8.)*)
 fun r_conv_racer can_inst ctxt ctxt0 search protocol goals : race_result Race.racer =
   ("R-conv", fn () =>
      let exception Unsupported
@@ -1129,16 +1135,10 @@ fun r_conv_racer can_inst ctxt ctxt0 search protocol goals : race_result Race.ra
   the context asked is the goal-side ctxt — #2 ruling, Nitpick's own
   entry does the same).*)
 
-(*the Scala protocol peer exists under PIDE and batch builds, not in a
-  bare Isa-REPL process; probed once per ML process.  No peer, no racer:
-  the race falls back to proof/negation only.  Kodkod single-path ruling
-  (plan §2.3): kodkod_scala unconditionally on, no external-kodkodi
-  fallback, never overlord, never a *_JNI SAT solver.*)
-val kodkod_peer = Lazy.lazy (fn () => can \<^scala>\<open>echo\<close> "guard_race")
-
-(*verbatim from nitpick.ML (not exported): the entry recipe plan §2.3
-  pins — the full assumption set, with fixed-variable defining equations
-  folded into a substitution that IS threaded through*)
+(*verbatim from nitpick.ML:972-982 (not exported); the call below mirrors
+  the entry recipe of pick_nits_in_subgoal, nitpick.ML:984-996 — the full
+  assumption set, with fixed-variable defining equations folded into a
+  substitution that IS threaded through.  Keep in sync with those lines.*)
 fun is_fixed_equation ctxt
       (Const (\<^const_name>\<open>Pure.eq\<close>, _) $ Free (s, _) $ Const _) =
       Variable.is_fixed ctxt s
@@ -1150,38 +1150,63 @@ fun extract_fixed_frees ctxt (assms, t) =
    in (subst, other_assms, subst_atomic subst t) end
 
 (*pinned parameters (plan §2.3): Nitpick_Commands.default_params reads
-  theory-level state the user command nitpick_params can write; every key
-  whose pollution could change a verdict (expect, falsify), kill the
-  budget (tac_timeout, card), break silence or determinism (debug,
-  verbose, overlord, spy) or crash the JVM (a *_JNI sat_solver) is
-  overridden explicitly.  Built once per race, shared by the subgoal
-  racers.  Time strings are decimal seconds (plan §1.2-4); the nominal
-  timeout is the full budget (§1.2-1 — the uniform outer watchdog is the
-  real limit); tac_timeout is pinned low because the 0.5s default is
-  billed per candidate type in pre-Kodkod monotonicity checks (§1.2-2).*)
-fun nitpick_params ctxt budget =
+  theory-level state the user command nitpick_params can write.  Pinned is
+  every STRING-SETTABLE key whose pollution could change a verdict
+  (expect, falsify), burn the budget (tac_timeout, card, max_threads —
+  Normal-mode extraction would otherwise hand Kodkod a platform-wide
+  thread pool where Nitpick's own auto mode uses 1), break silence or
+  determinism (debug, verbose, overlord, spy), or crash the JVM (a *_JNI
+  sat_solver).  Structural residue this interface cannot pin: term-list
+  keys (whack, eval, need) and per-type/per-const assignments (card <T>,
+  iter <c>, ...) are read straight off the raw params — tolerated, worst
+  known effect is completeness-only (plan §2.3).  spy=false is
+  load-bearing beyond silence: spying would call Proof.goal on the
+  goal-less Proof.init state below; the NITPICK_SPY env var ORs past this
+  pin and is guarded at assembly instead.  Construction cost: the
+  nitpick_params command validates KEYS only, so a malformed stored value
+  errors here — hence this is called only through a per-race Lazy forced
+  inside the racer bodies, surfacing pollution as this racer family's
+  Crashed exits, never a tactic error (§1.2-5).  (An interrupt hitting the
+  one racer that evaluates the Lazy can leak to concurrently blocked
+  forcers as their Cancelled exits — lazy.ML's documented semantic race;
+  completeness-only, the cell itself is restored.)  Time strings are decimal
+  seconds (§1.2-4); nominal timeout = the full budget (§1.2-1 — the
+  uniform outer watchdog is the real limit); tac_timeout pinned low
+  because the 0.5s default is billed per candidate type in pre-Kodkod
+  monotonicity checks (§1.2-2).*)
+fun pinned_nitpick_params ctxt budget =
   Nitpick_Commands.default_params (Proof_Context.theory_of ctxt)
     [("expect", ""), ("falsify", "true"),
      ("debug", "false"), ("verbose", "false"), ("overlord", "false"), ("spy", "false"),
-     ("max_genuine", "1"), ("max_potential", "0"),
+     ("max_genuine", "1"), ("max_potential", "0"), ("max_threads", "1"),
      ("sat_solver", "SAT4J"), ("batch_size", "smart"), ("card", "1-10"),
      ("timeout", Real.fmt (StringCvt.FIX (SOME 3)) (Time.toReal budget)),
      ("tac_timeout", "0.05")]
 
-fun r_nitpick_racer params ctxt th n (i, name) : race_result Race.racer =
+(*No availability guard (author ruling 2026-08-26): Kodkod runs single-path
+  over the Scala protocol peer (plan §2.3: kodkod_scala unconditionally on,
+  no external-kodkodi fallback, never overlord, never a *_JNI SAT solver),
+  and in a process WITHOUT a peer the pipeline's protocol call raises
+  Output.Protocol_Message — the one exception absorbed below: the racer
+  just gives up empty-handed (exit Gave_None).  Every declared environment
+  (PIDE, batch build, Isa-REPL via repl_server.sh's isabelle build) has a
+  peer, so the absorbed case costs nothing in practice; where it does
+  fire, the cost is bounded by this racer's own budget.*)
+fun r_nitpick_racer params ctxt (i, n) (subst, assms, t) name : race_result Race.racer =
   (name, fn () =>
-     let val ctxt = Config.put Kodkod.kodkod_scala true ctxt
-         val t = Logic.goal_params (Thm.prop_of th) i |> fst
-         val assms = map Thm.term_of (Assumption.all_assms_of ctxt)
-         val (subst, assms, t) = extract_fixed_frees ctxt (assms, t)
-      in case Nitpick.pick_nits_in_term (Proof.init ctxt) params
-                Nitpick.Auto_Try i n 0 subst [] assms t
-           of (code, _) =>
-                if code = Nitpick.genuineN then SOME (Refuted name) else NONE
-                (*quasi_genuine (not trusted), potential (misrefutes, measured),
-                  none (ZERO evidence — cheap on false props), unknown,
-                  and every error path: all NONE (plan §2.3 verdict map)*)
-      end)
+     (case Nitpick.pick_nits_in_term (Proof.init ctxt) (Lazy.force params)
+             Nitpick.Auto_Try i n 0 subst [] assms t
+        of (code, _) =>
+             if code = Nitpick.genuineN then SOME (Refuted name) else NONE
+             (*quasi_genuine (not trusted), potential (misrefutes, measured),
+               none (ZERO evidence — cheap on false props), unknown: all
+               NONE (plan §2.3 verdict map).  Other exceptions are NOT
+               absorbed: they leave the body and the engine reports this
+               racer truthfully (errors => Crashed, Timeout.TIMEOUT =>
+               Timed_Out, interrupts => Cancelled) — we bypass
+               Nitpick_Commands.handle_exceptions, incidentally a silence
+               win (its NOT_SUPPORTED bare warning is unreachable).*))
+     handle Output.Protocol_Message _ => NONE)
 
 
 (** Guard Solver **)
@@ -1232,21 +1257,33 @@ fun prove_or_refute can_inst ctxt ctxt0 =
                          {pauto_finished = false, refuted_by = NONE : string option}
 
         (*R-nitpick racers (plan §2.3): one per subgoal, each on the full
-          budget.  Absent entirely when the Scala peer is missing; a
-          schematic TYPE variable in any assumption silences all of them,
-          in one subgoal silences that subgoal's racer (no monotonization —
-          "substitute a typical type and refute" is unsound, since type
-          instantiation is also the prover's choice).*)
+          budget.  A schematic TYPE variable in any assumption silences all
+          of them, in one subgoal silences that subgoal's racer (no
+          monotonization — "substitute a typical type and refute" is
+          unsound, since type instantiation is also the prover's choice).
+          NITPICK_SPY=yes ORs past the spy pin and would crash on the
+          goal-less Proof.init state — ruled an absent-racer condition.
+          Everything a racer consumes is derived HERE, once: the tested
+          term is derived from the screened one by subst_atomic over
+          screened assumptions (which cannot introduce TVars — the global
+          assumption screen is load-bearing for the per-goal one), and the
+          assumptions are asked once from the goal-side ctxt (ruling #2
+          made structural).*)
         val nitpick_racers =
           let fun tvar_free t = null (Term.add_tvars t [])
-           in if Lazy.force kodkod_peer andalso
-                 forall (tvar_free o Thm.term_of) (Assumption.all_assms_of ctxt)
-              then let val params = nitpick_params ctxt budget
+              val nctxt = Config.put Kodkod.kodkod_scala true ctxt
+              val assms0 = map Thm.term_of (Assumption.all_assms_of nctxt)
+           in if getenv "NITPICK_SPY" <> "yes" andalso forall tvar_free assms0
+              then let val params = Lazy.lazy (fn () => pinned_nitpick_params nctxt budget)
+                       val n = length goals
                     in map_filter (fn (k, goal) =>
-                         if tvar_free (Thm.term_of goal)
-                         then SOME (r_nitpick_racer params ctxt th (length goals)
-                                      (k + 1, "R-nitpick" ^ string_of_int (k + 1)))
-                         else NONE)
+                         let val t0 = Thm.term_of goal
+                          in if tvar_free t0
+                             then SOME (r_nitpick_racer params nctxt (k + 1, n)
+                                          (extract_fixed_frees nctxt (assms0, t0))
+                                          ("R-nitpick" ^ string_of_int (k + 1)))
+                             else NONE
+                         end)
                        (map_index I goals)
                    end
               else []

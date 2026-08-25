@@ -6,7 +6,9 @@
 
 作者已裁决（写死，不再是决策点）：
 - **完全替换旧实现，无总开关、无关闭分支、无逐位兼容回退**——回退手段是 git。
-- **竞速架构**：30ms 串行速证保留；其后 `Par_List.get_some` 并行竞速，统一预算。
+- **竞速架构**：30ms 串行速证保留；其后在竞速引擎 `Race.race`
+  （Performant_Isabelle_ML）上并行竞速，统一预算（引擎裁决后取代早期的
+  `Par_List.get_some` 方案，§1.1）。
 - **R-conv 采用"赛后备胎"设计**（作者与评审共同演化出的第三形态，见 §2.2）：
   其反驳不抢答、只记录，仅当竞速整体无果时才被采纳——"Refuted 不得抢在
   Proved 尚有可能时生效"由此成为结构性不变式，无需任何等待协议。
@@ -92,6 +94,9 @@ timed_tac 30ms (auto_search_tac ctxt) ORELSE (fn th =>
 4. 超时串只认十进制秒（`"0.45"`；`"450ms"` 会 error 且被兜底吞掉）；
 5. 预算在读取处钳制 `Int.max (1, Config.get ...)`（<1ms 对 `Timeout.apply` 意为
    **无超时**——`Timeout.ignored` 陷阱）；不设断言、不在战术内抛 error。
+6. **串行模式最坏情形 = (2+k)×预算**（k 为子目标数；多线程关闭时引擎按表序
+   逐个跑，每选手各持全预算）——已接受的代价（2026-08-26 评审后记录；
+   不设选手数封顶，D4 裁决不回退）。
 
 ## 2 · 选手规格
 
@@ -150,22 +155,48 @@ schematic 的读法（引擎可实例化）与反驳所需的量词方向相反�
 ERROR 的 TERM 异常，nitpick_hol.ML:1912）。`("assms","true")` 在 Auto_Try 下是
 死参数，删。
 
-**参数构造**（评审 major 4 的修复）：`Nitpick_Commands.default_params thy` 读的
-是 theory 级用户可写状态（`nitpick_params` 命令可污染；`expect` 能把每个守卫变
-error 再被兜底吞成永久沉默；`overlord` 下固定文件名有并发数据竞争会产出**错
-答案**）。签名分析表明逐项显式覆盖是唯一防线——钉死清单：`expect=""`、
-`debug=false`、`overlord=false`、`spy=false`、`max_genuine=1`、`max_potential=0`、
-`tac_timeout`（§1.2）、`sat_solver`、`card` 上限、`batch_size`。params **每场竞速
-构造一次**、子目标选手间共享（`extract_params` 每次调用做 `Syntax.read_*`）。
+**参数构造**（评审 major 4 的修复；2026-08-26 评审后修订）：
+`Nitpick_Commands.default_params thy` 读的是 theory 级用户可写状态
+（`nitpick_params` 命令可污染；`expect` 能把每个守卫变 error 再被兜底吞成
+永久沉默；`overlord` 下固定文件名有并发数据竞争会产出**错答案**）。签名
+分析表明逐项显式覆盖是唯一防线——钉死清单：`expect=""`、`falsify=true`
+（防 `satisfy` 污染翻转语义）、`debug=false`、`verbose=false`、
+`overlord=false`、`spy=false`、`max_genuine=1`、`max_potential=0`、
+**`max_threads=1`**（Normal 模式抽取否则取 0=平台上限≤8,每次 Kodkod 调用
+在共享 JVM 现建现拆线程池,且在 §1.1 所赖的 ML future 池之外;Auto_Try
+本给 1。注意此钉把批内 scope 求解串行化——钉后实测 genuine 命中
+99ms/154ms（BAD∧SPIN / BADN,2026-08-26）,500ms 预算余量仍过半,
+§6 的 75-140ms 旧数据就此更替）、`tac_timeout`（§1.2）、`sat_solver=SAT4J`、`card=1-10`（钉回官方
+默认;放宽为 1-6 的提案已否决——scope 升序,7-10 在预算内到不了,删之
+无省反丢反驳;T5 有数据再议）、`batch_size`。**结构性残余（此接口钉不住,
+容忍,已知最坏为仅损完备性）**：词列键 `whack`/`eval`/`need` 与 per-type/
+per-const 赋值（`card <T>` 等）直读原始参数,平铺覆盖不可达。
+**`spy=false` 超出静默意义、承重**：spying 会对无目标的 `Proof.init` 态调
+`Proof.goal` 而崩;`NITPICK_SPY=yes` 环境变量 OR 越过此钉,在装配点守卫为
+选手缺席条件。**构造时机**：`nitpick_params` 命令只验键不验值,坏值在
+`extract_params` 才炸——故构造挂在**每场一个 Lazy**、在选手体内 force：
+每场构造一次、子目标选手共享（`extract_params` 每次调用做 `Syntax.read_*`）,
+污染以该选手族的 Crashed 出口现身,永不炸战术（§1.2-5）。
+**假设收集（裁决 #2 之落位,评审后重构）**：`Assumption.all_assms_of` 于
+**装配点一次性**向目标侧 ctxt 收取,TVar 筛查与 `extract_fixed_frees` 均
+就地完成,选手体只收 `(subst, assms, t)`——"被筛的即被测的"与语境选择
+均为结构性而非约定性。
 mode 传 `Auto_Try` 只买到静默，买不到其 scope 截断与单调性强制（default_params
 写死 Normal 构造）——scope/monos 限制按需在钉死清单里显式给。探针：theory 里
 先 `nitpick_params [expect="genuine", overlord]` 再跑守卫，验证免疫。
 
 **Kodkod 单路径（作者裁定 2026-08-23，双路径实测支撑）**：R-nitpick **无条件**
-`Config.put Kodkod.kodkod_scala true`，外置 kodkodi 回落分支**不写**。配一个
-三行的**选手可用性守卫**：进程内一次性 `can` 试调 `\<^scala>`（懒缓存），无
-Scala 协议对端（Isa-REPL 裸进程）则 R-nitpick 干脆不进选手表——安全缺席，
-守卫求解退回现状水平，不崩不挂不吃预算。实测依据：两路径**裁决完全一致**
+`Config.put Kodkod.kodkod_scala true`，外置 kodkodi 回落分支**不写**。
+**无可用性守卫（作者裁定 2026-08-26，⓪ 案，取代原"三行选手可用性守卫/
+进程内一次性懒缓存"条款）**：选手无条件进表；无 Scala 协议对端的进程里，
+管线走到协议调用时抛 `Output.Protocol_Message`，选手体内**窄接**该异常并
+空手退场（出口 Gave_None）。依据：原懒缓存探测被评审证实三病并发——等待
+无死线（"不挂"不成立）、缓存随 heap 镜像传代（"每进程一次"不实）、且本
+项目全部声明环境（PIDE/批构建/Isa-REPL）实测都有对端;⓪ 让三病与探测
+代码一起结构性消失,常见情形零开销（备选①"每场现问"实测 0.7ms/次）,
+无对端情形的浪费有界于**每选手**预算（k 子目标即 k 份并行核时,参
+§1.2-6 串行算术）。"不吃预算"相应弱化为"缺席成本有界,且仅存在于本项目
+不使用的环境"。实测依据：两路径**裁决完全一致**
 （同一 kki、同一 Kodkodi 前端类、同一默认 SAT4J），差异纯在进程边界——Scala
 路径 genuine 命中 ~75–140ms（0.5s 预算 10/10 存活；PIDE 会话 init 自带 warmup
 服务，首调即热），外置路径每调付 ~480–700ms JVM 地板（硬 500ms 墙下命中
@@ -192,7 +223,11 @@ NUNCHAKU_HOME；独立工程计划）；② `run_chaku_on_prop` 对含 Var 目�
 **未探测**，上线前补深查级探针；③ nunchaku.ML 有把不可靠翻译 SAT 误标 genuine
 的路径，须加护栏后才可采信；④ bash_process 环境。规格：`solvers = "cvc5 smbc"`
 （kodkod 后端零胜场，弃）；SAT genuine → `SOME Refuted`；UNSAT 无证明重构 →
-NONE（defer 机制就位后可升级为高置信推迟信号）。ML 层 Nunchaku 结构已在
+NONE（defer 机制就位后可升级为高置信推迟信号）；**上线前须裁决：是否参与
+早终场协议的 `refuted_by` 账本**（现状：R-conv 写、R-nitpick 有意不写——
+后者的模型式反驳直接终场;2026-08-26 评审分歧记录：统一账本 vs "Timeout
+返回边界丢失窗口的可观察代价为零、恰是 §11.1 ⑤ 已记录交易"，裁决推迟至
+本选手上线）。ML 层 Nunchaku 结构已在
 PLPR 作用域内（Main → Nunchaku → Nitpick），无需动 imports（评审 15，
 T 步的可达性分支删除）。
 
@@ -234,14 +269,15 @@ T 步的可达性分支删除）。
 ## 6 · 性能与环境
 
 - 墙钟 ≈ max(单路) + 收尾（输家中断/解栈/杀外部进程不免费）；前提
-  `max_threads > 1`，否则自动走 `get_first` 短路串行（§1.1）；
-  `parallel_limit` 被设为正数的环境会引入负载相关降级，记录在案。
+  多线程开启，否则引擎自动走**按表序短路串行**（Race.race 串行模式，§1.1；
+  最坏 (2+k)×预算，§1.2-6）。
 - Kodkod 单路径（评审 11 + 双路径实测 + 作者裁定，取代 rev 2 双路径矩阵与
-  中期的"回落"设想）：R-nitpick 恒走 Scala 路径（§2.3），无对端环境安全缺席。
-  前端差异是**已量化并文档化的不对称**：PIDE/build ~100ms 级命中；Isa-REPL
-  无此选手（现状水平）。T4 探针相应简化：逐前端一次 Scala 对端可用性 + 一次
-  真实 R-nitpick 调用；bash_process 探针只为将来的 R-nunchaku 保留（真外部
-  二进制）。预算含义：**500ms 即充裕**（作者原值，10/10 命中余量过半），
+  中期的"回落"设想）：R-nitpick 恒走 Scala 路径（§2.3）；无对端进程中选手
+  自行空手退场（⓪ 裁决，见 §2.3）。前端实情（2026-08-26 评审核实）：PIDE、
+  批构建、**Isa-REPL（经 repl_server.sh 的 isabelle build 启动）全部有
+  Scala 对端**——本项目声明环境中不存在无对端情形。T4 探针相应简化：
+  逐前端一次真实 R-nitpick 调用即可；bash_process 探针只为将来的
+  R-nunchaku 保留（真外部二进制）。预算含义：**500ms 即充裕**（作者原值，10/10 命中余量过半），
   700ms 的上调理由随外置路径弃用而消失，T5 实测回填终值。
 - kodkod 全局**单槽**结果缓存（debug/overlord 才旁路）：并发下命中率≈0，
   偶中会成为 T5 计时离群点——测量记录其命中数（评审 14）。
@@ -469,7 +505,29 @@ T 步的可达性分支删除）。
   固定 TFree，R-nitpick 在场并按全称读法正确空手（exits：R-nitpick1:none）
   ——schematic ?'a 屏蔽的专项探针留给 T3。前沿警告基线逐行不变。
 
-待作者裁决：本轮改动（N1 + T2 + 冒烟扩建 + 计划誊记）的提交。
+（上批改动已获批提交：phi-system 6c79fdb3 + auto_sledgehammer f90efc7 +
+主仓库 f55842f/c203abc，2026-08-25/26。）
+
+已定（2026-08-26，对 6c79fdb3 的两员 Opus 5 两回合对抗评审 + 作者裁决）：
+- 评审终审双方一致 **ACCEPT-WITH-FIXES**，无 blocker、无可靠性缺陷；
+  正确性核验清单（入口配方逐字节一致、Auto_Try 静默完备、不可靠选项
+  自动降级 quasi_genuine 等）载会话记录。
+- **修复清单（作者授权自主执行）**：M1 钉 `max_threads=1`；M2 参数构造
+  挂每场 Lazy、选手体内 force（B 案胜出：D6 形状 + crash 可见性；A 案
+  checked_io→缺席败于三因一果的无声化）；`NITPICK_SPY` 装配点守卫；
+  注释真伪五处打包修订（N1 全称句改不对称、错误路径=Crashed、钉死清单
+  限定"字符串可设键"、账本例外、探测器段整删）；装配点重构（假设一收、
+  筛测同源、`th` 离开选手体、`extract_fixed_frees` 保持整体逐字）；
+  `nitpick_params` 改名 `pinned_nitpick_params`；拷贝件补引注
+  nitpick.ML:972-982 与配方 984-996；冒烟 error 带完整 TSV 行、BADN
+  测试名注明需 Scala 对端；§1.2-6 串行代价、§6 措辞刷新。
+- **⓪ 裁决（作者 2026-08-26，取代探测器）**：删除 kodkod_peer，选手无
+  条件进表、体内窄接 `Output.Protocol_Message` 空手退场——详见 §2.3。
+  实测：echo 往返均摊 0.7ms/次（首调 7ms），备选①的代价基线记录在案。
+- **否决**：card 1-6 放宽（理由见 §2.3）；R-nitpick 写账本（推迟至
+  §2.4，分歧原文记 §2.4）；串行模式选手数封顶（D4 不回退）。
+
+待作者裁决：本轮评审修复改动的提交（含冒烟与计划誊记）。
 
 ## 9 · 档案索引
 

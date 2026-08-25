@@ -45,7 +45,11 @@ fun test ctxt name expects prop_str =
         be legitimate for one test*)
       val _ = if member (op =) expects observed then ()
               else error (name ^ ": expected one of " ^ @{make_string} expects ^
-                          " but logged " ^ @{make_string} observed)
+                          " but logged " ^ @{make_string} observed ^
+                          (*the full TSV lines carry the exits column, which
+                            self-explains a missing racer vs none vs crash*)
+                          (if null new then " (no race logged)"
+                           else "\n" ^ cat_lines (map (prefix "  ") new)))
   in writeln (name ^ ": " ^ (case r of SOME _ => "state" | NONE => "empty") ^
               " in " ^ string_of_int (Time.toMilliseconds (#elapsed t)) ^ "ms" ^
               "\n  log: " ^ (if null new then "(no race logged)" else cat_lines new))
@@ -80,7 +84,8 @@ ML \<open>test \<^context> "undecided (search bomb -> race -> fail exit)" [[("un
   milliseconds but may only relay post-race (P-auto must finish first),
   while a genuine Nitpick model ends the race directly (~100ms measured).
   Which one the log shows is a timing race between two correct verdicts --
-  both are accepted; absent the Scala peer only the R-conv line occurs.*)
+  both are accepted; without a Scala peer R-nitpick comes back
+  empty-handed and only the R-conv outcome remains.*)
 ML \<open>test \<^context> "false BAD&SPIN (attempt spins -> refuted by either refuter)"
   [[("refuted", "R-nitpick1")], [("refuted", "R-conv")]]
   "\<condition> (BAD \<and> SPIN 0)"\<close>
@@ -91,7 +96,7 @@ ML \<open>test \<^context> "false BAD&SPIN (attempt spins -> refuted by either r
    and refutes.  This is the test that only R-nitpick can win. *)
 definition BADN :: "nat \<Rightarrow> bool" where "BADN n = False"
 
-ML \<open>test \<^context> "false BADN&SPIN (only the model refuter can see it)"
+ML \<open>test \<^context> "false BADN&SPIN (only the model refuter can see it; requires a Scala peer)"
   [[("refuted", "R-nitpick1")]]
   "\<condition> (BADN 0 \<and> SPIN 0)"\<close>
 
