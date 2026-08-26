@@ -155,8 +155,7 @@ font, and `build_word_glyphs.py` now refuses to write a table containing one.
 it back if it goes missing, so registering the component is all a user has to do.
 The letters come from `../jedit/word-clipboard-text`, generated alongside the glyphs.
 
-Where this does not reach.  One of the lines below carries a marker for a plan not yet
-landed; strike the marker when that plan lands, and do not delete the line.
+Where this does not reach.
 
 * **Isabelle/VSCode** carries a symbol table frozen into the VSCodium component when it
   was built; no phi-System symbol is in it — not the word glyphs and not the hand-drawn
@@ -164,10 +163,17 @@ landed; strike the marker when that plan lands, and do not delete the line.
 * **HyperSearch's "copy results"** writes the system clipboard directly, bypassing both
   the clipboard register and the service list, so a startup script has no interception
   point.  No plan; a known limit.
-* **Dragging text out of jEdit** goes through `TextAreaTransferHandler`, which builds
-  its own clipboard contents and consults no service list, so a drag still carries the
-  private-use code point.  *Covered by a plan not yet landed:
-  `../jedit/DRAG_AND_DROP_PLAN.md`.*
+* **Dragging, in both directions, and deliberately not covered.**  Dragging *out* goes
+  through `TextAreaTransferHandler`, which builds its own clipboard contents and consults
+  no service list, so a drag carries the private-use code point.  That was **repaired once,
+  and the repair was withdrawn** after it had been written, tested and checked by hand:
+  AWT's drag and drop was measured to degrade *every* non-ASCII character to `?` on a
+  Wayland session — `日本語` fares no better than a word glyph — so handing correct letters
+  to the drag buys nothing.  Dragging *in* inserts nothing at all: `importText` treats every
+  line of a foreign drop as a path to open when `dragSource` is null.  Dragging *within*
+  jEdit was already right, the private-use code point travelling unchanged and jEdit having
+  the font.  `../jedit/DRAG_AND_DROP_PLAN.md` opens with everything that was measured,
+  including the one thing left open — a plain X11 session was never tried.
 * **The X11 primary selection** — selecting with the mouse, middle-clicking into
   another application — is reached now: jEdit's `%` register is wrapped in both
   directions, so a selected glyph leaves as the word in mathematical letters, and letters
@@ -193,7 +199,7 @@ escape rather than its code point — its output feeds language-model prompts, t
 semantic database and logs, none of which load PhiSymbols, and the escape still spells
 the word.  The reverse direction does name a raw private-use character, so one that
 escaped by any of the routes just listed — HyperSearch's copied results, a copy out of
-one of jEdit's own input fields, and until its plan lands, a drag — can be repaired.
+one of jEdit's own input fields, and a drag — can be repaired.
 Pasting such a character into a `.thy` shows nothing,
 `view.enableFontSubst=false` being the default.
 
