@@ -32,6 +32,74 @@ inverses; that text dropped in from another application is reliably ignored by j
 anonymous class body written as a call argument.
 
 
+## Withdrawn on 2026-08-26, after the code was written and the manual checks were run
+
+This plan was implemented in full, checked by hand in a running Isabelle/jEdit, and then
+**reverted** — commit `f4ab9384` and the revert that follows it. The user took the decision
+after the measurements below. Nothing of it ships. Everything from here down describes work
+that was done and undone; read this section before believing any of it.
+
+What the implementation was: a `TextAreaTransferHandler` subclass installed on every buffer
+text area as its EditPane is created, expanding word glyphs into mathematical letters on the
+way out and folding them back on the way in, with the last string handed out remembered so
+that a drag staying inside jEdit could restore its exact source text. Test sections 23 to 25
+covered it, driven on real `JEditTextArea`s built headlessly, and
+`jedit/archive/break_drag_and_drop.py` damaged the code sixteen ways, one at a time, each
+refused by its named check. All of that passed. It was withdrawn because the three routes it
+touches turned out to be worth nothing on the machine it was checked on, not because it was
+wrong.
+
+**Route one, dragging out of jEdit: the letters are handed out correctly and then degraded
+in transit.** Manual check 3 dragged `\<size>_\<then'>` into a browser field and it arrived
+as `????_????` — nine characters, of which the only survivor is the underscore, the only
+ASCII one. The control settles what that means: `日本語`, three characters with no
+connection to word glyphs at all, dragged the same way from the same editor, arrived as
+`???`. So **AWT's drag and drop degrades every non-ASCII character on this machine**, this
+work included and independently of it. The machine runs a Wayland session with jEdit on
+XWayland; whether a plain X11 session behaves the same was not measured.
+
+**That degradation is specific to dragging, and the copy direction is unaffected** — which
+is why it took a control to find. The same selection copied with Ctrl-C put
+`U+1D42C U+1D422 U+1D433 U+1D41E U+005F U+1D42D U+1D421 U+1D41E U+1D427` on the clipboard,
+read back byte for byte with `wl-paste`, and pasting that into the same browser field
+displayed `𝐬𝐢𝐳𝐞_𝐭𝐡𝐞𝐧` correctly. The shipped copy direction reaches other applications; a
+drag does not.
+
+**Route two, dragging text from another application into a buffer: jEdit inserts nothing,
+and this is not platform-dependent.** `importText` (`TextAreaTransferHandler.java:274-299`)
+opens with `if (dragSource == null)`, splits the incoming string into lines, tries each as a
+path or URL, sets `found = true` unconditionally and returns `true` — with no insertion
+anywhere in that branch. Attempted by hand, a drop of `𝐬𝐢𝐳𝐞_𝐭𝐡𝐞𝐧` from a browser into a
+buffer did nothing at all, which is manual check 6 answering with the first of its three
+outcomes. This is consistent with, and sharpens, what "A jEdit defect this plan must work
+around" says below: a foreign drop is inserted **only** when an earlier aborted drag left
+`dragSource` stale, so the folding branch this plan added for it could never be relied on.
+
+**Route three, dragging inside jEdit: it already worked, and checks 1 and 2 measured "not
+broken", not "now fixed".** Both passed — a drag within one text area and a drag across a
+split view each put the two glyphs down unchanged. But before this plan, the drag carried
+the private-use code point itself, which jEdit draws with PhiSymbols, so an intra-jEdit drag
+already showed the word and already round-tripped exactly, there being no transformation to
+be inexact. **Read from the source, not measured against the pre-change build.**
+
+The cost that made zero benefit not worth paying: 178 lines in every user's jEdit startup
+script, and a subscriber on the EditBus registered under `EBMessage.class`, which by jEdit's
+own design means **every** message on the bus passes through it.
+
+**What is not settled, and would have to be measured before reviving this.** The route-one
+degradation was observed on one machine, in a Wayland session. If phi-System is used on a
+plain X11 desktop and AWT's drag and drop carries non-ASCII characters intact there, route
+one has real value there and this plan becomes worth landing again. Nobody has measured
+that. Routes two and three are settled and platform-independent: route two is jEdit's source
+code, route three was already working.
+
+**A separate problem found here, belonging to no plan.** "AWT's drag and drop degrades every
+non-ASCII character" is not about word glyphs — it hits every CJK character, every accented
+letter, everything outside ASCII, dragged out of jEdit on this machine. Whether it can be
+repaired at all is unknown; it was not investigated. Recorded so that the next person who
+sees it does not re-derive it.
+
+
 ## What changed after this plan was reviewed
 
 This plan was reviewed as rounds 1 and 2, and again in the cross-plan rounds 6 and 7, all

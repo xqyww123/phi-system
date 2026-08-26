@@ -7,8 +7,9 @@ implemented in, the decisions the user has taken, the conventions all four share
 been reviewed, and what is still open. Read it before picking up any single plan — each
 plan is self-contained about *its* work, but none of them carries the cross-cutting state.
 
-**Plans 1, 2 and 3 have landed**, and so has `UI_FONT_PLAN.md`; plan 4 is still a
-document. `phi_word_clipboard.bsh`, `test_word_clipboard.bsh`, `run_word_clipboard_test.sh`,
+**Plans 1, 2 and 3 have landed**, and so has `UI_FONT_PLAN.md`. **Plan 4 was implemented,
+checked by hand and then withdrawn** on 2026-08-26; its own first section records what was
+measured and why, and nothing of it ships. `phi_word_clipboard.bsh`, `test_word_clipboard.bsh`, `run_word_clipboard_test.sh`,
 `fonts/PhiSymbols.ttf` and `fonts/WORD_GLYPHS.md` carry them. Line citations into
 `phi_word_clipboard.bsh` taken before plan 1 are stale — that plan rewrote the file — which
 is why the plans now cite it by function name instead.
@@ -31,7 +32,7 @@ Everything below is about routes where that conversion does not happen, or happe
 | 1 | `WORD_BOUNDARY_PLAN.md` **(landed)** | Rewrites `phi_word_expand` and `phi_word_fold`: marks word boundaries with `U+2060`, and replaces the interpreted per-character loops with compiled-regex ones. |
 | 2 | `PRIMARY_SELECTION_PLAN.md` **(landed)** | Wraps jEdit's `%` register so the X11 primary selection (mouse-select, middle-click) converts too. |
 | 3 | `SEARCH_FIELD_PASTE_PLAN.md` **(landed)** | Wraps the transfer handler of jEdit's text input fields so pasting a copied glyph into the Find box matches the buffer. |
-| 4 | `DRAG_AND_DROP_PLAN.md` | Installs a transfer handler on every buffer text area so drag and drop converts. |
+| 4 | `DRAG_AND_DROP_PLAN.md` **(withdrawn)** | Would have installed a transfer handler on every buffer text area so drag and drop converts. Written, tested, checked by hand, reverted: the three routes it touches were measured to be worth nothing on the machine it was checked on. Its first section says what was measured. |
 | — | `UI_FONT_PLAN.md` **(landed)** | Merges a text face into `fonts/PhiSymbols.ttf` so a glyph in a search box can be *seen*. Independent of all four: the blank box is live today with none of them landed. Not in the numbered order, because it fixes rendering rather than conversion. |
 
 **Why this order.** Plan 1 is a hard prerequisite: the other three call the two functions it
@@ -400,6 +401,45 @@ kind this file's conventions are about.
   passed every check, and then `w.r.t.` became a pattern whose `.` matches anything.
 
 
+## What plan 4 taught, having been withdrawn
+
+Plan 4 is the only one of the four that was written, tested, checked by hand and then
+reverted. What it cost was real and what it produced is worth keeping, so both are here.
+
+- **The manual checks are what settled it, and no amount of automated work could have.**
+  Sixteen mutations of the code, each refused by its own named check, said the code did what
+  the plan said. They could not say whether what the plan said was worth doing. The answer to
+  that came from three gestures in a running editor and one control, and it took under an
+  hour once the code existed.
+- **A control that shares nothing with the feature is what turns a symptom into a
+  diagnosis.** A dragged word glyph arriving in another application as `????_????` looks
+  exactly like this work having produced nine wrong characters. Dragging `日本語` — three
+  characters with no connection to word glyphs — out of the same editor and getting `???`
+  is what showed that the editor degrades every non-ASCII character on a drag, this work
+  included and independently of it. Reach for the control before reaching for the debugger.
+- **Confirm which route is broken before blaming the route under test.** The same selection
+  copied with Ctrl-C reached the clipboard intact — read byte for byte with `wl-paste`,
+  `U+1D42C U+1D422 U+1D433 U+1D41E U+005F U+1D42D U+1D421 U+1D41E U+1D427` — and pasted into
+  the same field correctly. Copy and drag leave by different routes, and only one of them was
+  degrading.
+- **"It passes" and "it was already passing" are different findings, and a plan should say
+  which of the two its checks can produce.** Plan 4's manual checks 1 and 2 pass, and would
+  have passed before plan 4 existed: an intra-jEdit drag carried the private-use code point,
+  which jEdit draws, so it already showed the word and already round-tripped exactly. The
+  plan did not say so, and two of its six checks were therefore incapable of telling anyone
+  anything.
+- **A plan's own measurement can be right and still mislead about how often it is
+  reachable.** Plan 4 measured that a foreign text drop is inserted into a buffer, and it is
+  — but only when an earlier aborted drag left jEdit's `dragSource` stale. When it is null,
+  `importText` (`TextAreaTransferHandler.java:274-299`) treats every line as a path to open
+  and returns without inserting anything. The measurement was taken in the stale state and
+  the plan carried it as though it were the ordinary one.
+- **A startup script's cost is not only its lines.** What made zero benefit not worth paying
+  was 178 lines in every user's jEdit startup plus a subscriber registered on the EditBus
+  under `EBMessage.class`, which by jEdit's design means every message on the bus passes
+  through it.
+
+
 ## Open items
 
 - **Round 7's audit was launched before decision 4** and reported the widened run class as a
@@ -414,6 +454,14 @@ kind this file's conventions are about.
   `Phi_System/IDE_CP_Core.unicode.thy`. Copying such a passage and pasting it back converts
   them to the new single symbols, which are **not letters** and so cannot sit inside an
   identifier. See the end of plan 1.
+- **Measured on one machine only, and it decides whether plan 4 could ever be revived**:
+  dragging out of jEdit degrades every non-ASCII character to `?`. Seen in a Wayland session
+  with jEdit on XWayland; a plain X11 session was not tried. If a drag carries non-ASCII
+  characters intact there, plan 4's outbound route has value there.
+- **Not about word glyphs, and belonging to no plan**: that same degradation hits every CJK
+  character and every accented letter dragged out of jEdit, not only the mathematical letters
+  a word glyph expands to. Whether it can be repaired at all is unknown; it was not
+  investigated.
 - **Not fixable from a startup script**: HyperSearch's "copy results"
   (`HyperSearchResults.java:791-794`, `:1049-1052`) writes the system clipboard directly,
   bypassing both the register and the service list. Recorded as a known limit.

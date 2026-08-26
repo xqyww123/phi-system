@@ -26,13 +26,8 @@ limit=${PHI_TEST_TIMEOUT:-300}
 
 jar=$(ls "$isabelle"/contrib/jedit-*/jedit*/jedit.jar 2>/dev/null | head -1)
 java=$(ls "$isabelle"/contrib/jdk-*/*/bin/java 2>/dev/null | head -1)
-# A real JEditTextArea is built in the test -- that is how a drop is driven through jEdit's
-# own importText instead of only through the script's helpers -- and its constructor reaches
-# FlatLaf.  Without this jar it fails with NoClassDefFoundError before anything is checked.
-flatlaf=$(ls "$isabelle"/contrib/flatlaf-*/lib/flatlaf-*-no-natives.jar 2>/dev/null | head -1)
 [ -n "$jar" ] || { echo "jedit.jar not found under $isabelle/contrib" >&2; exit 2; }
 [ -n "$java" ] || { echo "java not found under $isabelle/contrib" >&2; exit 2; }
-[ -n "$flatlaf" ] || { echo "flatlaf jar not found under $isabelle/contrib" >&2; exit 2; }
 command -v xvfb-run >/dev/null 2>&1 || { echo "xvfb-run not found; install xvfb" >&2; exit 2; }
 
 log=$(mktemp)
@@ -40,7 +35,7 @@ trap 'rm -f "$log"' EXIT
 
 set +e
 PHI_SYSTEM_HOME=$component timeout "$limit" xvfb-run -a "$java" -Dfile.encoding=UTF-8 \
-    -cp "$jar:$flatlaf" org.gjt.sp.jedit.bsh.Interpreter "$here/test_word_clipboard.bsh" \
+    -cp "$jar" org.gjt.sp.jedit.bsh.Interpreter "$here/test_word_clipboard.bsh" \
     > "$log" 2>&1
 rc=$?
 set -e

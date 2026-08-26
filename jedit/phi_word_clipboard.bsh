@@ -45,14 +45,6 @@
 //          StringSelection -- so that wrapper does both halves itself, expanding in
 //          setTransferable and folding in getTransferable.
 //
-//   drag   reaches none of the three.  TextAreaTransferHandler hands out a bare
-//          StringSelection over the selected text and reads the plain text straight back
-//          on the way in, so the handler itself is subclassed and installed on every text
-//          area as it is created.  It also remembers the last string it handed out: a drag
-//          that stays inside jEdit puts back the text that string was made from rather than
-//          folding it, because a move drag deletes the source before re-inserting it and
-//          folding does not repair every shape.
-//
 // Both directions are driven by patterns compiled once, when the table is built, and
 // never inside a loop: a selection can be millions of characters and every return to
 // the BeanShell interpreter costs about 3.5 microseconds.  See WORD_BOUNDARY_PLAN.md,
@@ -70,17 +62,12 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.gjt.sp.jedit.EBComponent;
-import org.gjt.sp.jedit.EBMessage;
-import org.gjt.sp.jedit.EditBus;
 import org.gjt.sp.jedit.Registers;
 import org.gjt.sp.jedit.datatransfer.JEditDataFlavor;
 import org.gjt.sp.jedit.datatransfer.JEditTransferableService;
 import org.gjt.sp.jedit.datatransfer.TransferHandler;
 import org.gjt.sp.jedit.gui.HistoryTextArea;
 import org.gjt.sp.jedit.gui.HistoryTextField;
-import org.gjt.sp.jedit.msg.EditPaneUpdate;
-import org.gjt.sp.jedit.textarea.TextAreaTransferHandler;
 import org.gjt.sp.util.Log;
 
 // The boundary marker, never written as a literal: an invisible character in source is
@@ -445,170 +432,6 @@ phi_install_primary_selection()
     Registers.setRegister('%', phi_selection);
 }
 
-/* drag and drop in buffer text areas */
-
-// Drag reaches neither of the hooks above.  TextAreaTransferHandler.createTransferable
-// returns a bare StringSelection over the selected text, and importData and exportDone read
-// the plain text straight back, so no service list and no register is ever consulted.  The
-// handler itself is therefore subclassed and installed on every buffer text area.
-//
-// The two slots below are what makes a drag that stays inside jEdit exact.  Expanding and
-// folding are not inverses for every input -- a glyph written against somebody else's bold
-// letters, or two glyphs bridged by an underscore, expand and do not fold back -- and a move
-// drag deletes the source text before re-inserting it, so an inexact round trip would not
-// merely fail to restore a glyph, it would rewrite the buffer.  When the string coming back
-// is character for character the one createTransferable handed out, the text it was made
-// from is put back instead of folding.
-//
-// One map at the top level rather than one per handler, which is the opposite of what the
-// primary-selection wrapper needs: a drag started in one EditPane is finished by the other
-// pane's handler instance -- importData runs on the destination's and exportDone on the
-// source's -- so the state has to be shared across instances, exactly as
-// TextAreaTransferHandler shares its own dragSource in a private static.  Installing twice
-// replaces the handler rather than nesting one inside another, so nothing reads a map that
-// something else writes.
-phi_drag = new java.util.HashMap();     // slots "original" and "expanded"
-
-// A transferable that is another one with its plain text replaced.  Delegating rather than a
-// fresh StringSelection because replacing the transferable would strip every other flavor,
-// and importData dispatches on those -- a file dropped from a file manager among them --
-// before it ever looks at text.  Bound to a name for the reason the comment above
-// phi_service gives: all three methods return reference types.
-phi_delegating(phi_inner, phi_replacement)
-{
-    Object phi_w = new Transferable() {
-        public DataFlavor[] getTransferDataFlavors() {
-            return phi_inner.getTransferDataFlavors();
-        }
-        public boolean isDataFlavorSupported(DataFlavor phi_f) {
-            return phi_inner.isDataFlavorSupported(phi_f);
-        }
-        public Object getTransferData(DataFlavor phi_f) {
-            if (DataFlavor.stringFlavor.equals(phi_f)) return phi_replacement;
-            return phi_inner.getTransferData(phi_f);
-        }
-    };
-    return phi_w;
-}
-
-// what arrives on a drop: the remembered text if we produced this string, folded otherwise
-phi_unexpand(phi_in)
-{
-    try {
-        if (phi_in == null) return phi_in;
-
-        // jEdit dispatches on these two before it looks at text at all, and a file dragged
-        // in from a file manager must still open.  Returning before touching stringFlavor is
-        // the point: fetching it here would force a blocking cross-process transfer jEdit
-        // would never have asked for, on the AWT thread, for a string then thrown away.
-        if (phi_in.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) return phi_in;
-        for (DataFlavor phi_fl : phi_in.getTransferDataFlavors()) {   // jEdit's own uri-list
-            if ("text".equals(phi_fl.getPrimaryType())                // test, which is private
-                    && "uri-list".equals(phi_fl.getSubType())
-                    && phi_fl.getRepresentationClass() == String.class)
-                return phi_in;
-        }
-
-        if (!phi_in.isDataFlavorSupported(DataFlavor.stringFlavor)) return phi_in;
-        String phi_s = phi_in.getTransferData(DataFlavor.stringFlavor);
-        if (phi_s == null) return phi_in;                             // legal, if unusual
-
-        String phi_out;
-        String phi_sent = phi_drag.get("expanded");
-        if (phi_sent != null && phi_sent.equals(phi_s)) phi_out = phi_drag.get("original");
-        else phi_out = phi_word_fold(phi_t, phi_s);                   // not a drag we started
-        if (phi_out == null) phi_out = phi_s;
-
-        // A wrapper even when nothing changed: the string has been paid for already, and
-        // handing back phi_in would make importText fetch it a second time -- on X11 a
-        // second blocking selection transfer on the AWT thread, on the commonest path there
-        // is, any ordinary text drop.
-        return phi_delegating(phi_in, phi_out);
-    }
-    // getTransferData declares UnsupportedFlavorException and IOException, and on X11 an
-    // IOException from a foreign drag source is routine.  Uncaught, one leaves jEdit's
-    // compound edit open and its dragSource non-null where the stock handler leaves both
-    // clean.  This does not make the overrides total, which is why each guards itself too.
-    catch (Exception e) { return phi_in; }
-}
-
-class Phi_Text_Area_Transfer_Handler extends TextAreaTransferHandler {
-
-    // public, where the superclass declares these protected.  bsh resolves super.<method> by
-    // a public-method lookup on the superclass and cannot fall back on accessibility --
-    // Capabilities.setAccessibility throws Unavailable unconditionally -- so protected here
-    // installs cleanly and then fails at the first drag.  Java permits the widening and the
-    // JVM still dispatches to the override.
-    public Transferable createTransferable(javax.swing.JComponent phi_c) {
-        phi_drag.clear();          // a drag that skipped exportDone may have left slots
-        // super first: it is where the superclass sets its own dragSource, and every branch
-        // of importText and exportDone keys off that
-        Transferable phi_base = super.createTransferable(phi_c);
-        if (phi_base == null) return null;
-        try {
-            String phi_original = phi_base.getTransferData(DataFlavor.stringFlavor);
-            if (phi_original != null) {
-                String phi_expanded = phi_word_expand(phi_t, phi_original);
-                phi_drag.put("original", phi_original);
-                phi_drag.put("expanded", phi_expanded);
-                return new StringSelection(phi_expanded);
-            }
-        }
-        catch (Exception e) { }
-        // jEdit's own transferable: the drag carries the glyphs themselves, degraded but
-        // never wrong, and the slots stay empty so no later match can fire against them
-        return phi_base;
-    }
-
-    // Each override carries its own guard, and it is not belt and braces: super can throw,
-    // and bsh re-types whatever comes out as TargetError, which is a *checked* exception,
-    // while the JDK's drop path catches only RuntimeException and its dragDropEnd path --
-    // the one that calls exportDone -- catches nothing at all.
-    public boolean importData(javax.swing.JComponent phi_c, Transferable phi_tr) {
-        try { return super.importData(phi_c, phi_unexpand(phi_tr)); }
-        catch (Exception e) { Log.log(Log.ERROR, this, e); return false; }
-    }
-
-    // exportDone needs the folding too: its same-text-area branch re-inserts from
-    // stringFlavor, so without it a drag within one pane would deposit letters.
-    public void exportDone(javax.swing.JComponent phi_c, Transferable phi_tr, int phi_action) {
-        try { super.exportDone(phi_c, phi_unexpand(phi_tr), phi_action); }
-        catch (Exception e) { Log.log(Log.ERROR, this, e); }
-        // both ends clear the slots, because either end can be skipped: exportToClipboard
-        // reaches exportDone only on success, and jEdit returns early from it whenever the
-        // drag ended in no action at all
-        finally { phi_drag.clear(); }
-    }
-}
-
-phi_install_drag()
-{
-    // Only the buffer text area has a transfer handler at all -- EditPane installs one and
-    // that is the sole such call on a text area -- and every EditPane is built in
-    // View.createEditPane, Isabelle's editpane-factory consulted inside it, so catching them
-    // as they are created off the EditBus catches all of them.  The bus delivers on the AWT
-    // thread, which is where setTransferHandler belongs, and startup scripts run before the
-    // first view exists, so none is missed.
-    Object phi_bus_listener = new EBComponent() {
-        public void handleMessage(EBMessage phi_msg) {
-            // The guard protects other people's subscribers, not this code: an EBComponent
-            // is registered under EBMessage.class and so sees every message, and EditBus
-            // wraps its whole handler loop in one try -- one throw and every handler behind
-            // us receives nothing.  jEdit's own DockingLayoutManager and Isabelle's symbols
-            // dockable are behind us.
-            try {
-                // CREATED is declared Object, so its identity is not part of the contract
-                if (phi_msg instanceof EditPaneUpdate
-                        && EditPaneUpdate.CREATED.equals(phi_msg.getWhat()))
-                    phi_msg.getEditPane().getTextArea()
-                           .setTransferHandler(new Phi_Text_Area_Transfer_Handler());
-            }
-            catch (Exception e) { Log.log(Log.ERROR, this, e); }
-        }
-    };
-    EditBus.addToBus(phi_bus_listener);
-}
-
 /* installation */
 
 phi_word_install()
@@ -654,7 +477,6 @@ phi_word_install()
 
     phi_install_field_paste();
     phi_install_primary_selection();
-    phi_install_drag();
 
     Log.log(Log.NOTICE, this,
             "phi word clipboard: " + phi_n + " words expand on copy, fold on paste");
