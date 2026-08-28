@@ -15,6 +15,14 @@ debt_axiomatization
   and idx_step_offset_arr':  \<open>idx_step_offset (\<array>[0] ty) (AgIdx_N j) = 0\<close>
   and MemObj_Size_arr: \<open>\<array>[N] ty \<noteq> \<poison> \<Longrightarrow> MemObj_Size (\<array>[N] ty) = N * MemObj_Size ty\<close>
   and array_TY_neq_void: \<open>\<void> \<noteq> \<array>[N] TY\<close>
+  and ptr_neq_array [simp]: \<open>\<ptr> \<noteq> \<array>[N] TY\<close>
+      \<comment> \<open>No guard needed: \<open>\<ptr>\<close> is never \<open>\<poison>\<close> (pointer_isnot_poison), so the two
+          differ even where the array type degenerates to \<open>\<poison>\<close>.  This is the
+          earliest theory that sees both constructors.\<close>
+
+lemma array_neq_ptr [simp]:
+  \<open>\<array>[N] TY \<noteq> \<ptr>\<close>
+  using ptr_neq_array by (rule not_sym)
 
 
 lemma memaddr_to_raw_array_GEP:

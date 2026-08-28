@@ -1950,8 +1950,13 @@ subsubsection \<open>Setup\<close>
 ML_file "library/type_info_DB.ML"
 ML_file "library/type_info.ML"
 ML_file "library/guess_instantiate.ML"
+ML_file "library/phi_nitpick.ML"
+ML_file "library/guard_refute.ML"
+
+declare Premise_def [\<phi>guard_refute_simp]
+
 ML_file "library/reasoners.ML"
- 
+
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)

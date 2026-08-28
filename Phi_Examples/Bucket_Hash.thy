@@ -16,8 +16,6 @@ abbreviation \<open>hash (x::nat) n \<equiv> x mod n\<close>
 
 abbreviation \<open>\<h>\<a>\<s>\<h> \<equiv> \<struct> {tabl: \<ptr>, N: \<size_t>} \<close>
 
-term \<open>\<Array>[N] x\<close>
-
 \<phi>type_def Hash
   where \<open>f \<Ztypecolon> Hash addr T \<equiv> 
        (tabl_addr, N) \<Ztypecolon> \<mem>[addr] \<lbrace> tabl: Ptr[\<array>[N] \<ptr>], N: \<nat>(\<size_t>) \<rbrace>\<heavy_comma>
@@ -33,35 +31,12 @@ term \<open>\<Array>[N] x\<close>
 deriving \<open> Abstract_Domain T P
        \<Longrightarrow> Abstract_Domain (Hash addr T)
             (\<lambda>f. \<typeof> addr = \<struct> {tabl: \<ptr>, N: int(\<size_t>)} \<and> (\<forall>k \<in> dom f. P (the (f k))))\<close>
-    notes list_all_length[simp] Let_def[simp] set_eq_iff[simp]
-
     and \<open>   Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Hash addr T) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom g. eq (the (f k)) (the (g k))))\<close>
-
-    notes case_prod_beta[simp] list_all2_conv_all_nth[\<phi>sledgehammer_simps] list_all_length[\<phi>sledgehammer_simps]
-          image_iff[simp] domIff[simp]
-          (tactic: auto simp: Ball_def Bex_def set_eq_iff,
-                   subgoal' for f f' xb buckets tabl_addr \<open>rule exI[where x=\<open>\<lambda>i. map (\<lambda>(k,_). (k, the (f' k))) (buckets i)\<close>]\<close> )
-
-  deriving \<open>\<premise> \<typeof> T = \<typeof> U
+    and \<open>\<premise> \<typeof> T = \<typeof> U
         \<Longrightarrow> Transformation_Functor (Hash addr) (Hash addr) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
                                 (\<lambda>r f g. dom f = dom g \<and> (\<forall>k \<in> dom g. r (the (f k)) (the (g k))))\<close>
-
-    notes set_eq_iff [\<phi>sledgehammer_simps] list_all2_conv_all_nth[\<phi>sledgehammer_simps]
-          list_all_length[\<phi>sledgehammer_simps] in_set_conv_nth[\<phi>sledgehammer_simps]
-    (tactic:  clarsimp,
-              subgoal' for x xa xb xc xd xe \<open>rule exI[where x=xe], (rule conjI)+, auto_sledgehammer,
-                subgoal_tac \<open>\<exists>g. \<forall>k x. g k = Some x \<longleftrightarrow> (\<exists>i<length xb. (k,x) \<in> set (xe i))\<close>,
-                clarify, subgoal' for g \<open>rule exI[where x=g]\<close>,
-                auto_sledgehammer,
-                subgoal_tac \<open>\<And>k v1 v2.
-                      \<exists>i<length xb. (k,v1) \<in> set (xe i)
-                  \<Longrightarrow> \<exists>i<length xb. (k,v2) \<in> set (xe i)
-                  \<Longrightarrow> v1 = v2\<close>,
-                subst choice_iff[symmetric]\<close>)
-
-
-  deriving \<open> \<premise> \<typeof> T = \<typeof> U
+    and \<open> \<premise> \<typeof> T = \<typeof> U
       \<Longrightarrow> Functional_Transformation_Functor (Hash addr) (Hash addr) T U (\<lambda>_. UNIV) (\<lambda>_. UNIV)
               (\<lambda>_ P f. \<forall>k\<in>dom f. P (the (f k))) (\<lambda>h _ f. map_option h o f)\<close>
     and Pointer_Of
@@ -101,7 +76,7 @@ proc insert_bucket:
       set_dynarr(addr, i, \<lbrace> k: k, v: v \<rbrace>) \<semicolon>
       met \<leftarrow> True
     \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
-  \<medium_right_bracket> certified by (auto simp add: list_eq_iff_nth_eq nth_append list_update_append; auto_sledgehammer) \<semicolon>
+  \<medium_right_bracket>
   
   if (\<not> met) \<medium_left_bracket>
     push_dynarr (addr, \<lbrace> k: k, v: v \<rbrace>)
@@ -113,8 +88,6 @@ proc update_hash:
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> Hash addr T\<close> 
 \<medium_left_bracket>
-  note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length ;;
-
   transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
   val N \<leftarrow> addr.N \<semicolon>
@@ -123,13 +96,6 @@ proc update_hash:
   insert_bucket (tabl_addr[hash], k, v) \<semicolon>
 
   \<makes> \<open>f(k \<mapsto> v) \<Ztypecolon> Hash addr T\<close>
-  certified by (auto, auto_sledgehammer, auto_sledgehammer, auto_sledgehammer, auto_sledgehammer,
-                rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
-                    subgoal_tac \<open>\<And>k' v. \<lbrakk> (k',v) \<in> set bucket' ; k' \<noteq> k \<rbrakk> \<Longrightarrow> (k', v) \<in> set (buckets (hash k ?N))\<close>,
-                    subgoal_tac \<open>\<And>k v i.\<lbrakk> (k,v) \<in> set (buckets i) ; i < ?N \<rbrakk> \<Longrightarrow> hash k ?N = i\<close>,
-                clarsimp, rule conjI, auto_sledgehammer, rule conjI, auto_sledgehammer,
-                rule exI[where x=\<open>\<lambda>i. if i = hash k ?N then bucket' else buckets i\<close>],
-                auto_sledgehammer, auto_sledgehammer, auto_sledgehammer)
 \<medium_right_bracket> .
 
 proc bucket_has_key:
@@ -150,8 +116,6 @@ proc hash_has_key:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr T\<heavy_comma> k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   output \<open>k \<in> dom f \<Ztypecolon> \<val> \<bool>\<heavy_comma> f \<Ztypecolon> Hash addr T\<close>
 \<medium_left_bracket>
-  note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
-
   transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
   val N \<leftarrow> addr.N \<semicolon>
@@ -159,7 +123,6 @@ proc hash_has_key:
   val ret \<leftarrow> bucket_has_key (tabl_addr[hash], k) \<semicolon>
 
   \<makes> \<open>f \<Ztypecolon> Hash addr T\<close> \<semicolon>
-
   ret
 \<medium_right_bracket> .
 
@@ -191,8 +154,6 @@ proc hash_lookup:
   premises \<open>k \<in> dom f\<close>
   output \<open>the (f k) \<Ztypecolon> \<val> T\<heavy_comma> f \<Ztypecolon> Hash addr T\<close>
 \<medium_left_bracket>
-  note [\<phi>sledgehammer_simps] = list_all2_conv_all_nth list_all_length \<semicolon>
-
   transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
 
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
@@ -201,7 +162,6 @@ proc hash_lookup:
   val ret \<leftarrow> lookup_bucket (tabl_addr[hash], k) \<semicolon>
 
   \<makes> \<open>f \<Ztypecolon> Hash addr T\<close> \<semicolon>
-
   ret
 \<medium_right_bracket> .
 
@@ -228,8 +188,7 @@ proc new_hash:
     holds_fact [simp]: \<open>addra = bucket_ptrs' ! i\<close>
     have [simp]: \<open>\<big_ast>\<^sup>\<phi> {ia. ia < i} (\<lambda>i. DynArr (bucket_ptrs  ! i) \<lbrace> k: \<nat>(\<size_t>), v: T \<rbrace>) =
                   \<big_ast>\<^sup>\<phi> {ia. ia < i} (\<lambda>i. DynArr (bucket_ptrs' ! i) \<lbrace> k: \<nat>(\<size_t>), v: T \<rbrace>)\<close>
-      by (rule \<phi>Mul_Quant\<^sub>\<Lambda>_cong, auto_sledgehammer)\<semicolon>
-
+      by (rule \<phi>Mul_Quant\<^sub>\<Lambda>_cong, hammer_or_aoa)\<semicolon>
   \<medium_right_bracket> \<semicolon>
   
   val ret \<leftarrow> calloc1 \<open>\<lbrace> tabl: Ptr[\<array>[N] \<ptr>], N: \<nat>(\<size_t>) \<rbrace>\<close> \<semicolon>
@@ -288,8 +247,6 @@ proc rehash:
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>f \<Ztypecolon> \<ref> Hash addr' T \<subj> addr'. \<top>\<close>
 \<medium_left_bracket>
-  note [\<phi>sledgehammer_simps] = Map.graph_def \<semicolon>
-
   val dynarr \<leftarrow> entries_of_hash (addr) \<semicolon>
   del_hash (addr) \<semicolon>
   val ret \<leftarrow> new_hash (N) T \<semicolon>
@@ -298,8 +255,7 @@ proc rehash:
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     val entry \<leftarrow> get_dynarr (dynarr, i) \<semicolon>
     update_hash (ret, entry.k, entry.v)
-  \<medium_right_bracket> certified by (clarify, rule exI[where x=\<open>fa(fst (l ! i) \<mapsto> snd (l ! i))\<close>],
-                  auto_sledgehammer) \<semicolon>
+  \<medium_right_bracket>
   del_dynarr (dynarr) \<semicolon>
   ret
 \<medium_right_bracket> .

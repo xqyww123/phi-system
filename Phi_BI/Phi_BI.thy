@@ -457,6 +457,13 @@ lemma inhabited_type_EIF':
 
 bundle deriving_intabited_type = inhabited_type_EIF'[\<phi>reason default %extract_pure]
 
+(*Loaded here because this is where \<open>Satisfiable\<close> is defined and where the
+  reason to assume it lives: it enters guards through \<open>Abstract_Domain\<close>, as a
+  representability bound on abstract values, not as a constraint the guard is
+  about.  The hook it registers weakens such an atom away before a guard is
+  refuted by model search; see the file for when that is legitimate.*)
+ML_file \<open>library/tools/guard_refute_scrub.ML\<close>
+
 
 
 paragraph \<open>Sum Type\<close>

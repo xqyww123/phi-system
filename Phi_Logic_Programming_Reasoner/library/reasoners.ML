@@ -1037,9 +1037,16 @@ fun search_solved search st =
   contradictory hypothesis H makes both H \<Longrightarrow> C and H \<Longrightarrow> \<not>C provable):
   P-auto would have won.  Synchronized.change_result, never
   Synchronized.assign (assign makes the variable Immutable).
-  R-nitpick deliberately does NOT write this ledger: a genuine model
-  excludes provability in a consistent theory, so it claims directly
-  (§2.3); whether R-nunchaku joins the ledger is a §2.4 decision.*)
+  R-nitpick writes this ledger too (author ruling 2026-08-27, closing the
+  question plan §18.5 left open).  A model refutation cannot be trusted to
+  pre-empt a running proof: under user_axioms = false Nitpick can never
+  certify a model genuine, so what this racer reports is always
+  quasi_genuine, and a model of a theory the guard does not actually live in
+  would otherwise end the race and cancel a P-auto that was about to
+  succeed.  Routing it through the ledger removes that structurally, and
+  costs almost nothing: once P-auto has finished empty-handed the refutation
+  still ends the race at once, and P-auto finishes in 80ms at the median.
+  Whether R-nunchaku joins the ledger is a §2.4 decision.*)
 
 fun p_auto_racer search protocol th : race_result Race.racer =
   ("P-auto", fn () =>
@@ -1120,20 +1127,25 @@ fun r_conv_racer can_inst ctxt ctxt0 search protocol goals : race_result Race.ra
      end)
 
 
-(*R-nitpick (plan §2.3): refute by MODEL — Nitpick searches a finite
-  countermodel of the subgoal under the collected context assumptions.
+(*R-nitpick (plan §2.3): refute by MODEL — a finite countermodel of the
+  subgoal under the collected context assumptions.  The search is
+  Phi_Guard_Refute.nitpick, which preprocesses the guard (weakening hooks,
+  the memory-model and per-struct rewrites, datatype case splits, and a
+  slice down to the conclusion's variables) and then hands the result to the
+  patched Nitpick copy Phi_Nitpick, whose premises are trusted rather than
+  re-derived.  That recipe is what makes the racer useful: on the replayed
+  corpus it refutes 222 of 247 guards where the unpreprocessed call refutes
+  far fewer, at zero misjudgment over 161 guards known provable (plan §22).
   The variable discipline is zero-transform, intentionally OPPOSITE to
   R-conv's freeze/export (duality note, plan §2.3 — do not cross-correct):
   the subgoal goes in as-is; falsify's close_form \<And>-closes residual Vars
   (= refute every instantiation) and lets the model pick the Frees
-  (= arbitrary but fixed).  A genuine model excludes provability in a
-  consistent theory, so it ends the race directly — no early-finish
-  protocol check, unlike R-conv's proof-style refutation.  Auto_Try mode
-  is silent by construction (messages are buffered into the ignored
-  second component).  Assumptions travel with the goal so the model must
-  satisfy them (plan §2.3: dropping one breaks the immunity argument;
-  the context asked is the goal-side ctxt — #2 ruling, Nitpick's own
-  entry does the same).*)
+  (= arbitrary but fixed).  Auto_Try mode is silent by construction
+  (messages are buffered into the ignored second component).  Assumptions
+  travel with the goal so the model must satisfy them (plan §2.3: dropping
+  one breaks the immunity argument; the context asked is the goal-side ctxt
+  — #2 ruling, Nitpick's own entry does the same); which of them survive is
+  Phi_Guard_Refute's premise filter, not this racer's business.*)
 
 (*verbatim from nitpick.ML:972-982 (not exported); the call below mirrors
   the entry recipe of pick_nits_in_subgoal, nitpick.ML:984-996 — the full
@@ -1162,24 +1174,55 @@ fun extract_fixed_frees ctxt (assms, t) =
   known effect is completeness-only (plan §2.3).  spy=false is
   load-bearing beyond silence: spying would call Proof.goal on the
   goal-less Proof.init state below; the NITPICK_SPY env var ORs past this
-  pin and is guarded at assembly instead.  Construction cost: the
-  nitpick_params command validates KEYS only, so a malformed stored value
-  errors here — hence this is called only through a per-race Lazy forced
-  inside the racer bodies, surfacing pollution as this racer family's
-  Crashed exits, never a tactic error (§1.2-5).  (An interrupt hitting the
-  one racer that evaluates the Lazy can leak to concurrently blocked
-  forcers as their Cancelled exits — lazy.ML's documented semantic race;
-  completeness-only, the cell itself is restored.)  Time strings are decimal
-  seconds (§1.2-4); nominal timeout = the full budget (§1.2-1 — the
-  uniform outer watchdog is the real limit); tac_timeout pinned low
-  because the 0.5s default is billed per candidate type in pre-Kodkod
-  monotonicity checks (§1.2-2).*)
+  pin and is guarded at assembly instead.  The nitpick_params command
+  validates KEYS only, so a malformed stored value errors HERE; this must
+  therefore stay a function called from inside a racer body, where pollution
+  surfaces as that racer's Crashed exit and never as a tactic error
+  (§1.2-5).  Time strings are decimal seconds (§1.2-4); tac_timeout pinned
+  low because the 0.5s default is billed per candidate type in pre-Kodkod
+  monotonicity checks (§1.2-2).
+
+  The budget passed in is the model search's OWN timeout, fixed and never
+  charged for preprocessing (author ruling 2026-08-28).  Nitpick divides the
+  number across the card scopes, so the outer watchdog must grant this much
+  ON TOP of preprocessing — see the note at Phi_Guard_Refute.nitpick.
+
+  mono = true drops Nitpick's per-type monotonicity INFERENCE (default
+  "smart", nitpick_commands.ML:43) and simply assumes monotonicity, so the
+  scope search does not spend the budget re-deriving it.  Every replayed
+  measurement of this refuter carried it; production did not, and the
+  omission was an oversight, not a decision (author ruling 2026-08-28).
+
+  card and user_axioms carry a measured choice, not a default (plan §18.3,
+  84 replayed undecided guards, one configuration swept over the whole
+  corpus at a time — adjacent configurations on one guard would read each
+  other's answer out of Kodkod's single-slot result cache).  user_axioms =
+  false keeps phi-system's ten monomorphic user axioms out of the problem:
+  the flag that decides certification does NOT consult the relevance filter
+  (got_all_mono_user_axioms, nitpick_preproc.ML:1038, is
+  "user_axioms = SOME true orelse null mono_nondefs"), so their mere
+  existence in the theory would downgrade every verdict anyway — see the
+  verdict map below, which is what pays for this.  card = 1-6 is an
+  INTERVAL on purpose: its scopes go to Kodkod in one batch and the
+  smallest model short-circuits the rest, where a single value (card = 6)
+  lost 34 of 81 refutations and cost five times the total time.  No
+  per-type cardinality is pinned: with the axioms out, phi-system's
+  abstract types do not enter the problem at all, so pinning them is idle
+  at best (measured worse — it raised one guard's domains and lost a
+  refutation).  Worst case over the corpus: 1434ms.*)
+(*The model search's own timeout, separate from the racer's watchdog: charging
+  preprocessing against the search would make its reach depend on a quantity
+  that has nothing to do with it (author ruling 2026-08-28).*)
+val guard_refute_timeout =
+      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_refute_timeout\<close> (K 5000)
+
 fun pinned_nitpick_params ctxt budget =
   Nitpick_Commands.default_params (Proof_Context.theory_of ctxt)
     [("expect", ""), ("falsify", "true"),
      ("debug", "false"), ("verbose", "false"), ("overlord", "false"), ("spy", "false"),
      ("max_genuine", "1"), ("max_potential", "0"), ("max_threads", "1"),
-     ("sat_solver", "SAT4J"), ("batch_size", "smart"), ("card", "1-10"),
+     ("sat_solver", "SAT4J"), ("batch_size", "smart"),
+     ("card", "1-6"), ("user_axioms", "false"), ("mono", "true"),
      ("timeout", Real.fmt (StringCvt.FIX (SOME 3)) (Time.toReal budget)),
      ("tac_timeout", "0.05")]
 
@@ -1192,27 +1235,55 @@ fun pinned_nitpick_params ctxt budget =
   (PIDE, batch build, Isa-REPL via repl_server.sh's isabelle build) has a
   peer, so the absorbed case costs nothing in practice; where it does
   fire, the cost is bounded by this racer's own budget.*)
-fun r_nitpick_racer params ctxt (i, n) (subst, assms, t) name : race_result Race.racer =
+(*Refuted goes to the ledger, never straight to the winner slot — the ruling
+  is argued at the protocol above.  Provable means the preprocessing simplifier
+  closed the guard, which is a real proof of the ORIGINAL guard but yields no
+  proof object here; this racer therefore only stands down, and P-auto is left
+  to produce the theorem.
+
+  quasi_genuine counts as a refutation (author ruling 2026-08-26, plan
+  §18.2/§18.5).  It has to: under user_axioms = false Nitpick can never
+  certify a model genuine, so the two codes together are the only refutation
+  this racer can ever report.  What that costs, now that the ledger holds it
+  back: (a) what is waived are phi-system's ten monomorphic user axioms, all
+  derivable from HOL's own, so a model ignoring them models a theory no
+  stronger than HOL's; (b) a wrong refutation costs COMPLETENESS only — a
+  guard judged false leaves one reasoning rule unapplied, and the undecided
+  exit already assumes the guard fails — and it can no longer cancel a P-auto
+  that was about to succeed; (c) quasi_genuine does not say WHICH check
+  downgraded it, so accepting it also accepts downgrades from wf / finitize /
+  total_consts / bisim_depth.  Over the replayed corpus only user_axioms ever
+  fired — a property of that corpus, not a guarantee.
+  Unknown (Nitpick found nothing, or the budget was already spent in
+  preprocessing) stands down as well.  Other exceptions are NOT absorbed:
+  they leave the body and the engine reports this racer truthfully (errors =>
+  Crashed, Timeout.TIMEOUT => Timed_Out, interrupts => Cancelled) — we bypass
+  Nitpick_Commands.handle_exceptions, incidentally a silence win (its
+  NOT_SUPPORTED bare warning is unreachable).*)
+fun r_nitpick_racer params ctxt protocol (i, n) goal name : race_result Race.racer =
   (name, fn () =>
-     (case Nitpick.pick_nits_in_term (Proof.init ctxt) (Lazy.force params)
-             Nitpick.Auto_Try i n 0 subst [] assms t
-        of (code, _) =>
-             if code = Nitpick.genuineN then SOME (Refuted name) else NONE
-             (*quasi_genuine (not trusted), potential (misrefutes, measured),
-               none (ZERO evidence — cheap on false props), unknown: all
-               NONE (plan §2.3 verdict map).  Other exceptions are NOT
-               absorbed: they leave the body and the engine reports this
-               racer truthfully (errors => Crashed, Timeout.TIMEOUT =>
-               Timed_Out, interrupts => Cancelled) — we bypass
-               Nitpick_Commands.handle_exceptions, incidentally a silence
-               win (its NOT_SUPPORTED bare warning is unreachable).*))
+     (case Phi_Guard_Refute.nitpick ctxt (Lazy.force params) (i, n) goal of
+        Phi_Guard_Refute.Refuted =>
+          Synchronized.change_result protocol
+            (fn {pauto_finished, refuted_by = _} =>
+              (if pauto_finished then SOME (Refuted name) else NONE,
+               {pauto_finished = pauto_finished, refuted_by = SOME name}))
+      | Phi_Guard_Refute.Provable => NONE
+      | Phi_Guard_Refute.Unknown => NONE)
      handle Output.Protocol_Message _ => NONE)
 
 
 (** Guard Solver **)
 
+(*5000ms (author ruling 2026-08-27).  Since 2026-08-28 this bounds P-auto and
+  R-conv only -- the refuter family has its own watchdog, derived from
+  \<phi>guard_refute_timeout -- so the value is now a decision about the two
+  SEARCHING racers alone, and is open: over the real-workload dump P-auto times
+  out on 41% of races and R-conv on 45%, and races carrying a timeout consume
+  97.9% of all race wall clock, so whatever stands here is paid on nearly every
+  guard.  HEAD carried 500.*)
 val guard_race_timeout =
-      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 500)
+      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 5000)
 val guard_race_log =
       Attrib.setup_config_string \<^binding>\<open>\<phi>guard_race_log\<close> (K "")
 
@@ -1274,12 +1345,13 @@ fun prove_or_refute can_inst ctxt ctxt0 =
               val nctxt = Config.put Kodkod.kodkod_scala true ctxt
               val assms0 = map Thm.term_of (Assumption.all_assms_of nctxt)
            in if getenv "NITPICK_SPY" <> "yes" andalso forall tvar_free assms0
-              then let val params = Lazy.lazy (fn () => pinned_nitpick_params nctxt budget)
+              then let val params = Lazy.lazy (fn () => pinned_nitpick_params nctxt
+                             (Time.fromMilliseconds (Config.get nctxt guard_refute_timeout)))
                        val n = length goals
                     in map_filter (fn (k, goal) =>
                          let val t0 = Thm.term_of goal
                           in if tvar_free t0
-                             then SOME (r_nitpick_racer params nctxt (k + 1, n)
+                             then SOME (r_nitpick_racer params nctxt protocol (k + 1, n)
                                           (extract_fixed_frees nctxt (assms0, t0))
                                           ("R-nitpick" ^ string_of_int (k + 1)))
                              else NONE
@@ -1290,16 +1362,25 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           end
 
         (*engine contract, both caller obligations: (a) racer bodies must be
-          self-bounded — each gets its own Timeout.apply budget here; (b) this
-          call site must not defer interrupts — nothing in phi-system does.
+          self-bounded — each gets its own Timeout.apply here; (b) this call
+          site must not defer interrupts — nothing in phi-system does.
           P-auto stays first: the engine breaks concurrent claims to the
           lowest index and starts serial racers in order, both biasing ties
-          toward Proved.*)
+          toward Proved.
+          The refuters get a longer watchdog than the searchers: theirs has to
+          cover preprocessing ON TOP of the model search's own timeout, which
+          is fixed and not charged for preprocessing.  Preprocessing measures
+          0.4s at the median and 2.6s at worst over the replayed corpus, so a
+          100% allowance is generous.*)
+        fun bounded t (name, body) = (name, fn () => Timeout.apply t body ())
+        val refute_wall =
+          Time.scale 2.0 (Time.fromMilliseconds
+                            (Int.max (1, Config.get ctxt guard_refute_timeout)))
         val racers =
-          p_auto_racer search protocol th ::
-          r_conv_racer can_inst ctxt ctxt0 search protocol goals ::
-          nitpick_racers
-          |> map (fn (name, body) => (name, fn () => Timeout.apply budget body ()))
+          map (bounded budget)
+              [p_auto_racer search protocol th,
+               r_conv_racer can_inst ctxt ctxt0 search protocol goals] @
+          map (bounded refute_wall) nitpick_racers
 
         val {winner, exits, forked} = Race.race racers
 
@@ -1334,19 +1415,53 @@ fun prove_or_refute can_inst ctxt ctxt0 =
              NONE => ()
            | SOME path =>
                ignore (checked_io "guard race log write failed" (fn () =>
-                 let fun exit_code Race.Won = "win"
+                 let val ser = serial_string ()
+                     fun exit_code Race.Won = "win"
                        | exit_code Race.Gave_None = "none"
                        | exit_code Race.Timed_Out = "timeout"
                        | exit_code (Race.Crashed _) = "crash"
                        | exit_code Race.Cancelled = "cancelled"
                        | exit_code (Race.Discarded _) = "discarded"
-                  in File.append path
+                     val _ = File.append path
                        (String.concatWith "\t"
-                          [serial_string (), verdict, vwinner,
+                          [ser, verdict, vwinner,
                            string_of_int elapsed, string_of_int (length goals),
                            if forked then "forked" else "serial",
                            String.concatWith ","
                              (map (fn (n, e) => n ^ ":" ^ exit_code e) exits)] ^ "\n")
+                     (*TEMPORARY -- guard dump (2026-08-26, re-armed for the
+                       Phi_Examples study).  DELETE together with the log
+                       declare in PLPR.thy.  Writes every raced guard beside
+                       the TSV, keyed by the same serial, so an undecided
+                       verdict in the TSV can be traced to the guard text,
+                       its assumptions, its schematic type variables, and the
+                       source position (which names the theory).*)
+                     val gctxt = ctxt |> Config.put show_types true
+                                      |> Config.put show_sorts true
+                     val assms0 = map Thm.term_of (Assumption.all_assms_of ctxt)
+                     val goals0 = map Thm.term_of goals
+                     val tvs = fold (fn t => fold (insert (op =)) (Term.add_tvars t []))
+                                    (goals0 @ assms0) []
+                     fun show_tvar ((s, i), S) =
+                           "?" ^ s ^ (if i = 0 then "" else string_of_int i) ^
+                           " :: " ^ @{make_string} S
+                     (*PIDE renders terms and positions with XML markup; strip it,
+                       the dump is meant to be read as plain text*)
+                     val plain = XML.content_of o YXML.parse_body
+                     val ppos = Position.thread_data ()
+                     val pos =
+                       (case (Position.file_of ppos, Position.line_of ppos) of
+                          (SOME f, SOME l) => f ^ ":" ^ string_of_int l
+                        | (SOME f, NONE) => f
+                        | (NONE, SOME l) => "line " ^ string_of_int l
+                        | _ => "?")
+                  in File.append (Path.explode (Config.get ctxt guard_race_log ^ ".goals"))
+                       (cat_lines
+                          (["##### " ^ ser ^ "\t" ^ verdict ^ "\t" ^ pos,
+                            "tvars: " ^
+                              (if null tvs then "(none)" else commas (map show_tvar tvs))] @
+                           map (fn t => "assm: " ^ plain (Syntax.string_of_term gctxt t)) assms0 @
+                           map (fn t => "goal: " ^ plain (Syntax.string_of_term gctxt t)) goals0) ^ "\n")
                  end)))
         val _ = diag 2 (fn () =>
                   verdict_text ^ " in " ^ string_of_int elapsed ^ "ms, " ^

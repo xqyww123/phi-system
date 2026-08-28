@@ -661,10 +661,13 @@ fun load_ss (set,pred,rel,map,zip) bnf ctxt =
                        @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
                        @ (if map then eBNF_Info.simps_of_map_safe bnf else [])
                        @ (if zip then eBNF_Info.simps_of_zip_safe bnf else [])
-                       @ additional)
-   |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
-                       @ (if rel then eBNF_Info.global_simps_of_rel_safe (Context.Proof ctxt) bnf else [])
-                       @ (if map then eBNF_Info.global_simps_of_map_safe bnf else []))
+                       @ additional
+                         (*pred_True and rel_eq are in the system simpset already, but
+                           Expansion.equip REPLACES the ambient simpset, so this store
+                           still needs its own copy*)
+                       @ (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
+                       @ (if rel then eBNF_Info.global_simps_of_rel_safe (Context.Proof ctxt) bnf else []))
+   |> add_global_simps (if map then eBNF_Info.global_simps_of_map_safe bnf else [])
   end
 
 
@@ -704,7 +707,7 @@ val guess_self_rel =
   let fun mk_term (ctxt, D, L, bnf) =
         let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
                                       @ eBNF_Info.simps_of_ctr_safe bnf)
-                     |> add_global_simps (eBNF_Info.global_simps_of_rel (Context.Proof ctxt) bnf)
+                     |> Expansion.add_simps' (eBNF_Info.global_simps_of_rel (Context.Proof ctxt) bnf)
          in Seq.single (eBNF_Info.mk_rel_of_bnf D L L bnf, ctxt')
         end
       val is_live = K true

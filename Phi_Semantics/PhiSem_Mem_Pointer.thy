@@ -92,7 +92,7 @@ abbreviation valid_rawaddr :: \<open>rawaddr \<Rightarrow> bool\<close>
   where \<open>valid_rawaddr addr \<equiv> Valid_MemBlk (addr.blk addr)\<close>
 
 definition valid_memaddr :: "address \<Rightarrow> bool"
-  where "valid_memaddr addr \<longleftrightarrow>
+  where [\<phi>guard_refute_simp]: "valid_memaddr addr \<longleftrightarrow>
     Valid_MemBlk (addr.blk addr) \<and>
     (addr.blk addr = Null \<longrightarrow> addr.offset addr = []) \<and>
     valid_index (block.layout (addr.blk addr)) (addr.offset addr) \<and>

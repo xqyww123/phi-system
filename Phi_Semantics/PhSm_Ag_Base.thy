@@ -329,6 +329,16 @@ setup \<open>Context.theory_map (Eval_Sem_Idx_SS.map (
   Simplifier.add_cong @{thm' mk_symbol_cong}
 ))\<close>
 
+(*The guard refuter needs exactly these rules -- a guard about a field's type is
+  otherwise an opaque constant to its model search -- but it lives in PLPR, upstream of
+  every aggregate, so it cannot name this simpset.  Registering the ENHANCER rather than
+  copying the rules keeps it current: whatever any later theory declares
+  \<open>[eval_aggregate_path]\<close> is picked up when the refuter runs.  Copying would be a
+  snapshot, and no snapshot can serve: the aggregate kinds are siblings of this theory
+  and no single theory imports them all.*)
+setup \<open>Context.theory_map (
+  Phi_Guard_Refute.Simpset_Hooks.add 100 (fn _ => Eval_Sem_Idx_SS.enhance))\<close>
+
 \<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<simplify>[eval_aggregate_path] ?X' : ?X\<close>
                                       | \<open>\<condition>[eval_aggregate_path] ?P\<close> )
   = \<open>Phi_Reasoners.wrap (

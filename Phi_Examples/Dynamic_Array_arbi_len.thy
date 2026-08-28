@@ -213,8 +213,7 @@ proc fold_map_dynarr:
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     C (get_dynarr (addr, i), zz) \<rightarrow> val x', var zz \<semicolon>
     set_dynarr (addr, i, x')
-  \<medium_right_bracket> certified by (auto simp add: list_eq_iff_nth_eq nth_append, auto_sledgehammer,
-                  insert \<open>i < length l\<close>, induct i, auto simp add: take_Suc_conv_app_nth) \<semicolon>
+  \<medium_right_bracket> 
   $zz
 \<medium_right_bracket> .
 

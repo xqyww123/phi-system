@@ -91,6 +91,83 @@ setup \<open>Context.theory_map (
 
 
 
+subsection \<open>Trivial Predicators and Relators\<close>
+
+text \<open>Every BNF proves \<open>pred\<^sub>T (\<lambda>_. True) \<dots> = (\<lambda>_. True)\<close> and \<open>rel\<^sub>T (=) \<dots> = (=)\<close> but notes
+them without attributes, so \<^term>\<open>list_all (\<lambda>_. True) xs\<close> does not reduce. Both rewrite
+towards a constant, hence terminate. The interpretation replays over the BNFs registered
+earlier, so \<^theory>\<open>Main\<close>'s datatypes are covered without a separate sweep.\<close>
+
+ML \<open>
+structure Phi_BNF_Trivial_Simps = struct
+
+val eq_flipped = @{lemma' \<open>(=) \<equiv> (\<lambda>x y. y = x)\<close> by (unfold atomize_eq, blast)}
+
+(*the i-th of the m arguments of an application, counted from the left*)
+fun nth_arg_conv m i cv = funpow (m - 1 - i) Conv.fun_conv (Conv.arg_conv cv)
+
+(*\<open>rel\<^sub>T \<dots> (\<lambda>x y. y = x) \<dots> = rel\<^sub>T \<dots> (=) \<dots>\<close>, one rule per argument.
+
+  \<open>rel\<^sub>T (=) \<dots> = (=)\<close> alone leaves every MIXTURE of flipped and plain arguments untouched.
+  Normalising one argument at a time reaches them all, and each rewrite strictly decreases
+  the number of flipped arguments, so the set terminates.
+
+  Do NOT replace these by the point-free \<open>(\<lambda>x y. y = x) = (=)\<close>: an abstraction keys as the
+  discrimination net's wildcard (Pure/net.ML), so that rule is retrieved and match-attempted
+  at every subterm every simplification visits, for the whole session. These key on their
+  head constant and are reached only under it.*)
+fun of_rel context rel0 n =
+  let
+    val ctxt = Context.proof_of context
+    val idx = Term.maxidx_of_term rel0 + 1
+    (*a quasi-BNF registers its relator with FREE type variables, a registered BNF with
+      schematic ones; a rule carrying a free type variable never applies*)
+    val rel = Term.map_types (Term.map_atyps
+                (fn TFree (a, S) => TVar ((a, idx), S) | T => T)) rel0
+    (*\<open>fun\<close>'s dead argument comes already applied, so a relator is not always atomic*)
+    val fixed = snd (Term.strip_comb rel)
+    val nf = length fixed
+    val argTs = take n (binder_types (fastype_of rel))
+    fun rule inst pos =
+      let
+        val args = map_index (fn (j, T) =>
+                     if nf + j = pos then Const (\<^const_name>\<open>HOL.eq\<close>, T)
+                     else Var (("R" ^ string_of_int j, idx), T)) (map inst argTs)
+        val ct = Thm.cterm_of ctxt (list_comb (Term.map_types inst rel, args))
+      in Thm.symmetric (nth_arg_conv (nf + n) pos (Conv.rewr_conv eq_flipped) ct) end
+    fun live_rule i =
+      let val argT = nth argTs i
+       in rule (Term.typ_subst_atomic
+                  [(Term.domain_type (Term.range_type argT), Term.domain_type argT)])
+               (nf + i)
+      end
+    fun is_eq (Const (\<^const_name>\<open>HOL.eq\<close>, _)) = true
+      | is_eq _ = false
+  in
+    map_filter (fn k => if is_eq (nth fixed k) then SOME (rule I k) else NONE) (0 upto nf - 1)
+    @ map live_rule (0 upto n - 1)
+  end
+
+fun of_relator context rel n rel_eq = Thm.transfer'' context rel_eq :: of_rel context rel n
+
+fun of_bnf_relator context bnf =
+  of_relator context (BNF_Def.rel_of_bnf bnf) (BNF_Def.live_of_bnf bnf)
+                     (BNF_Def.rel_eq_of_bnf bnf)
+
+fun of_bnf context bnf = BNF_Def.pred_True_of_bnf bnf :: of_bnf_relator context bnf
+
+end
+
+val phi_trivial_simps_plugin = Plugin_Name.declare_setup \<^binding>\<open>\<phi>trivial_simps\<close>
+
+val _ =
+  Theory.setup (BNF_Def.bnf_interpretation phi_trivial_simps_plugin
+    (Transfer_BNF.bnf_only_type_ctr (fn bnf => fn lthy =>
+      snd (Local_Theory.note ((Binding.empty, @{attributes [simp]}),
+                              Phi_BNF_Trivial_Simps.of_bnf (Context.Proof lthy) bnf) lthy))))
+\<close>
+
+
 subsection \<open>Error Mechanism\<close>
 
 ML_file \<open>library/tools/error.ML\<close>
@@ -315,10 +392,17 @@ consts \<A>infer :: action
 
 subsubsection \<open>Unspecified value\<close>
 
+(*
 consts unspec :: 'a
 axiomatization \<comment> \<open>this axiomatization is definitional, where it defines the \<open>unspec\<close> on product type\<close>
   where unspec_prod: \<open>unspec = (unspec, unspec)\<close>
+*)
 
+consts unspec :: 'a
+overloading unspec_prod \<equiv> "unspec :: 'a \<times> 'b"
+begin
+  definition "unspec_prod = (unspec::'a, unspec::'b)"
+end
 
 
 subsubsection \<open>Embedding Function into Relation\<close>
@@ -429,12 +513,12 @@ lemma map_pairewise_eq[\<phi>safe_simp]:
 lemma map_unspec[\<phi>safe_simp]:
   \<open> (\<lambda>_. unspec) \<otimes>\<^sub>f (\<lambda>_. unspec) = (\<lambda>_. unspec) \<close>
   unfolding fun_eq_iff
-  by (clarsimp simp: unspec_prod)
+  by (clarsimp simp: unspec_prod_def)
 
 lemma map_unspec_eq[\<phi>safe_simp]:
   \<open> f \<otimes>\<^sub>f g = (\<lambda>_. unspec) \<longleftrightarrow> f = (\<lambda>_. unspec) \<and> g = (\<lambda>_. unspec) \<close>
   unfolding fun_eq_iff
-  by (clarsimp simp: unspec_prod)
+  by (clarsimp simp: unspec_prod_def)
 
 lemma case_prod_map_prod[simp, \<phi>safe_simp]:
   \<open>(case (f \<otimes>\<^sub>f g) x of (a,b) \<Rightarrow> r a b) = (case x of (a,b) \<Rightarrow> let a' = f a ; b' = g b in r a' b')\<close>

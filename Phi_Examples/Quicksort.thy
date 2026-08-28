@@ -42,22 +42,9 @@ declare [[\<phi>variable_is_typed]]
         \<medium_right_bracket> \<medium_left_bracket>
           (*comment: else, do nothing*)
         \<medium_right_bracket> \<semicolon>
-      \<medium_right_bracket> \<semicolon> thm \<phi>  \<semicolon>
-
-      holds_fact t5[simp]: \<open>d - (d - Suc 0) = 1\<close> \<semicolon>
-
+      \<medium_right_bracket> \<semicolon>
       qsort (i, d-1) \<semicolon>
-      qsort (i + d, len - d)   \<semicolon>
-          
-
-
-      holds_fact t1: \<open>(\<forall>x\<in>set (drop d l'). ?pivot < x)\<close>
-             and t2: \<open>(\<forall>x\<in>set (take (d-1) l'). x \<le> ?pivot)\<close>
-             and t3[simp]: \<open>set l'b = set (drop d l')\<close>
-             and t4[simp]: \<open>set l'a = set (take (d-1) l')\<close>  
-             
-      note [simp] = sorted_simps sorted_wrt_append \<semicolon>
-  
+      qsort (i + d, len - d) \<semicolon>
       return
     \<medium_right_bracket>
   \<medium_right_bracket> .

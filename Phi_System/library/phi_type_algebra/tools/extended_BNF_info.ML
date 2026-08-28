@@ -149,11 +149,17 @@ structure qBNFs = Generic_Data (
   val merge = Symtab.merge (K true)
 )
 
-fun add_BNF (Tname, qbnf) =
-      qBNFs.map (Symtab.update_new (Tname, qbnf))
-   #> (case #fp_more qbnf
+(*The registrar installs the trivial-relator rules, mirroring Phi_Preliminary's BNF
+  interpretation: a quasi-BNF is not a registered BNF, so that interpretation cannot see it.*)
+fun add_BNF (Tname, qbnf) context =
+      context
+   |> qBNFs.map (Symtab.update_new (Tname, qbnf))
+   |> (case #fp_more qbnf
          of SOME fpm => BNF_FP_Sugar_More.add_fp_more (Tname, fpm)
           | NONE => I)
+   |> (fn context => Simplifier.map_ss (fn ctxt =>
+         ctxt addsimps Phi_BNF_Trivial_Simps.of_relator context
+                          (#rel qbnf) (length (#lives qbnf)) (#rel_eq qbnf)) context)
 
 (*** Auxiliaries ***)
 
@@ -439,7 +445,7 @@ val relator_on_const_true = gen_property no_inst "relator_on_const_True" (K I) g
 val relator_on_const_true_match =
       gen_property typ_inst_by_match "relator_on_const_True" get_bnf_of_typ1 gen_relator_const_true
 val relator_on_const_true_unify =
-      gen_property typ_inst_by_unify "relator_on_const_True" get_bnf_of_typ1 gen_unit_simps
+      gen_property typ_inst_by_unify "relator_on_const_True" get_bnf_of_typ1 gen_relator_const_true
 
 (*** Simplification rules ***)
 
@@ -459,15 +465,6 @@ fun simps_of_rel (BNF bnf) = #rel_distincts (#fp_bnf_sugar (g_fp bnf))
   | simps_of_rel (qBNF bnf) = #rel_simps bnf
 fun simps_of_rel_safe bnf = simps_of_rel bnf handle Automation_Fail _ => []
 
-(*lemma
-  \<open>(=) = (\<lambda>x y. y = x)\<close>
-  by blast*)
-
-(*converts arguments and leaves the head untouched*)
-fun args_conv cv ctm =
-  case Thm.term_of ctm of _ $ _ => Conv.combination_conv (args_conv cv) cv ctm
-                        | _ => cv ctm
-
 (*
 fun myrewr_conv rule ct =
   let
@@ -485,19 +482,10 @@ fun myrewr_conv rule ct =
   in Thm.transitive rule4 (Thm.beta_conversion true (Thm.rhs_of rule4)) end;
 *)
 
-val flip_eq = Phi_Conv.LHS_conv (args_conv (fn ctm =>
-      case Thm.term_of ctm
-        of Const(\<^const_name>\<open>HOL.eq\<close>, _) =>
-              Conv.rewr_conv @{lemma' \<open>(=) \<equiv> (\<lambda>x y. y = x)\<close> by (unfold atomize_eq, blast)} ctm
-         | _ => Conv.all_conv ctm))
-fun flip_eq' th = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of th) flip_eq) th
-
-
 fun global_simps_of_rel ctxt (BNF bnf) =
-        [ BNF_Def.rel_eq_of_bnf (g_bnf bnf),
-          flip_eq' (Thm.transfer'' ctxt (BNF_Def.rel_eq_of_bnf (g_bnf bnf))) ]
+        Phi_BNF_Trivial_Simps.of_bnf_relator ctxt (g_bnf bnf)
   | global_simps_of_rel ctxt (qBNF bnf) =
-        [ #rel_eq bnf, flip_eq' (Thm.transfer'' ctxt (#rel_eq bnf)) ]
+        Phi_BNF_Trivial_Simps.of_relator ctxt (#rel bnf) (length (#lives bnf)) (#rel_eq bnf)
 
 fun global_simps_of_rel_safe ctxt bnf = global_simps_of_rel ctxt bnf handle Automation_Fail _ => []
 
@@ -521,7 +509,7 @@ fun global_simps_of_map (BNF bnf) = [BNF_Def.map_ident_of_bnf (g_bnf bnf)]
 fun global_simps_of_map_safe bnf = global_simps_of_map bnf handle Automation_Fail _ => []
 
 fun global_simps_of_pred (BNF bnf) = [BNF_Def.pred_True_of_bnf (g_bnf bnf)]
-  | global_simps_of_pred (qBNF bnf)= [#map_ident bnf]
+  | global_simps_of_pred (qBNF _) = [] (*no pred_True counterpart in quasi_BNF*)
 fun global_simps_of_pred_safe bnf = global_simps_of_pred bnf handle Automation_Fail _ => []
 
 fun case_distribs_of (BNF bnf) = #case_distribs (g_ctr bnf)

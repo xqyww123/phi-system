@@ -124,11 +124,6 @@ proc sub_mat:
 \<medium_right_bracket> .
 
 
-context
-  notes [\<phi>sledgehammer_simps] = Let_def image_iff split_block_def four_block_mat_def mat_to_list_def
-                                list_eq_iff_nth_eq nth_append Bex_def in_set_conv_nth image_iff
-begin
-
 lemma split_4mat:
   \<open> \<param> (s, t)
 \<Longrightarrow> \<premise> s \<le> m \<and> t \<le> n
@@ -136,7 +131,7 @@ lemma split_4mat:
                                     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
                                     \<subj> x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2. (x\<^sub>1\<^sub>1, x\<^sub>1\<^sub>2, x\<^sub>2\<^sub>1, x\<^sub>2\<^sub>2) = split_block x s t\<close>
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
-  \<medium_left_bracket> \<medium_right_bracket> certified by (auto simp: Bex_def in_set_conv_nth image_iff; hammer_or_aoa) .
+  \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma merge_4mat:
   \<open> \<premise> s \<le> m \<and> t \<le> n
@@ -144,10 +139,7 @@ lemma merge_4mat:
     x\<^sub>2\<^sub>1 \<Ztypecolon> MatSlice a (i+s) j (m-s) t\<heavy_comma> x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a (i+s) (j+t) (m-s) (n-t)
     \<transforms> four_block_mat x\<^sub>1\<^sub>1 x\<^sub>1\<^sub>2 x\<^sub>2\<^sub>1 x\<^sub>2\<^sub>2 \<Ztypecolon> MatSlice a i j m n \<close>
   unfolding MatSlice.unfold \<comment> \<open>open abstraction in both sides\<close>
-  \<medium_left_bracket> \<medium_right_bracket> certified by (auto simp: \<phi>sledgehammer_simps \<phi>[unfolded carrier_mat_def, simplified]) .
-
-end
-
+  \<medium_left_bracket> \<medium_right_bracket> .
 
 declare [[linarith_split_limit = 20]]
 
@@ -185,15 +177,11 @@ proc strassen:
     \<open>MatSlice a\<^sub>B _ _ _ _\<close> transforms_to \<open'>  \<semicolon>
 
     a\<^sub>A[i\<^sub>A, j\<^sub>A] := a\<^sub>A[i\<^sub>A, j\<^sub>A] * a\<^sub>B[i\<^sub>B, j\<^sub>B] \<semicolon>
-      
-    holds_fact [\<phi>sledgehammer_simps]: \<open>dim_col B = 1 \<and> dim_row B = 1 \<and> dim_col A = 1 \<and> dim_row A = 1\<close> (*for proof obligation*)
-    note scalar_prod_def [\<phi>sledgehammer_simps] \<semicolon>                                       (*for proof obligation*)
 
     \<makes> \<open>A * B \<Ztypecolon> MatSlice a\<^sub>A i\<^sub>A j\<^sub>A (2^n) (2^n)\<close> \<semicolon>
     \<makes> \<open>B \<Ztypecolon> MatSlice a\<^sub>B i\<^sub>B j\<^sub>B (2^n) (2^n)\<close>
   \<medium_right_bracket>
   \<medium_left_bracket>
-    holds_fact t0: \<open>(2::nat) ^ n = 2 ^ (n - 1) + 2 ^ (n - 1)\<close>                          (*for proof obligation*)
     holds_fact t1[simp]: \<open>(2::nat) ^ n - 2 ^ (n - 1) = 2 ^ (n - 1)\<close> \<semicolon>                  (*an annotation for reasoning*)
         \<comment> \<open>Even when ML-aided ATP \<open>Sledgehammer\<close> is so powerful now, it cannot solve some simple
             high-school problems without the \<open>t0\<close> hint ...\<close>
@@ -202,8 +190,6 @@ proc strassen:
     \<open>MatSlice a\<^sub>B _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>B\<^sub>1\<^sub>1, B\<^sub>1\<^sub>2, B\<^sub>2\<^sub>1, B\<^sub>2\<^sub>2 \<semicolon>
     \<open>MatSlice a\<^sub>C _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>1, M\<^sub>2, M\<^sub>3, M\<^sub>4 \<semicolon>
     \<open>MatSlice a\<^sub>D _ _ _ _\<close> split_4mat \<open>(2^(n-1), 2^(n-1))\<close> \<exists>M\<^sub>5, M\<^sub>6, M\<^sub>7, M\<^sub>t \<semicolon>
-
-    holds_fact t2: \<open>n < addrspace_bits\<close> \<semicolon>                                              (*for proof obligation*)
 
     1 << (n-1) \<rightarrow> val N \<semicolon>
     i\<^sub>A + N \<rightarrow> val i\<^sub>A' \<semicolon>
@@ -278,29 +264,8 @@ proc strassen:
 
     (*Below, the proof is stolen from AFP23-10-16/Jordan_Normal_Form/Strassen_Algorithm.thy: 175-182, 227-239, lemma strassen_mat_mult*)
 
-    holds_fact split_A_B: \<open>B = four_block_mat B\<^sub>1\<^sub>1 B\<^sub>1\<^sub>2 B\<^sub>2\<^sub>1 B\<^sub>2\<^sub>2\<close>                      (*for proof obligation*)
-                          \<open>A = four_block_mat A\<^sub>1\<^sub>1 A\<^sub>1\<^sub>2 A\<^sub>2\<^sub>1 A\<^sub>2\<^sub>2\<close> \<semicolon>                    (*for proof obligation*)
-
-    note carriers = \<open>A\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>                (*for proof obligation*)
-                    \<open>A\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>A\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>1\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>1\<^sub>2 \<in> carrier_mat _ _\<close>
-                    \<open>B\<^sub>2\<^sub>1 \<in> carrier_mat _ _\<close> \<open>B\<^sub>2\<^sub>2 \<in> carrier_mat _ _\<close> \<semicolon>
-
     apply_rule merge_4mat[where a=a\<^sub>A and i=i\<^sub>A and s=\<open>?N\<close> and j=j\<^sub>A and t=\<open>?N\<close> and m=\<open>2^n\<close> and n=\<open>2^n\<close>, simplified t1]
-      is \<open>A * B\<close> certified by (                                                    (*\<open>A * B\<close> is an annotation*)
-         simp add: carriers split_A_B mult_four_block_mat[OF carriers],
-         rule cong_four_block_mat,
-         insert carriers,
-         auto simp add:  mult_carrier_mat[where n=\<open>?N\<close>]
-                         add_mult_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         minus_mult_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         mult_add_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         mult_minus_distrib_mat[where nr=\<open>?N\<close> and n=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         add_carrier_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         uminus_carrier_iff_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         assoc_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         comm_add_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>]
-                         minus_add_minus_mat[where nr=\<open>?N\<close> and nc=\<open>?N\<close>])
+      is \<open>A * B\<close>
     (*end of stolen proof*) \<semicolon>
 
 

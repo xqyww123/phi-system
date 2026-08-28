@@ -182,13 +182,13 @@ ML \<open>test plain \<^context> "false BAD&SPIN (attempt spins -> refuted by ei
   [[("refuted", "R-nitpick1")], [("refuted", "R-conv")]]
   "\<condition> (BAD \<and> SPIN 0)"\<close>
 
-(*T3-1: ground false guard -- the model refuter is the only one that can
-  see through BADN, and its win must short-circuit the field.  The exits
-  column is the short-circuit evidence: P-auto is cancelled mid-spin, and
-  R-conv (which cannot touch a bare definition) has already given up.
-  Requires a Scala peer.*)
-ML \<open>test with_exits \<^context> "T3-1 ground false guard (model refuter wins, field short-circuited)"
-  [[("refuted", "R-nitpick1", "P-auto:cancelled,R-conv:none,R-nitpick1:win")]]
+(*T3-1: ground false guard -- the model refuter is the only one that can see
+  through BADN.  It may not CLAIM the race, though: since 2026-08-27 it records
+  its refutation in the early-finish ledger and stands down, so P-auto spins to
+  its own timeout and the verdict comes from the post-race record.  The exits
+  column is the evidence that no racer won.  Requires a Scala peer.*)
+ML \<open>test with_exits \<^context> "T3-1 ground false guard (model refuter records, no winner)"
+  [[("refuted", "R-nitpick1", "P-auto:timeout,R-conv:none,R-nitpick1:none")]]
   "\<condition> (BADN 0 \<and> SPIN 0)"\<close>
 
 (*T3-2: a guard that IS provable, just not within the 30ms quick attempt.
@@ -268,7 +268,7 @@ nitpick_params [expect = unknown, timeout = 0.001, card = 1-1,
                 max_potential = 5, verbose]
 
 ML \<open>test with_exits \<^context> "T3-6 nitpick_params pollution immunity"
-  [[("refuted", "R-nitpick1", "P-auto:cancelled,R-conv:none,R-nitpick1:win")]]
+  [[("refuted", "R-nitpick1", "P-auto:timeout,R-conv:none,R-nitpick1:none")]]
   "\<condition> (BADN 0 \<and> SPIN 0)"\<close>
 
 end

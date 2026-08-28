@@ -88,8 +88,11 @@ lemma block_infinite_TY:
 
 subsection \<open>Address Type\<close>
 
+(*the refuter must see through this: a guard about an address's type is otherwise
+  an opaque constant to its model search*)
 definition address_type :: \<open>address \<Rightarrow> TY\<close>
-  where \<open>address_type addr \<equiv> index_type (addr.offset addr) (block.layout (addr.blk addr))\<close>
+  where [\<phi>guard_refute_simp]:
+    \<open>address_type addr \<equiv> index_type (addr.offset addr) (block.layout (addr.blk addr))\<close>
 
 adhoc_overloading Type_Of_syntax \<rightleftharpoons> address_type
 

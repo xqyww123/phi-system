@@ -8,35 +8,28 @@ section \<open>Abstract Model\<close>
 
 subsection \<open>Common Operations\<close>
 
-declare tree.rel_eq[simp]
 
 lemma rel_tree_Leaf[\<phi>deriver_simps, iff]:
   \<open> rel_tree R \<langle>\<rangle> tree \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
-  \<open> rel_tree R tree' \<langle>\<rangle> \<longleftrightarrow> tree' = \<langle>\<rangle> \<close>
-  by hammer_or_aoa
+  \<open> rel_tree R tree' \<langle>\<rangle> \<longleftrightarrow> tree' = \<langle>\<rangle> \<close> by hammer_or_aoa
 
 lemma rel_tree_Node1[\<phi>deriver_simps]:
   \<open> NO_MATCH \<langle>L', y, R'\<rangle> tree
-\<Longrightarrow> rel_tree r \<langle>L, x, R\<rangle> tree \<longleftrightarrow> (\<exists>L' y R'. tree = \<langle>L', y, R'\<rangle> \<and> rel_tree r L L' \<and> r x y \<and> rel_tree r R R') \<close>
-  by hammer_or_aoa
+\<Longrightarrow> rel_tree r \<langle>L, x, R\<rangle> tree \<longleftrightarrow> (\<exists>L' y R'. tree = \<langle>L', y, R'\<rangle> \<and> rel_tree r L L' \<and> r x y \<and> rel_tree r R R') \<close> by hammer_or_aoa
 
 lemma rel_tree__pred_tree:
-  \<open>rel_tree R x y \<Longrightarrow> pred_tree (\<lambda>x. \<exists>y. R x y) x\<close>
-  by hammer_or_aoa
+  \<open>rel_tree R x y \<Longrightarrow> pred_tree (\<lambda>x. \<exists>y. R x y) x\<close> by hammer_or_aoa
 
 lemma rel_tree_self_map:
   \<open> \<forall>a \<in> set_tree x. R a (f a)
-\<Longrightarrow> rel_tree R x (map_tree f x) \<close>
-  by hammer_or_aoa
+\<Longrightarrow> rel_tree R x (map_tree f x) \<close> by hammer_or_aoa
 
 lemma rel_tree_height:
   \<open> rel_tree R x y
-\<Longrightarrow> height x = height y \<close>
-  by hammer_or_aoa
+\<Longrightarrow> height x = height y \<close> by hammer_or_aoa
 
 lemma AList_Upd_map_of_is_Map_map_of[iff]:
-  \<open>map_of l = Map.map_of l\<close>
-  by hammer_or_aoa
+  \<open>map_of l = Map.map_of l\<close> by hammer_or_aoa
 
 
 subsection \<open>tree_domain_distinct\<close>
@@ -60,43 +53,34 @@ primrec sorted_lookup_tree :: \<open>('k::order \<times> 'v) tree \<Rightarrow> 
 
 
 lemma lookup_tree_map_tree[simp]:
-  \<open>lookup_tree (map_tree (\<lambda>(k, v). (k, f k v)) tree) = (\<lambda>k. map_option (f k) (lookup_tree tree k)) \<close>
-  unfolding fun_eq_iff
-  by hammer_or_aoa
+  \<open>lookup_tree (map_tree (\<lambda>(k, v). (k, f k v)) tree) = (\<lambda>k. map_option (f k) (lookup_tree tree k)) \<close> by  hammer_or_aoa
 
 lemma tree_domain_distinct_map[iff]:
-  \<open>tree_domain_distinct (Tree.tree.map_tree (\<lambda>(k, v). (k, f k v)) tree) \<longleftrightarrow> tree_domain_distinct tree\<close>
-  by hammer_or_aoa
+  \<open>tree_domain_distinct (Tree.tree.map_tree (\<lambda>(k, v). (k, f k v)) tree) \<longleftrightarrow> tree_domain_distinct tree\<close> by hammer_or_aoa
 
 
 lemma rel_tree_domain_eq:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
-\<Longrightarrow> dom (lookup_tree x) = dom (lookup_tree y) \<close>
-  by hammer_or_aoa
+\<Longrightarrow> dom (lookup_tree x) = dom (lookup_tree y) \<close> by hammer_or_aoa
 
 lemma sorted_lookup_tree_rel:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
-\<Longrightarrow> sorted_lookup_tree x \<longleftrightarrow> sorted_lookup_tree y \<close>
-  by hammer_or_aoa
+\<Longrightarrow> sorted_lookup_tree x \<longleftrightarrow> sorted_lookup_tree y \<close> by hammer_or_aoa
 
 lemma rel_tree_domain_distinct:
   \<open> rel_tree (\<lambda>a b. fst a = fst b) x y
-\<Longrightarrow> tree_domain_distinct x \<longleftrightarrow> tree_domain_distinct y \<close>
-  by hammer_or_aoa
+\<Longrightarrow> tree_domain_distinct x \<longleftrightarrow> tree_domain_distinct y \<close> by hammer_or_aoa
 
 lemma sorted1_inorder_map_tree[iff]:
-  \<open>sorted_lookup_tree (map_tree (\<lambda>(k, v). (k, f k v)) tree) \<longleftrightarrow> sorted_lookup_tree tree\<close>
-  by hammer_or_aoa
+  \<open>sorted_lookup_tree (map_tree (\<lambda>(k, v). (k, f k v)) tree) \<longleftrightarrow> sorted_lookup_tree tree\<close> by hammer_or_aoa
 
 subsection \<open>sorted\<close>
 
 lemma tree_sorted_implies_domain_distinct[simp]:
-  \<open>sorted_lookup_tree tree \<Longrightarrow> tree_domain_distinct tree\<close>
-  by hammer_or_aoa
+  \<open>sorted_lookup_tree tree \<Longrightarrow> tree_domain_distinct tree\<close> by hammer_or_aoa
 
 lemma lookup_tree_eq_empty:
-  \<open> lookup_tree tree = Map.empty \<longleftrightarrow> tree = \<langle>\<rangle> \<close>
-  by hammer_or_aoa
+  \<open> lookup_tree tree = Map.empty \<longleftrightarrow> tree = \<langle>\<rangle> \<close> by hammer_or_aoa
 
 lemma lookup_tree_by_set_distinct[simp]:
   \<open> tree_domain_distinct tree
@@ -106,35 +90,26 @@ lemma lookup_tree_by_set_distinct[simp]:
 lemma rel_map_lookup_by_rel_tree:
   \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd a) (snd b)) x y
 \<Longrightarrow> tree_domain_distinct x
-\<Longrightarrow> rel_map r (lookup_tree x) (lookup_tree y) \<close>
-  by hammer_or_aoa
+\<Longrightarrow> rel_map r (lookup_tree x) (lookup_tree y) \<close> by hammer_or_aoa
 
 lemma rel_map_lookup_by_rel_tree2:
   \<open> rel_tree (\<lambda>a b. fst a = fst b \<and> r (snd (snd a)) (snd (snd b))) x y
 \<Longrightarrow> tree_domain_distinct x
-\<Longrightarrow> rel_map r (map_option snd o lookup_tree x) (map_option snd o lookup_tree y) \<close>
-  by hammer_or_aoa
+\<Longrightarrow> rel_map r (map_option snd o lookup_tree x) (map_option snd o lookup_tree y) \<close> by hammer_or_aoa
 
 lemma lookup_tree_map_tree2[simp]:
-  \<open> lookup_tree (map_tree (\<lambda>(k, h, v). (k, f k h v)) tree) = (\<lambda>k. map_option (case_prod (f k)) (lookup_tree tree k)) \<close>
-  using lookup_tree_map_tree[where f=\<open>case_prod o f\<close>]
-  by hammer_or_aoa
+  \<open> lookup_tree (map_tree (\<lambda>(k, h, v). (k, f k h v)) tree) = (\<lambda>k. map_option (case_prod (f k)) (lookup_tree tree k)) \<close> by hammer_or_aoa
 
 lemma sorted_lookup_map_tree2[simp]:
-  \<open> sorted_lookup_tree (map_tree (\<lambda>(k, h, v). (k, f k h v)) tree) \<longleftrightarrow> sorted_lookup_tree tree \<close>
-  using sorted1_inorder_map_tree[where f=\<open>case_prod o f\<close>]
-  by hammer_or_aoa
+  \<open> sorted_lookup_tree (map_tree (\<lambda>(k, h, v). (k, f k h v)) tree) \<longleftrightarrow> sorted_lookup_tree tree \<close> by hammer_or_aoa
 
 lemma lookup_left_children:
   \<open> sorted_lookup_tree tree
-\<Longrightarrow> lookup_tree (left tree) = lookup_tree tree |` {x. x < fst (value tree)} \<close>
-  \<comment> \<open>this value is the value of the root node\<close>
-  by hammer_or_aoa
+\<Longrightarrow> lookup_tree (left tree) = lookup_tree tree |` {x. x < fst (value tree)} \<close> by hammer_or_aoa
 
 lemma lookup_right_children:
   \<open> sorted_lookup_tree tree
-\<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close>
-  by hammer_or_aoa
+\<Longrightarrow> lookup_tree (right tree) = lookup_tree tree |` {x. fst (value tree) < x} \<close> by hammer_or_aoa
 
 
 
@@ -148,17 +123,14 @@ primrec insert_tree :: \<open>'k::linorder \<Rightarrow> 'v \<Rightarrow> ('k \<
 
 lemma lookup_tree_insert_tree[simp]:
   \<open> sorted_lookup_tree tree
-\<Longrightarrow> lookup_tree (insert_tree k v tree) = (lookup_tree tree)(k \<mapsto> v)\<close>
-  by hammer_or_aoa
+\<Longrightarrow> lookup_tree (insert_tree k v tree) = (lookup_tree tree)(k \<mapsto> v)\<close> by hammer_or_aoa
 
 lemma insert_tree_sorted[simp]:
   \<open> sorted_lookup_tree tree
-\<Longrightarrow> sorted_lookup_tree (insert_tree k v tree) \<close>
-  by hammer_or_aoa
+\<Longrightarrow> sorted_lookup_tree (insert_tree k v tree) \<close> by hammer_or_aoa
 
 lemma insert_tree_not_Leaf[simp]:
-  \<open>insert_tree k v tree \<noteq> \<langle>\<rangle>\<close>
-  by hammer_or_aoa
+  \<open>insert_tree k v tree \<noteq> \<langle>\<rangle>\<close> by hammer_or_aoa
 
 
 
@@ -210,16 +182,12 @@ abbreviation \<open>bst_node TY\<^sub>K TY\<^sub>V \<equiv> tree_node (kv_pair T
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
          \<Longrightarrow> Abstract_Domain (Bin_Search_Tree addr K V)
                              (\<lambda>f. \<typeof> K \<noteq> \<poison> \<and> \<typeof> V \<noteq> \<poison> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
-            (tactic: clarsimp, subgoal' for tree x y \<open>induct tree arbitrary: x\<close>)
        and \<open> Identity_Elements\<^sub>E (Bin_Search_Tree addr K V)
                                 (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<typeof> K \<noteq> \<poison> \<and> \<typeof> V \<noteq> \<poison>) \<close>
        and \<open> Identity_Elements\<^sub>I (Bin_Search_Tree addr K V)
                                 (\<lambda>l. l = Map.empty) (\<lambda>l. addr = 0 \<and> \<typeof> K \<noteq> \<poison> \<and> \<typeof> V \<noteq> \<poison>) \<close>
        and \<open> Object_Equiv V eq
          \<Longrightarrow> Object_Equiv (Bin_Search_Tree addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
-            (tactic: clarsimp, 
-                     rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,_). (k, the (g k))) x\<close>],
-                     auto intro!: rel_tree_self_map simp: fun_eq_iff)
        and \<open> \<condition> (\<typeof> T = \<typeof> U \<and> addr' = addr)
          \<Longrightarrow> Transformation_Functor (Bin_Search_Tree addr K) (Bin_Search_Tree addr' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
        and \<open> \<condition> (\<typeof> T = \<typeof> U \<and> addr' = addr)
@@ -234,13 +202,11 @@ primrec AVL_invar
 
 lemma Object_Equiv_of_AVL_tree_invar:
   \<open> AVL_invar xa
-\<Longrightarrow> AVL_invar (Tree.tree.map_tree (\<lambda>(k, (h,v)). (k, (h, the (y k)))) xa)  \<close>
-  by hammer_or_aoa
+\<Longrightarrow> AVL_invar (Tree.tree.map_tree (\<lambda>(k, (h,v)). (k, (h, the (y k)))) xa)  \<close> by hammer_or_aoa
 
 lemma rel_tree__AVL_tree_invar:
   \<open> rel_tree (\<lambda>a b. fst (snd a) = fst (snd b)) x y
-\<Longrightarrow> AVL_invar x \<longleftrightarrow> AVL_invar y \<close>
-  by hammer_or_aoa
+\<Longrightarrow> AVL_invar x \<longleftrightarrow> AVL_invar y \<close> by hammer_or_aoa
  
 
 
@@ -257,16 +223,12 @@ abbreviation \<open>avl_node TY\<^sub>K TY\<^sub>V \<equiv> tree_node (avl_pair 
          \<Longrightarrow> Abstract_Domain V P\<^sub>V
          \<Longrightarrow> Abstract_Domain (AVL_Tree addr K V)
                          (\<lambda>f. \<typeof> K \<noteq> \<poison> \<and> \<typeof> V \<noteq> \<poison> \<and> (\<forall>x. x \<in> dom f \<and> P\<^sub>K x \<longrightarrow> P\<^sub>V (the (f x)))) \<close>
-            (tactic: clarsimp, subgoal' for tree x h y \<open>induct tree arbitrary: x\<close>)
        and \<open> Identity_Elements\<^sub>E (AVL_Tree addr K V)
                             (\<lambda>l. addr = 0 \<and> l = Map.empty \<and> \<typeof> K \<noteq> \<poison> \<and> \<typeof> V \<noteq> \<poison>) \<close>
        and \<open> Identity_Elements\<^sub>I (AVL_Tree addr K V) (\<lambda>l. l = Map.empty)
                            (\<lambda>l. addr = 0 \<and> \<typeof> K \<noteq> \<poison> \<and> \<typeof> V \<noteq> \<poison>) \<close>
        and \<open> Object_Equiv V eq
          \<Longrightarrow> Object_Equiv (AVL_Tree addr K V) (\<lambda>f g. dom f = dom g \<and> (\<forall>k \<in> dom f. eq (the (f k)) (the (g k))) ) \<close>  
-            (tactic: clarsimp, 
-                     rule exI[where x=\<open>\<lambda>_ g x. map_tree (\<lambda>(k,h,_). (k, h, the (g k))) x\<close>],
-                     auto simp: fun_eq_iff intro!: rel_tree_self_map)
        and \<open> \<condition> addr' = addr
          \<Longrightarrow> \<premise> \<typeof> T = \<typeof> U
          \<Longrightarrow> Transformation_Functor (AVL_Tree addr K) (AVL_Tree addr' K) T U ran (\<lambda>_. UNIV) rel_map \<close>
@@ -498,7 +460,7 @@ proc maintain_i:
           \<open>BinTree a\<^sub>E _\<close> \<open>BinTree a\<^sub>C _\<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
           \<open>BinTree a\<^sub>A _\<close> \<makes>(1) \<open>BinTree a\<^sub>B _\<close> \<semicolon>                                                  (*for reasoning, \<Omega>*)
  
-          return (B) certified by hammer_or_aoa (*Tac-1n-2m*)
+          return (B) (*Tac-1n-2m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain C\<^sub>L k\<^sub>C h\<^sub>C v\<^sub>C C\<^sub>R where C[simp]: \<open>C = \<langle>C\<^sub>L, (k\<^sub>C, h\<^sub>C, v\<^sub>C), C\<^sub>R\<rangle>\<close> by hammer_or_aoa \<semicolon>  (*this line and the next*)
@@ -522,7 +484,7 @@ proc maintain_i:
 
           holds_fact t1[useful]: \<open>k\<^sub>B < k\<^sub>D\<close>  \<semicolon>                                    (*for proof, Tac-s*)
 
-          return (C) certified by hammer_or_aoa  (*Tac-1n-3m*)
+          return (C)  (*Tac-1n-3m*)
     \<medium_right_bracket>
   \<medium_right_bracket>
   \<medium_left_bracket>
@@ -547,7 +509,7 @@ proc maintain_i:
           \<open>BinTree a\<^sub>F _\<close> \<open>BinTree a\<^sub>B _\<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>                 (*for reasoning, \<Omega>*)
           \<makes>(1) \<open>BinTree a\<^sub>E _\<close> \<semicolon>                                  (*for reasoning, \<Omega>*)
 
-          return (E) certified by hammer_or_aoa  (*Tac-1n-3m*)
+          return (E)  (*Tac-1n-3m*)
       \<medium_right_bracket>
       \<medium_left_bracket>
           obtain F\<^sub>L k\<^sub>F h\<^sub>F v\<^sub>F F\<^sub>R where F[simp]: \<open>F = \<langle>F\<^sub>L, (k\<^sub>F, h\<^sub>F, v\<^sub>F), F\<^sub>R\<rangle>\<close> by hammer_or_aoa \<semicolon>
@@ -569,7 +531,7 @@ proc maintain_i:
           \<open>BinTree a\<^sub>F\<^sub>L _\<close> \<open>BinTree a\<^sub>B _\<close> \<makes>(1) \<open>BinTree a\<^sub>D _\<close> \<semicolon>
           \<makes>(1) \<open>BinTree a\<^sub>F _\<close> \<semicolon>
 
-          return (F) certified by hammer_or_aoa                          (*Tac-4n-3m*)
+          return (F)                          (*Tac-4n-3m*)
       \<medium_right_bracket>
     \<medium_right_bracket>
     \<medium_left_bracket>

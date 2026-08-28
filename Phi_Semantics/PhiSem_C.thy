@@ -13,6 +13,16 @@ begin
 debt_axiomatization
   where ptr_neq_int_t'  [simp]: \<open>\<ptr> \<noteq> sem_int_T n\<close>
     and ptr_neq_struct [simp]: \<open>\<ptr> \<noteq> sem_ntup_T f\<close>
+    and int_t_neq_struct [simp]: \<open>sem_int_T n \<noteq> sem_ntup_T f\<close>
+    and struct_neq_array [simp]: \<open>sem_ntup_T f \<noteq> \<poison> \<Longrightarrow> sem_ntup_T f \<noteq> \<array>[N] TY\<close>
+      \<comment> \<open>This is the earliest theory that sees both the named tuple and the array
+          constructor (they enter through the sibling theories PhiSem_Mem_C_Ag_NT
+          and PhiSem_Mem_C_Ag_Ar).  Unlike \<open>\<ptr>\<close> and \<open>sem_int_T\<close>, BOTH of these
+          constructors degenerate to \<open>\<poison>\<close> -- \<open>\<array>[N] TY = \<poison>\<close> when \<open>TY = \<poison>\<close> and
+          \<open>N \<noteq> 0\<close> (semty_array_eq_poison), \<open>sem_ntup_T f = \<poison>\<close> when a field is
+          \<open>\<poison>\<close> (semty_ntup_eq_poison) -- and there they really are equal, so an
+          unguarded distinctness axiom would be FALSE.  One guarded direction
+          suffices; the other is derived below.\<close>
 
 
 lemma TY_neqs[simp]:
@@ -21,6 +31,14 @@ lemma TY_neqs[simp]:
   \<open>sem_ntup_T f \<noteq> \<ptr>\<close>
   unfolding mk_int_T_def bool_def'
   by simp_all (metis ptr_neq_int_t' ptr_neq_struct)+
+
+lemma struct_neq_int_t [simp]:
+  \<open>sem_ntup_T f \<noteq> sem_int_T n\<close>
+  using int_t_neq_struct by (rule not_sym)
+
+lemma array_neq_struct [simp]:
+  \<open>\<array>[N] TY \<noteq> \<poison> \<Longrightarrow> \<array>[N] TY \<noteq> sem_ntup_T f\<close>
+  by (metis struct_neq_array)
 
 
 

@@ -5,6 +5,14 @@ begin
 
 debt_axiomatization
       MemObj_Size_int: \<open>MemObj_Size (sem_int_T n) = 0 \<longleftrightarrow> n = 0\<close>
+  and int_t_neq_array [simp]: \<open>sem_int_T n \<noteq> \<array>[N] TY\<close>
+      \<comment> \<open>No guard needed: \<open>sem_int_T n\<close> is never \<open>\<poison>\<close> (int_t_neq_poison'), so the
+          two differ even where the array type degenerates to \<open>\<poison>\<close>.  This is the
+          earliest theory that sees both constructors.\<close>
+
+lemma array_neq_int_t [simp]:
+  \<open>\<array>[N] TY \<noteq> sem_int_T n\<close>
+  using int_t_neq_array by (rule not_sym)
 
 lemma phantom_mem_semantic_type_aint[simp]:
   \<open> phantom_mem_semantic_type (sem_int_T n) \<longleftrightarrow> n = 0 \<close>

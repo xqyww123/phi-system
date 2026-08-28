@@ -111,7 +111,6 @@ proc pop_dynarr:
   val ret \<leftarrow> addr.data[len] \<semicolon>
   addr.len := len \<semicolon>
   if (len \<le> half_cap) \<medium_left_bracket>
-    holds_fact [simp]: \<open>length l - Suc 0 = length ya div 2\<close> \<semicolon>
     val data' \<leftarrow> calloc (half_cap) \<open>T\<close> \<semicolon>
     memcpy (data', addr.data, len) \<semicolon>
     mfree (addr.data) \<semicolon>
@@ -152,7 +151,6 @@ proc map_dynarr:
   requires C: \<open>\<And>x u. \<proc> C u \<lbrace> x \<Ztypecolon> \<val>[u] T \<longmapsto> f x \<Ztypecolon> \<val> T \<rbrace> \<close>
   output \<open>map f l \<Ztypecolon> DynArr addr T\<close>
 \<medium_left_bracket>
-  note [\<phi>sledgehammer_simps] = list_eq_iff_nth_eq nth_append \<semicolon>
   iterate (\<open>0 \<Ztypecolon> \<nat>(\<size_t>)\<close>, len_dynarr (addr)) \<open>\<lambda>i. (map f (take i l) @ drop i l) \<Ztypecolon> DynArr addr T\<close>
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
      set_dynarr (addr, i, C (get_dynarr (addr, i)))
@@ -185,8 +183,7 @@ proc fold_map_dynarr:
   \<medium_left_bracket> \<rightarrow> val i \<semicolon>
     C (get_dynarr (addr, i), zz) \<rightarrow> val x', var zz ;;
     set_dynarr (addr, i, x')
-  \<medium_right_bracket> certified by (auto simp add: list_eq_iff_nth_eq nth_append, hammer_or_aoa,
-                  insert \<open>i < length l\<close>, induct i, auto simp add: take_Suc_conv_app_nth) ;;
+  \<medium_right_bracket>
   zz
 \<medium_right_bracket> .
 

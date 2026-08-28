@@ -7926,11 +7926,9 @@ lemmas [\<phi>deriver_simps] =
 lemmas [\<phi>deriver_simps] =
   Basic_BNFs.prod_set_defs
 
-declare option.rel_eq[iff] option.pred_True[iff]
 
 subsubsection \<open>List\<close>
 
-declare list.rel_eq[iff] list.pred_True[iff]
 
 (*definition \<open>zip' = case_prod zip\<close>*)
 setup \<open>Sign.mandatory_path "list"\<close>
