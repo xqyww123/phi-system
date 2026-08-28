@@ -24,7 +24,8 @@ sig
   (*arg = unit, state = Proof.context; see the structure below*)
   structure Simpset_Hooks : HOOKS
 
-  val premises_of : Proof.context -> term list -> term -> term list
+  (*premises and conclusion, both with the goal's \<And>-binders fixed*)
+  val premises_of : Proof.context -> term list -> term -> term list * term
   val slice : term list -> term -> term
   val preprocess : Proof.context -> term list -> term -> (term list * term) option
 
@@ -83,16 +84,37 @@ structure Simpset_Hooks = Hooks (
   filter widens the misjudgment surface -- it is a ruling, not an
   optimisation.*)
 
-fun is_premise (Const (\<^const_name>\<open>Trueprop\<close>, _) $
-                    (Const (\<^const_name>\<open>Premise\<close>, _) $ mode $ _)) =
-      (case mode of
-         Const (\<^const_name>\<open>default\<close>, _) => true          (*\<premise>*)
-       | Const (\<^const_name>\<open>MODE_GUARD\<close>, _) => true       (*\<condition>*)
-       | _ => false)                                        (*\<obligation>: a goal*)
-  | is_premise _ = false
+(*The tag sits on the CONCLUSION, so an assumption that is itself an hhf
+  formula is classified by what it concludes; it then travels whole, binders
+  and all -- a universally quantified fact is still a fact.*)
+fun is_premise assm =
+  (case snd (Phi_Help.strip_meta_hhf_bvs assm) of
+     Const (\<^const_name>\<open>Trueprop\<close>, _) $
+        (Const (\<^const_name>\<open>Premise\<close>, _) $ mode $ _) =>
+       (case mode of
+          Const (\<^const_name>\<open>default\<close>, _) => true         (*\<premise>*)
+        | Const (\<^const_name>\<open>MODE_GUARD\<close>, _) => true      (*\<condition>*)
+        | _ => false)                                       (*\<obligation>: a goal*)
+   | _ => false)
 
-fun premises_of _ assms goal =
-  Logic.strip_imp_prems goal @ filter is_premise assms
+(*Logic.strip_imp_prems stops at Pure.all, so a \<And>-headed subgoal used to reach
+  the search with NO antecedents at all -- not the recipe weakened but bypassed,
+  on 181 of the 1538 goals in the production dump.  Phi_Help.strip_meta_hhf goes
+  under both connectives in one pass; what it returns carries loose Bounds,
+  closed here by fixing each binder as a fresh Free.  That is also the form the
+  model search wants: Nitpick assigns free variables, which is exactly "some x
+  refutes \<And>x. ...".  Premises and conclusion must come from this ONE call --
+  taking the conclusion separately would close it over different Frees.*)
+fun premises_of ctxt assms goal =
+  let
+    val (bvs, prems, concl) = Phi_Help.strip_meta_hhf goal
+    (*names only -- these Frees never enter the context, so variant_fixes,
+      which would build one, is not the interface.  Everything they must stay
+      clear of is declared here, so freshness does not rest on the caller.*)
+    val frees =
+      map Free (Variable.variant_names (fold Variable.declare_term (goal :: assms) ctxt) bvs)
+    fun close t = subst_bounds (rev frees, t)
+  in (map close prems @ filter is_premise assms, close concl) end
 
 
 (*** Conjunction splitting and variable-closure slicing ***)
@@ -153,9 +175,8 @@ fun case_splits ctxt t =
 
 fun preprocess ctxt assms goal =
   let
-    val concl = Logic.strip_imp_concl goal
-    val prems =
-      Preprocess_Hooks.invoke (Context.Proof ctxt) ctxt (premises_of ctxt assms goal)
+    val (prems0, concl) = premises_of ctxt assms goal
+    val prems = Preprocess_Hooks.invoke (Context.Proof ctxt) ctxt prems0
     val prepared = Logic.list_implies (prems, concl)
     val simp_ctxt =
       Guard_Refute_SS.enhance ctxt
@@ -187,8 +208,9 @@ fun preprocess ctxt assms goal =
   cost (author ruling 2026-08-28).  Charging preprocessing against the search
   makes the search's reach depend on a quantity that has nothing to do with
   it, and makes two measurements incomparable whenever preprocessing differs.
-  The caller's watchdog must therefore allow preprocessing ON TOP of that
-  timeout.*)
+  The caller's watchdog is a separate matter and today does NOT allow for
+  preprocessing: it is shared with the searching racers, so the search sees
+  its timeout minus what preprocessing spent.*)
 
 fun nitpick ctxt params (i, n) (subst, assms, goal) =
   (case preprocess ctxt assms goal of

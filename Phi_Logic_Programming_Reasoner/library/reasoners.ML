@@ -1184,8 +1184,9 @@ fun extract_fixed_frees ctxt (assms, t) =
 
   The budget passed in is the model search's OWN timeout, fixed and never
   charged for preprocessing (author ruling 2026-08-28).  Nitpick divides the
-  number across the card scopes, so the outer watchdog must grant this much
-  ON TOP of preprocessing — see the note at Phi_Guard_Refute.nitpick.
+  number across the card scopes.  The outer watchdog is shared with the
+  searching racers and covers preprocessing too, so this timeout is a ceiling
+  the search rarely gets in full — see the note at the racer assembly.
 
   mono = true drops Nitpick's per-type monotonicity INFERENCE (default
   "smart", nitpick_commands.ML:43) and simply assumes monotonicity, so the
@@ -1367,20 +1368,17 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           P-auto stays first: the engine breaks concurrent claims to the
           lowest index and starts serial racers in order, both biasing ties
           toward Proved.
-          The refuters get a longer watchdog than the searchers: theirs has to
-          cover preprocessing ON TOP of the model search's own timeout, which
-          is fixed and not charged for preprocessing.  Preprocessing measures
-          0.4s at the median and 2.6s at worst over the replayed corpus, so a
-          100% allowance is generous.*)
-        fun bounded t (name, body) = (name, fn () => Timeout.apply t body ())
-        val refute_wall =
-          Time.scale 2.0 (Time.fromMilliseconds
-                            (Int.max (1, Config.get ctxt guard_refute_timeout)))
+          One watchdog for every racer (author ruling 2026-08-28).  The model
+          search's own timeout is fixed and not charged for preprocessing, but
+          this wall clock still covers both, so a refuter effectively searches
+          for that timeout MINUS preprocessing (0.4s median, 2.6s worst over
+          the replayed corpus).  Splitting the watchdog to pay for that is
+          deferred to the \<phi>guard_race_timeout redesign.*)
         val racers =
-          map (bounded budget)
-              [p_auto_racer search protocol th,
-               r_conv_racer can_inst ctxt ctxt0 search protocol goals] @
-          map (bounded refute_wall) nitpick_racers
+          p_auto_racer search protocol th ::
+          r_conv_racer can_inst ctxt ctxt0 search protocol goals ::
+          nitpick_racers
+          |> map (fn (name, body) => (name, fn () => Timeout.apply budget body ()))
 
         val {winner, exits, forked} = Race.race racers
 

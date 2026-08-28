@@ -29,6 +29,31 @@ fun qchk_one_side ctxt bvtys tm =
 
 
 
+(*** TEMPORARY probe (2026-08-28) -- Docs/GUARD_NITPICK_FALSIFY_PLAN.md section 26.
+     DELETE together with the declare in PLPR.thy that switches it on. ***)
+
+(*Solving \<open>?f a\<^sub>1 \<dots> a\<^sub>n = r\<close> by \<open>?f := \<lambda>a\<^sub>1 \<dots> a\<^sub>n. r\<close> is the UNIQUE solution only when the
+  a\<^sub>i are pairwise distinct variables bound inside the formula -- a Miller pattern,
+  and bans is exactly that list of locally bound variables.  Otherwise the
+  equation constrains ?f at isolated points and this is one solution out of many,
+  committed silently and without backtracking.  Records both kinds; off unless
+  the config names a file.*)
+val probe_log = Attrib.setup_config_string \<^binding>\<open>\<phi>guess_inst_probe\<close> (K "")
+
+val probe_acc : (bool * term * term list * term) list Unsynchronized.ref Thread_Data.var =
+      Thread_Data.var ()
+
+fun probe_forced bans args =
+  let val xs = map Thm.term_of args
+   in forall (fn Free b => member (op =) bans b | _ => false) xs andalso
+      not (has_duplicates (op aconv) xs)
+  end
+
+fun probe_record entry =
+  (case Thread_Data.get probe_acc of
+     SOME r => Unsynchronized.change r (cons entry)
+   | NONE => ())
+
 fun inst bans tab (v, args) cterm0 =
   let val cterm = Phi_Help.beta_eta_contract_cterm (Thm.instantiate_cterm (TVars.empty, tab) cterm0)
                |> fold_rev Thm.lambda args
@@ -37,7 +62,9 @@ fun inst bans tab (v, args) cterm0 =
                      of Var v' => v <> v'
                       | _ => true))
       then case Vars.lookup tab v
-             of NONE => Vars.add (v, cterm) tab
+             of NONE => (probe_record (probe_forced bans args, Var v,
+                                       map Thm.term_of args, Thm.term_of cterm);
+                         Vars.add (v, cterm) tab)
               | SOME cterm' => if Thm.term_of cterm aconv Thm.term_of cterm' then tab
                                else raise Guess_Conflicts
       else tab
@@ -169,15 +196,61 @@ fun guess_inst ctxt bans cterm =
 
 val enable_inst = Config.declare_bool ("enable_inst", \<^here>) (K true)
 
+(*TEMPORARY probe -- see the note at probe_log above.  One line per goal this
+  tactic actually instantiates: serial, whether EVERY choice on that goal was
+  forced, the counts, the source position, the goal, and each choice.*)
+fun probe_write path s =
+  (case Exn.capture_body (fn () => File.append (Path.explode path) s) of
+     Exn.Res _ => ()
+   | Exn.Exn exn => if Exn.is_interrupt exn then Exn.reraise exn else ())
+
+fun probe_flush ctxt goal entries =
+  (case Config.get ctxt probe_log of
+     "" => ()
+   | path =>
+      if null entries then () else
+      let
+        (*PIDE renders terms with XML markup; the dump is read as plain text,
+          one record per line*)
+        fun show t =
+          space_implode " " (split_lines (XML.content_of (YXML.parse_body
+            (Syntax.string_of_term ctxt t))))
+        val ppos = Position.thread_data ()
+        val pos =
+          (case (Position.file_of ppos, Position.line_of ppos) of
+             (SOME f, SOME l) => f ^ ":" ^ string_of_int l
+           | (SOME f, NONE) => f
+           | (NONE, SOME l) => "line " ^ string_of_int l
+           | _ => "?")
+        val unforced = length (filter_out #1 entries)
+      in
+        probe_write path (String.concatWith "\t"
+          [serial_string (),
+           if unforced = 0 then "forced" else "UNFORCED",
+           string_of_int (length entries), string_of_int unforced, pos, show goal,
+           String.concatWith " ; "
+             (map (fn (forced, v, args, r) =>
+                     (if forced then "[F] " else "[U] ") ^ show v ^
+                     " (" ^ commas (map show args) ^ ") := " ^ show r)
+                  (rev entries))] ^ "\n")
+      end)
+
 fun guess_inst_tac ctxt n st = Seq.make (fn () =>
-  let val (bvtys, concl) = Phi_Help.strip_meta_hhf_bvtys (Logic.nth_prem (n, Thm.prop_of st))
+  let val goal = Logic.nth_prem (n, Thm.prop_of st)
+      val (bvtys, concl) = Phi_Help.strip_meta_hhf_bvtys goal
    in if quick_check (Context.Proof ctxt) bvtys concl
       then
       let val cprem = Thm.cprem_of st n
           val (lb, _, concl, ctxt') = Phi_Help.strip_meta_hhf_c cprem ctxt
        in if Config.get ctxt enable_inst
-          then guess_inst ctxt' (map (Term.dest_Free o Thm.term_of) lb) concl
-            |> Option.map (fn inst => (Thm.instantiate (TVars.empty, inst) st, Seq.empty))
+          then
+            let val acc = Unsynchronized.ref []
+                val guessed =
+                  Thread_Data.setmp probe_acc (SOME acc)
+                    (fn () => guess_inst ctxt' (map (Term.dest_Free o Thm.term_of) lb) concl) ()
+                val _ = if is_some guessed then probe_flush ctxt goal (! acc) else ()
+             in Option.map (fn inst => (Thm.instantiate (TVars.empty, inst) st, Seq.empty)) guessed
+            end
           else NONE
       end
       else NONE

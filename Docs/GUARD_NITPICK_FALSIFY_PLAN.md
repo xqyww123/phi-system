@@ -1901,21 +1901,100 @@ R-conv 试图**证否**(证明其否定);R-nitpick 试图用**有限模型**驳�
 
 ### 22.3 未经作者批准、等待撤销/保留裁决的改动
 
-| # | 位置 | 改动 | 我当时的理由 |
-|---|---|---|---|
-| 1 | `deriver_framework.ML:710`(`guess_self_rel`) | `add_global_simps` → `Expansion.add_simps'` | 与 `:670` 保持一致 |
-| 2 | `PLPR.thy` | 删掉 `declare [[\<phi>guard_race_log = "/tmp/claude-1002/…"]]` 及 TEMPORARY 注释 | 硬编码会话临时目录,评审员一致点名 |
-| 3 | `Test/Guard_Race_Smoke.thy` | T3-1/T3-6 退出码断言改为 `P-auto:timeout,R-conv:none,R-nitpick1:none`,并重写 T3-1 的注释 | 账本改动让原断言不可能成立 |
-| 4 | `reasoners.ML` | 新增配置 `\<phi>guard_refute_timeout`(默认 5000),拆出 `refute_wall = 搜索时限 × 2` 作为驳斥赛道自己的看门狗 | 作者裁决"Nitpick 固定 5000ms"的实现,但**两配置拆分与 ×2 系数是我自定的** |
+| # | 位置 | 改动 | 我当时的理由 | 裁决 |
+|---|---|---|---|---|
+| 1 | `deriver_framework.ML:710`(`guess_self_rel`) | `add_global_simps` → `Expansion.add_simps'` | 与 `:670` 保持一致 | **2026-08-28 作者批准保留** |
+| 2 | `PLPR.thy` | 删掉 `declare [[\<phi>guard_race_log = "/tmp/claude-1002/…"]]` 及 TEMPORARY 注释 | 硬编码会话临时目录,评审员一致点名 | **本条作废,见下** |
+| 3 | `Test/Guard_Race_Smoke.thy` | T3-1/T3-6 退出码断言改为 `P-auto:timeout,R-conv:none,R-nitpick1:none`,并重写 T3-1 的注释 | 账本改动让原断言不可能成立 | **作者授权自主决定;决定:保留** |
+| 4 | `reasoners.ML` | 新增配置 `\<phi>guard_refute_timeout`(默认 5000),拆出 `refute_wall = 搜索时限 × 2` 作为驳斥赛道自己的看门狗 | 作者裁决"Nitpick 固定 5000ms"的实现,但**两配置拆分与 ×2 系数是我自定的** | **配置保留;`refute_wall = 2×` 作者裁决撤销** |
 
 另外 `deriver_framework.ML:670`(`load_ss`)把 pred/rel 的贡献从 `add_global_simps`
-移进 `Expansion.add_simps'`,同属未明确批准的范围。
+移进 `Expansion.add_simps'`,与第 1 项同属一次改动,**同批准保留**。
+
+**第 2 项作废的原因(2026-08-28 核实)**:那行 `declare` **从未进入任何一次提交**。
+`git grep -l claude-1002` 在 `8c805dbc^`、`4609815a`、`ae1dd806` 三个树上都只命中
+`Docs/GUARD_NITPICK_FALSIFY_PLAN.md` 与 `Phi_System/Option_Hunt_Probe.thy`(后者是
+**别的 agent** 的探针,见 §22.9 第 4 项),`PLPR.thy` 一次都没有。它自始至终是工作区里
+一行未提交的临时插桩,提交 `8c805dbc` 之前已清除。因此没有可撤销的东西,本项从待裁决
+清单移除。
+
+**作者裁决(2026-08-28),关于以后怎么开这个日志**:把
+`declare [[\<phi>guard_race_log = …]]` **插到要评估的目标之前**即可——`declare` 是
+theory 里的一条命令,从它往后的命令都在该配置下运行。**不要**为此另建 scratch theory
+再靠 import 链把配置传下去。**编辑 `PLPR.thy` 本身不是坏事**,需要就改;当时的问题只在
+路径硬编码成了会话临时目录,不在改了哪个文件。两种情形的界线:目标 theory 自身命令产生
+的守卫,`declare` 插在目标之前即可全收;若整条链都从源码加载(如在 `Phi_System_Base` 下
+从源码加载 `Binary_Trees.thy`,phi-system 自己的 theory 亦随之从源码走,`deriving` 块
+同样产生守卫),要收上游那些就得把 `declare` 放在上游,`PLPR.thy` 即为合适位置,路径写
+可移植形式(参照 `Test/Guard_Race_Smoke.thy:28` 的 `$ISABELLE_TMP`)。
+
+**第 3 项的处置(2026-08-28)**:作者授权自主决定,决定**保留改写**。理由:2026-08-27
+的提前完成账本裁决改变了可观测行为——R-nitpick 找到反模型后不再直接宣告获胜,而是
+在 P-auto 未跑完时把 `refuted_by` 记进账本并退场(`reasoners.ML:1372-1376`),判决由
+赛后记录补出。T3-1/T3-6 的守卫 `\<condition> (BADN 0 \<and> SPIN 0)` 恰好踩中:P-auto 由
+`cancelled` 变为 `timeout`,R-nitpick1 由 `win` 变为 `none`。**旧断言在新行为下不可能
+成立**,故改写是被裁决逼出的记账,不是设计选择。
+
+**已实测(2026-08-28,`Phi_System_Base` 会话,isabelle-mcp 从源码加载,撤销 `refute_wall`
+之后)**:整批 11 个探针**零错误**。T3-1 与 T3-6 的日志行分别是
+`16761144 refuted R-nitpick1 5000 1 forked P-auto:timeout,R-conv:none,R-nitpick1:none`
+与 `16761418 …`(同退出码),各 5031 ms 完成。这同时证实:驳斥赛道退回共用 5000 ms
+看门狗后,这两条守卫的反驳仍然成立。
+
+**第 4 项的处置(2026-08-28,作者裁决)**:配置项 `\<phi>guard_refute_timeout` **保留**
+(它就是"Nitpick 固定 5000ms"这条裁决的实现);`refute_wall = 搜索时限 × 2` 及两族
+赛道分套看门狗的做法**撤销**,退回改动前的形状——**所有赛道共用
+`\<phi>guard_race_timeout` 这一个看门狗**。作者同时指明:此处不必是最终形态,但不得是
+偏离原设计的第三形态。
+
+撤销的**已知后果**,已写进三处代码注释,不得再遗忘:看门狗既然与搜索赛道共用,它就
+同时覆盖预处理,于是模型搜索在墙钟上实际拿到的是"时限 − 预处理"(预处理中位 0.4 秒、
+最差 2.6 秒)。裁决把这个依赖从搜索的**参数**里去掉了,它从**墙钟**一侧回来了一部分。
+补偿它的看门狗拆分**推迟到 `\<phi>guard_race_timeout` 的重新设计**(§23.8 第 1 项,作者
+2026-08-28 表示正在构思全新设计,该项暂时搁置)。改动落点:`reasoners.ML` 赛道装配处
+的注释与 `val racers`、`reasoners.ML` `pinned_nitpick_params` 的注释、
+`guard_refute.ML` `nitpick` 的注释。
+
+**`\<phi>guard_race_log` 是什么**(读者需要的背景):`reasoners.ML:1287-1288` 声明的
+字符串配置,默认空串。空串即关闭(`:1323-1325`);非空则视为文件路径,竞赛每处理一个
+守卫追加一行 7 字段 TSV,并向 `<路径>.goals` 追加一份人可读转储(`:1458`):serial、
+判决、源位置、schematic 类型变量、全部 assumption 与 goal 的 pretty-print。路径无效
+不会让证明失败——`checked_io` 捕获异常、发 diagnostic、关闭日志。**本轮全部数据
+(1538 条生产目标行、`⋀` 绕过的 181 条、247 条重放语料)均取自这份 `.goals` 转储。**
+
+**`add_global_simps` 一共动了两处,均已随 `8c805dbc` 提交**,文件同为
+`Phi_System/library/phi_type_algebra/deriver_framework.ML`:
+
+| # | 改前 | 改后 | 函数 | 改动 |
+|---|---|---|---|---|
+| 1 | `:665` | `:668-670` | `load_ss` | pred/rel/map 原本一起走 `add_global_simps`;现在 pred 与 rel 并入上面 `Expansion.add_simps'` 的列表(`:668-669`,附三行注释),**只剩 map 走 `add_global_simps`**(`:670`) |
+| 2 | `:707` | `:710` | `guess_self_rel` 的 `mk_term` | `add_global_simps (global_simps_of_rel …)` → `Expansion.add_simps' (…)` |
+
+调用点因此由 2 个减为 1 个(`:670`);函数定义 `:644-646` 未动。
 
 **必读的机制事实**:`Simpset` functor 的 `equip` 是**替换**当前上下文的化简集,
-`enhance` 才是**合并**(`simpset.ML`)。推导器的消费者大量用 `equip`,所以
+`enhance` 才是**合并**(`simpset.ML:78-80`)。推导器的消费者大量用 `equip`,所以
 "规则已在全局 simp 集里"救不了它们——`\<phi>deriver_simps` 存储那一份必须保留。
-`add_global_simps` 这个名字骗人:它做两件事(进存储 + 进当前上下文的环境化简集),
-而且**两者都是局部的**,`ctxt` 一扔就没了。
+
+**一处更正(2026-08-28,作者质疑后核实)**:先前此处写"`add_global_simps` 这个名字
+骗人",这句话是错的,收回。该函数第二行 `ctxt addsimps thms` 确实把定理加进了系统
+化简集;而 `global` 一词在这一族命名里指的是**规则本身的身份**——
+`global_simps_of_pred` 即 `pred_True`、`global_simps_of_rel` 即 `rel_eq` 加逐参数
+翻转规则、`global_simps_of_map` 即 `map_ident`(`extended_BNF_info.ML:507-513`),
+命名是一致的。真正值得记的事实只有一条:该函数**两半都只作用于被串下去的那个
+`ctxt` 值**,一个字节都不进 theory(`Expansion.add_simps'` 是
+`Context.proof_map o add_simps`,`simpset.ML:100`,套在 Proof.context 上时改的是
+证明层那一份 `Generic_Data` 副本;`ctxt addsimps thms` 同样是纯函数),`ctxt` 一扔
+就没了。原句把"规则的身份"与"写入的作用域"两个轴混为一谈。
+
+**`already in the system simpset` 的来源(同日核实,关系到上面两处改动的理由与
+§22.7 第 6 项)**:`load_ss` 注释所称"pred_True 与 rel_eq 已在系统化简集里"成立,
+但**不是发行版给的**。`bnf_def.ML:963/:972/:977` 把 `map_ident`、`pred_True`、
+`rel_eq` 三者一律用**空属性列表**声明,`bnf` 命令一条 `[simp]` 都没给。它们之所以
+在环境化简集里,是 phi-system 自己的 `\<phi>trivial_simps` BNF interpretation 干的
+(`Phi_BI/Phi_Preliminary.thy:160-166`,`of_bnf` 把 `pred_True :: rel_eq :: 逐参数
+翻转规则` 整体以 `@{attributes [simp]}` 注册)。**`map_ident` 不在该列表中**——这正是
+`:670` 至今仍需 `add_global_simps` 的原因,也是 §22.7 第 6 项要裁决的事。
 
 ### 22.4 已完成的测量(可信,方法交代在内)
 
@@ -2060,8 +2139,13 @@ SHA 校验报警、`[simp]` vs `[iff]` 之争本身、"两个 ctxt 可能不一�
 ### 22.8 未跑的实验
 
 1. **`guess_inst_tac` 会不会实例化守卫的 schematic 变量**(`guess_instantiate.ML:172`
-   做 `Thm.instantiate`)。若会,Nitpick 拿到的是守卫的**特化**,而 `close_form` 把
-   schematic 当全称量词处理并不认可这种特化——**这是本轮唯一可能触及可靠性的未决问题**。
+   做 `Thm.instantiate`)。**本条的理由 2026-08-28 已更正,详见 §25;结论未变但机理相反。**
+   ~~若会,Nitpick 拿到的是守卫的特化,而 `close_form` 把 schematic 当全称量词处理并不
+   认可这种特化~~——`close_form` 的位置读错了:Nitpick **先取反再闭合**
+   (`phi_nitpick.ML:278` 造 `neg_t = (orig_t \<Longrightarrow> False)`,`nitpick_preproc.ML:1243-1245` 才对
+   `neg_t` 施 `close_form`),所以守卫里的 schematic 被读作**存在**量词,与推理器的读法一致,
+   极性本来就是对的。真正的风险方向**相反**:既然是存在语义,把 `?k` 特化成具体的 `t` 就是
+   **加强**守卫,驳倒 `P t` 并不能驳倒 `\<exists>k. P k`。
 2. **`⋀` bug 的真实可达性**:在分支里加一句 `warning`,重启 REPL 重放
    `Phi_Type.thy` + `Phi_Types.thy` 即可确认。
 3. **为什么 `pred_True` 作为重写规则显得昂贵**。约 33 条判别网索引的规则不该把整个
@@ -2110,3 +2194,600 @@ SHA 校验报警、`[simp]` vs `[iff]` 之争本身、"两个 ctxt 可能不一�
 `cleandiff_*.txt` / `cleandiag.tsv`;各消融档在 `T36`–`T51_*.thy`,结果在
 `replay_out.tsv`(按 (serial,pos) 首次出现去重,注意 `tight16` 有两段,
 第二段是钩子未装上的无效重跑)。
+
+
+## 23 · 配置审计、clean 结案与 Simpset_Hooks(2026-08-28 下午;本节假定读者没有会话记忆)
+
+本节接在 §22 之后。§22 写于本轮之初,其中若干数字与判断已被本节推翻,以本节为准。
+
+### 23.1 术语速查(与 §22 相同,重复以便独立阅读)
+
+- **guard condition**:形如 `Premise MODE_GUARD P` 的旁条件,写作 `\<condition>`。它跟
+  **obligation**(`MODE_COLLECT`,写作 `\<obligation>`)是两回事:前者由 `guard_condition_solver`
+  和 `reasoners.ML` 里的竞速处理,后者由 `Phi_Envir.solve_obligation` 处理。不要混。
+- **竞速**:三个选手。P-auto 证明它;R-conv 通过证明其否定来驳斥;R-nitpick 通过找有限反例模型
+  来驳斥。
+- **`Simpset` 函子**(`library/tools/simpset.ML`):造具名化简规则集。`equip` 用该集合**替换**
+  上下文的 simpset;`enhance`(`:79`)用 `Simplifier.merge_ss` 把它**并入**上下文的 simpset。
+  驳斥器用的是 `enhance`,所以**环境里所有全局 `[simp]`/`[iff]` 规则一直在驳斥器里生效**。
+  这一条是本节多处结论的前提。
+
+### 23.2 本轮已提交
+
+- `contrib/phi-system` → **`8c805dbc`**(41 文件,2651 行新增)
+- `MLML` → **`ca609f9`**(submodule bump)
+
+提交前距上一次提交 **44 小时**,期间三个新文件(`guard_refute.ML`、`phi_nitpick.ML`、
+`guard_refute_scrub.ML`)完全未被 git 跟踪。**教训:这类长会话必须中途提交。**
+
+提交里一并带上了同一工作树中他人的未提交改动(四条语义类型不等式引理、`Phi_Examples`
+中被删除的 tactic 提示与 `certified by` 子句、重新生成的 `.proof-store`),已在提交信息中说明。
+
+### 23.3 配置审计:实测配置几乎整套没有进生产
+
+起因是作者质疑"驳斥数从历史的 220 降到 202,是不是我们改坏了什么"。审计结论:**不是改坏,
+是从来没搬进去**。逐项对照历史实验(`T36_TrustAssms`、`T39_ScrubFix`、`T51_NoClean`、
+`T47_TightScrub`、`T38_TrustCard110`)与生产:
+
+| 项 | 实验 | 生产(审计时) | 处置 |
+| --- | --- | --- | --- |
+| `("mono","true")` | **每一个实验都有** | **没有** | **已加**(`reasoners.ML:1225`) |
+| `nitpick_simp` 声明集 `pred_injects_all @ rel_injects_all` | 每个高簇实验都有 | 全库 grep **零命中** | **作者裁定不做** |
+| 预处理规则 `pre_thms`(9 条) | `ctxt addsimps pre_thms` | 只有 `Premise_def` | 见 §23.5 |
+| 墙钟时限 | 30 s | `2 × guard_refute_timeout` = 10 s | 未动 |
+| 内层时限 | 10 s | 5 s | 作者裁定,非疏漏 |
+
+已核对**一致**的项:`card 1-6`、`user_axioms false`、`max_genuine 1`、`max_potential 0`、
+`max_threads 1`、`sat_solver SAT4J`、`batch_size smart`、`falsify true`、`tac_timeout 0.05`、
+trust 标志(生产传 `true`)、都用打过补丁的 `Phi_Nitpick`、前提都经 `nondef_assm_ts`。
+
+`mono` 的默认值是 `smart`(`nitpick_commands.ML:43`),即逐类型**推断**单调性。`mono = true`
+跳过推断直接假定,把预算留给 scope 搜索。生产那段注释里"`tac_timeout` 压低是因为 0.5 s 默认值
+会按候选类型计费在 pre-Kodkod 单调性检查上"说的正是这份推断开销。
+
+**`pinned_nitpick_params` 是 `cef02850`(2026-08-25)引入的,从一开始就没有 `mono`;
+后来据 §18.3 的实测把 `card` 改成 1-6、加上 `user_axioms false` 时,同一批实验里的
+`("mono","true")` 被漏掉。搬实测配置进生产时必须逐条核对整份 params,不能只挑记得的几条。**
+
+### 23.4 clean 的对拍:结案
+
+`clean` 是一个**纯语法**的项改写(scratchpad `T40_GenericScrub.thy:118` 的 `clean4`),
+只做六件事:`A ∧ True → A`、`A ∨ True → True`、`A ⟶ True → True`、`∀/∃x. True → True`、
+`list_all2 (λ_ _. True) xs ys → size xs = size ys`、以及"谓词子的所有槽都平凡为真则为 True"。
+生产的 scrub hook 会把满足性断言换成 `True`,`clean4` 紧接着把这些 `True` 塌掉。它在生产代码里
+**早已删除**,本轮只是追查"它当初为什么看起来有影响"。
+
+**实验一(`T73_CleanVerdict.thy`):项相等对拍。** 两个 arm 都调同一条生产流水线
+`Phi_Guard_Refute.preprocess`,唯一差别是有 clean 的那个上下文多注册一个优先级 500 的 hook
+承载 `clean4`。247 记录 × 3 重复 = **741 次比对,741 次 alpha 等价相同,零差异**。
+**`clean` 不改变任何目标,是纯优化。**
+
+**实验二(`T75_StageSplit.thy`):三阶段分别计时。** 741 次:
+
+| 阶段 | 合计 | 中位 | 占比 |
+| --- | --- | --- | --- |
+| hook(生产 scrub),无 clean | 1679 ms | 2 ms | 1.6% |
+| hook(scrub + clean4),有 clean | 1648 ms | 2 ms | 2.5% |
+| **`clean4` 自身** | **0 ms** | **0 ms** | 测不出 |
+| 化简 + slice,无 clean | 105763 ms | 94 ms | 98.4% |
+| 化简 + slice,有 clean | 63186 ms | 56 ms | 97.5% |
+
+**一个耗时测不出来的语法遍历,砍掉了 42.6 秒的化简器工作(比值 0.597)。** 成本全在化简器,
+不在 hook。测量缺陷:用了 `Time.toMilliseconds` 截断,丢掉了微秒分辨率,所以 `clean4` 只能说
+"小于 1 毫秒"。要精确值需改用微秒并多次重复。
+
+**实验三(`T74_CleanNitpick.thy`):固定 5000 ms 下的判决对拍。** 247 条记录,
+**247 条全部一致**,三档计数逐档相同(202 REFUTED / 42 none / 3 simp_proved)。
+整条 nitpick 调用耗时:无 clean 392.0 s,有 clean 376.7 s,**比值 0.961**——预处理只占整个调用
+约 4%,中位调用 798 ms,远不到 5 秒的墙。
+
+**旧代码确实存在"预算相减"这个缺陷**:`T51_NoClean.thy:87` 与 `T53_CleanTiming.thy:69,80`
+把 `预算 − 预处理已耗` 作为 `timeout` 交给 Nitpick,于是 `clean` 的有无会改变搜索时限。
+该缺陷已按作者裁决改成固定 5000 ms。
+
+**但它解释不了当初的落差,这一点必须记下来免得后人重推**:`clean` 平均只多给 58.6 ms
+= 5000 ms 的 1.17%(单条最多 228 ms = 4.56%);而今天两个 arm 都拿满 5000 ms——比旧代码的
+任一 arm 都多——结果仍是 202。**机制成立,量级被排除。**
+
+**"是机器噪声"这个解释也已被证伪**:`trustassm110` 三轮(第三轮是 2026-08-28 在新代码上跑的)
+给出**逐档相同**的 222 quasi_genuine / 25 unknown。机器和 Nitpick 都没问题。
+
+真正的原因是 §23.3 的配置分歧:历史高簇(220–223)全都带 `mono`,生产不带。
+
+### 23.5 那 9 条 `pre_thms` 的真实账目
+
+作者裁定"把这 9 条加入 `\<phi>guard_refute_simp`"。逐条核对后,**真正需要动的只有两条**:
+
+| 定理 | 结论 |
+| --- | --- |
+| `address_type_gep` | `PhiSem_Mem_Pointer.thy:403` 本来就是 `[iff]` → 早已生效 |
+| `fmupd_lookup` | `HOL-Library/Finite_Map.thy:249` 本来就是 `[simp]` → 早已生效 |
+| `valid_index_snoc` | **已存在**:`PhSm_Ag_Base.thy:76` 的 `valid_index_tail [iff]` 逐字同一命题 |
+| `index_type_snoc` | HOL `List.thy:3231` 的 `fold_append [simp]` + `fold_simps` 就够(`index_type ≡ fold idx_step_type`) |
+| `inst_tree_node` / `inst_link_list` / `inst_dynarr` | 是 `idx_step_type_tup` / `valid_idx_step_named_tup` 的**实例**,见 §23.6 |
+| `valid_memaddr_def` | **真缺**,只缺属性 → 已挂在 definition 上(`PhiSem_Mem_Pointer.thy:95`) |
+| `address_type_def` | **真缺**,只缺属性 → 已挂在 definition 上(`PhSm_Addr.thy:94`) |
+
+**我一度新写了五条 lemma 进仓库,随后全部撤回。不要重新添加。** 其中 `valid_index_snoc`
+是在 `PhSm_Ag_Base.thy` **第 70 行**插入的,而原件 `valid_index_tail [iff]` 就在**第 90 行**
+(现为 :76)——按名字 grep 找不到同命题的既有引理,**必须按命题找**。
+
+属性写法采用作者指定的形式:`definition f :: T where [attr]: "..."`,而不是事后
+`declare f_def [attr]`。理由:属性和定义写在一处就不可能走散,而分开的 `declare` 被落下时
+**不会报错**,驳斥器只是默默看不透那个常量。
+
+### 23.6 `Simpset_Hooks`:为什么必须是动态注册
+
+驳斥器需要 `idx_step_type (AgIdx_S s) (sem_ntup_T Ts) = ...` 这类规则。它们**早已存在**,
+标注是 `[eval_aggregate_path]`——那是 `PhSm_Ag_Base.thy:332` 用同一个 `Simpset` 函子造的
+另一个规则集(`Eval_Sem_Idx_SS`,`Minimal_SS` 打底,19 条规则分布在 5 个 theory,外加通过
+`Eval_Sem_Idx_SS.map` 加的同余规则 `mk_symbol_cong`)。**这些规则不带 `[simp]`,所以不在环境
+simpset 里**,驳斥器看不到。
+
+而 `guard_refute.ML` 由 PLPR 加载,在内存模型和所有聚合**之前**,无法引用 `Eval_Sem_Idx_SS`。
+
+三条路及取舍:
+
+- **快照**(一行 `setup` 把当时的规则拷进 `\<phi>guard_refute_simp`):**行不通**。四种聚合是
+  **兄弟**,各自 import `PhSm_Ag_Base`;`PhiSem_C` 只汇到 void / array / named tuple 三种,
+  **普通元组 `PhiSem_Aggregate_Tuple` 不在其 import 链上**(只有 `PhiSem_Mem_C_Tuple`、
+  `PhiSem_Mem_C_Ag_Tp`、`PhiSem_Play_Ground` 走它)。**不存在能同时看见四种的地方。**
+- **逐条标注**(给 19 条各加 `[\<phi>guard_refute_simp]`):要改 19 处;将来新增规则**同样**要有人
+  记得加两个属性,漂移风险原封不动;而且带不走 `mk_symbol_cong`(它没有属性列表)。
+- **注册取值函数**(采用):`guard_refute.ML` 用既有的 `Hooks` 函子加一个存储
+
+  ```
+  structure Simpset_Hooks = Hooks (type arg = unit  type state = Proof.context)
+  ```
+
+  `preprocess` 里 `Guard_Refute_SS.enhance ctxt |> Simpset_Hooks.invoke (Context.Proof ctxt) ()`;
+  `PhSm_Ag_Base.thy:339` 注册 `Eval_Sem_Idx_SS.enhance`。**注册的是取值函数,不是规则**,
+  所以驳斥器运行时才读 store,任何 theory、任何时候新增的 `[eval_aggregate_path]` 规则都会
+  被拿到,**永不漂移**。不引入新机器:该文件本来就有一个同类存储 `Preprocess_Hooks` 在管前提变换。
+
+### 23.7 §22 中被本节推翻的记载
+
+- §22 记的"删掉 clean 丢 2 条驳斥、慢 42%":方向对,数字错。干净机器上无 clean 是慢 **67%**
+  (0.599 的倒数),而驳斥数在固定时限下**完全不变**。
+- §22 记的"221 对 201":与 `replay_out.tsv` 对不上。该文件里 `noclean` 是 **220**,
+  `tight16` 两段分别是 **222** 和 **203**。引用旧数字前请先核 `replay_out.tsv`。
+- §22.7 里"`\<phi>guard_refute_simp` 的内容如何提供(4 条需 declare、5 条只在 scratchpad)"
+  这一条,答案见 §23.5 和 §23.6:实际只需 2 条 declare 加一次动态注册。
+
+### 23.8 仍然未决(从 §22.7 结转,加本节新增)
+
+1. **`\<phi>guard_race_timeout` 的值**(500 / 2000 / 5000)。现在它只约束 P-auto 与 R-conv;
+   R-nitpick 家族有自己的 `\<phi>guard_refute_timeout`(固定 5000 ms)。
+2. ~~**`guard_refute.ML` 的 `⋀` 绕过(HIGH)**~~ **2026-08-28 已修,见 §24。**
+   `premises_of` 曾用 `Logic.strip_imp_prems`,它在 `Pure.all` 处停下,于是 `⋀`-开头的
+   子目标整个绕过配方,生产转储 1538 条目标里占 **181 条(11.8%)**。现改用
+   `Phi_Help.strip_meta_hhf`(作者指认的既有复用点,**不是** `reasoners.ML:1092` 的
+   `conv_goal`——那段本身就是 `Phi_Conv.map_hhf_concl` 的又一份手写实现,应归入第 8 项
+   的重复实现清单)。收益尚未量化。
+3. ~~§22.3 那四项未经批准的改动是否保留~~ **四项 2026-08-28 全部了结,本项关闭**:
+   (1) `add_global_simps` → `Expansion.add_simps'`(两处,`:668-670` 与 `:710`)**批准
+   保留**;(2) `\<phi>guard_race_log` 的 declare **从未提交,作废**;(3)
+   `Guard_Race_Smoke.thy` 的断言改写**授权自主决定,保留**;(4)
+   `\<phi>guard_refute_timeout` **保留**,`refute_wall = 2×` **撤销**,退回单一看门狗。
+   处置与后果见 §22.3。
+4. `Phi_Preliminary.thy` 的 `declare rel_fun_eq[iff]`:`Transfer.thy:33` 里
+   `lemmas rel_fun_eq = fun.rel_eq`,它就是 `fun` 的 `rel_eq`,与 BNF interpretation 重叠,
+   差别只在 `[iff]` 对 `[simp]`。
+5. 是否把 `nitpick_simp` 声明集(`pred_injects_all @ rel_injects_all`)接进生产。
+   **作者本轮明确裁定"不做 B"**,列此仅为存档。
+6. `clean4` 自身耗时的精确值(需微秒分辨率)。
+
+### 23.9 新配置下的重跑:结果(2026-08-28 傍晚)
+
+`T74_CleanNitpick.thy`(它 import `T73_CleanVerdict.thy`)在新配置下重跑完毕,新配置指
+**`mono = true` + 两条 definition 属性 + `Simpset_Hooks` 动态注册**。台架与生产逐条对齐,
+**没有任何本地补丁**——`T73` 里那三条 `inst_*` 的本地副本已撤,因为 `PhSm_Ag_Base` 的注册
+在台架上游,台架会自动拿到。整条链零 error,`T74` 报 `clean`。
+
+**第一阶段(预处理后目标项逐条对拍):741 / 741 全部 `same`。** 把被删掉的 `clean` 清理重新
+挂回预处理钩子,产出的目标项与不挂它时逐字相同,一条不差。这与 §23.4 的结论一致,是在新配置
+下的独立复现。
+
+**第二阶段(判决对拍):247 / 247 两臂全部 `agree`,零分歧。** 三桶计数,两臂各自都是:
+
+| 判决 | 条数 | 含义 |
+| --- | --- | --- |
+| `REFUTED` | 222 | Nitpick 找到有限反模型 |
+| `none` | 22 | 超时/无结论 |
+| `simp_proved` | 3 | `preprocess` 返回 `NONE`,即化简器直接把目标证掉了(这是真证明,不是驳斥) |
+
+**驳斥数 222,正好落回历史区间(220–223),旧配置的 202 被彻底甩开。** 而且不是"数量凑巧
+相同":把 `T38_TrustCard110.thy` 第三轮(`replay_out.tsv` 中 `trustassm110` 标签的最后
+247 行)驳斥掉的那 222 条记录取出来,与本轮 `T74` 驳斥掉的 222 条求对称差,**结果是空集**
+——两次实验驳斥的是同一批目标,一条不多一条不少。T38 那 25 条 `unknown` 正好对应本轮的
+22 条 `none` 加 3 条 `simp_proved`(两条流水线对"化简器证掉了"的报告方式不同,T38 归入
+`unknown`)。
+
+这就把 §23.3 的诊断钉死了:**202 与 220–223 的落差全部来自配置分歧,不来自我们本轮引入的
+任何回归。** 缺的是 `mono = true`(以及聚合路径那批规则),补上就回到历史水平。
+
+耗时方面(列 5 / 列 6 是 `verdict` 整次调用的墙钟时间,含预处理与模型搜索,两臂搜索超时都
+钉死在 5000 ms):247 条合计 plain 217.9 s、cleaned 199.0 s,比值 0.913;单看 222 条
+`REFUTED` 是 746 ms 对 668 ms(0.895),单看 22 条 `none` 是 2362 ms 对 2300 ms
+(0.974)。方向与 §23.4 一致——`clean` 让预处理更快,所以带 `clean` 的那臂总时间更短;
+在这里被模型搜索的耗时稀释了,所以比值没有 §23.4 里 0.599 那么夸张。`none` 那 22 条几乎
+被 5 s 超时占满,预处理的差异摊薄得最厉害,比值也就最接近 1。
+
+`T38_TrustCard110.thy` 末尾的 `run_trust110 ()` 已注释掉:它每次加载都整轮重跑 12 分钟,
+而它用自己的流水线、对本轮改动不敏感。它连续三轮给出 222/25 的记录保留在
+`replay_out.tsv` 中(该标签共 741 行 = 3 × 247,**按标签切分数据时必须取最后 247 行**)。
+
+### 23.10 机器与工具的两条实操记录
+
+- **孤儿 veriT**:`isabelle_cancel_evaluation` 取消 Isabelle 侧的命令,但 sledgehammer 派出去的
+  **外部 prover 进程会活下来**,继续为已不存在的目标计算。本轮抓到两个,一个 26 分钟涨到
+  24.5 GB,把 62 GB 内存的机器逼到空闲为 0、交换用掉 60 GB。杀掉后立刻回收 25 GB。
+  **长时间实验前后都要 `pgrep -a veriT` 检查。**
+- **isabelle-mcp 的盲区**:`evaluation_status` / `command_status` 只回答被显式打开过的文件,
+  作为 import 加载的 theory 既不报进度也不报错误。根 theory 报 `clean` **不等于**整个
+  import 图干净。已记入 `ISABELLE_MCP_EVALUATION_ISSUES.md` 第六节第 17 条。
+
+### 23.11 `clean` 省下的时间到底省在哪个文件(2026-08-28 傍晚)
+
+**一句话:那个 72 ms 的全语料均值差是被一个文件撑起来的,不是 `clean` 的普遍性质。**
+`cleanverdict.tsv` 按 `Phi_Examples` 的源文件拆开(列 4 = 不带 `clean`,列 5 = 带 `clean`):
+
+| 文件 | 运行次数 | 不带 clean | 带 clean | 差 | 比值 |
+| --- | --- | --- | --- | --- | --- |
+| `Binary_Trees.thy` | 498 | 210.4 ms | 104.3 ms | **106.2 ms** | **0.495** |
+| `Quicksort.thy` | 48 | 420.9 ms | 417.5 ms | 3.4 ms | 0.992 |
+| `Binary_Search.thy` | 45 | 177.8 ms | 175.7 ms | 2.1 ms | 0.988 |
+| `Matrix_Oprs.thy` | 57 | 55.9 ms | 55.2 ms | 0.7 ms | 0.988 |
+| `Dynamic_Array.thy` | 45 | 44.6 ms | 44.3 ms | 0.3 ms | 0.994 |
+| `Linked_List.thy` | 48 | 27.8 ms | 22.4 ms | 5.4 ms | 0.804 |
+
+全语料共省 53.4 s,其中 **52.9 s(99%)来自 `Binary_Trees.thy`**;其余五个文件合计只省 0.6 s,
+均值差 2.4 ms、比值 0.984,落在噪声里。`Binary_Trees.thy` 还占了语料的大头(741 次运行里 498 次,
+67%),这是均值被拉到 72 ms 的第二个原因。
+
+逐次差值的分布是**双峰**而非长尾:313 次落在 0–19 ms,另有约 180 次挤在 180–239 ms;
+差值超过 100 ms 的 **210 次运行无一例外全是 `Binary_Trees.thy`**。所以这不是几个离群点,
+而是"一个文件受益、其余文件不受益"的清晰二分。
+
+两处边界必须守住,不要把推断当观测:
+
+- **省在哪一段,本轮没测。** 「全部省在化简器那一段」出自 §23.4 的分段计时,那是旧配置下做的;
+  本轮 `T73` 只记录预处理总耗时,没有分段。要在新配置下坐实,得重跑分段计时。
+- **为什么偏偏是 `Binary_Trees.thy`,尚未查明。** 一个尚未验证的猜测是该文件的目标带有
+  `clean4` 能消掉的冗余前提(例如平凡合取项),消掉后化简器要啃的东西少一半。
+  **这只是猜测。**
+
+有一条来自本轮数据的硬事实可以约束解释空间:741 次对拍全部 `same`,即两臂**最终留下的前提列表
+逐条相同**。所以 `clean4` 消掉的东西,不带 `clean` 时化简器自己最后也消掉了,只是代价高得多。
+`clean4` 没有做任何化简器做不到的事,它只是把其中最便宜的一部分提前用最便宜的方式做了。
+
+### 23.12 compact 前的待议清单(2026-08-28 傍晚)
+
+§23.8 的六项全部仍然有效,不重复。本轮新增三项:
+
+7. **`Binary_Trees.thy` 为何独享收益**——见 §23.11,未查明,需要按文件的规则用量数据才能回答。
+8. **系统 simpset 的 Net 根部审计**——已派 agent 进行,三项交付:(a) 带/不带 `clean` 两臂的
+   simp 规则用量对拍(应用次数,可能的话连匹配尝试次数一起),按源文件拆开;(b) 当前系统
+   simpset 与 `Guard_Refute_SS.enhance` 之后那个上下文里,落在 Net **根部通配符**的重写规则
+   数目与**每一条的完整命题**——根部规则的左手边头部是 `Var` 或整体是 `Abs`,享受不到 Net
+   索引,每访问一个子项都会被取出试匹配;(c) 实测复核那批逐参数翻转规则确实键在 relator
+   常量头部而非根部。产物写到 scratchpad 的 `SIMPLIFIER_NET_AUDIT.md`。**结果待回。**
+9. **本节(§23.9 / §23.11 / §23.12)尚未提交。**
+
+一条已澄清、不必再议的:`(\<lambda>x y. y = x) = (=)` 这条点自由规则**不在**系统 simplifier 里,
+也不在仓库任何地方——`converse_eq_pointfree` 已删除,全仓库零命中。
+`Phi_Preliminary.thy:104` 的 `eq_flipped` 只在 `:137` 被 `Conv.rewr_conv` 当作**转换**使用,
+用来**构造**那批逐参数规则,自身从不注册进任何 simpset。
+
+
+## 24 · `⋀` 绕过的修复(2026-08-28;本节假定读者没有会话记忆)
+
+### 24.1 一句话
+
+`guard_refute.ML` 的 `premises_of` 原本用 `Logic.strip_imp_prems` 收集守卫的前件,
+而该函数**在 `Pure.all`(即 `⋀`)处停下**,于是 `⋀` 开头的子目标不是"配方被削弱"而是
+**整条被绕过**——前件一条都收不到,弱化钩子、内存模型重写、分情况、切片全部落空;
+生产转储 1538 条目标里占 181 条(11.8%)。现改用 `Phi_Help.strip_meta_hhf`,一次遍历
+穿过 `⋀` 与 `⟹`,并把每个绑定变量固定成新鲜自由变量。
+
+### 24.2 复用了什么(作者指认,不是新写的代码)
+
+| 函数 | 位置 | 用在哪 |
+|---|---|---|
+| `Phi_Help.strip_meta_hhf : term -> (string*typ) list * term list * term` | `contrib/auto_sledgehammer/library/helpers0.ML:21` | `premises_of`:要前件 |
+| `Phi_Help.strip_meta_hhf_bvs : term -> bvs * term` | `helpers00.ML:99` | `is_premise`:只要结论 |
+
+两者同族,差别只在 `_bvs` 遇到 `⟹` 时把前件丢掉(`strip V (… $ H $ B) = strip V B`)。
+**基础的 `PHI_HELP` 签名与 `Phi_Help` 结构定义在 auto_sledgehammer**,phi-system 的
+`helpers00.ML:1-2` 以 `signature PHI_HELP = sig include PHI_HELP …` 在其上扩展;只在
+`contrib/phi-system/` 内搜索会漏掉 `strip_meta_hhf`(本轮踩过)。
+
+### 24.3 改了什么
+
+`Phi_Logic_Programming_Reasoner/library/guard_refute.ML`:
+
+1. `is_premise` 改为先 `strip_meta_hhf_bvs` 取结论再认 `Premise` 标记。标记在**结论**上,
+   所以 hhf 形状的假设按它所断言的东西分类;认定保留后**整条保留**,连同自身的绑定与
+   前件——全称量化的事实仍然是事实。
+2. `premises_of` 改用 `strip_meta_hhf`,签名由 `… -> term list` 变为
+   `… -> term list * term`(**前件与结论必须来自同一次调用**,分开取会让两者闭合到不同的
+   自由变量上)。绑定变量用 `Variable.variant_names` 取新鲜名字、`subst_bounds (rev frees, _)`
+   灌回去;此前从未被使用的 `ctxt` 形参在此获得用途(顺带消掉 §22.7 第 8 项里那条意见)。
+3. `preprocess` 随之改为 `val (prems0, concl) = premises_of ctxt assms goal`,不再单独调
+   `Logic.strip_imp_concl`(它同样在 `⋀` 处停,会把整个 `⋀x. …` 当成结论)。
+
+**一处被推翻的记载(2026-08-28,同日核实)**:本节初稿曾把"这些新自由变量要不要用
+`Variable.add_fixes` 声明进上下文"列为未决,理由是它会改变 `reasoners.ML:1158` 的
+`extract_fixed_frees` 是否把形如 `x ≡ t` 的假设折成替换。**该理由不成立,未决项取消。**
+调用顺序决定了它看不到这些变量:`extract_fixed_frees` 的唯一调用点是
+`reasoners.ML:1356`,在**赛道装配**时作为 `r_nitpick_racer` 的参数算出;而这些自由变量是
+赛道跑起来之后、`preprocess`(`guard_refute.ML:174`)内部才产生的。传给 Nitpick 的也是
+原上下文(`guard_refute.ML:217` 的 `Proof.init ctxt`),而 `phi_nitpick.ML` 全文只有 `:1011`
+一处查 `Variable.is_fixed`,即上述那一处。**当前调用链里没有任何代码读这些名字的固定状态。**
+
+**接口更正(同日)**:初版用 `Variable.variant_fixes` 取名。它的职责是**建立固定变量**
+(`Pure/variable.ML:467-469`,`new_fixes` 写固定变量表),返回 `(名字表, 新上下文)`,而我们
+只要名字、把新上下文丢掉——造了再丢,是接口挑错的信号。改用同结构的
+`Variable.variant_names`(`Pure/variable.ML:20`,实现 `:225`,`Name.variant_names (names_of ctxt)`
+的薄封装):纯取名、不建上下文,且直接吃 `(string * typ) list`,`map2` 随之消失。附带差别:
+`variant_fixes` 经 `Variable.variant`(`:440-445`)在 body 模式下会 skolem 化名字,而这些变量
+从不 export,那一步无谓。
+
+同时把新鲜性的依据收紧为 `fold Variable.declare_term (goal :: assms) ctxt`:此前只声明
+`goal`,`assms` 的自由变量靠"它们本就是调用方 ctxt 的固定变量"(`reasoners.ML:1347` 的
+`Assumption.all_assms_of nctxt`)才不撞名——那是**要人记住的**不变量,现在不再依赖调用方。
+
+### 24.4 已实测(`Phi_System_Base` 会话,isabelle-mcp 从源码加载)
+
+探针 `T90_MetaAllProbe.thy`(scratchpad),目标取生产转储里最常见的形状
+`⋀x y. 0 < x ⟹ x < y ⟹ y < x`:
+
+```
+=== OLD (Logic.strip_imp_prems / _concl) ===
+prems (0): (none)
+concl: ⋀x y. 0 < x ⟹ x < y ⟹ y < x
+=== NEW (Phi_Guard_Refute.premises_of) ===
+prems (2): 0 < x, x < y
+concl: y < x
+loose bounds in new results: [false, false, false]
+```
+
+带假设的第二个探针:给四条上下文假设(`⋀z. 0 < z ⟹ \<premise> z ≠ 0`、`\<condition> 1 < 2`、
+`\<obligation> True`、未打标记的 `0 < 1`),返回 4 条——目标的两条前件,加上 `\<premise>` 那条
+(**整条,含 `⋀z` 与它自己的前件**)和 `\<condition>` 那条;`\<obligation>` 与未打标记的被丢弃,
+与 §19.2 的裁决一致。
+
+回归:`Test/Guard_Race_Smoke.thy` 全批 11 个探针**零错误**(该批无 `⋀` 开头的守卫,
+故它证明"没坏",不证明"修好了";正面证据是上面两个探针)。
+
+### 24.5 未做
+
+- **收益未量化**:修复对那 181 条目标的实际影响(多少条因此可驳)尚未测。要测就按
+  §22.3 的裁决,在评估目标之前插一行 `declare [[\<phi>guard_race_log = …]]` 重新收一次语料。
+- **本节与 §22/§23 的本轮改动均未提交。**
+
+
+## 25 · 守卫里的 schematic 变量:极性与特化(2026-08-28;本节假定读者没有会话记忆)
+
+### 25.1 一句话
+
+守卫里的 schematic 变量被 Nitpick 读作**存在**量词,与推理器的读法一致,极性没有问题
+(§22.8 第 1 项写的"当全称量词处理"是错的);真正的风险方向**相反**——正因为是存在语义,
+任何**特化**都是在**加强**守卫,而 `guess_inst_tac` 会在守卫预处理里跑。该风险的实际
+可达性正在测量中。
+
+### 25.2 术语(读者从零开始所需)
+
+**守卫条件**:推理器应用一条规则前要判定的旁条件,写作 `\<condition> P`。它由一场**竞赛**
+判定,三类**赛道**并跑:**P-auto**(证明)、**R-conv**(证否定)、**R-nitpick**(找有限反模型)。
+本节只关心 R-nitpick,其实现是 `guard_refute.ML`(结构 `Phi_Guard_Refute`)加打过补丁的
+Nitpick 副本 `phi_nitpick.ML`(结构 `Phi_Nitpick`)。
+
+**schematic 变量**:写作 `?k`,是推理器**可以自行选值**的未知数。所以推理器读一个含 `?k`
+的守卫时,问的是"**存在**某个 k 使 P k 成立吗";若成立,规则可用。
+
+### 25.3 极性:实测结论是"对的",原记载是错的
+
+`close_form`(`nitpick_hol.ML:944-954`)确实把 schematic 变量用 `Logic.all_const` 全称
+量化。**但它施加的对象不是原目标,而是取反之后的式子**:
+
+- `phi_nitpick.ML:278`:`val neg_t = if falsify then Logic.mk_implies (orig_t, False) else orig_t`
+- `nitpick_preproc.ML:1243-1245`:`neg_t |> unfold_defs_in_term |> close_form |> …`
+
+`close_form` 对 `Pure.imp` 的处理是把**前件**里的 schematic 绑到整条蕴含之外,于是
+
+```
+neg_t       =  P ?k \<Longrightarrow> False
+close_form  =  \<And>k. (P k \<Longrightarrow> False)   \<equiv>   \<not>(\<exists>k. P k)
+```
+
+Nitpick 找的是这个式子的模型,即"**没有任何** k 能让守卫成立"。这正是存在量词的读法。
+
+**实测三档**(`schematic_goal` + `nitpick[card nat = 1-6, user_axioms = false, mono = true]`,
+scratchpad `T91_GuessInstProbe.thy`):
+
+| 目标 | 存在读法 | 全称读法 | 实际 |
+|---|---|---|---|
+| `?k = 3` | 可满足 | 假(k=0 是反例) | **potentially spurious counterexample**,"could not find a better counterexample, checked 6 of 6 scopes" → `potential` |
+| `?k \<noteq> ?k` | 不可满足 | 不可满足 | found a counterexample |
+| `(3::nat) = 4` | — | — | found a counterexample |
+
+第一行是判别性的:存在读法下可满足的守卫**没有**拿到确证反例。而 `potentialN` 是与
+`genuineN`/`quasi_genuineN` 并列的独立判决码(`phi_nitpick.ML:953 / :955 / :957`),赛道只
+接受后两者(`guard_refute.ML:220-221`),故落 `Unknown`,不构成驳斥。
+
+### 25.4 `guess_inst_tac` 确实在守卫预处理里跑(实测)
+
+`Guess_Instantiate.guess_inst_tac`(`guess_instantiate.ML:172`)由该文件 `:215` 一句
+`Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)` 装成**全局 theory
+simpset 的 looper**,名为 `inst_var_by_Ctr_sels`。实测环境 simpset:
+
+```
+ambient loopers: inst_var_by_Ctr_sels, split ...of_bool..., split HOL.If...
+```
+
+它排第一。`preprocess` 用的上下文是 `Guard_Refute_SS.enhance ctxt`,而 `enhance` 是**合并**
+(`simpset.ML:79-80`),`merge_ss` 对 `loop_tacs` 取并集(`raw_simplifier.ML:376` 的
+`AList.merge`)。故它必然在预处理里运行。
+
+已观测的一个样本(`T91_GuessInstProbe.thy`,`datatype 'a box = Box nat 'a`):
+
+```
+goal              : Box 3 True = Box ?k ?v
+goal vars         : k, v
+after premises_of : concl vars = k, v
+preprocess        : NONE (simplifier closed the goal)
+```
+
+`guess_inst` 解出 `?k := 3`、`?v := True`,简化器随即关闭目标,`preprocess` 返回 `NONE`,
+映射为 **`Provable`**——最保守的出口,不产生驳斥。构造子是单射,这个解**唯一**,不损失
+一般性。
+
+### 25.5 残余风险(正在测量)
+
+危险的情形是:**特化了、但没有关闭目标**,于是 Nitpick 拿到一个被加强的守卫去驳。
+另有一处理论缝隙:`guess_inst_eq` 在 `?v args = RHS` 时经 `inst`(`:33-45`)用
+`fold_rev Thm.lambda args` 抽象,若 `args` 不是互不相同的变量(非 Miller pattern),该解
+未必最一般。两者均**只读过代码、未观测**。已派 agent 测量(产物
+scratchpad `GUESS_INST_RISK.md`)。
+
+### 25.6 真实负载上的规模
+
+数据源:`guard_race_dump.tsv.goals`(scratchpad,1579 条记录)。
+
+| | 条数 |
+|---|---|
+| 记录总数 | 1579 |
+| `tvars` 为空、R-nitpick 真的跑过的 | 1428 |
+| 被 schematic **类型**变量筛掉(`reasoners.ML:1345`) | 151 |
+| 其中 goal 含 schematic **项**变量 | **254(占 1428 的 17.8%)** |
+| assm 含 schematic 项变量 | 0 |
+
+名字高度集中:`?TY2` 186 次、`?any2` 89 次、`?TY''2` 64 次。典型形状
+`\<lbrakk>…\<rbrakk> \<Longrightarrow> \<d>\<y>\<n>\<a>\<r>\<r> = \<array>[?any2] ?TY2`,即"这个语义类型等于某个长度
+`?any2`、元素类型 `?TY2` 的数组",两个 schematic 正是推理器要**解出来**的。
+
+这 254 条的判决:**161 proved、93 undecided、0 refuted**。**注意**:该转储收于**旧配置**
+(无 `mono = true`、无聚合体规则,重放语料上 202 对 222),驳斥器当时弱得多,所以这个 0
+是旁证而非保证。
+
+### 25.7 代价的上界
+
+按 `reasoners.ML:1244-1251` 的论证,一次错误驳斥只损失**完整性**:守卫被判假仅使一条
+推理规则不被应用,不会产生错误定理;且自 2026-08-27 的提前完成账本裁决之后,它已不能
+掐掉正在运行、即将成功的 P-auto。
+
+### 25.8 未做
+
+- ~~§25.5 的两项测量~~ **已完成,结论见 §25.9。**
+- 若测出真实的误驳路径,才会出现需要裁决的设计问题:把含 schematic 的目标整条排除在
+  驳斥赛道之外(仿 `reasoners.ML:1345` 的 TVar 筛)、在守卫预处理的上下文里关掉
+  `inst_var_by_Ctr_sels` 这个 looper、或接受并写成文档义务。**尚未裁决,勿预先实施。**
+
+### 25.9 残余风险的测量结果:误驳是真的(2026-08-28)
+
+**Q1 是。** `preprocess` 能返回 `SOME (prems, concl)`,其中 schematic 已被 `guess_inst_tac`
+特化。**Q2 是,存在真实的错误驳斥。** **Q3 否**,生产里那个占 254 条的形状
+`dynarr = \<array>[?any2] ?TY2` 不被咬——`\<array>` 在 `Type_Info` 眼里不是构造子。
+**Q4 是**,且它就是 Q1/Q2 的机理;但生产转储里没有一个**被应用**的 schematic 变量。
+
+**实证(scratchpad `T95_WrongRefutation.thy`,复现的生产参数,本人独立复跑过)**:
+
+```
+goal                : P 0 \<Longrightarrow> \<condition> ?f 0 = 5 \<and> P (?f 1)
+goal schematic vars : [f]
+
+WITH    looper inst_var_by_Ctr_sels:
+   residue = { prems = [P 0]  concl = P 5 }   Nitpick outcome code = "quasi_genuine"
+   verdict = Refuted
+WITHOUT looper (del_loop "inst_var_by_Ctr_sels"):
+   residue = { prems = [P 0]  concl = ?f 0 = 5 \<and> P (?f (Suc 0)) }   outcome = "unknown"
+   verdict = Unknown
+```
+
+同一文件把存在读法证成了定理(`P 0 \<Longrightarrow> \<exists>f. f 0 = 5 \<and> P (f 1)`,见证
+`\<lambda>n. if n = 0 then 5 else 0`),故 `Refuted` 是错的。`quasi_genuine` 正是
+`guard_refute.ML:220-221` 认作驳斥的码。`T94` 另有两例。
+
+**机理**:`inst`(`guess_instantiate.ML` 的 `?f a\<^sub>1 \<dots> a\<^sub>n = r` 分支)用
+`fold_rev Thm.lambda args` 得 `?f := \<lambda>a\<^sub>1 \<dots> a\<^sub>n. r`。`Thm.lambda` 抽象的是**项的出现**
+(`Term.abstract_over` 按 aconv 比较),被抽象的东西不必是变量。于是答案取决于右边是否
+恰好在**语法上**提到参数——实测(`T96_GuessInstGenerality.thy`):
+
+| 约束 | 得到 | 同样成立的还有 |
+|---|---|---|
+| `?f 0 = 5` | `\<lambda>z. 5` | `\<lambda>n. if n = 0 then 5 else 0`,无穷多 |
+| `?f 0 = 0` | `\<lambda>z. z`(**恒等**) | `\<lambda>_. 0`,无穷多 |
+| `?f 0 = Suc 0` | `Suc`(**后继**) | `\<lambda>_. 1`,无穷多 |
+| `\<forall>x. ?f x = 5` | `\<lambda>x. 5` | 无(Miller pattern,唯一解) |
+| `?f 0 = 5 \<and> ?f 0 = 6` | `NONE`(冲突) | — |
+| `?f 0 = 5 \<and> ?f 1 = 6` | `NONE`(**保守过头**,两者其实相容) | — |
+| `?f 0 = 5 \<and> P (?f 1)` | `\<lambda>z. 5`(**缺口**:第二个合取项不是等式,无人阻止提交) | — |
+
+**安全判据**:`?f := \<lambda>args. r` 唯一,当且仅当 args 是**两两不同、且在公式内部被绑定**的
+变量(Miller pattern);`bans` 恰是那份内部绑定变量名单。代码里**没有任何一处检查这一点**
+——`qchk_one_side` 只是启动前粗筛,`inst` 里的 `bans` 检查防的是**变量捕获**(作用域),
+`Guess_Conflicts` 只管同一变量的两个等式给出不同值。另有第二条:`guess_inst_tac` 返回的
+策略序列尾巴是 `Seq.empty`,**只给一个候选,不回溯**。
+
+**必须记住的区分**:`guess_inst` 本身**不产生错误定理**。schematic 本就是"证明器可自选值"
+的未知数,选定一个值再证,kernel 保证得到的是原命题的一个实例;挑错的代价是**完整性**。
+它对**证明**是称职的,对**驳斥**是致命的——守卫里的 schematic 是存在语义,特化即加强,
+驳倒加强版推不出驳倒原版。**所以缺陷不在 `guess_inst`,在于它被 `guess_instantiate.ML`
+末尾一句 `Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)` 装成全局
+looper,于是这个"承诺"被带进了一条反演语义的管线**(`Guard_Refute_SS.enhance` 是合并语义,
+把环境 simpset 连同 looper 一起吃进来)。
+
+**测不到的三处**(如实记录):Q3 只在 `typedecl`+`consts` 的**类比物**上验证,真正的
+`sem_array_T` 未观测(装不了 `PhiSem_Aggregate_Array`);`enable_inst`(`:170`)未导出,
+归因改用 `Raw_Simplifier.del_loop "inst_var_by_Ctr_sels"`;只测了这一条特化路径,未证明
+`preprocess` 里不存在别的会动 schematic 的东西。副产品:`guess_inst'` **没有 `HOL.disj`
+分支**;无具名选择子的 datatype 对它惰性。
+
+
+## 26 · 全链普查探测器:`guess_inst` 的实例化有多少是被强制的(2026-08-28)
+
+### 26.1 目的
+
+§25.9 证明了"未被强制的实例化"存在且能导致误驳,但只在人工构造的例子上。本节的探测器
+回答规模问题:**从 phi-system 一路到 `Phi_Examples` 的全部执行中,`guess_inst` 提交了多少
+次实例化,其中多少是被强制的、多少不是**。
+
+### 26.2 两处 TEMPORARY 改动(成对存在,要删一起删)
+
+| 位置 | 改动 |
+|---|---|
+| `Phi_Logic_Programming_Reasoner/library/guess_instantiate.ML` | 探测器本体 |
+| `Phi_Logic_Programming_Reasoner/PLPR.thy`(`ML_file "library/guess_instantiate.ML"` 之后) | `declare [[\<phi>guess_inst_probe = "…/scratchpad/guess_inst_probe.tsv"]]` |
+
+`declare` 必须在**上游**才能覆盖整条链(承 §22.3 的作者裁决:插在评估目标之前即可,
+且编辑 `PLPR.thy` 本身不是坏事)。
+
+### 26.3 探测器怎么做的
+
+- 新增配置 `\<phi>guess_inst_probe`(字符串路径,默认空 = 关闭,零开销)。
+- 判据 `probe_forced bans args`:args **两两不同**且**每个都在 `bans` 里**时记为
+  `[F]`(被强制),否则 `[U]`。空参数表算被强制。
+- `inst` 在**真正提交新实例化**的分支(`Vars.lookup tab v = NONE`)记一条
+  `(是否强制, ?v, args, 结果)`,存进 **`Thread_Data` 线程局部**累加器——PIDE 并行,
+  全局 ref 会串味。
+- `guess_inst_tac` 用 `Thread_Data.setmp` 把累加器套在 `guess_inst` 外面,仅当
+  `guess_inst` 真的返回实例化时冲刷成**一行 TSV**:serial、该目标是否**每一处**都被强制
+  (`forced`/`UNFORCED`)、总数、未强制数、源位置、**目标本身**、逐条
+  `[F]/[U] ?v (args) := 结果`。项一律剥 PIDE 的 XML 标记并压成单行,`File.append`
+  一次写完,避免并行交错。写文件失败不影响证明(捕获异常,中断照样重抛)。
+
+### 26.4 运行与状态
+
+运行方式:评估 `Phi_Examples/PhiEx_All.thy`(import 八个示例 theory,整条 phi-system 链
+从源码加载)。
+
+**途中的一条实操记录**:终止 isabelle-mcp 会话后无法重启,`Phi_System_Base` 的 heap 被
+判过期。**原因不是本轮改动**——该 heap 按其 `ROOT` 只装仓库外部 theory,phi-system 自己的
+theory 全在 heap 之外。真正过期的是别人改的依赖:比 `Minilang_AoA` heap(2026-08-24 19:57)
+新的源文件有 `Performant_Isabelle_ML/`(2)、`Semantic_Embedding/`(8)、
+`auto_sledgehammer/library/sledgehammer_solver.ML`(1)。原会话启动早于这些改动故不复查,
+一旦终止即无法重启。**教训:改过 `.ML` 后重启 isabelle-mcp 之前,先确认 heap 链没有被
+别的 agent 弄旧。**
+
+**结果:待填。**
