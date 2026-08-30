@@ -29,16 +29,41 @@ fun qchk_one_side ctxt bvtys tm =
 
 
 
-(*** TEMPORARY probe (2026-08-28) -- Docs/GUARD_NITPICK_FALSIFY_PLAN.md section 26.
-     DELETE together with the declare in PLPR.thy that switches it on. ***)
+(*** the guess_inst Event_Log category (EVENT_LOG_PLAN 2.6) -- successor of
+     the \<phi>guess_inst_probe TSV probe; original study:
+     Docs/GUARD_NITPICK_FALSIFY_PLAN.md section 26. ***)
 
 (*Solving \<open>?f a\<^sub>1 \<dots> a\<^sub>n = r\<close> by \<open>?f := \<lambda>a\<^sub>1 \<dots> a\<^sub>n. r\<close> is the UNIQUE solution only when the
   a\<^sub>i are pairwise distinct variables bound inside the formula -- a Miller pattern,
   and bans is exactly that list of locally bound variables.  Otherwise the
   equation constrains ?f at isolated points and this is one solution out of many,
   committed silently and without backtracking.  Records both kinds; off unless
-  the config names a file.*)
-val probe_log = Attrib.setup_config_string \<^binding>\<open>\<phi>guess_inst_probe\<close> (K "")
+  \<phi>log_guess_inst is set (context-level switch, EVENT_LOG_PLAN 2.3).*)
+val log_guess_inst = Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guess_inst\<close> (K false)
+
+(*term printing happens in the encoder, i.e. under Event_Log's own write
+  protection: a failing printer drops the record, never the tactic*)
+val log_category =
+  Event_Log.category {name = "guess_inst", enabled = fn () => true,
+    encode = fn {ctxt, goal, entries, n_others, other_hits, occurrences} =>
+      let val show = Protocol_Message.clean_output o Syntax.string_of_term ctxt
+          val unforced = length (filter_out #1 entries)
+      in
+        ([("verdict", if unforced = 0 then "forced" else "UNFORCED"),
+          ("choices", string_of_int (length entries)),
+          ("unforced", string_of_int unforced),
+          ("other_goals", string_of_int n_others),
+          ("other_goal_hits", string_of_int (length other_hits)),
+          ("hit_occurrences", string_of_int occurrences)],
+         Event_Log.elem_text "goal" (show goal) ::
+         map (fn (forced, v, args, r) =>
+               XML.Elem (("choice", [("forced", Bool.toString forced)]),
+                 [Event_Log.elem_text "var" (show v),
+                  Event_Log.elem_text "args" (commas (map show args)),
+                  Event_Log.elem_text "result" (show r)]))
+             (rev entries) @
+         map (Event_Log.elem_text "other_hit" o show) other_hits)
+      end}
 
 val probe_acc : (bool * term * term list * term) list Unsynchronized.ref Thread_Data.var =
       Thread_Data.var ()
@@ -196,44 +221,27 @@ fun guess_inst ctxt bans cterm =
 
 val enable_inst = Config.declare_bool ("enable_inst", \<^here>) (K true)
 
-(*TEMPORARY probe -- see the note at probe_log above.  One line per goal this
-  tactic actually instantiates: serial, whether EVERY choice on that goal was
-  forced, the counts, the source position, the goal, and each choice.*)
-fun probe_write path s =
-  (case Exn.capture_body (fn () => File.append (Path.explode path) s) of
-     Exn.Res _ => ()
-   | Exn.Exn exn => if Exn.is_interrupt exn then Exn.reraise exn else ())
-
-fun probe_flush ctxt goal entries =
-  (case Config.get ctxt probe_log of
-     "" => ()
-   | path =>
-      if null entries then () else
-      let
-        (*PIDE renders terms with XML markup; the dump is read as plain text,
-          one record per line*)
-        fun show t =
-          space_implode " " (split_lines (XML.content_of (YXML.parse_body
-            (Syntax.string_of_term ctxt t))))
-        val ppos = Position.thread_data ()
-        val pos =
-          (case (Position.file_of ppos, Position.line_of ppos) of
-             (SOME f, SOME l) => f ^ ":" ^ string_of_int l
-           | (SOME f, NONE) => f
-           | (NONE, SOME l) => "line " ^ string_of_int l
-           | _ => "?")
-        val unforced = length (filter_out #1 entries)
-      in
-        probe_write path (String.concatWith "\t"
-          [serial_string (),
-           if unforced = 0 then "forced" else "UNFORCED",
-           string_of_int (length entries), string_of_int unforced, pos, show goal,
-           String.concatWith " ; "
-             (map (fn (forced, v, args, r) =>
-                     (if forced then "[F] " else "[U] ") ^ show v ^
-                     " (" ^ commas (map show args) ^ ") := " ^ show r)
-                  (rev entries))] ^ "\n")
-      end)
+(*One record per goal this tactic actually instantiates -- see the note at
+  log_guess_inst above.  The commitment lands on the WHOLE state, so what
+  decides whether a choice is harmless is where else the variable occurs: in
+  the rest of this subgoal, and in every other subgoal.  Both are recorded --
+  the count, and each other subgoal that mentions an instantiated variable.*)
+fun probe_flush ctxt n st goal entries =
+  if not (Config.get ctxt log_guess_inst) orelse null entries then ()
+  else
+    let
+      val vars = map (fn (_, v, _, _) => v) entries
+      fun mentions t = exists (fn v => Term.exists_subterm (fn u => u aconv v) t) vars
+      fun occurrences t = length (filter (fn v => Term.exists_subterm (fn u => u aconv v) t) vars)
+      val others =
+        Thm.prems_of st |> map_index I |> filter (fn (i, _) => i + 1 <> n) |> map snd
+      val other_hits = filter mentions others
+    in
+      Event_Log.append log_category
+        {ctxt = ctxt, goal = goal, entries = entries,
+         n_others = length others, other_hits = other_hits,
+         occurrences = fold (fn t => fn k => k + occurrences t) other_hits 0}
+    end
 
 fun guess_inst_tac ctxt n st = Seq.make (fn () =>
   let val goal = Logic.nth_prem (n, Thm.prop_of st)
@@ -248,7 +256,7 @@ fun guess_inst_tac ctxt n st = Seq.make (fn () =>
                 val guessed =
                   Thread_Data.setmp probe_acc (SOME acc)
                     (fn () => guess_inst ctxt' (map (Term.dest_Free o Thm.term_of) lb) concl) ()
-                val _ = if is_some guessed then probe_flush ctxt goal (! acc) else ()
+                val _ = if is_some guessed then probe_flush ctxt n st goal (! acc) else ()
              in Option.map (fn inst => (Thm.instantiate (TVars.empty, inst) st, Seq.empty)) guessed
             end
           else NONE
@@ -285,7 +293,12 @@ fun add_guess_inst_looper ctxt = ctxt |> Simplifier.add_loop ("inst_var_by_Ctr_s
 fun add_guess_inst_solver ctxt = Raw_Simplifier.set_solvers [guess_inst_solver ctxt] ctxt
 
 
-val _ = Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)
+(*EXPERIMENT 1 (2026-08-29, author's step 1): the looper is no longer installed
+  into the theory simpset for EVERY simplification.  It is added only where
+  guard conditions are preprocessed (reasoners.ML, guard_condition_solver).
+  The global installation, kept for reference:
+    val _ = Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)
+  Restore it if Phi_Examples fails to go through under this scope.*)
 
 
 end

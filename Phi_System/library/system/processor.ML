@@ -196,8 +196,7 @@ fun translate_tokens [] = []
         of SOME toks' => toks' @ translate_tokens toks
          | NONE => tok :: translate_tokens toks
 
-fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
-  Phi_CP_IDE.call_of_state_sequent (fn stat0 =>
+fun eval_line' (cfg, auto_lev, auto_lev_no_input) toks stat0 =
     let val toks = translate_tokens toks
         val auto_lev = if empty_tokens toks then auto_lev_no_input else auto_lev
         val stat = (case auto_lev of SOME lev => apfst (Config.put Phi_Reasoner.auto_level lev) stat0
@@ -230,7 +229,23 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
         else ();
         snd opr_ctxt
      |> apfst (Phi_Opr_Stack.Data.put (#1 opr_ctxt))
-    end )
+    end
+
+(*record point (EVENT_LOG_PLAN 7): the outermost funnel of every \<phi>
+  statement command -- the traceless backstop for exceptions no capture site
+  below has seen (one that was already recorded below appears twice, with the
+  two sites telling the story; the frame-carrying variant of this site is the
+  PLAN 10.4 experiment)*)
+fun eval_line args toks =
+  Phi_CP_IDE.call_of_state_sequent (fn stat0 =>
+    (case Exn.capture_body (fn () => eval_line' args toks stat0) of
+       Exn.Res r => r
+     | Exn.Exn exn =>
+         ((if Exception_Log.default_record exn
+           then Event_Log.append Exception_Log.category
+                  {site = "\<phi> statement", exn = exn, trace = []}
+           else ());
+          Exn.reraise exn)))
 
 (*
 

@@ -931,14 +931,31 @@ fun internal_reason _ (SOME 0) S = SOME S
       else gen_reason' handlers ctxt (num_of_protected_prems sequent N)
                        [[ (Seq.single (ctxt, sequent))]]
 
+(*capture sites (EVENT_LOG_PLAN 7, author ruling): the reasoning core of the
+  whole of PLPR and phi-system -- an exception escaping here gets its frame
+  list (frames exist only under ML_debugger compilation, PLPR.thy:65).
+  Recursive nesting records at the outermost entry only; PLPR's own
+  control-flow exceptions are excluded on top of the default predicate.*)
+fun reason_record exn =
+  Exception_Log.default_record exn andalso
+  (case exn of
+    Success _ => false
+  | Global_Cut _ => false
+  | Explorative_Backtrack => false
+  | _ => true)
+
 fun reason handlers num ctxt sequent =
-  case internal_reason handlers num (ctxt,sequent)
-    of SOME (ctxt', sequent') =>
-               SOME (singleton (Proof_Context.export ctxt' ctxt) sequent')
-     | NONE => NONE
+  Exception_Log.capture {site = "Phi_Reasoner.reason", record = reason_record}
+    (fn () =>
+      case internal_reason handlers num (ctxt,sequent)
+        of SOME (ctxt', sequent') =>
+                   SOME (singleton (Proof_Context.export ctxt' ctxt) sequent')
+         | NONE => NONE)
 
 fun reason1 G handlers N ctxt sequent =
-  case reason handlers N ctxt sequent of SOME x => x | NONE => error (G ())
+  Exception_Log.capture {site = "Phi_Reasoner.reason1", record = reason_record}
+    (fn () =>
+      case reason handlers N ctxt sequent of SOME x => x | NONE => error (G ()))
 
 fun internal_reason_s handlers ctxt seqs =
   let val (ret,seqs') = seqs ctxt

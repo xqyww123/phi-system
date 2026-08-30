@@ -1951,12 +1951,6 @@ ML_file "library/type_info_DB.ML"
 ML_file "library/type_info.ML"
 ML_file "library/guess_instantiate.ML"
 
-(*TEMPORARY (2026-08-28) -- switches on the probe in guess_instantiate.ML, which
-  records every instantiation that module commits to, classified by whether the
-  choice was forced.  It has to sit HERE, upstream of everything, to cover the
-  whole chain down to Phi_Examples.  DELETE together with that probe.*)
-declare [[\<phi>guess_inst_probe = "$ISABELLE_HOME_USER/guess_inst_probe.tsv"]]
-
 ML_file "library/phi_nitpick.ML"
 ML_file "library/guard_refute.ML"
 

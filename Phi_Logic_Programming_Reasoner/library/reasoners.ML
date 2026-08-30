@@ -151,11 +151,12 @@ signature PHI_REASONERS = sig
         is virtual time (Timeout.apply scales it by timeout_scale and
         discounts GC) while the logged elapsed is wall clock, so a logged
         race may honestly exceed its nominal budget.*)
-  val guard_race_log : string Config.T
-      (*empty = off; otherwise a file path receiving one TSV line per race:
-        serial, verdict (proved/refuted/undecided), winner racer or "-",
-        wall-clock ms, #subgoals, mode (forked/serial), and per-racer exits
-        as name:code pairs (win/none/timeout/crash/cancelled/discarded)*)
+  val log_guard_race : bool Config.T
+      (*context-level switch of the guard_race Event_Log category (default
+        off): one record per race -- verdict (proved/refuted/undecided),
+        winner racer or "-", wall-clock ms, #subgoals, mode (forked/serial),
+        per-racer exits (win/none/timeout/crash/cancelled/discarded), and the
+        raced guards themselves (goals, assumptions, schematic type vars)*)
 
 end
 
@@ -1285,9 +1286,35 @@ fun r_nitpick_racer params ctxt protocol (i, n) goal name : race_result Race.rac
   guard.  HEAD carried 500.*)
 val guard_race_timeout =
       Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 5000)
-val guard_race_log =
-      Attrib.setup_config_string \<^binding>\<open>\<phi>guard_race_log\<close> (K "")
+val log_guard_race =
+      Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guard_race\<close> (K false)
 
+(*the guard_race Event_Log category (EVENT_LOG_PLAN 2.6): the successor of the
+  \<phi>guard_race_log TSV probe, with the former .goals companion file merged
+  into the same record (multi-line content is just sub-elements here)*)
+val guard_race_category =
+  Event_Log.category {name = "guard_race", enabled = fn () => true,
+    encode = fn {verdict, winner, elapsed_ms, n_goals, forked, exits,
+                 tvars, assms, goals} =>
+      ([("verdict", verdict), ("winner", winner),
+        ("elapsed_ms", string_of_int elapsed_ms),
+        ("subgoals", string_of_int n_goals),
+        ("mode", if forked then "forked" else "serial")],
+       map (fn (racer, code) =>
+              XML.Elem (("exit", [("racer", racer), ("code", code)]), [])) exits @
+       map (Event_Log.elem_text "tvar") tvars @
+       map (Event_Log.elem_text "assm") assms @
+       map (Event_Log.elem_text "goal") goals)}
+
+(*EXPERIMENT 1 (2026-08-29): guess_inst's looper is no longer in the theory
+  simpset (guess_instantiate.ML).  It reaches every simplification below
+  through ctxt, which guard_condition_solver's auto_tac already equipped:
+  auto_search_tac for the 30ms quick attempt, P-auto and R-conv (and r_conv's
+  own call on the imported ctxt'), and Guard_Refute_SS.enhance for R-nitpick,
+  which MERGES this ctxt's simpset.  Experiment 2 takes it back off the refuter
+  alone, where a non-most-general instantiation is unsound: a guard's schematic
+  is existential, so specialising it strengthens the guard, and refuting the
+  stronger form proves nothing.*)
 fun prove_or_refute can_inst ctxt ctxt0 =
   let val search = auto_search_tac ctxt
    in timed_tac (Time.fromMilliseconds 30) search ORELSE
@@ -1312,18 +1339,19 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           Phi_Reasoner.warn_pretty (Context.Proof ctxt) level
             (fn () => Pretty.str ("guard race: " ^ msg ()))
 
-        (*diagnostic I/O must never decide a proof: on any failure, report
-          via diag and disable logging, never fail the tactic*)
+        (*diagnostic I/O must never decide a proof: on any failure, record it
+          (EVENT_LOG_PLAN 7, record point), report via diag, never fail the
+          tactic*)
         fun checked_io what f =
           (case Exn.capture_body f of
              Exn.Res r => SOME r
            | Exn.Exn exn =>
-               if Race.contains_interrupt exn then Exn.reraise exn
-               else (diag 2 (fn () => what ^ ": " ^ Runtime.exn_message exn); NONE))
-        val log_path =
-          (case Config.get ctxt guard_race_log of
-             "" => NONE
-           | s => checked_io "invalid \<phi>guard_race_log path" (fn () => Path.explode s))
+               (if Exception_Log.default_record exn
+                then Event_Log.append Exception_Log.category
+                       {site = "guard race checked_io " ^ what, exn = exn, trace = []}
+                else ();
+                if Race.contains_interrupt exn then Exn.reraise exn
+                else (diag 2 (fn () => what ^ ": " ^ Runtime.exn_message exn); NONE)))
 
         val protocol = Synchronized.var "guard_race.protocol"
                          {pauto_finished = false, refuted_by = NONE : string option}
@@ -1378,7 +1406,14 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           p_auto_racer search protocol th ::
           r_conv_racer can_inst ctxt ctxt0 search protocol goals ::
           nitpick_racers
-          |> map (fn (name, body) => (name, fn () => Timeout.apply budget body ()))
+          |> map (fn (name, body) =>
+               (name, fn () =>
+                  (*capture site (EVENT_LOG_PLAN 7): a racer crash gets its
+                    frame list before the engine converts it to Crashed; the
+                    region is bounded by the racer's own budget*)
+                  Exception_Log.capture
+                    {site = "guard-racer " ^ name, record = Exception_Log.default_record}
+                    (fn () => Timeout.apply budget body ())))
 
         val {winner, exits, forked} = Race.race racers
 
@@ -1408,59 +1443,39 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           (if is_some recorded_refuter then " (post-race record)" else "")
 
         val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
+        (*one guard_race record per race (EVENT_LOG_PLAN 2.6): the successor
+          of the TSV line and its .goals companion, merged -- the raced
+          guards, their assumptions, and their schematic type variables ride
+          in the same record as the verdict; the source position comes from
+          the record's standard attributes.  Term printing runs inside
+          checked_io: a failing printer is recorded, never decides a proof.*)
         val _ =
-          (case log_path of
-             NONE => ()
-           | SOME path =>
-               ignore (checked_io "guard race log write failed" (fn () =>
-                 let val ser = serial_string ()
-                     fun exit_code Race.Won = "win"
-                       | exit_code Race.Gave_None = "none"
-                       | exit_code Race.Timed_Out = "timeout"
-                       | exit_code (Race.Crashed _) = "crash"
-                       | exit_code Race.Cancelled = "cancelled"
-                       | exit_code (Race.Discarded _) = "discarded"
-                     val _ = File.append path
-                       (String.concatWith "\t"
-                          [ser, verdict, vwinner,
-                           string_of_int elapsed, string_of_int (length goals),
-                           if forked then "forked" else "serial",
-                           String.concatWith ","
-                             (map (fn (n, e) => n ^ ":" ^ exit_code e) exits)] ^ "\n")
-                     (*TEMPORARY -- guard dump (2026-08-26, re-armed for the
-                       Phi_Examples study).  DELETE together with the log
-                       declare in PLPR.thy.  Writes every raced guard beside
-                       the TSV, keyed by the same serial, so an undecided
-                       verdict in the TSV can be traced to the guard text,
-                       its assumptions, its schematic type variables, and the
-                       source position (which names the theory).*)
-                     val gctxt = ctxt |> Config.put show_types true
-                                      |> Config.put show_sorts true
-                     val assms0 = map Thm.term_of (Assumption.all_assms_of ctxt)
-                     val goals0 = map Thm.term_of goals
-                     val tvs = fold (fn t => fold (insert (op =)) (Term.add_tvars t []))
-                                    (goals0 @ assms0) []
-                     fun show_tvar ((s, i), S) =
-                           "?" ^ s ^ (if i = 0 then "" else string_of_int i) ^
-                           " :: " ^ @{make_string} S
-                     (*PIDE renders terms and positions with XML markup; strip it,
-                       the dump is meant to be read as plain text*)
-                     val plain = XML.content_of o YXML.parse_body
-                     val ppos = Position.thread_data ()
-                     val pos =
-                       (case (Position.file_of ppos, Position.line_of ppos) of
-                          (SOME f, SOME l) => f ^ ":" ^ string_of_int l
-                        | (SOME f, NONE) => f
-                        | (NONE, SOME l) => "line " ^ string_of_int l
-                        | _ => "?")
-                  in File.append (Path.explode (Config.get ctxt guard_race_log ^ ".goals"))
-                       (cat_lines
-                          (["##### " ^ ser ^ "\t" ^ verdict ^ "\t" ^ pos,
-                            "tvars: " ^
-                              (if null tvs then "(none)" else commas (map show_tvar tvs))] @
-                           map (fn t => "assm: " ^ plain (Syntax.string_of_term gctxt t)) assms0 @
-                           map (fn t => "goal: " ^ plain (Syntax.string_of_term gctxt t)) goals0) ^ "\n")
-                 end)))
+          if not (Config.get ctxt log_guard_race) then ()
+          else
+            ignore (checked_io "guard race record" (fn () =>
+              let fun exit_code Race.Won = "win"
+                    | exit_code Race.Gave_None = "none"
+                    | exit_code Race.Timed_Out = "timeout"
+                    | exit_code (Race.Crashed _) = "crash"
+                    | exit_code Race.Cancelled = "cancelled"
+                    | exit_code (Race.Discarded _) = "discarded"
+                  val gctxt = ctxt |> Config.put show_types true
+                                   |> Config.put show_sorts true
+                  val show = Protocol_Message.clean_output o Syntax.string_of_term gctxt
+                  val assms0 = map Thm.term_of (Assumption.all_assms_of ctxt)
+                  val goals0 = map Thm.term_of goals
+                  val tvs = fold (fn t => fold (insert (op =)) (Term.add_tvars t []))
+                                 (goals0 @ assms0) []
+                  fun show_tvar ((s, i), S) =
+                        "?" ^ s ^ (if i = 0 then "" else string_of_int i) ^
+                        " :: " ^ @{make_string} S
+               in Event_Log.append guard_race_category
+                    {verdict = verdict, winner = vwinner, elapsed_ms = elapsed,
+                     n_goals = length goals, forked = forked,
+                     exits = map (apsnd exit_code) exits,
+                     tvars = map show_tvar tvs,
+                     assms = map show assms0, goals = map show goals0}
+              end))
         val _ = diag 2 (fn () =>
                   verdict_text ^ " in " ^ string_of_int elapsed ^ "ms, " ^
                   string_of_int (length goals) ^ " subgoal(s), " ^
@@ -1488,11 +1503,20 @@ fun guard_condition_solver {can_inst} ctxt0 th0 =
       let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1*)
           val th' = th
-          fun auto_tac ctxt =
+          (*EXPERIMENT 1 (2026-08-29): guess_inst's looper used to be in the
+            theory simpset, hence in every simplification anywhere.  It now
+            enters the guard machinery HERE and only here: this preprocessing
+            pass, the is_F shortcut, and -- through the ctxt handed on --
+            everything prove_or_refute simplifies, since all three racers derive
+            their simpsets from it (auto_search_tac for P-auto and R-conv,
+            Guard_Refute_SS.enhance for R-nitpick, which merges).*)
+          fun auto_tac ctxt0'' =
+              let val ctxt = Guess_Instantiate.add_guess_inst_looper ctxt0'' in
                 ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
                 (if is_F
                  then timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt)
                  else prove_or_refute can_inst ctxt ctxt0)
+              end
                 (* (timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt)) *)
         (*fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW

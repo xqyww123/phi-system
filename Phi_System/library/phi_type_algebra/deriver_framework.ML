@@ -1270,7 +1270,13 @@ end
 
 type solver = Phi_Type.phi_type * Proof.context * thm * Method.text option -> thm option
 
+(*capture site (EVENT_LOG_PLAN 7): a deriver obligation failing to solve gets
+  its frame list; the region is bounded by the single obligation's solving*)
 fun oblg_solver proof_id text ctxt sequent =
+  Exception_Log.capture
+    {site = "deriver obligation " ^ proof_id, record = Exception_Log.default_record}
+    (fn () => oblg_solver0 proof_id text ctxt sequent)
+and oblg_solver0 proof_id text ctxt sequent =
   (*case Thm.major_prem_of sequent
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)

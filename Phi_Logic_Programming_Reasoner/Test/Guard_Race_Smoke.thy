@@ -20,54 +20,76 @@ begin
    construct declarations below, turning them into frees (measured trap). *)
 
 declare [[\<phi>trace_reasoning = 3]]
-(*ISABELLE_TMP, not ISABELLE_TMP_PREFIX: the prefix directory is shared by
-  every Isabelle process of one user, so two frontends evaluating this theory
-  at once would interleave their lines into one file and each probe's
-  line-count delta would pick up the other's race.  ISABELLE_TMP is
-  per-process (measured: $ISABELLE_TMP_PREFIX/process<id>).*)
-declare [[\<phi>guard_race_log = "$ISABELLE_TMP/guard_race_smoke.tsv"]]
+(*the guard_race Event_Log category (EVENT_LOG_PLAN 2.6) replaces the TSV
+  probe this battery originally read.  Isolation between concurrent frontends
+  is now free: every process writes its own <start>-<pid>.xml file.*)
+declare [[\<phi>log_guard_race]]
 
 ML \<open>
-(*the config is the single source of truth for the log path*)
-fun log_lines ctxt =
-  let val path = Path.explode (Config.get ctxt Phi_Reasoners.guard_race_log)
-  in if File.exists path
-     then filter (fn s => s <> "") (split_lines (File.read path))
-     else []
-  end
+(*locate this process's guard_race log file; pid reuse across reboots can
+  leave several files with our suffix -- the lexicographically last one is
+  the newest, and the record-count delta neutralizes any inherited content*)
+fun log_file () =
+  (case Event_Log.log_dir () of
+     NONE => error "Guard_Race_Smoke requires event logging (ISABELLE_EVENT_LOG_DIR must not be empty)"
+   | SOME dir =>
+       let val category_dir = Path.append dir (Path.basic "guard_race")
+           val suffix = "-" ^ string_of_int (ML_Pid.get ()) ^ ".xml"
+       in if not (File.is_dir category_dir) then NONE
+          else (case filter (String.isSuffix suffix) (File.read_dir category_dir) of
+                  [] => NONE
+                | names => SOME (Path.append category_dir (Path.basic (List.last names))))
+       end)
 
-(*column projections over the 7-field TSV schema (see the guard_race_log
-  signature comment in reasoners.ML).  Each probe fixes exactly the columns
-  it is about, keeping the timing-dependent ones out of its assertion.*)
-fun verdict_winner (_ :: v :: w :: _) = (v, w)
-  | verdict_winner l = error ("malformed race log line: " ^ commas l)
-fun verdict_winner_exits [_, v, w, _, _, _, x] = (v, w, x)
-  | verdict_winner_exits l = error ("malformed race log line: " ^ commas l)
-fun verdict_winner_mode [_, v, w, _, _, m, _] = (v, w, m)
-  | verdict_winner_mode l = error ("malformed race log line: " ^ commas l)
+fun race_records () =
+  (case log_file () of
+     NONE => []
+   | SOME path =>
+       map_filter (fn XML.Elem (("record", atts), body) =>
+                        if AList.lookup (op =) atts "category" = SOME "guard_race"
+                        then SOME (atts, body) else NONE
+                    | _ => NONE)
+         (Event_Log.read_file path))
+
+(*projections over a guard_race record (see the log_guard_race signature
+  comment in reasoners.ML).  Each probe fixes exactly the fields it is
+  about, keeping the timing-dependent ones out of its assertion.*)
+fun attr a ((atts, _): Properties.T * XML.body) =
+  the_default "?" (AList.lookup (op =) atts a)
+fun exits_of ((_, body): Properties.T * XML.body) =
+  String.concatWith ","
+    (map_filter (fn XML.Elem (("exit", xatts), _) =>
+                      SOME (the_default "?" (AList.lookup (op =) xatts "racer") ^ ":" ^
+                            the_default "?" (AList.lookup (op =) xatts "code"))
+                  | _ => NONE) body)
+fun verdict_winner r = (attr "verdict" r, attr "winner" r)
+fun verdict_winner_exits r = (attr "verdict" r, attr "winner" r, exits_of r)
+fun verdict_winner_mode r = (attr "verdict" r, attr "winner" r, attr "mode" r)
+fun show_record (r as (atts, _)) = @{make_string} atts ^ " exits=" ^ exits_of r
 
 (*one engine for every probe: drive a guard through the solver, then assert
-  on the projection of the TSV line(s) THIS race appended (delta against the
-  line count beforehand).  expects is the SET of acceptable outcomes: a race
-  between two correct refuters is decided by timing, so more than one log
-  can be legitimate for one probe.*)
+  on the projection of the record(s) THIS race appended (delta against the
+  record count beforehand).  expects is the SET of acceptable outcomes: a
+  race between two correct refuters is decided by timing, so more than one
+  log can be legitimate for one probe.*)
 fun race_test {project, can_inst} ctxt name expects t =
-  let val n0 = length (log_lines ctxt)
+  let val n0 = length (race_records ())
       val st = Thm.trivial (Thm.cterm_of ctxt t)
       val (time, r) = Timing.timing (fn () =>
             Phi_Reasoners.guard_condition_solver {can_inst = can_inst} ctxt st |> Seq.pull) ()
-      val new = drop n0 (log_lines ctxt)
-      val observed = map (project o space_explode "\t") new
+      val new = drop n0 (race_records ())
+      val observed = map project new
       val _ = if member (op =) expects observed then ()
               else error (name ^ ": expected one of " ^ @{make_string} expects ^
                           " but logged " ^ @{make_string} observed ^
-                          (*the full lines carry the columns the projection
+                          (*the full records carry the fields the projection
                             dropped, which self-explain a surprise*)
                           (if null new then " (no race logged)"
-                           else "\n" ^ cat_lines (map (prefix "  ") new)))
+                           else "\n" ^ cat_lines (map (prefix "  " o show_record) new)))
   in writeln (name ^ ": " ^ (case r of SOME _ => "state" | NONE => "empty") ^
               " in " ^ string_of_int (Time.toMilliseconds (#elapsed time)) ^ "ms" ^
-              "\n  log: " ^ (if null new then "(no race logged)" else cat_lines new))
+              "\n  log: " ^
+              (if null new then "(no race logged)" else cat_lines (map show_record new)))
   end
 
 (*probe modes: `plain` fixes verdict and winner; `with_exits` also fixes the
