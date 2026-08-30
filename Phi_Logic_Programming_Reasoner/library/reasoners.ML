@@ -995,10 +995,9 @@ fun dest_all ct used =
   converts an interrupt into a result: external cancellation re-raises out
   of the race, while a racer's own internal interrupt is absorbed as that
   racer's Cancelled exit; a racer's crash is that racer's failure only,
-  reported post-race from its exit.  The exception discipline shared with
-  auto_sledgehammer's sledgehammer_solver.ML (classify / normalise) has its
-  kernel in Race.contains_interrupt — sledgehammer_solver.ML still carries
-  its own inline copy: keep the two in sync (unification pending, plan §8).*)
+  reported post-race from its exit.  The interrupt test shared with the race
+  engine and auto_sledgehammer's sledgehammer_solver.ML (normalise) is
+  Interrupt_Family (Performant_Isabelle_ML, library/accounted_timeout.ML).*)
 
 (** Racers **)
 
@@ -1350,7 +1349,7 @@ fun prove_or_refute can_inst ctxt ctxt0 =
                 then Event_Log.append Exception_Log.category
                        {site = "guard race checked_io " ^ what, exn = exn, trace = []}
                 else ();
-                if Race.contains_interrupt exn then Exn.reraise exn
+                if Interrupt_Family.contains_interrupt exn then Exn.reraise exn
                 else (diag 2 (fn () => what ^ ": " ^ Runtime.exn_message exn); NONE)))
 
         val protocol = Synchronized.var "guard_race.protocol"
