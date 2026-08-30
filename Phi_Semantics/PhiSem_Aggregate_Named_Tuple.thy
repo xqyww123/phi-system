@@ -105,8 +105,7 @@ print_translation \<open>[
   let fun strip_fmupd (Const(\<^const_syntax>\<open>fmupd\<close>, _) $ s $ v $ L)
             = (s,v) :: strip_fmupd L
         | strip_fmupd (Const(\<^const_syntax>\<open>fmempty\<close>, _)) = []
-      fun pass_sym (Const(\<^const_syntax>\<open>mk_symbol\<close>, _) $ X) = Phi_Tool_Symbol.print X
-        | pass_sym X = X
+      val pass_sym = Phi_Tool_Symbol.print
       fun assemble [(s,v)] =
             Const(\<^syntax_const>\<open>semty_ntup_arg0\<close>, dummyT) $ (Const(\<^syntax_const>\<open>semty_ntup_arg\<close>, dummyT) $ pass_sym s $ v)
         | assemble ((s,v)::L) =
@@ -290,8 +289,7 @@ print_translation \<open>[
       Const (\<^syntax_const>\<open>_\<phi>Tuple\<close>, dummyT) $
         (Const (\<^syntax_const>\<open>_\<phi>tuple_arg\<close>, dummyT) $
            (Const (\<^syntax_const>\<open>\<phi>_named_tuple_\<close>, dummyT)
-              $ (case sym of Const(\<^const_syntax>\<open>mk_symbol\<close>, _) $ id => Phi_Tool_Symbol.print id
-                           | _ => sym)
+              $ Phi_Tool_Symbol.print sym
               $ T)))
 ]\<close>
 

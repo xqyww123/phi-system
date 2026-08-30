@@ -1,5 +1,5 @@
 theory Phi_Element_Path
-  imports Phi_System.Calculus_of_Programming Phi_BI.PhiTool_Symbol
+  imports Phi_System.Calculus_of_Programming Performant_Isabelle_HOL.SSymb
 begin
 
 section \<open>Path of Elements in an Aggregate Structure\<close>
@@ -64,12 +64,10 @@ fun is_atom (Const ("_free", _) $ X) = is_atom X
   | is_atom (_ $ _) = false
   | is_atom _ = true
 
-fun print_index (Const(\<^const_syntax>\<open>AgIdx_S\<close>, _) $ (Const(\<^const_syntax>\<open>mk_symbol\<close>, _) $ tm)) =
-     (case Phi_Tool_Symbol.revert_symbol (dest_synt_numeral tm)
+fun print_index (Const(\<^const_syntax>\<open>AgIdx_S\<close>, _) $ tm) =
+     (case Phi_Tool_Symbol.decode_synt tm
         of SOME id => Free(id, dummyT)
-         | NONE => tm)
-  | print_index (Const(\<^const_syntax>\<open>AgIdx_S\<close>, _) $ tm) =
-     Const (\<^syntax_const>\<open>_LOG_EXPR_SYMBOL_\<close>, dummyT) $ tm
+         | NONE => Const (\<^syntax_const>\<open>_LOG_EXPR_SYMBOL_\<close>, dummyT) $ tm)
   | print_index (Const (\<^const_syntax>\<open>AgIdx_N\<close>, _) $ tm) =
       (case try dest_synt_numeral tm
          of SOME N => Const(\<^syntax_const>\<open>_log_num_ag_idx_\<close>, dummyT) $ Free(string_of_int N, dummyT)
@@ -86,10 +84,10 @@ parse_translation \<open>[
 ]\<close>
 
 print_translation \<open>[
-  (\<^const_syntax>\<open>AgIdx_S\<close>, (fn ctxt => fn [Const(\<^const_syntax>\<open>mk_symbol\<close>, _) $ tm] =>
-      case Phi_Tool_Symbol.revert_symbol (dest_synt_numeral tm)
+  (\<^const_syntax>\<open>AgIdx_S\<close>, (fn ctxt => fn [tm] =>
+      case Phi_Tool_Symbol.decode_synt tm
         of SOME id => Const (\<^syntax_const>\<open>_MK_ag_idx_\<close>, dummyT) $ Free(id, dummyT)
-         | NONE => tm)),
+         | NONE => raise Match)),
   (\<^const_syntax>\<open>AgIdx_N\<close>, (fn ctxt => fn [tm] =>
       case try dest_synt_numeral tm
         of SOME N => Const (\<^syntax_const>\<open>_MK_ag_idx_\<close>, dummyT) $

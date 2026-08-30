@@ -47,8 +47,7 @@ setup \<open>Context.theory_map (
           SOME (Const (\<^syntax_const>\<open>_\<phi>Tuple\<close>, dummyT) $
                   (Const (\<^syntax_const>\<open>_\<phi>tuple_arg\<close>, dummyT) $ (
             Const(\<^syntax_const>\<open>\<phi>_shared_named_tuple_\<close>, dummyT) $ sh
-                  $ (case sym of Const(\<^const_syntax>\<open>mk_symbol\<close>, _) $ id => Phi_Tool_Symbol.print id
-                           | _ => sym)
+                  $ Phi_Tool_Symbol.print sym
                   $ f ctxt T)))
      | X_ => NONE
 )

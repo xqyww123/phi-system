@@ -83,7 +83,7 @@ fun error_unprocessed_element_index ctxt idx =
             flat (Library.separate [Pretty.str "."] (map single (
                 HOLogic.dest_list (Thm.term_of idx)
              |> map (
-                  (fn term => case Phi_Tool_Symbol.revert_symbol_term term
+                  (fn term => case Phi_Tool_Symbol.dest_symbol term
                                 of SOME str => Pretty.str str
                                  | NONE => Syntax.pretty_term ctxt term) o
                   (fn term => case try Phi_Syntax.dest_phi_type_assertion term

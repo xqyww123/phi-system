@@ -3,7 +3,7 @@ chapter \<open>Theoretical Foundations\<close>
 section \<open>Preliminary\<close>
 
 theory Phi_Preliminary
-  imports Main "Phi_BI.Algebras" PhiTool_Symbol Phi_Aug
+  imports Main "Phi_BI.Algebras" Performant_Isabelle_HOL.SSymb Phi_Aug
           Phi_Logic_Programming_Reasoner.PLPR
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
           Phi_BI.Arrow_st
