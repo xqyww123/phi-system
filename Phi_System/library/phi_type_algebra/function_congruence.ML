@@ -19,7 +19,12 @@ val _ = Theory.setup (Context.theory_map (
                       Thm.cconcl_of prop |> Thm.dest_arg |> funpow 4 Thm.dest_fun |> Thm.dest_arg1,
                       [D,R,M])
               | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
-        val base_name = Term.term_name (Term.head_of (Thm.term_of F))
+        (*The proof-store key must carry the full constant name: `Term.term_name`
+          strips it to the base name, which theories defining a phi-type of the
+          same base name would then share.*)
+        val base_name = (case Term.head_of (Thm.term_of F)
+                           of Const (N, _) => N
+                            | t => Term.term_name t)
 
 
         val ctxt0 = ctxt0'

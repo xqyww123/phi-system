@@ -1303,8 +1303,16 @@ fun oblg_solver proof_id text ctxt sequent =
   end
      (*| _ => sequent*)
 
+(*The proof-store key of a derived property's obligations.  The phi-type's name
+  must be resolved against the local theory's background naming, so that the
+  key carries the theory (and any enclosing locale): a proof context's default
+  naming answers `local.X` for every theory alike, and the level-1 proof store
+  is one global table -- theories defining a phi-type of the same base name
+  would overwrite each other's proofs under that key.*)
+fun oblg_key phi ctxt name = Local_Theory.full_name ctxt (#name phi) ^ "/" ^ name
+
 fun oblg_solver' name (phi, ctxt, th, text) =
-      SOME (oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name) text ctxt th)
+      SOME (oblg_solver (oblg_key phi ctxt name) text ctxt th)
 
 
 (* default_ind_inst *)
@@ -1466,8 +1474,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
       val rule'4 =(case solver (phi, ctxt, rule'3, #4 instruction)
                      of SOME ret => ret
-                      | NONE => oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name)
-                                            (#4 instruction) ctxt rule'3)
+                      | NONE => oblg_solver (oblg_key phi ctxt name) (#4 instruction) ctxt rule'3)
                 |> Simplifier.rewrite_rule ctxt @{thms' Action_Tag_def[where A=\<phi>TA_ANT]}
                 |> simp (phi, PLPR_Rule_Gen.Rule_Gen_SS.enhance ctxt)
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
